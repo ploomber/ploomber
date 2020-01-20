@@ -111,9 +111,9 @@ def path_to_assets():
 
 
 def _load_db_credentials():
-    try:
-        p = Path('~', '.auth', 'postgres-ploomber.json').expanduser()
+    p = Path('~', '.auth', 'postgres-ploomber.json').expanduser()
 
+    try:
         with open(p) as f:
             db = json.load(f)
     except FileNotFoundError:
