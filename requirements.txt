@@ -1,0 +1,13 @@
+# testing
+pytest>=3.5
+# pytest-cov
+# pytest-flake8
+
+# sql module (SQLDump task)
+# numpy
+# pandas
+# pyarrow
+
+# pipeline example
+csvkit
+scikit-learn
