@@ -112,7 +112,7 @@ def path_to_assets():
 
 def _load_db_credentials():
     try:
-        p = Path('~', '.auth', 'postgres-dstools.json').expanduser()
+        p = Path('~', '.auth', 'postgres-ploomber.json').expanduser()
 
         with open(p) as f:
             db = json.load(f)

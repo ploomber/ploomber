@@ -8,9 +8,6 @@ pytest>=3.5
 # pandas
 # pyarrow
 
-# pipeline example
-csvkit
-scikit-learn
 
 # documentation
 sphinx
