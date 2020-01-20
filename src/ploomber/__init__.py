@@ -1,7 +1,7 @@
 from ploomber.dag import DAG
 from ploomber.env import Env
 
-__version__ = '0.1'
+__version__ = '0.2dev'
 
 # Set default logging handler to avoid "No handler found" warnings.
 import logging
