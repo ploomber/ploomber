@@ -11,3 +11,6 @@ pytest>=3.5
 
 # documentation
 sphinx
+
+# for releases
+twine
