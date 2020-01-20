@@ -29,7 +29,7 @@ __pycache__/
 env/
 
 # add env/ module
-!src/dstools/env/
+!src/ploomber/env/
 
 build/
 develop-eggs/

@@ -11,3 +11,6 @@ pytest>=3.5
 # pipeline example
 csvkit
 scikit-learn
+
+# documentation
+sphinx
