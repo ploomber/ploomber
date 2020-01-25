@@ -41,3 +41,16 @@ Templating, clients, on_finish hook, DAG report, tasks library
 how do we test task A works as expected?
 
 code quality: catching bugs, static analysis, 
+
+Multiple developers
+*******************
+
+Use Env, each developer has their own env.yaml so products do not overlap with
+each other
+
+Multiple systems
+****************
+
+Use Env, each machine has their own env.yaml so products do not overlap with
+each other
+
