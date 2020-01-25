@@ -5,7 +5,7 @@ Goals
 -----
 
 ploomber's goals are to accelerate experimentation and facilitate building
-reliable systems. It achieves these goals by providing incremental
+production systems. It achieves these goals by providing incremental
 builds, interactive execution, reducing boilerplate code, tools to inspect
 a pipeline object and facilitate testing.
 

@@ -1,6 +1,7 @@
 Patterns
 ========
 
+
 DAG factory
 ***********
 
