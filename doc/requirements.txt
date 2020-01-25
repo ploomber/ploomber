@@ -2,3 +2,4 @@
 # a version mismatch (it uses the setup.py file directly instead of pip),
 # adding this to fix it
 Pygments==2.5.2
+mistune<2
