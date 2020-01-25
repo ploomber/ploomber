@@ -4,7 +4,12 @@ ploomber
 .. image:: https://travis-ci.org/ploomber/ploomber.svg?branch=master
     :target: https://travis-ci.org/ploomber/ploomber.svg?branch=master
 
-[TODO: add link to docs]
+.. image:: https://readthedocs.org/projects/ploomber/badge/?version=latest
+    :target: https://ploomber.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+
+`Click here for focumentation <https://ploomber.readthedocs.io/>`_
 
 ploomber is a workflow management tool for data pipelines that accelerates
 experimentation and facilitates building production systems.
