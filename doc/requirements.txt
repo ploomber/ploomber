@@ -1,0 +1,4 @@
+# for some reason, read the docs command to install the package fails due to
+# a version mismatch (it uses the setup.py file directly instead of pip),
+# adding this to fix it
+Pygments==2.5.2
