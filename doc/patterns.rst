@@ -1,6 +1,25 @@
 Patterns
 ========
 
+DAG factory
+***********
+
+To avoid redundancy, there should be a single DAG definition, such definition
+should be taken as a single source of truth.
+
+e.g. change location to isolate runs
+
+
+Parametrized DAGs
+*****************
+
+
+Dynamic DAGs
+************
+
+Get daily dumps
+
+
 Maximize code reusability
 *************************
 
@@ -16,7 +35,7 @@ Maximize code reusability
 
 
 
-Templating, dynamic dags, clients, on_finish hook, DAG report, tasks library
+Templating, clients, on_finish hook, DAG report, tasks library
 
 how do we test task A works as expected?
 
