@@ -1,5 +1,5 @@
 """
-Using the same pipeline for fitting and predictions
+Example showing how to build a training and a prediction pipeline
 """
 from pathlib import Path
 
@@ -37,6 +37,8 @@ def _features(upstream, product):
 
 
 def _join_features(upstream, product):
+    """Join raw data with generated features
+    """
     a = pd.read_parquet(str(upstream['get']))
     b = pd.read_parquet(str(upstream['features']))
     df = a.join(b)
@@ -44,7 +46,7 @@ def _join_features(upstream, product):
 
 
 def _fit(upstream, product):
-    """Fit preprocessor and model
+    """Fit model and generate classification report
     """
     df = pd.read_parquet(str(upstream['join']))
     X = df.drop('target', axis='columns')
@@ -75,6 +77,8 @@ def _new_obs(product, values):
 
 
 def _score(product, upstream, model):
+    """De-serialize model and make a new prediction
+    """
     clf = joblib.load(model)
     df = pd.read_parquet(str(upstream['join']))
     df = df.drop('target', axis='columns')
@@ -83,33 +87,43 @@ def _score(product, upstream, model):
     score.to_csv(str(product), index=False)
 
 
-def make_pipeline(dag, get):
+def add_fts(dag):
+    """Modify a pipeline with a "get" task to generate features and join them
+    """
     fts = PythonCallable(_features, File('features.parquet'), dag,
                          name='features')
     join = PythonCallable(_join_features, File('join.parquet'), dag,
                           name='join')
 
-    get >> fts
+    dag['get'] >> fts
 
-    (get + fts) >> join
+    (dag['get'] + fts) >> join
 
     return dag
 
 
 dag_fit = DAG()
 get = PythonCallable(_get, File('data.parquet'), dag_fit, name='get')
-make_pipeline(dag_fit, get)
+
+dag_fit = add_fts(dag_fit, get)
+
 fit = PythonCallable(_fit, {'report': File('report.txt'),
-                            'model': File('model.joblib')}, dag_fit,
+                            'model': File('model.joblib')},
+                     dag_fit,
                      name='fit')
 
 dag_fit['join'] >> fit
 
 
 dag_pred = DAG()
-get = PythonCallable(_new_obs, File('obs.parquet'), dag_pred, name='get',
+get = PythonCallable(_new_obs,
+                     File('obs.parquet'),
+                     dag_pred,
+                     name='get',
                      params={'values': [1, 0, 10, 2]})
-make_pipeline(dag_pred, get)
+
+dag_pred = add_fts(dag_pred, get)
+
 score = PythonCallable(_score, File('pred.txt'), dag_pred,
                        name='pred',
                        params={'model': 'model.joblib'})
