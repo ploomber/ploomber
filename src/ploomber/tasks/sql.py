@@ -4,8 +4,8 @@ from io import StringIO
 from ploomber.exceptions import SourceInitializationError
 from ploomber.tasks.Task import Task
 from ploomber.sources import (SQLScriptSource,
-                                      SQLQuerySource,
-                                      GenericSource)
+                              SQLQuerySource,
+                              GenericSource)
 from ploomber.products import File, PostgresRelation, SQLiteRelation
 from ploomber import io
 
