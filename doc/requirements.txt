@@ -1,3 +1,5 @@
+# sphinx-gallery
+
 # for some reason, read the docs command to install the package fails due to
 # a version mismatch (it uses the setup.py file directly instead of pip),
 # adding this to fix it - we are now using the readthedocs.yaml for config
