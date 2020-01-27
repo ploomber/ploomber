@@ -1,8 +1,8 @@
-# This example shows the most basic usage of the `dstools.pipeline` module.
-#
-# Note: run this using `ipython` or in a Jupyter notebook (it won't run using `python`).
+"""
+This example shows the most basic usage
 
-# +
+Note: to see the plots you'll need to run this in a Jupyter notebook
+"""
 from pathlib import Path
 import tempfile
 
@@ -13,10 +13,13 @@ from ploomber import DAG
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
 
-from ploomber import tasks
-# -
 
-# A `DAG` is a workflow representation, it is a collection of `Tasks` that are executed in a given order, each task is associated with a `Product`, which is a persistent change in a system (i.e. a table in a remote database or a file in the local filesystem), a task can products from other tasks as inputs, these are known as upstream dependencies, finally, a task can have extra parameters, but it is recommended to keep these as simple as possible.
+# A `DAG` is a workflow representation, it is a collection of `Tasks` that
+# are executed in a given order, each task is associated with a `Product`,
+# which is a persistent change in a system (i.e. a table in a remote database
+# or a file in the local filesystem), a task can products from other tasks as
+# inputs, these are known as upstream dependencies, finally, a task can have
+# extra parameters, but it is recommended to keep these as simple as possible.
 
 # ## Building a simple DAG
 
@@ -39,13 +42,14 @@ def get_red_wine_data(product):
     # producg is a File type so you have to cast it to a str
     df.to_csv(str(product))
 
+
 def get_white_wine_data(product):
     """Get white wine data
     """
     df = pd.read_csv('http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv',
-                    sep=';', index_col=False)
+                     sep=';', index_col=False)
     df.to_csv(str(product))
-    
+
 
 # if the task has any dependencies, an upstream parameter is required
 
@@ -54,9 +58,8 @@ def concat_data(upstream, product):
     """
     red = pd.read_csv(str(upstream['red']))
     white = pd.read_csv(str(upstream['white']))
-    df =  pd.concat([red, white])
+    df = pd.concat([red, white])
     df.to_csv(str(product))
-
 
 
 # +
@@ -72,11 +75,11 @@ red_task = PythonCallable(get_red_wine_data,
 
 white_task = PythonCallable(get_white_wine_data,
                             product=File(tmp_dir / 'white.csv'),
-                           dag=dag, name='white')
+                            dag=dag, name='white')
 
 concat_task = PythonCallable(concat_data,
-                            product=File(tmp_dir / 'all.csv'),
-                            dag=dag, name='all')
+                             product=File(tmp_dir / 'all.csv'),
+                             dag=dag, name='all')
 
 # now we declare how our tasks relate to each other
 red_task >> concat_task
@@ -124,5 +127,3 @@ task.plan()
 df = pd.read_csv(str(dag['red']))
 
 df.head()
-
-
