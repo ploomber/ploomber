@@ -16,7 +16,7 @@ tmp_dir = Path(tempfile.mkdtemp())
 # Env can be used to centralize configuration parameters that can be switched
 # between users or servers - this configuration ensures that the output
 # location is automatically determined (by using the {{user}} placeholder)
-# to each user, see ploomber.Env documentation for more details
+# to each user. See ploomber.Env documentation for more details
 env = Env.from_dict({'path': {
     'raw': str(tmp_dir / '{{user}}' / 'raw'),
     'clean': str(tmp_dir / '{{user}}' / 'clean')
