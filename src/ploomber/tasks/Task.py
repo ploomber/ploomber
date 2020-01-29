@@ -67,7 +67,7 @@ class Task(abc.ABC):
         ----------
         source: str or pathlib.Path
             Source code for the task, for tasks that do not take source code
-            as input (such as PostgresCopy), this can be other thing. The
+            as input (such as PostgresCopy), this can be another thing. The
             source can be a template and can make references to any parameter
             in "params", "upstream" parameters or its own "product", not all
             Tasks have templated source (templating code is mostly used by
