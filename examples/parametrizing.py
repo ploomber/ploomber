@@ -48,6 +48,7 @@ def concat_data(upstream, product):
     df.to_parquet(str(product))
 
 
+###############################################################################
 # in both red_task and white_task, we use the same function get_data,
 # but pass different parameters
 red_task = PythonCallable(get_data,
@@ -73,6 +74,7 @@ upload_task = SQLUpload(tmp_dir / 'all.parquet',
                         name='upload')
 
 
+###############################################################################
 # you can use jinja2 to parametrize SQL, {{upstream}} and {{product}}
 # are available for your script. this way you could switch products without
 # changing your source code (e.g. each Data Scientist in your team writes
@@ -95,12 +97,16 @@ white_task >> concat_task
 
 concat_task >> upload_task >> features
 
+###############################################################################
 # render will pass all parameters so you can see exactly which SQL code
 # will be executed
 dag.render()
 
+###############################################################################
 # print source code for task "features"
 print(dag['features'].source_code)
 
+
+dag.plot(output='matplotlib')
 
 dag.build()

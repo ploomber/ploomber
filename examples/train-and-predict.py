@@ -121,6 +121,13 @@ fit = PythonCallable(_fit, {'report': File(tmp_dir / 'report.txt'),
                      dag_fit,
                      name='fit')
 dag_fit['join'] >> fit
+
+
+###############################################################################
+# Fit pipeline plot
+dag_fit.plot(output='matplotlib')
+
+
 dag_fit.build()
 
 # build prediction pipeline - pass a new observation with values [1, 0, 10, 2]
@@ -137,6 +144,11 @@ pred = PythonCallable(_pred, File(tmp_dir / 'pred.csv'), dag_pred,
                       params={'model': tmp_dir / 'model.joblib'})
 
 dag_pred['join'] >> pred
+
+###############################################################################
+# Prediction pipeline plot
+dag_pred.plot(output='matplotlib')
+
 dag_pred.build()
 
 # get prediction

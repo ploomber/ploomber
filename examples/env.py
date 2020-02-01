@@ -16,6 +16,7 @@ from ploomber.products import File
 
 tmp_dir = Path(tempfile.mkdtemp())
 
+###############################################################################
 # Env can be used to centralize configuration parameters that can be switched
 # between users or servers - this configuration ensures that the output
 # location is automatically determined (by using the {{user}} placeholder)
@@ -73,5 +74,8 @@ concat_task = PythonCallable(concat_data,
 
 red_task >> concat_task
 white_task >> concat_task
+
+
+dag.plot(output='matplotlib')
 
 dag.build()

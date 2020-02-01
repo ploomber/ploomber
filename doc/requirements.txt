@@ -1,6 +1,9 @@
 # the fix has not been merged, we have to use this version
 git+https://github.com/larsoner/sphinx-gallery@pickle
 
+# sphinx-gallery requires this
+pillow
+
 # needed for the train-and-predict example
 joblib
 scikit-learn

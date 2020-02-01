@@ -47,6 +47,7 @@ from ploomber.clients import SQLAlchemyClient
 tmp_dir = Path(tempfile.mkdtemp())
 path_to_db = tmp_dir / 'my_db.db'
 
+###############################################################################
 # first generate some sample data, one daily observation from 2010 to 2020
 dates = pd.date_range('2010', '2020', freq='D')
 df = pd.DataFrame({'date': dates,
@@ -55,6 +56,9 @@ df = pd.DataFrame({'date': dates,
 conn = sqlite3.connect(str(path_to_db))
 df.to_sql('data', conn)
 conn.close()
+
+###############################################################################
+# We now build the DAG
 
 dag = DAG()
 
@@ -87,5 +91,10 @@ for date_start, date_end in dates:
     make_task(date_start, date_end, tmp_dir, dag)
 
 
-# execute pipeline
+###############################################################################
+# plot
+dag.plot(output='matplotlib')
+
+###############################################################################
+# Execute pipeline
 dag.build()
