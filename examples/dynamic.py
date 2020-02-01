@@ -1,4 +1,7 @@
 """
+Dynamic DAGs
+============
+
 How to build DAGs dynamically
 
 Dynamic DAGs are pipelines whose tasks are determined by one or more variables.

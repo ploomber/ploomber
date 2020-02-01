@@ -33,8 +33,8 @@ release = version
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
               'IPython.sphinxext.ipython_console_highlighting',
-              'IPython.sphinxext.ipython_directive']
-              #'sphinx_gallery.gen_gallery']
+              'IPython.sphinxext.ipython_directive',
+              'sphinx_gallery.gen_gallery']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -62,7 +62,7 @@ master_doc = 'index'
 
 # sphinx-gallery
 
-# sphinx_gallery_conf = {
-#     'filename_pattern': '/',
-#     'ignore_pattern': r'__init__\.py',
-# }
+sphinx_gallery_conf = {
+    'filename_pattern': '/',
+    'ignore_pattern': r'__init__\.py',
+}

@@ -1,4 +1,7 @@
 """
+Using dstools.env
+=================
+
 Using ploomber.env to isolate pipeline execution between team members
 """
 from pathlib import Path
@@ -22,6 +25,10 @@ env = Env.from_dict({'path': {
     'clean': str(tmp_dir / '{{user}}' / 'clean')
     }
 })
+
+
+env.path.raw.mkdir(parents=True)
+env.path.clean.mkdir(parents=True)
 
 dag = DAG(name='my pipeline')
 

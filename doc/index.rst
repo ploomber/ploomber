@@ -14,11 +14,10 @@ Welcome to ploomber's documentation!
 
    intro
    api/index
-   examples
 
 
-..
-    .. include:: auto_examples/index.rst
+
+.. include:: auto_examples/index.rst
 
 
 Indices and tables

@@ -1,4 +1,7 @@
 """
+Parametrized DAGs
+=================
+
 How to parametrize Tasks to reduce boilerplate code
 """
 from pathlib import Path

@@ -1,4 +1,7 @@
 """
+Basic pipeline
+==============
+
 This example shows the most basic usage
 
 Note: to see the plots you'll need to run this in a Jupyter notebook

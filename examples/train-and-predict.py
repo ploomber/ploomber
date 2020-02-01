@@ -1,4 +1,7 @@
 """
+Traind and predict pipeline
+===========================
+
 Example showing how to build a training and a prediction pipeline
 """
 import tempfile
