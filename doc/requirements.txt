@@ -1,4 +1,5 @@
-sphinx-gallery
+# the fix has not been merged, we have to use this version
+git+https://github.com/larsoner/sphinx-gallery@pickle
 
 # for some reason, read the docs command to install the package fails due to
 # a version mismatch (it uses the setup.py file directly instead of pip),

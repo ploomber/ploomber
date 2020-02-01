@@ -4,13 +4,18 @@ from pathlib import Path
 from collections import defaultdict
 import shutil
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from ploomber.products import File
 
 
 def path2fig(path_to_image, dpi=50):
+    # FIXME: having this import at the top causes trouble with the
+    # multiprocessing library, moving it here solves the problem but we
+    # have to find a better solution.
+    # more info: https://stackoverflow.com/q/16254191/709975
+    import matplotlib.pyplot as plt
+
     data = plt.imread(path_to_image)
     height, width, _ = np.shape(data)
 

@@ -92,6 +92,8 @@ setup(
         'importlib_resources',
         # for NotebookRunner
         'papermill', 'jupytext', 'jupyter',
+        # only needed for dag.plot(output='matplotlib'),
+        'matplotlib',
 
     ],
     extras_require={
