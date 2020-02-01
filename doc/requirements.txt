@@ -3,6 +3,7 @@ git+https://github.com/larsoner/sphinx-gallery@pickle
 
 # needed for the train-and-predict example
 joblib
+scikit-learn
 
 # for some reason, read the docs command to install the package fails due to
 # a version mismatch (it uses the setup.py file directly instead of pip),
