@@ -4,7 +4,24 @@ from pathlib import Path
 from collections import defaultdict
 import shutil
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 from ploomber.products import File
+
+
+def path2fig(path_to_image, dpi=50):
+    data = plt.imread(path_to_image)
+    height, width, _ = np.shape(data)
+
+    fig = plt.figure()
+    fig.set_size_inches((width / dpi, height / dpi))
+    ax = plt.Axes(fig, [0, 0, 1, 1])
+    ax.set_axis_off()
+    fig.add_axes(ax)
+    ax.imshow(data)
+
+    return fig
 
 
 def safe_remove(path):
