@@ -48,6 +48,3 @@ experimentation and facilitates building production systems.
 
     # run the pipeline
     dag.build()
-
-
-More examples are available in the `examples/` directory
