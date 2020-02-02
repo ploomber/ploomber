@@ -2,18 +2,31 @@
 Basic pipeline
 ==============
 
-This example shows the most basic usage
-
-Note: to see the plots you'll need to run this in a Jupyter notebook
+We illustrate ploomber's core features with a typical data pipeline scenario:
+dump data from a database and apply a transformation to it. We use sqlite3 for
+this example but ploomber supports any database supported by sqlalchemy
+without code changes.
 """
+import sqlite3
 from pathlib import Path
 import tempfile
 
 import pandas as pd
+from sqlalchemy import create_engine
 
 from ploomber import DAG
-from ploomber.tasks import PythonCallable
 from ploomber.products import File
+from ploomber.tasks import PythonCallable, SQLDump
+from ploomber.clients import SQLAlchemyClient
+
+###############################################################################
+# This first part just exports some sample data to a database
+tmp_dir = Path(tempfile.mkdtemp())
+uri = 'sqlite:///' + str(tmp_dir / 'example.db')
+engine = create_engine(uri)
+df = pd.DataFrame({'a': [1, 2, 3, 4, 5]})
+df.to_sql('example', engine)
+
 
 ###############################################################################
 # A `DAG` is a workflow representation, it is a collection of `Tasks` that
@@ -22,82 +35,64 @@ from ploomber.products import File
 # or a file in the local filesystem), a task can products from other tasks as
 # inputs, these are known as upstream dependencies, finally, a task can have
 # extra parameters, but it is recommended to keep these as simple as possible.
+#
+# There are three core concepts in ``ploomber``: :class:`Tasks <ploomber.tasks>`,
+# :class:`Products <ploomber.products>` and :class:`DAGs <ploomber.DAG>`. Tasks
+# are units of work that generate Products, Tasks dependencies are organized in
+# a DAG.
 
 
-dag = DAG(name='my pipeline')
+dag = DAG()
+
+# the first task dumps data from the db to the local filesystem
+task_dump = SQLDump('SELECT * FROM example',
+                    File(tmp_dir / 'example.csv'),
+                    dag,
+                    name='dump',
+                    client=SQLAlchemyClient(uri),
+                    chunksize=None)
 
 
-###############################################################################
-# Let's now build the first tasks, they will just download some data, this
-# pipeline is entirely declared in a single file to simplify things, a real
-# pipeline will likely be splitted among several files.
-# Tasks can be a lot of things (bash scripts, SQL scripts, etc), for this
-# example they will be Python functions (their only requirement is to have
-# a product parameter)
-
-def get_red_wine_data(product):
-    """Get red wine data
-    """
-    url = ('http://archive.ics.uci.edu/ml/machine-learning-databases/'
-           'wine-quality/winequality-red.csv')
-    df = pd.read_csv(url,
-                     sep=';',
-                     index_col=False)
-    # producg is a File type so you have to cast it to a str
-    df.to_csv(str(product))
-
-
-def get_white_wine_data(product):
-    """Get white wine data
-    """
-    url = ('http://archive.ics.uci.edu/ml/machine-learning-databases/'
-           'wine-quality/winequality-white.csv')
-    df = pd.read_csv(url,
-                     sep=';',
-                     index_col=False)
-    df.to_csv(str(product))
-
-
-###############################################################################
+# we will add one to the data
 # if the task has any dependencies, an upstream parameter is required
-
-def concat_data(upstream, product):
-    """Concatenate red and white wine data
-    """
-    red = pd.read_csv(str(upstream['red']))
-    white = pd.read_csv(str(upstream['white']))
-    df = pd.concat([red, white])
-    df.to_csv(str(product))
+def _add_one(upstream, product):
+    df = pd.read_csv(str(upstream['dump']))
+    df['a'] = df['a'] + 1
+    df.to_csv(str(product), index=False)
 
 
-# create a temporary directory to store data
-tmp_dir = Path(tempfile.mkdtemp())
+# we convert the Python function to a Task
+task_add_one = PythonCallable(_add_one,
+                              File(tmp_dir / 'add_one.csv'),
+                              dag,
+                              name='add_one')
+
+# declare how tasks relate to each other
+task_dump >> task_add_one
+
+
+
+
+# the plot will show which tasks are up-to-date
+# in green
+dag.plot(output='matplotlib', clear_cached_status=True)
 
 ###############################################################################
-# convert our functions to Task objects, note that the product is a File
-# object, which means this functions will create a file in the local filesystem
+# Inspecting a pipeline
+# *********************
 
-red_task = PythonCallable(get_red_wine_data,
-                          product=File(tmp_dir / 'red.csv'),
-                          dag=dag, name='red')
+# A lot of data pipelines start as experimental projects (e.g. developing a 
+# Machine Learning model), which causes them to grow unpredictably. As the
+# pipeline evolves, it will span dozens of files whose intent is unclear. The
+# DAG object serves as the primary reference for anyone seeking to understand
+# the pipeline.
 
-white_task = PythonCallable(get_white_wine_data,
-                            product=File(tmp_dir / 'white.csv'),
-                            dag=dag, name='white')
 
-concat_task = PythonCallable(concat_data,
-                             product=File(tmp_dir / 'all.csv'),
-                             dag=dag, name='all')
+# Making a pipeline transparent helps others quickly understand it without going
+# through the code details and eases debugging for developers.
+# status returns a summary of each task status
+dag.status()
 
-# now we declare how our tasks relate to each other
-red_task >> concat_task
-white_task >> concat_task
-
-# we can plot our dag
-dag.plot(output='matplotlib')
-
-# build the dag (execute all the tasks)
-dag.build()
 
 ###############################################################################
 # Each time the DAG is run it will save the current timestamp and the
@@ -106,29 +101,34 @@ dag.build()
 # that: a task will run if its code (or the code from any dependency) has
 # changed since the last time it ran.
 
+# Data processing pipelines consist on many small long-running tasks which
+# depend on each other. During early development phases things are expected to
+# change: new tasks are added, bugs are fixed. Triggering a full end-to-end
+# run on each change is wasteful. On a successful run, ploomber saves the task
+# source code, if the pipeline is run again, it will skip tasks that are not
+# affected by the changes.
 
-# the plot will show which tasks are up-to-date
-# in green
-dag.plot(output='matplotlib', clear_cached_status=True)
+# run our sample pipeline
+dag.build()
 
-# status returns a summary of each task status
-dag.status()
+
+# the pipeline is up-to-date, no need to run again
+dag.build(clear_cached_status=True)
+
 
 ###############################################################################
 # Inspecting the `DAG` object
 # ---------------------------
-# The DAG object has utilities to debug and use the pipeline.
+# A lot of data work is done interactively using Jupyter or similar tools, being
+# able interact with a pipeline in the same way is an effective way of
+# experimenting new methods.
 
-# list all tasks in the dag
-list(dag)
+# say you are adding a new method to task add_one, you can run your code
+# with all upstream dependencies being taken care of like this
 
-# get a task
-task = dag['red']
-task
+# run your task
+dag['add_one'].build(force=True)
 
-# task plan returns the source code to be executed along with the input
-# parameters and product
-task.plan()
 
 ###############################################################################
 # avoid hardcoding paths to files by loading them directly
@@ -138,6 +138,10 @@ task.plan()
 # str(product) will return "schema"."name". Using this method for loading
 # products makes sure you don't have to hardcode paths to files and that
 # given your pipeline definition, you always read from the right place
-df = pd.read_csv(str(dag['red']))
 
-df.head()
+
+# explore results - reading the file this way guarantees you are using
+# the right file
+df = pd.read_csv(str(dag['add_one']))
+df
+

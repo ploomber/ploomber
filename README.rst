@@ -11,10 +11,14 @@ ploomber
 
 `Click here for focumentation <https://ploomber.readthedocs.io/>`_
 
-ploomber is a workflow management tool for data pipelines that accelerates
-experimentation and facilitates building production systems.
+ploomber is workflow management tool that accelerates experimentation and
+facilitates building production systems. It achieves so by providing
+incremental builds, interactive execution, tools to inspect pipelines, by
+facilitating testing and reducing boilerplate code.
 
 .. code-block:: python
+    """Minimal example
+    """
 
     from ploomber import DAG
     from ploomber.products import File
@@ -46,5 +50,10 @@ experimentation and facilitates building production systems.
     # declare how tasks relate to each other
     task_dump >> task_add_one
 
-    # run the pipeline
+    # run the pipeline - incremental buids: ploomber will keep track of each
+    # task's source code and will only execute outdated tasks in the next run
     dag.build()
+
+    # a DAG also serves as a tool to interact with your pipeline, for example,
+    # status will return a summary table
+    dag.status()
