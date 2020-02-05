@@ -62,14 +62,21 @@ class HighlightRenderer(mistune.Renderer):
 
 
 class DAG(collections.abc.Mapping):
-    """A DAG is a collection of tasks with dependencies
+    """A collectio of tasks with dependencies
 
     Parameters
     ----------
+    name: str, optional
+        A name to identify this DAG
+    clients:  dict, optional
+        A dictionary with classes as keys and clients as values, can be
+        later modified using dag.clients[dag] = client
     differ: CodeDiffer
         An object to determine whether two pieces of code are the same and
         to output a diff, defaults to CodeDiffer() (default parameters)
-
+    executor: str or ploomber.executors instance, optional
+        The executor to use. The parallel executor is currently experimental
+        and not recommended, use the serial excutor for now
     """
     def __init__(self, name=None, clients=None, differ=None,
                  on_task_finish=None, on_task_failure=None,

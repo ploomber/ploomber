@@ -29,7 +29,7 @@ class SQLScript(Task):
         A str to indentify this task. Should not already exist in the dag
     client: ploomber.clients.DBAPIClient or SQLAlchemyClient, optional
         The client used to connect to the database. Only required
-        if no dag-level client has been declared using dag.clients[class_name]
+        if no dag-level client has been declared using dag.clients[class]
     params: dict, optional
         Parameters to pass to the script, by default, the callable will
         be executed with a "product" (which will contain the product object).
@@ -74,7 +74,7 @@ class SQLDump(Task):
         A str to indentify this task. Should not already exist in the dag
     client: ploomber.clients.DBAPIClient or SQLAlchemyClient, optional
         The client used to connect to the database. Only required
-        if no dag-level client has been declared using dag.clients[class_name]
+        if no dag-level client has been declared using dag.clients[class]
     params: dict, optional
         Parameters to pass to the script, by default, the callable will
         be executed with a "product" (which will contain the product object).
@@ -176,7 +176,7 @@ class SQLTransfer(Task):
         A str to indentify this task. Should not already exist in the dag
     client: ploomber.clients.SQLAlchemyClient, optional
         The client used to connect to the database. Only required
-        if no dag-level client has been declared using dag.clients[class_name]
+        if no dag-level client has been declared using dag.clients[class]
     params: dict, optional
         Parameters to pass to the script, by default, the callable will
         be executed with a "product" (which will contain the product object).
@@ -252,7 +252,7 @@ class SQLUpload(Task):
         A str to indentify this task. Should not already exist in the dag
     client: ploomber.clients.SQLAlchemyClient, optional
         The client used to connect to the database. Only required
-        if no dag-level client has been declared using dag.clients[class_name]
+        if no dag-level client has been declared using dag.clients[class]
     params: dict, optional
         Parameters to pass to the script, by default, the callable will
         be executed with a "product" (which will contain the product object).

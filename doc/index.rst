@@ -41,7 +41,7 @@ Tasks
     SQLTransfer
     SQLUpload
     PostgresCopy
-    DownloadFromUrl
+    DownloadFromURL
     Link
     Input
     BashCommand

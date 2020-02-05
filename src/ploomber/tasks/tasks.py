@@ -137,7 +137,8 @@ class ShellScript(Task):
 
 
 class DownloadFromURL(Task):
-    """Download a file from a URL (uses urllib.request.urlretrieve)
+    """
+    Download a file from a URL (uses urllib.request.urlretrieve)
 
     Parameters
     ----------
@@ -188,7 +189,7 @@ class _Gather(PythonCallable):
 class Link(Task):
     """
     A dummy Task used to "plug" an external Product to a pipeline, this
-    task is always considered uo-to-date
+    task is always considered up-to-date
 
     The purpose of this Task is to link a pipeline to an external read-only
     file, this task does not do anything on the dataset and the product is

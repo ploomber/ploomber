@@ -9,6 +9,17 @@ from ploomber.templates.Placeholder import SQLRelationPlaceholder
 
 
 class SQLiteRelation(Product):
+    """A SQLite relation
+
+    Parameters
+    ----------
+    identifier: tuple of length 3
+        A tuple with (schema, name, kind) where kind must be either 'table'
+        or 'view'
+    client: ploomber.clients.DBAPIClient or SQLAlchemyClient, optional
+        The client used to connect to the database. Only required
+        if no dag-level client has been declared using dag.clients[class]
+    """
 
     def __init__(self, identifier, client=None):
         super().__init__(identifier)
@@ -118,7 +129,16 @@ class SQLiteRelation(Product):
 
 
 class PostgresRelation(Product):
-    """A Product that represents a postgres relation (table or view)
+    """A PostgreSQL relation
+
+    Parameters
+    ----------
+    identifier: tuple of length 3
+        A tuple with (schema, name, kind) where kind must be either 'table'
+        or 'view'
+    client: ploomber.clients.DBAPIClient or SQLAlchemyClient, optional
+        The client used to connect to the database. Only required
+        if no dag-level client has been declared using dag.clients[class]
     """
     # FIXME: identifier has schema as optional but that introduces ambiguity
     # when fetching metadata and checking if the table exists so maybe it
