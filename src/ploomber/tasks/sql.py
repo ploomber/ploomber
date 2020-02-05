@@ -269,6 +269,7 @@ class SQLUpload(Task):
     """
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation)
 
+    @requires(['pandas'], 'SQLUpload')
     def __init__(self, source, product, dag, name, client=None,
                  params=None, chunksize=None):
         params = params or {}
@@ -306,17 +307,27 @@ class SQLUpload(Task):
                   index=False)
 
 
+# TODO: provide more flexibility to configure the COPY statement
 class PostgresCopy(Task):
-    """Efficiently copy data to a postgres database using COPY (better
-    alternative to SQLUpload for postgres)
+    """Efficiently copy data to a postgres database using COPY (faster
+    alternative to SQLUpload for postgres). Assumes SQLAlchemy client
+    for postgres is psycopg2
 
     Parameters
     ----------
     source: str or pathlib.Path
         Path to parquet file to upload
+
+
+    Notes
+    -----
+    Although this task does not depend on pandas for data i/o, it still
+    needs it to dynamically create the table, after the table is created
+    the COPY statement is used to upload the data
     """
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation,)
 
+    @requires(['pandas'], 'PostgresCopy')
     def __init__(self, source, product, dag, name, client=None,
                  params=None, sep='\t', null='\\N', columns=None):
         params = params or {}
