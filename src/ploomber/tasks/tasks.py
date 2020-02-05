@@ -4,7 +4,6 @@ Task implementations
 A Task is a unit of work that produces a persistent change (Product)
 such as a bash or a SQL script
 """
-import types
 from urllib import request
 from multiprocessing import Pool
 import shlex
@@ -68,7 +67,7 @@ class PythonCallable(Task):
     ----------
     source: callable
         The callable to execute
-    product: ploomber.Product
+    product: ploomber.products.Product
         Product generated upon successful execution
     dag: ploomber.DAG
         A DAG to add this task to
@@ -138,6 +137,19 @@ class ShellScript(Task):
 
 
 class DownloadFromURL(Task):
+    """Download a file from a URL (uses urllib.request.urlretrieve)
+
+    Parameters
+    ----------
+    source: str
+        URL to download the file from
+    product: ploomber.products.File
+        Product generated upon successful execution
+    dag: ploomber.DAG
+        A DAG to add this task to
+    name: str
+        A str to indentify this task. Should not already exist in the dag
+    """
     def run(self):
         request.urlretrieve(str(self.source), filename=str(self.product))
 
@@ -174,20 +186,33 @@ class _Gather(PythonCallable):
 
 
 class Link(Task):
-    """A dummy Task used to "plug" an external Product to a pipeline
+    """
+    A dummy Task used to "plug" an external Product to a pipeline, this
+    task is always considered uo-to-date
 
     The purpose of this Task is to link a pipeline to an external read-only
-    dataset, this task does not do anything on the dataset and the product is
+    file, this task does not do anything on the dataset and the product is
     always considered up-to-date. There are two primary use cases:
     when the raw data is automatically uploaded to a file (or table) and the
     pipeline does not have control over data updates, this task can be used
     to link the pipeline to that file, without having to copy it, downstream
     tasks will see this dataset as just another Product. The second use case
     is when developing a prediction pipeline. When making predictions on new
-    data, sometimes some of the features are not provided directly by the
-    user but have to be looked up, this Task can help linking againts those
-    processed datasets so that predictions only provide the minimum input
-    to the model
+    data, the pipeline might rely on existing data to generate features,
+    this task can be used to point to such file it can also be used to
+    point to a serialized model, this last scenario is only recommended
+    for prediction pipeline that do not have strict performance requirements,
+    unserializing models is an expensive operation, for real-time predictions,
+    the model should be kept in memory
+
+    Parameters
+    ----------
+    product: ploomber.products.Product
+        Product to link to the dag
+    dag: ploomber.DAG
+        A DAG to add this task to
+    name: str
+        A str to indentify this task. Should not already exist in the dag
     """
 
     def __init__(self, product, dag, name):
@@ -219,14 +244,23 @@ class Link(Task):
 
 
 class Input(Task):
-    """A dummy task used to represent input provided by the user
+    """
+    A dummy task used to represent input provided by the user, it is always
+    considered outdated.
 
     When making new predictions, the user must submit some input data to build
-    features and then feed the model, this task can be used for that. It does
-    not perform any processing (read-only data) but it is always considered
-    outdated, which means it will always trigger execution in downstream
-    dependencies. Since at prediction time performance is important, metadata
-    saving is skipped.
+    features and then feed the model, this task can be used to point to
+    such input. It does not perform any processing (read-only data) but it is
+    always considered outdated, which means it will always trigger execution.
+
+    Parameters
+    ----------
+    product: ploomber.products.Product
+        Product to to serve as input to the dag
+    dag: ploomber.DAG
+        A DAG to add this task to
+    name: str
+        A str to indentify this task. Should not already exist in the dag
     """
 
     def __init__(self, product, dag, name):
