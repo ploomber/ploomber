@@ -2,10 +2,10 @@
 Basic pipeline
 ==============
 
-We illustrate ploomber's core features with a typical data pipeline scenario:
-dump data from a database and apply a transformation to it. We use sqlite3 for
-this example but ploomber supports any database supported by sqlalchemy
-without code changes.
+This example illustrates ploomber's core features with a typical data pipeline
+scenario: dump data from a database and apply a transformation to it. We use
+sqlite3 for this example but ploomber supports any database supported by
+sqlalchemy without code changes.
 """
 import sqlite3
 from pathlib import Path
@@ -20,7 +20,7 @@ from ploomber.tasks import PythonCallable, SQLDump
 from ploomber.clients import SQLAlchemyClient
 
 ###############################################################################
-# This first part just exports some sample data to a database
+# This first part just exports some sample data to a database:
 tmp_dir = Path(tempfile.mkdtemp())
 uri = 'sqlite:///' + str(tmp_dir / 'example.db')
 engine = create_engine(uri)
@@ -29,18 +29,11 @@ df.to_sql('example', engine)
 
 
 ###############################################################################
-# A `DAG` is a workflow representation, it is a collection of `Tasks` that
-# are executed in a given order, each task is associated with a `Product`,
-# which is a persistent change in a system (i.e. a table in a remote database
-# or a file in the local filesystem), a task can products from other tasks as
-# inputs, these are known as upstream dependencies, finally, a task can have
-# extra parameters, but it is recommended to keep these as simple as possible.
-#
 # There are three core concepts in ``ploomber``: :class:`Tasks <ploomber.tasks>`,
 # :class:`Products <ploomber.products>` and :class:`DAGs <ploomber.DAG>`. Tasks
-# are units of work that generate Products, Tasks dependencies are organized in
-# a DAG.
-
+# are units of work that generate Products (which are persistent changes on
+# disk). Tasks are organized into a DAG which keeps track of declared
+# dependencies among them.
 
 dag = DAG()
 
@@ -53,29 +46,51 @@ task_dump = SQLDump('SELECT * FROM example',
                     chunksize=None)
 
 
-# we will add one to the data
-# if the task has any dependencies, an upstream parameter is required
+# since this task will have an upstream dependency, it has to accept the
+# upstream parameter, all tasks must accept a product parameter
 def _add_one(upstream, product):
+    """Add one to column a
+    """
     df = pd.read_csv(str(upstream['dump']))
     df['a'] = df['a'] + 1
     df.to_csv(str(product), index=False)
 
-
-# we convert the Python function to a Task
+# we convert the Python function into a Task
 task_add_one = PythonCallable(_add_one,
                               File(tmp_dir / 'add_one.csv'),
                               dag,
                               name='add_one')
 
-# declare how tasks relate to each other
+# declare how tasks relate to each other: first dump then add one
 task_dump >> task_add_one
 
 
-
-
-# the plot will show which tasks are up-to-date
-# in green
+# plot the workflow, pending tasks are shown in red
 dag.plot(output='matplotlib', clear_cached_status=True)
+
+# run our sample pipeline
+dag.build()
+
+
+
+###############################################################################
+# Each time the DAG is run it will save the current timestamp and the
+# source code of each task, next time we run it it will only run the
+# necessary tasks to get everything up-to-date, there is a simple rule to
+# that: a task will run if its code (or the code from any dependency) has
+# changed since the last time it ran.
+
+# Data processing pipelines consist on many small long-running tasks which
+# depend on each other. During early development phases things are expected to
+# change: new tasks are added, bugs are fixed. Triggering a full end-to-end
+# run on each change is wasteful. On a successful run, ploomber saves the task
+# source code, if the pipeline is run again, it will skip tasks that are not
+# affected by the changes.
+
+
+# the pipeline is up-to-date, no need to run again
+dag.build(clear_cached_status=True)
+
 
 ###############################################################################
 # Inspecting a pipeline
@@ -93,27 +108,6 @@ dag.plot(output='matplotlib', clear_cached_status=True)
 # status returns a summary of each task status
 dag.status()
 
-
-###############################################################################
-# Each time the DAG is run it will save the current timestamp and the
-# source code of each task, next time we run it it will only run the
-# necessary tasks to get everything up-to-date, there is a simple rule to
-# that: a task will run if its code (or the code from any dependency) has
-# changed since the last time it ran.
-
-# Data processing pipelines consist on many small long-running tasks which
-# depend on each other. During early development phases things are expected to
-# change: new tasks are added, bugs are fixed. Triggering a full end-to-end
-# run on each change is wasteful. On a successful run, ploomber saves the task
-# source code, if the pipeline is run again, it will skip tasks that are not
-# affected by the changes.
-
-# run our sample pipeline
-dag.build()
-
-
-# the pipeline is up-to-date, no need to run again
-dag.build(clear_cached_status=True)
 
 
 ###############################################################################
