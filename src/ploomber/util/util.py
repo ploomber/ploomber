@@ -1,12 +1,44 @@
+from functools import wraps, reduce
 import base64
 from glob import glob
 from pathlib import Path
 from collections import defaultdict
 import shutil
+from pydoc import locate
 
 import numpy as np
 
 from ploomber.products import File
+
+
+def requires(pkgs, name=None):
+    """
+    Check if packages were imported, raise ImportError with an appropriate
+    message for missing ones
+    """
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            missing = [pkg for pkg in pkgs if locate(pkg) is None]
+
+            if missing:
+                msg = reduce(lambda x, y: x+' '+y, missing)
+                fn_name = name or f.__name__
+
+                raise ImportError('{} {} required to use {}. Install {} by '
+                                  'running "pip install {}"'
+                                  .format(msg,
+                                          'is' if len(missing) == 1 else 'are',
+                                          fn_name,
+                                          'it' if len(
+                                              missing) == 1 else 'them',
+                                          msg))
+
+            return f(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 def path2fig(path_to_image, dpi=50):

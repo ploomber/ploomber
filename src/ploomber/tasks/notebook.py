@@ -12,6 +12,9 @@ try:
 except ImportError:
     jupytext = None
 
+# nbformat, nbconvert and jupyter_client are jupyter requirements:
+# https://github.com/jupyter/notebook/blob/master/setup.py
+
 try:
     import nbformat
 except ImportError:
@@ -23,17 +26,19 @@ except ImportError:
     nbconvert = None
 
 try:
-    from jupyter_client import kernelspec
+    import jupyter_client
 except ImportError:
-    kernelspec = None
+    jupyter_client = None
 
 
 from ploomber.exceptions import TaskBuildError, SourceInitializationError
 from ploomber.sources import GenericSource
 from ploomber.products import File, MetaProduct
 from ploomber.tasks.Task import Task
+from ploomber.util import requires
 
 
+@requires(['jupytext'])
 def _to_ipynb(source, extension, kernelspec_name=None):
     """Convert to jupyter notebook via jupytext
     """
@@ -49,12 +54,12 @@ def _to_ipynb(source, extension, kernelspec_name=None):
                          'a kernelspec by name')
 
     if kernelspec_name is not None:
-        k = kernelspec.get_kernel_spec('python3')
+        k = jupyter_client.kernelspec.get_kernel_spec(kernelspec_name)
 
         nb.metadata.kernelspec = {
             "display_name": k.display_name,
             "language": k.language,
-            "name": "python3"
+            "name": kernelspec_name
         }
 
     out = mktemp()
@@ -89,10 +94,48 @@ def _from_ipynb(path_to_nb, extension, nbconvert_exporter_name):
 
 
 class NotebookRunner(Task):
-    """Run a notebook using papermill
+    """
+    Run a Jupyter notebook using papermill. Support several input formats
+    via jupytext and several output formats via nbconvert
+
+    Parameters
+    ----------
+    source: str or pathlib.Path
+        Notebook source, if str, the content is interpreted as the actual
+        notebook, if pathlib.Path, the content of the file is loaded. When
+        loading from a str, ext_in must be passed
+    product: ploomber.File
+        The output file
+    dag: ploomber.DAG
+        A DAG to add this task to
+    name: str, optional
+        A str to indentify this task
+    params: dict, optional
+        Notebook parameters. This are passed as the "parameters" argument
+        to the papermill.execute_notebook function, by default product
+        and upstream are included
+    kernelspec_name: str, optional
+        Kernelspec name to use, if the notebook already includes kernelspec
+        data (in metadata.kernelspec), this is ignored, otherwise, the kernel
+        is looked up using the jupyter_client.kernelspec.get_kernel_spec
+        function
+    nbconvert_exporter_name: str, optional
+        Once the notebook is run, this parameter controls whether to export
+        the notebook to a different parameter using the nbconvert package,
+        it is not needed unless the extension cannot be used to infer the
+        final output format, in which case the nbconvert.get_exporter is used
+    ext_in: str, optional
+        The input extension format. If source is a pathlib.Path, the extension
+        from there is used, if loaded from a str, this parameter is needed
+    nb_product_key: str, optional
+        If the notebook is expected to generate other products, pass the key
+        to identify the output notebook (i.e. if product is a list with 3
+        ploomber.File, pass the index pointing to the notebook path). If the
+        only output is the notebook itself, this parameter is not needed
     """
     PRODUCT_CLASSES_ALLOWED = (File, )
 
+    @requires(['jupyter', 'papermill'], 'NotebookRunner')
     def __init__(self, source, product, dag, name=None, params=None,
                  papermill_params=None, kernelspec_name=None,
                  nbconvert_exporter_name=None, ext_in=None,
