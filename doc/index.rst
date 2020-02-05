@@ -60,6 +60,16 @@ Products
     PostgresRelation
     SQLiteRelation
 
+Clients
+-------
+
+.. currentmodule:: ploomber.clients
+
+.. autosummary::
+    :toctree:
+
+    DBAPIClient
+    SQLAlchemyClient
 
 ..
   The include below will render an orphan: text, due to this bug:

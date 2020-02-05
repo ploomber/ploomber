@@ -62,7 +62,7 @@ class HighlightRenderer(mistune.Renderer):
 
 
 class DAG(collections.abc.Mapping):
-    """A collectio of tasks with dependencies
+    """A collection of tasks with dependencies
 
     Parameters
     ----------

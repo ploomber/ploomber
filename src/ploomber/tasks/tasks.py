@@ -61,7 +61,8 @@ class BashCommand(Task):
 
 
 class PythonCallable(Task):
-    """Run a Python callable (e.g. a function)
+    """
+    Run a Python callable (e.g. a function)
 
     Parameters
     ----------

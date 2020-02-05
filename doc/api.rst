@@ -20,3 +20,10 @@ Tasks
 
 .. automodule:: ploomber.tasks
     :members:
+
+
+Clients
+-------
+
+.. automodule:: ploomber.clients
+    :members:
