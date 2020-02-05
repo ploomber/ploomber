@@ -109,11 +109,11 @@ class NotebookRunner(Task):
     dag: ploomber.DAG
         A DAG to add this task to
     name: str, optional
-        A str to indentify this task
+        A str to indentify this task. Should not already exist in the dag
     params: dict, optional
         Notebook parameters. This are passed as the "parameters" argument
-        to the papermill.execute_notebook function, by default product
-        and upstream are included
+        to the papermill.execute_notebook function, by default, "product"
+        and "upstream" are included
     kernelspec_name: str, optional
         Kernelspec name to use, if the notebook already includes kernelspec
         data (in metadata.kernelspec), this is ignored, otherwise, the kernel

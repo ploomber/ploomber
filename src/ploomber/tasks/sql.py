@@ -13,10 +13,28 @@ import pandas as pd
 
 
 class SQLScript(Task):
-    """
-    A tasks represented by a SQL script run agains a database this Task
-    does not make any assumptions about the underlying SQL engine, it should
-    work witn all DBs supported by SQLAlchemy
+    """Execute a script in a SQL database
+
+    Parameters
+    ----------
+    source: str or pathlib.Path
+        SQL script source, if str, the content is interpreted as the actual
+        script, if pathlib.Path, the content of the file is loaded
+    product: ploomber.Product
+        Product generated upon successful execution
+    dag: ploomber.DAG
+        A DAG to add this task to
+    name: str
+        A str to indentify this task. Should not already exist in the dag
+    client: ploomber.clients.DBAPIClient or SQLAlchemyClient
+        The client used to connect to the database
+    params: dict
+        Parameters to pass to the script, by default, the callable will
+        be executed with a "product" (which will contain the product object).
+        It will also include a "upstream" parameter if the task has upstream
+        dependencies along with any parameters declared here. The source
+        code is converted to a jinja2.Template for passing parameters,
+        refer to jinja2 documentation for details
     """
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation)
 
@@ -46,8 +64,8 @@ class SQLDump(Task):
     ----------
     source: str
         The SQL query to run in the database
-    product: File
-        The directory location for the output parquet files
+    product: ploomber.products.File
+        The directory location for the output files
     dag: DAG
         The DAG for this task
     name: str
