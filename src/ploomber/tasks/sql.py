@@ -174,7 +174,7 @@ class SQLTransfer(Task):
         A DAG to add this task to
     name: str
         A str to indentify this task. Should not already exist in the dag
-    client: ploomber.clients.DBAPIClient or SQLAlchemyClient, optional
+    client: ploomber.clients.SQLAlchemyClient, optional
         The client used to connect to the database. Only required
         if no dag-level client has been declared using dag.clients[class_name]
     params: dict, optional
@@ -189,7 +189,7 @@ class SQLTransfer(Task):
 
     Notes
     ----
-    This task is *not* intended to be used to move large datasets, but a
+    This task is *not* intended to move large datasets, but a
     convenience way of transfering small to medium size datasets. It relies
     on pandas to read and write, which introduces a considerable overhead.
     """
@@ -233,17 +233,44 @@ class SQLTransfer(Task):
 
 # FIXME: support other data formats apart from parquet
 class SQLUpload(Task):
-    """Upload data to a database from a parquet file
+    """Upload data to a SQL database from a parquet file
 
     Parameters
     ----------
     source: str or pathlib.Path
-        Path to parquet file to upload
+        SQL script source, if str, the content is interpreted as the actual
+        script, if pathlib.Path, the content of the file is loaded
+    product: ploomber.Product
+        Product generated upon successful execution. For SQLTransfer, usually
+        product.client != task.client. task.client represents the data source
+        while product.client represents the data destination.
+    dag: ploomber.DAG
+        A DAG to add this task to
+    name: str
+        A str to indentify this task. Should not already exist in the dag
+    client: ploomber.clients.SQLAlchemyClient, optional
+        The client used to connect to the database. Only required
+        if no dag-level client has been declared using dag.clients[class_name]
+    params: dict, optional
+        Parameters to pass to the script, by default, the callable will
+        be executed with a "product" (which will contain the product object).
+        It will also include a "upstream" parameter if the task has upstream
+        dependencies along with any parameters declared here. The source
+        code is converted to a jinja2.Template for passing parameters,
+        refer to jinja2 documentation for details
+    chunksize: int, optional
+        Number of rows to transfer on every chunk
+
+    Notes
+    -----
+    This task is *not* intended to move large datasets, but a
+    convenience way of transfering small to medium size datasets. It relies
+    on pandas to read and write, which introduces a considerable overhead.
     """
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation)
 
     def __init__(self, source, product, dag, name, client=None,
-                 params=None):
+                 params=None, chunksize=None):
         params = params or {}
         super().__init__(source, product, dag, name, params)
 
@@ -252,6 +279,8 @@ class SQLUpload(Task):
         if self.client is None:
             raise ValueError('{} must be initialized with a connection'
                              .format(type(self).__name__))
+
+        self.chunksize = chunksize
 
     def _init_source(self, source):
         source = GenericSource(str(source))
