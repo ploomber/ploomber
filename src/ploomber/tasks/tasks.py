@@ -14,7 +14,7 @@ import logging
 from ploomber.exceptions import SourceInitializationError
 from ploomber.tasks.Task import Task
 from ploomber.sources import (PythonCallableSource,
-                                      GenericSource)
+                              GenericSource)
 
 
 class BashCommand(Task):
@@ -62,8 +62,25 @@ class BashCommand(Task):
 
 
 class PythonCallable(Task):
-    """A task that runs a Python callable (i.e.  a function)
+    """Run a Python callable (e.g. a function)
+
+    Parameters
+    ----------
+    source: callable
+        The callable to execute
+    product: ploomber.Product
+        Product generated upon successful execution
+    dag: ploomber.DAG
+        A DAG to add this task to
+    name: str
+        A str to indentify this task. Should not already exist in the dag
+    params: dict
+        Parameters to pass to the callable, by default, the callable will
+        be executed with a "product" (which will contain the product object).
+        It will also include a "upstream" parameter if the task has upstream
+        dependencies along with any parameters declared here
     """
+
     def __init__(self, source, product, dag, name, params=None):
         super().__init__(source, product, dag, name, params)
 
