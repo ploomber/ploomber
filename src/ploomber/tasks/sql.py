@@ -313,7 +313,7 @@ class SQLUpload(Task):
 class PostgresCopy(Task):
     """Efficiently copy data to a postgres database using COPY (faster
     alternative to SQLUpload for postgres). Assumes SQLAlchemy client
-    for postgres is psycopg2
+    for postgres is psycopg2. Replaces the table if exists.
 
     Parameters
     ----------
@@ -346,14 +346,7 @@ class PostgresCopy(Task):
         self.columns = columns
 
     def _init_source(self, source):
-        source = GenericSource(str(source))
-
-        if source.needs_render:
-            raise SourceInitializationError('{} does not support templates as '
-                                            'source, pass a path to a file',
-                                            self.__class__)
-
-        return source
+        return GenericSource(str(source))
 
     def run(self):
         product = self.params['product']

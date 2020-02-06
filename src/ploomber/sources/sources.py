@@ -244,6 +244,18 @@ class GenericSource(Source):
     """
     Generic source, the simplest type of source, it does not perform any kind
     of parsing nor validation
+
+    Prameters
+    ---------
+    value: str
+        The value for this source
+
+
+    Notes
+    -----
+    value is directly passed to ploomber.templates.Placeholder, which means
+    pathlib.Path objects are read and str are converted to jinja2.Template
+    objects, for more details see Placeholder documentation
     """
     @property
     def doc(self):
