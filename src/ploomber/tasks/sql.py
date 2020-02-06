@@ -242,8 +242,7 @@ class SQLUpload(Task):
     Parameters
     ----------
     source: str or pathlib.Path
-        SQL script source, if str, the content is interpreted as the actual
-        script, if pathlib.Path, the content of the file is loaded
+        Path to parquet file to upload
     product: ploomber.products.Product
         Product generated upon successful execution. For SQLTransfer, usually
         product.client != task.client. task.client represents the data source
@@ -288,14 +287,7 @@ class SQLUpload(Task):
         self.chunksize = chunksize
 
     def _init_source(self, source):
-        source = GenericSource(str(source))
-
-        if source.needs_render:
-            raise SourceInitializationError('{} does not support templates as '
-                                            'source, pass a path to a file',
-                                            self.__class__)
-
-        return source
+        return FileSource(str(source))
 
     def run(self):
         product = self.params['product']
