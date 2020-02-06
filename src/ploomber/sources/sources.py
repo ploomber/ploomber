@@ -272,3 +272,20 @@ class GenericSource(Source):
     @property
     def language(self):
         return None
+
+
+class FileSource(GenericSource):
+    """
+    A source that represents a path to a file, similar to GenericSource,
+    but it casts the value arument to str, hence pathlib.Path will be
+    interpreted as literals.
+
+    This source is utilized by Tasks that move/upload files.
+    """
+    def __init__(self, value):
+        value = str(value)
+        super().__init__(Placeholder(value))
+
+    def render(self, params):
+        self.value.render(params, optional=['product'])
+        self._post_render_validation(self.value.value, params)

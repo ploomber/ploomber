@@ -5,7 +5,8 @@ from ploomber.exceptions import SourceInitializationError
 from ploomber.tasks.Task import Task
 from ploomber.sources import (SQLScriptSource,
                               SQLQuerySource,
-                              GenericSource)
+                              GenericSource,
+                              FileSource)
 from ploomber.products import File, PostgresRelation, SQLiteRelation
 from ploomber import io
 from ploomber.util import requires
@@ -210,6 +211,7 @@ class SQLTransfer(Task):
         self.chunksize = chunksize
 
     def _init_source(self, source):
+        # TODO: this shoule be a FileSource
         return SQLQuerySource(source)
 
     def run(self):
@@ -346,7 +348,7 @@ class PostgresCopy(Task):
         self.columns = columns
 
     def _init_source(self, source):
-        return GenericSource(str(source))
+        return FileSource(str(source))
 
     def run(self):
         product = self.params['product']
