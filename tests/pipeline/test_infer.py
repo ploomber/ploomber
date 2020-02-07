@@ -2,6 +2,23 @@ from ploomber.sql import infer
 from ploomber.sql.infer import ParsedSQLRelation
 
 
+def test_unquoted_relation_to_str():
+    assert str(ParsedSQLRelation(None, 'data', 'table')) == 'data'
+
+
+def test_unquoted_relation_w_schema_to_str():
+    assert str(ParsedSQLRelation('schema', 'data', 'table')) == 'schema.data'
+
+
+def test_quoted_relation_to_str():
+    assert str(ParsedSQLRelation(None, '"data"', 'table')) == '"data"'
+
+
+def test_quoted_relation_w_schema_to_str():
+    assert (str(ParsedSQLRelation('"schema"', '"data"', 'table'))
+            == '"schema"."data"')
+
+
 # not able to correctly parse this
 # sql = """
 # CREATE TABLE schema.name2 AS (
@@ -27,8 +44,13 @@ def test_parses_create_table_w_quotes():
     assert rels[0] == ParsedSQLRelation(schema=None, name='x', kind='table')
 
 
+# def test_drop_create():
+#     rels = infer.created_relations('DROP TABLE x; CREATE TABLE x')
+#     assert rels[0] == ParsedSQLRelation(schema=None, name='x', kind='table')
+
+
 def test_ignores_drop_create():
-    rels = infer.created_relations('DROP TABLE x; CREATE TABLE "x"')
+    rels = infer.created_relations('CREATE TABLE x; DROP TABLE x;')
     assert not rels
 
 

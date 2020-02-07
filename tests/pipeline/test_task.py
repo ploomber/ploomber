@@ -80,9 +80,9 @@ def test_postgresscript_with_relation():
 
     t.render()
 
-    assert str(t.product) == '"user"."table"'
+    assert str(t.product) == 'user.table'
     assert (str(t.source)
-            == 'CREATE TABLE "user"."table" AS SELECT * FROM some_table')
+            == 'CREATE TABLE user.table AS SELECT * FROM some_table')
 
 
 def test_task_change_in_status():

@@ -158,16 +158,18 @@ def pg_client_and_schema():
 
     # set a new schema for this session, otherwise if two test sessions
     # are run at the same time, tests might conflict with each other
+    # NOTE: avoid upper case characters, pandas.DataFrame.to_sql does not like
+    # them
     schema = (''.join(random.choice(string.ascii_letters)
-              for i in range(8)))
+              for i in range(12))).lower()
 
-    client.execute('CREATE SCHEMA "{}";'.format(schema))
-    client.execute('SET search_path TO "{}";'.format(schema))
+    client.execute('CREATE SCHEMA {};'.format(schema))
+    client.execute('SET search_path TO {};'.format(schema))
 
     yield client, schema
 
     # clean up schema
-    client.execute('drop schema "{}" cascade;'.format(schema))
+    client.execute('drop schema {} cascade;'.format(schema))
 
     client.close()
 
