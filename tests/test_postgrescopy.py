@@ -1,12 +1,12 @@
 """
-Test PostgresCopy task
+Test PostgresCopyFrom task
 """
 from pathlib import Path
 import pandas as pd
 
 from ploomber import DAG
 from ploomber.products import PostgresRelation, File
-from ploomber.tasks import PostgresCopy, PythonCallable
+from ploomber.tasks import PostgresCopyFrom, PythonCallable
 
 
 def make_data(product):
@@ -23,14 +23,14 @@ def test_can_upload_a_file(tmp_directory, pg_client_and_schema):
     dag = DAG()
 
     dag.clients[PostgresRelation] = pg_client
-    dag.clients[PostgresCopy] = pg_client
+    dag.clients[PostgresCopyFrom] = pg_client
 
-    PostgresCopy('data.parquet',
-                 product=PostgresRelation((schema,
-                                           'test_can_upload_a_file',
-                                           'table')),
-                 dag=dag,
-                 name='upload')
+    PostgresCopyFrom('data.parquet',
+                     product=PostgresRelation((schema,
+                                               'test_can_upload_a_file',
+                                               'table')),
+                     dag=dag,
+                     name='upload')
 
     dag.build()
 
@@ -44,14 +44,14 @@ def test_can_upload_a_file_using_a_path(tmp_directory, pg_client_and_schema):
     dag = DAG()
 
     dag.clients[PostgresRelation] = pg_client
-    dag.clients[PostgresCopy] = pg_client
+    dag.clients[PostgresCopyFrom] = pg_client
 
-    PostgresCopy(Path('data.parquet'),
-                 product=PostgresRelation((schema,
-                                           'test_can_upload_a_file',
-                                           'table')),
-                 dag=dag,
-                 name='upload')
+    PostgresCopyFrom(Path('data.parquet'),
+                     product=PostgresRelation((schema,
+                                               'test_can_upload_a_file',
+                                               'table')),
+                     dag=dag,
+                     name='upload')
 
     dag.build()
 
@@ -64,7 +64,7 @@ def test_can_upload_file_from_upstream_dependency(tmp_directory,
     dag = DAG()
 
     dag.clients[PostgresRelation] = pg_client
-    dag.clients[PostgresCopy] = pg_client
+    dag.clients[PostgresCopyFrom] = pg_client
 
     make = PythonCallable(make_data,
                           product=File('data.parquet'),
@@ -72,12 +72,12 @@ def test_can_upload_file_from_upstream_dependency(tmp_directory,
                           name='make')
 
     name = 'test_can_upload_file_from_upstream_dependency'
-    pg = PostgresCopy('{{upstream["make"]}}',
-                      product=PostgresRelation((schema,
-                                                name,
-                                                'table')),
-                      dag=dag,
-                      name='upload')
+    pg = PostgresCopyFrom('{{upstream["make"]}}',
+                          product=PostgresRelation((schema,
+                                                    name,
+                                                    'table')),
+                          dag=dag,
+                          name='upload')
 
     make >> pg
 

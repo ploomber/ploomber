@@ -40,7 +40,7 @@ Tasks
     SQLDump
     SQLTransfer
     SQLUpload
-    PostgresCopy
+    PostgresCopyFrom
     DownloadFromURL
     Link
     Input
