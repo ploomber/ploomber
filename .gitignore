@@ -1,4 +1,5 @@
 doc/_build
+doc/auto_examples/
 project.sublime-project
 project.sublime-workspace
 a.txt

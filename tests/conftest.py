@@ -127,6 +127,7 @@ def db_credentials():
     return _load_db_credentials()
 
 
+# TODO: use pg_client_and_schema and remove this
 @pytest.fixture(scope='session')
 def pg_client():
     db = _load_db_credentials()
@@ -142,6 +143,30 @@ def pg_client():
     client.execute('SET search_path TO {};'.format(schema))
 
     yield client
+
+    # clean up schema
+    client.execute('drop schema {} cascade;'.format(schema))
+
+    client.close()
+
+
+@pytest.fixture(scope='session')
+def pg_client_and_schema():
+    db = _load_db_credentials()
+
+    client = SQLAlchemyClient(db['uri'])
+
+    # set a new schema for this session, otherwise if two test sessions
+    # are run at the same time, tests might conflict with each other
+    # NOTE: avoid upper case characters, pandas.DataFrame.to_sql does not like
+    # them
+    schema = (''.join(random.choice(string.ascii_letters)
+              for i in range(12))).lower()
+
+    client.execute('CREATE SCHEMA {};'.format(schema))
+    client.execute('SET search_path TO {};'.format(schema))
+
+    yield client, schema
 
     # clean up schema
     client.execute('drop schema {} cascade;'.format(schema))

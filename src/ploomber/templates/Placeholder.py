@@ -264,13 +264,13 @@ class SQLRelationPlaceholder:
     An identifier that represents a database relation (table or view), used
     internally by SQLiteRelation (Product). Not meant to be used directly
     by users.
-    
+
     Parameters
     ----------
     source: tuple
       A (schema, name, kind) tuple, where kind is either 'table' or 'view'
-    
-    
+
+
     Notes
     -----
     Beware that SQLRelationPlaceholder(('schema', 'data', 'table')) is
@@ -349,11 +349,6 @@ class SQLRelationPlaceholder:
     def safe(self):
         return '{}.{}'.format(self.schema, self._name_template.raw,
                               self.kind)
-
-    def __eq__(self, other):
-        return (self.schema == other.schema
-                and self.name == other.name
-                and self.kind == other.kind)
 
     def __hash__(self):
         return hash((self.schema, self.name, self.kind))

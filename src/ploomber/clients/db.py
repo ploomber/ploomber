@@ -8,7 +8,14 @@ from sqlalchemy import create_engine
 
 
 class DBAPIClient(Client):
-    """A client for a module following the PEP 214 DB API spec
+    """A client for a PEP 214 compliant client library
+
+    Parameters
+    ----------
+    connect_fn: callable
+        The function to use to open the connection
+    **connect_kwargs: kwargs
+        Keyword arguments to pass to connect_fn
     """
 
     def __init__(self, connect_fn, **connect_kwargs):
@@ -47,6 +54,10 @@ class DBAPIClient(Client):
 class SQLAlchemyClient(Client):
     """Client for connecting with any SQLAlchemy supported database
 
+    Parameters
+    ----------
+    uri: str
+        URI to pass to sqlalchemy.create_engine
     """
 
     def __init__(self, uri):

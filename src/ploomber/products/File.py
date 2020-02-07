@@ -9,7 +9,12 @@ from ploomber.templates.Placeholder import Placeholder
 
 
 class File(Product):
-    """A product representing a file in the local filesystem
+    """A file (or directory) in the local filesystem
+
+    Parameters
+    ----------
+    identifier: str or pathlib.Path
+        The path to the file (or directory)
     """
 
     def _init_identifier(self, identifier):

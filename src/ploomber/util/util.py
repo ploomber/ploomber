@@ -1,10 +1,64 @@
+from functools import wraps, reduce
 import base64
 from glob import glob
 from pathlib import Path
 from collections import defaultdict
 import shutil
+from pydoc import locate
+
+import numpy as np
 
 from ploomber.products import File
+
+
+def requires(pkgs, name=None):
+    """
+    Check if packages were imported, raise ImportError with an appropriate
+    message for missing ones
+    """
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            missing = [pkg for pkg in pkgs if locate(pkg) is None]
+
+            if missing:
+                msg = reduce(lambda x, y: x+' '+y, missing)
+                fn_name = name or f.__name__
+
+                raise ImportError('{} {} required to use {}. Install {} by '
+                                  'running "pip install {}"'
+                                  .format(msg,
+                                          'is' if len(missing) == 1 else 'are',
+                                          fn_name,
+                                          'it' if len(
+                                              missing) == 1 else 'them',
+                                          msg))
+
+            return f(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def path2fig(path_to_image, dpi=50):
+    # FIXME: having this import at the top causes trouble with the
+    # multiprocessing library, moving it here solves the problem but we
+    # have to find a better solution.
+    # more info: https://stackoverflow.com/q/16254191/709975
+    import matplotlib.pyplot as plt
+
+    data = plt.imread(path_to_image)
+    height, width, _ = np.shape(data)
+
+    fig = plt.figure()
+    fig.set_size_inches((width / dpi, height / dpi))
+    ax = plt.Axes(fig, [0, 0, 1, 1])
+    ax.set_axis_off()
+    fig.add_axes(ax)
+    ax.imshow(data)
+
+    return fig
 
 
 def safe_remove(path):

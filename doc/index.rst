@@ -1,20 +1,82 @@
-.. ploomber documentation master file, created by
-   sphinx-quickstart on Mon Jan 20 16:25:33 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to ploomber's documentation!
 ====================================
 
 .. include:: ../README.rst
 
+Table of contents
+=================
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
 
    intro
-   api/index
+   api
 
+
+API
+===
+
+DAG
+---
+
+.. currentmodule:: ploomber
+
+.. autosummary::
+    :toctree:
+
+    DAG
+
+Tasks
+-----
+
+.. currentmodule:: ploomber.tasks
+
+.. autosummary::
+    :toctree:
+
+    PythonCallable
+    NotebookRunner
+    SQLScript
+    SQLDump
+    SQLTransfer
+    SQLUpload
+    PostgresCopyFrom
+    DownloadFromURL
+    Link
+    Input
+    BashCommand
+    ShellScript
+
+
+Products
+--------
+
+.. currentmodule:: ploomber.products
+
+.. autosummary::
+    :toctree:
+
+    File
+    PostgresRelation
+    SQLiteRelation
+
+Clients
+-------
+
+.. currentmodule:: ploomber.clients
+
+.. autosummary::
+    :toctree:
+
+    DBAPIClient
+    SQLAlchemyClient
+
+..
+  The include below will render an orphan: text, due to this bug:
+  https://github.com/sphinx-doc/sphinx/issues/1545
+
+
+.. include:: auto_examples/index.rst
 
 
 Indices and tables

@@ -30,9 +30,12 @@ release = version
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon',
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.napoleon',
+              'sphinx.ext.autosummary',
               'IPython.sphinxext.ipython_console_highlighting',
-              'IPython.sphinxext.ipython_directive']
+              'IPython.sphinxext.ipython_directive',
+              'sphinx_gallery.gen_gallery']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -57,3 +60,10 @@ html_static_path = ['_static']
 
 # https://github.com/readthedocs/readthedocs.org/issues/2569
 master_doc = 'index'
+
+# sphinx-gallery
+
+sphinx_gallery_conf = {
+    'filename_pattern': '/',
+    'ignore_pattern': r'__init__\.py',
+}

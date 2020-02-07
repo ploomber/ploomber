@@ -9,7 +9,6 @@ from pathlib import Path
 import warnings
 import logging
 import collections
-import subprocess
 import tempfile
 
 try:
@@ -39,7 +38,7 @@ from jinja2 import Template
 
 from ploomber.Table import Table
 from ploomber.products import MetaProduct
-from ploomber.util import image_bytes2html, isiterable
+from ploomber.util import image_bytes2html, isiterable, path2fig
 from ploomber.CodeDiffer import CodeDiffer
 from ploomber import resources
 from ploomber import executors
@@ -63,14 +62,21 @@ class HighlightRenderer(mistune.Renderer):
 
 
 class DAG(collections.abc.Mapping):
-    """A DAG is a collection of tasks with dependencies
+    """A collection of tasks with dependencies
 
     Parameters
     ----------
+    name: str, optional
+        A name to identify this DAG
+    clients:  dict, optional
+        A dictionary with classes as keys and clients as values, can be
+        later modified using dag.clients[dag] = client
     differ: CodeDiffer
         An object to determine whether two pieces of code are the same and
         to output a diff, defaults to CodeDiffer() (default parameters)
-
+    executor: str or ploomber.executors instance, optional
+        The executor to use. The parallel executor is currently experimental
+        and not recommended, use the serial excutor for now
     """
     def __init__(self, name=None, clients=None, differ=None,
                  on_task_finish=None, on_task_failure=None,
@@ -244,9 +250,14 @@ class DAG(collections.abc.Mapping):
 
         return out
 
-    def plot(self, open_image=True, path=None, clear_cached_status=False):
+    def plot(self, output='tmp', clear_cached_status=False):
         """Plot the DAG
         """
+        if output in {'tmp', 'matplotlib'}:
+            path = tempfile.mktemp(suffix='.png')
+        else:
+            path = output
+
         if clear_cached_status:
             self._clear_cached_outdated_status()
 
@@ -255,9 +266,6 @@ class DAG(collections.abc.Mapping):
 
         # FIXME: add tests for this
         self.render()
-
-        if not path:
-            path = tempfile.mktemp(suffix='.png')
 
         G = self._to_graph()
 
@@ -271,10 +279,10 @@ class DAG(collections.abc.Mapping):
         G_ = nx.nx_agraph.to_agraph(G)
         G_.draw(path, prog='dot', args='-Grankdir=LR')
 
-        if open_image:
-            subprocess.run(['open', path])
-
-        return path
+        if output == 'matplotlib':
+            return path2fig(path)
+        else:
+            return path
 
     def diagnose(self):
         """Evaluate code quality
