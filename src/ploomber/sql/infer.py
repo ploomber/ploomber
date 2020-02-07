@@ -42,7 +42,12 @@ def parse_statement(statement):
 
         identifier = str(elements[2])
         tokens = identifier.split('.')
-
+        
+        if not tokens or len(tokens) > 2:
+            warnings.warn('Failed to parse statement: {}'
+                          .format(str(statement)))
+            return None
+        
         if len(tokens) == 1:
             schema = None
             name = tokens[0]
