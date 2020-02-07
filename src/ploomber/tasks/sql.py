@@ -304,9 +304,9 @@ class SQLUpload(Task):
 
 
 # TODO: provide more flexibility to configure the COPY statement
-class PostgresCopy(Task):
-    """Efficiently copy data to a postgres database using COPY (faster
-    alternative to SQLUpload for postgres). Assumes SQLAlchemy client
+class PostgresCopyFrom(Task):
+    """Efficiently copy data to a postgres database using COPY FROM (faster
+    alternative to SQLUpload for postgres). If using SQLAlchemy client
     for postgres is psycopg2. Replaces the table if exists.
 
     Parameters
@@ -323,7 +323,7 @@ class PostgresCopy(Task):
     """
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation,)
 
-    @requires(['pandas'], 'PostgresCopy')
+    @requires(['pandas'], 'PostgresCopyFrom')
     def __init__(self, source, product, dag, name, client=None,
                  params=None, sep='\t', null='\\N', columns=None):
         params = params or {}
