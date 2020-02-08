@@ -7,7 +7,6 @@ import tempfile
 
 import pytest
 from ploomber.templates.Placeholder import Placeholder
-from ploomber.templates import SQLStore
 from jinja2 import Template, Environment, FileSystemLoader, StrictUndefined
 
 
@@ -28,20 +27,6 @@ def test_raises_error_if_extra_parameter():
     with pytest.raises(TypeError):
         (Placeholder('SELECT * FROM {{table}}')
          .render(table=1, not_a_param=1))
-
-
-def test_can_create_template_loaded_from_sql_store(tmp_directory):
-    Path(tmp_directory, 'template.sql').write_text('{{file}}')
-
-    store = SQLStore(None, tmp_directory)
-
-    t = store.get_template('template.sql')
-
-    assert t.render({'file': 'some file'})
-
-    tt = Placeholder(t)
-
-    assert tt.render({'file': 'some file'})
 
 
 def test_strict_templates_initialized_from_jinja_template(path_to_assets):
@@ -114,3 +99,10 @@ def test_string_identifier_initialized_with_template_from_env():
     si = Placeholder(template).render(params=dict(key='things'))
 
     assert str(si) == 'things'
+
+
+def test_init_placeholder_with_placeholder():
+    t = Placeholder('{{file}}')
+    tt = Placeholder(t)
+
+    assert tt.render({'file': 'some file'})
