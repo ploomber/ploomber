@@ -1,7 +1,7 @@
 import tempfile
 from pathlib import Path
 
-from ploomber.templates import SourceLoader
+from ploomber import SourceLoader
 from ploomber.tasks import SQLTransfer
 from ploomber.products import SQLiteRelation
 from ploomber import DAG

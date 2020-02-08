@@ -21,7 +21,8 @@ def _is_iterable_w_types(o, types):
 
 
 class SourceLoader:
-    """
+    """Load source files using a jinja2.Environment
+
     Data pipelines usually rely on non-Python source code such as SQL scripts,
     SourceLoader provides a convenient way of loading them. This serves two
     purposes: 1) Avoid hardcoded paths to files and 2) Allows using advanced
@@ -41,7 +42,7 @@ class SourceLoader:
 
     Examples
     --------
-    >>> from ploomber.templates import SourceLoader
+    >>> from ploomber import SourceLoader
     >>> loader = SourceLoader('path/to/templates/')
     >>> loader['load_customers.sql']
     """

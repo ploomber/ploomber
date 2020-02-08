@@ -21,7 +21,8 @@ from jinja2 import Template
 
 
 class Env:
-    """
+    """Manage configuration settings (such as database URIs)
+
     Env provides a clean and consistent way of managing environment and
     configuration settings. Its simplest usage provides access to settings
     specified via an `env.yaml`.

@@ -27,3 +27,11 @@ Clients
 
 .. automodule:: ploomber.clients
     :members:
+
+
+Utilities
+---------
+
+.. autoclass:: ploomber.SourceLoader
+
+.. autoclass:: ploomber.Env

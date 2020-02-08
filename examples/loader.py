@@ -18,10 +18,9 @@ import tempfile
 import pandas as pd
 
 from ploomber.clients import SQLAlchemyClient
-from ploomber.templates import SourceLoader
 from ploomber.tasks import SQLTransfer, SQLScript
 from ploomber.products import SQLiteRelation
-from ploomber import DAG
+from ploomber import DAG, SourceLoader
 
 
 ###############################################################################

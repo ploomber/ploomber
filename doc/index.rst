@@ -71,6 +71,18 @@ Clients
     DBAPIClient
     SQLAlchemyClient
 
+
+Utilities
+---------
+
+.. currentmodule:: ploomber
+
+.. autosummary::
+    :toctree:
+
+    SourceLoader
+    Env
+
 ..
   The include below will render an orphan: text, due to this bug:
   https://github.com/sphinx-doc/sphinx/issues/1545
