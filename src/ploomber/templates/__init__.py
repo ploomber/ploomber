@@ -1,3 +1,3 @@
-from ploomber.templates.SQLStore import SQLStore
+from ploomber.templates.SourceLoader import SourceLoader
 
-__all__ = ['SQLStore']
+__all__ = ['SourceLoader']

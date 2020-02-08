@@ -20,10 +20,15 @@ def _is_iterable_w_types(o, types):
     return True
 
 
-class SQLStore:
+class SourceLoader:
     """
-    Utility class for loading SQL files from a folder, supports parametrized
-    SQL templates (jinja2)
+    Data pipelines usually rely on non-Python source code such as SQL scripts,
+    SourceLoader provides a convenient way of loading them. This serves two
+    purposes: 1) Avoid hardcoded paths to files and 2) Allows using advanced
+    jinja2 features that require an Environment object such as macros (under
+    the hood, SourceLoader initializes an Environment with a FileSystemLoader)
+    SourceLoader returns ploomber.Placeholder objects that can be directly
+    passed to Tasks in the source parameter
 
     Parameters
     ----------
@@ -36,13 +41,9 @@ class SQLStore:
 
     Examples
     --------
-    >>> from tax_estimator.sql import SQLStore
-    >>> from ploomber import Env
-    >>> env = Env()
-    >>> path = env.path.home / 'load' / 'sql'
-    >>> sqlstore = SQLStore(path)
-    >>> sqlstore['template.sql']
-    >>> sqlstore['template.sql'].path
+    >>> from ploomber.templates import SourceLoader
+    >>> loader = SourceLoader('path/to/templates/')
+    >>> loader['load_customers.sql']
     """
 
     def __init__(self, path=None, module=None):
