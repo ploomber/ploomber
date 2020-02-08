@@ -36,7 +36,8 @@ def test_can_create_task_with_more_than_one_product(tmp_directory):
     ta = BashCommand('touch {{product[0]}} {{product[1]}}',
                      (File(fa), File(fb)), dag, 'ta',
                      {}, kwargs, False)
-    tc = BashCommand('cat {{upstream["ta"][0]}} {{upstream["ta"][1]}} > {{product}}',
+    tc = BashCommand('cat {{upstream["ta"][0]}} {{upstream["ta"][1]}} > '
+                     '{{product}}',
                      File(fc), dag, 'tc',
                      {}, kwargs, False)
 

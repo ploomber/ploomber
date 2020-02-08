@@ -36,6 +36,12 @@ class ProductsContainer:
     def __len__(self):
         return len(self.products)
 
+    def __repr__(self):
+        return '{}: {}'.format(type(self).__name__, repr(self.products))
+
+    def __str__(self):
+        return str(self.products)
+
 
 class MetaProduct:
     """
@@ -145,12 +151,10 @@ class MetaProduct:
         return ', '.join([p._short_repr() for p in self.products])
 
     def __repr__(self):
-        reprs = ', '.join([repr(p) for p in self.products])
-        return f'{type(self).__name__}: {reprs}'
+        return '{}: {}'.format(type(self).__name__, str(self.products))
 
     def __str__(self):
-        strs = ', '.join([str(p) for p in self.products])
-        return f'{type(self).__name__}: {strs}'
+        return str(self.products)
 
     def __iter__(self):
         for product in self.products:
