@@ -1,16 +1,13 @@
-Welcome to ploomber's documentation!
-====================================
-
 .. include:: ../README.rst
 
-Table of contents
-=================
+.. include:: features.rst
 
-.. toctree::
-   :maxdepth: 3
+..
+  The include below will render an orphan: text, due to this bug:
+  https://github.com/sphinx-doc/sphinx/issues/1545
 
-   intro
-   api
+
+.. include:: auto_examples/index.rst
 
 
 API
@@ -69,6 +66,7 @@ Clients
 
     DBAPIClient
     SQLAlchemyClient
+    ShellClient
 
 
 Utilities
@@ -82,12 +80,14 @@ Utilities
     SourceLoader
     Env
 
-..
-  The include below will render an orphan: text, due to this bug:
-  https://github.com/sphinx-doc/sphinx/issues/1545
 
+Table of contents
+=================
 
-.. include:: auto_examples/index.rst
+.. toctree::
+   :maxdepth: 3
+
+   api
 
 
 Indices and tables

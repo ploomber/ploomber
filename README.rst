@@ -16,6 +16,17 @@ facilitates building production systems. It achieves so by providing
 incremental builds, interactive execution, tools to inspect pipelines, by
 facilitating testing and reducing boilerplate code.
 
+Install
+-------
+
+.. code-block:: shell
+
+    pip install ploomber
+
+
+Example
+-------
+
 .. code-block:: python
 
     """Minimal example
