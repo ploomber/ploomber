@@ -23,10 +23,12 @@ class ShellClient(Client):
     def __init__(self,
                  subprocess_run_kwargs={'stderr': subprocess.PIPE,
                                         'stdout': subprocess.PIPE,
-                                        'shell': False}):
+                                        'shell': False},
+                 run_template='bash {{path_to_code}}'):
         """
         """
         self.subprocess_run_kwargs = subprocess_run_kwargs
+        self.run_template = run_template
         self._logger = logging.getLogger('{}.{}'.format(__name__,
                                                         type(self).__name__))
 
@@ -34,36 +36,47 @@ class ShellClient(Client):
     def connection(self):
         raise NotImplementedError('ShellClient does not need a connection')
 
-    def execute(self, code, run_template='bash {{path_to_code}}'):
+    def execute(self, code):
         """Run code
         """
         _, path_to_tmp = tempfile.mkstemp()
         Path(path_to_tmp).write_text(code)
 
-        run_template = Placeholder(run_template)
+        run_template = Placeholder(self.run_template)
         source = run_template.render(dict(path_to_code=path_to_tmp))
 
         res = subprocess.run(shlex.split(source), **self.subprocess_run_kwargs)
+        stdout = res.stdout.decode('utf-8')
+        stderr = res.stderr.decode('utf-8')
 
         if res.returncode != 0:
             # log source code without expanded params
-            self._logger.info(f'{code} returned stdout: '
-                              f'{res.stdout} and stderr: {res.stderr} '
-                              f'and exit status {res.returncode}')
-            raise CalledProcessError(res.returncode, code)
+            self._logger.info(('{} returned stdout: '
+                               '{}\nstderr: {}\n'
+                               'exit status {}')
+                              .format(code, stdout, stderr,
+                                      res.returncode))
+            raise RuntimeError(('Error executing code.\nReturned stdout: '
+                                '{}\nstderr: {}\n'
+                                'exit status {}')
+                               .format(stdout, stderr,
+                                       res.returncode))
         else:
-            self._logger.info(f'Finished running {self}. stdout: {res.stdout},'
-                              f' stderr: {res.stderr}')
+            self._logger.info(('Finished running {}. stdout: {},'
+                               ' stderr: {}').format(self,
+                                                     stdout,
+                                                     stderr))
 
     def close(self):
         pass
 
 
 class RemoteShellClient(Client):
-    """Client to run commands in a remote shell
+    """EXPERIMENTAL: Client to run commands in a remote shell
     """
 
-    def __init__(self, connect_kwargs, path_to_directory):
+    def __init__(self, connect_kwargs, path_to_directory,
+                 run_template='bash {{path_to_code}}'):
         """
 
         path_to_directory: str
@@ -74,10 +87,10 @@ class RemoteShellClient(Client):
         """
         self.path_to_directory = path_to_directory
         self.connect_kwargs = connect_kwargs
+        self.run_template = run_template
         self._raw_client = None
         self._logger = logging.getLogger('{}.{}'.format(__name__,
                                                         type(self).__name__))
-        # CLIENTS.append(self)
 
     @property
     def connection(self):
