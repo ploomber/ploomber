@@ -1,8 +1,7 @@
-import subprocess
 from pathlib import Path
 
 from ploomber.dag import DAG
-from ploomber.tasks import BashCommand
+from ploomber.tasks import ShellScript
 from ploomber.products import File, MetaProduct
 
 
@@ -25,21 +24,15 @@ def test_can_iterate_when_initialized_with_dictionary():
 def test_can_create_task_with_more_than_one_product(tmp_directory):
     dag = DAG()
 
-    kwargs = {'stderr': subprocess.PIPE,
-              'stdout': subprocess.PIPE,
-              'shell': True}
-
     fa = Path('a.txt')
     fb = Path('b.txt')
     fc = Path('c.txt')
 
-    ta = BashCommand('touch {{product[0]}} {{product[1]}}',
-                     (File(fa), File(fb)), dag, 'ta',
-                     {}, kwargs, False)
-    tc = BashCommand('cat {{upstream["ta"][0]}} {{upstream["ta"][1]}} > '
+    ta = ShellScript('touch {{product[0]}} {{product[1]}}',
+                     (File(fa), File(fb)), dag, 'ta')
+    tc = ShellScript('cat {{upstream["ta"][0]}} {{upstream["ta"][1]}} > '
                      '{{product}}',
-                     File(fc), dag, 'tc',
-                     {}, kwargs, False)
+                     File(fc), dag, 'tc')
 
     ta >> tc
 

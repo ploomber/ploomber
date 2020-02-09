@@ -22,7 +22,8 @@ from jinja2 import Template
 
 # TODO: add defaults functionality if defined in env.yaml
 # TODO: improve str(Env) and repr(Env)
-
+# TODO: add suppot for custom placeholders by subclassing, maybe by adding
+# get_{placeholder_name} class methods
 
 def load_env(fn):
     # FIXME: make this more robust to args order

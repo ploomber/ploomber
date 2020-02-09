@@ -36,6 +36,7 @@ Tasks
 
     PythonCallable
     NotebookRunner
+    ShellScript
     SQLScript
     SQLDump
     SQLTransfer
@@ -44,8 +45,6 @@ Tasks
     DownloadFromURL
     Link
     Input
-    BashCommand
-    ShellScript
 
 
 Products

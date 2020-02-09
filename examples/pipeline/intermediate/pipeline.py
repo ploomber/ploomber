@@ -9,7 +9,7 @@ from pathlib import Path
 import logging
 
 from ploomber.products import File, PostgresRelation
-from ploomber.tasks import (BashCommand, PythonCallable,
+from ploomber.tasks import (ShellScript, PythonCallable,
                                     SQLScript)
 from ploomber.dag import DAG
 from ploomber.clients import SQLAlchemyClient
@@ -61,7 +61,7 @@ dag.product.delete()
 # let's introduce a new Task: bash command, this command will generate
 # 3 products, it is recommended for Tasks to have a single Product
 # but you can add more if needed
-get_data = BashCommand(Path('get_data.sh').read_text(),
+get_data = ShellScript(Path('get_data.sh').read_text(),
                        (File(env.path.input / 'raw' / 'red.csv'),
                         File(env.path.input / 'raw' / 'white.csv'),
                         File(env.path.input / 'raw' / 'names')),
@@ -79,16 +79,15 @@ get_data >> sample
 # utility, furthermore, since we declared a product and an upstream dependency, those are
 # available as parameters as well. This task does not create a File but a PostgresRelation,
 # this type of product is a a table named red in the public schema
-red_task = BashCommand(('csvsql --db {{uri}} --tables {{product.name}} --insert {{upstream["sample"][0]}} '
+red_task = ShellScript(('csvsql --db {{uri}} --tables {{product.name}} --insert {{upstream["sample"][0]}} '
                         '--overwrite'),
                        PostgresRelation(('public', 'red', 'table')),
                        dag,
                        params=dict(uri=uri),
-                       split_source_code=False,
                        name='red')
 sample >> red_task
 
-white_task = BashCommand(('csvsql --db {{uri}} --tables {{product.name}} --insert {{upstream["sample"][1]}} '
+white_task = ShellScript(('csvsql --db {{uri}} --tables {{product.name}} --insert {{upstream["sample"][1]}} '
                           '--overwrite'),
                          PostgresRelation(('public', 'white', 'table')),
                          dag,

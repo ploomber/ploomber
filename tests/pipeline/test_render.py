@@ -1,33 +1,27 @@
-import subprocess
+import pytest
 
 from ploomber.dag import DAG
-from ploomber.tasks import BashCommand
+from ploomber.tasks import ShellScript
 from ploomber.products import File
-
-import pytest
 
 
 @pytest.fixture
 def dag():
     dag = DAG()
 
-    kwargs = {'stderr': subprocess.PIPE,
-              'stdout': subprocess.PIPE,
-              'shell': True}
+    t1 = ShellScript('echo a > {{product}} ', File('1.txt'), dag,
+                     't1')
 
-    t1 = BashCommand('echo a > {{product}} ', File('1.txt'), dag,
-                     't1', {}, kwargs, False)
-
-    t2 = BashCommand(('cat {{upstream["t1"]}} > {{product}}'
+    t2 = ShellScript(('cat {{upstream["t1"]}} > {{product}}'
                       '&& echo b >> {{product}} '),
                      File(('2_{{upstream["t1"]}}')),
                      dag,
-                     't2', {}, kwargs, False)
+                     't2')
 
-    t3 = BashCommand(('cat {{upstream["t2"]}} > {{product}} '
+    t3 = ShellScript(('cat {{upstream["t2"]}} > {{product}} '
                       '&& echo c >> {{product}}'),
                      File(('3_{{upstream["t2"]}}')), dag,
-                     't3', {}, kwargs, False)
+                     't3')
 
     t1 >> t2 >> t3
 
@@ -37,7 +31,7 @@ def dag():
 def can_access_product_without_rendering_if_literal():
     dag = DAG()
 
-    BashCommand('echo a > {{product}}', File('1.txt'), dag,
+    ShellScript('echo a > {{product}}', File('1.txt'), dag,
                 't1')
 
     # no rendering!
@@ -72,25 +66,17 @@ def test_can_build_dag_with_templates(dag, tmp_directory):
 def test_rendering_dag_also_renders_upstream_outside_dag(tmp_directory):
     sub_dag = DAG('sub_dag')
 
-    kwargs = {'stderr': subprocess.PIPE,
-              'stdout': subprocess.PIPE,
-              'shell': True}
-
-    ta = BashCommand('touch {{product}}',
-                     File('a.txt'), sub_dag, 'ta',
-                     {}, kwargs, False)
-    tb = BashCommand('cat {{upstream["ta"]}} > {{product}}',
-                     File('b.txt'), sub_dag, 'tb',
-                     {}, kwargs, False)
+    ta = ShellScript('touch {{product}}',
+                     File('a.txt'), sub_dag, 'ta')
+    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}',
+                     File('b.txt'), sub_dag, 'tb')
 
     dag = DAG('dag')
 
-    tc = BashCommand('cat {{upstream["tb"]}} > {{product}}',
-                     File('c.txt'), dag, 'tc',
-                     {}, kwargs, False)
-    td = BashCommand('cat {{upstream["tc"]}} > {{product}}',
-                     File('d.txt'), dag, 'td',
-                     {}, kwargs, False)
+    tc = ShellScript('cat {{upstream["tb"]}} > {{product}}',
+                     File('c.txt'), dag, 'tc')
+    td = ShellScript('cat {{upstream["tc"]}} > {{product}}',
+                     File('d.txt'), dag, 'td')
 
     ta >> tb >> tc >> td
 

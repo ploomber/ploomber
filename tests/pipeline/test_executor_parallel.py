@@ -35,7 +35,7 @@ from pathlib import Path
 from ploomber.exceptions import RenderError
 from ploomber import DAG
 from ploomber.products import File, PostgresRelation
-from ploomber.tasks import PythonCallable, SQLScript, BashCommand
+from ploomber.tasks import PythonCallable, SQLScript
 from ploomber import executors
 
 
