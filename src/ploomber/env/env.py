@@ -31,7 +31,7 @@ def load_env(fn):
 
 
 class Env:
-    """Manage configuration settings (such as database URIs)
+    """Return the current environment
 
     Env provides a clean and consistent way of managing environment and
     configuration settings. Its simplest usage provides access to settings
@@ -47,39 +47,65 @@ class Env:
     is applied so "~" can be used. Strings with a trailing "/" will be
     interpreted as directories and they will be created if they do not exist
 
-    There are two wildcards available "{{user}}" (returns the current user)
-    and "{{git_location}}" (if the env.yaml file has a "module" key, then
-    # TODO: edit this
-    ... this will return the current branch name, if in detached HEAD
-    state, it will return the hash to the current commit
-
-    Notes
-    -----
-    The decision of making Env a process-wide instance is to avoid having
-    multiple env instances with different values that would cause calls to
-    env.some_parameter yield different values. Since configuration parameters
-    in Env objects are meant to be constants (such as db URIs) there should not
-    be a need for multiple Envs to exist at any given time. While it is
-    possible to switch to a different Env in the same process, this is
-    discouraged since that could lead to subtle bugs if modules set variables
-    from Env parameters
-
+    There are a few placeholders available: {{user}} expands to the current
+    user (by calling getpass.getuser())
 
     Examples
     --------
-
-    Basic usage
-
     >>> from ploomber import Env
-    >>> Env.start({'a': 1, 'module': 'my_project'})
+    >>> Env.start({'db': {'uri': 'my_uri'}, 'path': {'raw': '/path/to/raw'}})
     >>> env = Env()
     >>> env.db.uri # traverse the yaml tree structure using dot notation
     >>> env.path.raw # returns an absolute path to the raw data
     """
+
+    # There are two wildcards available "{{user}}" (returns the current user)
+    # and "{{git_location}}" (if the env.yaml file has a "module" key, then
+    # # TODO: edit this
+    # ... this will return the current branch name, if in detached HEAD
+    # state, it will return the hash to the current commit
+
+    # Notes
+    # -----
+    # The decision of making Env a process-wide instance is to avoid having
+    # multiple env instances with different values that would cause calls to
+    # env.some_parameter yield different values. Since configuration parameters
+    # in Env objects are meant to be constants (such as db URIs) there should not
+    # be a need for multiple Envs to exist at any given time. While it is
+    # possible to switch to a different Env in the same process, this is
+    # discouraged since that could lead to subtle bugs if modules set variables
+    # from Env parameters
+
     _data = None
 
     @classmethod
     def start(cls, source=None):
+        """Start the environment
+
+        Parameters
+        ----------
+        source: dict, str or pathlib.Path, optional
+            Environment source. If str or pathlib.Path, assumes the file
+            is in yaml format. If None, it tries to automatically find a
+            file by looking at the current working directory and by going to
+            parent directories, it first looks for a file named env.{host}.yaml
+            where host is replaced by the hostname (by calling
+            platform.node()), if it fails, it looks for a file called env.yaml,
+            if it cannot find it it raises a FileNotFoundError
+
+        Raises
+        ------
+        FileNotFoundError
+            If source is None and an environment file cannot be found
+            automatically
+        RuntimeError
+            If one environment has already started
+
+        Returns
+        -------
+        ploomber.Env
+            An environment object
+        """
         if cls._data is None:
 
             # try to set it if no argument was provided
@@ -90,7 +116,8 @@ class Env:
 
                 if path_found is None:
                     # TODO: improve error message, include hostname
-                    raise FileNotFoundError("Couldn't find env.yaml")
+                    raise FileNotFoundError('Could not find env.{}.yaml '
+                                            'nor env.yaml'.format(name))
                 else:
                     source = path_found
 
@@ -113,6 +140,11 @@ class Env:
 
     @classmethod
     def end(cls):
+        """
+        End environment. Usage is discouraged, a single environment is expected
+        to exist during the entire Python process lifespan to avoid
+        inconsistencies, use it only if you have a very strong reason to
+        """
         cls._path_to_env = None
         cls._name = None
         cls._path = None
@@ -154,10 +186,10 @@ class Env:
         else:
             raise RuntimeError('env is a read-only object')
 
-    def get_metadata(self):
-        """Get env metadata such as git hash, last commit timestamp
-        """
-        return repo.get_env_metadata(self.path.home)
+    # def get_metadata(self):
+    #     """Get env metadata such as git hash, last commit timestamp
+    #     """
+    #     return repo.get_env_metadata(self.path.home)
 
 
 def load(source):
@@ -196,7 +228,7 @@ def load(source):
                 params['version'] = module.__version__
             else:
                 raise RuntimeError('Module {} does not have a __version__, cannot '
-                             'expand version placeholder'.format(module_name))
+                                   'expand version placeholder'.format(module_name))
 
     if '{{git_location}}' in env_content:
         if module_name is None:

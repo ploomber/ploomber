@@ -33,5 +33,7 @@ Utilities
 ---------
 
 .. autoclass:: ploomber.SourceLoader
+    :members:
 
 .. autoclass:: ploomber.Env
+    :members:

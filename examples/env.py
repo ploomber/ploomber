@@ -1,8 +1,8 @@
 """
-Using dstools.env
-=================
+Using environments
+==================
 
-Using ploomber.env to isolate pipeline execution between team members
+Using ploomber.Env to isolate pipeline execution between team members
 """
 from pathlib import Path
 import tempfile

@@ -38,7 +38,7 @@ db_uri = 'sqlite:///' + str(tmp_dir / 'my_db.db')
 # Assume the raw data is stored in a remote filesystem so we have to fetch
 # it to the shared server first. Assume that the raw data is so big that we do
 # not want to save multiple copies, so all team members will read the same raw
-# data file, however, we want them to have separate copies or the final,
+# data file, however, we want them to have separate copies of the final,
 # so we make it dependent on their user by using the {{user}} placeholder,
 # we also want each member to have separate copies of the processed dataset
 # so each one will write to a different schema
@@ -91,12 +91,57 @@ def make_task_upload(env, dag):
                      dag=dag,
                      name='upload')
 
+
+@load_env
+def make_task_clean_setosa():
+    pass
+
+
+@load_env
+def make_task_clean_virginica():
+    pass
+
 # TODO: add processed dataset task, use env.schema
 
 
 @load_env
-def make_task_report(env, dag):
-    return NotebookRunner()
+def make_task_report(env, dag, params):
+    report = """
+# +
+# This file is in jupytext light format
+from sqlclchemy import create_engine
+import seaborn as sns
+import pandas as pd
+# -
+
+# + tags=['parameters']
+# papermill will add the parameters below this cell
+# db_location = None
+# upstream = None
+# product = None
+# -
+
+# +
+engine.create_engine('sqlite:///' + params["db_location"])
+query = 'SELECT * FROM {}'.format(upstream["upload"])
+df = pd.read_sql(path, engine)
+engine.dispose()
+# -
+
+# ## AGE distribution
+
+# +
+sns.distplot(df.AGE)
+# -
+
+# ## Price distribution
+
+# +
+sns.distplot(df.price)
+# -
+"""
+    # return NotebookRunner(report, 
+    #     product=)
 
 ###############################################################################
 # This introduces a subtle but important distinction between Env and Task.params,
@@ -113,8 +158,8 @@ def make_dag(env, params):
     dag.clients[SQLUpload] = SQLAlchemyClient(env.db_uri)
     dag.clients[SQLiteRelation] = SQLAlchemyClient(env.db_uri)
     dump = make_task_dump(dag)
-    transform = make_task_upload(dag)
-    dump >> transform
+    upload = make_task_upload(dag)
+    dump >> upload
     return dag
 
 
@@ -129,9 +174,30 @@ params_all = [{'kind': 'setosa'}, {'kind': 'virginica'}]
 
 dags = [make_dag(params) for params in params_all]
 
+
+###############################################################################
+# Pipeline (setosa) status
+# ------------------------
+
 dags[0].status()
 
+###############################################################################
+# Pipeline (virginica) status
+# ------------------------
+
 dags[1].status()
+
+
+###############################################################################
+# Pipeline plots
+# --------------
+
+dags[0].plot(output='matplotlib')
+dags[1].plot(output='matplotlib')
+
+###############################################################################
+# Pipelines build
+# ---------------
 
 for dag in dags:
     dag.build()
