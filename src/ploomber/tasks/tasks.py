@@ -62,14 +62,33 @@ class PythonCallable(Task):
 
 
 class ShellScript(Task):
-    """Execute a shell script
+    """Execute a shell script in a shell
 
     Parameters
     ----------
+    source: str or pathlib.Path
+        Script source, if str, the content is interpreted as the actual
+        script, if pathlib.Path, the content of the file is loaded
+    product: ploomber.products.Product
+        Product generated upon successful execution
+    dag: ploomber.DAG
+        A DAG to add this task to
+    name: str
+        A str to indentify this task. Should not already exist in the dag
+    client: ploomber.clients.ShellClient or RemoteShellClient, optional
+        The client used to connect to the database. Only required
+        if no dag-level client has been declared using dag.clients[class]
+    params: dict, optional
+        Parameters to pass to the script, by default, the callable will
+        be executed with a "product" (which will contain the product object).
+        It will also include a "upstream" parameter if the task has upstream
+        dependencies along with any parameters declared here. The source
+        code is converted to a jinja2.Template for passing parameters,
+        refer to jinja2 documentation for details
     """
 
-    def __init__(self, source, product, dag, name, params=None,
-                 client=None):
+    def __init__(self, source, product, dag, name, client=None,
+                 params=None):
         super().__init__(source, product, dag, name, params)
 
         self.client = client or self.dag.clients.get(type(self))

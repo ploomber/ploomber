@@ -18,13 +18,23 @@ import paramiko
 
 class ShellClient(Client):
     """Client to run command in the local shell
+
+    Parameters
+    ----------
+    run_template : str
+        Template for executing commands, must include the {{path_to_code}}
+        placeholder which will point to the rendered code. Defaults to
+        'bash {{path_to_code}}'
+    subprocess_run_kwargs : dict
+        Keyword arguments to pass to the subprocess.run when running
+        run_template
     """
 
     def __init__(self,
+                 run_template='bash {{path_to_code}}',
                  subprocess_run_kwargs={'stderr': subprocess.PIPE,
                                         'stdout': subprocess.PIPE,
-                                        'shell': False},
-                 run_template='bash {{path_to_code}}'):
+                                        'shell': False}):
         """
         """
         self.subprocess_run_kwargs = subprocess_run_kwargs
@@ -146,7 +156,7 @@ class RemoteShellClient(Client):
         ftp.close()
         path_to_tmp.unlink()
 
-    def execute(self, code, run_template='bash {{path_to_code}}'):
+    def execute(self, code):
         """Run code
         """
         ftp = self.connection.open_sftp()
@@ -158,7 +168,7 @@ class RemoteShellClient(Client):
         ftp.put(path_to_tmp, path_remote)
         ftp.close()
 
-        run_template = Placeholder(run_template)
+        run_template = Placeholder(self.run_template)
         source = run_template.render(dict(path_to_code=path_remote))
 
         # stream stdout. related: https://stackoverflow.com/q/31834743
