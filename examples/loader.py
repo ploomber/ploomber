@@ -1,6 +1,6 @@
 """
-SourceLoader
-============
+Managing static files (SQL scripts, jupyter notebooks)
+======================================================
 
 How to manage non-Python source files using SourceLoader, this examples shows
 how to load parametrized SQL scripts and make use of advanced jinja2 features

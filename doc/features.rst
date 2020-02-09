@@ -133,7 +133,7 @@ ploomber also supports a hook to execute code upon task execution. This allows t
     def test_no_nas(task):
         path = str(task.product)
         df = pd.read_parquet(path)
-        assert not df.isna().sum()
+        assert not df.some_column.isna().sum()
 
     def make_training_pipeline(sample=False):
         # your pipeline declaration...
