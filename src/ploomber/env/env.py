@@ -22,6 +22,7 @@ from jinja2 import Template
 
 
 # TODO: add defaults arg
+# TODO: improve str(Env) and repr(Env)
 
 
 def load_env(fn):
