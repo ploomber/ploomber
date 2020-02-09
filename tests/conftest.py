@@ -8,7 +8,7 @@ import pytest
 from pathlib import Path
 import tempfile
 from ploomber.clients import SQLAlchemyClient
-from ploomber.env.env import Env
+from ploomber import Env
 import pandas as pd
 
 
