@@ -146,3 +146,38 @@ ploomber also supports a hook to execute code upon task execution. This allows t
         dag = make_training_pipeline()
         # will fail if the output of clean_task has NAs
         dag.build()        
+
+
+:doc:`Full example <auto_examples/testing>`
+
+
+Communicable
+------------
+
+Being able to explain how a pipeline works is critical so any stakeholder
+involved is aware of the pipeline's logic and required resources. While the
+pipeline declaration provides a blueprint for developers, it is not well
+suited for communication with non-technical partners (or even technical ones
+that are not familiar with ploomber). For that reason, ploomber provides ways
+of easily communicating important pipeline details to a wider audience.
+
+.. code-block:: python
+
+    from ploomber import DAG
+    from pathlib import Path
+
+    dag = DAG()
+
+    # pipeline declaration
+    # ...
+    # ...
+    # ...
+
+    dag = make()
+
+    # with just a call, you can generate an HTML report
+    html = dag.to_markup()
+    Path('/path/to/report.html').write_text(html)
+
+
+:doc:`Full example <auto_examples/communicate>`
