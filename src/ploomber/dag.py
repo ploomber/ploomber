@@ -227,7 +227,7 @@ class DAG(collections.abc.Mapping):
             raise ValueError('fmt must be html or md, got {}'.format(fmt))
 
         status = self.status().to_format('html')
-        path_to_plot = Path(self.plot(open_image=False))
+        path_to_plot = Path(self.plot(clear_cached_status=True))
         plot = image_bytes2html(path_to_plot.read_bytes())
 
         template_md = importlib_resources.read_text(resources, 'dag.md')

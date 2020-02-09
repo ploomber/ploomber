@@ -10,7 +10,7 @@ import logging
 
 from ploomber.products import File, PostgresRelation
 from ploomber.tasks import (ShellScript, PythonCallable,
-                                    SQLScript)
+                            SQLScript)
 from ploomber.dag import DAG
 from ploomber.clients import SQLAlchemyClient
 from ploomber import testing
