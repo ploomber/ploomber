@@ -1,5 +1,5 @@
 from ploomber.dag import DAG
-from ploomber.env import Env
+from ploomber.env.Env import Env, load_env
 from ploomber.templates.SourceLoader import SourceLoader
 
 
@@ -17,4 +17,4 @@ except ImportError:
 logging.getLogger(__name__).addHandler(NullHandler())
 
 
-__all__ = ['DAG', 'Env', 'SourceLoader']
+__all__ = ['DAG', 'Env', 'SourceLoader', 'load_env']

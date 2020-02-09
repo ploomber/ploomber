@@ -11,6 +11,7 @@ from io import StringIO
 import getpass
 import tempfile
 import platform
+from functools import partial
 
 from ploomber.FrozenJSON import FrozenJSON
 from ploomber.path import PathManager
@@ -18,6 +19,14 @@ from ploomber import repo
 
 import yaml
 from jinja2 import Template
+
+
+# TODO: add defaults arg
+
+
+def load_env(fn):
+    # FIXME: make this more robust to args order
+    return partial(fn, Env())
 
 
 class Env:
@@ -34,12 +43,24 @@ class Env:
 
     All sections are optional, but if there is a path section, all values
     inside that section will be casted to pathlib.Path objects, expanduser()
-    is applied so "~" can be used.
+    is applied so "~" can be used. Strings with a trailing "/" will be
+    interpreted as directories and they will be created if they do not exist
 
     There are two wildcards available "{{user}}" (returns the current user)
     and "{{git_location}}" (if the env.yaml file is located inside a git
     repo, this will return the current branch name, if in detached HEAD
     state, it will return the hash to the current commit
+
+    Notes
+    -----
+    The decision of making Env a process-wide instance is to avoid having
+    multiple env instances with different values that would cause calls to
+    env.some_parameter yield different values. Since configuration parameters
+    in Env objects are meant to be constants (such as db URIs) there should not
+    be a need for multiple Envs to exist at any given time. While it is
+    possible to switch to a different Env in the same process, this is
+    discouraged.
+
 
     Examples
     --------
@@ -57,7 +78,7 @@ class Env:
     __wildcards_replace = {}
 
     def __init__(self, path_to_env=None):
-        self.logger = logging.getLogger(__name__)
+        self._logger = logging.getLogger(__name__)
 
         # if not env has been set...
         if Env.__path_to_env is None:
@@ -83,8 +104,8 @@ class Env:
             # if no argument provided, just use whatever env was already used
             if path_to_env is None:
                 path_to_env = Env.__path_to_env
-                self.logger.info('Already instantiated Env, loading it from '
-                                 f'{path_to_env}...')
+                self._logger.info('Already instantiated Env, loading it from '
+                                  f'{path_to_env}...')
 
             # otherwise, resolve argument and warn the user if there is
             # conflcit
@@ -127,6 +148,12 @@ class Env:
 
     def __getitem__(self, key):
         return self._env_content[key]
+
+    def __setattr__(self, name, value):
+        if name.startswith('_'):
+            super().__setattr__(name, value)
+        else:
+            raise RuntimeError('env is a read-only object')
 
     def get_metadata(self):
         """Get env metadata such as git hash, last commit timestamp
@@ -180,6 +207,7 @@ class Env:
 
     @classmethod
     def from_dict(cls, d):
+        # FIXME: this method should not rely on yaml files
         _, file = tempfile.mkstemp(prefix='env.', suffix='.yaml')
 
         with open(file, 'w') as f:
