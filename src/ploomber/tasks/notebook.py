@@ -1,3 +1,4 @@
+import warnings
 from copy import copy
 from tempfile import mktemp
 from pathlib import Path
@@ -41,11 +42,30 @@ from ploomber.util import requires
 @requires(['jupytext'])
 def _to_ipynb(source, extension, kernelspec_name=None):
     """Convert to jupyter notebook via jupytext
+
+    Parameters
+    ----------
+    source : str
+        Jupyter notebook (or jupytext compatible formatted) document
+
+    extension : str
+        Document format
     """
     nb = jupytext.reads(source, fmt={'extension': extension})
 
-    # tag the first cell as "parameters" for papermill to inject them
-    nb.cells[0]['metadata']['tags'] = ["parameters"]
+    has_parameters_tag = False
+
+    for c in nb.cells:
+        cell_tags = c.metadata.get('tags')
+
+        if cell_tags:
+            if 'parameters' in cell_tags:
+                has_parameters_tag = True
+                break
+
+    if not has_parameters_tag:
+        warnings.warn('Notebook does not have any cell with tag "parameters"'
+                      'which is required by papermill')
 
     if nb.metadata.get('kernelspec') is None and kernelspec_name is None:
         raise ValueError('juptext could not load kernelspec from file and '

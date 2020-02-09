@@ -7,6 +7,7 @@ pillow
 # needed for the train-and-predict example
 joblib
 scikit-learn
+seaborn
 
 # for some reason, read the docs command to install the package fails due to
 # a version mismatch (it uses the setup.py file directly instead of pip),
