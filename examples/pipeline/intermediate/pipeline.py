@@ -5,6 +5,7 @@
 # Note: run this using `ipython` or in a Jupyter notebook (it won't run using `python`).
 
 # +
+from pathlib import Path
 import logging
 
 from ploomber.products import File, PostgresRelation
@@ -28,8 +29,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-env = Env()
-home = env.path.home
+env = Env.start()
 path_to_sample = env.path.input / 'sample'
 
 (env.path.input / 'raw').mkdir(exist_ok=True, parents=True)
@@ -61,7 +61,7 @@ dag.product.delete()
 # let's introduce a new Task: bash command, this command will generate
 # 3 products, it is recommended for Tasks to have a single Product
 # but you can add more if needed
-get_data = BashCommand((home / 'get_data.sh').read_text(),
+get_data = BashCommand(Path('get_data.sh').read_text(),
                        (File(env.path.input / 'raw' / 'red.csv'),
                         File(env.path.input / 'raw' / 'white.csv'),
                         File(env.path.input / 'raw' / 'names')),
@@ -99,19 +99,19 @@ sample >> white_task
 
 # let's introduce a new type of task, a SQLScript, this task will execute
 # a script in a SQL database (any database supported by sql alchemy)
-wine_task = SQLScript(home / 'sql' / 'create_wine.sql',
+wine_task = SQLScript(Path('sql', 'create_wine.sql'),
                       PostgresRelation(('public', 'wine', 'table')),
                       dag, name='wine')
 (red_task + white_task) >> wine_task
 
 
-dataset_task = SQLScript(home / 'sql' / 'create_dataset.sql',
+dataset_task = SQLScript(Path('sql', 'create_dataset.sql'),
                          PostgresRelation(('public', 'dataset', 'table')),
                          dag, name='dataset')
 wine_task >> dataset_task
 
 
-training_task = SQLScript(home / 'sql' / 'create_training.sql',
+training_task = SQLScript(Path('sql', 'create_training.sql'),
                           PostgresRelation(('public', 'training', 'table')),
                           dag, name='training')
 dataset_task >> training_task
@@ -119,7 +119,7 @@ dataset_task >> training_task
 
 testing_table = PostgresRelation(('public', 'testing', 'table'))
 # testing_table.tests = [testing.Postgres.no_nas_in_column('label')]
-testing_task = SQLScript(home / 'sql' / 'create_testing.sql',
+testing_task = SQLScript(Path('sql', 'create_testing.sql'),
                          testing_table, dag, name='testing')
 
 dataset_task >> testing_task

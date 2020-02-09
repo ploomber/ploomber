@@ -48,9 +48,9 @@ def sqlite_client_and_tmp_dir():
 
 @pytest.fixture
 def cleanup_env():
-    Env._Env__path_to_env = None
+    Env.end()
     yield None
-    Env._Env__path_to_env = None
+    Env.end()
 
 
 @pytest.fixture()

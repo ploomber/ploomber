@@ -1,5 +1,5 @@
 from ploomber.dag import DAG
-from ploomber.env.Env import Env, load_env
+from ploomber.env.env import Env, load_env
 from ploomber.templates.SourceLoader import SourceLoader
 
 

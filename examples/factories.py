@@ -18,6 +18,9 @@ from ploomber.clients import SQLAlchemyClient
 from ploomber.tasks import SQLUpload, PythonCallable, NotebookRunner
 from ploomber.products import SQLiteRelation, File
 
+# NOTE: we need this to make sphinx-gallery happy
+Env.end()
+
 ###############################################################################
 # A common scenario for Data Science teams is to share computational
 # resources, say the team is sharing an analytical database so all
@@ -41,9 +44,9 @@ db_uri = 'sqlite:///' + str(tmp_dir / 'my_db.db')
 # so each one will write to a different schema
 
 # NOTE: adding trailing / so Env detects them as directories and creates them
-env = Env.from_dict({'path': {'raw': str(tmp_dir / 'raw') + '/',
-                              'report': str(tmp_dir / '{{user}}/') + '/'},
-                     'schema': '{{user}}', 'db_uri': db_uri})
+env = Env.start({'path': {'raw': str(tmp_dir / 'raw') + '/',
+                          'report': str(tmp_dir / '{{user}}/') + '/'},
+                 'schema': '{{user}}', 'db_uri': db_uri})
 
 
 """
@@ -53,6 +56,10 @@ env = Env()
 
 def make_dump():
     some_parameter = env.some_parameter
+
+# Nor this!
+
+some_parameter = env.some_parameter
 """
 
 

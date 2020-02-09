@@ -4,6 +4,7 @@ CHANGELOG
 0.2
 ---
 
+* Refactored env module
 * Renames SQLStore to SourceLoader
 * Improvements to SQLStore
 * Improved documentation
