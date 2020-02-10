@@ -29,9 +29,6 @@ Example
 
 .. code-block:: python
 
-    """Minimal example
-    """
-
     from ploomber import DAG
     from ploomber.products import File
     from ploomber.tasks import PythonCallable, SQLDump
@@ -47,8 +44,9 @@ Example
                         client=SQLAlchemyClient(uri),
                         chunksize=None)
 
-    # we will add one to the data
     def _add_one(upstream, product):
+        """Add one to column a
+        """
         df = pd.read_csv(str(upstream['dump']))
         df['a'] = df['a'] + 1
         df.to_csv(str(product), index=False)

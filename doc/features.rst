@@ -1,5 +1,6 @@
-ploomber is...
-==============
+Features
+========
+
 
 Expressive
 ----------
