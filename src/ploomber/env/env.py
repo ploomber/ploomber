@@ -10,6 +10,7 @@ from io import StringIO
 import getpass
 import platform
 from functools import partial
+from inspect import getfullargspec
 from collections.abc import Mapping
 
 from ploomber.FrozenJSON import FrozenJSON
@@ -20,14 +21,25 @@ import yaml
 from jinja2 import Template
 
 
-# TODO: add defaults functionality if defined in env.yaml
+# TODO: add defaults functionality if defined in {module}/env.defaults.yaml
 # TODO: improve str(Env) and repr(Env)
 # TODO: add suppot for custom placeholders by subclassing, maybe by adding
 # get_{placeholder_name} class methods
 
 def load_env(fn):
-    # FIXME: make this more robust to args order
-    return partial(fn, Env())
+    """
+    A function decorated with @load_env will be called with the current
+    environment in an env keyword argument
+    """
+    args = getfullargspec(fn).args
+    kwonlyargs = getfullargspec(fn).kwonlyargs
+    args_all = args + kwonlyargs
+
+    if 'env' not in args_all:
+        raise TypeError('callable "{}" does not have arg "env"'
+                        .format(fn.__name__))
+
+    return partial(fn, env=Env())
 
 
 class Env:

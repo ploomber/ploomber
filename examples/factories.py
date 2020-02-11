@@ -77,7 +77,7 @@ def _dump(product):
 
 
 @load_env
-def make_task_dump(env, dag):
+def make_task_dump(dag, env):
     return PythonCallable(_dump,
                           product=File(env.path.raw / 'raw.parquet'),
                           dag=dag,
@@ -85,7 +85,7 @@ def make_task_dump(env, dag):
 
 
 @load_env
-def make_task_upload(env, dag):
+def make_task_upload(dag, env):
     return SQLUpload('{{upstream["raw"]}}',
                      product=SQLiteRelation((None, 'raw', 'table')),
                      dag=dag,
@@ -105,7 +105,7 @@ def make_task_clean_virginica():
 
 
 @load_env
-def make_task_report(env, dag, params):
+def make_task_report(dag, params, env):
     report = """
 # +
 # This file is in jupytext light format
@@ -153,7 +153,7 @@ sns.distplot(df.price)
 
 
 @load_env
-def make_dag(env, params):
+def make_dag(params, env):
     dag = DAG()
     dag.clients[SQLUpload] = SQLAlchemyClient(env.db_uri)
     dag.clients[SQLiteRelation] = SQLAlchemyClient(env.db_uri)
