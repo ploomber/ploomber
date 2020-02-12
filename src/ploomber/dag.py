@@ -79,6 +79,7 @@ class DAG(collections.abc.Mapping):
         and not recommended, use the serial excutor for now
     """
     def __init__(self, name=None, clients=None, differ=None,
+                 on_task_finish=None, on_task_failure=None,
                  executor='serial'):
         self._G = nx.DiGraph()
 
@@ -100,9 +101,8 @@ class DAG(collections.abc.Mapping):
                             'an instance of executors.Executor, got type {}'
                             .format(type(executor)))
 
-        # TODO: implement this
-        # self._on_task_finish = on_task_finish
-        # self._on_task_failure = on_task_failure
+        self._on_task_finish = on_task_finish
+        self._on_task_failure = on_task_failure
 
     @property
     def product(self):
