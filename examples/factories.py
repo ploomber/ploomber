@@ -93,12 +93,12 @@ def make_task_upload(dag, env):
 
 
 @load_env
-def make_task_clean_setosa():
+def make_task_clean_setosa(env):
     pass
 
 
 @load_env
-def make_task_clean_virginica():
+def make_task_clean_virginica(env):
     pass
 
 # TODO: add processed dataset task, use env.schema
