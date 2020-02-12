@@ -7,3 +7,5 @@ sed 's/{{package_name}}/sample_project/g' setup.py > setup-tmp.py
 rm -f setup.py
 mv setup-tmp.py setup.py
 pip install .
+cd ../..
+rm -rf ds-template-master
