@@ -16,10 +16,18 @@ facilitates building production systems. It achieves so by providing
 incremental builds, interactive execution, tools to inspect pipelines, by
 facilitating testing and reducing boilerplate code.
 
-.. code-block:: python
+Install
+-------
 
-    """Minimal example
-    """
+.. code-block:: shell
+
+    pip install ploomber
+
+
+Example
+-------
+
+.. code-block:: python
 
     from ploomber import DAG
     from ploomber.products import File
@@ -36,8 +44,9 @@ facilitating testing and reducing boilerplate code.
                         client=SQLAlchemyClient(uri),
                         chunksize=None)
 
-    # we will add one to the data
     def _add_one(upstream, product):
+        """Add one to column a
+        """
         df = pd.read_csv(str(upstream['dump']))
         df['a'] = df['a'] + 1
         df.to_csv(str(product), index=False)

@@ -1,8 +1,20 @@
 from pathlib import Path
 
+import pytest
+
 from ploomber.dag import DAG
 from ploomber.tasks import NotebookRunner
+from ploomber.tasks.notebook import _to_ipynb
 from ploomber.products import File
+
+
+def test_warns_if_no_parameters_tagged_cell():
+    source = """
+1 + 1
+    """
+
+    with pytest.warns(UserWarning):
+        _to_ipynb(source, '.py', 'python3')
 
 
 def test_can_execute_from_ipynb(path_to_assets, tmp_directory):
@@ -56,7 +68,7 @@ def test_can_execute_with_parameters(tmp_directory):
 def test_can_execute_when_product_is_metaproduct(tmp_directory):
     dag = DAG()
 
-    code = """product = None
+    code = """
 
 from pathlib import Path
 

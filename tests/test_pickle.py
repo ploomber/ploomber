@@ -5,9 +5,8 @@ to be sent to other processed
 import pickle
 
 from ploomber import DAG
-from ploomber.tasks import PythonCallable, BashCommand
+from ploomber.tasks import PythonCallable, ShellScript
 from ploomber.products import File, PostgresRelation
-from ploomber.sources import SQLScriptSource
 from ploomber.templates.Placeholder import Placeholder
 
 
@@ -18,7 +17,7 @@ def fn():
 def test_can_pickle_dag():
     dag = DAG()
 
-    t = BashCommand('cat "hi" > {{product}}', File('/tmp/file.txt'), dag,
+    t = ShellScript('cat "hi" > {{product}}', File('/tmp/file.txt'), dag,
                     name='bash')
 
     t2 = PythonCallable(fn, File('/tmp/file2.txt'), dag, name='fn')

@@ -4,6 +4,9 @@ CHANGELOG
 0.2
 ---
 
+* Refactored env module
+* Renames SQLStore to SourceLoader
+* Improvements to SQLStore
 * Improved documentation
 * Renamed PostgresCopy to PostgresCopyFrom
 * SQLUpload and PostgresCopy have now the same API

@@ -6,58 +6,11 @@ such as a bash or a SQL script
 """
 from urllib import request
 from multiprocessing import Pool
-import shlex
-import subprocess
-from subprocess import CalledProcessError
-import logging
 from ploomber.exceptions import SourceInitializationError
 from ploomber.tasks.Task import Task
 from ploomber.sources import (PythonCallableSource,
                               GenericSource)
-
-
-class BashCommand(Task):
-    """A task that runs an inline bash command
-    """
-
-    def __init__(self, source, product, dag, name, params=None,
-                 subprocess_run_kwargs={'stderr': subprocess.PIPE,
-                                        'stdout': subprocess.PIPE,
-                                        'shell': True},
-                 split_source_code=False):
-        super().__init__(source, product, dag, name, params)
-        self.split_source_code = split_source_code
-        self.subprocess_run_kwargs = subprocess_run_kwargs
-        self._logger = logging.getLogger(__name__)
-
-    def _init_source(self, source):
-        source = GenericSource(str(source))
-
-        if not source.needs_render:
-            raise SourceInitializationError('The source for this task "{}"'
-                                            ' must be a template since the '
-                                            ' product will be passed as '
-                                            ' parameter'
-                                            .format(source.value.raw))
-
-        return source
-
-    def run(self):
-        source_code = (shlex.split(self.source_code) if self.split_source_code
-                       else self.source_code)
-
-        res = subprocess.run(source_code,
-                             **self.subprocess_run_kwargs)
-
-        if res.returncode != 0:
-            # log source code without expanded params
-            self._logger.info(f'{self.source_code} returned stdout: '
-                              f'{res.stdout} and stderr: {res.stderr} '
-                              f'and exit status {res.returncode}')
-            raise CalledProcessError(res.returncode, self.source_code)
-        else:
-            self._logger.info(f'Finished running {self}. stdout: {res.stdout},'
-                              f' stderr: {res.stderr}')
+from ploomber.clients import ShellClient
 
 
 class PythonCallable(Task):
@@ -109,18 +62,39 @@ class PythonCallable(Task):
 
 
 class ShellScript(Task):
-    """A task to run a shell script
+    """Execute a shell script in a shell
+
+    Parameters
+    ----------
+    source: str or pathlib.Path
+        Script source, if str, the content is interpreted as the actual
+        script, if pathlib.Path, the content of the file is loaded
+    product: ploomber.products.Product
+        Product generated upon successful execution
+    dag: ploomber.DAG
+        A DAG to add this task to
+    name: str
+        A str to indentify this task. Should not already exist in the dag
+    client: ploomber.clients.ShellClient or RemoteShellClient, optional
+        The client used to connect to the database. Only required
+        if no dag-level client has been declared using dag.clients[class]
+    params: dict, optional
+        Parameters to pass to the script, by default, the callable will
+        be executed with a "product" (which will contain the product object).
+        It will also include a "upstream" parameter if the task has upstream
+        dependencies along with any parameters declared here. The source
+        code is converted to a jinja2.Template for passing parameters,
+        refer to jinja2 documentation for details
     """
 
-    def __init__(self, source, product, dag, name, params=None,
-                 client=None):
+    def __init__(self, source, product, dag, name, client=None,
+                 params=None):
         super().__init__(source, product, dag, name, params)
 
         self.client = client or self.dag.clients.get(type(self))
 
         if self.client is None:
-            raise ValueError('{} must be initialized with a client'
-                             .format(type(self).__name__))
+            self.client = ShellClient()
 
     def _init_source(self, source):
         source = GenericSource(str(source))

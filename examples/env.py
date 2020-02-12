@@ -1,8 +1,8 @@
 """
-Using dstools.env
-=================
+Using environments
+==================
 
-Using ploomber.env to isolate pipeline execution between team members
+Using ploomber.Env to isolate pipeline execution between team members
 """
 from pathlib import Path
 import tempfile
@@ -16,12 +16,15 @@ from ploomber.products import File
 
 tmp_dir = Path(tempfile.mkdtemp())
 
+# NOTE: we need this to make sphinx-gallery happy
+Env.end()
+
 ###############################################################################
 # Env can be used to centralize configuration parameters that can be switched
 # between users or servers - this configuration ensures that the output
 # location is automatically determined (by using the {{user}} placeholder)
 # to each user. See ploomber.Env documentation for more details
-env = Env.from_dict({'path': {
+env = Env.start({'path': {
     'raw': str(tmp_dir / '{{user}}' / 'raw'),
     'clean': str(tmp_dir / '{{user}}' / 'clean')
     }

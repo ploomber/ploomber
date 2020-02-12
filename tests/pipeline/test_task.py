@@ -3,7 +3,7 @@ from pathlib import Path
 from ploomber.exceptions import RenderError
 from ploomber import DAG
 from ploomber.products import File, PostgresRelation
-from ploomber.tasks import PythonCallable, SQLScript, BashCommand
+from ploomber.tasks import PythonCallable, SQLScript, ShellScript
 from ploomber.constants import TaskStatus
 
 import pytest
@@ -24,7 +24,7 @@ def my_fn(product, upstream):
 
 # have to declare this here, otherwise it won't work with pickle
 def touch(product):
-        Path('file').touch()
+    Path('file').touch()
 
 
 def on_finish(task):
@@ -88,10 +88,10 @@ def test_postgresscript_with_relation():
 def test_task_change_in_status():
     dag = DAG('dag')
 
-    ta = BashCommand('echo "a" > {{product}}', File('a.txt'), dag, 'ta')
-    tb = BashCommand('cat {{upstream["ta"]}} > {{product}}',
+    ta = ShellScript('echo "a" > {{product}}', File('a.txt'), dag, 'ta')
+    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}',
                      File('b.txt'), dag, 'tb')
-    tc = BashCommand('cat {{upstream["tb"]}} > {{product}}',
+    tc = ShellScript('cat {{upstream["tb"]}} > {{product}}',
                      File('c.txt'), dag, 'tc')
 
     assert all([t._status == TaskStatus.WaitingRender for t in [ta, tb, tc]])
@@ -124,7 +124,7 @@ def test_task_change_in_status():
 def test_raises_render_error_if_missing_param_in_code():
     dag = DAG('my dag')
 
-    ta = BashCommand('{{command}} "a" > {{product}}', File('a.txt'), dag,
+    ta = ShellScript('{{command}} "a" > {{product}}', File('a.txt'), dag,
                      name='my task')
 
     with pytest.raises(RenderError):
@@ -134,7 +134,7 @@ def test_raises_render_error_if_missing_param_in_code():
 def test_raises_render_error_if_missing_param_in_product():
     dag = DAG('my dag')
 
-    ta = BashCommand('echo "a" > {{product}}', File('a_{{name}}.txt'), dag,
+    ta = ShellScript('echo "a" > {{product}}', File('a_{{name}}.txt'), dag,
                      name='my task')
 
     with pytest.raises(RenderError):
@@ -144,8 +144,8 @@ def test_raises_render_error_if_missing_param_in_product():
 def test_raises_render_error_if_non_existing_dependency_used():
     dag = DAG('my dag')
 
-    ta = BashCommand('echo "a" > {{product}}', File('a.txt'), dag, name='bash')
-    tb = BashCommand('cat {{upstream.not_valid}} > {{product}}',
+    ta = ShellScript('echo "a" > {{product}}', File('a.txt'), dag, name='bash')
+    tb = ShellScript('cat {{upstream.not_valid}} > {{product}}',
                      File('b.txt'), dag, name='bash2')
     ta >> tb
 
@@ -156,7 +156,7 @@ def test_raises_render_error_if_non_existing_dependency_used():
 def test_raises_render_error_if_extra_param_in_code():
     dag = DAG('my dag')
 
-    ta = BashCommand('echo "a" > {{product}}', File('a.txt'), dag,
+    ta = ShellScript('echo "a" > {{product}}', File('a.txt'), dag,
                      name='my task',
                      params=dict(extra_param=1))
 
@@ -167,10 +167,10 @@ def test_raises_render_error_if_extra_param_in_code():
 def test_shows_warning_if_unused_dependencies():
     dag = DAG('dag')
 
-    ta = BashCommand('echo "a" > {{product}}', File('a.txt'), dag, 'ta')
-    tb = BashCommand('cat {{upstream["ta"]}} > {{product}}',
+    ta = ShellScript('echo "a" > {{product}}', File('a.txt'), dag, 'ta')
+    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}',
                      File('b.txt'), dag, 'tb')
-    tc = BashCommand('cat {{upstream["tb"]}} > {{product}}',
+    tc = ShellScript('cat {{upstream["tb"]}} > {{product}}',
                      File('c.txt'), dag, 'tc')
 
     ta >> tb >> tc
@@ -195,9 +195,9 @@ def test_on_finish(tmp_directory):
 def test_lineage():
     dag = DAG('dag')
 
-    ta = BashCommand('touch {{product}}', File(Path('a.txt')), dag, 'ta')
-    tb = BashCommand('touch {{product}}', File(Path('b.txt')), dag, 'tb')
-    tc = BashCommand('touch {{product}}', File(Path('c.txt')), dag, 'tc')
+    ta = ShellScript('touch {{product}}', File(Path('a.txt')), dag, 'ta')
+    tb = ShellScript('touch {{product}}', File(Path('b.txt')), dag, 'tb')
+    tc = ShellScript('touch {{product}}', File(Path('c.txt')), dag, 'tc')
 
     ta >> tb >> tc
 

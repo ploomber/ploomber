@@ -1,6 +1,11 @@
 Patterns
 ========
 
+This is an advanced guide, if you are new to ploomber, check out some basic
+examples first to get familiar with the core concepts
+
+
+
 
 DAG factory
 ***********
@@ -54,3 +59,10 @@ Multiple systems
 Use Env, each machine has their own env.yaml so products do not overlap with
 each other
 
+
+
+Factories, parametrized and dynamic pipelines
+*********************************************
+Factories, parametrized and dynamic pipelines patterns provide great
+flexibility for developing pipelines but do not misuse them. Such patterns
+exist to reduce redundant code and optimize resources in different ways

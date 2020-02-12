@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from ploomber.dag import DAG
-from ploomber.tasks import BashCommand, PythonCallable, SQLScript
+from ploomber.tasks import PythonCallable, SQLScript
 from ploomber.products import File
 
 

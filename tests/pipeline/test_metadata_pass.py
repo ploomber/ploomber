@@ -1,34 +1,29 @@
 """
 Testing that upstream tasks metadata is available
 """
-import subprocess
 from pathlib import Path
 
 from ploomber.dag import DAG
-from ploomber.tasks import BashCommand, SQLScript
+from ploomber.tasks import ShellScript, SQLScript
 from ploomber.products import File, PostgresRelation
 from ploomber.clients import SQLAlchemyClient
 
 
-def test_passing_upstream_and_product_in_bashcommand(tmp_directory):
+def test_passing_upstream_and_product_in_shellscript(tmp_directory):
     dag = DAG()
 
     fa = Path('a.txt')
     fb = Path('b.txt')
     fc = Path('c.txt')
 
-    kwargs = {'stderr': subprocess.PIPE,
-              'stdout': subprocess.PIPE,
-              'shell': True}
-
-    ta = BashCommand(('echo a > {{product}} '), File(fa), dag,
-                     'ta', {}, kwargs, False)
-    tb = BashCommand(('cat {{upstream["ta"]}} > {{product}}'
+    ta = ShellScript(('echo a > {{product}} '), File(fa), dag,
+                     'ta')
+    tb = ShellScript(('cat {{upstream["ta"]}} > {{product}}'
                      '&& echo b >> {{product}} '), File(fb), dag,
-                     'tb', {}, kwargs, False)
-    tc = BashCommand(('cat {{upstream["tb"]}} > {{product}} '
+                     'tb')
+    tc = ShellScript(('cat {{upstream["tb"]}} > {{product}} '
                      '&& echo c >> {{product}}'), File(fc), dag,
-                     'tc', {}, kwargs, False)
+                     'tc')
 
     ta >> tb >> tc
 

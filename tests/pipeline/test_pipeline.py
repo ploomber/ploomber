@@ -1,19 +1,14 @@
-import subprocess
 from pathlib import Path
 
 from ploomber.dag import DAG
-from ploomber.tasks import BashCommand
+from ploomber.tasks import ShellScript
 from ploomber.products import File
-
-kwargs = {'stderr': subprocess.PIPE,
-          'stdout': subprocess.PIPE,
-          'shell': True}
 
 
 def test_non_existent_file():
     dag = DAG()
     f = File('file.txt')
-    ta = BashCommand('echo hi > {{product}}', f, dag, 'ta')
+    ta = ShellScript('echo hi > {{product}}', f, dag, 'ta')
     ta.render()
 
     assert not f.exists()
@@ -30,10 +25,9 @@ def test_outdated_data_simple_dependency(tmp_directory):
     fa = Path('a.txt')
     fb = Path('b.txt')
 
-    ta = BashCommand('touch {{product}}', File(fa), dag, 'ta', {}, kwargs,
-                     False)
-    tb = BashCommand('cat {{upstream["ta"]}} > {{product}}', File(fb), dag,
-                     'tb', {}, kwargs, False)
+    ta = ShellScript('touch {{product}}', File(fa), dag, 'ta')
+    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}', File(fb), dag,
+                     'tb')
 
     ta >> tb
 
@@ -75,12 +69,12 @@ def test_many_upstream(tmp_directory):
     fb = Path('b.txt')
     fc = Path('c.txt')
 
-    ta = BashCommand('touch {{product}}', File(fa),
-                     dag, 'ta', {}, kwargs, False)
-    tb = BashCommand('touch {{product}} > {{product}}', File(fb),
-                     dag, 'tb', {}, kwargs, False)
-    tc = BashCommand('cat {{upstream["ta"]}} {{upstream["tb"]}} >  {{product}}',
-                     File(fc), dag, 'tc', {}, kwargs, False)
+    ta = ShellScript('touch {{product}}', File(fa),
+                     dag, 'ta')
+    tb = ShellScript('touch {{product}} > {{product}}', File(fb),
+                     dag, 'tb')
+    tc = ShellScript('cat {{upstream["ta"]}} {{upstream["tb"]}} >  {{product}}',
+                     File(fc), dag, 'tc')
 
     (ta + tb) >> tc
 
@@ -126,7 +120,7 @@ def test_can_create_task_with_many_products():
     dag = DAG()
     fa1 = File('a1.txt')
     fa2 = File('a2.txt')
-    ta = BashCommand('echo {{product}}', [fa1, fa2], dag, 'ta')
+    ta = ShellScript('echo {{product}}', [fa1, fa2], dag, 'ta')
     ta.render()
 
     assert not ta.product.exists()
@@ -142,9 +136,9 @@ def test_overloaded_operators():
     fb = Path('b.txt')
     fc = Path('c.txt')
 
-    ta = BashCommand('touch {{product}}', File(fa), dag, 'ta')
-    tb = BashCommand('touch {{product}}', File(fb), dag, 'tb')
-    tc = BashCommand('touch {{product}}', File(fc), dag, 'tc')
+    ta = ShellScript('touch {{product}}', File(fa), dag, 'ta')
+    tb = ShellScript('touch {{product}}', File(fb), dag, 'tb')
+    tc = ShellScript('touch {{product}}', File(fc), dag, 'tc')
 
     ta >> tb >> tc
 
@@ -160,9 +154,9 @@ def test_adding_tasks():
     fb = Path('b.txt')
     fc = Path('c.txt')
 
-    ta = BashCommand('touch {{product}}', File(fa), dag, 'ta')
-    tb = BashCommand('touch {{product}}', File(fb), dag, 'tb')
-    tc = BashCommand('touch {{product}}', File(fc), dag, 'tc')
+    ta = ShellScript('touch {{product}}', File(fa), dag, 'ta')
+    tb = ShellScript('touch {{product}}', File(fb), dag, 'tb')
+    tc = ShellScript('touch {{product}}', File(fc), dag, 'tc')
 
     assert list((ta + tb).tasks) == [ta, tb]
     assert list((tb + ta).tasks) == [tb, ta]
@@ -178,9 +172,9 @@ def test_adding_tasks_left():
     fb = Path('b.txt')
     fc = Path('c.txt')
 
-    ta = BashCommand('touch {{product}}', File(fa), dag, 'ta')
-    tb = BashCommand('touch {{product}}', File(fb), dag, 'tb')
-    tc = BashCommand('touch {{product}}', File(fc), dag, 'tc')
+    ta = ShellScript('touch {{product}}', File(fa), dag, 'ta')
+    tb = ShellScript('touch {{product}}', File(fb), dag, 'tb')
+    tc = ShellScript('touch {{product}}', File(fc), dag, 'tc')
 
     (ta + tb) >> tc
 
@@ -196,9 +190,9 @@ def test_adding_tasks_right():
     fb = Path('b.txt')
     fc = Path('c.txt')
 
-    ta = BashCommand('touch {{product}}', File(fa), dag, 'ta')
-    tb = BashCommand('touch {{product}}', File(fb), dag, 'tb')
-    tc = BashCommand('touch {{product}}', File(fc), dag, 'tc')
+    ta = ShellScript('touch {{product}}', File(fa), dag, 'ta')
+    tb = ShellScript('touch {{product}}', File(fb), dag, 'tb')
+    tc = ShellScript('touch {{product}}', File(fc), dag, 'tc')
 
     ta >> (tb + tc)
 

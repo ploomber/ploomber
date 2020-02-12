@@ -1,75 +1,15 @@
-Welcome to ploomber's documentation!
-====================================
-
 .. include:: ../README.rst
 
-Table of contents
-=================
 
-.. toctree::
-   :maxdepth: 3
+Jump to...
+==========
 
-   intro
-   api
-
-
-API
-===
-
-DAG
----
-
-.. currentmodule:: ploomber
-
-.. autosummary::
-    :toctree:
-
-    DAG
-
-Tasks
------
-
-.. currentmodule:: ploomber.tasks
-
-.. autosummary::
-    :toctree:
-
-    PythonCallable
-    NotebookRunner
-    SQLScript
-    SQLDump
-    SQLTransfer
-    SQLUpload
-    PostgresCopyFrom
-    DownloadFromURL
-    Link
-    Input
-    BashCommand
-    ShellScript
+* :ref:`Features`
+* :ref:`Examples`
+* :ref:`API Summary`
 
 
-Products
---------
-
-.. currentmodule:: ploomber.products
-
-.. autosummary::
-    :toctree:
-
-    File
-    PostgresRelation
-    SQLiteRelation
-
-Clients
--------
-
-.. currentmodule:: ploomber.clients
-
-.. autosummary::
-    :toctree:
-
-    DBAPIClient
-    SQLAlchemyClient
+.. include:: features.rst
 
 ..
   The include below will render an orphan: text, due to this bug:
@@ -77,6 +17,18 @@ Clients
 
 
 .. include:: auto_examples/index.rst
+
+
+.. include:: api-summary.rst
+
+
+Table of contents
+=================
+
+.. toctree::
+   :maxdepth: 3
+
+   api
 
 
 Indices and tables

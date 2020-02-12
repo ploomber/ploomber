@@ -7,7 +7,6 @@ scenario: dump data from a database and apply a transformation to it. We use
 sqlite3 for this example but ploomber supports any database supported by
 sqlalchemy without code changes.
 """
-import sqlite3
 from pathlib import Path
 import tempfile
 

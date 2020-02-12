@@ -8,7 +8,8 @@ import pytest
 from pathlib import Path
 import tempfile
 from ploomber.clients import SQLAlchemyClient
-from ploomber.env.env import Env
+from ploomber import Env
+import pandas as pd
 
 
 def _path_to_tests():
@@ -31,11 +32,25 @@ def tmp_directory():
     os.chdir(old)
 
 
+@pytest.fixture()
+def sqlite_client_and_tmp_dir():
+    """
+    Creates a sqlite db with sample data and yields initialized client
+    along with a temporary directory location
+    """
+    tmp_dir = Path(tempfile.mkdtemp())
+    client = SQLAlchemyClient('sqlite:///' + str(tmp_dir / 'my_db.db'))
+    df = pd.DataFrame({'x': range(10)})
+    df.to_sql('data', client.engine)
+    yield client, tmp_dir
+    client.close()
+
+
 @pytest.fixture
 def cleanup_env():
-    Env._Env__path_to_env = None
+    Env.end()
     yield None
-    Env._Env__path_to_env = None
+    Env.end()
 
 
 @pytest.fixture()
