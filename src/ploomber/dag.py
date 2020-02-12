@@ -181,7 +181,7 @@ class DAG(collections.abc.Mapping):
         lineage = self[target]._lineage
         dag = copy(self)
 
-        to_pop = set(dag) - {self.name} - lineage
+        to_pop = set(dag) - {target} - lineage
 
         for task in to_pop:
             dag.pop(task)
