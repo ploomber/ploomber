@@ -16,3 +16,5 @@ seaborn
 # this might no longer be necessary
 Pygments==2.5.2
 mistune<2
+
+beautifulsoup4
