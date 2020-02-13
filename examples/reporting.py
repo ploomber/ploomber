@@ -119,11 +119,9 @@ dag.plot(output='matplotlib')
 from bs4 import BeautifulSoup
 report = Path(tmp_dir / 'report.html').read_text()
 str(BeautifulSoup(report, 'html.parser').body.div)
-Path('../doc/auto_examples/report.html').write_text(report)
+Path('../doc/_build/html/report.html').write_text(report)
+# print(Path('.').absolute())
+
 
 ####################################
-# `click here <report.html>`_
-
-####################################
-# .. raw:: html
-#     :file: report.html
+# `click here <../report.html>`_
