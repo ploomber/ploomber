@@ -120,6 +120,6 @@ dag.plot(output='matplotlib')
 # do not run these lines. they just move the report to make the above link work
 out = Path('../doc/_build/html/reporting-nb.html')
 
-if out.parent.exists():
-    html = Path(str(report.product)).read_text()
-    out.write_text(html)
+# if out.parent.exists():
+html = Path(str(report.product)).read_text()
+out.write_text(html)
