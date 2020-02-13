@@ -115,6 +115,4 @@ html = dag.to_markup()
 
 # do not run these lines. they just move the report to make the above link work
 out = Path('../doc/_build/html/communicate-nb.html')
-
-if out.parent.exists():
-    out.write_text(html)
+_ = out.write_text(html)
