@@ -1,9 +1,11 @@
 CHANGELOG
 =========
 
-0.2
----
+0.2dev
+------
 
+* Deletes BashCommand, use ShellScript
+* More examples added
 * Refactored env module
 * Renames SQLStore to SourceLoader
 * Improvements to SQLStore

@@ -15,7 +15,6 @@ build the pipeline again and you will get a new report.
 from pathlib import Path
 import tempfile
 
-from IPython.display import HTML
 import pandas as pd
 from sklearn import datasets
 
@@ -65,13 +64,13 @@ df = pd.read_parquet(path)
 # ## AGE distribution
 
 # +
-sns.distplot(df.AGE)
+_ = sns.distplot(df.AGE)
 # -
 
 # ## Price distribution
 
 # +
-sns.distplot(df.price)
+_ = sns.distplot(df.price)
 # -
 """
 
@@ -116,5 +115,11 @@ dag.plot(output='matplotlib')
 ###############################################################################
 # Output
 # ------
-# After running the pipeline, this HTML report is generated
-HTML(str(report.product))
+# `Click here to see the generated report.  <../reporting-nb.html>`_
+
+# do not run these lines. they just move the report to make the above link work
+out = Path('../doc/_build/html/reporting-nb.html')
+
+if out.parent.exists():
+    html = Path(str(report.product)).read_text()
+    out.write_text(html)

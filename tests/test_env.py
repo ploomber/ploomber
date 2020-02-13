@@ -14,7 +14,7 @@ def test_init_with_nonexistent_package(cleanup_env):
 
 def test_version_placeholder(cleanup_env):
     env = Env.start({'module': 'sample_project', 'version': '{{version}}'})
-    assert env.version == '0.1'
+    assert env.version == '0.1dev'
 
 
 def test_can_create_env_from_dict(cleanup_env):
