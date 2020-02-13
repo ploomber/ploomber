@@ -18,7 +18,6 @@ import tempfile
 
 import pandas as pd
 from sklearn import datasets
-from IPython.display import HTML
 
 from ploomber import DAG
 from ploomber.tasks import PythonCallable, SQLUpload, SQLScript

@@ -19,6 +19,24 @@ facilitating testing and reducing boilerplate code.
 Install
 -------
 
+If you want to try out everything ploomber has to offer:
+
+.. code-block:: shell
+
+    pip install ploomber[all]
+
+Note that installing everything will attemp to install pygraphviz, which
+depends on graphviz, you have to install that separately:
+
+.. code-block:: shell
+    # if you are using conda (recommended)
+    conda install graphviz
+    # if you are using homebew
+    brew install graphviz
+    # for other systems, see: https://www.graphviz.org/download/
+
+If you want to start with the minimal amount of dependencies:
+
 .. code-block:: shell
 
     pip install ploomber

@@ -1,10 +1,13 @@
 """
 Clients that communicate with databases
 """
+try:
+    from sqlalchemy import create_engine
+except ImportError:
+    create_engine = None
 
 from ploomber.clients.Client import Client
-
-from sqlalchemy import create_engine
+from ploomber.util import requires
 
 
 class DBAPIClient(Client):
@@ -60,6 +63,7 @@ class SQLAlchemyClient(Client):
         URI to pass to sqlalchemy.create_engine
     """
 
+    @requires(['sqlalchemy'], 'SQLAlchemyClient')
     def __init__(self, uri):
         super().__init__()
         self._uri = uri

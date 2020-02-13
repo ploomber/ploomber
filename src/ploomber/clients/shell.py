@@ -12,8 +12,12 @@ from subprocess import CalledProcessError
 
 from ploomber.clients.Client import Client
 from ploomber.templates.Placeholder import Placeholder
+from ploomber.util import requires
 
-import paramiko
+try:
+    import paramiko
+except ImportError:
+    paramiko = None
 
 
 class ShellClient(Client):
@@ -85,6 +89,7 @@ class RemoteShellClient(Client):
     """EXPERIMENTAL: Client to run commands in a remote shell
     """
 
+    @requires(['paramiko'], 'RemoteShellClient')
     def __init__(self, connect_kwargs, path_to_directory,
                  run_template='bash {{path_to_code}}'):
         """

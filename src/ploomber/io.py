@@ -4,10 +4,14 @@ Handling file I/O
 import csv
 from pathlib import Path
 
-import pyarrow as pa
-import pyarrow.parquet as pq
+try:
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+except ImportError:
+    pa = None
+    pq = None
 
-from ploomber.util import safe_remove
+from ploomber.util import safe_remove, requires
 
 
 class FileIO:
@@ -68,6 +72,7 @@ class ParquetIO(FileIO):
     This function uses the pyarrow package directly to save to parquet
     """
 
+    @requires(['pyarrow'], 'ParquetIO')
     def __init__(self, path, chunked):
         super().__init__(path, chunked)
         self.schema = None
