@@ -29,10 +29,12 @@ def read(*names, **kwargs):
 
 
 # matplotlib only needed for dag.plot(output='matplotlib'),
-# EXTRAS_REQUIRE_PG = ['psycopg2']
-EXTRAS_REQUIRE_PLOT = ['matplotlib', 'pygraphviz']
-EXTRAS_REQUIRE_NB = ['papermill', 'jupytext', 'jupyter']
-EXTRAS_REQUIRE_MISC = [
+PLOT = ['matplotlib', 'pygraphviz']
+NB = ['papermill', 'jupytext', 'jupyter']
+# FIXME: remove, we currently depend on this due to PostgresRelation
+# but the specific driver should be chosen by the user
+PG = ['psycopg2']
+MISC = [
     # sql dumps
     'pandas',
     # RemoteShellClient
@@ -90,9 +92,9 @@ setup(
 
     ],
     extras_require={
-        'plot': EXTRAS_REQUIRE_PLOT,
-        'nb': EXTRAS_REQUIRE_NB,
-        'all': EXTRAS_REQUIRE_MISC + EXTRAS_REQUIRE_PLOT + EXTRAS_REQUIRE_NB,
+        'plot': PLOT,
+        'nb': NB,
+        'all': MISC + PLOT + NB + PG,
     },
     entry_points={
         'console_scripts': [

@@ -1,6 +1,7 @@
 import sqlite3
 import json
 
+# FIXME: get rid of this - people might want to use a different client
 from psycopg2 import sql
 
 from ploomber.products import Product
