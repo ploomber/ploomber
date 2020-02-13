@@ -116,9 +116,13 @@ dag.plot(output='matplotlib')
 # Output
 # ------
 # After running the pipeline, this HTML report is generated
+from bs4 import BeautifulSoup
 report = Path(tmp_dir / 'report.html').read_text()
-# display(HTML(str(BeautifulSoup(report, 'html.parser').body.div)))
-Path('../doc/auto_examples/report.html').write_text(report)
+str(BeautifulSoup(report, 'html.parser').body.div)
+Path('../doc/_build/html/auto_examples/report.html').write_text(report)
+
+####################################
+# `click here <report.html>`_
 
 ####################################
 # .. raw:: html
