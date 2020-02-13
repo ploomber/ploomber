@@ -3,9 +3,6 @@ pytest>=3.5
 # pytest-cov
 # pytest-flake8
 
-# sample project for testing
-git+https://github.com/edublancas/ds-template#subdirectory=basic-template
-
 # sql module (SQLDump task)
 # numpy
 # pandas
