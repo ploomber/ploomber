@@ -115,10 +115,10 @@ dag.plot(output='matplotlib')
 ###############################################################################
 # Output
 # ------
-# `Click here to see the generated report.  <../report.html>`_
+# `Click here to see the generated report.  <../reporting-nb.html>`_
 
 # do not run these lines. they just move the report to make the above link work
-out = Path('../doc/_build/html/reporting-report.html')
+out = Path('../doc/_build/html/reporting-nb.html')
 
 if out.parent.exists():
     html = Path(str(report.product)).read_text()

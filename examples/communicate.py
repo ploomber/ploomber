@@ -111,10 +111,10 @@ html = dag.to_markup()
 ###############################################################################
 # Report
 # ------
-# `Click here to see the generated report.  <../communicate-report.html>`_
+# `Click here to see the generated report.  <../communicate-nb.html>`_
 
 # do not run these lines. they just move the report to make the above link work
-out = Path('../doc/_build/html/communicate-report.html')
+out = Path('../doc/_build/html/communicate-nb.html')
 
 if out.parent.exists():
     out.write_text(html)
