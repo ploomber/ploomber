@@ -15,7 +15,6 @@ build the pipeline again and you will get a new report.
 from pathlib import Path
 import tempfile
 
-from IPython.display import HTML
 import pandas as pd
 from sklearn import datasets
 
@@ -117,6 +116,10 @@ dag.plot(output='matplotlib')
 # Output
 # ------
 # After running the pipeline, this HTML report is generated
-from bs4 import BeautifulSoup
 report = Path(tmp_dir / 'report.html').read_text()
-HTML(str(BeautifulSoup(report, 'html.parser').body.div))
+# display(HTML(str(BeautifulSoup(report, 'html.parser').body.div)))
+Path('../doc/auto_examples/report.html').write_text(report)
+
+####################################
+# .. raw:: html
+#     :file: report.html
