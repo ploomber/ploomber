@@ -64,13 +64,13 @@ df = pd.read_parquet(path)
 # ## AGE distribution
 
 # +
-sns.distplot(df.AGE)
+_ = sns.distplot(df.AGE)
 # -
 
 # ## Price distribution
 
 # +
-sns.distplot(df.price)
+_ = sns.distplot(df.price)
 # -
 """
 
@@ -115,13 +115,11 @@ dag.plot(output='matplotlib')
 ###############################################################################
 # Output
 # ------
-# After running the pipeline, this HTML report is generated
-from bs4 import BeautifulSoup
-report = Path(tmp_dir / 'report.html').read_text()
-str(BeautifulSoup(report, 'html.parser').body.div)
-Path('../doc/_build/html/report.html').write_text(report)
-# print(Path('.').absolute())
+# `Click here to see the generated report.  <../report.html>`_
 
+# do not run these lines. they just move the report to make the above link work
+out = Path('../doc/_build/html/reporting-report.html')
 
-####################################
-# `click here <../report.html>`_
+if out.parent.exists():
+    html = Path(str(report.product)).read_text()
+    out.write_text(html)
