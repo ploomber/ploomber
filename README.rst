@@ -26,9 +26,10 @@ If you want to try out everything ploomber has to offer:
     pip install ploomber[all]
 
 Note that installing everything will attemp to install pygraphviz, which
-depends on graphviz, you have to install that separately:
+depends on graphviz, you have to install that first:
 
 .. code-block:: shell
+
     # if you are using conda (recommended)
     conda install graphviz
     # if you are using homebew

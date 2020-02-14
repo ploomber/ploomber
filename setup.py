@@ -31,9 +31,6 @@ def read(*names, **kwargs):
 # matplotlib only needed for dag.plot(output='matplotlib'),
 PLOT = ['matplotlib', 'pygraphviz']
 NB = ['papermill', 'jupytext', 'jupyter']
-# FIXME: remove, we currently depend on this due to PostgresRelation
-# but the specific driver should be chosen by the user
-PG = ['psycopg2']
 MISC = [
     # sql dumps
     'pandas',
@@ -94,7 +91,7 @@ setup(
     extras_require={
         'plot': PLOT,
         'nb': NB,
-        'all': MISC + PLOT + NB + PG,
+        'all': MISC + PLOT + NB,
     },
     entry_points={
         'console_scripts': [
