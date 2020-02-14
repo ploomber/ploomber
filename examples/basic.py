@@ -46,13 +46,14 @@ task_dump = SQLDump('SELECT * FROM example',
 
 
 # since this task will have an upstream dependency, it has to accept the
-# upstream parameter, all tasks must accept a product parameter
+# upstream parameter
 def _add_one(upstream, product):
     """Add one to column a
     """
     df = pd.read_csv(str(upstream['dump']))
     df['a'] = df['a'] + 1
     df.to_csv(str(product), index=False)
+
 
 # we convert the Python function into a Task
 task_add_one = PythonCallable(_add_one,
@@ -69,7 +70,6 @@ dag.plot(output='matplotlib', clear_cached_status=True)
 
 # run our sample pipeline
 dag.build()
-
 
 
 ###############################################################################
@@ -94,26 +94,24 @@ dag.build(clear_cached_status=True)
 ###############################################################################
 # Inspecting a pipeline
 # *********************
-
-# A lot of data pipelines start as experimental projects (e.g. developing a 
+# A lot of data pipelines start as experimental projects (e.g. developing a
 # Machine Learning model), which causes them to grow unpredictably. As the
 # pipeline evolves, it will span dozens of files whose intent is unclear. The
 # DAG object serves as the primary reference for anyone seeking to understand
 # the pipeline.
 
 
-# Making a pipeline transparent helps others quickly understand it without going
-# through the code details and eases debugging for developers.
+# Making a pipeline transparent helps others quickly understand it without
+# going through the code details and eases debugging for developers.
 # status returns a summary of each task status
 dag.status()
-
 
 
 ###############################################################################
 # Inspecting the `DAG` object
 # ---------------------------
-# A lot of data work is done interactively using Jupyter or similar tools, being
-# able interact with a pipeline in the same way is an effective way of
+# A lot of data work is done interactively using Jupyter or similar tools,
+# being able interact with a pipeline in the same way is an effective way of
 # experimenting new methods.
 
 # say you are adding a new method to task add_one, you can run your code
@@ -137,4 +135,3 @@ dag['add_one'].build(force=True)
 # the right file
 df = pd.read_csv(str(dag['add_one']))
 df
-

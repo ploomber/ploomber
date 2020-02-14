@@ -11,10 +11,8 @@ ploomber
 
 `Click here for focumentation <https://ploomber.readthedocs.io/>`_
 
-ploomber is workflow management tool that accelerates experimentation and
-facilitates building production systems. It achieves so by providing
-incremental builds, interactive execution, tools to inspect pipelines, by
-facilitating testing and reducing boilerplate code.
+ploomber is a workflow management tool that accelerates DS/ML experimentation.
+It provides incremental builds, interactive execution and testing tools
 
 Install
 -------

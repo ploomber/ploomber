@@ -48,7 +48,8 @@ in which order, but where output will be stored and in which form.
 Standalone
 ----------
 
-ploomber is a Python package that requires no setup after being installed.
+ploomber's pipelines can be executed after creation, no need to setup a
+separate system.
 
 .. code-block:: python
     
@@ -61,7 +62,7 @@ ploomber is a Python package that requires no setup after being installed.
     # ...
     # ...
 
-    # dag can be executed right away after instantiated
+    # execute it
     dag.build()
 
 
