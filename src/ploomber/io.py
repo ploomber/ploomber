@@ -1,6 +1,7 @@
 """
 Handling file I/O
 """
+import warnings
 import csv
 from pathlib import Path
 
@@ -74,6 +75,16 @@ class ParquetIO(FileIO):
 
     @requires(['pyarrow'], 'ParquetIO')
     def __init__(self, path, chunked):
+        if chunked:
+            warnings.warn('{} was initilized with the chunked option on, '
+                          'since each chunk will create a parquet file '
+                          'and the schema will be inferred from there '
+                          'there might be inconsistencies among chunks. '
+                          'To avoid this, the schema from the first chunk '
+                          'will be applied to all chunks, if this does not '
+                          'work either turn the chunked option off or '
+                          'use the ploomber.io.CSVIO')
+
         super().__init__(path, chunked)
         self.schema = None
 
