@@ -1,5 +1,13 @@
+from pathlib import Path
+
 import pytest
 from ploomber.env.env import _get_name, Env
+
+
+def test_path_returns_Path_objects(cleanup_env):
+    env = Env.start({'path': {'a': '/tmp/path', 'b': '/another/path/'}})
+    assert isinstance(env.path.a, Path)
+    assert isinstance(env.path.b, Path)
 
 
 def test_init_with_module_key(cleanup_env):
