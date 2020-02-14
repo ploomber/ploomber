@@ -1,5 +1,6 @@
 import warnings
 from functools import partial, wraps
+from collections.abc import Mapping
 
 
 class Assert:
@@ -68,15 +69,17 @@ def validator(fn):
 
 @validator
 def validate_schema(assert_, data, schema, optional=None,
-                    on_unexpected_cols='warn'):
+                    on_unexpected_cols='raise'):
     """Check if a data frame complies with a schema
 
     Parameters
     ----------
     data : pandas.DataFrame
         Data frame to test
-    schema : dict
-        Column names as keys, dtypes as values
+    schema : list or dict
+        List with column names (will only validate names)
+        or dict with column names as keys, dtypes as values (will validate
+        names and dtypes)
     optional : list, optional
         List of optional column names, it won't warn nor raise any errors if
         they appear
@@ -105,17 +108,18 @@ def validate_schema(assert_, data, schema, optional=None,
         caller = assert_ if on_unexpected_cols == 'raise' else assert_.warn
         caller(not unexpected, msg)
 
-    # validate column types (as many as you can)
-    dtypes = data.dtypes.astype(str).to_dict()
+    if isinstance(schema, Mapping):
+        # validate column types (as many as you can)
+        dtypes = data.dtypes.astype(str).to_dict()
 
-    for name, dtype in dtypes.items():
-        expected = schema.get(name)
+        for name, dtype in dtypes.items():
+            expected = schema.get(name)
 
-        if expected is not None:
-            msg = ('validate_schema: wrong dtype for column "{name}". '
-                   'Expected: "{expected}". Got: "{dtype}"'
-                   .format(name=name, expected=expected, dtype=dtype))
-            assert_(dtype == expected, msg)
+            if expected is not None:
+                msg = ('validate_schema: wrong dtype for column "{name}". '
+                       'Expected: "{expected}". Got: "{dtype}"'
+                       .format(name=name, expected=expected, dtype=dtype))
+                assert_(dtype == expected, msg)
 
     return assert_
 
