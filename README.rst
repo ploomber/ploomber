@@ -9,7 +9,7 @@ ploomber
     :alt: Documentation Status
 
 
-`Click here for focumentation <https://ploomber.readthedocs.io/>`_
+`Click here for documentation <https://ploomber.readthedocs.io/>`_
 
 ploomber is a workflow management tool that accelerates DS/ML experimentation.
 It provides incremental builds, interactive execution and testing tools
