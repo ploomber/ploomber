@@ -1,3 +1,4 @@
+import warnings
 from functools import partial, wraps
 
 
@@ -13,6 +14,7 @@ class Assert:
 
     def warn(self, expression, warning_message):
         if not expression:
+            warnings.warn(warning_message)
             self.messages_warning.append(warning_message)
 
     def __len__(self):
@@ -65,21 +67,43 @@ def validator(fn):
 
 
 @validator
-def validate_schema(assert_, data, schema, error_on_extra_cols=False):
+def validate_schema(assert_, data, schema, optional=None,
+                    on_unexpected_cols='warn'):
     """Check if a data frame complies with a schema
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        Data frame to test
+    schema : dict
+        Column names as keys, dtypes as values
+    optional : list, optional
+        List of optional column names, it won't warn nor raise any errors if
+        they appear
+    on_unexpected_cols : str, optional
+        One of 'warn', 'raise' or None. If 'warn', it will warn on extra
+        columns, if 'raise' it will raise an error, if None it will completely
+        ignore extra columns
     """
+    if on_unexpected_cols not in {'warn', 'raise', None}:
+        raise ValueError("'on_unexpected_cols' must be one of 'warn', 'raise' "
+                         "or None")
+
+    optional = set() if optional is None else set(optional)
     cols = set(data.columns)
     expected = set(schema)
+
     missing = expected - cols
-    unexpected = cols - expected
+    unexpected = cols - expected - optional
 
     msg = 'validate_schema: missing columns {missing}.'.format(missing=missing)
     assert_(not missing, msg)
 
-    msg = ('validate_schema: wnexpected columns {unexpected}'
-           .format(unexpected=unexpected))
-    caller = assert_ if error_on_extra_cols else assert_.warn
-    caller(not unexpected, msg)
+    if on_unexpected_cols is not None:
+        msg = ('validate_schema: unexpected columns {unexpected}'
+               .format(unexpected=unexpected))
+        caller = assert_ if on_unexpected_cols == 'raise' else assert_.warn
+        caller(not unexpected, msg)
 
     # validate column types (as many as you can)
     dtypes = data.dtypes.astype(str).to_dict()
@@ -152,3 +176,5 @@ def data_frame_validator(df, validators):
 
     if len(assert_):
         raise AssertionError(str(assert_))
+
+    return True
