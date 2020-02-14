@@ -4,6 +4,7 @@ CHANGELOG
 0.2dev
 ------
 
+* Simplifies installation
 * Deletes BashCommand, use ShellScript
 * More examples added
 * Refactored env module

@@ -1,8 +1,6 @@
 import sqlite3
 import json
 
-from psycopg2 import sql
-
 from ploomber.products import Product
 from ploomber.products.serializers import Base64Serializer
 from ploomber.templates.Placeholder import SQLRelationPlaceholder
@@ -205,15 +203,13 @@ class PostgresRelation(Product):
     def save_metadata(self):
         metadata = Base64Serializer.serialize(self.metadata)
 
-        if self._identifier.kind == 'table':
-            query = (sql.SQL("COMMENT ON TABLE {} IS %(metadata)s;"
-                             .format(self._identifier)))
-        else:
-            query = (sql.SQL("COMMENT ON VIEW {} IS %(metadata)s;"
-                             .format(self._identifier)))
+        query = (("COMMENT ON {} {} IS '{}';"
+                  .format(self._identifier.kind,
+                          self._identifier,
+                          metadata)))
 
         cur = self.client.connection.cursor()
-        cur.execute(query, dict(metadata=metadata))
+        cur.execute(query)
         self.client.connection.commit()
         cur.close()
 

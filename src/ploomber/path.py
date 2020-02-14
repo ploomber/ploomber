@@ -17,3 +17,10 @@ class PathManager:
             path.mkdir(parents=True, exist_ok=True)
 
         return path
+
+    def __repr__(self):
+        return '{}({})'.format(type(self).__name__,
+                               repr(self._env._data['path']))
+
+    def __str__(self):
+        return str(self._env._data['path'])

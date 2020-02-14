@@ -1,11 +1,9 @@
 from pathlib import Path
 from io import StringIO
 
-from ploomber.exceptions import SourceInitializationError
 from ploomber.tasks.Task import Task
 from ploomber.sources import (SQLScriptSource,
                               SQLQuerySource,
-                              GenericSource,
                               FileSource)
 from ploomber.products import File, PostgresRelation, SQLiteRelation
 from ploomber import io
@@ -323,7 +321,7 @@ class PostgresCopyFrom(Task):
     """
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation,)
 
-    @requires(['pandas'], 'PostgresCopyFrom')
+    @requires(['pandas', 'psycopg2'], 'PostgresCopyFrom')
     def __init__(self, source, product, dag, name, client=None,
                  params=None, sep='\t', null='\\N', columns=None):
         params = params or {}

@@ -18,7 +18,6 @@ import tempfile
 
 import pandas as pd
 from sklearn import datasets
-from IPython.display import HTML
 
 from ploomber import DAG
 from ploomber.tasks import PythonCallable, SQLUpload, SQLScript
@@ -111,10 +110,11 @@ html = dag.to_markup()
 ###############################################################################
 # Report
 # ------
-# `Click here to see the generated report.  <../communicate-nb.html>`_
+# `Click here to see the generated report.  <../_static/communicate-nb.html>`_
 
 # do not run these lines. they just move the report to make the above link work
-out = Path('../doc/_build/html/communicate-nb.html')
+doc = Path('../doc')
 
-if out.parent.exists():
+if doc.exists():
+    out = doc / '_static/communicate-nb.html'
     out.write_text(html)

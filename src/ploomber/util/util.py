@@ -41,6 +41,7 @@ def requires(pkgs, name=None):
     return decorator
 
 
+@requires(['matplotlib'])
 def path2fig(path_to_image, dpi=50):
     # FIXME: having this import at the top causes trouble with the
     # multiprocessing library, moving it here solves the problem but we

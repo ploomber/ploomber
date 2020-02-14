@@ -7,7 +7,7 @@ install:
   - pip install -r examples/pipeline/intermediate/requirements.txt
   - pip install -r requirements.txt
   - bash sample_package.sh
-  - pip install .
+  - pip install .[all]
 
 script:
   - pytest
