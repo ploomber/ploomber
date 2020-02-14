@@ -34,10 +34,10 @@ NB = ['papermill', 'jupytext', 'jupyter']
 MISC = [
     # sql dumps
     'pandas',
+    # parquet support
+    'pyarrow',
     # RemoteShellClient
     'paramiko',
-    'sqlalchemy',
-    'pyarrow',
 ]
 
 setup(
@@ -86,7 +86,7 @@ setup(
         'sqlparse', 'autopep8', 'parso',
         # for generating dag.to_markup(fmt='html')
         'mistune',
-
+        'sqlalchemy',
     ],
     extras_require={
         'plot': PLOT,
