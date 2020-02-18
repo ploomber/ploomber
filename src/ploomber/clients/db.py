@@ -117,9 +117,9 @@ class SQLAlchemyClient(Client):
         state = self.__dict__.copy()
         # _logger is not pickable, so we remove them and build it
         # again in __setstate__
-        del state['_logger']
-        del state['_engine']
-        del state['_connection']
+        state['_logger'] = None
+        state['_engine'] = None
+        state['_connection'] = None
 
         return state
 
