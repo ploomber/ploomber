@@ -165,6 +165,9 @@ ploomber's pipelines are interactive, which facilitates debugging:
     # only execute this task instead of the entire dag
     task.build()
 
+    # start a debugging session (only works if task is a PythonCallable)
+    task.debug()
+
 
 Communicable
 ------------

@@ -92,6 +92,5 @@ Example
     # status will return a summary table
     dag.status()
 
-    # you can explore your pipeline interactively, this is very useful for
-    # debugging
-    dag['add_one']
+    # start a debugging session (only works if task is a PythonCallable)
+    dag['add_one'].debug()
