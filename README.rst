@@ -11,8 +11,9 @@ ploomber
 
 `Click here for documentation <https://ploomber.readthedocs.io/>`_
 
-ploomber is a workflow management tool that accelerates DS/ML experimentation.
-It provides incremental builds, interactive execution and testing tools
+ploomber is an expressive workflow management library that provides
+incremental builds, testing and debugging tools to accelerate DS/ML pipeline
+development.
 
 Install
 -------
@@ -68,11 +69,17 @@ Example
         df['a'] = df['a'] + 1
         df.to_csv(str(product), index=False)
 
+    def on_finish(task):
+        df = pd.read_csv(str(task.product))
+        assert not df['a'].isna().sum()
+
     # we convert the Python function to a Task
     task_add_one = PythonCallable(_add_one,
                                   File(tmp_dir / 'add_one.csv'),
                                   dag,
                                   name='add_one')
+    # verify there are no NAs in columns a
+    task_add_one.on_finish = on_finish
 
     # declare how tasks relate to each other
     task_dump >> task_add_one
@@ -84,3 +91,7 @@ Example
     # a DAG also serves as a tool to interact with your pipeline, for example,
     # status will return a summary table
     dag.status()
+
+    # you can explore your pipeline interactively, this is very useful for
+    # debugging
+    dag['add_one']

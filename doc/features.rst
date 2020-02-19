@@ -7,7 +7,7 @@ Expressive
 
 ploomber expressive syntax makes pipeline declarations read like blueprints
 that provide a full picture: not only they include which tasks to perform and
-in which order, but where output will be stored and in which form.
+in which order, but where output will be stored and in which form. Furthermore, upstream products are available to downstream tasks, this way, each product is only declared once.
 
 .. code-block:: python
 
@@ -48,7 +48,8 @@ in which order, but where output will be stored and in which form.
 Standalone
 ----------
 
-ploomber's pipelines are ready to run right after being created, no need to setup a separate system.
+ploomber's pipelines are ready to run right after being created, no need to setup a separate system. Since all prodcts are part of the declaration, one
+can switch them entirely to isolate executions.
 
 .. code-block:: python
     
@@ -104,8 +105,8 @@ Try again...
     python pipeline.py
 
 
-Testable
---------
+Testable and interactive
+------------------------
 
 Since ploomber pipelines standalone Python objects, you can test them inside
 the usual `tests/` directory:
@@ -149,6 +150,20 @@ ploomber also supports a hook to execute code upon task execution. This allows t
 
 
 :doc:`Full example <auto_examples/testing>`
+
+Pipelines are notoriously hard to debug given their complex dependencies,
+ploomber's pipelines are interactive, which facilitates debugging:
+
+.. code-block:: python
+    
+    # get task named 'my_task'
+    task = dag['my_task']
+
+    # which are their upstream dependencies?
+    task.upstream
+
+    # only execute this task instead of the entire dag
+    task.build()
 
 
 Communicable
