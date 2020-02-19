@@ -155,7 +155,7 @@ Pipelines are notoriously hard to debug given their complex dependencies,
 ploomber's pipelines are interactive, which facilitates debugging:
 
 .. code-block:: python
-    
+
     # get task named 'my_task'
     task = dag['my_task']
 
