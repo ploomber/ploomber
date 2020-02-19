@@ -48,8 +48,7 @@ in which order, but where output will be stored and in which form.
 Standalone
 ----------
 
-ploomber's pipelines can be executed after creation, no need to setup a
-separate system.
+ploomber's pipelines are ready to run right after being created, no need to setup a separate system.
 
 .. code-block:: python
     
@@ -62,14 +61,14 @@ separate system.
     # ...
     # ...
 
-    # execute it
+    # execute it now
     dag.build()
 
 
 Incremental
 -----------
 
-ploomber keeps track of code changes and only executes a task if the code has changed since its last execution.
+Pipelines usually take hours or even days to run, during the development phase, it is wasteful to re-execute the pipeline on each change. ploomber keeps track of code changes and only executes a task if the source code has changed since its last execution.
 
 
 .. code-block:: python
@@ -108,9 +107,8 @@ Try again...
 Testable
 --------
 
-Since ploomber pipelines are Python objects that can execute themselves,
-testing is easier. Just import a function to instantiate you pipeline
-and test it in a usual `tests/` folder.
+Since ploomber pipelines standalone Python objects, you can test them inside
+the usual `tests/` directory:
 
 
 .. code-block:: python
@@ -156,12 +154,9 @@ ploomber also supports a hook to execute code upon task execution. This allows t
 Communicable
 ------------
 
-Being able to explain how a pipeline works is critical so any stakeholder
-involved is aware of the pipeline's logic and required resources. While the
-pipeline declaration provides a blueprint for developers, it is not well
-suited for communication with non-technical partners (or even technical ones
-that are not familiar with ploomber). For that reason, ploomber provides ways
-of easily communicating important pipeline details to a wider audience.
+Explaining the pipeline's embedded logic, assumptions and resources needed is key to get all stakeholders on board. ploomber is able to generate HTML
+summaries with code, output location and a diagram to communicate pipelines to
+a wider audience.
 
 .. code-block:: python
 
