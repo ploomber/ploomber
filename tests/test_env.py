@@ -1,7 +1,26 @@
+import platform
 from pathlib import Path
 
 import pytest
+import yaml
+
 from ploomber.env.env import _get_name, Env
+
+
+def test_load_env_with_name(tmp_directory, cleanup_env):
+    Path('env.some_name.yaml').write_text(yaml.dump({'a': 1}))
+    Env.start('env.some_name.yaml')
+
+
+def test_load_env_default_name(tmp_directory, cleanup_env):
+    Path('env.yaml').write_text(yaml.dump({'a': 1}))
+    Env.start()
+
+
+def test_load_env_hostname(tmp_directory, cleanup_env):
+    name = 'env.{}.yaml'.format(platform.node())
+    Path(name).write_text(yaml.dump({'a': 1}))
+    Env.start()
 
 
 def test_path_returns_Path_objects(cleanup_env):

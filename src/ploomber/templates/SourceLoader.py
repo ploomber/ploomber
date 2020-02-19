@@ -64,10 +64,12 @@ class SourceLoader:
             path = str(path)
 
         if isinstance(module, str):
-            module = pydoc.locate(module)
+            module_obj = pydoc.locate(module)
 
-            if module is None:
+            if module_obj is None:
                 raise ValueError('Could not locate module "{}"'.format(module))
+
+            module = module_obj
 
         # for module objects
         if hasattr(module, '__file__'):

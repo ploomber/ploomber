@@ -96,14 +96,13 @@ class Env:
 
         Parameters
         ----------
-        source: dict, str or pathlib.Path, optional
-            Environment source. If str or pathlib.Path, assumes the file
-            is in yaml format. If None, it tries to automatically find a
-            file by looking at the current working directory and by going to
-            parent directories, it first looks for a file named env.{host}.yaml
-            where host is replaced by the hostname (by calling
-            platform.node()), if it fails, it looks for a file called env.yaml,
-            if it cannot find it it raises a FileNotFoundError
+        source: dict, pathlib.Path, str, optional
+            If dict, loads it directly, if pathlib.Path, reads the file
+            (assumes yaml format), if str, looks for a file named that way
+            in the current directory and their parents. If None, it first looks
+            for a file named env.{host}.yaml where host is replaced by the
+            hostname (by calling platform.node()), if it fails, it looks for a
+            file called env.yaml
 
         Raises
         ------
@@ -120,20 +119,25 @@ class Env:
         """
         if cls._data is None:
 
-            # try to set it if no argument was provided
-            if source is None:
+            if isinstance(source, str):
+                source = find_env(source)
+
+                if source is None:
+                    raise FileNotFoundError('Could not find file "{}"'
+                                            .format(source))
+
+            elif source is None:
                 # look for an env.{name}.yaml, if that fails, try env.yaml
                 name = platform.node()
                 path_found = find_env_w_name(name)
 
                 if path_found is None:
-                    # TODO: improve error message, include hostname
                     raise FileNotFoundError('Could not find env.{}.yaml '
                                             'nor env.yaml'.format(name))
                 else:
                     source = path_found
 
-            if isinstance(source, (str, Path)):
+            if isinstance(source, Path):
                 cls._path_to_env = Path(source).resolve()
                 cls._name = _get_name(cls._path_to_env)
             else:
