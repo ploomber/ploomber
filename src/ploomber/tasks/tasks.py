@@ -4,6 +4,7 @@ Task implementations
 A Task is a unit of work that produces a persistent change (Product)
 such as a bash or a SQL script
 """
+import pdb
 from urllib import request
 from multiprocessing import Pool
 from ploomber.exceptions import SourceInitializationError
@@ -59,6 +60,13 @@ class PythonCallable(Task):
             p.join()
         else:
             self.source._source(**self.params)
+
+    def debug(self):
+        """
+        Run callable in debug mode.
+
+        """
+        pdb.runcall(self.source._source, **self.params)
 
 
 class ShellScript(Task):
