@@ -137,10 +137,11 @@ class Env:
                 else:
                     source = path_found
 
-            if isinstance(source, Path):
+            if isinstance(source, (str, Path)):
                 cls._path_to_env = Path(source).resolve()
                 cls._name = _get_name(cls._path_to_env)
             else:
+                # when loaded form dict, there is no name nor path
                 cls._path_to_env = None
                 cls._name = None
 
