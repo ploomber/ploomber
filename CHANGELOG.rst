@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.3dev
-------
+0.2.1 (2020-02-20)
+-------------------
 
 * Adds integration with pdb via PythonCallable.debug
 * Env.start now accepts a filename to look for
