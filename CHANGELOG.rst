@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+0.3dev
+------
+
+* Adds integration with pdb via PythonCallable.debug
+* Env.start now accepts a filename to look for
+* Improvements to data_frame_validator
+
 0.2 (2020-02-13)
 -----------------
 
