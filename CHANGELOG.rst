@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.2dev
-------
+0.2 (2020-02-13)
+-----------------
 
 * Simplifies installation
 * Deletes BashCommand, use ShellScript
