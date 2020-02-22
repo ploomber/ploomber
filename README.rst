@@ -10,6 +10,7 @@ ploomber
 
 
 `Click here for documentation <https://ploomber.readthedocs.io/>`_
+`Code on Github <https://github.com/ploomber/ploomber>`_
 
 ploomber is an expressive workflow management library that provides
 incremental builds, testing and debugging tools to accelerate DS/ML pipeline
