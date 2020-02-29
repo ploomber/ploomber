@@ -24,7 +24,7 @@ If you want to try out everything ploomber has to offer:
 
 .. code-block:: shell
 
-    pip install ploomber[all]
+    pip install "ploomber[all]"
 
 Note that installing everything will attemp to install pygraphviz, which
 depends on graphviz, you have to install that first:
