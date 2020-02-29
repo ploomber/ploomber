@@ -11,6 +11,8 @@ ploomber
 
 `Click here for documentation <https://ploomber.readthedocs.io/>`_
 
+`Code on Github <https://github.com/ploomber/ploomber>`_
+
 ploomber is an expressive workflow management library that provides
 incremental builds, testing and debugging tools to accelerate DS/ML pipeline
 development.
@@ -22,7 +24,7 @@ If you want to try out everything ploomber has to offer:
 
 .. code-block:: shell
 
-    pip install ploomber[all]
+    pip install "ploomber[all]"
 
 Note that installing everything will attemp to install pygraphviz, which
 depends on graphviz, you have to install that first:
