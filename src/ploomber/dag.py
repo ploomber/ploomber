@@ -18,47 +18,19 @@ except ImportError:
     import importlib_resources
 
 
-try:
-    import mistune
-except ImportError:
-    mistune = None
-
-
-try:
-    import pygments
-    from pygments import highlight
-    from pygments.lexers import get_lexer_by_name
-    from pygments.formatters import html
-except ImportError:
-    pygments = None
-
+import mistune
+import pygments
 import networkx as nx
 from tqdm.auto import tqdm
 from jinja2 import Template
 
 from ploomber.Table import Table
 from ploomber.products import MetaProduct
-from ploomber.util import image_bytes2html, isiterable, path2fig, requires
+from ploomber.util import (image_bytes2html, isiterable, path2fig, requires,
+                           markup)
 from ploomber.CodeDiffer import CodeDiffer
 from ploomber import resources
 from ploomber import executors
-
-
-class HighlightRenderer(mistune.Renderer):
-    """mistune renderer with syntax highlighting
-
-    Notes
-    -----
-    Source: https://github.com/lepture/mistune#renderer
-    """
-
-    def block_code(self, code, lang):
-        if not lang:
-            return '\n<pre><code>%s</code></pre>\n' % \
-                mistune.escape(code)
-        lexer = get_lexer_by_name(lang, stripall=True)
-        formatter = html.HtmlFormatter()
-        return highlight(code, lexer, formatter)
 
 
 class DAG(collections.abc.Mapping):
@@ -238,7 +210,7 @@ class DAG(collections.abc.Mapping):
                 raise ImportError('mistune and pygments are '
                                   'required to export to HTML')
 
-            renderer = HighlightRenderer()
+            renderer = markup.HighlightRenderer()
             out = mistune.markdown(out, escape=False, renderer=renderer)
 
             # add css
