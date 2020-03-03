@@ -204,3 +204,13 @@ def test_lineage():
     assert ta._lineage is None
     assert tb._lineage == {'ta'}
     assert tc._lineage == {'ta', 'tb'}
+
+
+def test_params_are_copied_upon_initialization():
+    dag = DAG()
+
+    params = {'a': 1}
+    t1 = PythonCallable(touch, File('file'), dag, name='t1', params=params)
+    t2 = PythonCallable(touch, File('file'), dag, name='t2', params=params)
+
+    assert t1.params is not t2.params

@@ -82,7 +82,11 @@ class Task(abc.ABC):
             Extra parameters passed to the task on rendering (if templated
             source) or during execution (if not templated source)
         """
-        self._params = params or {}
+        if params is None:
+            self._params = {}
+        else:
+            self._params = copy(params)
+
         self._name = name
         self._source = self._init_source(source)
 
