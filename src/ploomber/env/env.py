@@ -120,11 +120,14 @@ class Env:
         if cls._data is None:
 
             if isinstance(source, str):
-                source = find_env(source)
+                source_found = find_env(source)
 
-                if source is None:
-                    raise FileNotFoundError('Could not find file "{}"'
-                                            .format(source))
+                if source_found is None:
+                    raise FileNotFoundError('Could not find file "{}" in the '
+                                            'current working directory nor '
+                                            '6 levels up'.format(source))
+                else:
+                    source = source_found
 
             elif source is None:
                 # look for an env.{name}.yaml, if that fails, try env.yaml
