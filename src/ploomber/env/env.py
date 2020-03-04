@@ -9,7 +9,7 @@ from glob import iglob
 from io import StringIO
 import getpass
 import platform
-from functools import partial
+from functools import partial, wraps
 from inspect import getfullargspec
 from collections.abc import Mapping
 
@@ -40,6 +40,35 @@ def load_env(fn):
                         .format(fn.__name__))
 
     return partial(fn, env=Env())
+
+
+def with_env(source):
+    """
+    A function decorated with @with_env will start and Env with the desired
+    source, run the function and then call Env.end()
+    """
+    def decorator(fn):
+
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            args_declared = getfullargspec(fn).args
+            kwonlyargs = getfullargspec(fn).kwonlyargs
+            args_all = args_declared + kwonlyargs
+
+            if 'env' not in args_all:
+                raise TypeError('callable "{}" does not have arg "env"'
+                                .format(fn.__name__))
+
+            # check env is the first arg
+
+            Env.start(source)
+            res = fn(Env(), *args, **kwargs)
+            Env.end()
+            return res
+
+        return wrapper
+
+    return decorator
 
 
 class Env:
@@ -120,11 +149,14 @@ class Env:
         if cls._data is None:
 
             if isinstance(source, str):
-                source = find_env(source)
+                source_found = find_env(source)
 
-                if source is None:
-                    raise FileNotFoundError('Could not find file "{}"'
-                                            .format(source))
+                if source_found is None:
+                    raise FileNotFoundError('Could not find file "{}" in the '
+                                            'current working directory nor '
+                                            '6 levels up'.format(source))
+                else:
+                    source = source_found
 
             elif source is None:
                 # look for an env.{name}.yaml, if that fails, try env.yaml
@@ -202,6 +234,12 @@ class Env:
             super().__setattr__(name, value)
         else:
             raise RuntimeError('env is a read-only object')
+
+    # def __enter__(self):
+    #     return self
+
+    # def __exit__(self, exc_type, exc_value, traceback):
+    #     self.end()
 
     # def get_metadata(self):
     #     """Get env metadata such as git hash, last commit timestamp

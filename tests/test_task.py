@@ -5,6 +5,7 @@ from ploomber import DAG
 from ploomber.products import File, PostgresRelation
 from ploomber.tasks import PythonCallable, SQLScript, ShellScript
 from ploomber.constants import TaskStatus
+from ploomber.templates.Placeholder import Placeholder
 
 import pytest
 
@@ -204,3 +205,28 @@ def test_lineage():
     assert ta._lineage is None
     assert tb._lineage == {'ta'}
     assert tc._lineage == {'ta', 'tb'}
+
+
+def test_params_are_copied_upon_initialization():
+    dag = DAG()
+
+    params = {'a': 1}
+    t1 = PythonCallable(touch, File('file'), dag, name='t1', params=params)
+    t2 = PythonCallable(touch, File('file'), dag, name='t2', params=params)
+
+    assert t1.params is not t2.params
+
+
+def test_placeholder_is_copied_upon_initialization():
+    dag = DAG()
+    dag.clients[SQLScript] = object()
+    dag.clients[PostgresRelation] = object()
+
+    p = Placeholder('CREATE TABLE {{product}} AS SELECT * FROM TABLE')
+
+    t1 = SQLScript(p, PostgresRelation(('schema', 'a_table', 'table')),
+                   dag, name='t1')
+    t2 = SQLScript(p, PostgresRelation(('schema', 'another_table', 'table')),
+                   dag, name='t2')
+
+    assert t1.source.value is not t2.source.value

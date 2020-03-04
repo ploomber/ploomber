@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ploomber.env.env import _get_name, Env
+from ploomber.env.env import _get_name, Env, with_env
 
 
 def test_load_env_with_name(tmp_directory, cleanup_env):
@@ -71,3 +71,18 @@ def test_can_instantiate_env_if_located_in_sample_dir(move_to_sample_dir,
 def test_can_instantiate_env_if_located_in_sample_subdir(move_to_sample_subdir,
                                                          cleanup_env):
     Env.start()
+
+
+def test_raise_file_not_found_if(cleanup_env):
+    msg = ('Could not find file "env.non_existing.yaml" '
+           'in the current working directory nor 6 levels up')
+    with pytest.raises(FileNotFoundError, match=msg):
+        Env.start('env.non_existing.yaml')
+
+
+def test_with_env_decorator(cleanup_env):
+    @with_env({'a': 1})
+    def my_fn(env, b):
+        return env.a, b
+
+    assert (1, 2) == my_fn(2)
