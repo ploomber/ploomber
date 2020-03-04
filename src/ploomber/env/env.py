@@ -51,15 +51,19 @@ def with_env(source):
 
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            args_declared = getfullargspec(fn).args
-            kwonlyargs = getfullargspec(fn).kwonlyargs
-            args_all = args_declared + kwonlyargs
+            args_fn = getfullargspec(fn).args
 
-            if 'env' not in args_all:
-                raise TypeError('callable "{}" does not have arg "env"'
-                                .format(fn.__name__))
+            if not len(args_fn):
+                raise RuntimeError('Function "{}" does not take arguments, '
+                                   '@with_env decorated functions should '
+                                   'have env as their first artgument'
+                                   .format(fn.__name__))
 
-            # check env is the first arg
+            if args_fn[0] != 'env':
+                raise RuntimeError('Function "{}" does not "env" as its first '
+                                   'argument, which is required to use the '
+                                   '@with_env decorator'
+                                   .format(fn.__name__))
 
             Env.start(source)
             res = fn(Env(), *args, **kwargs)
