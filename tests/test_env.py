@@ -89,18 +89,31 @@ def test_with_env_decorator(cleanup_env):
 
 
 def test_with_env_fails_if_no_env_arg(cleanup_env):
-    @with_env({'a': 1})
-    def my_fn(a):
-        pass
-
     with pytest.raises(RuntimeError):
-        my_fn()
+        @with_env({'a': 1})
+        def my_fn(a):
+            pass
 
 
 def test_with_env_fails_if_fn_takes_no_args(cleanup_env):
-    @with_env({'a': 1})
-    def my_fn():
-        pass
-
     with pytest.raises(RuntimeError):
-        my_fn()
+        @with_env({'a': 1})
+        def my_fn():
+            pass
+
+
+def test_replace_defaults(cleanup_env):
+    @with_env({'a': {'b': 1}})
+    def my_fn(env, c):
+        return env.a.b + c
+
+    assert my_fn(1, env__a__b=100) == 101
+
+
+def test_replacing_raises_error_if_key_does_not_exist():
+    @with_env({'a': {'b': 1}})
+    def my_fn(env, c):
+        return env.a.b + c
+
+    with pytest.raises(KeyError):
+        my_fn(1, env__c=100)
