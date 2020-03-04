@@ -86,3 +86,21 @@ def test_with_env_decorator(cleanup_env):
         return env.a, b
 
     assert (1, 2) == my_fn(2)
+
+
+def test_with_env_fails_if_no_env_arg(cleanup_env):
+    @with_env({'a': 1})
+    def my_fn(a):
+        pass
+
+    with pytest.raises(RuntimeError):
+        my_fn()
+
+
+def test_with_env_fails_if_fn_takes_no_args(cleanup_env):
+    @with_env({'a': 1})
+    def my_fn():
+        pass
+
+    with pytest.raises(RuntimeError):
+        my_fn()

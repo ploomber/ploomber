@@ -1,5 +1,5 @@
 # the fix has not been merged, we have to use this version
-git+https://github.com/larsoner/sphinx-gallery@pickle
+git+https://github.com/sphinx-gallery/sphinx-gallery
 
 # sphinx-gallery requires this
 pillow
