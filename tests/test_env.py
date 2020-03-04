@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ploomber.env.env import _get_name, Env
+from ploomber.env.env import _get_name, Env, with_env
 
 
 def test_load_env_with_name(tmp_directory, cleanup_env):
@@ -78,3 +78,11 @@ def test_raise_file_not_found_if(cleanup_env):
            'in the current working directory nor 6 levels up')
     with pytest.raises(FileNotFoundError, match=msg):
         Env.start('env.non_existing.yaml')
+
+
+def test_with_env_decorator(cleanup_env):
+    @with_env({'a': 1})
+    def my_fn(env, b):
+        return env.a, b
+
+    assert (1, 2) == my_fn(2)
