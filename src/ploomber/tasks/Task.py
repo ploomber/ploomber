@@ -1,9 +1,9 @@
 """
 Task abstract class
 
-A Task is a unit of work, it has associated source code and
-a product (a persistent object such as a table in a database),
-it has a name and lives in a DAG
+A Task is a unit of work, it has associated source code and a product
+(a persistent object such as a table in a database), it has a name and lives
+in a DAG.
 
 [WIP] On subclassing Tasks
 
@@ -44,7 +44,32 @@ import humanize
 
 
 class Task(abc.ABC):
-    """A task represents a unit of work
+    """
+    A task represents a unit of work.
+
+    Parameters
+    ----------
+    source: str or pathlib.Path
+        Source code for the task, for tasks that do not take source code
+        as input (such as PostgresCopyFrom), this can be another thing. The
+        source can be a template and can make references to any parameter
+        in "params", "upstream" parameters or its own "product", not all
+        Tasks have templated source (templating code is mostly used by
+        Tasks that take SQL source code as input)
+    product: Product
+        The product that this task will create upon completion
+    dag: DAG
+        The DAG holding this task
+    name: str
+        A name for this task, if None a default will be assigned
+    params: dict
+        Extra parameters passed to the task on rendering (if templated
+        source) or during execution (if not templated source)
+
+    Notes
+    -----
+    All subclasses must implement the same constuctor to keep the API
+    consistent, optional parameters after "params" are ok
     """
     PRODUCT_CLASSES_ALLOWED = None
 
@@ -59,29 +84,6 @@ class Task(abc.ABC):
         pass
 
     def __init__(self, source, product, dag, name, params=None):
-        """
-        All subclasses must implement the same constuctor to keep the API
-        consistent, optional parameters after "params" are ok
-
-        Parameters
-        ----------
-        source: str or pathlib.Path
-            Source code for the task, for tasks that do not take source code
-            as input (such as PostgresCopyFrom), this can be another thing. The
-            source can be a template and can make references to any parameter
-            in "params", "upstream" parameters or its own "product", not all
-            Tasks have templated source (templating code is mostly used by
-            Tasks that take SQL source code as input)
-        product: Product
-            The product that this task will create upon completion
-        dag: DAG
-            The DAG holding this task
-        name: str
-            A name for this task, if None a default will be assigned
-        params: dict
-            Extra parameters passed to the task on rendering (if templated
-            source) or during execution (if not templated source)
-        """
         if params is None:
             self._params = {}
         else:
