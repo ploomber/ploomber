@@ -64,11 +64,10 @@ def with_env(source):
                                '@with_env decorator'
                                .format(fn.__name__))
 
+        # TODO: check no arg in the function starts with env (other than env)
+
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            # NOTE: whatever format we use we have to verify Env
-            # does not accept them as valid keys, otherwise it would be
-            # ambiguous
             to_replace = {k: v for k, v in kwargs.items()
                           if k.startswith('env__')}
 
