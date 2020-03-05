@@ -133,7 +133,7 @@ def _load_db_credentials():
             db = json.load(f)
     except FileNotFoundError:
         db = {
-            'uri': 'postgresql://localhost:5432',
+            'uri': 'postgresql://localhost:5432/db',
             'dbname': 'db',
             'host': 'localhost',
             'user': 'postgres',
