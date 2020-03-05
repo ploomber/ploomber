@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ploomber.exceptions import RenderError
+from ploomber.exceptions import RenderError, TaskBuildError
 from ploomber import DAG
 from ploomber.products import File, PostgresRelation
 from ploomber.tasks import PythonCallable, SQLScript, ShellScript
@@ -25,12 +25,15 @@ def my_fn(product, upstream):
 
 # have to declare this here, otherwise it won't work with pickle
 def touch(product):
-    Path('file').touch()
+    Path(str(product)).touch()
 
 
 def on_finish(task):
-    Path('file').write_text('hello')
+    Path(str(task)).write_text('hello')
 
+
+def on_finish_fail(task):
+    raise Exception
 
 # NOTE: this feature was removed
 # def test_task_can_infer_name_from_product():
@@ -230,3 +233,20 @@ def test_placeholder_is_copied_upon_initialization():
                    dag, name='t2')
 
     assert t1.source.value is not t2.source.value
+
+
+def test_task_is_re_executed_if_on_finish_fails():
+    dag = DAG()
+
+    t = PythonCallable(touch, File('file'), dag, name='t1')
+    t.on_finish = on_finish_fail
+
+    # first time it runs, fails..
+    try:
+        dag.build(clear_cached_status=True)
+    except TaskBuildError:
+        pass
+
+    # if we attempt to run, it will fail again (since no metadata is saved)
+    with pytest.raises(TaskBuildError):
+        dag.build(clear_cached_status=True)
