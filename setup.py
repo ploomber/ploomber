@@ -30,7 +30,14 @@ def read(*names, **kwargs):
 
 # matplotlib only needed for dag.plot(output='matplotlib'),
 PLOT = ['matplotlib', 'pygraphviz']
-NB = ['papermill', 'jupytext', 'jupyter']
+
+# jupyter_client and nbconvert are pinned to support parallel
+# execution using papermill (avoid "kernel did not respond" errors)
+# these are versions are not pinned in papermill (yet) so we put it here
+# https://discourse.jupyter.org/t/nbconvert-5-6-0-release/1867
+# https://github.com/nteract/papermill/issues/239
+NB = ['papermill', 'jupytext',
+      'jupyter_client>=5.3.1', 'nbconvert>=5.6.0']
 MISC = [
     # sql dumps
     'pandas',
