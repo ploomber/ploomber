@@ -13,9 +13,6 @@ try:
 except ImportError:
     jupytext = None
 
-# nbformat, nbconvert and jupyter_client are jupyter requirements:
-# https://github.com/jupyter/notebook/blob/master/setup.py
-
 try:
     import nbformat
 except ImportError:

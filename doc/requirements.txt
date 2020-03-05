@@ -1,4 +1,4 @@
-# the fix has not been merged, we have to use this version
+# the fix has not been release, we install from git
 git+https://github.com/sphinx-gallery/sphinx-gallery
 
 # sphinx-gallery requires this

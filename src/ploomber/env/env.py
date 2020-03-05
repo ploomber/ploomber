@@ -15,6 +15,7 @@ from collections.abc import Mapping
 
 from ploomber.FrozenJSON import FrozenJSON
 from ploomber.path import PathManager
+from ploomber.env import validate
 from ploomber import repo
 
 import yaml
@@ -48,26 +49,57 @@ def with_env(source):
     source, run the function and then call Env.end()
     """
     def decorator(fn):
+        spec = getfullargspec(fn)
+        args_fn = spec.args
+
+        if not len(args_fn):
+            raise RuntimeError('Function "{}" does not take arguments, '
+                               '@with_env decorated functions should '
+                               'have env as their first artgument'
+                               .format(fn.__name__))
+
+        if args_fn[0] != 'env':
+            raise RuntimeError('Function "{}" does not "env" as its first '
+                               'argument, which is required to use the '
+                               '@with_env decorator'
+                               .format(fn.__name__))
+
+        # TODO: check no arg in the function starts with env (other than env)
 
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            args_fn = getfullargspec(fn).args
+            to_replace = {k: v for k, v in kwargs.items()
+                          if k.startswith('env__')}
 
-            if not len(args_fn):
-                raise RuntimeError('Function "{}" does not take arguments, '
-                                   '@with_env decorated functions should '
-                                   'have env as their first artgument'
-                                   .format(fn.__name__))
+            for key in to_replace.keys():
+                kwargs.pop(key)
 
-            if args_fn[0] != 'env':
-                raise RuntimeError('Function "{}" does not "env" as its first '
-                                   'argument, which is required to use the '
-                                   '@with_env decorator'
-                                   .format(fn.__name__))
+            env = Env.start(source)
 
-            Env.start(source)
-            res = fn(Env(), *args, **kwargs)
+            for key, new_value in to_replace.items():
+                elements = key.split('__')
+                to_edit = env._data._data
+
+                for e in elements[1:-1]:
+                    to_edit = to_edit[e]
+
+                if to_edit.get(elements[-1]) is None:
+                    Env.end()
+                    dotted_path = '.'.join(elements[1:])
+                    raise KeyError('Trying to replace key "{}" in env, '
+                                   'but it does not exist'
+                                   .format(dotted_path))
+
+                to_edit[elements[-1]] = new_value
+
+            try:
+                res = fn(Env(), *args, **kwargs)
+            except Exception as e:
+                Env.end()
+                raise e
+
             Env.end()
+
             return res
 
         return wrapper
@@ -304,6 +336,7 @@ def load(source):
     with StringIO(s) as f:
         content = yaml.load(f, Loader=yaml.SafeLoader)
 
+    validate.env_dict(content)
     env = FrozenJSON(content)
 
     return env

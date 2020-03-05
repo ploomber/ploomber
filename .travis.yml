@@ -1,5 +1,8 @@
 language: python
 
+services:
+  - postgresql
+
 python:
   - 3.6
 
@@ -8,6 +11,9 @@ install:
   - pip install -r requirements.txt
   - bash sample_package.sh
   - pip install .[all]
+
+before_script:
+  - psql -c 'create database db;' -U postgres
 
 script:
   - pytest

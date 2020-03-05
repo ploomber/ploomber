@@ -300,6 +300,7 @@ class Task(abc.ABC):
             except Exception as e:
                 tb = traceback.format_exc()
 
+                # task failed, execute on_failure hook if any...
                 if self.on_failure:
                     try:
                         self.on_failure(self, tb)
@@ -311,11 +312,6 @@ class Task(abc.ABC):
             now = datetime.now()
             elapsed = (now - then).total_seconds()
             self._logger.info(f'Done. Operation took {elapsed:.1f} seconds')
-
-            # update metadata
-            self.product.timestamp = datetime.now().timestamp()
-            self.product.stored_source_code = self.source_code
-            self.product.save_metadata()
 
             # TODO: also check that the Products were updated:
             # if they did not exist, they must exist now, if they alredy
@@ -329,6 +325,7 @@ class Task(abc.ABC):
                                      '(task.product.exist() returned False)')
 
             if self.on_finish:
+                # execute on_finish hook
                 try:
                     if 'client' in inspect.getfullargspec(self.on_finish).args:
                         self.on_finish(self, client=self.client)
@@ -338,6 +335,13 @@ class Task(abc.ABC):
                 except Exception as e:
                     raise TaskBuildError('Exception when running on_finish '
                                          'for task {}: {}'.format(self, e))
+
+            # update metadata: this has to be after running the on_finish
+            # hook, to prevent failing tasks to save metadata and being skipped
+            # in the next build
+            self.product.timestamp = datetime.now().timestamp()
+            self.product.stored_source_code = self.source_code
+            self.product.save_metadata()
 
         else:
             self._logger.info(f'No need to run {repr(self)}')

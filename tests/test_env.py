@@ -5,6 +5,7 @@ import pytest
 import yaml
 
 from ploomber.env.env import _get_name, Env, with_env
+from ploomber.env import validate
 
 
 def test_load_env_with_name(tmp_directory, cleanup_env):
@@ -85,20 +86,52 @@ def test_with_env_decorator(cleanup_env):
     def my_fn(env, b):
         return env.a, b
 
+    assert (1, 2) == my_fn(2)
+
 
 def test_with_env_fails_if_no_env_arg(cleanup_env):
-    @with_env({'a': 1})
-    def my_fn(a):
-        pass
-
     with pytest.raises(RuntimeError):
-        my_fn()
+        @with_env({'a': 1})
+        def my_fn(a):
+            pass
 
 
 def test_with_env_fails_if_fn_takes_no_args(cleanup_env):
-    @with_env({'a': 1})
-    def my_fn():
-        pass
-
     with pytest.raises(RuntimeError):
-        my_fn()
+        @with_env({'a': 1})
+        def my_fn():
+            pass
+
+
+def test_replace_defaults(cleanup_env):
+    @with_env({'a': {'b': 1}})
+    def my_fn(env, c):
+        return env.a.b + c
+
+    assert my_fn(1, env__a__b=100) == 101
+
+
+def test_replacing_raises_error_if_key_does_not_exist():
+    @with_env({'a': {'b': 1}})
+    def my_fn(env, c):
+        return env.a.b + c
+
+    with pytest.raises(KeyError):
+        my_fn(1, env__c=100)
+
+
+def test_get_all_dict_keys():
+    got = validate.get_keys_for_dict({'a': 1, 'b': {'c': {'d': 10}}})
+    assert set(got) == {'a', 'b', 'c', 'd'}
+
+
+def test_double_underscore_raises_error():
+    msg = r"Keys cannot have double underscores, got: \['b\_\_c'\]"
+    with pytest.raises(ValueError, match=msg):
+        Env.start({'a': {'b__c': 1}})
+
+
+def test_leading_underscore_in_top_key_raises_error():
+    msg = r"Top-level keys cannot start with an underscore, got: \['\_a'\]"
+    with pytest.raises(ValueError, match=msg):
+        Env.start({'_a': 1})
