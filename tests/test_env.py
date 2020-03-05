@@ -5,6 +5,7 @@ import pytest
 import yaml
 
 from ploomber.env.env import _get_name, Env, with_env
+from ploomber.env import validate
 
 
 def test_load_env_with_name(tmp_directory, cleanup_env):
@@ -117,3 +118,20 @@ def test_replacing_raises_error_if_key_does_not_exist():
 
     with pytest.raises(KeyError):
         my_fn(1, env__c=100)
+
+
+def test_get_all_dict_keys():
+    got = validate.get_keys_for_dict({'a': 1, 'b': {'c': {'d': 10}}})
+    assert set(got) == {'a', 'b', 'c', 'd'}
+
+
+def test_double_underscore_raises_error():
+    msg = r"Keys cannot have double underscores, got: \['b\_\_c'\]"
+    with pytest.raises(ValueError, match=msg):
+        Env.start({'a': {'b__c': 1}})
+
+
+def test_leading_underscore_in_top_key_raises_error():
+    msg = r"Top-level keys cannot start with an underscore, got: \['\_a'\]"
+    with pytest.raises(ValueError, match=msg):
+        Env.start({'_a': 1})

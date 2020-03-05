@@ -15,6 +15,7 @@ from collections.abc import Mapping
 
 from ploomber.FrozenJSON import FrozenJSON
 from ploomber.path import PathManager
+from ploomber.env import validate
 from ploomber import repo
 
 import yaml
@@ -336,6 +337,7 @@ def load(source):
     with StringIO(s) as f:
         content = yaml.load(f, Loader=yaml.SafeLoader)
 
+    validate.env_dict(content)
     env = FrozenJSON(content)
 
     return env

@@ -152,7 +152,7 @@ def validate_values(assert_, data, values):
                    .format(column, min_expected, max_expected, min_, max_))
             assert_(min_expected <= min_ and max_ <= max_expected, msg)
         else:
-            ValueError('Got invalid kind, must be "unique" or "range"')
+            raise ValueError('Got invalid kind, must be "unique" or "range"')
 
 
 def data_frame_validator(df, validators):
