@@ -126,11 +126,16 @@ def path_to_assets():
 
 
 def _load_db_credentials():
+
+    # try load credentials from a local file
     p = Path('~', '.auth', 'postgres-ploomber.json').expanduser()
 
     try:
         with open(p) as f:
             db = json.load(f)
+
+    # if that does not work, try connecting to a local db (this is the
+    # case when running on Travis)
     except FileNotFoundError:
         db = {
             'uri': 'postgresql://localhost:5432/db',
@@ -148,44 +153,27 @@ def db_credentials():
     return _load_db_credentials()
 
 
-# TODO: use pg_client_and_schema and remove this
-@pytest.fixture(scope='session')
-def pg_client():
-    db = _load_db_credentials()
-
-    client = SQLAlchemyClient(db['uri'])
-
-    # set a new schema for this session, otherwise if two test sessions
-    # are run at the same time, tests might conflict with each other
-    schema = (''.join(random.choice(string.ascii_letters)
-              for i in range(8)))
-
-    client.execute('CREATE SCHEMA {};'.format(schema))
-    client.execute('SET search_path TO {};'.format(schema))
-
-    yield client
-
-    # clean up schema
-    client.execute('drop schema {} cascade;'.format(schema))
-
-    client.close()
-
-
 @pytest.fixture(scope='session')
 def pg_client_and_schema():
     db = _load_db_credentials()
 
-    client = SQLAlchemyClient(db['uri'])
+    # this client is only used to setup the schema and default schema
+    # see this: https://www.postgresonline.com/article_pfriendly/279.html
+    client_tmp = SQLAlchemyClient(db['uri'])
 
     # set a new schema for this session, otherwise if two test sessions
     # are run at the same time, tests might conflict with each other
     # NOTE: avoid upper case characters, pandas.DataFrame.to_sql does not like
     # them
     schema = (''.join(random.choice(string.ascii_letters)
-              for i in range(12))).lower()
+                      for i in range(12))).lower()
 
-    client.execute('CREATE SCHEMA {};'.format(schema))
-    client.execute('SET search_path TO {};'.format(schema))
+    client_tmp.execute('CREATE SCHEMA {};'.format(schema))
+    client_tmp.execute('ALTER USER "{}" SET search_path TO {};'
+                       .format(db['user'], schema))
+    client_tmp.close()
+
+    client = SQLAlchemyClient(db['uri'])
 
     yield client, schema
 

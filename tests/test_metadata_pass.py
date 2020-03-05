@@ -19,10 +19,10 @@ def test_passing_upstream_and_product_in_shellscript(tmp_directory):
     ta = ShellScript(('echo a > {{product}} '), File(fa), dag,
                      'ta')
     tb = ShellScript(('cat {{upstream["ta"]}} > {{product}}'
-                     '&& echo b >> {{product}} '), File(fb), dag,
+                      '&& echo b >> {{product}} '), File(fb), dag,
                      'tb')
     tc = ShellScript(('cat {{upstream["tb"]}} > {{product}} '
-                     '&& echo c >> {{product}}'), File(fc), dag,
+                      '&& echo c >> {{product}}'), File(fc), dag,
                      'tc')
 
     ta >> tb >> tc
@@ -32,7 +32,10 @@ def test_passing_upstream_and_product_in_shellscript(tmp_directory):
     assert fc.read_text() == 'a\nb\nc\n'
 
 
-def test_passing_upstream_and_product_in_postgres(pg_client, db_credentials):
+def test_passing_upstream_and_product_in_postgres(pg_client_and_schema,
+                                                  db_credentials):
+    pg_client, _ = pg_client_and_schema
+
     dag = DAG()
 
     client = SQLAlchemyClient(db_credentials['uri'])

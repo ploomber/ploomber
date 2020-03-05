@@ -113,7 +113,9 @@ def test_can_dump_sqlite_to_parquet(tmp_directory):
     assert dump.equals(db)
 
 
-def test_can_dump_postgres(tmp_directory, pg_client):
+def test_can_dump_postgres(tmp_directory, pg_client_and_schema):
+    pg_client, _ = pg_client_and_schema
+
     tmp = Path(tmp_directory)
 
     # dump output path
