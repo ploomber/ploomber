@@ -27,20 +27,39 @@ from jinja2 import Template
 # TODO: add suppot for custom placeholders by subclassing, maybe by adding
 # get_{placeholder_name} class methods
 
+def _validate_env_decorated_fn(fn):
+    spec = getfullargspec(fn)
+    args_fn = spec.args
+
+    if not len(args_fn):
+        raise RuntimeError('Function "{}" does not take arguments, '
+                           '@with_env decorated functions should '
+                           'have env as their first artgument'
+                           .format(fn.__name__))
+
+    if args_fn[0] != 'env':
+        raise RuntimeError('Function "{}" does not "env" as its first '
+                           'argument, which is required to use the '
+                           '@with_env decorator'
+                           .format(fn.__name__))
+
+    # TODO: check no arg in the function starts with env (other than env)
+
 def load_env(fn):
     """
     A function decorated with @load_env will be called with the current
     environment in an env keyword argument
     """
-    args = getfullargspec(fn).args
-    kwonlyargs = getfullargspec(fn).kwonlyargs
-    args_all = args + kwonlyargs
+    def decorator(fn):
+        _validate_env_decorated_fn(fn)
 
-    if 'env' not in args_all:
-        raise TypeError('callable "{}" does not have arg "env"'
-                        .format(fn.__name__))
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            return fn(Env(), *args, **kwargs)
 
-    return partial(fn, env=Env())
+        return wrapper
+
+    return decorator
 
 
 def with_env(source):
@@ -49,22 +68,7 @@ def with_env(source):
     source, run the function and then call Env.end()
     """
     def decorator(fn):
-        spec = getfullargspec(fn)
-        args_fn = spec.args
-
-        if not len(args_fn):
-            raise RuntimeError('Function "{}" does not take arguments, '
-                               '@with_env decorated functions should '
-                               'have env as their first artgument'
-                               .format(fn.__name__))
-
-        if args_fn[0] != 'env':
-            raise RuntimeError('Function "{}" does not "env" as its first '
-                               'argument, which is required to use the '
-                               '@with_env decorator'
-                               .format(fn.__name__))
-
-        # TODO: check no arg in the function starts with env (other than env)
+        _validate_env_decorated_fn(fn)
 
         @wraps(fn)
         def wrapper(*args, **kwargs):

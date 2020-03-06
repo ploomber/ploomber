@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ploomber.env.env import _get_name, Env, with_env
+from ploomber.env.env import _get_name, Env, with_env, load_env
 from ploomber.env import validate
 
 
@@ -135,3 +135,9 @@ def test_leading_underscore_in_top_key_raises_error():
     msg = r"Top-level keys cannot start with an underscore, got: \['\_a'\]"
     with pytest.raises(ValueError, match=msg):
         Env.start({'_a': 1})
+
+
+def test_can_decorate_w_load_env_without_initialized_env():
+    @load_env
+    def fn(env):
+        pass
