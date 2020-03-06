@@ -16,6 +16,7 @@ from collections.abc import Mapping
 from ploomber.FrozenJSON import FrozenJSON
 from ploomber.path import PathManager
 from ploomber.env import validate
+from ploomber.env.expand import expand_dict
 from ploomber import repo
 
 import yaml
@@ -290,59 +291,21 @@ class Env:
 
 def load(source):
     if isinstance(source, (str, Path)):
-        env_content = Path(source).read_text()
+        with open(source) as f:
+            source = yaml.load(f, Loader=yaml.SafeLoader)
 
-        with StringIO(env_content) as f:
-            m = yaml.load(f, Loader=yaml.SafeLoader)
-
-        module_name = m.get('module')
-    elif isinstance(source, Mapping):
-        env_content = yaml.dump(source)
-        module_name = source.get('module')
-
-    # if "module" is defined in the env file, make sure you can import it
-    if module_name is None:
-        module = None
-    else:
-        module = pydoc.locate(module_name)
-
-        if module is None:
-            raise ImportError('Could not import module "{}"'
-                              .format(module_name))
-
-    # at this point if "module" was defined, we have the module object,
-    # otherwise both are None
-
-    params = dict(user=getpass.getuser())
-
-    if '{{version}}' in env_content:
-        if module_name is None:
-            raise RuntimeError('The git_location placeholder is only available '
-                               'if Env defines a "module" constant')
-        else:
-            if hasattr(module, '__version__'):
-                params['version'] = module.__version__
-            else:
-                raise RuntimeError('Module {} does not have a __version__, cannot '
-                                   'expand version placeholder'.format(module_name))
-
-    if '{{git_location}}' in env_content:
-        if module_name is None:
-            raise RuntimeError('The git_location placeholder is only available '
-                               'if Env defines a "module" constant')
-        else:
-            module_path = str(Path(module.__file__).parent.absolute())
-            params['git_location'] = (repo
-                                      .get_env_metadata(module_path)
-                                      ['git_location'])
-
-    s = Template(env_content).render(**params)
-
-    with StringIO(s) as f:
-        content = yaml.load(f, Loader=yaml.SafeLoader)
-
-    validate.env_dict(content)
-    env = FrozenJSON(content)
+    # if '{{git_location}}' in env_content:
+    #     if module_name is None:
+    #         raise RuntimeError('The git_location placeholder is only available '
+    #                            'if Env defines a "module" constant')
+    #     else:
+    #         module_path = str(Path(module.__file__).parent.absolute())
+    #         params['git_location'] = (repo
+    #                                   .get_env_metadata(module_path)
+    #                                   ['git_location'])
+    source_expanded = expand_dict(source)
+    validate.env_dict(source_expanded)
+    env = FrozenJSON(source_expanded)
 
     return env
 
