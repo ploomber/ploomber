@@ -2,10 +2,12 @@ import pydoc
 import getpass
 from copy import deepcopy
 from collections.abc import Mapping
+from pathlib import Path
 
 from jinja2 import Template
 
 from ploomber.templates import util
+from ploomber import repo
 
 
 class EnvironmentExpander:
@@ -54,6 +56,14 @@ class EnvironmentExpander:
                                    'expand version placeholder'.format(self.module))
         else:
             raise self.unavailable['version']
+
+    def git(self):
+        if 'version' not in self.available:
+            raise RuntimeError('The git_location placeholder is only available '
+                               'if Env defines a "module" constant')
+        else:
+            module_path = str(Path(self.module.__file__).parent.absolute())
+            return repo.get_env_metadata(module_path)['git_location']
 
 
 def iterate_nested_dict(d):

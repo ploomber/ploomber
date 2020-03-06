@@ -1,26 +1,21 @@
 """
 Environment management
 """
-import pydoc
 import logging
 from itertools import chain
 from pathlib import Path
 from glob import iglob
-from io import StringIO
-import getpass
 import platform
 from functools import wraps
 from inspect import getfullargspec
-from collections.abc import Mapping
 
 from ploomber.FrozenJSON import FrozenJSON
 from ploomber.path import PathManager
 from ploomber.env import validate
 from ploomber.env.expand import expand_dict
-from ploomber import repo
+
 
 import yaml
-from jinja2 import Template
 
 
 # TODO: add defaults functionality if defined in {module}/env.defaults.yaml
@@ -294,15 +289,6 @@ def load(source):
         with open(source) as f:
             source = yaml.load(f, Loader=yaml.SafeLoader)
 
-    # if '{{git_location}}' in env_content:
-    #     if module_name is None:
-    #         raise RuntimeError('The git_location placeholder is only available '
-    #                            'if Env defines a "module" constant')
-    #     else:
-    #         module_path = str(Path(module.__file__).parent.absolute())
-    #         params['git_location'] = (repo
-    #                                   .get_env_metadata(module_path)
-    #                                   ['git_location'])
     source_expanded = expand_dict(source)
     validate.env_dict(source_expanded)
     env = FrozenJSON(source_expanded)

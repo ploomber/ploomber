@@ -7,6 +7,7 @@ import yaml
 
 from ploomber.env.env import _get_name, Env, with_env, load_env
 from ploomber.env import validate, expand
+from ploomber import repo
 
 
 def test_load_env_with_name(tmp_directory, cleanup_env):
@@ -42,9 +43,19 @@ def test_init_with_nonexistent_package(cleanup_env):
         Env.start({'module': 'i_do_not_exist'})
 
 
-def test_version_placeholder(cleanup_env):
+def test_expand_version(cleanup_env):
     env = Env.start({'module': 'sample_project', 'version': '{{version}}'})
     assert env.version == '0.1dev'
+
+
+def test_expand_git(monkeypatch, cleanup_env):
+    def mockreturn(module_path):
+        return {'git_location': 'some_version_string'}
+
+    monkeypatch.setattr(repo, 'get_env_metadata', mockreturn)
+
+    env = Env.start({'module': 'sample_project', 'git': '{{git}}'})
+    assert env.git == 'some_version_string'
 
 
 def test_can_create_env_from_dict(cleanup_env):
