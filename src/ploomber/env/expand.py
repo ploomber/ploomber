@@ -10,6 +10,11 @@ from ploomber.templates import util
 from ploomber import repo
 
 
+# NOTE: what would be the best way for users to provide their own expanders?
+# this is useful if they want to expand things like passwords, subclassing
+# works partially (only decorators will not work since they use ploomber.Env)
+# maybe through a ploomber.config file? We just have to be sure that the
+# difference between an env.yaml and a ploomber.config is clear
 class EnvironmentExpander:
     def __init__(self, raw):
         self.available = self.get_available(raw)
