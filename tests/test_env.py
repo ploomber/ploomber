@@ -123,6 +123,19 @@ def test_replace_defaults(cleanup_env):
     assert my_fn(1, env__a__b=100) == 101
 
 
+def test_replacing_defaults_also_expands(monkeypatch, cleanup_env):
+    @with_env({'user': 'some_user'})
+    def my_fn(env):
+        return env.user
+
+    def mockreturn():
+        return 'expanded_username'
+
+    monkeypatch.setattr(getpass, 'getuser', mockreturn)
+
+    assert my_fn(env__user='{{user}}') == 'expanded_username'
+
+
 def test_replacing_raises_error_if_key_does_not_exist():
     @with_env({'a': {'b': 1}})
     def my_fn(env, c):
@@ -157,7 +170,7 @@ def test_can_decorate_w_load_env_without_initialized_env():
 
 def test_modify_all_values_in_dict():
     env = {'a': 1, 'b': 2, 'c': {'d': 1}}
-    env_mod = expand.mofidy_values(env, lambda x: x + 1)
+    env_mod = expand.modify_values(env, lambda x: x + 1)
 
     assert env_mod == {'a': 2, 'b': 3, 'c': {'d': 2}}
     # original dict is not modified
@@ -172,6 +185,6 @@ def test_expand_tags(monkeypatch):
     monkeypatch.setattr(getpass, "getuser", mockreturn)
 
     env = {'a': '{{user}}', 'b': {'c': '{{user}} {{user}}'}}
-    env_expanded = expand.expand_dict(env)
+    env_expanded = expand.modify_values(env, expand.EnvironmentExpander(env))
 
     assert env_expanded == {'a': 'username', 'b': {'c': 'username username'}}

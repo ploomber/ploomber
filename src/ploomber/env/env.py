@@ -12,7 +12,7 @@ from inspect import getfullargspec
 from ploomber.FrozenJSON import FrozenJSON
 from ploomber.path import PathManager
 from ploomber.env import validate
-from ploomber.env.expand import expand_dict
+from ploomber.env.expand import modify_values, EnvironmentExpander
 
 
 import yaml
@@ -91,7 +91,7 @@ def with_env(source):
                                    'but it does not exist'
                                    .format(dotted_path))
 
-                to_edit[elements[-1]] = new_value
+                to_edit[elements[-1]] = env._expander(new_value)
 
             try:
                 res = fn(Env(), *args, **kwargs)
@@ -153,6 +153,7 @@ class Env:
     # possible to switch to a different Env in the same process, this is
     # discouraged since that could lead to subtle bugs if modules set variables
     # from Env parameters
+    expander_class = EnvironmentExpander
 
     _data = None
 
@@ -215,9 +216,20 @@ class Env:
                 cls._name = None
 
             cls._path = PathManager(cls)
-            cls._data = load(source)
 
-            return cls()
+            if isinstance(source, (str, Path)):
+                with open(source) as f:
+                    source = yaml.load(f, Loader=yaml.SafeLoader)
+
+            expander = cls.expander_class(source)
+            source_expanded = modify_values(source, expander)
+            validate.env_dict(source_expanded)
+
+            cls._data = FrozenJSON(source_expanded)
+
+            ins = cls()
+            ins._expander = expander
+            return ins
 
         # if an environment has been set...
         else:
@@ -282,18 +294,6 @@ class Env:
     #     """Get env metadata such as git hash, last commit timestamp
     #     """
     #     return repo.get_env_metadata(self.path.home)
-
-
-def load(source):
-    if isinstance(source, (str, Path)):
-        with open(source) as f:
-            source = yaml.load(f, Loader=yaml.SafeLoader)
-
-    source_expanded = expand_dict(source)
-    validate.env_dict(source_expanded)
-    env = FrozenJSON(source_expanded)
-
-    return env
 
 
 def find_env_w_name(name):

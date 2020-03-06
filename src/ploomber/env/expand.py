@@ -83,14 +83,10 @@ def iterate_nested_dict(d):
             yield d, k, v
 
 
-def mofidy_values(env, modifier):
+def modify_values(env, modifier):
     env = deepcopy(env)
 
     for d, k, v in iterate_nested_dict(env):
         d[k] = modifier(v)
 
     return env
-
-
-def expand_dict(d):
-    return mofidy_values(d, EnvironmentExpander(d))
