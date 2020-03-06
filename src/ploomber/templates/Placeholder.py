@@ -2,10 +2,11 @@ import logging
 from pathlib import Path
 
 from ploomber.exceptions import RenderError
+from ploomber.templates import util
 
 from numpydoc.docscrape import NumpyDocString
 import jinja2
-from jinja2 import (Environment, meta, Template, UndefinedError,
+from jinja2 import (Environment, Template, UndefinedError,
                     FileSystemLoader, PackageLoader)
 
 
@@ -157,15 +158,7 @@ class Placeholder:
         return '{}("{}")'.format(type(self).__name__, self.safe)
 
     def _get_declared(self):
-        if self.raw is None:
-            raise ValueError('Cannot find declared values is raw is None')
-
-        env = Environment()
-
-        # this accepts None and does not break!
-        ast = env.parse(self.raw)
-        declared = meta.find_undeclared_variables(ast)
-        return declared
+        return util.get_tags_in_str(self.raw)
 
     def diagnose(self):
         """Prints some diagnostics

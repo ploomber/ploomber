@@ -9,7 +9,7 @@ from glob import iglob
 from io import StringIO
 import getpass
 import platform
-from functools import partial, wraps
+from functools import wraps
 from inspect import getfullargspec
 from collections.abc import Mapping
 
@@ -44,6 +44,7 @@ def _validate_env_decorated_fn(fn):
                            .format(fn.__name__))
 
     # TODO: check no arg in the function starts with env (other than env)
+
 
 def load_env(fn):
     """

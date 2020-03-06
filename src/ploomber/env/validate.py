@@ -5,6 +5,9 @@ from collections.abc import Mapping
 
 
 def env_dict(d):
+    """
+    Validate a dictionary used to set an environment
+    """
     keys_all = get_keys_for_dict(d)
     errors = []
 

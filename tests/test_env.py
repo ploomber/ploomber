@@ -1,11 +1,12 @@
 import platform
 from pathlib import Path
+import getpass
 
 import pytest
 import yaml
 
 from ploomber.env.env import _get_name, Env, with_env, load_env
-from ploomber.env import validate
+from ploomber.env import validate, expand
 
 
 def test_load_env_with_name(tmp_directory, cleanup_env):
@@ -141,3 +142,25 @@ def test_can_decorate_w_load_env_without_initialized_env():
     @load_env
     def fn(env):
         pass
+
+
+def test_modify_all_values_in_dict():
+    env = {'a': 1, 'b': 2, 'c': {'d': 1}}
+    env_mod = expand.mofidy_values(env, lambda x: x + 1)
+
+    assert env_mod == {'a': 2, 'b': 3, 'c': {'d': 2}}
+    # original dict is not modified
+    assert env == {'a': 1, 'b': 2, 'c': {'d': 1}}
+
+
+def test_expand_tags(monkeypatch):
+
+    def mockreturn():
+        return 'username'
+
+    monkeypatch.setattr(getpass, "getuser", mockreturn)
+
+    env = {'a': '{{user}}', 'b': {'c': '{{user}} {{user}}'}}
+    env_expanded = expand.expand_dict(env)
+
+    assert env_expanded == {'a': 'username', 'b': {'c': 'username username'}}
