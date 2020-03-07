@@ -6,8 +6,6 @@ from itertools import chain
 from pathlib import Path
 from glob import iglob
 import platform
-from functools import wraps
-from inspect import getfullargspec
 
 from ploomber.FrozenJSON import FrozenJSON
 from ploomber.path import PathManager
@@ -19,93 +17,6 @@ import yaml
 
 
 # TODO: add defaults functionality if defined in {module}/env.defaults.yaml
-# TODO: improve str(Env) and repr(Env)
-# TODO: add suppot for custom placeholders by subclassing, maybe by adding
-# get_{placeholder_name} class methods
-
-def _validate_env_decorated_fn(fn):
-    spec = getfullargspec(fn)
-    args_fn = spec.args
-
-    if not len(args_fn):
-        raise RuntimeError('Function "{}" does not take arguments, '
-                           '@with_env decorated functions should '
-                           'have env as their first artgument'
-                           .format(fn.__name__))
-
-    if args_fn[0] != 'env':
-        raise RuntimeError('Function "{}" does not "env" as its first '
-                           'argument, which is required to use the '
-                           '@with_env decorator'
-                           .format(fn.__name__))
-
-    # TODO: check no arg in the function starts with env (other than env)
-
-
-def load_env(fn):
-    """
-    A function decorated with @load_env will be called with the current
-    environment in an env keyword argument
-    """
-    def decorator(fn):
-        _validate_env_decorated_fn(fn)
-
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            return fn(Env(), *args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-def with_env(source):
-    """
-    A function decorated with @with_env will start and Env with the desired
-    source, run the function and then call Env.end()
-    """
-    def decorator(fn):
-        _validate_env_decorated_fn(fn)
-
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            to_replace = {k: v for k, v in kwargs.items()
-                          if k.startswith('env__')}
-
-            for key in to_replace.keys():
-                kwargs.pop(key)
-
-            env = Env.start(source)
-
-            for key, new_value in to_replace.items():
-                elements = key.split('__')
-                to_edit = env._data._data
-
-                for e in elements[1:-1]:
-                    to_edit = to_edit[e]
-
-                if to_edit.get(elements[-1]) is None:
-                    Env.end()
-                    dotted_path = '.'.join(elements[1:])
-                    raise KeyError('Trying to replace key "{}" in env, '
-                                   'but it does not exist'
-                                   .format(dotted_path))
-
-                to_edit[elements[-1]] = env._expander(new_value)
-
-            try:
-                res = fn(Env(), *args, **kwargs)
-            except Exception as e:
-                Env.end()
-                raise e
-
-            Env.end()
-
-            return res
-
-        return wrapper
-
-    return decorator
 
 
 class Env:
@@ -125,8 +36,11 @@ class Env:
     is applied so "~" can be used. Strings with a trailing "/" will be
     interpreted as directories and they will be created if they do not exist
 
-    There are a few placeholders available: {{user}} expands to the current
-    user (by calling getpass.getuser())
+    There are a few placeholders available:
+        * {{user}} expands to the current user (by calling getpass.getuser())
+        * {{version}} expands to module.__version__ if _module is defined
+        * {{git}} expands to the git tag or current commit hash if _module is
+        defined
 
     Examples
     --------
@@ -135,24 +49,13 @@ class Env:
     >>> env = Env()
     >>> env.db.uri # traverse the yaml tree structure using dot notation
     >>> env.path.raw # returns an absolute path to the raw data
+
+    Notes
+    -----
+    Envs are intended to be short-lived, the recommended usage is to start and
+    end them only during the execution of a function that builds a DAG by
+    using the @with_env and @load_env decorators
     """
-
-    # There are two wildcards available "{{user}}" (returns the current user)
-    # and "{{git_location}}" (if the env.yaml file has a "module" key, then
-    # # TODO: edit this
-    # ... this will return the current branch name, if in detached HEAD
-    # state, it will return the hash to the current commit
-
-    # Notes
-    # -----
-    # The decision of making Env a process-wide instance is to avoid having
-    # multiple env instances with different values that would cause calls to
-    # env.some_parameter yield different values. Since configuration parameters
-    # in Env objects are meant to be constants (such as db URIs) there should not
-    # be a need for multiple Envs to exist at any given time. While it is
-    # possible to switch to a different Env in the same process, this is
-    # discouraged since that could lead to subtle bugs if modules set variables
-    # from Env parameters
     expander_class = EnvironmentExpander
 
     _data = None
@@ -255,8 +158,14 @@ class Env:
 
         self._logger = logging.getLogger(__name__)
 
+    def __str__(self):
+        return str(self._data)
+
     def __repr__(self):
-        return f'Env: {self._path_to_env} - {repr(self._data)}'
+        s = 'Env({})'.format(str(self._data))
+        if self._path_to_env:
+            s += 'loaded from ' + self._path_to_env
+        return s
 
     def __dir__(self):
         return dir(self._data)
