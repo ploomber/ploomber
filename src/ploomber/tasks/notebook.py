@@ -208,7 +208,7 @@ class NotebookRunner(Task):
             Path(path_to_in).write_text(source)
 
         # papermill only allows JSON serializable parameters
-        params = copy(self.params)
+        params = self.params.to_dict()
         params['product'] = params['product'].to_json_serializable()
 
         if params.get('upstream'):
