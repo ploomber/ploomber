@@ -24,7 +24,7 @@ class ProductsContainer:
     def __getitem__(self, key):
         return self.products[key]
 
-    def _to_json_serializable(self):
+    def to_json_serializable(self):
         """Returns a JSON serializable version of this product
         """
         if isinstance(self.products, Mapping):
@@ -132,12 +132,12 @@ class MetaProduct:
         for p in self.products:
             p._clear_cached_outdated_status
 
-    def _to_json_serializable(self):
+    def to_json_serializable(self):
         """Returns a JSON serializable version of this product
         """
         # NOTE: this is used in tasks where only JSON serializable parameters
         # are supported such as NotebookRunner that depends on papermill
-        return self.products._to_json_serializable()
+        return self.products.to_json_serializable()
 
     def save_metadata(self):
         for p in self.products:
