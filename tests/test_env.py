@@ -5,7 +5,8 @@ import getpass
 import pytest
 import yaml
 
-from ploomber.env.env import _get_name, Env, with_env, load_env
+from ploomber.env.env import _get_name, Env
+from ploomber.env.decorators import with_env, load_env
 from ploomber.env import validate, expand
 from ploomber import repo
 
@@ -166,6 +167,16 @@ def test_can_decorate_w_load_env_without_initialized_env():
     @load_env
     def fn(env):
         pass
+
+
+def test_load_env_decorator(cleanup_env):
+    Env.start({'a': 10})
+
+    @load_env
+    def fn(env):
+        return env.a
+
+    assert fn() == 10
 
 
 def test_modify_all_values_in_dict():
