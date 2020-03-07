@@ -29,7 +29,11 @@ def touch(product):
 
 
 def on_finish(task):
-    Path(str(task)).write_text('hello')
+    Path(str(task)).write_text('Written from on_finish')
+
+
+def on_render(task):
+    Path(str(task)).write_text('Written from on_render')
 
 
 def on_finish_fail(task):
@@ -195,6 +199,19 @@ def test_on_finish(tmp_directory):
 
     dag.build()
 
+    assert Path('file').read_text() == 'Written from on_finish'
+
+
+def test_on_render(tmp_directory):
+    dag = DAG()
+
+    t = PythonCallable(touch, File('file'), dag, name='touch')
+    t.on_render = on_render
+
+    dag.render()
+
+    assert Path('file').read_text() == 'Written from on_render'
+
 
 def test_lineage():
     dag = DAG('dag')
@@ -235,7 +252,7 @@ def test_placeholder_is_copied_upon_initialization():
     assert t1.source.value is not t2.source.value
 
 
-def test_task_is_re_executed_if_on_finish_fails():
+def test_task_is_re_executed_if_on_finish_fails(tmp_directory):
     dag = DAG()
 
     t = PythonCallable(touch, File('file'), dag, name='t1')

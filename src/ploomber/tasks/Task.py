@@ -135,8 +135,10 @@ class Task(abc.ABC):
 
         self._status = TaskStatus.WaitingRender
         self.build_report = None
+
         self._on_finish = None
         self._on_failure = None
+        self._on_render = None
 
     @property
     def name(self):
@@ -229,6 +231,14 @@ class Task(abc.ABC):
     @on_failure.setter
     def on_failure(self, value):
         self._on_failure = value
+
+    @property
+    def on_render(self):
+        return self._on_render
+
+    @on_render.setter
+    def on_render(self, value):
+        self._on_render = value
 
     def build(self, force=False):
         """Run the task if needed by checking its dependencies
@@ -334,7 +344,14 @@ class Task(abc.ABC):
 
                 except Exception as e:
                     raise TaskBuildError('Exception when running on_finish '
-                                         'for task {}: {}'.format(self, e))
+                                         'for task {}: {}'.format(self, e)) from e
+
+            # update metadata: this has to be after running the on_finish
+            # hook, to prevent failing tasks to save metadata and being skipped
+            # in the next build
+            self.product.timestamp = datetime.now().timestamp()
+            self.product.stored_source_code = self.source_code
+            self.product.save_metadata()
 
             # update metadata: this has to be after running the on_finish
             # hook, to prevent failing tasks to save metadata and being skipped
@@ -384,6 +401,17 @@ class Task(abc.ABC):
             raise type(e)('Error rendering code from Task "{}", '
                           ' check the full traceback above for details'
                           .format(repr(self), self.params)) from e
+
+        # abstract this, we have the same code for this and the other hooks
+        if self.on_render:
+            try:
+                if 'client' in inspect.getfullargspec(self.on_render).args:
+                    self.on_render(self, client=self.client)
+                else:
+                    self.on_render(self)
+            except Exception as e:
+                raise TaskBuildError('Exception when running on_render '
+                                     'for task {}: {}'.format(self, e)) from e
 
         self._status = (TaskStatus.WaitingExecution if not self.upstream
                         else TaskStatus.WaitingUpstream)

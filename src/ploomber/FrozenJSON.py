@@ -75,9 +75,11 @@ class FrozenJSON(object):
 
         return value
 
-    def __repr__(self):
+    def __str__(self):
         if self._path_to_file:
-            return ('FrozenJSON file loaded from: {}'
-                    .format(self._path_to_file))
+            return self._path_to_file
         else:
-            return 'FrozenJSON file loaded with: {}'.format(self._data)
+            return str(self._data)
+
+    def __repr__(self):
+        return 'FrozenJSON({})'.format(str(self))

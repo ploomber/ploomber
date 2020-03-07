@@ -1,110 +1,22 @@
 """
 Environment management
 """
-import pydoc
 import logging
 from itertools import chain
 from pathlib import Path
 from glob import iglob
-from io import StringIO
-import getpass
 import platform
-from functools import partial, wraps
-from inspect import getfullargspec
-from collections.abc import Mapping
 
 from ploomber.FrozenJSON import FrozenJSON
 from ploomber.path import PathManager
 from ploomber.env import validate
-from ploomber import repo
+from ploomber.env.expand import modify_values, EnvironmentExpander
+
 
 import yaml
-from jinja2 import Template
 
 
 # TODO: add defaults functionality if defined in {module}/env.defaults.yaml
-# TODO: improve str(Env) and repr(Env)
-# TODO: add suppot for custom placeholders by subclassing, maybe by adding
-# get_{placeholder_name} class methods
-
-def load_env(fn):
-    """
-    A function decorated with @load_env will be called with the current
-    environment in an env keyword argument
-    """
-    args = getfullargspec(fn).args
-    kwonlyargs = getfullargspec(fn).kwonlyargs
-    args_all = args + kwonlyargs
-
-    if 'env' not in args_all:
-        raise TypeError('callable "{}" does not have arg "env"'
-                        .format(fn.__name__))
-
-    return partial(fn, env=Env())
-
-
-def with_env(source):
-    """
-    A function decorated with @with_env will start and Env with the desired
-    source, run the function and then call Env.end()
-    """
-    def decorator(fn):
-        spec = getfullargspec(fn)
-        args_fn = spec.args
-
-        if not len(args_fn):
-            raise RuntimeError('Function "{}" does not take arguments, '
-                               '@with_env decorated functions should '
-                               'have env as their first artgument'
-                               .format(fn.__name__))
-
-        if args_fn[0] != 'env':
-            raise RuntimeError('Function "{}" does not "env" as its first '
-                               'argument, which is required to use the '
-                               '@with_env decorator'
-                               .format(fn.__name__))
-
-        # TODO: check no arg in the function starts with env (other than env)
-
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            to_replace = {k: v for k, v in kwargs.items()
-                          if k.startswith('env__')}
-
-            for key in to_replace.keys():
-                kwargs.pop(key)
-
-            env = Env.start(source)
-
-            for key, new_value in to_replace.items():
-                elements = key.split('__')
-                to_edit = env._data._data
-
-                for e in elements[1:-1]:
-                    to_edit = to_edit[e]
-
-                if to_edit.get(elements[-1]) is None:
-                    Env.end()
-                    dotted_path = '.'.join(elements[1:])
-                    raise KeyError('Trying to replace key "{}" in env, '
-                                   'but it does not exist'
-                                   .format(dotted_path))
-
-                to_edit[elements[-1]] = new_value
-
-            try:
-                res = fn(Env(), *args, **kwargs)
-            except Exception as e:
-                Env.end()
-                raise e
-
-            Env.end()
-
-            return res
-
-        return wrapper
-
-    return decorator
 
 
 class Env:
@@ -124,8 +36,11 @@ class Env:
     is applied so "~" can be used. Strings with a trailing "/" will be
     interpreted as directories and they will be created if they do not exist
 
-    There are a few placeholders available: {{user}} expands to the current
-    user (by calling getpass.getuser())
+    There are a few placeholders available:
+        * {{user}} expands to the current user (by calling getpass.getuser())
+        * {{version}} expands to module.__version__ if _module is defined
+        * {{git}} expands to the git tag or current commit hash if _module is
+        defined
 
     Examples
     --------
@@ -134,24 +49,14 @@ class Env:
     >>> env = Env()
     >>> env.db.uri # traverse the yaml tree structure using dot notation
     >>> env.path.raw # returns an absolute path to the raw data
+
+    Notes
+    -----
+    Envs are intended to be short-lived, the recommended usage is to start and
+    end them only during the execution of a function that builds a DAG by
+    using the @with_env and @load_env decorators
     """
-
-    # There are two wildcards available "{{user}}" (returns the current user)
-    # and "{{git_location}}" (if the env.yaml file has a "module" key, then
-    # # TODO: edit this
-    # ... this will return the current branch name, if in detached HEAD
-    # state, it will return the hash to the current commit
-
-    # Notes
-    # -----
-    # The decision of making Env a process-wide instance is to avoid having
-    # multiple env instances with different values that would cause calls to
-    # env.some_parameter yield different values. Since configuration parameters
-    # in Env objects are meant to be constants (such as db URIs) there should not
-    # be a need for multiple Envs to exist at any given time. While it is
-    # possible to switch to a different Env in the same process, this is
-    # discouraged since that could lead to subtle bugs if modules set variables
-    # from Env parameters
+    expander_class = EnvironmentExpander
 
     _data = None
 
@@ -214,9 +119,20 @@ class Env:
                 cls._name = None
 
             cls._path = PathManager(cls)
-            cls._data = load(source)
 
-            return cls()
+            if isinstance(source, (str, Path)):
+                with open(source) as f:
+                    source = yaml.load(f, Loader=yaml.SafeLoader)
+
+            expander = cls.expander_class(source)
+            source_expanded = modify_values(source, expander)
+            validate.env_dict(source_expanded)
+
+            cls._data = FrozenJSON(source_expanded)
+
+            ins = cls()
+            ins._expander = expander
+            return ins
 
         # if an environment has been set...
         else:
@@ -242,8 +158,14 @@ class Env:
 
         self._logger = logging.getLogger(__name__)
 
+    def __str__(self):
+        return str(self._data)
+
     def __repr__(self):
-        return f'Env: {self._path_to_env} - {repr(self._data)}'
+        s = 'Env({})'.format(str(self._data))
+        if self._path_to_env:
+            s += 'loaded from ' + self._path_to_env
+        return s
 
     def __dir__(self):
         return dir(self._data)
@@ -281,65 +203,6 @@ class Env:
     #     """Get env metadata such as git hash, last commit timestamp
     #     """
     #     return repo.get_env_metadata(self.path.home)
-
-
-def load(source):
-    if isinstance(source, (str, Path)):
-        env_content = Path(source).read_text()
-
-        with StringIO(env_content) as f:
-            m = yaml.load(f, Loader=yaml.SafeLoader)
-
-        module_name = m.get('module')
-    elif isinstance(source, Mapping):
-        env_content = yaml.dump(source)
-        module_name = source.get('module')
-
-    # if "module" is defined in the env file, make sure you can import it
-    if module_name is None:
-        module = None
-    else:
-        module = pydoc.locate(module_name)
-
-        if module is None:
-            raise ImportError('Could not import module "{}"'
-                              .format(module_name))
-
-    # at this point if "module" was defined, we have the module object,
-    # otherwise both are None
-
-    params = dict(user=getpass.getuser())
-
-    if '{{version}}' in env_content:
-        if module_name is None:
-            raise RuntimeError('The git_location placeholder is only available '
-                               'if Env defines a "module" constant')
-        else:
-            if hasattr(module, '__version__'):
-                params['version'] = module.__version__
-            else:
-                raise RuntimeError('Module {} does not have a __version__, cannot '
-                                   'expand version placeholder'.format(module_name))
-
-    if '{{git_location}}' in env_content:
-        if module_name is None:
-            raise RuntimeError('The git_location placeholder is only available '
-                               'if Env defines a "module" constant')
-        else:
-            module_path = str(Path(module.__file__).parent.absolute())
-            params['git_location'] = (repo
-                                      .get_env_metadata(module_path)
-                                      ['git_location'])
-
-    s = Template(env_content).render(**params)
-
-    with StringIO(s) as f:
-        content = yaml.load(f, Loader=yaml.SafeLoader)
-
-    validate.env_dict(content)
-    env = FrozenJSON(content)
-
-    return env
 
 
 def find_env_w_name(name):
