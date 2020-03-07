@@ -2,6 +2,7 @@
 Products are persistent changes triggered by Tasks such as a new file
 in the local filesystem or a table in a database
 """
+import shutil
 import os
 from pathlib import Path
 from ploomber.products.Product import Product
@@ -60,7 +61,10 @@ class File(Product):
         # compatibility
         if self.exists():
             self.logger.debug(f'Deleting {self._path_to_file}')
-            os.remove(self._path_to_file)
+            if self._path_to_file.is_dir():
+                shutil.rmtree(self._path_to_file)
+            else:
+                os.remove(self._path_to_file)
         else:
             self.logger.debug(f'{self._path_to_file} does not exist '
                               'ignoring...')
