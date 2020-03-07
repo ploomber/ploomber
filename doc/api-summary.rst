@@ -56,6 +56,18 @@ Clients
     SQLAlchemyClient
     ShellClient
 
+Env
+---
+
+.. currentmodule:: ploomber
+
+.. autosummary::
+    :toctree:
+
+    with_env
+    load_env
+    Env
+
 
 Utilities
 ---------
@@ -66,4 +78,3 @@ Utilities
     :toctree:
 
     SourceLoader
-    Env
