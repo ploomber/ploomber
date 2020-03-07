@@ -53,6 +53,11 @@ class DBAPIClient(Client):
         if self._connection is not None:
             self._connection.close()
 
+    def __getstate__(self):
+        state = super().__getstate__()
+        state['_connection'] = None
+        return state
+
 
 class SQLAlchemyClient(Client):
     """Client for connecting with any SQLAlchemy supported database
@@ -111,21 +116,11 @@ class SQLAlchemyClient(Client):
 
         return self._engine
 
-    # __getstate__ and __setstate__ are needed to make this picklable
-
     def __getstate__(self):
-        state = self.__dict__.copy()
-        # _logger is not pickable, so we remove them and build it
-        # again in __setstate__
-        state['_logger'] = None
+        state = super().__getstate__()
         state['_engine'] = None
         state['_connection'] = None
-
         return state
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        self._set_logger()
 
 
 class DrillClient(Client):
