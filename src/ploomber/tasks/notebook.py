@@ -1,5 +1,4 @@
 import warnings
-from copy import copy
 from tempfile import mktemp
 from pathlib import Path
 
@@ -79,7 +78,7 @@ def _to_ipynb(source, extension, kernelspec_name=None):
             "name": kernelspec_name
         }
 
-    out = mktemp()
+    out = mktemp('.ipynb')
     Path(out).write_text(nbformat.v4.writes(nb))
 
     return out
@@ -182,9 +181,9 @@ class NotebookRunner(Task):
 
     def run(self):
         if isinstance(self.product, MetaProduct):
-            path_to_out = str(self.product[self.nb_product_key])
+            path_to_out = Path(str(self.product[self.nb_product_key]))
         else:
-            path_to_out = str(self.product)
+            path_to_out = Path(str(self.product))
 
         source = str(self.source)
 
@@ -197,14 +196,18 @@ class NotebookRunner(Task):
         else:
             ext_in = Path(self.source.loc).suffix
 
-        ext_out = Path(path_to_out).suffix
+        ext_out = path_to_out.suffix
+        # we will run the notebook with this extension, regardless of the
+        # user's choice, if any error happens, this will allow them to debug
+        # we will change the extension after the notebook runs successfully
+        path_to_out_nb = path_to_out.with_suffix('.ipynb')
 
         # need to convert to ipynb using jupytext
         if ext_in != '.ipynb':
             path_to_in = _to_ipynb(source, ext_in, self.kernelspec_name)
         else:
             # otherwise just save rendered code in a tmp file
-            path_to_in = mktemp()
+            path_to_in = mktemp('.ipynb')
             Path(path_to_in).write_text(source)
 
         # papermill only allows JSON serializable parameters
@@ -215,11 +218,16 @@ class NotebookRunner(Task):
             params['upstream'] = {k: n.to_json_serializable() for k, n
                                   in params['upstream'].items()}
 
-        pm.execute_notebook(path_to_in, path_to_out,
-                            parameters=params,
-                            **self.papermill_params)
+        try:
+            pm.execute_notebook(path_to_in, str(path_to_out_nb),
+                                parameters=params,
+                                **self.papermill_params)
+        except Exception as e:
+            raise TaskBuildError('An error ocurred when calling'
+                                 ' papermil.execute_notebook') from e
 
         # if output format other than ipynb, convert using nbconvert
         # and overwrite
         if ext_out != '.ipynb' or self.nbconvert_exporter_name is not None:
+            path_to_out_nb.rename(path_to_out)
             _from_ipynb(path_to_out, ext_out, self.nbconvert_exporter_name)
