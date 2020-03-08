@@ -3,7 +3,7 @@ from pathlib import Path
 from ploomber.exceptions import RenderError, TaskBuildError
 from ploomber import DAG
 from ploomber.products import File, PostgresRelation
-from ploomber.tasks import PythonCallable, SQLScript, ShellScript
+from ploomber.tasks import PythonCallable, SQLScript, ShellScript, SQLDump
 from ploomber.constants import TaskStatus
 from ploomber.templates.Placeholder import Placeholder
 
@@ -39,31 +39,19 @@ def on_render(task):
 def on_finish_fail(task):
     raise Exception
 
-# NOTE: this feature was removed
-# def test_task_can_infer_name_from_product():
-#     dag = DAG()
-#     t = PythonCallable(my_fn, File('/path/to/{{name}}'), dag,
-#                        params=dict(name='file'), name='my_fn')
-#     assert t.name == 'file'
+
+def test_task_can_infer_name_from_source():
+    dag = DAG()
+    t = PythonCallable(my_fn, File('/path/to/{{name}}'), dag,
+                       params=dict(name='file'))
+    assert t.name == 'my_fn'
 
 
-# NOTE: this feature was removed
-# def test_task_raises_error_if_name_cannot_be_infered():
-#     dag = DAG()
+def test_task_raises_error_if_name_cannot_be_infered():
+    dag = DAG()
 
-#     with pytest.raises(RenderError):
-#         PythonCallable(my_fn, File('/path/to/{{upstream["t1"]}}_2'), dag,
-#                        name='my_fn')
-
-
-# NOTE: this feature was removed
-# def test_task_can_infer_name_if_product_does_not_depend_on_upstream():
-#     dag = DAG()
-#     t1 = PythonCallable(my_fn, File('/path/to/{{name}}'), dag,
-#                         params=dict(name='file'), name='my_fn')
-#     t2 = PythonCallable(my_fn, File('/path/to/{{name}}'), dag,
-#                         params=dict(name='file2'), name='my_fn2')
-#     assert t1.name == 'file' and t2.name == 'file2'
+    with pytest.raises(AttributeError):
+        SQLDump('SELECT * FROM my_table', File('/path/to/data'), dag)
 
 
 def test_python_callable_with_file():
