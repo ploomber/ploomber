@@ -1,3 +1,8 @@
+class DAGBuildError(Exception):
+    """Raise when a dag fails to build
+    """
+    pass
+
 
 class TaskBuildError(Exception):
     """Raise when a task fails to build
