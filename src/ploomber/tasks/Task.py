@@ -428,6 +428,7 @@ class Task(abc.ABC):
                 else:
                     self.source.render(self.params)
         except Exception as e:
+            self.exec_status = TaskStatus.ErroredRender
             raise type(e)('Error rendering code from Task "{}", '
                           ' check the full traceback above for details'
                           .format(repr(self), self.params)) from e
@@ -551,6 +552,11 @@ class Task(abc.ABC):
 
             if any_upstream_errored_or_aborted:
                 task.exec_status = TaskStatus.Aborted
+            elif any([t.exec_status in (TaskStatus.ErroredRender,
+                                        TaskStatus.AbortedRender)
+                      for t
+                      in task.upstream.values()]):
+                task.exec_status = TaskStatus.AbortedRender
             elif all_upstream_executed:
                 task.exec_status = TaskStatus.WaitingExecution
 
