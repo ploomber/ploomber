@@ -112,6 +112,8 @@ class Task(abc.ABC):
         if dag is None:
             raise TypeError('DAG cannot be None')
 
+        # NOTE: we should get rid of this, maybe just add hooks that are
+        # called back on the dag object to avoid having a reference here
         self.dag = dag
         dag._add_task(self)
 
@@ -275,9 +277,18 @@ class Task(abc.ABC):
         dict
             A dictionary with keys 'run' and 'elapsed'
         """
-        # TODO: if this is run in a task that has upstream dependencies
-        # it will fail with a useless error since self.params does not have
-        # upstream yet (added after rendering)
+        # cannot keep running, we depend on the render step to get all the
+        # parameters resolved (params, upstream, product)
+        if self.exec_status == TaskStatus.WaitingRender:
+            raise TaskBuildError('Cannot build task that has not been '
+                                 'rendered, call DAG.render() first ')
+
+        # if aborted (this happens when an upstream dependency fails)
+        elif self.exec_status == TaskStatus.Aborted:
+            # TODO: change Ran column for status
+            self.build_report = Row({'name': self.name, 'Ran?': False,
+                                     'Elapsed (s)': 0, })
+            return self
 
         # NOTE: should i fetch metadata here? I need to make sure I have
         # the latest before building
@@ -432,7 +443,8 @@ class Task(abc.ABC):
                 raise TaskBuildError('Exception when running on_render '
                                      'for task {}: {}'.format(self, e)) from e
 
-        self.exec_status = (TaskStatus.WaitingExecution if not self.upstream
+        self.exec_status = (TaskStatus.WaitingExecution
+                            if not self.upstream
                             else TaskStatus.WaitingUpstream)
 
     def set_upstream(self, other):
