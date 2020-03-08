@@ -82,6 +82,7 @@ def test_postgresscript_with_relation():
 
 
 def test_task_change_in_status():
+    # NOTE: there are some similar tests in test_dag.py - maybe move them?
     dag = DAG('dag')
 
     ta = ShellScript('echo "a" > {{product}}', File('a.txt'), dag, 'ta')
@@ -90,31 +91,32 @@ def test_task_change_in_status():
     tc = ShellScript('cat {{upstream["tb"]}} > {{product}}',
                      File('c.txt'), dag, 'tc')
 
-    assert all([t._status == TaskStatus.WaitingRender for t in [ta, tb, tc]])
+    assert all([t.exec_status == TaskStatus.WaitingRender for t
+                in [ta, tb, tc]])
 
     ta >> tb >> tc
 
     dag.render()
 
-    assert (ta._status == TaskStatus.WaitingExecution
-            and tb._status == TaskStatus.WaitingUpstream
-            and tc._status == TaskStatus.WaitingUpstream)
+    assert (ta.exec_status == TaskStatus.WaitingExecution
+            and tb.exec_status == TaskStatus.WaitingUpstream
+            and tc.exec_status == TaskStatus.WaitingUpstream)
 
     ta.build()
 
-    assert (ta._status == TaskStatus.Executed
-            and tb._status == TaskStatus.WaitingExecution
-            and tc._status == TaskStatus.WaitingUpstream)
+    assert (ta.exec_status == TaskStatus.Executed
+            and tb.exec_status == TaskStatus.WaitingExecution
+            and tc.exec_status == TaskStatus.WaitingUpstream)
 
     tb.build()
 
-    assert (ta._status == TaskStatus.Executed
-            and tb._status == TaskStatus.Executed
-            and tc._status == TaskStatus.WaitingExecution)
+    assert (ta.exec_status == TaskStatus.Executed
+            and tb.exec_status == TaskStatus.Executed
+            and tc.exec_status == TaskStatus.WaitingExecution)
 
     tc.build()
 
-    assert all([t._status == TaskStatus.Executed for t in [ta, tb, tc]])
+    assert all([t.exec_status == TaskStatus.Executed for t in [ta, tb, tc]])
 
 
 def test_raises_render_error_if_missing_param_in_code():

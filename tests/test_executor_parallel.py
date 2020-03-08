@@ -45,19 +45,21 @@ def test_parallel_execution_runs_all_possible_tasks(tmp_directory):
     # import logging
     # logging.basicConfig(level='DEBUG')
     dag = DAG(executor='parallel')
-    t_fail = PythonCallable(failing, File('t_fail.txt'), dag, name='t_fail')
-    t_fail_downstream = PythonCallable(failing, File('t_fail_downstream.txt'),
+    t_fail = PythonCallable(failing, File('t_fail'), dag, name='t_fail')
+    t_fail_downstream = PythonCallable(failing, File('t_fail_downstream'),
                                        dag, name='t_fail_downstream')
+    t_touch_aborted = PythonCallable(touch_root, File('t_touch_aborted'),
+                                     dag, name='t_touch_aborted')
 
-    t_fail >> t_fail_downstream
+    t_fail >> t_fail_downstream >> t_touch_aborted
 
-    PythonCallable(touch_root, File('t_ok.txt'), dag, name='t_ok')
+    PythonCallable(touch_root, File('t_ok'), dag, name='t_ok')
 
     try:
         dag.build(force=True)
     except TaskBuildError:
         pass
 
-    assert not Path('t_fail.txt').exists()
-    assert not Path('t_fail_downstream.txt').exists()
-    assert Path('t_ok.txt').exists()
+    assert not Path('t_fail').exists()
+    assert not Path('t_fail_downstream').exists()
+    assert Path('t_ok').exists()

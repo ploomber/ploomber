@@ -39,6 +39,8 @@ class Serial(Executor):
             try:
                 t.build(**kwargs)
             except Exception as e:
+                # FIXME: this should not be here, but called
+                # inside task
                 if dag._on_task_failure:
                     dag._on_task_failure(t)
 

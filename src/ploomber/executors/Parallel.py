@@ -1,5 +1,5 @@
 """
-Task._status only makes sense for parallel execution, when using the serial
+Task.exec_status only makes sense for parallel execution, when using the serial
 executor, we can update the _status automatically (within Task) but it is
 unusable, get rid of the logic that updates it automatically, however,
 we ar eusing here the _update status here to propagate dowstream updates.
@@ -27,9 +27,10 @@ class FailedTaskResult:
 
 class TaskBuildWrapper:
     """
-    Wraps task.build. Traceback is lost when using ProcessPoolExecutor,
-    so we have to catch it here and return it so at the end of the DAG
-    execution, a message with the traceback can be printed
+    Wraps task.build. Traceback is lost when using ProcessPoolExecutor
+    (future.exception().__traceback__ returns None), so we have to catch it
+    here and return it so at the end of the DAG execution, a message with the
+    traceback can be printed
     """
 
     def __init__(self, task):
@@ -84,7 +85,7 @@ class Parallel(Executor):
         # this is a bit confusing, so maybe change WaitingExecution
         # to WaitingBuild?
         for name in dag:
-            if dag[name]._status == TaskStatus.Executed:
+            if dag[name].exec_status == TaskStatus.Executed:
                 done.append(dag[name])
 
         def callback(future):
@@ -94,15 +95,17 @@ class Parallel(Executor):
             self._logger.debug('Added %s to the list of finished tasks...',
                                task.name)
 
-            if future.exception() is None:
+            result = future.result()
+
+            if isinstance(result, FailedTaskResult):
                 # TODO: must check for esxecution status - if there is an error
                 # is this status updated automatically? cause it will be better
                 # for tasks to update their status by themselves, then have a
                 # manager to update the other tasks statuses whenever one finishes
                 # to know which ones are available for execution
-                task._status = TaskStatus.Executed
+                task.exec_status = TaskStatus.Errored
             else:
-                task._status = TaskStatus.Errored
+                task.exec_status = TaskStatus.Executed
 
             done.append(task)
 
@@ -113,18 +116,8 @@ class Parallel(Executor):
             a StopIteration exception if there are no more tasks to run, which means
             the DAG is done
             """
-            # update task status for tasks in the done list
-            for task in done:
-                task = dag[task.name]
-
-                # update other tasks status, should abstract this in a execution
-                # manager, also make the _get_downstream more efficient by
-                # using the networkx data structure directly
-                for t in task._get_downstream():
-                    t._update_status()
-
             for name in dag:
-                if dag[name]._status == TaskStatus.Aborted:
+                if dag[name].exec_status == TaskStatus.Aborted:
                     done.append(dag[name])
 
             # iterate over tasks to find which is ready for execution
@@ -132,7 +125,7 @@ class Parallel(Executor):
                 # ignore tasks that are already started, I should probably add an
                 # executing status but that cannot exist in the task itself,
                 # maybe in the manaer?
-                if (dag[task_name]._status == TaskStatus.WaitingExecution
+                if (dag[task_name].exec_status == TaskStatus.WaitingExecution
                         and dag[task_name] not in started):
                     t = dag[task_name]
                     return t

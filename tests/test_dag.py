@@ -6,6 +6,24 @@ import pytest
 from ploomber.dag import DAG
 from ploomber.tasks import ShellScript, PythonCallable, SQLDump
 from ploomber.products import File
+from ploomber.constants import TaskStatus
+from ploomber.exceptions import TaskBuildError
+
+
+class FailedTask(Exception):
+    pass
+
+
+def touch_root(product):
+    Path(str(product)).touch()
+
+
+def touch(upstream, product):
+    Path(str(product)).touch()
+
+
+def failing(product):
+    raise FailedTask('Bad things happened')
 
 
 # can test this since this uses dag.plot(), which needs dot for plotting
@@ -162,3 +180,27 @@ def test_partial_build(tmp_directory):
 
     assert {row['name'] for row in table} == {'ta', 'tb', 'tc'}
     assert all(row['Ran?'] for row in table)
+
+
+@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+def test_status_parallel(executor, tmp_directory):
+    dag = DAG(executor=executor)
+    t1 = PythonCallable(failing, File('a_file'), dag, name='t1')
+    t2 = PythonCallable(touch, File('another_file'), dag, name='t2')
+    t3 = PythonCallable(touch, File('yet_another_file'), dag, name='t3')
+    t1 >> t2 >> t3
+
+    dag.render()
+
+    assert t1.exec_status == TaskStatus.WaitingExecution
+    assert t2.exec_status == TaskStatus.WaitingUpstream
+    assert t3.exec_status == TaskStatus.WaitingUpstream
+
+    try:
+        dag.build()
+    except TaskBuildError:
+        pass
+
+    assert t1.exec_status == TaskStatus.Errored
+    assert t2.exec_status == TaskStatus.Aborted
+    assert t3.exec_status == TaskStatus.Aborted

@@ -150,7 +150,7 @@ class Task(abc.ABC):
         self.product.task = self
         self.client = None
 
-        self._status = TaskStatus.WaitingRender
+        self.exec_status = TaskStatus.WaitingRender
         self.build_report = None
 
         self._on_finish = None
@@ -257,6 +257,16 @@ class Task(abc.ABC):
     def on_render(self, value):
         self._on_render = value
 
+    @property
+    def exec_status(self):
+        return self._exec_status
+
+    @exec_status.setter
+    def exec_status(self, value):
+        self._logger.debug('Setting %s status to %s', self, value)
+        self._exec_status = value
+        self._update_downstream_status()
+
     def build(self, force=False):
         """Run the task if needed by checking its dependencies
 
@@ -326,6 +336,7 @@ class Task(abc.ABC):
                 self.run()
             except Exception as e:
                 tb = traceback.format_exc()
+                self.exec_status = TaskStatus.Errored
 
                 # task failed, execute on_failure hook if any...
                 if self.on_failure:
@@ -334,7 +345,8 @@ class Task(abc.ABC):
                     except Exception:
                         self._logger.exception('Error executing on_failure '
                                                'callback')
-                raise e
+                raise TaskBuildError('Error executing task "{}"'
+                                     .format(self)) from e
 
             now = datetime.now()
             elapsed = (now - then).total_seconds()
@@ -375,10 +387,7 @@ class Task(abc.ABC):
 
         self._logger.info('-----\n')
 
-        self._status = TaskStatus.Executed
-
-        for t in self._get_downstream():
-            t._update_status()
+        self.exec_status = TaskStatus.Executed
 
         self.build_report = Row({'name': self.name, 'Ran?': run,
                                  'Elapsed (s)': elapsed, })
@@ -423,8 +432,8 @@ class Task(abc.ABC):
                 raise TaskBuildError('Exception when running on_render '
                                      'for task {}: {}'.format(self, e)) from e
 
-        self._status = (TaskStatus.WaitingExecution if not self.upstream
-                        else TaskStatus.WaitingUpstream)
+        self.exec_status = (TaskStatus.WaitingExecution if not self.upstream
+                            else TaskStatus.WaitingUpstream)
 
     def set_upstream(self, other):
         self.dag._add_edge(other, self)
@@ -510,24 +519,31 @@ class Task(abc.ABC):
                           .format(repr(self), self.params)) from e
 
     def _get_downstream(self):
+        # make the _get_downstream more efficient by
+        # using the networkx data structure directly
         downstream = []
         for t in self.dag.values():
             if self in t.upstream.values():
                 downstream.append(t)
         return downstream
 
-    def _update_status(self):
-        if self._status == TaskStatus.WaitingUpstream:
-            any_upstream_errored = any([t._status == TaskStatus.Errored
-                                        for t in self.upstream.values()])
-            all_upstream_executed = all([t._status == TaskStatus.Executed
-                                         for t in self.upstream.values()])
+    def _update_downstream_status(self):
+        def update_status(task):
+            any_upstream_errored_or_aborted = any([t.exec_status
+                                                   in (TaskStatus.Errored,
+                                                       TaskStatus.Aborted)
+                                                   for t
+                                                   in task.upstream.values()])
+            all_upstream_executed = all([t.exec_status == TaskStatus.Executed
+                                         for t in task.upstream.values()])
 
-            if any_upstream_errored:
-                self._status = TaskStatus.Aborted
+            if any_upstream_errored_or_aborted:
+                task.exec_status = TaskStatus.Aborted
+            elif all_upstream_executed:
+                task.exec_status = TaskStatus.WaitingExecution
 
-            if all_upstream_executed:
-                self._status = TaskStatus.WaitingExecution
+        for t in self._get_downstream():
+            update_status(t)
 
     def __rshift__(self, other):
         """ a >> b is the same as b.set_upstream(a)
