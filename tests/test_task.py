@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ploomber.exceptions import RenderError, TaskBuildError
+from ploomber.exceptions import RenderError, DAGBuildError
 from ploomber import DAG
 from ploomber.products import File, PostgresRelation
 from ploomber.tasks import PythonCallable, SQLScript, ShellScript, SQLDump
@@ -250,10 +250,10 @@ def test_task_is_re_executed_if_on_finish_fails(tmp_directory):
 
     # first time it runs, fails..
     try:
-        dag.build(clear_cached_status=True)
-    except TaskBuildError:
+        dag.build()
+    except DAGBuildError:
         pass
 
     # if we attempt to run, it will fail again (since no metadata is saved)
-    with pytest.raises(TaskBuildError):
-        dag.build(clear_cached_status=True)
+    with pytest.raises(DAGBuildError):
+        dag.build(force=True)

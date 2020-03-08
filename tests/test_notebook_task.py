@@ -6,7 +6,7 @@ from ploomber.dag import DAG
 from ploomber.tasks import NotebookRunner
 from ploomber.tasks.notebook import _to_ipynb
 from ploomber.products import File
-from ploomber.exceptions import TaskBuildError
+from ploomber.exceptions import DAGBuildError
 
 
 def test_warns_if_no_parameters_tagged_cell():
@@ -107,7 +107,7 @@ def test_failing_notebook_saves_partial_result(tmp_directory):
                    name='nb')
 
     # build breaks due to the exception
-    with pytest.raises(TaskBuildError):
+    with pytest.raises(DAGBuildError):
         dag.build()
 
     # but the file with ipynb extension exists to help debugging

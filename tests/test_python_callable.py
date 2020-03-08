@@ -3,7 +3,7 @@ from pathlib import Path
 from ploomber import DAG
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
-from ploomber.exceptions import TaskBuildError
+from ploomber.exceptions import DAGBuildError
 
 
 class MyException(Exception):
@@ -47,5 +47,5 @@ def test_exceptions_are_raised_with_serial_executor():
     PythonCallable(fn_w_exception, File('file.txt'),
                    dag, 'callable')
 
-    with pytest.raises(TaskBuildError):
+    with pytest.raises(DAGBuildError):
         dag.build()
