@@ -31,6 +31,8 @@ from ploomber.util import (image_bytes2html, isiterable, path2fig, requires,
 from ploomber.CodeDiffer import CodeDiffer
 from ploomber import resources
 from ploomber import executors
+from ploomber.constants import TaskStatus, DAGStatus
+from ploomber.exceptions import DAGBuildError
 
 
 class DAG(collections.abc.Mapping):
@@ -50,6 +52,7 @@ class DAG(collections.abc.Mapping):
         The executor to use. The parallel executor is currently experimental
         and not recommended, use the serial excutor for now
     """
+
     def __init__(self, name=None, clients=None, differ=None,
                  on_task_finish=None, on_task_failure=None,
                  executor='serial'):
@@ -60,7 +63,7 @@ class DAG(collections.abc.Mapping):
         self._logger = logging.getLogger(__name__)
 
         self._clients = clients or {}
-        self._rendered = False
+        self._exec_status = DAGStatus.WaitingRender
 
         if executor == 'serial':
             self._executor = executors.Serial()
@@ -125,7 +128,7 @@ class DAG(collections.abc.Mapping):
         Parameters
         ----------
         force: bool, optional
-            If True, it will run all tasks regadless of status, defaults to
+            If True, it will run all tasks regardless of status, defaults to
             False
 
         clear_cached_status: bool, optional
@@ -141,12 +144,34 @@ class DAG(collections.abc.Mapping):
         if clear_cached_status:
             self._clear_cached_outdated_status()
 
-        self.render()
-        return self._executor(dag=self, force=force)
+        # nothing breaks if we just use self.render() but this way we avoid
+        # showing warning, since it should only be shown when calling render
+        # explicitely
+        if self._exec_status == DAGStatus.WaitingRender:
+            self.render()
+
+        if (self._exec_status in {DAGStatus.Executed, DAGStatus.Errored}
+                and not force):
+            warnings.warn('{} has been built already, to force pass '
+                          'force=True'.format(self))
+        else:
+            try:
+                res = self._executor(dag=self, force=force)
+            except Exception as e:
+                self._exec_status = DAGStatus.Errored
+                e_new = DAGBuildError('Failed to build DAG {}'.format(self))
+                raise e_new from e
+            else:
+                self._exec_status = DAGStatus.Executed
+
+            return res
 
     def build_partially(self, target, clear_cached_status=False):
         """Partially build a dag until certain task
         """
+        # NOTE: doing this should not change self._exec_status in any way
+        # but we are currently modifying self, have to fix this
+
         if clear_cached_status:
             self._clear_cached_outdated_status()
 
@@ -272,7 +297,7 @@ class DAG(collections.abc.Mapping):
         # if the dag is modified, render won't have an effect, DAGs are meant
         # to be all set before rendering, but might be worth raising a warning
         # if trying to modify an already rendered DAG
-        if not self._rendered or force:
+        if self._exec_status == DAGStatus.WaitingRender or force:
             g = self._to_graph(only_current_dag=True)
 
             tasks = nx.algorithms.topological_sort(g)
@@ -281,6 +306,9 @@ class DAG(collections.abc.Mapping):
                 tasks = tqdm(tasks, total=len(g))
 
             for t in tasks:
+                # reset task status
+                t.exec_status = TaskStatus.WaitingRender
+
                 if show_progress:
                     tasks.set_description('Rendering DAG "{}"'
                                           .format(self.name))
@@ -300,7 +328,11 @@ class DAG(collections.abc.Mapping):
                                .format(repr(t), '\n'.join(messages)))
                     warnings.warn(warning)
 
-                self._rendered = True
+                self._exec_status = DAGStatus.WaitingExecution
+        else:
+            warnings.warn('{} has already been rendered, this call has no '
+                          'effect, to force rendering again, pass force=True'
+                          .format(self))
 
     def _add_task(self, task):
         """Adds a task to the DAG
