@@ -5,10 +5,13 @@ CHANGELOG
 --------
 * DAG parallel executor
 * DAG rendering and build now continue until no more tasks can render/build
-(instead of failing at the first exception)
+    (instead of failing at the first exception)
 * New @with_env and @load_env decorators for managing environments
-* Env expansion ({{user}} expands to the current, also {{git}} and {{version}} available)
-* Task.name is now optional when Task is initialized with a source that has __name__ attribute (Python functions) or a name attribute (like Placeholders returned fromSourceLoader)
+* Env expansion ({{user}} expands to the current, also {{git}} and {{version}}
+    available)
+* Task.name is now optional when Task is initialized with a source that has
+    __name__ attribute (Python functions) or a name attribute (like
+    Placeholders returned fromSourceLoader)
 * New Task.on_render hook
 * Bug fixes
 * A lot of new tests
