@@ -1,6 +1,13 @@
 from enum import Enum
 
 
+class DAGStatus(Enum):
+    WaitingRender = 'waiting_render'
+    WaitingExecution = 'waiting_execution'
+    Executed = 'executed'
+    Errored = 'errored'
+
+
 class TaskStatus(Enum):
     # waiting render
     WaitingRender = 'waiting_render'
