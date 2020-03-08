@@ -66,6 +66,8 @@ class Parallel(Executor):
         self._i = 0
 
     def __call__(self, dag, **kwargs):
+        super().__call__(dag)
+
         if self.logging_directory:
             logger_handler = LoggerHandler(dag_name=dag.name,
                                            directory=self.logging_directory,
