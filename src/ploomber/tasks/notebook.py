@@ -161,7 +161,7 @@ class NotebookRunner(Task):
         self.nbconvert_exporter_name = nbconvert_exporter_name
         self.ext_in = ext_in
         self.nb_product_key = nb_product_key
-        super().__init__(source, product, dag, name, params or {})
+        super().__init__(source, product, dag, name, params)
 
         if isinstance(self.product, MetaProduct) and nb_product_key is None:
             raise KeyError('More than one product was passed but '

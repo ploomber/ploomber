@@ -13,7 +13,7 @@ from jinja2 import Template, Environment, FileSystemLoader, StrictUndefined
 def test_get_name_property():
     p = Path(tempfile.mktemp())
     p.write_text('This is some text in a file used as Placeholder {{tag}}')
-    assert p.name == Placeholder(p).__name__
+    assert p.name == Placeholder(p).name
 
 
 def test_verify_if_strict_template_is_literal():

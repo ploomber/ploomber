@@ -35,7 +35,7 @@ class PythonCallable(Task):
         dependencies along with any parameters declared here
     """
 
-    def __init__(self, source, product, dag, name, params=None):
+    def __init__(self, source, product, dag, name=None, params=None):
         super().__init__(source, product, dag, name, params)
 
     def _init_source(self, source):
@@ -95,7 +95,7 @@ class ShellScript(Task):
         refer to jinja2 documentation for details
     """
 
-    def __init__(self, source, product, dag, name, client=None,
+    def __init__(self, source, product, dag, name=None, client=None,
                  params=None):
         super().__init__(source, product, dag, name, params)
 

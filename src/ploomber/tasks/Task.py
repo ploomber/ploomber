@@ -89,10 +89,25 @@ class Task(abc.ABC):
     def _init_source(self, source):
         pass
 
-    def __init__(self, source, product, dag, name, params=None):
+    def __init__(self, source, product, dag, name=None, params=None):
         self._params = Params(params)
-        self._name = name
         self._source = self._init_source(source)
+
+        if name is None:
+            # works with pathlib.Path and ploomber.Placeholder
+            if hasattr(source, 'name'):
+                self._name = source.name
+            # works with python functions
+            elif hasattr(source, '__name__'):
+                self._name = source.__name__
+            else:
+                raise AttributeError('name can ony be None if the souce '
+                                     'has a "name" attribute such as a '
+                                     'Placeholder (returned from SourceLoader)'
+                                     ' or pathlib.Path objects, or a '
+                                     '"__name__" attribute (Python functions)')
+        else:
+            self._name = name
 
         if dag is None:
             raise TypeError('DAG cannot be None')

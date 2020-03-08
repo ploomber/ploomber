@@ -39,7 +39,7 @@ class SQLScript(Task):
     """
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation)
 
-    def __init__(self, source, product, dag, name, client=None,
+    def __init__(self, source, product, dag, name=None, client=None,
                  params=None):
         params = params or {}
         super().__init__(source, product, dag, name, params)
@@ -98,7 +98,7 @@ class SQLDump(Task):
     """
     PRODUCT_CLASSES_ALLOWED = (File, )
 
-    def __init__(self, source, product, dag, name, client=None,
+    def __init__(self, source, product, dag, name=None, client=None,
                  params=None,
                  chunksize=10000, io_handler=io.CSVIO):
         params = params or {}
@@ -195,7 +195,7 @@ class SQLTransfer(Task):
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation)
 
     @requires(['pandas'], 'SQLTransfer')
-    def __init__(self, source, product, dag, name, client=None,
+    def __init__(self, source, product, dag, name=None, client=None,
                  params=None, chunksize=10000):
         params = params or {}
         super().__init__(source, product, dag, name, params)
@@ -271,7 +271,7 @@ class SQLUpload(Task):
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation)
 
     @requires(['pandas'], 'SQLUpload')
-    def __init__(self, source, product, dag, name, client=None,
+    def __init__(self, source, product, dag, name=None, client=None,
                  params=None, chunksize=None):
         params = params or {}
         super().__init__(source, product, dag, name, params)
@@ -322,7 +322,7 @@ class PostgresCopyFrom(Task):
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation,)
 
     @requires(['pandas', 'psycopg2'], 'PostgresCopyFrom')
-    def __init__(self, source, product, dag, name, client=None,
+    def __init__(self, source, product, dag, name=None, client=None,
                  params=None, sep='\t', null='\\N', columns=None):
         params = params or {}
         super().__init__(source, product, dag, name, params)
