@@ -1,3 +1,9 @@
+class DAGRenderError(Exception):
+    """Raise when a dag fails to build
+    """
+    pass
+
+
 class DAGBuildError(Exception):
     """Raise when a dag fails to build
     """
