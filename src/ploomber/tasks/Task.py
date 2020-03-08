@@ -281,7 +281,7 @@ class Task(abc.ABC):
         # parameters resolved (params, upstream, product)
         if self.exec_status == TaskStatus.WaitingRender:
             raise TaskBuildError('Cannot build task that has not been '
-                                 'rendered, call DAG.render() first ')
+                                 'rendered, call DAG.render() first')
 
         # if aborted (this happens when an upstream dependency fails)
         elif self.exec_status == TaskStatus.Aborted:

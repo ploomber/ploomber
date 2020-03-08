@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ploomber.exceptions import RenderError, DAGBuildError
+from ploomber.exceptions import RenderError, DAGBuildError, TaskBuildError
 from ploomber import DAG
 from ploomber.products import File, PostgresRelation
 from ploomber.tasks import PythonCallable, SQLScript, ShellScript, SQLDump
@@ -257,3 +257,18 @@ def test_task_is_re_executed_if_on_finish_fails(tmp_directory):
     # if we attempt to run, it will fail again (since no metadata is saved)
     with pytest.raises(DAGBuildError):
         dag.build(force=True)
+
+
+def test_attempting_to_build_unrendered_task_throws_exception():
+    dag = DAG()
+    t = SQLDump('SELECT * FROM, table', File('file'), dag,
+                name='task',
+                client=object())
+
+    msg = ('Cannot build task that has not been rendered, call '
+           'DAG.render() first')
+
+    with pytest.raises(TaskBuildError) as excinfo:
+        t.build()
+
+    assert str(excinfo.value) == msg
