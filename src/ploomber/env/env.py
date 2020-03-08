@@ -8,7 +8,7 @@ from glob import iglob
 import platform
 
 from ploomber.FrozenJSON import FrozenJSON
-from ploomber.path import PathManager
+from ploomber.env.PathManager import PathManager
 from ploomber.env import validate
 from ploomber.env.expand import modify_values, EnvironmentExpander
 
