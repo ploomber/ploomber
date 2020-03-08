@@ -252,7 +252,7 @@ class Placeholder:
             self._template = env.from_string(self.raw)
 
     @property
-    def __name__(self):
+    def name(self):
         if self._path is None:
             raise AttributeError('Cannot get name for Placeholder if '
                                  'initialized directly from a string, load '
