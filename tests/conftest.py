@@ -1,7 +1,6 @@
 import string
 import random
 import json
-from os import environ
 import shutil
 import os
 import pytest
