@@ -1,12 +1,54 @@
+"""
+Task._status only makes sense for parallel execution, when using the serial
+executor, we can update the _status automatically (within Task) but it is
+unusable, get rid of the logic that updates it automatically, however,
+we ar eusing here the _update status here to propagate dowstream updates.
+So think about which parts can go away and which ones should not
+"""
 import logging
-from multiprocessing import Pool
+from concurrent.futures import ProcessPoolExecutor
 from ploomber.constants import TaskStatus
 from ploomber.executors.Executor import Executor
 from ploomber.executors.LoggerHandler import LoggerHandler
+from ploomber.exceptions import TaskBuildError
+
+import traceback
+
+
+class FailedTaskResult:
+    """
+    An object to store a failed task name and its traceback string
+    """
+
+    def __init__(self, name, traceback_str):
+        self.name = name
+        self.traceback_str = traceback_str
+
+
+class TaskBuildWrapper:
+    """
+    Wraps task.build. Traceback is lost when using ProcessPoolExecutor,
+    so we have to catch it here and return it so at the end of the DAG
+    execution, a message with the traceback can be printed
+    """
+
+    def __init__(self, task):
+        self.task = task
+
+    def __call__(self, *args, **kwargs):
+        try:
+            return self.task.build(**kwargs)
+        except Exception as e:
+            return FailedTaskResult(self.task.name, traceback.format_exc())
 
 
 class Parallel(Executor):
-    """Runs a DAG in parallel using the multiprocessing module
+    """Runs a DAG in parallel using multiprocessing
+
+    Notes
+    -----
+    If any task crashes, downstream tasks execution is aborted, building
+    continues until no more tasks can be executed
     """
     # Tasks should not create child processes, see documention:
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.daemon
@@ -33,6 +75,7 @@ class Parallel(Executor):
         done = []
         started = []
         set_all = set(dag)
+        future_mapping = {}
 
         # there might be up-to-date tasks, add them to done
         # FIXME: this only happens when the dag is already build and then
@@ -44,11 +87,23 @@ class Parallel(Executor):
             if dag[name]._status == TaskStatus.Executed:
                 done.append(dag[name])
 
-        def callback(task):
+        def callback(future):
             """Keep track of finished tasks
             """
+            task = future_mapping[future]
             self._logger.debug('Added %s to the list of finished tasks...',
                                task.name)
+
+            if future.exception() is None:
+                # TODO: must check for esxecution status - if there is an error
+                # is this status updated automatically? cause it will be better
+                # for tasks to update their status by themselves, then have a
+                # manager to update the other tasks statuses whenever one finishes
+                # to know which ones are available for execution
+                task._status = TaskStatus.Executed
+            else:
+                task._status = TaskStatus.Errored
+
             done.append(task)
 
         def next_task():
@@ -61,18 +116,16 @@ class Parallel(Executor):
             # update task status for tasks in the done list
             for task in done:
                 task = dag[task.name]
-                # TODO: must check for esxecution status - if there is an error
-                # is this status updated automatically? cause it will be better
-                # for tasks to update their status by themselves, then have a
-                # manager to update the other tasks statuses whenever one finishes
-                # to know which ones are available for execution
-                task._status = TaskStatus.Executed
 
                 # update other tasks status, should abstract this in a execution
                 # manager, also make the _get_downstream more efficient by
                 # using the networkx data structure directly
                 for t in task._get_downstream():
                     t._update_status()
+
+            for name in dag:
+                if dag[name]._status == TaskStatus.Aborted:
+                    done.append(dag[name])
 
             # iterate over tasks to find which is ready for execution
             for task_name in dag:
@@ -105,7 +158,7 @@ class Parallel(Executor):
 
             self._i += 1
 
-        with Pool(processes=self.processes) as pool:
+        with ProcessPoolExecutor(max_workers=self.processes) as pool:
             while True:
                 try:
                     task = next_task()
@@ -113,11 +166,25 @@ class Parallel(Executor):
                     break
                 else:
                     if task is not None:
-                        res = pool.apply_async(
-                            task.build, [], kwds=kwargs, callback=callback)
+                        future = pool.submit(TaskBuildWrapper(task), **kwargs)
+                        future.add_done_callback(callback)
                         started.append(task)
+                        future_mapping[future] = task
                         logging.info('Added %s to the pool...', task.name)
                         # time.sleep(3)
+
+        exps = [f.result() for f, t in future_mapping.items() if
+                isinstance(f.result(), FailedTaskResult)]
+
+        if exps:
+            msgs = ['* Task "{}" traceback:\n{}'
+                    .format(r.name,
+                            r.traceback_str)
+                    for r in exps]
+            msg = '\n'.join(msgs)
+            raise TaskBuildError('DAG execution failed. The following tasks '
+                                 'crashed:\n{}'
+                                 .format(msg))
 
     # __getstate__ and __setstate__ are needed to make this picklable
 

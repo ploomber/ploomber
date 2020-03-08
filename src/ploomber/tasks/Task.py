@@ -518,8 +518,13 @@ class Task(abc.ABC):
 
     def _update_status(self):
         if self._status == TaskStatus.WaitingUpstream:
+            any_upstream_errored = any([t._status == TaskStatus.Errored
+                                        for t in self.upstream.values()])
             all_upstream_executed = all([t._status == TaskStatus.Executed
                                          for t in self.upstream.values()])
+
+            if any_upstream_errored:
+                self._status = TaskStatus.Aborted
 
             if all_upstream_executed:
                 self._status = TaskStatus.WaitingExecution
