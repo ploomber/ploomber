@@ -7,7 +7,7 @@ from ploomber.dag import DAG
 from ploomber.tasks import ShellScript, PythonCallable, SQLDump
 from ploomber.products import File
 from ploomber.constants import TaskStatus, DAGStatus
-from ploomber.exceptions import DAGBuildError
+from ploomber.exceptions import DAGBuildError, DAGRenderError
 
 
 class FailedTask(Exception):
@@ -310,3 +310,95 @@ def test_warns_on_built_dag(tmp_directory):
 
     assert len(record) == 1
     assert record[0].message.args[0] == expected_msg
+
+
+def test_status_on_render_fail():
+    def make():
+        dag = DAG()
+        SQLDump('SELECT * FROM my_table', File('ok'), dag, name='t1',
+                client=object())
+        t2 = SQLDump('SELECT * FROM {{table}}', File('a_file'), dag, name='t2',
+                     client=object())
+        t3 = SQLDump('SELECT * FROM another', File('another_file'), dag,
+                     name='t3',
+                     client=object())
+        t4 = SQLDump('SELECT * FROM something', File('yet_another'), dag,
+                     name='t4', client=object())
+        SQLDump('SELECT * FROM my_table_2', File('ok_2'), dag,
+                name='t5', client=object())
+        t2 >> t3 >> t4
+        return dag
+
+    dag = make()
+
+    with pytest.raises(DAGRenderError):
+        dag.render()
+
+    assert dag._exec_status == DAGStatus.ErroredRender
+    assert dag['t1'].exec_status == TaskStatus.WaitingExecution
+    assert dag['t2'].exec_status == TaskStatus.ErroredRender
+    assert dag['t3'].exec_status == TaskStatus.AbortedRender
+    assert dag['t4'].exec_status == TaskStatus.AbortedRender
+    assert dag['t5'].exec_status == TaskStatus.WaitingExecution
+
+    # building directly should also raise render error
+    dag = make()
+
+    with pytest.raises(DAGRenderError):
+        dag.build()
+
+
+def test_tracebacks_are_shown_for_all_on_render_failing_tasks():
+    dag = DAG()
+    SQLDump('SELECT * FROM {{one_table}}', File('one_table'), dag,
+            name='t1', client=object())
+    SQLDump('SELECT * FROM {{another_table}}', File('another_table'), dag,
+            name='t2',         client=object())
+
+    with pytest.raises(DAGRenderError) as excinfo:
+        dag.render()
+
+    assert "SQLDump: t2 -> File('another_table')" in str(excinfo.value)
+    assert "SQLDump: t1 -> File('one_table')" in str(excinfo.value)
+
+
+@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+def test_tracebacks_are_shown_for_all_on_build_failing_tasks(executor):
+    dag = DAG(executor=executor)
+    PythonCallable(failing, File('a_file'), dag, name='t1')
+    PythonCallable(failing, File('another_file'), dag, name='t2')
+
+    with pytest.raises(DAGBuildError) as excinfo:
+        dag.build()
+
+    # need this to get chained exceptions:
+    # https://docs.pytest.org/en/latest/reference.html#_pytest._code.ExceptionInfo.getrepr
+    assert "PythonCallable: t1 -> File('a_file')" in str(excinfo.getrepr())
+    assert ("PythonCallable: t2 -> File('another_file')"
+            in str(excinfo.getrepr()))
+
+
+@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+def test_sucessful_execution(executor, tmp_directory):
+    dag = DAG(executor=executor)
+    t1 = PythonCallable(touch_root, File('ok'), dag, name='t1')
+    t2 = PythonCallable(touch, File('a_file'), dag, name='t2')
+    t3 = PythonCallable(touch, File('another_file'), dag, name='t3')
+    t4 = PythonCallable(touch, File('yet_another_file'), dag, name='t4')
+    PythonCallable(touch_root, File('file'), dag, name='t5')
+    t1 >> t2
+    t1 >> t3
+    (t2 + t3) >> t4
+
+    dag.build()
+
+    assert Path('ok').exists()
+    assert Path('a_file').exists()
+    assert Path('another_file').exists()
+    assert Path('yet_another_file').exists()
+    assert Path('file').exists()
+
+    assert set(t.exec_status for t in dag.values()) == {TaskStatus.Executed}
+
+
+# TODO: test forced execution, check it actually ran two times
