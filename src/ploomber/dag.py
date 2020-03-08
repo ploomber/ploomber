@@ -42,17 +42,19 @@ class DAG(collections.abc.Mapping):
 
     Parameters
     ----------
-    name: str, optional
+    name : str, optional
         A name to identify this DAG
-    clients:  dict, optional
+    clients : dict, optional
         A dictionary with classes as keys and clients as values, can be
         later modified using dag.clients[dag] = client
-    differ: CodeDiffer
+    differ : CodeDiffer
         An object to determine whether two pieces of code are the same and
         to output a diff, defaults to CodeDiffer() (default parameters)
-    executor: str or ploomber.executors instance, optional
-        The executor to use. The parallel executor is currently experimental
-        and not recommended, use the serial excutor for now
+    executor : str or ploomber.executors instance, optional
+        The executor to use (ploomber.executors.Serial and
+        ploomber.executors.Parallel), is a string is passed ('serial'
+        or 'parallel') the corresponding executor is initialized with default
+        parameters
     """
 
     def __init__(self, name=None, clients=None, differ=None,
