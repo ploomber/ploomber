@@ -10,19 +10,10 @@ from concurrent.futures import ProcessPoolExecutor
 from ploomber.constants import TaskStatus
 from ploomber.executors.Executor import Executor
 from ploomber.executors.LoggerHandler import LoggerHandler
-from ploomber.exceptions import TaskBuildError
+from ploomber.exceptions import DAGBuildError
+from ploomber.ExceptionCollector import ExceptionCollector, ExceptionResult
 
 import traceback
-
-
-class FailedTaskResult:
-    """
-    An object to store a failed task name and its traceback string
-    """
-
-    def __init__(self, name, traceback_str):
-        self.name = name
-        self.traceback_str = traceback_str
 
 
 class TaskBuildWrapper:
@@ -40,7 +31,8 @@ class TaskBuildWrapper:
         try:
             return self.task.build(**kwargs)
         except Exception as e:
-            return FailedTaskResult(self.task.name, traceback.format_exc())
+            return ExceptionResult(task_str=repr(self.task),
+                                   traceback_str=traceback.format_exc())
 
 
 class Parallel(Executor):
@@ -99,7 +91,7 @@ class Parallel(Executor):
 
             result = future.result()
 
-            if isinstance(result, FailedTaskResult):
+            if isinstance(result, ExceptionResult):
                 # TODO: must check for esxecution status - if there is an error
                 # is this status updated automatically? cause it will be better
                 # for tasks to update their status by themselves, then have a
@@ -168,18 +160,17 @@ class Parallel(Executor):
                         logging.info('Added %s to the pool...', task.name)
                         # time.sleep(3)
 
-        exps = [f.result() for f, t in future_mapping.items() if
-                isinstance(f.result(), FailedTaskResult)]
+        exps = ExceptionCollector([f.result()
+                                   for f, t
+                                   in future_mapping.items()
+                                   if isinstance(f.result(), ExceptionResult)])
 
         if exps:
-            msgs = ['* Task "{}" traceback:\n{}'
-                    .format(r.name,
-                            r.traceback_str)
-                    for r in exps]
-            msg = '\n'.join(msgs)
-            raise TaskBuildError('DAG execution failed. The following tasks '
-                                 'crashed:\n{}'
-                                 .format(msg))
+            raise DAGBuildError('DAG build failed, the following '
+                                'tasks crashed '
+                                '(corresponding tasks aborted '
+                                'execuion):\n{}'
+                                .format(str(exps)))
 
     # __getstate__ and __setstate__ are needed to make this picklable
 
