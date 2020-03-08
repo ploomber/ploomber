@@ -179,7 +179,7 @@ class Product(abc.ABC):
         self.logger = logging.getLogger('{}.{}'.format(__name__,
                                                        type(self).__name__))
 
-    def _to_json_serializable(self):
+    def to_json_serializable(self):
         """Returns a JSON serializable version of this product
         """
         # NOTE: this is used in tasks where only JSON serializable parameters

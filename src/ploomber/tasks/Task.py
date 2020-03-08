@@ -27,7 +27,6 @@ the output, hence shoulf not make tasks outdated
 import inspect
 import abc
 import traceback
-from copy import copy
 import logging
 from datetime import datetime
 from ploomber.products import Product, MetaProduct
@@ -36,6 +35,7 @@ from ploomber.exceptions import TaskBuildError
 from ploomber.tasks.TaskGroup import TaskGroup
 from ploomber.constants import TaskStatus
 from ploomber.tasks.Upstream import Upstream
+from ploomber.tasks.Params import Params
 from ploomber.Table import Row
 from ploomber.sources.sources import Source
 from ploomber.util import isiterable
@@ -66,6 +66,12 @@ class Task(abc.ABC):
         Extra parameters passed to the task on rendering (if templated
         source) or during execution (if not templated source)
 
+    Attributes
+    ----------
+    params : Params
+        A read-only dictionary-like object with params passed, after running
+        'product' and 'upstream' are added, if any
+
     Notes
     -----
     All subclasses must implement the same constuctor to keep the API
@@ -83,14 +89,25 @@ class Task(abc.ABC):
     def _init_source(self, source):
         pass
 
-    def __init__(self, source, product, dag, name, params=None):
-        if params is None:
-            self._params = {}
-        else:
-            self._params = copy(params)
-
-        self._name = name
+    def __init__(self, source, product, dag, name=None, params=None):
+        self._params = Params(params)
         self._source = self._init_source(source)
+
+        if name is None:
+            # works with pathlib.Path and ploomber.Placeholder
+            if hasattr(source, 'name'):
+                self._name = source.name
+            # works with python functions
+            elif hasattr(source, '__name__'):
+                self._name = source.__name__
+            else:
+                raise AttributeError('name can ony be None if the souce '
+                                     'has a "name" attribute such as a '
+                                     'Placeholder (returned from SourceLoader)'
+                                     ' or pathlib.Path objects, or a '
+                                     '"__name__" attribute (Python functions)')
+        else:
+            self._name = name
 
         if dag is None:
             raise TypeError('DAG cannot be None')
@@ -353,13 +370,6 @@ class Task(abc.ABC):
             self.product.stored_source_code = self.source_code
             self.product.save_metadata()
 
-            # update metadata: this has to be after running the on_finish
-            # hook, to prevent failing tasks to save metadata and being skipped
-            # in the next build
-            self.product.timestamp = datetime.now().timestamp()
-            self.product.stored_source_code = self.source_code
-            self.product.save_metadata()
-
         else:
             self._logger.info(f'No need to run {repr(self)}')
 
@@ -383,20 +393,20 @@ class Task(abc.ABC):
         """
         self._render_product()
 
-        self.params['product'] = self.product
-
-        params = copy(self.params)
+        # Params are read-only for users, but we have to add the product
+        # so we do it directly to the dictionary
+        self.params._dict['product'] = self.product
 
         try:
             if self.source.needs_render:
                 # if this task has upstream dependencies, render using the
                 # context manager, which will raise a warning if any of the
                 # dependencies is not used, otherwise just render
-                if params.get('upstream'):
-                    with params.get('upstream'):
-                        self.source.render(params)
+                if self.params.get('upstream'):
+                    with self.params.get('upstream'):
+                        self.source.render(self.params)
                 else:
-                    self.source.render(params)
+                    self.source.render(self.params)
         except Exception as e:
             raise type(e)('Error rendering code from Task "{}", '
                           ' check the full traceback above for details'
@@ -481,16 +491,18 @@ class Task(abc.ABC):
         params_names = list(self.params)
 
         # add upstream product identifiers to params, if any
+        # Params are read-only for users, but we have to add upstream
+        # dependencies so we do it directly to the dictionary
         if self.upstream:
-            self.params['upstream'] = Upstream({n: t.product for n, t
-                                                in self.upstream.items()})
+            self.params._dict['upstream'] = Upstream({n: t.product for n, t in
+                                                      self.upstream.items()})
 
         # render the current product
         try:
             # using the upstream products to define the current product
             # is optional, using the parameters passed in params is also
             # optional
-            self.product.render(copy(self.params),
+            self.product.render(self.params,
                                 optional=set(params_names + ['upstream']))
         except Exception as e:
             raise type(e)('Error rendering Product from Task "{}", '

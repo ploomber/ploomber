@@ -6,6 +6,7 @@ from ploomber.dag import DAG
 from ploomber.tasks import NotebookRunner
 from ploomber.tasks.notebook import _to_ipynb
 from ploomber.products import File
+from ploomber.exceptions import TaskBuildError
 
 
 def test_warns_if_no_parameters_tagged_cell():
@@ -87,3 +88,27 @@ Path(product['model']).touch()
                    nb_product_key='nb',
                    name='nb')
     dag.build()
+
+
+def test_failing_notebook_saves_partial_result(tmp_directory):
+    dag = DAG()
+
+    code = """
+    raise Exception('failing notebook')
+    """
+
+    # attempting to generate an HTML report
+    NotebookRunner(code,
+                   product=File('out.html'),
+                   dag=dag,
+                   kernelspec_name='python3',
+                   params={'var': 1},
+                   ext_in='py',
+                   name='nb')
+
+    # build breaks due to the exception
+    with pytest.raises(TaskBuildError):
+        dag.build()
+
+    # but the file with ipynb extension exists to help debugging
+    assert Path('out.ipynb').exists()

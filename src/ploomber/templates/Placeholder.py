@@ -251,6 +251,16 @@ class Placeholder:
             env = Environment(loader=loader, undefined=jinja2.StrictUndefined)
             self._template = env.from_string(self.raw)
 
+    @property
+    def name(self):
+        if self._path is None:
+            raise AttributeError('Cannot get name for Placeholder if '
+                                 'initialized directly from a string, load '
+                                 'from a pathlib.Path or using '
+                                 'ploomber.SourceLoader for this to work')
+        else:
+            return self._path.name
+
 
 class SQLRelationPlaceholder:
     """
