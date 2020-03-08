@@ -27,7 +27,6 @@ the output, hence shoulf not make tasks outdated
 import inspect
 import abc
 import traceback
-from copy import copy
 import logging
 from datetime import datetime
 from ploomber.products import Product, MetaProduct
