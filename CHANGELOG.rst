@@ -10,8 +10,8 @@ CHANGELOG
 * Env expansion ({{user}} expands to the current, also {{git}} and
 {{version}} available)
 * Task.name is now optional when Task is initialized with a source that has
-__name__ attribute (Python functions) or a name attribute (like Placeholders
-returned from SourceLoader)
+    __name__ attribute (Python functions) or a name attribute (like Placeholders
+    returned from SourceLoader)
 * New Task.on_render hook
 * Bug fixes
 * A lot of new tests
