@@ -1,6 +1,7 @@
 """
 DAG executors
 """
+import traceback
 import logging
 
 import networkx as nx
@@ -9,6 +10,7 @@ from ploomber.Table import BuildReport
 from ploomber.executors.Executor import Executor
 from ploomber.executors.LoggerHandler import LoggerHandler
 from ploomber.exceptions import DAGBuildError
+from ploomber.ExceptionCollector import ExceptionCollector
 
 
 class Serial(Executor):
@@ -41,7 +43,7 @@ class Serial(Executor):
         g = dag._to_graph()
         pbar = tqdm(nx.algorithms.topological_sort(g), total=len(g))
 
-        exceptions = []
+        exceptions = ExceptionCollector()
 
         for t in pbar:
             pbar.set_description('Building task "{}"'.format(t.name))
@@ -49,11 +51,13 @@ class Serial(Executor):
             try:
                 t.build(**kwargs)
             except Exception as e:
+                tr = traceback.format_exc()
+                exceptions.append(traceback_str=tr, task_str=repr(t))
+
                 # FIXME: this should not be here, but called
                 # inside DAG
                 if dag._on_task_failure:
                     dag._on_task_failure(t)
-                exceptions.append(e)
             else:
                 if dag._on_task_finish:
                     dag._on_task_finish(t)
@@ -61,8 +65,11 @@ class Serial(Executor):
             status_all.append(t.build_report)
 
         if exceptions:
-            # TODO: print all traceback and tasks that failed
-            raise DAGBuildError('Errors occured')
+            raise DAGBuildError('DAG build failed, the following '
+                                'tasks crashed '
+                                '(corresponding tasks aborted '
+                                'execuion):\n{}'
+                                .format(str(exceptions)))
 
         build_report = BuildReport(status_all)
         self._logger.info(' DAG report:\n{}'.format(repr(build_report)))
