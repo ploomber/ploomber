@@ -6,6 +6,24 @@ import pytest
 from ploomber.dag import DAG
 from ploomber.tasks import ShellScript, PythonCallable, SQLDump
 from ploomber.products import File
+from ploomber.constants import TaskStatus, DAGStatus
+from ploomber.exceptions import DAGBuildError, DAGRenderError
+
+
+class FailedTask(Exception):
+    pass
+
+
+def touch_root(product):
+    Path(str(product)).touch()
+
+
+def touch(upstream, product):
+    Path(str(product)).touch()
+
+
+def failing(product):
+    raise FailedTask('Bad things happened')
 
 
 # can test this since this uses dag.plot(), which needs dot for plotting
@@ -162,3 +180,225 @@ def test_partial_build(tmp_directory):
 
     assert {row['name'] for row in table} == {'ta', 'tb', 'tc'}
     assert all(row['Ran?'] for row in table)
+
+
+@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+def test_dag_task_status_life_cycle(executor, tmp_directory):
+    """
+    Check dag and task status along calls to DAG.render and DAG.build.
+    Although DAG and Task status are automatically updated and propagated
+    downstream upon calls to render and build, we have to parametrize this
+    over executors since the object that gets updated might not be the same
+    one that we declared here (this happens when a task runs in a different
+    process), hence, it is the executor's responsibility to notify tasks
+    on sucess/fail scenarios so downstream tasks are updated correctly
+    """
+    dag = DAG(executor=executor)
+    t1 = PythonCallable(touch_root, File('ok'), dag, name='t1')
+    t2 = PythonCallable(failing, File('a_file'), dag, name='t2')
+    t3 = PythonCallable(touch, File('another_file'), dag, name='t3')
+    t4 = PythonCallable(touch, File('yet_another_file'), dag, name='t4')
+    t5 = PythonCallable(touch_root, File('file'), dag, name='t5')
+    t2 >> t3 >> t4
+
+    assert dag._exec_status == DAGStatus.WaitingRender
+    assert {TaskStatus.WaitingRender} == set([t.exec_status
+                                              for t in dag.values()])
+
+    dag.render()
+
+    assert dag._exec_status == DAGStatus.WaitingExecution
+    assert t1.exec_status == TaskStatus.WaitingExecution
+    assert t2.exec_status == TaskStatus.WaitingExecution
+    assert t3.exec_status == TaskStatus.WaitingUpstream
+    assert t4.exec_status == TaskStatus.WaitingUpstream
+    assert t5.exec_status == TaskStatus.WaitingExecution
+
+    try:
+        dag.build()
+    except DAGBuildError:
+        pass
+
+    assert dag._exec_status == DAGStatus.Errored
+    assert t1.exec_status == TaskStatus.Executed
+    assert t2.exec_status == TaskStatus.Errored
+    assert t3.exec_status == TaskStatus.Aborted
+    assert t4.exec_status == TaskStatus.Aborted
+    assert t5.exec_status == TaskStatus.Executed
+
+    dag.render()
+
+    assert dag._exec_status == DAGStatus.Errored
+    assert t1.exec_status == TaskStatus.Executed
+    assert t2.exec_status == TaskStatus.Errored
+    assert t3.exec_status == TaskStatus.Aborted
+    assert t4.exec_status == TaskStatus.Aborted
+    assert t5.exec_status == TaskStatus.Executed
+
+    # TODO: add test when trying to Execute dag with task status
+    # other than WaitingExecution anf WaitingUpstream
+
+    dag.build()
+
+    assert dag._exec_status == DAGStatus.Errored
+    assert t1.exec_status == TaskStatus.Executed
+    assert t2.exec_status == TaskStatus.Errored
+    assert t3.exec_status == TaskStatus.Aborted
+    assert t4.exec_status == TaskStatus.Aborted
+    assert t5.exec_status == TaskStatus.Executed
+
+    # render again to check status reset
+    dag.render(force=True)
+
+    assert dag._exec_status == DAGStatus.WaitingExecution
+    assert t1.exec_status == TaskStatus.WaitingExecution
+    assert t2.exec_status == TaskStatus.WaitingExecution
+    assert t3.exec_status == TaskStatus.WaitingUpstream
+    assert t4.exec_status == TaskStatus.WaitingUpstream
+    assert t5.exec_status == TaskStatus.WaitingExecution
+
+
+@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+def test_executor_keeps_running_until_no_more_tasks_can_run(executor,
+                                                            tmp_directory):
+    dag = DAG(executor=executor)
+    t_fail = PythonCallable(failing, File('t_fail'), dag, name='t_fail')
+    t_fail_downstream = PythonCallable(failing, File('t_fail_downstream'),
+                                       dag, name='t_fail_downstream')
+    t_touch_aborted = PythonCallable(touch_root, File('t_touch_aborted'),
+                                     dag, name='t_touch_aborted')
+
+    t_fail >> t_fail_downstream >> t_touch_aborted
+
+    PythonCallable(touch_root, File('t_ok'), dag, name='t_ok')
+
+    try:
+        dag.build(force=True)
+    except DAGBuildError:
+        pass
+
+    assert not Path('t_fail').exists()
+    assert not Path('t_fail_downstream').exists()
+    assert Path('t_ok').exists()
+
+
+def test_warns_on_rendered_dag():
+    dag = DAG()
+    PythonCallable(touch_root, File('ok'), dag, name='t1')
+    dag.render()
+
+    with pytest.warns(UserWarning) as record:
+        dag.render()
+
+    expected_msg = ('DAG("No name") has already been rendered, this call has '
+                    'no effect, to force rendering again, pass force=True')
+
+    assert len(record) == 1
+    assert record[0].message.args[0] == expected_msg
+
+
+def test_warns_on_built_dag(tmp_directory):
+    dag = DAG()
+    PythonCallable(touch_root, File('ok'), dag, name='t1')
+    dag.build()
+
+    with pytest.warns(UserWarning) as record:
+        dag.build()
+
+    expected_msg = ('DAG("No name") has been built already, to force pass '
+                    'force=True')
+
+    assert len(record) == 1
+    assert record[0].message.args[0] == expected_msg
+
+
+def test_status_on_render_fail():
+    def make():
+        dag = DAG()
+        SQLDump('SELECT * FROM my_table', File('ok'), dag, name='t1',
+                client=object())
+        t2 = SQLDump('SELECT * FROM {{table}}', File('a_file'), dag, name='t2',
+                     client=object())
+        t3 = SQLDump('SELECT * FROM another', File('another_file'), dag,
+                     name='t3',
+                     client=object())
+        t4 = SQLDump('SELECT * FROM something', File('yet_another'), dag,
+                     name='t4', client=object())
+        SQLDump('SELECT * FROM my_table_2', File('ok_2'), dag,
+                name='t5', client=object())
+        t2 >> t3 >> t4
+        return dag
+
+    dag = make()
+
+    with pytest.raises(DAGRenderError):
+        dag.render()
+
+    assert dag._exec_status == DAGStatus.ErroredRender
+    assert dag['t1'].exec_status == TaskStatus.WaitingExecution
+    assert dag['t2'].exec_status == TaskStatus.ErroredRender
+    assert dag['t3'].exec_status == TaskStatus.AbortedRender
+    assert dag['t4'].exec_status == TaskStatus.AbortedRender
+    assert dag['t5'].exec_status == TaskStatus.WaitingExecution
+
+    # building directly should also raise render error
+    dag = make()
+
+    with pytest.raises(DAGRenderError):
+        dag.build()
+
+
+def test_tracebacks_are_shown_for_all_on_render_failing_tasks():
+    dag = DAG()
+    SQLDump('SELECT * FROM {{one_table}}', File('one_table'), dag,
+            name='t1', client=object())
+    SQLDump('SELECT * FROM {{another_table}}', File('another_table'), dag,
+            name='t2',         client=object())
+
+    with pytest.raises(DAGRenderError) as excinfo:
+        dag.render()
+
+    assert "SQLDump: t2 -> File('another_table')" in str(excinfo.value)
+    assert "SQLDump: t1 -> File('one_table')" in str(excinfo.value)
+
+
+@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+def test_tracebacks_are_shown_for_all_on_build_failing_tasks(executor):
+    dag = DAG(executor=executor)
+    PythonCallable(failing, File('a_file'), dag, name='t1')
+    PythonCallable(failing, File('another_file'), dag, name='t2')
+
+    with pytest.raises(DAGBuildError) as excinfo:
+        dag.build()
+
+    # need this to get chained exceptions:
+    # https://docs.pytest.org/en/latest/reference.html#_pytest._code.ExceptionInfo.getrepr
+    assert "PythonCallable: t1 -> File('a_file')" in str(excinfo.getrepr())
+    assert ("PythonCallable: t2 -> File('another_file')"
+            in str(excinfo.getrepr()))
+
+
+@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+def test_sucessful_execution(executor, tmp_directory):
+    dag = DAG(executor=executor)
+    t1 = PythonCallable(touch_root, File('ok'), dag, name='t1')
+    t2 = PythonCallable(touch, File('a_file'), dag, name='t2')
+    t3 = PythonCallable(touch, File('another_file'), dag, name='t3')
+    t4 = PythonCallable(touch, File('yet_another_file'), dag, name='t4')
+    PythonCallable(touch_root, File('file'), dag, name='t5')
+    t1 >> t2
+    t1 >> t3
+    (t2 + t3) >> t4
+
+    dag.build()
+
+    assert Path('ok').exists()
+    assert Path('a_file').exists()
+    assert Path('another_file').exists()
+    assert Path('yet_another_file').exists()
+    assert Path('file').exists()
+
+    assert set(t.exec_status for t in dag.values()) == {TaskStatus.Executed}
+
+
+# TODO: test forced execution, check it actually ran two times

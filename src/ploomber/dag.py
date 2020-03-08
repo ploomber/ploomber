@@ -4,6 +4,7 @@ DAG module
 A DAG is collection of tasks that makes sure they are executed in
 the right order
 """
+import traceback
 from copy import copy
 from pathlib import Path
 import warnings
@@ -31,6 +32,9 @@ from ploomber.util import (image_bytes2html, isiterable, path2fig, requires,
 from ploomber.CodeDiffer import CodeDiffer
 from ploomber import resources
 from ploomber import executors
+from ploomber.constants import TaskStatus, DAGStatus
+from ploomber.exceptions import DAGBuildError, DAGRenderError
+from ploomber.ExceptionCollector import ExceptionCollector
 
 
 class DAG(collections.abc.Mapping):
@@ -50,6 +54,7 @@ class DAG(collections.abc.Mapping):
         The executor to use. The parallel executor is currently experimental
         and not recommended, use the serial excutor for now
     """
+
     def __init__(self, name=None, clients=None, differ=None,
                  on_task_finish=None, on_task_failure=None,
                  executor='serial'):
@@ -60,7 +65,7 @@ class DAG(collections.abc.Mapping):
         self._logger = logging.getLogger(__name__)
 
         self._clients = clients or {}
-        self._rendered = False
+        self._exec_status = DAGStatus.WaitingRender
 
         if executor == 'serial':
             self._executor = executors.Serial()
@@ -125,7 +130,7 @@ class DAG(collections.abc.Mapping):
         Parameters
         ----------
         force: bool, optional
-            If True, it will run all tasks regadless of status, defaults to
+            If True, it will run all tasks regardless of status, defaults to
             False
 
         clear_cached_status: bool, optional
@@ -141,12 +146,46 @@ class DAG(collections.abc.Mapping):
         if clear_cached_status:
             self._clear_cached_outdated_status()
 
-        self.render()
-        return self._executor(dag=self, force=force)
+        # nothing breaks if we just use self.render() but this way we avoid
+        # showing warning, since it should only be shown when calling render
+        # explicitely
+        if self._exec_status == DAGStatus.WaitingRender:
+            self.render()
+        elif self._exec_status == DAGStatus.ErroredRender:
+            raise DAGBuildError('Cannot build dag that failed to render, '
+                                'fix rendering errors then build again. '
+                                'To see the full traceback again, run '
+                                'dag.render(force=True)')
+
+        did_run = self._exec_status in {DAGStatus.Executed, DAGStatus.Errored}
+
+        if did_run and not force:
+            warnings.warn('{} has been built already, to force pass '
+                          'force=True'.format(self))
+        else:
+            if did_run and force:
+                # we need to reset status so all tasks are either
+                # WaitingExecution or WaitingUpstream, this is taken care in
+                # DAG.render (by calling render on each task)
+                self.render(force=True)
+
+            try:
+                res = self._executor(dag=self, force=force)
+            except Exception as e:
+                self._exec_status = DAGStatus.Errored
+                e_new = DAGBuildError('Failed to build DAG {}'.format(self))
+                raise e_new from e
+            else:
+                self._exec_status = DAGStatus.Executed
+
+            return res
 
     def build_partially(self, target, clear_cached_status=False):
         """Partially build a dag until certain task
         """
+        # NOTE: doing this should not change self._exec_status in any way
+        # but we are currently modifying self, have to fix this
+
         if clear_cached_status:
             self._clear_cached_outdated_status()
 
@@ -268,11 +307,10 @@ class DAG(collections.abc.Mapping):
                 warnings.warn('Task "{}" has no docstring'.format(task_name))
 
     def _render_current(self, show_progress, force):
-        # only render the first time this is called, this means that
-        # if the dag is modified, render won't have an effect, DAGs are meant
-        # to be all set before rendering, but might be worth raising a warning
-        # if trying to modify an already rendered DAG
-        if not self._rendered or force:
+        """
+        Render tasks, and update exec_status
+        """
+        if self._exec_status == DAGStatus.WaitingRender or force:
             g = self._to_graph(only_current_dag=True)
 
             tasks = nx.algorithms.topological_sort(g)
@@ -280,7 +318,17 @@ class DAG(collections.abc.Mapping):
             if show_progress:
                 tasks = tqdm(tasks, total=len(g))
 
+            exceptions = ExceptionCollector()
+
             for t in tasks:
+                # no need to process task with AbortedRender
+                if t.exec_status == TaskStatus.AbortedRender:
+                    continue
+
+                # FIXME: instead of setting the status here, check task
+                # is waiting for render, .render should set the state (?)
+                t.exec_status = TaskStatus.WaitingRender
+
                 if show_progress:
                     tasks.set_description('Rendering DAG "{}"'
                                           .format(self.name))
@@ -289,18 +337,29 @@ class DAG(collections.abc.Mapping):
                     try:
                         t.render()
                     except Exception as e:
-                        raise type(e)('While rendering a Task in {}, check '
-                                      'the full '
-                                      'traceback above for details'
-                                      .format(self)) from e
+                        tr = traceback.format_exc()
+                        exceptions.append(traceback_str=tr, task_str=repr(t))
 
-                if warnings_:
-                    messages = [str(w.message) for w in warnings_]
-                    warning = ('Task "{}" had the following warnings:\n\n{}'
-                               .format(repr(t), '\n'.join(messages)))
-                    warnings.warn(warning)
+            if exceptions:
+                self._exec_status = DAGStatus.ErroredRender
+                raise DAGRenderError('DAG render failed, the following '
+                                     'tasks could not render '
+                                     '(corresponding tasks aborted '
+                                     'rendering):\n{}'
+                                     .format(str(exceptions)))
 
-                self._rendered = True
+            # TODO: also include warnings in the exception message
+            if warnings_:
+                messages = [str(w.message) for w in warnings_]
+                warning = ('Task "{}" had the following warnings:\n\n{}'
+                           .format(repr(t), '\n'.join(messages)))
+                warnings.warn(warning)
+
+            self._exec_status = DAGStatus.WaitingExecution
+        else:
+            warnings.warn('{} has already been rendered, this call has no '
+                          'effect, to force rendering again, pass force=True'
+                          .format(self))
 
     def _add_task(self, task):
         """Adds a task to the DAG

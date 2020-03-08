@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ploomber.exceptions import RenderError, TaskBuildError
+from ploomber.exceptions import RenderError, DAGBuildError, TaskBuildError
 from ploomber import DAG
 from ploomber.products import File, PostgresRelation
 from ploomber.tasks import PythonCallable, SQLScript, ShellScript, SQLDump
@@ -82,6 +82,7 @@ def test_postgresscript_with_relation():
 
 
 def test_task_change_in_status():
+    # NOTE: there are some similar tests in test_dag.py - maybe move them?
     dag = DAG('dag')
 
     ta = ShellScript('echo "a" > {{product}}', File('a.txt'), dag, 'ta')
@@ -90,31 +91,32 @@ def test_task_change_in_status():
     tc = ShellScript('cat {{upstream["tb"]}} > {{product}}',
                      File('c.txt'), dag, 'tc')
 
-    assert all([t._status == TaskStatus.WaitingRender for t in [ta, tb, tc]])
+    assert all([t.exec_status == TaskStatus.WaitingRender for t
+                in [ta, tb, tc]])
 
     ta >> tb >> tc
 
     dag.render()
 
-    assert (ta._status == TaskStatus.WaitingExecution
-            and tb._status == TaskStatus.WaitingUpstream
-            and tc._status == TaskStatus.WaitingUpstream)
+    assert (ta.exec_status == TaskStatus.WaitingExecution
+            and tb.exec_status == TaskStatus.WaitingUpstream
+            and tc.exec_status == TaskStatus.WaitingUpstream)
 
     ta.build()
 
-    assert (ta._status == TaskStatus.Executed
-            and tb._status == TaskStatus.WaitingExecution
-            and tc._status == TaskStatus.WaitingUpstream)
+    assert (ta.exec_status == TaskStatus.Executed
+            and tb.exec_status == TaskStatus.WaitingExecution
+            and tc.exec_status == TaskStatus.WaitingUpstream)
 
     tb.build()
 
-    assert (ta._status == TaskStatus.Executed
-            and tb._status == TaskStatus.Executed
-            and tc._status == TaskStatus.WaitingExecution)
+    assert (ta.exec_status == TaskStatus.Executed
+            and tb.exec_status == TaskStatus.Executed
+            and tc.exec_status == TaskStatus.WaitingExecution)
 
     tc.build()
 
-    assert all([t._status == TaskStatus.Executed for t in [ta, tb, tc]])
+    assert all([t.exec_status == TaskStatus.Executed for t in [ta, tb, tc]])
 
 
 def test_raises_render_error_if_missing_param_in_code():
@@ -248,10 +250,25 @@ def test_task_is_re_executed_if_on_finish_fails(tmp_directory):
 
     # first time it runs, fails..
     try:
-        dag.build(clear_cached_status=True)
-    except TaskBuildError:
+        dag.build()
+    except DAGBuildError:
         pass
 
     # if we attempt to run, it will fail again (since no metadata is saved)
-    with pytest.raises(TaskBuildError):
-        dag.build(clear_cached_status=True)
+    with pytest.raises(DAGBuildError):
+        dag.build(force=True)
+
+
+def test_attempting_to_build_unrendered_task_throws_exception():
+    dag = DAG()
+    t = SQLDump('SELECT * FROM, table', File('file'), dag,
+                name='task',
+                client=object())
+
+    msg = ('Cannot build task that has not been rendered, call '
+           'DAG.render() first')
+
+    with pytest.raises(TaskBuildError) as excinfo:
+        t.build()
+
+    assert str(excinfo.value) == msg

@@ -28,6 +28,7 @@ def tmp_directory():
 
     yield tmp
 
+    shutil.rmtree(tmp)
     os.chdir(old)
 
 
