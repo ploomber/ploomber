@@ -321,6 +321,7 @@ class DAG(collections.abc.Mapping):
                 tasks = tqdm(tasks, total=len(g))
 
             exceptions = ExceptionCollector()
+            warnings_ = None
 
             for t in tasks:
                 # no need to process task with AbortedRender
