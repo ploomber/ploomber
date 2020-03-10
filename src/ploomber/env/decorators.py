@@ -1,3 +1,4 @@
+import types
 from functools import wraps
 from inspect import getfullargspec
 
@@ -57,7 +58,6 @@ def with_env(source):
     .. literalinclude:: ../examples/short/with_env.py
 
     """
-
     def decorator(fn):
         _validate_env_decorated_fn(fn)
 
@@ -98,5 +98,10 @@ def with_env(source):
             return res
 
         return wrapper
+
+    if isinstance(source, types.FunctionType):
+        fn = source
+        source = None
+        return decorator(fn)
 
     return decorator
