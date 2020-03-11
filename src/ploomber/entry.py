@@ -112,6 +112,9 @@ def main():
                     if getattr(args, name) is not None
                     if name not in {'entry_point', 'action'}}
 
+        # TODO: add a way of test this by the parameters it will use to
+        # call the function, have an aux function to get those then another
+        # to execute, test using the first one
         print(getattr(entry(**{**kwargs, **replaced}), args.action)())
 
 
