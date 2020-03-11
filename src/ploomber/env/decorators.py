@@ -90,7 +90,8 @@ def with_env(source):
                                    'but it does not exist'
                                    .format(dotted_path))
 
-                to_edit[elements[-1]] = env._expander(new_value)
+                to_edit[elements[-1]] = env._expander(new_value,
+                                                      elements[1:-1])
 
             try:
                 res = fn(Env(), *args, **kwargs)

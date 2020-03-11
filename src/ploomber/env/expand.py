@@ -1,6 +1,6 @@
 import pydoc
 import getpass
-from copy import deepcopy
+from copy import deepcopy, copy
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -20,14 +20,24 @@ class EnvironmentExpander:
         self.available = self.get_available(raw)
         self.raw = raw
 
-    def __call__(self, value):
+    def __call__(self, value, parents):
         tags = util.get_tags_in_str(value)
 
         if not tags:
             return value
 
         params = {k: getattr(self, k)() for k in tags}
-        return Template(value).render(**params)
+
+        # FIXME: we have duplicated logic here, must only use PathManager
+        value = Template(value).render(**params)
+
+        if parents:
+            if parents[0] == 'path':
+                return Path(value)
+            else:
+                return value
+        else:
+            return value
 
     def get_available(self, raw):
         available = ['user']
@@ -71,22 +81,28 @@ class EnvironmentExpander:
             return repo.get_env_metadata(module_path)['git_location']
 
 
-def iterate_nested_dict(d):
+def iterate_nested_dict(d, preffix=[]):
     """
     Iterate over all values (possibly nested) in a dictionary
+
+    Yields: dict holding the value, current key, current value, list of keys
+    to get to this value
     """
+    # TODO: remove preffix, we are not using it
     for k, v in d.items():
         if isinstance(v, Mapping):
-            for i in iterate_nested_dict(v):
+            preffix_new = copy(preffix)
+            preffix_new.append(k)
+            for i in iterate_nested_dict(v, preffix_new):
                 yield i
         else:
-            yield d, k, v
+            yield d, k, v, copy(preffix)
 
 
 def modify_values(env, modifier):
     env = deepcopy(env)
 
-    for d, k, v in iterate_nested_dict(env):
-        d[k] = modifier(v)
+    for d, current_key, current_val, parent_keys in iterate_nested_dict(env):
+        d[current_key] = modifier(current_val, parent_keys)
 
     return env

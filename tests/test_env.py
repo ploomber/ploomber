@@ -103,6 +103,17 @@ def test_with_env_decorator(cleanup_env):
     assert (1, 2) == my_fn(2)
 
 
+# TODO: try even more nested
+def test_with_env_casts_paths(cleanup_env):
+    @with_env({'path': {'data': '/some/path'}})
+    def my_fn(env):
+        return env.path.data
+
+    returned = my_fn(env__path__data='/another/path')
+
+    assert returned == Path('/another/path')
+
+
 def test_with_env_fails_if_no_env_arg(cleanup_env):
     with pytest.raises(RuntimeError):
         @with_env({'a': 1})
@@ -198,11 +209,16 @@ def test_load_env_decorator(cleanup_env):
 
 def test_modify_all_values_in_dict():
     env = {'a': 1, 'b': 2, 'c': {'d': 1}}
-    env_mod = expand.modify_values(env, lambda x: x + 1)
+    env_mod = expand.modify_values(env, lambda x, _: x + 1)
 
     assert env_mod == {'a': 2, 'b': 3, 'c': {'d': 2}}
     # original dict is not modified
     assert env == {'a': 1, 'b': 2, 'c': {'d': 1}}
+
+
+# def test_iterate_nested_dict():
+#     env = {'a': 1, 'b': 2, 'c': {'d': 1}}
+#     list(expand.iterate_nested_dict(env))
 
 
 def test_expand_tags(monkeypatch):

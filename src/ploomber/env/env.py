@@ -4,8 +4,8 @@ Environment management
 import logging
 
 from ploomber.env.FrozenJSON import FrozenJSON
-from ploomber.env.PathManager import PathManager
 from ploomber.env.EnvDict import EnvDict
+from ploomber.env.PathManager import PathManager
 
 
 # TODO: add defaults functionality if defined in {module}/env.defaults.yaml
