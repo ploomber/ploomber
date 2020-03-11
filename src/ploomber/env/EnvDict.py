@@ -17,7 +17,7 @@ class EnvDict(Mapping):
     factory functions introspection without having to create an actual Env
     """
     def __init__(self, source, expander_class=EnvironmentExpander):
-        self._raw_data, self.path_to_env, self.name = load_from_source(source)
+        self._raw_data, self._path_to_env, self.name = load_from_source(source)
         self.expander = expander_class(self._raw_data)
         self._data = modify_values(self._raw_data, self.expander)
         validate.env_dict(self._data)
@@ -31,6 +31,14 @@ class EnvDict(Mapping):
 
     def __len__(self):
         return len(self._data)
+
+    @property
+    def path_to_env(self):
+        if self._path_to_env:
+            return Path(self._path_to_env)
+        else:
+            # maybe raise an error?
+            return None
 
 
 def find_env_w_name(name):
