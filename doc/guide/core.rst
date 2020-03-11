@@ -40,6 +40,8 @@ Declaration
 The simplest Task is PythonCallable, which takes a callable (e.g. a function) as its first argument. The only requirement for the functions is to have a product
 argument, if the task has dependencies, it must have an upstream argument as well.
 
+.. note on the str(product) pattern and why it is not needed in placeholders
+
 .. ipython:: python
 
     def _one_task(product):
@@ -101,6 +103,7 @@ Within the downstream task, you can access upstream dependencies using jinja syn
     dag.render()
     sql_task
 
-.. talk about debugging rendering
+.. talk about debugging rendering, using the traceback (errors are details)
+    but also doing task.params (explain pre and post render difference)
 
 .. talk about source code tracking, parameter passing

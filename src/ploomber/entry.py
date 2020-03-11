@@ -98,13 +98,19 @@ def main():
             parser.add_argument(arg, help=get_desc(arg))
 
         for arg, val in flat_env_dict.items():
-            parser.add_argument('--'+arg, help='Default: {}'.format(val))
+            parser.add_argument('--env__'+arg, help='Default: {}'.format(val))
 
         args = parser.parse_args()
 
+        # required by the function signature
         kwargs = {key: getattr(args, key) for key in required}
 
-        print(getattr(entry(**kwargs), args.action)())
+        # env modifiers
+        env_replace = {name: getattr(args, name)
+                       for name in dir(args) if name.startswith('env__')
+                       if getattr(args, name) if not None}
+
+        print(getattr(entry(**{**kwargs, **env_replace}), args.action)())
 
 
 if __name__ == '__main__':

@@ -12,6 +12,15 @@ def test_complete_case(monkeypatch, tmp_sample_dir):
     entry.main()
 
 
+def test_replace_env_value(monkeypatch, tmp_sample_dir):
+    # TODO: why is it importing from relative to this file even though
+    # I'm moving to a different one?
+    monkeypatch.setattr(sys, 'argv',
+                        ['python', 'entry.with_doc', 'build',
+                         '--env__path__data', '/another/path'])
+    entry.main()
+
+
 def test_no_doc(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
                         ['python', 'entry.no_doc', 'build'])
