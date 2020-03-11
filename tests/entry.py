@@ -9,10 +9,12 @@ def with_doc(env):
     ----------
     param : int
         Some parameter
-
-    optional : int
-        Optional parameter, defaults to 1
     """
+    return DAG()
+
+
+@with_env({})
+def opt_fn_param(env, optional=1):
     return DAG()
 
 

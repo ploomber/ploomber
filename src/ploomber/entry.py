@@ -105,12 +105,14 @@ def main():
         # required by the function signature
         kwargs = {key: getattr(args, key) for key in required}
 
-        # env modifiers
-        env_replace = {name: getattr(args, name)
-                       for name in dir(args) if name.startswith('env__')
-                       if getattr(args, name) if not None}
+        # env and function defaults replaced
+        replaced = {name: getattr(args, name)
+                    for name in dir(args)
+                    if not name.startswith('_')
+                    if getattr(args, name) is not None
+                    if name not in {'entry_point', 'action'}}
 
-        print(getattr(entry(**{**kwargs, **env_replace}), args.action)())
+        print(getattr(entry(**{**kwargs, **replaced}), args.action)())
 
 
 if __name__ == '__main__':
