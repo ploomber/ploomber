@@ -3,6 +3,7 @@ from functools import wraps
 from inspect import getfullargspec
 
 from ploomber.env.env import Env
+from ploomber.env.EnvDict import EnvDict
 
 
 def _validate_env_decorated_fn(fn):
@@ -52,6 +53,8 @@ def with_env(source):
     env.key.another, you can call the decorated function with:
     my_fn(env__key__another='my_new_value')
 
+    The environment is resolved at import time, changes to the working
+    directory will not affect initializaiton
 
     Examples
     --------
@@ -60,6 +63,8 @@ def with_env(source):
     """
     def decorator(fn):
         _validate_env_decorated_fn(fn)
+        env_dict = EnvDict(source)
+        fn._env_dict = env_dict
 
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -69,7 +74,7 @@ def with_env(source):
             for key in to_replace.keys():
                 kwargs.pop(key)
 
-            env = Env.start(source)
+            env = Env.start(env_dict)
 
             for key, new_value in to_replace.items():
                 elements = key.split('__')

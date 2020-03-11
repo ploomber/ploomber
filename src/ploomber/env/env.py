@@ -2,18 +2,10 @@
 Environment management
 """
 import logging
-from itertools import chain
-from pathlib import Path
-from glob import iglob
-import platform
 
 from ploomber.env.FrozenJSON import FrozenJSON
 from ploomber.env.PathManager import PathManager
-from ploomber.env import validate
-from ploomber.env.expand import modify_values, EnvironmentExpander
-
-
-import yaml
+from ploomber.env.EnvDict import EnvDict
 
 
 # TODO: add defaults functionality if defined in {module}/env.defaults.yaml
@@ -56,8 +48,6 @@ class Env:
     end them only during the execution of a function that builds a DAG by
     using the @with_env and @load_env decorators
     """
-    expander_class = EnvironmentExpander
-
     _data = None
 
     @classmethod
@@ -88,50 +78,20 @@ class Env:
             An environment object
         """
         if cls._data is None:
+            # TODO: this looks ugly, refactor
 
-            if isinstance(source, str):
-                source_found = find_env(source)
-
-                if source_found is None:
-                    raise FileNotFoundError('Could not find file "{}" in the '
-                                            'current working directory nor '
-                                            '6 levels up'.format(source))
-                else:
-                    source = source_found
-
-            elif source is None:
-                # look for an env.{name}.yaml, if that fails, try env.yaml
-                name = platform.node()
-                path_found = find_env_w_name(name)
-
-                if path_found is None:
-                    raise FileNotFoundError('Could not find env.{}.yaml '
-                                            'nor env.yaml'.format(name))
-                else:
-                    source = path_found
-
-            if isinstance(source, (str, Path)):
-                cls._path_to_env = Path(source).resolve()
-                cls._name = _get_name(cls._path_to_env)
+            if not isinstance(source, EnvDict):
+                env_dict = EnvDict(source)
             else:
-                # when loaded form dict, there is no name nor path
-                cls._path_to_env = None
-                cls._name = None
+                env_dict = source
+
+            cls._path_to_env = env_dict.path_to_env
+            cls._name = env_dict.name
 
             cls._path = PathManager(cls)
-
-            if isinstance(source, (str, Path)):
-                with open(source) as f:
-                    source = yaml.load(f, Loader=yaml.SafeLoader)
-
-            expander = cls.expander_class(source)
-            source_expanded = modify_values(source, expander)
-            validate.env_dict(source_expanded)
-
-            cls._data = FrozenJSON(source_expanded)
-
+            cls._data = FrozenJSON(env_dict)
             ins = cls()
-            ins._expander = expander
+            ins._expander = env_dict.expander
             return ins
 
         # if an environment has been set...
@@ -203,60 +163,3 @@ class Env:
     #     """Get env metadata such as git hash, last commit timestamp
     #     """
     #     return repo.get_env_metadata(self.path.home)
-
-
-def find_env_w_name(name):
-    """Find environment named env.{name}.yaml by going to parent folders
-    """
-    path = find_env(name='env.{}.yaml'.format(name))
-
-    if path is None:
-        return find_env(name='env.yaml')
-    else:
-        return path
-
-
-def find_env(name, max_levels_up=6):
-    """Find environment by going to the parent folders
-    """
-    def levels_up(n):
-        return chain.from_iterable(iglob('../' * i + '**')
-                                   for i in range(n + 1))
-
-    path_to_env = None
-
-    for filename in levels_up(max_levels_up):
-        p = Path(filename)
-
-        if p.name == name:
-            path_to_env = filename
-            break
-
-    return path_to_env
-
-
-def _get_name(path_to_env):
-    """Parse env.{name}.yaml -> name
-    """
-    filename = str(Path(path_to_env).name)
-
-    err = ValueError('Wrong filename, must be either env.{name}.yaml '
-                     'or env.yaml')
-
-    elements = filename.split('.')
-
-    if len(elements) == 2:
-        # no name case
-        env, _ = elements
-        name = 'root'
-    elif len(elements) > 2:
-        # name
-        env = elements[0]
-        name = '.'.join(elements[1:-1])
-    else:
-        raise err
-
-    if env != 'env':
-        raise err
-
-    return name

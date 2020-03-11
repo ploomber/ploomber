@@ -5,9 +5,10 @@ import getpass
 import pytest
 import yaml
 
-from ploomber.env.env import _get_name, Env
+from ploomber.env.env import Env
 from ploomber.env.decorators import with_env, load_env
 from ploomber.env import validate, expand
+from ploomber.env.EnvDict import _get_name
 from ploomber import repo
 
 
@@ -132,7 +133,15 @@ def test_with_env_without_args(cleanup_env):
     assert my_fn() == 1
 
 
-def test_replacing_defaults_also_expands(monkeypatch, cleanup_env):
+def test_env_dict_is_available_upon_decoration():
+    @with_env({'a': 1})
+    def make(env, param, optional=1):
+        pass
+
+    assert make._env_dict['a'] == 1
+
+
+def test_replacing_defaults_also_expand(monkeypatch, cleanup_env):
     @with_env({'user': 'some_user'})
     def my_fn(env):
         return env.user
