@@ -17,6 +17,8 @@ from numpydoc.docscrape import NumpyDocString
 from ploomber.env.EnvDict import flatten_dict
 
 
+# TODO: what to do if numpydoc is not installed? required it? fail silently?
+# output  a warning?
 def parse_doc(doc):
     """
     Convert numpydoc docstring to a list of dictionaries

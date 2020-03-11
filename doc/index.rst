@@ -29,6 +29,7 @@ Table of contents
    :maxdepth: 3
 
    api
+   guide_index
    changelog
 
 
