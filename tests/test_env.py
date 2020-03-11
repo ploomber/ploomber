@@ -78,12 +78,12 @@ def test_raises_error_if_wrong_format():
         _get_name('path/to/wrong.my_name.yaml')
 
 
-def test_can_instantiate_env_if_located_in_sample_dir(move_to_sample_dir,
+def test_can_instantiate_env_if_located_in_sample_dir(tmp_sample_dir,
                                                       cleanup_env):
     Env.start()
 
 
-def test_can_instantiate_env_if_located_in_sample_subdir(move_to_sample_subdir,
+def test_can_instantiate_env_if_located_in_sample_subdir(tmp_sample_subdir,
                                                          cleanup_env):
     Env.start()
 

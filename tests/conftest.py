@@ -88,24 +88,32 @@ def tmp_example_pipeline_directory():
 
 
 @pytest.fixture(scope='session')
-def move_to_sample_dir():
+def tmp_sample_dir():
     old = os.getcwd()
-    new = _path_to_tests() / 'assets' / 'sample_dir'
-    os.chdir(new)
+    tmp = Path(tempfile.mkdtemp(), 'sample_dir')
+    sample_dir = _path_to_tests() / 'assets' / 'sample_dir'
+    shutil.copytree(sample_dir, tmp)
 
-    yield new
+    os.chdir(tmp)
 
+    yield tmp
+
+    shutil.rmtree(tmp)
     os.chdir(old)
 
 
 @pytest.fixture(scope='session')
-def move_to_sample_subdir():
+def tmp_sample_subdir():
     old = os.getcwd()
-    new = _path_to_tests() / 'assets' / 'sample_dir' / 'subdir'
-    os.chdir(new)
+    tmp = Path(tempfile.mkdtemp(), 'sample_dir')
+    sample_dir = _path_to_tests() / 'assets' / 'sample_dir'
+    shutil.copytree(sample_dir, tmp)
 
-    yield new
+    os.chdir(tmp / 'subdir')
 
+    yield tmp
+
+    shutil.rmtree(tmp)
     os.chdir(old)
 
 

@@ -21,6 +21,9 @@ def parse_doc(doc):
     """
     Convert numpydoc docstring to a list of dictionaries
     """
+    if doc is None:
+        return {'params': {}, 'summary': None}
+
     doc = NumpyDocString(doc)
     parameters = {p.name: {'desc': ' '.join(p.desc), 'type': p.type}
                   for p in doc['Parameters']}
@@ -28,13 +31,21 @@ def parse_doc(doc):
     return {'params': parameters, 'summary': summary}
 
 
+def _parse_module(s):
+    parts = s.split('.')
+
+    if len(parts) < 2:
+        raise ImportError('Invalid module name, must be a dot separated '
+                          'string, with at least '
+                          '[module_name].[function_name]')
+
+    return '.'.join(parts[:-1]), parts[-1]
+
+
 def main():
     parser = argparse.ArgumentParser()
 
     n_pos = len([arg for arg in sys.argv if not arg.startswith('-')])
-
-    # print(n_pos)
-    # print(sys.argv)
 
     parser.add_argument('entry_point', help='Entry point (DAG)')
 
@@ -42,10 +53,24 @@ def main():
         args = parser.parse_args()
     else:
         parser.add_argument('action', help='Action to execute')
-        parts = sys.argv[1].split('.')
-        mod, name = '.'.join(parts[:-1]), parts[-1]
 
-        entry = getattr(importlib.import_module(mod), name)
+        mod, name = _parse_module(sys.argv[1])
+
+        try:
+            module = importlib.import_module(mod)
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError('Could not import module "{}", '
+                                      'make sure it is available in the '
+                                      'current python environment'.
+                                      format(mod))
+
+        try:
+            entry = getattr(module, name)
+        except AttributeError as e:
+            raise AttributeError('Could not get attribute "{}" from module '
+                                 '"{}", make sure such function exists'
+                                 .format(mod, name)) from e
+
         flat_env_dict = flatten_dict(entry._env_dict)
 
         doc = parse_doc(entry.__doc__)
@@ -81,4 +106,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as e:
+        print('Error:', e)
+        sys.exit(1)
