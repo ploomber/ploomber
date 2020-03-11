@@ -103,8 +103,12 @@ def load_from_source(source):
         path_found = find_env_w_name(name)
 
         if path_found is None:
-            raise FileNotFoundError('Could not find env.{}.yaml '
-                                    'nor env.yaml'.format(name))
+            raise FileNotFoundError('Tried to initialize environment with '
+                                    'None, but automatic '
+                                    'file search failed to locate '
+                                    'env.{}.yaml nor env.yaml in the '
+                                    'current directory nor 6 levels up'
+                                    .format(name))
         else:
             source = path_found
 
