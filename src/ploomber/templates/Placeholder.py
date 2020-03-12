@@ -113,6 +113,10 @@ class Placeholder:
         return self._value
 
     @property
+    def _value_repr(self):
+        return self._raw if self._value is None else self._value
+
+    @property
     def template(self):
         """jinja2.Template object
         """
@@ -271,7 +275,8 @@ class SQLRelationPlaceholder:
     Parameters
     ----------
     source: tuple
-      A (schema, name, kind) tuple, where kind is either 'table' or 'view'
+      A (schema, name, kind) or a (name, kind) tuple, where kind is either
+      'table' or 'view'
 
 
     Notes
@@ -281,18 +286,22 @@ class SQLRelationPlaceholder:
     The first one will be rendered as schema.data and the second one as
     "schema"."data" (in SQL, quoted identifiers are case-sensitive)
     """
+    # TODO: allow templating in schema
 
     def __init__(self, source):
-        if len(source) != 3:
-            raise ValueError('{} must be initialized with 3 elements, '
+        if len(source) == 2:
+            name, kind = source
+            schema = None
+        elif len(source) == 3:
+            schema, name, kind = source
+        else:
+            raise ValueError('{} must be initialized with 2 or 3 elements, '
                              'got: {}'
                              .format(type(self).__name__, len(source)))
 
-        schema, name, kind = source
-
-        if schema is None:
-            # raise ValueError('schema cannot be None')
-            schema = ''
+        # ignore empty string
+        if schema == '':
+            schema = None
 
         if name is None:
             raise ValueError('name cannot be None')
@@ -338,20 +347,30 @@ class SQLRelationPlaceholder:
         self._validate_name(name)
         return self
 
-    def __str__(self):
-        if self.schema is not None and self.schema != '':
-            return '{}.{}'.format(self.schema, self.name)
+    def _get_qualified(self, allow_repr=False):
+        qualified = ''
+
+        if self.schema is not None:
+            qualified += self.schema + '.'
+
+        if allow_repr:
+            qualified += self._name_template._value_repr
         else:
-            return '{}'.format(self.name)
+            qualified += self._name_template.value
+
+        return qualified
+
+    def __str__(self):
+        return self._get_qualified(allow_repr=False)
 
     def __repr__(self):
-        return ('SQLRelationPlaceholder({}.{})'
-                .format(self.schema, self._name_template.raw, self.kind))
+        return ('SQLRelationPlaceholder({})'
+                .format(self._get_qualified(allow_repr=True)))
 
+    # TODO: rename this
     @property
     def safe(self):
-        return '{}.{}'.format(self.schema, self._name_template.raw,
-                              self.kind)
+        return self._get_qualified(allow_repr=True)
 
     def __hash__(self):
         return hash((self.schema, self.name, self.kind))

@@ -21,22 +21,14 @@ class SQLiteRelation(Product):
 
     def __init__(self, identifier, client=None):
         super().__init__(identifier)
-        self._identifier._schema = None
         self._client = client
 
     def _init_identifier(self, identifier):
-        if identifier[0] is not None:
-            raise ValueError('SQLite does not support schemas, you should '
-                             'pass None')
-
-        # SQLRelationPlaceholder needs a schema value, we use a dummy value
-        # for itniialization
-        # FIXME: this is a hacky, refactor SQLRelationPlaceholder
-        identifier = ('', identifier[1], identifier[2])
         return SQLRelationPlaceholder(identifier)
 
     @property
     def client(self):
+        # FIXME: this nested reference looks ugly
         if self._client is None:
             default = self.task.dag.clients.get(type(self))
 
@@ -124,6 +116,10 @@ class SQLiteRelation(Product):
     @property
     def schema(self):
         return self._identifier.schema
+
+    @property
+    def kind(self):
+        return self._identifier.kind
 
 
 class PostgresRelation(Product):
@@ -263,3 +259,7 @@ class PostgresRelation(Product):
     @property
     def schema(self):
         return self._identifier.schema
+
+    @property
+    def kind(self):
+        return self._identifier.kind
