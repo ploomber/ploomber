@@ -5,4 +5,4 @@ User Guide
     :maxdepth: 1
 
     guide/core
-    guide/another
+    guide/env
