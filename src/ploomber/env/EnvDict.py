@@ -20,11 +20,12 @@ class EnvDict(Mapping):
     def __init__(self, source, expander_class=EnvironmentExpander):
         self._raw_data, self._path_to_env, self.name = load_from_source(source)
 
+        validate.raw_data_keys(self._raw_data)
+
         raw_preprocess(self._raw_data, self.path_to_env)
 
         self.expander = expander_class(self._raw_data, self._path_to_env)
         self._data = modify_values(self._raw_data, self.expander)
-        validate.env_dict(self._data)
 
     def __getitem__(self, key):
         return self._data[key]

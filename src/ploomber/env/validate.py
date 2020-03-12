@@ -4,9 +4,10 @@ Validation functions
 from collections.abc import Mapping
 
 
-def env_dict(d):
+def raw_data_keys(d):
     """
-    Validate a dictionary used to set an environment
+    Validate raw dictionary, no top-level keys with leading underscores,
+    except for _module, and no keys with double underscores anywhere
     """
     keys_all = get_keys_for_dict(d)
     errors = []
