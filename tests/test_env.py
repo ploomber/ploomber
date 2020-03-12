@@ -232,3 +232,13 @@ def test_expand_tags(monkeypatch):
     env_expanded = expand.modify_values(env, expand.EnvironmentExpander(env))
 
     assert env_expanded == {'a': 'username', 'b': {'c': 'username username'}}
+
+
+def test_here_placeholder(tmp_directory, cleanup_env):
+    Path('env.yaml').write_text(yaml.dump({'here': '{{here}}'}))
+    env = Env.start()
+    assert env.here == str(Path(tmp_directory, 'env.yaml').resolve())
+
+
+# TODO: {{here}} allowed in _module
+# TODO: test invalid YAML shows error message

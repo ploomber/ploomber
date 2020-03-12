@@ -87,7 +87,7 @@ def tmp_example_pipeline_directory():
     os.chdir(old)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture()
 def tmp_sample_dir():
     old = os.getcwd()
     tmp = Path(tempfile.mkdtemp(), 'sample_dir')
@@ -102,7 +102,7 @@ def tmp_sample_dir():
     os.chdir(old)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture()
 def tmp_sample_subdir():
     old = os.getcwd()
     tmp = Path(tempfile.mkdtemp(), 'sample_dir')
