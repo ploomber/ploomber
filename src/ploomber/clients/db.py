@@ -11,7 +11,7 @@ from ploomber.util import requires
 
 
 class DBAPIClient(Client):
-    """A client for a PEP 214 compliant client library
+    """A client for a PEP 249 compliant client library
 
     Parameters
     ----------
