@@ -33,7 +33,7 @@ def one_line_git_summary(path):
 
 def git_hash(path):
     """Get git hash"""
-    return _run_command(path, 'git rev-parse HEAD')
+    return _run_command(path, 'git describe --tags --always --dirty=-dirty')
 
 
 def get_git_timestamp(path):
