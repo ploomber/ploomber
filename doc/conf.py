@@ -33,10 +33,12 @@ release = version
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
               'sphinx.ext.autosummary',
+              # remove these two
               'IPython.sphinxext.ipython_console_highlighting',
               'IPython.sphinxext.ipython_directive',
               'sphinx_gallery.gen_gallery',
-              'sphinx.ext.autosectionlabel']
+              'sphinx.ext.autosectionlabel',
+              'nbsphinx']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
