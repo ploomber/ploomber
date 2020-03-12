@@ -66,7 +66,7 @@ task_dump >> task_add_one
 
 
 # plot the workflow, pending tasks are shown in red
-dag.plot(output='matplotlib', clear_cached_status=True)
+dag.plot(output='matplotlib')
 
 # run our sample pipeline
 dag.build()
@@ -88,7 +88,7 @@ dag.build()
 
 
 # the pipeline is up-to-date, no need to run again
-dag.build(clear_cached_status=True)
+dag.build()
 
 
 ###############################################################################
@@ -135,3 +135,6 @@ dag['add_one'].build(force=True)
 # the right file
 df = pd.read_csv(str(dag['add_one']))
 df
+
+""
+
