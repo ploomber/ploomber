@@ -5,7 +5,6 @@ A Task is a unit of work that produces a persistent change (Product)
 such as a bash or a SQL script
 """
 import pdb
-from urllib import request
 from multiprocessing import Pool
 from ploomber.exceptions import SourceInitializationError
 from ploomber.tasks.Task import Task
@@ -135,6 +134,8 @@ class DownloadFromURL(Task):
         A str to indentify this task. Should not already exist in the dag
     """
     def run(self):
+        # lazily load urllib as it is slow to import
+        from urllib import request
         request.urlretrieve(str(self.source), filename=str(self.product))
 
     def _init_source(self, source):
