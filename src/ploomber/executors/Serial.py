@@ -19,14 +19,8 @@ from ploomber.constants import TaskStatus
 class Serial(Executor):
     """Runs a DAG serially
     """
-    # FIXME: these flags are used by PythonCallable but they shoult not
-    # be there, tasks should be agnostic about execution, it is the executor
-    # that decides how to run the code
-    TASKS_CAN_CREATE_CHILD_PROCESSES = True
-    STOP_ON_EXCEPTION = True
-
     # TODO: maybe add a parameter: stop on first exception, same for Parallel
-
+    # TODO: add option to run all tasks in a subprocess
     def __init__(self, logging_directory=None, logging_level=logging.INFO):
         self.logging_directory = logging_directory
         self.logging_level = logging_level
