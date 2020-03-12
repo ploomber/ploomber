@@ -3,7 +3,6 @@ import ast
 import pydoc
 import getpass
 from copy import deepcopy, copy
-import importlib
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -27,7 +26,7 @@ class EnvironmentExpander:
                                     else str(Path(path_to_env).parent))
         # self.version_requires_import = False
 
-        self.placeholders = {}
+        self._placeholders = {}
 
     def __call__(self, value, parents):
         tags = util.get_tags_in_str(value)
@@ -35,7 +34,7 @@ class EnvironmentExpander:
         if not tags:
             return value
 
-        params = {k: getattr(self, k) for k in tags}
+        params = {k: self.load_placeholder(k) for k in tags}
 
         # FIXME: we have duplicated logic here, must only use PathManager
         value = Template(value).render(**params)
@@ -48,6 +47,7 @@ class EnvironmentExpander:
         else:
             return value
 
+    # TODO: finish this implementation, replace for _module
     def _get_version_import(self, raw):
         package_name = raw.get('_package')
 
@@ -68,24 +68,11 @@ class EnvironmentExpander:
                                'attribute '.format(self.module))
 
     def _get_version_without_importing(self):
-        # check loaded from file ?
-        module = self.raw.get('_module')
+        if '_module' not in self.raw:
+            raise KeyError('_module key is required to use version '
+                           'placeholder')
 
-        if not module:
-            raise KeyError('_module key is required to get version')
-
-        try:
-            module_spec = importlib.util.find_spec(module)
-        except ValueError:
-            # it fails if passed "."
-            module_spec = None
-
-        if not module_spec:
-            path_to_init = Path(module, '__init__.py')
-        else:
-            path_to_init = Path(module_spec.origin)
-
-        content = path_to_init.read_text()
+        content = (self.raw['_module'] / '__init__.py').read_text()
 
         version_re = re.compile(r'__version__\s+=\s+(.*)')
 
@@ -93,11 +80,14 @@ class EnvironmentExpander:
                       content).group(1)))
         return version
 
-    def __getattr__(self, key):
-        if key not in self.placeholders:
-            self.placeholders[key] = getattr(self, 'get_'+key)()
+    def load_placeholder(self, key):
+        if key not in self._placeholders:
+            if hasattr(self, 'get_'+key):
+                self._placeholders[key] = getattr(self, 'get_'+key)()
+            else:
+                raise RuntimeError('Unknown placeholder "{}"'.format(key))
 
-        return self.placeholders[key]
+        return self._placeholders[key]
 
     def get_version(self):
         return self._get_version_without_importing()
@@ -118,19 +108,7 @@ class EnvironmentExpander:
         if not module:
             raise KeyError('_module key is required to use git placeholder')
 
-        try:
-            module_spec = importlib.util.find_spec(module)
-        except ValueError:
-            # it fails if passed "."
-            module_spec = None
-
-        if not module_spec:
-            # interpret as directort
-            path_to_root = Path(module)
-        else:
-            path_to_root = Path(module_spec.origin).parent
-
-        return repo.get_env_metadata(path_to_root)['git_location']
+        return repo.get_env_metadata(module)['git_location']
 
 
 def iterate_nested_dict(d, preffix=[]):

@@ -31,8 +31,8 @@ class Env:
     There are a few placeholders available:
         * {{user}} expands to the current user (by calling getpass.getuser())
         * {{version}} expands to module.__version__ if _module is defined
-        * {{git}} expands to the git tag or current commit hash if _module is
-        defined
+        * {{git}} expands to branch name if at the tip, otherwise to
+        the current commit hash (_module has to be defined)
 
     Examples
     --------

@@ -1,3 +1,4 @@
+import importlib
 from itertools import chain
 from glob import iglob
 import platform
@@ -18,6 +19,9 @@ class EnvDict(Mapping):
     """
     def __init__(self, source, expander_class=EnvironmentExpander):
         self._raw_data, self._path_to_env, self.name = load_from_source(source)
+
+        raw_preprocess(self._raw_data, self.path_to_env)
+
         self.expander = expander_class(self._raw_data, self._path_to_env)
         self._data = modify_values(self._raw_data, self.expander)
         validate.env_dict(self._data)
@@ -100,6 +104,8 @@ def _get_name(path_to_env):
 
 def load_from_source(source):
     """
+    Loads from a dictionary or a YAML and applies preprocesssing to the
+    dictionary
     """
     if isinstance(source, Mapping):
         # dictiionary, path, name
@@ -140,6 +146,47 @@ def load_from_source(source):
     path = Path(source).resolve()
 
     return raw, str(path), _get_name(path)
+
+
+def raw_preprocess(raw, path_to_raw):
+    """
+    """
+    # preprocess an env - expands _module to module path, raises error
+    # if invalid, # expands {{here}} if _module: {{here}}
+    # update expander, since _module will be a path when we finish this
+    # function
+    module = raw.get('_module')
+
+    if module:
+
+        if raw['_module'] == '{{here}}':
+
+            if path_to_raw is not None:
+                raw['_module'] = path_to_raw.parent
+            else:
+                raise ValueError('_module cannot be {{here}} if '
+                                 'not loaded from a file')
+        else:
+            try:
+                module_spec = importlib.util.find_spec(module)
+            except ValueError:
+                # raises ValueError if passed "."
+                module_spec = None
+
+            if not module_spec:
+                path_to_module = Path(module)
+
+                if not (path_to_module.exists()
+                        and path_to_module.is_dir()):
+                    raise ValueError('Could not resolve _module "{}", '
+                                     'failed to import as a module '
+                                     'and is not a directory'
+                                     .format(module))
+
+            else:
+                path_to_module = Path(module_spec.origin).parent
+
+            raw['_module'] = path_to_module
 
 
 # TODO: move to entry points module
