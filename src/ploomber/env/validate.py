@@ -50,8 +50,11 @@ def no_double_underscores(keys):
 
 
 def no_leading_underscore(keys):
-    not_allowed = [k for k in keys if k.startswith('_')]
+    allowed = {'_module'}
+    not_allowed = [k for k in keys if k.startswith('_') and k
+                   not in allowed]
 
     if not_allowed:
         raise ValueError('Top-level keys cannot start '
-                         'with an underscore, got: {}'.format(not_allowed))
+                         'with an underscore, except for {}. '
+                         'Got: {}'.format(allowed, not_allowed))

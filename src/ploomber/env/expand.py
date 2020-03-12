@@ -1,6 +1,9 @@
+import re
+import ast
 import pydoc
 import getpass
 from copy import deepcopy, copy
+import importlib
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -14,11 +17,17 @@ from ploomber import repo
 # this is useful if they want to expand things like passwords, subclassing
 # works partially (only decorators will not work since they use ploomber.Env)
 # maybe through a ploomber.config file? We just have to be sure that the
-# difference between an env.yaml and a ploomber.config is clear
+# difference between an env.yaml and a ploomber.config is clear,
+# how to provide a way to initialize this with custom arguments
 class EnvironmentExpander:
-    def __init__(self, raw):
-        self.available = self.get_available(raw)
+    #TODO: add version_requires_import=False
+    def __init__(self, raw, path_to_env=None):
         self.raw = raw
+        self._path_to_env_parent = (None if path_to_env is None
+                                    else str(Path(path_to_env).parent))
+        # self.version_requires_import = False
+
+        self.placeholders = {}
 
     def __call__(self, value, parents):
         tags = util.get_tags_in_str(value)
@@ -26,7 +35,7 @@ class EnvironmentExpander:
         if not tags:
             return value
 
-        params = {k: getattr(self, k)() for k in tags}
+        params = {k: getattr(self, k) for k in tags}
 
         # FIXME: we have duplicated logic here, must only use PathManager
         value = Template(value).render(**params)
@@ -39,46 +48,89 @@ class EnvironmentExpander:
         else:
             return value
 
-    def get_available(self, raw):
-        available = ['user']
-        unavailable = {}
+    def _get_version_import(self, raw):
+        package_name = raw.get('_package')
 
-        module_name = raw.get('module')
+        if not package_name:
+            raise KeyError('_package key is required to get version')
 
-        if module_name:
-            module = pydoc.locate(module_name)
+        module = pydoc.locate(package_name)
 
-            if module is None:
-                raise ImportError('Could not import module "{}"'
-                                  .format(module_name))
+        if module is None:
+            raise ImportError('_package "{}" was declared in env but '
+                              'import failed'
+                              .format(package_name))
 
-            available.append('version')
-            self.module = module
+        if hasattr(self.module, '__version__'):
+            return self.module.__version__
         else:
-            unavailable['version'] = RuntimeError('The git_location placeholder is only available if Env defines a "module" constant')
+            raise RuntimeError('Module {} does not have a __version__ '
+                               'attribute '.format(self.module))
 
-        return available
+    def _get_version_without_importing(self):
+        # check loaded from file ?
+        module = self.raw.get('_module')
 
-    def user(self):
+        if not module:
+            raise KeyError('_module key is required to get version')
+
+        try:
+            module_spec = importlib.util.find_spec(module)
+        except ValueError:
+            # it fails if passed "."
+            module_spec = None
+
+        if not module_spec:
+            path_to_init = Path(module, '__init__.py')
+        else:
+            path_to_init = Path(module_spec.origin)
+
+        content = path_to_init.read_text()
+
+        version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+        version = str(ast.literal_eval(version_re.search(
+                      content).group(1)))
+        return version
+
+    def __getattr__(self, key):
+        if key not in self.placeholders:
+            self.placeholders[key] = getattr(self, 'get_'+key)()
+
+        return self.placeholders[key]
+
+    def get_version(self):
+        return self._get_version_without_importing()
+
+    def get_user(self):
         return getpass.getuser()
 
-    def version(self):
-        if 'version' in self.available:
-            if hasattr(self.module, '__version__'):
-                return self.module.__version__
-            else:
-                raise RuntimeError('Module {} does not have a __version__, cannot '
-                                   'expand version placeholder'.format(self.module))
+    def get_here(self):
+        if self._path_to_env_parent:
+            return self._path_to_env_parent
         else:
-            raise self.unavailable['version']
+            raise RuntimeError('here placeholder is only available '
+                               'when env was initialized from a file')
 
-    def git(self):
-        if 'version' not in self.available:
-            raise RuntimeError('The git_location placeholder is only available '
-                               'if Env defines a "module" constant')
+    def get_git(self):
+        module = self.raw.get('_module')
+
+        if not module:
+            raise KeyError('_module key is required to use git placeholder')
+
+        try:
+            module_spec = importlib.util.find_spec(module)
+        except ValueError:
+            # it fails if passed "."
+            module_spec = None
+
+        if not module_spec:
+            # interpret as directort
+            path_to_root = Path(module)
         else:
-            module_path = str(Path(self.module.__file__).parent.absolute())
-            return repo.get_env_metadata(module_path)['git_location']
+            path_to_root = Path(module_spec.origin).parent
+
+        return repo.get_env_metadata(path_to_root)['git_location']
 
 
 def iterate_nested_dict(d, preffix=[]):

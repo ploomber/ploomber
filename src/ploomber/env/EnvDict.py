@@ -18,7 +18,7 @@ class EnvDict(Mapping):
     """
     def __init__(self, source, expander_class=EnvironmentExpander):
         self._raw_data, self._path_to_env, self.name = load_from_source(source)
-        self.expander = expander_class(self._raw_data)
+        self.expander = expander_class(self._raw_data, self._path_to_env)
         self._data = modify_values(self._raw_data, self.expander)
         validate.env_dict(self._data)
 
@@ -131,7 +131,11 @@ def load_from_source(source):
             source = source_found
 
     with open(source) as f:
-        raw = yaml.load(f, Loader=yaml.SafeLoader)
+        try:
+            raw = yaml.load(f, Loader=yaml.SafeLoader)
+        except Exception as e:
+            raise type(e)('yaml.load failed to parse your YAML file '
+                          'fix syntax errors and try again') from e
 
     path = Path(source).resolve()
 
