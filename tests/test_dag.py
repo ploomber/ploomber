@@ -42,12 +42,11 @@ def failing(product):
 #     dag.to_html('a.html')
 
 
-def test_render_empty_dag():
-    DAG().render()
-
-
-def test_build_empty_dag():
-    DAG().build()
+@pytest.mark.parametrize('function_name', ['render', 'build', 'to_markup',
+                         'plot'])
+def test_dag_functions(function_name):
+    dag = DAG()
+    getattr(dag, function_name)()
 
 
 def test_warn_on_python_missing_docstrings():
