@@ -261,6 +261,9 @@ class SQLUpload(Task):
         refer to jinja2 documentation for details
     chunksize: int, optional
         Number of rows to transfer on every chunk
+    io_handler : callable, optional
+        A Python callable to read the source file,
+        if None, it will tried to be infered from the source file extension
 
     Notes
     -----
@@ -272,7 +275,7 @@ class SQLUpload(Task):
 
     @requires(['pandas'], 'SQLUpload')
     def __init__(self, source, product, dag, name=None, client=None,
-                 params=None, chunksize=None):
+                 params=None, chunksize=None, io_handler=None):
         params = params or {}
         super().__init__(source, product, dag, name, params)
 
@@ -283,15 +286,32 @@ class SQLUpload(Task):
                              .format(type(self).__name__))
 
         self.chunksize = chunksize
+        self.io_handler = io_handler
 
     def _init_source(self, source):
         return FileSource(str(source))
 
     def run(self):
         product = self.params['product']
+        path = str(self.source)
+
+        mapping = {
+            '.csv': pd.read_csv,
+            '.parquet': pd.read_parquet,
+        }
+
+        if self.io_handler is None:
+            extension = Path(path).suffix
+            read_fn = mapping.get(extension)
+
+            if not read_fn:
+                raise ValueError('Could not infer reading function for '
+                                 'file with extension: {}'.format(extension),
+                                 'pass the function directly in the '
+                                 'io_handler argument')
 
         self._logger.info('Reading data...')
-        df = pd.read_parquet(str(self.source))
+        df = read_fn(path)
         self._logger.info('Done reading data...')
 
         df.to_sql(name=product.name,
