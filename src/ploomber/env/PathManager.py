@@ -13,7 +13,7 @@ class PathManager:
         # need this if statement in case the path is a file, otherwise it will
         # try to create a folder for an existing file which throws a
         # FileExistsError error
-        if not path.exists() and raw_value.endswith('/'):
+        if not path.exists() and str(raw_value).endswith('/'):
             path.mkdir(parents=True, exist_ok=True)
 
         return path

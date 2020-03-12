@@ -42,6 +42,14 @@ def failing(product):
 #     dag.to_html('a.html')
 
 
+def test_render_empty_dag():
+    DAG().render()
+
+
+def test_build_empty_dag():
+    DAG().build()
+
+
 def test_warn_on_python_missing_docstrings():
     def fn1(product):
         pass
@@ -228,34 +236,15 @@ def test_dag_task_status_life_cycle(executor, tmp_directory):
 
     dag.render()
 
-    assert dag._exec_status == DAGStatus.Errored
-    assert t1.exec_status == TaskStatus.Executed
-    assert t2.exec_status == TaskStatus.Errored
-    assert t3.exec_status == TaskStatus.Aborted
-    assert t4.exec_status == TaskStatus.Aborted
-    assert t5.exec_status == TaskStatus.Executed
-
-    # TODO: add test when trying to Execute dag with task status
-    # other than WaitingExecution anf WaitingUpstream
-
-    dag.build()
-
-    assert dag._exec_status == DAGStatus.Errored
-    assert t1.exec_status == TaskStatus.Executed
-    assert t2.exec_status == TaskStatus.Errored
-    assert t3.exec_status == TaskStatus.Aborted
-    assert t4.exec_status == TaskStatus.Aborted
-    assert t5.exec_status == TaskStatus.Executed
-
-    # render again to check status reset
-    dag.render(force=True)
-
     assert dag._exec_status == DAGStatus.WaitingExecution
     assert t1.exec_status == TaskStatus.WaitingExecution
     assert t2.exec_status == TaskStatus.WaitingExecution
     assert t3.exec_status == TaskStatus.WaitingUpstream
     assert t4.exec_status == TaskStatus.WaitingUpstream
     assert t5.exec_status == TaskStatus.WaitingExecution
+
+    # TODO: add test when trying to Execute dag with task status
+    # other than WaitingExecution anf WaitingUpstream
 
 
 @pytest.mark.parametrize('executor', ['parallel', 'serial'])
@@ -280,36 +269,6 @@ def test_executor_keeps_running_until_no_more_tasks_can_run(executor,
     assert not Path('t_fail').exists()
     assert not Path('t_fail_downstream').exists()
     assert Path('t_ok').exists()
-
-
-def test_warns_on_rendered_dag():
-    dag = DAG()
-    PythonCallable(touch_root, File('ok'), dag, name='t1')
-    dag.render()
-
-    with pytest.warns(UserWarning) as record:
-        dag.render()
-
-    expected_msg = ('DAG("No name") has already been rendered, this call has '
-                    'no effect, to force rendering again, pass force=True')
-
-    assert len(record) == 1
-    assert record[0].message.args[0] == expected_msg
-
-
-def test_warns_on_built_dag(tmp_directory):
-    dag = DAG()
-    PythonCallable(touch_root, File('ok'), dag, name='t1')
-    dag.build()
-
-    with pytest.warns(UserWarning) as record:
-        dag.build()
-
-    expected_msg = ('DAG("No name") has been built already, to force pass '
-                    'force=True')
-
-    assert len(record) == 1
-    assert record[0].message.args[0] == expected_msg
 
 
 def test_status_on_render_fail():

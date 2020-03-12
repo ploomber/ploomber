@@ -11,6 +11,9 @@ from ploomber.executors.Executor import Executor
 from ploomber.executors.LoggerHandler import LoggerHandler
 from ploomber.exceptions import DAGBuildError
 from ploomber.ExceptionCollector import ExceptionCollector
+from ploomber.constants import TaskStatus
+
+# TODO: add a SerialIterator executor
 
 
 class Serial(Executor):
@@ -46,11 +49,16 @@ class Serial(Executor):
         exceptions = ExceptionCollector()
 
         for t in pbar:
+            # skip aborted tasks
+            if t.exec_status == TaskStatus.Aborted:
+                continue
+
             pbar.set_description('Building task "{}"'.format(t.name))
 
             try:
                 t.build(**kwargs)
             except Exception as e:
+                t.exec_status = TaskStatus.Errored
                 tr = traceback.format_exc()
                 exceptions.append(traceback_str=tr, task_str=repr(t))
 
@@ -59,6 +67,8 @@ class Serial(Executor):
                 if dag._on_task_failure:
                     dag._on_task_failure(t)
             else:
+                t.exec_status = TaskStatus.Executed
+
                 if dag._on_task_finish:
                     dag._on_task_finish(t)
 

@@ -180,6 +180,7 @@ class Task(abc.ABC):
         """
         return self._product
 
+    # FIXME: remove, only keep source
     @property
     def source_code(self):
         """
@@ -347,6 +348,7 @@ class Task(abc.ABC):
                 self.run()
             except Exception as e:
                 tb = traceback.format_exc()
+                # FIXME: this should be set in the executor, not here
                 self.exec_status = TaskStatus.Errored
 
                 # task failed, execute on_failure hook if any...
@@ -398,6 +400,7 @@ class Task(abc.ABC):
 
         self._logger.info('-----\n')
 
+        # FIXME: this should be set in the executor, not here
         self.exec_status = TaskStatus.Executed
 
         self.build_report = Row({'name': self.name, 'Ran?': run,
@@ -428,7 +431,6 @@ class Task(abc.ABC):
                 else:
                     self.source.render(self.params)
         except Exception as e:
-            self.exec_status = TaskStatus.ErroredRender
             raise type(e)('Error rendering code from Task "{}", '
                           ' check the full traceback above for details'
                           .format(repr(self), self.params)) from e
@@ -443,10 +445,6 @@ class Task(abc.ABC):
             except Exception as e:
                 raise TaskBuildError('Exception when running on_render '
                                      'for task {}: {}'.format(self, e)) from e
-
-        self.exec_status = (TaskStatus.WaitingExecution
-                            if not self.upstream
-                            else TaskStatus.WaitingUpstream)
 
     def set_upstream(self, other):
         self.dag._add_edge(other, self)
@@ -541,6 +539,7 @@ class Task(abc.ABC):
         return downstream
 
     def _update_downstream_status(self):
+        # TODO: move to DAG
         def update_status(task):
             any_upstream_errored_or_aborted = any([t.exec_status
                                                    in (TaskStatus.Errored,
@@ -554,8 +553,7 @@ class Task(abc.ABC):
                 task.exec_status = TaskStatus.Aborted
             elif any([t.exec_status in (TaskStatus.ErroredRender,
                                         TaskStatus.AbortedRender)
-                      for t
-                      in task.upstream.values()]):
+                      for t in task.upstream.values()]):
                 task.exec_status = TaskStatus.AbortedRender
             elif all_upstream_executed:
                 task.exec_status = TaskStatus.WaitingExecution
