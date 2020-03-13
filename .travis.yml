@@ -12,6 +12,10 @@ install:
   - bash sample_package.sh
   - pip install .[all]
 
+
+before_install:
+  - sudo apt-get -y install graphviz
+
 before_script:
   - psql -c 'create database db;' -U postgres
 
