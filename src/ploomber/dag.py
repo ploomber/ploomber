@@ -156,20 +156,6 @@ class DAG(collections.abc.Mapping):
                                     if not task.upstream
                                     else TaskStatus.WaitingUpstream)
         # attempted execution but failed
-        elif value == DAGStatus.Errored:
-            exec_values = set(task.exec_status for task in self.values())
-
-            if not exec_values <= {TaskStatus.Executed,
-                                   TaskStatus.Errored,
-                                   TaskStatus.Aborted}:
-                raise RuntimeError('Trying to set DAG status to '
-                                   'DAGStatus.Errored but executor '
-                                   'returned tasks whose status is not in a '
-                                   'subet of TaskStatus.Executed, '
-                                   'TaskStatus.Errored and '
-                                   'TaskStatus.Aborted. Returned '
-                                   'status: {}'.format(exec_values))
-
         elif value == DAGStatus.Executed:
             exec_values = set(task.exec_status for task in self.values())
 
@@ -180,6 +166,10 @@ class DAG(collections.abc.Mapping):
                                    'returned tasks whose status is not '
                                    'TaskStatus.Executed, returned '
                                    'status: {}'.format(exec_values))
+        elif value == DAGStatus.Errored:
+            # no value validation since this state is also set then the
+            # DAG executor ends up abrubtly
+            pass
         else:
             raise RuntimeError('Unknown DAGStatus value: {}'
                                .format(value))
