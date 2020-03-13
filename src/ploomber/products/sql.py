@@ -244,8 +244,9 @@ class PostgresRelation(Product):
         """Deletes the product
         """
         cascade = 'CASCADE' if force else ''
-        query = f"DROP {self._identifier.kind} IF EXISTS {self} {cascade}"
-        self.logger.debug(f'Running "{query}" on the databse...')
+        query = ("DROP {} IF EXISTS {} {}"
+                 .format(self._identifier.kind, self, cascade))
+        self.logger.debug('Running "%s" on the databse...', query)
 
         cur = self.client.connection.cursor()
         cur.execute(query)

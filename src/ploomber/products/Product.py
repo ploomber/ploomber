@@ -148,7 +148,7 @@ class Product(abc.ABC):
         return str(self._identifier)
 
     def __repr__(self):
-        return f'{type(self).__name__}({self._identifier.safe})'
+        return '{}({})'.format(type(self).__name__, self._identifier.safe)
 
     def _short_repr(self):
         s = str(self._identifier)

@@ -79,9 +79,10 @@ class MetaProduct:
                                   for p in self.products
                                   if p.stored_source_code is not None])
         if len(stored_source_code):
-            warnings.warn(f'Stored source codes for products {self.products} '
+            warnings.warn('Stored source codes for products {} '
                           'are different, but they are part of the same '
-                          'MetaProduct, returning stored_source_code as None')
+                          'MetaProduct, returning stored_source_code as None'
+                          .format(self.products))
             return None
         else:
             return list(stored_source_code)[0]

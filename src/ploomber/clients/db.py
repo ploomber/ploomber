@@ -115,7 +115,7 @@ class SQLAlchemyClient(Client):
     def close(self):
         """Closes all connections
         """
-        self._logger.info(f'Disposing engine {self._engine}')
+        self._logger.info('Disposing engine %s', self._engine)
         if self._engine is not None:
             self._engine.dispose()
             self._engine = None

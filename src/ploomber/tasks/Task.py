@@ -294,7 +294,7 @@ class Task(abc.ABC):
         # NOTE: should i fetch metadata here? I need to make sure I have
         # the latest before building
 
-        self._logger.info(f'-----\nChecking {repr(self)}....')
+        self._logger.info('-----\nChecking %s....', repr(self))
 
         # do not run unless some of the conditions below match...
         run = False
@@ -340,7 +340,7 @@ class Task(abc.ABC):
                 self._logger.info('Running...')
 
         if run:
-            self._logger.info(f'Starting execution: {repr(self)}')
+            self._logger.info('Starting execution: %s', repr(self))
 
             then = datetime.now()
 
@@ -362,7 +362,8 @@ class Task(abc.ABC):
 
             now = datetime.now()
             elapsed = (now - then).total_seconds()
-            self._logger.info(f'Done. Operation took {elapsed:.1f} seconds')
+            self._logger.info('Done. Operation took {:.1f} seconds'
+                              .format(elapsed))
 
             # TODO: also check that the Products were updated:
             # if they did not exist, they must exist now, if they alredy
@@ -370,10 +371,11 @@ class Task(abc.ABC):
             # used. maybe run fetch metadata again and validate?
 
             if not self.product.exists():
-                raise TaskBuildError(f'Error building task "{self}": '
+                raise TaskBuildError('Error building task "{}": '
                                      'the task ran successfully but product '
-                                     f'"{self.product}" does not exist yet '
-                                     '(task.product.exist() returned False)')
+                                     '"{}" does not exist yet '
+                                     '(task.product.exist() returned False)'
+                                     .format(self, self.product))
 
             if self.on_finish:
                 # execute on_finish hook
@@ -395,7 +397,7 @@ class Task(abc.ABC):
             self.product.save_metadata()
 
         else:
-            self._logger.info(f'No need to run {repr(self)}')
+            self._logger.info('No need to run %s', repr(self))
 
         self._logger.info('-----\n')
 
@@ -449,13 +451,13 @@ class Task(abc.ABC):
         """Shows a text summary of what this task will execute
         """
 
-        plan = f"""
-        Input parameters: {self.params}
-        Product: {self.product}
+        plan = """
+        Input parameters: {}
+        Product: {}
 
         Source code:
-        {self.source_code}
-        """
+        {}
+        """.format(self.params, self.product, self.source_code)
 
         print(plan)
 
@@ -573,7 +575,8 @@ class Task(abc.ABC):
             return TaskGroup((self, other))
 
     def __repr__(self):
-        return f'{type(self).__name__}: {self.name} -> {repr(self.product)}'
+        return ('{}: {} -> {}'
+                .format(type(self).__name__, self.name, repr(self.product)))
 
     def __str__(self):
         return str(self.product)
@@ -583,7 +586,8 @@ class Task(abc.ABC):
             max_l = 30
             return s if len(s) <= max_l else s[:max_l - 3] + '...'
 
-        return f'{short(self.name)} -> \n{self.product._short_repr()}'
+        return ('{} -> \n{}'
+                .format(short(self.name), self.product._short_repr()))
 
     # __getstate__ and __setstate__ are needed to make this picklable
 

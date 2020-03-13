@@ -51,7 +51,7 @@ def test_nonexisting_module(monkeypatch):
     monkeypatch.setattr(sys, 'argv',
                         ['python', 'some_module.some_function'])
 
-    with pytest.raises(ModuleNotFoundError):
+    with pytest.raises(ImportError):
         entry.main()
 
 

@@ -72,11 +72,11 @@ def make_task(date_start, date_end, path, dag):
     SELECT * FROM data
     WHERE DATE('{{date_start}}') <= date AND date < DATE('{{date_end}}')
     """
-    name = f'{date_start}-to-{date_end}.csv'
+    name = '{}-to-{}.csv'.format(date_start, date_end)
     return SQLDump(sql,
                    product=File(Path(path / name)),
                    dag=dag,
-                   name=f'dump_{name}',
+                   name='dump_' + name,
                    params={'date_start': date_start, 'date_end': date_end},
                    chunksize=None)
 

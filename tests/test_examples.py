@@ -7,7 +7,7 @@ import subprocess
 from conftest import _path_to_tests
 
 
-_examples = [f for f in os.listdir(_path_to_tests().parent / 'examples')
+_examples = [f for f in os.listdir(str(_path_to_tests().parent / 'examples'))
              if f.endswith('.py')]
 
 

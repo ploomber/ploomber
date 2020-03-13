@@ -60,11 +60,11 @@ def main():
 
         try:
             module = importlib.import_module(mod)
-        except ModuleNotFoundError as e:
-            raise ModuleNotFoundError('Could not import module "{}", '
-                                      'make sure it is available in the '
-                                      'current python environment'.
-                                      format(mod))
+        except ImportError as e:
+            raise ImportError('Could not import module "{}", '
+                              'make sure it is available in the '
+                              'current python environment'.
+                              format(mod))
 
         try:
             entry = getattr(module, name)

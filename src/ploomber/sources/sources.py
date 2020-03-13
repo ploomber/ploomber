@@ -188,6 +188,7 @@ class SQLQuerySource(SQLSourceMixin, Source):
     # TODO: validate this is a SELECT statement
     # a query needs to return a result, also validate that {{product}}
     # does not exist in the template, instead of just making it optional
+
     def render(self, params):
         self.value.render(params, optional=['product'])
         self._post_render_validation(self.value.value, params)
@@ -199,9 +200,11 @@ class PythonCallableSource(Source):
 
     def __init__(self, source):
         if not callable(source):
-            raise TypeError(f'{type(self).__name__} must be initialized'
+            raise TypeError('{} must be initialized'
                             'with a Python callable, got '
-                            f'"{type(source).__name__}"')
+                            '"{}"'
+                            .format(type(self).__name__),
+                            type(source).__name__)
 
         self._source = source
         self._source_as_str = inspect.getsource(source)
@@ -282,6 +285,7 @@ class FileSource(GenericSource):
 
     This source is utilized by Tasks that move/upload files.
     """
+
     def __init__(self, value):
         value = str(value)
         super().__init__(Placeholder(value))

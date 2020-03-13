@@ -180,7 +180,7 @@ def test_adding_tasks_left():
 
     assert not ta.upstream
     assert not tb.upstream
-    assert list(tc.upstream.values()) == [ta, tb]
+    assert set(tc.upstream.values()) == {ta, tb}
 
 
 def test_adding_tasks_right():

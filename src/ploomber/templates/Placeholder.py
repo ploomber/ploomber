@@ -172,10 +172,10 @@ class Placeholder:
         documented = set([p[0] for p in docstring_np['Parameters']])
 
         print('The following variables were found in the template but are '
-              f'not documented: {found - documented}')
+              'not documented: {}'.format(found - documented))
 
         print('The following variables are documented but were not found in '
-              f'the template: {documented - found}')
+              'the template: {}'.format(documented - found))
 
         return documented, found
 
@@ -338,9 +338,9 @@ class SQLRelationPlaceholder:
         if len(name) > 63:
             url = ('https://www.postgresql.org/docs/current/'
                    'sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS')
-            raise ValueError(f'"{name}" exceeds maximum length of 63 '
-                             f' (length is {len(name)}), '
-                             f'see: {url}')
+            raise ValueError('"{}" exceeds maximum length of 63 '
+                             ' (length is {}), '
+                             'see: {}'.format(name, len(name), url))
 
     def render(self, params, **kwargs):
         name = self._name_template.render(params, **kwargs)
