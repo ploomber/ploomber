@@ -25,3 +25,4 @@ class TaskStatus(Enum):
     Errored = 'errored'
     # an upstream dependency crashed
     Aborted = 'aborted'
+    BrokenProcessPool = 'broken_process_pool'
