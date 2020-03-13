@@ -1,6 +1,7 @@
 """
 DAG executors
 """
+# from multiprocessing import Pool
 import traceback
 import logging
 
@@ -12,6 +13,7 @@ from ploomber.executors.LoggerHandler import LoggerHandler
 from ploomber.exceptions import DAGBuildError
 from ploomber.ExceptionCollector import ExceptionCollector
 from ploomber.constants import TaskStatus
+
 
 # TODO: add a SerialIterator executor
 
@@ -50,6 +52,18 @@ class Serial(Executor):
             pbar.set_description('Building task "{}"'.format(t.name))
 
             try:
+                # p = Pool(processes=1)
+                # res = p.apply_async(func=t.build, kwds=kwargs)
+                # # calling this make sure we catch the exception, from the docs:
+                # # Return the result when it arrives. If timeout is not None and
+                # # the result does not arrive within timeout seconds then
+                # # multiprocessing.TimeoutError is raised. If the remote call
+                # # raised an exception then that exception will be reraised by
+                # # get().
+                # # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.AsyncResult.get
+                # res.get()
+                # p.close()
+                # p.join()
                 t.build(**kwargs)
             except Exception as e:
                 t.exec_status = TaskStatus.Errored
