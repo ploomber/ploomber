@@ -19,6 +19,7 @@ def requires(pkgs, name=None):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
+            # FIXME: use importlib and find_spec to avoid importing here
             missing = [pkg for pkg in pkgs if locate(pkg) is None]
 
             if missing:
@@ -51,7 +52,6 @@ def path2fig(path_to_image, dpi=50):
 
     data = plt.imread(path_to_image)
     height, width, _ = np.shape(data)
-
     fig = plt.figure()
     fig.set_size_inches((width / dpi, height / dpi))
     ax = plt.Axes(fig, [0, 0, 1, 1])
