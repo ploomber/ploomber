@@ -348,9 +348,8 @@ class Task(abc.ABC):
                 self.run()
             except Exception as e:
                 tb = traceback.format_exc()
-                # FIXME: this should be set in the executor, not here
-                self.exec_status = TaskStatus.Errored
 
+                # FIXME: this should happen in the executor
                 # task failed, execute on_failure hook if any...
                 if self.on_failure:
                     try:
@@ -399,9 +398,6 @@ class Task(abc.ABC):
             self._logger.info(f'No need to run {repr(self)}')
 
         self._logger.info('-----\n')
-
-        # FIXME: this should be set in the executor, not here
-        self.exec_status = TaskStatus.Executed
 
         self.build_report = Row({'name': self.name, 'Ran?': run,
                                  'Elapsed (s)': elapsed, })
