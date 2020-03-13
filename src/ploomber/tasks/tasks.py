@@ -41,20 +41,10 @@ class PythonCallable(Task):
         return PythonCallableSource(source)
 
     def run(self):
-        if self.dag._executor.TASKS_CAN_CREATE_CHILD_PROCESSES:
+        if self.dag._executor.SERIAL:
             p = Pool()
             res = p.apply_async(func=self.source._source, kwds=self.params)
-
-            # calling this make sure we catch the exception, from the docs:
-            # Return the result when it arrives. If timeout is not None and
-            # the result does not arrive within timeout seconds then
-            # multiprocessing.TimeoutError is raised. If the remote call
-            # raised an exception then that exception will be reraised by
-            # get().
-            # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.AsyncResult.get
-            if self.dag._executor.STOP_ON_EXCEPTION:
-                res.get()
-
+            res.get()
             p.close()
             p.join()
         else:

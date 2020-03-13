@@ -102,19 +102,21 @@ def test_task_change_in_status():
             and tb.exec_status == TaskStatus.WaitingUpstream
             and tc.exec_status == TaskStatus.WaitingUpstream)
 
-    ta.build()
+    # ta.build()
 
-    assert (ta.exec_status == TaskStatus.Executed
-            and tb.exec_status == TaskStatus.WaitingExecution
-            and tc.exec_status == TaskStatus.WaitingUpstream)
+    # assert (ta.exec_status == TaskStatus.Executed
+    #         and tb.exec_status == TaskStatus.WaitingExecution
+    #         and tc.exec_status == TaskStatus.WaitingUpstream)
 
-    tb.build()
+    # tb.build()
 
-    assert (ta.exec_status == TaskStatus.Executed
-            and tb.exec_status == TaskStatus.Executed
-            and tc.exec_status == TaskStatus.WaitingExecution)
+    # assert (ta.exec_status == TaskStatus.Executed
+    #         and tb.exec_status == TaskStatus.Executed
+    #         and tc.exec_status == TaskStatus.WaitingExecution)
 
-    tc.build()
+    # tc.build()
+
+    dag.build()
 
     assert all([t.exec_status == TaskStatus.Executed for t in [ta, tb, tc]])
 

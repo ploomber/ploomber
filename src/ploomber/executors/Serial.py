@@ -21,6 +21,8 @@ from ploomber.constants import TaskStatus
 class Serial(Executor):
     """Runs a DAG serially
     """
+    SERIAL = True
+
     # TODO: maybe add a parameter: stop on first exception, same for Parallel
     # TODO: add option to run all tasks in a subprocess
     def __init__(self, logging_directory=None, logging_level=logging.INFO):
