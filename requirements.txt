@@ -1,6 +1,6 @@
 # pyarrow breaks with earlier versions (!)
 # https://github.com/apache/arrow/issues/2468
-numpy>=1.15.1
+numpy>=1.16
 
 # testing
 pytest>=3.5
