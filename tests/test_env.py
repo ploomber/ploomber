@@ -8,8 +8,9 @@ import yaml
 
 from ploomber.env.env import Env
 from ploomber.env.decorators import with_env, load_env
-from ploomber.env import validate, expand
+from ploomber.env import validate
 from ploomber.env.EnvDict import _get_name
+from ploomber.env.expand import EnvironmentExpander
 from ploomber import repo
 
 
@@ -34,6 +35,11 @@ def test_path_returns_Path_objects(cleanup_env):
                               'b': '/another/path/file.csv'}})
     assert isinstance(env.path.a, Path)
     assert isinstance(env.path.b, Path)
+
+
+def test_path_expandsuser(cleanup_env):
+    env = Env.start({'path': {'home': '~'}})
+    assert env.path.home == Path('~').expanduser()
 
 
 def test_init_with_module_key(cleanup_env):
@@ -233,15 +239,6 @@ def test_load_env_decorator(cleanup_env):
     assert fn() == 10
 
 
-def test_modify_all_values_in_dict():
-    env = {'a': 1, 'b': 2, 'c': {'d': 1}}
-    env_mod = expand.modify_values(env, lambda x, _: x + 1)
-
-    assert env_mod == {'a': 2, 'b': 3, 'c': {'d': 2}}
-    # original dict is not modified
-    assert env == {'a': 1, 'b': 2, 'c': {'d': 1}}
-
-
 # def test_iterate_nested_dict():
 #     env = {'a': 1, 'b': 2, 'c': {'d': 1}}
 #     list(expand.iterate_nested_dict(env))
@@ -254,8 +251,9 @@ def test_expand_tags(monkeypatch):
 
     monkeypatch.setattr(getpass, "getuser", mockreturn)
 
-    env = {'a': '{{user}}', 'b': {'c': '{{user}} {{user}}'}}
-    env_expanded = expand.modify_values(env, expand.EnvironmentExpander(env))
+    raw = {'a': '{{user}}', 'b': {'c': '{{user}} {{user}}'}}
+    expander = EnvironmentExpander(preprocessed={})
+    env_expanded = expander.expand_raw_dictionary(raw)
 
     assert env_expanded == {'a': 'username', 'b': {'c': 'username username'}}
 

@@ -3,14 +3,12 @@ Environment management
 """
 import logging
 
-from ploomber.env.FrozenJSON import FrozenJSON
 from ploomber.env.EnvDict import EnvDict
-from ploomber.env.PathManager import PathManager
 
 
 # TODO: add defaults functionality if defined in {module}/env.defaults.yaml
 
-
+# TODO: env must be a envdict subclass that can only be instantiated once
 class Env:
     """Return the current environment
 
@@ -78,8 +76,6 @@ class Env:
             An environment object
         """
         if cls._data is None:
-            # TODO: this looks ugly, refactor
-
             if not isinstance(source, EnvDict):
                 env_dict = EnvDict(source)
             else:
@@ -87,11 +83,8 @@ class Env:
 
             cls._path_to_env = env_dict.path_to_env
             cls._name = env_dict.name
-
-            cls._path = PathManager(cls)
-            cls._data = FrozenJSON(env_dict)
+            cls._data = env_dict
             ins = cls()
-            ins._expander = env_dict.expander
             return ins
 
         # if an environment has been set...
@@ -133,13 +126,6 @@ class Env:
     @property
     def name(self):
         return self._name
-
-    @property
-    def path(self):
-        """
-        path manager, return paths to directories specified in your env
-        """
-        return self._path
 
     def __getattr__(self, key):
         return getattr(self._data, key)

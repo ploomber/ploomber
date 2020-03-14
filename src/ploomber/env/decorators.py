@@ -77,21 +77,18 @@ def with_env(source):
             env = Env.start(env_dict)
 
             for key, new_value in to_replace.items():
-                elements = key.split('__')
-                to_edit = env._data._data
+                # convert env__a__b__c -> ['a', 'b', 'c']
+                keys_all = key.split('__')[1:]
 
-                for e in elements[1:-1]:
-                    to_edit = to_edit[e]
-
-                if to_edit.get(elements[-1]) is None:
+                # catch errors here so we end the env if anything goes
+                # wrong
+                try:
+                    env._replace_value(new_value, keys_all)
+                except Exception as e:
                     Env.end()
-                    dotted_path = '.'.join(elements[1:])
-                    raise KeyError('Trying to replace key "{}" in env, '
-                                   'but it does not exist'
-                                   .format(dotted_path))
-
-                to_edit[elements[-1]] = env._expander(new_value,
-                                                      elements[1:-1])
+                    raise KeyError('Failed to replace value using '
+                                   '{}'
+                                   .format(key)) from e
 
             try:
                 res = fn(Env(), *args, **kwargs)
