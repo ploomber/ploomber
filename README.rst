@@ -17,6 +17,8 @@ ploomber is an expressive workflow management library that provides
 incremental builds, testing and debugging tools to accelerate DS/ML pipeline
 development.
 
+Compatible with Python 3.5 and higher.
+
 Install
 -------
 

@@ -110,55 +110,30 @@ class DAG(collections.abc.Mapping):
     def _exec_status(self, value):
         self._logger.debug('Setting %s status to %s', self, value)
 
-        # whenever statis is changed, we update tasks status to make sure
-        # the DAG does not enter an inconsistent state
+        # The Task class is responsible for updating their status
+        # (except for Executed and Errored, those are updated by the executor)
+        # DAG should not set task status but only verify that after an attemp
+        # to change DAGStatus, all Tasks have allowed states, otherwise there
+        # is an error in either the Task or the Executor
 
-        # DAG methods execute actions, this method checks that task
-        # status are the valid, DAG methods only check the state they have
-        # when they enter
-        # TODO: abstract the exec_values, allowed, raise logic
-
-        # if render has not been executed
         if value == DAGStatus.WaitingRender:
-            for task in self.values():
-                task.exec_status == TaskStatus.WaitingRender
+            self.check_tasks_have_allowed_status({TaskStatus.WaitingRender})
 
         # render errored
         elif value == DAGStatus.ErroredRender:
-            # do not change status here, rendering function should update
-            # states, just check it did the right thing
-            exec_values = set(task.exec_status for task in self.values())
             allowed = {TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream,
                        TaskStatus.ErroredRender, TaskStatus.AbortedRender}
-
-            if not exec_values <= allowed:
-                raise RuntimeError('Trying to set DAG status to '
-                                   'DAGStatus.Errored but executor '
-                                   'returned tasks whose status is not in a '
-                                   'subet of {}. Returned '
-                                   'status: {}'.format(allowed, exec_values))
+            self.check_tasks_have_allowed_status(allowed)
 
         # rendering ok, waiting execution
         elif value == DAGStatus.WaitingExecution:
             exec_values = set(task.exec_status for task in self.values())
             allowed = {TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream}
+            self.check_tasks_have_allowed_status(allowed)
 
-            if not exec_values <= allowed:
-                raise RuntimeError('Trying to set DAG status to '
-                                   'DAGStatus.Errored but executor '
-                                   'returned tasks whose status is not in a '
-                                   'subet of {}. Returned '
-                                   'status: {}'.format(allowed, exec_values))
-
-            # task values depend on having or not upstream dependencies
-            for task in self.values():
-                task.exec_status = (TaskStatus.WaitingExecution
-                                    if not task.upstream
-                                    else TaskStatus.WaitingUpstream)
         # attempted execution but failed
         elif value == DAGStatus.Executed:
             exec_values = set(task.exec_status for task in self.values())
-
             # check len(self) to prevent this from failing on an empty DAG
             if not exec_values == {TaskStatus.Executed} and len(self):
                 raise RuntimeError('Trying to set DAG status to '
@@ -175,6 +150,15 @@ class DAG(collections.abc.Mapping):
                                .format(value))
 
         self.__exec_status = value
+
+    def check_tasks_have_allowed_status(self, allowed):
+        exec_values = set(task.exec_status for task in self.values())
+        if not exec_values <= allowed:
+            raise RuntimeError('Trying to set DAG status to '
+                               'DAGStatus.Errored but executor '
+                               'returned tasks whose status is not in a '
+                               'subet of {}. Returned '
+                               'status: {}'.format(allowed, exec_values))
 
     @property
     def product(self):
@@ -254,7 +238,8 @@ class DAG(collections.abc.Mapping):
             self._logger.info('Building DAG %s', self)
 
             try:
-                res = self._executor(dag=self, force=force)
+                res = self._executor(dag=self, force=force,
+                                     self_report_build_status=False)
             except Exception as e:
                 self._exec_status = DAGStatus.Errored
                 e_new = DAGBuildError('Failed to build DAG {}'.format(self))

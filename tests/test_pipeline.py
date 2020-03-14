@@ -5,7 +5,7 @@ from ploomber.tasks import ShellScript
 from ploomber.products import File
 
 
-def test_non_existent_file():
+def test_non_existent_file(tmp_directory):
     dag = DAG()
     f = File('file.txt')
     ta = ShellScript('echo hi > {{product}}', f, dag, 'ta')

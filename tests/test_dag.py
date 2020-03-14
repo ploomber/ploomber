@@ -9,6 +9,12 @@ from ploomber.products import File
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import DAGBuildError, DAGRenderError
 
+# TODO: a lot of these tests should be in a test_executor file
+# since they test Errored or Executed status and the output errors, which
+# is done by the executor
+# TODO: check build successful execution does not run anything
+# TODO: test forced execution, check it actually ran two times
+
 
 class FailedTask(Exception):
     pass
@@ -357,6 +363,3 @@ def test_sucessful_execution(executor, tmp_directory):
     assert Path('file').exists()
 
     assert set(t.exec_status for t in dag.values()) == {TaskStatus.Executed}
-
-
-# TODO: test forced execution, check it actually ran two times

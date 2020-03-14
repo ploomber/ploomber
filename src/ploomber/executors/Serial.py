@@ -10,12 +10,15 @@ from tqdm.auto import tqdm
 from ploomber.Table import BuildReport, Row
 from ploomber.executors.Executor import Executor
 from ploomber.executors.LoggerHandler import LoggerHandler
-from ploomber.exceptions import DAGBuildError
+from ploomber.exceptions import DAGBuildError, TaskBuildError
 from ploomber.ExceptionCollector import ExceptionCollector
 from ploomber.constants import TaskStatus
 
 
 # TODO: add a SerialIterator executor
+# TODO: document how executors should handle errors, they need to catch
+# failures in task.build but also in t.exec_status = TaskStatus.Executed
+# to report on_finish errors
 
 
 class Serial(Executor):
@@ -66,7 +69,11 @@ class Serial(Executor):
                 if dag._on_task_failure:
                     dag._on_task_failure(t)
             else:
-                t.exec_status = TaskStatus.Executed
+                try:
+                    t.exec_status = TaskStatus.Executed
+                except Exception as e:
+                    tr = traceback.format_exc()
+                    exceptions.append(traceback_str=tr, task_str=repr(t))
 
                 if dag._on_task_finish:
                     dag._on_task_finish(t)
@@ -82,8 +89,8 @@ class Serial(Executor):
         if exceptions:
             raise DAGBuildError('DAG build failed, the following '
                                 'tasks crashed '
-                                '(corresponding tasks aborted '
-                                'execuion):\n{}'
+                                '(corresponding downstream tasks aborted '
+                                'execution):\n{}'
                                 .format(str(exceptions)))
 
         build_report = BuildReport(task_reports)

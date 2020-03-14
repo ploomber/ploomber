@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ploomber.exceptions import RenderError, DAGBuildError, TaskBuildError
+from ploomber.exceptions import RenderError, TaskBuildError
 from ploomber import DAG
 from ploomber.products import File, PostgresRelation
 from ploomber.tasks import PythonCallable, SQLScript, ShellScript, SQLDump
@@ -26,18 +26,6 @@ def my_fn(product, upstream):
 # have to declare this here, otherwise it won't work with pickle
 def touch(product):
     Path(str(product)).touch()
-
-
-def on_finish(task):
-    Path(str(task)).write_text('Written from on_finish')
-
-
-def on_render(task):
-    Path(str(task)).write_text('Written from on_render')
-
-
-def on_finish_fail(task):
-    raise Exception
 
 
 def test_task_can_infer_name_from_source():
@@ -183,28 +171,6 @@ def test_shows_warning_if_unused_dependencies():
         tc.render()
 
 
-def test_on_finish(tmp_directory):
-    dag = DAG()
-
-    t = PythonCallable(touch, File('file'), dag, name='touch')
-    t.on_finish = on_finish
-
-    dag.build()
-
-    assert Path('file').read_text() == 'Written from on_finish'
-
-
-def test_on_render(tmp_directory):
-    dag = DAG()
-
-    t = PythonCallable(touch, File('file'), dag, name='touch')
-    t.on_render = on_render
-
-    dag.render()
-
-    assert Path('file').read_text() == 'Written from on_render'
-
-
 def test_lineage():
     dag = DAG('dag')
 
@@ -244,23 +210,6 @@ def test_placeholder_is_copied_upon_initialization():
     assert t1.source.value is not t2.source.value
 
 
-def test_task_is_re_executed_if_on_finish_fails(tmp_directory):
-    dag = DAG()
-
-    t = PythonCallable(touch, File('file'), dag, name='t1')
-    t.on_finish = on_finish_fail
-
-    # first time it runs, fails..
-    try:
-        dag.build()
-    except DAGBuildError:
-        pass
-
-    # if we attempt to run, it will fail again (since no metadata is saved)
-    with pytest.raises(DAGBuildError):
-        dag.build(force=True)
-
-
 def test_attempting_to_build_unrendered_task_throws_exception():
     dag = DAG()
     t = SQLDump('SELECT * FROM, table', File('file'), dag,
@@ -273,4 +222,4 @@ def test_attempting_to_build_unrendered_task_throws_exception():
     with pytest.raises(TaskBuildError) as excinfo:
         t.build()
 
-    assert str(excinfo.value) == msg
+    assert msg in str(excinfo.getrepr())

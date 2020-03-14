@@ -250,9 +250,10 @@ class Task(abc.ABC):
             try:
                 self.on_finish(**kwargs)
             except Exception as e:
-                raise TaskBuildError('Exception when running on_finish '
-                                     'for task "{}": {}'
-                                     .format(self.name, e)) from e
+                self.exec_status = TaskStatus.Errored
+                raise type(e)('Exception when running on_finish '
+                              'for task "{}": {}'
+                              .format(self.name, e)) from e
 
     @property
     def on_failure(self):
@@ -289,14 +290,17 @@ class Task(abc.ABC):
 
     def _run_on_render(self):
         if self.on_render:
+            self._logger.debug('Calling on_render hook on task %s', self.name)
+
             kwargs = callback_check(self.on_render,
                                     self._available_callback_kwargs)
             try:
                 self.on_render(**kwargs)
-            except Exception:
-                tr = traceback.format_exc()
-                warnings.warn('Exception when running on_render '
-                              'for task {}. {}'.format(self.name, tr))
+            except Exception as e:
+                self.exec_status = TaskStatus.ErroredRender
+                raise type(e)('Exception when running on_render '
+                              'for task "{}": {}'
+                              .format(self.name, e)) from e
 
     @property
     def exec_status(self):
@@ -304,18 +308,26 @@ class Task(abc.ABC):
 
     @exec_status.setter
     def exec_status(self, value):
-        self._logger.debug('Setting %s status to %s', self, value)
+
+        self._logger.debug('Setting "%s" status to %s', self.name, value)
         self._exec_status = value
         self._update_downstream_status()
 
+        # TODO: move this to build method? do we really need to run this in
+        # the main process?
         if value == TaskStatus.Executed:
+            # run on finish first, if this fails, we don't want to save
+            # metadata
             self._run_on_finish()
+
+            self.product.timestamp = datetime.now().timestamp()
+            self.product.stored_source_code = self.source_code
+            self.product.save_metadata()
+
         elif value == TaskStatus.Errored:
             self._run_on_failure()
-        elif value == TaskStatus.WaitingExecution:
-            self._run_on_render()
 
-    def build(self, force=False):
+    def build(self, force=False, self_report_build_status=True):
         """Run the task if needed by checking its dependencies
 
         Returns
@@ -323,6 +335,21 @@ class Task(abc.ABC):
         dict
             A dictionary with keys 'run' and 'elapsed'
         """
+        if self_report_build_status:
+            try:
+                res = self._build(force)
+            except Exception as e:
+                self.exec_status = TaskStatus.Errored
+                raise type(e)('Error calling build on task {}'
+                              .format(self.name)) from e
+
+            self.exec_status = TaskStatus.Executed
+            return res
+
+        else:
+            return self._build(force)
+
+    def _build(self, force):
         # cannot keep running, we depend on the render step to get all the
         # parameters resolved (params, upstream, product)
         if self.exec_status == TaskStatus.WaitingRender:
@@ -344,7 +371,8 @@ class Task(abc.ABC):
         elapsed = 0
 
         if force:
-            self._logger.info('Forcing run, skipping checks...')
+            self._logger.info('Forcing run "%s", skipping checks...',
+                              self.name)
             run = True
         else:
             # not forcing, need to check dependencies...
@@ -386,7 +414,9 @@ class Task(abc.ABC):
             self._logger.info('Starting execution: %s', repr(self))
 
             then = datetime.now()
+
             self.run()
+
             now = datetime.now()
             elapsed = (now - then).total_seconds()
             self._logger.info('Done. Operation took {:.1f} seconds'
@@ -403,16 +433,8 @@ class Task(abc.ABC):
                                      '"{}" does not exist yet '
                                      '(task.product.exist() returned False)'
                                      .format(self, self.product))
-
-            # update metadata: this has to be after running the on_finish
-            # hook, to prevent failing tasks to save metadata and being skipped
-            # in the next build
-            self.product.timestamp = datetime.now().timestamp()
-            self.product.stored_source_code = self.source_code
-            self.product.save_metadata()
-
         else:
-            self._logger.info('No need to run %s', repr(self))
+            self._logger.info('No need to run %s', self.name)
 
         self._logger.info('-----\n')
 
@@ -424,6 +446,8 @@ class Task(abc.ABC):
         first, for that reason, this method will usually not be called
         directly but via DAG.render(), which renders in the right order
         """
+        self._logger.debug('Calling render on task %s', self.name)
+
         self._render_product()
 
         # Params are read-only for users, but we have to add the product
@@ -446,7 +470,10 @@ class Task(abc.ABC):
                           ' check the full traceback above for details'
                           .format(repr(self), self.params)) from e
         else:
-            self.exec_status = TaskStatus.WaitingExecution
+            self.exec_status = (TaskStatus.WaitingExecution
+                                if not self.upstream
+                                else TaskStatus.WaitingUpstream)
+            self._run_on_render()
 
     def set_upstream(self, other):
         self.dag._add_edge(other, self)
