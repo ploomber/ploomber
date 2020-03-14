@@ -44,8 +44,7 @@ class Parallel(Executor):
     If any task crashes, downstream tasks execution is aborted, building
     continues until no more tasks can be executed
     """
-    SERIAL = False
-    # Tasks should not create child processes
+    # NOTE: Tasks should not create child processes
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.daemon
 
     def __init__(self, processes=4, logging_directory=None,

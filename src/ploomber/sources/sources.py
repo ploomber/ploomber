@@ -198,30 +198,25 @@ class PythonCallableSource(Source):
     """A source that holds a Python callable
     """
 
-    def __init__(self, source):
-        if not callable(source):
+    def __init__(self, value):
+        if not callable(value):
             raise TypeError('{} must be initialized'
                             'with a Python callable, got '
                             '"{}"'
                             .format(type(self).__name__),
-                            type(source).__name__)
+                            type(value).__name__)
 
-        self._source = source
-        self._source_as_str = inspect.getsource(source)
-        _, self._source_lineno = inspect.getsourcelines(source)
-
-        self._params = None
-        self._loc = inspect.getsourcefile(source)
-
-    def __repr__(self):
-        return 'Placeholder({})'.format(self._source.raw)
+        self.value = value
+        self._source_as_str = inspect.getsource(value)
+        _, self._source_lineno = inspect.getsourcelines(value)
+        self._loc = inspect.getsourcefile(value)
 
     def __str__(self):
         return self._source_as_str
 
     @property
     def doc(self):
-        return self._source.__doc__
+        return self.value.__doc__
 
     @property
     def doc_short(self):

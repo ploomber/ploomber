@@ -26,7 +26,6 @@ the output, hence shoulf not make tasks outdated
 """
 import inspect
 import abc
-import traceback
 import logging
 from datetime import datetime
 from ploomber.products import Product, MetaProduct
@@ -39,6 +38,7 @@ from ploomber.tasks.Params import Params
 from ploomber.Table import Row
 from ploomber.sources.sources import Source
 from ploomber.util import isiterable
+from ploomber.util.util import callback_check
 
 import humanize
 
@@ -153,7 +153,6 @@ class Task(abc.ABC):
         self.client = None
 
         self.exec_status = TaskStatus.WaitingRender
-        self.build_report = None
 
         self._on_finish = None
         self._on_failure = None
@@ -240,6 +239,16 @@ class Task(abc.ABC):
     def on_finish(self, value):
         self._on_finish = value
 
+    def _run_on_finish(self):
+        if self.on_finish:
+            available = {'task': self, 'client': self.client}
+            kwargs = callback_check(self.on_finish, available)
+            try:
+                self.on_finish(**kwargs)
+            except Exception as e:
+                raise TaskBuildError('Exception when running on_finish '
+                                     'for task {}: {}'.format(self, e)) from e
+
     @property
     def on_failure(self):
         """
@@ -251,6 +260,18 @@ class Task(abc.ABC):
     @on_failure.setter
     def on_failure(self, value):
         self._on_failure = value
+
+    def _run_on_failure(self):
+        if self.on_failure:
+            available = {'task': self, 'client': self.client}
+            kwargs = callback_check(self.on_failure, available)
+            try:
+                self.on_failure(**kwargs)
+            except Exception as e:
+                # 'Exception when running on_finish '
+                                     # 'for task {}: {}'.format(self, e)
+                self._logger.exception('Error executing on_failure '
+                                       'callback')
 
     @property
     def on_render(self):
@@ -270,6 +291,11 @@ class Task(abc.ABC):
         self._exec_status = value
         self._update_downstream_status()
 
+        if value == TaskStatus.Executed:
+            self._run_on_finish()
+        elif value == TaskStatus.Errored:
+            self._run_on_failure()
+
     def build(self, force=False):
         """Run the task if needed by checking its dependencies
 
@@ -284,12 +310,10 @@ class Task(abc.ABC):
             raise TaskBuildError('Cannot build task that has not been '
                                  'rendered, call DAG.render() first')
 
-        # if aborted (this happens when an upstream dependency fails)
         elif self.exec_status == TaskStatus.Aborted:
-            # TODO: change Ran column for status
-            self.build_report = Row({'name': self.name, 'Ran?': False,
-                                     'Elapsed (s)': 0, })
-            return self
+            raise TaskBuildError('Attempted to run task "{}", which has '
+                                 'status TaskStatus.Aborted'
+                                 .format(self.name))
 
         # NOTE: should i fetch metadata here? I need to make sure I have
         # the latest before building
@@ -343,23 +367,7 @@ class Task(abc.ABC):
             self._logger.info('Starting execution: %s', repr(self))
 
             then = datetime.now()
-
-            try:
-                self.run()
-            except Exception as e:
-                tb = traceback.format_exc()
-
-                # FIXME: this should happen in the executor
-                # task failed, execute on_failure hook if any...
-                if self.on_failure:
-                    try:
-                        self.on_failure(self, tb)
-                    except Exception:
-                        self._logger.exception('Error executing on_failure '
-                                               'callback')
-                raise TaskBuildError('Error executing task "{}"'
-                                     .format(self)) from e
-
+            self.run()
             now = datetime.now()
             elapsed = (now - then).total_seconds()
             self._logger.info('Done. Operation took {:.1f} seconds'
@@ -377,18 +385,6 @@ class Task(abc.ABC):
                                      '(task.product.exist() returned False)'
                                      .format(self, self.product))
 
-            if self.on_finish:
-                # execute on_finish hook
-                try:
-                    if 'client' in inspect.getfullargspec(self.on_finish).args:
-                        self.on_finish(self, client=self.client)
-                    else:
-                        self.on_finish(self)
-
-                except Exception as e:
-                    raise TaskBuildError('Exception when running on_finish '
-                                         'for task {}: {}'.format(self, e)) from e
-
             # update metadata: this has to be after running the on_finish
             # hook, to prevent failing tasks to save metadata and being skipped
             # in the next build
@@ -400,9 +396,6 @@ class Task(abc.ABC):
             self._logger.info('No need to run %s', repr(self))
 
         self._logger.info('-----\n')
-
-        self.build_report = Row({'name': self.name, 'Ran?': run,
-                                 'Elapsed (s)': elapsed, })
 
         return self
 

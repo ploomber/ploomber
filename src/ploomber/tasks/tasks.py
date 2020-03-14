@@ -41,21 +41,14 @@ class PythonCallable(Task):
         return PythonCallableSource(source)
 
     def run(self):
-        if self.dag._executor.SERIAL:
-            p = Pool()
-            res = p.apply_async(func=self.source._source, kwds=self.params)
-            res.get()
-            p.close()
-            p.join()
-        else:
-            self.source._source(**self.params)
+        self.source.value(**self.params)
 
     def debug(self):
         """
         Run callable in debug mode.
 
         """
-        pdb.runcall(self.source._source, **self.params)
+        pdb.runcall(self.source.value, **self.params)
 
 
 class ShellScript(Task):

@@ -6,6 +6,12 @@ import pytest
 from ploomber.dag import DAG
 from ploomber.tasks import PythonCallable, SQLScript
 from ploomber.products import File
+from ploomber.exceptions import DAGBuildError
+
+# TODO: test with all clients!
+# TODO: and wih the subprocess options on/off
+# TODO: update other test aswell to use all serial with subprocess on/off
+# TODO: checking signature checks when adding callbacks
 
 
 def fn1(product):
@@ -16,53 +22,39 @@ def fn_that_fails(product):
     raise Exception
 
 
-def on_finish(task):
-    print('running on finish')
+def on_finish(task, client):
+    print('on finish')
 
 
-def on_finish_w_client(task, client):
-    pass
+def on_failure(task, client):
+    print('on failure')
 
 
-def on_failure(task, traceback):
-    print('running on failure')
-
-
-def on_failure_w_client(task, client):
-    pass
-
-
-def test_runs_on_finish(tmp_directory, capsys):
-
+@pytest.mark.parametrize('executor', ['serial', 'parallel'])
+def test_runs_on_finish(executor, tmp_directory, capsys):
     dag = DAG()
     t = PythonCallable(fn1, File('file1.txt'), dag, name='fn1')
     t.on_finish = on_finish
+
     dag.build()
 
-    assert capsys.readouterr().out == 'running on finish\n'
+    assert capsys.readouterr().out == 'on finish\n'
 
 
-def test_passes_client_to_on_finish(tmp_directory):
-
+@pytest.mark.parametrize('executor', ['serial', 'parallel'])
+def test_runs_on_failure(executor, tmp_directory, capsys):
     dag = DAG()
-    t = PythonCallable(fn1, File('file1.txt'), dag, name='fn1')
-    t.on_finish = on_finish_w_client
-    dag.build()
+    t = PythonCallable(fn_that_fails, File('file1.txt'), dag)
+    t.on_failure = on_failure
+
+    try:
+        dag.build()
+    except DAGBuildError:
+        pass
+
+    assert capsys.readouterr().out == 'on failure\n'
 
 
-# def test_runs_on_failure(tmp_directory, capsys):
-
-#     dag = DAG()
-#     t = PythonCallable(fn_that_fails, File('file1.txt'), dag)
-#     t.on_failure = on_failure
-#     dag.build()
-
-#     assert capsys.readouterr().out == 'running on failure\n'
-
-
-# def test_passes_client_to_on_failure(tmp_directory):
-
-#     dag = DAG()
-#     t = PythonCallable(fn1, File('file1.txt'), dag)
-#     t.on_finish = on_finish_w_client
-#     dag.build()
+# TODO: add on render
+# TODO: test warning is shown if on_finish crashes
+# TODO: DAGBuildError is any on_finish crashes (all errors should be visible)

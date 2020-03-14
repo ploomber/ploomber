@@ -1,12 +1,13 @@
 """
 DAG executors
 """
-# from multiprocessing import Pool
+from datetime import datetime
+from multiprocessing import Pool
 import traceback
 import logging
 
 from tqdm.auto import tqdm
-from ploomber.Table import BuildReport
+from ploomber.Table import BuildReport, Row
 from ploomber.executors.Executor import Executor
 from ploomber.executors.LoggerHandler import LoggerHandler
 from ploomber.exceptions import DAGBuildError
@@ -20,14 +21,14 @@ from ploomber.constants import TaskStatus
 class Serial(Executor):
     """Runs a DAG serially
     """
-    SERIAL = True
-
     # TODO: maybe add a parameter: stop on first exception, same for Parallel
     # TODO: add option to run all tasks in a subprocess
-    def __init__(self, logging_directory=None, logging_level=logging.INFO):
+    def __init__(self, logging_directory=None, logging_level=logging.INFO,
+                 execute_callables_in_subprocess=True):
         self.logging_directory = logging_directory
         self.logging_level = logging_level
         self._logger = logging.getLogger(__name__)
+        self._execute_callables_in_subprocess = execute_callables_in_subprocess
 
     def __call__(self, dag, **kwargs):
         super().__call__(dag)
@@ -38,37 +39,30 @@ class Serial(Executor):
                                            logging_level=self.logging_level)
             logger_handler.add()
 
-        status_all = []
+        exceptions = ExceptionCollector()
+        task_reports = []
 
         pbar = tqdm(dag._topologically_sorted_iter(skip_aborted=True),
                     total=len(dag))
 
-        exceptions = ExceptionCollector()
-
         for t in pbar:
             pbar.set_description('Building task "{}"'.format(t.name))
 
+            then = datetime.now()
+
             try:
-                # p = Pool(processes=1)
-                # res = p.apply_async(func=t.build, kwds=kwargs)
-                # # calling this make sure we catch the exception, from the docs:
-                # # Return the result when it arrives. If timeout is not None and
-                # # the result does not arrive within timeout seconds then
-                # # multiprocessing.TimeoutError is raised. If the remote call
-                # # raised an exception then that exception will be reraised by
-                # # get().
-                # # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.AsyncResult.get
-                # res.get()
-                # p.close()
-                # p.join()
-                t.build(**kwargs)
+                if (callable(t.source.value)
+                        and self._execute_callables_in_subprocess):
+                    execute_in_subprocess(t, kwargs)
+                else:
+                    t.build(**kwargs)
             except Exception as e:
                 t.exec_status = TaskStatus.Errored
                 tr = traceback.format_exc()
                 exceptions.append(traceback_str=tr, task_str=repr(t))
 
                 # FIXME: this should not be here, but called
-                # inside DAG
+                # inside the task, or the dag, depending on the level
                 if dag._on_task_failure:
                     dag._on_task_failure(t)
             else:
@@ -76,8 +70,14 @@ class Serial(Executor):
 
                 if dag._on_task_finish:
                     dag._on_task_finish(t)
-
-            status_all.append(t.build_report)
+            finally:
+                now = datetime.now()
+                elapsed = (now - then).total_seconds()
+                did_exec = t.exec_status == TaskStatus.Executed
+                report = {'name': t.name,
+                          'Ran?': did_exec,
+                          'Elapsed (s)': elapsed if did_exec else 0}
+                task_reports.append(Row(report))
 
         if exceptions:
             raise DAGBuildError('DAG build failed, the following '
@@ -86,7 +86,8 @@ class Serial(Executor):
                                 'execuion):\n{}'
                                 .format(str(exceptions)))
 
-        build_report = BuildReport(status_all)
+        build_report = BuildReport(task_reports)
+
         self._logger.info(' DAG report:\n{}'.format(repr(build_report)))
 
         # TODO: this should be moved to the superclass, should be like
@@ -112,3 +113,18 @@ class Serial(Executor):
     def __setstate__(self, state):
         self.__dict__.update(state)
         self._logger = logging.getLogger(__name__)
+
+
+def execute_in_subprocess(task, build_kwargs):
+    p = Pool(processes=1)
+    res = p.apply_async(func=task.build, kwds=build_kwargs)
+    # calling this make sure we catch the exception, from the docs:
+    # Return the result when it arrives. If timeout is not None and
+    # the result does not arrive within timeout seconds then
+    # multiprocessing.TimeoutError is raised. If the remote call
+    # raised an exception then that exception will be reraised by
+    # get().
+    # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.AsyncResult.get
+    res.get()
+    p.close()
+    p.join()
