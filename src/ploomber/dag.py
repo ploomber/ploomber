@@ -394,9 +394,6 @@ class DAG(collections.abc.Mapping):
         """
         Render tasks, and update exec_status
         """
-        # warnings.warn('{} has already been rendered, this call has no '
-        #               'effect, to force rendering again, pass force=True'
-        #               .format(self))
         if not self._cache_rendered_status or not self._did_render:
             self._logger.info('Rendering DAG %s', self)
 
@@ -414,11 +411,6 @@ class DAG(collections.abc.Mapping):
                 if t.exec_status == TaskStatus.AbortedRender:
                     continue
 
-                # FIXME: instead of setting the status here, check task
-                # is waiting for render, .render should set the state (?)
-                # otherwise raise an error
-                t.exec_status = TaskStatus.WaitingRender
-
                 tasks.set_description('Rendering DAG "{}"'
                                       .format(self.name))
 
@@ -426,11 +418,8 @@ class DAG(collections.abc.Mapping):
                     try:
                         t.render()
                     except Exception as e:
-                        t.exec_status = TaskStatus.ErroredRender
                         tr = traceback.format_exc()
                         exceptions.append(traceback_str=tr, task_str=repr(t))
-                    else:
-                        t.exec_status = TaskStatus.WaitingExecution
 
             if exceptions:
                 self._exec_status = DAGStatus.ErroredRender

@@ -24,9 +24,10 @@ NOTE: Params trigger different data output (and should make tasks outdated),
 Tasks constructor args (such as chunksize in SQLDump) should not change
 the output, hence shoulf not make tasks outdated
 """
-import inspect
+import traceback
 import abc
 import logging
+import warnings
 from datetime import datetime
 from ploomber.products import Product, MetaProduct
 from ploomber.dag import DAG
@@ -157,6 +158,8 @@ class Task(abc.ABC):
         self._on_finish = None
         self._on_failure = None
         self._on_render = None
+        self._available_callback_kwargs = {'task': self,
+                                           'client': self.client}
 
     @property
     def name(self):
@@ -237,17 +240,19 @@ class Task(abc.ABC):
 
     @on_finish.setter
     def on_finish(self, value):
+        callback_check(value, self._available_callback_kwargs)
         self._on_finish = value
 
     def _run_on_finish(self):
         if self.on_finish:
-            available = {'task': self, 'client': self.client}
-            kwargs = callback_check(self.on_finish, available)
+            kwargs = callback_check(self.on_finish,
+                                    self._available_callback_kwargs)
             try:
                 self.on_finish(**kwargs)
             except Exception as e:
                 raise TaskBuildError('Exception when running on_finish '
-                                     'for task {}: {}'.format(self, e)) from e
+                                     'for task "{}": {}'
+                                     .format(self.name, e)) from e
 
     @property
     def on_failure(self):
@@ -259,19 +264,19 @@ class Task(abc.ABC):
 
     @on_failure.setter
     def on_failure(self, value):
+        callback_check(value, self._available_callback_kwargs)
         self._on_failure = value
 
     def _run_on_failure(self):
         if self.on_failure:
-            available = {'task': self, 'client': self.client}
-            kwargs = callback_check(self.on_failure, available)
+            kwargs = callback_check(self.on_failure,
+                                    self._available_callback_kwargs)
             try:
                 self.on_failure(**kwargs)
-            except Exception as e:
-                # 'Exception when running on_finish '
-                                     # 'for task {}: {}'.format(self, e)
-                self._logger.exception('Error executing on_failure '
-                                       'callback')
+            except Exception:
+                tr = traceback.format_exc()
+                warnings.warn('Exception when running on_failure '
+                              'for task "{}". {}'.format(self.name, tr))
 
     @property
     def on_render(self):
@@ -279,7 +284,19 @@ class Task(abc.ABC):
 
     @on_render.setter
     def on_render(self, value):
+        callback_check(value, self._available_callback_kwargs)
         self._on_render = value
+
+    def _run_on_render(self):
+        if self.on_render:
+            kwargs = callback_check(self.on_render,
+                                    self._available_callback_kwargs)
+            try:
+                self.on_render(**kwargs)
+            except Exception:
+                tr = traceback.format_exc()
+                warnings.warn('Exception when running on_render '
+                              'for task {}. {}'.format(self.name, tr))
 
     @property
     def exec_status(self):
@@ -295,6 +312,8 @@ class Task(abc.ABC):
             self._run_on_finish()
         elif value == TaskStatus.Errored:
             self._run_on_failure()
+        elif value == TaskStatus.WaitingExecution:
+            self._run_on_render()
 
     def build(self, force=False):
         """Run the task if needed by checking its dependencies
@@ -422,20 +441,12 @@ class Task(abc.ABC):
                 else:
                     self.source.render(self.params)
         except Exception as e:
+            self.exec_status = TaskStatus.ErroredRender
             raise type(e)('Error rendering code from Task "{}", '
                           ' check the full traceback above for details'
                           .format(repr(self), self.params)) from e
-
-        # abstract this, we have the same code for this and the other hooks
-        if self.on_render:
-            try:
-                if 'client' in inspect.getfullargspec(self.on_render).args:
-                    self.on_render(self, client=self.client)
-                else:
-                    self.on_render(self)
-            except Exception as e:
-                raise TaskBuildError('Exception when running on_render '
-                                     'for task {}: {}'.format(self, e)) from e
+        else:
+            self.exec_status = TaskStatus.WaitingExecution
 
     def set_upstream(self, other):
         self.dag._add_edge(other, self)
