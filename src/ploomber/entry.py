@@ -10,11 +10,9 @@ import sys
 import importlib
 import argparse
 import inspect
+from collections.abc import Mapping
 
 from numpydoc.docscrape import NumpyDocString
-
-# TODO: move this here
-from ploomber.env.EnvDict import flatten_dict
 
 
 # TODO: what to do if numpydoc is not installed? required it? fail silently?
@@ -73,7 +71,7 @@ def main():
                                  '"{}", make sure such function exists'
                                  .format(mod, name)) from e
 
-        flat_env_dict = flatten_dict(entry._env_dict)
+        flat_env_dict = flatten_dict(entry._env_dict._data)
 
         doc = parse_doc(entry.__doc__)
 
@@ -116,6 +114,21 @@ def main():
         # call the function, have an aux function to get those then another
         # to execute, test using the first one
         print(getattr(entry(**{**kwargs, **replaced}), args.action)())
+
+
+def flatten_dict(d, prefix=''):
+    """
+    Convert a nested dict: {'a': {'b': 1}} -> {'a__b': 1}
+    """
+    out = {}
+
+    for k, v in d.items():
+        if isinstance(v, Mapping):
+            out = {**out, **flatten_dict(v, prefix=prefix + k + '__')}
+        else:
+            out[prefix+k] = v
+
+    return out
 
 
 if __name__ == '__main__':

@@ -268,19 +268,3 @@ def _get_name(path_to_env):
         raise err
 
     return name
-
-
-# TODO: move to entry points module
-def flatten_dict(d, prefix=''):
-    """
-    Convert a nested dict: {'a': {'b': 1}} -> {'a__b': 1}
-    """
-    out = {}
-
-    for k, v in d.items():
-        if isinstance(v, Mapping):
-            out = {**out, **flatten_dict(v, prefix=prefix + k + '__')}
-        else:
-            out[prefix+k] = v
-
-    return out
