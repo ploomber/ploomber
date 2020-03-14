@@ -5,7 +5,6 @@ DAG executors
 import traceback
 import logging
 
-import networkx as nx
 from tqdm.auto import tqdm
 from ploomber.Table import BuildReport
 from ploomber.executors.Executor import Executor
@@ -41,16 +40,12 @@ class Serial(Executor):
 
         status_all = []
 
-        g = dag._to_graph()
-        pbar = tqdm(nx.algorithms.topological_sort(g), total=len(g))
+        pbar = tqdm(dag._topologically_sorted_iter(skip_aborted=True),
+                    total=len(dag))
 
         exceptions = ExceptionCollector()
 
         for t in pbar:
-            # skip aborted tasks
-            if t.exec_status == TaskStatus.Aborted:
-                continue
-
             pbar.set_description('Building task "{}"'.format(t.name))
 
             try:

@@ -537,6 +537,12 @@ class DAG(collections.abc.Mapping):
     def _short_repr(self):
         return repr(self)
 
+    def _topologically_sorted_iter(self, skip_aborted=True):
+        g = self._to_graph()
+        for task in nx.algorithms.topological_sort(g):
+            if task.exec_status != TaskStatus.Aborted and skip_aborted:
+                yield task
+
     # IPython integration
     # https://ipython.readthedocs.io/en/stable/config/integrating.html
 
