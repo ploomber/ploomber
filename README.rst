@@ -23,7 +23,7 @@ At a glance
 * Test-driven. Use `on_finish` hooks to **check data assumptions**, verify that an output data frame has no NAs, an "age" column has only positive numbers, etc
 * SQL-friendly. **SQL scripts can be parametrized** for simplicity and consistency using jinja2
 * Notebook-friendly. **Generate reports** in Jupyter notebook format (or HTML) by executing parametrized notebooks using papermill
-* Switch configurations. Automatically **switch pipeline configuration based on the current environment**, for example, make all pipeline output files go to `/data/project/{{user}}`, where `{{user}}` will be automatically replaced to the user logged-in
+* Switch configurations. Automatically **switch pipeline configuration based on the current environment**, for example, make all pipeline output files go to `/data/project/{{user}}`, where `{{user}}` will be automatically replaced depending on the current user
 * Reduce boilerplate code by using the **Tasks library**, for example, dump SQL tables or upload a local file to a database
 
 
