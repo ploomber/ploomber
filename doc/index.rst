@@ -1,14 +1,6 @@
 .. include:: ../README.rst
 
 
-Jump to...
-==========
-
-* :ref:`Features`
-* :ref:`Examples`
-* :ref:`API Summary`
-
-
 .. include:: features.rst
 
 ..
@@ -19,8 +11,6 @@ Jump to...
 .. include:: auto_examples/index.rst
 
 
-.. include:: api-summary.rst
-
 
 Table of contents
 =================
@@ -28,8 +18,8 @@ Table of contents
 .. toctree::
    :maxdepth: 3
 
-   api
    guide_index
+   api_index
    changelog
 
 

@@ -52,6 +52,10 @@ class Source(abc.ABC):
         self.value.render(params)
         self._post_render_validation(self.value.value, params)
 
+    @property
+    def loc(self):
+        return self.value.path
+
     def __str__(self):
         return str(self.value)
 
@@ -69,11 +73,6 @@ class Source(abc.ABC):
     @property
     @abc.abstractmethod
     def language(self):
-        pass
-
-    @property
-    @abc.abstractmethod
-    def loc(self):
         pass
 
     # optional validation
@@ -102,10 +101,6 @@ class SQLSourceMixin:
     @property
     def language(self):
         return 'sql'
-
-    @property
-    def loc(self):
-        return None
 
 
 class SQLScriptSource(SQLSourceMixin, Source):
@@ -262,10 +257,6 @@ class GenericSource(Source):
     @property
     def doc_short(self):
         return ''
-
-    @property
-    def loc(self):
-        return self.value.path
 
     @property
     def language(self):

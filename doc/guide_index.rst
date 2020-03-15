@@ -6,3 +6,8 @@ User Guide
 
     guide/core
     guide/env
+    guide/static
+    guide/hooks
+    guide/structuring
+    guide/versioning
+    guide/extending

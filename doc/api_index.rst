@@ -1,5 +1,5 @@
-API Summary
-===========
+API
+===
 
 DAG
 ---
@@ -69,8 +69,8 @@ Env
     Env
 
 
-Utilities
----------
+SourceLoader
+------------
 
 .. currentmodule:: ploomber
 

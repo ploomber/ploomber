@@ -1,0 +1,4 @@
+DAG
+---
+
+.. autoclass:: ploomber.DAG
