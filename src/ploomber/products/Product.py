@@ -12,8 +12,7 @@ from math import ceil
 
 class Product(abc.ABC):
     """
-    A product is a persistent triggered by a Task, this is an abstract
-    class for all products
+    Abstract class for all Products
     """
 
     def __init__(self, identifier):

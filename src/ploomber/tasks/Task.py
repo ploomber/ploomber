@@ -46,7 +46,7 @@ import humanize
 
 class Task(abc.ABC):
     """
-    A task represents a unit of work.
+    Abstract class for all Tasks
 
     Parameters
     ----------
