@@ -1,9 +1,14 @@
 CHANGELOG
 =========
 
-0.2.2dev
+0.3.1dev
 --------
+
 * DAG parallel executor
+* [Experimenta] Interact with pipelines from the command line (entry module)
+
+0.3dev
+------
 * DAG rendering and build now continue until no more tasks can render/build (instead of failing at the first exception)
 * New @with_env and @load_env decorators for managing environments
 * Env expansion ({{user}} expands to the current, also {{git}} and {{version}} available)
@@ -11,6 +16,7 @@ CHANGELOG
 * New Task.on_render hook
 * Bug fixes
 * A lot of new tests
+* Now compatible with Python 3.5 and higher
 
 0.2.1 (2020-02-20)
 -------------------
