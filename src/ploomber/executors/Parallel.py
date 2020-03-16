@@ -99,7 +99,7 @@ class Parallel(Executor):
                 if isinstance(result, ExceptionResult):
                     task.exec_status = TaskStatus.Errored
                 else:
-                    task.exec_status = TaskStatus.Executed
+                    task.exec_status = result
 
             done.append(task)
 
@@ -117,20 +117,19 @@ class Parallel(Executor):
                     raise StopIteration
 
             # iterate over tasks to find which is ready for execution
-            for task_name in dag:
+            for task in dag.values():
                 # ignore tasks that are already started, I should probably add an
                 # executing status but that cannot exist in the task itself,
                 # maybe in the manaer?
-                if (dag[task_name].exec_status == TaskStatus.WaitingExecution
-                        and dag[task_name] not in started):
-                    t = dag[task_name]
-                    return t
+                if (task.exec_status == TaskStatus.WaitingExecution
+                        and task not in started):
+                    return task
                 # there might be some up-to-date tasks, add them
 
-            # if all tasks are done, stop
             set_done = set([t.name for t in done])
 
             if not self._i % 1000:
+                print('done ', set_done, 'set all', set_all)
                 self._logger.debug('Finished tasks so far: %s', set_done)
                 self._logger.debug('Remaining tasks: %s',
                                    set_all - set_done)
@@ -193,4 +192,4 @@ def get_future_result(future, future_mapping):
     try:
         return future.result()
     except BrokenProcessPool as e:
-        raise BrokenProcessPool('SAD THIGNS {}'.format(future_mapping[future])) from e
+        raise BrokenProcessPool('Broken pool {}'.format(future_mapping[future])) from e

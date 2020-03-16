@@ -590,8 +590,10 @@ class Task(abc.ABC):
                                                        TaskStatus.Aborted)
                                                    for t
                                                    in task.upstream.values()])
-            all_upstream_executed = all([t.exec_status == TaskStatus.Executed
-                                         for t in task.upstream.values()])
+            all_upstream_done = all([t.exec_status
+                                     in {TaskStatus.Executed,
+                                         TaskStatus.Skipped}
+                                     for t in task.upstream.values()])
 
             if any_upstream_errored_or_aborted:
                 task.exec_status = TaskStatus.Aborted
@@ -599,7 +601,7 @@ class Task(abc.ABC):
                                         TaskStatus.AbortedRender)
                       for t in task.upstream.values()]):
                 task.exec_status = TaskStatus.AbortedRender
-            elif all_upstream_executed:
+            elif all_upstream_done:
                 task.exec_status = TaskStatus.WaitingExecution
 
         for t in self._get_downstream():

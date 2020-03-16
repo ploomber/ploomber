@@ -17,6 +17,8 @@ from ploomber.exceptions import DAGBuildError, DAGRenderError
 # TODO: test forced execution, check it actually ran two times
 # TODO: once a successful dag build happens, check task.should_execute
 # TODO: check skipped status
+# TODO: test once a task is skipped, downstream tasks go from WaitingUpstream
+# to WaitingExecution
 
 
 class FailedTask(Exception):
