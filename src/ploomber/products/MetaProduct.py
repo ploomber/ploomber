@@ -142,6 +142,12 @@ class MetaProduct:
         # are supported such as NotebookRunner that depends on papermill
         return self.products.to_json_serializable()
 
+    def _save_metadata(self, source_code):
+        from datetime import datetime
+        self.timestamp = datetime.now().timestamp()
+        self.stored_source_code = source_code
+        self.save_metadata(self.metadata)
+
     def save_metadata(self, metadata):
         # TODO: clean this up
         metadata = list(metadata.values())[0]

@@ -66,6 +66,11 @@ class Product(abc.ABC):
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
 
+    def _save_metadata(self, source_code):
+        self.timestamp = datetime.now().timestamp()
+        self.stored_source_code = source_code
+        self.save_metadata(self.metadata)
+
     @property
     def timestamp(self):
         return self.metadata.get('timestamp')
