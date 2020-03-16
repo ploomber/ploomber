@@ -179,8 +179,13 @@ class Product(abc.ABC):
 
         return self._outdated_code_dependency_status
 
-    def _clear_cached_outdated_status(self):
-        self.logger.debug('Clearing "%s" outdated status', self.name)
+    def _clear_cached_status(self):
+        # These flags keep a cache of the Product's outdated status, they
+        # are computed using the Product's metadata, hence they will only
+        # change when the metadata changes. Metadata changes in three
+        # situations: 1) at startup (loaded from disk), 2) after build
+        # (metadata is updated and then saved to disk) and 3) Forced load
+        # (if we force loading, currently not implemented).
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
 

@@ -328,7 +328,7 @@ class Task(abc.ABC):
         elif value == TaskStatus.Errored:
             self._run_on_failure()
 
-    def build(self, force=False, self_report_build_status=True):
+    def build(self, force=False, within_dag=False):
         """Run the task if needed by checking its dependencies
 
         Returns
@@ -336,7 +336,9 @@ class Task(abc.ABC):
         dict
             A dictionary with keys 'run' and 'elapsed'
         """
-        if self_report_build_status:
+        if within_dag:
+            return self._build(force)
+        else:
             try:
                 res = self._build(force)
             except Exception as e:
@@ -345,10 +347,9 @@ class Task(abc.ABC):
                               .format(self.name)) from e
 
             self.exec_status = TaskStatus.Executed
-            return res
+            self.product._clear_cached_status()
 
-        else:
-            return self._build(force)
+            return res
 
     def _build(self, force):
         # cannot keep running, we depend on the render step to get all the

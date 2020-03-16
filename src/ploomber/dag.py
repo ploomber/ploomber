@@ -55,15 +55,16 @@ class DAG(collections.abc.Mapping):
         ploomber.executors.Parallel), is a string is passed ('serial'
         or 'parallel') the corresponding executor is initialized with default
         parameters
-    cache_product_metadata : bool, optional
-        Whether to keep the a copy of the product metadata or not, if True
-        it will just get the status once, if False, it will get it on every
-        call that needs it (such as build, plot, status)
     cache_rendered_status : bool, optional
         If True, once the DAG is rendered, subsequent calls to render will
         not do anything (rendering is implicitely called in build, plot,
         status), otherwise it will always render again
     """
+    # cache_product_metadata : bool, optional
+    #     Whether to keep the a copy of the product metadata or not, if True
+    #     it will just get the status once, if False, it will get it on every
+    #     call that needs it (such as build, plot, status)
+
     # Rendering is cheap - always do it so we have a change to update sources
     # if they changed.
     # Getting product status is expensive if have to go over the network
@@ -235,20 +236,22 @@ class DAG(collections.abc.Mapping):
             # calling render will update status to DAGStatus.WaitingExecution
             self.render()
 
-            if not self._cache_product_metadata:
-                self._clear_cached_outdated_status()
+            # self._clear_cached_status()
 
             self._logger.info('Building DAG %s', self)
 
             try:
                 res = self._executor(dag=self, force=force,
-                                     self_report_build_status=False)
+                                     within_dag=True)
             except Exception as e:
                 self._exec_status = DAGStatus.Errored
                 e_new = DAGBuildError('Failed to build DAG {}'.format(self))
                 raise e_new from e
             else:
                 self._exec_status = DAGStatus.Executed
+            finally:
+                # always clear out status
+                self._clear_cached_status()
 
             return res
 
@@ -258,8 +261,7 @@ class DAG(collections.abc.Mapping):
         # NOTE: doing this should not change self._exec_status in any way
         # but we are currently modifying self, have to fix this
 
-        if not self._cache_product_metadata:
-            self._clear_cached_outdated_status()
+        # self._clear_cached_status()
 
         lineage = self[target]._lineage
         dag = copy(self)
@@ -275,8 +277,7 @@ class DAG(collections.abc.Mapping):
     def status(self, **kwargs):
         """Returns a table with tasks status
         """
-        if not self._cache_product_metadata:
-            self._clear_cached_outdated_status()
+        # self._clear_cached_status()
 
         self.render()
 
@@ -292,8 +293,7 @@ class DAG(collections.abc.Mapping):
         include_plot: bool, optional
             If True, the path to a PNG file with the plot in "_plot"
         """
-        if not self._cache_product_metadata:
-            self._clear_cached_outdated_status()
+        # self._clear_cached_status()
 
         d = {name: self._G.nodes[name]['task'].to_dict()
              for name in self._G}
@@ -342,8 +342,7 @@ class DAG(collections.abc.Mapping):
         else:
             path = output
 
-        if not self._cache_product_metadata:
-            self._clear_cached_outdated_status()
+        # self._clear_cached_status()
 
         # attributes docs:
         # https://graphviz.gitlab.io/_pages/doc/info/attrs.html
@@ -492,11 +491,12 @@ class DAG(collections.abc.Mapping):
         upstream = self._G.predecessors(task_name)
         return {u: self._G.nodes[u]['task'] for u in upstream}
 
-    def _clear_cached_outdated_status(self):
-        self._logger.debug('Clearing outdated status...')
-
+    def _clear_cached_status(self):
+        self._logger.debug('Clearing product status')
+        # clearing out this way is only useful after building, but not
+        # if the metadata changed since it wont be reloaded
         for task in self.values():
-            task.product._clear_cached_outdated_status()
+            task.product._clear_cached_status()
 
     def __getitem__(self, key):
         return self._G.nodes[key]['task']

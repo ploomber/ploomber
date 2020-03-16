@@ -28,6 +28,25 @@ def touch(product):
     Path(str(product)).touch()
 
 
+def test_task_build_clears_cached_status(tmp_directory):
+    dag = DAG()
+    t = PythonCallable(touch, File('my_file'), dag)
+    t.render()
+
+    assert t.product._outdated_data_dependencies_status is None
+    assert t.product._outdated_code_dependency_status is None
+
+    t.status()
+
+    assert t.product._outdated_data_dependencies_status is not None
+    assert t.product._outdated_code_dependency_status is not None
+
+    t.build()
+
+    assert t.product._outdated_data_dependencies_status is None
+    assert t.product._outdated_code_dependency_status is None
+
+
 def test_task_can_infer_name_from_source():
     dag = DAG()
     t = PythonCallable(my_fn, File('/path/to/{{name}}'), dag,
