@@ -14,6 +14,12 @@ from ploomber.env.expand import EnvironmentExpander
 from ploomber import repo
 
 
+def test_env_repr_and_str(cleanup_env):
+    env = Env.start({'a': 1})
+    assert repr(env) == "Env({'a': 1})"
+    assert str(env) == "{'a': 1}"
+
+
 def test_load_env_with_name(tmp_directory, cleanup_env):
     Path('env.some_name.yaml').write_text(yaml.dump({'a': 1}))
     Env.start('env.some_name.yaml')

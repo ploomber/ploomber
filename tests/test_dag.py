@@ -12,8 +12,11 @@ from ploomber.exceptions import DAGBuildError, DAGRenderError
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
 # is done by the executor
-# TODO: check build successful execution does not run anything
+# TODO: check build successful execution does not run anything if tried a
+# # second time
 # TODO: test forced execution, check it actually ran two times
+# TODO: once a successful dag build happens, check task.should_execute
+# TODO: check skipped status
 
 
 class FailedTask(Exception):
@@ -276,13 +279,49 @@ def test_executor_keeps_running_until_no_more_tasks_can_run(executor,
     assert Path('t_ok').exists()
 
 
-def test_status_on_render_fail():
+def test_status_on_render_source_fail():
     def make():
         dag = DAG()
         SQLDump('SELECT * FROM my_table', File('ok'), dag, name='t1',
                 client=object())
         t2 = SQLDump('SELECT * FROM {{table}}', File('a_file'), dag, name='t2',
                      client=object())
+        t3 = SQLDump('SELECT * FROM another', File('another_file'), dag,
+                     name='t3',
+                     client=object())
+        t4 = SQLDump('SELECT * FROM something', File('yet_another'), dag,
+                     name='t4', client=object())
+        SQLDump('SELECT * FROM my_table_2', File('ok_2'), dag,
+                name='t5', client=object())
+        t2 >> t3 >> t4
+        return dag
+
+    dag = make()
+
+    with pytest.raises(DAGRenderError):
+        dag.render()
+
+    assert dag._exec_status == DAGStatus.ErroredRender
+    assert dag['t1'].exec_status == TaskStatus.WaitingExecution
+    assert dag['t2'].exec_status == TaskStatus.ErroredRender
+    assert dag['t3'].exec_status == TaskStatus.AbortedRender
+    assert dag['t4'].exec_status == TaskStatus.AbortedRender
+    assert dag['t5'].exec_status == TaskStatus.WaitingExecution
+
+    # building directly should also raise render error
+    dag = make()
+
+    with pytest.raises(DAGRenderError):
+        dag.build()
+
+
+def test_status_on_product_source_fail():
+    def make():
+        dag = DAG()
+        SQLDump('SELECT * FROM my_table', File('ok'), dag, name='t1',
+                client=object())
+        t2 = SQLDump('SELECT * FROM my_table', File('{{unknown}}'), dag,
+                     name='t2', client=object())
         t3 = SQLDump('SELECT * FROM another', File('another_file'), dag,
                      name='t3',
                      client=object())
@@ -363,3 +402,8 @@ def test_sucessful_execution(executor, tmp_directory):
     assert Path('file').exists()
 
     assert set(t.exec_status for t in dag.values()) == {TaskStatus.Executed}
+    assert set(t.should_execute() for t in dag.values()) == {False}
+
+    dag.build()
+
+    assert set(t.exec_status for t in dag.values()) == {TaskStatus.Skipped}

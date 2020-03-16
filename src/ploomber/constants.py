@@ -23,6 +23,7 @@ class TaskStatus(Enum):
     AbortedRender = 'aborted_render'
     # succesfully executed
     Executed = 'executed'
+    Skipped = 'skipped'
     # crashed
     Errored = 'errored'
     # an upstream dependency crashed

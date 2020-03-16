@@ -56,11 +56,12 @@ class Serial(Executor):
             try:
                 if (callable(t.source.value)
                         and self._execute_callables_in_subprocess):
-                    execute_in_subprocess(t, kwargs)
+                    new_status = execute_in_subprocess(t, kwargs)
                 else:
-                    t.build(**kwargs)
+                    new_status = t.build(**kwargs)
             except Exception as e:
                 t.exec_status = TaskStatus.Errored
+                new_status = TaskStatus.Errored
                 tr = traceback.format_exc()
                 exceptions.append(traceback_str=tr, task_str=repr(t))
 
@@ -70,7 +71,7 @@ class Serial(Executor):
                     dag._on_task_failure(t)
             else:
                 try:
-                    t.exec_status = TaskStatus.Executed
+                    t.exec_status = new_status
                 except Exception as e:
                     tr = traceback.format_exc()
                     exceptions.append(traceback_str=tr, task_str=repr(t))
@@ -79,11 +80,11 @@ class Serial(Executor):
                     dag._on_task_finish(t)
             finally:
                 now = datetime.now()
+                did_execute = new_status == TaskStatus.Executed
                 elapsed = (now - then).total_seconds()
-                did_exec = t.exec_status == TaskStatus.Executed
                 report = {'name': t.name,
-                          'Ran?': did_exec,
-                          'Elapsed (s)': elapsed if did_exec else 0}
+                          'Ran?': did_execute,
+                          'Elapsed (s)': elapsed if did_execute else 0}
                 task_reports.append(Row(report))
 
         if exceptions:
@@ -132,6 +133,7 @@ def execute_in_subprocess(task, build_kwargs):
     # raised an exception then that exception will be reraised by
     # get().
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.AsyncResult.get
-    res.get()
+    result = res.get()
     p.close()
     p.join()
+    return result

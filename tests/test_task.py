@@ -35,6 +35,23 @@ def test_task_can_infer_name_from_source():
     assert t.name == 'my_fn'
 
 
+def test_clear_product_cache_status():
+    import logging
+    logging.basicConfig(level='DEBUG')
+
+    dag = DAG()
+    t = PythonCallable(touch, File('some_file'), dag)
+
+    t.product.metadata
+    t.exec_status
+
+    dag.status()
+
+    dag.build()
+
+    assert t.name == 'my_fn2'
+
+
 def test_task_raises_error_if_name_cannot_be_infered():
     dag = DAG()
 

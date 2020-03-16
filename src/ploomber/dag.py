@@ -55,11 +55,10 @@ class DAG(collections.abc.Mapping):
         ploomber.executors.Parallel), is a string is passed ('serial'
         or 'parallel') the corresponding executor is initialized with default
         parameters
-    cache_product_status : bool, optional
-        Whether to keep the a copy of the product status or not, if True
+    cache_product_metadata : bool, optional
+        Whether to keep the a copy of the product metadata or not, if True
         it will just get the status once, if False, it will get it on every
         call that needs it (such as build, plot, status)
-
     cache_rendered_status : bool, optional
         If True, once the DAG is rendered, subsequent calls to render will
         not do anything (rendering is implicitely called in build, plot,
@@ -74,7 +73,7 @@ class DAG(collections.abc.Mapping):
     def __init__(self, name=None, clients=None, differ=None,
                  on_task_finish=None, on_task_failure=None,
                  executor='serial',
-                 cache_product_status=True,
+                 cache_product_metadata=True,
                  cache_rendered_status=False):
         self._G = nx.DiGraph()
 
@@ -98,7 +97,7 @@ class DAG(collections.abc.Mapping):
 
         self._on_task_finish = on_task_finish
         self._on_task_failure = on_task_failure
-        self._cache_product_status = cache_product_status
+        self._cache_product_metadata = cache_product_metadata
         self._cache_rendered_status = cache_rendered_status
         self._did_render = False
 
@@ -117,29 +116,32 @@ class DAG(collections.abc.Mapping):
         # is an error in either the Task or the Executor
 
         if value == DAGStatus.WaitingRender:
-            self.check_tasks_have_allowed_status({TaskStatus.WaitingRender})
+            self.check_tasks_have_allowed_status({TaskStatus.WaitingRender},
+                                                 value)
 
         # render errored
         elif value == DAGStatus.ErroredRender:
             allowed = {TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream,
                        TaskStatus.ErroredRender, TaskStatus.AbortedRender}
-            self.check_tasks_have_allowed_status(allowed)
+            self.check_tasks_have_allowed_status(allowed, value)
 
         # rendering ok, waiting execution
         elif value == DAGStatus.WaitingExecution:
             exec_values = set(task.exec_status for task in self.values())
             allowed = {TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream}
-            self.check_tasks_have_allowed_status(allowed)
+            self.check_tasks_have_allowed_status(allowed, value)
 
         # attempted execution but failed
         elif value == DAGStatus.Executed:
             exec_values = set(task.exec_status for task in self.values())
             # check len(self) to prevent this from failing on an empty DAG
-            if not exec_values == {TaskStatus.Executed} and len(self):
+            if not exec_values <= {TaskStatus.Executed,
+                                   TaskStatus.Skipped} and len(self):
                 raise RuntimeError('Trying to set DAG status to '
                                    'DAGStatus.Executed but executor '
                                    'returned tasks whose status is not '
-                                   'TaskStatus.Executed, returned '
+                                   'TaskStatus.Executed nor '
+                                   'TaskStatus.Skipped, returned '
                                    'status: {}'.format(exec_values))
         elif value == DAGStatus.Errored:
             # no value validation since this state is also set then the
@@ -151,14 +153,15 @@ class DAG(collections.abc.Mapping):
 
         self.__exec_status = value
 
-    def check_tasks_have_allowed_status(self, allowed):
+    def check_tasks_have_allowed_status(self, allowed, new_status):
         exec_values = set(task.exec_status for task in self.values())
         if not exec_values <= allowed:
             raise RuntimeError('Trying to set DAG status to '
-                               'DAGStatus.Errored but executor '
+                               '{} but executor '
                                'returned tasks whose status is not in a '
                                'subet of {}. Returned '
-                               'status: {}'.format(allowed, exec_values))
+                               'status: {}'.format(new_status, allowed,
+                                                   exec_values))
 
     @property
     def product(self):
@@ -232,7 +235,7 @@ class DAG(collections.abc.Mapping):
             # calling render will update status to DAGStatus.WaitingExecution
             self.render()
 
-            if not self._cache_product_status:
+            if not self._cache_product_metadata:
                 self._clear_cached_outdated_status()
 
             self._logger.info('Building DAG %s', self)
@@ -255,7 +258,7 @@ class DAG(collections.abc.Mapping):
         # NOTE: doing this should not change self._exec_status in any way
         # but we are currently modifying self, have to fix this
 
-        if not self._cache_product_status:
+        if not self._cache_product_metadata:
             self._clear_cached_outdated_status()
 
         lineage = self[target]._lineage
@@ -272,7 +275,7 @@ class DAG(collections.abc.Mapping):
     def status(self, **kwargs):
         """Returns a table with tasks status
         """
-        if not self._cache_product_status:
+        if not self._cache_product_metadata:
             self._clear_cached_outdated_status()
 
         self.render()
@@ -289,7 +292,7 @@ class DAG(collections.abc.Mapping):
         include_plot: bool, optional
             If True, the path to a PNG file with the plot in "_plot"
         """
-        if not self._cache_product_status:
+        if not self._cache_product_metadata:
             self._clear_cached_outdated_status()
 
         d = {name: self._G.nodes[name]['task'].to_dict()
@@ -339,7 +342,7 @@ class DAG(collections.abc.Mapping):
         else:
             path = output
 
-        if not self._cache_product_status:
+        if not self._cache_product_metadata:
             self._clear_cached_outdated_status()
 
         # attributes docs:
@@ -490,6 +493,8 @@ class DAG(collections.abc.Mapping):
         return {u: self._G.nodes[u]['task'] for u in upstream}
 
     def _clear_cached_outdated_status(self):
+        self._logger.debug('Clearing outdated status...')
+
         for task in self.values():
             task.product._clear_cached_outdated_status()
 

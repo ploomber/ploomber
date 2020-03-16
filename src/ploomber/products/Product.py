@@ -85,6 +85,9 @@ class Product(abc.ABC):
     def _outdated_data_dependencies(self):
 
         if self._outdated_data_dependencies_status is not None:
+            self.logger.debug(('Returning cached data dependencies status. '
+                               'Outdated? %s'),
+                              self._outdated_data_dependencies_status)
             return self._outdated_data_dependencies_status
 
         def is_outdated(up_prod):
@@ -100,12 +103,20 @@ class Product(abc.ABC):
 
         outdated = any([is_outdated(up.product) for up
                         in self.task.upstream.values()])
+
         self._outdated_data_dependencies_status = outdated
+
+        self.logger.debug(('Finished checking data dependencies status. '
+                           'Outdated? %s'),
+                          self._outdated_data_dependencies_status)
 
         return self._outdated_data_dependencies_status
 
     def _outdated_code_dependency(self):
         if self._outdated_code_dependency_status is not None:
+            self.logger.debug(('Returning cached code dependencies status. '
+                               'Outdated? %s'),
+                              self._outdated_code_dependency_status)
             return self._outdated_code_dependency_status
 
         outdated = self.task.dag.differ.code_is_different(
@@ -115,9 +126,14 @@ class Product(abc.ABC):
 
         self._outdated_code_dependency_status = outdated
 
+        self.logger.debug(('Finished checking code dependencies status. '
+                           'Outdated? %s'),
+                          self._outdated_code_dependency_status)
+
         return self._outdated_code_dependency_status
 
     def _clear_cached_outdated_status(self):
+        self.logger.debug('Clearing "%s" outdated status', self.name)
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
 

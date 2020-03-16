@@ -308,6 +308,9 @@ class Task(abc.ABC):
 
     @exec_status.setter
     def exec_status(self, value):
+        if value not in list(TaskStatus):
+            raise ValueError('Setting task.exec_status to an unknown '
+                             'value: %s', value)
 
         self._logger.debug('Setting "%s" status to %s', self.name, value)
         self._exec_status = value
@@ -364,51 +367,12 @@ class Task(abc.ABC):
         # NOTE: should i fetch metadata here? I need to make sure I have
         # the latest before building
 
-        self._logger.info('-----\nChecking %s....', repr(self))
-
-        # do not run unless some of the conditions below match...
-        run = False
-        elapsed = 0
-
         if force:
             self._logger.info('Forcing run "%s", skipping checks...',
                               self.name)
             run = True
         else:
-            # not forcing, need to check dependencies...
-            p_exists = self.product.exists()
-
-            # check dependencies only if the product exists and there is
-            # metadata
-            if p_exists and self.product.metadata is not None:
-
-                outdated_data_deps = self.product._outdated_data_dependencies()
-                outdated_code_dep = self.product._outdated_code_dependency()
-
-                self._logger.info('Checking dependencies...')
-
-                if outdated_data_deps:
-                    run = True
-                    self._logger.info('Outdated data deps...')
-                else:
-                    self._logger.info('Up-to-date data deps...')
-
-                if outdated_code_dep:
-                    run = True
-                    self._logger.info('Outdated code dep...')
-                else:
-                    self._logger.info('Up-to-date code dep...')
-            else:
-                run = True
-
-                # just log why it will run
-                if not p_exists:
-                    self._logger.info('Product does not exist...')
-
-                if self.product.metadata is None:
-                    self._logger.info('Product metadata is None...')
-
-                self._logger.info('Running...')
+            run = self.should_execute()
 
         if run:
             self._logger.info('Starting execution: %s', repr(self))
@@ -433,12 +397,57 @@ class Task(abc.ABC):
                                      '"{}" does not exist yet '
                                      '(task.product.exist() returned False)'
                                      .format(self, self.product))
+
+        # NOTE: return the TaskReport here?
+        return TaskStatus.Executed if run else TaskStatus.Skipped
+
+    def should_execute(self):
+        """
+        Given current conditions, determine if calling Task.build() should
+        actually run the Task.
+
+        Returns
+        -------
+        bool
+            True if the Task should execute, False otherwise
+        """
+        run = False
+
+        self._logger.info('Checking status for task "%s"', self.name)
+
+        # check product...
+        p_exists = self.product.exists()
+
+        # check dependencies only if the product exists and there is metadata
+        if p_exists and self.product.metadata is not None:
+
+            outdated_data_deps = self.product._outdated_data_dependencies()
+            outdated_code_dep = self.product._outdated_code_dependency()
+
+            if outdated_data_deps:
+                run = True
+                self._logger.info('Outdated data deps...')
+            else:
+                self._logger.info('Up-to-date data deps...')
+
+            if outdated_code_dep:
+                run = True
+                self._logger.info('Outdated code dep...')
+            else:
+                self._logger.info('Up-to-date code dep...')
         else:
-            self._logger.info('No need to run %s', self.name)
+            run = True
 
-        self._logger.info('-----\n')
+            # just log why it will run
+            if not p_exists:
+                self._logger.info('Product does not exist...')
 
-        return self
+            if self.product.metadata is None:
+                self._logger.info('Product metadata is None...')
+
+        self._logger.info('Should run? %s', run)
+
+        return run
 
     def render(self):
         """
@@ -448,7 +457,13 @@ class Task(abc.ABC):
         """
         self._logger.debug('Calling render on task %s', self.name)
 
-        self._render_product()
+        try:
+            self._render_product()
+        except Exception as e:
+            self.exec_status = TaskStatus.ErroredRender
+            raise type(e)('Error rendering product from Task "{}", '
+                          ' check the full traceback above for details'
+                          .format(repr(self), self.params)) from e
 
         # Params are read-only for users, but we have to add the product
         # so we do it directly to the dictionary
@@ -466,14 +481,14 @@ class Task(abc.ABC):
                     self.source.render(self.params)
         except Exception as e:
             self.exec_status = TaskStatus.ErroredRender
-            raise type(e)('Error rendering code from Task "{}", '
+            raise type(e)('Error rendering source from Task "{}", '
                           ' check the full traceback above for details'
                           .format(repr(self), self.params)) from e
-        else:
-            self.exec_status = (TaskStatus.WaitingExecution
-                                if not self.upstream
-                                else TaskStatus.WaitingUpstream)
-            self._run_on_render()
+
+        self.exec_status = (TaskStatus.WaitingExecution
+                            if not self.upstream
+                            else TaskStatus.WaitingUpstream)
+        self._run_on_render()
 
     def set_upstream(self, other):
         self.dag._add_edge(other, self)

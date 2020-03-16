@@ -67,6 +67,12 @@ class EnvDict(Mapping):
     def __len__(self):
         return len(self._data)
 
+    def __str__(self):
+        return str(self._data)
+
+    def __repr__(self):
+        return '{}({})'.format(type(self).__name__, str(self))
+
     def _replace_value(self, value, keys_all):
         keys_to_final_dict = keys_all[:-1]
         key_to_edit = keys_all[-1]
