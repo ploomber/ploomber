@@ -131,9 +131,9 @@ class MetaProduct:
         return any([p._outdated_code_dependency()
                     for p in self.products])
 
-    def _clear_cached_outdated_status(self):
+    def _clear_cached_status(self):
         for p in self.products:
-            p._clear_cached_outdated_status
+            p._clear_cached_status()
 
     def to_json_serializable(self):
         """Returns a JSON serializable version of this product
