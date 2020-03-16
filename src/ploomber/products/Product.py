@@ -58,13 +58,13 @@ class Product(abc.ABC):
             raise TypeError('_init_identifier must return a value, returned '
                             'None')
 
-        self.did_download_metadata = False
         self.task = None
         self.logger = logging.getLogger('{}.{}'.format(__name__,
                                                        type(self).__name__))
 
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
+        self._metadata = None
 
     def _save_metadata(self, source_code):
         self.timestamp = datetime.now().timestamp()
@@ -88,11 +88,29 @@ class Product(abc.ABC):
 
     @property
     def metadata(self):
-        if self.did_download_metadata:
+        # This method calls Product.fetch_metadata() (provided by subclasses),
+        # if some conditions are met, then it saves it in Product.metadata
+        if self._metadata is not None:
             return self._metadata
         else:
-            self._get_metadata()
-            self.did_download_metadata = True
+            metadata_empty = dict(timestamp=None, stored_source_code=None)
+
+            # if the product does not exist, return a metadata
+            # with None in the values
+            if not self.exists():
+                self._metadata = metadata_empty
+            else:
+                metadata = self.fetch_metadata()
+
+                if metadata is None:
+                    self._metadata = metadata_empty
+                else:
+                    # FIXME: we need to further validate this, need to check
+                    # that this is an instance of mapping, if yes, then
+                    # check keys [timestamp, stored_source_code], check
+                    # types and fill with None if any of the keys is missing
+                    self._metadata = metadata
+
             return self._metadata
 
     @task.setter
@@ -106,10 +124,6 @@ class Product(abc.ABC):
     @stored_source_code.setter
     def stored_source_code(self, value):
         self.metadata['stored_source_code'] = value
-
-    @metadata.setter
-    def metadata(self, value):
-        self._metadata = value
 
     def render(self, params, **kwargs):
         """
@@ -177,28 +191,6 @@ class Product(abc.ABC):
         self.logger.debug('Clearing "%s" outdated status', self.name)
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
-
-    def _get_metadata(self):
-        """
-        This method calls Product.fetch_metadata() (provided by subclasses),
-        if some conditions are met, then it saves it in Product.metadata
-        """
-        metadata_empty = dict(timestamp=None, stored_source_code=None)
-        # if the product does not exist, return a metadata
-        # with None in the values
-        if not self.exists():
-            self.metadata = metadata_empty
-        else:
-            metadata = self.fetch_metadata()
-
-            if metadata is None:
-                self.metadata = metadata_empty
-            else:
-                # FIXME: we need to further validate this, need to check
-                # that this is an instance of mapping, if yes, then
-                # check keys [timestamp, stored_source_code], check
-                # types and fill with None if any of the keys is missing
-                self.metadata = metadata
 
     def __str__(self):
         return str(self._identifier)
