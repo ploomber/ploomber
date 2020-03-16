@@ -59,6 +59,8 @@ class MetaProduct:
 
     @property
     def metadata(self):
+        # FIXME: return a single dictionary, all products should have the
+        # same metadata, no need to keep them all
         # this has to happen dynamically since it depends on
         # the tasks being rendered already
         return {p: p.metadata for p in self.products}
@@ -79,9 +81,10 @@ class MetaProduct:
                                   for p in self.products
                                   if p.stored_source_code is not None])
         if len(stored_source_code):
-            warnings.warn(f'Stored source codes for products {self.products} '
+            warnings.warn('Stored source codes for products {} '
                           'are different, but they are part of the same '
-                          'MetaProduct, returning stored_source_code as None')
+                          'MetaProduct, returning stored_source_code as None'
+                          .format(self.products))
             return None
         else:
             return list(stored_source_code)[0]
@@ -128,9 +131,9 @@ class MetaProduct:
         return any([p._outdated_code_dependency()
                     for p in self.products])
 
-    def _clear_cached_outdated_status(self):
+    def _clear_cached_status(self):
         for p in self.products:
-            p._clear_cached_outdated_status
+            p._clear_cached_status()
 
     def to_json_serializable(self):
         """Returns a JSON serializable version of this product
@@ -139,9 +142,17 @@ class MetaProduct:
         # are supported such as NotebookRunner that depends on papermill
         return self.products.to_json_serializable()
 
-    def save_metadata(self):
+    def _save_metadata(self, source_code):
+        from datetime import datetime
+        self.timestamp = datetime.now().timestamp()
+        self.stored_source_code = source_code
+        self.save_metadata(self.metadata)
+
+    def save_metadata(self, metadata):
+        # TODO: clean this up
+        metadata = list(metadata.values())[0]
         for p in self.products:
-            p.save_metadata()
+            p.save_metadata(metadata)
 
     def render(self, params, **kwargs):
         for p in self.products:

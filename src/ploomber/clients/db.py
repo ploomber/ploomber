@@ -11,7 +11,7 @@ from ploomber.util import requires
 
 
 class DBAPIClient(Client):
-    """A client for a PEP 214 compliant client library
+    """A client for a PEP 249 compliant client library
 
     Parameters
     ----------
@@ -20,7 +20,6 @@ class DBAPIClient(Client):
     **connect_kwargs: kwargs
         Keyword arguments to pass to connect_fn
     """
-
     def __init__(self, connect_fn, **connect_kwargs):
         super().__init__()
         self.connect_fn = connect_fn
@@ -66,12 +65,20 @@ class SQLAlchemyClient(Client):
     ----------
     uri: str
         URI to pass to sqlalchemy.create_engine
+
+    Notes
+    -----
+    SQLite client does not support sending more than one command at a time,
+    if using such backend code will be split and several calls to the db
+    will be performed.
     """
+    split_commands = ['sqlite']
 
     @requires(['sqlalchemy'], 'SQLAlchemyClient')
     def __init__(self, uri):
         super().__init__()
         self._uri = uri
+        self.flavor = uri.split(':')[0]
         self._engine = None
         self._connection = None
 
@@ -95,14 +102,20 @@ class SQLAlchemyClient(Client):
 
     def execute(self, code):
         cur = self.connection.cursor()
-        cur.execute(code)
+
+        if self.flavor in self.split_commands:
+            for command in code.split(';'):
+                cur.execute(command)
+        else:
+            cur.execute(code)
+
         self.connection.commit()
         cur.close()
 
     def close(self):
         """Closes all connections
         """
-        self._logger.info(f'Disposing engine {self._engine}')
+        self._logger.info('Disposing engine %s', self._engine)
         if self._engine is not None:
             self._engine.dispose()
             self._engine = None

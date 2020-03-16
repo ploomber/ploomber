@@ -1,15 +1,16 @@
 .. include:: ../README.rst
 
 
-Jump to...
-==========
+Contents
+========
 
-* :ref:`Features`
-* :ref:`Examples`
-* :ref:`API Summary`
+.. toctree::
+   :maxdepth: 3
 
-
-.. include:: features.rst
+   quickstart
+   guide_index
+   api_index
+   changelog
 
 ..
   The include below will render an orphan: text, due to this bug:
@@ -17,19 +18,6 @@ Jump to...
 
 
 .. include:: auto_examples/index.rst
-
-
-.. include:: api-summary.rst
-
-
-Table of contents
-=================
-
-.. toctree::
-   :maxdepth: 3
-
-   api
-   changelog
 
 
 Indices and tables

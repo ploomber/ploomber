@@ -192,18 +192,19 @@ class RemoteShellClient(Client):
 
         if returncode != 0:
             # log source code without expanded params
-            self._logger.info(f'{code} returned stdout: '
-                              f'{stdout} and stderr: {stderr} '
-                              f'and exit status {returncode}')
+            self._logger.info('%s returned stdout: '
+                              '%s and stderr: %s '
+                              'and exit status %s',
+                              code, stdout, stderr, returncode)
             raise CalledProcessError(returncode, code)
         else:
-            self._logger.info(f'Finished running {self}. stdout: {stdout},'
-                              f' stderr: {stderr}')
+            self._logger.info('Finished running %s. stdout: %s,'
+                              ' stderr: %s', self, stdout, stderr)
 
         return {'returncode': returncode, 'stdout': stdout, 'stderr': stderr}
 
     def close(self):
         if self._raw_client is not None:
-            self._logger.info(f'Closing client {self._raw_client}')
+            self._logger.info('Closing client %s', self._raw_client)
             self._raw_client.close()
             self._raw_client = None

@@ -5,6 +5,9 @@ from ploomber import DAG
 from ploomber.products import File
 from ploomber.tasks import PythonCallable
 
+# executors are responsible for reporting Executed and Errored status
+# should check that they do it
+
 
 def touch_root(product):
     Path(str(product)).touch()

@@ -4,7 +4,7 @@ from pathlib import Path
 
 def load_db_uri():
     try:
-        p = Path('~', '.auth', 'postgres-ploomber.json').expanduser()
+        p = str(Path('~', '.auth', 'postgres-ploomber.json').expanduser())
 
         with open(p) as f:
             db = json.load(f)

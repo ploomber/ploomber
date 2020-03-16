@@ -4,9 +4,10 @@ Validation functions
 from collections.abc import Mapping
 
 
-def env_dict(d):
+def raw_data_keys(d):
     """
-    Validate a dictionary used to set an environment
+    Validate raw dictionary, no top-level keys with leading underscores,
+    except for _module, and no keys with double underscores anywhere
     """
     keys_all = get_keys_for_dict(d)
     errors = []
@@ -50,8 +51,11 @@ def no_double_underscores(keys):
 
 
 def no_leading_underscore(keys):
-    not_allowed = [k for k in keys if k.startswith('_')]
+    allowed = {'_module'}
+    not_allowed = [k for k in keys if k.startswith('_') and k
+                   not in allowed]
 
     if not_allowed:
         raise ValueError('Top-level keys cannot start '
-                         'with an underscore, got: {}'.format(not_allowed))
+                         'with an underscore, except for {}. '
+                         'Got: {}'.format(allowed, not_allowed))

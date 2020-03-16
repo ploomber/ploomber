@@ -24,11 +24,11 @@ def path_to_tests():
 def tmp_directory():
     old = os.getcwd()
     tmp = tempfile.mkdtemp()
-    os.chdir(tmp)
+    os.chdir(str(tmp))
 
     yield tmp
 
-    shutil.rmtree(tmp)
+    shutil.rmtree(str(tmp))
     os.chdir(old)
 
 
@@ -62,8 +62,8 @@ def tmp_intermediate_example_directory():
     tmp = Path(tempfile.mkdtemp()) / 'content'
 
     # we have to add extra folder content/, otherwise copytree complains
-    shutil.copytree(path, tmp)
-    os.chdir(tmp)
+    shutil.copytree(str(path), str(tmp))
+    os.chdir(str(tmp))
 
     yield tmp
 
@@ -79,33 +79,58 @@ def tmp_example_pipeline_directory():
     tmp = Path(tempfile.mkdtemp()) / 'content'
 
     # we have to add extra folder content/, otherwise copytree complains
-    shutil.copytree(path, tmp)
-    os.chdir(tmp)
+    shutil.copytree(str(path), str(tmp))
+    os.chdir(str(tmp))
 
     yield tmp
 
     os.chdir(old)
 
 
-@pytest.fixture(scope='session')
-def move_to_sample_dir():
+@pytest.fixture()
+def tmp_examples_directory():
+    """Move to examples/pipeline/
+    """
     old = os.getcwd()
-    new = _path_to_tests() / 'assets' / 'sample_dir'
-    os.chdir(new)
+    path = _path_to_tests() / '..' / 'examples'
+    tmp = Path(tempfile.mkdtemp()) / 'content'
 
-    yield new
+    # we have to add extra folder content/, otherwise copytree complains
+    shutil.copytree(str(path), str(tmp))
+    os.chdir(str(tmp))
+
+    yield tmp
 
     os.chdir(old)
 
 
-@pytest.fixture(scope='session')
-def move_to_sample_subdir():
+@pytest.fixture()
+def tmp_sample_dir():
     old = os.getcwd()
-    new = _path_to_tests() / 'assets' / 'sample_dir' / 'subdir'
-    os.chdir(new)
+    tmp = Path(tempfile.mkdtemp(), 'sample_dir')
+    sample_dir = _path_to_tests() / 'assets' / 'sample_dir'
+    shutil.copytree(str(sample_dir), str(tmp))
 
-    yield new
+    os.chdir(str(tmp))
 
+    yield tmp
+
+    shutil.rmtree(str(tmp))
+    os.chdir(old)
+
+
+@pytest.fixture()
+def tmp_sample_subdir():
+    old = os.getcwd()
+    tmp = Path(tempfile.mkdtemp(), 'sample_dir')
+    sample_dir = _path_to_tests() / 'assets' / 'sample_dir'
+    shutil.copytree(str(sample_dir), str(tmp))
+
+    os.chdir(str(tmp / 'subdir'))
+
+    yield tmp
+
+    shutil.rmtree(str(tmp))
     os.chdir(old)
 
 
@@ -128,7 +153,7 @@ def path_to_assets():
 def _load_db_credentials():
 
     # try load credentials from a local file
-    p = Path('~', '.auth', 'postgres-ploomber.json').expanduser()
+    p = str(Path('~', '.auth', 'postgres-ploomber.json').expanduser())
 
     try:
         with open(p) as f:

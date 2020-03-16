@@ -9,6 +9,17 @@ from ploomber.products import File
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import DAGBuildError, DAGRenderError
 
+# TODO: a lot of these tests should be in a test_executor file
+# since they test Errored or Executed status and the output errors, which
+# is done by the executor
+# TODO: check build successful execution does not run anything if tried a
+# # second time
+# TODO: test forced execution, check it actually ran two times
+# TODO: once a successful dag build happens, check task.should_execute
+# TODO: check skipped status
+# TODO: test once a task is skipped, downstream tasks go from WaitingUpstream
+# to WaitingExecution
+
 
 class FailedTask(Exception):
     pass
@@ -40,6 +51,31 @@ def failing(product):
 #     t1 >> t2
 
 #     dag.to_html('a.html')
+
+
+@pytest.mark.parametrize('function_name', ['render', 'build', 'to_markup',
+                         'plot'])
+def test_dag_functions(function_name):
+    dag = DAG()
+    getattr(dag, function_name)()
+
+
+def test_dag_build_clears_cached_status(tmp_directory):
+    dag = DAG()
+    t = PythonCallable(touch_root, File('my_file'), dag)
+
+    assert t.product._outdated_data_dependencies_status is None
+    assert t.product._outdated_code_dependency_status is None
+
+    dag.status()
+
+    assert t.product._outdated_data_dependencies_status is not None
+    assert t.product._outdated_code_dependency_status is not None
+
+    dag.build()
+
+    assert t.product._outdated_data_dependencies_status is None
+    assert t.product._outdated_code_dependency_status is None
 
 
 def test_warn_on_python_missing_docstrings():
@@ -228,34 +264,15 @@ def test_dag_task_status_life_cycle(executor, tmp_directory):
 
     dag.render()
 
-    assert dag._exec_status == DAGStatus.Errored
-    assert t1.exec_status == TaskStatus.Executed
-    assert t2.exec_status == TaskStatus.Errored
-    assert t3.exec_status == TaskStatus.Aborted
-    assert t4.exec_status == TaskStatus.Aborted
-    assert t5.exec_status == TaskStatus.Executed
-
-    # TODO: add test when trying to Execute dag with task status
-    # other than WaitingExecution anf WaitingUpstream
-
-    dag.build()
-
-    assert dag._exec_status == DAGStatus.Errored
-    assert t1.exec_status == TaskStatus.Executed
-    assert t2.exec_status == TaskStatus.Errored
-    assert t3.exec_status == TaskStatus.Aborted
-    assert t4.exec_status == TaskStatus.Aborted
-    assert t5.exec_status == TaskStatus.Executed
-
-    # render again to check status reset
-    dag.render(force=True)
-
     assert dag._exec_status == DAGStatus.WaitingExecution
     assert t1.exec_status == TaskStatus.WaitingExecution
     assert t2.exec_status == TaskStatus.WaitingExecution
     assert t3.exec_status == TaskStatus.WaitingUpstream
     assert t4.exec_status == TaskStatus.WaitingUpstream
     assert t5.exec_status == TaskStatus.WaitingExecution
+
+    # TODO: add test when trying to Execute dag with task status
+    # other than WaitingExecution anf WaitingUpstream
 
 
 @pytest.mark.parametrize('executor', ['parallel', 'serial'])
@@ -282,43 +299,49 @@ def test_executor_keeps_running_until_no_more_tasks_can_run(executor,
     assert Path('t_ok').exists()
 
 
-def test_warns_on_rendered_dag():
-    dag = DAG()
-    PythonCallable(touch_root, File('ok'), dag, name='t1')
-    dag.render()
-
-    with pytest.warns(UserWarning) as record:
-        dag.render()
-
-    expected_msg = ('DAG("No name") has already been rendered, this call has '
-                    'no effect, to force rendering again, pass force=True')
-
-    assert len(record) == 1
-    assert record[0].message.args[0] == expected_msg
-
-
-def test_warns_on_built_dag(tmp_directory):
-    dag = DAG()
-    PythonCallable(touch_root, File('ok'), dag, name='t1')
-    dag.build()
-
-    with pytest.warns(UserWarning) as record:
-        dag.build()
-
-    expected_msg = ('DAG("No name") has been built already, to force pass '
-                    'force=True')
-
-    assert len(record) == 1
-    assert record[0].message.args[0] == expected_msg
-
-
-def test_status_on_render_fail():
+def test_status_on_render_source_fail():
     def make():
         dag = DAG()
         SQLDump('SELECT * FROM my_table', File('ok'), dag, name='t1',
                 client=object())
         t2 = SQLDump('SELECT * FROM {{table}}', File('a_file'), dag, name='t2',
                      client=object())
+        t3 = SQLDump('SELECT * FROM another', File('another_file'), dag,
+                     name='t3',
+                     client=object())
+        t4 = SQLDump('SELECT * FROM something', File('yet_another'), dag,
+                     name='t4', client=object())
+        SQLDump('SELECT * FROM my_table_2', File('ok_2'), dag,
+                name='t5', client=object())
+        t2 >> t3 >> t4
+        return dag
+
+    dag = make()
+
+    with pytest.raises(DAGRenderError):
+        dag.render()
+
+    assert dag._exec_status == DAGStatus.ErroredRender
+    assert dag['t1'].exec_status == TaskStatus.WaitingExecution
+    assert dag['t2'].exec_status == TaskStatus.ErroredRender
+    assert dag['t3'].exec_status == TaskStatus.AbortedRender
+    assert dag['t4'].exec_status == TaskStatus.AbortedRender
+    assert dag['t5'].exec_status == TaskStatus.WaitingExecution
+
+    # building directly should also raise render error
+    dag = make()
+
+    with pytest.raises(DAGRenderError):
+        dag.build()
+
+
+def test_status_on_product_source_fail():
+    def make():
+        dag = DAG()
+        SQLDump('SELECT * FROM my_table', File('ok'), dag, name='t1',
+                client=object())
+        t2 = SQLDump('SELECT * FROM my_table', File('{{unknown}}'), dag,
+                     name='t2', client=object())
         t3 = SQLDump('SELECT * FROM another', File('another_file'), dag,
                      name='t3',
                      client=object())
@@ -358,8 +381,8 @@ def test_tracebacks_are_shown_for_all_on_render_failing_tasks():
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
 
-    assert "SQLDump: t2 -> File('another_table')" in str(excinfo.value)
-    assert "SQLDump: t1 -> File('one_table')" in str(excinfo.value)
+    assert "SQLDump: t2 -> File(another_table)" in str(excinfo.value)
+    assert "SQLDump: t1 -> File(one_table)" in str(excinfo.value)
 
 
 @pytest.mark.parametrize('executor', ['parallel', 'serial'])
@@ -373,8 +396,8 @@ def test_tracebacks_are_shown_for_all_on_build_failing_tasks(executor):
 
     # need this to get chained exceptions:
     # https://docs.pytest.org/en/latest/reference.html#_pytest._code.ExceptionInfo.getrepr
-    assert "PythonCallable: t1 -> File('a_file')" in str(excinfo.getrepr())
-    assert ("PythonCallable: t2 -> File('another_file')"
+    assert "PythonCallable: t1 -> File(a_file)" in str(excinfo.getrepr())
+    assert ("PythonCallable: t2 -> File(another_file)"
             in str(excinfo.getrepr()))
 
 
@@ -399,6 +422,8 @@ def test_sucessful_execution(executor, tmp_directory):
     assert Path('file').exists()
 
     assert set(t.exec_status for t in dag.values()) == {TaskStatus.Executed}
+    assert set(t.should_execute() for t in dag.values()) == {False}
 
+    dag.build()
 
-# TODO: test forced execution, check it actually ran two times
+    assert set(t.exec_status for t in dag.values()) == {TaskStatus.Skipped}

@@ -49,9 +49,9 @@ class File(Product):
 
         return dict(timestamp=timestamp, stored_source_code=stored_source_code)
 
-    def save_metadata(self):
+    def save_metadata(self, metadata):
         # timestamp automatically updates when the file is saved...
-        self._path_to_stored_source_code.write_text(self.stored_source_code)
+        self._path_to_stored_source_code.write_text(metadata['stored_source_code'])
 
     def exists(self):
         return self._path_to_file.exists()
@@ -60,14 +60,14 @@ class File(Product):
         # force is not used for this product but it is left for API
         # compatibility
         if self.exists():
-            self.logger.debug(f'Deleting {self._path_to_file}')
+            self.logger.debug('Deleting %s', self._path_to_file)
             if self._path_to_file.is_dir():
-                shutil.rmtree(self._path_to_file)
+                shutil.rmtree(str(self._path_to_file))
             else:
-                os.remove(self._path_to_file)
+                os.remove(str(self._path_to_file))
         else:
-            self.logger.debug(f'{self._path_to_file} does not exist '
-                              'ignoring...')
+            self.logger.debug('%s does not exist ignoring...',
+                              self._path_to_file)
 
     @property
     def name(self):

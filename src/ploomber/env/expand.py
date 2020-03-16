@@ -1,6 +1,8 @@
+import re
+import ast
 import pydoc
 import getpass
-from copy import deepcopy
+from copy import deepcopy, copy
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -10,83 +12,155 @@ from ploomber.templates import util
 from ploomber import repo
 
 
-# NOTE: what would be the best way for users to provide their own expanders?
-# this is useful if they want to expand things like passwords, subclassing
-# works partially (only decorators will not work since they use ploomber.Env)
-# maybe through a ploomber.config file? We just have to be sure that the
-# difference between an env.yaml and a ploomber.config is clear
 class EnvironmentExpander:
-    def __init__(self, raw):
-        self.available = self.get_available(raw)
-        self.raw = raw
+    """
+    Conver values in the raw dictionary by expanding tags such as {{git}},
+    {{version}} or {{here}}. See `expand_raw_value` for more details
+    """
 
-    def __call__(self, value):
-        tags = util.get_tags_in_str(value)
+    def __init__(self, preprocessed, path_to_env=None,
+                 version_requires_import=False):
+        self._preprocessed = preprocessed
 
-        if not tags:
-            return value
+        # {{here}} resolves to this value
+        self._path_to_here = (None if path_to_env is None
+                              else str(Path(path_to_env).parent))
+        # we compute every placeholder's value so we only do it once
+        self._placeholders = {}
 
-        params = {k: getattr(self, k)() for k in tags}
-        return Template(value).render(**params)
+        self._version_requires_import = version_requires_import
 
-    def get_available(self, raw):
-        available = ['user']
-        unavailable = {}
+    def expand_raw_dictionary(self, raw):
+        data = deepcopy(raw)
 
-        module_name = raw.get('module')
+        for (d, current_key,
+             current_val, parent_keys) in iterate_nested_dict(data):
+            d[current_key] = self.expand_raw_value(current_val, parent_keys)
 
-        if module_name:
-            module = pydoc.locate(module_name)
+        return data
 
-            if module is None:
-                raise ImportError('Could not import module "{}"'
-                                  .format(module_name))
+    def expand_raw_value(self, raw_value, parents):
+        """
+        Expand a string with placeholders
 
-            available.append('version')
-            self.module = module
+        Parameters
+        ----------
+        raw_value : str
+            The original value to expand
+        parents : list
+            The list of parents to get to this value in the dictionary
+
+        Notes
+        -----
+        If for a given raw_value, the first parent is 'path', expanded value
+        is casted to pathlib.Path object and .expanduser() is called,
+        furthermore, if raw_value ends with '/', a directory is created if
+        it does not currently exist
+        """
+        placeholders = util.get_tags_in_str(raw_value)
+
+        if not placeholders:
+            value = raw_value
         else:
-            unavailable['version'] = RuntimeError('The git_location placeholder is only available if Env defines a "module" constant')
+            # get all required placeholders
+            params = {k: self.load_placeholder(k) for k in placeholders}
+            value = Template(raw_value).render(**params)
 
-        return available
+        if parents:
+            if parents[0] == 'path':
+                self._handle_path(value)
+                return Path(value).expanduser()
+            else:
+                return value
 
-    def user(self):
+    def _handle_path(self, value):
+        path = Path(value)
+
+        if not path.exists() and value.endswith('/'):
+            path.mkdir(parents=True)
+
+    def load_placeholder(self, key):
+        if key not in self._placeholders:
+            if hasattr(self, 'get_'+key):
+                self._placeholders[key] = getattr(self, 'get_'+key)()
+            else:
+                raise RuntimeError('Unknown placeholder "{}"'.format(key))
+
+        return self._placeholders[key]
+
+    def _get_version_importing(self):
+        module_path = self._preprocessed.get('_module')
+
+        if not module_path:
+            raise KeyError('_module key is required to use version '
+                           'placeholder')
+
+        # is this ok to do? /path/to/{module_name}
+        module_name = str(Path(module_path).name)
+        module = pydoc.locate(module_name)
+
+        if module is None:
+            raise ImportError('Unabe to import module with name "{}"'
+                              .format(module_name))
+
+        if hasattr(module, '__version__'):
+            return module.__version__
+        else:
+            raise RuntimeError('Module "{}" does not have a __version__ '
+                               'attribute '.format(module))
+
+    def _get_version_without_importing(self):
+        if '_module' not in self._preprocessed:
+            raise KeyError('_module key is required to use version '
+                           'placeholder')
+
+        content = (self._preprocessed['_module'] / '__init__.py').read_text()
+
+        version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+        version = str(ast.literal_eval(version_re.search(
+                      content).group(1)))
+        return version
+
+    def get_version(self):
+        if self._version_requires_import:
+            return self._get_version_importing()
+        else:
+            return self._get_version_without_importing()
+
+    def get_user(self):
         return getpass.getuser()
 
-    def version(self):
-        if 'version' in self.available:
-            if hasattr(self.module, '__version__'):
-                return self.module.__version__
-            else:
-                raise RuntimeError('Module {} does not have a __version__, cannot '
-                                   'expand version placeholder'.format(self.module))
+    def get_here(self):
+        if self._path_to_here:
+            return self._path_to_here
         else:
-            raise self.unavailable['version']
+            raise RuntimeError('here placeholder is only available '
+                               'when env was initialized from a file')
 
-    def git(self):
-        if 'version' not in self.available:
-            raise RuntimeError('The git_location placeholder is only available '
-                               'if Env defines a "module" constant')
-        else:
-            module_path = str(Path(self.module.__file__).parent.absolute())
-            return repo.get_env_metadata(module_path)['git_location']
+    def get_git(self):
+        module = self._preprocessed.get('_module')
+
+        if not module:
+            raise KeyError('_module key is required to use git placeholder')
+
+        return repo.get_env_metadata(module)['git_location']
 
 
-def iterate_nested_dict(d):
+def iterate_nested_dict(d, preffix=[]):
     """
     Iterate over all values (possibly nested) in a dictionary
+
+    Yields: dict holding the value, current key, current value, list of keys
+    to get to this value
     """
     for k, v in d.items():
         if isinstance(v, Mapping):
-            for i in iterate_nested_dict(v):
+            preffix_new = copy(preffix)
+            preffix_new.append(k)
+            for i in iterate_nested_dict(v, preffix_new):
                 yield i
         else:
-            yield d, k, v
-
-
-def modify_values(env, modifier):
-    env = deepcopy(env)
-
-    for d, k, v in iterate_nested_dict(env):
-        d[k] = modifier(v)
-
-    return env
+            preffix_new = copy(preffix)
+            preffix_new.append(k)
+            yield d, k, v, preffix_new

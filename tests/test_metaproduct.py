@@ -10,7 +10,7 @@ def test_can_iterate_over_products():
     p2 = File('2.txt')
     m = MetaProduct([p1, p2])
 
-    assert list(m) == [p1, p2]
+    assert set(m) == {p1, p2}
 
 
 def test_can_iterate_when_initialized_with_dictionary():
@@ -18,7 +18,7 @@ def test_can_iterate_when_initialized_with_dictionary():
     p2 = File('2.txt')
     m = MetaProduct({'a': p1, 'b': p2})
 
-    assert list(m) == [p1, p2]
+    assert set(m) == {p1, p2}
 
 
 def test_can_create_task_with_more_than_one_product(tmp_directory):

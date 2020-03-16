@@ -62,8 +62,8 @@ class GenericProduct(Product):
         else:
             return json.loads(meta)
 
-    def save_metadata(self):
-        metadata_str = json.dumps(self.metadata)
+    def save_metadata(self, metadata):
+        metadata_str = json.dumps(metadata)
         self.client.write_to_file(metadata_str, self._path_to_metadata_file)
 
     # TODO: implement

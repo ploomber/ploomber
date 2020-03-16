@@ -6,7 +6,6 @@ def test_can_get_first():
     p = Upstream()
 
     p['a'] = 0
-    p['b'] = 1
 
     assert p.first == 0
 

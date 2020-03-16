@@ -24,7 +24,7 @@ tmp_dir = Path(tempfile.mkdtemp())
 path_to_db = 'sqlite:///' + str(tmp_dir / 'my_db.db')
 print('temporary dir: ', tmp_dir)
 
-dag = DAG()
+dag = DAG(executor='serial')
 
 client = SQLAlchemyClient(path_to_db)
 dag.clients[SQLUpload] = client
@@ -111,7 +111,6 @@ dag.render()
 # print source code for task "features"
 print(dag['features'].source_code)
 
-
-dag.plot(output='matplotlib')
+# dag.plot(output='matplotlib')
 
 dag.build()

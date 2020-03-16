@@ -38,7 +38,7 @@ params_array = ParamGrid(
 def namer(params):
     s = str(params['dates'][0]).replace('-', '_')
     e = str(params['dates'][1]).replace('-', '_')
-    return f'get_data_{s}_{e}'
+    return 'get_data_{}_{}'.format(s, e)
 
 
 make_task_group(task_class=PythonCallable,

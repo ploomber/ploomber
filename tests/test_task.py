@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ploomber.exceptions import RenderError, DAGBuildError, TaskBuildError
+from ploomber.exceptions import RenderError, TaskBuildError
 from ploomber import DAG
 from ploomber.products import File, PostgresRelation
 from ploomber.tasks import PythonCallable, SQLScript, ShellScript, SQLDump
@@ -28,16 +28,23 @@ def touch(product):
     Path(str(product)).touch()
 
 
-def on_finish(task):
-    Path(str(task)).write_text('Written from on_finish')
+def test_task_build_clears_cached_status(tmp_directory):
+    dag = DAG()
+    t = PythonCallable(touch, File('my_file'), dag)
+    t.render()
 
+    assert t.product._outdated_data_dependencies_status is None
+    assert t.product._outdated_code_dependency_status is None
 
-def on_render(task):
-    Path(str(task)).write_text('Written from on_render')
+    t.status()
 
+    assert t.product._outdated_data_dependencies_status is not None
+    assert t.product._outdated_code_dependency_status is not None
 
-def on_finish_fail(task):
-    raise Exception
+    t.build()
+
+    assert t.product._outdated_data_dependencies_status is None
+    assert t.product._outdated_code_dependency_status is None
 
 
 def test_task_can_infer_name_from_source():
@@ -81,7 +88,7 @@ def test_postgresscript_with_relation():
             == 'CREATE TABLE user.table AS SELECT * FROM some_table')
 
 
-def test_task_change_in_status():
+def test_task_change_in_status(tmp_directory):
     # NOTE: there are some similar tests in test_dag.py - maybe move them?
     dag = DAG('dag')
 
@@ -102,19 +109,21 @@ def test_task_change_in_status():
             and tb.exec_status == TaskStatus.WaitingUpstream
             and tc.exec_status == TaskStatus.WaitingUpstream)
 
-    ta.build()
+    # ta.build()
 
-    assert (ta.exec_status == TaskStatus.Executed
-            and tb.exec_status == TaskStatus.WaitingExecution
-            and tc.exec_status == TaskStatus.WaitingUpstream)
+    # assert (ta.exec_status == TaskStatus.Executed
+    #         and tb.exec_status == TaskStatus.WaitingExecution
+    #         and tc.exec_status == TaskStatus.WaitingUpstream)
 
-    tb.build()
+    # tb.build()
 
-    assert (ta.exec_status == TaskStatus.Executed
-            and tb.exec_status == TaskStatus.Executed
-            and tc.exec_status == TaskStatus.WaitingExecution)
+    # assert (ta.exec_status == TaskStatus.Executed
+    #         and tb.exec_status == TaskStatus.Executed
+    #         and tc.exec_status == TaskStatus.WaitingExecution)
 
-    tc.build()
+    # tc.build()
+
+    dag.build()
 
     assert all([t.exec_status == TaskStatus.Executed for t in [ta, tb, tc]])
 
@@ -181,28 +190,6 @@ def test_shows_warning_if_unused_dependencies():
         tc.render()
 
 
-def test_on_finish(tmp_directory):
-    dag = DAG()
-
-    t = PythonCallable(touch, File('file'), dag, name='touch')
-    t.on_finish = on_finish
-
-    dag.build()
-
-    assert Path('file').read_text() == 'Written from on_finish'
-
-
-def test_on_render(tmp_directory):
-    dag = DAG()
-
-    t = PythonCallable(touch, File('file'), dag, name='touch')
-    t.on_render = on_render
-
-    dag.render()
-
-    assert Path('file').read_text() == 'Written from on_render'
-
-
 def test_lineage():
     dag = DAG('dag')
 
@@ -242,23 +229,6 @@ def test_placeholder_is_copied_upon_initialization():
     assert t1.source.value is not t2.source.value
 
 
-def test_task_is_re_executed_if_on_finish_fails(tmp_directory):
-    dag = DAG()
-
-    t = PythonCallable(touch, File('file'), dag, name='t1')
-    t.on_finish = on_finish_fail
-
-    # first time it runs, fails..
-    try:
-        dag.build()
-    except DAGBuildError:
-        pass
-
-    # if we attempt to run, it will fail again (since no metadata is saved)
-    with pytest.raises(DAGBuildError):
-        dag.build(force=True)
-
-
 def test_attempting_to_build_unrendered_task_throws_exception():
     dag = DAG()
     t = SQLDump('SELECT * FROM, table', File('file'), dag,
@@ -271,4 +241,4 @@ def test_attempting_to_build_unrendered_task_throws_exception():
     with pytest.raises(TaskBuildError) as excinfo:
         t.build()
 
-    assert str(excinfo.value) == msg
+    assert msg in str(excinfo.getrepr())

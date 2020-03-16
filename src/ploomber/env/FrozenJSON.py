@@ -7,8 +7,9 @@ import yaml
 
 
 class FrozenJSON(object):
-    """A facade for navigating a JSON-like object
-    using attribute notation. Based on FrozenJSON from 'Fluent Python'
+    """
+    A facade for navigating a JSON-like object using attribute notation.
+    Based on FrozenJSON from 'Fluent Python'
     """
     @classmethod
     def from_yaml(cls, path_to_file, *args, **kwargs):
@@ -38,7 +39,7 @@ class FrozenJSON(object):
         else:
             return arg
 
-    def __init__(self, mapping, expand_user=True):
+    def __init__(self, mapping):
         self._logger = logging.getLogger(__name__)
         self._logger.debug('Loaded with params: {}'.format(mapping))
         self._path_to_file = None
@@ -46,10 +47,6 @@ class FrozenJSON(object):
         self._data = {}
 
         for key, value in mapping.items():
-
-            if isinstance(value, str) and expand_user:
-                value = str(path.expanduser(value))
-
             if keyword.iskeyword(key):
                 key += '_'
 

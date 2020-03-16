@@ -1,47 +1,15 @@
 API
 ===
 
-DAG
----
+Abstract classes
+----------------
 
-.. autoclass:: ploomber.DAG
+.. autoclass:: ploomber.tasks.Task
+    :members:
 
-
-Products
---------
-
-
-.. automodule:: ploomber.products
+.. autoclass:: ploomber.products.Product
     :members:
 
 
-Tasks
------
-
-.. automodule:: ploomber.tasks
-    :members:
-
-
-Clients
--------
-
-.. automodule:: ploomber.clients
-    :members:
-
-
-Env
----
-
-.. autofunction:: ploomber.with_env
-
-.. autofunction:: ploomber.load_env
-
-.. autoclass:: ploomber.Env
-    :members:
-
-
-Utilities
----------
-
-.. autoclass:: ploomber.SourceLoader
+.. autoclass:: ploomber.clients.Client
     :members:

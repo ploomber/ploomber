@@ -55,11 +55,27 @@ class DAG(collections.abc.Mapping):
         ploomber.executors.Parallel), is a string is passed ('serial'
         or 'parallel') the corresponding executor is initialized with default
         parameters
+    cache_rendered_status : bool, optional
+        If True, once the DAG is rendered, subsequent calls to render will
+        not do anything (rendering is implicitely called in build, plot,
+        status), otherwise it will always render again
     """
+    # cache_product_metadata : bool, optional
+    #     Whether to keep the a copy of the product metadata or not, if True
+    #     it will just get the status once, if False, it will get it on every
+    #     call that needs it (such as build, plot, status)
+
+    # Rendering is cheap - always do it so we have a change to update sources
+    # if they changed.
+    # Getting product status is expensive if have to go over the network
+    # (e.g. checking remote db tables), so cache by default but have a flag
+    # to turn this off
 
     def __init__(self, name=None, clients=None, differ=None,
                  on_task_finish=None, on_task_failure=None,
-                 executor='serial'):
+                 executor='serial',
+                 cache_product_metadata=True,
+                 cache_rendered_status=False):
         self._G = nx.DiGraph()
 
         self.name = name or 'No name'
@@ -67,7 +83,7 @@ class DAG(collections.abc.Mapping):
         self._logger = logging.getLogger(__name__)
 
         self._clients = clients or {}
-        self._exec_status = DAGStatus.WaitingRender
+        self.__exec_status = DAGStatus.WaitingRender
 
         if executor == 'serial':
             self._executor = executors.Serial()
@@ -82,6 +98,71 @@ class DAG(collections.abc.Mapping):
 
         self._on_task_finish = on_task_finish
         self._on_task_failure = on_task_failure
+        self._cache_product_metadata = cache_product_metadata
+        self._cache_rendered_status = cache_rendered_status
+        self._did_render = False
+
+    @property
+    def _exec_status(self):
+        return self.__exec_status
+
+    @_exec_status.setter
+    def _exec_status(self, value):
+        self._logger.debug('Setting %s status to %s', self, value)
+
+        # The Task class is responsible for updating their status
+        # (except for Executed and Errored, those are updated by the executor)
+        # DAG should not set task status but only verify that after an attemp
+        # to change DAGStatus, all Tasks have allowed states, otherwise there
+        # is an error in either the Task or the Executor
+
+        if value == DAGStatus.WaitingRender:
+            self.check_tasks_have_allowed_status({TaskStatus.WaitingRender},
+                                                 value)
+
+        # render errored
+        elif value == DAGStatus.ErroredRender:
+            allowed = {TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream,
+                       TaskStatus.ErroredRender, TaskStatus.AbortedRender}
+            self.check_tasks_have_allowed_status(allowed, value)
+
+        # rendering ok, waiting execution
+        elif value == DAGStatus.WaitingExecution:
+            exec_values = set(task.exec_status for task in self.values())
+            allowed = {TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream}
+            self.check_tasks_have_allowed_status(allowed, value)
+
+        # attempted execution but failed
+        elif value == DAGStatus.Executed:
+            exec_values = set(task.exec_status for task in self.values())
+            # check len(self) to prevent this from failing on an empty DAG
+            if not exec_values <= {TaskStatus.Executed,
+                                   TaskStatus.Skipped} and len(self):
+                raise RuntimeError('Trying to set DAG status to '
+                                   'DAGStatus.Executed but executor '
+                                   'returned tasks whose status is not '
+                                   'TaskStatus.Executed nor '
+                                   'TaskStatus.Skipped, returned '
+                                   'status: {}'.format(exec_values))
+        elif value == DAGStatus.Errored:
+            # no value validation since this state is also set then the
+            # DAG executor ends up abrubtly
+            pass
+        else:
+            raise RuntimeError('Unknown DAGStatus value: {}'
+                               .format(value))
+
+        self.__exec_status = value
+
+    def check_tasks_have_allowed_status(self, allowed, new_status):
+        exec_values = set(task.exec_status for task in self.values())
+        if not exec_values <= allowed:
+            raise RuntimeError('Trying to set DAG status to '
+                               '{} but executor '
+                               'returned tasks whose status is not in a '
+                               'subet of {}. Returned '
+                               'status: {}'.format(new_status, allowed,
+                                                   exec_values))
 
     @property
     def product(self):
@@ -99,7 +180,7 @@ class DAG(collections.abc.Mapping):
         self._G.remove_node(name)
         return t
 
-    def render(self, show_progress=True, force=False):
+    def render(self):
         """Render the graph
         """
         g = self._to_graph()
@@ -115,16 +196,18 @@ class DAG(collections.abc.Mapping):
 
         # first render any other dags involved (this happens when some
         # upstream parameters come form other dags)
+        # NOTE: for large compose dags it might be wasteful to render over
+        # and over
         for dag in dags:
             if dag is not self:
-                dag._render_current(show_progress, force)
+                dag._render_current()
 
         # then, render this dag
-        self._render_current(show_progress, force)
+        self._render_current()
 
         return self
 
-    def build(self, force=False, clear_cached_status=False):
+    def build(self, force=False):
         """
         Runs the DAG in order so that all upstream dependencies are run for
         every task
@@ -135,61 +218,50 @@ class DAG(collections.abc.Mapping):
             If True, it will run all tasks regardless of status, defaults to
             False
 
-        clear_cached_status: bool, optional
-            If True, it will clear all cached status forcing a check on all
-            tasks
-
         Returns
         -------
         BuildReport
             A dict-like object with tasks as keys and dicts with task
             status as values
         """
-        if clear_cached_status:
-            self._clear_cached_outdated_status()
-
-        # nothing breaks if we just use self.render() but this way we avoid
-        # showing warning, since it should only be shown when calling render
-        # explicitely
-        if self._exec_status == DAGStatus.WaitingRender:
-            self.render()
-        elif self._exec_status == DAGStatus.ErroredRender:
+        if self._exec_status == DAGStatus.ErroredRender:
             raise DAGBuildError('Cannot build dag that failed to render, '
                                 'fix rendering errors then build again. '
                                 'To see the full traceback again, run '
                                 'dag.render(force=True)')
-
-        did_run = self._exec_status in {DAGStatus.Executed, DAGStatus.Errored}
-
-        if did_run and not force:
-            warnings.warn('{} has been built already, to force pass '
-                          'force=True'.format(self))
         else:
-            if did_run and force:
-                # we need to reset status so all tasks are either
-                # WaitingExecution or WaitingUpstream, this is taken care in
-                # DAG.render (by calling render on each task)
-                self.render(force=True)
+            # at this point the DAG can only be:
+            # DAGStatus.WaitingExecution, DAGStatus.Executed or
+            # DAGStatus.Errored, DAGStatus.WaitingRender
+            # calling render will update status to DAGStatus.WaitingExecution
+            self.render()
+
+            # self._clear_cached_status()
+
+            self._logger.info('Building DAG %s', self)
 
             try:
-                res = self._executor(dag=self, force=force)
+                res = self._executor(dag=self, force=force,
+                                     within_dag=True)
             except Exception as e:
                 self._exec_status = DAGStatus.Errored
                 e_new = DAGBuildError('Failed to build DAG {}'.format(self))
                 raise e_new from e
             else:
                 self._exec_status = DAGStatus.Executed
+            finally:
+                # always clear out status
+                self._clear_cached_status()
 
             return res
 
-    def build_partially(self, target, clear_cached_status=False):
+    def build_partially(self, target):
         """Partially build a dag until certain task
         """
         # NOTE: doing this should not change self._exec_status in any way
         # but we are currently modifying self, have to fix this
 
-        if clear_cached_status:
-            self._clear_cached_outdated_status()
+        # self._clear_cached_status()
 
         lineage = self[target]._lineage
         dag = copy(self)
@@ -202,18 +274,17 @@ class DAG(collections.abc.Mapping):
         dag.render()
         return self._executor(dag=dag)
 
-    def status(self, clear_cached_status=False, **kwargs):
+    def status(self, **kwargs):
         """Returns a table with tasks status
         """
-        if clear_cached_status:
-            self._clear_cached_outdated_status()
+        # self._clear_cached_status()
 
         self.render()
 
         return Table([self._G.nodes[name]['task'].status(**kwargs)
                       for name in self._G])
 
-    def to_dict(self, include_plot=False, clear_cached_status=False):
+    def to_dict(self, include_plot=False):
         """Returns a dict representation of the dag's Tasks,
         only includes a few attributes.
 
@@ -222,8 +293,7 @@ class DAG(collections.abc.Mapping):
         include_plot: bool, optional
             If True, the path to a PNG file with the plot in "_plot"
         """
-        if clear_cached_status:
-            self._clear_cached_outdated_status()
+        # self._clear_cached_status()
 
         d = {name: self._G.nodes[name]['task'].to_dict()
              for name in self._G}
@@ -240,7 +310,7 @@ class DAG(collections.abc.Mapping):
             raise ValueError('fmt must be html or md, got {}'.format(fmt))
 
         status = self.status().to_format('html')
-        path_to_plot = Path(self.plot(clear_cached_status=True))
+        path_to_plot = Path(self.plot())
         plot = image_bytes2html(path_to_plot.read_bytes())
 
         template_md = importlib_resources.read_text(resources, 'dag.md')
@@ -264,7 +334,7 @@ class DAG(collections.abc.Mapping):
         return out
 
     @requires(['pygraphviz'])
-    def plot(self, output='tmp', clear_cached_status=False):
+    def plot(self, output='tmp'):
         """Plot the DAG
         """
         if output in {'tmp', 'matplotlib'}:
@@ -272,8 +342,7 @@ class DAG(collections.abc.Mapping):
         else:
             path = output
 
-        if clear_cached_status:
-            self._clear_cached_outdated_status()
+        # self._clear_cached_status()
 
         # attributes docs:
         # https://graphviz.gitlab.io/_pages/doc/info/attrs.html
@@ -308,32 +377,29 @@ class DAG(collections.abc.Mapping):
             if doc is None or doc == '':
                 warnings.warn('Task "{}" has no docstring'.format(task_name))
 
-    def _render_current(self, show_progress, force):
+    def _render_current(self):
         """
         Render tasks, and update exec_status
         """
-        if self._exec_status == DAGStatus.WaitingRender or force:
+        if not self._cache_rendered_status or not self._did_render:
+            self._logger.info('Rendering DAG %s', self)
+
             g = self._to_graph(only_current_dag=True)
 
             tasks = nx.algorithms.topological_sort(g)
 
-            if show_progress:
-                tasks = tqdm(tasks, total=len(g))
+            tasks = tqdm(tasks, total=len(g))
 
             exceptions = ExceptionCollector()
+            warnings_ = None
 
             for t in tasks:
                 # no need to process task with AbortedRender
                 if t.exec_status == TaskStatus.AbortedRender:
                     continue
 
-                # FIXME: instead of setting the status here, check task
-                # is waiting for render, .render should set the state (?)
-                t.exec_status = TaskStatus.WaitingRender
-
-                if show_progress:
-                    tasks.set_description('Rendering DAG "{}"'
-                                          .format(self.name))
+                tasks.set_description('Rendering DAG "{}"'
+                                      .format(self.name))
 
                 with warnings.catch_warnings(record=True) as warnings_:
                     try:
@@ -357,11 +423,7 @@ class DAG(collections.abc.Mapping):
                            .format(repr(t), '\n'.join(messages)))
                 warnings.warn(warning)
 
-            self._exec_status = DAGStatus.WaitingExecution
-        else:
-            warnings.warn('{} has already been rendered, this call has no '
-                          'effect, to force rendering again, pass force=True'
-                          .format(self))
+        self._exec_status = DAGStatus.WaitingExecution
 
     def _add_task(self, task):
         """Adds a task to the DAG
@@ -400,6 +462,9 @@ class DAG(collections.abc.Mapping):
     def _add_edge(self, task_from, task_to):
         """Add an edge between two tasks
         """
+        # if a new task is added, rendering is required again
+        self._did_render = False
+
         if isiterable(task_from) and not isinstance(task_from, DAG):
             # if iterable, add all components as separate upstream tasks
             for a_task_from in task_from:
@@ -426,9 +491,12 @@ class DAG(collections.abc.Mapping):
         upstream = self._G.predecessors(task_name)
         return {u: self._G.nodes[u]['task'] for u in upstream}
 
-    def _clear_cached_outdated_status(self):
+    def _clear_cached_status(self):
+        self._logger.debug('Clearing product status')
+        # clearing out this way is only useful after building, but not
+        # if the metadata changed since it wont be reloaded
         for task in self.values():
-            task.product._clear_cached_outdated_status()
+            task.product._clear_cached_status()
 
     def __getitem__(self, key):
         return self._G.nodes[key]['task']
@@ -447,6 +515,12 @@ class DAG(collections.abc.Mapping):
 
     def _short_repr(self):
         return repr(self)
+
+    def _topologically_sorted_iter(self, skip_aborted=True):
+        g = self._to_graph()
+        for task in nx.algorithms.topological_sort(g):
+            if task.exec_status != TaskStatus.Aborted and skip_aborted:
+                yield task
 
     # IPython integration
     # https://ipython.readthedocs.io/en/stable/config/integrating.html

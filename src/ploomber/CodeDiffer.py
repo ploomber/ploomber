@@ -107,10 +107,10 @@ class CodeDiffer:
     def code_is_different(self, a, b, language=None):
         normalizer = self._get_normalizer(language)
 
-        a = normalizer(a)
-        b = normalizer(b)
+        a_norm = normalizer(a)
+        b_norm = normalizer(b)
 
-        return a != b
+        return a_norm != b_norm
 
     def get_diff(self, a, b, language=None):
         normalizer = self._get_normalizer(language)

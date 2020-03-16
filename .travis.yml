@@ -4,13 +4,19 @@ services:
   - postgresql
 
 python:
+  - 3.5
   - 3.6
+  - 3.7
 
 install:
   - pip install -r examples/pipeline/intermediate/requirements.txt
   - pip install -r requirements.txt
   - bash sample_package.sh
   - pip install .[all]
+
+
+before_install:
+  - sudo apt-get -y install graphviz
 
 before_script:
   - psql -c 'create database db;' -U postgres

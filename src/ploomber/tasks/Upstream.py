@@ -35,6 +35,10 @@ class Upstream(abc.Mapping):
         if not self._dict:
             raise KeyError('Cannot obtain first upstream task, the Task has '
                            'no upstream dependencies declared')
+        if len(self._dict) > 1:
+            raise ValueError('first can only be used if there is a single '
+                             'upstream dependency, got {}'
+                             .format(len(self._dict)))
 
         first_key = next(iter(self._dict))
         return self._dict[first_key]

@@ -7,6 +7,7 @@ So think about which parts can go away and which ones should not
 """
 import logging
 from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from ploomber.constants import TaskStatus
 from ploomber.executors.Executor import Executor
 from ploomber.executors.LoggerHandler import LoggerHandler
@@ -43,10 +44,8 @@ class Parallel(Executor):
     If any task crashes, downstream tasks execution is aborted, building
     continues until no more tasks can be executed
     """
-    # Tasks should not create child processes, see documention:
+    # NOTE: Tasks should not create child processes
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.daemon
-    TASKS_CAN_CREATE_CHILD_PROCESSES = False
-    STOP_ON_EXCEPTION = False
 
     def __init__(self, processes=4, logging_directory=None,
                  logging_level=logging.INFO):
@@ -88,18 +87,19 @@ class Parallel(Executor):
             task = future_mapping[future]
             self._logger.debug('Added %s to the list of finished tasks...',
                                task.name)
-
-            result = future.result()
-
-            if isinstance(result, ExceptionResult):
-                # TODO: must check for esxecution status - if there is an error
-                # is this status updated automatically? cause it will be better
-                # for tasks to update their status by themselves, then have a
-                # manager to update the other tasks statuses whenever one finishes
-                # to know which ones are available for execution
-                task.exec_status = TaskStatus.Errored
+            try:
+                result = future.result()
+            except BrokenProcessPool as e:
+                # ignore the error here but flag the task,
+                # so next_task is able to stop the iteration,
+                # when we call result after breaking the loop,
+                # this will show up
+                task.exec_status = TaskStatus.BrokenProcessPool
             else:
-                task.exec_status = TaskStatus.Executed
+                if isinstance(result, ExceptionResult):
+                    task.exec_status = TaskStatus.Errored
+                else:
+                    task.exec_status = result
 
             done.append(task)
 
@@ -110,25 +110,26 @@ class Parallel(Executor):
             a StopIteration exception if there are no more tasks to run, which means
             the DAG is done
             """
-            for name in dag:
-                if dag[name].exec_status == TaskStatus.Aborted:
-                    done.append(dag[name])
+            for task in dag.values():
+                if task.exec_status == TaskStatus.Aborted:
+                    done.append(task)
+                elif task.exec_status == TaskStatus.BrokenProcessPool:
+                    raise StopIteration
 
             # iterate over tasks to find which is ready for execution
-            for task_name in dag:
+            for task in dag.values():
                 # ignore tasks that are already started, I should probably add an
                 # executing status but that cannot exist in the task itself,
                 # maybe in the manaer?
-                if (dag[task_name].exec_status == TaskStatus.WaitingExecution
-                        and dag[task_name] not in started):
-                    t = dag[task_name]
-                    return t
+                if (task.exec_status == TaskStatus.WaitingExecution
+                        and task not in started):
+                    return task
                 # there might be some up-to-date tasks, add them
 
-            # if all tasks are done, stop
             set_done = set([t.name for t in done])
 
             if not self._i % 1000:
+                print('done ', set_done, 'set all', set_all)
                 self._logger.debug('Finished tasks so far: %s', set_done)
                 self._logger.debug('Remaining tasks: %s',
                                    set_all - set_done)
@@ -160,10 +161,11 @@ class Parallel(Executor):
                         logging.info('Added %s to the pool...', task.name)
                         # time.sleep(3)
 
-        exps = ExceptionCollector([f.result()
+        exps = ExceptionCollector([get_future_result(f, future_mapping)
                                    for f, t
                                    in future_mapping.items()
-                                   if isinstance(f.result(), ExceptionResult)])
+                                   if isinstance(get_future_result(f, future_mapping),
+                                                 ExceptionResult)])
 
         if exps:
             raise DAGBuildError('DAG build failed, the following '
@@ -184,3 +186,10 @@ class Parallel(Executor):
     def __setstate__(self, state):
         self.__dict__.update(state)
         self._logger = logging.getLogger(__name__)
+
+
+def get_future_result(future, future_mapping):
+    try:
+        return future.result()
+    except BrokenProcessPool as e:
+        raise BrokenProcessPool('Broken pool {}'.format(future_mapping[future])) from e

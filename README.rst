@@ -8,14 +8,24 @@ ploomber
     :target: https://ploomber.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
+`Click here for documentation <https://ploomber.readthedocs.io/>`_. `Code on Github <https://github.com/ploomber/ploomber>`_.
 
-`Click here for documentation <https://ploomber.readthedocs.io/>`_
+ploomber is an expressive workflow management library that provides incremental builds, testing and debugging tools to accelerate DS/ML pipeline development.
 
-`Code on Github <https://github.com/ploomber/ploomber>`_
+Compatible with Python 3.5 and higher.
 
-ploomber is an expressive workflow management library that provides
-incremental builds, testing and debugging tools to accelerate DS/ML pipeline
-development.
+At a glance
+-----------
+
+* Airflow-like syntax to declare **pipelines as code**
+* Interactive. Once a pipeline is declared, you can **build it right away**, inspect it, check status or even generate HTML reports, use it in a Python session or a Jupyter notebook
+* Fast experimentation. Modify your source code and ploomber will figure out **which tasks to run** and which ones to skip **based on source code changes**
+* Test-driven. Use `on_finish` hooks to **check data assumptions**, verify that an output data frame has no NAs, an "age" column has only positive numbers, etc
+* SQL-friendly. **SQL scripts can be parametrized** for simplicity and consistency using jinja2
+* Notebook-friendly. **Generate reports** in Jupyter notebook format (or HTML) by executing parametrized notebooks using papermill
+* Switch configurations. Automatically **switch pipeline configuration based on the current environment**, for example, make all pipeline output files go to `/data/project/{{user}}`, where `{{user}}` will be automatically replaced depending on the current user
+* Reduce boilerplate code by using the **Tasks library**, for example, dump SQL tables or upload a local file to a database
+
 
 Install
 -------
@@ -86,7 +96,7 @@ Example
     # declare how tasks relate to each other
     task_dump >> task_add_one
 
-    # run the pipeline - incremental buids: ploomber will keep track of each
+    # run the pipeline - incremental builds: ploomber will keep track of each
     # task's source code and will only execute outdated tasks in the next run
     dag.build()
 

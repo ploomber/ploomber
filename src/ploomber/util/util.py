@@ -5,10 +5,12 @@ from pathlib import Path
 from collections import defaultdict
 import shutil
 from pydoc import locate
+import inspect
 
 import numpy as np
 
 from ploomber.products import File
+from ploomber.exceptions import CallbackSignatureError
 
 
 def requires(pkgs, name=None):
@@ -19,6 +21,7 @@ def requires(pkgs, name=None):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
+            # FIXME: use importlib and find_spec to avoid importing here
             missing = [pkg for pkg in pkgs if locate(pkg) is None]
 
             if missing:
@@ -51,7 +54,6 @@ def path2fig(path_to_image, dpi=50):
 
     data = plt.imread(path_to_image)
     height, width, _ = np.shape(data)
-
     fig = plt.figure()
     fig.set_size_inches((width / dpi, height / dpi))
     ax = plt.Axes(fig, [0, 0, 1, 1])
@@ -130,3 +132,29 @@ def isiterable(obj):
         return False
     else:
         return True
+
+
+def callback_check(fn, available):
+    parameters = inspect.signature(fn).parameters
+    optional = {name for name, param in parameters.items()
+                if param.default != inspect._empty}
+
+    if optional:
+        raise CallbackSignatureError('Callback functions cannot have '
+                                     'parameters with default values, '
+                                     'got: {} in "{}"'.format(optional,
+                                                              fn.__name__))
+
+    required = {name for name, param in parameters.items()
+                if param.default == inspect._empty}
+
+    available_set = set(available)
+    extra = required - available_set
+
+    if extra:
+        raise CallbackSignatureError('Callback function "{}" unknown '
+                                     'parameter(s): {}, available ones are: '
+                                     '{}'.format(fn.__name__, extra,
+                                                 available_set))
+
+    return {k: v for k, v in available.items() if k in required}

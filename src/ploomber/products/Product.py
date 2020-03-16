@@ -5,15 +5,50 @@ for example a file can be specified using a absolute path, a table can be
 fully specified by specifying a database, a schema and a name. Names
 are lazy evaluated, they can be built from templates
 """
+from datetime import datetime
 import abc
 import logging
 from math import ceil
 
 
+class StoredMetadata:
+
+    def __init__(self, fetch_fn, write_fn):
+        self.fetch_fn = fetch_fn
+        self.write_fn = write_fn
+        self._d = dict(timestamp=None, stored_source_code=None)
+        self.fetch_fn()
+
+    # def fetch(self):
+    #     # ignore metadata it product does not exists
+    #     res = self.fetch_fn()
+
+    #     if res is not None:
+    #         self._data = res
+
+    def overwrite(self, new_source_code):
+        self._d['stored_source_code'] = new_source_code
+        self._d['timestamp'] = datetime.now().timestamp()
+        self.write_fn(self._d)
+
+    @property
+    def timestamp(self):
+        return self._d['timestamp']
+
+    @property
+    def stored_source_code(self):
+        return self._d['stored_source_code']
+
+    def __getitem__(self, key):
+        return self._d[key]
+
+    def __setitem__(self, key, value):
+        self._d[key] = value
+
+
 class Product(abc.ABC):
     """
-    A product is a persistent triggered by a Task, this is an abstract
-    class for all products
+    Abstract class for all Products
     """
 
     def __init__(self, identifier):
@@ -23,13 +58,18 @@ class Product(abc.ABC):
             raise TypeError('_init_identifier must return a value, returned '
                             'None')
 
-        self.did_download_metadata = False
         self.task = None
         self.logger = logging.getLogger('{}.{}'.format(__name__,
                                                        type(self).__name__))
 
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
+        self._metadata = None
+
+    def _save_metadata(self, source_code):
+        self.metadata['timestamp'] = datetime.now().timestamp()
+        self.metadata['stored_source_code'] = source_code
+        self.save_metadata(self.metadata)
 
     @property
     def timestamp(self):
@@ -48,28 +88,34 @@ class Product(abc.ABC):
 
     @property
     def metadata(self):
-        if self.did_download_metadata:
+        # This method calls Product.fetch_metadata() (provided by subclasses),
+        # if some conditions are met, then it saves it in Product.metadata
+        if self._metadata is not None:
             return self._metadata
         else:
-            self._get_metadata()
-            self.did_download_metadata = True
+            metadata_empty = dict(timestamp=None, stored_source_code=None)
+
+            # if the product does not exist, return a metadata
+            # with None in the values
+            if not self.exists():
+                self._metadata = metadata_empty
+            else:
+                metadata = self.fetch_metadata()
+
+                if metadata is None:
+                    self._metadata = metadata_empty
+                else:
+                    # FIXME: we need to further validate this, need to check
+                    # that this is an instance of mapping, if yes, then
+                    # check keys [timestamp, stored_source_code], check
+                    # types and fill with None if any of the keys is missing
+                    self._metadata = metadata
+
             return self._metadata
 
     @task.setter
     def task(self, value):
         self._task = value
-
-    @timestamp.setter
-    def timestamp(self, value):
-        self.metadata['timestamp'] = value
-
-    @stored_source_code.setter
-    def stored_source_code(self, value):
-        self.metadata['stored_source_code'] = value
-
-    @metadata.setter
-    def metadata(self, value):
-        self._metadata = value
 
     def render(self, params, **kwargs):
         """
@@ -86,6 +132,9 @@ class Product(abc.ABC):
     def _outdated_data_dependencies(self):
 
         if self._outdated_data_dependencies_status is not None:
+            self.logger.debug(('Returning cached data dependencies status. '
+                               'Outdated? %s'),
+                              self._outdated_data_dependencies_status)
             return self._outdated_data_dependencies_status
 
         def is_outdated(up_prod):
@@ -101,12 +150,20 @@ class Product(abc.ABC):
 
         outdated = any([is_outdated(up.product) for up
                         in self.task.upstream.values()])
+
         self._outdated_data_dependencies_status = outdated
+
+        self.logger.debug(('Finished checking data dependencies status. '
+                           'Outdated? %s'),
+                          self._outdated_data_dependencies_status)
 
         return self._outdated_data_dependencies_status
 
     def _outdated_code_dependency(self):
         if self._outdated_code_dependency_status is not None:
+            self.logger.debug(('Returning cached code dependencies status. '
+                               'Outdated? %s'),
+                              self._outdated_code_dependency_status)
             return self._outdated_code_dependency_status
 
         outdated = self.task.dag.differ.code_is_different(
@@ -116,39 +173,27 @@ class Product(abc.ABC):
 
         self._outdated_code_dependency_status = outdated
 
+        self.logger.debug(('Finished checking code dependencies status. '
+                           'Outdated? %s'),
+                          self._outdated_code_dependency_status)
+
         return self._outdated_code_dependency_status
 
-    def _clear_cached_outdated_status(self):
+    def _clear_cached_status(self):
+        # These flags keep a cache of the Product's outdated status, they
+        # are computed using the Product's metadata, hence they will only
+        # change when the metadata changes. Metadata changes in three
+        # situations: 1) at startup (loaded from disk), 2) after build
+        # (metadata is updated and then saved to disk) and 3) Forced load
+        # (if we force loading, currently not implemented).
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
-
-    def _get_metadata(self):
-        """
-        This method calls Product.fetch_metadata() (provided by subclasses),
-        if some conditions are met, then it saves it in Product.metadata
-        """
-        metadata_empty = dict(timestamp=None, stored_source_code=None)
-        # if the product does not exist, return a metadata
-        # with None in the values
-        if not self.exists():
-            self.metadata = metadata_empty
-        else:
-            metadata = self.fetch_metadata()
-
-            if metadata is None:
-                self.metadata = metadata_empty
-            else:
-                # FIXME: we need to further validate this, need to check
-                # that this is an instance of mapping, if yes, then
-                # check keys [timestamp, stored_source_code], check
-                # types and fill with None if any of the keys is missing
-                self.metadata = metadata
 
     def __str__(self):
         return str(self._identifier)
 
     def __repr__(self):
-        return f'{type(self).__name__}({repr(self._identifier.safe)})'
+        return '{}({})'.format(type(self).__name__, self._identifier.safe)
 
     def _short_repr(self):
         s = str(self._identifier)
@@ -205,7 +250,7 @@ class Product(abc.ABC):
     # when writing a new product to know that the metaada to save is
     # in self.metadata
     @abc.abstractmethod
-    def save_metadata(self):
+    def save_metadata(self, metadata):
         pass
 
     @abc.abstractmethod

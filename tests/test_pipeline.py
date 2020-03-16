@@ -5,7 +5,7 @@ from ploomber.tasks import ShellScript
 from ploomber.products import File
 
 
-def test_non_existent_file():
+def test_non_existent_file(tmp_directory):
     dag = DAG()
     f = File('file.txt')
     ta = ShellScript('echo hi > {{product}}', f, dag, 'ta')
@@ -41,7 +41,7 @@ def test_outdated_data_simple_dependency(tmp_directory):
 
     dag.build()
 
-    dag._clear_cached_outdated_status()
+    dag._clear_cached_status()
 
     # they both exist now
     assert ta.product.exists()
@@ -54,7 +54,7 @@ def test_outdated_data_simple_dependency(tmp_directory):
     # let's make b outdated
     ta.build(force=True)
 
-    dag._clear_cached_outdated_status()
+    dag._clear_cached_status()
 
     assert not ta.product._outdated()
     assert tb.product._outdated()
@@ -89,7 +89,7 @@ def test_many_upstream(tmp_directory):
     assert not tc.product._outdated()
 
     ta.build(force=True)
-    dag._clear_cached_outdated_status()
+    dag._clear_cached_status()
 
     assert not ta.product._outdated()
     assert not tb.product._outdated()
@@ -97,7 +97,7 @@ def test_many_upstream(tmp_directory):
 
     dag.build()
     tb.build(force=True)
-    dag._clear_cached_outdated_status()
+    dag._clear_cached_status()
 
     assert not ta.product._outdated()
     assert not tb.product._outdated()
@@ -180,7 +180,7 @@ def test_adding_tasks_left():
 
     assert not ta.upstream
     assert not tb.upstream
-    assert list(tc.upstream.values()) == [ta, tb]
+    assert set(tc.upstream.values()) == {ta, tb}
 
 
 def test_adding_tasks_right():

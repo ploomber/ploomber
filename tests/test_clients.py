@@ -33,6 +33,15 @@ def test_pickle_sqlalchemyclient(tmp_directory):
     assert pickle.dumps(client)
 
 
+def test_send_more_than_one_command_in_sqlite(tmp_directory):
+    client = SQLAlchemyClient('sqlite:///my_db.db')
+    code = """
+    CREATE TABLE my_table (num INT);
+    SELECT * FROM my_table
+    """
+    client.execute(code)
+
+
 def test_shell_client(tmp_directory):
     path = Path(tmp_directory, 'a_file')
 

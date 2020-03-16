@@ -24,10 +24,10 @@ NOTE: Params trigger different data output (and should make tasks outdated),
 Tasks constructor args (such as chunksize in SQLDump) should not change
 the output, hence shoulf not make tasks outdated
 """
-import inspect
-import abc
 import traceback
+import abc
 import logging
+import warnings
 from datetime import datetime
 from ploomber.products import Product, MetaProduct
 from ploomber.dag import DAG
@@ -39,13 +39,14 @@ from ploomber.tasks.Params import Params
 from ploomber.Table import Row
 from ploomber.sources.sources import Source
 from ploomber.util import isiterable
+from ploomber.util.util import callback_check
 
 import humanize
 
 
 class Task(abc.ABC):
     """
-    A task represents a unit of work.
+    Abstract class for all Tasks
 
     Parameters
     ----------
@@ -153,11 +154,12 @@ class Task(abc.ABC):
         self.client = None
 
         self.exec_status = TaskStatus.WaitingRender
-        self.build_report = None
 
         self._on_finish = None
         self._on_failure = None
         self._on_render = None
+        self._available_callback_kwargs = {'task': self,
+                                           'client': self.client}
 
     @property
     def name(self):
@@ -180,6 +182,7 @@ class Task(abc.ABC):
         """
         return self._product
 
+    # FIXME: remove, only keep source
     @property
     def source_code(self):
         """
@@ -237,7 +240,20 @@ class Task(abc.ABC):
 
     @on_finish.setter
     def on_finish(self, value):
+        callback_check(value, self._available_callback_kwargs)
         self._on_finish = value
+
+    def _run_on_finish(self):
+        if self.on_finish:
+            kwargs = callback_check(self.on_finish,
+                                    self._available_callback_kwargs)
+            try:
+                self.on_finish(**kwargs)
+            except Exception as e:
+                self.exec_status = TaskStatus.Errored
+                raise type(e)('Exception when running on_finish '
+                              'for task "{}": {}'
+                              .format(self.name, e)) from e
 
     @property
     def on_failure(self):
@@ -249,7 +265,19 @@ class Task(abc.ABC):
 
     @on_failure.setter
     def on_failure(self, value):
+        callback_check(value, self._available_callback_kwargs)
         self._on_failure = value
+
+    def _run_on_failure(self):
+        if self.on_failure:
+            kwargs = callback_check(self.on_failure,
+                                    self._available_callback_kwargs)
+            try:
+                self.on_failure(**kwargs)
+            except Exception:
+                tr = traceback.format_exc()
+                warnings.warn('Exception when running on_failure '
+                              'for task "{}". {}'.format(self.name, tr))
 
     @property
     def on_render(self):
@@ -257,7 +285,22 @@ class Task(abc.ABC):
 
     @on_render.setter
     def on_render(self, value):
+        callback_check(value, self._available_callback_kwargs)
         self._on_render = value
+
+    def _run_on_render(self):
+        if self.on_render:
+            self._logger.debug('Calling on_render hook on task %s', self.name)
+
+            kwargs = callback_check(self.on_render,
+                                    self._available_callback_kwargs)
+            try:
+                self.on_render(**kwargs)
+            except Exception as e:
+                self.exec_status = TaskStatus.ErroredRender
+                raise type(e)('Exception when running on_render '
+                              'for task "{}": {}'
+                              .format(self.name, e)) from e
 
     @property
     def exec_status(self):
@@ -265,11 +308,27 @@ class Task(abc.ABC):
 
     @exec_status.setter
     def exec_status(self, value):
-        self._logger.debug('Setting %s status to %s', self, value)
+        if value not in list(TaskStatus):
+            raise ValueError('Setting task.exec_status to an unknown '
+                             'value: %s', value)
+
+        self._logger.debug('Setting "%s" status to %s', self.name, value)
         self._exec_status = value
         self._update_downstream_status()
 
-    def build(self, force=False):
+        # TODO: move this to build method? do we really need to run this in
+        # the main process?
+        if value == TaskStatus.Executed:
+            # run on finish first, if this fails, we don't want to save
+            # metadata
+            self._run_on_finish()
+
+            self.product._save_metadata(self.source_code)
+
+        elif value == TaskStatus.Errored:
+            self._run_on_failure()
+
+    def build(self, force=False, within_dag=False):
         """Run the task if needed by checking its dependencies
 
         Returns
@@ -277,91 +336,54 @@ class Task(abc.ABC):
         dict
             A dictionary with keys 'run' and 'elapsed'
         """
+        if within_dag:
+            return self._build(force)
+        else:
+            try:
+                res = self._build(force)
+            except Exception as e:
+                self.exec_status = TaskStatus.Errored
+                raise type(e)('Error calling build on task {}'
+                              .format(self.name)) from e
+
+            self.exec_status = TaskStatus.Executed
+            self.product._clear_cached_status()
+
+            return res
+
+    def _build(self, force):
         # cannot keep running, we depend on the render step to get all the
         # parameters resolved (params, upstream, product)
         if self.exec_status == TaskStatus.WaitingRender:
             raise TaskBuildError('Cannot build task that has not been '
                                  'rendered, call DAG.render() first')
 
-        # if aborted (this happens when an upstream dependency fails)
         elif self.exec_status == TaskStatus.Aborted:
-            # TODO: change Ran column for status
-            self.build_report = Row({'name': self.name, 'Ran?': False,
-                                     'Elapsed (s)': 0, })
-            return self
+            raise TaskBuildError('Attempted to run task "{}", which has '
+                                 'status TaskStatus.Aborted'
+                                 .format(self.name))
 
         # NOTE: should i fetch metadata here? I need to make sure I have
         # the latest before building
 
-        self._logger.info(f'-----\nChecking {repr(self)}....')
-
-        # do not run unless some of the conditions below match...
-        run = False
-        elapsed = 0
-
         if force:
-            self._logger.info('Forcing run, skipping checks...')
+            self._logger.info('Forcing run "%s", skipping checks...',
+                              self.name)
             run = True
         else:
-            # not forcing, need to check dependencies...
-            p_exists = self.product.exists()
-
-            # check dependencies only if the product exists and there is
-            # metadata
-            if p_exists and self.product.metadata is not None:
-
-                outdated_data_deps = self.product._outdated_data_dependencies()
-                outdated_code_dep = self.product._outdated_code_dependency()
-
-                self._logger.info('Checking dependencies...')
-
-                if outdated_data_deps:
-                    run = True
-                    self._logger.info('Outdated data deps...')
-                else:
-                    self._logger.info('Up-to-date data deps...')
-
-                if outdated_code_dep:
-                    run = True
-                    self._logger.info('Outdated code dep...')
-                else:
-                    self._logger.info('Up-to-date code dep...')
-            else:
-                run = True
-
-                # just log why it will run
-                if not p_exists:
-                    self._logger.info('Product does not exist...')
-
-                if self.product.metadata is None:
-                    self._logger.info('Product metadata is None...')
-
-                self._logger.info('Running...')
+            run = self.should_execute()
 
         if run:
-            self._logger.info(f'Starting execution: {repr(self)}')
+            self._logger.info('Starting execution: %s', repr(self))
 
             then = datetime.now()
 
-            try:
-                self.run()
-            except Exception as e:
-                tb = traceback.format_exc()
-                self.exec_status = TaskStatus.Errored
-
-                # task failed, execute on_failure hook if any...
-                if self.on_failure:
-                    try:
-                        self.on_failure(self, tb)
-                    except Exception:
-                        self._logger.exception('Error executing on_failure '
-                                               'callback')
-                raise TaskBuildError('Error executing task "{}"'
-                                     .format(self)) from e
+            self.run()
 
             now = datetime.now()
             elapsed = (now - then).total_seconds()
-            self._logger.info(f'Done. Operation took {elapsed:.1f} seconds')
+            self._logger.info('Done. Operation took {:.1f} seconds'
+                              .format(elapsed))
 
             # TODO: also check that the Products were updated:
             # if they did not exist, they must exist now, if they alredy
@@ -369,41 +391,62 @@ class Task(abc.ABC):
             # used. maybe run fetch metadata again and validate?
 
             if not self.product.exists():
-                raise TaskBuildError(f'Error building task "{self}": '
+                raise TaskBuildError('Error building task "{}": '
                                      'the task ran successfully but product '
-                                     f'"{self.product}" does not exist yet '
-                                     '(task.product.exist() returned False)')
+                                     '"{}" does not exist yet '
+                                     '(task.product.exist() returned False)'
+                                     .format(self, self.product))
 
-            if self.on_finish:
-                # execute on_finish hook
-                try:
-                    if 'client' in inspect.getfullargspec(self.on_finish).args:
-                        self.on_finish(self, client=self.client)
-                    else:
-                        self.on_finish(self)
+        # NOTE: return the TaskReport here?
+        return TaskStatus.Executed if run else TaskStatus.Skipped
 
-                except Exception as e:
-                    raise TaskBuildError('Exception when running on_finish '
-                                         'for task {}: {}'.format(self, e)) from e
+    def should_execute(self):
+        """
+        Given current conditions, determine if calling Task.build() should
+        actually run the Task.
 
-            # update metadata: this has to be after running the on_finish
-            # hook, to prevent failing tasks to save metadata and being skipped
-            # in the next build
-            self.product.timestamp = datetime.now().timestamp()
-            self.product.stored_source_code = self.source_code
-            self.product.save_metadata()
+        Returns
+        -------
+        bool
+            True if the Task should execute, False otherwise
+        """
+        run = False
 
+        self._logger.info('Checking status for task "%s"', self.name)
+
+        # check product...
+        p_exists = self.product.exists()
+
+        # check dependencies only if the product exists and there is metadata
+        if p_exists and self.product.metadata is not None:
+
+            outdated_data_deps = self.product._outdated_data_dependencies()
+            outdated_code_dep = self.product._outdated_code_dependency()
+
+            if outdated_data_deps:
+                run = True
+                self._logger.info('Outdated data deps...')
+            else:
+                self._logger.info('Up-to-date data deps...')
+
+            if outdated_code_dep:
+                run = True
+                self._logger.info('Outdated code dep...')
+            else:
+                self._logger.info('Up-to-date code dep...')
         else:
-            self._logger.info(f'No need to run {repr(self)}')
+            run = True
 
-        self._logger.info('-----\n')
+            # just log why it will run
+            if not p_exists:
+                self._logger.info('Product does not exist...')
 
-        self.exec_status = TaskStatus.Executed
+            if self.product.metadata is None:
+                self._logger.info('Product metadata is None...')
 
-        self.build_report = Row({'name': self.name, 'Ran?': run,
-                                 'Elapsed (s)': elapsed, })
+        self._logger.info('Should run? %s', run)
 
-        return self
+        return run
 
     def render(self):
         """
@@ -411,7 +454,15 @@ class Task(abc.ABC):
         first, for that reason, this method will usually not be called
         directly but via DAG.render(), which renders in the right order
         """
-        self._render_product()
+        self._logger.debug('Calling render on task %s', self.name)
+
+        try:
+            self._render_product()
+        except Exception as e:
+            self.exec_status = TaskStatus.ErroredRender
+            raise type(e)('Error rendering product from Task "{}", '
+                          ' check the full traceback above for details'
+                          .format(repr(self), self.params)) from e
 
         # Params are read-only for users, but we have to add the product
         # so we do it directly to the dictionary
@@ -429,24 +480,14 @@ class Task(abc.ABC):
                     self.source.render(self.params)
         except Exception as e:
             self.exec_status = TaskStatus.ErroredRender
-            raise type(e)('Error rendering code from Task "{}", '
+            raise type(e)('Error rendering source from Task "{}", '
                           ' check the full traceback above for details'
                           .format(repr(self), self.params)) from e
-
-        # abstract this, we have the same code for this and the other hooks
-        if self.on_render:
-            try:
-                if 'client' in inspect.getfullargspec(self.on_render).args:
-                    self.on_render(self, client=self.client)
-                else:
-                    self.on_render(self)
-            except Exception as e:
-                raise TaskBuildError('Exception when running on_render '
-                                     'for task {}: {}'.format(self, e)) from e
 
         self.exec_status = (TaskStatus.WaitingExecution
                             if not self.upstream
                             else TaskStatus.WaitingUpstream)
+        self._run_on_render()
 
     def set_upstream(self, other):
         self.dag._add_edge(other, self)
@@ -455,13 +496,13 @@ class Task(abc.ABC):
         """Shows a text summary of what this task will execute
         """
 
-        plan = f"""
-        Input parameters: {self.params}
-        Product: {self.product}
+        plan = """
+        Input parameters: {}
+        Product: {}
 
         Source code:
-        {self.source_code}
-        """
+        {}
+        """.format(self.params, self.product, self.source_code)
 
         print(plan)
 
@@ -541,23 +582,25 @@ class Task(abc.ABC):
         return downstream
 
     def _update_downstream_status(self):
+        # TODO: move to DAG
         def update_status(task):
             any_upstream_errored_or_aborted = any([t.exec_status
                                                    in (TaskStatus.Errored,
                                                        TaskStatus.Aborted)
                                                    for t
                                                    in task.upstream.values()])
-            all_upstream_executed = all([t.exec_status == TaskStatus.Executed
-                                         for t in task.upstream.values()])
+            all_upstream_done = all([t.exec_status
+                                     in {TaskStatus.Executed,
+                                         TaskStatus.Skipped}
+                                     for t in task.upstream.values()])
 
             if any_upstream_errored_or_aborted:
                 task.exec_status = TaskStatus.Aborted
             elif any([t.exec_status in (TaskStatus.ErroredRender,
                                         TaskStatus.AbortedRender)
-                      for t
-                      in task.upstream.values()]):
+                      for t in task.upstream.values()]):
                 task.exec_status = TaskStatus.AbortedRender
-            elif all_upstream_executed:
+            elif all_upstream_done:
                 task.exec_status = TaskStatus.WaitingExecution
 
         for t in self._get_downstream():
@@ -579,7 +622,8 @@ class Task(abc.ABC):
             return TaskGroup((self, other))
 
     def __repr__(self):
-        return f'{type(self).__name__}: {self.name} -> {repr(self.product)}'
+        return ('{}: {} -> {}'
+                .format(type(self).__name__, self.name, repr(self.product)))
 
     def __str__(self):
         return str(self.product)
@@ -589,7 +633,8 @@ class Task(abc.ABC):
             max_l = 30
             return s if len(s) <= max_l else s[:max_l - 3] + '...'
 
-        return f'{short(self.name)} -> \n{self.product._short_repr()}'
+        return ('{} -> \n{}'
+                .format(short(self.name), self.product._short_repr()))
 
     # __getstate__ and __setstate__ are needed to make this picklable
 

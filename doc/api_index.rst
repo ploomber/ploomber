@@ -1,5 +1,5 @@
-API Summary
-===========
+API
+===
 
 DAG
 ---
@@ -19,6 +19,7 @@ Tasks
 .. autosummary::
     :toctree:
 
+    Task
     PythonCallable
     NotebookRunner
     ShellScript
@@ -40,6 +41,7 @@ Products
 .. autosummary::
     :toctree:
 
+    Product
     File
     PostgresRelation
     SQLiteRelation
@@ -52,6 +54,7 @@ Clients
 .. autosummary::
     :toctree:
 
+    Client
     DBAPIClient
     SQLAlchemyClient
     ShellClient
@@ -69,8 +72,8 @@ Env
     Env
 
 
-Utilities
----------
+SourceLoader
+------------
 
 .. currentmodule:: ploomber
 

@@ -21,22 +21,14 @@ class SQLiteRelation(Product):
 
     def __init__(self, identifier, client=None):
         super().__init__(identifier)
-        self._identifier._schema = None
         self._client = client
 
     def _init_identifier(self, identifier):
-        if identifier[0] is not None:
-            raise ValueError('SQLite does not support schemas, you should '
-                             'pass None')
-
-        # SQLRelationPlaceholder needs a schema value, we use a dummy value
-        # for itniialization
-        # FIXME: this is a hacky, refactor SQLRelationPlaceholder
-        identifier = ('', identifier[1], identifier[2])
         return SQLRelationPlaceholder(identifier)
 
     @property
     def client(self):
+        # FIXME: this nested reference looks ugly
         if self._client is None:
             default = self.task.dag.clients.get(type(self))
 
@@ -77,10 +69,10 @@ class SQLiteRelation(Product):
         else:
             return None
 
-    def save_metadata(self):
+    def save_metadata(self, metadata):
         self._create_metadata_relation()
 
-        metadata_bin = json.dumps(self.metadata).encode('utf-8')
+        metadata_bin = json.dumps(metadata).encode('utf-8')
 
         query = """
             REPLACE INTO _metadata(metadata, name)
@@ -124,6 +116,10 @@ class SQLiteRelation(Product):
     @property
     def schema(self):
         return self._identifier.schema
+
+    @property
+    def kind(self):
+        return self._identifier.kind
 
 
 class PostgresRelation(Product):
@@ -200,8 +196,8 @@ class PostgresRelation(Product):
         # TODO: also check if metadata  does not give any parsing errors,
         # if yes, also return a dict with None values, and maybe emit a warn
 
-    def save_metadata(self):
-        metadata = Base64Serializer.serialize(self.metadata)
+    def save_metadata(self, metadata):
+        metadata = Base64Serializer.serialize(metadata)
 
         query = (("COMMENT ON {} {} IS '{}';"
                   .format(self._identifier.kind,
@@ -248,8 +244,9 @@ class PostgresRelation(Product):
         """Deletes the product
         """
         cascade = 'CASCADE' if force else ''
-        query = f"DROP {self._identifier.kind} IF EXISTS {self} {cascade}"
-        self.logger.debug(f'Running "{query}" on the databse...')
+        query = ("DROP {} IF EXISTS {} {}"
+                 .format(self._identifier.kind, self, cascade))
+        self.logger.debug('Running "%s" on the databse...', query)
 
         cur = self.client.connection.cursor()
         cur.execute(query)
@@ -263,3 +260,7 @@ class PostgresRelation(Product):
     @property
     def schema(self):
         return self._identifier.schema
+
+    @property
+    def kind(self):
+        return self._identifier.kind

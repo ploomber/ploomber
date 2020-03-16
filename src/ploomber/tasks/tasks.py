@@ -5,7 +5,6 @@ A Task is a unit of work that produces a persistent change (Product)
 such as a bash or a SQL script
 """
 import pdb
-from urllib import request
 from multiprocessing import Pool
 from ploomber.exceptions import SourceInitializationError
 from ploomber.tasks.Task import Task
@@ -42,31 +41,14 @@ class PythonCallable(Task):
         return PythonCallableSource(source)
 
     def run(self):
-        if self.dag._executor.TASKS_CAN_CREATE_CHILD_PROCESSES:
-            p = Pool()
-            res = p.apply_async(func=self.source._source, kwds=self.params)
-
-            # calling this make sure we catch the exception, from the docs:
-            # Return the result when it arrives. If timeout is not None and
-            # the result does not arrive within timeout seconds then
-            # multiprocessing.TimeoutError is raised. If the remote call
-            # raised an exception then that exception will be reraised by
-            # get().
-            # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.AsyncResult.get
-            if self.dag._executor.STOP_ON_EXCEPTION:
-                res.get()
-
-            p.close()
-            p.join()
-        else:
-            self.source._source(**self.params)
+        self.source.value(**self.params)
 
     def debug(self):
         """
         Run callable in debug mode.
 
         """
-        pdb.runcall(self.source._source, **self.params)
+        pdb.runcall(self.source.value, **self.params)
 
 
 class ShellScript(Task):
@@ -135,6 +117,8 @@ class DownloadFromURL(Task):
         A str to indentify this task. Should not already exist in the dag
     """
     def run(self):
+        # lazily load urllib as it is slow to import
+        from urllib import request
         request.urlretrieve(str(self.source), filename=str(self.product))
 
     def _init_source(self, source):

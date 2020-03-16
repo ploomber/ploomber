@@ -8,6 +8,8 @@ import logging
 
 class Client(abc.ABC):
     """
+    Abstract class for all clients
+
     Clients are classes that communicate with another system (usually a
     database), they provide a thin wrapper around libraries that implement
     clients to avoid managing connections directly. The most common use

@@ -1,6 +1,7 @@
 from enum import Enum
 
 
+# TODO: rename to use the name wors as the hooks: finished and failure
 class DAGStatus(Enum):
     WaitingRender = 'waiting_render'
     WaitingExecution = 'waiting_execution'
@@ -9,6 +10,7 @@ class DAGStatus(Enum):
     Errored = 'errored'
 
 
+# TODO: rename to use the name wors as the hooks: finished and failure
 class TaskStatus(Enum):
     # waiting render
     WaitingRender = 'waiting_render'
@@ -21,7 +23,10 @@ class TaskStatus(Enum):
     AbortedRender = 'aborted_render'
     # succesfully executed
     Executed = 'executed'
+    Skipped = 'skipped'
     # crashed
     Errored = 'errored'
     # an upstream dependency crashed
     Aborted = 'aborted'
+
+    BrokenProcessPool = 'broken_process_pool'
