@@ -5,7 +5,7 @@ CHANGELOG
 --------
 
 * DAG parallel executor
-* [Experimenta] Interact with pipelines from the command line (entry module)
+* [Experimental] Interact with pipelines from the command line (entry module)
 
 0.3dev
 ------
