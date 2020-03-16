@@ -35,23 +35,6 @@ def test_task_can_infer_name_from_source():
     assert t.name == 'my_fn'
 
 
-def test_clear_product_cache_status():
-    import logging
-    logging.basicConfig(level='DEBUG')
-
-    dag = DAG()
-    t = PythonCallable(touch, File('some_file'), dag)
-
-    t.product.metadata
-    t.exec_status
-
-    dag.status()
-
-    dag.build()
-
-    assert t.name == 'my_fn2'
-
-
 def test_task_raises_error_if_name_cannot_be_infered():
     dag = DAG()
 
@@ -86,7 +69,7 @@ def test_postgresscript_with_relation():
             == 'CREATE TABLE user.table AS SELECT * FROM some_table')
 
 
-def test_task_change_in_status():
+def test_task_change_in_status(tmp_directory):
     # NOTE: there are some similar tests in test_dag.py - maybe move them?
     dag = DAG('dag')
 
