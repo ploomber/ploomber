@@ -9,6 +9,7 @@ CHANGELOG
 
 0.3dev
 ------
+* New Quickstart and User Guide section in documentation
 * DAG rendering and build now continue until no more tasks can render/build (instead of failing at the first exception)
 * New @with_env and @load_env decorators for managing environments
 * Env expansion ({{user}} expands to the current, also {{git}} and {{version}} available)
