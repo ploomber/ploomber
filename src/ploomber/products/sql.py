@@ -69,10 +69,10 @@ class SQLiteRelation(Product):
         else:
             return None
 
-    def save_metadata(self):
+    def save_metadata(self, metadata):
         self._create_metadata_relation()
 
-        metadata_bin = json.dumps(self.metadata).encode('utf-8')
+        metadata_bin = json.dumps(metadata).encode('utf-8')
 
         query = """
             REPLACE INTO _metadata(metadata, name)
@@ -196,8 +196,8 @@ class PostgresRelation(Product):
         # TODO: also check if metadata  does not give any parsing errors,
         # if yes, also return a dict with None values, and maybe emit a warn
 
-    def save_metadata(self):
-        metadata = Base64Serializer.serialize(self.metadata)
+    def save_metadata(self, metadata):
+        metadata = Base64Serializer.serialize(metadata)
 
         query = (("COMMENT ON {} {} IS '{}';"
                   .format(self._identifier.kind,

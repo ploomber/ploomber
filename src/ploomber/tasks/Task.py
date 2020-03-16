@@ -325,7 +325,7 @@ class Task(abc.ABC):
 
             self.product.timestamp = datetime.now().timestamp()
             self.product.stored_source_code = self.source_code
-            self.product.save_metadata()
+            self.product.save_metadata(self.product.metadata)
 
         elif value == TaskStatus.Errored:
             self._run_on_failure()

@@ -59,6 +59,8 @@ class MetaProduct:
 
     @property
     def metadata(self):
+        # FIXME: return a single dictionary, all products should have the
+        # same metadata, no need to keep them all
         # this has to happen dynamically since it depends on
         # the tasks being rendered already
         return {p: p.metadata for p in self.products}
@@ -140,9 +142,11 @@ class MetaProduct:
         # are supported such as NotebookRunner that depends on papermill
         return self.products.to_json_serializable()
 
-    def save_metadata(self):
+    def save_metadata(self, metadata):
+        # TODO: clean this up
+        metadata = list(metadata.values())[0]
         for p in self.products:
-            p.save_metadata()
+            p.save_metadata(metadata)
 
     def render(self, params, **kwargs):
         for p in self.products:

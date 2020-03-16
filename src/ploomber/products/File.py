@@ -49,9 +49,9 @@ class File(Product):
 
         return dict(timestamp=timestamp, stored_source_code=stored_source_code)
 
-    def save_metadata(self):
+    def save_metadata(self, metadata):
         # timestamp automatically updates when the file is saved...
-        self._path_to_stored_source_code.write_text(self.stored_source_code)
+        self._path_to_stored_source_code.write_text(metadata['stored_source_code'])
 
     def exists(self):
         return self._path_to_file.exists()

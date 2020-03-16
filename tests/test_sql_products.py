@@ -81,7 +81,7 @@ def test_sqlite_product_save_metadata(tmp_directory):
     numbers.metadata['timestamp'] = datetime.now().timestamp()
     numbers.metadata['stored_source_code'] = 'some code'
 
-    numbers.save_metadata()
+    numbers.save_metadata(numbers.metadata)
 
     fetched = numbers.fetch_metadata()
 

@@ -5,9 +5,45 @@ for example a file can be specified using a absolute path, a table can be
 fully specified by specifying a database, a schema and a name. Names
 are lazy evaluated, they can be built from templates
 """
+from datetime import datetime
 import abc
 import logging
 from math import ceil
+
+
+class StoredMetadata:
+
+    def __init__(self, fetch_fn, write_fn):
+        self.fetch_fn = fetch_fn
+        self.write_fn = write_fn
+        self._d = dict(timestamp=None, stored_source_code=None)
+        self.fetch_fn()
+
+    # def fetch(self):
+    #     # ignore metadata it product does not exists
+    #     res = self.fetch_fn()
+
+    #     if res is not None:
+    #         self._data = res
+
+    def overwrite(self, new_source_code):
+        self._d['stored_source_code'] = new_source_code
+        self._d['timestamp'] = datetime.now().timestamp()
+        self.write_fn(self._d)
+
+    @property
+    def timestamp(self):
+        return self._d['timestamp']
+
+    @property
+    def stored_source_code(self):
+        return self._d['stored_source_code']
+
+    def __getitem__(self, key):
+        return self._d[key]
+
+    def __setitem__(self, key, value):
+        self._d[key] = value
 
 
 class Product(abc.ABC):
@@ -220,7 +256,7 @@ class Product(abc.ABC):
     # when writing a new product to know that the metaada to save is
     # in self.metadata
     @abc.abstractmethod
-    def save_metadata(self):
+    def save_metadata(self, metadata):
         pass
 
     @abc.abstractmethod
