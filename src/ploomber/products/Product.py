@@ -67,8 +67,8 @@ class Product(abc.ABC):
         self._metadata = None
 
     def _save_metadata(self, source_code):
-        self.timestamp = datetime.now().timestamp()
-        self.stored_source_code = source_code
+        self.metadata['timestamp'] = datetime.now().timestamp()
+        self.metadata['stored_source_code'] = source_code
         self.save_metadata(self.metadata)
 
     @property
@@ -116,14 +116,6 @@ class Product(abc.ABC):
     @task.setter
     def task(self, value):
         self._task = value
-
-    @timestamp.setter
-    def timestamp(self, value):
-        self.metadata['timestamp'] = value
-
-    @stored_source_code.setter
-    def stored_source_code(self, value):
-        self.metadata['stored_source_code'] = value
 
     def render(self, params, **kwargs):
         """
