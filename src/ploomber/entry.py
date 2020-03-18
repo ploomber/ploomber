@@ -43,10 +43,9 @@ def _parse_module(s):
 
 
 def main():
-    parser = argparse.ArgumentParser()
-
     n_pos = len([arg for arg in sys.argv if not arg.startswith('-')])
 
+    parser = argparse.ArgumentParser()
     parser.add_argument('entry_point', help='Entry point (DAG)')
 
     if n_pos < 2:
@@ -132,8 +131,4 @@ def flatten_dict(d, prefix=''):
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except Exception as e:
-        print('Error:', e)
-        sys.exit(1)
+    main()
