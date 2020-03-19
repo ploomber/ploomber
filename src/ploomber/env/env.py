@@ -12,6 +12,9 @@ from ploomber.env.EnvDict import EnvDict
 class Env:
     """Return the current environment
 
+    NOTE: this API is experimental and subject to change, it is recommmended
+    to use @with_env and @load_env decorators instead
+
     Env provides a clean and consistent way of managing environment and
     configuration settings. Its simplest usage provides access to settings
     specified via an `env.yaml`.
