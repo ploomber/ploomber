@@ -159,7 +159,8 @@ class Task(abc.ABC):
         self._on_failure = None
         self._on_render = None
         self._available_callback_kwargs = {'task': self,
-                                           'client': self.client}
+                                           'client': self.client,
+                                           'product': self.product}
 
     @property
     def name(self):
