@@ -13,12 +13,22 @@ class Upstream(abc.Mapping):
     Used for task upstream dependencies, when employed as a context manager,
     it raises a warning if any of the elements was not used at least once,
     which means there are unused upstream dependencies
+
+    Parameters
+    ----------
+    data : dict
+        Data with upstream dependencies
+
+    name : str
+        Task name, only used to give more context when raising an exception
+        (e.g. trying to access a key that does not exist)
     """
 
-    def __init__(self, data=None):
+    def __init__(self, data=None, name=None):
         self._dict = (data or {})
         self._init_counts()
         self._in_context = False
+        self._name = name
 
     # we cannot define this inside _init_counts or as a lambda, that does
     # not work with pickle
@@ -33,12 +43,13 @@ class Upstream(abc.Mapping):
     @property
     def first(self):
         if not self._dict:
-            raise KeyError('Cannot obtain first upstream task, the Task has '
-                           'no upstream dependencies declared')
+            raise KeyError('Cannot obtain first upstream task, task "{}" has '
+                           'no upstream dependencies declared'
+                           .format(self._name))
         if len(self._dict) > 1:
             raise ValueError('first can only be used if there is a single '
-                             'upstream dependency, got {}'
-                             .format(len(self._dict)))
+                             'upstream dependency, task "{}" has: {}'
+                             .format(self._name, len(self._dict)))
 
         first_key = next(iter(self._dict))
         return self._dict[first_key]
@@ -56,9 +67,9 @@ class Upstream(abc.Mapping):
         try:
             return self._dict[key]
         except KeyError:
-            raise KeyError('Cannot obtain upstream dependency named '
-                           '{}, declared dependencies are: {}'
-                           .format(key, self))
+            raise KeyError('Cannot obtain upstream dependency in task "{}" '
+                           'named "{}", declared dependencies are: {}'
+                           .format(self._name, key, self))
 
     def __setitem__(self, key, value):
         self._dict[key] = value
@@ -87,5 +98,6 @@ class Upstream(abc.Mapping):
                       if count == 0])
 
         if unused:
-            warnings.warn('The following parameters were not used {}'
-                          .format(unused))
+            warnings.warn('The following upstream dependencies in task "{}" '
+                          'were not used {}'
+                          .format(self._name, unused))

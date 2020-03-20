@@ -559,7 +559,8 @@ class Task(abc.ABC):
         # dependencies so we do it directly to the dictionary
         if self.upstream:
             self.params._dict['upstream'] = Upstream({n: t.product for n, t in
-                                                      self.upstream.items()})
+                                                      self.upstream.items()},
+                                                     name=self.name)
 
         # render the current product
         try:

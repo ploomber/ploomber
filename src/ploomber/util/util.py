@@ -134,6 +134,7 @@ def isiterable(obj):
         return True
 
 
+# TODO: add more context to errors, which task and which hook?
 def callback_check(fn, available):
     parameters = inspect.signature(fn).parameters
     optional = {name for name, param in parameters.items()
