@@ -7,8 +7,8 @@ CHANGELOG
 * DAG parallel executor
 * [Experimental] Interact with pipelines from the command line (entry module)
 
-0.3dev
-------
+0.3 (2020-03-20)
+----------------
 * New Quickstart and User Guide section in documentation
 * DAG rendering and build now continue until no more tasks can render/build (instead of failing at the first exception)
 * New @with_env and @load_env decorators for managing environments
@@ -20,14 +20,14 @@ CHANGELOG
 * Now compatible with Python 3.5 and higher
 
 0.2.1 (2020-02-20)
--------------------
+------------------
 
 * Adds integration with pdb via PythonCallable.debug
 * Env.start now accepts a filename to look for
 * Improvements to data_frame_validator
 
 0.2 (2020-02-13)
------------------
+----------------
 
 * Simplifies installation
 * Deletes BashCommand, use ShellScript
