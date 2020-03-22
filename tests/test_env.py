@@ -2,6 +2,7 @@ import importlib
 import platform
 from pathlib import Path
 import getpass
+import inspect
 
 import pytest
 import yaml
@@ -136,6 +137,14 @@ def test_with_env_decorator(cleanup_env):
     assert (1, 2) == my_fn(2)
 
 
+def test_with_env_modifies_signature(cleanup_env):
+    @with_env({'a': 1})
+    def my_fn(env, b):
+        return env.a, b
+
+    assert tuple(inspect.signature(my_fn).parameters) == ('b', )
+
+
 # TODO: try even more nested
 def test_with_env_casts_paths(cleanup_env):
     @with_env({'path': {'data': '/some/path'}})
@@ -233,6 +242,14 @@ def test_can_decorate_w_load_env_without_initialized_env():
     @load_env
     def fn(env):
         pass
+
+
+def test_load_env_modifies_signature(cleanup_env):
+    @load_env
+    def fn(env):
+        pass
+
+    assert tuple(inspect.signature(fn).parameters) == ()
 
 
 def test_load_env_decorator(cleanup_env):

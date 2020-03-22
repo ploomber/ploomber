@@ -1,26 +1,29 @@
 import types
 from functools import wraps
-from inspect import getfullargspec
+from inspect import signature
 
 from ploomber.env.env import Env
 from ploomber.env.EnvDict import EnvDict
 
 
-def _validate_env_decorated_fn(fn):
-    spec = getfullargspec(fn)
-    args_fn = spec.args
+def _validate_and_modify_signature(fn):
+    sig = signature(fn)
 
-    if not len(args_fn):
+    if not len(sig.parameters):
         raise RuntimeError('Function "{}" does not take arguments, '
                            '@with_env decorated functions should '
                            'have env as their first artgument'
                            .format(fn.__name__))
 
-    if args_fn[0] != 'env':
+    if list(sig.parameters.keys())[0] != 'env':
         raise RuntimeError('Function "{}" does not "env" as its first '
                            'argument, which is required to use the '
                            '@with_env decorator'
                            .format(fn.__name__))
+
+    # https://www.python.org/dev/peps/pep-0362/#examples
+    new_sig = sig.replace(parameters=tuple(sig.parameters.values())[1:])
+    fn.__signature__ = new_sig
 
     # TODO: check no arg in the function starts with env (other than env)
 
@@ -29,8 +32,9 @@ def load_env(fn):
     """
     A function decorated with @load_env will be called with the current
     environment in an env keyword argument
+
     """
-    _validate_env_decorated_fn(fn)
+    _validate_and_modify_signature(fn)
 
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -47,7 +51,8 @@ def with_env(source):
     Notes
     -----
     The first argument of a function decorated with @with_env must be named
-    "env"
+    "env", the env will be passed automatically when calling the function. The
+    original function's signature is edited.
 
     You can replace values in the environment, e.g. if you want to replace
     env.key.another, you can call the decorated function with:
@@ -62,7 +67,7 @@ def with_env(source):
 
     """
     def decorator(fn):
-        _validate_env_decorated_fn(fn)
+        _validate_and_modify_signature(fn)
         env_dict = EnvDict(source)
         fn._env_dict = env_dict
 

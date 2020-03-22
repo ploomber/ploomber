@@ -89,8 +89,6 @@ def main():
             parser.add_argument('--'+arg,
                                 help=get_desc(arg))
 
-        required.remove('env')
-
         for arg in required:
             parser.add_argument(arg, help=get_desc(arg))
 
