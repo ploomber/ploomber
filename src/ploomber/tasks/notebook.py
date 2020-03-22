@@ -224,7 +224,10 @@ class NotebookRunner(Task):
                                 **self.papermill_params)
         except Exception as e:
             raise TaskBuildError('An error ocurred when calling'
-                                 ' papermil.execute_notebook') from e
+                                 ' papermil.execute_notebook, partially'
+                                 ' executed notebook with traceback '
+                                 'available at {}'
+                                 .format(str(path_to_out_nb))) from e
 
         # if output format other than ipynb, convert using nbconvert
         # and overwrite
