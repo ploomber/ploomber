@@ -236,7 +236,7 @@ class Input(Task):
         super().__init__(None, product, dag, name, None)
 
         # do not save metadata (Product's location is read-only)
-        self.product.save_metadata = self._null
+        self.product.save_metadata = self._null_save_metadata
 
         # the product will aleays be considered outdated
         self.product._outdated_data_dependencies = self._true
@@ -252,7 +252,7 @@ class Input(Task):
     def _init_source(self, source):
         return GenericSource(str(source))
 
-    def _null(self):
+    def _null_save_metadata(self, metadata):
         pass
 
     def _true(self):
