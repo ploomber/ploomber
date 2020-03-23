@@ -418,8 +418,8 @@ class Task(abc.ABC):
         # check product...
         p_exists = self.product.exists()
 
-        # check dependencies only if the product exists and there is metadata
-        if p_exists and self.product.metadata is not None:
+        # check dependencies only if the product exists
+        if p_exists:
 
             outdated_data_deps = self.product._outdated_data_dependencies()
             outdated_code_dep = self.product._outdated_code_dependency()
@@ -441,9 +441,6 @@ class Task(abc.ABC):
             # just log why it will run
             if not p_exists:
                 self._logger.info('Product does not exist...')
-
-            if self.product.metadata is None:
-                self._logger.info('Product metadata is None...')
 
         self._logger.info('Should run? %s', run)
 
@@ -516,8 +513,8 @@ class Task(abc.ABC):
 
         data['name'] = self.name
 
-        if p.timestamp is not None:
-            dt = datetime.fromtimestamp(p.timestamp)
+        if p.metadata.timestamp is not None:
+            dt = datetime.fromtimestamp(p.metadata.timestamp)
             date_h = dt.strftime('%b %d, %y at %H:%M')
             time_h = humanize.naturaltime(dt)
             data['Last updated'] = '{} ({})'.format(time_h, date_h)
@@ -531,7 +528,7 @@ class Task(abc.ABC):
         if outd_code and return_code_diff:
             data['Code diff'] = (self.dag
                                  .differ
-                                 .get_diff(p.stored_source_code,
+                                 .get_diff(p.metadata.stored_source_code,
                                            self.source_code,
                                            language=self.source.language))
         else:

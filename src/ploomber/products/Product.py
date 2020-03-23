@@ -36,14 +36,6 @@ class Product(abc.ABC):
         self.metadata.update(source_code)
 
     @property
-    def timestamp(self):
-        return self.metadata.timestamp
-
-    @property
-    def stored_source_code(self):
-        return self.metadata.stored_source_code
-
-    @property
     def task(self):
         if self._task is None:
             raise ValueError('This product has not been assigned to any Task')
@@ -79,10 +71,11 @@ class Product(abc.ABC):
             A task becomes data outdated if an upstream product has a higher
             timestamp or if an upstream product is outdated
             """
-            if self.timestamp is None or up_prod.timestamp is None:
+            if (self.metadata.timestamp is None
+               or up_prod.metadata.timestamp is None):
                 return True
             else:
-                return ((up_prod.timestamp > self.timestamp)
+                return ((up_prod.metadata.timestamp > self.metadata.timestamp)
                         or up_prod._outdated())
 
         outdated = any([is_outdated(up.product) for up
@@ -104,7 +97,7 @@ class Product(abc.ABC):
             return self._outdated_code_dependency_status
 
         outdated = self.task.dag.differ.code_is_different(
-            self.stored_source_code,
+            self.metadata.stored_source_code,
             self.task.source_code,
             language=self.task.source.language)
 

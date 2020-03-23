@@ -1,3 +1,4 @@
+import logging
 import warnings
 import abc
 from datetime import datetime
@@ -15,6 +16,9 @@ class AbstractMetadata(abc.ABC):
         # rendered on Metadata initialization, we have to do lazy loading
         self._data = None
         self._product = product
+
+        self._logger = logging.getLogger('{}.{}'.format(__name__,
+                                                        type(self).__name__))
 
     @property
     @abc.abstractmethod
@@ -38,6 +42,18 @@ class AbstractMetadata(abc.ABC):
 
     def __eq__(self, other):
         return self.data == other
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # _logger is not pickable, so we remove them and build
+        # them again in __setstate__
+        del state['_logger']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._logger = logging.getLogger('{}.{}'.format(__name__,
+                                                        type(self).__name__))
 
 
 class Metadata(AbstractMetadata):
@@ -65,6 +81,9 @@ class Metadata(AbstractMetadata):
             metadata_fetched = self._product.fetch_metadata()
 
             if metadata_fetched is None:
+                self._logger.debug('fetch_metadata for product %s returned '
+                                   'None',
+                                   self._product)
                 metadata = dict(timestamp=None, stored_source_code=None)
             else:
                 # FIXME: we need to further validate this, need to check
@@ -95,9 +114,9 @@ class MetadataCollection(AbstractMetadata):
         """When the product was originally created
         """
         # TODO: refactor, all products should have the same metadata
-        timestamps = [p.timestamp
+        timestamps = [p.metadata.timestamp
                       for p in self._products
-                      if p.timestamp is not None]
+                      if p.metadata.timestamp is not None]
         if timestamps:
             return max(timestamps)
         else:
@@ -107,9 +126,10 @@ class MetadataCollection(AbstractMetadata):
     def stored_source_code(self):
         """Source code that generated the product
         """
-        stored_source_code = set([p.stored_source_code
+        stored_source_code = set([p.metadata.stored_source_code
                                   for p in self._products
-                                  if p.stored_source_code is not None])
+                                  if p.metadata.stored_source_code
+                                  is not None])
         if len(stored_source_code):
             warnings.warn('Stored source codes for products {} '
                           'are different, but they are part of the same '

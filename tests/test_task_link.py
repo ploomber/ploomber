@@ -12,6 +12,7 @@ def touch(product, upstream):
 def test_link_is_up_to_date_before_build(tmp_directory):
     dag = DAG()
 
+    Path('some_file').touch()
     t1 = Link(File('some_file'), dag, name='some_file')
 
     assert not t1.should_execute()
@@ -21,7 +22,6 @@ def test_downstream_from_link_is_up_to_date_after_build(tmp_directory):
     dag = DAG()
 
     Path('some_file').touch()
-
     t1 = Link(File('some_file'), dag, name='some_file')
     t2 = PythonCallable(touch, File('another_file'), dag)
     t1 >> t2

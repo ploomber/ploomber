@@ -5,7 +5,6 @@ A Task is a unit of work that produces a persistent change (Product)
 such as a bash or a SQL script
 """
 import pdb
-from multiprocessing import Pool
 from ploomber.exceptions import SourceInitializationError
 from ploomber.tasks.Task import Task
 from ploomber.sources import (PythonCallableSource,
@@ -188,7 +187,7 @@ class Link(Task):
         super().__init__(None, product, dag, name, None)
 
         # do not save metadata (Product's location is read-only)
-        self.product.save_metadata = self._null
+        self.product._save_metadata = self._null_save_metadata
 
         # the product will never be considered outdated
         self.product._outdated_data_dependencies = self._false
@@ -204,7 +203,7 @@ class Link(Task):
     def _init_source(self, source):
         return GenericSource(str(source))
 
-    def _null(self):
+    def _null_save_metadata(self, metadata):
         pass
 
     def _false(self):
@@ -236,7 +235,7 @@ class Input(Task):
         super().__init__(None, product, dag, name, None)
 
         # do not save metadata (Product's location is read-only)
-        self.product.save_metadata = self._null_save_metadata
+        self.product._save_metadata = self._null_save_metadata
 
         # the product will aleays be considered outdated
         self.product._outdated_data_dependencies = self._true
