@@ -1,5 +1,6 @@
 from collections.abc import Mapping
-import warnings
+
+from ploomber.products.Metadata import MetadataCollection
 
 
 class ProductsContainer:
@@ -43,6 +44,7 @@ class ProductsContainer:
         return str(self.products)
 
 
+# NOTE: rename this to ProductCollection?
 class MetaProduct:
     """
     Exposes a Product-like API to allow Tasks to create more than one Product,
@@ -55,42 +57,22 @@ class MetaProduct:
     """
 
     def __init__(self, products):
-        self.products = ProductsContainer(products)
+        container = ProductsContainer(products)
 
-    @property
-    def metadata(self):
-        # FIXME: return a single dictionary, all products should have the
-        # same metadata, no need to keep them all
-        # this has to happen dynamically since it depends on
-        # the tasks being rendered already
-        return {p: p.metadata for p in self.products}
+        self.products = container
+        self.metadata = MetadataCollection(container)
 
     @property
     def timestamp(self):
-        timestamps = [p.timestamp
-                      for p in self.products
-                      if p.timestamp is not None]
-        if timestamps:
-            return max(timestamps)
-        else:
-            return None
+        return self.metadata.timestamp
 
     @property
     def stored_source_code(self):
-        stored_source_code = set([p.stored_source_code
-                                  for p in self.products
-                                  if p.stored_source_code is not None])
-        if len(stored_source_code):
-            warnings.warn('Stored source codes for products {} '
-                          'are different, but they are part of the same '
-                          'MetaProduct, returning stored_source_code as None'
-                          .format(self.products))
-            return None
-        else:
-            return list(stored_source_code)[0]
+        return self.metadata.stored_source_code
 
     @property
     def task(self):
+        # TODO: validate same task
         return self.products[0].task
 
     @property
@@ -143,16 +125,7 @@ class MetaProduct:
         return self.products.to_json_serializable()
 
     def _save_metadata(self, source_code):
-        from datetime import datetime
-        self.timestamp = datetime.now().timestamp()
-        self.stored_source_code = source_code
-        self.save_metadata(self.metadata)
-
-    def save_metadata(self, metadata):
-        # TODO: clean this up
-        metadata = list(metadata.values())[0]
-        for p in self.products:
-            p.save_metadata(metadata)
+        self.metadata.update(source_code)
 
     def render(self, params, **kwargs):
         for p in self.products:

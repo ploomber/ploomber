@@ -9,7 +9,7 @@ def touch(product, upstream):
     Path(str(product)).touch()
 
 
-def test_link_is_up_to_date(tmp_directory):
+def test_link_is_up_to_date_before_build(tmp_directory):
     dag = DAG()
 
     t1 = Link(File('some_file'), dag, name='some_file')

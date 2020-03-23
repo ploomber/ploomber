@@ -5,45 +5,11 @@ for example a file can be specified using a absolute path, a table can be
 fully specified by specifying a database, a schema and a name. Names
 are lazy evaluated, they can be built from templates
 """
-from datetime import datetime
 import abc
 import logging
 from math import ceil
 
-
-class StoredMetadata:
-
-    def __init__(self, fetch_fn, write_fn):
-        self.fetch_fn = fetch_fn
-        self.write_fn = write_fn
-        self._d = dict(timestamp=None, stored_source_code=None)
-        self.fetch_fn()
-
-    # def fetch(self):
-    #     # ignore metadata it product does not exists
-    #     res = self.fetch_fn()
-
-    #     if res is not None:
-    #         self._data = res
-
-    def overwrite(self, new_source_code):
-        self._d['stored_source_code'] = new_source_code
-        self._d['timestamp'] = datetime.now().timestamp()
-        self.write_fn(self._d)
-
-    @property
-    def timestamp(self):
-        return self._d['timestamp']
-
-    @property
-    def stored_source_code(self):
-        return self._d['stored_source_code']
-
-    def __getitem__(self, key):
-        return self._d[key]
-
-    def __setitem__(self, key, value):
-        self._d[key] = value
+from ploomber.products.Metadata import Metadata
 
 
 class Product(abc.ABC):
@@ -64,20 +30,18 @@ class Product(abc.ABC):
 
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
-        self._metadata = None
+        self.metadata = Metadata(self)
 
     def _save_metadata(self, source_code):
-        self.metadata['timestamp'] = datetime.now().timestamp()
-        self.metadata['stored_source_code'] = source_code
-        self.save_metadata(self.metadata)
+        self.metadata.update(source_code)
 
     @property
     def timestamp(self):
-        return self.metadata.get('timestamp')
+        return self.metadata.timestamp
 
     @property
     def stored_source_code(self):
-        return self.metadata.get('stored_source_code')
+        return self.metadata.stored_source_code
 
     @property
     def task(self):
@@ -85,33 +49,6 @@ class Product(abc.ABC):
             raise ValueError('This product has not been assigned to any Task')
 
         return self._task
-
-    @property
-    def metadata(self):
-        # This method calls Product.fetch_metadata() (provided by subclasses),
-        # if some conditions are met, then it saves it in Product.metadata
-        if self._metadata is not None:
-            return self._metadata
-        else:
-            metadata_empty = dict(timestamp=None, stored_source_code=None)
-
-            # if the product does not exist, return a metadata
-            # with None in the values
-            if not self.exists():
-                self._metadata = metadata_empty
-            else:
-                metadata = self.fetch_metadata()
-
-                if metadata is None:
-                    self._metadata = metadata_empty
-                else:
-                    # FIXME: we need to further validate this, need to check
-                    # that this is an instance of mapping, if yes, then
-                    # check keys [timestamp, stored_source_code], check
-                    # types and fill with None if any of the keys is missing
-                    self._metadata = metadata
-
-            return self._metadata
 
     @task.setter
     def task(self, value):
@@ -246,9 +183,6 @@ class Product(abc.ABC):
     def fetch_metadata(self):
         pass
 
-    # TODO: this should have metadata as parameter, it is confusing
-    # when writing a new product to know that the metaada to save is
-    # in self.metadata
     @abc.abstractmethod
     def save_metadata(self, metadata):
         pass

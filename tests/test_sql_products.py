@@ -78,11 +78,11 @@ def test_sqlite_product_save_metadata(tmp_directory):
     numbers = SQLiteRelation((None, 'numbers', 'table'), conn)
     numbers.render({})
 
-    numbers.metadata['timestamp'] = datetime.now().timestamp()
-    numbers.metadata['stored_source_code'] = 'some code'
+    metadata_new = {'timestamp': datetime.now().timestamp(),
+                    'stored_source_code': 'some code'}
 
-    numbers.save_metadata(numbers.metadata)
+    numbers.save_metadata(metadata_new)
 
     fetched = numbers.fetch_metadata()
 
-    assert fetched == numbers.metadata
+    assert fetched == metadata_new
