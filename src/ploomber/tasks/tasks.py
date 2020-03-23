@@ -10,6 +10,7 @@ from ploomber.tasks.Task import Task
 from ploomber.sources import (PythonCallableSource,
                               GenericSource)
 from ploomber.clients import ShellClient
+from ploomber.products.Metadata import MetadataAlwaysUpToDate
 
 
 class PythonCallable(Task):
@@ -186,19 +187,23 @@ class Link(Task):
         # there is no source nor params for this product
         super().__init__(None, product, dag, name, None)
 
-        # do not save metadata (Product's location is read-only)
-        self.product._save_metadata = self._null_save_metadata
-
-        # the product will never be considered outdated
-        self.product._outdated_data_dependencies = self._false
+        # patch product's metadata
+        self.product.metadata = MetadataAlwaysUpToDate()
+        # product's code will never be considered outdated
         self.product._outdated_code_dependency = self._false
 
     def run(self):
         """This Task does not run anything
         """
-        # TODO: verify that this task has no upstream dependencies
-        # is this the best place to check?
-        pass
+        if self.upstream:
+            raise RuntimeError('Link tasks should not have upstream '
+                               'dependencies. "{}" task has them'
+                               .format(self.name))
+
+        if not self.product.exists():
+            raise RuntimeError('Link tasks should point to Products that '
+                               'already exist. "{}" task product "{}" does '
+                               'not exist'.format(self.name, self.product))
 
     def _init_source(self, source):
         return GenericSource(str(source))
@@ -237,16 +242,22 @@ class Input(Task):
         # do not save metadata (Product's location is read-only)
         self.product._save_metadata = self._null_save_metadata
 
-        # the product will aleays be considered outdated
+        # the product will always be considered outdated
         self.product._outdated_data_dependencies = self._true
         self.product._outdated_code_dependency = self._true
 
     def run(self):
         """This Task does not run anything
         """
-        # TODO: verify that this task has no upstream dependencies
-        # is this the best place to check?
-        pass
+        if self.upstream:
+            raise RuntimeError('Input tasks should not have upstream '
+                               'dependencies. "{}" task has them'
+                               .format(self.name))
+
+        if not self.product.exists():
+            raise RuntimeError('Input tasks should point to Products that '
+                               'already exist. "{}" task product "{}" does '
+                               'not exist'.format(self.name, self.product))
 
     def _init_source(self, source):
         return GenericSource(str(source))

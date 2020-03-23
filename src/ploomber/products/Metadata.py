@@ -45,9 +45,10 @@ class AbstractMetadata(abc.ABC):
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # _logger is not pickable, so we remove them and build
-        # them again in __setstate__
-        del state['_logger']
+
+        if '_logger' in state:
+            del state['_logger']
+
         return state
 
     def __setstate__(self, state):
@@ -60,6 +61,7 @@ class Metadata(AbstractMetadata):
     """
     Internal class to standardize access to Product's metadata
     """
+    # TODO: this should be _data, since it is an internal API
     @property
     def data(self):
         if self._data is None:
@@ -144,3 +146,25 @@ class MetadataCollection(AbstractMetadata):
         """
         for p in self._products:
             p.metadata.update(source_code)
+
+
+class MetadataAlwaysUpToDate(AbstractMetadata):
+    """
+    Metadata for Link tasks (always up-to-date)
+    """
+    def __init__(self):
+        pass
+
+    @property
+    def timestamp(self):
+        return 0
+
+    @property
+    def stored_source_code(self):
+        return None
+
+    def load(self):
+        pass
+
+    def update(self, source_code):
+        pass
