@@ -20,7 +20,7 @@ At a glance
 * Airflow-like syntax to declare **pipelines as code**
 * Interactive. Once a pipeline is declared, you can **build it right away**, inspect it, check status or even generate HTML reports, use it in a Python session or a Jupyter notebook
 * Fast experimentation. Modify your source code and ploomber will figure out **which tasks to run** and which ones to skip **based on source code changes**
-* Test-driven. Use `on_finish` hooks to **check data assumptions**, verify that an output data frame has no NAs, an "age" column has only positive numbers, etc
+* Test-driven. Use `on_finish` hooks to **check data assumptions** (e.g. verify that an output data frame has no NAs, an "age" column has only positive numbers, etc)
 * SQL-friendly. **SQL scripts can be parametrized** for simplicity and consistency using jinja2
 * Notebook-friendly. **Generate reports** in Jupyter notebook format (or HTML) by executing parametrized notebooks using papermill
 * Switch configurations. Automatically **switch pipeline configuration based on the current environment**, for example, make all pipeline output files go to `/data/project/{{user}}`, where `{{user}}` will be automatically replaced depending on the current user
