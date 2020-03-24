@@ -163,14 +163,15 @@ class Parallel(Executor):
         exps = ExceptionCollector([get_future_result(f, future_mapping)
                                    for f, t
                                    in future_mapping.items()
-                                   if isinstance(get_future_result(f, future_mapping),
+                                   if isinstance(get_future_result(f,
+                                                 future_mapping),
                                                  ExceptionResult)])
 
         if exps:
             raise DAGBuildError('DAG build failed, the following '
                                 'tasks crashed '
-                                '(corresponding tasks aborted '
-                                'execuion):\n{}'
+                                '(corresponding downstream tasks aborted '
+                                'execution):\n{}'
                                 .format(str(exps)))
 
     # __getstate__ and __setstate__ are needed to make this picklable
