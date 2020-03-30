@@ -120,7 +120,7 @@ class Env:
     def __repr__(self):
         s = 'Env({})'.format(str(self._data))
         if self._path_to_env:
-            s += 'loaded from ' + self._path_to_env
+            s += ' (from %s)' % str(self._path_to_env)
         return s
 
     def __dir__(self):
