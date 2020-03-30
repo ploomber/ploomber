@@ -1,13 +1,12 @@
-from ploomber import Env
+from ploomber import load_env
 
 import warnings
 import smtplib
 from email.message import EmailMessage
 
 
-def send_email(subject, body):
-    env = Env()
-
+@load_env
+def send_email(env, subject, body):
     msg = EmailMessage()
     msg.set_content(body)
 
