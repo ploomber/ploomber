@@ -1,11 +1,11 @@
 CHANGELOG
 =========
 
-0.3.1dev
---------
+0.3.1 (2020-04-01)
+------------------
 
-* [Experimental] DAG parallel executor
-* [Experimental] Interact with pipelines from the command line (entry module)
+* DAG parallel executor
+* Interact with pipelines from the command line (entry module)
 * Bug fixes
 * Refactored access to Product.metadata
 
