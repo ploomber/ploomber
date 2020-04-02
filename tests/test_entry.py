@@ -12,9 +12,14 @@ def test_complete_case(monkeypatch, tmp_sample_dir):
     entry.main()
 
 
+def test_log_enabled(monkeypatch, tmp_sample_dir):
+    monkeypatch.setattr(sys, 'argv',
+                        ['python', 'entry.with_doc', 'build', '--log',
+                         'INFO'])
+    entry.main()
+
+
 def test_replace_env_value(monkeypatch, tmp_sample_dir):
-    # TODO: why is it importing from relative to this file even though
-    # I'm moving to a different one?
     monkeypatch.setattr(sys, 'argv',
                         ['python', 'entry.with_doc', 'build',
                          '--env__path__data', '/another/path'])
@@ -61,3 +66,10 @@ def test_invalid_function(monkeypatch):
 
     with pytest.raises(AttributeError):
         entry.main()
+
+
+def test_undecorated_function(monkeypatch, tmp_sample_dir):
+    monkeypatch.setattr(sys, 'argv',
+                        ['python', 'entry.plain_function', 'build'])
+
+    entry.main()

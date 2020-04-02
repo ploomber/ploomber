@@ -43,3 +43,7 @@ def incomplete_doc(env):
         Optional parameter, defaults to 1
     """
     return DAG()
+
+
+def plain_function():
+    return DAG()

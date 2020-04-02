@@ -5,7 +5,7 @@ Warning: this code is highly experimental
 # TODO: print enviornment content on help and maybe on any other command
 # it is useful for debugging purposes
 # TODO: this should also work if the function is not decorated with @with_env
-
+import logging
 import sys
 import importlib
 import argparse
@@ -43,12 +43,14 @@ def _parse_module(s):
 
 
 def main():
-    n_pos = len([arg for arg in sys.argv if not arg.startswith('-')])
-
     parser = argparse.ArgumentParser()
     parser.add_argument('entry_point', help='Entry point (DAG)')
+    parser.add_argument('--log', help='Enables logging to stdout at the '
+                        'specified level', default=None)
 
-    if n_pos < 2:
+    n_positional = len([arg for arg in sys.argv if not arg.startswith('-')])
+
+    if n_positional < 2:
         args = parser.parse_args()
     else:
         parser.add_argument('action', help='Action to execute')
@@ -58,19 +60,15 @@ def main():
         try:
             module = importlib.import_module(mod)
         except ImportError as e:
-            raise ImportError('Could not import module "{}", '
-                              'make sure it is available in the '
-                              'current python environment'.
-                              format(mod))
+            raise ImportError('An error happened when trying to '
+                              'import module "{}"'.format(mod)) from e
 
         try:
             entry = getattr(module, name)
         except AttributeError as e:
             raise AttributeError('Could not get attribute "{}" from module '
-                                 '"{}", make sure such function exists'
-                                 .format(mod, name)) from e
-
-        flat_env_dict = flatten_dict(entry._env_dict._data)
+                                 '"{}", make sure it is a valid callable'
+                                 .format(name, mod)) from e
 
         doc = parse_doc(entry.__doc__)
 
@@ -92,10 +90,17 @@ def main():
         for arg in required:
             parser.add_argument(arg, help=get_desc(arg))
 
-        for arg, val in flat_env_dict.items():
-            parser.add_argument('--env__'+arg, help='Default: {}'.format(val))
+        # if entry point was decorated with @with_env, add arguments
+        # to replace declared variables in env.yaml
+        if hasattr(entry, '_env_dict'):
+            flat_env_dict = flatten_dict(entry._env_dict._data)
+            for arg, val in flat_env_dict.items():
+                parser.add_argument('--env__'+arg, help='Default: {}'.format(val))
 
         args = parser.parse_args()
+
+        if args.log is not None:
+            logging.basicConfig(level=args.log)
 
         # required by the function signature
         kwargs = {key: getattr(args, key) for key in required}
@@ -105,7 +110,7 @@ def main():
                     for name in dir(args)
                     if not name.startswith('_')
                     if getattr(args, name) is not None
-                    if name not in {'entry_point', 'action'}}
+                    if name not in {'entry_point', 'action', 'log'}}
 
         # TODO: add a way of test this by the parameters it will use to
         # call the function, have an aux function to get those then another
