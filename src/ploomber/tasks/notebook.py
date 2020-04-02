@@ -130,6 +130,8 @@ class NotebookRunner(Task):
         Notebook parameters. This are passed as the "parameters" argument
         to the papermill.execute_notebook function, by default, "product"
         and "upstream" are included
+    papermill_params : dict, optional
+        Other parameters passed to papermill.execute_notebook, defaults to None
     kernelspec_name: str, optional
         Kernelspec name to use, if the notebook already includes kernelspec
         data (in metadata.kernelspec), this is ignored, otherwise, the kernel
