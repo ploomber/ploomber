@@ -96,7 +96,7 @@ class Serial(Executor):
 
         build_report = BuildReport(task_reports)
 
-        self._logger.info(' DAG report:\n{}'.format(repr(build_report)))
+        self._logger.info(' DAG report:\n{}'.format(build_report))
 
         # TODO: this should be moved to the superclass, should be like
         # a cleanup function, add a test to verify that this happens

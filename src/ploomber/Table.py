@@ -15,14 +15,14 @@ class Row:
             raise TypeError('Rows must be initialized with mappings')
 
         self._data = data
-        self._repr = tabulate([self._data], headers='keys')
+        self._str = tabulate([self._data], headers='keys', tablefmt='simple')
         self._html = tabulate([self._data], headers='keys', tablefmt='html')
 
     def __str__(self):
-        return str(self._data)
+        return self._str
 
     def __repr__(self):
-        return self._repr
+        return repr(self._data)
 
     def _repr_html_(self):
         return self._html
@@ -41,14 +41,14 @@ class Table:
     """
     def __init__(self, data):
         self._data = self.data_preprocessing([d._data for d in data])
-        self._repr = tabulate(self._data, headers='keys')
+        self._str = tabulate(self._data, headers='keys', tablefmt='simple')
         self._html = tabulate(self._data, headers='keys', tablefmt='html')
 
     def __str__(self):
-        return str(self._data)
+        return self._str
 
     def __repr__(self):
-        return self._repr
+        return repr(self._data)
 
     def _repr_html_(self):
         return self._html
