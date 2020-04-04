@@ -43,6 +43,7 @@ def sqlite_client_and_tmp_dir():
     df = pd.DataFrame({'x': range(10)})
     df.to_sql('data', client.engine)
     yield client, tmp_dir
+    shutil.rmtree(str(tmp_dir))
     client.close()
 
 
