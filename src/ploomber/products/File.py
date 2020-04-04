@@ -68,7 +68,3 @@ class File(Product):
         else:
             self.logger.debug('%s does not exist ignoring...',
                               self._path_to_file)
-
-    @property
-    def name(self):
-        return self._path_to_file.with_suffix('').name

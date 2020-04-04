@@ -193,17 +193,3 @@ class Product(abc.ABC):
         """Deletes the product
         """
         pass
-
-    # FIXME: remove, no longer used, default name is inferred from the source
-    # we have to now this at delcaration time and this might only be
-    # available after rendering. But I think we still need this,
-    # Files just have an identifier but we need name so independent if they
-    # are files or sql relations we can get a "name"
-    @property
-    @abc.abstractmethod
-    def name(self):
-        """
-        Product name, this is used as Task.name default if no name
-        is provided
-        """
-        pass
