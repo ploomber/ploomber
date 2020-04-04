@@ -6,7 +6,53 @@ from ploomber.products.serializers import Base64Serializer
 from ploomber.templates.Placeholder import SQLRelationPlaceholder
 
 
-class SQLiteRelation(Product):
+class SQLiteBackedProductMixin:
+    def _create_metadata_relation(self):
+
+        create_metadata = """
+        CREATE TABLE IF NOT EXISTS _metadata (
+            name TEXT PRIMARY KEY,
+            metadata BLOB
+        )
+        """
+        self.client.execute(create_metadata)
+
+    def fetch_metadata(self):
+        self._create_metadata_relation()
+
+        query = """
+        SELECT metadata FROM _metadata
+        WHERE name = '{name}'
+        """.format(name=self.name)
+
+        cur = self.client.connection.cursor()
+        cur.execute(query)
+        records = cur.fetchone()
+        cur.close()
+
+        if records:
+            metadata_bin = records[0]
+            return json.loads(metadata_bin.decode("utf-8"))
+        else:
+            return None
+
+    def save_metadata(self, metadata):
+        self._create_metadata_relation()
+
+        metadata_bin = json.dumps(metadata).encode('utf-8')
+
+        query = """
+            REPLACE INTO _metadata(metadata, name)
+            VALUES(?, ?)
+        """
+        cur = self.client.connection.cursor()
+        cur.execute(query, (sqlite3.Binary(metadata_bin),
+                            self.name))
+        self.client.connection.commit()
+        cur.close()
+
+
+class SQLiteRelation(SQLiteBackedProductMixin, Product):
     """A SQLite relation
 
     Parameters
@@ -40,58 +86,14 @@ class SQLiteRelation(Product):
 
         return self._client
 
-    def _create_metadata_relation(self):
-
-        create_metadata = """
-        CREATE TABLE IF NOT EXISTS _metadata (
-            name TEXT PRIMARY KEY,
-            metadata BLOB
-        )
-        """
-        self.client.execute(create_metadata)
-
-    def fetch_metadata(self):
-        self._create_metadata_relation()
-
-        query = """
-        SELECT metadata FROM _metadata
-        WHERE name = '{name}'
-        """.format(name=self._identifier.name)
-
-        cur = self.client.connection.cursor()
-        cur.execute(query)
-        records = cur.fetchone()
-        cur.close()
-
-        if records:
-            metadata_bin = records[0]
-            return json.loads(metadata_bin.decode("utf-8"))
-        else:
-            return None
-
-    def save_metadata(self, metadata):
-        self._create_metadata_relation()
-
-        metadata_bin = json.dumps(metadata).encode('utf-8')
-
-        query = """
-            REPLACE INTO _metadata(metadata, name)
-            VALUES(?, ?)
-        """
-        cur = self.client.connection.cursor()
-        cur.execute(query, (sqlite3.Binary(metadata_bin),
-                            self._identifier.name))
-        self.client.connection.commit()
-        cur.close()
-
     def exists(self):
         query = """
         SELECT name
         FROM sqlite_master
         WHERE type = '{kind}'
         AND name = '{name}'
-        """.format(kind=self._identifier.kind,
-                   name=self._identifier.name)
+        """.format(kind=self.kind,
+                   name=self.name)
 
         cur = self.client.connection.cursor()
         cur.execute(query)
@@ -103,7 +105,7 @@ class SQLiteRelation(Product):
         """Deletes the product
         """
         query = ("DROP {kind} IF EXISTS {relation}"
-                 .format(kind=self._identifier.kind,
+                 .format(kind=self.kind,
                          relation=str(self)))
         self.logger.debug('Running "{query}" on the databse...'
                           .format(query=query))
@@ -122,6 +124,8 @@ class SQLiteRelation(Product):
         return self._identifier.kind
 
 
+# FIXME: self._identifier should not be accessed direclty since it might
+# be a placeholder
 class PostgresRelation(Product):
     """A PostgreSQL relation
 
@@ -161,8 +165,8 @@ class PostgresRelation(Product):
     def fetch_metadata(self):
         cur = self.client.connection.cursor()
 
-        if self._identifier.schema:
-            schema = self._identifier.schema
+        if self.schema:
+            schema = self.schema
         else:
             # if schema is empty, we have to find out the default one
             query = """
@@ -181,8 +185,7 @@ class PostgresRelation(Product):
         WHERE nspname = %(schema)s
         AND relname = %(name)s
         """
-        cur.execute(query, dict(schema=schema,
-                                name=self._identifier.name))
+        cur.execute(query, dict(schema=schema, name=self.name))
         metadata = cur.fetchone()
 
         cur.close()
@@ -200,7 +203,7 @@ class PostgresRelation(Product):
         metadata = Base64Serializer.serialize(metadata)
 
         query = (("COMMENT ON {} {} IS '{}';"
-                  .format(self._identifier.kind,
+                  .format(self.kind,
                           self._identifier,
                           metadata)))
 
@@ -212,8 +215,8 @@ class PostgresRelation(Product):
     def exists(self):
         cur = self.client.connection.cursor()
 
-        if self._identifier.schema:
-            schema = self._identifier.schema
+        if self.schema:
+            schema = self.schema
         else:
             # if schema is empty, we have to find out the default one
             query = """
@@ -235,7 +238,7 @@ class PostgresRelation(Product):
         """
 
         cur.execute(query, dict(schema=schema,
-                                name=self._identifier.name))
+                                name=self.name))
         exists = cur.fetchone()[0]
         cur.close()
         return exists
@@ -245,7 +248,7 @@ class PostgresRelation(Product):
         """
         cascade = 'CASCADE' if force else ''
         query = ("DROP {} IF EXISTS {} {}"
-                 .format(self._identifier.kind, self, cascade))
+                 .format(self.kind, self, cascade))
         self.logger.debug('Running "%s" on the databse...', query)
 
         cur = self.client.connection.cursor()
