@@ -51,6 +51,18 @@ class SQLiteBackedProductMixin:
         self.client.connection.commit()
         cur.close()
 
+    def _delete_metadata(self):
+        self._create_metadata_relation()
+
+        query = """
+        DELETE FROM _metadata
+        WHERE name = '{name}'
+        """.format(name=self.name)
+
+        cur = self.client.connection.cursor()
+        cur.execute(query)
+        cur.close()
+
 
 class SQLiteRelation(SQLiteBackedProductMixin, Product):
     """A SQLite relation

@@ -15,3 +15,13 @@ def test_save_metadata_sqlite_backend(sqlite_client_and_tmp_dir):
 
     assert product.exists()
     assert product.fetch_metadata() == m
+
+
+def test_delete_sqlite_backend(sqlite_client_and_tmp_dir):
+    client, tmp_dir = sqlite_client_and_tmp_dir
+    product = GenericProduct('some_identifier', client=client)
+    m = {'metadata': 'value'}
+    product.save_metadata(m)
+    product.delete()
+
+    assert not product.exists()

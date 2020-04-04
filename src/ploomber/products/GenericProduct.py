@@ -60,7 +60,7 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
         """Deletes the product
         """
         # just delete the metadata, we cannot do anything else
-        pass
+        return self._delete_metadata()
 
     @property
     def name(self):
