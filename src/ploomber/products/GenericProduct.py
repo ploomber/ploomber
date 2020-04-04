@@ -7,26 +7,33 @@ import logging
 from pathlib import Path
 
 from ploomber.products.Product import Product
+from ploomber.products.sql import SQLiteBackedProductMixin
 from ploomber.templates.Placeholder import Placeholder
 
 
-class GenericProduct(Product):
-    def __init__(self, identifier, path_to_metadata, exists_command,
-                 delete_command, client=None):
+# NOTE: this is gonna look a lot like SQLiteRelation, create a mixing,
+# except for the exists and delete method
+# TODO: add check_product and run tests: e.g .name should return a string
+# no placeholders objects or {{}}
+class GenericProduct(SQLiteBackedProductMixin, Product):
+    """
+    GenericProduct is used when there is no specific Product implementation.
+    Sometimes it is technically possible to write a Product implementation
+    but if you don't want to do it you can use this one. Other times is is
+    not possible to provide a concrete Product implementation (e.g. we
+    cannot store arbitrary metadata in a Hive table). GenericProduct works
+    as any other product but its metadata is stored not in the Product itself
+    but in a different backend.
 
-        self._identifier = Placeholder(str(identifier))
-        self._path_to_metadata = path_to_metadata
+    Notes
+    -----
+    exists does not check for product existence, just checks if metadata exists
+    delete does not perform actual deletion, just deletes metadata
+    """
+
+    def __init__(self, identifier, client=None):
+        super().__init__(identifier)
         self._client = client
-
-        self.exists_command = Placeholder(str(exists_command))
-        self.delete_command = Placeholder(str(delete_command))
-
-        self.did_download_metadata = False
-        self.task = None
-        self._logger = logging.getLogger(__name__)
-
-    def _init_identifier(self, identifier):
-        pass
 
     # TODO: create a mixing with this so all client-based tasks can include it
     @property
@@ -42,37 +49,19 @@ class GenericProduct(Product):
 
         return self._client
 
-    def render(self, params, **kwargs):
-        # overriding parent implementation since this product also needs
-        # render for other variables
-        self._identifier.render(params, **kwargs)
-        self.exists_command.render(params, **kwargs)
-        self.delete_command.render(params, **kwargs)
+    def _init_identifier(self, identifier):
+        return Placeholder(identifier)
 
-    @property
-    def _path_to_metadata_file(self):
-        return self._path_to_metadata + str(self._identifier) + '.json'
-
-    def fetch_metadata(self):
-        try:
-            meta = self.client.read_file(self._path_to_metadata_file)
-        except Exception as e:
-            self._logger.exception(e)
-            return {}
-        else:
-            return json.loads(meta)
-
-    def save_metadata(self, metadata):
-        metadata_str = json.dumps(metadata)
-        self.client.write_to_file(metadata_str, self._path_to_metadata_file)
-
-    # TODO: implement
     def exists(self):
-        return True
+        # just check if there is metadata
+        return self.fetch_metadata() is not None
 
     def delete(self, force=False):
+        """Deletes the product
+        """
+        # just delete the metadata, we cannot do anything else
         pass
 
     @property
     def name(self):
-        return Path(str(self._path_to_metadata)).with_suffix('').name
+        return str(self._identifier)
