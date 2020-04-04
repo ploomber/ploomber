@@ -2,19 +2,14 @@
 A generic product whose metadata is saved in a given directory and
 exists/delete methods are bash commands
 """
-import json
-import logging
-from pathlib import Path
-
 from ploomber.products.Product import Product
 from ploomber.products.sql import SQLiteBackedProductMixin
 from ploomber.templates.Placeholder import Placeholder
 
 
-# NOTE: this is gonna look a lot like SQLiteRelation, create a mixing,
-# except for the exists and delete method
 # TODO: add check_product and run tests: e.g .name should return a string
 # no placeholders objects or {{}}
+# TODO: add GenericSQLRelation
 class GenericProduct(SQLiteBackedProductMixin, Product):
     """
     GenericProduct is used when there is no specific Product implementation.

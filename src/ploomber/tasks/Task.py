@@ -326,6 +326,17 @@ class Task(abc.ABC):
 
             self.product._save_metadata(self.source_code)
 
+            # NOTE: for most Products, it's ok to do this check before
+            # saving metadata, but not for GenericProduct, since the way
+            # exists() works is by checking metadata, so we have to do it
+            # after saving metadata for it to work
+            if not self.product.exists():
+                raise TaskBuildError('Error building task "{}": '
+                                     'the task ran successfully but product '
+                                     '"{}" does not exist yet '
+                                     '(task.product.exists() returned False)'
+                                     .format(self, self.product))
+
         elif value == TaskStatus.Errored:
             self._run_on_failure()
 
@@ -391,12 +402,6 @@ class Task(abc.ABC):
             # exist, timestamp must be recent equal to the datetime.now()
             # used. maybe run fetch metadata again and validate?
 
-            if not self.product.exists():
-                raise TaskBuildError('Error building task "{}": '
-                                     'the task ran successfully but product '
-                                     '"{}" does not exist yet '
-                                     '(task.product.exist() returned False)'
-                                     .format(self, self.product))
 
         # NOTE: return the TaskReport here?
         return TaskStatus.Executed if run else TaskStatus.Skipped
@@ -411,6 +416,7 @@ class Task(abc.ABC):
         bool
             True if the Task should execute, False otherwise
         """
+        # FIXME: this should really be a method in Product, not Task
         run = False
 
         self._logger.info('Checking status for task "%s"', self.name)
