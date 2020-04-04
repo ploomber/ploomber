@@ -19,6 +19,16 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
     as any other product but its metadata is stored not in the Product itself
     but in a different backend.
 
+    Parameters
+    ----------
+    identifier : str
+        An identifier fot this product, can contain placeholders
+        (e.g. {{placeholder}})
+
+    client : ploomber.clients.DBAPIClient or SQLAlchemyClient, optional
+        The client used to *store metadata for this product*. Only required
+        if no dag-level client has been declared using dag.clients[class]
+
     Notes
     -----
     exists does not check for product existence, just checks if metadata exists
@@ -63,6 +73,16 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
 
 class GenericSQLRelation(GenericProduct):
     """A GenericProduct whose identifier is a SQL relation
+
+    Parameters
+    ----------
+    identifier : tuple of length 3
+        A tuple with (schema, name, kind) where kind must be either 'table'
+        or 'view'
+
+    client : ploomber.clients.DBAPIClient or SQLAlchemyClient, optional
+        The client used to *store metadata for this product*. Only required
+        if no dag-level client has been declared using dag.clients[class]
     """
     def _init_identifier(self, identifier):
         return SQLRelationPlaceholder(identifier)

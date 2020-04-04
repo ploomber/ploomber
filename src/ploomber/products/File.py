@@ -15,7 +15,8 @@ class File(Product):
     Parameters
     ----------
     identifier: str or pathlib.Path
-        The path to the file (or directory)
+        The path to the file (or directory), can contain placeholders
+        (e.g. {{placeholder}})
     """
 
     def _init_identifier(self, identifier):

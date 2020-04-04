@@ -45,6 +45,8 @@ Products
     File
     PostgresRelation
     SQLiteRelation
+    GenericProduct
+    GenericSQLRelation
 
 Clients
 -------
