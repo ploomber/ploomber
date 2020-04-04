@@ -4,12 +4,11 @@ exists/delete methods are bash commands
 """
 from ploomber.products.Product import Product
 from ploomber.products.sql import SQLiteBackedProductMixin
-from ploomber.templates.Placeholder import Placeholder
+from ploomber.templates.Placeholder import Placeholder, SQLRelationPlaceholder
 
 
 # TODO: add check_product and run tests: e.g .name should return a string
 # no placeholders objects or {{}}
-# TODO: add GenericSQLRelation
 class GenericProduct(SQLiteBackedProductMixin, Product):
     """
     GenericProduct is used when there is no specific Product implementation.
@@ -60,3 +59,10 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
     @property
     def name(self):
         return str(self._identifier)
+
+
+class GenericSQLRelation(GenericProduct):
+    """A GenericProduct whose identifier is a SQL relation
+    """
+    def _init_identifier(self, identifier):
+        return SQLRelationPlaceholder(identifier)
