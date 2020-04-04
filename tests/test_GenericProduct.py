@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from ploomber import DAG
-from ploomber.tasks import PythonCallable
+from ploomber.tasks import PythonCallable, SQLScript, SQLTransfer, SQLUpload
 from ploomber.products import GenericProduct, GenericSQLRelation
 
 
@@ -56,3 +56,18 @@ def test_sample_dag(sqlite_client_and_tmp_dir, class_, identifier):
     assert Path('some_file').exists()
     assert product.exists()
     assert product.fetch_metadata() is not None
+
+
+@pytest.mark.parametrize("class_,source",
+                         [(SQLScript,
+                           'CREATE TABLE {{product}} as SELECT * FROM table'),
+                          (SQLTransfer, '/some/file'),
+                          (SQLUpload, '/some/file')])
+def test_sql_with_sql_tasks(class_, source):
+    dag = DAG()
+    client_metadata = object()
+    client = object()
+    product = GenericSQLRelation(('name', 'table'), client=client_metadata)
+    class_(source,
+           product, dag, client=client, name='task')
+

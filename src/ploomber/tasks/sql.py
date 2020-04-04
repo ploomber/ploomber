@@ -5,7 +5,8 @@ from ploomber.tasks.Task import Task
 from ploomber.sources import (SQLScriptSource,
                               SQLQuerySource,
                               FileSource)
-from ploomber.products import File, PostgresRelation, SQLiteRelation
+from ploomber.products import (File, PostgresRelation, SQLiteRelation,
+                               GenericSQLRelation)
 from ploomber import io
 from ploomber.util import requires
 
@@ -37,7 +38,8 @@ class SQLScript(Task):
         code is converted to a jinja2.Template for passing parameters,
         refer to jinja2 documentation for details
     """
-    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation)
+    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation,
+                               GenericSQLRelation)
 
     def __init__(self, source, product, dag, name=None, client=None,
                  params=None):
@@ -192,7 +194,8 @@ class SQLTransfer(Task):
     convenience way of transfering small to medium size datasets. It relies
     on pandas to read and write, which introduces a considerable overhead.
     """
-    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation)
+    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation,
+                               GenericSQLRelation)
 
     @requires(['pandas'], 'SQLTransfer')
     def __init__(self, source, product, dag, name=None, client=None,
@@ -271,7 +274,8 @@ class SQLUpload(Task):
     convenience way of transfering small to medium size datasets. It relies
     on pandas to read and write, which introduces a considerable overhead.
     """
-    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation)
+    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation,
+                               GenericSQLRelation)
 
     @requires(['pandas'], 'SQLUpload')
     def __init__(self, source, product, dag, name=None, client=None,
