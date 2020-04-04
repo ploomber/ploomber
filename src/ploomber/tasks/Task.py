@@ -102,11 +102,12 @@ class Task(abc.ABC):
             elif hasattr(source, '__name__'):
                 self._name = source.__name__
             else:
-                raise AttributeError('name can ony be None if the souce '
-                                     'has a "name" attribute such as a '
-                                     'Placeholder (returned from SourceLoader)'
-                                     ' or pathlib.Path objects, or a '
-                                     '"__name__" attribute (Python functions)')
+                raise AttributeError('Task name can only be None if the '
+                                     'source object has a "name" attribute: '
+                                     'Placeholder objects (returned from '
+                                     'SourceLoader) or pathlib.Path objects. '
+                                     'Python functions also work since they '
+                                     'have a "__name__" attribute')
         else:
             self._name = name
 

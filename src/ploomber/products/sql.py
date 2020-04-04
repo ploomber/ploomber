@@ -6,6 +6,7 @@ from ploomber.products.serializers import Base64Serializer
 from ploomber.templates.Placeholder import SQLRelationPlaceholder
 
 
+# TODO: metadata should be looked up by schema and name, not only name
 class SQLiteBackedProductMixin:
     def _create_metadata_relation(self):
 
