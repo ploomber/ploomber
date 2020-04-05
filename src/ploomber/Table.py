@@ -101,7 +101,7 @@ class Table:
             yield col
 
     def __len__(self):
-        return len(self.columns)
+        return len(self._values.keys())
 
     def __eq__(self, other):
         return self._rows == other
