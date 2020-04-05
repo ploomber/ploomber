@@ -1,4 +1,4 @@
-from ploomber.Table import Row, Table
+from ploomber.Table import Row, Table, BuildReport
 
 
 def test_row():
@@ -31,3 +31,10 @@ def test_select_multiple_cols_in_table():
     r = Row(d)
     t = Table([r, r])
     assert t[['a', 'b']] == [d, d]
+
+
+def test_create_build_report():
+    row = Row({'Elapsed (s)': 1})
+    report = BuildReport([row, row])
+    row_out = {'Elapsed (s)': 1, 'Percentage': 50}
+    assert report == [row_out, row_out]

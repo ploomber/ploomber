@@ -40,6 +40,9 @@ class Row:
         else:
             return self._mapping[key]
 
+    def __setitem__(self, key, value):
+        self._mapping[key] = value
+
     def __eq__(self, other):
         return self._mapping == other
 
