@@ -29,7 +29,7 @@ class Row:
         return self._str
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, repr(self._mapping))
+        return str(self)
 
     def _repr_html_(self):
         return self._html
@@ -59,7 +59,7 @@ class Table:
         return self._str
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, repr(self._rows))
+        return str(self)
 
     def _repr_html_(self):
         return self._html
