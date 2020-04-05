@@ -3,58 +3,75 @@ A mapping object with text and HTML representations
 """
 from pathlib import Path
 import tempfile
-from collections.abc import Mapping
+from collections.abc import Mapping, Iterable
 from tabulate import tabulate
+
+
+def _is_iterable(obj):
+    return isinstance(obj, Iterable) and not isinstance(obj, str)
 
 
 class Row:
     """A class to represent a dictionary as a table row
     """
-    def __init__(self, data):
-        if not isinstance(data, Mapping):
+
+    def __init__(self, mapping):
+        if not isinstance(mapping, Mapping):
             raise TypeError('Rows must be initialized with mappings')
 
-        self._data = data
-        self._str = tabulate([self._data], headers='keys', tablefmt='simple')
-        self._html = tabulate([self._data], headers='keys', tablefmt='html')
+        self._mapping = mapping
+        self._str = tabulate([self._mapping], headers='keys',
+                             tablefmt='simple')
+        self._html = tabulate([self._mapping], headers='keys',
+                              tablefmt='html')
 
     def __str__(self):
         return self._str
 
     def __repr__(self):
-        return repr(self._data)
+        return '{}({})'.format(type(self).__name__, repr(self._mapping))
 
     def _repr_html_(self):
         return self._html
 
     def __getitem__(self, key):
-        return self._data[key]
+        if _is_iterable(key):
+            return Row({k: self._mapping[k] for k in key})
+        else:
+            return self._mapping[key]
+
+    def __eq__(self, other):
+        return self._mapping == other
+
 
 
 class Table:
     """A collection of rows
-
-    >>> from ploomber.Table import Table
-    >>> data = {'name': 'task', 'elapsed': 10, 'errors': False}
-    >>> table = Table(data)
-    >>> table
     """
-    def __init__(self, data):
-        self._data = self.data_preprocessing([d._data for d in data])
-        self._str = tabulate(self._data, headers='keys', tablefmt='simple')
-        self._html = tabulate(self._data, headers='keys', tablefmt='html')
+
+    def __init__(self, rows):
+        self._rows = self.data_preprocessing(rows)
+        self._rows_raw = [row._mapping for row in rows]
+        self._str = tabulate(self._rows_raw, headers='keys', tablefmt='simple')
+        self._html = tabulate(self._rows_raw, headers='keys', tablefmt='html')
 
     def __str__(self):
         return self._str
 
     def __repr__(self):
-        return repr(self._data)
+        return '{}({})'.format(type(self).__name__, repr(self._rows))
 
     def _repr_html_(self):
         return self._html
 
     def __getitem__(self, key):
-        return self._data[key]
+        if not _is_iterable(key):
+            key = [key]
+
+        return Table([row[key] for row in self._rows])
+
+    def __eq__(self, other):
+        return self._rows == other
 
     def data_preprocessing(self, data):
         return data
@@ -68,17 +85,17 @@ class Table:
         return path
 
     def to_format(self, fmt):
-        return tabulate(self._data, headers='keys', tablefmt=fmt)
+        return tabulate(self._rows_raw, headers='keys', tablefmt=fmt)
 
 
 class BuildReport(Table):
     """A Table that adds a columns for checking task elapsed time
     """
 
-    def data_preprocessing(self, data):
+    def data_preprocessing(self, rows):
         """Create a build report from several tasks
         """
-        total = sum([row['Elapsed (s)'] or 0 for row in data])
+        total = sum([row['Elapsed (s)'] or 0 for row in rows])
 
         def compute_pct(elapsed, total):
             if not elapsed:
@@ -86,7 +103,7 @@ class BuildReport(Table):
             else:
                 return 100 * elapsed / total
 
-        for row in data:
+        for row in rows:
             row['Percentage'] = compute_pct(row['Elapsed (s)'], total)
 
-        return data
+        return rows
