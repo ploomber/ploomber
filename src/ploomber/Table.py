@@ -1,6 +1,7 @@
 """
 A mapping object with text and HTML representations
 """
+from copy import deepcopy
 from pathlib import Path
 import tempfile
 from collections.abc import Mapping, Iterable
@@ -46,6 +47,9 @@ class Row:
     def __eq__(self, other):
         return self._mapping == other
 
+    @property
+    def columns(self):
+        return tuple(self._mapping.keys())
 
 
 class Table:
@@ -53,10 +57,29 @@ class Table:
     """
 
     def __init__(self, rows):
+        # TODO: remove this, only use ._values
         self._rows = self.data_preprocessing(rows)
-        self._rows_raw = [row._mapping for row in rows]
-        self._str = tabulate(self._rows_raw, headers='keys', tablefmt='simple')
-        self._html = tabulate(self._rows_raw, headers='keys', tablefmt='html')
+        self._values = self._transform(rows)
+        self._str = tabulate(self.values, headers='keys',
+                             tablefmt='simple')
+        self._html = tabulate(self.values, headers='keys',
+                              tablefmt='html')
+
+    def _transform(self, rows):
+        """Convert [{key: value}, {key: value2}] to [{key: [value, value2]}]
+        """
+        if not len(rows):
+            return {}
+
+        cols_combinations = set(row.columns for row in rows)
+
+        if len(cols_combinations) > 1:
+            raise KeyError('All rows should have the same columns, got: '
+                           '{}'.format(cols_combinations))
+
+        columns = rows[0].columns
+
+        return {col: [row[col] for row in rows] for col in columns}
 
     def __str__(self):
         return self._str
@@ -68,10 +91,17 @@ class Table:
         return self._html
 
     def __getitem__(self, key):
-        if not _is_iterable(key):
-            key = [key]
+        if _is_iterable(key):
+            return Table([row[key] for row in self._rows])
+        else:
+            return self.values[key]
 
-        return Table([row[key] for row in self._rows])
+    def __iter__(self):
+        for col in self.values:
+            yield col
+
+    def __len__(self):
+        return len(self.columns)
 
     def __eq__(self, other):
         return self._rows == other
@@ -88,7 +118,20 @@ class Table:
         return path
 
     def to_format(self, fmt):
-        return tabulate(self._rows_raw, headers='keys', tablefmt=fmt)
+        return tabulate(self.values, headers='keys', tablefmt=fmt)
+
+    def to_pandas(self):
+        import pandas as pd
+        return pd.DataFrame(self.values)
+
+    def to_dict(self):
+        return deepcopy(self.values)
+
+    @property
+    def values(self):
+        return self._values
+    
+    
 
 
 class BuildReport(Table):

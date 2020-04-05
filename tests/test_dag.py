@@ -214,8 +214,8 @@ def test_partial_build(tmp_directory):
 
     table = dag.build_partially('tc')
 
-    assert {row['name'] for row in table} == {'ta', 'tb', 'tc'}
-    assert all(row['Ran?'] for row in table)
+    assert set(table['name']) == {'ta', 'tb', 'tc'}
+    assert all(table['Ran?'])
 
 
 @pytest.mark.parametrize('executor', ['parallel', 'serial'])
