@@ -10,13 +10,13 @@ from ploomber.clients import ShellClient, SQLAlchemyClient, DBAPIClient
 
 
 def test_deepcopy_dbapiclient(tmp_directory):
-    client = DBAPIClient(sqlite3.connect, database='my_db.db')
+    client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'))
     client.execute('CREATE TABLE my_table (num INT)')
     assert copy.deepcopy(client)
 
 
 def test_pickle_dbapiclient(tmp_directory):
-    client = DBAPIClient(sqlite3.connect, database='my_db.db')
+    client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'))
     client.execute('CREATE TABLE my_table (num INT)')
     assert pickle.dumps(client)
 

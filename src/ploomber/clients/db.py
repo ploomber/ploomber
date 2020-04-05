@@ -15,15 +15,22 @@ class DBAPIClient(Client):
 
     Parameters
     ----------
-    connect_fn: callable
+    connect_fn : callable
         The function to use to open the connection
-    **connect_kwargs: kwargs
+
+    connect_kwargs : dict
         Keyword arguments to pass to connect_fn
+
+    split_source : bool, optional
+        Some database drivers do not support multiple commands, use this
+        optiion to split commands by ';' and send them one at a time. Defaults
+        to False
     """
-    def __init__(self, connect_fn, **connect_kwargs):
+    def __init__(self, connect_fn, connect_kwargs, split_source=False):
         super().__init__()
         self.connect_fn = connect_fn
         self.connect_kwargs = connect_kwargs
+        self.split_source = split_source
 
         # there is no open connection by default
         self._connection = None
@@ -42,7 +49,13 @@ class DBAPIClient(Client):
         """Execute code with the existing connection
         """
         cur = self.connection.cursor()
-        cur.execute(code)
+
+        if self.split_source:
+            for command in code.split(';'):
+                cur.execute(command)
+        else:
+            cur.execute(code)
+
         self.connection.commit()
         cur.close()
 
@@ -72,7 +85,7 @@ class SQLAlchemyClient(Client):
     if using such backend code will be split and several calls to the db
     will be performed.
     """
-    split_commands = ['sqlite']
+    split_source = ['sqlite']
 
     @requires(['sqlalchemy'], 'SQLAlchemyClient')
     def __init__(self, uri):
@@ -103,7 +116,7 @@ class SQLAlchemyClient(Client):
     def execute(self, code):
         cur = self.connection.cursor()
 
-        if self.flavor in self.split_commands:
+        if self.flavor in self.split_source:
             for command in code.split(';'):
                 cur.execute(command)
         else:
