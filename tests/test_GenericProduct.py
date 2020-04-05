@@ -11,8 +11,8 @@ params = [(GenericProduct, 'some_identifier'),
           (GenericSQLRelation, ('a_table', 'table'))]
 
 
-def touch(product):
-    Path(str(product)).touch()
+def nothing(product):
+    pass
 
 
 @pytest.mark.parametrize("class_,identifier", params)
@@ -50,7 +50,7 @@ def test_sample_dag(sqlite_client_and_tmp_dir, class_, identifier):
     client, tmp_dir = sqlite_client_and_tmp_dir
     dag = DAG()
     product = GenericProduct('some_file', client=client)
-    PythonCallable(touch, product, dag)
+    PythonCallable(nothing, product, dag)
     dag.build()
 
     assert Path('some_file').exists()
@@ -71,3 +71,20 @@ def test_sql_with_sql_tasks(class_, source):
     class_(source,
            product, dag, client=client, name='task')
 
+
+def test_sql_stores_metadata_by_schema_and_name(sqlite_client_and_tmp_dir):
+    client, tmp_dir = sqlite_client_and_tmp_dir
+    dag = DAG()
+
+    product = GenericSQLRelation(('schema', 'name', 'table'), client=client)
+    product2 = GenericSQLRelation(('schema2', 'name', 'table'), client=client)
+
+    PythonCallable(nothing, product, dag, 't1')
+    PythonCallable(nothing, product2, dag, 't2')
+    dag.build()
+
+    # delete this product (will delete metadata)
+    product.delete()
+
+    # but should not affect this other one
+    assert product2.exists()
