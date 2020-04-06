@@ -416,7 +416,9 @@ class Task(abc.ABC):
         bool
             True if the Task should execute, False otherwise
         """
-        # FIXME: this should really be a method in Product, not Task
+        # FIXME: this should really be a method in Product, not Task.
+        # this should me implemented as part of the render method,
+        # then executors just skip up to date tasks
         run = False
 
         self._logger.info('Checking status for task "%s"', self.name)

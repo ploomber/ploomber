@@ -87,7 +87,7 @@ class ShellScript(Task):
             self.client = ShellClient()
 
     def _init_source(self, source):
-        source = GenericSource(str(source))
+        source = GenericSource(source)
 
         if not source.needs_render:
             raise SourceInitializationError('The source for this task '

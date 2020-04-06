@@ -6,7 +6,7 @@ from ploomber.sources import (SQLScriptSource,
                               SQLQuerySource,
                               FileSource)
 from ploomber.products import (File, PostgresRelation, SQLiteRelation,
-                               GenericSQLRelation)
+                               GenericSQLRelation, GenericProduct)
 from ploomber import io
 from ploomber.util import requires
 
@@ -98,7 +98,7 @@ class SQLDump(Task):
     network trip, but this is driver-dependent, not all drivers implement
     this (cx_Oracle does it)
     """
-    PRODUCT_CLASSES_ALLOWED = (File, )
+    PRODUCT_CLASSES_ALLOWED = (File, GenericProduct)
 
     def __init__(self, source, product, dag, name=None, client=None,
                  params=None,

@@ -2,8 +2,10 @@ from pathlib import Path
 
 from ploomber.exceptions import RenderError, TaskBuildError
 from ploomber import DAG
-from ploomber.products import File, PostgresRelation
-from ploomber.tasks import PythonCallable, SQLScript, ShellScript, SQLDump
+from ploomber.products import (File, PostgresRelation, GenericProduct,
+                               GenericSQLRelation)
+from ploomber.tasks import (PythonCallable, SQLScript, ShellScript, SQLDump,
+                            SQLTransfer, SQLUpload, PostgresCopyFrom)
 from ploomber.constants import TaskStatus
 from ploomber.templates.Placeholder import Placeholder
 
@@ -26,6 +28,31 @@ def my_fn(product, upstream):
 # have to declare this here, otherwise it won't work with pickle
 def touch(product):
     Path(str(product)).touch()
+
+
+@pytest.mark.parametrize('Task, prod, source',
+                         [(ShellScript, GenericProduct('file.txt'),
+                           'touch {{product}}'),
+                          (SQLScript, GenericSQLRelation(('name', 'table')),
+                           'CREATE TABLE {{product}}'),
+                          (SQLDump, GenericProduct('file.txt'),
+                           'SELECT * FROM {{upstream["key"]}}'),
+                          (SQLTransfer, GenericSQLRelation(('name', 'table')),
+                           'SELECT * FROM {{upstream["key"]}}'),
+                          (SQLUpload, GenericSQLRelation(('name', 'table')),
+                           'some_file.txt'),
+                          (PostgresCopyFrom,
+                           PostgresRelation(('name', 'table')),
+                           'file.parquet')])
+def test_task_init_source_with_placeholder_obj(Task, prod, source):
+    """
+    Testing we can initialize a task with a Placeholder as the source argument
+    """
+    dag = DAG()
+    dag.clients[Task] = object()
+    dag.clients[type(prod)] = object()
+
+    Task(Placeholder(source), prod, dag, name='task')
 
 
 def test_task_build_clears_cached_status(tmp_directory):
