@@ -65,10 +65,12 @@ class FrozenJSON(object):
         value = self._data.get(key)
 
         if value is None:
-            raise ValueError('No value was set in Config{}for key "{}", '
-                             'available keys are: {}'
-                             .format(self._path_to_file, key,
-                                     self._data.keys()))
+            key_ = key if not isinstance(key, str) else "'%s'" % key
+            msg = ('Key error: {}, available keys are: {}'
+                   .format(key_, self._data.keys()))
+            if self._path_to_file is not None:
+                msg += '. File loaded from {}'.format(self._path_to_file)
+            raise KeyError(msg)
 
         return value
 
