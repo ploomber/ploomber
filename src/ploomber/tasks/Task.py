@@ -403,7 +403,6 @@ class Task(abc.ABC):
             # exist, timestamp must be recent equal to the datetime.now()
             # used. maybe run fetch metadata again and validate?
 
-
         # NOTE: return the TaskReport here?
         return TaskStatus.Executed if run else TaskStatus.Skipped
 
