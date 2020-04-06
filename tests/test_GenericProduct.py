@@ -11,8 +11,8 @@ params = [(GenericProduct, 'some_identifier'),
           (GenericSQLRelation, ('a_table', 'table'))]
 
 
-def nothing(product):
-    pass
+def touch(product):
+    Path(str(product)).touch()
 
 
 @pytest.mark.parametrize("class_,identifier", params)
@@ -47,10 +47,10 @@ def test_delete_sqlite_backend(sqlite_client_and_tmp_dir, class_, identifier):
 
 @pytest.mark.parametrize("class_,identifier", params)
 def test_sample_dag(sqlite_client_and_tmp_dir, class_, identifier):
-    client, tmp_dir = sqlite_client_and_tmp_dir
+    client, _ = sqlite_client_and_tmp_dir
     dag = DAG()
     product = GenericProduct('some_file', client=client)
-    PythonCallable(nothing, product, dag)
+    PythonCallable(touch, product, dag)
     dag.build()
 
     assert Path('some_file').exists()
@@ -79,8 +79,8 @@ def test_sql_stores_metadata_by_schema_and_name(sqlite_client_and_tmp_dir):
     product = GenericSQLRelation(('schema', 'name', 'table'), client=client)
     product2 = GenericSQLRelation(('schema2', 'name', 'table'), client=client)
 
-    PythonCallable(nothing, product, dag, 't1')
-    PythonCallable(nothing, product2, dag, 't2')
+    PythonCallable(touch, product, dag, 't1')
+    PythonCallable(touch, product2, dag, 't2')
     dag.build()
 
     # delete this product (will delete metadata)

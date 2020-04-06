@@ -38,11 +38,14 @@ def sqlite_client_and_tmp_dir():
     Creates a sqlite db with sample data and yields initialized client
     along with a temporary directory location
     """
+    old = os.getcwd()
     tmp_dir = Path(tempfile.mkdtemp())
+    os.chdir(str(tmp_dir))
     client = SQLAlchemyClient('sqlite:///' + str(tmp_dir / 'my_db.db'))
     df = pd.DataFrame({'x': range(10)})
     df.to_sql('data', client.engine)
     yield client, tmp_dir
+    os.chdir(old)
     shutil.rmtree(str(tmp_dir))
     client.close()
 
