@@ -7,6 +7,7 @@ from ploomber import DAG
 from ploomber.tasks import ShellScript
 from ploomber.products import File
 from ploomber.clients import ShellClient, SQLAlchemyClient, DBAPIClient
+from ploomber.clients import db
 
 
 def test_deepcopy_dbapiclient(tmp_directory):
@@ -93,3 +94,8 @@ def test_custom_client_in_dag(tmp_directory):
     dag.build()
 
     assert path.exists()
+
+
+def test_db_code_split():
+    assert list(db.code_split('a;b;c;')) == ['a', 'b', 'c']
+    assert list(db.code_split('a;b;c;\n')) == ['a', 'b', 'c']

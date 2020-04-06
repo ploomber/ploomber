@@ -9,6 +9,16 @@ except ImportError:
 from ploomber.clients.Client import Client
 from ploomber.util import requires
 
+import re
+
+
+def code_split(code, token=';'):
+    only_whitespace = re.compile(r'^\s*$')
+
+    for part in code.split(token):
+        if not re.match(only_whitespace, part):
+            yield part
+
 
 class DBAPIClient(Client):
     """A client for a PEP 249 compliant client library
@@ -51,7 +61,7 @@ class DBAPIClient(Client):
         cur = self.connection.cursor()
 
         if self.split_source:
-            for command in code.split(';'):
+            for command in code_split(code):
                 cur.execute(command)
         else:
             cur.execute(code)
@@ -117,7 +127,7 @@ class SQLAlchemyClient(Client):
         cur = self.connection.cursor()
 
         if self.flavor in self.split_source:
-            for command in code.split(';'):
+            for command in code_split(code):
                 cur.execute(command)
         else:
             cur.execute(code)
