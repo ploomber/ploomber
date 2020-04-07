@@ -135,10 +135,14 @@ class Table:
 class TaskReport(Row):
 
     @classmethod
-    def empty_with_name(cls, name):
+    def with_data(cls, name, ran, elapsed):
         return cls({'name': name,
-                    'Ran?': False,
-                    'Elapsed (s)': 0})
+                    'Ran?': ran,
+                    'Elapsed (s)': elapsed})
+
+    @classmethod
+    def empty_with_name(cls, name):
+        return cls.with_data(name, False, 0)
 
 
 class BuildReport(Table):

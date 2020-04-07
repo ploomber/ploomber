@@ -56,7 +56,7 @@ from ploomber.tasks.TaskGroup import TaskGroup
 from ploomber.constants import TaskStatus
 from ploomber.tasks.Upstream import Upstream
 from ploomber.tasks.Params import Params
-from ploomber.Table import Row
+from ploomber.Table import TaskReport, Row
 from ploomber.sources.sources import Source
 from ploomber.util import isiterable
 from ploomber.util.util import callback_check
@@ -436,9 +436,7 @@ class Task(abc.ABC):
         # exist, timestamp must be recent equal to the datetime.now()
         # used. maybe run fetch metadata again and validate?
 
-        return Row({'name': self.name,
-                    'Ran?': True,
-                    'Elapsed (s)': elapsed})
+        return TaskReport.with_data(name=self.name, ran=True, elapsed=elapsed)
 
     def render(self):
         """

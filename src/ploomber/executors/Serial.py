@@ -51,14 +51,12 @@ class Serial(Executor):
         for t in pbar:
             pbar.set_description('Building task "{}"'.format(t.name))
 
-            then = datetime.now()
-
             try:
                 if (callable(t.source.value)
                         and self._execute_callables_in_subprocess):
-                    execute_in_subprocess(t, kwargs)
+                    report = execute_in_subprocess(t, kwargs)
                 else:
-                    t.build(**kwargs)
+                    report = t.build(**kwargs)
             except Exception as e:
                 t.exec_status = TaskStatus.Errored
                 new_status = TaskStatus.Errored
@@ -78,17 +76,10 @@ class Serial(Executor):
                     tr = traceback.format_exc()
                     exceptions.append(traceback_str=tr, task_str=repr(t))
 
+                task_reports.append(report)
+
                 if dag._on_task_finish:
                     dag._on_task_finish(t)
-            finally:
-                # FIXME: remove this, use report returned by task.build
-                now = datetime.now()
-                did_execute = new_status == TaskStatus.Executed
-                elapsed = (now - then).total_seconds()
-                report = {'name': t.name,
-                          'Ran?': did_execute,
-                          'Elapsed (s)': elapsed if did_execute else 0}
-                task_reports.append(Row(report))
 
         if exceptions:
             raise DAGBuildError('DAG build failed, the following '
