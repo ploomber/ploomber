@@ -71,7 +71,7 @@ class Table:
         if not len(rows):
             return {}
 
-        cols_combinations = set(set(row.columns) for row in rows)
+        cols_combinations = set(sorted(row.columns) for row in rows)
 
         if len(cols_combinations) > 1:
             raise KeyError('All rows should have the same columns, got: '
