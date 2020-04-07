@@ -284,7 +284,9 @@ class DAG(collections.abc.Mapping):
             dag.pop(task)
 
         dag.render()
-        return self._executor(dag=dag)
+        task_reports = self._executor(dag=dag)
+
+        return BuildReport(task_reports)
 
     def status(self, **kwargs):
         """Returns a table with tasks status

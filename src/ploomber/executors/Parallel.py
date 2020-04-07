@@ -161,19 +161,19 @@ class Parallel(Executor):
                         logging.info('Added %s to the pool...', task.name)
                         # time.sleep(3)
 
-        exps = ExceptionCollector([get_future_result(f, future_mapping)
-                                   for f, t
-                                   in future_mapping.items()
-                                   if isinstance(get_future_result(f,
-                                                                   future_mapping),
-                                                 ExceptionResult)])
+        results = [get_future_result(f, future_mapping)
+                   for f in future_mapping.keys()]
+
+        exps = [r for r in results if isinstance(r, ExceptionResult)]
 
         if exps:
             raise DAGBuildError('DAG build failed, the following '
                                 'tasks crashed '
                                 '(corresponding downstream tasks aborted '
                                 'execution):\n{}'
-                                .format(str(exps)))
+                                .format(str(ExceptionCollector(exps))))
+
+        return results
 
     # __getstate__ and __setstate__ are needed to make this picklable
 

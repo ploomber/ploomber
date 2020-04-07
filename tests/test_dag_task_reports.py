@@ -33,8 +33,9 @@ def test_task_report_after_building(tmp_directory):
     assert report['name'] == 'task'
 
 
-def test_dag_report_after_building(tmp_directory):
-    dag = DAG()
+@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+def test_dag_report_after_building(tmp_directory, executor):
+    dag = DAG(executor=executor)
 
     PythonCallable(touch_root, File('some_file'), dag, name='task')
     PythonCallable(touch_root, File('some_file'), dag, name='task2')
