@@ -86,3 +86,15 @@ class GenericSQLRelation(GenericProduct):
     """
     def _init_identifier(self, identifier):
         return SQLRelationPlaceholder(identifier)
+
+    @property
+    def name(self):
+        return self._identifier.name
+
+    @property
+    def schema(self):
+        return self._identifier.schema
+
+    @property
+    def kind(self):
+        return self._identifier.kind

@@ -1,30 +1,50 @@
 import sqlite3
 import json
 
+from jinja2 import Template
+
 from ploomber.products import Product
 from ploomber.products.serializers import Base64Serializer
 from ploomber.templates.Placeholder import SQLRelationPlaceholder
 
 
-# TODO: metadata should be looked up by schema and name, not only name
 class SQLiteBackedProductMixin:
     def _create_metadata_relation(self):
 
         create_metadata = """
         CREATE TABLE IF NOT EXISTS _metadata (
-            name TEXT PRIMARY KEY,
-            metadata BLOB
+            name TEXT NOT NULL,
+            schema TEXT,
+            metadata BLOB,
+            UNIQUE(schema, name)
         )
         """
         self.client.execute(create_metadata)
 
+    def _get_schema(self):
+        # the actual implementation can be a simple identifier or a sql
+        # identifier
+        if hasattr(self, 'schema'):
+            # there is a schema (can be None)
+            return self.schema
+        else:
+            # this means there is no schema
+            return False
+
     def fetch_metadata(self):
         self._create_metadata_relation()
 
-        query = """
+        query = Template("""
         SELECT metadata FROM _metadata
-        WHERE name = '{name}'
-        """.format(name=self.name)
+        WHERE name = '{{name}}'
+        {% if schema is not sameas false %}
+            {% if schema %}
+                AND schema = '{{schema}}'
+            {% else %}
+                AND schema IS NULL
+            {% endif %}
+        {% endif %}
+        """).render(name=self.name, schema=self._get_schema())
 
         cur = self.client.connection.cursor()
         cur.execute(query)
@@ -41,24 +61,41 @@ class SQLiteBackedProductMixin:
         self._create_metadata_relation()
 
         metadata_bin = json.dumps(metadata).encode('utf-8')
-
-        query = """
-            REPLACE INTO _metadata(metadata, name)
-            VALUES(?, ?)
-        """
         cur = self.client.connection.cursor()
-        cur.execute(query, (sqlite3.Binary(metadata_bin),
-                            self.name))
+
+        if self._get_schema():
+            query = """
+                REPLACE INTO _metadata(metadata, name, schema)
+                VALUES(?, ?, ?)
+            """
+            cur.execute(query, (sqlite3.Binary(metadata_bin),
+                                self.name,
+                                self._get_schema()))
+        else:
+            query = """
+                REPLACE INTO _metadata(metadata, name)
+                VALUES(?, ?)
+            """
+            cur.execute(query, (sqlite3.Binary(metadata_bin),
+                                self.name))
+
         self.client.connection.commit()
         cur.close()
 
     def _delete_metadata(self):
         self._create_metadata_relation()
 
-        query = """
+        query = Template("""
         DELETE FROM _metadata
-        WHERE name = '{name}'
-        """.format(name=self.name)
+        WHERE name = '{{name}}'
+        {% if schema is not sameas false %}
+            {% if schema %}
+                AND schema = '{{schema}}'
+            {% else %}
+                AND schema IS NULL
+            {% endif %}
+        {% endif %}
+        """).render(name=self.name, schema=self._get_schema())
 
         cur = self.client.connection.cursor()
         cur.execute(query)

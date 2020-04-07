@@ -1,8 +1,10 @@
 import pytest
 from ploomber.templates.Placeholder import SQLRelationPlaceholder
-from ploomber.products import SQLiteRelation, PostgresRelation
+from ploomber.products import (SQLiteRelation, PostgresRelation,
+                               GenericSQLRelation)
 
-classes = [SQLRelationPlaceholder, SQLiteRelation, PostgresRelation]
+classes = [SQLRelationPlaceholder, SQLiteRelation, PostgresRelation,
+           GenericSQLRelation]
 
 
 @pytest.mark.parametrize('class_', classes)
