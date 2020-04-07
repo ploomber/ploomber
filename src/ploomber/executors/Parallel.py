@@ -100,7 +100,7 @@ class Parallel(Executor):
                 if isinstance(result, ExceptionResult):
                     task.exec_status = TaskStatus.Errored
                 else:
-                    task.exec_status = result
+                    task.exec_status = TaskStatus.Executed
 
             done.append(task)
 

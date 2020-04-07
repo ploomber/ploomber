@@ -130,8 +130,15 @@ class Table:
     @property
     def values(self):
         return self._values
-    
-    
+
+
+class TaskReport(Row):
+
+    @classmethod
+    def empty_with_name(cls, name):
+        return cls({'name': name,
+                    'Ran?': False,
+                    'Elapsed (s)': 0})
 
 
 class BuildReport(Table):

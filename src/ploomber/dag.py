@@ -25,7 +25,7 @@ import networkx as nx
 from tqdm.auto import tqdm
 from jinja2 import Template
 
-from ploomber.Table import Table
+from ploomber.Table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
 from ploomber.util import (image_bytes2html, isiterable, path2fig, requires,
                            markup)
@@ -245,8 +245,8 @@ class DAG(collections.abc.Mapping):
             try:
                 # within_dag flags when we execute a task in isolation
                 # vs as part of a dag execution
-                res = self._executor(dag=self, force=force,
-                                     within_dag=True)
+                task_reports = self._executor(dag=self, force=force,
+                                              within_dag=True)
             except Exception as e:
                 self._exec_status = DAGStatus.Errored
                 e_new = DAGBuildError('Failed to build DAG {}'.format(self))
@@ -257,7 +257,15 @@ class DAG(collections.abc.Mapping):
                 # always clear out status
                 self._clear_cached_status()
 
-            return res
+            # add reports from skipped tasks
+            empty = [TaskReport.empty_with_name(t.name)
+                     for t in self.values()
+                     if t.exec_status == TaskStatus.Skipped]
+
+            build_report = BuildReport(task_reports + empty)
+            self._logger.info(' DAG report:\n{}'.format(build_report))
+
+            return build_report
 
     def build_partially(self, target):
         """Partially build a dag until certain task

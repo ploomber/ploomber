@@ -375,7 +375,7 @@ class Task(abc.ABC):
             self._run_on_failure()
 
     def build(self, force=False, within_dag=False):
-        """Run the task if needed by checking its dependencies
+        """build the task
 
         Returns
         -------
@@ -424,10 +424,9 @@ class Task(abc.ABC):
         self._logger.info('Starting execution: %s', repr(self))
 
         then = datetime.now()
-
         self.run()
-
         now = datetime.now()
+
         elapsed = (now - then).total_seconds()
         self._logger.info('Done. Operation took {:.1f} seconds'
                           .format(elapsed))
@@ -437,11 +436,9 @@ class Task(abc.ABC):
         # exist, timestamp must be recent equal to the datetime.now()
         # used. maybe run fetch metadata again and validate?
 
-        # NOTE: return the TaskReport here?
-        return TaskStatus.Executed
-
-    def _render(self):
-        pass
+        return Row({'name': self.name,
+                    'Ran?': True,
+                    'Elapsed (s)': elapsed})
 
     def render(self):
         """

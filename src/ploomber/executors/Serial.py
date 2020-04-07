@@ -56,9 +56,9 @@ class Serial(Executor):
             try:
                 if (callable(t.source.value)
                         and self._execute_callables_in_subprocess):
-                    new_status = execute_in_subprocess(t, kwargs)
+                    execute_in_subprocess(t, kwargs)
                 else:
-                    new_status = t.build(**kwargs)
+                    t.build(**kwargs)
             except Exception as e:
                 t.exec_status = TaskStatus.Errored
                 new_status = TaskStatus.Errored
@@ -70,6 +70,8 @@ class Serial(Executor):
                 if dag._on_task_failure:
                     dag._on_task_failure(t)
             else:
+                new_status = TaskStatus.Executed
+
                 try:
                     t.exec_status = new_status
                 except Exception as e:
@@ -79,6 +81,7 @@ class Serial(Executor):
                 if dag._on_task_finish:
                     dag._on_task_finish(t)
             finally:
+                # FIXME: remove this, use report returned by task.build
                 now = datetime.now()
                 did_execute = new_status == TaskStatus.Executed
                 elapsed = (now - then).total_seconds()
@@ -94,10 +97,6 @@ class Serial(Executor):
                                 'execution):\n{}'
                                 .format(str(exceptions)))
 
-        build_report = BuildReport(task_reports)
-
-        self._logger.info(' DAG report:\n{}'.format(build_report))
-
         # TODO: this should be moved to the superclass, should be like
         # a cleanup function, add a test to verify that this happens
         # even if execution fails
@@ -107,7 +106,7 @@ class Serial(Executor):
         if self.logging_directory:
             logger_handler.remove()
 
-        return build_report
+        return task_reports
 
     # __getstate__ and __setstate__ are needed to make this picklable
 
