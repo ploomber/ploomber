@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+0.3.2dev
+--------
+
+* Faster Product status checking, now performed at rendering time
+* New products: GenericProduct and GenericSQLRelation for Products that do not have a specific implementation (e.g. you can use Hive with the DBAPI client + GenericSQLRelation)
+* Improved DAG build reports, subselect columns, transform to pandas.DataFrame and dict
+
+
+
 0.3.1 (2020-04-01)
 ------------------
 
