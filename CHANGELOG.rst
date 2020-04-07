@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.3.2dev
---------
+0.3.2 (2020-04-07)
+-------------------
 
 * Faster Product status checking, now performed at rendering time
 * New products: GenericProduct and GenericSQLRelation for Products that do not have a specific implementation (e.g. you can use Hive with the DBAPI client + GenericSQLRelation)
