@@ -45,7 +45,7 @@ class Serial(Executor):
         exceptions = ExceptionCollector()
         task_reports = []
 
-        pbar = tqdm(dag._topologically_sorted_iter(skip_aborted=True),
+        pbar = tqdm(dag._iter_tasks(need_execution_only=True),
                     total=len(dag))
 
         for t in pbar:

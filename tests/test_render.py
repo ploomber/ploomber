@@ -1,8 +1,19 @@
+from pathlib import Path
+
 import pytest
 
+from ploomber.constants import TaskStatus
 from ploomber.dag import DAG
-from ploomber.tasks import ShellScript
+from ploomber.tasks import ShellScript, PythonCallable
 from ploomber.products import File
+
+
+def touch_root(product):
+    Path(str(product)).touch()
+
+
+def touch(upstream, product):
+    Path(str(product)).touch()
 
 
 @pytest.fixture
@@ -28,7 +39,103 @@ def dag():
     return dag
 
 
-def can_access_product_without_rendering_if_literal():
+def test_dag_render_step_by_step():
+    dag = DAG()
+
+    t1 = PythonCallable(touch_root, File('t1.txt'), dag, name='t1')
+    t21 = PythonCallable(touch, File('t21.txt'), dag, name='t21')
+    t22 = PythonCallable(touch, File('t22.txt'), dag, name='t22')
+    t3 = PythonCallable(touch, File('t3.txt'), dag, name='t3')
+
+    t1 >> t21
+    t1 >> t22
+
+    (t21 + t22) >> t3
+
+    assert (set(t.exec_status for t in dag.values())
+            == {TaskStatus.WaitingRender})
+
+    t1.render()
+
+    assert t1.exec_status == TaskStatus.WaitingExecution
+    assert t21.exec_status == TaskStatus.WaitingRender
+    assert t22.exec_status == TaskStatus.WaitingRender
+    assert t3.exec_status == TaskStatus.WaitingRender
+
+    t21.render()
+
+    assert t1.exec_status == TaskStatus.WaitingExecution
+    assert t21.exec_status == TaskStatus.WaitingUpstream
+    assert t22.exec_status == TaskStatus.WaitingRender
+    assert t3.exec_status == TaskStatus.WaitingRender
+
+    t22.render()
+
+    assert t1.exec_status == TaskStatus.WaitingExecution
+    assert t21.exec_status == TaskStatus.WaitingUpstream
+    assert t22.exec_status == TaskStatus.WaitingUpstream
+    assert t3.exec_status == TaskStatus.WaitingRender
+
+    t3.render()
+
+    assert t1.exec_status == TaskStatus.WaitingExecution
+    assert t21.exec_status == TaskStatus.WaitingUpstream
+    assert t22.exec_status == TaskStatus.WaitingUpstream
+    assert t3.exec_status == TaskStatus.WaitingUpstream
+
+
+def test_dag_render_step_by_step_w_skipped(tmp_directory):
+    dag = DAG()
+
+    t1 = PythonCallable(touch_root, File('t1.txt'), dag, name='t1')
+    t21 = PythonCallable(touch, File('t21.txt'), dag, name='t21')
+    t22 = PythonCallable(touch, File('t22.txt'), dag, name='t22')
+    t3 = PythonCallable(touch, File('t3.txt'), dag, name='t3')
+
+    t1 >> t21
+    t1 >> t22
+
+    (t21 + t22) >> t3
+
+    assert (set(t.exec_status for t in dag.values())
+            == {TaskStatus.WaitingRender})
+
+    dag.render()
+    t1.build()
+
+    dag.render()
+
+    assert t1.exec_status == TaskStatus.Skipped
+    assert t21.exec_status == TaskStatus.WaitingExecution
+    assert t22.exec_status == TaskStatus.WaitingExecution
+    assert t3.exec_status == TaskStatus.WaitingUpstream
+
+    t21.build()
+    dag.render()
+
+    assert t1.exec_status == TaskStatus.Skipped
+    assert t21.exec_status == TaskStatus.Skipped
+    assert t22.exec_status == TaskStatus.WaitingExecution
+    assert t3.exec_status == TaskStatus.WaitingUpstream
+
+    t22.build()
+    dag.render()
+
+    assert t1.exec_status == TaskStatus.Skipped
+    assert t21.exec_status == TaskStatus.Skipped
+    assert t22.exec_status == TaskStatus.Skipped
+    assert t3.exec_status == TaskStatus.WaitingExecution
+
+    t3.build()
+    dag.render()
+
+    assert t1.exec_status == TaskStatus.Skipped
+    assert t21.exec_status == TaskStatus.Skipped
+    assert t22.exec_status == TaskStatus.Skipped
+    assert t3.exec_status == TaskStatus.Skipped
+
+
+def test_can_access_product_without_rendering_if_literal():
     dag = DAG()
 
     ShellScript('echo a > {{product}}', File('1.txt'), dag,

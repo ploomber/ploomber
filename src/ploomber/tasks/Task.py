@@ -23,6 +23,26 @@ Optional:
 NOTE: Params trigger different data output (and should make tasks outdated),
 Tasks constructor args (such as chunksize in SQLDump) should not change
 the output, hence shoulf not make tasks outdated
+
+Task Status lifecycle:
+
+* They all start on WaitingRender (set in __init__)
+* (dag.render() is called)
+* Tasks move to:
+    * If sucessful render: TaskStatus.Skipped, WaitingExecution or
+        WaitingUpstream
+    * If failed render: ErroredRender or AbortedRender
+    * This happens in Task.render()
+    * AbortedRender is not set directly, but by propagating downstream
+* (dag.build() is called)
+* Check that all TaskStatus are either WaitingExecution, WaitingUpstream
+    or Skipped (currently done in Executor)
+* Once dag.build() starts, the executor must call task.build() inside a
+    try-catch statement to set status to Executed or Errored
+* When tasks are set to Errored, Abort is set to downstream tasks
+
+TODO: describe BrokenProcesssPool
+
 """
 import traceback
 import abc
@@ -310,19 +330,31 @@ class Task(abc.ABC):
 
     @exec_status.setter
     def exec_status(self, value):
+        # FIXME: this should only be used for th eexecutor to report back
+        # status Executed or Errored, reject all other cases, those are handled
+        # internally
         if value not in list(TaskStatus):
             raise ValueError('Setting task.exec_status to an unknown '
                              'value: %s', value)
 
         self._logger.debug('Setting "%s" status to %s', self.name, value)
         self._exec_status = value
+
+        # process might crash, propagate now or changes might not be
+        # reflected (e.g. if a Task is marked as Aborted, all downtream
+        # tasks should be marked as aborted as well)
         self._update_downstream_status()
+
+        # FIXME: this is inefficient, it is better to traverse
+        # the dag in topological order but exclude nodes not affected by
+        # this change
 
         # TODO: move this to build method? do we really need to run this in
         # the main process?
         if value == TaskStatus.Executed:
             # run on finish first, if this fails, we don't want to save
             # metadata
+            # Exceptions are *not* silenced here
             self._run_on_finish()
 
             self.product._save_metadata(self.source_code)
@@ -339,6 +371,7 @@ class Task(abc.ABC):
                                      .format(self, self.product))
 
         elif value == TaskStatus.Errored:
+            # Exceptions here are silenced
             self._run_on_failure()
 
     def build(self, force=False, within_dag=False):
@@ -372,87 +405,43 @@ class Task(abc.ABC):
                                  'rendered, call DAG.render() first')
 
         elif self.exec_status == TaskStatus.Aborted:
-            raise TaskBuildError('Attempted to run task "{}", which has '
-                                 'status TaskStatus.Aborted'
+            raise TaskBuildError('Attempted to run task "{}", whose '
+                                 'status is TaskStatus.Aborted'
+                                 .format(self.name))
+        elif self.exec_status == TaskStatus.Skipped and not force:
+            raise TaskBuildError('Attempted to run task "{}", whose '
+                                 'status TaskStatus.Skipped. Use force=True '
+                                 'if you want to execute it anyway'
                                  .format(self.name))
 
         # NOTE: should i fetch metadata here? I need to make sure I have
         # the latest before building
 
         if force:
-            self._logger.info('Forcing run "%s", skipping checks...',
+            self._logger.info('Forcing run "%s", status ignored...',
                               self.name)
-            run = True
-        else:
-            run = self.should_execute()
 
-        if run:
-            self._logger.info('Starting execution: %s', repr(self))
+        self._logger.info('Starting execution: %s', repr(self))
 
-            then = datetime.now()
+        then = datetime.now()
 
-            self.run()
+        self.run()
 
-            now = datetime.now()
-            elapsed = (now - then).total_seconds()
-            self._logger.info('Done. Operation took {:.1f} seconds'
-                              .format(elapsed))
+        now = datetime.now()
+        elapsed = (now - then).total_seconds()
+        self._logger.info('Done. Operation took {:.1f} seconds'
+                          .format(elapsed))
 
-            # TODO: also check that the Products were updated:
-            # if they did not exist, they must exist now, if they alredy
-            # exist, timestamp must be recent equal to the datetime.now()
-            # used. maybe run fetch metadata again and validate?
+        # TODO: also check that the Products were updated:
+        # if they did not exist, they must exist now, if they alredy
+        # exist, timestamp must be recent equal to the datetime.now()
+        # used. maybe run fetch metadata again and validate?
 
         # NOTE: return the TaskReport here?
-        return TaskStatus.Executed if run else TaskStatus.Skipped
+        return TaskStatus.Executed
 
-    def should_execute(self):
-        """
-        Given current conditions, determine if calling Task.build() should
-        actually run the Task.
-
-        Returns
-        -------
-        bool
-            True if the Task should execute, False otherwise
-        """
-        # FIXME: this should really be a method in Product, not Task.
-        # this should me implemented as part of the render method,
-        # then executors just skip up to date tasks
-        run = False
-
-        self._logger.info('Checking status for task "%s"', self.name)
-
-        # check product...
-        p_exists = self.product.exists()
-
-        # check dependencies only if the product exists
-        if p_exists:
-
-            outdated_data_deps = self.product._outdated_data_dependencies()
-            outdated_code_dep = self.product._outdated_code_dependency()
-
-            if outdated_data_deps:
-                run = True
-                self._logger.info('Outdated data deps...')
-            else:
-                self._logger.info('Up-to-date data deps...')
-
-            if outdated_code_dep:
-                run = True
-                self._logger.info('Outdated code dep...')
-            else:
-                self._logger.info('Up-to-date code dep...')
-        else:
-            run = True
-
-            # just log why it will run
-            if not p_exists:
-                self._logger.info('Product does not exist...')
-
-        self._logger.info('Should run? %s', run)
-
-        return run
+    def _render(self):
+        pass
 
     def render(self):
         """
@@ -490,9 +479,28 @@ class Task(abc.ABC):
                           ' check the full traceback above for details'
                           .format(repr(self), self.params)) from e
 
-        self.exec_status = (TaskStatus.WaitingExecution
-                            if not self.upstream
-                            else TaskStatus.WaitingUpstream)
+        # Maybe set ._exec_status directly, since no downstream propagation
+        # is needed here.
+        is_outdated = self.product._is_outdated()
+
+        if not self.upstream:
+            if not is_outdated:
+                self._exec_status = TaskStatus.Skipped
+            else:
+                self._exec_status = TaskStatus.WaitingExecution
+        else:
+            all_upstream_done = all([t.exec_status
+                                     in {TaskStatus.Executed,
+                                         TaskStatus.Skipped}
+                                     for t in self.upstream.values()])
+
+            if all_upstream_done and is_outdated:
+                self._exec_status = TaskStatus.WaitingExecution
+            elif all_upstream_done and not is_outdated:
+                self._exec_status = TaskStatus.Skipped
+            else:
+                self._exec_status = TaskStatus.WaitingUpstream
+
         self._run_on_render()
 
     def set_upstream(self, other):
@@ -589,6 +597,9 @@ class Task(abc.ABC):
         return downstream
 
     def _update_downstream_status(self):
+        # FIXME: this is inefficient, it is better to traverse
+        # the dag in topological order but exclude nodes not affected by
+        # this change
         # TODO: move to DAG
         def update_status(task):
             any_upstream_errored_or_aborted = any([t.exec_status

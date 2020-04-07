@@ -34,8 +34,10 @@ def test_cannot_initialize_sql_script_with_literals():
         SQLScriptSource('SELECT * FROM my_table')
 
 
-def test_warns_if_sql_scipt_does_not_create_relation():
+def test_warns_if_sql_scipt_does_not_create_relation(sqlite_client_and_tmp_dir):
+    client, _ = sqlite_client_and_tmp_dir
     dag = DAG()
+    dag.clients[SQLiteRelation] = client
 
     t = SQLScript('SELECT * FROM {{product}}',
                   SQLiteRelation((None, 'my_table', 'table')),
@@ -49,8 +51,10 @@ def test_warns_if_sql_scipt_does_not_create_relation():
         t.render()
 
 
-def test_warns_if_number_of_relations_does_not_match_products():
+def test_warns_if_number_of_relations_does_not_match_products(sqlite_client_and_tmp_dir):
+    client, _ = sqlite_client_and_tmp_dir
     dag = DAG()
+    dag.clients[SQLiteRelation] = client
 
     sql = """
     -- wrong sql, products must be used in CREATE statements

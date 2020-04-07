@@ -78,7 +78,8 @@ class Parallel(Executor):
         # this is a bit confusing, so maybe change WaitingExecution
         # to WaitingBuild?
         for name in dag:
-            if dag[name].exec_status == TaskStatus.Executed:
+            if dag[name].exec_status in {TaskStatus.Executed,
+                                         TaskStatus.Skipped}:
                 done.append(dag[name])
 
         def callback(future):
@@ -111,7 +112,7 @@ class Parallel(Executor):
             the DAG is done
             """
             for task in dag.values():
-                if task.exec_status == TaskStatus.Aborted:
+                if task.exec_status in {TaskStatus.Aborted}:
                     done.append(task)
                 elif task.exec_status == TaskStatus.BrokenProcessPool:
                     raise StopIteration
@@ -164,7 +165,7 @@ class Parallel(Executor):
                                    for f, t
                                    in future_mapping.items()
                                    if isinstance(get_future_result(f,
-                                                 future_mapping),
+                                                                   future_mapping),
                                                  ExceptionResult)])
 
         if exps:
@@ -192,4 +193,5 @@ def get_future_result(future, future_mapping):
     try:
         return future.result()
     except BrokenProcessPool as e:
-        raise BrokenProcessPool('Broken pool {}'.format(future_mapping[future])) from e
+        raise BrokenProcessPool('Broken pool {}'.format(
+            future_mapping[future])) from e

@@ -22,11 +22,11 @@ def test_input_always_executes(tmp_directory):
     Path('some_file').touch()
     t1 = Input(File('some_file'), dag, name='some_file')
 
-    assert t1.should_execute()
+    assert t1.product._is_outdated()
 
     dag.build()
 
-    assert t1.should_execute()
+    assert t1.product._is_outdated()
 
 
 def test_error_raised_if_input_has_upstream_dependencies(tmp_directory):

@@ -54,9 +54,50 @@ class Product(abc.ABC):
         """
         self._identifier.render(params, **kwargs)
 
-    def _outdated(self):
-        return (self._outdated_data_dependencies()
-                or self._outdated_code_dependency())
+    def _is_outdated(self):
+        """
+        Given current conditions, determine if the Task that holds this
+        Product should be executed
+
+        Returns
+        -------
+        bool
+            True if the Task should execute
+        """
+        run = False
+
+        self.logger.info('Checking status for task "%s"', self.task.name)
+
+        # check product...
+        p_exists = self.exists()
+
+        # check dependencies only if the product exists
+        if p_exists:
+
+            outdated_data_deps = self._outdated_data_dependencies()
+            outdated_code_dep = self._outdated_code_dependency()
+
+            if outdated_data_deps:
+                run = True
+                self.logger.info('Outdated data deps...')
+            else:
+                self.logger.info('Up-to-date data deps...')
+
+            if outdated_code_dep:
+                run = True
+                self.logger.info('Outdated code dep...')
+            else:
+                self.logger.info('Up-to-date code dep...')
+        else:
+            run = True
+
+            # just log why it will run
+            if not p_exists:
+                self.logger.info('Product does not exist...')
+
+        self.logger.info('Should run? %s', run)
+
+        return run
 
     def _outdated_data_dependencies(self):
 
@@ -76,7 +117,7 @@ class Product(abc.ABC):
                 return True
             else:
                 return ((up_prod.metadata.timestamp > self.metadata.timestamp)
-                        or up_prod._outdated())
+                        or up_prod._is_outdated())
 
         outdated = any([is_outdated(up.product) for up
                         in self.task.upstream.values()])
