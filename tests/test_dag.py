@@ -265,11 +265,11 @@ def test_dag_task_status_life_cycle(executor, tmp_directory):
     dag.render()
 
     assert dag._exec_status == DAGStatus.WaitingExecution
-    assert t1.exec_status == TaskStatus.WaitingExecution
+    assert t1.exec_status == TaskStatus.Skipped
     assert t2.exec_status == TaskStatus.WaitingExecution
     assert t3.exec_status == TaskStatus.WaitingUpstream
     assert t4.exec_status == TaskStatus.WaitingUpstream
-    assert t5.exec_status == TaskStatus.WaitingExecution
+    assert t5.exec_status == TaskStatus.Skipped
 
     # TODO: add test when trying to Execute dag with task status
     # other than WaitingExecution anf WaitingUpstream
@@ -422,7 +422,7 @@ def test_sucessful_execution(executor, tmp_directory):
     assert Path('file').exists()
 
     assert set(t.exec_status for t in dag.values()) == {TaskStatus.Executed}
-    assert set(t.should_execute() for t in dag.values()) == {False}
+    assert set(t.product._is_outdated() for t in dag.values()) == {False}
 
     dag.build()
 

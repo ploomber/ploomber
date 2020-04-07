@@ -129,7 +129,9 @@ class DAG(collections.abc.Mapping):
         # rendering ok, waiting execution
         elif value == DAGStatus.WaitingExecution:
             exec_values = set(task.exec_status for task in self.values())
-            allowed = {TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream}
+            allowed = {TaskStatus.WaitingExecution,
+                       TaskStatus.WaitingUpstream,
+                       TaskStatus.Skipped}
             self.check_tasks_have_allowed_status(allowed, value)
 
         # attempted execution but failed
@@ -180,7 +182,7 @@ class DAG(collections.abc.Mapping):
         self._G.remove_node(name)
         return t
 
-    def render(self):
+    def render(self, show_progress=True):
         """Render the graph
         """
         g = self._to_graph()
@@ -200,10 +202,10 @@ class DAG(collections.abc.Mapping):
         # and over
         for dag in dags:
             if dag is not self:
-                dag._render_current()
+                dag._render_current(show_progress=show_progress)
 
         # then, render this dag
-        self._render_current()
+        self._render_current(show_progress=show_progress)
 
         return self
 
@@ -241,6 +243,8 @@ class DAG(collections.abc.Mapping):
             self._logger.info('Building DAG %s', self)
 
             try:
+                # within_dag flags when we execute a task in isolation
+                # vs as part of a dag execution
                 res = self._executor(dag=self, force=force,
                                      within_dag=True)
             except Exception as e:
@@ -377,7 +381,7 @@ class DAG(collections.abc.Mapping):
             if doc is None or doc == '':
                 warnings.warn('Task "{}" has no docstring'.format(task_name))
 
-    def _render_current(self):
+    def _render_current(self, show_progress):
         """
         Render tasks, and update exec_status
         """
@@ -386,9 +390,10 @@ class DAG(collections.abc.Mapping):
 
             g = self._to_graph(only_current_dag=True)
 
-            tasks = nx.algorithms.topological_sort(g)
+            tasks = self._iter_tasks(need_execution_only=False)
 
-            tasks = tqdm(tasks, total=len(g))
+            if show_progress:
+                tasks = tqdm(tasks, total=len(g))
 
             exceptions = ExceptionCollector()
             warnings_ = None
@@ -398,8 +403,9 @@ class DAG(collections.abc.Mapping):
                 if t.exec_status == TaskStatus.AbortedRender:
                     continue
 
-                tasks.set_description('Rendering DAG "{}"'
-                                      .format(self.name))
+                if show_progress:
+                    tasks.set_description('Rendering DAG "{}"'
+                                          .format(self.name))
 
                 with warnings.catch_warnings(record=True) as warnings_:
                     try:
@@ -516,11 +522,16 @@ class DAG(collections.abc.Mapping):
     def _short_repr(self):
         return repr(self)
 
-    def _topologically_sorted_iter(self, skip_aborted=True):
+    def _iter_tasks(self, need_execution_only):
+        # need_execution_only: only iterate over tasks that need execution
         g = self._to_graph()
         for task in nx.algorithms.topological_sort(g):
-            if task.exec_status != TaskStatus.Aborted and skip_aborted:
-                yield task
+            if ((task.exec_status in {TaskStatus.Skipped,
+                                      TaskStatus.Aborted})
+                    and need_execution_only):
+                continue
+
+            yield task
 
     # IPython integration
     # https://ipython.readthedocs.io/en/stable/config/integrating.html
