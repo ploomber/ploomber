@@ -357,7 +357,7 @@ class DAG(collections.abc.Mapping):
         G = self._to_graph()
 
         for n, data in G.nodes(data=True):
-            data['color'] = 'red' if n.product._outdated() else 'green'
+            data['color'] = 'red' if n.product._is_outdated() else 'green'
             data['label'] = n._short_repr()
 
         # https://networkx.github.io/documentation/networkx-1.10/reference/drawing.html

@@ -12,7 +12,7 @@ def test_non_existent_file(tmp_directory):
     ta.render()
 
     assert not f.exists()
-    assert f._outdated()
+    assert f._is_outdated()
     assert f._outdated_code_dependency()
     assert not f._outdated_data_dependencies()
 
@@ -36,8 +36,8 @@ def test_outdated_data_simple_dependency(tmp_directory):
 
     assert not ta.product.exists()
     assert not tb.product.exists()
-    assert ta.product._outdated()
-    assert tb.product._outdated()
+    assert ta.product._is_outdated()
+    assert tb.product._is_outdated()
 
     dag.build()
 
@@ -48,16 +48,16 @@ def test_outdated_data_simple_dependency(tmp_directory):
     assert tb.product.exists()
 
     # and arent outdated...
-    assert not ta.product._outdated()
-    assert not tb.product._outdated()
+    assert not ta.product._is_outdated()
+    assert not tb.product._is_outdated()
 
     # let's make b outdated
     ta.build(force=True)
 
     dag._clear_cached_status()
 
-    assert not ta.product._outdated()
-    assert tb.product._outdated()
+    assert not ta.product._is_outdated()
+    assert tb.product._is_outdated()
 
 
 def test_many_upstream(tmp_directory):
@@ -84,24 +84,24 @@ def test_many_upstream(tmp_directory):
     assert tb.product.exists()
     assert tc.product.exists()
 
-    assert not ta.product._outdated()
-    assert not tb.product._outdated()
-    assert not tc.product._outdated()
+    assert not ta.product._is_outdated()
+    assert not tb.product._is_outdated()
+    assert not tc.product._is_outdated()
 
     ta.build(force=True)
     dag._clear_cached_status()
 
-    assert not ta.product._outdated()
-    assert not tb.product._outdated()
-    assert tc.product._outdated()
+    assert not ta.product._is_outdated()
+    assert not tb.product._is_outdated()
+    assert tc.product._is_outdated()
 
     dag.build()
     tb.build(force=True)
     dag._clear_cached_status()
 
-    assert not ta.product._outdated()
-    assert not tb.product._outdated()
-    assert tc.product._outdated()
+    assert not ta.product._is_outdated()
+    assert not tb.product._is_outdated()
+    assert tc.product._is_outdated()
 
 
 def test_many_downstream():
@@ -124,7 +124,7 @@ def test_can_create_task_with_many_products():
     ta.render()
 
     assert not ta.product.exists()
-    assert ta.product._outdated()
+    assert ta.product._is_outdated()
     assert ta.product._outdated_code_dependency()
     assert not ta.product._outdated_data_dependencies()
 

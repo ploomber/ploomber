@@ -99,11 +99,6 @@ class Product(abc.ABC):
 
         return run
 
-    # FIXME: delete, we don't need this anymore
-    def _outdated(self):
-        return (self._outdated_data_dependencies()
-                or self._outdated_code_dependency())
-
     def _outdated_data_dependencies(self):
 
         if self._outdated_data_dependencies_status is not None:
@@ -122,7 +117,7 @@ class Product(abc.ABC):
                 return True
             else:
                 return ((up_prod.metadata.timestamp > self.metadata.timestamp)
-                        or up_prod._outdated())
+                        or up_prod._is_outdated())
 
         outdated = any([is_outdated(up.product) for up
                         in self.task.upstream.values()])
