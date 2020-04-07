@@ -291,6 +291,8 @@ class DAG(collections.abc.Mapping):
     def status(self, **kwargs):
         """Returns a table with tasks status
         """
+        # FIXME: delete this, make dag.render() return this
+
         # self._clear_cached_status()
 
         self.render()
