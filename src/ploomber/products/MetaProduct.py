@@ -97,9 +97,14 @@ class MetaProduct:
         for product in self.products:
             product.delete(force)
 
+    # FIXME: delete
     def _outdated(self):
         return (self._outdated_data_dependencies()
                 or self._outdated_code_dependency())
+
+    def _is_outdated(self):
+        return any([p._is_outdated()
+                    for p in self.products])
 
     def _outdated_data_dependencies(self):
         return any([p._outdated_data_dependencies()

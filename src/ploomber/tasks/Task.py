@@ -351,12 +351,7 @@ class Task(abc.ABC):
 
         # TODO: move this to build method? do we really need to run this in
         # the main process?
-        if value == TaskStatus.WaitingExecution:
-            # determine if we actually need execution or we can just skip:
-            if not self.product._is_outdated():
-                self.exec_status = TaskStatus.Skipped
-
-        elif value == TaskStatus.Executed:
+        if value == TaskStatus.Executed:
             # run on finish first, if this fails, we don't want to save
             # metadata
             # Exceptions are *not* silenced here
@@ -445,6 +440,9 @@ class Task(abc.ABC):
         # NOTE: return the TaskReport here?
         return TaskStatus.Executed
 
+    def _render(self):
+        pass
+
     def render(self):
         """
         Renders code and product, all upstream tasks must have been rendered
@@ -483,17 +481,25 @@ class Task(abc.ABC):
 
         # Maybe set ._exec_status directly, since no downstream propagation
         # is needed here.
-        # determine status. If no upstream dependencies, check if Skipped
-        # or WaitingExecution. If there are upstream dependencies, set
-        # to WaitingUpstream. Then
-        # use code update_status to determine if change to Skipped (all
-        # upstream done and not outdated) or WaitingExecution (all dependencies
-        # done but outdated). Maybe add a "all dependecies done check?"
+        is_outdated = self.product._is_outdated()
 
-        if self.exec_status != TaskStatus.Skipped:
-            self.exec_status = (TaskStatus.WaitingExecution
-                                if not self.upstream
-                                else TaskStatus.WaitingUpstream)
+        if not self.upstream:
+            if not is_outdated:
+                self._exec_status = TaskStatus.Skipped
+            else:
+                self._exec_status = TaskStatus.WaitingExecution
+        else:
+            all_upstream_done = all([t.exec_status
+                                     in {TaskStatus.Executed,
+                                         TaskStatus.Skipped}
+                                     for t in self.upstream.values()])
+
+            if all_upstream_done and is_outdated:
+                self._exec_status = TaskStatus.WaitingExecution
+            elif all_upstream_done and not is_outdated:
+                self._exec_status = TaskStatus.Skipped
+            else:
+                self._exec_status = TaskStatus.WaitingUpstream
 
         self._run_on_render()
 

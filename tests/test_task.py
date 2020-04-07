@@ -98,15 +98,16 @@ def test_python_callable_with_file():
     assert str(t.source) == 'def my_fn(product, upstream):\n    pass\n'
 
 
-def test_postgresscript_with_relation():
+def test_postgresscript_with_relation(pg_client_and_schema):
+    client, _ = pg_client_and_schema
     dag = DAG()
     t = SQLScript('CREATE TABLE {{product}} AS SELECT * FROM {{name}}',
                   PostgresRelation(('user', 'table', 'table'),
-                                   client=Dummy()),
+                                   client=client),
                   dag,
                   name='name',
                   params=dict(name='some_table'),
-                  client=Dummy())
+                  client=client)
 
     t.render()
 

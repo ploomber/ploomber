@@ -22,7 +22,7 @@ def test_link_is_up_to_date_before_build(tmp_directory):
     Path('some_file').touch()
     t1 = Link(File('some_file'), dag, name='some_file')
 
-    assert not t1.should_execute()
+    assert not t1.product._is_outdated()
 
 
 def test_downstream_from_link_is_up_to_date_after_build(tmp_directory):
@@ -37,7 +37,7 @@ def test_downstream_from_link_is_up_to_date_after_build(tmp_directory):
 
     dag.build()
 
-    assert not t2.should_execute()
+    assert not t2.product._is_outdated()
 
 
 def test_error_raised_if_link_has_upstream_dependencies(tmp_directory):
