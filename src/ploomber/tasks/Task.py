@@ -535,8 +535,23 @@ class Task(abc.ABC):
         else:
             data['Last updated'] = 'Has not been run'
 
-        data['Outdated dependencies'] = p._outdated_data_dependencies()
+        outd_data = p._outdated_data_dependencies()
         outd_code = p._outdated_code_dependency()
+
+        outd = False
+
+        if outd_code:
+            outd = 'Source code'
+
+        if outd_data:
+            if not outd:
+                outd = 'Upstream'
+            else:
+                outd += '& Upstream'
+
+        data['Outdated?'] = outd
+
+        data['Outdated dependencies'] = outd_data
         data['Outdated code'] = outd_code
 
         if outd_code and return_code_diff:
