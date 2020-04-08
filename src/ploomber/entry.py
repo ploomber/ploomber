@@ -1,5 +1,29 @@
 """
-Warning: this code is highly experimental
+[Experimental module]
+
+The entry module creates command line interfaces for functions that return a
+DAG object
+
+Example:
+
+Assume module.sub_module.entry_point is a function that returns a DAG.
+
+Run this will parse the function parameters:
+
+    $ python -m ploomber.entry module.sub_module.entry_point --help
+
+To build the dag returned by the entry point:
+
+    $ python -m ploomber.entry module.sub_module.entry_point build
+
+Features:
+
+    * Parse docstring (numpydoc) and show it using --help
+    * Enable logging to standard output using --log LEVEL
+    * Pass function parameters using --PARAM_NAME VALUE
+    * If the function is decorated with @with_env, replace env variables using
+        --env__KEY VALUE
+
 """
 
 # TODO: print enviornment content on help and maybe on any other command
