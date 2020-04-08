@@ -2,6 +2,8 @@
 Products are persistent changes triggered by Tasks such as a new file
 in the local filesystem or a table in a database
 """
+import warnings
+import json
 import shutil
 import os
 from pathlib import Path
@@ -42,8 +44,21 @@ class File(Product):
         # if wrong anf the task should run again
         if (self._path_to_stored_source_code.exists()
                 and self._path_to_file.exists()):
-            stored_source_code = self._path_to_stored_source_code.read_text()
-            timestamp = self._path_to_stored_source_code.stat().st_mtime
+            content = self._path_to_stored_source_code.read_text()
+
+            try:
+                parsed = json.loads(content)
+            except json.JSONDecodeError:
+                # for compatibility with the previous version
+                stored_source_code = content
+                timestamp = self._path_to_stored_source_code.stat().st_mtime
+
+                warnings.warn('Migrating metadata to new format...')
+                self.save_metadata(dict(timestamp=timestamp,
+                                        stored_source_code=stored_source_code))
+            else:
+                stored_source_code = parsed['stored_source_code']
+                timestamp = parsed['timestamp']
         else:
             stored_source_code = None
             timestamp = None
@@ -51,8 +66,8 @@ class File(Product):
         return dict(timestamp=timestamp, stored_source_code=stored_source_code)
 
     def save_metadata(self, metadata):
-        # timestamp automatically updates when the file is saved...
-        self._path_to_stored_source_code.write_text(metadata['stored_source_code'])
+        (self._path_to_stored_source_code
+            .write_text(json.dumps(metadata)))
 
     def exists(self):
         return self._path_to_file.exists()
