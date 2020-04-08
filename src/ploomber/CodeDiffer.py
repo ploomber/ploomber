@@ -104,19 +104,22 @@ class CodeDiffer:
     NORMALIZERS = {None: normalize_null, 'python': normalize_python,
                    'sql': normalize_sql}
 
-    def code_is_different(self, a, b, language=None):
+    def is_different(self, a, b, language=None):
         normalizer = self._get_normalizer(language)
 
         a_norm = normalizer(a)
         b_norm = normalizer(b)
 
-        return a_norm != b_norm
+        diff = self.get_diff(a_norm, b_norm, normalize=False)
 
-    def get_diff(self, a, b, language=None):
-        normalizer = self._get_normalizer(language)
+        return a_norm != b_norm, diff
 
-        a = normalizer(a)
-        b = normalizer(b)
+    def get_diff(self, a, b, language=None, normalize=True):
+        if normalize:
+            normalizer = self._get_normalizer(language)
+
+            a = normalizer(a)
+            b = normalizer(b)
 
         diff = diff_strings(a, b)
 

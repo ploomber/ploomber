@@ -18,7 +18,8 @@ def x():
 '''
 
     differ = CodeDiffer()
-    assert not differ.code_is_different(a, b, language='python')
+    res, _ = differ.is_different(a, b, language='python')
+    assert not res
 
 
 def test_python_differ_ignores_comments():
@@ -37,4 +38,5 @@ def x():
 '''
 
     differ = CodeDiffer()
-    assert not differ.code_is_different(a, b, language='python')
+    res, _ = differ.is_different(a, b, language='python')
+    assert not res
