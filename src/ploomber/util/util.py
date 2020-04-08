@@ -1,10 +1,10 @@
+import importlib
 from functools import wraps, reduce
 import base64
 from glob import glob
 from pathlib import Path
 from collections import defaultdict
 import shutil
-from pydoc import locate
 import inspect
 
 import numpy as np
@@ -21,8 +21,8 @@ def requires(pkgs, name=None):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            # FIXME: use importlib and find_spec to avoid importing here
-            missing = [pkg for pkg in pkgs if locate(pkg) is None]
+            missing = [pkg for pkg in pkgs if importlib.util.find_spec(pkg)
+                       is None]
 
             if missing:
                 msg = reduce(lambda x, y: x+' '+y, missing)
