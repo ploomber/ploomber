@@ -520,6 +520,11 @@ class Task(abc.ABC):
         data = {}
 
         data['name'] = self.name
+        data['type'] = type(self).__name__
+        # FIXME: all tasks should have a client property
+        data['client'] = (repr(self.client)
+                          if hasattr(self, 'client')
+                          else None)
 
         if p.metadata.timestamp is not None:
             dt = datetime.fromtimestamp(p.metadata.timestamp)
@@ -542,7 +547,12 @@ class Task(abc.ABC):
         else:
             outd_code = ''
 
+        data['Product type'] = type(self.product).__name__
         data['Product'] = str(self.product)
+        # FIXME: all products should have a client property
+        data['Product client'] = (repr(self.product.client)
+                                  if hasattr(self.product, 'client')
+                                  else None)
         data['Doc (short)'] = self.source.doc_short
         data['Location'] = self.source.loc
 
