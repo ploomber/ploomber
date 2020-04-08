@@ -185,16 +185,21 @@ class Task(abc.ABC):
 
     @property
     def name(self):
-        """A str that represents the name of the task
+        """
+        A str that represents the name of the task, you can access tasks
+        in a dag using dag['some_name']
         """
         return self._name
 
     @property
     def source(self):
         """
-        A code object which represents what will be run upn task execution,
-        for tasks that do not take source code as parameter (such as
-        PostgresCopyFrom), the source object will be a different thing
+        Source is used by the task to compute its output, for most cases
+        this is source code, for example PythonCallable takes a function
+        as source and SQLScript takes a string with SQL code as source.
+        But other tasks might take non-code objects as source, for example,
+        PostgresCopyFrom takes a path to a file. If source represents code
+        doing str(task.source) will return the string representation
         """
         return self._source
 
@@ -204,18 +209,10 @@ class Task(abc.ABC):
         """
         return self._product
 
-    # FIXME: remove, only keep source
-    @property
-    def source_code(self):
-        """
-        A str with the source for that this task will run on execution, if
-        templated, it is only available after rendering
-        """
-        return str(self.source)
-
     @property
     def upstream(self):
-        """{task names} -> [task objects] mapping for upstream dependencies
+        """
+        A mapping for upstream dependencies {task name} -> [task obkect]
         """
         # this is jus syntactic sugar, upstream relations are tracked by the
         # DAG object
@@ -357,7 +354,7 @@ class Task(abc.ABC):
             # Exceptions are *not* silenced here
             self._run_on_finish()
 
-            self.product._save_metadata(self.source_code)
+            self.product._save_metadata(str(self.source))
 
             # NOTE: for most Products, it's ok to do this check before
             # saving metadata, but not for GenericProduct, since the way
@@ -511,7 +508,7 @@ class Task(abc.ABC):
 
         Source code:
         {}
-        """.format(self.params, self.product, self.source_code)
+        """.format(self.params, self.product, str(self.source))
 
         print(plan)
 
@@ -540,7 +537,7 @@ class Task(abc.ABC):
             data['Code diff'] = (self.dag
                                  .differ
                                  .get_diff(p.metadata.stored_source_code,
-                                           self.source_code,
+                                           str(self.source),
                                            language=self.source.language))
         else:
             outd_code = ''
@@ -557,7 +554,7 @@ class Task(abc.ABC):
         attributes
         """
         return dict(name=self.name, product=str(self.product),
-                    source_code=self.source_code)
+                    source_code=str(self.source))
 
     def _render_product(self):
         params_names = list(self.params)
