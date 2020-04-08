@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 
 import pytest
@@ -8,11 +9,29 @@ from ploomber.tasks import ShellScript, PythonCallable
 from ploomber.products import File
 
 
+class WarningA(Warning):
+    pass
+
+
+class WarningB(Warning):
+    pass
+
+
 def touch_root(product):
     Path(str(product)).touch()
 
 
 def touch(upstream, product):
+    Path(str(product)).touch()
+
+
+def touch_root_w_warning(product):
+    warnings.warn('This is a warning', WarningA)
+    Path(str(product)).touch()
+
+
+def touch_w_warning(upstream, product):
+    warnings.warn('This is another warning', WarningA)
     Path(str(product)).touch()
 
 
@@ -197,3 +216,26 @@ def test_rendering_dag_also_renders_upstream_outside_dag(tmp_directory):
     # this works
     sub_dag.build()
     dag.build()
+
+
+@pytest.mark.xfail(reason="Not implemented yet")
+def test_warnings_are_shown(tmp_directory):
+    # this fails when tasks are executed in a subprocess, messages are still
+    # visible but can't be capture, probably because multiprocessing
+    # only sends them to standard error
+
+    # from ploomber.executors import Serial
+    # dag = DAG(executor=Serial(execute_callables_in_subprocess=False))
+    t1 = PythonCallable(touch_root_w_warning, File('file.txt'), dag)
+    t2 = PythonCallable(touch_w_warning, File('file2.txt'), dag)
+    t1 >> t2
+
+    with pytest.warns(None) as record:
+        dag.build()
+
+    assert len(record) == 2
+    assert str(record[0].message) == 'This is a warning'
+    assert str(record[1].message) == 'This is another warning'
+    # this is not working, returning WarningMessage instead of Warning obj
+    assert isinstance(record[0], WarningA)
+    assert isinstance(record[1], WarningB)

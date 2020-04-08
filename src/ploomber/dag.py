@@ -436,6 +436,7 @@ class DAG(collections.abc.Mapping):
 
             # TODO: also include warnings in the exception message
             if warnings_:
+                # maybe raise one by one to keep the warning type
                 messages = [str(w.message) for w in warnings_]
                 warning = ('Task "{}" had the following warnings:\n\n{}'
                            .format(repr(t), '\n'.join(messages)))
