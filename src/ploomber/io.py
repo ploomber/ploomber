@@ -1,6 +1,7 @@
 """
-Handling file I/O
+Handling file I/O for writing files, optionally saving them in chunks
 """
+import abc
 import warnings
 import csv
 from pathlib import Path
@@ -15,7 +16,9 @@ except ImportError:
 from ploomber.util import safe_remove, requires
 
 
-class FileIO:
+class FileIO(abc.ABC):
+    """Abstract class for file I/O
+    """
 
     def __init__(self, path, chunked):
         self.path = Path(path)
@@ -50,12 +53,14 @@ class FileIO:
             self.write_in_path(str(self.path), data, headers)
 
     @classmethod
+    @abc.abstractmethod
     def write_in_path(cls, path, data, headers):
-        raise NotImplementedError
+        pass
 
     @property
+    @abc.abstractmethod
     def extension(self):
-        raise NotImplementedError
+        pass
 
 
 class ParquetIO(FileIO):
@@ -122,6 +127,8 @@ class ParquetIO(FileIO):
 
 
 class CSVIO(FileIO):
+    """csv file handler
+    """
 
     @classmethod
     def write_in_path(cls, path, data, headers):
