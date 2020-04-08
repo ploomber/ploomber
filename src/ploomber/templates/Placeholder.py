@@ -114,7 +114,14 @@ class Placeholder:
 
     @property
     def _value_repr(self):
-        return self._raw if self._value is None else self._value
+        raw = self._raw if self._value is None else self._value
+        parts = raw.split('\n')
+        first_part = parts[0]
+        short = first_part if len(first_part) < 80 else first_part[:77]
+
+        if len(parts) > 1 or len(first_part) >= 80:
+            short += '...'
+        return short
 
     @property
     def template(self):

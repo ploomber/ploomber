@@ -51,6 +51,7 @@ class Source(abc.ABC):
     def render(self, params):
         self.value.render(params)
         self._post_render_validation(self.value.value, params)
+        return self
 
     @property
     def loc(self):
@@ -58,6 +59,9 @@ class Source(abc.ABC):
 
     def __str__(self):
         return str(self.value)
+
+    def __repr__(self):
+        return "{}({})".format(type(self).__name__, self.value._value_repr)
 
     # required by subclasses
     @property
