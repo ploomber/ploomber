@@ -55,7 +55,7 @@ def test_dag_report_after_building(tmp_directory, executor):
     assert len(report['Percentage']) == 2
 
 
-def test_dag_status(sqlite_client_and_tmp_dir):
+def test_dag_reports_sub_select_cols(sqlite_client_and_tmp_dir):
     client, _ = sqlite_client_and_tmp_dir
     dag = DAG()
 
@@ -63,8 +63,9 @@ def test_dag_status(sqlite_client_and_tmp_dir):
     dag.clients[SQLiteRelation] = client
 
     PythonCallable(touch_root, File('some_file'), dag, name='task')
-    SQLScript('SELECT * FROM {{product}}', SQLiteRelation(('name', 'table')),
+    sql = 'CREATE TABLE {{product}} AS SELECT * FROM data'
+    SQLScript(sql, SQLiteRelation(('data2', 'table')),
               dag, name='task2')
 
-    print(dag.status())
-    assert dag.status() == 1
+    assert dag.status()[['name', 'type']]
+    assert dag.build()[['Ran?', 'Elapsed (s)']]
