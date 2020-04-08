@@ -521,6 +521,7 @@ class Task(abc.ABC):
 
         data['name'] = self.name
         data['type'] = type(self).__name__
+        data['status'] = self.exec_status.name
         # FIXME: all tasks should have a client property
         data['client'] = (repr(self.client)
                           if hasattr(self, 'client')
