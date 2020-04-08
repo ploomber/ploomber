@@ -39,6 +39,8 @@ from ploomber.sql import infer
 
 
 class Source(abc.ABC):
+    """Source abstract class
+    """
 
     def __init__(self, value):
         self.value = Placeholder(value)

@@ -12,14 +12,21 @@ from jinja2 import (Environment, Template, UndefinedError,
 
 class Placeholder:
     """
-    A jinja2 Template-like object that adds the following features:
+    Placeholder powers all the objects that use placeholder variables (
+    between curly brackets). It uses a jinja2.Template object under the hood
+    but adds a few important things:
 
-        * template.raw - Returns the raw template used for initialization
-        * template.location - Returns a path to the Template object if available
-        * strict - will not render if missing or extra parameters
-        * It also keeps the rendered value for later access
+    * Keeps the raw (undendered) value: template.raw
+    * Keeps path to raw value: template.location
+    * Strict: will not render if missing or extra parameters
+    * Upon calling .render, saves the rendered value for later access
 
-    Note that this does not implement the full jinja2.Template API
+    Although this object mimics a jinja2.Template object, it does not implement
+    the full API.
+
+    End users should not manipulate Placeholder objects, they should be
+    automatically created from strings, pathlib.Path or jinja2.Template
+    objects.
     """
 
     def __init__(self, source):
@@ -89,7 +96,8 @@ class Placeholder:
             elif isinstance(loader, PackageLoader):
                 self.loader_init = {'class': type(loader).__name__,
                                     'kwargs': {
-                                    'package_name': loader.provider.loader.name,
+                                    'package_name':
+                                    loader.provider.loader.name,
                                     'package_path': loader.package_path}}
             else:
                 raise TypeError('Only templates with loader tyoe '
@@ -275,9 +283,9 @@ class Placeholder:
 
 class SQLRelationPlaceholder:
     """
-    An identifier that represents a database relation (table or view), used
-    internally by SQLiteRelation (Product). Not meant to be used directly
-    by users.
+    An structured Placeholder to represents a database relation (table or
+    view). Used by Products that take SQL relations as parameters.
+    Not meant to be used directly by end users.
 
     Parameters
     ----------
