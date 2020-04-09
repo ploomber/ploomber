@@ -123,7 +123,8 @@ class DAG(collections.abc.Mapping):
         # render errored
         elif value == DAGStatus.ErroredRender:
             allowed = {TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream,
-                       TaskStatus.ErroredRender, TaskStatus.AbortedRender}
+                       TaskStatus.ErroredRender, TaskStatus.AbortedRender,
+                       TaskStatus.Skipped}
             self.check_tasks_have_allowed_status(allowed, value)
 
         # rendering ok, waiting execution
