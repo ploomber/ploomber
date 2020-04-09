@@ -26,18 +26,21 @@ class UploadToS3(Task):
     """
 
     def __init__(self, source, product, dag, bucket, name=None, params=None,
-                 client_kwargs=None):
+                 client_kwargs=None, upload_file_kwargs=None):
         super().__init__(source, product, dag, name, params)
         self._bucket = bucket
         self._client_kwargs = client_kwargs
+        self._upload_file_kwargs = upload_file_kwargs
 
     def run(self):
         client_kwargs = self._client_kwargs or {}
+        upload_file_kwargs = self._upload_file_kwargs or {}
         s3_client = boto3.client('s3', **client_kwargs)
         source = str(self.source)
-        name = str(Path(source).name)
+
         try:
-            s3_client.upload_file(source, self._bucket, name)
+            s3_client.upload_file(source, self._bucket, str(self.product),
+                                  upload_file_kwargs)
         except ClientError as e:
             logging.error(e)
 

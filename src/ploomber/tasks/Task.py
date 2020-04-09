@@ -547,7 +547,7 @@ class Task(abc.ABC):
             if not outd:
                 outd = 'Upstream'
             else:
-                outd += '& Upstream'
+                outd += ' & Upstream'
 
         data['Outdated?'] = outd
 
