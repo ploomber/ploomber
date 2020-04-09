@@ -49,6 +49,8 @@ MISC = [
     'pyarrow',
     # RemoteShellClient
     'paramiko',
+    # s3 upload
+    'boto3',
 ]
 
 setup(
