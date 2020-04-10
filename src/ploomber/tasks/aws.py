@@ -30,7 +30,7 @@ class UploadToS3(Task):
         self._client_kwargs = client_kwargs
         self._upload_file_kwargs = upload_file_kwargs
 
-    @requires(['boto3'], 'NotebookRunner')
+    @requires(['boto3'], 'UploadToS3')
     def run(self):
         import boto3
         from botocore.exceptions import ClientError
