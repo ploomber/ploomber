@@ -1,10 +1,8 @@
-from pathlib import Path
 import logging
-import boto3
-from botocore.exceptions import ClientError
 
 from ploomber.tasks.Task import Task
 from ploomber.sources import FileSource
+from ploomber.util import requires
 
 
 class UploadToS3(Task):
@@ -32,7 +30,11 @@ class UploadToS3(Task):
         self._client_kwargs = client_kwargs
         self._upload_file_kwargs = upload_file_kwargs
 
+    @requires(['boto3'], 'NotebookRunner')
     def run(self):
+        import boto3
+        from botocore.exceptions import ClientError
+
         client_kwargs = self._client_kwargs or {}
         upload_file_kwargs = self._upload_file_kwargs or {}
         s3_client = boto3.client('s3', **client_kwargs)
