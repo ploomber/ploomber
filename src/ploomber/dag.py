@@ -35,6 +35,7 @@ from ploomber import executors
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import DAGBuildError, DAGRenderError
 from ploomber.ExceptionCollector import ExceptionCollector
+from ploomber.util.util import callback_check
 
 
 class DAG(collections.abc.Mapping):
@@ -101,6 +102,8 @@ class DAG(collections.abc.Mapping):
         self._cache_product_metadata = cache_product_metadata
         self._cache_rendered_status = cache_rendered_status
         self._did_render = False
+
+        self._available_callback_kwargs = {'dag': self}
 
     @property
     def _exec_status(self):
@@ -251,6 +254,17 @@ class DAG(collections.abc.Mapping):
             except Exception as e:
                 self._exec_status = DAGStatus.Errored
                 e_new = DAGBuildError('Failed to build DAG {}'.format(self))
+
+                if self.on_failure:
+                    self._logger.debug('Executing on_failure hook '
+                                       'for dag "%s"', self.name)
+                    kwargs = callback_check(self.on_failure,
+                                            self._available_callback_kwargs)
+                    self.on_failure(**kwargs)
+                else:
+                    self._logger.debug('No on_failure hook for dag '
+                                       '"%s", skipping', self.name)
+
                 raise e_new from e
             else:
                 self._exec_status = DAGStatus.Executed
@@ -265,6 +279,16 @@ class DAG(collections.abc.Mapping):
 
             build_report = BuildReport(task_reports + empty)
             self._logger.info(' DAG report:\n{}'.format(build_report))
+
+            if self.on_finish:
+                self._logger.debug('Executing on_finish hook '
+                                   'for dag "%s"', self.name)
+                kwargs = callback_check(self.on_finish,
+                                        self._available_callback_kwargs)
+                self.on_finish(**kwargs)
+            else:
+                self._logger.debug('No on_finish hook for dag '
+                                   '"%s", skipping', self.name)
 
             return build_report
 
