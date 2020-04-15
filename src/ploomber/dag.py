@@ -103,6 +103,8 @@ class DAG(collections.abc.Mapping):
         self._cache_rendered_status = cache_rendered_status
         self._did_render = False
 
+        self.on_finish = None
+        self.on_failure = None
         self._available_callback_kwargs = {'dag': self}
 
     @property
