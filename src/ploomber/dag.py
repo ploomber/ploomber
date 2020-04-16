@@ -260,8 +260,10 @@ class DAG(collections.abc.Mapping):
                 if self.on_failure:
                     self._logger.debug('Executing on_failure hook '
                                        'for dag "%s"', self.name)
-                    kwargs = callback_check(self.on_failure,
-                                            self._available_callback_kwargs)
+                    kwargs_available = copy(self._available_callback_kwargs)
+                    kwargs_available['traceback'] = traceback.format_exc()
+
+                    kwargs = callback_check(self.on_failure, kwargs_available)
                     self.on_failure(**kwargs)
                 else:
                     self._logger.debug('No on_failure hook for dag '
@@ -285,8 +287,9 @@ class DAG(collections.abc.Mapping):
             if self.on_finish:
                 self._logger.debug('Executing on_finish hook '
                                    'for dag "%s"', self.name)
-                kwargs = callback_check(self.on_finish,
-                                        self._available_callback_kwargs)
+                kwargs_available = copy(self._available_callback_kwargs)
+                kwargs_available['report'] = build_report
+                kwargs = callback_check(self.on_finish, kwargs_available)
                 self.on_finish(**kwargs)
             else:
                 self._logger.debug('No on_finish hook for dag '
