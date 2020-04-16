@@ -430,12 +430,8 @@ class DAG(collections.abc.Mapping):
         if not self._cache_rendered_status or not self._did_render:
             self._logger.info('Rendering DAG %s', self)
 
-            g = self._to_graph(only_current_dag=True)
-
-            tasks = self._iter_tasks(need_execution_only=False)
-
             if show_progress:
-                tasks = tqdm(tasks, total=len(g))
+                tasks = tqdm(self.values(), total=len(self))
 
             exceptions = ExceptionCollector()
             warnings_ = None
@@ -551,9 +547,11 @@ class DAG(collections.abc.Mapping):
         return self._G.nodes[key]['task']
 
     def __iter__(self):
+        """Iterate task names in topological order
+        """
         # TODO: raise a warning if this any of this dag tasks have tasks
         # from other tasks as dependencies (they won't show up here)
-        for name in self._G:
+        for name in nx.algorithms.topological_sort(self._G):
             yield name
 
     def __len__(self):
@@ -564,17 +562,6 @@ class DAG(collections.abc.Mapping):
 
     def _short_repr(self):
         return repr(self)
-
-    def _iter_tasks(self, need_execution_only):
-        # need_execution_only: only iterate over tasks that need execution
-        g = self._to_graph()
-        for task in nx.algorithms.topological_sort(g):
-            if ((task.exec_status in {TaskStatus.Skipped,
-                                      TaskStatus.Aborted})
-                    and need_execution_only):
-                continue
-
-            yield task
 
     # IPython integration
     # https://ipython.readthedocs.io/en/stable/config/integrating.html

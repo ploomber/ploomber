@@ -53,6 +53,18 @@ def failing(product):
 #     dag.to_html('a.html')
 
 
+def test_mapping_interface():
+    dag = DAG()
+    t1 = PythonCallable(touch_root, File('1.txt'), dag, name=1)
+    t2 = PythonCallable(touch, File('2.txt'), dag, name=2)
+    t3 = PythonCallable(touch, File('3.txt'), dag, name=3)
+    t1 >> t2 >> t3
+
+    assert list(dag) == [1, 2, 3]
+    assert list(dag.keys()) == [1, 2, 3]
+    assert list(dag.values()) == [t1, t2, t3]
+
+
 @pytest.mark.parametrize('function_name', ['render', 'build', 'to_markup',
                          'plot'])
 def test_dag_functions(function_name):
