@@ -11,6 +11,8 @@ from ploomber.sources import (PythonCallableSource,
                               GenericSource)
 from ploomber.clients import ShellClient
 from ploomber.products.Metadata import MetadataAlwaysUpToDate
+from ploomber.exceptions import TaskBuildError
+from ploomber.constants import TaskStatus
 
 
 class PythonCallable(Task):
@@ -48,6 +50,12 @@ class PythonCallable(Task):
         Run callable in debug mode.
 
         """
+        if self.exec_status == TaskStatus.WaitingRender:
+            raise TaskBuildError('Error in task "{}". '
+                                 'Cannot debug task that has not been '
+                                 'rendered, call DAG.render() first'
+                                 .format(self.name))
+
         pdb.runcall(self.source.value, **self.params)
 
 

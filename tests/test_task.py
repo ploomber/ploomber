@@ -269,4 +269,17 @@ def test_attempting_to_build_unrendered_task_throws_exception():
     with pytest.raises(TaskBuildError) as excinfo:
         t.build()
 
-    assert msg in str(excinfo.getrepr())
+    assert msg in str(excinfo.value)
+
+
+def test_attempt_to_debug_unrendered_task():
+    dag = DAG()
+    t = PythonCallable(touch, File('1.txt'), dag)
+
+    msg = ('Cannot debug task that has not been rendered, call '
+           'DAG.render() first')
+
+    with pytest.raises(TaskBuildError) as excinfo:
+        t.debug()
+
+    assert msg in str(excinfo.value)

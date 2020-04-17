@@ -389,10 +389,8 @@ class Task(abc.ABC):
         else:
             try:
                 res = self._build(force)
-            except Exception as e:
+            finally:
                 self.exec_status = TaskStatus.Errored
-                raise type(e)('Error calling build on task {}'
-                              .format(self.name)) from e
 
             self.exec_status = TaskStatus.Executed
             self.product._clear_cached_status()
@@ -403,8 +401,10 @@ class Task(abc.ABC):
         # cannot keep running, we depend on the render step to get all the
         # parameters resolved (params, upstream, product)
         if self.exec_status == TaskStatus.WaitingRender:
-            raise TaskBuildError('Cannot build task that has not been '
-                                 'rendered, call DAG.render() first')
+            raise TaskBuildError('Error building task "{}". '
+                                 'Cannot build task that has not been '
+                                 'rendered, call DAG.render() first'
+                                 .format(self.name))
 
         elif self.exec_status == TaskStatus.Aborted:
             raise TaskBuildError('Attempted to run task "{}", whose '
