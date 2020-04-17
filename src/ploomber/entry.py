@@ -16,6 +16,14 @@ To build the dag returned by the entry point:
 
     $ python -m ploomber.entry module.sub_module.entry_point build
 
+
+To start an interactive session by loading the entry point first:
+
+    $ python -i -m ploomber.entry module.sub_module.entry_point status
+
+ipython -i -m also works. Once the interactive session starts, the object
+returned by the entry point will be available in the "dag" variable.
+
 Features:
 
     * Parse docstring (numpydoc) and show it using --help
@@ -139,7 +147,11 @@ def main():
         # TODO: add a way of test this by the parameters it will use to
         # call the function, have an aux function to get those then another
         # to execute, test using the first one
-        print(getattr(entry(**{**kwargs, **replaced}), args.action)())
+        obj = entry(**{**kwargs, **replaced})
+
+        print(getattr(obj, args.action)())
+
+        return obj
 
 
 def flatten_dict(d, prefix=''):
@@ -158,4 +170,4 @@ def flatten_dict(d, prefix=''):
 
 
 if __name__ == '__main__':
-    main()
+    dag = main()
