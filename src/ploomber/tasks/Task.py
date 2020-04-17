@@ -179,9 +179,14 @@ class Task(abc.ABC):
         self._on_finish = None
         self._on_failure = None
         self._on_render = None
-        self._available_callback_kwargs = {'task': self,
-                                           'client': self.client,
-                                           'product': self.product}
+
+    @property
+    def _available_callback_kwargs(self):
+        # make it a property so we always get the latest value for self.client
+        # given that could be None during init
+        return {'task': self,
+                'client': self.client,
+                'product': self.product}
 
     @property
     def name(self):
