@@ -5,7 +5,7 @@ import pytest
 from ploomber import DAG
 from ploomber.tasks import Input, PythonCallable
 from ploomber.products import File
-from ploomber.exceptions import DAGBuildError
+from ploomber.exceptions import DAGRenderError
 
 
 def touch_root(product):
@@ -36,8 +36,8 @@ def test_error_raised_if_input_has_upstream_dependencies(tmp_directory):
     t1 = Input(File('some_file'), dag, name='some_file')
     t0 >> t1
 
-    with pytest.raises(DAGBuildError) as excinfo:
-        dag.build()
+    with pytest.raises(DAGRenderError) as excinfo:
+        dag.render()
 
     msg = ('Input tasks should not have upstream dependencies. '
            '"some_file" task has them')
@@ -49,8 +49,8 @@ def test_error_raised_if_input_product_does_not_exist(tmp_directory):
 
     Input(File('some_file'), dag, name='some_file')
 
-    with pytest.raises(DAGBuildError) as excinfo:
-        dag.build()
+    with pytest.raises(DAGRenderError) as excinfo:
+        dag.render()
 
     msg = ('Input tasks should point to Products that already exist. '
            '"some_file" task product "some_file" does not exist')

@@ -11,7 +11,7 @@ from ploomber.sources import (PythonCallableSource,
                               GenericSource)
 from ploomber.clients import ShellClient
 from ploomber.products.Metadata import MetadataAlwaysUpToDate
-from ploomber.exceptions import TaskBuildError
+from ploomber.exceptions import TaskBuildError, TaskRenderError
 from ploomber.constants import TaskStatus
 from ploomber.util.util import signature_check
 
@@ -128,6 +128,7 @@ class DownloadFromURL(Task):
     name: str
         A str to indentify this task. Should not already exist in the dag
     """
+
     def run(self):
         # lazily load urllib as it is slow to import
         from urllib import request
@@ -207,6 +208,9 @@ class Link(Task):
     def run(self):
         """This Task does not run anything
         """
+        pass
+
+    def _validate_render(self):
         if self.upstream:
             raise RuntimeError('Link tasks should not have upstream '
                                'dependencies. "{}" task has them'
@@ -261,15 +265,18 @@ class Input(Task):
     def run(self):
         """This Task does not run anything
         """
+        pass
+
+    def _validate_render(self):
         if self.upstream:
-            raise RuntimeError('Input tasks should not have upstream '
-                               'dependencies. "{}" task has them'
-                               .format(self.name))
+            raise TaskRenderError('Input tasks should not have upstream '
+                                  'dependencies. "{}" task has them'
+                                  .format(self.name))
 
         if not self.product.exists():
-            raise RuntimeError('Input tasks should point to Products that '
-                               'already exist. "{}" task product "{}" does '
-                               'not exist'.format(self.name, self.product))
+            raise TaskRenderError('Input tasks should point to Products that '
+                                  'already exist. "{}" task product "{}" does '
+                                  'not exist'.format(self.name, self.product))
 
     def _init_source(self, source):
         return GenericSource(str(source))
