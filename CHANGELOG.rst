@@ -11,8 +11,10 @@ CHANGELOG
 * Improved DAG build reports, subselect columns, transform to pandas.DataFrame and dict
 * Parallel executor now returns build reports, just like the Serial executor
 * Support for enabling logging in entry points (via --logging)
+* Support for starting an interactiev session using entry points (via python -i -m)
 * Improved support for database drivers that can only send one query at a time
 * Improved repr for SQLAlchemyClient, shows URI (but hiddes password)
+* PythonCallable now validates signature against params at render time
 * Bug fixes
 
 
