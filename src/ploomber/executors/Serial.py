@@ -1,16 +1,14 @@
 """
-DAG executors
+Serial DAG executor: builds one task at a time
 """
-from datetime import datetime
 from multiprocessing import Pool
 import traceback
 import logging
 
 from tqdm.auto import tqdm
-from ploomber.Table import BuildReport, Row
 from ploomber.executors.Executor import Executor
 from ploomber.executors.LoggerHandler import LoggerHandler
-from ploomber.exceptions import DAGBuildError, TaskBuildError
+from ploomber.exceptions import DAGBuildError
 from ploomber.ExceptionCollector import ExceptionCollector
 from ploomber.constants import TaskStatus
 
