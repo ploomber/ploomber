@@ -16,6 +16,12 @@ class TaskBuildError(Exception):
     pass
 
 
+class TaskRenderError(Exception):
+    """Raise when a task fails to render
+    """
+    pass
+
+
 class RenderError(Exception):
     """Raise when a template fails to render
     """

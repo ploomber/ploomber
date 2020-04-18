@@ -13,6 +13,7 @@ from ploomber.clients import ShellClient
 from ploomber.products.Metadata import MetadataAlwaysUpToDate
 from ploomber.exceptions import TaskBuildError
 from ploomber.constants import TaskStatus
+from ploomber.util.util import signature_check
 
 
 class PythonCallable(Task):
@@ -41,6 +42,9 @@ class PythonCallable(Task):
 
     def _init_source(self, source):
         return PythonCallableSource(source)
+
+    def _validate_render(self):
+        signature_check(self.source.value, self.params, self.name)
 
     def run(self):
         self.source.value(**self.params)
