@@ -21,11 +21,6 @@ class Dummy:
     pass
 
 
-def my_fn(product, upstream):
-    pass
-
-
-# have to declare this here, otherwise it won't work with pickle
 def touch(product):
     Path(str(product)).touch()
 
@@ -76,9 +71,8 @@ def test_task_build_clears_cached_status(tmp_directory):
 
 def test_task_can_infer_name_from_source():
     dag = DAG()
-    t = PythonCallable(my_fn, File('/path/to/{{name}}'), dag,
-                       params=dict(name='file'))
-    assert t.name == 'my_fn'
+    t = PythonCallable(touch, File('file.txt'), dag)
+    assert t.name == 'touch'
 
 
 def test_task_raises_error_if_name_cannot_be_infered():
@@ -90,12 +84,12 @@ def test_task_raises_error_if_name_cannot_be_infered():
 
 def test_python_callable_with_file():
     dag = DAG()
-    t = PythonCallable(my_fn, File('/path/to/{{name}}'), dag, name='name',
-                       params=dict(name='file'))
+    t = PythonCallable(touch, File('file.txt'), dag, name='name')
     t.render()
 
-    assert str(t.product) == '/path/to/file'
-    assert str(t.source) == 'def my_fn(product, upstream):\n    pass\n'
+    assert str(t.product) == 'file.txt'
+    assert str(t.source) == ('def touch(product):\n    '
+                             'Path(str(product)).touch()\n')
 
 
 def test_postgresscript_with_relation(pg_client_and_schema):
