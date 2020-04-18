@@ -3,7 +3,8 @@ from ploomber.sources.sources import (PythonCallableSource,
                                       SQLQuerySource,
                                       GenericSource,
                                       FileSource)
+from ploomber.sources.NotebookSource import NotebookSource
 
 __all__ = ['PythonCallableSource', 'SQLScriptSource',
            'SQLQuerySource',
-           'GenericSource', 'FileSource']
+           'GenericSource', 'FileSource', 'NotebookSource']
