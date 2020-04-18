@@ -45,10 +45,12 @@ class Serial(Executor):
         exceptions = ExceptionCollector()
         task_reports = []
 
-        pbar = tqdm(dag._iter_tasks(need_execution_only=True),
-                    total=len(dag))
+        pbar = tqdm(dag.values(), total=len(dag))
 
         for t in pbar:
+            if t.exec_status in {TaskStatus.Skipped, TaskStatus.Aborted}:
+                continue
+
             pbar.set_description('Building task "{}"'.format(t.name))
 
             try:

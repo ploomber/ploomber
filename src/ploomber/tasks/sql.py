@@ -53,7 +53,7 @@ class SQLScript(Task):
                              .format(type(self).__name__))
 
     def run(self):
-        return self.client.execute(self.source_code)
+        return self.client.execute(str(self.source))
 
     def _init_source(self, source):
         return SQLScriptSource(source)

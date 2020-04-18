@@ -11,6 +11,9 @@ from ploomber.sources import (PythonCallableSource,
                               GenericSource)
 from ploomber.clients import ShellClient
 from ploomber.products.Metadata import MetadataAlwaysUpToDate
+from ploomber.exceptions import TaskBuildError, TaskRenderError
+from ploomber.constants import TaskStatus
+from ploomber.util.util import signature_check
 
 
 class PythonCallable(Task):
@@ -40,6 +43,9 @@ class PythonCallable(Task):
     def _init_source(self, source):
         return PythonCallableSource(source)
 
+    def _validate_render(self):
+        signature_check(self.source.value, self.params, self.name)
+
     def run(self):
         self.source.value(**self.params)
 
@@ -48,6 +54,12 @@ class PythonCallable(Task):
         Run callable in debug mode.
 
         """
+        if self.exec_status == TaskStatus.WaitingRender:
+            raise TaskBuildError('Error in task "{}". '
+                                 'Cannot debug task that has not been '
+                                 'rendered, call DAG.render() first'
+                                 .format(self.name))
+
         pdb.runcall(self.source.value, **self.params)
 
 
@@ -116,6 +128,7 @@ class DownloadFromURL(Task):
     name: str
         A str to indentify this task. Should not already exist in the dag
     """
+
     def run(self):
         # lazily load urllib as it is slow to import
         from urllib import request
@@ -195,6 +208,9 @@ class Link(Task):
     def run(self):
         """This Task does not run anything
         """
+        pass
+
+    def _validate_render(self):
         if self.upstream:
             raise RuntimeError('Link tasks should not have upstream '
                                'dependencies. "{}" task has them'
@@ -249,15 +265,18 @@ class Input(Task):
     def run(self):
         """This Task does not run anything
         """
+        pass
+
+    def _validate_render(self):
         if self.upstream:
-            raise RuntimeError('Input tasks should not have upstream '
-                               'dependencies. "{}" task has them'
-                               .format(self.name))
+            raise TaskRenderError('Input tasks should not have upstream '
+                                  'dependencies. "{}" task has them'
+                                  .format(self.name))
 
         if not self.product.exists():
-            raise RuntimeError('Input tasks should point to Products that '
-                               'already exist. "{}" task product "{}" does '
-                               'not exist'.format(self.name, self.product))
+            raise TaskRenderError('Input tasks should point to Products that '
+                                  'already exist. "{}" task product "{}" does '
+                                  'not exist'.format(self.name, self.product))
 
     def _init_source(self, source):
         return GenericSource(str(source))

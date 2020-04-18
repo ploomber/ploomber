@@ -2,6 +2,7 @@ import sqlite3
 import pickle
 import copy
 from pathlib import Path
+from urllib.parse import urlparse
 
 from ploomber import DAG
 from ploomber.tasks import ShellScript
@@ -41,6 +42,16 @@ def test_send_more_than_one_command_in_sqlite(tmp_directory):
     SELECT * FROM my_table
     """
     client.execute(code)
+
+
+def test_safe_uri():
+    # with password
+    res = db.safe_uri(urlparse('postgresql://user:pass@localhost/db'))
+    assert res == 'postgresql://user:********@localhost/db'
+
+    # no password
+    res = db.safe_uri(urlparse('postgresql://user@localhost/db'))
+    assert res == 'postgresql://user@localhost/db'
 
 
 def test_shell_client(tmp_directory):

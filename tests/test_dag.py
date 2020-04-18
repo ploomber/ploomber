@@ -33,7 +33,11 @@ def touch(upstream, product):
     Path(str(product)).touch()
 
 
-def failing(product):
+def failing_root(product):
+    raise FailedTask('Bad things happened')
+
+
+def failing(upstream, product):
     raise FailedTask('Bad things happened')
 
 
@@ -51,6 +55,18 @@ def failing(product):
 #     t1 >> t2
 
 #     dag.to_html('a.html')
+
+
+def test_mapping_interface():
+    dag = DAG()
+    t1 = PythonCallable(touch_root, File('1.txt'), dag, name=1)
+    t2 = PythonCallable(touch, File('2.txt'), dag, name=2)
+    t3 = PythonCallable(touch, File('3.txt'), dag, name=3)
+    t1 >> t2 >> t3
+
+    assert list(dag) == [1, 2, 3]
+    assert list(dag.keys()) == [1, 2, 3]
+    assert list(dag.values()) == [t1, t2, t3]
 
 
 @pytest.mark.parametrize('function_name', ['render', 'build', 'to_markup',
@@ -231,7 +247,7 @@ def test_dag_task_status_life_cycle(executor, tmp_directory):
     """
     dag = DAG(executor=executor)
     t1 = PythonCallable(touch_root, File('ok'), dag, name='t1')
-    t2 = PythonCallable(failing, File('a_file'), dag, name='t2')
+    t2 = PythonCallable(failing_root, File('a_file'), dag, name='t2')
     t3 = PythonCallable(touch, File('another_file'), dag, name='t3')
     t4 = PythonCallable(touch, File('yet_another_file'), dag, name='t4')
     t5 = PythonCallable(touch_root, File('file'), dag, name='t5')
@@ -279,10 +295,10 @@ def test_dag_task_status_life_cycle(executor, tmp_directory):
 def test_executor_keeps_running_until_no_more_tasks_can_run(executor,
                                                             tmp_directory):
     dag = DAG(executor=executor)
-    t_fail = PythonCallable(failing, File('t_fail'), dag, name='t_fail')
+    t_fail = PythonCallable(failing_root, File('t_fail'), dag, name='t_fail')
     t_fail_downstream = PythonCallable(failing, File('t_fail_downstream'),
                                        dag, name='t_fail_downstream')
-    t_touch_aborted = PythonCallable(touch_root, File('t_touch_aborted'),
+    t_touch_aborted = PythonCallable(touch, File('t_touch_aborted'),
                                      dag, name='t_touch_aborted')
 
     t_fail >> t_fail_downstream >> t_touch_aborted
@@ -388,8 +404,8 @@ def test_tracebacks_are_shown_for_all_on_render_failing_tasks():
 @pytest.mark.parametrize('executor', ['parallel', 'serial'])
 def test_tracebacks_are_shown_for_all_on_build_failing_tasks(executor):
     dag = DAG(executor=executor)
-    PythonCallable(failing, File('a_file'), dag, name='t1')
-    PythonCallable(failing, File('another_file'), dag, name='t2')
+    PythonCallable(failing_root, File('a_file'), dag, name='t1')
+    PythonCallable(failing_root, File('another_file'), dag, name='t2')
 
     with pytest.raises(DAGBuildError) as excinfo:
         dag.build()

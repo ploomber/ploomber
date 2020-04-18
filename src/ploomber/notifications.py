@@ -7,6 +7,8 @@ from email.message import EmailMessage
 
 @load_env
 def send_email(env, subject, body):
+    """Send an email notification
+    """
     msg = EmailMessage()
     msg.set_content(body)
 

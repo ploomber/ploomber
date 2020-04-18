@@ -5,8 +5,10 @@ import pytest
 
 from ploomber.dag import DAG
 from ploomber.tasks import PythonCallable, SQLScript
-from ploomber.products import File
-from ploomber.exceptions import DAGBuildError, CallbackSignatureError, DAGRenderError
+from ploomber.products import File, SQLiteRelation
+from ploomber.clients import SQLAlchemyClient
+from ploomber.exceptions import (DAGBuildError, CallbackSignatureError,
+                                 DAGRenderError)
 from ploomber.executors import Serial
 from ploomber.constants import TaskStatus
 
@@ -18,6 +20,7 @@ from ploomber.constants import TaskStatus
 # TODO: test callbacks when calling a task directly render and build,
 # TODO: in test_tasks test task status when build/render task directly
 # status to other tasks shoould propagate as well
+
 
 def fn(product):
     if hasattr(fn, 'count'):
@@ -43,22 +46,22 @@ def fn_that_fails(product):
     raise Exception
 
 
-def hook(task, client):
+def hook():
     if hasattr(hook, 'count'):
         hook.count += 1
 
 
-def hook_2(task, client):
+def hook_2():
     if hasattr(hook_2, 'count'):
         hook_2.count += 1
 
 
-def hook_3(task, client):
+def hook_3():
     if hasattr(hook_3, 'count'):
         hook_3.count += 1
 
 
-def hook_crashing(task, client):
+def hook_crashing():
     if hasattr(hook_crashing, 'count'):
         hook_crashing.count += 1
     raise Exception
@@ -247,3 +250,34 @@ def test_task_is_re_executed_if_on_finish_fails(tmp_directory):
 
     assert hook_crashing.count == 3
     assert fn.count == 3
+
+
+def on_finish_sql(task, product, client):
+    on_finish_sql.task = task
+    on_finish_sql.product = product
+    on_finish_sql.client = client
+
+
+def test_can_request_params(sqlite_client_and_tmp_dir):
+    on_finish_sql.task = None
+    on_finish_sql.product = None
+    on_finish_sql.client = None
+
+    client, _ = sqlite_client_and_tmp_dir
+    dag = DAG()
+
+    dag.clients[SQLScript] = client
+    dag.clients[SQLiteRelation] = client
+
+    t = SQLScript('CREATE TABLE {{product}} AS SELECT * FROM data',
+                  SQLiteRelation(('new_table', 'table')),
+                  dag,
+                  name='t')
+
+    t.on_finish = on_finish_sql
+
+    dag.build()
+
+    assert on_finish_sql.task is t
+    assert on_finish_sql.product is t.product
+    assert on_finish_sql.client is client

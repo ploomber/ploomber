@@ -179,22 +179,32 @@ class Task(abc.ABC):
         self._on_finish = None
         self._on_failure = None
         self._on_render = None
-        self._available_callback_kwargs = {'task': self,
-                                           'client': self.client,
-                                           'product': self.product}
+
+    @property
+    def _available_callback_kwargs(self):
+        # make it a property so we always get the latest value for self.client
+        # given that could be None during init
+        return {'task': self,
+                'client': self.client,
+                'product': self.product}
 
     @property
     def name(self):
-        """A str that represents the name of the task
+        """
+        A str that represents the name of the task, you can access tasks
+        in a dag using dag['some_name']
         """
         return self._name
 
     @property
     def source(self):
         """
-        A code object which represents what will be run upn task execution,
-        for tasks that do not take source code as parameter (such as
-        PostgresCopyFrom), the source object will be a different thing
+        Source is used by the task to compute its output, for most cases
+        this is source code, for example PythonCallable takes a function
+        as source and SQLScript takes a string with SQL code as source.
+        But other tasks might take non-code objects as source, for example,
+        PostgresCopyFrom takes a path to a file. If source represents code
+        doing str(task.source) will return the string representation
         """
         return self._source
 
@@ -204,18 +214,10 @@ class Task(abc.ABC):
         """
         return self._product
 
-    # FIXME: remove, only keep source
-    @property
-    def source_code(self):
-        """
-        A str with the source for that this task will run on execution, if
-        templated, it is only available after rendering
-        """
-        return str(self.source)
-
     @property
     def upstream(self):
-        """{task names} -> [task objects] mapping for upstream dependencies
+        """
+        A mapping for upstream dependencies {task name} -> [task obkect]
         """
         # this is jus syntactic sugar, upstream relations are tracked by the
         # DAG object
@@ -357,7 +359,7 @@ class Task(abc.ABC):
             # Exceptions are *not* silenced here
             self._run_on_finish()
 
-            self.product._save_metadata(self.source_code)
+            self.product._save_metadata(str(self.source))
 
             # NOTE: for most Products, it's ok to do this check before
             # saving metadata, but not for GenericProduct, since the way
@@ -387,10 +389,8 @@ class Task(abc.ABC):
         else:
             try:
                 res = self._build(force)
-            except Exception as e:
+            finally:
                 self.exec_status = TaskStatus.Errored
-                raise type(e)('Error calling build on task {}'
-                              .format(self.name)) from e
 
             self.exec_status = TaskStatus.Executed
             self.product._clear_cached_status()
@@ -401,8 +401,10 @@ class Task(abc.ABC):
         # cannot keep running, we depend on the render step to get all the
         # parameters resolved (params, upstream, product)
         if self.exec_status == TaskStatus.WaitingRender:
-            raise TaskBuildError('Cannot build task that has not been '
-                                 'rendered, call DAG.render() first')
+            raise TaskBuildError('Error building task "{}". '
+                                 'Cannot build task that has not been '
+                                 'rendered, call DAG.render() first'
+                                 .format(self.name))
 
         elif self.exec_status == TaskStatus.Aborted:
             raise TaskBuildError('Attempted to run task "{}", whose '
@@ -496,7 +498,18 @@ class Task(abc.ABC):
             else:
                 self._exec_status = TaskStatus.WaitingUpstream
 
+        self._validate_render()
         self._run_on_render()
+
+    def _validate_render(self):
+        """
+        This hook is executed after rendering, it can be used to perform
+        validation on parameters that might cause runtime errors. e.g.
+        if is used by PythonCallable to check if the function signature
+        matches parameters passed. Note: if is executed before the
+        user-supplied on_render hook
+        """
+        pass
 
     def set_upstream(self, other):
         self.dag._add_edge(other, self)
@@ -511,7 +524,7 @@ class Task(abc.ABC):
 
         Source code:
         {}
-        """.format(self.params, self.product, self.source_code)
+        """.format(self.params, self.product, str(self.source))
 
         print(plan)
 
@@ -523,6 +536,12 @@ class Task(abc.ABC):
         data = {}
 
         data['name'] = self.name
+        data['type'] = type(self).__name__
+        data['status'] = self.exec_status.name
+        # FIXME: all tasks should have a client property
+        data['client'] = (repr(self.client)
+                          if hasattr(self, 'client')
+                          else None)
 
         if p.metadata.timestamp is not None:
             dt = datetime.fromtimestamp(p.metadata.timestamp)
@@ -532,20 +551,40 @@ class Task(abc.ABC):
         else:
             data['Last updated'] = 'Has not been run'
 
-        data['Outdated dependencies'] = p._outdated_data_dependencies()
+        outd_data = p._outdated_data_dependencies()
         outd_code = p._outdated_code_dependency()
+
+        outd = False
+
+        if outd_code:
+            outd = 'Source code'
+
+        if outd_data:
+            if not outd:
+                outd = 'Upstream'
+            else:
+                outd += ' & Upstream'
+
+        data['Outdated?'] = outd
+
+        data['Outdated dependencies'] = outd_data
         data['Outdated code'] = outd_code
 
         if outd_code and return_code_diff:
             data['Code diff'] = (self.dag
                                  .differ
                                  .get_diff(p.metadata.stored_source_code,
-                                           self.source_code,
+                                           str(self.source),
                                            language=self.source.language))
         else:
             outd_code = ''
 
+        data['Product type'] = type(self.product).__name__
         data['Product'] = str(self.product)
+        # FIXME: all products should have a client property
+        data['Product client'] = (repr(self.product.client)
+                                  if hasattr(self.product, 'client')
+                                  else None)
         data['Doc (short)'] = self.source.doc_short
         data['Location'] = self.source.loc
 
@@ -557,7 +596,7 @@ class Task(abc.ABC):
         attributes
         """
         return dict(name=self.name, product=str(self.product),
-                    source_code=self.source_code)
+                    source_code=str(self.source))
 
     def _render_product(self):
         params_names = list(self.params)

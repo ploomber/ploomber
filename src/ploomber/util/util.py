@@ -1,16 +1,16 @@
+import importlib
 from functools import wraps, reduce
 import base64
 from glob import glob
 from pathlib import Path
 from collections import defaultdict
 import shutil
-from pydoc import locate
 import inspect
 
 import numpy as np
 
 from ploomber.products import File
-from ploomber.exceptions import CallbackSignatureError
+from ploomber.exceptions import CallbackSignatureError, TaskRenderError
 
 
 def requires(pkgs, name=None):
@@ -21,8 +21,8 @@ def requires(pkgs, name=None):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            # FIXME: use importlib and find_spec to avoid importing here
-            missing = [pkg for pkg in pkgs if locate(pkg) is None]
+            missing = [pkg for pkg in pkgs if importlib.util.find_spec(pkg)
+                       is None]
 
             if missing:
                 msg = reduce(lambda x, y: x+' '+y, missing)
@@ -159,3 +159,32 @@ def callback_check(fn, available):
                                                  available_set))
 
     return {k: v for k, v in available.items() if k in required}
+
+
+def signature_check(fn, params, task_name):
+    params = set(params)
+    parameters = inspect.signature(fn).parameters
+    required = {name for name, param in parameters.items()
+                if param.default == inspect._empty}
+
+    extra = params - set(parameters.keys())
+    missing = set(required) - params
+
+    errors = []
+
+    if extra:
+        msg = ('The following params are not part of the function '
+               'signature: {}'.format(extra))
+        errors.append(msg)
+
+    if missing:
+        msg = 'The following params are missing: {}'.format(missing)
+        errors.append(msg)
+
+    if extra or missing:
+        msg = '. '.join(errors)
+        raise TaskRenderError('Error rendering task "{}" initialized with '
+                              'function "{}". {}'
+                              .format(task_name, fn.__name__, msg))
+
+    return True

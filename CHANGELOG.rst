@@ -4,10 +4,17 @@ CHANGELOG
 0.3.2 (2020-04-07)
 -------------------
 
+* Adds task to upload files to S3 (ploomber.tasks.UploadToS3), requires boto3
+* Adds DAG-level on_finish and on_failure hooks
 * Faster Product status checking, now performed at rendering time
 * New products: GenericProduct and GenericSQLRelation for Products that do not have a specific implementation (e.g. you can use Hive with the DBAPI client + GenericSQLRelation)
 * Improved DAG build reports, subselect columns, transform to pandas.DataFrame and dict
 * Parallel executor now returns build reports, just like the Serial executor
+* Support for enabling logging in entry points (via --logging)
+* Improved support for database drivers that can only send one query at a time
+* Improved repr for SQLAlchemyClient, shows URI (but hiddes password)
+* Bug fixes
+
 
 
 

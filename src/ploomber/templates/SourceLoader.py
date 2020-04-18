@@ -1,6 +1,3 @@
-"""
-This module provides subclasses of jinja2 for better integration with SQL
-"""
 from collections.abc import Iterable
 import pydoc
 from pathlib import Path
@@ -44,7 +41,8 @@ class SourceLoader:
     --------
     >>> from ploomber import SourceLoader
     >>> loader = SourceLoader('path/to/templates/')
-    >>> loader['load_customers.sql']
+    >>> loader['load_customers.sql'] # ipython autocompletion available
+    >>> loader.get_template('load_customers.sql') # same as above
     """
 
     def __init__(self, path=None, module=None):

@@ -109,7 +109,7 @@ dag.render()
 
 ###############################################################################
 # print source code for task "features"
-print(dag['features'].source_code)
+print(dag['features'].source)
 
 # dag.plot(output='matplotlib')
 

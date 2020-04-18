@@ -10,6 +10,7 @@ from ploomber.clients.Client import Client
 from ploomber.util import requires
 
 import re
+from urllib.parse import urlparse, urlunparse
 
 
 def code_split(code, token=';'):
@@ -18,6 +19,18 @@ def code_split(code, token=';'):
     for part in code.split(token):
         if not re.match(only_whitespace, part):
             yield part
+
+
+def safe_uri(parsed):
+    password = parsed.password
+
+    if password:
+        parts = list(parsed)
+        # netloc
+        parts[1] = parts[1].replace(password, '********')
+        return urlunparse(parts)
+    else:
+        return urlunparse(parsed)
 
 
 class DBAPIClient(Client):
@@ -101,7 +114,9 @@ class SQLAlchemyClient(Client):
     def __init__(self, uri):
         super().__init__()
         self._uri = uri
-        self.flavor = uri.split(':')[0]
+        self._uri_parsed = urlparse(uri)
+        self._uri_safe = safe_uri(self._uri_parsed)
+        self.flavor = self._uri_parsed.scheme
         self._engine = None
         self._connection = None
 
@@ -157,6 +172,12 @@ class SQLAlchemyClient(Client):
         state['_engine'] = None
         state['_connection'] = None
         return state
+
+    def __str__(self):
+        return self._uri_safe
+
+    def __repr__(self):
+        return '{}({})'.format(type(self).__name__, self._uri_safe)
 
 
 class DrillClient(Client):

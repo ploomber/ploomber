@@ -15,6 +15,6 @@
 ### {{task.name}}
 
 ```{{task.language}}
-{{task.source_code}}
+{{task.source}}
 ```
 {% endfor %}

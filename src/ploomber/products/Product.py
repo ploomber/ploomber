@@ -137,16 +137,21 @@ class Product(abc.ABC):
                               self._outdated_code_dependency_status)
             return self._outdated_code_dependency_status
 
-        outdated = self.task.dag.differ.code_is_different(
+        outdated, diff = self.task.dag.differ.is_different(
             self.metadata.stored_source_code,
-            self.task.source_code,
+            str(self.task.source),
             language=self.task.source.language)
 
         self._outdated_code_dependency_status = outdated
 
-        self.logger.debug(('Finished checking code dependencies status. '
+        self.logger.debug(('Finished checking code status for task "%s" '
                            'Outdated? %s'),
+                          self.task.name,
                           self._outdated_code_dependency_status)
+
+        if outdated:
+            self.logger.info('Task "%s" has outdated code. Diff:\n%s',
+                             self.task.name, diff)
 
         return self._outdated_code_dependency_status
 

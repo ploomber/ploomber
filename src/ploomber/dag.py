@@ -35,6 +35,7 @@ from ploomber import executors
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import DAGBuildError, DAGRenderError
 from ploomber.ExceptionCollector import ExceptionCollector
+from ploomber.util.util import callback_check
 
 
 class DAG(collections.abc.Mapping):
@@ -102,6 +103,10 @@ class DAG(collections.abc.Mapping):
         self._cache_rendered_status = cache_rendered_status
         self._did_render = False
 
+        self.on_finish = None
+        self.on_failure = None
+        self._available_callback_kwargs = {'dag': self}
+
     @property
     def _exec_status(self):
         return self.__exec_status
@@ -123,7 +128,8 @@ class DAG(collections.abc.Mapping):
         # render errored
         elif value == DAGStatus.ErroredRender:
             allowed = {TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream,
-                       TaskStatus.ErroredRender, TaskStatus.AbortedRender}
+                       TaskStatus.ErroredRender, TaskStatus.AbortedRender,
+                       TaskStatus.Skipped}
             self.check_tasks_have_allowed_status(allowed, value)
 
         # rendering ok, waiting execution
@@ -250,6 +256,19 @@ class DAG(collections.abc.Mapping):
             except Exception as e:
                 self._exec_status = DAGStatus.Errored
                 e_new = DAGBuildError('Failed to build DAG {}'.format(self))
+
+                if self.on_failure:
+                    self._logger.debug('Executing on_failure hook '
+                                       'for dag "%s"', self.name)
+                    kwargs_available = copy(self._available_callback_kwargs)
+                    kwargs_available['traceback'] = traceback.format_exc()
+
+                    kwargs = callback_check(self.on_failure, kwargs_available)
+                    self.on_failure(**kwargs)
+                else:
+                    self._logger.debug('No on_failure hook for dag '
+                                       '"%s", skipping', self.name)
+
                 raise e_new from e
             else:
                 self._exec_status = DAGStatus.Executed
@@ -264,6 +283,17 @@ class DAG(collections.abc.Mapping):
 
             build_report = BuildReport(task_reports + empty)
             self._logger.info(' DAG report:\n{}'.format(build_report))
+
+            if self.on_finish:
+                self._logger.debug('Executing on_finish hook '
+                                   'for dag "%s"', self.name)
+                kwargs_available = copy(self._available_callback_kwargs)
+                kwargs_available['report'] = build_report
+                kwargs = callback_check(self.on_finish, kwargs_available)
+                self.on_finish(**kwargs)
+            else:
+                self._logger.debug('No on_finish hook for dag '
+                                   '"%s", skipping', self.name)
 
             return build_report
 
@@ -400,12 +430,8 @@ class DAG(collections.abc.Mapping):
         if not self._cache_rendered_status or not self._did_render:
             self._logger.info('Rendering DAG %s', self)
 
-            g = self._to_graph(only_current_dag=True)
-
-            tasks = self._iter_tasks(need_execution_only=False)
-
             if show_progress:
-                tasks = tqdm(tasks, total=len(g))
+                tasks = tqdm(self.values(), total=len(self))
 
             exceptions = ExceptionCollector()
             warnings_ = None
@@ -436,6 +462,7 @@ class DAG(collections.abc.Mapping):
 
             # TODO: also include warnings in the exception message
             if warnings_:
+                # maybe raise one by one to keep the warning type
                 messages = [str(w.message) for w in warnings_]
                 warning = ('Task "{}" had the following warnings:\n\n{}'
                            .format(repr(t), '\n'.join(messages)))
@@ -520,9 +547,11 @@ class DAG(collections.abc.Mapping):
         return self._G.nodes[key]['task']
 
     def __iter__(self):
+        """Iterate task names in topological order
+        """
         # TODO: raise a warning if this any of this dag tasks have tasks
         # from other tasks as dependencies (they won't show up here)
-        for name in self._G:
+        for name in nx.algorithms.topological_sort(self._G):
             yield name
 
     def __len__(self):
@@ -533,17 +562,6 @@ class DAG(collections.abc.Mapping):
 
     def _short_repr(self):
         return repr(self)
-
-    def _iter_tasks(self, need_execution_only):
-        # need_execution_only: only iterate over tasks that need execution
-        g = self._to_graph()
-        for task in nx.algorithms.topological_sort(g):
-            if ((task.exec_status in {TaskStatus.Skipped,
-                                      TaskStatus.Aborted})
-                    and need_execution_only):
-                continue
-
-            yield task
 
     # IPython integration
     # https://ipython.readthedocs.io/en/stable/config/integrating.html
