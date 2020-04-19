@@ -16,6 +16,9 @@ from ploomber.ExceptionCollector import ExceptionCollector, ExceptionResult
 
 import traceback
 
+# FIXME: dag level hooks do not work here, they are run in the serial executor
+# but should be moved to the dag implementation
+
 
 class TaskBuildWrapper:
     """
