@@ -6,6 +6,7 @@ numpy>=1.16
 pytest>=3.5
 # pytest-cov
 # pytest-flake8
+papermill
 
 # sql module (SQLDump task)
 # numpy
