@@ -6,6 +6,8 @@ import parso
 from pyflakes.api import check as pyflakes_check
 from pyflakes.reporter import Reporter
 
+from ploomber.templates.Placeholder import Placeholder
+
 
 class NotebookSource:
     """
@@ -13,12 +15,15 @@ class NotebookSource:
     by jupytext)
     """
 
-    def __init__(self, path):
+    def __init__(self, value):
         # any non-py file must first be converted using jupytext, we need
         # that representation for validation, if input is already a .py file
         # do not convert. If passed a string, try to guess format using
         # jupytext
-        pass
+        self.value = Placeholder(value)
+        self._post_init_validation(self.value)
+
+
 
     def _get_parameters(self):
         """
@@ -46,7 +51,7 @@ class NotebookSource:
 
     def _post_render_validate(self):
         """
-        Validate params passed againts parameters in the notebook
+        Validate params passed against parameters in the notebook
         """
         # TODO: run check_notebook_source here
         pass

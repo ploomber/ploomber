@@ -18,7 +18,7 @@ def x():
 '''
 
     differ = CodeDiffer()
-    res, _ = differ.is_different(a, b, language='python')
+    res, _ = differ.is_different(a, b, extension='py')
     assert not res
 
 
@@ -38,5 +38,5 @@ def x():
 '''
 
     differ = CodeDiffer()
-    res, _ = differ.is_different(a, b, language='python')
+    res, _ = differ.is_different(a, b, extension='py')
     assert not res
