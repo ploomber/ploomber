@@ -215,7 +215,7 @@ class DAG(collections.abc.Mapping):
 
         return self
 
-    def build(self, force=False):
+    def build(self, force=False, show_progress=True):
         """
         Runs the DAG in order so that all upstream dependencies are run for
         every task
@@ -242,7 +242,7 @@ class DAG(collections.abc.Mapping):
             # DAGStatus.WaitingExecution, DAGStatus.Executed or
             # DAGStatus.Errored, DAGStatus.WaitingRender
             # calling render will update status to DAGStatus.WaitingExecution
-            self.render(force=force)
+            self.render(force=force, show_progress=show_progress)
 
             # self._clear_cached_status()
 
@@ -252,6 +252,7 @@ class DAG(collections.abc.Mapping):
                 # within_dag flags when we execute a task in isolation
                 # vs as part of a dag execution
                 task_reports = self._executor(dag=self, force=force,
+                                              show_progress=show_progress,
                                               within_dag=True)
             except Exception as e:
                 self._exec_status = DAGStatus.Errored

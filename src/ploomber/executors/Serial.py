@@ -44,13 +44,17 @@ class Serial(Executor):
         exceptions = ExceptionCollector()
         task_reports = []
 
-        pbar = tqdm(dag.values(), total=len(dag))
+        if kwargs.get('show_progress'):
+            tasks = tqdm(dag.values(), total=len(dag))
+        else:
+            tasks = dag.values()
 
-        for t in pbar:
+        for t in tasks:
             if t.exec_status in {TaskStatus.Skipped, TaskStatus.Aborted}:
                 continue
 
-            pbar.set_description('Building task "{}"'.format(t.name))
+            if kwargs.get('show_progress'):
+                tasks.set_description('Building task "{}"'.format(t.name))
 
             try:
                 if (callable(t.source.value)

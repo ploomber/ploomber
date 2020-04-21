@@ -18,6 +18,9 @@ import traceback
 
 # FIXME: dag level hooks do not work here, they are run in the serial executor
 # but should be moved to the dag implementation
+# TODO: support for show_progress, we can use a progress bar but we have
+# to modify the label since at any point more than one task might be
+# executing
 
 
 class TaskBuildWrapper:
