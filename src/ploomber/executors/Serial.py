@@ -1,16 +1,14 @@
 """
-DAG executors
+Serial DAG executor: builds one task at a time
 """
-from datetime import datetime
 from multiprocessing import Pool
 import traceback
 import logging
 
 from tqdm.auto import tqdm
-from ploomber.Table import BuildReport, Row
 from ploomber.executors.Executor import Executor
 from ploomber.executors.LoggerHandler import LoggerHandler
-from ploomber.exceptions import DAGBuildError, TaskBuildError
+from ploomber.exceptions import DAGBuildError
 from ploomber.ExceptionCollector import ExceptionCollector
 from ploomber.constants import TaskStatus
 
@@ -26,6 +24,7 @@ class Serial(Executor):
     """
     # TODO: maybe add a parameter: stop on first exception, same for Parallel
     # TODO: add option to run all tasks in a subprocess
+
     def __init__(self, logging_directory=None, logging_level=logging.INFO,
                  execute_callables_in_subprocess=True):
         self.logging_directory = logging_directory
@@ -33,7 +32,7 @@ class Serial(Executor):
         self._logger = logging.getLogger(__name__)
         self._execute_callables_in_subprocess = execute_callables_in_subprocess
 
-    def __call__(self, dag, **kwargs):
+    def __call__(self, dag, show_progress, task_kwargs):
         super().__call__(dag)
 
         if self.logging_directory:
@@ -45,20 +44,24 @@ class Serial(Executor):
         exceptions = ExceptionCollector()
         task_reports = []
 
-        pbar = tqdm(dag.values(), total=len(dag))
+        if show_progress:
+            tasks = tqdm(dag.values(), total=len(dag))
+        else:
+            tasks = dag.values()
 
-        for t in pbar:
+        for t in tasks:
             if t.exec_status in {TaskStatus.Skipped, TaskStatus.Aborted}:
                 continue
 
-            pbar.set_description('Building task "{}"'.format(t.name))
+            if show_progress:
+                tasks.set_description('Building task "{}"'.format(t.name))
 
             try:
                 if (callable(t.source.value)
                         and self._execute_callables_in_subprocess):
-                    report = execute_in_subprocess(t, kwargs)
+                    report = execute_in_subprocess(t, task_kwargs)
                 else:
-                    report = t.build(**kwargs)
+                    report = t.build(**task_kwargs)
             except Exception as e:
                 t.exec_status = TaskStatus.Errored
                 new_status = TaskStatus.Errored

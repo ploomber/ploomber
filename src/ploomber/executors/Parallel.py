@@ -16,6 +16,12 @@ from ploomber.ExceptionCollector import ExceptionCollector, ExceptionResult
 
 import traceback
 
+# FIXME: dag level hooks do not work here, they are run in the serial executor
+# but should be moved to the dag implementation
+# TODO: support for show_progress, we can use a progress bar but we have
+# to modify the label since at any point more than one task might be
+# executing
+
 
 class TaskBuildWrapper:
     """
@@ -56,7 +62,7 @@ class Parallel(Executor):
         self._logger = logging.getLogger(__name__)
         self._i = 0
 
-    def __call__(self, dag, **kwargs):
+    def __call__(self, dag, show_progress, task_kwargs):
         super().__call__(dag)
 
         if self.logging_directory:
@@ -154,7 +160,7 @@ class Parallel(Executor):
                     break
                 else:
                     if task is not None:
-                        future = pool.submit(TaskBuildWrapper(task), **kwargs)
+                        future = pool.submit(TaskBuildWrapper(task), **task_kwargs)
                         future.add_done_callback(callback)
                         started.append(task)
                         future_mapping[future] = task

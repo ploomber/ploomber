@@ -188,7 +188,7 @@ class DAG(collections.abc.Mapping):
         self._G.remove_node(name)
         return t
 
-    def render(self, show_progress=True):
+    def render(self, force=False, show_progress=True):
         """Render the graph
         """
         g = self._to_graph()
@@ -208,14 +208,14 @@ class DAG(collections.abc.Mapping):
         # and over
         for dag in dags:
             if dag is not self:
-                dag._render_current(show_progress=show_progress)
+                dag._render_current(force=force, show_progress=show_progress)
 
         # then, render this dag
-        self._render_current(show_progress=show_progress)
+        self._render_current(force=force, show_progress=show_progress)
 
         return self
 
-    def build(self, force=False):
+    def build(self, force=False, show_progress=True):
         """
         Runs the DAG in order so that all upstream dependencies are run for
         every task
@@ -242,7 +242,7 @@ class DAG(collections.abc.Mapping):
             # DAGStatus.WaitingExecution, DAGStatus.Executed or
             # DAGStatus.Errored, DAGStatus.WaitingRender
             # calling render will update status to DAGStatus.WaitingExecution
-            self.render()
+            self.render(force=force, show_progress=show_progress)
 
             # self._clear_cached_status()
 
@@ -251,8 +251,9 @@ class DAG(collections.abc.Mapping):
             try:
                 # within_dag flags when we execute a task in isolation
                 # vs as part of a dag execution
-                task_reports = self._executor(dag=self, force=force,
-                                              within_dag=True)
+                task_reports = self._executor(dag=self,
+                                              show_progress=show_progress,
+                                              task_kwargs=dict(within_dag=True))
             except Exception as e:
                 self._exec_status = DAGStatus.Errored
                 e_new = DAGBuildError('Failed to build DAG {}'.format(self))
@@ -297,7 +298,7 @@ class DAG(collections.abc.Mapping):
 
             return build_report
 
-    def build_partially(self, target):
+    def build_partially(self, target, force=False, show_progress=True):
         """Partially build a dag until certain task
         """
         # NOTE: doing this should not change self._exec_status in any way
@@ -313,10 +314,7 @@ class DAG(collections.abc.Mapping):
         for task in to_pop:
             dag.pop(task)
 
-        dag.render()
-        task_reports = self._executor(dag=dag)
-
-        return BuildReport(task_reports)
+        return dag.build(force=force, show_progress=show_progress)
 
     def status(self, **kwargs):
         """Returns a table with tasks status
@@ -423,7 +421,7 @@ class DAG(collections.abc.Mapping):
             if doc is None or doc == '':
                 warnings.warn('Task "{}" has no docstring'.format(task_name))
 
-    def _render_current(self, show_progress):
+    def _render_current(self, force, show_progress):
         """
         Render tasks, and update exec_status
         """
@@ -447,7 +445,7 @@ class DAG(collections.abc.Mapping):
 
                 with warnings.catch_warnings(record=True) as warnings_:
                     try:
-                        t.render()
+                        t.render(force=force)
                     except Exception as e:
                         tr = traceback.format_exc()
                         exceptions.append(traceback_str=tr, task_str=repr(t))

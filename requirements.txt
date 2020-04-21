@@ -7,6 +7,12 @@ pytest>=3.5
 # pytest-cov
 # pytest-flake8
 
+# to convert notebooks and execute them as python scripts
+nbformat
+ipython
+
+
+
 # sql module (SQLDump task)
 # numpy
 # pandas
