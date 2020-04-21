@@ -80,6 +80,29 @@ def test_forced_build(executor, tmp_directory):
     assert report['Ran?'] == [True]
 
 
+@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+def test_build_partially(tmp_directory, executor):
+    dag = DAG(executor=executor)
+    PythonCallable(touch_root, File('1.txt'), dag, name=1)
+    PythonCallable(touch_root, File('2.txt'), dag, name=2)
+
+    report = dag.build_partially(2)
+
+    # check it only ran task 2
+    assert report['Ran?'] == [True]
+    assert report['name'] == [2]
+
+    # task status in original dag are the same
+    assert (set(t.exec_status for t in dag.values())
+            == {TaskStatus.WaitingRender})
+
+    dag.render()
+
+    # new task status reflect partial execution
+    assert ({n: t.exec_status for n, t in dag.items()}
+            == {1: TaskStatus.WaitingExecution, 2: TaskStatus.Skipped})
+
+
 @pytest.mark.parametrize('function_name', ['render', 'build', 'to_markup',
                          'plot'])
 def test_dag_functions(function_name):
