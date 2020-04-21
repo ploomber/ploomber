@@ -6,7 +6,13 @@ numpy>=1.16
 pytest>=3.5
 # pytest-cov
 # pytest-flake8
+
+# to run notebooks
 papermill
+
+# to get everything required to correctly run notebooks using papermill (such as ipywidgets)
+jupyter
+
 
 # sql module (SQLDump task)
 # numpy
