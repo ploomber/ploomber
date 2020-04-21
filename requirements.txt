@@ -7,11 +7,10 @@ pytest>=3.5
 # pytest-cov
 # pytest-flake8
 
-# to run notebooks
-papermill
+# to convert notebooks and execute them as python scripts
+nbformat
+ipython
 
-# to get everything required to correctly run notebooks using papermill (such as ipywidgets)
-jupyter
 
 
 # sql module (SQLDump task)
