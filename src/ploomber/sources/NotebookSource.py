@@ -53,6 +53,11 @@ class NotebookSource:
         Validate params passed against parameters in the notebook
         """
         # TODO: run check_notebook_source here
+        # use papermill.execution_notebook in prepare_only mode
+        # and replace the source, this way the user will be able
+        # to see the source code with injected parameters,
+        # then the cask just calls execute_notebook in the already-prepared
+        # notebook
         pass
 
     @property
