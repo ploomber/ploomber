@@ -251,9 +251,9 @@ class DAG(collections.abc.Mapping):
             try:
                 # within_dag flags when we execute a task in isolation
                 # vs as part of a dag execution
-                task_reports = self._executor(dag=self, force=force,
+                task_reports = self._executor(dag=self,
                                               show_progress=show_progress,
-                                              within_dag=True)
+                                              task_kwargs=dict(within_dag=True))
             except Exception as e:
                 self._exec_status = DAGStatus.Errored
                 e_new = DAGBuildError('Failed to build DAG {}'.format(self))
@@ -298,7 +298,7 @@ class DAG(collections.abc.Mapping):
 
             return build_report
 
-    def build_partially(self, target):
+    def build_partially(self, target, force=False, show_progress=True):
         """Partially build a dag until certain task
         """
         # NOTE: doing this should not change self._exec_status in any way
@@ -314,10 +314,7 @@ class DAG(collections.abc.Mapping):
         for task in to_pop:
             dag.pop(task)
 
-        dag.render()
-        task_reports = self._executor(dag=dag)
-
-        return BuildReport(task_reports)
+        return dag.build(force=force, show_progress=show_progress)
 
     def status(self, **kwargs):
         """Returns a table with tasks status

@@ -32,7 +32,7 @@ class Serial(Executor):
         self._logger = logging.getLogger(__name__)
         self._execute_callables_in_subprocess = execute_callables_in_subprocess
 
-    def __call__(self, dag, **kwargs):
+    def __call__(self, dag, show_progress, task_kwargs):
         super().__call__(dag)
 
         if self.logging_directory:
@@ -44,7 +44,7 @@ class Serial(Executor):
         exceptions = ExceptionCollector()
         task_reports = []
 
-        if kwargs.get('show_progress'):
+        if show_progress:
             tasks = tqdm(dag.values(), total=len(dag))
         else:
             tasks = dag.values()
@@ -53,15 +53,15 @@ class Serial(Executor):
             if t.exec_status in {TaskStatus.Skipped, TaskStatus.Aborted}:
                 continue
 
-            if kwargs.get('show_progress'):
+            if show_progress:
                 tasks.set_description('Building task "{}"'.format(t.name))
 
             try:
                 if (callable(t.source.value)
                         and self._execute_callables_in_subprocess):
-                    report = execute_in_subprocess(t, kwargs)
+                    report = execute_in_subprocess(t, task_kwargs)
                 else:
-                    report = t.build(**kwargs)
+                    report = t.build(**task_kwargs)
             except Exception as e:
                 t.exec_status = TaskStatus.Errored
                 new_status = TaskStatus.Errored
