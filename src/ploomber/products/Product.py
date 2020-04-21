@@ -140,7 +140,7 @@ class Product(abc.ABC):
         outdated, diff = self.task.dag.differ.is_different(
             self.metadata.stored_source_code,
             str(self.task.source),
-            language=self.task.source.language)
+            extension=self.task.source.extension)
 
         self._outdated_code_dependency_status = outdated
 

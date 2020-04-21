@@ -40,6 +40,10 @@ from ploomber.sql import infer
 
 class Source(abc.ABC):
     """Source abstract class
+
+    Sources encapsulate the code that will be executed by Tasks, they
+    add the ability to render placeholders so Products are only declared once.
+
     """
 
     def __init__(self, value):
@@ -51,6 +55,8 @@ class Source(abc.ABC):
         return self.value.needs_render
 
     def render(self, params):
+        """Render source
+        """
         self.value.render(params)
         self._post_render_validation(self.value.value, params)
         return self
@@ -65,28 +71,41 @@ class Source(abc.ABC):
     def __repr__(self):
         return "{}({})".format(type(self).__name__, self.value._value_repr)
 
-    # required by subclasses
     @property
-    @abc.abstractmethod
-    def doc(self):
-        pass
-
-    @property
-    @abc.abstractmethod
     def doc_short(self):
-        pass
+        if self.doc is not None:
+            return self.doc.split('\n')[0]
+        else:
+            return None
 
     @property
-    @abc.abstractmethod
-    def language(self):
-        pass
+    def extension(self):
+        """
+        Optional property that should return the file extension, used for
+        code normalization (applied before determining wheter two pieces
+        or code are different). If None, no normalization is done.
+        """
+        return None
 
     # optional validation
 
     def _post_render_validation(self, rendered_value, params):
+        """
+        Validation function executed after rendering
+        """
         pass
 
     def _post_init_validation(self, value):
+        pass
+
+    # required by subclasses
+
+    @property
+    @abc.abstractmethod
+    def doc(self):
+        """
+        Returns code docstring
+        """
         pass
 
 
@@ -101,11 +120,7 @@ class SQLSourceMixin:
         return '' if match is None else match.group(1)
 
     @property
-    def doc_short(self):
-        return self.doc.split('\n')[0]
-
-    @property
-    def language(self):
+    def extension(self):
         return 'sql'
 
 
@@ -220,13 +235,6 @@ class PythonCallableSource(Source):
         return self.value.__doc__
 
     @property
-    def doc_short(self):
-        if self.doc is not None:
-            return self.doc.split('\n')[0]
-        else:
-            return None
-
-    @property
     def loc(self):
         return '{}:{}'.format(self._loc, self._source_lineno)
 
@@ -235,8 +243,8 @@ class PythonCallableSource(Source):
         return False
 
     @property
-    def language(self):
-        return 'python'
+    def extension(self):
+        return 'py'
 
 
 class GenericSource(Source):
@@ -258,14 +266,6 @@ class GenericSource(Source):
     """
     @property
     def doc(self):
-        return ''
-
-    @property
-    def doc_short(self):
-        return ''
-
-    @property
-    def language(self):
         return None
 
 

@@ -14,22 +14,26 @@ class NotebookSource:
     """
 
     def __init__(self, path):
+        # any non-py file must first be converted using jupytext, we need
+        # that representation for validation, if input is already a .py file
+        # do not convert. If passed a string, try to guess format using
+        # jupytext
         pass
 
-    def get_parameters(self):
+    def _get_parameters(self):
         """
         Returns a dictionary with the declared parameters (variables in a cell
         tagged as "parameters")
         """
         pass
 
-    def to_python(self):
+    def _to_python(self):
         """
         Returns the Python representation for this notebook
         """
         pass
 
-    def post_init_validate():
+    def _post_init_validate():
         """
         Validate notebook after initialization (run pyflakes to detect
         syntax errors)
@@ -40,11 +44,16 @@ class NotebookSource:
         # compile cannot?
         pass
 
-    def post_render_validate(self):
+    def _post_render_validate(self):
         """
         Validate params passed againts parameters in the notebook
         """
+        # TODO: run check_notebook_source here
         pass
+
+    @property
+    def doc(self):
+        return None
 
 
 def check_notebook_source(nb_source, params, filename='notebook'):
@@ -105,7 +114,8 @@ def check_params(params_source, params):
     # params are keys in "params" dictionary
     params = set(params)
 
-    # use parso to parse the "parameters" cell source code and get all variable names declared
+    # use parso to parse the "parameters" cell source code and get all
+    # variable names declared
     declared = set(parso.parse(params_source).get_used_names().keys())
 
     # now act depending on missing variables and/or extra variables

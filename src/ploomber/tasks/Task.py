@@ -582,7 +582,7 @@ class Task(abc.ABC):
                                  .differ
                                  .get_diff(p.metadata.stored_source_code,
                                            str(self.source),
-                                           language=self.source.language))
+                                           extension=self.source.extension))
         else:
             outd_code = ''
 

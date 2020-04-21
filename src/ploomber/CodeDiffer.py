@@ -100,12 +100,11 @@ def diff_strings(a, b):
 
 
 class CodeDiffer:
-    LANGUAGES = ['python', 'sql']
-    NORMALIZERS = {None: normalize_null, 'python': normalize_python,
+    NORMALIZERS = {None: normalize_null, 'py': normalize_python,
                    'sql': normalize_sql}
 
-    def is_different(self, a, b, language=None):
-        normalizer = self._get_normalizer(language)
+    def is_different(self, a, b, extension=None):
+        normalizer = self._get_normalizer(extension)
 
         a_norm = normalizer(a)
         b_norm = normalizer(b)
@@ -114,22 +113,22 @@ class CodeDiffer:
 
         return a_norm != b_norm, diff
 
-    def get_diff(self, a, b, language=None, normalize=True):
+    def get_diff(self, a, b, extension=None, normalize=True):
         if normalize:
-            normalizer = self._get_normalizer(language)
+            normalizer = self._get_normalizer(extension)
 
             a = normalizer(a)
             b = normalizer(b)
 
         diff = diff_strings(a, b)
 
-        if language is not None:
+        if extension is not None:
             diff = '[Code was normalized]\n' + diff
 
         return diff
 
-    def _get_normalizer(self, language):
-        if language in self.NORMALIZERS:
-            return self.NORMALIZERS[language]
+    def _get_normalizer(self, extension):
+        if extension in self.NORMALIZERS:
+            return self.NORMALIZERS[extension]
         else:
             return normalize_null
