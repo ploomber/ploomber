@@ -440,11 +440,18 @@ class Task(abc.ABC):
 
         return TaskReport.with_data(name=self.name, ran=True, elapsed=elapsed)
 
-    def render(self):
+    def render(self, force=False):
         """
         Renders code and product, all upstream tasks must have been rendered
         first, for that reason, this method will usually not be called
         directly but via DAG.render(), which renders in the right order
+
+        Parameters
+        ----------
+        force : bool
+            If True, mark status as WaitingExecution/WaitingUpstream even if
+            the task is up to, otherwise up to date tasks are marked as
+            Skipped
         """
         self._logger.debug('Calling render on task %s', self.name)
 
@@ -481,7 +488,7 @@ class Task(abc.ABC):
         is_outdated = self.product._is_outdated()
 
         if not self.upstream:
-            if not is_outdated:
+            if not is_outdated and not force:
                 self._exec_status = TaskStatus.Skipped
             else:
                 self._exec_status = TaskStatus.WaitingExecution
@@ -493,7 +500,7 @@ class Task(abc.ABC):
 
             if all_upstream_done and is_outdated:
                 self._exec_status = TaskStatus.WaitingExecution
-            elif all_upstream_done and not is_outdated:
+            elif all_upstream_done and not is_outdated and not force:
                 self._exec_status = TaskStatus.Skipped
             else:
                 self._exec_status = TaskStatus.WaitingUpstream

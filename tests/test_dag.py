@@ -14,7 +14,6 @@ from ploomber.exceptions import DAGBuildError, DAGRenderError
 # is done by the executor
 # TODO: check build successful execution does not run anything if tried a
 # # second time
-# TODO: test forced execution, check it actually ran two times
 # TODO: once a successful dag build happens, check task.should_execute
 # TODO: check skipped status
 # TODO: test once a task is skipped, downstream tasks go from WaitingUpstream
@@ -67,6 +66,18 @@ def test_mapping_interface():
     assert list(dag) == [1, 2, 3]
     assert list(dag.keys()) == [1, 2, 3]
     assert list(dag.values()) == [t1, t2, t3]
+
+
+@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+def test_forced_build(executor, tmp_directory):
+    dag = DAG(executor=executor)
+    PythonCallable(touch_root, File('1.txt'), dag, name=1)
+
+    dag.build()
+
+    report = dag.build(force=True)
+
+    assert report['Ran?'] == [True]
 
 
 @pytest.mark.parametrize('function_name', ['render', 'build', 'to_markup',

@@ -24,6 +24,7 @@ class Serial(Executor):
     """
     # TODO: maybe add a parameter: stop on first exception, same for Parallel
     # TODO: add option to run all tasks in a subprocess
+
     def __init__(self, logging_directory=None, logging_level=logging.INFO,
                  execute_callables_in_subprocess=True):
         self.logging_directory = logging_directory

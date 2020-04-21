@@ -188,7 +188,7 @@ class DAG(collections.abc.Mapping):
         self._G.remove_node(name)
         return t
 
-    def render(self, show_progress=True):
+    def render(self, force=False, show_progress=True):
         """Render the graph
         """
         g = self._to_graph()
@@ -208,10 +208,10 @@ class DAG(collections.abc.Mapping):
         # and over
         for dag in dags:
             if dag is not self:
-                dag._render_current(show_progress=show_progress)
+                dag._render_current(force=force, show_progress=show_progress)
 
         # then, render this dag
-        self._render_current(show_progress=show_progress)
+        self._render_current(force=force, show_progress=show_progress)
 
         return self
 
@@ -242,7 +242,7 @@ class DAG(collections.abc.Mapping):
             # DAGStatus.WaitingExecution, DAGStatus.Executed or
             # DAGStatus.Errored, DAGStatus.WaitingRender
             # calling render will update status to DAGStatus.WaitingExecution
-            self.render()
+            self.render(force=force)
 
             # self._clear_cached_status()
 
@@ -423,7 +423,7 @@ class DAG(collections.abc.Mapping):
             if doc is None or doc == '':
                 warnings.warn('Task "{}" has no docstring'.format(task_name))
 
-    def _render_current(self, show_progress):
+    def _render_current(self, force, show_progress):
         """
         Render tasks, and update exec_status
         """
@@ -447,7 +447,7 @@ class DAG(collections.abc.Mapping):
 
                 with warnings.catch_warnings(record=True) as warnings_:
                     try:
-                        t.render()
+                        t.render(force=force)
                     except Exception as e:
                         tr = traceback.format_exc()
                         exceptions.append(traceback_str=tr, task_str=repr(t))
