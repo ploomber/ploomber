@@ -1,15 +1,11 @@
 CHANGELOG
 =========
 
-0.3.2dev
+0.3.3dev
 --------
 
 * Adds task to upload files to S3 (ploomber.tasks.UploadToS3), requires boto3
 * Adds DAG-level on_finish and on_failure hooks
-* Faster Product status checking, now performed at rendering time
-* New products: GenericProduct and GenericSQLRelation for Products that do not have a specific implementation (e.g. you can use Hive with the DBAPI client + GenericSQLRelation)
-* Improved DAG build reports, subselect columns, transform to pandas.DataFrame and dict
-* Parallel executor now returns build reports, just like the Serial executor
 * Support for enabling logging in entry points (via --logging)
 * Support for starting an interactiev session using entry points (via python -i -m)
 * Improved support for database drivers that can only send one query at a time
@@ -17,6 +13,14 @@ CHANGELOG
 * PythonCallable now validates signature against params at render time
 * Bug fixes
 
+
+0.3.2 (2020-04-07)
+------------------
+
+* Faster Product status checking, now performed at rendering time
+* New products: GenericProduct and GenericSQLRelation for Products that do not have a specific implementation (e.g. you can use Hive with the DBAPI client + GenericSQLRelation)
+* Improved DAG build reports, subselect columns, transform to pandas.DataFrame and dict
+* Parallel executor now returns build reports, just like the Serial executor
 
 
 
