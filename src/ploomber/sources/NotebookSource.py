@@ -1,3 +1,4 @@
+from pathlib import Path
 from io import StringIO
 import warnings
 
@@ -22,8 +23,6 @@ class NotebookSource:
         # jupytext
         self.value = Placeholder(value)
         self._post_init_validation(self.value)
-
-
 
     def _get_parameters(self):
         """
@@ -59,6 +58,25 @@ class NotebookSource:
     @property
     def doc(self):
         return None
+
+
+def to_python(value):
+    """
+    """
+    # TODO: this should also handle the case when value is a Placeholder,
+    # this happens when using sourceloader
+    if isinstance(value, str):
+        nb = jupytext.reads(value)
+        return jupytext.writes(nb, fmt='py')
+
+    # handle path
+    else:
+        # no need to convert
+        if Path(value).suffix == '.py':
+            return Path(value).read_text()
+
+        nb = jupytext.read(value)
+        return jupytext.writes(nb, fmt='py')
 
 
 def check_notebook_source(nb_source, params, filename='notebook'):
