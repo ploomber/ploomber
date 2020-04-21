@@ -5,7 +5,7 @@ A DAG is collection of tasks that makes sure they are executed in
 the right order
 """
 import traceback
-from copy import copy
+from copy import copy, deepcopy
 from pathlib import Path
 import warnings
 import logging
@@ -301,15 +301,13 @@ class DAG(collections.abc.Mapping):
     def build_partially(self, target, force=False, show_progress=True):
         """Partially build a dag until certain task
         """
-        # NOTE: doing this should not change self._exec_status in any way
-        # but we are currently modifying self, have to fix this
-
-        # self._clear_cached_status()
-
         lineage = self[target]._lineage
-        dag = copy(self)
+        dag = deepcopy(self)
 
-        to_pop = set(dag) - {target} - lineage
+        to_pop = set(dag) - {target}
+
+        if lineage:
+            to_pop = to_pop - lineage
 
         for task in to_pop:
             dag.pop(task)
