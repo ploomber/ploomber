@@ -1,4 +1,4 @@
-from ploomber.dag import DAG
+from ploomber import DAG
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
 from ploomber.exceptions import DAGBuildError

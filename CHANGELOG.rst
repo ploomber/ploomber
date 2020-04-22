@@ -4,6 +4,7 @@ CHANGELOG
 0.3.3dev
 --------
 
+* Introduces DAGConfigurator for advanced DAG configuration [Experimental API]
 * Adds task to upload files to S3 (ploomber.tasks.UploadToS3), requires boto3
 * Adds DAG-level on_finish and on_failure hooks
 * Support for enabling logging in entry points (via --logging)

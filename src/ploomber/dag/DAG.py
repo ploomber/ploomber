@@ -36,6 +36,7 @@ from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import DAGBuildError, DAGRenderError
 from ploomber.ExceptionCollector import ExceptionCollector
 from ploomber.util.util import callback_check
+from ploomber.dag.DAGConfiguration import DAGConfiguration
 
 
 class DAG(collections.abc.Mapping):
@@ -107,6 +108,8 @@ class DAG(collections.abc.Mapping):
         self.on_failure = None
         self._available_callback_kwargs = {'dag': self}
 
+        self._cfg = DAGConfiguration.default()
+
     @property
     def _exec_status(self):
         return self.__exec_status
@@ -119,7 +122,13 @@ class DAG(collections.abc.Mapping):
         # (except for Executed and Errored, those are updated by the executor)
         # DAG should not set task status but only verify that after an attemp
         # to change DAGStatus, all Tasks have allowed states, otherwise there
-        # is an error in either the Task or the Executor
+        # is an error in either the Task or the Executor. we cannot raise an
+        # exception here, since setting _exec_status happens might happen
+        # right before catching an exception, but we still have to warn the
+        # user that the DAG entered an inconsistent state. We only raise
+        # an exception when trying to set an invalid value
+        # NOTE: in some exec_status, it is ok to raise an exception, maybe we
+        # should do it?
 
         if value == DAGStatus.WaitingRender:
             self.check_tasks_have_allowed_status({TaskStatus.WaitingRender},
@@ -146,12 +155,13 @@ class DAG(collections.abc.Mapping):
             # check len(self) to prevent this from failing on an empty DAG
             if not exec_values <= {TaskStatus.Executed,
                                    TaskStatus.Skipped} and len(self):
-                raise RuntimeError('Trying to set DAG status to '
-                                   'DAGStatus.Executed but executor '
-                                   'returned tasks whose status is not '
-                                   'TaskStatus.Executed nor '
-                                   'TaskStatus.Skipped, returned '
-                                   'status: {}'.format(exec_values))
+                warnings.warn('The DAG "{}" entered in an inconsistent '
+                              'state: trying to set DAG status to '
+                              'DAGStatus.Executed but executor '
+                              'returned tasks whose status is not '
+                              'TaskStatus.Executed nor '
+                              'TaskStatus.Skipped, returned '
+                              'status: {}'.format(self.name, exec_values))
         elif value == DAGStatus.Errored:
             # no value validation since this state is also set then the
             # DAG executor ends up abrubtly
@@ -165,12 +175,13 @@ class DAG(collections.abc.Mapping):
     def check_tasks_have_allowed_status(self, allowed, new_status):
         exec_values = set(task.exec_status for task in self.values())
         if not exec_values <= allowed:
-            raise RuntimeError('Trying to set DAG status to '
-                               '{} but executor '
-                               'returned tasks whose status is not in a '
-                               'subet of {}. Returned '
-                               'status: {}'.format(new_status, allowed,
-                                                   exec_values))
+            warnings.warn('The DAG "{}" entered in an inconsistent state: '
+                          'trying to set DAG status to '
+                          '{} but executor '
+                          'returned tasks whose status is not in a '
+                          'subet of {}. Returned '
+                          'status: {}'.format(self.name, new_status, allowed,
+                                              exec_values))
 
     @property
     def product(self):
@@ -443,8 +454,9 @@ class DAG(collections.abc.Mapping):
 
                 with warnings.catch_warnings(record=True) as warnings_:
                     try:
-                        t.render(force=force)
-                    except Exception as e:
+                        t.render(force=force,
+                                 outdated_by_code=self._cfg.outdated_by_code)
+                    except Exception:
                         tr = traceback.format_exc()
                         exceptions.append(traceback_str=tr, task_str=repr(t))
 

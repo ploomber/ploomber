@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ploomber.dag import DAG
+from ploomber import DAG
 from ploomber.tasks import ShellScript
 from ploomber.products import File
 

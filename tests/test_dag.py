@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from ploomber.dag import DAG
+from ploomber import DAG
 from ploomber.tasks import ShellScript, PythonCallable, SQLDump
 from ploomber.products import File
 from ploomber.constants import TaskStatus, DAGStatus

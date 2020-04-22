@@ -3,7 +3,7 @@ Testing that upstream tasks metadata is available
 """
 from pathlib import Path
 
-from ploomber.dag import DAG
+from ploomber import DAG
 from ploomber.tasks import ShellScript, SQLScript
 from ploomber.products import File, PostgresRelation
 from ploomber.clients import SQLAlchemyClient
