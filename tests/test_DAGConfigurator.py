@@ -30,3 +30,8 @@ def test_turn_off_outdated_by_code(tmp_directory):
 
     # tasks should not run
     assert report['Ran?'] == [False]
+
+
+def test_from_dict():
+    cfg = DAGConfigurator.from_dict({'outdated_by_code': False})
+    assert cfg.outdated_by_code
