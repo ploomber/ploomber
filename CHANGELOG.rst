@@ -10,7 +10,7 @@ CHANGELOG
 * Adds task to upload files to S3 (ploomber.tasks.UploadToS3), requires boto3
 * Adds DAG-level on_finish and on_failure hooks
 * Support for enabling logging in entry points (via --logging)
-* Support for starting an interactiev session using entry points (via python -i -m)
+* Support for starting an interactive session using entry points (via python -i -m)
 * Improved support for database drivers that can only send one query at a time
 * Improved repr for SQLAlchemyClient, shows URI (but hiddes password)
 * PythonCallable now validates signature against params at render time
