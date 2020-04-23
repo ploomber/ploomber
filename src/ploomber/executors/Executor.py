@@ -20,6 +20,10 @@ class Executor:
     It is safe to skip task.build() on tasks that are either Skipped or
     Aborted.
 
+    Although not strictly required, it is recommended for executors to capture
+    all warnings and exceptions, then display a summary at the end of the
+    execution, showing each task with their corresponding errors and warnings.
+
     Notes
     -----
     The following is still being defined: do we need to send the whole dag

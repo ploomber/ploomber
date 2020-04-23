@@ -14,9 +14,6 @@ from ploomber.constants import TaskStatus
 
 
 # TODO: add a SerialIterator executor
-# TODO: document how executors should handle errors, they need to catch
-# failures in task.build but also in t.exec_status = TaskStatus.Executed
-# to report on_finish errors
 
 
 class Serial(Executor):
@@ -62,7 +59,7 @@ class Serial(Executor):
                     report = execute_in_subprocess(t, task_kwargs)
                 else:
                     report = t.build(**task_kwargs)
-            except Exception as e:
+            except Exception:
                 t.exec_status = TaskStatus.Errored
                 new_status = TaskStatus.Errored
                 tr = traceback.format_exc()
@@ -77,7 +74,7 @@ class Serial(Executor):
 
                 try:
                     t.exec_status = new_status
-                except Exception as e:
+                except Exception:
                     tr = traceback.format_exc()
                     exceptions.append(traceback_str=tr, task_str=repr(t))
 
