@@ -57,27 +57,10 @@ class DAG(collections.abc.Mapping):
         ploomber.executors.Parallel), is a string is passed ('serial'
         or 'parallel') the corresponding executor is initialized with default
         parameters
-    cache_rendered_status : bool, optional
-        If True, once the DAG is rendered, subsequent calls to render will
-        not do anything (rendering is implicitely called in build, plot,
-        status), otherwise it will always render again
     """
-    # cache_product_metadata : bool, optional
-    #     Whether to keep the a copy of the product metadata or not, if True
-    #     it will just get the status once, if False, it will get it on every
-    #     call that needs it (such as build, plot, status)
-
-    # Rendering is cheap - always do it so we have a change to update sources
-    # if they changed.
-    # Getting product status is expensive if have to go over the network
-    # (e.g. checking remote db tables), so cache by default but have a flag
-    # to turn this off
-
     def __init__(self, name=None, clients=None, differ=None,
                  on_task_finish=None, on_task_failure=None,
-                 executor='serial',
-                 cache_product_metadata=True,
-                 cache_rendered_status=False):
+                 executor='serial'):
         self._G = nx.DiGraph()
 
         self.name = name or 'No name'
@@ -100,8 +83,6 @@ class DAG(collections.abc.Mapping):
 
         self._on_task_finish = on_task_finish
         self._on_task_failure = on_task_failure
-        self._cache_product_metadata = cache_product_metadata
-        self._cache_rendered_status = cache_rendered_status
         self._did_render = False
 
         self.on_finish = None
@@ -434,7 +415,7 @@ class DAG(collections.abc.Mapping):
         """
         Render tasks, and update exec_status
         """
-        if not self._cache_rendered_status or not self._did_render:
+        if not self._cfg.cache_rendered_status or not self._did_render:
             self._logger.info('Rendering DAG %s', self)
 
             if show_progress:

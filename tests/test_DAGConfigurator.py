@@ -23,7 +23,7 @@ def test_turn_off_outdated_by_code(tmp_directory):
 
     # same dag, but with modified source code and set checking code to false
     configurator = DAGConfigurator()
-    configurator.oudated_by_code = False
+    configurator.set_param('oudated_by_code', False)
     dag2 = configurator.create()
     PythonCallable(touch_root_modified, File('file.txt'), dag2)
     report = dag2.build()
@@ -33,5 +33,5 @@ def test_turn_off_outdated_by_code(tmp_directory):
 
 
 def test_from_dict():
-    cfg = DAGConfigurator.from_dict({'outdated_by_code': False})
-    assert cfg.outdated_by_code
+    configurator = DAGConfigurator.from_dict({'outdated_by_code': False})
+    assert not configurator.cfg.outdated_by_code
