@@ -41,8 +41,26 @@ from ploomber.sql import infer
 class Source(abc.ABC):
     """Source abstract class
 
-    Sources encapsulate the code that will be executed by Tasks, they
-    add the ability to render placeholders so Products are only declared once.
+    Sources encapsulate the code that will be executed by Tasks, they add the
+    ability to render placeholders so Products are only declared once.
+
+    They optionally implement validation logic that Tasks can use in two
+    scenarios: initialization and render. Initialization prevents Tasks
+    from being instantiated with ill-defined sources. For example, a SQLScript
+    is expected to create a table/view, if the source does not contains a
+    CREATE TABLE/VIEW statement, then validation could fail to prevent this
+    error be to be discovered at runtime. Render validation happens after
+    placeholders are resolved. For example, a PythonCallable checks that
+    the passed Task.params are compatible with the source function signature.
+
+    Since there is a limited amount of Sources that cover most use cases, this
+    will help developers to create their own Tasks faster, as they can pick up
+    one of the implemented sources, if none of the current implementations
+    matches their use case, they can either use a GenericSource or as a last
+    resource, implement their own.
+
+    Sources are also used by some Products that support placeholders, such as
+    SQLRelation or File.
 
     """
 
@@ -52,10 +70,15 @@ class Source(abc.ABC):
 
     @property
     def needs_render(self):
+        """
+        Whether this source needs render (because it has {{}} placeholders
+        or not). Some Tasks do not accept sources that have placeholders
+        and they can use this function to raise errors during initialization
+        """
         return self.value.needs_render
 
     def render(self, params):
-        """Render source
+        """Render source (fill placeholders)
         """
         self.value.render(params)
         self._post_render_validation(self.value.value, params)
@@ -63,6 +86,11 @@ class Source(abc.ABC):
 
     @property
     def loc(self):
+        """
+        Source location. For most cases, this is the path to the file that
+        contains the source code. Used only for informative purpose (e.g.
+        when doing dag.status())
+        """
         return self.value.path
 
     def __str__(self):
@@ -73,6 +101,8 @@ class Source(abc.ABC):
 
     @property
     def doc_short(self):
+        """Returns the first line in the docstring, None if no docstring
+        """
         if self.doc is not None:
             return self.doc.split('\n')[0]
         else:
