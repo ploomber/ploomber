@@ -8,6 +8,7 @@ User Guide
     guide/env
     guide/static
     guide/hooks
+    guide/testing
     guide/structuring
     guide/versioning
     guide/extending
