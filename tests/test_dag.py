@@ -1,9 +1,8 @@
-from unittest.mock import Mock
 from pathlib import Path
 
 import pytest
 
-from ploomber.dag import DAG
+from ploomber import DAG
 from ploomber.tasks import ShellScript, PythonCallable, SQLDump
 from ploomber.products import File
 from ploomber.constants import TaskStatus, DAGStatus
@@ -126,54 +125,6 @@ def test_dag_build_clears_cached_status(tmp_directory):
 
     assert t.product._outdated_data_dependencies_status is None
     assert t.product._outdated_code_dependency_status is None
-
-
-def test_warn_on_python_missing_docstrings():
-    def fn1(product):
-        pass
-
-    dag = DAG()
-    PythonCallable(fn1, File('file1.txt'), dag, name='fn1')
-
-    with pytest.warns(UserWarning):
-        dag.diagnose()
-
-
-def test_does_not_warn_on_python_docstrings():
-    def fn1(product):
-        """This is a docstring
-        """
-        pass
-
-    dag = DAG()
-    PythonCallable(fn1, File('file1.txt'), dag, name='fn1')
-
-    with pytest.warns(None) as warn:
-        dag.diagnose()
-
-    assert not warn
-
-
-def test_warn_on_sql_missing_docstrings():
-    dag = DAG()
-
-    sql = 'SELECT * FROM table'
-    SQLDump(sql, File('file1.txt'), dag, client=Mock(), name='sql')
-
-    with pytest.warns(UserWarning):
-        dag.diagnose()
-
-
-def test_does_not_warn_on_sql_docstrings():
-    dag = DAG()
-
-    sql = '/* get data from table */\nSELECT * FROM table'
-    SQLDump(sql, File('file1.txt'), dag, client=Mock(), name='sql')
-
-    with pytest.warns(None) as warn:
-        dag.diagnose()
-
-    assert not warn
 
 
 # def test_can_use_null_task(tmp_directory):

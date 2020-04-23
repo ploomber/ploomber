@@ -54,7 +54,7 @@ class Product(abc.ABC):
         """
         self._identifier.render(params, **kwargs)
 
-    def _is_outdated(self):
+    def _is_outdated(self, outdated_by_code=True):
         """
         Given current conditions, determine if the Task that holds this
         Product should be executed
@@ -74,20 +74,18 @@ class Product(abc.ABC):
         # check dependencies only if the product exists
         if p_exists:
 
-            outdated_data_deps = self._outdated_data_dependencies()
-            outdated_code_dep = self._outdated_code_dependency()
-
-            if outdated_data_deps:
+            if self._outdated_data_dependencies():
                 run = True
                 self.logger.info('Outdated data deps...')
             else:
                 self.logger.info('Up-to-date data deps...')
 
-            if outdated_code_dep:
-                run = True
-                self.logger.info('Outdated code dep...')
-            else:
-                self.logger.info('Up-to-date code dep...')
+            if outdated_by_code:
+                if self._outdated_code_dependency():
+                    run = True
+                    self.logger.info('Outdated code dep...')
+                else:
+                    self.logger.info('Up-to-date code dep...')
         else:
             run = True
 
@@ -100,6 +98,9 @@ class Product(abc.ABC):
         return run
 
     def _outdated_data_dependencies(self):
+        """
+        Determine if the product is outdated by checking upstream timestamps
+        """
 
         if self._outdated_data_dependencies_status is not None:
             self.logger.debug(('Returning cached data dependencies status. '
@@ -131,6 +132,10 @@ class Product(abc.ABC):
         return self._outdated_data_dependencies_status
 
     def _outdated_code_dependency(self):
+        """
+        Determine if the product is outdated by checking the source code that
+        it generated it
+        """
         if self._outdated_code_dependency_status is not None:
             self.logger.debug(('Returning cached code dependencies status. '
                                'Outdated? %s'),
@@ -140,7 +145,7 @@ class Product(abc.ABC):
         outdated, diff = self.task.dag.differ.is_different(
             self.metadata.stored_source_code,
             str(self.task.source),
-            language=self.task.source.language)
+            extension=self.task.source.extension)
 
         self._outdated_code_dependency_status = outdated
 

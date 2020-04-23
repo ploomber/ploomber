@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ploomber.dag import DAG
+from ploomber import DAG
 from ploomber.tasks import NotebookRunner
 from ploomber.tasks.notebook import _to_ipynb
 from ploomber.products import File

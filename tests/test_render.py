@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from ploomber.constants import TaskStatus
-from ploomber.dag import DAG
+from ploomber import DAG
 from ploomber.tasks import ShellScript, PythonCallable
 from ploomber.products import File
 

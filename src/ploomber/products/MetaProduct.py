@@ -97,8 +97,8 @@ class MetaProduct:
         for product in self.products:
             product.delete(force)
 
-    def _is_outdated(self):
-        return any([p._is_outdated()
+    def _is_outdated(self, outdated_by_code=True):
+        return any([p._is_outdated(outdated_by_code=outdated_by_code)
                     for p in self.products])
 
     def _outdated_data_dependencies(self):

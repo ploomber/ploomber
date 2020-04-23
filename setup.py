@@ -41,7 +41,9 @@ PLOT = ['matplotlib', 'pygraphviz']
 # https://discourse.jupyter.org/t/nbconvert-5-6-0-release/1867
 # https://github.com/nteract/papermill/issues/239
 NB = ['papermill', 'jupytext', 'ipykernel>=1.5.2',
-      'jupyter_client>=5.3.1', 'nbconvert>=5.6.0']
+      'jupyter_client>=5.3.1', 'nbconvert>=5.6.0',
+      # for notebook validation
+      'parso', 'pyflakes']
 MISC = [
     # sql dumps
     'pandas',

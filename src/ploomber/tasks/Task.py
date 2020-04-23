@@ -50,7 +50,7 @@ import logging
 import warnings
 from datetime import datetime
 from ploomber.products import Product, MetaProduct
-from ploomber.dag import DAG
+from ploomber.dag.DAG import DAG
 from ploomber.exceptions import TaskBuildError
 from ploomber.tasks.TaskGroup import TaskGroup
 from ploomber.constants import TaskStatus
@@ -440,7 +440,7 @@ class Task(abc.ABC):
 
         return TaskReport.with_data(name=self.name, ran=True, elapsed=elapsed)
 
-    def render(self, force=False):
+    def render(self, force=False, outdated_by_code=True):
         """
         Renders code and product, all upstream tasks must have been rendered
         first, for that reason, this method will usually not be called
@@ -452,6 +452,10 @@ class Task(abc.ABC):
             If True, mark status as WaitingExecution/WaitingUpstream even if
             the task is up to, otherwise up to date tasks are marked as
             Skipped
+
+        outdated_by_code : str
+            Factors to determine if Task.product is marked outdated when source
+            code changes. Otherwise just the upstream timestamps are used.
         """
         self._logger.debug('Calling render on task %s', self.name)
 
@@ -485,7 +489,8 @@ class Task(abc.ABC):
 
         # Maybe set ._exec_status directly, since no downstream propagation
         # is needed here.
-        is_outdated = self.product._is_outdated()
+        is_outdated = (self.product
+                       ._is_outdated(outdated_by_code=outdated_by_code))
 
         if not self.upstream:
             if not is_outdated and not force:
@@ -582,7 +587,7 @@ class Task(abc.ABC):
                                  .differ
                                  .get_diff(p.metadata.stored_source_code,
                                            str(self.source),
-                                           language=self.source.language))
+                                           extension=self.source.extension))
         else:
             outd_code = ''
 

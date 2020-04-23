@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from ploomber.dag import DAG
+from ploomber import DAG
 from ploomber.tasks import PythonCallable, SQLScript
 from ploomber.products import File, SQLiteRelation
 from ploomber.clients import SQLAlchemyClient

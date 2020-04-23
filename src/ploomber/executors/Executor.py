@@ -1,7 +1,9 @@
+import abc
+
 from ploomber.constants import TaskStatus
 
 
-class Executor:
+class Executor(abc.ABC):
     """
     Abstract class for executors.
 
@@ -20,11 +22,17 @@ class Executor:
     It is safe to skip task.build() on tasks that are either Skipped or
     Aborted.
 
+    Although not strictly required, it is recommended for executors to capture
+    all warnings and exceptions, then display a summary at the end of the
+    execution, showing each task with their corresponding errors and warnings.
+
     Notes
     -----
     The following is still being defined: do we need to send the whole dag
     object? Looks like we are good by just sending the tasks
     """
+
+    @abc.abstractmethod
     def __call__(self, dag):
         exec_status = set([t.exec_status for t in dag.values()])
 

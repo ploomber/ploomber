@@ -4,7 +4,6 @@ from pathlib import Path
 from ploomber.exceptions import RenderError
 from ploomber.templates import util
 
-from numpydoc.docscrape import NumpyDocString
 import jinja2
 from jinja2 import (Environment, Template, UndefinedError,
                     FileSystemLoader, PackageLoader)
@@ -107,9 +106,6 @@ class Placeholder:
         else:
             self.loader_init = None
 
-        # dynamically set the docstring
-        # self.__doc__ = self._parse_docstring()
-
     @property
     def value(self):
         if self._value is None:
@@ -178,21 +174,6 @@ class Placeholder:
 
     def _get_declared(self):
         return util.get_tags_in_str(self.raw)
-
-    def diagnose(self):
-        """Prints some diagnostics
-        """
-        found = self.declared
-        docstring_np = NumpyDocString(self.docstring())
-        documented = set([p[0] for p in docstring_np['Parameters']])
-
-        print('The following variables were found in the template but are '
-              'not documented: {}'.format(found - documented))
-
-        print('The following variables are documented but were not found in '
-              'the template: {}'.format(documented - found))
-
-        return documented, found
 
     def render(self, params, optional=None):
         """
