@@ -37,3 +37,4 @@ class SourceInitializationError(Exception):
 class CallbackSignatureError(Exception):
     """When a callback function does not have the right signature
     """
+    pass

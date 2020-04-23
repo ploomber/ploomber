@@ -127,7 +127,8 @@ def main():
         if hasattr(entry, '_env_dict'):
             flat_env_dict = flatten_dict(entry._env_dict._data)
             for arg, val in flat_env_dict.items():
-                parser.add_argument('--env__'+arg, help='Default: {}'.format(val))
+                parser.add_argument('--env__'+arg,
+                                    help='Default: {}'.format(val))
 
         args = parser.parse_args()
 

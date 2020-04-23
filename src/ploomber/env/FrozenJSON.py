@@ -1,4 +1,3 @@
-from os import path
 from collections import Mapping, MutableSequence
 import keyword
 import logging
