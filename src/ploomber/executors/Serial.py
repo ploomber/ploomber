@@ -88,7 +88,7 @@ class Serial(Executor):
         # only close when tasks are executed in this process (otherwise
         # this won't have any effect anyway)
         if not self._execute_callables_in_subprocess:
-            for client in self.clients.values():
+            for client in dag.clients.values():
                 client.close()
 
         return task_reports
