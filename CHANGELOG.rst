@@ -2,8 +2,8 @@ CHANGELOG
 =========
 
 
-0.3.3dev
---------
+0.3.3 (2020-04-23)
+-------------------
 * Cleaned up some modules, deprecated some rarely used functionality
 * Improves documentation aimed to developers looking to extend ploomber
 * Introduces DAGConfigurator for advanced DAG configuration [Experimental API]
