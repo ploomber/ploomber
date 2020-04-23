@@ -1,17 +1,17 @@
+"""
+@with_env and @load_env facilitate loading env.yaml files
+"""
 from pathlib import Path
 
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
 from ploomber import DAG, with_env, load_env
 
-# @with_env and @load_env facilitate passing parameters without having to
-# carry them all over
 
-
-# @with_env argument is passed directly to Env
 @with_env({'path': {'data': '/tmp/'},
            'db_uri': 'sqlite:///my_db.db'})
-# the first parameter of the decorated function must be named "env"
+# the first parameter of the decorated function must be named "env", will
+# be automatically passed to the function
 def dag_factory(env):
     dag = DAG()
     write = PythonCallable(_write_file,

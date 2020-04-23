@@ -9,7 +9,8 @@ Contents
 
    quickstart
    guide_index
-   api_index
+   api_summary
+   modules_index
    changelog
 
 ..

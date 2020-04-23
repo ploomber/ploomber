@@ -63,7 +63,7 @@ def with_env(source):
 
     Examples
     --------
-    .. literalinclude:: ../examples/short/with_env.py
+    .. literalinclude:: ../../examples/short/with_env.py
 
     """
     def decorator(fn):

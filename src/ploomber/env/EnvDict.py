@@ -52,7 +52,11 @@ class EnvDict(Mapping):
         self._data = self.expander.expand_raw_dictionary(self._raw_data)
 
     def __getattr__(self, key):
-        return self[key]
+        if key in self:
+            return self[key]
+        else:
+            raise AttributeError("'{}' object has no attribute '{}'"
+                                 .format(type(self).__name__, key))
 
     def __getitem__(self, key):
         if key in self.preprocessed:
