@@ -59,7 +59,6 @@ class DAG(collections.abc.Mapping):
         parameters
     """
     def __init__(self, name=None, clients=None, differ=None,
-                 on_task_finish=None, on_task_failure=None,
                  executor='serial'):
         self._G = nx.DiGraph()
 
@@ -81,8 +80,6 @@ class DAG(collections.abc.Mapping):
                             'an instance of executors.Executor, got type {}'
                             .format(type(executor)))
 
-        self._on_task_finish = on_task_finish
-        self._on_task_failure = on_task_failure
         self._did_render = False
 
         self.on_finish = None
@@ -217,6 +214,10 @@ class DAG(collections.abc.Mapping):
         force: bool, optional
             If True, it will run all tasks regardless of status, defaults to
             False
+
+        Notes
+        -----
+        All dag-level clients are closed after calling this function
 
         Returns
         -------

@@ -16,8 +16,6 @@ from ploomber.ExceptionCollector import ExceptionCollector, ExceptionResult
 
 import traceback
 
-# FIXME: dag level hooks do not work here, they are run in the serial executor
-# but should be moved to the dag implementation
 # TODO: support for show_progress, we can use a progress bar but we have
 # to modify the label since at any point more than one task might be
 # executing
@@ -37,7 +35,7 @@ class TaskBuildWrapper:
     def __call__(self, *args, **kwargs):
         try:
             return self.task.build(**kwargs)
-        except Exception as e:
+        except Exception:
             return ExceptionResult(task_str=repr(self.task),
                                    traceback_str=traceback.format_exc())
 
@@ -96,7 +94,7 @@ class Parallel(Executor):
                                task.name)
             try:
                 result = future.result()
-            except BrokenProcessPool as e:
+            except BrokenProcessPool:
                 # ignore the error here but flag the task,
                 # so next_task is able to stop the iteration,
                 # when we call result after breaking the loop,
@@ -180,8 +178,6 @@ class Parallel(Executor):
                                 .format(str(ExceptionCollector(exps))))
 
         return results
-
-    # __getstate__ and __setstate__ are needed to make this picklable
 
     def __getstate__(self):
         state = self.__dict__.copy()

@@ -1,7 +1,9 @@
+import abc
+
 from ploomber.constants import TaskStatus
 
 
-class Executor:
+class Executor(abc.ABC):
     """
     Abstract class for executors.
 
@@ -29,6 +31,8 @@ class Executor:
     The following is still being defined: do we need to send the whole dag
     object? Looks like we are good by just sending the tasks
     """
+
+    @abc.abstractmethod
     def __call__(self, dag):
         exec_status = set([t.exec_status for t in dag.values()])
 

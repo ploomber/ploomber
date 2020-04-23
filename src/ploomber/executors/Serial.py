@@ -18,9 +18,9 @@ from ploomber.constants import TaskStatus
 
 class Serial(Executor):
     """Runs a DAG serially
+
     """
     # TODO: maybe add a parameter: stop on first exception, same for Parallel
-    # TODO: add option to run all tasks in a subprocess
 
     def __init__(self, logging_directory=None, logging_level=logging.INFO,
                  execute_callables_in_subprocess=True):
@@ -64,11 +64,6 @@ class Serial(Executor):
                 new_status = TaskStatus.Errored
                 tr = traceback.format_exc()
                 exceptions.append(traceback_str=tr, task_str=repr(t))
-
-                # FIXME: this should not be here, but called
-                # inside the task, or the dag, depending on the level
-                if dag._on_task_failure:
-                    dag._on_task_failure(t)
             else:
                 new_status = TaskStatus.Executed
 
@@ -80,9 +75,6 @@ class Serial(Executor):
 
                 task_reports.append(report)
 
-                if dag._on_task_finish:
-                    dag._on_task_finish(t)
-
         if exceptions:
             raise DAGBuildError('DAG build failed, the following '
                                 'tasks crashed '
@@ -90,18 +82,16 @@ class Serial(Executor):
                                 'execution):\n{}'
                                 .format(str(exceptions)))
 
-        # TODO: this should be moved to the superclass, should be like
-        # a cleanup function, add a test to verify that this happens
-        # even if execution fails
-        for client in dag.clients.values():
-            client.close()
-
         if self.logging_directory:
             logger_handler.remove()
 
-        return task_reports
+        # only close when tasks are executed in this process (otherwise
+        # this won't have any effect anyway)
+        if not self._execute_callables_in_subprocess:
+            for client in self.clients.values():
+                client.close()
 
-    # __getstate__ and __setstate__ are needed to make this picklable
+        return task_reports
 
     def __getstate__(self):
         state = self.__dict__.copy()
