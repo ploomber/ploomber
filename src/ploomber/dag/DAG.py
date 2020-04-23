@@ -402,16 +402,6 @@ class DAG(collections.abc.Mapping):
         else:
             return path
 
-    def diagnose(self):
-        """Evaluate code quality
-        """
-        for task_name in self:
-
-            doc = self[task_name].source.doc
-
-            if doc is None or doc == '':
-                warnings.warn('Task "{}" has no docstring'.format(task_name))
-
     def _render_current(self, force, show_progress):
         """
         Render tasks, and update exec_status
