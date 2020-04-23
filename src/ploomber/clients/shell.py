@@ -14,11 +14,6 @@ from ploomber.clients.Client import Client
 from ploomber.templates.Placeholder import Placeholder
 from ploomber.util import requires
 
-try:
-    import paramiko
-except ImportError:
-    paramiko = None
-
 
 class ShellClient(Client):
     """Client to run command in the local shell
@@ -109,6 +104,10 @@ class RemoteShellClient(Client):
 
     @property
     def connection(self):
+        # lazily loading paramiko, importing it takes a bit and we don't want
+        # to slow down importing ploomber.clients
+        import paramiko
+
         # client has not been created
         if self._raw_client is None:
             self._raw_client = paramiko.SSHClient()
