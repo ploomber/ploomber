@@ -5,7 +5,7 @@ A DAG is collection of tasks that makes sure they are executed in
 the right order
 """
 import traceback
-from copy import copy
+from copy import copy, deepcopy
 from pathlib import Path
 import warnings
 import logging
@@ -36,6 +36,7 @@ from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import DAGBuildError, DAGRenderError
 from ploomber.ExceptionCollector import ExceptionCollector
 from ploomber.util.util import callback_check
+from ploomber.dag.DAGConfiguration import DAGConfiguration
 
 
 class DAG(collections.abc.Mapping):
@@ -56,27 +57,9 @@ class DAG(collections.abc.Mapping):
         ploomber.executors.Parallel), is a string is passed ('serial'
         or 'parallel') the corresponding executor is initialized with default
         parameters
-    cache_rendered_status : bool, optional
-        If True, once the DAG is rendered, subsequent calls to render will
-        not do anything (rendering is implicitely called in build, plot,
-        status), otherwise it will always render again
     """
-    # cache_product_metadata : bool, optional
-    #     Whether to keep the a copy of the product metadata or not, if True
-    #     it will just get the status once, if False, it will get it on every
-    #     call that needs it (such as build, plot, status)
-
-    # Rendering is cheap - always do it so we have a change to update sources
-    # if they changed.
-    # Getting product status is expensive if have to go over the network
-    # (e.g. checking remote db tables), so cache by default but have a flag
-    # to turn this off
-
     def __init__(self, name=None, clients=None, differ=None,
-                 on_task_finish=None, on_task_failure=None,
-                 executor='serial',
-                 cache_product_metadata=True,
-                 cache_rendered_status=False):
+                 executor='serial'):
         self._G = nx.DiGraph()
 
         self.name = name or 'No name'
@@ -97,15 +80,13 @@ class DAG(collections.abc.Mapping):
                             'an instance of executors.Executor, got type {}'
                             .format(type(executor)))
 
-        self._on_task_finish = on_task_finish
-        self._on_task_failure = on_task_failure
-        self._cache_product_metadata = cache_product_metadata
-        self._cache_rendered_status = cache_rendered_status
         self._did_render = False
 
         self.on_finish = None
         self.on_failure = None
         self._available_callback_kwargs = {'dag': self}
+
+        self._cfg = DAGConfiguration.default()
 
     @property
     def _exec_status(self):
@@ -119,7 +100,13 @@ class DAG(collections.abc.Mapping):
         # (except for Executed and Errored, those are updated by the executor)
         # DAG should not set task status but only verify that after an attemp
         # to change DAGStatus, all Tasks have allowed states, otherwise there
-        # is an error in either the Task or the Executor
+        # is an error in either the Task or the Executor. we cannot raise an
+        # exception here, since setting _exec_status happens might happen
+        # right before catching an exception, but we still have to warn the
+        # user that the DAG entered an inconsistent state. We only raise
+        # an exception when trying to set an invalid value
+        # NOTE: in some exec_status, it is ok to raise an exception, maybe we
+        # should do it?
 
         if value == DAGStatus.WaitingRender:
             self.check_tasks_have_allowed_status({TaskStatus.WaitingRender},
@@ -146,12 +133,13 @@ class DAG(collections.abc.Mapping):
             # check len(self) to prevent this from failing on an empty DAG
             if not exec_values <= {TaskStatus.Executed,
                                    TaskStatus.Skipped} and len(self):
-                raise RuntimeError('Trying to set DAG status to '
-                                   'DAGStatus.Executed but executor '
-                                   'returned tasks whose status is not '
-                                   'TaskStatus.Executed nor '
-                                   'TaskStatus.Skipped, returned '
-                                   'status: {}'.format(exec_values))
+                warnings.warn('The DAG "{}" entered in an inconsistent '
+                              'state: trying to set DAG status to '
+                              'DAGStatus.Executed but executor '
+                              'returned tasks whose status is not '
+                              'TaskStatus.Executed nor '
+                              'TaskStatus.Skipped, returned '
+                              'status: {}'.format(self.name, exec_values))
         elif value == DAGStatus.Errored:
             # no value validation since this state is also set then the
             # DAG executor ends up abrubtly
@@ -165,12 +153,13 @@ class DAG(collections.abc.Mapping):
     def check_tasks_have_allowed_status(self, allowed, new_status):
         exec_values = set(task.exec_status for task in self.values())
         if not exec_values <= allowed:
-            raise RuntimeError('Trying to set DAG status to '
-                               '{} but executor '
-                               'returned tasks whose status is not in a '
-                               'subet of {}. Returned '
-                               'status: {}'.format(new_status, allowed,
-                                                   exec_values))
+            warnings.warn('The DAG "{}" entered in an inconsistent state: '
+                          'trying to set DAG status to '
+                          '{} but executor '
+                          'returned tasks whose status is not in a '
+                          'subet of {}. Returned '
+                          'status: {}'.format(self.name, new_status, allowed,
+                                              exec_values))
 
     @property
     def product(self):
@@ -225,6 +214,10 @@ class DAG(collections.abc.Mapping):
         force: bool, optional
             If True, it will run all tasks regardless of status, defaults to
             False
+
+        Notes
+        -----
+        All dag-level clients are closed after calling this function
 
         Returns
         -------
@@ -301,15 +294,13 @@ class DAG(collections.abc.Mapping):
     def build_partially(self, target, force=False, show_progress=True):
         """Partially build a dag until certain task
         """
-        # NOTE: doing this should not change self._exec_status in any way
-        # but we are currently modifying self, have to fix this
-
-        # self._clear_cached_status()
-
         lineage = self[target]._lineage
-        dag = copy(self)
+        dag = deepcopy(self)
 
-        to_pop = set(dag) - {target} - lineage
+        to_pop = set(dag) - {target}
+
+        if lineage:
+            to_pop = to_pop - lineage
 
         for task in to_pop:
             dag.pop(task)
@@ -425,7 +416,7 @@ class DAG(collections.abc.Mapping):
         """
         Render tasks, and update exec_status
         """
-        if not self._cache_rendered_status or not self._did_render:
+        if not self._cfg.cache_rendered_status or not self._did_render:
             self._logger.info('Rendering DAG %s', self)
 
             if show_progress:
@@ -445,8 +436,9 @@ class DAG(collections.abc.Mapping):
 
                 with warnings.catch_warnings(record=True) as warnings_:
                     try:
-                        t.render(force=force)
-                    except Exception as e:
+                        t.render(force=force,
+                                 outdated_by_code=self._cfg.outdated_by_code)
+                    except Exception:
                         tr = traceback.format_exc()
                         exceptions.append(traceback_str=tr, task_str=repr(t))
 
