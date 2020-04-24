@@ -25,6 +25,14 @@ def touch(upstream, product):
     Path(str(product)).touch()
 
 
+def on_render_1():
+    warnings.warn('This is a warning', WarningA)
+
+
+def on_render_2():
+    warnings.warn('This is another warning', WarningA)
+
+
 def touch_root_w_warning(product):
     warnings.warn('This is a warning', WarningA)
     Path(str(product)).touch()
@@ -218,24 +226,19 @@ def test_rendering_dag_also_renders_upstream_outside_dag(tmp_directory):
     dag.build()
 
 
-@pytest.mark.xfail(reason="Not implemented yet")
 def test_warnings_are_shown(tmp_directory):
-    # this fails when tasks are executed in a subprocess, messages are still
-    # visible but can't be capture, probably because multiprocessing
-    # only sends them to standard error
-
-    # from ploomber.executors import Serial
-    # dag = DAG(executor=Serial(build_in_subprocess=False))
-    t1 = PythonCallable(touch_root_w_warning, File('file.txt'), dag)
-    t2 = PythonCallable(touch_w_warning, File('file2.txt'), dag)
+    dag = DAG()
+    t1 = PythonCallable(touch_root, File('file.txt'), dag)
+    t2 = PythonCallable(touch, File('file2.txt'), dag)
+    t1.on_render = on_render_1
+    t2.on_render = on_render_2
     t1 >> t2
 
     with pytest.warns(None) as record:
-        dag.build()
+        dag.render()
 
-    assert len(record) == 2
-    assert str(record[0].message) == 'This is a warning'
-    assert str(record[1].message) == 'This is another warning'
-    # this is not working, returning WarningMessage instead of Warning obj
-    assert isinstance(record[0], WarningA)
-    assert isinstance(record[1], WarningB)
+    assert len(record) == 1
+    assert 'This is a warning' in str(record[0].message)
+    assert 'This is another warning' in str(record[0].message)
+    # assert isinstance(record[0], WarningA)
+    # assert isinstance(record[1], WarningB)

@@ -9,7 +9,7 @@ from tqdm.auto import tqdm
 from ploomber.executors.Executor import Executor
 from ploomber.executors.LoggerHandler import LoggerHandler
 from ploomber.exceptions import DAGBuildError
-from ploomber.ExceptionCollector import ExceptionCollector
+from ploomber.MessageCollector import MessageCollector
 from ploomber.constants import TaskStatus
 
 
@@ -53,7 +53,7 @@ class Serial(Executor):
                                            logging_level=self.logging_level)
             logger_handler.add()
 
-        exceptions = ExceptionCollector()
+        exceptions = MessageCollector()
         task_reports = []
 
         if show_progress:
@@ -78,7 +78,7 @@ class Serial(Executor):
                 t.exec_status = TaskStatus.Errored
                 new_status = TaskStatus.Errored
                 tr = traceback.format_exc()
-                exceptions.append(traceback_str=tr, task_str=repr(t))
+                exceptions.append(message=tr, task_str=repr(t))
             else:
                 new_status = TaskStatus.Executed
 
@@ -86,7 +86,7 @@ class Serial(Executor):
                     t.exec_status = new_status
                 except Exception:
                     tr = traceback.format_exc()
-                    exceptions.append(traceback_str=tr, task_str=repr(t))
+                    exceptions.append(message=tr, task_str=repr(t))
 
                 task_reports.append(report)
 

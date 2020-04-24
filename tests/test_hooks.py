@@ -215,7 +215,7 @@ def test_task_is_re_executed_if_on_finish_fails(tmp_directory):
 
     def make():
         # NOTE: must run callables in the same process so counting works
-        dag = DAG(executor=Serial(buil_in_subprocess=False))
+        dag = DAG(executor=Serial(build_in_subprocess=False))
         t = PythonCallable(fn, File('file1.txt'), dag)
         t.on_finish = hook_crashing
         return dag

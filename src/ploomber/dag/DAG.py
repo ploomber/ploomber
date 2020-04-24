@@ -33,7 +33,7 @@ from ploomber import resources
 from ploomber import executors
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import DAGBuildError, DAGRenderError
-from ploomber.ExceptionCollector import ExceptionCollector
+from ploomber.MessageCollector import MessageCollector
 from ploomber.util.util import callback_check
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 
@@ -408,8 +408,8 @@ class DAG(collections.abc.Mapping):
             if show_progress:
                 tasks = tqdm(self.values(), total=len(self))
 
-            exceptions = ExceptionCollector()
-            warnings_ = None
+            exceptions = MessageCollector()
+            warnings_ = MessageCollector()
 
             for t in tasks:
                 # no need to process task with AbortedRender
@@ -420,13 +420,24 @@ class DAG(collections.abc.Mapping):
                     tasks.set_description('Rendering DAG "{}"'
                                           .format(self.name))
 
-                with warnings.catch_warnings(record=True) as warnings_:
+                with warnings.catch_warnings(record=True) as warnings_current:
                     try:
                         t.render(force=force,
                                  outdated_by_code=self._cfg.outdated_by_code)
                     except Exception:
                         tr = traceback.format_exc()
-                        exceptions.append(traceback_str=tr, task_str=repr(t))
+                        exceptions.append(message=tr, task_str=repr(t))
+
+                if warnings_current:
+                    w = [str(a_warning.message) for a_warning
+                         in warnings_current]
+                    warnings_.append(task_str=t.name,
+                                     message='\n'.join(w))
+
+            if warnings_:
+                # FIXME: maybe raise one by one to keep the warning type
+                warnings.warn('Some tasks had warnings when rendering DAG '
+                              '"{}":\n{}'.format(self.name, str(warnings_)))
 
             if exceptions:
                 self._exec_status = DAGStatus.ErroredRender
@@ -435,14 +446,6 @@ class DAG(collections.abc.Mapping):
                                      '(corresponding tasks aborted '
                                      'rendering):\n{}'
                                      .format(str(exceptions)))
-
-            # TODO: also include warnings in the exception message
-            if warnings_:
-                # maybe raise one by one to keep the warning type
-                messages = [str(w.message) for w in warnings_]
-                warning = ('Task "{}" had the following warnings:\n\n{}'
-                           .format(repr(t), '\n'.join(messages)))
-                warnings.warn(warning)
 
         self._exec_status = DAGStatus.WaitingExecution
 

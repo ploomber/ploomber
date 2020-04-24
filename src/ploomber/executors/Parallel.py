@@ -12,7 +12,7 @@ from ploomber.constants import TaskStatus
 from ploomber.executors.Executor import Executor
 from ploomber.executors.LoggerHandler import LoggerHandler
 from ploomber.exceptions import DAGBuildError
-from ploomber.ExceptionCollector import ExceptionCollector, ExceptionResult
+from ploomber.MessageCollector import MessageCollector, Message
 
 import traceback
 
@@ -36,8 +36,8 @@ class TaskBuildWrapper:
         try:
             return self.task.build(**kwargs)
         except Exception:
-            return ExceptionResult(task_str=repr(self.task),
-                                   traceback_str=traceback.format_exc())
+            return Message(task_str=repr(self.task),
+                           message=traceback.format_exc())
 
 
 class Parallel(Executor):
@@ -101,7 +101,7 @@ class Parallel(Executor):
                 # this will show up
                 task.exec_status = TaskStatus.BrokenProcessPool
             else:
-                if isinstance(result, ExceptionResult):
+                if isinstance(result, Message):
                     task.exec_status = TaskStatus.Errored
                 else:
                     task.exec_status = TaskStatus.Executed
@@ -158,7 +158,8 @@ class Parallel(Executor):
                     break
                 else:
                     if task is not None:
-                        future = pool.submit(TaskBuildWrapper(task), **task_kwargs)
+                        future = pool.submit(
+                            TaskBuildWrapper(task), **task_kwargs)
                         future.add_done_callback(callback)
                         started.append(task)
                         future_mapping[future] = task
@@ -168,14 +169,14 @@ class Parallel(Executor):
         results = [get_future_result(f, future_mapping)
                    for f in future_mapping.keys()]
 
-        exps = [r for r in results if isinstance(r, ExceptionResult)]
+        exps = [r for r in results if isinstance(r, Message)]
 
         if exps:
             raise DAGBuildError('DAG build failed, the following '
                                 'tasks crashed '
                                 '(corresponding downstream tasks aborted '
                                 'execution):\n{}'
-                                .format(str(ExceptionCollector(exps))))
+                                .format(str(MessageCollector(exps))))
 
         return results
 
