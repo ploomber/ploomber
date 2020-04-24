@@ -225,7 +225,7 @@ def test_warnings_are_shown(tmp_directory):
     # only sends them to standard error
 
     # from ploomber.executors import Serial
-    # dag = DAG(executor=Serial(execute_callables_in_subprocess=False))
+    # dag = DAG(executor=Serial(build_in_subprocess=False))
     t1 = PythonCallable(touch_root_w_warning, File('file.txt'), dag)
     t2 = PythonCallable(touch_w_warning, File('file2.txt'), dag)
     t1 >> t2
