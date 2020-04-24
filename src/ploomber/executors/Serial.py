@@ -1,6 +1,7 @@
 """
 Serial DAG executor: builds one task at a time
 """
+import warnings
 from multiprocessing import Pool
 import traceback
 import logging
@@ -23,7 +24,7 @@ class Serial(Executor):
     tasks fail, a final traceback is shown at the end of the execution showing
     error messages along with their corresponding task to ease debgging, the
     same happens with warnings: they are captured and shown at the end of the
-    execution.
+    execution (but only when build_in_subprocess is False).
 
     Parameters
     ----------
@@ -54,6 +55,7 @@ class Serial(Executor):
             logger_handler.add()
 
         exceptions = MessageCollector()
+        warnings_ = MessageCollector()
         task_reports = []
 
         if show_progress:
@@ -69,11 +71,12 @@ class Serial(Executor):
                 tasks.set_description('Building task "{}"'.format(t.name))
 
             try:
-                if (callable(t.source.value)
-                        and self._build_in_subprocess):
-                    report = execute_in_subprocess(t, task_kwargs)
-                else:
-                    report = t.build(**task_kwargs)
+                with warnings.catch_warnings(record=True) as warnings_current:
+                    if (callable(t.source.value)
+                            and self._build_in_subprocess):
+                        report = execute_in_subprocess(t, task_kwargs)
+                    else:
+                        report = t.build(**task_kwargs)
             except Exception:
                 t.exec_status = TaskStatus.Errored
                 new_status = TaskStatus.Errored
@@ -89,6 +92,19 @@ class Serial(Executor):
                     exceptions.append(message=tr, task_str=repr(t))
 
                 task_reports.append(report)
+
+            if warnings_current:
+                w = [str(a_warning.message) for a_warning
+                     in warnings_current]
+                warnings_.append(task_str=t.name,
+                                 message='\n'.join(w))
+
+        # end of for loop
+
+        if warnings_:
+            # FIXME: maybe raise one by one to keep the warning type
+            warnings.warn('Some tasks had warnings when rendering DAG '
+                          '"{}":\n{}'.format(dag.name, str(warnings_)))
 
         if exceptions:
             raise DAGBuildError('DAG build failed, the following '

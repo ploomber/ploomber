@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,7 @@ from ploomber.tasks import ShellScript, PythonCallable, SQLDump
 from ploomber.products import File
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import DAGBuildError, DAGRenderError
+from ploomber.executors import Serial
 
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
@@ -23,11 +25,29 @@ class FailedTask(Exception):
     pass
 
 
+class WarningA(Warning):
+    pass
+
+
+class WarningB(Warning):
+    pass
+
+
 def touch_root(product):
     Path(str(product)).touch()
 
 
 def touch(upstream, product):
+    Path(str(product)).touch()
+
+
+def touch_root_w_warning(product):
+    warnings.warn('This is a warning', WarningA)
+    Path(str(product)).touch()
+
+
+def touch_w_warning(upstream, product):
+    warnings.warn('This is another warning', WarningA)
     Path(str(product)).touch()
 
 
@@ -428,3 +448,19 @@ def test_sucessful_execution(executor, tmp_directory):
     dag.build()
 
     assert set(t.exec_status for t in dag.values()) == {TaskStatus.Skipped}
+
+
+def test_warnings_are_shown(tmp_directory):
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+    t1 = PythonCallable(touch_root_w_warning, File('file.txt'), dag)
+    t2 = PythonCallable(touch_w_warning, File('file2.txt'), dag)
+    t1 >> t2
+
+    with pytest.warns(None) as record:
+        dag.build()
+
+    assert len(record) == 1
+    assert 'This is a warning' in str(record[0].message)
+    assert 'This is another warning' in str(record[0].message)
+    # assert isinstance(record[0], WarningA)
+    # assert isinstance(record[1], WarningB)

@@ -33,16 +33,6 @@ def on_render_2():
     warnings.warn('This is another warning', WarningA)
 
 
-def touch_root_w_warning(product):
-    warnings.warn('This is a warning', WarningA)
-    Path(str(product)).touch()
-
-
-def touch_w_warning(upstream, product):
-    warnings.warn('This is another warning', WarningA)
-    Path(str(product)).touch()
-
-
 @pytest.fixture
 def dag():
     dag = DAG()
