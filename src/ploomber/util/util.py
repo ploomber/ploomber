@@ -7,8 +7,6 @@ from collections import defaultdict
 import shutil
 import inspect
 
-import numpy as np
-
 from ploomber.products import File
 from ploomber.exceptions import CallbackSignatureError, TaskRenderError
 
@@ -53,7 +51,7 @@ def path2fig(path_to_image, dpi=50):
     import matplotlib.pyplot as plt
 
     data = plt.imread(path_to_image)
-    height, width, _ = np.shape(data)
+    height, width, _ = data.shape
     fig = plt.figure()
     fig.set_size_inches((width / dpi, height / dpi))
     ax = plt.Axes(fig, [0, 0, 1, 1])
