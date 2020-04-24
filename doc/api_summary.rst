@@ -10,6 +10,7 @@ DAG
     :toctree:
 
     DAG
+    DAGConfigurator
 
 Tasks
 -----

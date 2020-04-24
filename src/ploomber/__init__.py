@@ -1,4 +1,5 @@
 from ploomber.dag.DAG import DAG
+from ploomber.dag.DAGConfigurator import DAGConfigurator
 from ploomber.env.env import Env
 from ploomber.env.decorators import load_env, with_env
 from ploomber.templates.SourceLoader import SourceLoader
@@ -13,4 +14,5 @@ from logging import NullHandler
 logging.getLogger(__name__).addHandler(NullHandler())
 
 
-__all__ = ['DAG', 'Env', 'SourceLoader', 'load_env', 'with_env']
+__all__ = ['DAG', 'Env', 'SourceLoader', 'load_env', 'with_env',
+           'DAGConfigurator']
