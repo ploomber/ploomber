@@ -12,6 +12,10 @@ Run this will parse the function parameters:
 
     $ python -m ploomber.entry module.sub_module.entry_point --help
 
+
+If numpydoc is installed, it will parse the docstring (if any) and add it
+when using --help
+
 To build the dag returned by the entry point:
 
     $ python -m ploomber.entry module.sub_module.entry_point build
@@ -44,19 +48,22 @@ import argparse
 import inspect
 from collections.abc import Mapping
 
-from numpydoc.docscrape import NumpyDocString
 
-
-# TODO: what to do if numpydoc is not installed? required it? fail silently?
-# output  a warning?
 def parse_doc(doc):
     """
     Convert numpydoc docstring to a list of dictionaries
     """
+    # no docstring
     if doc is None:
         return {'params': {}, 'summary': None}
 
-    doc = NumpyDocString(doc)
+    # try to import numpydoc
+    docscrape = importlib.import_module('numpydoc.docscrape')
+
+    if not docscrape:
+        return {'params': {}, 'summary': None}
+
+    doc = docscrape.NumpyDocString(doc)
     parameters = {p.name: {'desc': ' '.join(p.desc), 'type': p.type}
                   for p in doc['Parameters']}
     summary = doc['Summary']

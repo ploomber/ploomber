@@ -1,5 +1,6 @@
-from numpydoc.docscrape import NumpyDocString
 import warnings
+
+from ploomber.util import requires
 
 
 class DAGQualityChecker:
@@ -18,9 +19,12 @@ class DAGQualityChecker:
                 warnings.warn('Task "{}" has no docstring'.format(name))
 
 
+@requires(['numpydoc'])
 def diagnose(source):
     """Prints some diagnostics
     """
+    from numpydoc.docscrape import NumpyDocString
+
     # [WIP] function to validate docstrings in sources that
     # have placeholders
     found = source.value.declared

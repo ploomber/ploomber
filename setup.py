@@ -53,6 +53,8 @@ MISC = [
     'paramiko',
     # s3 upload
     'boto3',
+    # qa and entry modules
+    'numpydoc'
 ]
 
 setup(
@@ -95,7 +97,7 @@ setup(
     ],
     install_requires=[
         'pyyaml', 'networkx', 'jinja2', 'tabulate',  'humanize', 'tqdm',
-        'numpydoc', 'importlib_resources;python_version<"3.7"',
+        'importlib_resources;python_version<"3.7"',
         # for code normalization
         'sqlparse', 'autopep8', 'parso',
         # for generating dag.to_markup(fmt='html')
