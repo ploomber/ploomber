@@ -19,11 +19,10 @@ except ImportError:
     import importlib_resources
 
 
-import mistune
-import pygments
 import networkx as nx
 from tqdm.auto import tqdm
 from jinja2 import Template
+import mistune
 
 from ploomber.Table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
@@ -352,10 +351,6 @@ class DAG(collections.abc.Mapping):
         out = Template(template_md).render(plot=plot, status=status, dag=self)
 
         if fmt == 'html':
-            if not mistune or not pygments:
-                raise ImportError('mistune and pygments are '
-                                  'required to export to HTML')
-
             renderer = markup.HighlightRenderer()
             out = mistune.markdown(out, escape=False, renderer=renderer)
 
@@ -363,6 +358,7 @@ class DAG(collections.abc.Mapping):
             html = importlib_resources.read_text(resources,
                                                  'github-markdown.html')
             out = Template(html).render(content=out)
+
         if path is not None:
             Path(path).write_text(out)
 

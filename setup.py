@@ -102,6 +102,8 @@ setup(
         'sqlparse', 'autopep8', 'parso',
         # for generating dag.to_markup(fmt='html')
         'mistune',
+        # for syntax highlighting when generating dag HTML reports
+        'pygments',
         'sqlalchemy',
     ],
     extras_require={
