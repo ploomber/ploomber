@@ -2,12 +2,8 @@ from pathlib import Path
 from io import StringIO
 import warnings
 
-import jupytext
-import parso
-from pyflakes.api import check as pyflakes_check
-from pyflakes.reporter import Reporter
-
 from ploomber.templates.Placeholder import Placeholder
+from ploomber.util import requires
 
 
 class NotebookSource:
@@ -16,6 +12,7 @@ class NotebookSource:
     by jupytext)
     """
 
+    @requires(['parso', 'pyflakes', 'jupytext', 'NotebookSource'])
     def __init__(self, value):
         # any non-py file must first be converted using jupytext, we need
         # that representation for validation, if input is already a .py file
@@ -68,6 +65,8 @@ class NotebookSource:
 def to_python(value):
     """
     """
+    import jupytext
+
     # TODO: this should also handle the case when value is a Placeholder,
     # this happens when using sourceloader
     if isinstance(value, str):
@@ -101,6 +100,8 @@ def check_notebook_source(nb_source, params, filename='notebook'):
     filename : str
         Filename to identify pyflakes warnings and errors
     """
+    import jupytext
+
     # parse the JSON string and convert it to a notebook object using jupytext
     nb = jupytext.reads(nb_source, fmt='py')
 
@@ -139,6 +140,8 @@ def check_params(params_source, params):
     Compare the parameters cell's source with the passed parameters, warn
     on missing parameter and raise error if an extra parameter was passed.
     """
+    import parso
+
     # params are keys in "params" dictionary
     params = set(params)
 
@@ -166,6 +169,9 @@ def check_source(nb, filename):
     Run pyflakes on a notebook, wil catch errors such as missing passed
     parameters that do not have default values
     """
+    from pyflakes.api import check as pyflakes_check
+    from pyflakes.reporter import Reporter
+
     # concatenate all cell's source code in a single string
     source = '\n'.join([c['source'] for c in nb.cells])
 
