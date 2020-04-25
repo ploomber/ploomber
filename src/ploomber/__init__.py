@@ -5,7 +5,7 @@ from ploomber.env.decorators import load_env, with_env
 from ploomber.templates.SourceLoader import SourceLoader
 
 
-__version__ = '0.3.4'
+__version__ = '0.3.5dev'
 
 # Set default logging handler to avoid "No handler found" warnings.
 import logging
