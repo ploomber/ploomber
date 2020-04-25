@@ -1,10 +1,14 @@
 CHANGELOG
 =========
 
+0.3.4dev
+--------
 
+* Dependencies cleanup
 * Removed (numpydoc) as dependency, now optional
 * A few bug fixes: #79, #71
 * All warnings are captured and shown at the end (Serial executor)
+* Moves differ parameter from DAG constructor to DAGConfigurator
 
 
 0.3.3 (2020-04-23)
