@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.3.4dev
---------
+0.3.4 (2020-04-25)
+-------------------
 
 * Dependencies cleanup
 * Removed (numpydoc) as dependency, now optional
