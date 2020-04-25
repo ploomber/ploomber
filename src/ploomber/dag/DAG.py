@@ -28,7 +28,6 @@ from ploomber.Table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
 from ploomber.util import (image_bytes2html, isiterable, path2fig, requires,
                            markup)
-from ploomber.CodeDiffer import CodeDiffer
 from ploomber import resources
 from ploomber import executors
 from ploomber.constants import TaskStatus, DAGStatus
@@ -57,12 +56,10 @@ class DAG(collections.abc.Mapping):
         or 'parallel') the corresponding executor is initialized with default
         parameters
     """
-    def __init__(self, name=None, clients=None, differ=None,
-                 executor='serial'):
+    def __init__(self, name=None, clients=None, executor='serial'):
         self._G = nx.DiGraph()
 
         self.name = name or 'No name'
-        self.differ = differ or CodeDiffer()
         self._logger = logging.getLogger(__name__)
 
         self._clients = clients or {}
@@ -85,7 +82,9 @@ class DAG(collections.abc.Mapping):
         self.on_failure = None
         self._available_callback_kwargs = {'dag': self}
 
-        self._cfg = DAGConfiguration.default()
+        self._cfg = DAGConfiguration()
+
+        self.differ = self._cfg.differ
 
     @property
     def _exec_status(self):

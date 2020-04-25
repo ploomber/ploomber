@@ -1,24 +1,10 @@
+from ploomber.CodeDiffer import CodeDiffer
+
+
 class DAGConfiguration:
     """
-
-    Attributes
-    ----------
-    cache_rendered_status : bool
-        If True, once the DAG is rendered, subsequent calls to render will
-        not do anything (rendering is implicitely called in build, plot,
-        status), otherwise it will always render again
+    DAGConfiguration() initializes a configuration object with default values.
     """
-    @classmethod
-    def default(cls):
-        """
-        Returns a configuration object with default values, these values are
-        used when a DAG is initialized using the its constructor (DAG()) as
-        opposed to calling the DAGConfigurator.create() method
-        """
-        cfg = cls()
-        cfg.outdated_by_code = True
-        cfg.cache_rendered_status = False
-        return cfg
 
     @classmethod
     def from_dict(cls, d):
@@ -30,5 +16,39 @@ class DAGConfiguration:
         return cfg
 
     def __init__(self):
-        self.outdated_by_code = None
-        self.cache_rendered_status = None
+        self._outdated_by_code = True
+        self._cache_rendered_status = False
+        self._differ = CodeDiffer()
+
+    @property
+    def outdated_by_code(self):
+        return self._outdated_by_code
+
+    @outdated_by_code.setter
+    def outdated_by_code(self, value):
+        if value not in {True, False}:
+            raise ValueError('outdated_by_code must be True or False')
+
+        self._outdated_by_code = value
+
+    @property
+    def cache_rendered_status(self):
+        return self._cache_rendered_status
+
+    @cache_rendered_status.setter
+    def cache_rendered_status(self, value):
+        if value not in {True, False}:
+            raise ValueError('cache_rendered_status must be True or False')
+
+        self._cache_rendered_status = value
+
+    @property
+    def differ(self):
+        return self._differ
+
+    @differ.setter
+    def differ(self, value):
+        if value == 'default':
+            value = CodeDiffer()
+
+        self._differ = value

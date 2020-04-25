@@ -1,8 +1,10 @@
 CHANGELOG
 =========
 
+
 * Removed (numpydoc) as dependency, now optional
 * A few bug fixes: #79, #71
+* All warnings are captured and shown at the end (Serial executor)
 
 
 0.3.3 (2020-04-23)
