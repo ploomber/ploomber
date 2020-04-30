@@ -52,3 +52,11 @@ class DAGConfiguration:
             value = CodeDiffer()
 
         self._differ = value
+
+    @property
+    def logging_handler(self):
+        return self._logging_handler
+
+    @logging_handler.setter
+    def logging_handler(self, value):
+        self._logging_handler = value

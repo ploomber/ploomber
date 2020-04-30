@@ -8,7 +8,6 @@ import logging
 
 from tqdm.auto import tqdm
 from ploomber.executors.Executor import Executor
-from ploomber.executors.LoggerHandler import LoggerHandler
 from ploomber.exceptions import DAGBuildError
 from ploomber.MessageCollector import MessageCollector
 from ploomber.constants import TaskStatus
@@ -38,21 +37,12 @@ class Serial(Executor):
     """
     # TODO: maybe add a parameter: stop on first exception, same for Parallel
 
-    def __init__(self, logging_directory=None, logging_level=logging.INFO,
-                 build_in_subprocess=True):
-        self.logging_directory = logging_directory
-        self.logging_level = logging_level
+    def __init__(self, build_in_subprocess=True):
         self._logger = logging.getLogger(__name__)
         self._build_in_subprocess = build_in_subprocess
 
     def __call__(self, dag, show_progress, task_kwargs):
         super().__call__(dag)
-
-        if self.logging_directory:
-            logger_handler = LoggerHandler(dag_name=dag.name,
-                                           directory=self.logging_directory,
-                                           logging_level=self.logging_level)
-            logger_handler.add()
 
         exceptions = MessageCollector()
         warnings_ = MessageCollector()
@@ -112,9 +102,6 @@ class Serial(Executor):
                                 '(corresponding downstream tasks aborted '
                                 'execution):\n{}'
                                 .format(str(exceptions)))
-
-        if self.logging_directory:
-            logger_handler.remove()
 
         # only close when tasks are executed in this process (otherwise
         # this won't have any effect anyway)
