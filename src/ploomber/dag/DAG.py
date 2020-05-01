@@ -35,6 +35,7 @@ from ploomber.exceptions import DAGBuildError, DAGRenderError
 from ploomber.MessageCollector import MessageCollector
 from ploomber.util.util import callback_check
 from ploomber.dag.DAGConfiguration import DAGConfiguration
+from ploomber.dag.DAGLogger import DAGLogger
 
 
 class DAG(collections.abc.Mapping):
@@ -223,6 +224,14 @@ class DAG(collections.abc.Mapping):
             A dict-like object with tasks as keys and dicts with task
             status as values
         """
+        dag_logger = DAGLogger(self._cfg.logging_handler_factory())
+
+        with dag_logger:
+            report = self._build(force, show_progress)
+
+        return report
+
+    def _build(self, force, show_progress):
         if self._exec_status == DAGStatus.ErroredRender:
             raise DAGBuildError('Cannot build dag that failed to render, '
                                 'fix rendering errors then build again. '

@@ -1,6 +1,10 @@
 from ploomber.CodeDiffer import CodeDiffer
 
 
+def _logging_handler_factory():
+    return None
+
+
 class DAGConfiguration:
     """
     DAGConfiguration() initializes a configuration object with default values.
@@ -18,6 +22,7 @@ class DAGConfiguration:
     def __init__(self):
         self._outdated_by_code = True
         self._cache_rendered_status = False
+        self._logging_handler_factory = _logging_handler_factory
         self._differ = CodeDiffer()
 
     @property
@@ -54,9 +59,9 @@ class DAGConfiguration:
         self._differ = value
 
     @property
-    def logging_handler(self):
-        return self._logging_handler
+    def logging_handler_factory(self):
+        return self._logging_handler_factory
 
-    @logging_handler.setter
-    def logging_handler(self, value):
-        self._logging_handler = value
+    @logging_handler_factory.setter
+    def logging_handler_factory(self, value):
+        self._logging_handler_factory = value

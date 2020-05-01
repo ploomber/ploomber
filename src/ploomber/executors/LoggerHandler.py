@@ -3,36 +3,6 @@ import logging
 from pathlib import Path
 
 
-class DAGLogger:
-    """Set up logging when calling DAG.build()
-
-    DAGLogger logger works by simply adding a logger handler to the root logger
-    when DAG.build() starts and removing it when it finishes. This class is
-    not intended to be used directly.
-
-    Examples
-    --------
-    >>> import logging
-    >>> from ploomber import DAGConfigurator
-    >>> configurator = DAGConfigurator()
-    >>> handler = logging.FileHandler('my_pipeline.log')
-    >>> handler.setLevel(logging.INFO)
-    >>> configurator.cfg.logging_handler = handler
-    >>> dag = configurator.create()
-    """
-    def __init__(self, handler):
-        self.handler = handler
-        self.root_logger = logging.getLogger()
-
-    def __enter__(self):
-        # can be None
-        if self.handler:
-            self.root_logger.addHandler(self.handler)
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.root_logger.removeHandler(self.handler)
-
-
 class LoggerHandler:
     """Add a remove a handler to configure logging during a DAG run
     """

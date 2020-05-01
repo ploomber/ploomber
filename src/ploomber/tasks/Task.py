@@ -44,6 +44,7 @@ Task Status lifecycle:
 TODO: describe BrokenProcesssPool
 
 """
+import copy
 import traceback
 import abc
 import logging
@@ -699,8 +700,6 @@ class Task(abc.ABC):
 
         return ('{} -> \n{}'
                 .format(short(self.name), self.product._short_repr()))
-
-    # __getstate__ and __setstate__ are needed to make this picklable
 
     def __getstate__(self):
         state = self.__dict__.copy()
