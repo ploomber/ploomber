@@ -167,9 +167,11 @@ def callback_check(fn, available):
     extra = required - available_set
 
     if extra:
+        # not all functions have __name__ (e.g. partials)
+        fn_name = getattr(fn, '__name__', fn)
         raise CallbackSignatureError('Callback function "{}" unknown '
                                      'parameter(s): {}, available ones are: '
-                                     '{}'.format(fn.__name__, extra,
+                                     '{}'.format(fn_name, extra,
                                                  available_set))
 
     return {k: v for k, v in available.items() if k in required}
@@ -201,8 +203,10 @@ def signature_check(fn, params, task_name):
 
     if extra or missing:
         msg = '. '.join(errors)
+        # not all functions have __name__ (e.g. partials)
+        fn_name = getattr(fn, '__name__', fn)
         raise TaskRenderError('Error rendering task "{}" initialized with '
                               'function "{}". {}'
-                              .format(task_name, fn.__name__, msg))
+                              .format(task_name, fn_name, msg))
 
     return True
