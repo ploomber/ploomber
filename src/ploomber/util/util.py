@@ -134,6 +134,22 @@ def isiterable(obj):
 
 # TODO: add more context to errors, which task and which hook?
 def callback_check(fn, available):
+    """
+    Check if a callback function signature requests available parameters
+
+    Parameters
+    ----------
+    fn : callable
+        Callable (e.g. a function) to check
+
+    available : dict
+        All available params
+
+    Returns
+    -------
+    dict
+        Dictionary with requested parameters
+    """
     parameters = inspect.signature(fn).parameters
     optional = {name for name, param in parameters.items()
                 if param.default != inspect._empty}
@@ -160,6 +176,10 @@ def callback_check(fn, available):
 
 
 def signature_check(fn, params, task_name):
+    """
+    Verify if the function signature used as source in a PythonCallable
+    task matches available params
+    """
     params = set(params)
     parameters = inspect.signature(fn).parameters
     required = {name for name, param in parameters.items()

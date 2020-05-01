@@ -57,6 +57,7 @@ class DAG(collections.abc.Mapping):
         or 'parallel') the corresponding executor is initialized with default
         parameters
     """
+
     def __init__(self, name=None, clients=None, executor='serial'):
         self._G = nx.DiGraph()
 
@@ -224,7 +225,10 @@ class DAG(collections.abc.Mapping):
             A dict-like object with tasks as keys and dicts with task
             status as values
         """
-        dag_logger = DAGLogger(self._cfg.logging_handler_factory())
+        kwargs = callback_check(self._cfg.logging_handler_factory,
+                                available={'dag_name': self.name})
+
+        dag_logger = DAGLogger(self._cfg.logging_handler_factory(**kwargs))
 
         with dag_logger:
             report = self._build(force, show_progress)

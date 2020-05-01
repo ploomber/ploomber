@@ -17,8 +17,8 @@ def touch_root_modified(product):
     Path(str(product)).touch()
 
 
-def handler_factory():
-    handler = logging.FileHandler('dag.log')
+def handler_factory(dag_name):
+    handler = logging.FileHandler('{}.log'.format(dag_name))
     handler.setLevel(logging.INFO)
     return handler
 
@@ -50,7 +50,9 @@ def test_logging_handler(tmp_directory):
 
     configurator.cfg.logging_handler_factory = handler_factory
     dag = configurator.create()
+    dag.name = 'my_dag'
+
     PythonCallable(touch_root, File('file.txt'), dag)
     dag.build()
 
-    assert 'Logging...' in Path('dag.log').read_text()
+    assert 'Logging...' in Path('my_dag.log').read_text()

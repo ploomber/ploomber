@@ -44,7 +44,6 @@ Task Status lifecycle:
 TODO: describe BrokenProcesssPool
 
 """
-import copy
 import traceback
 import abc
 import logging
