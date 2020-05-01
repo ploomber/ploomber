@@ -10,7 +10,6 @@ from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from ploomber.constants import TaskStatus
 from ploomber.executors.Executor import Executor
-from ploomber.executors.LoggerHandler import LoggerHandler
 from ploomber.exceptions import DAGBuildError
 from ploomber.MessageCollector import MessageCollector, Message
 
@@ -51,10 +50,7 @@ class Parallel(Executor):
     # NOTE: Tasks should not create child processes
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.daemon
 
-    def __init__(self, processes=4, logging_directory=None,
-                 logging_level=logging.INFO):
-        self.logging_directory = logging_directory
-        self.logging_level = logging_level
+    def __init__(self, processes=4):
         self.processes = processes
 
         self._logger = logging.getLogger(__name__)
@@ -63,11 +59,6 @@ class Parallel(Executor):
     def __call__(self, dag, show_progress, task_kwargs):
         super().__call__(dag)
 
-        if self.logging_directory:
-            logger_handler = LoggerHandler(dag_name=dag.name,
-                                           directory=self.logging_directory,
-                                           logging_level=self.logging_level)
-            logger_handler.add()
         # TODO: Have to test this with other Tasks, especially the ones that use
         # clients - have to make sure they are serialized correctly
         done = []
@@ -142,9 +133,6 @@ class Parallel(Executor):
 
             if set_done == set_all:
                 self._logger.debug('All tasks done')
-
-                if self.logging_directory:
-                    logger_handler.remove()
 
                 raise StopIteration
 
