@@ -133,7 +133,7 @@ def isiterable(obj):
 
 
 # TODO: add more context to errors, which task and which hook?
-def callback_check(fn, available):
+def callback_check(fn, available, allow_default=False):
     """
     Check if a callback function signature requests available parameters
 
@@ -145,6 +145,9 @@ def callback_check(fn, available):
     available : dict
         All available params
 
+    allow_default : bool, optional
+        Whether allow arguments with default values in "fn" or not
+
     Returns
     -------
     dict
@@ -153,12 +156,14 @@ def callback_check(fn, available):
     parameters = inspect.signature(fn).parameters
     optional = {name for name, param in parameters.items()
                 if param.default != inspect._empty}
+    # not all functions have __name__ (e.g. partials)
+    fn_name = getattr(fn, '__name__', fn)
 
-    if optional:
+    if optional and not allow_default:
         raise CallbackSignatureError('Callback functions cannot have '
                                      'parameters with default values, '
                                      'got: {} in "{}"'.format(optional,
-                                                              fn.__name__))
+                                                              fn_name))
 
     required = {name for name, param in parameters.items()
                 if param.default == inspect._empty}
@@ -167,8 +172,6 @@ def callback_check(fn, available):
     extra = required - available_set
 
     if extra:
-        # not all functions have __name__ (e.g. partials)
-        fn_name = getattr(fn, '__name__', fn)
         raise CallbackSignatureError('Callback function "{}" unknown '
                                      'parameter(s): {}, available ones are: '
                                      '{}'.format(fn_name, extra,
