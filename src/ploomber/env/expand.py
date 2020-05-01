@@ -68,15 +68,16 @@ class EnvironmentExpander:
 
         if parents:
             if parents[0] == 'path':
+                value = Path(value).expanduser()
                 self._handle_path(value)
-                return Path(value).expanduser()
+                return value
             else:
                 return value
 
     def _handle_path(self, value):
         path = Path(value)
 
-        if not path.exists() and value.endswith('/'):
+        if not path.exists() and str(value).endswith('/'):
             path.mkdir(parents=True)
 
     def load_placeholder(self, key):

@@ -52,6 +52,11 @@ def test_path_returns_Path_objects(cleanup_env):
     assert isinstance(env.path.b, Path)
 
 
+def test_automatically_creates_path(cleanup_env, tmp_directory):
+    Env.start({'path': {'home': 'some_path/'}})
+    assert Path('some_path').exists() and Path('some_path').is_dir()
+
+
 def test_path_expandsuser(cleanup_env):
     env = Env.start({'path': {'home': '~'}})
     assert env.path.home == Path('~').expanduser()
