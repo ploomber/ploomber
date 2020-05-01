@@ -68,16 +68,23 @@ class EnvironmentExpander:
 
         if parents:
             if parents[0] == 'path':
-                value = Path(value).expanduser()
-                self._handle_path(value)
-                return value
+
+                # value is a str (since it was loaded from a yaml file),
+                # if it has an explicit trailing slash, interpret it as
+                # a directory and create it, we have to do it at this point,
+                # because once we cast to Path, we lose the trailing slash
+                if value.endswith('/'):
+                    self._try_create_dir(value)
+
+                return Path(value).expanduser()
             else:
                 return value
 
-    def _handle_path(self, value):
-        path = Path(value)
+    def _try_create_dir(self, value):
+        # make sure to expand user to avoid creating a "~" folder
+        path = Path(value).expanduser()
 
-        if not path.exists() and str(value).endswith('/'):
+        if not path.exists():
             path.mkdir(parents=True)
 
     def load_placeholder(self, key):
