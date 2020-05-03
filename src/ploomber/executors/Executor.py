@@ -26,6 +26,12 @@ class Executor(abc.ABC):
     all warnings and exceptions, then display a summary at the end of the
     execution, showing each task with their corresponding errors and warnings.
 
+    Executors do not run hooks, these are triggered by the DAG object
+    (DAG-level hooks) and Task objects (task-level hooks). These translates
+    in DAG hooks to be executed in the main process and Task hooks in the same
+    process where Task.build() is called.
+
+
     Notes
     -----
     The following is still being defined: do we need to send the whole dag

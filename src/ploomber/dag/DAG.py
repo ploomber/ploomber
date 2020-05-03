@@ -56,6 +56,16 @@ class DAG(collections.abc.Mapping):
         ploomber.executors.Parallel), is a string is passed ('serial'
         or 'parallel') the corresponding executor is initialized with default
         parameters
+
+    Attributes
+    ----------
+    on_finish : callable
+        Function to execute upon execution. Can request a "dag" parameter to
+        receive the DAG object that registered it.
+
+    on_failure : callable
+        Function to execute upon failure. Can request a "dag" parameter to
+        receive the DAG object that registered it.
     """
 
     def __init__(self, name=None, clients=None, executor='serial'):
