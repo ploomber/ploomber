@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.3.5dev
---------
+0.3.5 (2020-05-03)
+-------------------
 * Bug fixes #88, #89, #90, #84, #91
 * Modifies Env API: Env() is now Env.load(), Env.start() is now Env()
 * New advanced Env guide added to docs
