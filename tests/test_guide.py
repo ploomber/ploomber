@@ -5,7 +5,6 @@ import subprocess
 from pathlib import Path
 import shutil
 import os
-import tempfile
 from glob import glob
 
 # we have to use this, nbconvert removes cells that execute shell comands
@@ -25,9 +24,7 @@ nbs = [f for f in glob(str(Path(path_to_doc, '**', '*.ipynb')))
 def run_notebook(nb):
     print('Running %s' % nb)
 
-    dir_ = tempfile.mkdtemp()
-
-    out = str(Path(dir_, 'nb.py'))
+    out = 'nb.py'
     jupytext.write(jupytext.read(nb), out)
 
     # jupytext keeps shell commands but adds them as comments, fix
@@ -42,15 +39,12 @@ def run_notebook(nb):
 
     Path(out).write_text('\n'.join(lines))
 
-    os.chdir(dir_)
     exit_code = subprocess.call(['ipython', 'nb.py'])
-
-    shutil.rmtree(dir_)
 
     return exit_code
 
 
 @pytest.mark.parametrize('nb', nbs)
-def test_examples(nb):
+def test_examples(nb, tmp_directory):
     # TODO: add timeout
     assert run_notebook(nb) == 0
