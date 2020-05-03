@@ -133,7 +133,7 @@ def isiterable(obj):
 
 
 # TODO: add more context to errors, which task and which hook?
-def callback_check(fn, available, allow_default=False):
+def callback_check(fn, available, allow_default=True):
     """
     Check if a callback function signature requests available parameters
 
