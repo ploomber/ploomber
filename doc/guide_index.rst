@@ -11,5 +11,6 @@ User Guide
     guide/testing
     guide/structuring
     guide/dag-configurator
+    guide/env-lifecycle
     guide/versioning
     guide/extending
