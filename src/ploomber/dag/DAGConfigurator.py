@@ -38,17 +38,15 @@ class DAGConfigurator:
     >>> configurator.cfg.cache_rendered_status = False
     >>> dag = configurator.create()
     """
-    def __init__(self, cfg=None):
-        self._cfg = cfg or DAGConfiguration()
+    def __init__(self, d=None):
+        if d:
+            self._cfg = DAGConfiguration.from_dict(d)
+        else:
+            self._cfg = DAGConfiguration()
 
     @property
     def cfg(self):
         return self._cfg
-
-    @classmethod
-    def from_dict(cls, d):
-        cfg = DAGConfiguration.from_dict(d)
-        return cls(cfg=cfg)
 
     def create(self, *args, **kwargs):
         """Return a DAG with the given parameters
@@ -58,7 +56,10 @@ class DAGConfigurator:
         """
         dag = DAG(*args, **kwargs)
         dag._cfg = copy(self.cfg)
-
-        # TODO: validate configuration
-
         return dag
+
+    def __setattr__(self, key, value):
+        if key != '_cfg':
+            raise AttributeError('Cannot assign attributes to DAGConfigurator,'
+                                 ' use configurator.cfg.param_name = value')
+        super().__setattr__(key, value)

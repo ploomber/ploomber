@@ -25,6 +25,13 @@ def handler_factory(dag_name):
     return handler
 
 
+def test_raise_error_on_setattr():
+    configurator = DAGConfigurator()
+
+    with pytest.raises(AttributeError):
+        configurator.some_param = 1
+
+
 def test_turn_off_outdated_by_code(tmp_directory):
     # build a dag that generates a file
     dag = DAG()
@@ -43,7 +50,7 @@ def test_turn_off_outdated_by_code(tmp_directory):
 
 
 def test_from_dict():
-    configurator = DAGConfigurator.from_dict({'outdated_by_code': False})
+    configurator = DAGConfigurator({'outdated_by_code': False})
     assert not configurator.cfg.outdated_by_code
 
 

@@ -1,9 +1,18 @@
 CHANGELOG
 =========
 
+0.3.5dev
+--------
+* Bug fixes #88, #89, #90, #84, #91
+* Modifies Env API: Env() is now Env.load(), Env.start() is now Env()
+* New advanced Env guide added to docs
+* Env can now be used with a context manager
+* Improved DAGConfigurator API
+* Deletes logger configuration in executors constructors, logging is available via DAGConfigurator
+
+
 0.3.4 (2020-04-25)
 -------------------
-
 * Dependencies cleanup
 * Removed (numpydoc) as dependency, now optional
 * A few bug fixes: #79, #71
