@@ -1,6 +1,8 @@
 import logging
 from pathlib import Path
 
+import pytest
+
 from ploomber import DAG
 from ploomber.dag.DAGConfigurator import DAGConfigurator
 from ploomber.tasks import PythonCallable
@@ -56,3 +58,10 @@ def test_logging_handler(tmp_directory):
     dag.build()
 
     assert 'Logging...' in Path('my_dag.log').read_text()
+
+
+def test_error_if_non_existing_parameter():
+    configurator = DAGConfigurator()
+
+    with pytest.raises(AttributeError):
+        configurator.cfg.non_existing_param = True
