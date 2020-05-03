@@ -34,19 +34,19 @@ class DAGConfigurator:
     --------
     >>> from ploomber import DAGConfigurator
     >>> configurator = DAGConfigurator()
-    >>> configurator.cfg.outdated_by_code = True
-    >>> configurator.cfg.cache_rendered_status = False
+    >>> configurator.param.outdated_by_code = True
+    >>> configurator.param.cache_rendered_status = False
     >>> dag = configurator.create()
     """
     def __init__(self, d=None):
         if d:
-            self._cfg = DAGConfiguration.from_dict(d)
+            self._param = DAGConfiguration.from_dict(d)
         else:
-            self._cfg = DAGConfiguration()
+            self._param = DAGConfiguration()
 
     @property
-    def cfg(self):
-        return self._cfg
+    def param(self):
+        return self._param
 
     def create(self, *args, **kwargs):
         """Return a DAG with the given parameters
@@ -55,11 +55,11 @@ class DAGConfigurator:
             Parameters to pass to the DAG constructor
         """
         dag = DAG(*args, **kwargs)
-        dag._cfg = copy(self.cfg)
+        dag._param = copy(self.param)
         return dag
 
     def __setattr__(self, key, value):
-        if key != '_cfg':
+        if key != '_param':
             raise AttributeError('Cannot assign attributes to DAGConfigurator,'
-                                 ' use configurator.cfg.param_name = value')
+                                 ' use configurator.param.param_name = value')
         super().__setattr__(key, value)
