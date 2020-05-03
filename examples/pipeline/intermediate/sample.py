@@ -9,7 +9,7 @@ from ploomber import Env
 
 
 def sample(product, upstream):
-    env = Env()
+    env = Env.load()
 
     red = pd.read_csv(str(upstream['get_data'][0]), sep=';')
     white = pd.read_csv(str(upstream['get_data'][1]), sep=';')
