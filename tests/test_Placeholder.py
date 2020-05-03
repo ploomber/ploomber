@@ -6,7 +6,7 @@ from copy import copy, deepcopy
 from pathlib import Path
 
 import pytest
-from ploomber.templates.Placeholder import Placeholder
+from ploomber.templates.Placeholder import Placeholder, SQLRelationPlaceholder
 from jinja2 import Template, Environment, FileSystemLoader, StrictUndefined
 
 
@@ -112,3 +112,13 @@ def test_init_placeholder_with_placeholder():
     tt = Placeholder(t)
 
     assert tt.render({'file': 'some file'})
+
+
+def test_repr_shows_tags_if_unrendered():
+    assert repr(Placeholder('{{tag}}')) == 'Placeholder("{{tag}}")'
+
+
+def test_sql_placeholder_repr_shows_tags_if_unrendered_sql():
+    expected = 'SQLRelationPlaceholder({{schema}}.{{name}})'
+    assert (repr(SQLRelationPlaceholder(('{{schema}}', '{{name}}', 'table')))
+            == expected)
