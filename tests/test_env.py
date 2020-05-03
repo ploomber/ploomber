@@ -15,8 +15,37 @@ from ploomber.env.expand import EnvironmentExpander
 from ploomber import repo
 
 
+def test_cannot_start_env_if_one_exists_already(cleanup_env):
+    Env({'a': 1})
+
+    with pytest.raises(RuntimeError):
+        Env({'a': 2})
+
+
+def test_can_initialize_env_after_failed_attempt(cleanup_env):
+    try:
+        # underscores are not allowed, this will fail, but before raising
+        # the exception, the instance (created in __new__) must be discarded
+        Env({'_a': 1})
+    except Exception as e:
+        pass
+
+    Env({'a': 1})
+
+
+def test_context_manager(cleanup_env):
+
+    with Env({'a': 1}) as env:
+        value = env.a
+
+    # should be able to initialize another env now
+    Env({'a': 2})
+
+    assert value == 1
+
+
 def test_env_repr_and_str(cleanup_env):
-    env = Env.start({'a': 1})
+    env = Env({'a': 1})
     assert repr(env) == "Env({'a': 1})"
     assert str(env) == "{'a': 1}"
 
@@ -24,46 +53,46 @@ def test_env_repr_and_str(cleanup_env):
 def test_env_repr_and_str_when_loaded_from_file(tmp_directory, cleanup_env):
     path_env = Path('env.yaml')
     path_env.write_text(yaml.dump({'a': 1}))
-    env = Env.start()
+    env = Env()
     assert repr(env) == "Env({'a': 1}) (from %s)" % str(path_env.resolve())
     assert str(env) == "{'a': 1}"
 
 
 def test_load_env_with_name(tmp_directory, cleanup_env):
     Path('env.some_name.yaml').write_text(yaml.dump({'a': 1}))
-    Env.start('env.some_name.yaml')
+    Env('env.some_name.yaml')
 
 
 def test_load_env_default_name(tmp_directory, cleanup_env):
     Path('env.yaml').write_text(yaml.dump({'a': 1}))
-    Env.start()
+    Env()
 
 
 def test_load_env_hostname(tmp_directory, cleanup_env):
     name = 'env.{}.yaml'.format(platform.node())
     Path(name).write_text(yaml.dump({'a': 1}))
-    Env.start()
+    Env()
 
 
 def test_path_returns_Path_objects(cleanup_env):
-    env = Env.start({'path': {'a': '/tmp/path/file.txt',
-                              'b': '/another/path/file.csv'}})
+    env = Env({'path': {'a': '/tmp/path/file.txt',
+                        'b': '/another/path/file.csv'}})
     assert isinstance(env.path.a, Path)
     assert isinstance(env.path.b, Path)
 
 
 def test_automatically_creates_path(cleanup_env, tmp_directory):
-    Env.start({'path': {'home': 'some_path/'}})
+    Env({'path': {'home': 'some_path/'}})
     assert Path('some_path').exists() and Path('some_path').is_dir()
 
 
 def test_path_expandsuser(cleanup_env):
-    env = Env.start({'path': {'home': '~'}})
+    env = Env({'path': {'home': '~'}})
     assert env.path.home == Path('~').expanduser()
 
 
 def test_init_with_module_key(cleanup_env):
-    env = Env.start({'_module': 'sample_project'})
+    env = Env({'_module': 'sample_project'})
 
     expected = Path(importlib.util.find_spec('sample_project').origin).parent
     assert env._module == expected
@@ -71,7 +100,7 @@ def test_init_with_module_key(cleanup_env):
 
 def test_init_with_nonexistent_package(cleanup_env):
     with pytest.raises(ValueError) as exc_info:
-        Env.start({'_module': 'i_do_not_exist'})
+        Env({'_module': 'i_do_not_exist'})
 
     expected = ('Could not resolve _module "i_do_not_exist", '
                 'failed to import as a module and is not a directory')
@@ -80,7 +109,7 @@ def test_init_with_nonexistent_package(cleanup_env):
 
 def test_module_is_here_placeholder_raises_error_if_init_w_dict(cleanup_env):
     with pytest.raises(ValueError) as exc_info:
-        Env.start({'_module': '{{here}}'})
+        Env({'_module': '{{here}}'})
 
     expected = '_module cannot be {{here}} if not loaded from a file'
     assert exc_info.value.args[0] == expected
@@ -88,12 +117,12 @@ def test_module_is_here_placeholder_raises_error_if_init_w_dict(cleanup_env):
 
 def test_module_with_here_placeholder(tmp_directory, cleanup_env):
     Path('env.yaml').write_text('_module: "{{here}}"')
-    env = Env.start()
+    env = Env()
     assert env._module == Path(tmp_directory).resolve()
 
 
 def test_expand_version(cleanup_env):
-    env = Env.start({'_module': 'sample_project', 'version': '{{version}}'})
+    env = Env({'_module': 'sample_project', 'version': '{{version}}'})
     assert env.version == '0.1dev'
 
 
@@ -103,12 +132,12 @@ def test_expand_git(monkeypatch, cleanup_env):
 
     monkeypatch.setattr(repo, 'get_env_metadata', mockreturn)
 
-    env = Env.start({'_module': 'sample_project', 'git': '{{git}}'})
+    env = Env({'_module': 'sample_project', 'git': '{{git}}'})
     assert env.git == 'some_version_string'
 
 
 def test_can_create_env_from_dict(cleanup_env):
-    e = Env.start({'a': 1})
+    e = Env({'a': 1})
     assert e.a == 1
 
 
@@ -127,19 +156,19 @@ def test_raises_error_if_wrong_format():
 
 def test_can_instantiate_env_if_located_in_sample_dir(tmp_sample_dir,
                                                       cleanup_env):
-    Env.start()
+    Env()
 
 
 def test_can_instantiate_env_if_located_in_sample_subdir(tmp_sample_subdir,
                                                          cleanup_env):
-    Env.start()
+    Env()
 
 
 def test_raise_file_not_found_if(cleanup_env):
     msg = ('Could not find file "env.non_existing.yaml" '
            'in the current working directory nor 6 levels up')
     with pytest.raises(FileNotFoundError, match=msg):
-        Env.start('env.non_existing.yaml')
+        Env('env.non_existing.yaml')
 
 
 def test_with_env_decorator(cleanup_env):
@@ -239,14 +268,14 @@ def test_get_all_dict_keys():
 def test_double_underscore_raises_error():
     msg = r"Keys cannot have double underscores, got: \['b\_\_c'\]"
     with pytest.raises(ValueError, match=msg):
-        Env.start({'a': {'b__c': 1}})
+        Env({'a': {'b__c': 1}})
 
 
-def test_leading_underscore_in_top_key_raises_error():
+def test_leading_underscore_in_top_key_raises_error(cleanup_env):
     msg = """Error validating env.
 Top-level keys cannot start with an underscore, except for {'_module'}. Got: ['_a']"""
     with pytest.raises(ValueError) as exc_info:
-        Env.start({'_a': 1})
+        Env({'_a': 1})
 
     assert exc_info.value.args[0] == msg
 
@@ -266,7 +295,7 @@ def test_load_env_modifies_signature(cleanup_env):
 
 
 def test_load_env_decorator(cleanup_env):
-    Env.start({'a': 10})
+    Env({'a': 10})
 
     @load_env
     def fn(env):
@@ -296,7 +325,7 @@ def test_expand_tags(monkeypatch):
 
 def test_here_placeholder(tmp_directory, cleanup_env):
     Path('env.yaml').write_text(yaml.dump({'here': '{{here}}'}))
-    env = Env.start()
+    env = Env()
     assert env.here == str(Path(tmp_directory).resolve())
 
 

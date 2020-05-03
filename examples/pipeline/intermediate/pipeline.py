@@ -29,7 +29,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-env = Env.start()
+env = Env()
 path_to_sample = env.path.input / 'sample'
 
 (env.path.input / 'raw').mkdir(exist_ok=True, parents=True)

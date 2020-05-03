@@ -1,14 +1,11 @@
 """
 Environment management
 """
-import logging
-
 from ploomber.env.EnvDict import EnvDict
 
 
 # TODO: add defaults functionality if defined in {module}/env.defaults.yaml
 
-# TODO: env must be a envdict subclass that can only be instantiated once
 class Env:
     """Return the current environment
 
@@ -38,8 +35,8 @@ class Env:
     Examples
     --------
     >>> from ploomber import Env
-    >>> Env.start({'db': {'uri': 'my_uri'}, 'path': {'raw': '/path/to/raw'}})
-    >>> env = Env()
+    >>> Env({'db': {'uri': 'my_uri'}, 'path': {'raw': '/path/to/raw'}})
+    >>> env = Env.load()
     >>> env.db.uri # traverse the yaml tree structure using dot notation
     >>> env.path.raw # returns an absolute path to the raw data
 
@@ -49,10 +46,17 @@ class Env:
     end them only during the execution of a function that builds a DAG by
     using the @with_env and @load_env decorators
     """
-    _data = None
+    __instance = None
 
-    @classmethod
-    def start(cls, source=None):
+    def __new__(cls, source=None):
+        if cls.__instance is None:
+            cls.__instance = super().__new__(cls)
+            return cls.__instance
+        else:
+            raise RuntimeError('Cannot start environment, one has already '
+                               'started: {}'.format(cls.__instance))
+
+    def __init__(self, source=None):
         """Start the environment
 
         Parameters
@@ -78,22 +82,23 @@ class Env:
         ploomber.Env
             An environment object
         """
-        if cls._data is None:
-            if not isinstance(source, EnvDict):
-                env_dict = EnvDict(source)
-            else:
-                env_dict = source
+        if not isinstance(source, EnvDict):
+            # try to initialize an EnvDict to perform validation, if any
+            # errors occur, discard object
+            try:
+                source = EnvDict(source)
+            except Exception:
+                Env.__instance = None
+                raise
 
-            cls._path_to_env = env_dict.path_to_env
-            cls._name = env_dict.name
-            cls._data = env_dict
-            ins = cls()
-            return ins
+        self._data = source
 
-        # if an environment has been set...
-        else:
-            raise RuntimeError('Cannot start environment, one has already '
-                               'started: {}'.format(cls()))
+    @classmethod
+    def load(cls):
+        if cls.__instance is None:
+            raise RuntimeError('Env has not been set, run Env() before '
+                               'running Env.load()')
+        return cls.__instance
 
     @classmethod
     def end(cls):
@@ -102,25 +107,15 @@ class Env:
         to exist during the entire Python process lifespan to avoid
         inconsistencies, use it only if you have a very strong reason to
         """
-        cls._path_to_env = None
-        cls._name = None
-        cls._path = None
-        cls._data = None
-
-    def __init__(self):
-        if self._data is None:
-            raise RuntimeError('Env has not been set, run Env.start before '
-                               'running Env()')
-
-        self._logger = logging.getLogger(__name__)
+        cls.__instance = None
 
     def __str__(self):
         return str(self._data)
 
     def __repr__(self):
         s = 'Env({})'.format(str(self._data))
-        if self._path_to_env:
-            s += ' (from %s)' % str(self._path_to_env)
+        if self._data.path_to_env:
+            s += ' (from %s)' % str(self._data.path_to_env)
         return s
 
     def __dir__(self):
@@ -128,7 +123,7 @@ class Env:
 
     @property
     def name(self):
-        return self._name
+        return self._data.name
 
     def __getattr__(self, key):
         return getattr(self._data, key)
@@ -142,13 +137,8 @@ class Env:
         else:
             raise RuntimeError('env is a read-only object')
 
-    # def __enter__(self):
-    #     return self
+    def __enter__(self):
+        return self
 
-    # def __exit__(self, exc_type, exc_value, traceback):
-    #     self.end()
-
-    # def get_metadata(self):
-    #     """Get env metadata such as git hash, last commit timestamp
-    #     """
-    #     return repo.get_env_metadata(self.path.home)
+    def __exit__(self, exc_type, exc_value, traceback):
+        Env.end()

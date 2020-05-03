@@ -8,7 +8,7 @@ from ploomber import Env
 def test_get_version(tmp_directory, cleanup_env):
     Path('__init__.py').write_text('__version__ = "0.1dev0"')
     Path('env.yaml').write_text('_module: .\nversion: "{{version}}"')
-    env = Env.start()
+    env = Env()
     assert env.version == '0.1dev0'
 
 
@@ -20,5 +20,5 @@ def test_get_git(tmp_directory, cleanup_env):
     subprocess.run(['git', 'add', '--all'])
     subprocess.run(['git', 'commit', '-m', 'first commit'])
 
-    env = Env.start()
+    env = Env()
     assert env.git == 'master'

@@ -38,7 +38,7 @@ def load_env(fn):
 
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        return fn(Env(), *args, **kwargs)
+        return fn(Env.load(), *args, **kwargs)
 
     return wrapper
 
@@ -79,7 +79,7 @@ def with_env(source):
             for key in to_replace.keys():
                 kwargs.pop(key)
 
-            env = Env.start(env_dict)
+            env = Env(env_dict)
 
             for key, new_value in to_replace.items():
                 # convert env__a__b__c -> ['a', 'b', 'c']
@@ -96,7 +96,7 @@ def with_env(source):
                                    .format(key)) from e
 
             try:
-                res = fn(Env(), *args, **kwargs)
+                res = fn(Env.load(), *args, **kwargs)
             except Exception as e:
                 Env.end()
                 raise e

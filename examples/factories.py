@@ -44,9 +44,9 @@ db_uri = 'sqlite:///' + str(tmp_dir / 'my_db.db')
 # so each one will write to a different schema
 
 # NOTE: adding trailing / so Env detects them as directories and creates them
-env = Env.start({'path': {'raw': str(tmp_dir / 'raw') + '/',
-                          'report': str(tmp_dir / '{{user}}/') + '/'},
-                 'schema': '{{user}}', 'db_uri': db_uri})
+env = Env({'path': {'raw': str(tmp_dir / 'raw') + '/',
+                    'report': str(tmp_dir / '{{user}}/') + '/'},
+           'schema': '{{user}}', 'db_uri': db_uri})
 
 
 """
@@ -140,7 +140,7 @@ sns.distplot(df.AGE)
 sns.distplot(df.price)
 # -
 """
-    # return NotebookRunner(report, 
+    # return NotebookRunner(report,
     #     product=)
 
 ###############################################################################
