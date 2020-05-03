@@ -10,5 +10,6 @@ User Guide
     guide/hooks
     guide/testing
     guide/structuring
+    guide/dag-configurator
     guide/versioning
     guide/extending
