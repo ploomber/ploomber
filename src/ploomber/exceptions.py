@@ -38,3 +38,9 @@ class CallbackSignatureError(Exception):
     """When a callback function does not have the right signature
     """
     pass
+
+
+class EnvInitializationError(Exception):
+    """When an Env fails to initialize
+    """
+    pass

@@ -4,6 +4,7 @@ from inspect import signature
 
 from ploomber.env.env import Env
 from ploomber.env.EnvDict import EnvDict
+from ploomber.exceptions import EnvInitializationError
 
 
 def _validate_and_modify_signature(fn):
@@ -68,7 +69,16 @@ def with_env(source):
     """
     def decorator(fn):
         _validate_and_modify_signature(fn)
-        env_dict = EnvDict(source)
+
+        try:
+            env_dict = EnvDict(source)
+        except Exception as e:
+            raise EnvInitializationError(
+                'Failed to initialize environment using '
+                '@with_env decorator in function "{}". '
+                'Tried to call Env with argument: {}'
+                .format(fn.__name__, source)) from e
+
         fn._env_dict = env_dict
 
         @wraps(fn)
