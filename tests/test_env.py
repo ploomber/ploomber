@@ -3,6 +3,7 @@ import platform
 from pathlib import Path
 import getpass
 import inspect
+import pickle
 
 import pytest
 import yaml
@@ -10,7 +11,7 @@ import yaml
 from ploomber.env.env import Env
 from ploomber.env.decorators import with_env, load_env
 from ploomber.env import validate
-from ploomber.env.EnvDict import _get_name
+from ploomber.env.EnvDict import _get_name, EnvDict
 from ploomber.env.expand import EnvironmentExpander
 from ploomber import repo
 
@@ -327,6 +328,22 @@ def test_here_placeholder(tmp_directory, cleanup_env):
     Path('env.yaml').write_text(yaml.dump({'here': '{{here}}'}))
     env = Env()
     assert env.here == str(Path(tmp_directory).resolve())
+
+
+def test_serialize_env_dict():
+    # this tests an edge case due to EnvDict's implementation: to enable
+    # accessing values in the underlying dictionary as attributes, we are
+    # customizing __getattr__, however, when an object is unserialized,
+    # Python tries to look for __getstate__ (which triggers calling
+    # __getattr__), since it cannot find it, it will go to __getitem__
+    # (given the current implementation of __getattr__). But __getitem__
+    # uses self.preprocessed. At unserialization time, this attribute does
+    # not exist yet!, which will cause another call to __getattr__. To avoid
+    # this recursive loop, we have to prevent special methods to call
+    # __getitem__ if they do not exist - EnvDict and Env objects are not
+    # expected to be serialized but we have fix it anyway
+    env = EnvDict({'a': 1})
+    assert pickle.loads(pickle.dumps(env))
 
 
 # TODO: {{here}} allowed in _module
