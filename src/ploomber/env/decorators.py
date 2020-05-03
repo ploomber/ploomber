@@ -1,3 +1,4 @@
+import inspect
 import types
 from functools import wraps
 from inspect import signature
@@ -73,11 +74,12 @@ def with_env(source):
         try:
             env_dict = EnvDict(source)
         except Exception as e:
+            mod_name = inspect.getmodule(fn).__name__
             raise EnvInitializationError(
                 'Failed to initialize environment using '
-                '@with_env decorator in function "{}". '
+                '@with_env decorator in function "{}", defined in module {}. '
                 'Tried to call Env with argument: {}'
-                .format(fn.__name__, source)) from e
+                .format(fn.__name__, mod_name, source)) from e
 
         fn._env_dict = env_dict
 

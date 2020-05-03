@@ -262,13 +262,14 @@ def test_replacing_raises_error_if_key_does_not_exist():
         my_fn(1, env__c=100)
 
 
-def test_with_env_shows_function_name_if_invalid_env(cleanup_env):
+def test_with_env_shows_name_and_module_if_invalid_env(cleanup_env):
     with pytest.raises(EnvInitializationError) as excinfo:
         @with_env({'_a': 1})
         def some_function(env):
             pass
 
     assert 'some_function' in str(excinfo.getrepr())
+    assert 'test_env' in str(excinfo.getrepr())
 
 
 def test_get_all_dict_keys():
