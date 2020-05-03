@@ -8,7 +8,7 @@ from ploomber.tasks import ShellScript, PythonCallable, SQLDump
 from ploomber.products import File
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import DAGBuildError, DAGRenderError
-from ploomber.executors import Serial
+from ploomber.executors import Serial, Parallel
 
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
@@ -19,6 +19,11 @@ from ploomber.executors import Serial
 # TODO: check skipped status
 # TODO: test once a task is skipped, downstream tasks go from WaitingUpstream
 # to WaitingExecution
+
+# parametrize tests over these executors
+_executors = [Serial(build_in_subprocess=False),
+              Serial(build_in_subprocess=True),
+              Parallel()]
 
 
 class FailedTask(Exception):
@@ -87,7 +92,7 @@ def test_mapping_interface():
     assert list(dag.values()) == [t1, t2, t3]
 
 
-@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+@pytest.mark.parametrize('executor', _executors)
 def test_forced_build(executor, tmp_directory):
     dag = DAG(executor=executor)
     PythonCallable(touch_root, File('1.txt'), dag, name=1)
@@ -99,7 +104,7 @@ def test_forced_build(executor, tmp_directory):
     assert report['Ran?'] == [True]
 
 
-@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+@pytest.mark.parametrize('executor', _executors)
 def test_build_partially(tmp_directory, executor):
     dag = DAG(executor=executor)
     PythonCallable(touch_root, File('1.txt'), dag, name=1)
@@ -239,7 +244,7 @@ def test_partial_build(tmp_directory):
     assert all(table['Ran?'])
 
 
-@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+@pytest.mark.parametrize('executor', _executors)
 def test_dag_task_status_life_cycle(executor, tmp_directory):
     """
     Check dag and task status along calls to DAG.render and DAG.build.
@@ -296,7 +301,7 @@ def test_dag_task_status_life_cycle(executor, tmp_directory):
     # other than WaitingExecution anf WaitingUpstream
 
 
-@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+@pytest.mark.parametrize('executor', _executors)
 def test_executor_keeps_running_until_no_more_tasks_can_run(executor,
                                                             tmp_directory):
     dag = DAG(executor=executor)
@@ -406,7 +411,7 @@ def test_tracebacks_are_shown_for_all_on_render_failing_tasks():
     assert "SQLDump: t1 -> File(one_table)" in str(excinfo.value)
 
 
-@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+@pytest.mark.parametrize('executor', _executors)
 def test_tracebacks_are_shown_for_all_on_build_failing_tasks(executor):
     dag = DAG(executor=executor)
     PythonCallable(failing_root, File('a_file'), dag, name='t1')
@@ -422,7 +427,7 @@ def test_tracebacks_are_shown_for_all_on_build_failing_tasks(executor):
             in str(excinfo.getrepr()))
 
 
-@pytest.mark.parametrize('executor', ['parallel', 'serial'])
+@pytest.mark.parametrize('executor', _executors)
 def test_sucessful_execution(executor, tmp_directory):
     dag = DAG(executor=executor)
     t1 = PythonCallable(touch_root, File('ok'), dag, name='t1')
