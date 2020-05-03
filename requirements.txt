@@ -11,6 +11,9 @@ pytest>=3.5
 nbformat
 ipython
 
+# to convert notebooks (to test them) in doc/
+jupytext
+
 
 
 # sql module (SQLDump task)
