@@ -93,6 +93,18 @@ class Task(abc.ABC):
         A read-only dictionary-like object with params passed, after running
         'product' and 'upstream' are added, if any
 
+    on_render : callable
+        Function to execute after rendering. The function can request any of
+        the following parmeters: task, client and/or product.
+
+    on_finish : callable
+        Function to execute upon execution. Can request the same params as the
+        on_render hook.
+
+    on_failure : callable
+        Function to execute upon failure. Can request the same params as the
+        on_render hook.
+
     Notes
     -----
     All subclasses must implement the same constuctor to keep the API
