@@ -8,7 +8,7 @@ def test_fn_with_default_values():
         pass
 
     with pytest.raises(CallbackSignatureError):
-        callback_check(fn, {'a', 'b'})
+        callback_check(fn, {'a', 'b'}, allow_default=False)
 
 
 def test_fn_with_unknown_params():

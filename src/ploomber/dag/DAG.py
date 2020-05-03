@@ -226,8 +226,7 @@ class DAG(collections.abc.Mapping):
             status as values
         """
         kwargs = callback_check(self._cfg.logging_handler_factory,
-                                available={'dag_name': self.name},
-                                allow_default=True)
+                                available={'dag_name': self.name})
 
         dag_logger = DAGLogger(self._cfg.logging_handler_factory(**kwargs))
 
