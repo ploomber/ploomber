@@ -84,9 +84,10 @@ class DAG(collections.abc.Mapping):
         self.on_failure = None
         self._available_callback_kwargs = {'dag': self}
 
-        self._cfg = DAGConfiguration()
+        self._params = DAGConfiguration()
 
-        self.differ = self._cfg.differ
+        # task access differ using .dag.differ
+        self.differ = self._params.differ
 
     @property
     def _exec_status(self):
@@ -225,10 +226,10 @@ class DAG(collections.abc.Mapping):
             A dict-like object with tasks as keys and dicts with task
             status as values
         """
-        kwargs = callback_check(self._cfg.logging_handler_factory,
+        kwargs = callback_check(self._params.logging_handler_factory,
                                 available={'dag_name': self.name})
 
-        dag_logger = DAGLogger(self._cfg.logging_handler_factory(**kwargs))
+        dag_logger = DAGLogger(self._params.logging_handler_factory(**kwargs))
 
         with dag_logger:
             report = self._build(force, show_progress)
@@ -414,7 +415,7 @@ class DAG(collections.abc.Mapping):
         """
         Render tasks, and update exec_status
         """
-        if not self._cfg.cache_rendered_status or not self._did_render:
+        if not self._params.cache_rendered_status or not self._did_render:
             self._logger.info('Rendering DAG %s', self)
 
             if show_progress:
@@ -435,7 +436,7 @@ class DAG(collections.abc.Mapping):
                 with warnings.catch_warnings(record=True) as warnings_current:
                     try:
                         t.render(force=force,
-                                 outdated_by_code=self._cfg.outdated_by_code)
+                                 outdated_by_code=self._params.outdated_by_code)
                     except Exception:
                         tr = traceback.format_exc()
                         exceptions.append(message=tr, task_str=repr(t))

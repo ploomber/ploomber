@@ -40,7 +40,7 @@ def test_turn_off_outdated_by_code(tmp_directory):
 
     # same dag, but with modified source code and set checking code to false
     configurator = DAGConfigurator()
-    configurator.param.outdated_by_code = False
+    configurator.params.outdated_by_code = False
     dag2 = configurator.create()
     PythonCallable(touch_root_modified, File('file.txt'), dag2)
     report = dag2.build()
@@ -51,13 +51,13 @@ def test_turn_off_outdated_by_code(tmp_directory):
 
 def test_from_dict():
     configurator = DAGConfigurator({'outdated_by_code': False})
-    assert not configurator.param.outdated_by_code
+    assert not configurator.params.outdated_by_code
 
 
 def test_logging_handler(tmp_directory):
     configurator = DAGConfigurator()
 
-    configurator.param.logging_handler_factory = handler_factory
+    configurator.params.logging_handler_factory = handler_factory
     dag = configurator.create()
     dag.name = 'my_dag'
 
@@ -71,4 +71,4 @@ def test_error_if_non_existing_parameter():
     configurator = DAGConfigurator()
 
     with pytest.raises(AttributeError):
-        configurator.param.non_existing_param = True
+        configurator.params.non_existing_param = True
