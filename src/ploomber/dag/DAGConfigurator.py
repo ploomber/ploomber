@@ -50,10 +50,13 @@ class DAGConfigurator:
         cfg = DAGConfiguration.from_dict(d)
         return cls(cfg=cfg)
 
-    def create(self):
+    def create(self, *args, **kwargs):
         """Return a DAG with the given parameters
+
+        *args, **kwargs
+            Parameters to pass to the DAG constructor
         """
-        dag = DAG()
+        dag = DAG(*args, **kwargs)
         dag._cfg = copy(self.cfg)
 
         # TODO: validate configuration

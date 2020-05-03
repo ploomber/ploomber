@@ -9,6 +9,8 @@ class DAGConfiguration:
     """
     DAGConfiguration() initializes a configuration object with default values.
     """
+    __attrs = {'outdated_by_code', 'cache_rendered_status',
+               'logging_handler_factory', 'differ'}
 
     @classmethod
     def from_dict(cls, d):
@@ -20,10 +22,10 @@ class DAGConfiguration:
         return cfg
 
     def __init__(self):
-        self._outdated_by_code = True
-        self._cache_rendered_status = False
-        self._logging_handler_factory = _logging_handler_factory
-        self._differ = CodeDiffer()
+        self.outdated_by_code = True
+        self.cache_rendered_status = False
+        self.logging_handler_factory = _logging_handler_factory
+        self.differ = CodeDiffer()
 
     @property
     def outdated_by_code(self):
@@ -65,3 +67,11 @@ class DAGConfiguration:
     @logging_handler_factory.setter
     def logging_handler_factory(self, value):
         self._logging_handler_factory = value
+
+    def __setattr__(self, key, value):
+        # prevent non-existing parameters from being created
+        attr_name = key[1:] if key.startswith('_') else key
+        if attr_name not in self.__attrs:
+            raise AttributeError('"{}" is not a valid parameter, must be '
+                                 'one of: {}'.format(key, self.__attrs))
+        super().__setattr__(key, value)
