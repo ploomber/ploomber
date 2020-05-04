@@ -11,6 +11,7 @@ Contents
    guide_index
    api_summary
    modules_index
+   faq_index
    changelog
 
 ..
