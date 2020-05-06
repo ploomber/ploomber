@@ -59,6 +59,9 @@ class DAG(collections.abc.Mapping):
 
     Attributes
     ----------
+    name : str
+        A name to identify the DAG
+
     on_finish : callable
         Function to execute upon execution. Can request a "dag" parameter to
         receive the DAG object that registered it.

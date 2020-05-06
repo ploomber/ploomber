@@ -36,6 +36,21 @@ Features:
     * If the function is decorated with @with_env, replace env variables using
         --env__KEY VALUE
 
+
+ploomber.entry only works with the factory pattern (a function that returns
+a dag), but you can still start interactice sesssions if you have your own
+CLI logic (note we are calling the module directly instead of using ploomber.entry):
+
+    $ python -i -m module.sub_module.entry_point --some_arg
+
+
+In IPython:
+
+    $ ipython -i -m module.sub_module.entry_point -- --some_arg
+
+
+Note: you need to add "--" to prevent IPython from parsing your custom args
+
 """
 
 # TODO: print enviornment content on help and maybe on any other command

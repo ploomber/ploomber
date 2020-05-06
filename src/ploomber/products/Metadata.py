@@ -7,7 +7,7 @@ from datetime import datetime
 class AbstractMetadata(abc.ABC):
     """Abstract class to represent Product's metadata
 
-    If product does not exist, initialize empty metadata, othersiw use
+    If product does not exist, initialize empty metadata, otherwise use
     product.fetch_metadata, and accept it after doing some validations
     """
 

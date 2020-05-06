@@ -33,6 +33,7 @@ class Product(abc.ABC):
         self.metadata = Metadata(self)
 
     def _save_metadata(self, source_code):
+        # this is called by task in the exec_status setter
         self.metadata.update(source_code)
 
     @property
