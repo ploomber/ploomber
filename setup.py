@@ -60,7 +60,7 @@ MISC = [
 setup(
     name='ploomber',
     version=VERSION,
-    description='A Python framework to build data pipelines',
+    description='Build, modify, skip, repeat: Ploomber is a Python framework to efficiently develop data pipelines.',
     long_description='%s\n%s' % (
         re.compile('^.. start-badges.*^.. end-badges',
                    re.M | re.S).sub('', read('README.rst')),

@@ -1,4 +1,4 @@
-ploomber
+Ploomber
 ========
 
 .. image:: https://travis-ci.org/ploomber/ploomber.svg?branch=master
@@ -10,7 +10,7 @@ ploomber
 
 `Click here for documentation <https://ploomber.readthedocs.io/>`_. `Code on Github <https://github.com/ploomber/ploomber>`_.
 
-ploomber is an expressive workflow management library that provides incremental builds, testing and debugging tools to accelerate DS/ML pipeline development.
+At its core, Ploomber is a framework to efficiently develop data pipelines: once you declare a pipeline, you can build it with a single command, next time you build it, Ploomber will skip tasks whose source code has not changed, allowing you to quickly run experiments by skipping redundant long-running computations.
 
 Compatible with Python 3.5 and higher.
 
