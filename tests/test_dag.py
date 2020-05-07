@@ -91,6 +91,9 @@ def test_mapping_interface():
     assert list(dag.keys()) == [1, 2, 3]
     assert list(dag.values()) == [t1, t2, t3]
 
+    del dag[3]
+    assert list(dag) == [1, 2]
+
 
 @pytest.mark.parametrize('executor', _executors)
 def test_forced_build(executor, tmp_directory):

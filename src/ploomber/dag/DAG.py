@@ -551,6 +551,12 @@ class DAG(collections.abc.Mapping):
     def __getitem__(self, key):
         return self._G.nodes[key]['task']
 
+    def __delitem__(self, key):
+        # TODO: this implementation is correct but perhaps we should raise
+        # warning if the deleted task has downstream dependencies, render
+        # and build will no longer work
+        return self._G.remove_node(key)
+
     def __iter__(self):
         """Iterate task names in topological order
         """
