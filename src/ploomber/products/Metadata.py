@@ -101,7 +101,8 @@ class Metadata(AbstractMetadata):
         """
         self.data['timestamp'] = datetime.now().timestamp()
         self.data['stored_source_code'] = source_code
-        self._product.save_metadata(self.data)
+        data = self._product.pre_save_metadata(self.data)
+        self._product.save_metadata(data)
 
 
 class MetadataCollection(AbstractMetadata):

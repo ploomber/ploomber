@@ -1,11 +1,18 @@
 from datetime import datetime
 from pathlib import Path
 
+from ploomber import DAG
+from ploomber.tasks import SQLScript
 from ploomber.products import SQLiteRelation
 from ploomber.clients import SQLAlchemyClient
 
 import pandas as pd
 import numpy as np
+
+
+def add_number_one(metadata):
+    metadata['number'] = 1
+    return metadata
 
 
 def test_sqlite_product_exists(tmp_directory):
@@ -86,3 +93,22 @@ def test_sqlite_product_save_metadata(tmp_directory):
     fetched = numbers.fetch_metadata()
 
     assert fetched == metadata_new
+
+
+def test_add_metadata_fields(sqlite_client_and_tmp_dir):
+    client, _ = sqlite_client_and_tmp_dir
+    dag = DAG()
+    dag.clients[SQLScript] = client
+    dag.clients[SQLiteRelation] = client
+
+    query = 'CREATE TABLE {{product}} AS SELECT * FROM data'
+    product = SQLiteRelation(('a_table', 'table'))
+    product.pre_save_metadata = add_number_one
+
+    SQLScript(query, product, dag, name='t1')
+
+    dag.build()
+
+    metadata = product.fetch_metadata()
+
+    assert metadata['number'] == 1

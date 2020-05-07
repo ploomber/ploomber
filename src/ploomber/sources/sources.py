@@ -69,6 +69,10 @@ class Source(abc.ABC):
         self._post_init_validation(self.value)
 
     @property
+    def variables(self):
+        return self.value.variables
+
+    @property
     def needs_render(self):
         """
         Whether this source needs render (because it has {{}} placeholders

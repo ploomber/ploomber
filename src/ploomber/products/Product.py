@@ -12,6 +12,10 @@ from math import ceil
 from ploomber.products.Metadata import Metadata
 
 
+def _pre_save_metadata(metadata):
+    return metadata
+
+
 class Product(abc.ABC):
     """
     Abstract class for all Products
@@ -31,6 +35,8 @@ class Product(abc.ABC):
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
         self.metadata = Metadata(self)
+
+        self.pre_save_metadata = _pre_save_metadata
 
     def _save_metadata(self, source_code):
         # this is called by task in the exec_status setter

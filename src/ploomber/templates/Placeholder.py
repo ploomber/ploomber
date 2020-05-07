@@ -79,7 +79,7 @@ class Placeholder:
                             .format(type(self).__name__,
                                     type(source).__name__))
 
-        self.declared = self._get_declared()
+        self._variables = util.get_tags_in_str(self.raw)
 
         self.needs_render = self._needs_render()
 
@@ -105,6 +105,12 @@ class Placeholder:
                                 .format(type(loader).__name__))
         else:
             self.loader_init = None
+
+    @property
+    def variables(self):
+        """Returns declared variables in the template
+        """
+        return self._variables
 
     @property
     def value(self):
@@ -172,9 +178,6 @@ class Placeholder:
     def __repr__(self):
         return '{}("{}")'.format(type(self).__name__, self.safe)
 
-    def _get_declared(self):
-        return util.get_tags_in_str(self.raw)
-
     def render(self, params, optional=None):
         """
         """
@@ -183,8 +186,8 @@ class Placeholder:
 
         passed = set(params.keys())
 
-        missing = self.declared - passed
-        extra = passed - self.declared - optional
+        missing = self.variables - passed
+        extra = passed - self.variables - optional
 
         if missing:
             raise RenderError('in {}, missing required '
@@ -194,7 +197,7 @@ class Placeholder:
         if extra:
             raise RenderError('in {}, unused parameters: {}, params '
                               'declared: {}'
-                              .format(repr(self), extra, self.declared))
+                              .format(repr(self), extra, self.variables))
 
         try:
             self._value = self.template.render(**params)

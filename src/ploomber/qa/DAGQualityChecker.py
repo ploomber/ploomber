@@ -27,7 +27,7 @@ def diagnose(source):
 
     # [WIP] function to validate docstrings in sources that
     # have placeholders
-    found = source.value.declared
+    found = source.value.variables
     docstring_np = NumpyDocString(source.value.docstring())
     documented = set([p[0] for p in docstring_np['Parameters']])
 
