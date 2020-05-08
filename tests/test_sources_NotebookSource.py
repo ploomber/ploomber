@@ -1,5 +1,9 @@
+from pathlib import Path
 import pytest
 
+import nbformat
+
+from ploomber.tasks.Params import Params
 from ploomber.sources.NotebookSource import check_notebook_source, _load_nb
 from ploomber.sources.NotebookSource import NotebookSource
 from ploomber.products import File
@@ -88,23 +92,31 @@ def test_warns_if_no_parameters_tagged_cell():
 
 
 def test_tmp_file_is_deleted():
-    pass
-
-
-def test_parameters_are_added_on_render():
-    pass
-
-
-def test_render():
     s = NotebookSource("""
     x = 1
     """, ext_in='py', kernelspec_name='python3')
-    from ploomber.tasks.Params import Params
+
+    s.render(Params({'product': File('output.ipynb')}))
+    loc = s.loc_rendered
+
+    assert Path(loc).exists()
+    del s
+    assert not Path(loc).exists()
+
+
+def test_injects_parameters_on_render():
+    s = NotebookSource("""
+    x = 1
+    """, ext_in='py', kernelspec_name='python3')
     s.render(Params({'some_param': 1, 'product': File('output.ipynb')}))
 
-    # s.path
+    format_ = nbformat.versions[nbformat.current_nbformat]
+    nb = format_.reads(Path(s.loc_rendered).read_text())
 
-    # s.path
+    tags = nb.cells[0]['metadata']['tags']
 
+    assert len(tags) == 1
+    assert tags[0] == 'injected-parameters'
 
-# TODO: test different jupytext formats
+    expected = '# Parameters\nsome_param = 1\nproduct = "output.ipynb"\n'
+    assert nb.cells[0]['source'] == expected
