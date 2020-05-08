@@ -3,7 +3,7 @@ from pathlib import Path
 from io import StringIO
 import warnings
 
-from ploomber.exceptions import SourceInitializationError
+from ploomber.exceptions import SourceInitializationError, RenderError
 from ploomber.templates.Placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources.sources import Source
@@ -76,6 +76,8 @@ class NotebookSource(Source):
         self._loc_rendered = tmp_out
         Path(tmp_in).unlink()
 
+        self._post_render_validate(params)
+
     def _get_parameters(self):
         """
         Returns a dictionary with the declared parameters (variables in a cell
@@ -129,17 +131,14 @@ class NotebookSource(Source):
         # compile cannot?
         pass
 
-    def _post_render_validate(self):
+    def _post_render_validate(self, params):
         """
         Validate params passed against parameters in the notebook
         """
-        # TODO: run check_notebook_source here
-        # use papermill.execution_notebook in prepare_only mode
-        # and replace the source, this way the user will be able
-        # to see the source code with injected parameters,
-        # then the cask just calls execute_notebook in the already-prepared
-        # notebook
-        pass
+        import nbformat
+        nb_rendered = nbformat.reads(self._get_nb_repr(),
+                                     nbformat.current_nbformat)
+        check_notebook(nb_rendered, params)
 
     @property
     def doc(self):
@@ -165,7 +164,7 @@ class NotebookSource(Source):
             Path(self._loc_rendered).unlink()
 
 
-def check_notebook_source(nb_source, params, filename='notebook'):
+def check_notebook(nb, params, filename='notebook'):
     """
     Perform static analysis on a Jupyter notebook source raises
     an exception if validation fails
@@ -182,14 +181,7 @@ def check_notebook_source(nb_source, params, filename='notebook'):
     filename : str
         Filename to identify pyflakes warnings and errors
     """
-    import jupytext
-
-    # parse the JSON string and convert it to a notebook object using jupytext
-    nb = jupytext.reads(nb_source, fmt='py')
-
-    # add a new cell just below the cell tagged with "parameters"
-    # this emulates the notebook that papermill will run
-    nb, params_cell = add_passed_parameters(nb, params)
+    params_cell = _get_parameters_cell(nb)
 
     # run pyflakes and collect errors
     res = check_source(nb, filename=filename)
@@ -212,7 +204,7 @@ def check_notebook_source(nb_source, params, filename='notebook'):
 
     # if any errors were returned, raise an exception
     if error_message != '\n':
-        raise ValueError(error_message)
+        raise RenderError(error_message)
 
     return True
 
@@ -273,61 +265,19 @@ def check_source(nb, filename):
             'errors': '\n'.join(err.readlines())}
 
 
-def add_passed_parameters(nb, params):
-    """
-    Insert a cell just below the one tagged with "parameters"
-
-    Notes
-    -----
-    Insert a code cell with params, to simulate the notebook papermill
-    will run. This is a simple implementation, for the actual one see:
-    https://github.com/nteract/papermill/blob/master/papermill/parameterize.py
-    """
-    # find "parameters" cell
-    idx, params_cell = _get_parameters_cell(nb)
-
-    # convert the parameters passed to valid python code
-    # e.g {'a': 1, 'b': 'hi'} to:
-    # a = 1
-    # b = 'hi'
-    params_as_code = '\n'.join([_parse_token(k, v) for k, v in params.items()])
-
-    # insert the cell with the passed parameters
-    nb.cells.insert(idx + 1, {'cell_type': 'code', 'metadata': {},
-                              'execution_count': None,
-                              'source': params_as_code,
-                              'outputs': []})
-    return nb, params_cell
-
-
-# TODO: integrate in the other function
 def _get_parameters_cell(nb):
     """
     Iterate over cells, return the index and cell content
     for the first cell tagged "parameters", if not cell
     is found raise a ValueError
     """
-    for i, c in enumerate(nb.cells):
+    for c in nb.cells:
         cell_tags = c.metadata.get('tags')
         if cell_tags:
             if 'parameters' in cell_tags:
-                return i, c
+                return c
 
-    raise ValueError('Notebook does not have a cell tagged "parameters"')
-
-
-# TODO: delete
-def _parse_token(k, v):
-    """
-    Convert parameters to their Python code representation
-
-    Notes
-    -----
-    This is a very simple way of doing it, for a more complete implementation,
-    check out papermill's source code:
-    https://github.com/nteract/papermill/blob/master/papermill/translators.py
-    """
-    return '{} = {}'.format(k, repr(v))
+    raise RenderError('Notebook does not have a cell tagged "parameters"')
 
 
 def _load_nb(source, extension, kernelspec_name=None):
@@ -346,25 +296,11 @@ def _load_nb(source, extension, kernelspec_name=None):
     # NOTE: how is this different to just doing fmt='.py'
     nb = jupytext.reads(source, fmt={'extension': '.'+extension})
 
-    has_parameters_tag = False
-
-    for c in nb.cells:
-        cell_tags = c.metadata.get('tags')
-
-        if cell_tags:
-            if 'parameters' in cell_tags:
-                has_parameters_tag = True
-                break
-
-    if not has_parameters_tag:
-        warnings.warn('Notebook does not have any cell with tag "parameters"'
-                      'which is required by papermill')
-
     if nb.metadata.get('kernelspec') is None and kernelspec_name is None:
-        raise ValueError('juptext could not load kernelspec from file and '
-                         'kernelspec_name was not specified, either add '
-                         'kernelspec info to your source file or specify '
-                         'a kernelspec by name')
+        raise RenderError('juptext could not load kernelspec from file and '
+                          'kernelspec_name was not specified, either add '
+                          'kernelspec info to your source file or specify '
+                          'a kernelspec by name')
 
     if kernelspec_name is not None:
         k = jupyter_client.kernelspec.get_kernel_spec(kernelspec_name)
