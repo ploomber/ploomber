@@ -171,8 +171,9 @@ some_param = 2
     assert len(tags) == 1
     assert tags[0] == 'injected-parameters'
 
-    expected = '# Parameters\nsome_param = 1\nproduct = "output.ipynb"\n'
-    assert injected['source'] == expected
+    # py 3.5 does not gurantee order, so we check them separately
+    assert 'some_param = 1' in injected['source']
+    assert 'product = "output.ipynb"' in injected['source']
 
 
 def test_cleanup_rendered_notebook():
