@@ -5,6 +5,14 @@ from ploomber.tasks import ShellScript
 from ploomber.products import File, MetaProduct
 
 
+def test_get():
+    a = File('1.txt')
+    m = MetaProduct({'a': a})
+
+    assert m.get('a') is a
+    assert m.get('b') is None
+
+
 def test_can_iterate_over_products():
     p1 = File('1.txt')
     p2 = File('2.txt')

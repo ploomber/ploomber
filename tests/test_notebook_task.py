@@ -80,6 +80,25 @@ Path(product['model']).touch()
     dag.build()
 
 
+def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory):
+    dag = DAG()
+
+    product = {'some_notebook': File(Path(tmp_directory, 'out.ipynb')),
+               'model': File(Path(tmp_directory, 'model.pkl'))}
+
+    with pytest.raises(KeyError) as excinfo:
+        NotebookRunner('',
+                       product=product,
+                       dag=dag,
+                       kernelspec_name='python3',
+                       params={'var': 1},
+                       ext_in='py',
+                       nb_product_key='nb',
+                       name='nb')
+
+    assert 'Key "nb" does not exist in product' in str(excinfo.value)
+
+
 def test_failing_notebook_saves_partial_result(tmp_directory):
     dag = DAG()
 
