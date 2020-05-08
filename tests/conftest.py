@@ -80,7 +80,8 @@ def tmp_example_pipeline_directory():
     """
     old = os.getcwd()
     path = _path_to_tests() / '..' / 'examples' / 'pipeline'
-    tmp = Path(tempfile.mkdtemp()) / 'content'
+    tmp_dir = tempfile.mkdtemp()
+    tmp = Path(tmp_dir,  'content')
 
     # we have to add extra folder content/, otherwise copytree complains
     shutil.copytree(str(path), str(tmp))
@@ -89,6 +90,26 @@ def tmp_example_pipeline_directory():
     yield tmp
 
     os.chdir(old)
+    shutil.rmtree(tmp_dir)
+
+
+@pytest.fixture()
+def tmp_recipes_directory():
+    """Move to examples/pipeline/
+    """
+    old = os.getcwd()
+    path = _path_to_tests() / '..' / 'recipes'
+    tmp_dir = tempfile.mkdtemp()
+    tmp = Path(tmp_dir,  'content')
+
+    # we have to add extra folder content/, otherwise copytree complains
+    shutil.copytree(str(path), str(tmp))
+    os.chdir(str(tmp))
+
+    yield tmp
+
+    os.chdir(old)
+    shutil.rmtree(tmp_dir)
 
 
 @pytest.fixture()
@@ -97,7 +118,8 @@ def tmp_examples_directory():
     """
     old = os.getcwd()
     path = _path_to_tests() / '..' / 'examples'
-    tmp = Path(tempfile.mkdtemp()) / 'content'
+    tmp_dir = tempfile.mkdtemp()
+    tmp = Path(tmp_dir, 'content')
 
     # we have to add extra folder content/, otherwise copytree complains
     shutil.copytree(str(path), str(tmp))
@@ -106,6 +128,7 @@ def tmp_examples_directory():
     yield tmp
 
     os.chdir(old)
+    shutil.rmtree(tmp_dir)
 
 
 @pytest.fixture()

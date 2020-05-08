@@ -178,3 +178,7 @@ def test_can_transfer_sqlite(tmp_directory):
 
     # make sure they are the same
     assert original.equals(transfer)
+
+
+def test_dump_difference():
+    pass

@@ -38,6 +38,7 @@ class File(Product):
         return Path(str(self._path_to_file) + '.source')
 
     def fetch_metadata(self):
+        empty = dict(timestamp=None, stored_source_code=None)
         # but we have no control over the stored code, it might be missing
         # so we check, we also require the file to exists: even if the
         # .source file exists, missing the actual data file means something
@@ -54,16 +55,15 @@ class File(Product):
                 timestamp = self._path_to_stored_source_code.stat().st_mtime
 
                 warnings.warn('Migrating metadata to new format...')
-                self.save_metadata(dict(timestamp=timestamp,
-                                        stored_source_code=stored_source_code))
+                loaded = dict(timestamp=timestamp,
+                              stored_source_code=stored_source_code)
+                self.save_metadata(loaded)
+                return loaded
             else:
-                stored_source_code = parsed['stored_source_code']
-                timestamp = parsed['timestamp']
+                # TODO: validate 'stored_source_code', 'timestamp' exist
+                return parsed
         else:
-            stored_source_code = None
-            timestamp = None
-
-        return dict(timestamp=timestamp, stored_source_code=stored_source_code)
+            return empty
 
     def save_metadata(self, metadata):
         (self._path_to_stored_source_code

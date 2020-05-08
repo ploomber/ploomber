@@ -2,6 +2,7 @@ import logging
 import warnings
 import abc
 from datetime import datetime
+from ploomber.util.util import callback_check
 
 
 class AbstractMetadata(abc.ABC):
@@ -101,8 +102,17 @@ class Metadata(AbstractMetadata):
         """
         self.data['timestamp'] = datetime.now().timestamp()
         self.data['stored_source_code'] = source_code
-        data = self._product.pre_save_metadata(self.data)
+
+        kwargs = callback_check(self._product.pre_save_metadata,
+                                available={'metadata': self.data,
+                                           'product': self._product})
+
+        data = self._product.pre_save_metadata(**kwargs)
+
         self._product.save_metadata(data)
+
+    def __getitem__(self, key):
+        return self._data[key]
 
 
 class MetadataCollection(AbstractMetadata):
@@ -148,11 +158,14 @@ class MetadataCollection(AbstractMetadata):
         for p in self._products:
             p.metadata.update(source_code)
 
+    # TODO: add getitem
+
 
 class MetadataAlwaysUpToDate(AbstractMetadata):
     """
     Metadata for Link tasks (always up-to-date)
     """
+
     def __init__(self):
         pass
 
@@ -169,3 +182,5 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
 
     def update(self, source_code):
         pass
+
+    # TODO: add getitem
