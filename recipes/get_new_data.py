@@ -23,23 +23,28 @@ def add_last_value(metadata, product):
     """
     df = pd.read_csv(str(product))
 
+    # data has not been changed (the query triggered downloading 0 rows),
+    # do not alter metadata
     if not df.shape[0]:
         return metadata
 
+    # got some data...
+
     new_max = int(df.x.max())
 
+    # there is no last_value in metadata, this is the first time we run this,
+    # just save the new value
     if 'last_value' not in metadata:
         metadata['last_value'] = new_max
         return metadata
-
+    # we have a previously saved value, verify it's bigger than the one we saw
+    # last time...
     if new_max > metadata['last_value']:
         metadata['last_value'] = new_max
-    elif new_max == metadata['last_value']:
-        pass
-    else:
-        raise ValueError('data was deleted')
+        return metadata
 
-    return metadata
+    # NOTE: the other scenarios should not happen, our query
+    # has a strict inequality
 
 
 def _plus_one(product, upstream):
