@@ -110,7 +110,7 @@ class NotebookRunner(Task):
     def __init__(self, source, product, dag, name=None, params=None,
                  papermill_params=None, kernelspec_name=None,
                  nbconvert_exporter_name=None, ext_in=None,
-                 nb_product_key=None, static_analysis=False):
+                 nb_product_key='nb', static_analysis=False):
         self.papermill_params = papermill_params or {}
         self.kernelspec_name = kernelspec_name
         self.nbconvert_exporter_name = nbconvert_exporter_name
@@ -119,11 +119,13 @@ class NotebookRunner(Task):
         self.static_analysis = static_analysis
         super().__init__(source, product, dag, name, params)
 
-        if isinstance(self.product, MetaProduct) and nb_product_key is None:
-            raise KeyError('More than one product was passed but '
-                           'nb_product_key '
-                           'is None, pass a value to locate the notebook '
-                           'save location')
+        if isinstance(self.product, MetaProduct):
+            if self.product.get(nb_product_key) is None:
+                raise KeyError('Key "{}" does not exist in product: {}. '
+                               'nb_product_key should be an existing '
+                               'key to know where to save the output '
+                               'notebook'.format(nb_product_key,
+                                                 str(self.product)))
 
     def _init_source(self, source):
         return NotebookSource(source,

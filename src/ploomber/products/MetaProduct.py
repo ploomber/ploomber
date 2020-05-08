@@ -8,7 +8,7 @@ class ProductsContainer:
     An iterator that when initialized with a sequence behaves just like it
     but when initialized with a mapping, iterates over values (instead of
     keys), this non-standard behavior but it is needed to simpplify the
-    MetaProduct API
+    MetaProduct API since it has to work with lists and dictionaries
     """
 
     def __init__(self, products):
@@ -142,6 +142,12 @@ class MetaProduct:
 
     def __getitem__(self, key):
         return self.products[key]
+
+    def get(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            return None
 
     def __len__(self):
         return len(self.products)
