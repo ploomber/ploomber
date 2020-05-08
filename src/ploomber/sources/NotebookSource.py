@@ -13,17 +13,20 @@ class NotebookSource(Source):
     """
     A source object representing a jupyter notebook (or any format supported
     by jupytext)
+
     """
 
     @requires(['parso', 'pyflakes', 'jupytext', 'nbformat', 'papermill',
                'jupyter_client'])
-    def __init__(self, value, ext_in=None, kernelspec_name=None):
+    def __init__(self, value, ext_in=None, kernelspec_name=None,
+                 static_analysis=False):
         # any non-py file must first be converted using jupytext, we need
         # that representation for validation, if input is already a .py file
         # do not convert. If passed a string, try to guess format using
         # jupytext. We also need ipynb representation for .develop(),
         # but do lazy loading in case we don't need both
         self.placeholder = Placeholder(value)
+        self.static_analysis = static_analysis
         self._kernelspec_name = kernelspec_name
 
         if self.placeholder.needs_render:
@@ -87,7 +90,8 @@ class NotebookSource(Source):
 
     def _get_python_repr(self):
         """
-        Returns the Python representation for this notebook
+        Returns the Python representation for this notebook, this is the
+        raw source code passed, does not contain injected parameters
         """
         import jupytext
         import nbformat
@@ -103,7 +107,12 @@ class NotebookSource(Source):
         return self._python_repr
 
     def _get_nb_repr(self):
-        """Returns the notebook representation
+        """
+        Returns the notebook representation (JSON string), this is the raw
+        source code passed, does not contain injected parameters.
+
+        Adds kernelspec info if not present based on the kernelspec_name,
+        this metadata is required for papermill to know which kernel to use
         """
         import nbformat
 
@@ -111,8 +120,8 @@ class NotebookSource(Source):
             if self._ext_in == 'ipynb':
                 self._nb_repr = self.value
             else:
-                nb = _load_nb(self.value, extension='py',
-                              kernelspec_name=self._kernelspec_name)
+                nb = _to_nb_obj(self.value, extension='py',
+                                kernelspec_name=self._kernelspec_name)
                 writer = (nbformat
                           .versions[nbformat.current_nbformat]
                           .nbjson.JSONWriter())
@@ -135,10 +144,15 @@ class NotebookSource(Source):
         """
         Validate params passed against parameters in the notebook
         """
-        import nbformat
-        nb_rendered = nbformat.reads(self._get_nb_repr(),
-                                     nbformat.current_nbformat)
-        check_notebook(nb_rendered, params)
+        if self.static_analysis:
+            import nbformat
+            # read the notebook with the injected parameters from the tmp
+            # location
+            nb_rendered = (nbformat
+                           .reads(Path(self._loc_rendered).read_text(),
+                                  nbformat.current_nbformat))
+            check_notebook(nb_rendered, params,
+                           filename=self.placeholder.path or 'notebook')
 
     @property
     def doc(self):
@@ -164,10 +178,9 @@ class NotebookSource(Source):
             Path(self._loc_rendered).unlink()
 
 
-def check_notebook(nb, params, filename='notebook'):
+def check_notebook(nb, params, filename):
     """
-    Perform static analysis on a Jupyter notebook source raises
-    an exception if validation fails
+    Perform static analysis on a Jupyter notebook code cell sources
 
     Parameters
     ----------
@@ -180,12 +193,33 @@ def check_notebook(nb, params, filename='notebook'):
 
     filename : str
         Filename to identify pyflakes warnings and errors
+
+    Raises
+    ------
+    RenderError
+        If the notebook does not have a cell with the tag 'parameters',
+        if the parameters in the notebook do not match the passed params or
+        if pyflakes validation fails
     """
-    params_cell = _get_parameters_cell(nb)
+    # variable to collect all error messages
+    error_message = '\n'
+
+    params_cell, _ = _find_cell_with_tag(nb, 'parameters')
+
+    if params_cell is None:
+        error_message += ('Notebook does not have a cell tagged '
+                          '"parameters"')
+    else:
+        # compare passed parameters with declared
+        # parameters. This will make our notebook behave more
+        # like a "function", if any parameter is passed but not
+        # declared, this will return an error message, if any parameter
+        # is declared but not passed, a warning is shown
+        res_params = compare_params(params_cell['source'], params)
+        error_message += res_params
 
     # run pyflakes and collect errors
     res = check_source(nb, filename=filename)
-    error_message = '\n'
 
     # pyflakes returns "warnings" and "errors", collect them separately
     if res['warnings']:
@@ -194,14 +228,6 @@ def check_notebook(nb, params, filename='notebook'):
     if res['errors']:
         error_message += 'pyflakes errors:\n' + res['errors']
 
-    # compare passed parameters with declared
-    # parameters. This will make our notebook behave more
-    # like a "function", if any parameter is passed but not
-    # declared, this will return an error message, if any parameter
-    # is declared but not passed, a warning is shown
-    res_params = check_params(params_cell['source'], params)
-    error_message += res_params
-
     # if any errors were returned, raise an exception
     if error_message != '\n':
         raise RenderError(error_message)
@@ -209,11 +235,12 @@ def check_notebook(nb, params, filename='notebook'):
     return True
 
 
-def check_params(params_source, params):
+def compare_params(params_source, params):
     """
     Compare the parameters cell's source with the passed parameters, warn
     on missing parameter and raise error if an extra parameter was passed.
     """
+    # FIXME: we don't really need parso, we can just use the ast module
     import parso
 
     # params are keys in "params" dictionary
@@ -265,23 +292,10 @@ def check_source(nb, filename):
             'errors': '\n'.join(err.readlines())}
 
 
-def _get_parameters_cell(nb):
+def _to_nb_obj(source, extension, kernelspec_name=None):
     """
-    Iterate over cells, return the index and cell content
-    for the first cell tagged "parameters", if not cell
-    is found raise a ValueError
-    """
-    for c in nb.cells:
-        cell_tags = c.metadata.get('tags')
-        if cell_tags:
-            if 'parameters' in cell_tags:
-                return c
-
-    raise RenderError('Notebook does not have a cell tagged "parameters"')
-
-
-def _load_nb(source, extension, kernelspec_name=None):
-    """Convert to jupyter notebook via jupytext
+    Convert to jupyter notebook via jupytext, adding kernelspec details if
+    missing
 
     Parameters
     ----------
@@ -290,6 +304,11 @@ def _load_nb(source, extension, kernelspec_name=None):
 
     extension : str
         Document format
+
+    Returns
+    -------
+    nb
+        Notebook object
     """
     import jupytext
     import jupyter_client
@@ -312,3 +331,29 @@ def _load_nb(source, extension, kernelspec_name=None):
         }
 
     return nb
+
+
+def _cleanup_rendered_nb(nb):
+    cell, i = _find_cell_with_tag(nb, 'injected-parameters')
+
+    if i is not None:
+        print('Removing injected-parameters cell...')
+        nb.cells.pop(i)
+
+    cell, i = _find_cell_with_tag(nb, 'debugging-settings')
+
+    if i is not None:
+        print('Removing debugging-settings cell...')
+        nb.cells.pop(i)
+
+    return nb
+
+
+def _find_cell_with_tag(nb, tag):
+    for i, c in enumerate(nb.cells):
+        cell_tags = c.metadata.get('tags')
+        if cell_tags:
+            if tag in cell_tags:
+                return c, i
+
+    return None, None

@@ -1,11 +1,9 @@
 from pathlib import Path
 import pytest
 
-import jupytext
 import nbformat
 
 from ploomber.tasks.Params import Params
-from ploomber.sources.NotebookSource import check_notebook, _get_parameters_cell
 from ploomber.sources.NotebookSource import NotebookSource
 from ploomber.products import File
 from ploomber.exceptions import RenderError
@@ -15,35 +13,49 @@ notebook_ab = """
 # + tags=['parameters']
 a = 1
 b = 2
+product = None
 
 # +
 a + b
 """
 
-notebook_ab = jupytext.reads(notebook_ab, fmt='py')
-
 
 def test_error_if_parameters_cell_doesnt_exist():
     notebook_no_parameters_tag = """
-    a + b
+x = 1
     """
 
-    nb = jupytext.reads(notebook_no_parameters_tag, fmt='py')
+    source = NotebookSource(notebook_no_parameters_tag,
+                            ext_in='py',
+                            kernelspec_name='python3',
+                            static_analysis=True)
 
     with pytest.raises(RenderError) as excinfo:
-        check_notebook(nb, {'a': 1, 'b': 2})
+        source.render(Params({'product': File('output.ipynb')}))
 
-    assert ('Notebook does not have a cell tagged "parameters"'
+    assert ('\nNotebook does not have a cell tagged "parameters"'
             == str(excinfo.value))
 
+# add test on missing kernelspec_name
 
-def test_returns_true_if_parameters_match():
-    assert check_notebook(notebook_ab, {'a': 1, 'b': 2})
+
+def test_sucess_if_parameters_match():
+    source = NotebookSource(notebook_ab,
+                            ext_in='py',
+                            kernelspec_name='python3',
+                            static_analysis=True)
+
+    source.render(Params({'product': File('output.ipynb'), 'a': 1, 'b': 2}))
 
 
 def test_warn_if_using_default_value():
+    source = NotebookSource(notebook_ab,
+                            ext_in='py',
+                            kernelspec_name='python3',
+                            static_analysis=True)
+
     with pytest.warns(UserWarning) as record:
-        check_notebook(notebook_ab, {'a': 1})
+        source.render(Params({'product': File('output.ipynb'), 'a': 1}))
 
     assert len(record) == 1
     assert (str(record[0].message)
@@ -51,8 +63,14 @@ def test_warn_if_using_default_value():
 
 
 def test_error_if_passing_undeclared_parameter():
+    source = NotebookSource(notebook_ab,
+                            ext_in='py',
+                            kernelspec_name='python3',
+                            static_analysis=True)
+
     with pytest.raises(RenderError) as excinfo:
-        check_notebook(notebook_ab, {'a': 1, 'b': 2, 'c': 3})
+        source.render(Params({'product': File('output.ipynb'), 'a': 1,
+                              'b': 2, 'c': 3}))
 
     assert str(excinfo.value) == "\nPassed non-declared parameters: {'c'}"
 
@@ -67,11 +85,14 @@ b = 2
 # variable "c" is used but never declared!
 a + b + c
 """
-
-    notebook_w_warning = jupytext.reads(notebook_w_warning, fmt='py')
+    source = NotebookSource(notebook_w_warning,
+                            ext_in='py',
+                            kernelspec_name='python3',
+                            static_analysis=True)
 
     with pytest.raises(RenderError) as excinfo:
-        check_notebook(notebook_w_warning, {'a': 1, 'b': 2})
+        source.render(Params({'product': File('output.ipynb'),
+                              'a': 1, 'b': 2}))
 
     assert "undefined name 'c'" in str(excinfo.value)
 
@@ -85,11 +106,14 @@ b = 2
 # +
 if
 """
-
-    notebook_w_error = jupytext.reads(notebook_w_error, fmt='py')
+    source = NotebookSource(notebook_w_error,
+                            ext_in='py',
+                            kernelspec_name='python3',
+                            static_analysis=True)
 
     with pytest.raises(RenderError) as excinfo:
-        check_notebook(notebook_w_error, {'a': 1, 'b': 2})
+        source.render(Params({'product': File('output.ipynb'),
+                              'a': 1, 'b': 2}))
 
     assert 'invalid syntax' in str(excinfo.value)
 
@@ -99,12 +123,17 @@ def test_error_if_no_parameters_cell():
 1 + 1
     """
 
-    source = jupytext.reads(source, fmt='py')
+    source = NotebookSource(source,
+                            ext_in='py',
+                            kernelspec_name='python3',
+                            static_analysis=True)
 
     with pytest.raises(RenderError) as excinfo:
-        _get_parameters_cell(source)
+        source.render(Params({'product': File('output.ipynb'),
+                              'a': 1, 'b': 2}))
 
-    assert 'Notebook does not have a cell tagged "parameters"' in str(excinfo.value)
+    assert 'Notebook does not have a cell tagged "parameters"' in str(
+        excinfo.value)
 
 
 def test_tmp_file_is_deleted():
@@ -146,8 +175,13 @@ some_param = 2
     assert injected['source'] == expected
 
 
-# def test_error_if_missing_parameters_cell():
-#     s = NotebookSource("""
-#     x = 1
-#     """, ext_in='py', kernelspec_name='python3')
-#     s.render(Params({'some_param': 1, 'product': File('output.ipynb')}))
+def test_cleanup_rendered_notebook():
+    # simulate a rendered notebook (with injected parameters)
+    source = """
+1 + 1
+    """
+
+    source = NotebookSource(source,
+                            ext_in='py',
+                            kernelspec_name='python3')
+    source.render(Params({'product': File('output.ipynb')}))

@@ -24,6 +24,7 @@ except ImportError:
 
 from ploomber.exceptions import TaskBuildError
 from ploomber.sources import NotebookSource
+from ploomber.sources.NotebookSource import _to_nb_obj, _cleanup_rendered_nb
 from ploomber.products import File, MetaProduct
 from ploomber.tasks.Task import Task
 from ploomber.util import requires
@@ -95,6 +96,13 @@ class NotebookRunner(Task):
         to identify the output notebook (i.e. if product is a list with 3
         ploomber.File, pass the index pointing to the notebook path). If the
         only output is the notebook itself, this parameter is not needed
+    static_analysis : bool
+        Run static analysis after rendering.
+        This requires a cell with the tag 'parameters' to exist in the
+        notebook, such cell should have at least a "product = None" variable
+        declared. Passed and declared parameters are compared (they make
+        notebooks behave more like "functions"), pyflakes is also run to
+        detect errors before executing the notebook
     """
     PRODUCT_CLASSES_ALLOWED = (File, )
 
@@ -102,12 +110,13 @@ class NotebookRunner(Task):
     def __init__(self, source, product, dag, name=None, params=None,
                  papermill_params=None, kernelspec_name=None,
                  nbconvert_exporter_name=None, ext_in=None,
-                 nb_product_key=None):
+                 nb_product_key=None, static_analysis=False):
         self.papermill_params = papermill_params or {}
         self.kernelspec_name = kernelspec_name
         self.nbconvert_exporter_name = nbconvert_exporter_name
         self.ext_in = ext_in
         self.nb_product_key = nb_product_key
+        self.static_analysis = static_analysis
         super().__init__(source, product, dag, name, params)
 
         if isinstance(self.product, MetaProduct) and nb_product_key is None:
@@ -119,14 +128,68 @@ class NotebookRunner(Task):
     def _init_source(self, source):
         return NotebookSource(source,
                               ext_in=self.ext_in,
-                              kernelspec_name=self.kernelspec_name)
+                              kernelspec_name=self.kernelspec_name,
+                              static_analysis=self.static_analysis)
 
     def develop(self):
+        """
+        Opens the notebook (unmodified and in its original location)
+        """
         if self.source.loc is None:
             raise ValueError('Can only use develop in notebooks loaded '
                              'from files, not from str')
 
-        subprocess.call(['jupyter', 'notebook', self.source.loc])
+        try:
+            subprocess.call(['jupyter', 'notebook', self.source.loc])
+        except KeyboardInterrupt:
+            print('Jupyter notebook server closed...')
+
+    def debug(self):
+        """
+        Opens the rendered notebook (with a new cell that includes injected
+        parameters and in a temporary location) with debug settings turned on.
+        Changes to this notebook can be exported to the original notebook
+        (the injected parameters cell and cells that turn debugging on are
+        excluded).
+        """
+        if self.source.loc is None:
+            raise ValueError('Can only use develop in notebooks loaded '
+                             'from files, not from str')
+
+        # TODO: make a copy and insert debug cells
+
+        content = Path(self.source.loc_rendered).read_text()
+
+        try:
+            subprocess.call(['jupyter', 'notebook', self.source.loc_rendered])
+        except KeyboardInterrupt:
+            print('Jupyter notebook server closed...')
+
+        content_new = Path(self.source.loc_rendered).read_text()
+
+        if content == content_new:
+            print('No changes found...')
+        else:
+            save = input('Notebook changed, do you want to save changes '
+                         'in the original location? (injected parameters '
+                         'and debugging cells will be removed before '
+                         'saving). Enter "no" to skip saving changes, '
+                         'anything else will be interpreted as "yes": ')
+
+            if save != 'no':
+                # this is always papermill's output, hence a ipynb notebook
+                nb = _to_nb_obj(content_new, extension='ipynb')
+
+                # remove injected-parameters and debugging-settings cells if
+                # they exist
+                _cleanup_rendered_nb(nb)
+
+                # write back in the same format and original location
+                ext_source = Path(self.source.loc).suffix[1:]
+                print('Saving notebook to: ', self.source.loc)
+                jupytext.write(nb, self.source.loc, fmt=ext_source)
+            else:
+                print('Not saving changes...')
 
     def run(self):
         if isinstance(self.product, MetaProduct):
