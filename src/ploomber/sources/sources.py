@@ -36,6 +36,9 @@ from ploomber.sql import infer
 # this behabior for an after-render validation, and just pass the product
 # as parameter maybe from the Task? the task should not do this
 # FIXME: remove opt from Placeholder.render
+# FIXME: sources and placeholder should have the same API, placeholder
+# should only be a way to get fast implementations but it should not be
+# an parent class
 
 
 class Source(abc.ABC):

@@ -4,18 +4,8 @@ import pytest
 
 from ploomber import DAG
 from ploomber.tasks import NotebookRunner
-from ploomber.tasks.notebook import _to_ipynb
 from ploomber.products import File
 from ploomber.exceptions import DAGBuildError
-
-
-def test_warns_if_no_parameters_tagged_cell():
-    source = """
-1 + 1
-    """
-
-    with pytest.warns(UserWarning):
-        _to_ipynb(source, '.py', 'python3')
 
 
 def test_can_execute_from_ipynb(path_to_assets, tmp_directory):
@@ -112,3 +102,25 @@ def test_failing_notebook_saves_partial_result(tmp_directory):
 
     # but the file with ipynb extension exists to help debugging
     assert Path('out.ipynb').exists()
+
+
+# TODO: we are not testing output, we have to make sure params are inserted
+# correctly
+
+# def test_develop(tmp_directory):
+#     dag = DAG()
+
+#     code = """
+#     1 + 1
+#     """
+#     p = Path('some_notebook.py')
+
+#     p.write_text(code)
+
+#     t = NotebookRunner(p,
+#                        product=File(Path(tmp_directory, 'out.ipynb')),
+#                        dag=dag,
+#                        kernelspec_name='python3',
+#                        params={'var': 1},
+#                        name='nb')
+#     t.develop()

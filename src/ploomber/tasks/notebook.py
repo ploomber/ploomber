@@ -1,5 +1,4 @@
-import warnings
-from tempfile import mktemp
+import subprocess
 from pathlib import Path
 
 try:
@@ -22,66 +21,12 @@ try:
 except ImportError:
     nbconvert = None
 
-try:
-    import jupyter_client
-except ImportError:
-    jupyter_client = None
 
-
-from ploomber.exceptions import TaskBuildError, SourceInitializationError
-from ploomber.sources import GenericSource
+from ploomber.exceptions import TaskBuildError
+from ploomber.sources import NotebookSource
 from ploomber.products import File, MetaProduct
 from ploomber.tasks.Task import Task
 from ploomber.util import requires
-
-
-@requires(['jupytext'])
-def _to_ipynb(source, extension, kernelspec_name=None):
-    """Convert to jupyter notebook via jupytext
-
-    Parameters
-    ----------
-    source : str
-        Jupyter notebook (or jupytext compatible formatted) document
-
-    extension : str
-        Document format
-    """
-    nb = jupytext.reads(source, fmt={'extension': extension})
-
-    has_parameters_tag = False
-
-    for c in nb.cells:
-        cell_tags = c.metadata.get('tags')
-
-        if cell_tags:
-            if 'parameters' in cell_tags:
-                has_parameters_tag = True
-                break
-
-    if not has_parameters_tag:
-        warnings.warn('Notebook does not have any cell with tag "parameters"'
-                      'which is required by papermill')
-
-    if nb.metadata.get('kernelspec') is None and kernelspec_name is None:
-        raise ValueError('juptext could not load kernelspec from file and '
-                         'kernelspec_name was not specified, either add '
-                         'kernelspec info to your source file or specify '
-                         'a kernelspec by name')
-
-    if kernelspec_name is not None:
-        k = jupyter_client.kernelspec.get_kernel_spec(kernelspec_name)
-
-        nb.metadata.kernelspec = {
-            "display_name": k.display_name,
-            "language": k.language,
-            "name": kernelspec_name
-        }
-
-    out = mktemp('.ipynb')
-    Path(out).write_text(nbformat.v4.writes(nb))
-
-    return out
 
 
 def _from_ipynb(path_to_nb, extension, nbconvert_exporter_name):
@@ -172,14 +117,16 @@ class NotebookRunner(Task):
                            'save location')
 
     def _init_source(self, source):
-        source = GenericSource(source)
+        return NotebookSource(source,
+                              ext_in=self.ext_in,
+                              kernelspec_name=self.kernelspec_name)
 
-        if source.needs_render:
-            raise SourceInitializationError('The source for this task "{}"'
-                                            ' must be a literal '
-                                            .format(source.value.raw))
+    def develop(self):
+        if self.source.loc is None:
+            raise ValueError('Can only use develop in notebooks loaded '
+                             'from files, not from str')
 
-        return source
+        subprocess.call(['jupyter', 'notebook', self.source.loc])
 
     def run(self):
         if isinstance(self.product, MetaProduct):
@@ -187,42 +134,15 @@ class NotebookRunner(Task):
         else:
             path_to_out = Path(str(self.product))
 
-        source = str(self.source)
-
-        if self.source.loc is None:
-            if self.ext_in is None:
-                raise ValueError('If the source was loaded from a string '
-                                 'you need to pass the ext_in parameter')
-
-            ext_in = '.'+self.ext_in
-        else:
-            ext_in = Path(self.source.loc).suffix
-
         ext_out = path_to_out.suffix
         # we will run the notebook with this extension, regardless of the
         # user's choice, if any error happens, this will allow them to debug
         # we will change the extension after the notebook runs successfully
         path_to_out_nb = path_to_out.with_suffix('.ipynb')
 
-        # need to convert to ipynb using jupytext
-        if ext_in != '.ipynb':
-            path_to_in = _to_ipynb(source, ext_in, self.kernelspec_name)
-        else:
-            # otherwise just save rendered code in a tmp file
-            path_to_in = mktemp('.ipynb')
-            Path(path_to_in).write_text(source)
-
-        # papermill only allows JSON serializable parameters
-        params = self.params.to_dict()
-        params['product'] = params['product'].to_json_serializable()
-
-        if params.get('upstream'):
-            params['upstream'] = {k: n.to_json_serializable() for k, n
-                                  in params['upstream'].items()}
-
         try:
-            pm.execute_notebook(path_to_in, str(path_to_out_nb),
-                                parameters=params,
+            # no need to pass parameters, they are already there
+            pm.execute_notebook(self.source.loc_rendered, str(path_to_out_nb),
                                 **self.papermill_params)
         except Exception as e:
             raise TaskBuildError('An error ocurred when calling'

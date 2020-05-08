@@ -1,6 +1,9 @@
 import pytest
 
-from ploomber.sources.NotebookSource import check_notebook_source
+from ploomber.sources.NotebookSource import check_notebook_source, _load_nb
+from ploomber.sources.NotebookSource import NotebookSource
+from ploomber.products import File
+
 
 notebook_ab = """
 # + tags=['parameters']
@@ -73,3 +76,35 @@ if
         check_notebook_source(notebook_w_error, {'a': 1, 'b': 2})
 
     assert 'invalid syntax' in str(excinfo.value)
+
+
+def test_warns_if_no_parameters_tagged_cell():
+    source = """
+1 + 1
+    """
+
+    with pytest.warns(UserWarning):
+        _load_nb(source, 'py', 'python3')
+
+
+def test_tmp_file_is_deleted():
+    pass
+
+
+def test_parameters_are_added_on_render():
+    pass
+
+
+def test_render():
+    s = NotebookSource("""
+    x = 1
+    """, ext_in='py', kernelspec_name='python3')
+    from ploomber.tasks.Params import Params
+    s.render(Params({'some_param': 1, 'product': File('output.ipynb')}))
+
+    # s.path
+
+    # s.path
+
+
+# TODO: test different jupytext formats

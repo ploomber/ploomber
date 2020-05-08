@@ -26,6 +26,12 @@ class Placeholder:
     End users should not manipulate Placeholder objects, they should be
     automatically created from strings, pathlib.Path or jinja2.Template
     objects.
+
+    Attributes
+    ----------
+    path
+        The location of the raw object. None if initialized with a str or with
+        a jinja2.Template created from a str
     """
 
     def __init__(self, source):
@@ -147,13 +153,6 @@ class Placeholder:
 
     @property
     def path(self):
-        """The location of the raw object
-
-        Notes
-        -----
-        None if initialized with a str or with a jinja2.Template created
-        from a str
-        """
         return self._path
 
     def _needs_render(self):

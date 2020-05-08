@@ -1,25 +1,80 @@
+import tempfile
 from pathlib import Path
 from io import StringIO
 import warnings
 
+from ploomber.exceptions import SourceInitializationError
 from ploomber.templates.Placeholder import Placeholder
 from ploomber.util import requires
+from ploomber.sources.sources import Source
 
 
-class NotebookSource:
+class NotebookSource(Source):
     """
     A source object representing a jupyter notebook (or any format supported
     by jupytext)
     """
 
-    @requires(['parso', 'pyflakes', 'jupytext', 'NotebookSource'])
-    def __init__(self, value):
+    @requires(['parso', 'pyflakes', 'jupytext', 'nbformat', 'papermill',
+               'jupyter_client'])
+    def __init__(self, value, ext_in=None, kernelspec_name=None):
         # any non-py file must first be converted using jupytext, we need
         # that representation for validation, if input is already a .py file
         # do not convert. If passed a string, try to guess format using
-        # jupytext
-        self.value = Placeholder(value)
+        # jupytext. We also need ipynb representation for .develop(),
+        # but do lazy loading in case we don't need both
+        self.placeholder = Placeholder(value)
+        self._kernelspec_name = kernelspec_name
+
+        if self.placeholder.needs_render:
+            raise SourceInitializationError('The source for this task "{}"'
+                                            ' must be a literal '
+                                            .format(self.placeholder.value.raw))
+
+        # this should not have tags, hence we can convert it right now
+        self.value = str(self.placeholder)
+
+        # TODO: validate ext_in values and extensions
+
+        if self.placeholder.path is not None and ext_in is None:
+            self._ext_in = self.placeholder.path.suffix[1:]
+        elif self.placeholder.path is None and ext_in is None:
+            raise ValueError('ext_in cannot be None if notebook is '
+                             'initialized from a string')
+        elif self.placeholder.path is not None and ext_in is not None:
+            raise ValueError('ext_in must be None if notebook is '
+                             'initialized from a file')
+        elif self.placeholder.path is None and ext_in is not None:
+            self._ext_in = ext_in
+
         self._post_init_validation(self.value)
+
+        self._python_repr = None
+        self._nb_repr = None
+        self._loc = None
+        self._loc_rendered = None
+
+    def render(self, params):
+        """Render notebook (fill parameters using papermill)
+        """
+        import papermill as pm
+
+        # papermill only allows JSON serializable parameters
+        # convert Params object to dict
+        params = params.to_dict()
+        params['product'] = params['product'].to_json_serializable()
+
+        if params.get('upstream'):
+            params['upstream'] = {k: n.to_json_serializable() for k, n
+                                  in params['upstream'].items()}
+
+        tmp_in = tempfile.mktemp('.ipynb')
+        tmp_out = tempfile.mktemp('.ipynb')
+        Path(tmp_in).write_text(self._get_nb_repr())
+        pm.execute_notebook(tmp_in, tmp_out, prepare_only=True,
+                            parameters=params)
+        self._loc_rendered = tmp_out
+        Path(tmp_in).unlink()
 
     def _get_parameters(self):
         """
@@ -28,13 +83,42 @@ class NotebookSource:
         """
         pass
 
-    def _to_python(self):
+    def _get_python_repr(self):
         """
         Returns the Python representation for this notebook
         """
-        pass
+        import jupytext
+        import nbformat
 
-    def _post_init_validate():
+        if self._python_repr is None:
+            if self._ext_in == 'py':
+                self._python_repr = self.value
+            else:
+                # convert from ipynb to notebook
+                nb = nbformat.reads(self.value, nbformat.current_nbformat)
+                self._python_repr = jupytext.writes(nb, fmt='py')
+
+        return self._python_repr
+
+    def _get_nb_repr(self):
+        """Returns the notebook representation
+        """
+        import nbformat
+
+        if self._nb_repr is None:
+            if self._ext_in == 'ipynb':
+                self._nb_repr = self.value
+            else:
+                nb = _load_nb(self.value, extension='py',
+                              kernelspec_name=self._kernelspec_name)
+                writer = (nbformat
+                          .versions[nbformat.current_nbformat]
+                          .nbjson.JSONWriter())
+                self._nb_repr = writer.writes(nb)
+
+        return self._nb_repr
+
+    def _post_init_validation(self, value):
         """
         Validate notebook after initialization (run pyflakes to detect
         syntax errors)
@@ -61,26 +145,24 @@ class NotebookSource:
     def doc(self):
         return None
 
+    @property
+    def needs_render(self):
+        return True
 
-def to_python(value):
-    """
-    """
-    import jupytext
+    @property
+    def loc(self):
+        return self.placeholder.path
 
-    # TODO: this should also handle the case when value is a Placeholder,
-    # this happens when using sourceloader
-    if isinstance(value, str):
-        nb = jupytext.reads(value)
-        return jupytext.writes(nb, fmt='py')
+    @property
+    def loc_rendered(self):
+        if self._loc_rendered is None:
+            raise RuntimeError('Attempted to get location for an unrendered '
+                               'notebook, render it first')
+        return self._loc_rendered
 
-    # handle path
-    else:
-        # no need to convert
-        if Path(value).suffix == '.py':
-            return Path(value).read_text()
-
-        nb = jupytext.read(value)
-        return jupytext.writes(nb, fmt='py')
+    def __del__(self):
+        if self._loc_rendered is not None:
+            Path(self._loc_rendered).unlink()
 
 
 def check_notebook_source(nb_source, params, filename='notebook'):
@@ -218,6 +300,7 @@ def add_passed_parameters(nb, params):
     return nb, params_cell
 
 
+# TODO: integrate in the other function
 def _get_parameters_cell(nb):
     """
     Iterate over cells, return the index and cell content
@@ -233,6 +316,7 @@ def _get_parameters_cell(nb):
     raise ValueError('Notebook does not have a cell tagged "parameters"')
 
 
+# TODO: delete
 def _parse_token(k, v):
     """
     Convert parameters to their Python code representation
@@ -244,3 +328,51 @@ def _parse_token(k, v):
     https://github.com/nteract/papermill/blob/master/papermill/translators.py
     """
     return '{} = {}'.format(k, repr(v))
+
+
+def _load_nb(source, extension, kernelspec_name=None):
+    """Convert to jupyter notebook via jupytext
+
+    Parameters
+    ----------
+    source : str
+        Jupyter notebook (or jupytext compatible formatted) document
+
+    extension : str
+        Document format
+    """
+    import jupytext
+    import jupyter_client
+    # NOTE: how is this different to just doing fmt='.py'
+    nb = jupytext.reads(source, fmt={'extension': '.'+extension})
+
+    has_parameters_tag = False
+
+    for c in nb.cells:
+        cell_tags = c.metadata.get('tags')
+
+        if cell_tags:
+            if 'parameters' in cell_tags:
+                has_parameters_tag = True
+                break
+
+    if not has_parameters_tag:
+        warnings.warn('Notebook does not have any cell with tag "parameters"'
+                      'which is required by papermill')
+
+    if nb.metadata.get('kernelspec') is None and kernelspec_name is None:
+        raise ValueError('juptext could not load kernelspec from file and '
+                         'kernelspec_name was not specified, either add '
+                         'kernelspec info to your source file or specify '
+                         'a kernelspec by name')
+
+    if kernelspec_name is not None:
+        k = jupyter_client.kernelspec.get_kernel_spec(kernelspec_name)
+
+        nb.metadata.kernelspec = {
+            "display_name": k.display_name,
+            "language": k.language,
+            "name": kernelspec_name
+        }
+
+    return nb
