@@ -55,8 +55,8 @@ class SQLScript(Task):
     def run(self):
         return self.client.execute(str(self.source))
 
-    def _init_source(self, source):
-        return SQLScriptSource(source)
+    def _init_source(self, source, kwargs):
+        return SQLScriptSource(source, **kwargs)
 
 
 class SQLDump(Task):
@@ -114,8 +114,8 @@ class SQLDump(Task):
             raise ValueError('{} must be initialized with a client'
                              .format(type(self).__name__))
 
-    def _init_source(self, source):
-        return SQLQuerySource(source)
+    def _init_source(self, source, kwargs):
+        return SQLQuerySource(source, **kwargs)
 
     def run(self):
         source_code = str(self.source)
@@ -211,9 +211,9 @@ class SQLTransfer(Task):
 
         self.chunksize = chunksize
 
-    def _init_source(self, source):
+    def _init_source(self, source, kwargs):
         # TODO: this shoule be a FileSource
-        return SQLQuerySource(source)
+        return SQLQuerySource(source, **kwargs)
 
     def run(self):
         source_code = str(self.source)
@@ -292,8 +292,8 @@ class SQLUpload(Task):
         self.chunksize = chunksize
         self.io_handler = io_handler
 
-    def _init_source(self, source):
-        return FileSource(str(source))
+    def _init_source(self, source, kwargs):
+        return FileSource(str(source), **kwargs)
 
     def run(self):
         product = self.params['product']
@@ -361,8 +361,8 @@ class PostgresCopyFrom(Task):
         self.null = null
         self.columns = columns
 
-    def _init_source(self, source):
-        return FileSource(str(source))
+    def _init_source(self, source, kwargs):
+        return FileSource(str(source), **kwargs)
 
     def run(self):
         product = self.params['product']

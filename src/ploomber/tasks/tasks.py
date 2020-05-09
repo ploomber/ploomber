@@ -40,8 +40,8 @@ class PythonCallable(Task):
     def __init__(self, source, product, dag, name=None, params=None):
         super().__init__(source, product, dag, name, params)
 
-    def _init_source(self, source):
-        return PythonCallableSource(source)
+    def _init_source(self, source, kwargs):
+        return PythonCallableSource(source, **kwargs)
 
     def _validate_render(self):
         signature_check(self.source.value, self.params, self.name)
@@ -98,8 +98,8 @@ class ShellScript(Task):
         if self.client is None:
             self.client = ShellClient()
 
-    def _init_source(self, source):
-        source = GenericSource(source)
+    def _init_source(self, source, kwargs):
+        source = GenericSource(source, **kwargs)
 
         if not source.needs_render:
             raise SourceInitializationError('The source for this task '
@@ -134,8 +134,8 @@ class DownloadFromURL(Task):
         from urllib import request
         request.urlretrieve(str(self.source), filename=str(self.product))
 
-    def _init_source(self, source):
-        return GenericSource(str(source))
+    def _init_source(self, source, kwargs):
+        return GenericSource(str(source), **kwargs)
 
 
 # TODO: move this and _Gather to helpers.py (actually create a module
@@ -151,8 +151,8 @@ class _Partition(Task):
         # is this the best place to check?
         pass
 
-    def _init_source(self, source):
-        return GenericSource(str(source))
+    def _init_source(self, source, kwargs):
+        return GenericSource(str(source), **kwargs)
 
     def _null(self):
         pass
@@ -221,8 +221,8 @@ class Link(Task):
                                'already exist. "{}" task product "{}" does '
                                'not exist'.format(self.name, self.product))
 
-    def _init_source(self, source):
-        return GenericSource(str(source))
+    def _init_source(self, source, kwargs):
+        return GenericSource(str(source), **kwargs)
 
     def _null_save_metadata(self, metadata):
         pass
@@ -278,8 +278,8 @@ class Input(Task):
                                   'already exist. "{}" task product "{}" does '
                                   'not exist'.format(self.name, self.product))
 
-    def _init_source(self, source):
-        return GenericSource(str(source))
+    def _init_source(self, source, kwargs):
+        return GenericSource(str(source), **kwargs)
 
     def _null_save_metadata(self, metadata):
         pass

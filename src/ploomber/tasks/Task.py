@@ -119,12 +119,14 @@ class Task(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _init_source(self, source):
+    def _init_source(self, source, kwargs):
         pass
 
     def __init__(self, source, product, dag, name=None, params=None):
         self._params = Params(params)
-        self._source = self._init_source(source)
+
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = self._init_source(source, kwargs)
 
         if name is None:
             # works with pathlib.Path and ploomber.Placeholder

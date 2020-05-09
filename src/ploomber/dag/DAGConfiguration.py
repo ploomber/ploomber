@@ -10,7 +10,7 @@ class DAGConfiguration:
     DAGConfiguration() initializes a configuration object with default values.
     """
     __attrs = {'outdated_by_code', 'cache_rendered_status',
-               'logging_handler_factory', 'differ'}
+               'logging_handler_factory', 'differ', 'hot_reload'}
 
     @classmethod
     def from_dict(cls, d):
@@ -24,6 +24,7 @@ class DAGConfiguration:
     def __init__(self):
         self.outdated_by_code = True
         self.cache_rendered_status = False
+        self.hot_reload = False
         self.logging_handler_factory = _logging_handler_factory
         self.differ = CodeDiffer()
 
@@ -37,6 +38,17 @@ class DAGConfiguration:
             raise ValueError('outdated_by_code must be True or False')
 
         self._outdated_by_code = value
+
+    @property
+    def hot_reload(self):
+        return self._hot_reload
+
+    @hot_reload.setter
+    def hot_reload(self, value):
+        if value not in {True, False}:
+            raise ValueError('hot_reload must be True or False')
+
+        self._hot_reload = value
 
     @property
     def cache_rendered_status(self):

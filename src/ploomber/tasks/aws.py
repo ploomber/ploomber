@@ -46,5 +46,5 @@ class UploadToS3(Task):
         except ClientError as e:
             logging.error(e)
 
-    def _init_source(self, source):
-        return FileSource(source)
+    def _init_source(self, source, kwargs):
+        return FileSource(source, **kwargs)

@@ -51,9 +51,6 @@ class NotebookSource(Source):
                                             ' must be a literal '
                                             .format(self.placeholder.value.raw))
 
-        # this should not have tags, hence we can convert it right now
-        self.value = str(self.placeholder)
-
         # TODO: validate ext_in values and extensions
 
         if self.placeholder.path is None and hot_reload:
@@ -77,6 +74,10 @@ class NotebookSource(Source):
         self._nb_repr = None
         self._loc = None
         self._loc_rendered = None
+
+    @property
+    def value(self):
+        return self.placeholder.raw
 
     def render(self, params):
         """Render notebook (fill parameters using papermill)

@@ -130,11 +130,12 @@ class NotebookRunner(Task):
                                'notebook'.format(nb_product_key,
                                                  str(self.product)))
 
-    def _init_source(self, source):
+    def _init_source(self, source, kwargs):
         return NotebookSource(source,
                               ext_in=self.ext_in,
                               kernelspec_name=self.kernelspec_name,
-                              static_analysis=self.static_analysis)
+                              static_analysis=self.static_analysis,
+                              **kwargs)
 
     def develop(self):
         """

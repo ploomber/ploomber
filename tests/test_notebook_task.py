@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ploomber import DAG
+from ploomber import DAG, DAGConfigurator
 from ploomber.tasks import NotebookRunner
 from ploomber.products import File
 from ploomber.exceptions import DAGBuildError
@@ -143,3 +143,32 @@ def test_failing_notebook_saves_partial_result(tmp_directory):
 #                        params={'var': 1},
 #                        name='nb')
 #     t.develop()
+
+
+# TODO: make a more general text and parametrize by all task types
+# but we also have to test it at the source level
+def test_hot_reload(tmp_directory):
+    cfg = DAGConfigurator()
+    cfg.params.hot_reload = True
+
+    dag = cfg.create()
+
+    path = Path('nb.py')
+    path.write_text("""
+1 + 1
+    """)
+
+    t = NotebookRunner(path,
+                       product=File('out.html'),
+                       dag=dag,
+                       kernelspec_name='python3')
+
+    t.render()
+
+    path.write_text("""
+2 + 2
+    """)
+
+    t.render()
+
+    assert '2 + 2' in Path(t.source.loc_rendered).read_text()
