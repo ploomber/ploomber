@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+0.3.6dev
+--------
+* Adds NotebookRunner.debug() and NotebookRunner.develop()
+* NotebookRunner: now has an option to run static analysis on render
+* Bug fixes #37, #38, #49,
+* Adds documentation for DAG-level hooks
+
 0.3.5 (2020-05-03)
 -------------------
 * Bug fixes #88, #89, #90, #84, #91
