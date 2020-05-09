@@ -1,3 +1,4 @@
+import tempfile
 import subprocess
 from pathlib import Path
 
@@ -158,17 +159,41 @@ class NotebookRunner(Task):
             raise ValueError('Can only use develop in notebooks loaded '
                              'from files, not from str')
 
-        # TODO: make a copy and insert debug cells
+        # load original notebook content
+        content_original = Path(self.source.loc_rendered).read_text()
 
-        content = Path(self.source.loc_rendered).read_text()
+        # add debug cells
+        nb = nbformat.reads(content_original, as_version=nbformat.NO_CONVERT)
+        nbformat_v = nbformat.versions[nb.nbformat]
+
+        source = """
+# Debugging settings (this cell will be removed before saving)
+# change the current working directory to the one when .debug() happen
+# to make relative paths work
+from os import chdir
+chdir("{}")
+""".format(Path('.').resolve())
+
+        cell = nbformat_v.new_code_cell(source,
+                                        metadata={'tags':
+                                                  ['debugging-settings']})
+        nb.cells.insert(0, cell)
+
+        # save modified notebook
+        _, tmp = tempfile.mkstemp(suffix='.ipynb')
+        content = nbformat.writes(nb, version=nbformat.NO_CONVERT)
+        Path(tmp).write_text(content)
 
         try:
-            subprocess.call(['jupyter', 'notebook', self.source.loc_rendered])
+            # open notebook with injected debugging cell
+            subprocess.call(['jupyter', 'notebook', tmp])
         except KeyboardInterrupt:
             print('Jupyter notebook server closed...')
 
-        content_new = Path(self.source.loc_rendered).read_text()
+        # read tmp file again, to see if the user made any changes
+        content_new = Path(tmp).read_text()
 
+        # maybe exclude changes in tmp cells?
         if content == content_new:
             print('No changes found...')
         else:
@@ -178,9 +203,10 @@ class NotebookRunner(Task):
                          'saving). Enter "no" to skip saving changes, '
                          'anything else will be interpreted as "yes": ')
 
+            # save changes
             if save != 'no':
-                # this is always papermill's output, hence a ipynb notebook
-                nb = _to_nb_obj(content_new, extension='ipynb')
+                nb = nbformat.reads(content_new,
+                                    as_version=nbformat.NO_CONVERT)
 
                 # remove injected-parameters and debugging-settings cells if
                 # they exist
@@ -192,6 +218,9 @@ class NotebookRunner(Task):
                 jupytext.write(nb, self.source.loc, fmt=ext_source)
             else:
                 print('Not saving changes...')
+
+        # remove tmp file
+        Path(tmp).unlink()
 
     def run(self):
         if isinstance(self.product, MetaProduct):

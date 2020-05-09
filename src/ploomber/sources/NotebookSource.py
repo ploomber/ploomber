@@ -14,6 +14,10 @@ class NotebookSource(Source):
     A source object representing a jupyter notebook (or any format supported
     by jupytext)
 
+    Notes
+    -----
+    The render method prepares the notebook for execution: it adds the
+    parameters and it makes sure kernelspec is defined
     """
 
     @requires(['parso', 'pyflakes', 'jupytext', 'nbformat', 'papermill',
@@ -309,6 +313,15 @@ def _to_nb_obj(source, extension, kernelspec_name=None):
     -------
     nb
         Notebook object
+
+
+    Raises
+    ------
+    RenderError
+        If the notebook has no kernelspec metadata and kernelspec_name is
+        None. A notebook without kernelspec metadata will not display in
+        jupyter notebook correctly. We have to make sure all notebooks
+        have this.
     """
     import jupytext
     import jupyter_client
@@ -316,7 +329,7 @@ def _to_nb_obj(source, extension, kernelspec_name=None):
     nb = jupytext.reads(source, fmt={'extension': '.'+extension})
 
     if nb.metadata.get('kernelspec') is None and kernelspec_name is None:
-        raise RenderError('juptext could not load kernelspec from file and '
+        raise RenderError('Notebook does not contains kernelspec metadata and '
                           'kernelspec_name was not specified, either add '
                           'kernelspec info to your source file or specify '
                           'a kernelspec by name')
