@@ -11,7 +11,10 @@ from ploomber.sources.sources import Source
 
 # FIXME: for all tasks, there should be an easy way to check exactly
 # which code will be run, make sure there is a consistent implementation accross
-# products (and sources indirectly), including this one
+# products (and sources indirectly), including this one.
+# Using a Placeholder for somthing that does not need tags is not right,
+# make a very simple StaticPlaceholder class with the same API but simpler
+# ignore all jinja stuff
 class NotebookSource(Source):
     """
     A source object representing a jupyter notebook (or any format supported
@@ -199,6 +202,9 @@ class NotebookSource(Source):
     def __del__(self):
         if self._loc_rendered is not None:
             Path(self._loc_rendered).unlink()
+
+    def __str__(self):
+        return self.placeholder.raw
 
 
 def check_notebook(nb, params, filename):

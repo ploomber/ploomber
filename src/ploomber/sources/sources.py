@@ -103,6 +103,24 @@ class Source(abc.ABC):
         """
         return self.value.path
 
+    # NOTE: when determined code differences str(task.source) is performed
+    # to obtain the code (maybe change for a a more explicit operation name?)
+    # so this determines what is considered the "code", this varies from one
+    # source to the other:
+    # SQL: sql with all parameters rendered
+    # Python: function source code
+    # Notebook: the current implementation returns the raw input
+    #       (this means passed parameters are not included)
+    # the consequence for this is that the only source that triggers
+    # execution when parameters change is SQL, the other two don't,
+    # I have to think if this is an ok decision. At least for Notebook,
+    # the same behavior that SQL has is possible by just saving the Notebook
+    # with the rendered parameters but for Python functions is not obvious,
+    # how I'd like to include the parameters If I wanted to trigge execution
+    # when they change - maybe source code could be: function code + json
+    # with parameters? but this will not allow me to pass complex objects
+    # as params to PythonCallable which is undesirable, maybe just keep
+    # it that way but be explicit in the docs how this works
     def __str__(self):
         return str(self.value)
 
@@ -281,6 +299,9 @@ class PythonCallableSource(Source):
     @property
     def loc(self):
         return '{}:{}'.format(self._loc, self._source_lineno)
+
+    def render(self, params):
+        pass
 
     @property
     def needs_render(self):

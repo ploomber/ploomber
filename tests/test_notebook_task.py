@@ -147,6 +147,8 @@ def test_failing_notebook_saves_partial_result(tmp_directory):
 
 # TODO: make a more general text and parametrize by all task types
 # but we also have to test it at the source level
+# also test at the DAG level, we have to make sure the property that
+# code differ uses (raw code) it also hot_loaded
 def test_hot_reload(tmp_directory):
     cfg = DAGConfigurator()
     cfg.params.hot_reload = True
@@ -172,3 +174,5 @@ def test_hot_reload(tmp_directory):
     t.render()
 
     assert '2 + 2' in Path(t.source.loc_rendered).read_text()
+
+    # TODO: check task is not marked as outdated

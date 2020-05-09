@@ -495,6 +495,8 @@ class Task(abc.ABC):
         self.params._dict['product'] = self.product
 
         try:
+            # FIXME: have to get rid of this, all sources implement
+            # render (even if they don't do anything)
             if self.source.needs_render:
                 # if this task has upstream dependencies, render using the
                 # context manager, which will raise a warning if any of the
