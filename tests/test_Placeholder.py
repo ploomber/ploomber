@@ -1,13 +1,22 @@
 # TODO: these tests need clean up, is a merge from two files since
 # StringPlaceholder was removed and its interface was implemented directly
 # in Placeholder
+import sys
 import tempfile
 from copy import copy, deepcopy
 from pathlib import Path
 
 import pytest
 from ploomber.templates.Placeholder import Placeholder, SQLRelationPlaceholder
-from jinja2 import Template, Environment, FileSystemLoader, StrictUndefined
+from ploomber import SourceLoader
+from jinja2 import Template, Environment, PackageLoader, FileSystemLoader, StrictUndefined
+
+
+@pytest.fixture()
+def sys_path():
+    original = sys.path
+    yield sys.path
+    sys.path = original
 
 
 def test_get_name_property():
@@ -124,22 +133,110 @@ def test_sql_placeholder_repr_shows_tags_if_unrendered_sql():
             == expected)
 
 
-def test_hot_reload(tmp_directory):
+def _setup_sample_templates_structure(tmp_directory):
+    templates_dir = Path(tmp_directory, 'placeholder_package', 'templates')
+    templates_dir.mkdir(parents=True)
+
+    macros = '{% macro my_macro() -%} table {%- endmacro %}'
+    (templates_dir / 'macros.sql').write_text(macros)
+
+    query = '{% import "macros.sql" as m %}SELECT * FROM {{m.my_macro()}}'
+    (templates_dir / 'query.sql').write_text(query)
+
+
+def _filesystem_loader(tmp_directory):
+    _setup_sample_templates_structure(tmp_directory)
+    return Environment(loader=FileSystemLoader(str(Path('placeholder_package',
+                                                        'templates'))),
+                       undefined=StrictUndefined)
+
+
+def _package_loader(tmp_directory):
+    _setup_sample_templates_structure(tmp_directory)
+    # pytest does not add the current directory to sys.path, add it manually
+    sys.path.append(tmp_directory)
     tmp_directory = Path(tmp_directory)
-    path = tmp_directory / 'template.sql'
+    (tmp_directory / '..' / '__init__.py').touch()
+    (tmp_directory / '__init__.py').touch()
+    return Environment(loader=PackageLoader('placeholder_package',
+                                            'templates'),
+                       undefined=StrictUndefined)
 
-    path.write_text('SELECT * FROM {{product}}')
 
-    p = Placeholder(path, hot_reload=True)
-    p.render({'product': 'table'})
+def _source_loader(tmp_directory):
+    _setup_sample_templates_structure(tmp_directory)
+    return SourceLoader((str(Path('placeholder_package', 'templates'))))
 
-    assert p.variables == {'product'}
-    assert str(p) == 'SELECT * FROM table'
-    assert p.raw == 'SELECT * FROM {{product}}'
 
-    path.write_text('SELECT * FROM {{product}} WHERE x > {{value}}')
-    p.render({'product': 'table', 'value': 10})
+_env_initializers = [_filesystem_loader, _package_loader, _source_loader]
 
-    assert p.variables == {'product', 'value'}
-    assert str(p) == 'SELECT * FROM table WHERE x > 10'
-    assert p.raw == 'SELECT * FROM {{product}} WHERE x > {{value}}'
+
+@pytest.mark.parametrize('env_init', _env_initializers)
+def test_macros_with_template_environment(env_init, sys_path, tmp_directory):
+    env = env_init(tmp_directory)
+
+    # this template contains a macro
+    placeholder = Placeholder(env.get_template('query.sql'))
+    placeholder.render({})
+
+    assert str(placeholder) == 'SELECT * FROM table'
+
+
+@pytest.mark.parametrize('env_init', _env_initializers)
+def test_hot_reload_with_template_env(env_init, tmp_directory):
+    env = env_init(tmp_directory)
+
+    placeholder = Placeholder(env.get_template('query.sql'), hot_reload=True)
+    placeholder.render({})
+
+    assert str(placeholder) == 'SELECT * FROM table'
+
+    # use a macro to make sure the template loader is correctly initialized
+    query = ('{% import "macros.sql" as m %}SELECT * FROM {{m.my_macro()}}'
+             ' WHERE x = 10')
+
+    query_path = Path('placeholder_package', 'templates', 'query.sql')
+    query_path.write_text(query)
+    placeholder.render({})
+
+    assert str(placeholder) == 'SELECT * FROM table WHERE x = 10'
+
+
+def test_hot_reload_with_with_path(tmp_directory):
+    _setup_sample_templates_structure(tmp_directory)
+
+    query_path = Path(tmp_directory, 'simple_query.sql')
+    query_path.write_text('SELECT * FROM {{tag}}')
+
+    placeholder = Placeholder(Path(query_path), hot_reload=True)
+    placeholder.render({'tag': 'table'})
+
+    assert str(placeholder) == 'SELECT * FROM table'
+
+    query_path.write_text('SELECT * FROM {{tag}} WHERE x = 10')
+    placeholder.render({'tag': 'table'})
+
+    assert str(placeholder) == 'SELECT * FROM table WHERE x = 10'
+
+
+def test_error_when_init_from_string_and_hot_reload():
+    with pytest.raises(ValueError) as excinfo:
+        Placeholder('SELECT * FROM table', hot_reload=True)
+
+    m = 'hot_reload only works when Placeholder is initialized from a file'
+    assert str(excinfo.value) == m
+
+
+@pytest.mark.parametrize('env_init', _env_initializers)
+def test_placeholder_initialized_with_placeholder(env_init, tmp_directory):
+    env = env_init(tmp_directory)
+    placeholder = Placeholder(env.get_template('query.sql'))
+    placeholder_new = Placeholder(placeholder)
+
+    assert placeholder_new.raw == placeholder.raw
+    assert placeholder_new.path == placeholder.path
+
+    assert placeholder_new is not placeholder
+    assert placeholder_new._loader_init is not None
+    assert placeholder_new._loader_init == placeholder._loader_init
+    assert placeholder_new._loader_init is not placeholder._loader_init

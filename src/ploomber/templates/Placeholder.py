@@ -45,16 +45,24 @@ class Placeholder:
                                                         type(self).__name__))
         self._hot_reload = hot_reload
 
+        # the public versions of this attributes are lazily loaded
+        self._variables = None
+        self._template = None
+
+        # we have to take care of 4 possible cases and make sure we have
+        # all we need to initialize the template, this includes having
+        # access to the raw template (str) and a way to re-initialize
+        # the jinja.environment.loader object (to make sure copies and
+        # pickles work)
+
         if isinstance(source, Path):
             self._path = source
             self._raw = source.read_text()
-            self._template = Template(self._raw,
-                                      undefined=jinja2.StrictUndefined)
+            self._loader_init = None
         elif isinstance(source, str):
             self._path = None
             self._raw = source
-            self._template = Template(self._raw,
-                                      undefined=jinja2.StrictUndefined)
+            self._loader_init = None
 
         elif isinstance(source, Template):
             path = Path(source.filename)
@@ -67,24 +75,30 @@ class Placeholder:
                                  'either in the Template or Environment '
                                  'constructors')
 
+            # we cannot get the raw template on this case, raise error
             if not path.exists():
                 raise ValueError('Could not load raw source from '
                                  'jinja2.Template, this usually happens '
                                  'when Templates are initialized directly '
                                  'from a str, only Templates loaded from '
                                  'the filesystem are supported, using a '
-                                 'jinja2.Environment will fix this issue, '
+                                 'FileSystemLoader or '
+                                 'PackageLoader will fix this issue, '
                                  'if you want to create a template from '
-                                 'a string pass it directly to this '
-                                 'constructor')
+                                 'a string pass it directly '
+                                 'Placeholder("some {{placeholder}}")')
 
             self._path = path
             self._raw = path.read_text()
-            self._template = source
+            self._loader_init = _make_loader_init(source.environment.loader)
+        # SourceLoader returns Placeholder objects, which could inadvertedly
+        # be passed to another Placeholder constructor when instantiating
+        # a source object, make sure this case is covered
         elif isinstance(source, Placeholder):
             self._path = source.path
             self._raw = source.raw
-            self._template = source.template
+            self._loader_init = _make_loader_init(source
+                                                  .template.environment.loader)
         else:
             raise TypeError('{} must be initialized with a Template, '
                             'Placeholder, pathlib.Path or str, '
@@ -99,29 +113,6 @@ class Placeholder:
         self.needs_render = self._needs_render()
 
         self._value = None if self.needs_render else self.raw
-
-        loader = self._template.environment.loader
-
-        if loader is not None:
-            if isinstance(loader, FileSystemLoader):
-                self.loader_init = {'class': type(loader).__name__,
-                                    'kwargs':
-                                    {'searchpath': loader.searchpath}}
-            elif isinstance(loader, PackageLoader):
-                self.loader_init = {'class': type(loader).__name__,
-                                    'kwargs': {
-                                    'package_name':
-                                    loader.provider.loader.name,
-                                    'package_path': loader.package_path}}
-            else:
-                raise TypeError('Only templates with loader tyoe '
-                                'FileSystemLoader or PackageLoader are '
-                                'supported, got: {}'
-                                .format(type(loader).__name__))
-        else:
-            self.loader_init = None
-
-        self._variables = None
 
     @property
     def variables(self):
@@ -159,10 +150,8 @@ class Placeholder:
     def template(self):
         """jinja2.Template object
         """
-        # FIXME: re-init loader env, otherwise macros will break
-        if self._hot_reload:
-            self._template = Template(self.raw,
-                                      undefined=jinja2.StrictUndefined)
+        if self._template is None or self._hot_reload:
+            self._template = _init_template(self.raw, self._loader_init)
 
         return self._template
 
@@ -262,25 +251,8 @@ class Placeholder:
         self._logger = logging.getLogger('{}.{}'.format(__name__,
                                                         type(self).__name__))
 
-        if self.loader_init is None:
-            self._template = Template(self.raw,
-                                      undefined=jinja2.StrictUndefined)
-        # re-construct the Templates environment, otherwise there could
-        # be errors when using copy or pickling (the copied or unpickled
-        # object wont have access to the environment which can break macros
-        # and other thigns)
-        else:
-            if self.loader_init['class'] == 'FileSystemLoader':
-                loader = FileSystemLoader(**self.loader_init['kwargs'])
-            elif self.loader_init['class'] == 'PackageLoader':
-                loader = PackageLoader(**self.loader_init['kwargs'])
-            else:
-                raise TypeError('Error setting state for Placeholder, '
-                                'expected the loader to be FileSystemLoader '
-                                'or PackageLoader')
-
-            env = Environment(loader=loader, undefined=jinja2.StrictUndefined)
-            self._template = env.from_string(self.raw)
+        # make sure this attribute exists, we deleted it in getstate
+        self._template = None
 
     @property
     def name(self):
@@ -291,6 +263,61 @@ class Placeholder:
                                  'ploomber.SourceLoader for this to work')
         else:
             return self._path.name
+
+
+def _init_template(raw, loader_init):
+    """
+    Initializes template, taking care of configuring the loader environment
+    if needed
+
+    This helps prevents errors when using copy or pickling (the copied or
+    unpickled object wont have access to the environment.loader which breaks
+    macros and anything that needs access to the jinja environment.loader
+    object
+    """
+    if loader_init is None:
+        return Template(raw, undefined=jinja2.StrictUndefined)
+    else:
+        if loader_init['class'] == 'FileSystemLoader':
+            loader = FileSystemLoader(**loader_init['kwargs'])
+        elif loader_init['class'] == 'PackageLoader':
+            loader = PackageLoader(**loader_init['kwargs'])
+        else:
+            raise TypeError('Error setting state for Placeholder, '
+                            'expected the loader to be FileSystemLoader '
+                            'or PackageLoader')
+
+        env = Environment(loader=loader, undefined=jinja2.StrictUndefined)
+        return env.from_string(raw)
+
+
+def _get_package_name(loader):
+    # the provider attribute was introduced in jinja 2.11.2, previous
+    # versions have package_name
+    if hasattr(loader, 'package_name'):
+        return loader.package_name
+    else:
+        return loader.provider.loader.name
+
+
+def _make_loader_init(loader):
+
+    if loader is None:
+        return None
+    if isinstance(loader, FileSystemLoader):
+        return {'class': type(loader).__name__,
+                'kwargs':
+                {'searchpath': loader.searchpath}}
+    elif isinstance(loader, PackageLoader):
+        return {'class': type(loader).__name__,
+                'kwargs': {
+            'package_name': _get_package_name(loader),
+            'package_path': loader.package_path}}
+    else:
+        raise TypeError('Only templates with loader type '
+                        'FileSystemLoader or PackageLoader are '
+                        'supported, got: {}'
+                        .format(type(loader).__name__))
 
 
 class SQLRelationPlaceholder:
