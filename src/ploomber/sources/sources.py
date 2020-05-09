@@ -39,6 +39,9 @@ from ploomber.sql import infer
 # FIXME: sources and placeholder should have the same API, placeholder
 # should only be a way to get fast implementations but it should not be
 # an parent class
+# FIXME: some sources are used to initialize Task.source but others are used
+# as params in products (to support placeholders), we have to make that
+# distinction clear since hot_reload only makes sense for Task.sources
 
 
 class Source(abc.ABC):
