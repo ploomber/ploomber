@@ -40,7 +40,7 @@ install:
   - pip install .[all]
 
   # install sample package for tests
-  - cd tests/assets/test_pkg; pip install .
+  - bash test_pkg.sh
 
 
 before_install:
