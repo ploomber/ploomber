@@ -67,8 +67,8 @@ class Source(abc.ABC):
 
     """
 
-    def __init__(self, value):
-        self.value = Placeholder(value)
+    def __init__(self, value, hot_reload=False):
+        self.value = Placeholder(value, hot_reload=hot_reload)
         self._post_init_validation(self.value)
 
     @property
@@ -251,7 +251,11 @@ class PythonCallableSource(Source):
     """A source that holds a Python callable
     """
 
-    def __init__(self, value):
+    def __init__(self, value, hot_reload=False):
+        if hot_reload:
+            warnings.warn('hot_reload is not implement for '
+                          'PythonCallableSource, this will be ignored')
+
         if not callable(value):
             raise TypeError('{} must be initialized'
                             'with a Python callable, got '
@@ -313,9 +317,11 @@ class FileSource(GenericSource):
     interpreted as literals.
 
     This source is utilized by Tasks that move/upload files.
+
     """
 
-    def __init__(self, value):
+    def __init__(self, value, hot_reload=False):
+        # hot_reload does not apply here, ignored
         value = str(value)
         super().__init__(Placeholder(value))
 

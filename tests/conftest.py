@@ -1,3 +1,4 @@
+import importlib
 import string
 import random
 import json
@@ -18,6 +19,11 @@ def _path_to_tests():
 @pytest.fixture(scope='session')
 def path_to_tests():
     return _path_to_tests()
+
+
+@pytest.fixture()
+def path_to_test_pkg():
+    return str(Path(importlib.util.find_spec('test_pkg').origin).parent)
 
 
 @pytest.fixture()

@@ -43,6 +43,9 @@ class NotebookSource(Source):
         self._kernelspec_name = kernelspec_name
         self._hot_reload = hot_reload
 
+        # FIXME: we should be doing this, might be the case that the notebook
+        # is using jinja inside and {{}} will appear, we should just use
+        # the raw value in the placeholder instead
         if self.placeholder.needs_render:
             raise SourceInitializationError('The source for this task "{}"'
                                             ' must be a literal '

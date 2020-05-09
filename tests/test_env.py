@@ -94,9 +94,9 @@ def test_path_expandsuser(cleanup_env):
 
 
 def test_init_with_module_key(cleanup_env):
-    env = Env({'_module': 'sample_project'})
+    env = Env({'_module': 'test_pkg'})
 
-    expected = Path(importlib.util.find_spec('sample_project').origin).parent
+    expected = Path(importlib.util.find_spec('test_pkg').origin).parent
     assert env._module == expected
 
 
@@ -124,8 +124,8 @@ def test_module_with_here_placeholder(tmp_directory, cleanup_env):
 
 
 def test_expand_version(cleanup_env):
-    env = Env({'_module': 'sample_project', 'version': '{{version}}'})
-    assert env.version == '0.1dev'
+    env = Env({'_module': 'test_pkg', 'version': '{{version}}'})
+    assert env.version == 'VERSION'
 
 
 def test_expand_git(monkeypatch, cleanup_env):
@@ -134,7 +134,7 @@ def test_expand_git(monkeypatch, cleanup_env):
 
     monkeypatch.setattr(repo, 'get_env_metadata', mockreturn)
 
-    env = Env({'_module': 'sample_project', 'git': '{{git}}'})
+    env = Env({'_module': 'test_pkg', 'git': '{{git}}'})
     assert env.git == 'some_version_string'
 
 

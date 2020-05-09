@@ -1,0 +1,1 @@
+{% import "macros.sql" as m %}SELECT * FROM {{m.my_macro()}}
