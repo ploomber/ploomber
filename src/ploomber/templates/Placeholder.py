@@ -96,8 +96,6 @@ class Placeholder:
             raise ValueError('hot_reload only works when Placeholder is '
                              'initialized from a file')
 
-        self._variables = util.get_tags_in_str(self.raw)
-
         self.needs_render = self._needs_render()
 
         self._value = None if self.needs_render else self.raw
@@ -123,10 +121,17 @@ class Placeholder:
         else:
             self.loader_init = None
 
+        self._variables = None
+
     @property
     def variables(self):
         """Returns declared variables in the template
         """
+        # this requires parsing the raw template, do lazy load, but override
+        # it if hot_reload is True
+        if self._variables is None or self._hot_reload:
+            self._variables = util.get_tags_in_str(self.raw)
+
         return self._variables
 
     @property

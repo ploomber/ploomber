@@ -128,14 +128,18 @@ def test_hot_reload(tmp_directory):
     tmp_directory = Path(tmp_directory)
     path = tmp_directory / 'template.sql'
 
-    path.write_text('SELECT * FROM table')
+    path.write_text('SELECT * FROM {{product}}')
 
     p = Placeholder(path, hot_reload=True)
-    p.render({})
+    p.render({'product': 'table'})
 
+    assert p.variables == {'product'}
     assert str(p) == 'SELECT * FROM table'
+    assert p.raw == 'SELECT * FROM {{product}}'
 
-    path.write_text('SELECT * FROM another_table')
-    p.render({})
+    path.write_text('SELECT * FROM {{product}} WHERE x > {{value}}')
+    p.render({'product': 'table', 'value': 10})
 
-    assert str(p) == 'SELECT * FROM another_table'
+    assert p.variables == {'product', 'value'}
+    assert str(p) == 'SELECT * FROM table WHERE x > 10'
+    assert p.raw == 'SELECT * FROM {{product}} WHERE x > {{value}}'
