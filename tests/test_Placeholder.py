@@ -122,3 +122,20 @@ def test_sql_placeholder_repr_shows_tags_if_unrendered_sql():
     expected = 'SQLRelationPlaceholder({{schema}}.{{name}})'
     assert (repr(SQLRelationPlaceholder(('{{schema}}', '{{name}}', 'table')))
             == expected)
+
+
+def test_hot_reload(tmp_directory):
+    tmp_directory = Path(tmp_directory)
+    path = tmp_directory / 'template.sql'
+
+    path.write_text('SELECT * FROM table')
+
+    p = Placeholder(path, hot_reload=True)
+    p.render({})
+
+    assert str(p) == 'SELECT * FROM table'
+
+    path.write_text('SELECT * FROM another_table')
+    p.render({})
+
+    assert str(p) == 'SELECT * FROM another_table'

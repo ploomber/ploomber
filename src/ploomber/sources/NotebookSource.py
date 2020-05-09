@@ -9,10 +9,18 @@ from ploomber.util import requires
 from ploomber.sources.sources import Source
 
 
+# FIXME: for all tasks, there should be an easy way to check exactly
+# which code will be run, make sure there is a consistent implementation accross
+# products (and sources indirectly), including this one
 class NotebookSource(Source):
     """
     A source object representing a jupyter notebook (or any format supported
     by jupytext)
+
+    Parameters
+    ----------
+    hot_reload : bool, optional
+        Makes the notebook always read the file before rendering
 
     Notes
     -----
@@ -22,16 +30,18 @@ class NotebookSource(Source):
 
     @requires(['parso', 'pyflakes', 'jupytext', 'nbformat', 'papermill',
                'jupyter_client'])
-    def __init__(self, value, ext_in=None, kernelspec_name=None,
+    def __init__(self, value, hot_reload=False, ext_in=None,
+                 kernelspec_name=None,
                  static_analysis=False):
         # any non-py file must first be converted using jupytext, we need
         # that representation for validation, if input is already a .py file
         # do not convert. If passed a string, try to guess format using
         # jupytext. We also need ipynb representation for .develop(),
         # but do lazy loading in case we don't need both
-        self.placeholder = Placeholder(value)
+        self.placeholder = Placeholder(value, hot_reload=hot_reload)
         self.static_analysis = static_analysis
         self._kernelspec_name = kernelspec_name
+        self._hot_reload = hot_reload
 
         if self.placeholder.needs_render:
             raise SourceInitializationError('The source for this task "{}"'
@@ -42,6 +52,10 @@ class NotebookSource(Source):
         self.value = str(self.placeholder)
 
         # TODO: validate ext_in values and extensions
+
+        if self.placeholder.path is None and hot_reload:
+            raise ValueError('hot_reload only works in the notebook was '
+                             'loaded from a file')
 
         if self.placeholder.path is not None and ext_in is None:
             self._ext_in = self.placeholder.path.suffix[1:]
@@ -120,7 +134,8 @@ class NotebookSource(Source):
         """
         import nbformat
 
-        if self._nb_repr is None:
+        # hot_reload causes to always re-evalaute the notebook representation
+        if self._nb_repr is None or self._hot_reload:
             if self._ext_in == 'ipynb':
                 self._nb_repr = self.value
             else:

@@ -27,6 +27,12 @@ class Placeholder:
     automatically created from strings, pathlib.Path or jinja2.Template
     objects.
 
+    Parameters
+    ----------
+    hot_reload : bool, optional
+        Makes the placeholder always read the template from the file before
+        rendering
+
     Attributes
     ----------
     path
@@ -34,9 +40,10 @@ class Placeholder:
         a jinja2.Template created from a str
     """
 
-    def __init__(self, source):
+    def __init__(self, source, hot_reload=False):
         self._logger = logging.getLogger('{}.{}'.format(__name__,
                                                         type(self).__name__))
+        self._hot_reload = hot_reload
 
         if isinstance(source, Path):
             self._path = source
@@ -84,6 +91,10 @@ class Placeholder:
                             'got {} instead'
                             .format(type(self).__name__,
                                     type(source).__name__))
+
+        if self._path is None and hot_reload:
+            raise ValueError('hot_reload only works when Placeholder is '
+                             'initialized from a file')
 
         self._variables = util.get_tags_in_str(self.raw)
 
@@ -143,13 +154,25 @@ class Placeholder:
     def template(self):
         """jinja2.Template object
         """
+        # FIXME: re-init loader env, otherwise macros will break
+        if self._hot_reload:
+            self._template = Template(self.raw,
+                                      undefined=jinja2.StrictUndefined)
+
         return self._template
 
     @property
     def raw(self):
         """A string with the raw jinja2.Template contents
         """
+        if self._hot_reload:
+            self._raw = self._path.read_text()
+
         return self._raw
+
+    @raw.setter
+    def raw(self, value):
+        self._raw = value
 
     @property
     def path(self):
@@ -188,6 +211,7 @@ class Placeholder:
         missing = self.variables - passed
         extra = passed - self.variables - optional
 
+        # FIXME: self.variables should also be updated on hot_reload
         if missing:
             raise RenderError('in {}, missing required '
                               'parameters: {}, params passed: {}'

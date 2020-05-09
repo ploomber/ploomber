@@ -103,7 +103,9 @@ class NotebookRunner(Task):
         notebook, such cell should have at least a "product = None" variable
         declared. Passed and declared parameters are compared (they make
         notebooks behave more like "functions"), pyflakes is also run to
-        detect errors before executing the notebook
+        detect errors before executing the notebook. If the task has
+        upstream dependencies an upstream parameter should also be declared
+        "upstream = None"
     """
     PRODUCT_CLASSES_ALLOWED = (File, )
 
