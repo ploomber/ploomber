@@ -373,16 +373,25 @@ class Task(abc.ABC):
 
             self.product._save_metadata(str(self.source))
 
-            # NOTE: for most Products, it's ok to do this check before
+            # For most Products, it's ok to do this check before
             # saving metadata, but not for GenericProduct, since the way
             # exists() works is by checking metadata, so we have to do it
-            # after saving metadata for it to work
+            # here, after saving metadata
             if not self.product.exists():
-                raise TaskBuildError('Error building task "{}": '
-                                     'the task ran successfully but product '
-                                     '"{}" does not exist yet '
-                                     '(task.product.exists() returned False)'
-                                     .format(self, self.product))
+                if isinstance(self.product, MetaProduct):
+                    raise TaskBuildError(
+                        'Error building task "{}": '
+                        'the task ran successfully but product '
+                        '"{}" does not exist yet '
+                        '(task.product.exists() returned False). '
+                        .format(self, self.product))
+                else:
+                    raise TaskBuildError(
+                        'Error building task "{}": '
+                        'the task ran successfully but at least one of the '
+                        'products in "{}" does not exist yet '
+                        '(task.product.exists() returned False). '
+                        .format(self, self.product))
 
         elif value == TaskStatus.Errored:
             # Exceptions here are silenced

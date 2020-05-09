@@ -1,7 +1,7 @@
 doc/_build
 doc/auto_examples/
-project.sublime-project
-project.sublime-workspace
+*.sublime-project
+*.sublime-workspace
 *.txt
 *.source
 *.parquet
