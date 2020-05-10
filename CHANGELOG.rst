@@ -3,6 +3,9 @@ CHANGELOG
 
 0.3.6dev
 --------
+* Implements hot reload for notebooks and python callables
+* General clean ups for old `__str__` and `__repr__` in several modules
+* Refactored ploomber.sources module and ploomber.placeholders (previously ploomber.templates)
 * Adds NotebookRunner.debug() and NotebookRunner.develop()
 * NotebookRunner: now has an option to run static analysis on render
 * Bug fixes #37, #38, #49,
