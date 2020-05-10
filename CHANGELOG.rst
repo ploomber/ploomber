@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-0.3.6dev
+0.4.0dev
 --------
 * Implements hot reload for notebooks and python callables
 * General clean ups for old `__str__` and `__repr__` in several modules
