@@ -11,6 +11,7 @@ import logging
 from ploomber.products import File, PostgresRelation
 from ploomber.tasks import (ShellScript, PythonCallable,
                             SQLScript)
+from ploomber.executors import Serial
 from ploomber import DAG
 from ploomber.clients import SQLAlchemyClient
 from ploomber import testing
@@ -44,7 +45,7 @@ uri = util.load_db_uri()
 pg_client = SQLAlchemyClient(uri)
 
 # +
-dag = DAG()
+dag = DAG(executor=Serial(False))
 
 # Tasks and Tables/Views accept a client in the constructor, but you
 # can also declared them using dag.clients to avoid passing them
@@ -80,7 +81,7 @@ get_data >> sample
 # available as parameters as well. This task does not create a File but a PostgresRelation,
 # this type of product is a a table named red in the public schema
 red_task = ShellScript(('csvsql --db {{uri}} --tables {{product.name}} --insert {{upstream["sample"][0]}} '
-                        '--overwrite'),
+                        '--overwrite --db-schema {{product.schema}}'),
                        PostgresRelation(('public', 'red', 'table')),
                        dag,
                        params=dict(uri=uri),
@@ -88,7 +89,7 @@ red_task = ShellScript(('csvsql --db {{uri}} --tables {{product.name}} --insert 
 sample >> red_task
 
 white_task = ShellScript(('csvsql --db {{uri}} --tables {{product.name}} --insert {{upstream["sample"][1]}} '
-                          '--overwrite'),
+                          '--overwrite --db-schema {{product.schema}}'),
                          PostgresRelation(('public', 'white', 'table')),
                          dag,
                          params=dict(uri=uri),

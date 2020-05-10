@@ -6,15 +6,9 @@ from copy import copy, deepcopy
 from pathlib import Path
 
 import pytest
-from ploomber.templates.Placeholder import Placeholder, SQLRelationPlaceholder
+from ploomber.placeholders.Placeholder import Placeholder, SQLRelationPlaceholder
 from ploomber import SourceLoader
 from jinja2 import Template, Environment, PackageLoader, FileSystemLoader, StrictUndefined
-
-
-def test_get_name_property():
-    p = Path(tempfile.mktemp())
-    p.write_text('This is some text in a file used as Placeholder {{tag}}')
-    assert p.name == Placeholder(p).name
 
 
 def test_verify_if_strict_template_is_literal():
@@ -214,7 +208,7 @@ def test_placeholder_initialized_with_placeholder(env_init, path_to_test_pkg):
     placeholder = Placeholder(env.get_template('query.sql'))
     placeholder_new = Placeholder(placeholder)
 
-    assert placeholder_new.raw == placeholder.raw
+    assert placeholder_new._raw == placeholder._raw
     assert placeholder_new.path == placeholder.path
 
     assert placeholder_new is not placeholder

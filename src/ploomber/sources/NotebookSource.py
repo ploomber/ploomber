@@ -3,18 +3,14 @@ from pathlib import Path
 from io import StringIO
 import warnings
 
-from ploomber.exceptions import SourceInitializationError, RenderError
-from ploomber.templates.Placeholder import Placeholder
+from ploomber.exceptions import RenderError
+from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.util import requires
-from ploomber.sources.sources import Source
+from ploomber.sources import Source
 
 
-# FIXME: for all tasks, there should be an easy way to check exactly
-# which code will be run, make sure there is a consistent implementation accross
-# products (and sources indirectly), including this one.
-# Using a Placeholder for somthing that does not need tags is not right,
-# make a very simple StaticPlaceholder class with the same API but simpler
-# ignore all jinja stuff
+# TODO: make sure this works with R, Julia and other notebooks supported
+# by Jupyter
 class NotebookSource(Source):
     """
     A source object representing a jupyter notebook (or any format supported
@@ -33,7 +29,7 @@ class NotebookSource(Source):
 
     @requires(['parso', 'pyflakes', 'jupytext', 'nbformat', 'papermill',
                'jupyter_client'])
-    def __init__(self, value, hot_reload=False, ext_in=None,
+    def __init__(self, primitive, hot_reload=False, ext_in=None,
                  kernelspec_name=None,
                  static_analysis=False):
         # any non-py file must first be converted using jupytext, we need
@@ -41,37 +37,45 @@ class NotebookSource(Source):
         # do not convert. If passed a string, try to guess format using
         # jupytext. We also need ipynb representation for .develop(),
         # but do lazy loading in case we don't need both
-        self.placeholder = Placeholder(value, hot_reload=hot_reload)
+        self._primitive = primitive
+
+        # this happens if using SourceLoader
+        if isinstance(primitive, Placeholder):
+            self._path = primitive.path
+            self._primitive = str(primitive)
+        elif isinstance(primitive, str):
+            self._path = None
+            self._primitive = primitive
+        elif isinstance(primitive, Path):
+            self._path = primitive
+            self._primitive = primitive.read_text()
+        else:
+            raise TypeError('Notebooks must be initialized from strings, '
+                            'Placeholder or pathlib.Path, got {}'
+                            .format(type(primitive)))
+
         self.static_analysis = static_analysis
         self._kernelspec_name = kernelspec_name
         self._hot_reload = hot_reload
 
-        # FIXME: we should be doing this, might be the case that the notebook
-        # is using jinja inside and {{}} will appear, we should just use
-        # the raw value in the placeholder instead
-        if self.placeholder.needs_render:
-            raise SourceInitializationError('The source for this task "{}"'
-                                            ' must be a literal '
-                                            .format(self.placeholder.value.raw))
-
         # TODO: validate ext_in values and extensions
 
-        if self.placeholder.path is None and hot_reload:
+        if self._path is None and hot_reload:
             raise ValueError('hot_reload only works in the notebook was '
                              'loaded from a file')
 
-        if self.placeholder.path is not None and ext_in is None:
-            self._ext_in = self.placeholder.path.suffix[1:]
-        elif self.placeholder.path is None and ext_in is None:
+        if self._path is not None and ext_in is None:
+            self._ext_in = self._path.suffix[1:]
+        elif self._path is None and ext_in is None:
             raise ValueError('ext_in cannot be None if notebook is '
                              'initialized from a string')
-        elif self.placeholder.path is not None and ext_in is not None:
+        elif self._path is not None and ext_in is not None:
             raise ValueError('ext_in must be None if notebook is '
                              'initialized from a file')
-        elif self.placeholder.path is None and ext_in is not None:
+        elif self._path is None and ext_in is not None:
             self._ext_in = ext_in
 
-        self._post_init_validation(self.value)
+        self._post_init_validation(str(self._primitive))
 
         self._python_repr = None
         self._nb_repr = None
@@ -79,8 +83,11 @@ class NotebookSource(Source):
         self._loc_rendered = None
 
     @property
-    def value(self):
-        return self.placeholder.raw
+    def primitive(self):
+        if self._hot_reload:
+            self._primitive = self._path.read_text()
+
+        return self._primitive
 
     def render(self, params):
         """Render notebook (fill parameters using papermill)
@@ -98,20 +105,15 @@ class NotebookSource(Source):
 
         tmp_in = tempfile.mktemp('.ipynb')
         tmp_out = tempfile.mktemp('.ipynb')
+        # _get_nb_repr uses hot_reload, this ensures we always get the latest
+        # version
         Path(tmp_in).write_text(self._get_nb_repr())
         pm.execute_notebook(tmp_in, tmp_out, prepare_only=True,
                             parameters=params)
         self._loc_rendered = tmp_out
         Path(tmp_in).unlink()
 
-        self._post_render_validate(params)
-
-    def _get_parameters(self):
-        """
-        Returns a dictionary with the declared parameters (variables in a cell
-        tagged as "parameters")
-        """
-        pass
+        self._post_render_validation(params)
 
     def _get_python_repr(self):
         """
@@ -123,10 +125,11 @@ class NotebookSource(Source):
 
         if self._python_repr is None:
             if self._ext_in == 'py':
-                self._python_repr = self.value
+                self._python_repr = self._primitive
             else:
                 # convert from ipynb to notebook
-                nb = nbformat.reads(self.value, nbformat.current_nbformat)
+                nb = nbformat.reads(self._primitive,
+                                    nbformat.current_nbformat)
                 self._python_repr = jupytext.writes(nb, fmt='py')
 
         return self._python_repr
@@ -144,9 +147,10 @@ class NotebookSource(Source):
         # hot_reload causes to always re-evalaute the notebook representation
         if self._nb_repr is None or self._hot_reload:
             if self._ext_in == 'ipynb':
-                self._nb_repr = self.value
+                self._nb_repr = self.primitive
             else:
-                nb = _to_nb_obj(self.value, extension='py',
+                nb = _to_nb_obj(self.primitive,
+                                extension='py',
                                 kernelspec_name=self._kernelspec_name)
                 writer = (nbformat
                           .versions[nbformat.current_nbformat]
@@ -166,7 +170,7 @@ class NotebookSource(Source):
         # compile cannot?
         pass
 
-    def _post_render_validate(self, params):
+    def _post_render_validation(self, params):
         """
         Validate params passed against parameters in the notebook
         """
@@ -178,19 +182,20 @@ class NotebookSource(Source):
                            .reads(Path(self._loc_rendered).read_text(),
                                   nbformat.current_nbformat))
             check_notebook(nb_rendered, params,
-                           filename=self.placeholder.path or 'notebook')
+                           filename=self._path or 'notebook')
 
     @property
     def doc(self):
+        # TODO: look for a cell tagged "docstring?"
         return None
 
     @property
-    def needs_render(self):
-        return True
+    def loc(self):
+        return self._path
 
     @property
-    def loc(self):
-        return self.placeholder.path
+    def name(self):
+        return self._path.name
 
     @property
     def loc_rendered(self):
@@ -204,7 +209,23 @@ class NotebookSource(Source):
             Path(self._loc_rendered).unlink()
 
     def __str__(self):
-        return self.placeholder.raw
+        # NOTE: the value returned here is used to determine code differences,
+        # if this is initialized with a ipynb file, any change in the structure
+        # will trigger execution, we could make this return a text-only version
+        # depending on what we want we could either just concatenate the code
+        # cells or use jupytext to keep metadata
+        return self.primitive
+
+    @property
+    def variables(self):
+        raise NotImplementedError
+
+    @property
+    def extension(self):
+        # this can be Python, R, Julia, etc. We are handling them the same,
+        # for now, no normalization can be done.
+        # One approach is to use the ext if loaded from file, otherwise None
+        return None
 
 
 def check_notebook(nb, params, filename):

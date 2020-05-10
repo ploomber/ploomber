@@ -173,6 +173,14 @@ def test_hot_reload(tmp_directory):
 
     t.render()
 
+    assert '2 + 2' in str(t.source)
+    assert t.product._outdated_code_dependency()
+    assert not t.product._outdated_data_dependencies()
+
     assert '2 + 2' in Path(t.source.loc_rendered).read_text()
+
+    report = dag.build()
+
+    assert report['Ran?'] == [True]
 
     # TODO: check task is not marked as outdated

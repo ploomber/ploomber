@@ -11,8 +11,8 @@ def download_dataset(product, upstream, path_to_dataset):
 
     engine = create_engine(util.load_db_uri())
 
-    df_training = pd.read_sql('SELECT * FROM training', engine)
-    df_testing = pd.read_sql('SELECT * FROM testing', engine)
+    df_training = pd.read_sql('SELECT * FROM public.training', engine)
+    df_testing = pd.read_sql('SELECT * FROM public.testing', engine)
 
     engine.dispose()
 

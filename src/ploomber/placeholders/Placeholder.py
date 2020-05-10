@@ -1,15 +1,44 @@
+from collections.abc import Mapping
+import abc
 import logging
 from pathlib import Path
 
-from ploomber.exceptions import RenderError
-from ploomber.templates import util
+from ploomber.exceptions import RenderError, SourceInitializationError
+from ploomber.placeholders import util
 
 import jinja2
 from jinja2 import (Environment, Template, UndefinedError,
                     FileSystemLoader, PackageLoader)
 
 
-class Placeholder:
+class AbstractPlaceholder(abc.ABC):
+    """
+    Placeholder are objects that can eventually be converted to strings using
+    str(placeholder), if this operator is used before they are fully resolved
+    (e.g. they need to render first), they will raise an error.
+
+    repr(placeholder) is always safe to use and it will return the rendered
+    version if available, otherwise, it will show the raw string with
+    tags, the representation is shortened if needed.
+
+    Placeholders are mostly used inside Source objects, but are sometims
+    also used to give Products placeholding features (e.g.
+    by directly using Placeholder or SQLRelationPlaceholder)
+    """
+    @abc.abstractmethod
+    def __str__(self):
+        pass
+
+    @abc.abstractmethod
+    def __repr__(self):
+        pass
+
+    @abc.abstractmethod
+    def render(self, params):
+        pass
+
+
+class Placeholder(AbstractPlaceholder):
     """
     Placeholder powers all the objects that use placeholder variables (
     between curly brackets). It uses a jinja2.Template object under the hood
@@ -20,12 +49,12 @@ class Placeholder:
     * Strict: will not render if missing or extra parameters
     * Upon calling .render, saves the rendered value for later access
 
-    Although this object mimics a jinja2.Template object, it does not implement
-    the full API.
-
     End users should not manipulate Placeholder objects, they should be
     automatically created from strings, pathlib.Path or jinja2.Template
     objects.
+
+    Placeholder is mostly used by sources whose source code are parametrized
+    strings (e.g. SQL scripts)
 
     Parameters
     ----------
@@ -35,19 +64,23 @@ class Placeholder:
 
     Attributes
     ----------
-    path
+    variables : set
+        Returns the set of variables in the template (values sourrounded by
+        {{ and }})
+
+    path : pathlib.Path
         The location of the raw object. None if initialized with a str or with
         a jinja2.Template created from a str
+
     """
 
-    def __init__(self, source, hot_reload=False):
+    def __init__(self, primitive, hot_reload=False, required=None):
         self._logger = logging.getLogger('{}.{}'.format(__name__,
                                                         type(self).__name__))
         self._hot_reload = hot_reload
 
-        # the public versions of this attributes are lazily loaded
         self._variables = None
-        self._template = None
+        self.__template = None
 
         # we have to take care of 4 possible cases and make sure we have
         # all we need to initialize the template, this includes having
@@ -55,19 +88,19 @@ class Placeholder:
         # the jinja.environment.loader object (to make sure copies and
         # pickles work)
 
-        if isinstance(source, Path):
-            self._path = source
-            self._raw = source.read_text()
+        if isinstance(primitive, Path):
+            self._path = primitive
+            self.__raw = primitive.read_text()
             self._loader_init = None
-        elif isinstance(source, str):
+        elif isinstance(primitive, str):
             self._path = None
-            self._raw = source
+            self.__raw = primitive
             self._loader_init = None
 
-        elif isinstance(source, Template):
-            path = Path(source.filename)
+        elif isinstance(primitive, Template):
+            path = Path(primitive.filename)
 
-            if source.environment.undefined != jinja2.StrictUndefined:
+            if primitive.environment.undefined != jinja2.StrictUndefined:
                 raise ValueError('Placeholder can only be initialized '
                                  'from jinja2.Templates whose undefined '
                                  'parameter is set to '
@@ -89,84 +122,64 @@ class Placeholder:
                                  'Placeholder("some {{placeholder}}")')
 
             self._path = path
-            self._raw = path.read_text()
-            self._loader_init = _make_loader_init(source.environment.loader)
+            self.__raw = path.read_text()
+            self._loader_init = _make_loader_init(primitive.environment.loader)
         # SourceLoader returns Placeholder objects, which could inadvertedly
         # be passed to another Placeholder constructor when instantiating
-        # a source object, make sure this case is covered
-        elif isinstance(source, Placeholder):
-            self._path = source.path
-            self._raw = source.raw
-            self._loader_init = _make_loader_init(source
-                                                  .template.environment.loader)
+        # a source object, since they sometimes use placeholders
+        #  make sure this case is covered
+        elif isinstance(primitive, Placeholder):
+            self._path = primitive.path
+            self.__raw = primitive._raw
+            self._loader_init = _make_loader_init(primitive
+                                                  ._template
+                                                  .environment.loader)
         else:
             raise TypeError('{} must be initialized with a Template, '
                             'Placeholder, pathlib.Path or str, '
                             'got {} instead'
                             .format(type(self).__name__,
-                                    type(source).__name__))
+                                    type(primitive).__name__))
 
         if self._path is None and hot_reload:
             raise ValueError('hot_reload only works when Placeholder is '
                              'initialized from a file')
 
+        # TODO: remove
         self.needs_render = self._needs_render()
 
-        self._value = None if self.needs_render else self.raw
+        self._str = None if self.needs_render else self._raw
+
+        if required:
+            self._validate_required(required)
+
+    def _validate_required(self, required):
+        missing_required = set(required) - self.variables
+
+        if missing_required:
+            msg = ('The following tags are required. '
+                   + display_error(missing_required, required))
+            raise SourceInitializationError(msg)
 
     @property
-    def variables(self):
-        """Returns declared variables in the template
-        """
-        # this requires parsing the raw template, do lazy load, but override
-        # it if hot_reload is True
-        if self._variables is None or self._hot_reload:
-            self._variables = util.get_tags_in_str(self.raw)
+    def _template(self):
+        if self.__template is None or self._hot_reload:
+            self.__template = _init_template(self._raw, self._loader_init)
 
-        return self._variables
+        return self.__template
 
     @property
-    def value(self):
-        if self._value is None:
-            raise RuntimeError('Tried to read {} {} without '
-                               'rendering first'
-                               .format(type(self).__name__,
-                                       repr(self)))
-
-        return self._value
-
-    @property
-    def _value_repr(self):
-        raw = self._raw if self._value is None else self._value
-        parts = raw.split('\n')
-        first_part = parts[0]
-        short = first_part if len(first_part) < 80 else first_part[:77]
-
-        if len(parts) > 1 or len(first_part) >= 80:
-            short += '...'
-        return short
-
-    @property
-    def template(self):
-        """jinja2.Template object
-        """
-        if self._template is None or self._hot_reload:
-            self._template = _init_template(self.raw, self._loader_init)
-
-        return self._template
-
-    @property
-    def raw(self):
+    def _raw(self):
         """A string with the raw jinja2.Template contents
         """
         if self._hot_reload:
-            self._raw = self._path.read_text()
+            self.__raw = self._path.read_text()
 
-        return self._raw
+        return self.__raw
 
-    @raw.setter
-    def raw(self, value):
-        self._raw = value
+    @_raw.setter
+    def _raw(self, value):
+        self.__raw = value
 
     @property
     def path(self):
@@ -177,27 +190,30 @@ class Placeholder:
         Returns true if the template is a literal and does not need any
         parameters to render
         """
-        env = self.template.environment
+        env = self._template.environment
 
         # check if the template has the variable or block start string
         # is there any better way of checking this?
-        needs_variables = (env.variable_start_string in self.raw
-                           and env.variable_end_string in self.raw)
-        needs_blocks = (env.block_start_string in self.raw
-                        and env.block_end_string in self.raw)
+        needs_variables = (env.variable_start_string in self._raw
+                           and env.variable_end_string in self._raw)
+        needs_blocks = (env.block_start_string in self._raw
+                        and env.block_end_string in self._raw)
 
         return needs_variables or needs_blocks
 
     def __str__(self):
-        return self.value
+        if self._str is None:
+            raise RuntimeError('Tried to read {} {} without '
+                               'rendering first'
+                               .format(type(self).__name__,
+                                       repr(self)))
 
-    def __repr__(self):
-        return '{}("{}")'.format(type(self).__name__, self.safe)
+        return self._str
 
-    def render(self, params, optional=None):
+    def render(self, params, optional=None, required=None):
         """
         """
-        optional = optional or {}
+        optional = optional or set()
         optional = set(optional)
 
         passed = set(params.keys())
@@ -217,8 +233,8 @@ class Placeholder:
                               .format(repr(self), extra, self.variables))
 
         try:
-            self._value = self.template.render(**params)
-            return self.value
+            self._str = self._template.render(**params)
+            return str(self)
         except UndefinedError as e:
             raise RenderError('in {}, jinja2 raised an UndefinedError, this '
                               'means the template is using an attribute '
@@ -229,21 +245,41 @@ class Placeholder:
                               '/templates/#variables'
                               .format(repr(self))) from e
 
-    @property
-    def safe(self):
-        if self._value is None:
-            return self.raw
-        else:
-            return self._value
+    def best_str(self, shorten):
+        """
+        Returns the rendered version (if available), otherwise the raw version
+        """
+        best = self._raw if self._str is None else self._str
 
-    # __getstate__ and __setstate__ are needed to make this picklable
+        if shorten:
+            lines = best.split('\n')
+            first_line = lines[0]
+            best = first_line if len(first_line) < 80 else first_line[:77]
+
+            if len(lines) > 1 or len(first_line) >= 80:
+                best += '...'
+
+        return best
+
+    @property
+    def variables(self):
+        """Returns declared variables in the template
+        """
+        # this requires parsing the raw template, do lazy load, but override
+        # it if hot_reload is True
+        if self._variables is None or self._hot_reload:
+            self._variables = util.get_tags_in_str(self._raw)
+
+        return self._variables
+
+    def __repr__(self):
+        return '{}("{}")'.format(type(self).__name__,
+                                 self.best_str(shorten=True))
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # _logger and _source are not pickable, so we remove them and build
-        # them again in __setstate__
         del state['_logger']
-        del state['_template']
+        del state['_Placeholder__template']
         return state
 
     def __setstate__(self, state):
@@ -251,18 +287,7 @@ class Placeholder:
         self._logger = logging.getLogger('{}.{}'.format(__name__,
                                                         type(self).__name__))
 
-        # make sure this attribute exists, we deleted it in getstate
-        self._template = None
-
-    @property
-    def name(self):
-        if self._path is None:
-            raise AttributeError('Cannot get name for Placeholder if '
-                                 'initialized directly from a string, load '
-                                 'from a pathlib.Path or using '
-                                 'ploomber.SourceLoader for this to work')
-        else:
-            return self._path.name
+        self.__template = None
 
 
 def _init_template(raw, loader_init):
@@ -320,8 +345,11 @@ def _make_loader_init(loader):
                         .format(type(loader).__name__))
 
 
-class SQLRelationPlaceholder:
+class SQLRelationPlaceholder(AbstractPlaceholder):
     """
+    Sources are also used by some Products that support placeholders, such as
+    SQLRelation or File.
+
     An structured Placeholder to represents a database relation (table or
     view). Used by Products that take SQL relations as parameters.
     Not meant to be used directly by end users.
@@ -380,7 +408,7 @@ class SQLRelationPlaceholder:
 
     @property
     def name(self):
-        return self._name_template.value
+        return str(self._name_template)
 
     @property
     def kind(self):
@@ -399,32 +427,45 @@ class SQLRelationPlaceholder:
     def render(self, params, **kwargs):
         name = self._name_template.render(params, **kwargs)
         self._validate_name(name)
-        return self
+        return str(self)
 
-    def _get_qualified(self, allow_repr=False):
+    def _qualified_name(self, unrendered_ok, shorten):
         qualified = ''
 
         if self.schema is not None:
             qualified += self.schema + '.'
 
-        if allow_repr:
-            qualified += self._name_template._value_repr
+        if unrendered_ok:
+            qualified += self._name_template.best_str(shorten=shorten)
         else:
-            qualified += self._name_template.value
+            qualified += str(self._name_template)
 
         return qualified
 
     def __str__(self):
-        return self._get_qualified(allow_repr=False)
+        return self._qualified_name(unrendered_ok=False, shorten=False)
 
     def __repr__(self):
         return ('SQLRelationPlaceholder({})'
-                .format(self._get_qualified(allow_repr=True)))
+                .format(self._qualified_name(unrendered_ok=True,
+                                             shorten=True)))
 
-    # TODO: rename this
-    @property
-    def safe(self):
-        return self._get_qualified(allow_repr=True)
+    def best_str(self, shorten):
+        return self._qualified_name(unrendered_ok=True,
+                                    shorten=shorten)
 
     def __hash__(self):
         return hash((self.schema, self.name, self.kind))
+
+
+def display_error(keys, descriptions):
+    if isinstance(descriptions, Mapping):
+        msg = '\n'
+
+        for key, error in descriptions.items():
+            msg += '"{key}": {error}\n'.format(key=key, error=error)
+
+        return msg
+
+    else:
+        return ', '.join(keys)

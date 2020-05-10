@@ -1,5 +1,5 @@
 import pytest
-from ploomber.templates.Placeholder import SQLRelationPlaceholder
+from ploomber.placeholders.Placeholder import SQLRelationPlaceholder
 from ploomber.products import (SQLiteRelation, PostgresRelation,
                                GenericSQLRelation)
 

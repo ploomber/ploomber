@@ -17,12 +17,7 @@ Implementation details:
 Optional:
 
 * Validating PRODUCT_CLASSES_ALLOWED
-* Validating upstream, product and params in code
 * Using a client parameter
-
-NOTE: Params trigger different data output (and should make tasks outdated),
-Tasks constructor args (such as chunksize in SQLDump) should not change
-the output, hence shoulf not make tasks outdated
 
 Task Status lifecycle:
 
@@ -41,8 +36,7 @@ Task Status lifecycle:
     try-catch statement to set status to Executed or Errored
 * When tasks are set to Errored, Abort is set to downstream tasks
 
-TODO: describe BrokenProcesssPool
-
+TODO: describe BrokenProcesssPool status
 """
 import traceback
 import abc
@@ -129,19 +123,16 @@ class Task(abc.ABC):
         self._source = self._init_source(source, kwargs)
 
         if name is None:
-            # works with pathlib.Path and ploomber.Placeholder
-            if hasattr(source, 'name'):
-                self._name = source.name
-            # works with python functions
-            elif hasattr(source, '__name__'):
-                self._name = source.__name__
-            else:
-                raise AttributeError('Task name can only be None if the '
-                                     'source object has a "name" attribute: '
-                                     'Placeholder objects (returned from '
-                                     'SourceLoader) or pathlib.Path objects. '
-                                     'Python functions also work since they '
-                                     'have a "__name__" attribute')
+            # use name inferred from the source object
+            self._name = self._source.name
+
+            if self._name is None:
+                raise AttributeError('Task name can only be None if a name'
+                                     'can be inferred from the source object. '
+                                     'This only works when the task receives a'
+                                     'pathlib.Path, when using SourceLoader '
+                                     'or in PythonCallable. Pass a value '
+                                     'explicitely.')
         else:
             self._name = name
 
@@ -495,17 +486,7 @@ class Task(abc.ABC):
         self.params._dict['product'] = self.product
 
         try:
-            # FIXME: have to get rid of this, all sources implement
-            # render (even if they don't do anything)
-            if self.source.needs_render:
-                # if this task has upstream dependencies, render using the
-                # context manager, which will raise a warning if any of the
-                # dependencies is not used, otherwise just render
-                if self.params.get('upstream'):
-                    with self.params.get('upstream'):
-                        self.source.render(self.params)
-                else:
-                    self.source.render(self.params)
+            self.source.render(self.params)
         except Exception as e:
             self.exec_status = TaskStatus.ErroredRender
             raise type(e)('Error rendering source from Task "{}", '
@@ -538,6 +519,8 @@ class Task(abc.ABC):
         self._validate_render()
         self._run_on_render()
 
+    # FIXME: delete, this is a special case for Input and Link, should not be
+    # part of this abstract class
     def _validate_render(self):
         """
         This hook is executed after rendering, it can be used to perform
@@ -551,6 +534,7 @@ class Task(abc.ABC):
     def set_upstream(self, other):
         self.dag._add_edge(other, self)
 
+    # FIXME: delete
     def plan(self):
         """Shows a text summary of what this task will execute
         """
@@ -622,7 +606,7 @@ class Task(abc.ABC):
         data['Product client'] = (repr(self.product.client)
                                   if hasattr(self.product, 'client')
                                   else None)
-        data['Doc (short)'] = self.source.doc_short
+        data['Doc (short)'] = _doc_short(self.source.doc)
         data['Location'] = self.source.loc
 
         return Row(data)
@@ -717,14 +701,6 @@ class Task(abc.ABC):
     def __str__(self):
         return str(self.product)
 
-    def _short_repr(self):
-        def short(s):
-            max_l = 30
-            return s if len(s) <= max_l else s[:max_l - 3] + '...'
-
-        return ('{} -> \n{}'
-                .format(short(self.name), self.product._short_repr()))
-
     def __getstate__(self):
         state = self.__dict__.copy()
         # _logger is not pickable, so we remove them and build
@@ -736,3 +712,10 @@ class Task(abc.ABC):
         self.__dict__.update(state)
         self._logger = logging.getLogger('{}.{}'.format(__name__,
                                                         type(self).__name__))
+
+
+def _doc_short(doc):
+    if doc is not None:
+        return doc.split('\n')[0]
+    else:
+        return None

@@ -1,162 +1,106 @@
-"""
-If Task B has Task A as a dependency, it means that the
-Product of A should be used by B in some way (e.g. Task A produces a table
-and Task B pivots it), placeholders help avoid redundancy when building tasks,
-if you declare that Product A is "schema"."table", the use of placeholders
-prevents "schema"."table" to be explicitely declared in B, since B depends
-on A, this information from A is passed to B. Sources fill that purpose,
-they are placeholders that will be filled at rendering time so that
-parameteters are only declared once.
-
-They serve a second, more advanced use case. It is recommended for Tasks to
-have no parameters and be fully declared by specifying their code, product
-and upstream dependencies. However, there is one use case where parameters
-are useful: batch processing and parallelization. For example, if we are
-operating on a 10-year databse, a single task might take too long, but we
-could split the data in 1-year chunks and process them in parallel, in such
-use case we could create 10 task instances, each one with a different year
-parameters and process them independently. So, apart from upstream and product
-placeholders, arbitrary parameters can also be placeholders.
-
-These classes are not intended to be used by the end user, since Task and
-Product objects create sources from strings.
-"""
 import abc
 import warnings
 import re
-import inspect
 
 from ploomber.products import Product
-from ploomber.templates.Placeholder import Placeholder
+from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.exceptions import SourceInitializationError
 from ploomber.sql import infer
-
-# FIXME: move diagnose to here, task might need this as well, since
-# validation may involve checking against the product, but we can replace
-# this behabior for an after-render validation, and just pass the product
-# as parameter maybe from the Task? the task should not do this
-# FIXME: remove opt from Placeholder.render
-# FIXME: sources and placeholder should have the same API, placeholder
-# should only be a way to get fast implementations but it should not be
-# an parent class
-# FIXME: some sources are used to initialize Task.source but others are used
-# as params in products (to support placeholders), we have to make that
-# distinction clear since hot_reload only makes sense for Task.sources
 
 
 class Source(abc.ABC):
     """Source abstract class
 
-    Sources encapsulate the code that will be executed by Tasks, they add the
-    ability to render placeholders so Products are only declared once.
+    Sources encapsulate the code that will be executed. Tasks only focus on
+    execution and sources take care of the source code lifecycle: import,
+    render (add parameter and validate) then hand off execution to the Task
+    object.
 
-    They optionally implement validation logic that Tasks can use in two
-    scenarios: initialization and render. Initialization prevents Tasks
-    from being instantiated with ill-defined sources. For example, a SQLScript
-    is expected to create a table/view, if the source does not contains a
-    CREATE TABLE/VIEW statement, then validation could fail to prevent this
-    error be to be discovered at runtime. Render validation happens after
-    placeholders are resolved. For example, a PythonCallable checks that
-    the passed Task.params are compatible with the source function signature.
+    They validation logic is optional and is done at init time to prevent
+    Tasks from being instantiated with ill-defined sources. For example, a
+    SQLScript is expected to create a table/view, if the source does not
+    contain a CREATE TABLE/VIEW statement, then validation could prevent this
+    source code from executing. Validation can also happen after rendering.
+    For example, a PythonCallableSource checks that the passed Task.params are
+    compatible with the source function signature.
 
-    Since there is a limited amount of Sources that cover most use cases, this
-    will help developers to create their own Tasks faster, as they can pick up
-    one of the implemented sources, if none of the current implementations
-    matches their use case, they can either use a GenericSource or as a last
-    resource, implement their own.
-
-    Sources are also used by some Products that support placeholders, such as
-    SQLRelation or File.
-
+    A new Task does not mean a new source is required, the concrete classes
+    implemented cover most use cases, if none of the current implementations
+    matches their use case, they can either use a GenericSource or implement
+    their own.
     """
 
-    def __init__(self, value, hot_reload=False):
-        self.value = Placeholder(value, hot_reload=hot_reload)
-        self._post_init_validation(self.value)
+    @abc.abstractmethod
+    def __init__(self, primitive, hot_reload=False):
+        pass
 
     @property
+    @abc.abstractmethod
+    def primitive(self):
+        """
+        Return the argument passed to build the source, unmodified. e.g. For
+        SQL code this is a string, for notebooks it is a JSON string (or
+        a plain text code string in a formate that can be converted to a
+        notebook), for PythonCallableSource, it is a callable object.
+
+        Should load from disk each time the user calls source.primitive
+        if hot_reload is True. Any other object build from the primitive
+        (e.g. the code with the injected parameters) should access this
+        so hot_reload is propagated.
+        """
+        pass
+
+    # TODO: rename to params
+    # NOTE: maybe allow dictionaries for cases where default values are
+    # possible? python callables and notebooks
+    @property
+    @abc.abstractmethod
     def variables(self):
-        return self.value.variables
+        pass
 
-    @property
-    def needs_render(self):
-        """
-        Whether this source needs render (because it has {{}} placeholders
-        or not). Some Tasks do not accept sources that have placeholders
-        and they can use this function to raise errors during initialization
-        """
-        return self.value.needs_render
-
+    @abc.abstractmethod
     def render(self, params):
         """Render source (fill placeholders)
-        """
-        self.value.render(params)
-        self._post_render_validation(self.value.value, params)
-        return self
 
+        If hot_reload is True, this should indirectly reload primitive
+        from disk by using self.primitive
+        """
+        pass
+
+    # NOTE: maybe rename to path? the only case where it is not exactly a path
+    # is when it is a callable (line number is added :line), but this is
+    # intended as a human-readable property
     @property
+    @abc.abstractmethod
     def loc(self):
         """
         Source location. For most cases, this is the path to the file that
         contains the source code. Used only for informative purpose (e.g.
         when doing dag.status())
         """
-        return self.value.path
+        pass
 
-    # NOTE: when determined code differences str(task.source) is performed
-    # to obtain the code (maybe change for a a more explicit operation name?)
-    # so this determines what is considered the "code", this varies from one
-    # source to the other:
-    # SQL: sql with all parameters rendered
-    # Python: function source code
-    # Notebook: the current implementation returns the raw input
-    #       (this means passed parameters are not included)
-    # the consequence for this is that the only source that triggers
-    # execution when parameters change is SQL, the other two don't,
-    # I have to think if this is an ok decision. At least for Notebook,
-    # the same behavior that SQL has is possible by just saving the Notebook
-    # with the rendered parameters but for Python functions is not obvious,
-    # how I'd like to include the parameters If I wanted to trigge execution
-    # when they change - maybe source code could be: function code + json
-    # with parameters? but this will not allow me to pass complex objects
-    # as params to PythonCallable which is undesirable, maybe just keep
-    # it that way but be explicit in the docs how this works
+    @abc.abstractmethod
     def __str__(self):
-        return str(self.value)
-
-    def __repr__(self):
-        return "{}({})".format(type(self).__name__, self.value._value_repr)
-
-    @property
-    def doc_short(self):
-        """Returns the first line in the docstring, None if no docstring
         """
-        if self.doc is not None:
-            return self.doc.split('\n')[0]
-        else:
-            return None
+        Must return the code that will be executed by the Task in a
+        human-readable form (even if it's not the actual code sent to the
+        task, the only case where this happens currently is for notebooks,
+        human-readable would be plain text code but the actual code is an
+        ipynb file in JSON), if it is modified by the render step
+        (e.g. SQL code with tags), calling this before rendering should
+        raise an error.
 
-    @property
-    def extension(self):
-        """
-        Optional property that should return the file extension, used for
-        code normalization (applied before determining wheter two pieces
-        or code are different). If None, no normalization is done.
-        """
-        return None
-
-    # optional validation
-
-    def _post_render_validation(self, rendered_value, params):
-        """
-        Validation function executed after rendering
+        This and the task params given an unambiguous definition of which code
+        will be run. And it's actually the same code that will be executed
+        for all cases except notebooks (where the JSON string is passed to
+        the task to execute).
         """
         pass
 
-    def _post_init_validation(self, value):
-        pass
-
-    # required by subclasses
+    # NOTE: should __repr__ contain: human-readable code + class name +
+    # parameters? That's one option, we currently do not have a useful
+    # __repr__ for sources
 
     @property
     @abc.abstractmethod
@@ -166,15 +110,85 @@ class Source(abc.ABC):
         """
         pass
 
+    @property
+    @abc.abstractmethod
+    def extension(self):
+        """
+        Optional property that should return the file extension, used for
+        code normalization (applied before determining wheter two pieces
+        or code are different). If None, no normalization is done.
+        """
+        pass
 
-class SQLSourceMixin:
-    """A source representing SQL source code
+    @abc.abstractmethod
+    def _post_render_validation(self, rendered_value, params):
+        """
+        Validation function executed after rendering
+        """
+        pass
+
+    @abc.abstractmethod
+    def _post_init_validation(self, value):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def name(self):
+        pass
+
+
+class PlaceholderSource(Source):
+    """
+    Source concrete class for the ones that use a Placeholder
     """
 
+    def __init__(self, value, hot_reload=False):
+        self._primitive = value
+        # rename, and make it private
+        self._placeholder = Placeholder(value, hot_reload=hot_reload)
+        self._post_init_validation(self._placeholder)
+
+    @property
+    def primitive(self):
+        return self._primitive
+
+    # TODO: rename to params
+    @property
+    def variables(self):
+        return self._placeholder.variables
+
+    def render(self, params):
+        if params.get('upstream'):
+            with params.get('upstream'):
+                self._placeholder.render(params)
+        else:
+            self._placeholder.render(params)
+
+        self._post_render_validation(str(self._placeholder), params)
+        return self
+
+    @property
+    def loc(self):
+        return self._placeholder.path
+
+    def __str__(self):
+        return str(self._placeholder)
+
+    def __repr__(self):
+        return "{}({})".format(type(self).__name__,
+                               self._placeholder.best_str(shorten=True))
+
+    @property
+    def name(self):
+        if self._placeholder.path is not None:
+            return self._placeholder.path.name
+
+
+class SQLSourceMixin:
     @property
     def doc(self):
         regex = r'^\s*\/\*([\w\W]+)\*\/[\w\W]*'
-        match = re.match(regex, self.value.safe)
+        match = re.match(regex, self._placeholder.best_str(shorten=False))
         return '' if match is None else match.group(1)
 
     @property
@@ -182,7 +196,7 @@ class SQLSourceMixin:
         return 'sql'
 
 
-class SQLScriptSource(SQLSourceMixin, Source):
+class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
     """
     A SQL (templated) script, it is expected to make a persistent change in
     the database (by using the CREATE statement), its validation verifies
@@ -253,7 +267,7 @@ class SQLScriptSource(SQLSourceMixin, Source):
         #                       .format(infered_relations, actual_len))
 
 
-class SQLQuerySource(SQLSourceMixin, Source):
+class SQLQuerySource(SQLSourceMixin, PlaceholderSource):
     """
     Templated SQL query, it is not expected to make any persistent changes in
     the database (in contrast with SQLScriptSource), so its validation is
@@ -264,55 +278,22 @@ class SQLQuerySource(SQLSourceMixin, Source):
     # does not exist in the template, instead of just making it optional
 
     def render(self, params):
-        self.value.render(params, optional=['product'])
-        self._post_render_validation(self.value.value, params)
+        if params.get('upstream'):
+            with params.get('upstream'):
+                self._placeholder.render(params, optional=['product'])
+        else:
+            self._placeholder.render(params, optional=['product'])
 
+        self._post_render_validation(str(self._placeholder), params)
 
-class PythonCallableSource(Source):
-    """A source that holds a Python callable
-    """
-
-    def __init__(self, value, hot_reload=False):
-        if hot_reload:
-            warnings.warn('hot_reload is not implement for '
-                          'PythonCallableSource, this will be ignored')
-
-        if not callable(value):
-            raise TypeError('{} must be initialized'
-                            'with a Python callable, got '
-                            '"{}"'
-                            .format(type(self).__name__),
-                            type(value).__name__)
-
-        self.value = value
-        self._source_as_str = inspect.getsource(value)
-        _, self._source_lineno = inspect.getsourcelines(value)
-        self._loc = inspect.getsourcefile(value)
-
-    def __str__(self):
-        return self._source_as_str
-
-    @property
-    def doc(self):
-        return self.value.__doc__
-
-    @property
-    def loc(self):
-        return '{}:{}'.format(self._loc, self._source_lineno)
-
-    def render(self, params):
+    def _post_render_validation(self, rendered_value, params):
         pass
 
-    @property
-    def needs_render(self):
-        return False
-
-    @property
-    def extension(self):
-        return 'py'
+    def _post_init_validation(self, value):
+        pass
 
 
-class GenericSource(Source):
+class GenericSource(PlaceholderSource):
     """
     Generic source, the simplest type of source, it does not perform any kind
     of parsing nor validation
@@ -329,9 +310,39 @@ class GenericSource(Source):
     pathlib.Path objects are read and str are converted to jinja2.Template
     objects, for more details see Placeholder documentation
     """
+
+    def __init__(self, value, hot_reload=False, optional=None, required=None):
+        self._primitive = value
+        # rename, and make it private
+        self._placeholder = Placeholder(value, hot_reload=hot_reload,
+                                        required=required)
+        self._post_init_validation(self._placeholder)
+        self._optional = optional
+        self._required = required
+
+    def render(self, params):
+        if params.get('upstream'):
+            with params.get('upstream'):
+                self._placeholder.render(params, optional=self._optional)
+        else:
+            self._placeholder.render(params, optional=self._optional)
+
+        self._post_render_validation(str(self._placeholder), params)
+        return self
+
     @property
     def doc(self):
         return None
+
+    @property
+    def extension(self):
+        return None
+
+    def _post_render_validation(self, rendered_value, params):
+        pass
+
+    def _post_init_validation(self, value):
+        pass
 
 
 class FileSource(GenericSource):
@@ -350,5 +361,61 @@ class FileSource(GenericSource):
         super().__init__(Placeholder(value))
 
     def render(self, params):
-        self.value.render(params, optional=['product'])
-        self._post_render_validation(self.value.value, params)
+        if params.get('upstream'):
+            with params.get('upstream'):
+                self._placeholder.render(
+                    params, optional=['product', 'upstream'])
+        else:
+            self._placeholder.render(params, optional=['product', 'upstream'])
+
+        self._post_render_validation(str(self._placeholder), params)
+
+    def _post_render_validation(self, rendered_value, params):
+        pass
+
+    def _post_init_validation(self, value):
+        pass
+
+
+class EmptySource(Source):
+    """A source that does not do anything, used for sourceless tasks
+    """
+
+    def __init__(self, primitive, **kwargs):
+        pass
+
+    @property
+    def primitive(self):
+        pass
+
+    @property
+    def variables(self):
+        pass
+
+    def render(self, params):
+        pass
+
+    @property
+    def loc(self):
+        pass
+
+    def __str__(self):
+        return 'EmptySource'
+
+    @property
+    def doc(self):
+        pass
+
+    @property
+    def extension(self):
+        pass
+
+    def _post_render_validation(self, rendered_value, params):
+        pass
+
+    def _post_init_validation(self, value):
+        pass
+
+    @property
+    def name(self):
+        pass

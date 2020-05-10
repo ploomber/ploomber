@@ -11,7 +11,7 @@ import subprocess
 from subprocess import CalledProcessError
 
 from ploomber.clients.Client import Client
-from ploomber.templates.Placeholder import Placeholder
+from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.util import requires
 
 

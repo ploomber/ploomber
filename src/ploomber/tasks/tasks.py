@@ -5,15 +5,13 @@ A Task is a unit of work that produces a persistent change (Product)
 such as a bash or a SQL script
 """
 import pdb
-from ploomber.exceptions import SourceInitializationError
 from ploomber.tasks.Task import Task
 from ploomber.sources import (PythonCallableSource,
-                              GenericSource)
+                              GenericSource, EmptySource)
 from ploomber.clients import ShellClient
 from ploomber.products.Metadata import MetadataAlwaysUpToDate
 from ploomber.exceptions import TaskBuildError, TaskRenderError
 from ploomber.constants import TaskStatus
-from ploomber.util.util import signature_check
 
 
 class PythonCallable(Task):
@@ -43,11 +41,8 @@ class PythonCallable(Task):
     def _init_source(self, source, kwargs):
         return PythonCallableSource(source, **kwargs)
 
-    def _validate_render(self):
-        signature_check(self.source.value, self.params, self.name)
-
     def run(self):
-        self.source.value(**self.params)
+        self.source.primitive(**self.params)
 
     def debug(self):
         """
@@ -60,7 +55,7 @@ class PythonCallable(Task):
                                  'rendered, call DAG.render() first'
                                  .format(self.name))
 
-        pdb.runcall(self.source.value, **self.params)
+        pdb.runcall(self.source.primitive, **self.params)
 
 
 class ShellScript(Task):
@@ -99,15 +94,10 @@ class ShellScript(Task):
             self.client = ShellClient()
 
     def _init_source(self, source, kwargs):
-        source = GenericSource(source, **kwargs)
+        required = {'product': ('ShellScript must include {{product}} in '
+                                'its source')}
 
-        if not source.needs_render:
-            raise SourceInitializationError('The source for this task '
-                                            'must be a template since the '
-                                            'product will be passed as '
-                                            'parameter')
-
-        return source
+        return GenericSource(source, **kwargs, required=required)
 
     def run(self):
         self.client.execute(str(self.source))
@@ -135,7 +125,7 @@ class DownloadFromURL(Task):
         request.urlretrieve(str(self.source), filename=str(self.product))
 
     def _init_source(self, source, kwargs):
-        return GenericSource(str(source), **kwargs)
+        return GenericSource(str(source), **kwargs, optional=['product'])
 
 
 # TODO: move this and _Gather to helpers.py (actually create a module
@@ -152,7 +142,7 @@ class _Partition(Task):
         pass
 
     def _init_source(self, source, kwargs):
-        return GenericSource(str(source), **kwargs)
+        return EmptySource(None, **kwargs)
 
     def _null(self):
         pass
@@ -222,7 +212,7 @@ class Link(Task):
                                'not exist'.format(self.name, self.product))
 
     def _init_source(self, source, kwargs):
-        return GenericSource(str(source), **kwargs)
+        return EmptySource(None, **kwargs)
 
     def _null_save_metadata(self, metadata):
         pass
@@ -279,7 +269,7 @@ class Input(Task):
                                   'not exist'.format(self.name, self.product))
 
     def _init_source(self, source, kwargs):
-        return GenericSource(str(source), **kwargs)
+        return EmptySource(None, **kwargs)
 
     def _null_save_metadata(self, metadata):
         pass

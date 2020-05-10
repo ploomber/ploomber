@@ -7,7 +7,7 @@ import pickle
 from ploomber import DAG
 from ploomber.tasks import PythonCallable, ShellScript
 from ploomber.products import File, PostgresRelation
-from ploomber.templates.Placeholder import Placeholder
+from ploomber.placeholders.Placeholder import Placeholder
 
 
 def fn():

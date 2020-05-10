@@ -7,7 +7,6 @@ are lazy evaluated, they can be built from templates
 """
 import abc
 import logging
-from math import ceil
 
 from ploomber.products.Metadata import Metadata
 
@@ -121,7 +120,7 @@ class Product(abc.ABC):
             timestamp or if an upstream product is outdated
             """
             if (self.metadata.timestamp is None
-               or up_prod.metadata.timestamp is None):
+                    or up_prod.metadata.timestamp is None):
                 return True
             else:
                 return ((up_prod.metadata.timestamp > self.metadata.timestamp)
@@ -181,24 +180,8 @@ class Product(abc.ABC):
         return str(self._identifier)
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, self._identifier.safe)
-
-    def _short_repr(self):
-        s = str(self._identifier)
-
-        if len(s) > 20:
-            s_short = ''
-
-            t = ceil(len(s) / 20)
-
-            for i in range(t):
-                s_short += s[(20 * i):(20 * (i + 1))] + '\n'
-        else:
-            s_short = s
-
-        return s_short
-
-    # __getstate__ and __setstate__ are needed to make this picklable
+        return '{}({})'.format(type(self).__name__,
+                               self._identifier.best_str(shorten=True))
 
     def __getstate__(self):
         state = self.__dict__.copy()

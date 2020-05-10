@@ -11,6 +11,7 @@ import warnings
 import logging
 import collections
 import tempfile
+from math import ceil
 
 try:
     import importlib.resources as importlib_resources
@@ -177,6 +178,8 @@ class DAG(collections.abc.Mapping):
 
     @property
     def product(self):
+        # NOTE: this allows declaring a dag as a dependency for one task,
+        # maybe create a metaclass that applies to DAGs and Task
         # We have to rebuild it since tasks might have been added
         return MetaProduct([t.product for t in self.values()])
 
@@ -292,7 +295,8 @@ class DAG(collections.abc.Mapping):
             else:
                 self._exec_status = DAGStatus.Executed
             finally:
-                # always clear out status
+                # status is cached during dag execution to only compute it
+                # once per task, clear it after it's done
                 self._clear_cached_status()
 
             # add reports from skipped tasks
@@ -409,15 +413,19 @@ class DAG(collections.abc.Mapping):
 
         G = self._to_graph()
 
-        for n, data in G.nodes(data=True):
-            data['color'] = 'red' if n.product._is_outdated() else 'green'
-            data['label'] = n._short_repr()
+        for task, data in G.nodes(data=True):
+            data['color'] = 'red' if task.product._is_outdated() else 'green'
+            data['label'] = _task_short_repr(task)
 
         # https://networkx.github.io/documentation/networkx-1.10/reference/drawing.html
         # # http://graphviz.org/doc/info/attrs.html
         # NOTE: requires pygraphviz and pygraphviz
         G_ = nx.nx_agraph.to_agraph(G)
         G_.draw(path, prog='dot', args='-Grankdir=LR')
+
+        # plot function uses _is_outdated, which casues caching, clear up
+        # to avoid re-using this in any other operation
+        self._clear_cached_status()
 
         if output == 'matplotlib':
             return path2fig(path)
@@ -542,6 +550,7 @@ class DAG(collections.abc.Mapping):
         return {u: self._G.nodes[u]['task'] for u in upstream}
 
     def _clear_cached_status(self):
+        # NOTE: maybe make this a context manager and/or a decorator
         self._logger.debug('Clearing product status')
         # clearing out this way is only useful after building, but not
         # if the metadata changed since it wont be reloaded
@@ -593,3 +602,41 @@ class DAG(collections.abc.Mapping):
         self.__dict__.update(state)
         self._logger = logging.getLogger('{}.{}'.format(__name__,
                                                         type(self).__name__))
+
+
+def _single_product_short_repr(product):
+    s = str(product._identifier)
+
+    if len(s) > 20:
+        s_short = ''
+
+        t = ceil(len(s) / 20)
+
+        for i in range(t):
+            s_short += s[(20 * i):(20 * (i + 1))] + '\n'
+    else:
+        s_short = s
+
+    return s_short
+
+
+def _meta_product_short_repr(metaproduct):
+    return ', '.join([_single_product_short_repr(p)
+                      for p in metaproduct.products])
+
+
+def _product_short_repr(product):
+    if isinstance(product, MetaProduct):
+        return _meta_product_short_repr(product)
+    else:
+        return _single_product_short_repr(product)
+
+
+def _task_short_repr(task):
+    def short(s):
+        max_l = 30
+        return s if len(s) <= max_l else s[:max_l - 3] + '...'
+
+    return ('{} -> \n{}'
+            .format(short(str(task.name)),
+                    _product_short_repr(task.product)))

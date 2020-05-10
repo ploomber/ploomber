@@ -19,6 +19,8 @@ from ploomber.executors import Serial, Parallel
 # TODO: check skipped status
 # TODO: test once a task is skipped, downstream tasks go from WaitingUpstream
 # to WaitingExecution
+# TODO: test dag.plot(), create a function that returns an object and test
+# such function, to avoid comparing images
 
 # parametrize tests over these executors
 _executors = [Serial(build_in_subprocess=False),
@@ -132,9 +134,13 @@ def test_build_partially(tmp_directory, executor):
 
 @pytest.mark.parametrize('function_name', ['render', 'build', 'to_markup',
                          'plot'])
-def test_dag_functions(function_name):
+def test_dag_functions_clear_up_product_status(function_name, tmp_directory):
     dag = DAG()
+    t = PythonCallable(touch_root, File('1.txt'), dag, name=1)
     getattr(dag, function_name)()
+
+    assert t.product._outdated_code_dependency_status is None
+    assert t.product._outdated_data_dependencies_status is None
 
 
 def test_dag_build_clears_cached_status(tmp_directory):

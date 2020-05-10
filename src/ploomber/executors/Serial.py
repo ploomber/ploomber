@@ -62,7 +62,7 @@ class Serial(Executor):
 
             try:
                 with warnings.catch_warnings(record=True) as warnings_current:
-                    if (callable(t.source.value)
+                    if (callable(t.source.primitive)
                             and self._build_in_subprocess):
                         report = execute_in_subprocess(t, task_kwargs)
                     else:

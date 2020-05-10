@@ -8,7 +8,7 @@ from pathlib import Path
 
 from jinja2 import Template
 
-from ploomber.templates import util
+from ploomber.placeholders import util
 from ploomber import repo
 
 

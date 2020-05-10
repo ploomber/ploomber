@@ -19,8 +19,8 @@ def touch(product, upstream):
 def test_input_always_executes(tmp_directory):
     dag = DAG()
 
-    Path('some_file').touch()
-    t1 = Input(File('some_file'), dag, name='some_file')
+    Path('some_file.txt').touch()
+    t1 = Input(File('some_file.txt'), dag, name='some_file')
 
     assert t1.product._is_outdated()
 
@@ -32,8 +32,10 @@ def test_input_always_executes(tmp_directory):
 def test_error_raised_if_input_has_upstream_dependencies(tmp_directory):
     dag = DAG()
 
-    t0 = PythonCallable(touch_root, File('another_file'), dag)
-    t1 = Input(File('some_file'), dag, name='some_file')
+    t0 = PythonCallable(touch_root, File('another_file.txt'), dag)
+    Path('some_file.txt').touch()
+    t1 = Input(File('some_file.txt'), dag, name='some_file')
+
     t0 >> t1
 
     with pytest.raises(DAGRenderError) as excinfo:
@@ -47,11 +49,11 @@ def test_error_raised_if_input_has_upstream_dependencies(tmp_directory):
 def test_error_raised_if_input_product_does_not_exist(tmp_directory):
     dag = DAG()
 
-    Input(File('some_file'), dag, name='some_file')
+    Input(File('some_file.txt'), dag, name='some_file')
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
 
     msg = ('Input tasks should point to Products that already exist. '
-           '"some_file" task product "some_file" does not exist')
+           '"some_file" task product "some_file.txt" does not exist')
     assert msg in str(excinfo.getrepr())

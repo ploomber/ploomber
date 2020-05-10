@@ -7,7 +7,7 @@ from ploomber.tasks import PythonCallable, SQLScript, SQLTransfer, SQLUpload
 from ploomber.products import GenericProduct, GenericSQLRelation
 
 
-params = [(GenericProduct, 'some_identifier'),
+params = [(GenericProduct, 'some_identifier.txt'),
           (GenericSQLRelation, ('a_table', 'table'))]
 
 
@@ -26,7 +26,7 @@ def test_exists_sqlite_backend(sqlite_client_and_tmp_dir, class_, identifier):
 def test_save_metadata_sqlite_backend(sqlite_client_and_tmp_dir, class_,
                                       identifier):
     client, tmp_dir = sqlite_client_and_tmp_dir
-    product = GenericProduct('some_identifier', client=client)
+    product = GenericProduct('some_identifier.txt', client=client)
     m = {'metadata': 'value'}
     product.save_metadata(m)
 
@@ -37,7 +37,7 @@ def test_save_metadata_sqlite_backend(sqlite_client_and_tmp_dir, class_,
 @pytest.mark.parametrize("class_,identifier", params)
 def test_delete_sqlite_backend(sqlite_client_and_tmp_dir, class_, identifier):
     client, tmp_dir = sqlite_client_and_tmp_dir
-    product = GenericProduct('some_identifier', client=client)
+    product = GenericProduct('some_identifier.txt', client=client)
     m = {'metadata': 'value'}
     product.save_metadata(m)
     product.delete()
@@ -49,11 +49,11 @@ def test_delete_sqlite_backend(sqlite_client_and_tmp_dir, class_, identifier):
 def test_sample_dag(sqlite_client_and_tmp_dir, class_, identifier):
     client, _ = sqlite_client_and_tmp_dir
     dag = DAG()
-    product = GenericProduct('some_file', client=client)
+    product = GenericProduct('some_file.txt', client=client)
     PythonCallable(touch, product, dag)
     dag.build()
 
-    assert Path('some_file').exists()
+    assert Path('some_file.txt').exists()
     assert product.exists()
     assert product.fetch_metadata() is not None
 

@@ -1,13 +1,20 @@
-import pytest
+from pathlib import Path
 from unittest.mock import Mock
 
+import pytest
+
 from ploomber.exceptions import SourceInitializationError
-from ploomber.sources import SQLQuerySource, SQLScriptSource, GenericSource
+from ploomber.sources import (SQLQuerySource, SQLScriptSource, GenericSource,
+                              PythonCallableSource)
 from ploomber.tasks import SQLScript
 from ploomber.products import SQLiteRelation
 from ploomber import DAG
 from ploomber.products import GenericSQLRelation
 from ploomber.sql import infer
+
+from test_pkg import functions
+
+# def test retrieve .name
 
 
 def test_generic_source_unrendered():
@@ -174,3 +181,20 @@ def test_warns_if_number_of_relations_does_not_match_products(sqlite_client_and_
 #                           params=dict(name='customers'))
 
 # comparing metaproduct
+
+
+# TODO: parametrize
+# TODO: use fixture and backup the entire test_pkg source code
+# TODO: check all other relevant properties are updated as well
+def test_hot_reload(path_to_test_pkg):
+    path_to_functions = Path(path_to_test_pkg, 'functions.py')
+    source = PythonCallableSource(functions.some_function,
+                                  hot_reload=True)
+
+    source_old = path_to_functions.read_text()
+    source_new = 'def some_function():\n    1 + 1\n'
+    path_to_functions.write_text(source_new)
+
+    assert str(source) == source_new
+
+    path_to_functions.write_text(source_old)

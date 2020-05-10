@@ -5,7 +5,7 @@ from jinja2 import Template
 
 from ploomber.products import Product
 from ploomber.products.serializers import Base64Serializer
-from ploomber.templates.Placeholder import SQLRelationPlaceholder
+from ploomber.placeholders.Placeholder import SQLRelationPlaceholder
 
 
 class SQLiteBackedProductMixin:

@@ -2,7 +2,7 @@ from ploomber.dag.DAG import DAG
 from ploomber.dag.DAGConfigurator import DAGConfigurator
 from ploomber.env.env import Env
 from ploomber.env.decorators import load_env, with_env
-from ploomber.templates.SourceLoader import SourceLoader
+from ploomber.placeholders.SourceLoader import SourceLoader
 
 
 __version__ = '0.3.6dev'

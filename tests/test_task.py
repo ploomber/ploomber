@@ -7,7 +7,7 @@ from ploomber.products import (File, PostgresRelation, GenericProduct,
 from ploomber.tasks import (PythonCallable, SQLScript, ShellScript, SQLDump,
                             SQLTransfer, SQLUpload, PostgresCopyFrom)
 from ploomber.constants import TaskStatus
-from ploomber.templates.Placeholder import Placeholder
+from ploomber.placeholders.Placeholder import Placeholder
 
 import pytest
 
@@ -248,7 +248,7 @@ def test_placeholder_is_copied_upon_initialization():
     t2 = SQLScript(p, PostgresRelation(('schema', 'another_table', 'table')),
                    dag, name='t2')
 
-    assert t1.source.value is not t2.source.value
+    assert t1.source._placeholder is not t2.source._placeholder
 
 
 def test_attempting_to_build_unrendered_task_throws_exception():

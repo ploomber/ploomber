@@ -8,7 +8,7 @@ import shutil
 import os
 from pathlib import Path
 from ploomber.products.Product import Product
-from ploomber.templates.Placeholder import Placeholder
+from ploomber.placeholders.Placeholder import Placeholder
 
 
 class File(Product):

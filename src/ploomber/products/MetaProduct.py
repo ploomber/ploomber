@@ -127,9 +127,6 @@ class MetaProduct:
         for p in self.products:
             p.render(params, **kwargs)
 
-    def _short_repr(self):
-        return ', '.join([p._short_repr() for p in self.products])
-
     def __repr__(self):
         return '{}: {}'.format(type(self).__name__, str(self.products))
 

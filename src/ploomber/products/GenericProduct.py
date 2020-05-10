@@ -4,7 +4,7 @@ exists/delete methods are bash commands
 """
 from ploomber.products.Product import Product
 from ploomber.products.sql import SQLiteBackedProductMixin
-from ploomber.templates.Placeholder import Placeholder, SQLRelationPlaceholder
+from ploomber.placeholders.Placeholder import Placeholder, SQLRelationPlaceholder
 
 
 # TODO: add check_product and run tests: e.g .name should return a string

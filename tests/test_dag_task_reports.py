@@ -23,7 +23,7 @@ def touch(upstream, product):
 def test_task_report_after_building(tmp_directory):
     dag = DAG()
 
-    t = PythonCallable(touch_root, File('some_file'), dag, name='task')
+    t = PythonCallable(touch_root, File('some_file.txt'), dag, name='task')
 
     t.render()
     report = t.build()
@@ -37,8 +37,8 @@ def test_task_report_after_building(tmp_directory):
 def test_dag_report_after_building(tmp_directory, executor):
     dag = DAG(executor=executor)
 
-    PythonCallable(touch_root, File('some_file'), dag, name='task')
-    PythonCallable(touch_root, File('some_file'), dag, name='task2')
+    PythonCallable(touch_root, File('some_file.txt'), dag, name='task')
+    PythonCallable(touch_root, File('some_file.txt'), dag, name='task2')
 
     report = dag.build()
 
@@ -62,7 +62,7 @@ def test_dag_reports_sub_select_cols(sqlite_client_and_tmp_dir):
     dag.clients[SQLScript] = client
     dag.clients[SQLiteRelation] = client
 
-    PythonCallable(touch_root, File('some_file'), dag, name='task')
+    PythonCallable(touch_root, File('some_file.txt'), dag, name='task')
     sql = 'CREATE TABLE {{product}} AS SELECT * FROM data'
     SQLScript(sql, SQLiteRelation(('data2', 'table')),
               dag, name='task2')

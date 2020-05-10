@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 import pydoc
 from pathlib import Path
-from ploomber.templates.Placeholder import Placeholder
+from ploomber.placeholders.Placeholder import Placeholder
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
