@@ -8,12 +8,22 @@ class Params(abc.Mapping):
     initializes with a copy of the passed dictionary
     """
 
-    def __init__(self, dict_=None):
-        if dict_ is None:
+    def __init__(self, params=None):
+        if params is None:
             self._dict = {}
         else:
+            self._dict = copy(params)
 
-            self._dict = copy(dict_)
+
+        if 'upstream' in params:
+            raise ValueError('Task params cannot be initialized with an '
+                             '"upstream" key as it automatically added '
+                             'upon rendering')
+
+        if 'product' in params:
+            raise ValueError('Task params cannot be initialized with an '
+                             '"product" key as it automatically added '
+                             'upon rendering')
 
     def to_dict(self):
         return copy(self._dict)
