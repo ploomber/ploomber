@@ -65,7 +65,8 @@ class ShellScript(Task):
     ----------
     source: str or pathlib.Path
         Script source, if str, the content is interpreted as the actual
-        script, if pathlib.Path, the content of the file is loaded
+        script, if pathlib.Path, the content of the file is loaded. The
+        souce code must have the {{product}} tag
     product: ploomber.products.Product
         Product generated upon successful execution
     dag: ploomber.DAG
@@ -195,21 +196,16 @@ class Link(Task):
         # product's code will never be considered outdated
         self.product._outdated_code_dependency = self._false
 
-    def run(self):
-        """This Task does not run anything
-        """
-        pass
-
-    def _validate_render(self):
-        if self.upstream:
-            raise RuntimeError('Link tasks should not have upstream '
-                               'dependencies. "{}" task has them'
-                               .format(self.name))
-
         if not self.product.exists():
             raise RuntimeError('Link tasks should point to Products that '
                                'already exist. "{}" task product "{}" does '
                                'not exist'.format(self.name, self.product))
+
+    def run(self):
+        pass
+
+    def set_upstream(self, other):
+        raise RuntimeError('Link tasks should not have upstream dependencies')
 
     def _init_source(self, source, kwargs):
         return EmptySource(None, **kwargs)
@@ -252,21 +248,17 @@ class Input(Task):
         self.product._outdated_data_dependencies = self._true
         self.product._outdated_code_dependency = self._true
 
+        if not self.product.exists():
+            raise RuntimeError('Input tasks should point to Products that '
+                               'already exist. "{}" task product "{}" does '
+                               'not exist'.format(self.name, self.product))
+
     def run(self):
-        """This Task does not run anything
-        """
         pass
 
-    def _validate_render(self):
-        if self.upstream:
-            raise TaskRenderError('Input tasks should not have upstream '
-                                  'dependencies. "{}" task has them'
-                                  .format(self.name))
-
-        if not self.product.exists():
-            raise TaskRenderError('Input tasks should point to Products that '
-                                  'already exist. "{}" task product "{}" does '
-                                  'not exist'.format(self.name, self.product))
+    def set_upstream(self, other):
+        raise RuntimeError('Input tasks should not have upstream '
+                           'dependencies')
 
     def _init_source(self, source, kwargs):
         return EmptySource(None, **kwargs)

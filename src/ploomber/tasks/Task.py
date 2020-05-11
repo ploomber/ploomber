@@ -516,20 +516,8 @@ class Task(abc.ABC):
             else:
                 self._exec_status = TaskStatus.WaitingUpstream
 
-        self._validate_render()
         self._run_on_render()
 
-    # FIXME: delete, this is a special case for Input and Link, should not be
-    # part of this abstract class
-    def _validate_render(self):
-        """
-        This hook is executed after rendering, it can be used to perform
-        validation on parameters that might cause runtime errors. e.g.
-        if is used by PythonCallable to check if the function signature
-        matches parameters passed. Note: if is executed before the
-        user-supplied on_render hook
-        """
-        pass
 
     def set_upstream(self, other):
         self.dag._add_edge(other, self)

@@ -234,8 +234,9 @@ class Placeholder(AbstractPlaceholder):
 
         try:
             self._str = self._template.render(**params)
-            return str(self)
         except UndefinedError as e:
+            # TODO: we can use e.message to see which param caused the
+            # error
             raise RenderError('in {}, jinja2 raised an UndefinedError, this '
                               'means the template is using an attribute '
                               'or item that does not exist, the original '
@@ -244,6 +245,8 @@ class Placeholder(AbstractPlaceholder):
                               'http://jinja.pocoo.org/docs/latest'
                               '/templates/#variables'
                               .format(repr(self))) from e
+
+        return str(self)
 
     def best_str(self, shorten):
         """

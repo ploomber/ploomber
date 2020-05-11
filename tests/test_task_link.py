@@ -48,23 +48,19 @@ def test_error_raised_if_link_has_upstream_dependencies(tmp_directory):
     t0 = PythonCallable(touch_root, File('another_file'), dag)
     Path('some_file.txt').touch()
     t1 = Link(File('some_file.txt'), dag, name='some_file')
-    t0 >> t1
 
-    with pytest.raises(DAGRenderError) as excinfo:
-        dag.render()
+    with pytest.raises(RuntimeError) as excinfo:
+        t0 >> t1
 
-    msg = ('Link tasks should not have upstream dependencies. '
-           '"some_file" task has them')
+    msg = 'Link tasks should not have upstream dependencies'
     assert msg in str(excinfo.getrepr())
 
 
 def test_error_raised_if_link_product_does_not_exist(tmp_directory):
     dag = DAG()
 
-    Link(File('some_file.txt'), dag, name='some_file')
-
-    with pytest.raises(DAGRenderError) as excinfo:
-        dag.render()
+    with pytest.raises(RuntimeError) as excinfo:
+        Link(File('some_file.txt'), dag, name='some_file')
 
     msg = ('Link tasks should point to Products that already exist. '
            '"some_file" task product "some_file.txt" does not exist')
