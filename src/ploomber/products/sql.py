@@ -107,12 +107,21 @@ class SQLiteRelation(SQLiteBackedProductMixin, Product):
 
     Parameters
     ----------
-    identifier: tuple of length 3
+    identifier: tuple of length 3 or 2
         A tuple with (schema, name, kind) where kind must be either 'table'
-        or 'view'
+        or 'view'. If passed a tuple with length 2, schema is assumed None.
+        Schemas in SQLite represent other databases when using the ATTACH
+        command.
     client: ploomber.clients.DBAPIClient or SQLAlchemyClient, optional
         The client used to connect to the database. Only required
         if no dag-level client has been declared using dag.clients[class]
+
+
+    Examples
+    --------
+    >>> from ploomber.products import SQLiteRelation
+    >>> relation = SQLiteRelation(('schema', 'some_table', 'table'))
+    >>> str(relation) # returns qualified name
     """
 
     def __init__(self, identifier, client=None):
@@ -187,6 +196,12 @@ class PostgresRelation(Product):
     client: ploomber.clients.DBAPIClient or SQLAlchemyClient, optional
         The client used to connect to the database. Only required
         if no dag-level client has been declared using dag.clients[class]
+
+    Examples
+    --------
+    >>> from ploomber.products import PostgresRelation
+    >>> relation = PostgresRelation(('schema', 'some_table', 'table'))
+    >>> str(relation) # returns qualified name
     """
     # FIXME: identifier has schema as optional but that introduces ambiguity
     # when fetching metadata and checking if the table exists so maybe it
