@@ -5,25 +5,25 @@ from collections import abc
 class Params(abc.Mapping):
     """
     Read-only mapping to represent params passed in Task constructor. It
-    initializes with a copy of the passed dictionary
+    initializes with a copy of the passed dictionary. Cannot be initialized
+    with a key "upstream" nor "product" as they are added upon Task rendering
     """
 
     def __init__(self, params=None):
         if params is None:
             self._dict = {}
         else:
+            if 'upstream' in params:
+                raise ValueError('Task params cannot be initialized with an '
+                                 '"upstream" key as it automatically added '
+                                 'upon rendering')
+
+            if 'product' in params:
+                raise ValueError('Task params cannot be initialized with an '
+                                 '"product" key as it automatically added '
+                                 'upon rendering')
+
             self._dict = copy(params)
-
-
-        if 'upstream' in params:
-            raise ValueError('Task params cannot be initialized with an '
-                             '"upstream" key as it automatically added '
-                             'upon rendering')
-
-        if 'product' in params:
-            raise ValueError('Task params cannot be initialized with an '
-                             '"product" key as it automatically added '
-                             'upon rendering')
 
     def to_dict(self):
         return copy(self._dict)

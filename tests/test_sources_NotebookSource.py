@@ -30,8 +30,12 @@ x = 1
                             kernelspec_name='python3',
                             static_analysis=True)
 
+    params = Params()
+    # set private attribute to allow init with product
+    params._dict = {'product': File('output.ipynb')}
+
     with pytest.raises(RenderError) as excinfo:
-        source.render(Params({'product': File('output.ipynb')}))
+        source.render(params)
 
     assert ('\nNotebook does not have a cell tagged "parameters"'
             == str(excinfo.value))
@@ -45,7 +49,9 @@ def test_sucess_if_parameters_match():
                             kernelspec_name='python3',
                             static_analysis=True)
 
-    source.render(Params({'product': File('output.ipynb'), 'a': 1, 'b': 2}))
+    params = Params()
+    params._dict = {'product': File('output.ipynb'), 'a': 1, 'b': 2}
+    source.render(params)
 
 
 def test_warn_if_using_default_value():
@@ -54,8 +60,11 @@ def test_warn_if_using_default_value():
                             kernelspec_name='python3',
                             static_analysis=True)
 
+    params = Params()
+    params._dict = {'product': File('output.ipynb'), 'a': 1}
+
     with pytest.warns(UserWarning) as record:
-        source.render(Params({'product': File('output.ipynb'), 'a': 1}))
+        source.render(params)
 
     assert len(record) == 1
     assert (str(record[0].message)
@@ -68,9 +77,11 @@ def test_error_if_passing_undeclared_parameter():
                             kernelspec_name='python3',
                             static_analysis=True)
 
+    params = Params()
+    params._dict = {'product': File('output.ipynb'), 'a': 1, 'b': 2, 'c': 3}
+
     with pytest.raises(RenderError) as excinfo:
-        source.render(Params({'product': File('output.ipynb'), 'a': 1,
-                              'b': 2, 'c': 3}))
+        source.render(params)
 
     assert str(excinfo.value) == "\nPassed non-declared parameters: {'c'}"
 
@@ -90,9 +101,11 @@ a + b + c
                             kernelspec_name='python3',
                             static_analysis=True)
 
+    params = Params()
+    params._dict = {'product': File('output.ipynb'), 'a': 1, 'b': 2}
+
     with pytest.raises(RenderError) as excinfo:
-        source.render(Params({'product': File('output.ipynb'),
-                              'a': 1, 'b': 2}))
+        source.render(params)
 
     assert "undefined name 'c'" in str(excinfo.value)
 
@@ -111,9 +124,11 @@ if
                             kernelspec_name='python3',
                             static_analysis=True)
 
+    params = Params()
+    params._dict = {'product': File('output.ipynb'), 'a': 1, 'b': 2}
+
     with pytest.raises(RenderError) as excinfo:
-        source.render(Params({'product': File('output.ipynb'),
-                              'a': 1, 'b': 2}))
+        source.render(params)
 
     assert 'invalid syntax' in str(excinfo.value)
 
@@ -128,9 +143,11 @@ def test_error_if_no_parameters_cell():
                             kernelspec_name='python3',
                             static_analysis=True)
 
+    params = Params()
+    params._dict = {'product': File('output.ipynb'), 'a': 1, 'b': 2}
+
     with pytest.raises(RenderError) as excinfo:
-        source.render(Params({'product': File('output.ipynb'),
-                              'a': 1, 'b': 2}))
+        source.render(params)
 
     assert 'Notebook does not have a cell tagged "parameters"' in str(
         excinfo.value)
@@ -142,7 +159,9 @@ def test_tmp_file_is_deleted():
 product = None
     """, ext_in='py', kernelspec_name='python3')
 
-    s.render(Params({'product': File('output.ipynb')}))
+    params = Params()
+    params._dict = {'product': File('output.ipynb')}
+    s.render(params)
     loc = s.loc_rendered
 
     assert Path(loc).exists()
@@ -156,7 +175,9 @@ def test_injects_parameters_on_render():
 product = None
 some_param = 2
     """, ext_in='py', kernelspec_name='python3')
-    s.render(Params({'some_param': 1, 'product': File('output.ipynb')}))
+    params = Params()
+    params._dict = {'some_param': 1, 'product': File('output.ipynb')}
+    s.render(params)
 
     format_ = nbformat.versions[nbformat.current_nbformat]
     nb = format_.reads(Path(s.loc_rendered).read_text())
@@ -185,4 +206,6 @@ def test_cleanup_rendered_notebook():
     source = NotebookSource(source,
                             ext_in='py',
                             kernelspec_name='python3')
-    source.render(Params({'product': File('output.ipynb')}))
+    params = Params()
+    params._dict = {'product': File('output.ipynb')}
+    source.render(params)
