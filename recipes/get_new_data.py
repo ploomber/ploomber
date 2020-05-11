@@ -33,13 +33,11 @@ def add_last_value(metadata, product):
     new_max = int(df.x.max())
 
     # there is no last_value in metadata, this is the first time we run this,
-    # just save the new value
-    if 'last_value' not in metadata:
-        metadata['last_value'] = new_max
-        return metadata
+    # just save the new value or if
     # we have a previously saved value, verify it's bigger than the one we saw
     # last time...
-    if new_max > metadata['last_value']:
+    if ('last_value' not in metadata
+            or new_max > metadata['last_value']):
         metadata['last_value'] = new_max
         return metadata
 
