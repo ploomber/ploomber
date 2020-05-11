@@ -2,6 +2,7 @@ from pathlib import Path
 import pytest
 
 import nbformat
+from jupyter_client.kernelspec import NoSuchKernel
 
 from ploomber.tasks.Params import Params
 from ploomber.sources.NotebookSource import NotebookSource
@@ -18,6 +19,13 @@ product = None
 # +
 a + b
 """
+
+
+def test_error_if_kernelspec_name_is_invalid():
+    with pytest.raises(NoSuchKernel):
+        NotebookSource(notebook_ab,
+                       ext_in='py',
+                       kernelspec_name='invalid_kernelspec')
 
 
 def test_error_if_parameters_cell_doesnt_exist():

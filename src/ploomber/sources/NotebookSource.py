@@ -3,7 +3,7 @@ from pathlib import Path
 from io import StringIO
 import warnings
 
-from ploomber.exceptions import RenderError
+from ploomber.exceptions import RenderError, SourceInitializationError
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources import Source
@@ -20,6 +20,12 @@ class NotebookSource(Source):
     ----------
     hot_reload : bool, optional
         Makes the notebook always read the file before rendering
+
+    kernelspec_name : str, optional
+        Which kernel to use for executing the notebook, it overrides any
+        existing kernelspec metadata in the notebook. If the notebook does
+        not have kernelspec info, this parameter is required. Defaults to None.
+        To see which kernelspecs are available run "jupyter kernelspec list"
 
     Notes
     -----
@@ -78,9 +84,12 @@ class NotebookSource(Source):
         self._post_init_validation(str(self._primitive))
 
         self._python_repr = None
-        self._nb_repr = None
         self._loc = None
         self._loc_rendered = None
+        self._nb_repr = None
+
+        # this will raise an error if kernelspec_name is invalid
+        self._get_nb_repr()
 
     @property
     def primitive(self):
@@ -375,10 +384,11 @@ def _to_nb_obj(source, extension, kernelspec_name=None):
     nb = jupytext.reads(source, fmt={'extension': '.'+extension})
 
     if nb.metadata.get('kernelspec') is None and kernelspec_name is None:
-        raise RenderError('Notebook does not contains kernelspec metadata and '
-                          'kernelspec_name was not specified, either add '
-                          'kernelspec info to your source file or specify '
-                          'a kernelspec by name')
+        raise SourceInitializationError(
+            'Notebook does not contains kernelspec metadata and '
+            'kernelspec_name was not specified, either add '
+            'kernelspec info to your source file or specify '
+            'a kernelspec by name')
 
     if kernelspec_name is not None:
         k = jupyter_client.kernelspec.get_kernel_spec(kernelspec_name)
