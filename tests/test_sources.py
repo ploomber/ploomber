@@ -10,7 +10,6 @@ from ploomber.tasks import SQLScript
 from ploomber.products import SQLiteRelation
 from ploomber import DAG
 from ploomber.products import GenericSQLRelation
-from ploomber.sql import infer
 
 from test_pkg import functions
 
@@ -183,7 +182,6 @@ def test_warns_if_number_of_relations_does_not_match_products(sqlite_client_and_
 # comparing metaproduct
 
 
-# TODO: parametrize
 # TODO: use fixture and backup the entire test_pkg source code
 # TODO: check all other relevant properties are updated as well
 def test_hot_reload(path_to_test_pkg):
@@ -198,3 +196,42 @@ def test_hot_reload(path_to_test_pkg):
     assert str(source) == source_new
 
     path_to_functions.write_text(source_old)
+
+
+@pytest.mark.parametrize('class_', [SQLScriptSource, SQLQuerySource])
+def test_hot_reload_sql_sources(class_, tmp_directory):
+    path = Path(tmp_directory, 'script.sql')
+    path.write_text('/*doc*/\n{{product}}')
+
+    product = SQLiteRelation(('some_table', 'table'))
+
+    source = class_(path, hot_reload=True)
+    source.render({'product': product})
+
+    assert str(source) == '/*doc*/\nsome_table'
+    assert source.variables == {'product'}
+    assert source.doc == 'doc'
+
+    path.write_text('/*new doc*/\n{{product}} {{new_tag}}')
+    source.render({'product': product, 'new_tag': 'modified'})
+
+    assert str(source) == '/*new doc*/\nsome_table modified'
+    assert source.variables == {'product', 'new_tag'}
+    assert source.doc == 'new doc'
+
+
+def test_hot_reload_generic_source(tmp_directory):
+    path = Path(tmp_directory, 'script.sql')
+    path.write_text('/*doc*/\n{{product}}')
+
+    source = GenericSource(path, hot_reload=True)
+    source.render({'product': 'some_table'})
+
+    assert str(source) == '/*doc*/\nsome_table'
+    assert source.variables == {'product'}
+
+    path.write_text('/*new doc*/\n{{product}} {{new_tag}}')
+    source.render({'product': 'some_table', 'new_tag': 'modified'})
+
+    assert str(source) == '/*new doc*/\nsome_table modified'
+    assert source.variables == {'product', 'new_tag'}
