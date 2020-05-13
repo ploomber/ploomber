@@ -14,22 +14,12 @@ def with_doc(env):
 
 
 @with_env({})
-def opt_fn_param(env, optional=1):
+def with_param(env, param):
     return DAG()
 
 
 @with_env({})
 def no_doc(env):
-    return DAG()
-
-
-@with_env({})
-def invalid_doc(env):
-    """This is not a valid numpydocstring
-
-    Attributes:
-        Blah blah blah
-    """
     return DAG()
 
 
@@ -45,5 +35,29 @@ def incomplete_doc(env):
     return DAG()
 
 
+@with_env({})
+def invalid_doc(env):
+    """This is not a valid numpydocstring
+
+    Attributes:
+        Blah blah blah
+    """
+    return DAG()
+
+
 def plain_function():
+    return DAG()
+
+
+@with_env({})
+def opt_fn_param(env, optional=1):
+    return DAG()
+
+
+@with_env({})
+def required_fn_param(env, param):
+    return DAG()
+
+
+def plain_function_w_param(param):
     return DAG()

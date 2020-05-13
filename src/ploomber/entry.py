@@ -1,14 +1,12 @@
 """
-[Experimental module]
-
-The entry module creates command line interfaces for functions that return a
-DAG object
+The entry module automatically creates command line interfaces from functions
+that return a DAG object.
 
 Example:
 
 Assume module.sub_module.entry_point is a function that returns a DAG.
 
-Run this will parse the function parameters:
+Run this will parse the function parameters and return them:
 
     $ python -m ploomber.entry module.sub_module.entry_point --help
 
@@ -30,7 +28,7 @@ returned by the entry point will be available in the "dag" variable.
 
 Features:
 
-    * Parse docstring (numpydoc) and show it using --help
+    * Parse docstring and show it using --help
     * Enable logging to standard output using --log LEVEL
     * Pass function parameters using --PARAM_NAME VALUE
     * If the function is decorated with @with_env, replace env variables using
@@ -38,8 +36,9 @@ Features:
 
 
 ploomber.entry only works with the factory pattern (a function that returns
-a dag), but you can still start interactice sesssions if you have your own
-CLI logic (note we are calling the module directly instead of using ploomber.entry):
+a dag). But this same pattern can be applied to start interactive sesssions
+if you have your own CLI logic (note we are calling the module directly instead
+of using ploomber.entry):
 
     $ python -i -m module.sub_module.entry_point --some_arg
 
@@ -52,10 +51,8 @@ In IPython:
 Note: you need to add "--" to prevent IPython from parsing your custom args
 
 """
-
 # TODO: print enviornment content on help and maybe on any other command
 # it is useful for debugging purposes
-# TODO: this should also work if the function is not decorated with @with_env
 import logging
 import sys
 import importlib

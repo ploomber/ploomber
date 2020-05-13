@@ -518,7 +518,6 @@ class Task(abc.ABC):
 
         self._run_on_render()
 
-
     def set_upstream(self, other):
         self.dag._add_edge(other, self)
 
