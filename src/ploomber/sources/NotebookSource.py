@@ -138,7 +138,7 @@ class NotebookSource(Source):
             else:
                 # convert from ipynb to notebook
                 nb = nbformat.reads(self._primitive,
-                                    nbformat.current_nbformat)
+                                    as_version=nbformat.NO_CONVERT)
                 self._python_repr = jupytext.writes(nb, fmt='py')
 
         return self._python_repr
@@ -161,10 +161,8 @@ class NotebookSource(Source):
                 nb = _to_nb_obj(self.primitive,
                                 extension='py',
                                 kernelspec_name=self._kernelspec_name)
-                writer = (nbformat
-                          .versions[nbformat.current_nbformat]
-                          .nbjson.JSONWriter())
-                self._nb_repr = writer.writes(nb)
+                self._nb_repr = nbformat.writes(nb,
+                                                version=nbformat.NO_CONVERT)
 
         return self._nb_repr
 
@@ -189,7 +187,7 @@ class NotebookSource(Source):
             # location
             nb_rendered = (nbformat
                            .reads(Path(self._loc_rendered).read_text(),
-                                  nbformat.current_nbformat))
+                                  as_version=nbformat.NO_CONVERT))
             check_notebook(nb_rendered, params,
                            filename=self._path or 'notebook')
 

@@ -187,8 +187,8 @@ some_param = 2
     params._dict = {'some_param': 1, 'product': File('output.ipynb')}
     s.render(params)
 
-    format_ = nbformat.versions[nbformat.current_nbformat]
-    nb = format_.reads(Path(s.loc_rendered).read_text())
+    nb = nbformat.reads(Path(s.loc_rendered).read_text(),
+                        as_version=nbformat.NO_CONVERT)
 
     # cell 0: empty
     # cell 1: parameters

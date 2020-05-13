@@ -24,7 +24,7 @@ NBS = [nb for nb in glob(str(Path(PATH_TO_DOC, '**/*.ipynb')))
 @pytest.mark.parametrize('path', NBS)
 def test_notebooks(tmp_directory, path):
     path = Path(path)
-    nb = nbformat.v4.reads(path.read_text())
+    nb = nbformat.reads(path.read_text(), as_version=nbformat.NO_CONVERT)
     py = jupytext.writes(nb, fmt='py')
     Path(path.name).write_text(py)
     assert subprocess.call(['ipython', path.name]) == 0

@@ -47,7 +47,7 @@ def _from_ipynb(path_to_nb, extension, nbconvert_exporter_name):
 
     path = Path(path_to_nb)
 
-    nb = nbformat.v4.reads(path.read_text())
+    nb = nbformat.reads(path.read_text(), as_version=nbformat.NO_CONVERT)
     content, _ = nbconvert.export(exporter, nb,
                                   exclude_input=True)
 
