@@ -110,6 +110,7 @@ class Source(abc.ABC):
         """
         pass
 
+    # TODO: rename to suffix to be consistent with pathlib.Path
     @property
     @abc.abstractmethod
     def extension(self):

@@ -84,3 +84,7 @@ class File(Product):
         else:
             self.logger.debug('%s does not exist ignoring...',
                               self._path_to_file)
+
+    @property
+    def suffix(self):
+        return Path(self._identifier.best_str(shorten=False)).suffix

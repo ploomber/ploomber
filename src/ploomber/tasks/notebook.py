@@ -31,19 +31,27 @@ from ploomber.tasks.Task import Task
 from ploomber.util import requires
 
 
-def _from_ipynb(path_to_nb, extension, nbconvert_exporter_name):
+def _get_exporter(nbconvert_exporter_name, extension):
     if nbconvert_exporter_name is not None:
         exporter = nbconvert.get_exporter(nbconvert_exporter_name)
     else:
-        try:
-            exporter = nbconvert.get_exporter(extension.replace('.', ''))
-        except ValueError:
-            raise TaskBuildError('Could not determine nbconvert exporter '
+        if extension == '.ipynb':
+            return None
+        else:
+            try:
+                exporter = nbconvert.get_exporter(extension.replace('.', ''))
+            except ValueError:
+                raise ValueError('Could not determine nbconvert exporter '
                                  'either specify in the path extension '
                                  'or pass a valid exporter name in '
                                  'the NotebookRunner constructor, '
-                                 'valid expoers are: {}'
+                                 'valid exporters are: {}'
                                  .format(nbconvert.get_export_names()))
+
+    return exporter
+
+
+def _from_ipynb(path_to_nb, exporter):
 
     path = Path(path_to_nb)
 
@@ -129,6 +137,13 @@ class NotebookRunner(Task):
                                'key to know where to save the output '
                                'notebook'.format(nb_product_key,
                                                  str(self.product)))
+
+        if isinstance(self.product, MetaProduct):
+            ext_out = self.product[self.nb_product_key].suffix
+        else:
+            ext_out = self.product.suffix
+
+        self._exporter = _get_exporter(nbconvert_exporter_name, ext_out)
 
     def _init_source(self, source, kwargs):
         return NotebookSource(source,
@@ -231,7 +246,6 @@ chdir("{}")
         else:
             path_to_out = Path(str(self.product))
 
-        ext_out = path_to_out.suffix
         # we will run the notebook with this extension, regardless of the
         # user's choice, if any error happens, this will allow them to debug
         # we will change the extension after the notebook runs successfully
@@ -250,6 +264,6 @@ chdir("{}")
 
         # if output format other than ipynb, convert using nbconvert
         # and overwrite
-        if ext_out != '.ipynb' or self.nbconvert_exporter_name is not None:
+        if self._exporter is not None:
             path_to_out_nb.rename(path_to_out)
-            _from_ipynb(path_to_out, ext_out, self.nbconvert_exporter_name)
+            _from_ipynb(path_to_out, self._exporter)

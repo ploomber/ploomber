@@ -123,6 +123,30 @@ def test_failing_notebook_saves_partial_result(tmp_directory):
     assert Path('out.ipynb').exists()
 
 
+def test_error_if_wrong_exporter_name(path_to_assets, tmp_directory):
+    dag = DAG()
+
+    with pytest.raises(ValueError) as excinfo:
+        NotebookRunner(path_to_assets / 'sample.ipynb',
+                       product=File(Path(tmp_directory, 'out.ipynb')),
+                       dag=dag,
+                       nbconvert_exporter_name='wrong_name')
+
+    assert 'Unknown exporter "wrong_name"' in str(excinfo.value)
+
+
+def test_error_if_cant_determine_exporter_name(path_to_assets, tmp_directory):
+    dag = DAG()
+
+    with pytest.raises(ValueError) as excinfo:
+        NotebookRunner(path_to_assets / 'sample.ipynb',
+                       product=File(Path(tmp_directory, 'out.wrong_ext')),
+                       dag=dag,
+                       nbconvert_exporter_name=None)
+
+    assert 'Could not determine nbconvert exporter' in str(excinfo.value)
+
+
 # TODO: we are not testing output, we have to make sure params are inserted
 # correctly
 
