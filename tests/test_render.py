@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+from ploomber.exceptions import DAGRenderError
 from ploomber.constants import TaskStatus
 from ploomber import DAG
 from ploomber.tasks import ShellScript, PythonCallable
@@ -31,6 +32,10 @@ def on_render_1():
 
 def on_render_2():
     warnings.warn('This is another warning', WarningA)
+
+
+def on_render_failed():
+    raise ValueError
 
 
 @pytest.fixture
@@ -232,3 +237,25 @@ def test_warnings_are_shown(tmp_directory):
     assert 'This is another warning' in str(record[0].message)
     # assert isinstance(record[0], WarningA)
     # assert isinstance(record[1], WarningB)
+
+
+def test_recover_from_failed_render():
+    dag = DAG()
+    t1 = PythonCallable(touch_root, File('file.txt'), dag)
+    t2 = PythonCallable(touch, File('file2.txt'), dag)
+    t1.on_render = on_render_failed
+    t2.on_render = on_render_2
+    t1 >> t2
+
+    with pytest.raises(DAGRenderError):
+        dag.render()
+
+    assert t1.exec_status == TaskStatus.ErroredRender
+    assert t2.exec_status == TaskStatus.AbortedRender
+
+    t1.on_render = on_render_1
+
+    dag.render()
+
+    assert t1.exec_status == TaskStatus.WaitingExecution
+    assert t2.exec_status == TaskStatus.WaitingUpstream
