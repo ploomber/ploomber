@@ -4,6 +4,8 @@ Test SQLUpload task
 from pathlib import Path
 import pandas as pd
 
+import pytest
+
 from ploomber import DAG
 from ploomber.products import PostgresRelation, File
 from ploomber.tasks import SQLUpload, PythonCallable
@@ -14,46 +16,63 @@ def make_data(product):
     df.to_parquet(str(product))
 
 
-def test_can_upload_a_file(tmp_directory, pg_client_and_schema):
+@pytest.mark.parametrize('serializer, task_arg',
+                         [('to_parquet', 'data.parquet'),
+                          ('to_parquet', Path('data.parquet')),
+                          ('to_csv', 'data.csv')
+                          ])
+def test_can_upload_a_file(serializer, task_arg, tmp_directory,
+                           pg_client_and_schema):
     pg_client, schema = pg_client_and_schema
 
     df = pd.DataFrame({'a': [1, 2, 3]})
-    df.to_parquet('data.parquet')
+    getattr(df, serializer)(task_arg)
 
     dag = DAG()
 
     dag.clients[PostgresRelation] = pg_client
     dag.clients[SQLUpload] = pg_client
 
-    SQLUpload('data.parquet',
+    SQLUpload(task_arg,
               product=PostgresRelation((schema,
                                         'test_can_upload_a_file',
                                         'table')),
               dag=dag,
-              name='upload')
+              name='upload',
+              to_sql_kwargs={'if_exists': 'replace'})
 
     dag.build()
 
 
-def test_can_upload_a_file_using_a_path(tmp_directory, pg_client_and_schema):
+def test_append_rows(tmp_directory, pg_client_and_schema):
     pg_client, schema = pg_client_and_schema
 
     df = pd.DataFrame({'a': [1, 2, 3]})
-    df.to_parquet('data.parquet')
+    df.to_csv('data.csv', index=False)
 
     dag = DAG()
 
     dag.clients[PostgresRelation] = pg_client
     dag.clients[SQLUpload] = pg_client
 
-    SQLUpload(Path('data.parquet'),
+    # create table
+    df.to_sql('test_append', pg_client.engine,
+              schema=schema, if_exists='replace', index=False)
+
+    SQLUpload('data.csv',
               product=PostgresRelation((schema,
-                                        'test_can_upload_a_file',
+                                        'test_append',
                                         'table')),
               dag=dag,
-              name='upload')
+              name='upload',
+              to_sql_kwargs={'if_exists': 'append', 'index': False})
 
     dag.build()
+
+    df = pd.read_sql('SELECT * FROM {}.test_append'.format(schema),
+                     pg_client.engine)
+
+    assert df.shape[0] == 6
 
 
 def test_can_upload_file_from_upstream_dependency(tmp_directory,
@@ -77,7 +96,8 @@ def test_can_upload_file_from_upstream_dependency(tmp_directory,
                                              name,
                                              'table')),
                    dag=dag,
-                   name='upload')
+                   name='upload',
+                   to_sql_kwargs={'if_exists': 'replace'})
 
     make >> pg
 

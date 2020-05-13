@@ -234,7 +234,6 @@ class SQLTransfer(Task):
                       index=False)
 
 
-# FIXME: support other data formats apart from parquet
 class SQLUpload(Task):
     """
     Upload data to a SQL database from a parquet file (Note: this relies on
@@ -243,7 +242,7 @@ class SQLUpload(Task):
     Parameters
     ----------
     source: str or pathlib.Path
-        Path to parquet file to upload
+        Path to parquet or a csv file to upload
     product: ploomber.products.Product
         Product generated upon successful execution. For SQLTransfer, usually
         product.client != task.client. task.client represents the data source
@@ -266,7 +265,12 @@ class SQLUpload(Task):
         Number of rows to transfer on every chunk
     io_handler : callable, optional
         A Python callable to read the source file,
-        if None, it will tried to be infered from the source file extension
+        if None, it will tried to be inferred from the source file extension
+
+    to_sql_kwargs : dict
+        Keyword arguments passed to the pandas.DataFrame.to_sql function,
+        one useful parameter is "if_exists", which determines if the inserted
+        rows should replace the table or just be appended.
 
     Notes
     -----
@@ -279,7 +283,8 @@ class SQLUpload(Task):
 
     @requires(['pandas'], 'SQLUpload')
     def __init__(self, source, product, dag, name=None, client=None,
-                 params=None, chunksize=None, io_handler=None):
+                 params=None, chunksize=None, io_handler=None,
+                 to_sql_kwargs=None):
         params = params or {}
         super().__init__(source, product, dag, name, params)
 
@@ -291,6 +296,7 @@ class SQLUpload(Task):
 
         self.chunksize = chunksize
         self.io_handler = io_handler
+        self.to_sql_kwargs = to_sql_kwargs or {}
 
     def _init_source(self, source, kwargs):
         return FileSource(str(source), **kwargs)
@@ -321,8 +327,7 @@ class SQLUpload(Task):
         df.to_sql(name=product.name,
                   con=product.client.engine,
                   schema=product.schema,
-                  if_exists='replace',
-                  index=False)
+                  **self.to_sql_kwargs)
 
 
 # TODO: provide more flexibility to configure the COPY statement
