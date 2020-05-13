@@ -14,7 +14,36 @@ from ploomber.env import validate
 from ploomber.env.EnvDict import _get_name, EnvDict
 from ploomber.env.expand import EnvironmentExpander
 from ploomber import repo
-from ploomber.exceptions import EnvInitializationError
+
+
+def test_env_repr_and_str(cleanup_env):
+    env = Env({'a': 1})
+    assert repr(env) == "Env({'a': 1})"
+    assert str(env) == "{'a': 1}"
+
+
+def test_env_repr_and_str_when_loaded_from_file(tmp_directory, cleanup_env):
+    path_env = Path('env.yaml')
+    path_env.write_text(yaml.dump({'a': 1}))
+    env = Env()
+    assert repr(env) == "Env({'a': 1}) (from file: %s)" % str(path_env.resolve())
+    assert str(env) == "{'a': 1}"
+
+
+def test_includes_path_in_repr_if_init_from_file(cleanup_env):
+    Path('env.yaml').write_text('a: 1')
+    env = Env('env.yaml')
+
+    assert 'env.yaml' in repr(env)
+
+
+def test_includes_function_module_and_name_if_decorated(cleanup_env):
+    @with_env({'a': 1})
+    def my_fn(env):
+        return env
+
+    # NOTE: pytest sets the module name to the current filename
+    assert 'test_env.my_fn' in repr(my_fn())
 
 
 def test_cannot_start_env_if_one_exists_already(cleanup_env):
@@ -44,20 +73,6 @@ def test_context_manager(cleanup_env):
     Env({'a': 2})
 
     assert value == 1
-
-
-def test_env_repr_and_str(cleanup_env):
-    env = Env({'a': 1})
-    assert repr(env) == "Env({'a': 1})"
-    assert str(env) == "{'a': 1}"
-
-
-def test_env_repr_and_str_when_loaded_from_file(tmp_directory, cleanup_env):
-    path_env = Path('env.yaml')
-    path_env.write_text(yaml.dump({'a': 1}))
-    env = Env()
-    assert repr(env) == "Env({'a': 1}) (from %s)" % str(path_env.resolve())
-    assert str(env) == "{'a': 1}"
 
 
 def test_load_env_with_name(tmp_directory, cleanup_env):
@@ -263,13 +278,30 @@ def test_replacing_raises_error_if_key_does_not_exist():
 
 
 def test_with_env_shows_name_and_module_if_invalid_env(cleanup_env):
-    with pytest.raises(EnvInitializationError) as excinfo:
+    with pytest.raises(RuntimeError) as excinfo:
         @with_env({'_a': 1})
         def some_function(env):
             pass
 
-    assert 'some_function' in str(excinfo.getrepr())
-    assert 'test_env' in str(excinfo.getrepr())
+    # NOTE: pytest sets the module name to the current filename
+    assert 'test_env.some_function' in str(excinfo.getrepr())
+
+
+def test_with_env_shows_function_names_if_env_exists(cleanup_env):
+    @with_env({'a': 1})
+    def first(env):
+        pass
+
+    @with_env({'a': 1})
+    def second(env):
+        first()
+
+    with pytest.raises(RuntimeError) as excinfo:
+        second()
+
+    # NOTE: pytest sets the module name to the current filename
+    assert 'test_env.first' in str(excinfo.getrepr())
+    assert 'test_env.second' in str(excinfo.getrepr())
 
 
 def test_get_all_dict_keys():

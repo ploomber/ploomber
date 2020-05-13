@@ -5,7 +5,11 @@ from inspect import signature
 
 from ploomber.env.env import Env
 from ploomber.env.EnvDict import EnvDict
-from ploomber.exceptions import EnvInitializationError
+
+
+def _get_function_name_w_module(fn):
+    mod_name = inspect.getmodule(fn).__name__
+    return '.'.join((mod_name, fn.__name__))
 
 
 def _validate_and_modify_signature(fn):
@@ -61,7 +65,7 @@ def with_env(source):
     my_fn(env__key__another='my_new_value')
 
     The environment is resolved at import time, changes to the working
-    directory will not affect initializaiton
+    directory will not affect initialization.
 
     Examples
     --------
@@ -74,12 +78,11 @@ def with_env(source):
         try:
             env_dict = EnvDict(source)
         except Exception as e:
-            mod_name = inspect.getmodule(fn).__name__
-            raise EnvInitializationError(
-                'Failed to initialize environment using '
-                '@with_env decorator in function "{}", defined in module {}. '
+            raise RuntimeError(
+                'Failed to resolve environment using '
+                '@with_env decorator in function "{}". '
                 'Tried to call Env with argument: {}'
-                .format(fn.__name__, mod_name, source)) from e
+                .format(_get_function_name_w_module(fn), source)) from e
 
         fn._env_dict = env_dict
 
@@ -91,7 +94,19 @@ def with_env(source):
             for key in to_replace.keys():
                 kwargs.pop(key)
 
-            env = Env(env_dict)
+            try:
+                env = Env._init_from_decorator(env_dict,
+                                               _get_function_name_w_module(fn))
+            except Exception as e:
+                current = Env.load()
+                raise RuntimeError(
+                    'Failed to initialize environment using '
+                    '@with_env decorator in function "{}". '
+                    'Current environment: {}'
+                    .format(_get_function_name_w_module(fn),
+                            repr(current))) from e
+
+            Env._ref = _get_function_name_w_module(fn)
 
             for key, new_value in to_replace.items():
                 # convert env__a__b__c -> ['a', 'b', 'c']

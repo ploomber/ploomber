@@ -47,6 +47,8 @@ class Env:
     using the @with_env and @load_env decorators
     """
     __instance = None
+    # just a variable to display in error messages so users know where
+    # the env was initialized if they try to create a new one
 
     def __new__(cls, source=None):
         if cls.__instance is None:
@@ -54,7 +56,7 @@ class Env:
             return cls.__instance
         else:
             raise RuntimeError('Cannot start environment, one has already '
-                               'started: {}'.format(cls.__instance))
+                               'started: {}'.format(repr(cls.__instance)))
 
     def __init__(self, source=None):
         """Start the environment
@@ -92,6 +94,13 @@ class Env:
                 raise
 
         self._data = source
+        self._fn_name = None
+
+    @classmethod
+    def _init_from_decorator(cls, source, fn_name):
+        env = Env(source=source)
+        env._fn_name = fn_name
+        return env
 
     @classmethod
     def load(cls):
@@ -113,9 +122,14 @@ class Env:
         return str(self._data)
 
     def __repr__(self):
-        s = 'Env({})'.format(str(self._data))
+        s = 'Env({})'.format(str(self._data)[:20])
+
+        if self._fn_name:
+            s += ' (initialized in function: %s)' % self._fn_name
+
         if self._data.path_to_env:
-            s += ' (from %s)' % str(self._data.path_to_env)
+            s += ' (from file: %s)' % str(self._data.path_to_env)
+
         return s
 
     def __dir__(self):
