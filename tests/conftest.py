@@ -233,6 +233,9 @@ def pg_client_and_schema():
 
     client = SQLAlchemyClient(db['uri'])
 
+    df = pd.DataFrame({'x': range(10)})
+    df.to_sql('data', client.engine)
+
     yield client, schema
 
     # clean up schema

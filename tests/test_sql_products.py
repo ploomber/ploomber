@@ -3,11 +3,26 @@ from pathlib import Path
 
 from ploomber import DAG
 from ploomber.tasks import SQLScript
-from ploomber.products import SQLiteRelation
-from ploomber.clients import SQLAlchemyClient
+from ploomber.products import SQLiteRelation, PostgresRelation
 
 import pandas as pd
 import numpy as np
+import pytest
+
+
+@pytest.fixture(params=['sqlite', 'pg'])
+def client_and_prod(request, sqlite_client_and_tmp_dir, pg_client_and_schema):
+    # Based on: https://github.com/pytest-dev/pytest/issues/349#issue-88534390
+    if request.param == 'sqlite':
+        client, _ = sqlite_client_and_tmp_dir
+        product = SQLiteRelation((None, 'numbers', 'table'), client)
+    else:
+        client, schema = pg_client_and_schema
+        product = PostgresRelation((schema, 'numbers', 'table'), client)
+
+    yield client, product
+
+    product.delete()
 
 
 def add_number_one(metadata):
@@ -15,94 +30,70 @@ def add_number_one(metadata):
     return metadata
 
 
-def test_sqlite_product_exists(tmp_directory):
-    """
+def test_exists(client_and_prod):
+    client, product = client_and_prod
+    product.render({})
 
-    >>> import tempfile
-    >>> tmp_directory = tempfile.mkdtemp()
-    """
-    tmp = Path(tmp_directory)
-
-    # create a db
-    conn = SQLAlchemyClient('sqlite:///{}'.format(tmp / "database.db"))
-
-    numbers = SQLiteRelation((None, 'numbers', 'table'), conn)
-    numbers.render({})
-
-    assert not numbers.exists()
+    assert not product.exists()
 
     df = pd.DataFrame({'a': np.arange(0, 100), 'b': np.arange(100, 200)})
-    df.to_sql('numbers', conn.engine)
+    df.to_sql('numbers', client.engine, if_exists='replace')
 
-    assert numbers.exists()
+    assert product.exists()
 
 
-def test_sqlite_product_delete(tmp_directory):
-    """
-    >>> import tempfile
-    >>> tmp_directory = tempfile.mkdtemp()
-    """
-    tmp = Path(tmp_directory)
-    conn = SQLAlchemyClient('sqlite:///{}'.format(tmp / "database.db"))
+def test_delete(client_and_prod):
+    client, product = client_and_prod
 
     df = pd.DataFrame({'a': np.arange(0, 100), 'b': np.arange(100, 200)})
-    df.to_sql('numbers', conn.engine)
+    df.to_sql('numbers', client.engine, if_exists='replace')
 
-    numbers = SQLiteRelation((None, 'numbers', 'table'), conn)
-    numbers.render({})
-    numbers.delete()
+    product.render({})
+    product.delete()
 
-    assert not numbers.exists()
-
-
-def test_sqlite_product_fetch_metadata_none_if_not_exists(tmp_directory):
-    tmp = Path(tmp_directory)
-    conn = SQLAlchemyClient('sqlite:///{}'.format(tmp / "database.db"))
-
-    numbers = SQLiteRelation((None, 'numbers', 'table'), conn)
-    numbers.render({})
-
-    assert numbers.fetch_metadata() is None
+    assert not product.exists()
 
 
-def test_sqlite_product_fetch_metadata_none_if_empty_metadata(tmp_directory):
-    tmp = Path(tmp_directory)
-    conn = SQLAlchemyClient('sqlite:///{}'.format(tmp / "database.db"))
+def test_fetch_metadata_none_if_not_exists(client_and_prod):
+    client, product = client_and_prod
+    product.render({})
+
+    assert product.fetch_metadata() is None
+
+
+def test_fetch_metadata_none_if_empty_metadata(client_and_prod):
+    client, product = client_and_prod
+    df = pd.DataFrame({'a': np.arange(0, 100), 'b': np.arange(100, 200)})
+    df.to_sql('numbers', client.engine, if_exists='replace')
+    product.render({})
+
+    assert product.fetch_metadata() is None
+
+
+def test_save_metadata(client_and_prod):
+    client, product = client_and_prod
 
     df = pd.DataFrame({'a': np.arange(0, 100), 'b': np.arange(100, 200)})
-    df.to_sql('numbers', conn.engine)
+    df.to_sql('numbers', client.engine, if_exists='replace')
 
-    numbers = SQLiteRelation((None, 'numbers', 'table'), conn)
-    numbers.render({})
-
-    assert numbers.fetch_metadata() is None
-
-
-def test_sqlite_product_save_metadata(tmp_directory):
-    tmp = Path(tmp_directory)
-    conn = SQLAlchemyClient('sqlite:///{}'.format(tmp / "database.db"))
-
-    numbers = SQLiteRelation((None, 'numbers', 'table'), conn)
-    numbers.render({})
-
+    product.render({})
     metadata_new = {'timestamp': datetime.now().timestamp(),
                     'stored_source_code': 'some code'}
 
-    numbers.save_metadata(metadata_new)
+    product.save_metadata(metadata_new)
 
-    fetched = numbers.fetch_metadata()
+    fetched = product.fetch_metadata()
 
     assert fetched == metadata_new
 
 
-def test_add_metadata_fields(sqlite_client_and_tmp_dir):
-    client, _ = sqlite_client_and_tmp_dir
+def test_add_metadata_fields(client_and_prod):
+    client, product = client_and_prod
     dag = DAG()
     dag.clients[SQLScript] = client
-    dag.clients[SQLiteRelation] = client
+    dag.clients[type(product)] = client
 
     query = 'CREATE TABLE {{product}} AS SELECT * FROM data'
-    product = SQLiteRelation(('a_table', 'table'))
     product.pre_save_metadata = add_number_one
 
     SQLScript(query, product, dag, name='t1')

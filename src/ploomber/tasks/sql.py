@@ -267,10 +267,11 @@ class SQLUpload(Task):
         A Python callable to read the source file,
         if None, it will tried to be inferred from the source file extension
 
-    to_sql_kwargs : dict
+    to_sql_kwargs : dict, optional
         Keyword arguments passed to the pandas.DataFrame.to_sql function,
         one useful parameter is "if_exists", which determines if the inserted
-        rows should replace the table or just be appended.
+        rows should replace the table or just be appended. If None,
+        {'if_exists': 'replace'} is passed.
 
     Notes
     -----

@@ -86,6 +86,7 @@ def test_undecorated_function_w_param(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
                         ['python',
                          'test_pkg.entry.plain_function_w_param',
+                         'build',
                          'some_value_for_param'])
 
     entry.main()
