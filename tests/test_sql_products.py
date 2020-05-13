@@ -33,6 +33,7 @@ def add_number_one(metadata):
 def test_exists(client_and_prod):
     client, product = client_and_prod
     product.render({})
+    product.delete()
 
     assert not product.exists()
 

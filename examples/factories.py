@@ -89,7 +89,8 @@ def make_task_upload(env, dag):
     return SQLUpload('{{upstream["raw"]}}',
                      product=SQLiteRelation((None, 'raw', 'table')),
                      dag=dag,
-                     name='upload')
+                     name='upload',
+                     to_sql_kwargs={'if_exists': 'replace'})
 
 
 @load_env
