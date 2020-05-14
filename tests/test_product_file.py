@@ -41,3 +41,11 @@ def test_file_delete_directory(tmp_directory):
     File('dir').delete()
 
     assert not d.exists()
+
+
+def test_suffix():
+    assert File('some/file.txt').suffix == '.txt'
+
+
+def test_suffix_when_tags_present():
+    assert File('{{some}}/{{file}}.txt').suffix == '.txt'

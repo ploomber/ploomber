@@ -1,5 +1,4 @@
 from datetime import datetime
-from pathlib import Path
 
 from ploomber import DAG
 from ploomber.tasks import SQLScript
@@ -103,3 +102,15 @@ def test_add_metadata_fields(client_and_prod):
     metadata = product.fetch_metadata()
 
     assert metadata['number'] == 1
+
+
+@pytest.mark.parametrize('class_', [SQLiteRelation, PostgresRelation])
+def test_error_message_when_missing_client(class_):
+    # this works since we haven't tried to access the client yet...
+    product = class_((None, 'name', 'table'))
+
+    # this fails
+    with pytest.raises(ValueError) as excinfo:
+        product.client
+
+    assert 'Cannot obtain client for this product' in str(excinfo.value)

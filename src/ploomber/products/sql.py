@@ -134,7 +134,15 @@ class SQLiteRelation(SQLiteBackedProductMixin, Product):
     @property
     def client(self):
         # FIXME: this nested reference looks ugly
+        # FIXME: create a mixin
         if self._client is None:
+            if self._task is None:
+                raise ValueError('Cannot obtain client for this product, '
+                                 'the constructor did not receive a client '
+                                 'and this product has not been assigned '
+                                 'to a DAG yet, hence we cannot look up '
+                                 'dag.clients')
+
             default = self.task.dag.clients.get(type(self))
 
             if default is None:
@@ -217,6 +225,13 @@ class PostgresRelation(Product):
     @property
     def client(self):
         if self._client is None:
+            if self._task is None:
+                raise ValueError('Cannot obtain client for this product, '
+                                 'the constructor did not receive a client '
+                                 'and this product has not been assigned '
+                                 'to a DAG yet, hence we cannot look up '
+                                 'dag.clients')
+
             default = self.task.dag.clients.get(type(self))
 
             if default is None:
