@@ -10,7 +10,6 @@ from ploomber.placeholders.Placeholder import SQLRelationPlaceholder
 
 class SQLiteBackedProductMixin:
     def _create_metadata_relation(self):
-
         create_metadata = """
         CREATE TABLE IF NOT EXISTS _metadata (
             name TEXT NOT NULL,
@@ -62,15 +61,26 @@ class SQLiteBackedProductMixin:
 
         metadata_bin = json.dumps(metadata).encode('utf-8')
         cur = self.client.connection.cursor()
+        schema = self._get_schema()
 
-        if self._get_schema():
+        if schema is not False:
+            if schema is None:
+                cur.execute('DELETE FROM _metadata WHERE name = ?',
+                            (self.name,))
+            else:
+                cur.execute('DELETE FROM _metadata '
+                            'WHERE name = ? AND schema = ?',
+                            (self.name, schema))
+
+            # we cannot rely on INSERT INTO since NULL schema values are
+            # allowed
             query = """
-                REPLACE INTO _metadata(metadata, name, schema)
+                INSERT INTO _metadata (metadata, name, schema)
                 VALUES(?, ?, ?)
             """
             cur.execute(query, (sqlite3.Binary(metadata_bin),
                                 self.name,
-                                self._get_schema()))
+                                schema))
         else:
             query = """
                 REPLACE INTO _metadata(metadata, name)
