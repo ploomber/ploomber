@@ -11,8 +11,8 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 from ploomber import DAG
-from ploomber.tasks import SQLDump, PythonCallable
-from ploomber.products import File
+from ploomber.tasks import SQLDump, PythonCallable, SQLUpload
+from ploomber.products import File, SQLiteRelation
 from ploomber.clients import SQLAlchemyClient
 
 
@@ -59,9 +59,12 @@ def make(tmp):
     tmp = Path(tmp)
 
     dag = DAG()
-    client = SQLAlchemyClient('sqlite:///' + str(tmp / 'my_db.db'))
+    client_source = SQLAlchemyClient('sqlite:///' + str(tmp / 'source.db'))
+    client_target = SQLAlchemyClient('sqlite:///' + str(tmp / 'target.db'))
 
-    dag.clients[SQLDump] = client
+    dag.clients[SQLDump] = client_source
+    dag.clients[SQLUpload] = client_target
+    dag.clients[SQLiteRelation] = client_target
 
     out = File(tmp / 'x.csv')
     out.pre_save_metadata = add_last_value
@@ -78,7 +81,13 @@ def make(tmp):
     plus_one = PythonCallable(_plus_one, File(tmp / 'plus_one.csv'),
                               dag=dag, name='plus_one')
 
-    dump >> plus_one
+    upload = SQLUpload('{{upstream["plus_one"]}}',
+                       product=SQLiteRelation((None, 'plus_one', 'table')),
+                       dag=dag,
+                       name='upload',
+                       to_sql_kwargs={'if_exists': 'append', 'index': False})
+
+    dump >> plus_one >> upload
 
     return dag
 
@@ -91,7 +100,7 @@ dag = make(tmp)
 
 
 # add some sample data to the database
-engine = create_engine('sqlite:///' + str(Path(tmp, 'my_db.db')))
+engine = create_engine('sqlite:///' + str(Path(tmp, 'source.db')))
 df = pd.DataFrame({'x': range(10)})
 df.to_sql('data', engine)
 
