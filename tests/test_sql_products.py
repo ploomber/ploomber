@@ -114,3 +114,30 @@ def test_error_message_when_missing_client(class_):
         product.client
 
     assert 'Cannot obtain client for this product' in str(excinfo.value)
+
+
+# TODO: we should really be testing the mixin, which is where this logic
+# is implemented
+@pytest.mark.parametrize('arg', [(None, 'table', 'table'),
+                                 ('schema', 'table', 'table')])
+def test_old_metadata_is_replaced(arg, sqlite_client_and_tmp_dir):
+    client, tmp = sqlite_client_and_tmp_dir
+    schema, name, _ = arg
+    product = SQLiteRelation(arg, client=client)
+
+    product.render({})
+
+    product.save_metadata({'timestamp': datetime.now().timestamp(),
+                           'stored_source_code': 'some code'})
+
+    product.save_metadata({'timestamp': datetime.now().timestamp(),
+                           'stored_source_code': 'some code'})
+
+    query = "SELECT COUNT(*) FROM _metadata WHERE name='{}'".format(name)
+
+    if schema is not None:
+        query += " AND schema='{}'".format(schema)
+
+    result = list(client.engine.execute(query))[0][0]
+
+    assert result == 1
