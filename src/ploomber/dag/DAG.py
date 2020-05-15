@@ -275,6 +275,7 @@ class DAG(collections.abc.Mapping):
             try:
                 # within_dag flags when we execute a task in isolation
                 # vs as part of a dag execution
+                # FIXME: not passing force flag
                 task_reports = self._executor(dag=self,
                                               show_progress=show_progress,
                                               task_kwargs=dict(within_dag=True))

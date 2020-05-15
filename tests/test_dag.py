@@ -67,6 +67,10 @@ def early_stop_root(product):
     raise DAGBuildEarlyStop('Ending gracefully')
 
 
+def early_stop_on_finish():
+    raise DAGBuildEarlyStop('Ending gracefully')
+
+
 def failing(upstream, product):
     raise FailedTask('Bad things happened')
 
@@ -498,9 +502,18 @@ def test_exception_is_not_masked_if_not_catching_them(executor):
         dag.build()
 
 
-def test_early_stop():
+def test_early_stop(tmp_directory):
     dag = DAG(executor=Serial(build_in_subprocess=True,
               catch_exceptions=False))
     PythonCallable(early_stop_root, File('file.txt'), dag)
 
-    dag.build()
+    assert dag.build() is None
+
+
+def test_early_stop_from_on_finish(tmp_directory):
+    dag = DAG(executor=Serial(build_in_subprocess=True,
+              catch_exceptions=False))
+    t = PythonCallable(touch_root, File('file.txt'), dag)
+    t.on_finish = early_stop_on_finish
+
+    assert dag.build() is None

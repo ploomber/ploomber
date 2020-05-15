@@ -13,9 +13,7 @@ from ploomber.MessageCollector import MessageCollector
 from ploomber.constants import TaskStatus
 
 
-# TODO: add a SerialIterator executor
-
-
+# TODO: test exceptions are logged
 class Serial(Executor):
     """Runs a DAG one task at a time
 
@@ -34,9 +32,13 @@ class Serial(Executor):
         it guarantees that memory will be cleared up upon task execution.
         Defaults to True
 
-    """
-    # TODO: maybe add a parameter: stop on first exception, same for Parallel
+    catch_exceptions : bool, optional
+        Whether to catch exceptions raised when building tasks and running
+        hooks. If False, no catching is done, on_failure won't be executed
+        and task status will not be updated and tracebacks won't be logger.
+        Useful only for debugging purposes.
 
+    """
     def __init__(self, build_in_subprocess=True, catch_exceptions=True,
                  catch_warnings=True):
         self._logger = logging.getLogger(__name__)
@@ -79,6 +81,10 @@ class Serial(Executor):
                                   kwargs={'fn': fn,
                                           'warnings_all': warnings_all},
                                   task=t)
+            else:
+                fn = LazyFunction(fn=pass_exceptions,
+                                  kwargs={'fn': fn},
+                                  task=t)
 
             if self._catch_exceptions:
                 fn = LazyFunction(fn=catch_exceptions,
@@ -95,6 +101,9 @@ class Serial(Executor):
             warnings.warn('Some tasks had warnings when executing DAG '
                           '"{}":\n{}'.format(dag.name, str(warnings_all)))
 
+        # maybe replace for DAGBuildEarlyStop if there is at least one of that
+        # kind? that will allow the polling pipeline to keep catch_exceptions
+        # as true
         if exceptions_all and self._catch_exceptions:
             raise DAGBuildError('DAG build failed, the following '
                                 'tasks crashed '
@@ -112,8 +121,6 @@ class Serial(Executor):
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # _logger is not pickable, so we remove them and build
-        # them again in __setstate__
         del state['_logger']
         return state
 
@@ -146,6 +153,8 @@ def catch_warnings(fn, warnings_all):
 
 
 def catch_exceptions(fn, exceptions_all):
+    # TODO: setting exec_status can also raise exceptions if the hook fails
+    # add tests for that, and check the final task status
     try:
         fn()
     except Exception:
@@ -161,6 +170,13 @@ def catch_exceptions(fn, exceptions_all):
         except Exception:
             tr = traceback.format_exc()
             exceptions_all.append(message=tr, task_str=repr(fn.task))
+
+
+def pass_exceptions(fn):
+    # should i still check here for DAGBuildEarlyStop? is it worth
+    # for returning accurate task status?
+    fn()
+    fn.task.exec_status = TaskStatus.Executed
 
 
 def build_in_current_process(task, build_kwargs, reports_all):

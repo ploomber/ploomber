@@ -3,6 +3,7 @@ A pipeline that dumps and processes rows since last execution
 """
 
 # +
+import logging
 import shutil
 from pathlib import Path
 import tempfile
@@ -14,6 +15,8 @@ from ploomber import DAG
 from ploomber.tasks import SQLDump, PythonCallable, SQLUpload
 from ploomber.products import File, SQLiteRelation
 from ploomber.clients import SQLAlchemyClient
+from ploomber.exceptions import DAGBuildEarlyStop
+from ploomber.executors import Serial
 
 
 # -
@@ -53,12 +56,20 @@ def _plus_one(product, upstream):
     df.to_csv(str(product), index=False)
 
 
+def dump_on_finish(product):
+    df = pd.read_csv(str(product))
+
+    if not df.shape[0]:
+        raise DAGBuildEarlyStop('No new observations')
+
+
 def make(tmp):
     """Make the dag
     """
     tmp = Path(tmp)
 
-    dag = DAG()
+    executor = Serial(build_in_subprocess=False, catch_exceptions=False)
+    dag = DAG(executor=executor)
     client_source = SQLAlchemyClient('sqlite:///' + str(tmp / 'source.db'))
     client_target = SQLAlchemyClient('sqlite:///' + str(tmp / 'target.db'))
 
@@ -77,6 +88,7 @@ def make(tmp):
         SELECT * FROM  data
     {% endif %}
     """, out, dag=dag, name='dump', chunksize=None)
+    dump.on_finish = dump_on_finish
 
     plus_one = PythonCallable(_plus_one, File(tmp / 'plus_one.csv'),
                               dag=dag, name='plus_one')
@@ -93,6 +105,7 @@ def make(tmp):
 
 
 # ## Testing
+logging.basicConfig(level=logging.INFO)
 
 # create dag
 tmp = tempfile.mkdtemp()
@@ -104,19 +117,23 @@ engine = create_engine('sqlite:///' + str(Path(tmp, 'source.db')))
 df = pd.DataFrame({'x': range(10)})
 df.to_sql('data', engine)
 
+target = create_engine('sqlite:///' + str(Path(tmp, 'target.db')))
+
 # run dag, should pull this first 10 observations
 dag.build(force=True)
 
 # checking downloaded data with the plus one added
-df = pd.read_csv(str(dag['plus_one']))
-assert df.x.min() == 1 and df.shape[0] == 10
+df = pd.read_sql('SELECT * FROM plus_one', target)
+assert df.x.max() == 10 and df.shape[0] == 10
 df
 
-# run the dag again, this time plus one should be empty as there
-# are no new rows and we are forcing a run
+# run the dag again, this time plus one should be the same
 dag.build(force=True)
-df = pd.read_csv(str(dag['plus_one']))
-assert not df.shape[0]
+
+df = pd.read_sql('SELECT * FROM plus_one', target)
+assert df.x.max() == 10 and df.shape[0] == 10
+df
+
 
 # simulate new data arrival
 df = pd.DataFrame({'x': range(10)})
@@ -126,9 +143,9 @@ df.to_sql('data', engine, if_exists='append')
 # +
 # should only get new rows
 dag.build(force=True)
-df = pd.read_csv(str(dag['plus_one']))
-assert df.x.min() == 11
 
+df = pd.read_sql('SELECT * FROM plus_one', target)
+assert df.x.max() == 20 and df.shape[0] == 20
 df
 # -
 

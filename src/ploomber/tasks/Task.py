@@ -54,6 +54,7 @@ from ploomber.Table import TaskReport, Row
 from ploomber.sources.sources import Source
 from ploomber.util import isiterable
 from ploomber.util.util import callback_check
+from ploomber.exceptions import DAGBuildEarlyStop
 
 import humanize
 
@@ -357,7 +358,8 @@ class Task(abc.ABC):
         # this change
 
         # TODO: move this to build method? do we really need to run this in
-        # the main process?
+        # the main process? This makes testing easier but is not necessarily
+        # the best option
         if value == TaskStatus.Executed:
             # run on finish first, if this fails, we don't want to save
             # metadata
@@ -398,6 +400,7 @@ class Task(abc.ABC):
         dict
             A dictionary with keys 'run' and 'elapsed'
         """
+        # FIXME
         if within_dag:
             return self._build(force)
         else:

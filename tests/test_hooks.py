@@ -61,21 +61,42 @@ def hook_3():
         hook_3.count += 1
 
 
+def hook_4():
+    if hasattr(hook_4, 'count'):
+        hook_4.count += 1
+
+
 def hook_crashing():
     if hasattr(hook_crashing, 'count'):
         hook_crashing.count += 1
     raise Exception
 
 
-@pytest.mark.parametrize('executor', ['serial', 'parallel'])
+_executors = [Serial(build_in_subprocess=False, catch_exceptions=False),
+              Serial(build_in_subprocess=False, catch_exceptions=True),
+              Serial(build_in_subprocess=True, catch_exceptions=False),
+              Serial(build_in_subprocess=True, catch_exceptions=True),
+              'parallel']
+
+
+_executors_catch_exc = [Serial(build_in_subprocess=False,
+                               catch_exceptions=True),
+                        Serial(build_in_subprocess=True,
+                               catch_exceptions=True),
+                        'parallel']
+
+
+@pytest.mark.parametrize('executor', _executors)
 def test_runs_on_finish(executor, tmp_directory):
     hook.count = 0
     hook_2.count = 0
     hook_3.count = 0
+    hook_4.count = 0
 
     dag = DAG(executor=executor)
     t = PythonCallable(fn, File('file1.txt'), dag, 't')
     t.on_finish = hook
+    t.on_failure = hook_4
 
     t2 = PythonCallable(touch_w_upstream, File('file2'), dag, 't2')
     t2.on_finish = hook_2
@@ -90,9 +111,10 @@ def test_runs_on_finish(executor, tmp_directory):
     assert hook.count == 1
     assert hook_2.count == 1
     assert hook_3.count == 1
+    assert hook_4.count == 0
 
 
-@pytest.mark.parametrize('executor', ['serial', 'parallel'])
+@pytest.mark.parametrize('executor', _executors)
 @pytest.mark.parametrize('method', ['build', 'render'])
 def test_runs_on_render(executor, method, tmp_directory):
     hook.count = 0
@@ -118,7 +140,7 @@ def test_runs_on_render(executor, method, tmp_directory):
     assert hook_3.count == 1
 
 
-@pytest.mark.parametrize('executor', ['serial', 'parallel'])
+@pytest.mark.parametrize('executor', _executors_catch_exc)
 def test_runs_on_failure(executor, tmp_directory):
     hook.count = 0
     hook_2.count = 0
