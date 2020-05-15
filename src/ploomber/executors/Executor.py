@@ -31,6 +31,9 @@ class Executor(abc.ABC):
     in DAG hooks to be executed in the main process and Task hooks in the same
     process where Task.build() is called.
 
+    To allow finishing dag.build() gracefully, executors should raise
+    DAGBuildError (this will trigger the DAG.on_failure hook)
+
 
     Notes
     -----

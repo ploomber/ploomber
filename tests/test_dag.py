@@ -133,7 +133,7 @@ def test_build_partially(tmp_directory, executor):
 
 
 @pytest.mark.parametrize('function_name', ['render', 'build', 'to_markup',
-                         'plot'])
+                                           'plot'])
 def test_dag_functions_clear_up_product_status(function_name, tmp_directory):
     dag = DAG()
     t = PythonCallable(touch_root, File('1.txt'), dag, name=1)
@@ -478,3 +478,16 @@ def test_warnings_are_shown(tmp_directory):
     assert 'This is another warning' in str(record[0].message)
     # assert isinstance(record[0], WarningA)
     # assert isinstance(record[1], WarningB)
+
+
+@pytest.mark.parametrize('executor',
+                         [Serial(build_in_subprocess=True,
+                                 catch_exceptions=False),
+                          Serial(build_in_subprocess=False,
+                                 catch_exceptions=False)])
+def test_exception_is_not_masked_if_not_catching_them(executor):
+    dag = DAG(executor=executor)
+    PythonCallable(failing_root, File('file.txt'), dag)
+
+    with pytest.raises(FailedTask):
+        dag.build()
