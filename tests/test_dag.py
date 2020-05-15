@@ -7,7 +7,8 @@ from ploomber import DAG
 from ploomber.tasks import ShellScript, PythonCallable, SQLDump
 from ploomber.products import File
 from ploomber.constants import TaskStatus, DAGStatus
-from ploomber.exceptions import DAGBuildError, DAGRenderError
+from ploomber.exceptions import (DAGBuildError, DAGRenderError,
+                                 DAGBuildEarlyStop)
 from ploomber.executors import Serial, Parallel
 
 # TODO: a lot of these tests should be in a test_executor file
@@ -60,6 +61,10 @@ def touch_w_warning(upstream, product):
 
 def failing_root(product):
     raise FailedTask('Bad things happened')
+
+
+def early_stop_root(product):
+    raise DAGBuildEarlyStop('Ending gracefully')
 
 
 def failing(upstream, product):
@@ -491,3 +496,11 @@ def test_exception_is_not_masked_if_not_catching_them(executor):
 
     with pytest.raises(FailedTask):
         dag.build()
+
+
+def test_early_stop():
+    dag = DAG(executor=Serial(build_in_subprocess=True,
+              catch_exceptions=False))
+    PythonCallable(early_stop_root, File('file.txt'), dag)
+
+    dag.build()

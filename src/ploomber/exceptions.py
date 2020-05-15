@@ -10,6 +10,14 @@ class DAGBuildError(Exception):
     pass
 
 
+class DAGBuildEarlyStop(Exception):
+    """
+    This is raised on purpose to signal that the DAG should not continue
+    executing but is not considered a build error
+    """
+    pass
+
+
 class TaskBuildError(Exception):
     """Raise when a task fails to build
     """

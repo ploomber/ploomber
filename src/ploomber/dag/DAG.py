@@ -32,7 +32,8 @@ from ploomber.util import (image_bytes2html, isiterable, path2fig, requires,
 from ploomber import resources
 from ploomber import executors
 from ploomber.constants import TaskStatus, DAGStatus
-from ploomber.exceptions import DAGBuildError, DAGRenderError
+from ploomber.exceptions import (DAGBuildError, DAGRenderError,
+                                 DAGBuildEarlyStop)
 from ploomber.MessageCollector import MessageCollector
 from ploomber.util.util import callback_check
 from ploomber.dag.DAGConfiguration import DAGConfiguration
@@ -269,6 +270,8 @@ class DAG(collections.abc.Mapping):
 
             self._logger.info('Building DAG %s', self)
 
+            early_stop = False
+
             try:
                 # within_dag flags when we execute a task in isolation
                 # vs as part of a dag execution
@@ -298,6 +301,9 @@ class DAG(collections.abc.Mapping):
                                        '"%s", skipping', self.name)
 
                 raise e_new from e
+            except DAGBuildEarlyStop as e:
+                self._logger.info('Early stopping %s: %s', self, str(e))
+                early_stop = True
             else:
                 self._exec_status = DAGStatus.Executed
             finally:
@@ -305,26 +311,27 @@ class DAG(collections.abc.Mapping):
                 # once per task, clear it after it's done
                 self._clear_cached_status()
 
-            # add reports from skipped tasks
-            empty = [TaskReport.empty_with_name(t.name)
-                     for t in self.values()
-                     if t.exec_status == TaskStatus.Skipped]
+            if not early_stop:
+                # add reports from skipped tasks
+                empty = [TaskReport.empty_with_name(t.name)
+                         for t in self.values()
+                         if t.exec_status == TaskStatus.Skipped]
 
-            build_report = BuildReport(task_reports + empty)
-            self._logger.info(' DAG report:\n{}'.format(build_report))
+                build_report = BuildReport(task_reports + empty)
+                self._logger.info(' DAG report:\n{}'.format(build_report))
 
-            if self.on_finish:
-                self._logger.debug('Executing on_finish hook '
-                                   'for dag "%s"', self.name)
-                kwargs_available = copy(self._available_callback_kwargs)
-                kwargs_available['report'] = build_report
-                kwargs = callback_check(self.on_finish, kwargs_available)
-                self.on_finish(**kwargs)
-            else:
-                self._logger.debug('No on_finish hook for dag '
-                                   '"%s", skipping', self.name)
+                if self.on_finish:
+                    self._logger.debug('Executing on_finish hook '
+                                       'for dag "%s"', self.name)
+                    kwargs_available = copy(self._available_callback_kwargs)
+                    kwargs_available['report'] = build_report
+                    kwargs = callback_check(self.on_finish, kwargs_available)
+                    self.on_finish(**kwargs)
+                else:
+                    self._logger.debug('No on_finish hook for dag '
+                                       '"%s", skipping', self.name)
 
-            return build_report
+                return build_report
 
     def build_partially(self, target, force=False, show_progress=True):
         """Partially build a dag until certain task
