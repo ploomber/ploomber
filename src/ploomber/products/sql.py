@@ -8,7 +8,35 @@ from ploomber.products.serializers import Base64Serializer
 from ploomber.placeholders.Placeholder import SQLRelationPlaceholder
 
 
-class SQLiteBackedProductMixin:
+class ProductWithClientMixin:
+    """
+    Adds the client property to a Product with the hierarchical resolution
+    logic: Product -> Task -> DAG.clients. Product.client is only used
+    for storing metadata
+    """
+    @property
+    def client(self):
+        # FIXME: this nested reference looks ugly, how can we improve this?
+        if self._client is None:
+            if self._task is None:
+                raise ValueError('Cannot obtain client for this product, '
+                                 'the constructor did not receive a client '
+                                 'and this product has not been assigned '
+                                 'to a DAG yet, hence we cannot look up '
+                                 'dag.clients')
+
+            default = self.task.dag.clients.get(type(self))
+
+            if default is None:
+                raise ValueError('{} must be initialized with a client'
+                                 .format(type(self).__name__))
+            else:
+                self._client = default
+
+        return self._client
+
+
+class SQLiteBackedProductMixin(ProductWithClientMixin):
     def _create_metadata_relation(self):
         create_metadata = """
         CREATE TABLE IF NOT EXISTS _metadata (
@@ -141,28 +169,6 @@ class SQLiteRelation(SQLiteBackedProductMixin, Product):
     def _init_identifier(self, identifier):
         return SQLRelationPlaceholder(identifier)
 
-    @property
-    def client(self):
-        # FIXME: this nested reference looks ugly
-        # FIXME: create a mixin
-        if self._client is None:
-            if self._task is None:
-                raise ValueError('Cannot obtain client for this product, '
-                                 'the constructor did not receive a client '
-                                 'and this product has not been assigned '
-                                 'to a DAG yet, hence we cannot look up '
-                                 'dag.clients')
-
-            default = self.task.dag.clients.get(type(self))
-
-            if default is None:
-                raise ValueError('{} must be initialized with a client'
-                                 .format(type(self).__name__))
-            else:
-                self._client = default
-
-        return self._client
-
     def exists(self):
         query = """
         SELECT name
@@ -203,7 +209,7 @@ class SQLiteRelation(SQLiteBackedProductMixin, Product):
 
 # FIXME: self._identifier should not be accessed direclty since it might
 # be a placeholder
-class PostgresRelation(Product):
+class PostgresRelation(ProductWithClientMixin, Product):
     """A PostgreSQL relation
 
     Parameters
@@ -231,26 +237,6 @@ class PostgresRelation(Product):
 
     def _init_identifier(self, identifier):
         return SQLRelationPlaceholder(identifier)
-
-    @property
-    def client(self):
-        if self._client is None:
-            if self._task is None:
-                raise ValueError('Cannot obtain client for this product, '
-                                 'the constructor did not receive a client '
-                                 'and this product has not been assigned '
-                                 'to a DAG yet, hence we cannot look up '
-                                 'dag.clients')
-
-            default = self.task.dag.clients.get(type(self))
-
-            if default is None:
-                raise ValueError('{} must be initialized with a client'
-                                 .format(type(self).__name__))
-            else:
-                self._client = default
-
-        return self._client
 
     def fetch_metadata(self):
         cur = self.client.connection.cursor()
