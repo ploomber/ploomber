@@ -236,33 +236,43 @@ class SQLTransfer(Task):
 
 class SQLUpload(Task):
     """
-    Upload data to a SQL database from a parquet file (Note: this relies on
-    pandas, only use it for small to medium size datasets)
+    Upload data to a SQL database from a parquet or a csv file. Note: this
+    task relies uses pandas.to_sql which introduces some overhead. Only use it
+    for small to medium size datasets. Each database usually come with a tool
+    to upload data efficiently. If you are using PostgreSQL, check out the
+    PostgresCopyFrom task.
 
     Parameters
     ----------
-    source: str or pathlib.Path
+    source : str or pathlib.Path
         Path to parquet or a csv file to upload
-    product: ploomber.products.Product
-        Product generated upon successful execution. For SQLTransfer, usually
-        product.client != task.client. task.client represents the data source
-        while product.client represents the data destination.
-    dag: ploomber.DAG
+
+    product : ploomber.products.Product
+        Product generated upon successful execution. The client for the product
+        must be in the target database, where as task.client should be a client
+        in the source database.
+
+    dag : ploomber.DAG
         A DAG to add this task to
-    name: str
+
+    name : str
         A str to indentify this task. Should not already exist in the dag
+
     client: ploomber.clients.SQLAlchemyClient, optional
-        The client used to connect to the database. Only required
-        if no dag-level client has been declared using dag.clients[class]
-    params: dict, optional
+        The client to the the target database. It is only used if the Product
+        is a GenericSQLRelation, otherwise product.client is used.
+
+    params : dict, optional
         Parameters to pass to the script, by default, the callable will
         be executed with a "product" (which will contain the product object).
         It will also include a "upstream" parameter if the task has upstream
         dependencies along with any parameters declared here. The source
         code is converted to a jinja2.Template for passing parameters,
         refer to jinja2 documentation for details
-    chunksize: int, optional
+
+    chunksize : int, optional
         Number of rows to transfer on every chunk
+
     io_handler : callable, optional
         A Python callable to read the source file,
         if None, it will tried to be inferred from the source file extension
@@ -288,11 +298,14 @@ class SQLUpload(Task):
         params = params or {}
         super().__init__(source, product, dag, name, params)
 
-        self.client = client or self.dag.clients.get(type(self))
+        if isinstance(self.product, GenericSQLRelation):
+            self.client = client or self.dag.clients.get(type(self))
 
-        if self.client is None:
-            raise ValueError('{} must be initialized with a connection'
-                             .format(type(self).__name__))
+            if self.client is None:
+                raise ValueError('{} must be initialized with a connection'
+                                 .format(type(self).__name__))
+        else:
+            self.client = self.product.client
 
         self.chunksize = chunksize
         self.io_handler = io_handler
@@ -325,7 +338,7 @@ class SQLUpload(Task):
         self._logger.info('Done reading data...')
 
         df.to_sql(name=product.name,
-                  con=product.client.engine,
+                  con=self.client.engine,
                   schema=product.schema,
                   **self.to_sql_kwargs)
 

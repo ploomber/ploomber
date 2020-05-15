@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from ploomber import DAG
-from ploomber.products import PostgresRelation, File
+from ploomber.products import PostgresRelation, File, GenericSQLRelation
 from ploomber.tasks import SQLUpload, PythonCallable
 
 
@@ -31,12 +31,41 @@ def test_can_upload_a_file(serializer, task_arg, tmp_directory,
     dag = DAG()
 
     dag.clients[PostgresRelation] = pg_client
-    dag.clients[SQLUpload] = pg_client
 
     SQLUpload(task_arg,
               product=PostgresRelation((schema,
                                         'test_can_upload_a_file',
                                         'table')),
+              dag=dag,
+              name='upload',
+              to_sql_kwargs={'if_exists': 'replace'})
+
+    dag.build()
+
+
+@pytest.mark.parametrize('serializer, task_arg',
+                         [('to_parquet', 'data.parquet'),
+                          ('to_parquet', Path('data.parquet')),
+                          ('to_csv', 'data.csv')
+                          ])
+def test_upload_a_file_with_generic_relation(serializer, task_arg,
+                                             sqlite_client_and_tmp_dir,
+                                             pg_client_and_schema):
+    client, _ = sqlite_client_and_tmp_dir
+    pg_client, schema = pg_client_and_schema
+
+    df = pd.DataFrame({'a': [1, 2, 3]})
+    getattr(df, serializer)(task_arg)
+
+    dag = DAG()
+
+    dag.clients[GenericSQLRelation] = client
+    dag.clients[SQLUpload] = pg_client
+
+    SQLUpload(task_arg,
+              product=GenericSQLRelation((schema,
+                                          'test_can_upload_a_file',
+                                          'table')),
               dag=dag,
               name='upload',
               to_sql_kwargs={'if_exists': 'replace'})
