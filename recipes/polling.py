@@ -1,9 +1,9 @@
 """
-A pipeline that dumps and processes rows since last execution
+A pipeline that polls a database for new observations, process them and
+inserts them to a table
 """
 
 # +
-import logging
 import shutil
 from pathlib import Path
 import tempfile
@@ -16,10 +16,61 @@ from ploomber.tasks import SQLDump, PythonCallable, SQLUpload
 from ploomber.products import File, SQLiteRelation
 from ploomber.clients import SQLAlchemyClient
 from ploomber.exceptions import DAGBuildEarlyStop
-from ploomber.executors import Serial
 
 
-# -
+def make(tmp):
+    """Make the dag
+    """
+    tmp = Path(tmp)
+    dag = DAG()
+
+    # db with the source data
+    client_source = SQLAlchemyClient('sqlite:///' + str(tmp / 'source.db'))
+    # db where we'll insert processed data (can be the same as the
+    # source db)
+    client_target = SQLAlchemyClient('sqlite:///' + str(tmp / 'target.db'))
+
+    dag.clients[SQLDump] = client_source
+    dag.clients[SQLUpload] = client_target
+    dag.clients[SQLiteRelation] = client_target
+
+    # we dump new observations to this file
+    dumped_data = File(tmp / 'x.csv')
+    # we add a hook that allows us to save info on the latest seen value
+    dumped_data.pre_save_metadata = add_last_value
+
+    # the actual task that dumps data
+    dump = SQLDump("""
+    -- if the product (x.csv file) already has metadata (it has run before)
+    -- use the value in the metadata to only get row above such value
+    {% if product.metadata.timestamp %}
+        SELECT * FROM data
+        WHERE x > {{product.metadata['last_value']}}
+    -- if there is no metadata, just get everything
+    {% else %}
+        SELECT * FROM  data
+    {% endif %}
+    """, dumped_data, dag=dag, name='dump', chunksize=None)
+
+    # on finish hook, will stop DAG execution if there aren't new observations
+    dump.on_finish = dump_on_finish
+
+    # a dummy task to modify the data
+    plus_one = PythonCallable(_plus_one, File(tmp / 'plus_one.csv'),
+                              dag=dag, name='plus_one')
+
+    # upload the data to the target database
+    upload = SQLUpload('{{upstream["plus_one"]}}',
+                       product=SQLiteRelation((None, 'plus_one', 'table')),
+                       dag=dag,
+                       name='upload',
+                       # append observations if the table already exists
+                       to_sql_kwargs={'if_exists': 'append', 'index': False})
+
+    dump >> plus_one >> upload
+
+    return dag
+
 
 def add_last_value(metadata, product):
     """Hook to save last value downloaded before saving metadata
@@ -35,17 +86,12 @@ def add_last_value(metadata, product):
 
     new_max = int(df.x.max())
 
-    # there is no last_value in metadata, this is the first time we run this,
-    # just save the new value or if
-    # we have a previously saved value, verify it's bigger than the one we saw
-    # last time...
+    # if running this for the first time or last value it's bigger than the
+    # one we saved, save a new last_value
     if ('last_value' not in metadata
             or new_max > metadata['last_value']):
         metadata['last_value'] = new_max
         return metadata
-
-    # NOTE: the other scenarios should not happen, our query
-    # has a strict inequality
 
 
 def _plus_one(product, upstream):
@@ -59,53 +105,10 @@ def _plus_one(product, upstream):
 def dump_on_finish(product):
     df = pd.read_csv(str(product))
 
+    # if we dumped data but got no new observations, stop execution gracefully
     if not df.shape[0]:
         raise DAGBuildEarlyStop('No new observations')
 
-
-def make(tmp):
-    """Make the dag
-    """
-    tmp = Path(tmp)
-
-    executor = Serial(build_in_subprocess=False, catch_exceptions=True)
-    dag = DAG(executor=executor)
-    client_source = SQLAlchemyClient('sqlite:///' + str(tmp / 'source.db'))
-    client_target = SQLAlchemyClient('sqlite:///' + str(tmp / 'target.db'))
-
-    dag.clients[SQLDump] = client_source
-    dag.clients[SQLUpload] = client_target
-    dag.clients[SQLiteRelation] = client_target
-
-    out = File(tmp / 'x.csv')
-    out.pre_save_metadata = add_last_value
-
-    dump = SQLDump("""
-    {% if product.metadata.timestamp %}
-        SELECT * FROM data
-        WHERE x > {{product.metadata['last_value']}}
-    {% else %}
-        SELECT * FROM  data
-    {% endif %}
-    """, out, dag=dag, name='dump', chunksize=None)
-    dump.on_finish = dump_on_finish
-
-    plus_one = PythonCallable(_plus_one, File(tmp / 'plus_one.csv'),
-                              dag=dag, name='plus_one')
-
-    upload = SQLUpload('{{upstream["plus_one"]}}',
-                       product=SQLiteRelation((None, 'plus_one', 'table')),
-                       dag=dag,
-                       name='upload',
-                       to_sql_kwargs={'if_exists': 'append', 'index': False})
-
-    dump >> plus_one >> upload
-
-    return dag
-
-
-# ## Testing
-logging.basicConfig(level=logging.INFO)
 
 # create dag
 tmp = tempfile.mkdtemp()
