@@ -68,7 +68,7 @@ def make(tmp):
     """
     tmp = Path(tmp)
 
-    executor = Serial(build_in_subprocess=False, catch_exceptions=False)
+    executor = Serial(build_in_subprocess=False, catch_exceptions=True)
     dag = DAG(executor=executor)
     client_source = SQLAlchemyClient('sqlite:///' + str(tmp / 'source.db'))
     client_target = SQLAlchemyClient('sqlite:///' + str(tmp / 'target.db'))

@@ -4,7 +4,7 @@ _sep = '\n\n'+'-'*80+'\n'+'-'*80+'\n\n'
 
 
 Message = namedtuple('Message',
-                     ['task_str', 'message'])
+                     ['task_str', 'message', 'obj'])
 
 
 class MessageCollector:
@@ -18,9 +18,10 @@ class MessageCollector:
     def __init__(self, messages=None):
         self.messages = messages or []
 
-    def append(self, task_str, message):
+    def append(self, task_str, message, obj=None):
         self.messages.append(Message(task_str=task_str,
-                                     message=message))
+                                     message=message,
+                                     obj=obj))
 
     def __str__(self):
         return _sep.join(['* {}: {}'.format(exp.task_str,
@@ -29,3 +30,7 @@ class MessageCollector:
 
     def __bool__(self):
         return bool(self.messages)
+
+    def __iter__(self):
+        for message in self.messages:
+            yield message

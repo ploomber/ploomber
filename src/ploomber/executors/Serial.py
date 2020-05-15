@@ -8,20 +8,14 @@ import logging
 
 from tqdm.auto import tqdm
 from ploomber.executors.Executor import Executor
-from ploomber.exceptions import DAGBuildError
+from ploomber.exceptions import DAGBuildError, DAGBuildEarlyStop
 from ploomber.MessageCollector import MessageCollector
 from ploomber.constants import TaskStatus
 
 
 # TODO: test exceptions are logged
 class Serial(Executor):
-    """Runs a DAG one task at a time
-
-    Tries to run as many tasks as possible (even if some of them fail), when
-    tasks fail, a final traceback is shown at the end of the execution showing
-    error messages along with their corresponding task to ease debgging, the
-    same happens with warnings: they are captured and shown at the end of the
-    execution (but only when build_in_subprocess is False).
+    """Executor than runs one task at a time
 
     Parameters
     ----------
@@ -30,15 +24,32 @@ class Serial(Executor):
         current process. For pipelines with a lot of PythonCallables loading
         large objects such as pandas.DataFrame, this option is recommended as
         it guarantees that memory will be cleared up upon task execution.
-        Defaults to True
+        Defaults to True.
 
     catch_exceptions : bool, optional
         Whether to catch exceptions raised when building tasks and running
-        hooks. If False, no catching is done, on_failure won't be executed
+        hooks. If True, exceptions are collected and displayed at the end,
+        downstream tasks of failed ones are aborted (not executed at all).
+        If False, no catching is done, on_failure won't be executed
         and task status will not be updated and tracebacks won't be logger.
-        Useful only for debugging purposes.
+        Setting of to False is only useful for debugging purposes.
 
+
+    catch_warnings : bool, optional
+        If True, the executor catches all warnings raised by tasks and
+        displays them at the end of execution. If catch_exceptions is True
+        and there is an error building the DAG, capture warnings are still
+        shown before raising the collected exceptions.
+
+    Notes
+    -----
+    Raising a DAGBuildEarlyStop inside the task or on_finish hook is not
+    considered an error and can be used to signal that the DAG cannot keep
+    executing due to unforeseen circumtances. This is useful for polling
+    pipelines that run on a schedule and process new observations since last
+    run. If no new observations exist, there is no need to keep running.
     """
+
     def __init__(self, build_in_subprocess=True, catch_exceptions=True,
                  catch_warnings=True):
         self._logger = logging.getLogger(__name__)
@@ -101,15 +112,21 @@ class Serial(Executor):
             warnings.warn('Some tasks had warnings when executing DAG '
                           '"{}":\n{}'.format(dag.name, str(warnings_all)))
 
-        # maybe replace for DAGBuildEarlyStop if there is at least one of that
-        # kind? that will allow the polling pipeline to keep catch_exceptions
-        # as true
         if exceptions_all and self._catch_exceptions:
-            raise DAGBuildError('DAG build failed, the following '
-                                'tasks crashed '
-                                '(corresponding downstream tasks aborted '
-                                'execution):\n{}'
-                                .format(str(exceptions_all)))
+            early_stop = any([isinstance(m.obj, DAGBuildEarlyStop)
+                              for m in exceptions_all])
+            if early_stop:
+                raise DAGBuildEarlyStop('Ealy stopping DAG execution, '
+                                        'at least one of the tasks that '
+                                        'failed raised a DAGBuildEarlyStop '
+                                        'exception:\n{}'
+                                        .format(str(exceptions_all)))
+            else:
+                raise DAGBuildError('DAG build failed, the following '
+                                    'tasks crashed '
+                                    '(corresponding downstream tasks aborted '
+                                    'execution):\n{}'
+                                    .format(str(exceptions_all)))
 
         # only close when tasks are executed in this process (otherwise
         # this won't have any effect anyway)
@@ -157,19 +174,19 @@ def catch_exceptions(fn, exceptions_all):
     # add tests for that, and check the final task status
     try:
         fn()
-    except Exception:
+    except Exception as e:
         fn.task.exec_status = TaskStatus.Errored
         new_status = TaskStatus.Errored
         tr = traceback.format_exc()
-        exceptions_all.append(message=tr, task_str=repr(fn.task))
+        exceptions_all.append(message=tr, task_str=repr(fn.task), obj=e)
     else:
         new_status = TaskStatus.Executed
 
         try:
             fn.task.exec_status = new_status
-        except Exception:
+        except Exception as e:
             tr = traceback.format_exc()
-            exceptions_all.append(message=tr, task_str=repr(fn.task))
+            exceptions_all.append(message=tr, task_str=repr(fn.task), obj=e)
 
 
 def pass_exceptions(fn):

@@ -34,9 +34,10 @@ class TaskBuildWrapper:
     def __call__(self, *args, **kwargs):
         try:
             return self.task.build(**kwargs)
-        except Exception:
+        except Exception as e:
             return Message(task_str=repr(self.task),
-                           message=traceback.format_exc())
+                           message=traceback.format_exc(),
+                           obj=e)
 
 
 class Parallel(Executor):
