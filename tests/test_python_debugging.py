@@ -28,7 +28,7 @@ def backup_test_pkg():
     # sanity check, in case we change the structure
     assert root.name == 'test_pkg'
 
-    shutil.copytree(root, Path(backup, 'test_pkg'))
+    shutil.copytree(str(root), Path(backup, 'test_pkg'))
 
     yield
 
