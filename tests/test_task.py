@@ -25,6 +25,10 @@ def touch(product):
     Path(str(product)).touch()
 
 
+def touch_w_upstream(product, upstream):
+    Path(str(product)).touch()
+
+
 @pytest.mark.parametrize('Task, prod, source',
                          [(ShellScript, GenericProduct('file.txt'),
                            'touch {{product}}'),
@@ -251,19 +255,25 @@ def test_placeholder_is_copied_upon_initialization():
     assert t1.source._placeholder is not t2.source._placeholder
 
 
-def test_attempting_to_build_unrendered_task_throws_exception():
+def test_build_a_single_task(tmp_directory):
     dag = DAG()
-    t = SQLDump('SELECT * FROM, table', File('file'), dag,
-                name='task',
-                client=object())
+    t = PythonCallable(touch, File('1.txt'), dag)
+    assert t.build()
 
-    msg = ('Cannot build task that has not been rendered, call '
-           'DAG.render() first')
+
+def test_building_a_single_task_when_has_upstream():
+    dag = DAG()
+    t1 = PythonCallable(touch, File('1.txt'), dag, name=1)
+    t2 = PythonCallable(touch, File('2.txt'), dag, name=2)
+
+    t1 >> t2
 
     with pytest.raises(TaskBuildError) as excinfo:
-        t.build()
+        t2.build()
 
-    assert msg in str(excinfo.value)
+    msg = ('Cannot directly build task "2" as it has upstream dependencies'
+           ', call dag.render() first')
+    assert msg == str(excinfo.value)
 
 
 def test_attempt_to_debug_unrendered_task():

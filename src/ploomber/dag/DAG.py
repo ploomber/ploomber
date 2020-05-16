@@ -196,7 +196,11 @@ class DAG(collections.abc.Mapping):
         return t
 
     def render(self, force=False, show_progress=True):
-        """Render the graph
+        """
+
+        Render resolves all placeholders in tasks and determines whether
+        a task should run or not based on the task.product metadata, this
+        allows up-to-date tasks to be skipped.
         """
         g = self._to_graph()
 
@@ -307,6 +311,8 @@ class DAG(collections.abc.Mapping):
             else:
                 self._exec_status = DAGStatus.Executed
             finally:
+                # FIXME: move this to render, after rendering is done, we no
+                # longer need cached status
                 # status is cached during dag execution to only compute it
                 # once per task, clear it after it's done
                 self._clear_cached_status()

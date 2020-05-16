@@ -393,8 +393,11 @@ class Task(abc.ABC):
         # this change
         self._update_downstream_status()
 
-    def build(self, catch_exceptions=True):
-        """build the task
+    def build(self, force=False, catch_exceptions=True):
+        """Build a single task
+
+        Render task then build, only works if the task does not have upstream
+        dependencies, if that's the case, you should call dag.render() first.
 
         Returns
         -------
@@ -404,23 +407,33 @@ class Task(abc.ABC):
         Raises
         ------
         TaskBuildError
-            If the error failed to build (either the build itself failed or
-            build succeded but on_finish hook failed)
+            If the error failed to build because it has upstream dependencies,
+            the build itself failed or build succeded but on_finish hook failed
 
         DAGBuildEarlyStop
             If any task or on_finish hook raises a DAGBuildEarlyStop error
         """
+        if self.upstream:
+            raise TaskBuildError('Cannot directly build task "{}" as it '
+                                 'has upstream dependencies, call '
+                                 'dag.render() first'.format(self.name))
+
         # This is the public API for uses who'd to run tasks in isolation,
         # we have to make sure we clear product cache status, otherwise
         # this will interfer with other render calls
+        self.render(force=force)
+
         res = self._build(catch_exceptions=catch_exceptions)
         self.product._clear_cached_status()
         return res
 
     def _build(self, catch_exceptions):
         """
-        Private API for building DAGs. This is what executors should call
+        Private API for building DAGs. This is what executors should call.
+        Unlike the public method, this one does not call render, as it
+        should happen via a dag.render() call
         """
+
         if not catch_exceptions:
             res = self._run()
             self._run_on_finish()
