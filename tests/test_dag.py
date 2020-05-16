@@ -530,3 +530,13 @@ def test_early_stop_from_on_finish(executor, tmp_directory):
     assert dag.build() is None
 
 # test early stop when registered an on_failure hook, maybe don't run hook?
+
+
+
+def test_reporting_status_triggers_metadata_reload(tmp_directory):
+    dag = DAG(executor=Serial(build_in_subprocess=True))
+    t = PythonCallable(touch_root, File('file.txt'), dag)
+
+    dag.build()
+
+    assert t.product.metadata._data is not None

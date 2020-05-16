@@ -380,6 +380,11 @@ class Task(abc.ABC):
         self._logger.debug('Setting "%s" status to %s', self.name, value)
         self._exec_status = value
 
+        # some executors run this in a subprocess, the main process will not
+        # get the new metadata since it was not saved from there, reload
+        if value == TaskStatus.Executed:
+            self.product.metadata.load()
+
         # process might crash, propagate now or changes might not be
         # reflected (e.g. if a Task is marked as Aborted, all downtream
         # tasks should be marked as aborted as well)
