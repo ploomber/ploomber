@@ -27,13 +27,15 @@ class CallableDebugger:
         self.lines = (start, start + len(lines))
         self.params = params
         _, self.tmp_path = tempfile.mkstemp(suffix='.ipynb')
+        self.body_start = None
 
     def _to_nb(self):
         """
         Returns the function's body in a notebook (tmp location), insert
         injected parameters
         """
-        callable_to_nb(self.fn, self.tmp_path)
+        body, self.body_start = parse(self.fn)
+        body_to_nb(body, self.tmp_path)
 
         papermill.execute_notebook(self.tmp_path, self.tmp_path,
                                    prepare_only=True,
@@ -58,7 +60,10 @@ class CallableDebugger:
 
         content = Path(self.file).read_text().splitlines()
 
-        new_content = (content[:self.lines[0]]
+        # first element: where the function starts + offset due to signature
+        # second: new body
+        # third: the rest of the file
+        new_content = (content[:self.lines[0] + self.body_start]
                        + code_cells + content[self.lines[1]:])
 
         Path(self.file).write_text('\n'.join(new_content))
@@ -85,20 +90,23 @@ def indent_cell(code):
     return '\n'.join([indent_line(l) for l in code.splitlines()])
 
 
-def callable_to_nb(fn, path):
-    """
-    Converts a Python function to a notebook
-    """
+def parse(fn):
     # TODO: exclude return at the end, what if we find more than one?
     # maybe do not support functions with return statements for now
     s = inspect.getsource(fn)
     module = parso.parse(s)
-    statements = module.children[0].children[-1]
+    body = module.children[0].children[-1]
+    return body, body.start_pos[0]
 
+
+def body_to_nb(body, path):
+    """
+    Converts a Python function to a notebook
+    """
     nb_format = nbformat.versions[nbformat.current_nbformat]
     nb = nb_format.new_notebook()
 
-    for statement in statements.children:
+    for statement in body.children:
         lines = [l[4:] for l in statement.get_code().split('\n')]
         cell = nb_format.new_code_cell(source='\n'.join(lines))
         nb.cells.append(cell)

@@ -9,6 +9,7 @@ from test_pkg import functions
 import nbformat
 
 from ploomber.sources.debugging import CallableDebugger
+from ploomber.sources import debugging
 
 
 @pytest.fixture
@@ -42,17 +43,27 @@ def replace_cell(nb, source, replacement):
                 cell['source'] = replacement
 
 
-@pytest.mark.parametrize('fn', [functions.simple,
-                                functions.multiple_lines_signature])
-def test_simple_case(fn, tmp_file, backup_test_pkg):
+@pytest.mark.parametrize('fn,start',
+                         [
+                             (functions.simple, 1),
+                             (functions.multiple_lines_signature, 3)
+                         ])
+def test_find_body_start_line(fn, start):
+    assert debugging.parse(fn)[1] == start
 
-    with CallableDebugger(fn,
+
+@pytest.mark.parametrize('fn_name', ['simple',
+                                     'multiple_lines_signature'])
+def test_editing_function(fn_name, tmp_file, backup_test_pkg):
+
+    with CallableDebugger(getattr(functions, fn_name),
                           {'upstream': None, 'product': None}) as tmp_nb:
 
         nb = nbformat.read(tmp_nb, as_version=nbformat.NO_CONVERT)
         replace_cell(nb, 'x = 1\n', 'x = 2\n')
         nbformat.write(nb, tmp_nb)
 
-    importlib.reload(functions)
-    fn(None, None, tmp_file)
+    reloaded = importlib.reload(functions)
+    getattr(reloaded, fn_name)(None, None, tmp_file)
+    print(Path(functions.__file__).read_text())
     assert Path(tmp_file).read_text() == '2'
