@@ -32,8 +32,8 @@ def backup_test_pkg():
 
     yield
 
-    shutil.rmtree(root)
-    shutil.copytree(Path(backup, 'test_pkg'), root)
+    shutil.rmtree(str(root))
+    shutil.copytree(str(Path(backup, 'test_pkg')), str(root))
     shutil.rmtree(backup)
 
 
