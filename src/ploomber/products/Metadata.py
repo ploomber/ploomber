@@ -41,6 +41,12 @@ class AbstractMetadata(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def load(self):
+        """Load metadata
+        """
+        pass
+
     def __eq__(self, other):
         return self.data == other
 
@@ -157,6 +163,10 @@ class MetadataCollection(AbstractMetadata):
         """
         for p in self._products:
             p.metadata.update(source_code)
+
+    def load(self):
+        for p in self._products:
+            p.metadata.load()
 
     # TODO: add getitem
 
