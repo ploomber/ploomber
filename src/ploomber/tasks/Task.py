@@ -19,37 +19,30 @@ Optional:
 * Validating PRODUCT_CLASSES_ALLOWED
 * Using a client parameter
 
-Task Status lifecycle:
+Task execution model:
 
-* They all start on WaitingRender (set in __init__)
-* (dag.render() is called)
-* Tasks move to:
-    * If sucessful render: TaskStatus.Skipped, WaitingExecution or
-        WaitingUpstream
-    * If failed render: ErroredRender or AbortedRender
-    * This happens in Task.render()
-    * AbortedRender is not set directly, but by propagating downstream
-* (dag.build() is called)
-* Check that all TaskStatus are either WaitingExecution, WaitingUpstream
-    or Skipped (currently done in Executor)
-* Once dag.build() starts, the executor must call task.build() inside a
-    try-catch statement to set status to Executed or Errored
-* When tasks are set to Errored, Abort is set to downstream tasks
+Upon instantiation, all tasks start with a WaitingRender status. On successful
+render, they move to Skipped if they are up-to-date and all upstream
+dependencies are up-to-date as well, WaitingExecution if they
+are outdated but upstream dependencies are up-to-date or WaitingUpstream, if
+any upstream dependency is outdated.
+
+If render fails, they are marked as ErroredRender and downstream dependencies
+are marked as AbortedRender.
+
+When a Task is built, and succeeds, the on_finish hook is executed, if
+on_finish succeeds as well, the Task is marked as Executed. If either
+the task fails or on_finish fails, the Task is marked as Errored.
+
+When a task is marked as Executed, is saves metadata in its Product,
+if the product registered a prepare_metadata hook, the metadata to save
+can be modified before is saved.
+
+When a Task is marked as Errored, on_failure hook is executed and downstream
+dependencies are marked as Aborted.
+
 
 TODO: describe BrokenProcesssPool status
-
-
-Task build status flow. When building a Task, it always starts with the
-WaitingExecution status. Upon successful execution, the task runs its
-on_finish hook (if any), if successful, task is marked as Executed and
-building finished.
-
-If building fails, status is set to Errored, the task runs its on_failure hook,
-no more changes in status happend since the status is already marked as
-Errored.
-
-
-
 """
 import abc
 import logging

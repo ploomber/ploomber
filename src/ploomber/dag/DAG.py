@@ -1,8 +1,31 @@
 """
-DAG module
+Ploomber execution model:
 
-A DAG is collection of tasks that makes sure they are executed in
-the right order
+To orchestrate Task execution, they are organized in a DAG object that keeps
+track of dependencies and status.
+
+It all starts with a call to DAG.render(), all placeholders are resolved
+and the task status is determined. If any task fails to render, the process
+is stopped and such DAG cannot be executed.
+
+Once all tasks render successfully, their product's metadata determined
+whether they should run or not based on source code changes, this behavior
+can be overridden by passing DAG.render(force=True).
+
+When DAG.build() is called, actual execution happens. Tasks are executed in
+order (but up-to-date tasks are skipped). If tasks succeed, their downstream
+dependencies will be executed, otherwise they are aborted.
+
+If any tasks fail, DAG executes the on_failure hook, otherwise, it executes
+the on_finish hook.
+
+Tasks support hooks as well and building a task is a process by itself, see
+the docstring in the Task module for details.
+
+The DAG does not execute tasks, but delegates this to an Executor object,
+executors adhere to task status and do not build tasks if they are marked
+as Aborted or Skipped.
+
 """
 import traceback
 from copy import copy, deepcopy
