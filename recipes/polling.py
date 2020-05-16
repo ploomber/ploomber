@@ -37,7 +37,7 @@ def make(tmp):
     # we dump new observations to this file
     dumped_data = File(tmp / 'x.csv')
     # we add a hook that allows us to save info on the latest seen value
-    dumped_data.pre_save_metadata = add_last_value
+    dumped_data.prepare_metadata = add_last_value
 
     # the actual task that dumps data
     dump = SQLDump("""

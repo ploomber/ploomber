@@ -93,7 +93,7 @@ def test_add_metadata_fields(client_and_prod):
     dag.clients[type(product)] = client
 
     query = 'CREATE TABLE {{product}} AS SELECT * FROM data'
-    product.pre_save_metadata = add_number_one
+    product.prepare_metadata = add_number_one
 
     SQLScript(query, product, dag, name='t1')
 

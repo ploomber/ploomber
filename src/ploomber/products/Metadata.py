@@ -103,11 +103,11 @@ class Metadata(AbstractMetadata):
         self.data['timestamp'] = datetime.now().timestamp()
         self.data['stored_source_code'] = source_code
 
-        kwargs = callback_check(self._product.pre_save_metadata,
+        kwargs = callback_check(self._product.prepare_metadata,
                                 available={'metadata': self.data,
                                            'product': self._product})
 
-        data = self._product.pre_save_metadata(**kwargs)
+        data = self._product.prepare_metadata(**kwargs)
 
         self._product.save_metadata(data)
 

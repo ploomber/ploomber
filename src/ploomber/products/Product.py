@@ -11,13 +11,22 @@ import logging
 from ploomber.products.Metadata import Metadata
 
 
-def _pre_save_metadata(metadata):
+def _prepare_metadata(metadata):
     return metadata
 
 
 class Product(abc.ABC):
     """
     Abstract class for all Products
+
+    Attributes
+    ----------
+    prepare_metadata : callable
+        A hook to execute before saving metadata, should include a "metadata"
+        parameter and might include "product". "metadata" will be a
+        dictionary with the metadata to save, it is not recommended to change
+        any of the existing keys but additional key-value pairs might be
+        included
     """
 
     def __init__(self, identifier):
@@ -35,7 +44,7 @@ class Product(abc.ABC):
         self._outdated_code_dependency_status = None
         self.metadata = Metadata(self)
 
-        self.pre_save_metadata = _pre_save_metadata
+        self.prepare_metadata = _prepare_metadata
 
     def _save_metadata(self, source_code):
         # this is called by task in the exec_status setter
