@@ -71,7 +71,9 @@ class Serial(Executor):
         warnings_all = MessageCollector()
         task_reports = []
 
+        # FIXME: this should not be here
         task_kwargs['catch_exceptions'] = self._catch_exceptions
+        task_kwargs['clear_product_status'] = False
 
         if show_progress:
             tasks = tqdm(dag.values(), total=len(dag))

@@ -388,7 +388,8 @@ class Task(abc.ABC):
         # this change
         self._update_downstream_status()
 
-    def build(self, force=False, catch_exceptions=False):
+    def build(self, force=False, catch_exceptions=False,
+              clear_product_status=True):
         """build the task
 
         Returns
@@ -405,6 +406,10 @@ class Task(abc.ABC):
         if not catch_exceptions:
             res = self._build(force)
             self._run_on_finish()
+
+            if clear_product_status:
+                self.product._clear_cached_status()
+
             return res
         else:
             try:
@@ -447,6 +452,9 @@ class Task(abc.ABC):
                         raise TaskBuildError(msg) from e
                 else:
                     self.exec_status = TaskStatus.Executed
+
+                if clear_product_status:
+                    self.product._clear_cached_status()
 
                 return res
             else:
