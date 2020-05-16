@@ -261,10 +261,10 @@ def test_build_a_single_task(tmp_directory):
     assert t.build()
 
 
-def test_building_a_single_task_when_has_upstream():
+def test_building_a_single_task_when_has_unrendered_upstream():
     dag = DAG()
     t1 = PythonCallable(touch, File('1.txt'), dag, name=1)
-    t2 = PythonCallable(touch, File('2.txt'), dag, name=2)
+    t2 = PythonCallable(touch_w_upstream, File('2.txt'), dag, name=2)
 
     t1 >> t2
 
@@ -274,6 +274,17 @@ def test_building_a_single_task_when_has_upstream():
     msg = ('Cannot directly build task "2" as it has upstream dependencies'
            ', call dag.render() first')
     assert msg == str(excinfo.value)
+
+
+def test_building_a_single_task_when_rendered_upstream():
+    dag = DAG()
+    t1 = PythonCallable(touch, File('1.txt'), dag, name=1)
+    t2 = PythonCallable(touch_w_upstream, File('2.txt'), dag, name=2)
+
+    t1 >> t2
+
+    dag.render()
+    t2.build()
 
 
 def test_attempt_to_debug_unrendered_task():

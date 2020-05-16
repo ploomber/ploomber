@@ -413,7 +413,8 @@ class Task(abc.ABC):
         DAGBuildEarlyStop
             If any task or on_finish hook raises a DAGBuildEarlyStop error
         """
-        if self.upstream:
+        if any(t.exec_status == TaskStatus.WaitingRender
+               for t in self.upstream.values()):
             raise TaskBuildError('Cannot directly build task "{}" as it '
                                  'has upstream dependencies, call '
                                  'dag.render() first'.format(self.name))
