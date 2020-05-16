@@ -34,8 +34,8 @@ class CallableDebugger:
         Returns the function's body in a notebook (tmp location), insert
         injected parameters
         """
-        body, self.body_start = parse(self.fn)
-        body_to_nb(body, self.tmp_path)
+        body_elements, self.body_start = parse(self.fn)
+        body_to_nb(body_elements, self.tmp_path)
 
         papermill.execute_notebook(self.tmp_path, self.tmp_path,
                                    prepare_only=True,
@@ -61,10 +61,12 @@ class CallableDebugger:
         content = Path(self.file).read_text().splitlines()
 
         # first element: where the function starts + offset due to signature
+        # line break
         # second: new body
         # third: the rest of the file
-        new_content = (content[:self.lines[0] + self.body_start]
-                       + code_cells + content[self.lines[1]:])
+        keep_until = self.lines[0] + self.body_start
+        new_content = (content[:keep_until]
+                       + code_cells + ['\n'] + content[self.lines[1]:])
 
         Path(self.file).write_text('\n'.join(new_content))
 
@@ -93,21 +95,33 @@ def indent_cell(code):
 def parse(fn):
     # TODO: exclude return at the end, what if we find more than one?
     # maybe do not support functions with return statements for now
-    s = inspect.getsource(fn)
+    # getsource adds a new line at the end of the the function, we don't need
+    # this
+    s = inspect.getsource(fn).rstrip()
     module = parso.parse(s)
     body = module.children[0].children[-1]
-    return body, body.start_pos[0]
+
+    # parso is adding a new line as first element, not sure if this
+    # happens always though
+    if isinstance(body.children[0], parso.python.tree.Newline):
+        body_elements = body.children[1:]
+    else:
+        body_elements = body.children
+
+    # return body and the last line of the signature
+    return body_elements, body.start_pos[0] - 1
 
 
-def body_to_nb(body, path):
+def body_to_nb(body_elements, path):
     """
     Converts a Python function to a notebook
     """
     nb_format = nbformat.versions[nbformat.current_nbformat]
     nb = nb_format.new_notebook()
 
-    for statement in body.children:
-        lines = [l[4:] for l in statement.get_code().split('\n')]
+    for statement in body_elements:
+        # parso incluses new line tokens, remove any trailing whitespace
+        lines = [l[4:] for l in statement.get_code().rstrip().split('\n')]
         cell = nb_format.new_code_cell(source='\n'.join(lines))
         nb.cells.append(cell)
 

@@ -4,14 +4,16 @@ Task implementations
 A Task is a unit of work that produces a persistent change (Product)
 such as a bash or a SQL script
 """
+import subprocess
 import pdb
 from ploomber.tasks.Task import Task
 from ploomber.sources import (PythonCallableSource,
                               GenericSource, EmptySource)
 from ploomber.clients import ShellClient
 from ploomber.products.Metadata import MetadataAlwaysUpToDate
-from ploomber.exceptions import TaskBuildError, TaskRenderError
+from ploomber.exceptions import TaskBuildError
 from ploomber.constants import TaskStatus
+from ploomber.sources.debugging import CallableDebugger
 
 
 class PythonCallable(Task):
@@ -43,6 +45,20 @@ class PythonCallable(Task):
 
     def run(self):
         self.source.primitive(**self.params)
+
+    def develop(self):
+        # TODO: Params should implement an option to call to_json_serializable
+        # on product to avoid repetition I'm using this same code in notebook
+        # runner. Also raise error if any of the params is not
+        # json serializable
+        params = self.params.to_dict()
+        params['product'] = params['product'].to_json_serializable()
+
+        with CallableDebugger(self.source.primitive, params) as tmp:
+            try:
+                subprocess.call(['jupyter', 'notebook', tmp])
+            except KeyboardInterrupt:
+                print('Jupyter notebook server closed...')
 
     def debug(self):
         """

@@ -1,3 +1,4 @@
+import inspect
 import shutil
 import pytest
 from pathlib import Path
@@ -36,23 +37,28 @@ def backup_test_pkg():
     shutil.rmtree(backup)
 
 
-def replace_cell(nb, source, replacement):
+def replace_first_cell(nb, source, replacement):
     for cell in nb.cells:
         if cell['cell_type'] == 'code':
             if cell['source'] == source:
                 cell['source'] = replacement
+                return
+
+    raise Exception('Cell with source "{}" not found'.format(source))
 
 
 @pytest.mark.parametrize('fn,start',
                          [
-                             (functions.simple, 1),
-                             (functions.multiple_lines_signature, 3)
+                             (functions.simple, 0),
+                             (functions.multiple_lines_signature, 2)
                          ])
-def test_find_body_start_line(fn, start):
+def test_find_signature_last_line(fn, start):
     assert debugging.parse(fn)[1] == start
 
 
 @pytest.mark.parametrize('fn_name', ['simple',
+                                     'simple_w_docstring',
+                                     'simple_w_docstring_long',
                                      'multiple_lines_signature'])
 def test_editing_function(fn_name, tmp_file, backup_test_pkg):
 
@@ -60,10 +66,30 @@ def test_editing_function(fn_name, tmp_file, backup_test_pkg):
                           {'upstream': None, 'product': None}) as tmp_nb:
 
         nb = nbformat.read(tmp_nb, as_version=nbformat.NO_CONVERT)
-        replace_cell(nb, 'x = 1\n', 'x = 2\n')
+        replace_first_cell(nb, 'x = 1', 'x = 2')
         nbformat.write(nb, tmp_nb)
 
     reloaded = importlib.reload(functions)
     getattr(reloaded, fn_name)(None, None, tmp_file)
     print(Path(functions.__file__).read_text())
     assert Path(tmp_file).read_text() == '2'
+
+# TODO: test with docstring
+
+
+@pytest.mark.parametrize('fn_name', ['simple',
+                                     'simple_w_docstring',
+                                     'simple_w_docstring_long',
+                                     'multiple_lines_signature'])
+def test_unmodified_function(fn_name, tmp_file, backup_test_pkg):
+    print(Path(functions.__file__).read_text())
+    source_original = inspect.getsource(getattr(functions, fn_name))
+
+    with CallableDebugger(getattr(functions, fn_name),
+                          {'upstream': None, 'product': None}):
+        pass
+
+    reloaded = importlib.reload(functions)
+    source_new = inspect.getsource(getattr(reloaded, fn_name))
+    print(Path(functions.__file__).read_text())
+    assert source_original == source_new
