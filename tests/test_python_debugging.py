@@ -28,7 +28,7 @@ def backup_test_pkg():
     # sanity check, in case we change the structure
     assert root.name == 'test_pkg'
 
-    shutil.copytree(str(root), Path(backup, 'test_pkg'))
+    shutil.copytree(str(root), str(Path(backup, 'test_pkg')))
 
     yield
 
@@ -73,8 +73,6 @@ def test_editing_function(fn_name, tmp_file, backup_test_pkg):
     getattr(reloaded, fn_name)(None, None, tmp_file)
     print(Path(functions.__file__).read_text())
     assert Path(tmp_file).read_text() == '2'
-
-# TODO: test with docstring
 
 
 @pytest.mark.parametrize('fn_name', ['simple',

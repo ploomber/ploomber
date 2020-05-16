@@ -171,22 +171,29 @@ def catch_warnings(fn, warnings_all):
 
 def catch_exceptions(fn, exceptions_all):
     # TODO: setting exec_status can also raise exceptions if the hook fails
-    # add tests for that, and check the final task status
+    # add tests for that, and check the final task status,
+    # TODO: this status settnig should be inside task, not here
     try:
+        # try to run task build
         fn()
     except Exception as e:
-        fn.task.exec_status = TaskStatus.Errored
+        # it failed: will set status to error
         new_status = TaskStatus.Errored
+        # capture exception
         tr = traceback.format_exc()
         exceptions_all.append(message=tr, task_str=repr(fn.task), obj=e)
     else:
+        # sucess: will set status to executed
         new_status = TaskStatus.Executed
 
-        try:
-            fn.task.exec_status = new_status
-        except Exception as e:
-            tr = traceback.format_exc()
-            exceptions_all.append(message=tr, task_str=repr(fn.task), obj=e)
+    try:
+        # try to update status, this will trigger on_finish hook  if setting
+        # to executed or on_failure hook if error. But this can also crash
+        fn.task.exec_status = new_status
+    except Exception as e:
+        # if any erros happend whhen running the hook, add exception info
+        tr = traceback.format_exc()
+        exceptions_all.append(message=tr, task_str=repr(fn.task), obj=e)
 
 
 def pass_exceptions(fn):

@@ -38,10 +38,8 @@ Task Status lifecycle:
 
 TODO: describe BrokenProcesssPool status
 """
-import traceback
 import abc
 import logging
-import warnings
 from datetime import datetime
 from ploomber.products import Product, MetaProduct
 from ploomber.dag.DAG import DAG
@@ -54,7 +52,6 @@ from ploomber.Table import TaskReport, Row
 from ploomber.sources.sources import Source
 from ploomber.util import isiterable
 from ploomber.util.util import callback_check
-from ploomber.exceptions import DAGBuildEarlyStop
 
 import humanize
 
@@ -280,10 +277,12 @@ class Task(abc.ABC):
             try:
                 self.on_finish(**kwargs)
             except Exception as e:
+                msg = ('Exception when running on_finish '
+                       'for task "{}": {}'
+                       .format(self.name, e))
+                self._logger.exception(msg)
                 self.exec_status = TaskStatus.Errored
-                raise type(e)('Exception when running on_finish '
-                              'for task "{}": {}'
-                              .format(self.name, e)) from e
+                raise type(e)(msg) from e
 
     @property
     def on_failure(self):
@@ -304,10 +303,12 @@ class Task(abc.ABC):
                                     self._available_callback_kwargs)
             try:
                 self.on_failure(**kwargs)
-            except Exception:
-                tr = traceback.format_exc()
-                warnings.warn('Exception when running on_failure '
-                              'for task "{}". {}'.format(self.name, tr))
+            except Exception as e:
+                msg = ('Exception when running on_failure '
+                       'for task "{}": {}'
+                       .format(self.name, e))
+                self._logger.exception(msg)
+                raise type(e)(msg) from e
 
     @property
     def on_render(self):
@@ -327,10 +328,12 @@ class Task(abc.ABC):
             try:
                 self.on_render(**kwargs)
             except Exception as e:
+                msg = ('Exception when running on_render '
+                       'for task "{}": {}'
+                       .format(self.name, e))
+                self._logger.exception(msg)
                 self.exec_status = TaskStatus.ErroredRender
-                raise type(e)('Exception when running on_render '
-                              'for task "{}": {}'
-                              .format(self.name, e)) from e
+                raise type(e)(msg) from e
 
     @property
     def exec_status(self):

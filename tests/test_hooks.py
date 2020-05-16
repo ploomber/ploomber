@@ -1,3 +1,4 @@
+import logging
 from unittest.mock import Mock
 from pathlib import Path
 
@@ -164,6 +165,45 @@ def test_runs_on_failure(executor, tmp_directory):
     assert hook_3.count == 1
 
 
+@pytest.mark.parametrize('executor', _executors)
+def test_on_render_exceptions_are_logged(executor, caplog):
+    dag = DAG(executor=executor)
+    t = PythonCallable(fn, File('file.txt'), dag, name='t')
+    t.on_render = hook_crashing
+
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(DAGRenderError):
+            dag.render()
+
+    assert 'Exception when running on_render for task "t"' in caplog.text
+
+
+# @pytest.mark.parametrize('executor', _executors_catch_exc)
+def test_on_finish_exceptions_are_logged(caplog):
+    dag = DAG(executor='serial')
+    t = PythonCallable(fn, File('file.txt'), dag, name='t')
+    t.on_finish = hook_crashing
+
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(DAGBuildError):
+            dag.build()
+
+    assert 'Exception when running on_finish for task "t"' in caplog.text
+
+
+# @pytest.mark.parametrize('executor', _executors_catch_exc)
+# def test_on_failure_exceptions_are_logged(caplog):
+#     dag = DAG(executor='serial')
+#     t = PythonCallable(fn_that_fails, File('file.txt'), dag, name='t')
+#     t.on_failure = hook_crashing
+
+#     with caplog.at_level(logging.ERROR):
+#         with pytest.raises(DAGBuildError):
+#             dag.build()
+
+#     assert 'Exception when running on_failure for task "t"' in caplog.text
+
+
 # TODO: parametrize by executor since reported status depends on it
 def test_task_status_when_on_render_crashes(tmp_directory):
     dag = DAG()
@@ -201,21 +241,17 @@ def test_task_status_and_output_when_on_failure_crashes(tmp_directory):
     dag = DAG()
     t = PythonCallable(fn_that_fails, File('file'), dag)
     t.on_failure = hook_crashing
+
     t2 = PythonCallable(touch_w_upstream, File('file2'), dag)
     t >> t2
 
-    with pytest.warns(UserWarning) as record:
-        try:
-            dag.build()
-        except DAGBuildError:
-            pass
+    with pytest.raises(DAGBuildError) as excinfo:
+        dag.build()
 
     assert t.exec_status == TaskStatus.Errored
     assert t2.exec_status == TaskStatus.Aborted
-
-    expected = 'Exception when running on_failure for task "fn_that_fails"'
-    assert len(record) == 1
-    assert expected in record[0].message.args[0]
+    assert ('* PythonCallable: fn_that_fails -> File(file):'
+            in str(excinfo.getrepr()))
 
 
 @pytest.mark.parametrize('callback', ['on_finish', 'on_render', 'on_failure'])
