@@ -278,7 +278,7 @@ class DAG(collections.abc.Mapping):
                 # FIXME: not passing force flag
                 task_reports = self._executor(dag=self,
                                               show_progress=show_progress,
-                                              task_kwargs=dict(within_dag=True))
+                                              task_kwargs={})
 
             # executors raise this error to signal that there was an error
             # building the dag, this allows us to run the on_failure hook,

@@ -37,13 +37,26 @@ Task Status lifecycle:
 * When tasks are set to Errored, Abort is set to downstream tasks
 
 TODO: describe BrokenProcesssPool status
+
+
+Task build status flow. When building a Task, it always starts with the
+WaitingExecution status. Upon successful execution, the task runs its
+on_finish hook (if any), if successful, task is marked as Executed and
+building finished.
+
+If building fails, status is set to Errored, the task runs its on_failure hook,
+no more changes in status happend since the status is already marked as
+Errored.
+
+
+
 """
 import abc
 import logging
 from datetime import datetime
 from ploomber.products import Product, MetaProduct
 from ploomber.dag.DAG import DAG
-from ploomber.exceptions import TaskBuildError
+from ploomber.exceptions import TaskBuildError, DAGBuildEarlyStop
 from ploomber.tasks.TaskGroup import TaskGroup
 from ploomber.constants import TaskStatus
 from ploomber.tasks.Upstream import Upstream
@@ -271,6 +284,7 @@ class Task(abc.ABC):
         self._on_finish = value
 
     def _run_on_finish(self):
+        # run on finish first, if this fails, we don't want to save metadata
         if self.on_finish:
             kwargs = callback_check(self.on_finish,
                                     self._available_callback_kwargs)
@@ -283,6 +297,28 @@ class Task(abc.ABC):
                 self._logger.exception(msg)
                 self.exec_status = TaskStatus.Errored
                 raise type(e)(msg) from e
+
+        self.product._save_metadata(str(self.source))
+
+        # For most Products, it's ok to do this check before
+        # saving metadata, but not for GenericProduct, since the way
+        # exists() works is by checking metadata, so we have to do it
+        # here, after saving metadata
+        if not self.product.exists():
+            if isinstance(self.product, MetaProduct):
+                raise TaskBuildError(
+                    'Error building task "{}": '
+                    'the task ran successfully but product '
+                    '"{}" does not exist yet '
+                    '(task.product.exists() returned False). '
+                    .format(self, self.product))
+            else:
+                raise TaskBuildError(
+                    'Error building task "{}": '
+                    'the task ran successfully but at least one of the '
+                    'products in "{}" does not exist yet '
+                    '(task.product.exists() returned False). '
+                    .format(self, self.product))
 
     @property
     def on_failure(self):
@@ -301,14 +337,7 @@ class Task(abc.ABC):
         if self.on_failure:
             kwargs = callback_check(self.on_failure,
                                     self._available_callback_kwargs)
-            try:
-                self.on_failure(**kwargs)
-            except Exception as e:
-                msg = ('Exception when running on_failure '
-                       'for task "{}": {}'
-                       .format(self.name, e))
-                self._logger.exception(msg)
-                raise type(e)(msg) from e
+            self.on_failure(**kwargs)
 
     @property
     def on_render(self):
@@ -354,68 +383,89 @@ class Task(abc.ABC):
         # process might crash, propagate now or changes might not be
         # reflected (e.g. if a Task is marked as Aborted, all downtream
         # tasks should be marked as aborted as well)
-        self._update_downstream_status()
-
         # FIXME: this is inefficient, it is better to traverse
         # the dag in topological order but exclude nodes not affected by
         # this change
+        self._update_downstream_status()
 
-        # TODO: move this to build method? do we really need to run this in
-        # the main process? This makes testing easier but is not necessarily
-        # the best option
-        if value == TaskStatus.Executed:
-            # run on finish first, if this fails, we don't want to save
-            # metadata
-            # Exceptions are *not* silenced here
-            self._run_on_finish()
-
-            self.product._save_metadata(str(self.source))
-
-            # For most Products, it's ok to do this check before
-            # saving metadata, but not for GenericProduct, since the way
-            # exists() works is by checking metadata, so we have to do it
-            # here, after saving metadata
-            if not self.product.exists():
-                if isinstance(self.product, MetaProduct):
-                    raise TaskBuildError(
-                        'Error building task "{}": '
-                        'the task ran successfully but product '
-                        '"{}" does not exist yet '
-                        '(task.product.exists() returned False). '
-                        .format(self, self.product))
-                else:
-                    raise TaskBuildError(
-                        'Error building task "{}": '
-                        'the task ran successfully but at least one of the '
-                        'products in "{}" does not exist yet '
-                        '(task.product.exists() returned False). '
-                        .format(self, self.product))
-
-        elif value == TaskStatus.Errored:
-            # Exceptions here are silenced
-            self._run_on_failure()
-
-    def build(self, force=False, within_dag=False):
+    def build(self, force=False, catch_exceptions=False):
         """build the task
 
         Returns
         -------
         dict
             A dictionary with keys 'run' and 'elapsed'
+
+        Raises
+        ------
+        TaskBuildError
+            If the error failed to build (either the build itself failed or
+            build succeded but on_finish hook failed)
         """
-        # FIXME
-        if within_dag:
-            return self._build(force)
+        if not catch_exceptions:
+            res = self._build(force)
+            self._run_on_finish()
+            return res
         else:
             try:
                 res = self._build(force)
-            finally:
+            except Exception as e:
+                msg = 'Error building task "{}"' .format(self.name)
+                self._logger.exception(msg)
                 self.exec_status = TaskStatus.Errored
 
-            self.exec_status = TaskStatus.Executed
-            self.product._clear_cached_status()
+                # if there isn't anything left to run, raise exception here
+                if self.on_failure is None:
+                    if isinstance(e, DAGBuildEarlyStop):
+                        raise DAGBuildEarlyStop('Stopping task {} gracefully'
+                                                .format(self.name)) from e
+                    else:
+                        raise TaskBuildError(msg) from e
 
-            return res
+                build_success = False
+                build_exception = e
+            else:
+                build_success = True
+                build_exception = None
+
+            if build_success:
+                try:
+                    # this not only runs the hook, but also
+                    # calls save metadata and checks that the product exists
+                    self._run_on_finish()
+                except Exception as e:
+                    self.exec_status = TaskStatus.Errored
+                    msg = ('Exception when running on_finish '
+                           'for task "{}": {}'
+                           .format(self.name, e))
+                    self._logger.exception(msg)
+
+                    if isinstance(e, DAGBuildEarlyStop):
+                        raise DAGBuildEarlyStop('Stopping task {} gracefully'
+                                                .format(self.name)) from e
+                    else:
+                        raise TaskBuildError(msg) from e
+                else:
+                    self.exec_status = TaskStatus.Executed
+
+                return res
+            else:
+                try:
+                    self._run_on_failure()
+                except Exception as e:
+                    msg = ('Exception when running on_failure '
+                           'for task "{}": {}'
+                           .format(self.name, e))
+                    self._logger.exception(msg)
+                    raise TaskBuildError(msg) from e
+
+                if isinstance(build_exception, DAGBuildEarlyStop):
+                    raise DAGBuildEarlyStop(
+                        'Stopping task {} gracefully'
+                        .format(self.name)) from build_exception
+                else:
+                    msg = 'Error building task "{}"' .format(self.name)
+                    raise TaskBuildError(msg) from build_exception
 
     def _build(self, force):
         # cannot keep running, we depend on the render step to get all the

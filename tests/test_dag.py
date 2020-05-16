@@ -528,3 +528,5 @@ def test_early_stop_from_on_finish(executor, tmp_directory):
     t = PythonCallable(touch_root, File('file.txt'), dag)
     t.on_finish = early_stop_on_finish
     assert dag.build() is None
+
+# test early stop when registered an on_failure hook, maybe don't run hook?

@@ -86,8 +86,18 @@ _executors_catch_exc = [Serial(build_in_subprocess=False,
                                catch_exceptions=True),
                         'parallel']
 
+_executors_serial_catch_exc = [Serial(build_in_subprocess=False,
+                                      catch_exceptions=True),
+                               Serial(build_in_subprocess=True,
+                                      catch_exceptions=True)]
 
-@pytest.mark.parametrize('executor', _executors)
+_executors_current_process = [Serial(build_in_subprocess=False,
+                                     catch_exceptions=False),
+                              Serial(build_in_subprocess=False,
+                                     catch_exceptions=True)]
+
+
+@pytest.mark.parametrize('executor', _executors_current_process)
 def test_runs_on_finish(executor, tmp_directory):
     hook.count = 0
     hook_2.count = 0
@@ -115,7 +125,7 @@ def test_runs_on_finish(executor, tmp_directory):
     assert hook_4.count == 0
 
 
-@pytest.mark.parametrize('executor', _executors)
+@pytest.mark.parametrize('executor', _executors_current_process)
 @pytest.mark.parametrize('method', ['build', 'render'])
 def test_runs_on_render(executor, method, tmp_directory):
     hook.count = 0
@@ -141,13 +151,13 @@ def test_runs_on_render(executor, method, tmp_directory):
     assert hook_3.count == 1
 
 
-@pytest.mark.parametrize('executor', _executors_catch_exc)
-def test_runs_on_failure(executor, tmp_directory):
+def test_runs_on_failure(tmp_directory):
     hook.count = 0
     hook_2.count = 0
     hook_3.count = 0
 
-    dag = DAG(executor=executor)
+    dag = DAG(executor=Serial(build_in_subprocess=False,
+                              catch_exceptions=True))
     t = PythonCallable(fn_that_fails, File('file1.txt'), dag, 't')
     t.on_failure = hook
     t2 = PythonCallable(fn_that_fails, File('file2'), dag, 't2')
@@ -165,7 +175,7 @@ def test_runs_on_failure(executor, tmp_directory):
     assert hook_3.count == 1
 
 
-@pytest.mark.parametrize('executor', _executors)
+@pytest.mark.parametrize('executor', _executors_serial_catch_exc)
 def test_on_render_exceptions_are_logged(executor, caplog):
     dag = DAG(executor=executor)
     t = PythonCallable(fn, File('file.txt'), dag, name='t')
@@ -178,9 +188,9 @@ def test_on_render_exceptions_are_logged(executor, caplog):
     assert 'Exception when running on_render for task "t"' in caplog.text
 
 
-# @pytest.mark.parametrize('executor', _executors_catch_exc)
-def test_on_finish_exceptions_are_logged(caplog):
-    dag = DAG(executor='serial')
+@pytest.mark.parametrize('executor', _executors_serial_catch_exc)
+def test_on_finish_exceptions_are_logged(executor, tmp_directory, caplog):
+    dag = DAG(executor=executor)
     t = PythonCallable(fn, File('file.txt'), dag, name='t')
     t.on_finish = hook_crashing
 
@@ -191,17 +201,17 @@ def test_on_finish_exceptions_are_logged(caplog):
     assert 'Exception when running on_finish for task "t"' in caplog.text
 
 
-# @pytest.mark.parametrize('executor', _executors_catch_exc)
-# def test_on_failure_exceptions_are_logged(caplog):
-#     dag = DAG(executor='serial')
-#     t = PythonCallable(fn_that_fails, File('file.txt'), dag, name='t')
-#     t.on_failure = hook_crashing
+@pytest.mark.parametrize('executor', _executors_serial_catch_exc)
+def test_on_failure_exceptions_are_logged(executor, caplog):
+    dag = DAG(executor='serial')
+    t = PythonCallable(fn_that_fails, File('file.txt'), dag, name='t')
+    t.on_failure = hook_crashing
 
-#     with caplog.at_level(logging.ERROR):
-#         with pytest.raises(DAGBuildError):
-#             dag.build()
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(DAGBuildError):
+            dag.build()
 
-#     assert 'Exception when running on_failure for task "t"' in caplog.text
+    assert 'Exception when running on_failure for task "t"' in caplog.text
 
 
 # TODO: parametrize by executor since reported status depends on it

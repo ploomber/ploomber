@@ -57,12 +57,21 @@ class Serial(Executor):
         self._catch_exceptions = catch_exceptions
         self._catch_warnings = catch_warnings
 
+    def __repr__(self):
+        return ('Serial(build_in_subprocess={}, '
+                'catch_exceptions={}, catch_warnings={})'
+                .format(self._build_in_subprocess,
+                        self._catch_exceptions, self._catch_warnings))
+
+    # FIXME: remove task_kwargs
     def __call__(self, dag, show_progress, task_kwargs):
         super().__call__(dag)
 
         exceptions_all = MessageCollector()
         warnings_all = MessageCollector()
         task_reports = []
+
+        task_kwargs['catch_exceptions'] = self._catch_exceptions
 
         if show_progress:
             tasks = tqdm(dag.values(), total=len(dag))
@@ -170,28 +179,15 @@ def catch_warnings(fn, warnings_all):
 
 
 def catch_exceptions(fn, exceptions_all):
+    logger = logging.getLogger(__name__)
+
     # TODO: setting exec_status can also raise exceptions if the hook fails
     # add tests for that, and check the final task status,
-    # TODO: this status settnig should be inside task, not here
     try:
         # try to run task build
         fn()
     except Exception as e:
-        # it failed: will set status to error
-        new_status = TaskStatus.Errored
-        # capture exception
-        tr = traceback.format_exc()
-        exceptions_all.append(message=tr, task_str=repr(fn.task), obj=e)
-    else:
-        # sucess: will set status to executed
-        new_status = TaskStatus.Executed
-
-    try:
-        # try to update status, this will trigger on_finish hook  if setting
-        # to executed or on_failure hook if error. But this can also crash
-        fn.task.exec_status = new_status
-    except Exception as e:
-        # if any erros happend whhen running the hook, add exception info
+        logger.exception(str(e))
         tr = traceback.format_exc()
         exceptions_all.append(message=tr, task_str=repr(fn.task), obj=e)
 
@@ -200,11 +196,11 @@ def pass_exceptions(fn):
     # should i still check here for DAGBuildEarlyStop? is it worth
     # for returning accurate task status?
     fn()
-    fn.task.exec_status = TaskStatus.Executed
 
 
 def build_in_current_process(task, build_kwargs, reports_all):
     report = task.build(**build_kwargs)
+    # print('Report: ', report, build_kwargs)
     reports_all.append(report)
 
 
@@ -219,10 +215,18 @@ def build_in_subprocess(task, build_kwargs, reports_all):
         # raised an exception then that exception will be reraised by
         # get().
         # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.AsyncResult.get
-        report = res.get()
+        try:
+            report = res.get()
+        # we have to updat status since this is running in a different process
+        except Exception as e:
+            task.exec_status = TaskStatus.Errored
+            raise
+        else:
+            task.exec_status = TaskStatus.Executed
+            reports_all.append(report)
+
         p.close()
         p.join()
     else:
         report = task.build(**build_kwargs)
-
-    reports_all.append(report)
+        reports_all.append(report)
