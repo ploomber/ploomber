@@ -26,12 +26,13 @@ def backup_test_pkg():
     # sanity check, in case we change the structure
     assert root.name == 'test_pkg'
 
-    shutil.copytree(root.parent, Path(backup, 'test_pkg'))
+    shutil.copytree(root, Path(backup, 'test_pkg'))
 
     yield
 
     shutil.rmtree(root)
     shutil.copytree(Path(backup, 'test_pkg'), root)
+    shutil.rmtree(backup)
 
 
 def replace_cell(nb, source, replacement):
@@ -43,7 +44,7 @@ def replace_cell(nb, source, replacement):
 
 @pytest.mark.parametrize('fn', [functions.simple,
                                 functions.multiple_lines_signature])
-def test_simple_case(fn, tmp_file):
+def test_simple_case(fn, tmp_file, backup_test_pkg):
 
     with CallableDebugger(fn,
                           {'upstream': None, 'product': None}) as tmp_nb:
