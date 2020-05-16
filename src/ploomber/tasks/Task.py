@@ -396,8 +396,20 @@ class Task(abc.ABC):
     def build(self, force=False, catch_exceptions=True):
         """Build a single task
 
-        Render task then build, only works if the task does not have upstream
-        dependencies, if that's the case, you should call dag.render() first.
+        Although Tasks are primarily designed to execute via DAG.build(), it
+        is possible to do so in isolation. However, this only works if the
+        task does not have any unrendered upstream dependencies, if that's the
+        case, you should call DAG.render() before calling Task.build()
+
+        Examples
+        --------
+        >>> from pathlib import Path
+        >>> from ploomber import DAG
+        >>> from ploomber.tasks import PythonCallable
+        >>> from ploomber.products import File
+        >>> def fn(product):
+        ...     Path(str(product)).touch()
+        >>> PythonCallable(fn, File('file.txt'), dag=DAG()).build()
 
         Returns
         -------
