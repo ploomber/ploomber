@@ -52,7 +52,8 @@ class CallableDebugger:
         nb = nbformat.read(path, as_version=nbformat.NO_CONVERT)
 
         code_cells = [c['source'] for c in nb.cells if c['cell_type'] == 'code'
-                      and 'injected-parameters' not in c['metadata']['tags']
+                      and 'injected-parameters'
+                      not in c['metadata'].get('tags', [])
                       and c['source'][:2] != '#\n']
 
         # add 4 spaces to each code cell, exclude white space lines
@@ -128,10 +129,10 @@ def body_to_nb(body_elements, path):
     k = jupyter_client.kernelspec.get_kernel_spec('python3')
 
     nb.metadata.kernelspec = {
-            "display_name": k.display_name,
-            "language": k.language,
-            "name": 'python3'
-        }
+        "display_name": k.display_name,
+        "language": k.language,
+        "name": 'python3'
+    }
 
     nbformat.write(nb, path)
 

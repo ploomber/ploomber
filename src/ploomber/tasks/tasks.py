@@ -51,6 +51,7 @@ class PythonCallable(Task):
         # on product to avoid repetition I'm using this same code in notebook
         # runner. Also raise error if any of the params is not
         # json serializable
+        # TODO: resolve to absolute to make relative paths work
         params = self.params.to_dict()
         params['product'] = params['product'].to_json_serializable()
 
