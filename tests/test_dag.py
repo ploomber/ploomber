@@ -1,9 +1,11 @@
+import logging
 from itertools import product
 import warnings
 from pathlib import Path
 
 import pytest
 
+from tests_util import executors_w_exception_logging
 from ploomber import DAG
 from ploomber.tasks import ShellScript, PythonCallable, SQLDump
 from ploomber.products import File
@@ -532,7 +534,6 @@ def test_early_stop_from_on_finish(executor, tmp_directory):
 # test early stop when registered an on_failure hook, maybe don't run hook?
 
 
-
 def test_reporting_status_triggers_metadata_reload(tmp_directory):
     dag = DAG(executor=Serial(build_in_subprocess=True))
     t = PythonCallable(touch_root, File('file.txt'), dag)
@@ -540,3 +541,15 @@ def test_reporting_status_triggers_metadata_reload(tmp_directory):
     dag.build()
 
     assert t.product.metadata._data is not None
+
+
+@pytest.mark.parametrize('executor', executors_w_exception_logging)
+def test_task_errors_are_logged(executor, caplog):
+    dag = DAG(executor=executor)
+    PythonCallable(failing_root, File('file.txt'), dag, name='t')
+
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(DAGBuildError):
+            dag.build()
+
+    assert 'Error building task "t"' in caplog.text

@@ -277,12 +277,11 @@ class DAG(collections.abc.Mapping):
                 # vs as part of a dag execution
                 # FIXME: not passing force flag
                 task_reports = self._executor(dag=self,
-                                              show_progress=show_progress,
-                                              task_kwargs={})
+                                              show_progress=show_progress)
 
             # executors raise this error to signal that there was an error
             # building the dag, this allows us to run the on_failure hook,
-            # in some cases, it's best not to catch exceptions at all (e.g.
+            # but any other errors should not be caught (e.g.
             # a user might turn that setting off in the executor to start
             # a debugging session at the line of failure)
             except DAGBuildError as e:

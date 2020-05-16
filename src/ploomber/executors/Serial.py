@@ -1,6 +1,3 @@
-"""
-Serial DAG executor: builds one task at a time
-"""
 import warnings
 from multiprocessing import Pool
 import traceback
@@ -13,7 +10,6 @@ from ploomber.MessageCollector import MessageCollector
 from ploomber.constants import TaskStatus
 
 
-# TODO: test exceptions are logged
 class Serial(Executor):
     """Executor than runs one task at a time
 
@@ -29,11 +25,12 @@ class Serial(Executor):
     catch_exceptions : bool, optional
         Whether to catch exceptions raised when building tasks and running
         hooks. If True, exceptions are collected and displayed at the end,
-        downstream tasks of failed ones are aborted (not executed at all).
-        If False, no catching is done, on_failure won't be executed
-        and task status will not be updated and tracebacks won't be logger.
-        Setting of to False is only useful for debugging purposes.
-
+        downstream tasks of failed ones are aborted (not executed at all),
+        If any task raises a DAGBuildEarlyStop exception, the final exception
+        raised will be of such type. If False, no catching is done, on_failure
+        won't be executed and task status will not be updated and tracebacks
+        from build and hooks won't be logged. Setting of to False is only
+        useful for debugging purposes.
 
     catch_warnings : bool, optional
         If True, the executor catches all warnings raised by tasks and
@@ -41,13 +38,6 @@ class Serial(Executor):
         and there is an error building the DAG, capture warnings are still
         shown before raising the collected exceptions.
 
-    Notes
-    -----
-    Raising a DAGBuildEarlyStop inside the task or on_finish hook is not
-    considered an error and can be used to signal that the DAG cannot keep
-    executing due to unforeseen circumtances. This is useful for polling
-    pipelines that run on a schedule and process new observations since last
-    run. If no new observations exist, there is no need to keep running.
     """
 
     def __init__(self, build_in_subprocess=True, catch_exceptions=True,
@@ -63,17 +53,14 @@ class Serial(Executor):
                 .format(self._build_in_subprocess,
                         self._catch_exceptions, self._catch_warnings))
 
-    # FIXME: remove task_kwargs
-    def __call__(self, dag, show_progress, task_kwargs):
+    def __call__(self, dag, show_progress):
         super().__call__(dag)
 
         exceptions_all = MessageCollector()
         warnings_all = MessageCollector()
         task_reports = []
 
-        # FIXME: this should not be here
-        task_kwargs['catch_exceptions'] = self._catch_exceptions
-        task_kwargs['clear_product_status'] = False
+        task_kwargs = {'catch_exceptions': self._catch_exceptions}
 
         if show_progress:
             tasks = tqdm(dag.values(), total=len(dag))
@@ -189,6 +176,9 @@ def catch_exceptions(fn, exceptions_all):
         # try to run task build
         fn()
     except Exception as e:
+        # if running in a different process, logger.exception inside Task.build
+        # won't show up. So we do it here.
+        # FIXME: this is going to cause duplicates if not running in a subprocess
         logger.exception(str(e))
         tr = traceback.format_exc()
         exceptions_all.append(message=tr, task_str=repr(fn.task), obj=e)
@@ -201,7 +191,7 @@ def pass_exceptions(fn):
 
 
 def build_in_current_process(task, build_kwargs, reports_all):
-    report = task.build(**build_kwargs)
+    report = task._build(**build_kwargs)
     # print('Report: ', report, build_kwargs)
     reports_all.append(report)
 
@@ -209,7 +199,7 @@ def build_in_current_process(task, build_kwargs, reports_all):
 def build_in_subprocess(task, build_kwargs, reports_all):
     if callable(task.source.primitive):
         p = Pool(processes=1)
-        res = p.apply_async(func=task.build, kwds=build_kwargs)
+        res = p.apply_async(func=task._build, kwds=build_kwargs)
         # calling this make sure we catch the exception, from the docs:
         # Return the result when it arrives. If timeout is not None and
         # the result does not arrive within timeout seconds then
@@ -230,5 +220,5 @@ def build_in_subprocess(task, build_kwargs, reports_all):
         p.close()
         p.join()
     else:
-        report = task.build(**build_kwargs)
+        report = task._build(**build_kwargs)
         reports_all.append(report)

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from tests_util import expand_grid, executors_w_exception_logging
 from ploomber import DAG
 from ploomber.tasks import PythonCallable, SQLScript
 from ploomber.products import File, SQLiteRelation
@@ -174,8 +175,12 @@ def test_runs_on_failure(tmp_directory):
     assert hook_2.count == 1
     assert hook_3.count == 1
 
+########################
+# Logging hook crashes #
+########################
 
-@pytest.mark.parametrize('executor', _executors_serial_catch_exc)
+
+@pytest.mark.parametrize('executor', executors_w_exception_logging)
 def test_on_render_exceptions_are_logged(executor, caplog):
     dag = DAG(executor=executor)
     t = PythonCallable(fn, File('file.txt'), dag, name='t')
@@ -188,7 +193,7 @@ def test_on_render_exceptions_are_logged(executor, caplog):
     assert 'Exception when running on_render for task "t"' in caplog.text
 
 
-@pytest.mark.parametrize('executor', _executors_serial_catch_exc)
+@pytest.mark.parametrize('executor', executors_w_exception_logging)
 def test_on_finish_exceptions_are_logged(executor, tmp_directory, caplog):
     dag = DAG(executor=executor)
     t = PythonCallable(fn, File('file.txt'), dag, name='t')
@@ -201,7 +206,7 @@ def test_on_finish_exceptions_are_logged(executor, tmp_directory, caplog):
     assert 'Exception when running on_finish for task "t"' in caplog.text
 
 
-@pytest.mark.parametrize('executor', _executors_serial_catch_exc)
+@pytest.mark.parametrize('executor', executors_w_exception_logging)
 def test_on_failure_exceptions_are_logged(executor, caplog):
     dag = DAG(executor='serial')
     t = PythonCallable(fn_that_fails, File('file.txt'), dag, name='t')

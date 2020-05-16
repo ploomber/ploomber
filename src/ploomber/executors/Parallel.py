@@ -19,10 +19,13 @@ import traceback
 # to modify the label since at any point more than one task might be
 # executing
 
+# TODO: add support for logging errors, then add this executor to the tests
+# in test_hooks
+
 
 class TaskBuildWrapper:
     """
-    Wraps task.build. Traceback is lost when using ProcessPoolExecutor
+    Wraps task._build. Traceback is lost when using ProcessPoolExecutor
     (future.exception().__traceback__ returns None), so we have to catch it
     here and return it so at the end of the DAG execution, a message with the
     traceback can be printed
@@ -33,7 +36,7 @@ class TaskBuildWrapper:
 
     def __call__(self, *args, **kwargs):
         try:
-            return self.task.build(**kwargs)
+            return self.task._build(**kwargs)
         except Exception as e:
             return Message(task_str=repr(self.task),
                            message=traceback.format_exc(),
@@ -57,7 +60,7 @@ class Parallel(Executor):
         self._logger = logging.getLogger(__name__)
         self._i = 0
 
-    def __call__(self, dag, show_progress, task_kwargs):
+    def __call__(self, dag, show_progress):
         super().__call__(dag)
 
         # TODO: Have to test this with other Tasks, especially the ones that use
@@ -138,6 +141,8 @@ class Parallel(Executor):
                 raise StopIteration
 
             self._i += 1
+
+        task_kwargs = {'catch_exceptions': True}
 
         with ProcessPoolExecutor(max_workers=self.processes) as pool:
             while True:

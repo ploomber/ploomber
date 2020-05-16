@@ -393,8 +393,7 @@ class Task(abc.ABC):
         # this change
         self._update_downstream_status()
 
-    def build(self, force=False, catch_exceptions=False,
-              clear_product_status=True):
+    def build(self, catch_exceptions=True):
         """build the task
 
         Returns
@@ -407,18 +406,28 @@ class Task(abc.ABC):
         TaskBuildError
             If the error failed to build (either the build itself failed or
             build succeded but on_finish hook failed)
+
+        DAGBuildEarlyStop
+            If any task or on_finish hook raises a DAGBuildEarlyStop error
+        """
+        # This is the public API for uses who'd to run tasks in isolation,
+        # we have to make sure we clear product cache status, otherwise
+        # this will interfer with other render calls
+        res = self._build(catch_exceptions=catch_exceptions)
+        self.product._clear_cached_status()
+        return res
+
+    def _build(self, catch_exceptions):
+        """
+        Private API for building DAGs. This is what executors should call
         """
         if not catch_exceptions:
-            res = self._build(force)
+            res = self._run()
             self._run_on_finish()
-
-            if clear_product_status:
-                self.product._clear_cached_status()
-
             return res
         else:
             try:
-                res = self._build(force)
+                res = self._run()
             except Exception as e:
                 msg = 'Error building task "{}"' .format(self.name)
                 self._logger.exception(msg)
@@ -458,9 +467,6 @@ class Task(abc.ABC):
                 else:
                     self.exec_status = TaskStatus.Executed
 
-                if clear_product_status:
-                    self.product._clear_cached_status()
-
                 return res
             else:
                 try:
@@ -480,7 +486,11 @@ class Task(abc.ABC):
                     msg = 'Error building task "{}"' .format(self.name)
                     raise TaskBuildError(msg) from build_exception
 
-    def _build(self, force):
+    def _run(self):
+        """
+        Run task if certain status conditions are ok, otherwise raise a
+        TaskBuildError exception
+        """
         # cannot keep running, we depend on the render step to get all the
         # parameters resolved (params, upstream, product)
         if self.exec_status == TaskStatus.WaitingRender:
@@ -493,19 +503,15 @@ class Task(abc.ABC):
             raise TaskBuildError('Attempted to run task "{}", whose '
                                  'status is TaskStatus.Aborted'
                                  .format(self.name))
-        elif self.exec_status == TaskStatus.Skipped and not force:
+        elif self.exec_status == TaskStatus.Skipped:
             raise TaskBuildError('Attempted to run task "{}", whose '
-                                 'status TaskStatus.Skipped. Use force=True '
-                                 'if you want to execute it anyway'
+                                 'status TaskStatus.Skipped. Render again and'
+                                 'set force=True if you want to force '
+                                 'execution'
                                  .format(self.name))
 
         # NOTE: should i fetch metadata here? I need to make sure I have
         # the latest before building
-
-        if force:
-            self._logger.info('Forcing run "%s", status ignored...',
-                              self.name)
-
         self._logger.info('Starting execution: %s', repr(self))
 
         then = datetime.now()
@@ -527,7 +533,9 @@ class Task(abc.ABC):
         """
         Renders code and product, all upstream tasks must have been rendered
         first, for that reason, this method will usually not be called
-        directly but via DAG.render(), which renders in the right order
+        directly but via DAG.render(), which renders in the right order.
+
+        Render fully determines whether a task should run or not.
 
         Parameters
         ----------
@@ -572,6 +580,8 @@ class Task(abc.ABC):
                 self._exec_status = TaskStatus.Skipped
             else:
                 self._exec_status = TaskStatus.WaitingExecution
+                self._logger.debug('Forcing status "%s", outdated conditions'
+                                   ' ignored...', self.name)
         else:
             all_upstream_done = all([t.exec_status
                                      in {TaskStatus.Executed,
@@ -584,6 +594,8 @@ class Task(abc.ABC):
                 self._exec_status = TaskStatus.Skipped
             else:
                 self._exec_status = TaskStatus.WaitingUpstream
+                self._logger.debug('Forcing status "%s", outdated conditions'
+                                   ' ignored...', self.name)
 
         self._run_on_render()
 
