@@ -30,7 +30,7 @@ def test_env_repr_and_str_when_loaded_from_file(tmp_directory, cleanup_env):
     assert str(env) == "{'a': 1}"
 
 
-def test_includes_path_in_repr_if_init_from_file(cleanup_env):
+def test_includes_path_in_repr_if_init_from_file(cleanup_env, tmp_directory):
     Path('env.yaml').write_text('a: 1')
     env = Env('env.yaml')
 

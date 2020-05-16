@@ -170,7 +170,7 @@ class SQLTransfer(Task):
     product: ploomber.products.Product
         Product generated upon successful execution. For SQLTransfer, usually
         product.client != task.client. task.client represents the data source
-        while product.client represents the data destination.
+        while product.client represents the data destination
     dag: ploomber.DAG
         A DAG to add this task to
     name: str
@@ -259,8 +259,8 @@ class SQLUpload(Task):
         A str to indentify this task. Should not already exist in the dag
 
     client: ploomber.clients.SQLAlchemyClient, optional
-        The client to the the target database. It is only used if the Product
-        is a GenericSQLRelation, otherwise product.client is used.
+        The client used to connect to the database. Only required
+        if no dag-level client has been declared using dag.clients[class]
 
     params : dict, optional
         Parameters to pass to the script, by default, the callable will
@@ -298,14 +298,11 @@ class SQLUpload(Task):
         params = params or {}
         super().__init__(source, product, dag, name, params)
 
-        if isinstance(self.product, GenericSQLRelation):
-            self.client = client or self.dag.clients.get(type(self))
+        self.client = client or self.dag.clients.get(type(self))
 
-            if self.client is None:
-                raise ValueError('{} must be initialized with a connection'
-                                 .format(type(self).__name__))
-        else:
-            self.client = self.product.client
+        if self.client is None:
+            raise ValueError('{} must be initialized with a connection'
+                             .format(type(self).__name__))
 
         self.chunksize = chunksize
         self.io_handler = io_handler
@@ -389,7 +386,7 @@ class PostgresCopyFrom(Task):
         # create the table
         self._logger.info('Creating table...')
         df.head(0).to_sql(name=product.name,
-                          con=product.client.engine,
+                          con=self.client.engine,
                           schema=product.schema,
                           if_exists='replace',
                           index=False)

@@ -30,6 +30,7 @@ def test_can_upload_a_file(serializer, task_arg, tmp_directory,
 
     dag = DAG()
 
+    dag.clients[SQLUpload] = pg_client
     dag.clients[PostgresRelation] = pg_client
 
     SQLUpload(task_arg,
@@ -59,8 +60,8 @@ def test_upload_a_file_with_generic_relation(serializer, task_arg,
 
     dag = DAG()
 
-    dag.clients[GenericSQLRelation] = client
     dag.clients[SQLUpload] = pg_client
+    dag.clients[GenericSQLRelation] = client
 
     SQLUpload(task_arg,
               product=GenericSQLRelation((schema,
@@ -81,8 +82,8 @@ def test_append_rows(tmp_directory, pg_client_and_schema):
 
     dag = DAG()
 
-    dag.clients[PostgresRelation] = pg_client
     dag.clients[SQLUpload] = pg_client
+    dag.clients[PostgresRelation] = pg_client
 
     # create table
     df.to_sql('test_append', pg_client.engine,
@@ -111,8 +112,8 @@ def test_can_upload_file_from_upstream_dependency(tmp_directory,
 
     dag = DAG()
 
-    dag.clients[PostgresRelation] = pg_client
     dag.clients[SQLUpload] = pg_client
+    dag.clients[PostgresRelation] = pg_client
 
     make = PythonCallable(make_data,
                           product=File('data.parquet'),
