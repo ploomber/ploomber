@@ -37,6 +37,11 @@ class CallableDebugger:
         body_elements, self.body_start = parse(self.fn)
         body_to_nb(body_elements, self.tmp_path)
 
+        # TODO: inject cells with imports + functions + classes defined
+        # in the file (should make this the cwd for imports in non-packages
+        # to work though) - if i do that, then I should probably do the same
+        # for notebook runner to be consistent
+
         papermill.execute_notebook(self.tmp_path, self.tmp_path,
                                    prepare_only=True,
                                    parameters=self.params)
