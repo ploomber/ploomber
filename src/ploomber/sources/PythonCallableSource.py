@@ -41,7 +41,7 @@ class PythonCallableSource(Source):
 
     @property
     def _source_lineno(self):
-        if self.__source_lineno:
+        if self.__source_lineno is None or self._hot_reload:
             _, self.__source_lineno = inspect.getsourcelines(self.primitive)
 
         return self.__source_lineno

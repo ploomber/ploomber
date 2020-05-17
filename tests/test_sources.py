@@ -235,3 +235,14 @@ def test_hot_reload_generic_source(tmp_directory):
 
     assert str(source) == '/*new doc*/\nsome_table modified'
     assert source.variables == {'product', 'new_tag'}
+
+
+def test_python_callable_properties(path_to_test_pkg):
+    source = PythonCallableSource(functions.simple_w_docstring)
+
+    file, line = source.loc.split(':')
+
+    assert source.doc == functions.simple_w_docstring.__doc__
+    assert source.name == 'simple_w_docstring'
+    assert file == functions.__file__
+    assert line == '13'
