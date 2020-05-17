@@ -44,6 +44,17 @@ class WarningB(Warning):
     pass
 
 
+def hook():
+    if hasattr(hook, 'count'):
+        hook.count += 1
+
+
+def hook_crashing():
+    if hasattr(hook_crashing, 'count'):
+        hook_crashing.count += 1
+    raise Exception
+
+
 def touch_root(product):
     Path(str(product)).touch()
 
@@ -553,3 +564,45 @@ def test_task_errors_are_logged(executor, caplog):
             dag.build()
 
     assert 'Error building task "t"' in caplog.text
+
+
+def test_on_finish_hook_is_executed(tmp_directory):
+    hook.count = 0
+
+    dag = DAG()
+    PythonCallable(touch_root, File('file.txt'), dag, name='t')
+    dag.on_finish = hook
+
+    dag.build()
+
+    assert hook.count == 1
+
+
+def test_on_failure(caplog):
+    hook.count = 0
+
+    dag = DAG(name='dag')
+    PythonCallable(failing_root, File('file.txt'), dag, name='t')
+    dag.on_failure = hook
+
+    with pytest.raises(DAGBuildError):
+        with caplog.at_level(logging.ERROR):
+            dag.build()
+
+    assert hook.count == 1
+    assert 'Failure when building DAG "dag"' in caplog.text
+
+
+def test_on_failure_exception(caplog):
+    hook_crashing.count = 0
+
+    dag = DAG(name='dag')
+    PythonCallable(failing_root, File('file.txt'), dag, name='t')
+    dag.on_failure = hook_crashing
+
+    with pytest.raises(DAGBuildError):
+        with caplog.at_level(logging.ERROR):
+            dag.build()
+
+    assert hook_crashing.count == 1
+    assert 'Exception when running on_failure for DAG "dag"' in caplog.text

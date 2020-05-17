@@ -87,13 +87,22 @@ class DAG(collections.abc.Mapping):
     name : str
         A name to identify the DAG
 
+    clients : dict
+        A class to client mapping
+
+    executor : ploomber.Executor
+        Executor object to run tasks
+
     on_finish : callable
-        Function to execute upon execution. Can request a "dag" parameter to
-        receive the DAG object that registered it.
+        Function to execute upon execution. Can request a "dag" parameter
+        and/or "report", which containes the report object returned by the
+        build function.
 
     on_failure : callable
-        Function to execute upon failure. Can request a "dag" parameter to
-        receive the DAG object that registered it.
+        Function to execute upon failure. Can request a "dag" parameter and/or
+        "traceback" which will contain a dictionary, possible keys are "build"
+        which contains the build error traceback and "on_finish" which contains
+        the on_finish hook traceback, if any.
     """
 
     def __init__(self, name=None, clients=None, executor='serial'):
@@ -126,6 +135,14 @@ class DAG(collections.abc.Mapping):
 
         # task access differ using .dag.differ
         self.differ = self._params.differ
+
+    @property
+    def executor(self):
+        return self._executor
+
+    @executor.setter
+    def executor(self, value):
+        self._executor = value
 
     @property
     def _exec_status(self):
@@ -297,7 +314,7 @@ class DAG(collections.abc.Mapping):
 
             self._logger.info('Building DAG %s', self)
 
-            early_stop = False
+            tb = {}
 
             try:
                 # within_dag flags when we execute a task in isolation
@@ -312,36 +329,23 @@ class DAG(collections.abc.Mapping):
             # a user might turn that setting off in the executor to start
             # a debugging session at the line of failure)
             except DAGBuildError as e:
+                tb['build'] = traceback.format_exc()
+                # error build dag, log exception and set status
+                self._logger.exception('Failure when building DAG "{}"'
+                                       .format(self.name))
                 self._exec_status = DAGStatus.Errored
-                e_new = DAGBuildError('Failed to build DAG {}'.format(self))
-
-                if self.on_failure:
-                    self._logger.debug('Executing on_failure hook '
-                                       'for dag "%s"', self.name)
-                    kwargs_available = copy(self._available_callback_kwargs)
-                    kwargs_available['traceback'] = traceback.format_exc()
-
-                    kwargs = callback_check(self.on_failure, kwargs_available)
-                    self.on_failure(**kwargs)
-                else:
-                    self._logger.debug('No on_failure hook for dag '
-                                       '"%s", skipping', self.name)
-
-                raise e_new from e
-            except DAGBuildEarlyStop as e:
-                self._logger.info('Early stopping %s: %s', self, str(e))
-                early_stop = True
+                build_exception = e
+            except DAGBuildEarlyStop:
+                # early stop and empty on_failure, nothing left to do
+                if self.on_failure is None:
+                    # FIXME: remove this, only needed after rendering
+                    self._clear_cached_status()
+                    return
             else:
-                self._exec_status = DAGStatus.Executed
-            finally:
-                # FIXME: move this to render, after rendering is done, we no
-                # longer need cached status
-                # status is cached during dag execution to only compute it
-                # once per task, clear it after it's done
-                self._clear_cached_status()
+                # no error when building dag
+                build_exception = None
 
-            if not early_stop:
-                # add reports from skipped tasks
+            if build_exception is None:
                 empty = [TaskReport.empty_with_name(t.name)
                          for t in self.values()
                          if t.exec_status == TaskStatus.Skipped]
@@ -349,18 +353,81 @@ class DAG(collections.abc.Mapping):
                 build_report = BuildReport(task_reports + empty)
                 self._logger.info(' DAG report:\n{}'.format(build_report))
 
-                if self.on_finish:
-                    self._logger.debug('Executing on_finish hook '
-                                       'for dag "%s"', self.name)
-                    kwargs_available = copy(self._available_callback_kwargs)
-                    kwargs_available['report'] = build_report
-                    kwargs = callback_check(self.on_finish, kwargs_available)
-                    self.on_finish(**kwargs)
-                else:
-                    self._logger.debug('No on_finish hook for dag '
-                                       '"%s", skipping', self.name)
+                # try on_finish hook
+                try:
+                    self._run_on_finish(build_report)
+                except Exception as e:
+                    tb['on_finish'] = traceback.format_exc()
+                    # on_finish error, log exception and set status
+                    msg = ('Exception when running on_finish '
+                           'for DAG "{}": {}'
+                           .format(self.name, e))
+                    self._logger.exception(msg)
+                    self._exec_status = DAGStatus.Errored
 
-                return build_report
+                    if isinstance(e, DAGBuildEarlyStop):
+                        # early stop, nothing left to co
+                        # FIXME: remove this, only needed after rendering
+                        self._clear_cached_status()
+                        return
+                    else:
+                        # otherwise raise exception
+                        raise DAGBuildError(msg) from e
+                else:
+                    # DAG success and on_finish did not raise exception
+                    self._exec_status = DAGStatus.Executed
+                    # FIXME: remove this, only needed after rendering
+                    self._clear_cached_status()
+                    return build_report
+
+            else:
+                # DAG raised error, run on_failure hook
+                try:
+                    self._run_on_failure(tb)
+                except Exception as e:
+                    # error in hook, log exception
+                    msg = ('Exception when running on_failure '
+                           'for DAG "{}": {}'
+                           .format(self.name, e))
+                    self._logger.exception(msg)
+
+                    # do not raise exception if early stop
+                    if isinstance(e, DAGBuildEarlyStop):
+                        return
+                    else:
+                        raise DAGBuildError(msg) from e
+
+                # on_failure hook executed, raise original exception
+                # FIXME: remove this, only needed after rendering
+                self._clear_cached_status()
+
+                raise DAGBuildError(
+                    'Failed to build DAG {}'.format(self)) from build_exception
+
+    def _run_on_failure(self, tb):
+        if self.on_failure:
+            self._logger.debug('Executing on_failure hook '
+                               'for dag "%s"', self.name)
+            kwargs_available = copy(self._available_callback_kwargs)
+            kwargs_available['traceback'] = tb
+
+            kwargs = callback_check(self.on_failure, kwargs_available)
+            self.on_failure(**kwargs)
+        else:
+            self._logger.debug('No on_failure hook for dag '
+                               '"%s", skipping', self.name)
+
+    def _run_on_finish(self, build_report):
+        if self.on_finish:
+            self._logger.debug('Executing on_finish hook '
+                               'for dag "%s"', self.name)
+            kwargs_available = copy(self._available_callback_kwargs)
+            kwargs_available['report'] = build_report
+            kwargs = callback_check(self.on_finish, kwargs_available)
+            self.on_finish(**kwargs)
+        else:
+            self._logger.debug('No on_finish hook for dag '
+                               '"%s", skipping', self.name)
 
     def build_partially(self, target, force=False, show_progress=True):
         """Partially build a dag until certain task

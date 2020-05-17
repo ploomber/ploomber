@@ -10,4 +10,4 @@ Modules
     modules/env
     modules/clients
     modules/source_loader
-    
+    modules/entry

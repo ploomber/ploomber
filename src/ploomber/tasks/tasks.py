@@ -61,18 +61,33 @@ class PythonCallable(Task):
             except KeyboardInterrupt:
                 print('Jupyter notebook server closed...')
 
-    def debug(self):
+    def debug(self, kind='ipdb'):
         """
         Run callable in debug mode.
 
+        Parameters
+        ----------
+        kind : str ('ipdb' or 'pdb')
+            Which debugger to use 'ipdb' for IPython debugger or 'pdb' for
+            debugger from the standard library
         """
+        opts = {'ipdb', 'pdb'}
+
+        if kind not in opts:
+            raise ValueError('kind must be one of {}'.format(opts))
+
         if self.exec_status == TaskStatus.WaitingRender:
             raise TaskBuildError('Error in task "{}". '
                                  'Cannot debug task that has not been '
                                  'rendered, call DAG.render() first'
                                  .format(self.name))
 
-        pdb.runcall(self.source.primitive, **self.params)
+        if kind == 'ipdb':
+            from IPython.terminal.debugger import TerminalPdb
+            ipdb = TerminalPdb()
+            ipdb.runcall(self.source.primitive, **self.params)
+        elif kind == 'pdb':
+            pdb.runcall(self.source.primitive, **self.params)
 
 
 class ShellScript(Task):
