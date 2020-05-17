@@ -88,12 +88,16 @@ class DAG(collections.abc.Mapping):
         A name to identify the DAG
 
     on_finish : callable
-        Function to execute upon execution. Can request a "dag" parameter to
-        receive the DAG object that registered it.
+        Function to execute upon execution. Can request a "dag" parameter
+        and/or "report", which containes the report object returned by the
+        build function.
 
     on_failure : callable
-        Function to execute upon failure. Can request a "dag" parameter to
-        receive the DAG object that registered it.
+        Function to execute upon failure. Can request a "dag" parameter and/or
+        "traceback" which will contain a dictionary, possible keys are "build"
+        which contains the build error traceback and "on_finish" which contains
+        the on_finish hook traceback, if any.
+
 
     clients : dict
         A class to client mapping
@@ -395,7 +399,6 @@ class DAG(collections.abc.Mapping):
             self._logger.debug('Executing on_failure hook '
                                'for dag "%s"', self.name)
             kwargs_available = copy(self._available_callback_kwargs)
-            # TODO: document traceback param
             kwargs_available['traceback'] = tb
 
             kwargs = callback_check(self.on_failure, kwargs_available)
