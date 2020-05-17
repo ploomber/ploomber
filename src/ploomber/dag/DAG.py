@@ -87,6 +87,12 @@ class DAG(collections.abc.Mapping):
     name : str
         A name to identify the DAG
 
+    clients : dict
+        A class to client mapping
+
+    executor : ploomber.Executor
+        Executor object to run tasks
+
     on_finish : callable
         Function to execute upon execution. Can request a "dag" parameter
         and/or "report", which containes the report object returned by the
@@ -97,10 +103,6 @@ class DAG(collections.abc.Mapping):
         "traceback" which will contain a dictionary, possible keys are "build"
         which contains the build error traceback and "on_finish" which contains
         the on_finish hook traceback, if any.
-
-
-    clients : dict
-        A class to client mapping
     """
 
     def __init__(self, name=None, clients=None, executor='serial'):
@@ -133,6 +135,14 @@ class DAG(collections.abc.Mapping):
 
         # task access differ using .dag.differ
         self.differ = self._params.differ
+
+    @property
+    def executor(self):
+        return self._executor
+
+    @executor.setter
+    def executor(self, value):
+        self._executor = value
 
     @property
     def _exec_status(self):
