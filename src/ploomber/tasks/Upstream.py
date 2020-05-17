@@ -65,13 +65,18 @@ class Upstream(abc.Mapping):
         if self._in_context:
             self._counts[key] += 1
 
+        if not len(self._dict):
+            raise UpstreamKeyError('Cannot obtain upstream dependency "{}". '
+                                   'Task "{}" has no upstream dependencies'
+                                   .format(key, self._name))
+
         try:
             return self._dict[key]
         except KeyError:
             raise UpstreamKeyError(
-                'Cannot obtain upstream dependency in task "{}" '
-                'named "{}", declared dependencies are: {}'
-                .format(self._name, key, self))
+                'Cannot obtain upstream dependency "{}" for task "{}" '
+                'declared dependencies are: {}'
+                .format(key, self._name, self))
 
     def __setitem__(self, key, value):
         self._dict[key] = value

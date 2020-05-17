@@ -231,9 +231,22 @@ def test_placeholder_initialized_with_placeholder(env_init, path_to_test_pkg):
 
 def test_error_if_missing_upstream():
     p = Placeholder('SELECT * FROM {{upstream["name"]}}')
-    upstream = Upstream({})
+    upstream = Upstream({'a': 1}, name='task')
 
     with pytest.raises(UpstreamKeyError) as excinfo:
         p.render({'upstream': upstream})
 
-    assert 'Cannot obtain upstream dependency in task'in str(excinfo.value)
+    assert ('Cannot obtain upstream dependency "name" for task "task"'
+            in str(excinfo.value))
+
+
+def test_error_if_no_upstream():
+    p = Placeholder('SELECT * FROM {{upstream["name"]}}')
+    upstream = Upstream({}, name='task')
+
+    with pytest.raises(UpstreamKeyError) as excinfo:
+        p.render({'upstream': upstream})
+
+    msg = ('Cannot obtain upstream dependency "name". '
+           'Task "task" has no upstream dependencies')
+    assert msg == str(excinfo.value)
