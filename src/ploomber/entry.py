@@ -8,7 +8,7 @@ Assume module.sub_module.entry_point is a function that returns a DAG.
 
 Run this will parse the function parameters and return them:
 
-    $ python -m ploomber.entry module.sub_module.entry_point --help
+    ``$ python -m ploomber.entry module.sub_module.entry_point --help``
 
 
 If numpydoc is installed, it will parse the docstring (if any) and add it
@@ -16,39 +16,38 @@ when using --help
 
 To build the dag returned by the entry point:
 
-    $ python -m ploomber.entry module.sub_module.entry_point build
+    ``$ python -m ploomber.entry module.sub_module.entry_point build``
 
 
 To start an interactive session by loading the entry point first:
 
-    $ python -i -m ploomber.entry module.sub_module.entry_point status
+    ``$ python -i -m ploomber.entry module.sub_module.entry_point status``
 
-ipython -i -m also works. Once the interactive session starts, the object
+``ipython -i -m`` also works. Once the interactive session starts, the object
 returned by the entry point will be available in the "dag" variable.
 
 Features:
 
-    * Parse docstring and show it using --help
-    * Enable logging to standard output using --log LEVEL
-    * Pass function parameters using --PARAM_NAME VALUE
-    * If the function is decorated with @with_env, replace env variables using
-        --env__KEY VALUE
+    * Parse docstring and show it using ``--help``
+    * Enable logging to standard output using ``--log LEVEL``
+    * Pass function parameters using ``--PARAM_NAME VALUE``
+    * If the function is decorated with ``@with_env``, replace env variables using ``--env__KEY VALUE``
 
 
-ploomber.entry only works with the factory pattern (a function that returns
+``ploomber.entry`` only works with the factory pattern (a function that returns
 a dag). But this same pattern can be applied to start interactive sesssions
 if you have your own CLI logic (note we are calling the module directly instead
 of using ploomber.entry):
 
-    $ python -i -m module.sub_module.entry_point --some_arg
+    ``$ python -i -m module.sub_module.entry_point --some_arg``
 
 
 In IPython:
 
-    $ ipython -i -m module.sub_module.entry_point -- --some_arg
+    ``$ ipython -i -m module.sub_module.entry_point -- --some_arg``
 
 
-Note: you need to add "--" to prevent IPython from parsing your custom args
+Note: you need to add ``--`` to prevent IPython from parsing your custom args
 
 """
 # TODO: print enviornment content on help and maybe on any other command
@@ -61,7 +60,7 @@ import inspect
 from collections.abc import Mapping
 
 
-def parse_doc(doc):
+def _parse_doc(doc):
     """
     Convert numpydoc docstring to a list of dictionaries
     """
@@ -93,7 +92,7 @@ def _parse_module(s):
     return '.'.join(parts[:-1]), parts[-1]
 
 
-def main():
+def _main():
     parser = argparse.ArgumentParser()
     parser.add_argument('entry_point', help='Entry point (DAG)')
     parser.add_argument('--log', help='Enables logging to stdout at the '
@@ -121,7 +120,7 @@ def main():
                                  '"{}", make sure it is a valid callable'
                                  .format(name, mod)) from e
 
-        doc = parse_doc(entry.__doc__)
+        doc = _parse_doc(entry.__doc__)
 
         def get_desc(arg):
             arg_data = doc['params'].get(arg)
@@ -144,7 +143,7 @@ def main():
         # if entry point was decorated with @with_env, add arguments
         # to replace declared variables in env.yaml
         if hasattr(entry, '_env_dict'):
-            flat_env_dict = flatten_dict(entry._env_dict._data)
+            flat_env_dict = _flatten_dict(entry._env_dict._data)
             for arg, val in flat_env_dict.items():
                 parser.add_argument('--env__'+arg,
                                     help='Default: {}'.format(val))
@@ -174,7 +173,7 @@ def main():
         return obj
 
 
-def flatten_dict(d, prefix=''):
+def _flatten_dict(d, prefix=''):
     """
     Convert a nested dict: {'a': {'b': 1}} -> {'a__b': 1}
     """
@@ -182,7 +181,7 @@ def flatten_dict(d, prefix=''):
 
     for k, v in d.items():
         if isinstance(v, Mapping):
-            out = {**out, **flatten_dict(v, prefix=prefix + k + '__')}
+            out = {**out, **_flatten_dict(v, prefix=prefix + k + '__')}
         else:
             out[prefix+k] = v
 
@@ -190,4 +189,4 @@ def flatten_dict(d, prefix=''):
 
 
 if __name__ == '__main__':
-    dag = main()
+    dag = _main()
