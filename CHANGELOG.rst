@@ -3,7 +3,8 @@ CHANGELOG
 
 0.4.1dev
 --------
-* Experimental debugger for PythonCallable
+* Experimental PythonCallable.develop() and NotebookRunner.develop()
+* Experimental NotebookRunner.debug()
 
 0.4.0dev
 --------

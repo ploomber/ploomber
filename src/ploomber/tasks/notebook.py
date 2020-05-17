@@ -156,6 +156,8 @@ class NotebookRunner(Task):
         """
         Opens the notebook (unmodified and in its original location)
         """
+        # TODO: put debug() contents here and make debug() start an actual
+        # debugging sessions (with the parameters injected)
         if self.source.loc is None:
             raise ValueError('Can only use develop in notebooks loaded '
                              'from files, not from str')
