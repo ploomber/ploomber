@@ -7,6 +7,7 @@ CHANGELOG
 
 0.4.0dev
 --------
+* PythonCallable.debug() now uses IPython debugger by default
 * Improvements to Task.build() public API
 * Moves hook triggering logic to Task to simplify executors implementation
 * Adds DAGBuildEarlyStop exception to signal DAG execution stop
