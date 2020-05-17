@@ -11,7 +11,7 @@ import yaml
 from ploomber.env.env import Env
 from ploomber.env.decorators import with_env, load_env
 from ploomber.env import validate
-from ploomber.env.EnvDict import _get_name, EnvDict
+from ploomber.env.EnvDict import EnvDict
 from ploomber.env.expand import EnvironmentExpander
 from ploomber import repo
 
@@ -35,6 +35,11 @@ def test_includes_path_in_repr_if_init_from_file(cleanup_env, tmp_directory):
     env = Env('env.yaml')
 
     assert 'env.yaml' in repr(env)
+
+
+def test_init_with_arbitrary_name(cleanup_env, tmp_directory):
+    Path('some_environment.yaml').write_text('a: 1')
+    assert Env('some_environment.yaml')
 
 
 def test_includes_function_module_and_name_if_decorated(cleanup_env):
@@ -156,19 +161,6 @@ def test_expand_git(monkeypatch, cleanup_env):
 def test_can_create_env_from_dict(cleanup_env):
     e = Env({'a': 1})
     assert e.a == 1
-
-
-def test_assigns_default_name():
-    assert _get_name('path/to/env.yaml') == 'root'
-
-
-def test_can_extract_name():
-    assert _get_name('path/to/env.my_name.yaml') == 'my_name'
-
-
-def test_raises_error_if_wrong_format():
-    with pytest.raises(ValueError):
-        _get_name('path/to/wrong.my_name.yaml')
 
 
 def test_can_instantiate_env_if_located_in_sample_dir(tmp_sample_dir,

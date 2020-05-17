@@ -31,9 +31,8 @@ class EnvDict(Mapping):
 
         # load data
         (self._raw_data,
-         # these two will be None if source is a dict
-         self.path_to_env,
-         self.name) = load_from_source(source)
+         # this will be None if source is a dict
+         self.path_to_env) = load_from_source(source)
 
         # check raw data is ok
         validate.raw_data_keys(self._raw_data)
@@ -118,8 +117,8 @@ def load_from_source(source):
         None if another format or if source is a dict
     """
     if isinstance(source, Mapping):
-        # dictiionary, path, name
-        return source, None, None
+        # dictiionary, path
+        return source, None
 
     elif source is None:
         # look for an env.{name}.yaml, if that fails, try env.yaml
@@ -155,7 +154,7 @@ def load_from_source(source):
 
     path = Path(source).resolve()
 
-    return raw, path, _get_name(path)
+    return raw, path
 
 
 def raw_preprocess(raw, path_to_raw):
@@ -255,31 +254,3 @@ def find_env(name, max_levels_up=6):
             break
 
     return path_to_env
-
-
-def _get_name(path_to_env):
-    """
-    Parse env.{name}.yaml to return name
-    """
-    filename = str(Path(path_to_env).name)
-
-    err = ValueError('Wrong filename, must be either env.{name}.yaml '
-                     'or env.yaml')
-
-    elements = filename.split('.')
-
-    if len(elements) == 2:
-        # no name case
-        env, _ = elements
-        name = 'root'
-    elif len(elements) > 2:
-        # name
-        env = elements[0]
-        name = '.'.join(elements[1:-1])
-    else:
-        raise err
-
-    if env != 'env':
-        raise err
-
-    return name
