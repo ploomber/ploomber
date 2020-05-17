@@ -3,6 +3,8 @@ from ploomber.tasks import PythonCallable
 from ploomber.products import File
 from ploomber.exceptions import DAGBuildError
 
+# FIXME: there are duplicated tests in test_dag
+
 
 def fn_that_fails(product):
     raise Exception
@@ -31,6 +33,7 @@ def test_on_finish():
     report = dag.build()
 
     assert on_finish_hook.count == 1
+    # check report parameter sent is the same as the one returned
     assert report is on_finish_hook.report
 
 
@@ -39,9 +42,7 @@ def test_on_failure():
     on_failure_hook.traceback = None
 
     dag = DAG()
-
     PythonCallable(fn_that_fails, File('some_file.txt'), dag)
-
     dag.on_failure = on_failure_hook
 
     try:
@@ -50,4 +51,5 @@ def test_on_failure():
         pass
 
     assert on_failure_hook.count == 1
-    assert 'Traceback (most recent call last):' in on_failure_hook.traceback
+    # check access to the traceback
+    assert on_failure_hook.traceback['build']

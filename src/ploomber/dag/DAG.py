@@ -94,6 +94,9 @@ class DAG(collections.abc.Mapping):
     on_failure : callable
         Function to execute upon failure. Can request a "dag" parameter to
         receive the DAG object that registered it.
+
+    clients : dict
+        A class to client mapping
     """
 
     def __init__(self, name=None, clients=None, executor='serial'):
@@ -297,6 +300,8 @@ class DAG(collections.abc.Mapping):
 
             self._logger.info('Building DAG %s', self)
 
+            tb = {}
+
             try:
                 # within_dag flags when we execute a task in isolation
                 # vs as part of a dag execution
@@ -310,6 +315,7 @@ class DAG(collections.abc.Mapping):
             # a user might turn that setting off in the executor to start
             # a debugging session at the line of failure)
             except DAGBuildError as e:
+                tb['build'] = traceback.format_exc()
                 # error build dag, log exception and set status
                 self._logger.exception('Failure when building DAG "{}"'
                                        .format(self.name))
@@ -326,10 +332,18 @@ class DAG(collections.abc.Mapping):
                 build_exception = None
 
             if build_exception is None:
+                empty = [TaskReport.empty_with_name(t.name)
+                         for t in self.values()
+                         if t.exec_status == TaskStatus.Skipped]
+
+                build_report = BuildReport(task_reports + empty)
+                self._logger.info(' DAG report:\n{}'.format(build_report))
+
                 # try on_finish hook
                 try:
-                    self._run_on_finish(task_reports)
+                    self._run_on_finish(build_report)
                 except Exception as e:
+                    tb['on_finish'] = traceback.format_exc()
                     # on_finish error, log exception and set status
                     msg = ('Exception when running on_finish '
                            'for DAG "{}": {}'
@@ -347,15 +361,7 @@ class DAG(collections.abc.Mapping):
                         raise DAGBuildError(msg) from e
                 else:
                     # DAG success and on_finish did not raise exception
-
                     self._exec_status = DAGStatus.Executed
-                    empty = [TaskReport.empty_with_name(t.name)
-                             for t in self.values()
-                             if t.exec_status == TaskStatus.Skipped]
-
-                    build_report = BuildReport(task_reports + empty)
-                    self._logger.info(' DAG report:\n{}'.format(build_report))
-
                     # FIXME: remove this, only needed after rendering
                     self._clear_cached_status()
                     return build_report
@@ -363,7 +369,7 @@ class DAG(collections.abc.Mapping):
             else:
                 # DAG raised error, run on_failure hook
                 try:
-                    self._run_on_failure()
+                    self._run_on_failure(tb)
                 except Exception as e:
                     # error in hook, log exception
                     msg = ('Exception when running on_failure '
@@ -384,12 +390,13 @@ class DAG(collections.abc.Mapping):
                 raise DAGBuildError(
                     'Failed to build DAG {}'.format(self)) from build_exception
 
-    def _run_on_failure(self):
+    def _run_on_failure(self, tb):
         if self.on_failure:
             self._logger.debug('Executing on_failure hook '
                                'for dag "%s"', self.name)
             kwargs_available = copy(self._available_callback_kwargs)
-            kwargs_available['traceback'] = traceback.format_exc()
+            # TODO: document traceback param
+            kwargs_available['traceback'] = tb
 
             kwargs = callback_check(self.on_failure, kwargs_available)
             self.on_failure(**kwargs)
