@@ -1,15 +1,24 @@
 CHANGELOG
 =========
 
+0.4.1dev
+--------
+* Experimental debugger for PythonCallable
+
 0.4.0dev
 --------
+* Improvements to Task.build() public API
+* Moves hook triggering logic to Task to simplify executors implementation
+* Adds DAGBuildEarlyStop exception to signal DAG execution stop
+* New option in Serial executor to turn warnings and exceptions capture off
+* Adds Product.prepare_metadata hook
 * Implements hot reload for notebooks and python callables
 * General clean ups for old `__str__` and `__repr__` in several modules
 * Refactored ploomber.sources module and ploomber.placeholders (previously ploomber.templates)
 * Adds NotebookRunner.debug() and NotebookRunner.develop()
 * NotebookRunner: now has an option to run static analysis on render
-* Bug fixes #37, #38, #49,
 * Adds documentation for DAG-level hooks
+* Bug fixes
 
 0.3.5 (2020-05-03)
 -------------------
@@ -40,7 +49,7 @@ CHANGELOG
 * Support for enabling logging in entry points (via --logging)
 * Support for starting an interactive session using entry points (via python -i -m)
 * Improved support for database drivers that can only send one query at a time
-* Improved repr for SQLAlchemyClient, shows URI (but hiddes password)
+* Improved repr for SQLAlchemyClient, shows URI (but hides password)
 * PythonCallable now validates signature against params at render time
 * Bug fixes
 
