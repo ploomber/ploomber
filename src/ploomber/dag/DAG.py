@@ -27,6 +27,7 @@ executors adhere to task status and do not build tasks if they are marked
 as Aborted or Skipped.
 
 """
+from collections.abc import Iterable
 import traceback
 from copy import copy, deepcopy
 from pathlib import Path
@@ -287,10 +288,15 @@ class DAG(collections.abc.Mapping):
             A dict-like object with tasks as keys and dicts with task
             status as values
         """
-        kwargs = callback_check(self._params.logging_handler_factory,
+        kwargs = callback_check(self._params.logging_factory,
                                 available={'dag_name': self.name})
 
-        dag_logger = DAGLogger(self._params.logging_handler_factory(**kwargs))
+        res = self._params.logging_factory(**kwargs)
+
+        if isinstance(res, Iterable):
+            dag_logger = DAGLogger(*res)
+        else:
+            dag_logger = DAGLogger(handler=res)
 
         with dag_logger:
             report = self._build(force, show_progress)

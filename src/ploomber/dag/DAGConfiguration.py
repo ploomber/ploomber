@@ -1,7 +1,7 @@
 from ploomber.CodeDiffer import CodeDiffer
 
 
-def _logging_handler_factory():
+def _logging_factory():
     return None
 
 
@@ -10,7 +10,7 @@ class DAGConfiguration:
     DAGConfiguration() initializes a configuration object with default values.
     """
     __attrs = {'outdated_by_code', 'cache_rendered_status',
-               'logging_handler_factory', 'differ', 'hot_reload'}
+               'logging_factory', 'differ', 'hot_reload'}
 
     @classmethod
     def from_dict(cls, d):
@@ -25,7 +25,7 @@ class DAGConfiguration:
         self.outdated_by_code = True
         self.cache_rendered_status = False
         self.hot_reload = False
-        self.logging_handler_factory = _logging_handler_factory
+        self.logging_factory = _logging_factory
         self.differ = CodeDiffer()
 
     @property
@@ -73,12 +73,12 @@ class DAGConfiguration:
         self._differ = value
 
     @property
-    def logging_handler_factory(self):
-        return self._logging_handler_factory
+    def logging_factory(self):
+        return self._logging_factory
 
-    @logging_handler_factory.setter
-    def logging_handler_factory(self, value):
-        self._logging_handler_factory = value
+    @logging_factory.setter
+    def logging_factory(self, value):
+        self._logging_factory = value
 
     def __setattr__(self, key, value):
         # prevent non-existing parameters from being created

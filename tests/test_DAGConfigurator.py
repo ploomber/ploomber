@@ -10,6 +10,7 @@ from ploomber.products import File
 
 
 def touch_root(product):
+    logging.debug('This should not appear...')
     logging.info('Logging...')
     Path(str(product)).touch()
 
@@ -19,10 +20,11 @@ def touch_root_modified(product):
     Path(str(product)).touch()
 
 
-def handler_factory(dag_name):
+def logging_factory(dag_name):
     handler = logging.FileHandler('{}.log'.format(dag_name))
     handler.setLevel(logging.INFO)
-    return handler
+    root = logging.getLogger()
+    return handler, root
 
 
 def test_raise_error_on_setattr():
@@ -57,14 +59,33 @@ def test_from_dict():
 def test_logging_handler(tmp_directory):
     configurator = DAGConfigurator()
 
-    configurator.params.logging_handler_factory = handler_factory
+    configurator.params.logging_factory = logging_factory
     dag = configurator.create()
     dag.name = 'my_dag'
 
     PythonCallable(touch_root, File('file.txt'), dag)
     dag.build()
 
-    assert 'Logging...' in Path('my_dag.log').read_text()
+    log = Path('my_dag.log').read_text()
+    assert 'Logging...' in log
+    assert 'This should not appear...' not in log
+
+
+def test_logging_handler_does_not_modify_root_logger_level(tmp_directory,
+                                                           caplog):
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    configurator = DAGConfigurator()
+
+    configurator.params.logging_factory = logging_factory
+    dag = configurator.create()
+    dag.name = 'my_dag'
+    PythonCallable(touch_root, File('file.txt'), dag)
+
+    with caplog.at_level(logging.INFO):
+        dag.build()
+
+    assert 'DEBUG' not in caplog.text
 
 
 def test_error_if_non_existing_parameter():
