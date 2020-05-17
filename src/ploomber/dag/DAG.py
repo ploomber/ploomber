@@ -311,13 +311,15 @@ class DAG(collections.abc.Mapping):
             # a debugging session at the line of failure)
             except DAGBuildError as e:
                 # error build dag, log exception and set status
-                msg = 'Failed to build DAG {}'.format(self)
-                self._logger.exception('Failed')
+                self._logger.exception('Failure when building DAG "{}"'
+                                       .format(self.name))
                 self._exec_status = DAGStatus.Errored
-                build_exception = DAGBuildError(msg)
+                build_exception = e
             except DAGBuildEarlyStop:
                 # early stop and empty on_failure, nothing left to do
                 if self.on_failure is None:
+                    # FIXME: remove this, only needed after rendering
+                    self._clear_cached_status()
                     return
             else:
                 # no error when building dag
@@ -337,6 +339,8 @@ class DAG(collections.abc.Mapping):
 
                     if isinstance(e, DAGBuildEarlyStop):
                         # early stop, nothing left to co
+                        # FIXME: remove this, only needed after rendering
+                        self._clear_cached_status()
                         return
                     else:
                         # otherwise raise exception
@@ -351,6 +355,9 @@ class DAG(collections.abc.Mapping):
 
                     build_report = BuildReport(task_reports + empty)
                     self._logger.info(' DAG report:\n{}'.format(build_report))
+
+                    # FIXME: remove this, only needed after rendering
+                    self._clear_cached_status()
                     return build_report
 
             else:
@@ -359,7 +366,7 @@ class DAG(collections.abc.Mapping):
                     self._run_on_failure()
                 except Exception as e:
                     # error in hook, log exception
-                    msg = ('Exception when running on_finish '
+                    msg = ('Exception when running on_failure '
                            'for DAG "{}": {}'
                            .format(self.name, e))
                     self._logger.exception(msg)
@@ -371,7 +378,11 @@ class DAG(collections.abc.Mapping):
                         raise DAGBuildError(msg) from e
 
                 # on_failure hook executed, raise original exception
-                raise build_exception
+                # FIXME: remove this, only needed after rendering
+                self._clear_cached_status()
+
+                raise DAGBuildError(
+                    'Failed to build DAG {}'.format(self)) from build_exception
 
     def _run_on_failure(self):
         if self.on_failure:
