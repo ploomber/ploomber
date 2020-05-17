@@ -46,3 +46,13 @@ class CallbackSignatureError(Exception):
     """When a callback function does not have the right signature
     """
     pass
+
+
+class UpstreamKeyError(Exception):
+    """
+    Raised when trying to get an upstream dependency that does not exist,
+    we have to implement a custom exception otherwise jinja is going
+    to ignore our error messages (if we raise the usual KeyError).
+    See: https://jinja.palletsprojects.com/en/2.11.x/templates/#variables
+    """
+    pass

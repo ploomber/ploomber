@@ -1,6 +1,7 @@
 from copy import copy
 import warnings
 from collections import defaultdict, abc
+from ploomber.exceptions import UpstreamKeyError
 
 
 class Upstream(abc.Mapping):
@@ -67,9 +68,10 @@ class Upstream(abc.Mapping):
         try:
             return self._dict[key]
         except KeyError:
-            raise KeyError('Cannot obtain upstream dependency in task "{}" '
-                           'named "{}", declared dependencies are: {}'
-                           .format(self._name, key, self))
+            raise UpstreamKeyError(
+                'Cannot obtain upstream dependency in task "{}" '
+                'named "{}", declared dependencies are: {}'
+                .format(self._name, key, self))
 
     def __setitem__(self, key, value):
         self._dict[key] = value

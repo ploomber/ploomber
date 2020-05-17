@@ -8,8 +8,11 @@ from pathlib import Path
 import pytest
 from ploomber.placeholders.Placeholder import Placeholder, SQLRelationPlaceholder
 from ploomber.placeholders.util import get_tags_in_str
+from ploomber.tasks.Upstream import Upstream
+from ploomber.tasks.Params import Params
 from ploomber import SourceLoader
 from jinja2 import Template, Environment, PackageLoader, FileSystemLoader, StrictUndefined
+from ploomber.exceptions import UpstreamKeyError
 
 
 def test_get_tags_in_str():
@@ -224,3 +227,13 @@ def test_placeholder_initialized_with_placeholder(env_init, path_to_test_pkg):
     assert placeholder_new._loader_init is not None
     assert placeholder_new._loader_init == placeholder._loader_init
     assert placeholder_new._loader_init is not placeholder._loader_init
+
+
+def test_error_if_missing_upstream():
+    p = Placeholder('SELECT * FROM {{upstream["name"]}}')
+    upstream = Upstream({})
+
+    with pytest.raises(UpstreamKeyError) as excinfo:
+        p.render({'upstream': upstream})
+
+    assert 'Cannot obtain upstream dependency in task'in str(excinfo.value)
