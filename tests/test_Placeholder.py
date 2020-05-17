@@ -7,8 +7,17 @@ from pathlib import Path
 
 import pytest
 from ploomber.placeholders.Placeholder import Placeholder, SQLRelationPlaceholder
+from ploomber.placeholders.util import get_tags_in_str
 from ploomber import SourceLoader
 from jinja2 import Template, Environment, PackageLoader, FileSystemLoader, StrictUndefined
+
+
+def test_get_tags_in_str():
+    assert get_tags_in_str('{{a}} {{b}}') == {'a', 'b'}
+
+
+def test_get_tags_in_none():
+    assert get_tags_in_str(None) == set()
 
 
 def test_verify_if_strict_template_is_literal():

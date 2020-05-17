@@ -42,6 +42,11 @@ def test_init_with_arbitrary_name(cleanup_env, tmp_directory):
     assert Env('some_environment.yaml')
 
 
+def test_init_with_null_value(cleanup_env, tmp_directory):
+    Path('env.yaml').write_text('a: null')
+    assert Env('env.yaml')
+
+
 def test_includes_function_module_and_name_if_decorated(cleanup_env):
     @with_env({'a': 1})
     def my_fn(env):
