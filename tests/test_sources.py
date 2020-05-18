@@ -245,4 +245,4 @@ def test_python_callable_properties(path_to_test_pkg):
     assert source.doc == functions.simple_w_docstring.__doc__
     assert source.name == 'simple_w_docstring'
     assert file == functions.__file__
-    assert line == '13'
+    assert line == '21'
