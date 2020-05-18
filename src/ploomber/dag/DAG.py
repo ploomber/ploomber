@@ -562,10 +562,7 @@ class DAG(collections.abc.Mapping):
 
             # reset all tasks status
             for task in self.values():
-                # TODO: set the attribtue directly, .exec_status does some
-                # extra logic we don't require here, we have to fix
-                # the setter so we don't directly modify ._exec_status
-                task._exec_status = TaskStatus.WaitingRender
+                task.exec_status = TaskStatus.WaitingRender
 
             for t in tasks:
                 # no need to process task with AbortedRender

@@ -5,6 +5,26 @@ from ploomber.sources.sources import Source
 from ploomber.util.util import signature_check
 
 
+class CallableLoader:
+
+    def __init__(self, callable_, hot_reload):
+        self.hot_reload = hot_reload
+
+        if self.hot_reload:
+            self.module_name = inspect.getmodule(callable_).__name__
+            self.name = callable_.__name__
+        else:
+            self.callable_ = callable_
+
+    def __call__(self):
+        if self.hot_reload:
+            module = importlib.import_module(self.module_name)
+            importlib.reload(module)
+            return getattr(module, self.name)
+        else:
+            return self.callable_
+
+
 class PythonCallableSource(Source):
     """
     A source object to encapsulate a Python callable (i.e. functions).
@@ -17,29 +37,15 @@ class PythonCallableSource(Source):
                             '"{}"'
                             .format(type(self).__name__),
                             type(primitive).__name__)
-
-
-        self.m = inspect.getmodule(primitive).__name__
-        self.n = primitive.__name__
-        # self._primitive = primitive
+        self._callable_loader = CallableLoader(primitive, hot_reload)
         self._source_as_str = None
         self._loc = None
         self._hot_reload = hot_reload
         self.__source_lineno = None
 
-    def _reloaded(self):
-        if self._hot_reload:
-            # module = inspect.getmodule(self._primitive)
-            module = importlib.import_module(self.m)
-            # name = self._primitive.__name__
-            module_reloaded = importlib.reload(module)
-            # self._primitive = getattr(module_reloaded, name)
-
     @property
     def primitive(self):
-        self._reloaded()
-        # return self._primitive
-        return getattr(importlib.import_module(self.m), self.n)
+        return self._callable_loader()
 
     @property
     def _source_lineno(self):

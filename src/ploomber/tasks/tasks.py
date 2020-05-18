@@ -44,10 +44,6 @@ class PythonCallable(Task):
         return PythonCallableSource(source, **kwargs)
 
     def run(self):
-        # self.source._reloaded()
-        # import importlib
-        # module = importlib.import_module(self.source.module_name)
-        # importlib.reload(module)
         self.source.primitive(**self.params)
 
     def develop(self):
