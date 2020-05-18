@@ -38,7 +38,7 @@ def test_dag_report_after_building(tmp_directory, executor):
     dag = DAG(executor=executor)
 
     PythonCallable(touch_root, File('some_file.txt'), dag, name='task')
-    PythonCallable(touch_root, File('some_file.txt'), dag, name='task2')
+    PythonCallable(touch_root, File('another_file.txt'), dag, name='task2')
 
     report = dag.build()
 
