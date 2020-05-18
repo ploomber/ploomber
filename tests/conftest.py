@@ -7,6 +7,7 @@ import os
 import pytest
 from pathlib import Path
 import tempfile
+import test_pkg
 from ploomber.clients import SQLAlchemyClient
 from ploomber import Env
 import pandas as pd
@@ -24,6 +25,23 @@ def path_to_tests():
 @pytest.fixture()
 def path_to_test_pkg():
     return str(Path(importlib.util.find_spec('test_pkg').origin).parent)
+
+
+@pytest.fixture
+def backup_test_pkg():
+    backup = tempfile.mkdtemp()
+    root = Path(test_pkg.__file__).parents[2]
+
+    # sanity check, in case we change the structure
+    assert root.name == 'test_pkg'
+
+    shutil.copytree(str(root), str(Path(backup, 'test_pkg')))
+
+    yield str(Path(importlib.util.find_spec('test_pkg').origin).parent)
+
+    shutil.rmtree(str(root))
+    shutil.copytree(str(Path(backup, 'test_pkg')), str(root))
+    shutil.rmtree(backup)
 
 
 @pytest.fixture()

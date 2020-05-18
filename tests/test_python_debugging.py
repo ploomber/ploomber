@@ -1,11 +1,9 @@
 import inspect
-import shutil
 import pytest
 from pathlib import Path
 import importlib
 import tempfile
 
-import test_pkg
 from test_pkg import functions
 import nbformat
 
@@ -18,23 +16,6 @@ def tmp_file():
     _, tmp = tempfile.mkstemp()
     yield tmp
     Path(tmp).unlink()
-
-
-@pytest.fixture
-def backup_test_pkg():
-    backup = tempfile.mkdtemp()
-    root = Path(test_pkg.__file__).parents[2]
-
-    # sanity check, in case we change the structure
-    assert root.name == 'test_pkg'
-
-    shutil.copytree(str(root), str(Path(backup, 'test_pkg')))
-
-    yield
-
-    shutil.rmtree(str(root))
-    shutil.copytree(str(Path(backup, 'test_pkg')), str(root))
-    shutil.rmtree(backup)
 
 
 def replace_first_cell(nb, source, replacement):

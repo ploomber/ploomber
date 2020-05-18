@@ -1,5 +1,4 @@
 import importlib
-import warnings
 import inspect
 
 from ploomber.sources.sources import Source
@@ -12,10 +11,6 @@ class PythonCallableSource(Source):
     """
 
     def __init__(self, primitive, hot_reload=False):
-        if hot_reload:
-            warnings.warn('hot_reload is not implement for '
-                          'PythonCallableSource, this will be ignored')
-
         if not callable(primitive):
             raise TypeError('{} must be initialized'
                             'with a Python callable, got '
@@ -23,21 +18,28 @@ class PythonCallableSource(Source):
                             .format(type(self).__name__),
                             type(primitive).__name__)
 
-        self._primitive = primitive
+
+        self.m = inspect.getmodule(primitive).__name__
+        self.n = primitive.__name__
+        # self._primitive = primitive
         self._source_as_str = None
         self._loc = None
         self._hot_reload = hot_reload
         self.__source_lineno = None
 
+    def _reloaded(self):
+        if self._hot_reload:
+            # module = inspect.getmodule(self._primitive)
+            module = importlib.import_module(self.m)
+            # name = self._primitive.__name__
+            module_reloaded = importlib.reload(module)
+            # self._primitive = getattr(module_reloaded, name)
+
     @property
     def primitive(self):
-        if self._hot_reload:
-            module = inspect.getmodule(self._primitive)
-            name = self._primitive.__name__
-            module_reloaded = importlib.reload(module)
-            self._primitive = getattr(module_reloaded, name)
-
-        return self._primitive
+        self._reloaded()
+        # return self._primitive
+        return getattr(importlib.import_module(self.m), self.n)
 
     @property
     def _source_lineno(self):
