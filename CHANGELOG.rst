@@ -6,8 +6,8 @@ CHANGELOG
 * Experimental PythonCallable.develop() and NotebookRunner.develop()
 * Experimental NotebookRunner.debug()
 
-0.4.0dev
---------
+0.4.0 (2020-05-18)
+-------------------
 * PythonCallable.debug() now uses IPython debugger by default
 * Improvements to Task.build() public API
 * Moves hook triggering logic to Task to simplify executors implementation
