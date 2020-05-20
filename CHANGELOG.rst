@@ -1,10 +1,15 @@
 CHANGELOG
 =========
 
-0.4.1dev
+0.4.2dev
 --------
 * Experimental PythonCallable.develop() and NotebookRunner.develop()
 * Experimental NotebookRunner.debug()
+
+0.4.1 (2020-05-19)
+-------------------
+* PythonCallable.debug() now works in Jupyter notebooks
+
 
 0.4.0 (2020-05-18)
 -------------------
