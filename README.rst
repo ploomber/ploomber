@@ -15,7 +15,7 @@ Ploomber
 At its core, Ploomber is a framework to efficiently develop data pipelines: once you declare a pipeline, you can build it with a single command, next time you build it, Ploomber will skip tasks whose source code has not changed, allowing you to quickly run experiments by skipping redundant long-running computations.
 
 
-`Try it out now (no setup required) <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=basic-tutorial%2Fnotebook.ipynb>`_.
+`Try it out now (no installation required) <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=basic-tutorial%2Fnotebook.ipynb>`_.
 
 `Click here for documentation <https://ploomber.readthedocs.io/>`_.
 
