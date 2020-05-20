@@ -83,8 +83,15 @@ class PythonCallable(Task):
                                  .format(self.name))
 
         if kind == 'ipdb':
-            from IPython.terminal.debugger import TerminalPdb
-            ipdb = TerminalPdb()
+            from IPython.terminal.debugger import TerminalPdb, Pdb
+
+            try:
+                # this seems to only work in a Terminal
+                ipdb = TerminalPdb()
+            except AttributeError:
+                # this works in a Jupyter notebook
+                ipdb = Pdb()
+
             ipdb.runcall(self.source.primitive, **self.params)
         elif kind == 'pdb':
             pdb.runcall(self.source.primitive, **self.params)
