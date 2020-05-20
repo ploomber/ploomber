@@ -267,6 +267,64 @@ class DAG(collections.abc.Mapping):
 
         return self
 
+    def _render_current(self, force, show_progress):
+        """
+        Render tasks, and update exec_status
+        """
+        # FIXME: should also render again if errored render, maybe change
+        # _did_render for needs render which is on the first time
+        # and when there's an error
+        if not self._params.cache_rendered_status or not self._did_render:
+            self._logger.info('Rendering DAG %s', self)
+
+            if show_progress:
+                tasks = tqdm(self.values(), total=len(self))
+
+            exceptions = MessageCollector()
+            warnings_ = MessageCollector()
+
+            # reset all tasks status
+            for task in self.values():
+                task.exec_status = TaskStatus.WaitingRender
+
+            for t in tasks:
+                # no need to process task with AbortedRender
+                if t.exec_status == TaskStatus.AbortedRender:
+                    continue
+
+                if show_progress:
+                    tasks.set_description('Rendering DAG "{}"'
+                                          .format(self.name))
+
+                with warnings.catch_warnings(record=True) as warnings_current:
+                    try:
+                        t.render(force=force,
+                                 outdated_by_code=self._params.outdated_by_code)
+                    except Exception:
+                        tr = traceback.format_exc()
+                        exceptions.append(message=tr, task_str=repr(t))
+
+                if warnings_current:
+                    w = [str(a_warning.message) for a_warning
+                         in warnings_current]
+                    warnings_.append(task_str=t.name,
+                                     message='\n'.join(w))
+
+            if warnings_:
+                # FIXME: maybe raise one by one to keep the warning type
+                warnings.warn('Some tasks had warnings when rendering DAG '
+                              '"{}":\n{}'.format(self.name, str(warnings_)))
+
+            if exceptions:
+                self._exec_status = DAGStatus.ErroredRender
+                raise DAGRenderError('DAG render failed, the following '
+                                     'tasks could not render '
+                                     '(corresponding tasks aborted '
+                                     'rendering):\n{}'
+                                     .format(str(exceptions)))
+
+        self._exec_status = DAGStatus.WaitingExecution
+
     def build(self, force=False, show_progress=True):
         """
         Runs the DAG in order so that all upstream dependencies are run for
@@ -304,20 +362,16 @@ class DAG(collections.abc.Mapping):
         return report
 
     def _build(self, force, show_progress):
+        # always render before building, the function might immediately
+        # return if the user turned render status caching on
+        self.render(force=force, show_progress=show_progress)
+
         if self._exec_status == DAGStatus.ErroredRender:
             raise DAGBuildError('Cannot build dag that failed to render, '
                                 'fix rendering errors then build again. '
                                 'To see the full traceback again, run '
                                 'dag.render(force=True)')
         else:
-            # at this point the DAG can only be:
-            # DAGStatus.WaitingExecution, DAGStatus.Executed or
-            # DAGStatus.Errored, DAGStatus.WaitingRender
-            # calling render will update status to DAGStatus.WaitingExecution
-            self.render(force=force, show_progress=show_progress)
-
-            # self._clear_cached_status()
-
             self._logger.info('Building DAG %s', self)
 
             tb = {}
@@ -546,61 +600,6 @@ class DAG(collections.abc.Mapping):
             return path2fig(path)
         else:
             return path
-
-    def _render_current(self, force, show_progress):
-        """
-        Render tasks, and update exec_status
-        """
-        if not self._params.cache_rendered_status or not self._did_render:
-            self._logger.info('Rendering DAG %s', self)
-
-            if show_progress:
-                tasks = tqdm(self.values(), total=len(self))
-
-            exceptions = MessageCollector()
-            warnings_ = MessageCollector()
-
-            # reset all tasks status
-            for task in self.values():
-                task.exec_status = TaskStatus.WaitingRender
-
-            for t in tasks:
-                # no need to process task with AbortedRender
-                if t.exec_status == TaskStatus.AbortedRender:
-                    continue
-
-                if show_progress:
-                    tasks.set_description('Rendering DAG "{}"'
-                                          .format(self.name))
-
-                with warnings.catch_warnings(record=True) as warnings_current:
-                    try:
-                        t.render(force=force,
-                                 outdated_by_code=self._params.outdated_by_code)
-                    except Exception:
-                        tr = traceback.format_exc()
-                        exceptions.append(message=tr, task_str=repr(t))
-
-                if warnings_current:
-                    w = [str(a_warning.message) for a_warning
-                         in warnings_current]
-                    warnings_.append(task_str=t.name,
-                                     message='\n'.join(w))
-
-            if warnings_:
-                # FIXME: maybe raise one by one to keep the warning type
-                warnings.warn('Some tasks had warnings when rendering DAG '
-                              '"{}":\n{}'.format(self.name, str(warnings_)))
-
-            if exceptions:
-                self._exec_status = DAGStatus.ErroredRender
-                raise DAGRenderError('DAG render failed, the following '
-                                     'tasks could not render '
-                                     '(corresponding tasks aborted '
-                                     'rendering):\n{}'
-                                     .format(str(exceptions)))
-
-        self._exec_status = DAGStatus.WaitingExecution
 
     def _add_task(self, task):
         """Adds a task to the DAG

@@ -220,7 +220,9 @@ def test_on_failure_exceptions_are_logged(executor, caplog):
 
 
 # TODO: parametrize by executor since reported status depends on it
-def test_task_status_when_on_render_crashes(tmp_directory):
+
+@pytest.mark.parametrize('method', ['render', 'build'])
+def test_task_status_when_on_render_crashes(method, tmp_directory):
     dag = DAG()
     t = PythonCallable(fn, File('file'), dag)
     t.on_render = hook_crashing
@@ -228,14 +230,21 @@ def test_task_status_when_on_render_crashes(tmp_directory):
     t >> t2
 
     with pytest.raises(DAGRenderError) as excinfo:
-        dag.render()
+        getattr(dag, method)()
 
     assert t.exec_status == TaskStatus.ErroredRender
     assert t2.exec_status == TaskStatus.AbortedRender
     assert '* PythonCallable: fn -> File(file):' in str(excinfo.getrepr())
 
+    # let's also check we can recover
+    t.on_render = hook
+
+    assert getattr(dag, method)()
+
 
 # TODO: parametrize by executor since reported status depends on it
+
+
 def test_task_status_and_output_when_on_finish_crashes(tmp_directory):
     dag = DAG()
     t = PythonCallable(fn, File('file'), dag)
