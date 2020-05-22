@@ -136,14 +136,16 @@ def load_from_source(source):
             source = path_found
 
     elif isinstance(source, (str, Path)):
-        source_found = find_env(source)
+        # if not pointing to a file, try to locate it...
+        if not Path(source).exists():
+            source_found = find_env(source)
 
-        if source_found is None:
-            raise FileNotFoundError('Could not find file "{}" in the '
-                                    'current working directory nor '
-                                    '6 levels up'.format(source))
-        else:
-            source = source_found
+            if source_found is None:
+                raise FileNotFoundError('Could not find file "{}" in the '
+                                        'current working directory nor '
+                                        '6 levels up'.format(source))
+            else:
+                source = source_found
 
     with open(source) as f:
         try:

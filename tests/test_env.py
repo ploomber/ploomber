@@ -47,6 +47,11 @@ def test_init_with_null_value(cleanup_env, tmp_directory):
     assert Env('env.yaml')
 
 
+def test_init_with_absolute_path(cleanup_env, tmp_directory):
+    Path('env.yaml').write_text('a: 1')
+    assert Env(Path(tmp_directory, 'env.yaml'))
+
+
 def test_includes_function_module_and_name_if_decorated(cleanup_env):
     @with_env({'a': 1})
     def my_fn(env):
