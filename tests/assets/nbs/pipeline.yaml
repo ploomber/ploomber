@@ -16,6 +16,5 @@
 - class: NotebookRunner
   name: plot
   source: plot.py
-  product:
-    nb: output/plot.ipynb
-  upstream: [clean]
+  product: output/plot.ipynb
+  upstream: clean
