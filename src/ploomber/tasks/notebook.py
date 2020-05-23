@@ -91,7 +91,6 @@ class NotebookRunner(Task):
         Kernelspec name to use, if the notebook already includes kernelspec
         data (in metadata.kernelspec), this is ignored, otherwise, the kernel
         is looked up using the jupyter_client.kernelspec.get_kernel_spec
-        function
     nbconvert_exporter_name: str, optional
         Once the notebook is run, this parameter controls whether to export
         the notebook to a different parameter using the nbconvert package,
@@ -119,7 +118,7 @@ class NotebookRunner(Task):
 
     @requires(['jupyter', 'papermill'], 'NotebookRunner')
     def __init__(self, source, product, dag, name=None, params=None,
-                 papermill_params=None, kernelspec_name=None,
+                 papermill_params=None, kernelspec_name='python3',
                  nbconvert_exporter_name=None, ext_in=None,
                  nb_product_key='nb', static_analysis=False):
         self.papermill_params = papermill_params or {}

@@ -380,15 +380,17 @@ def _to_nb_obj(source, extension, kernelspec_name=None):
     import jupyter_client
     # NOTE: how is this different to just doing fmt='.py'
     nb = jupytext.reads(source, fmt={'extension': '.'+extension})
+    nb_kernelspec = nb.metadata.get('kernelspec')
 
-    if nb.metadata.get('kernelspec') is None and kernelspec_name is None:
+    if nb_kernelspec is None and kernelspec_name is None:
         raise SourceInitializationError(
             'Notebook does not contains kernelspec metadata and '
             'kernelspec_name was not specified, either add '
             'kernelspec info to your source file or specify '
             'a kernelspec by name')
 
-    if kernelspec_name is not None:
+    # only use kernelspec_name when there is no kernelspec info in the nb
+    if nb_kernelspec is None and kernelspec_name is not None:
         k = jupyter_client.kernelspec.get_kernel_spec(kernelspec_name)
 
         nb.metadata.kernelspec = {
