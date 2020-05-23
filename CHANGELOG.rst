@@ -3,6 +3,7 @@ CHANGELOG
 
 0.4.2dev
 --------
+* Experimental support to specify DAGs with yaml files
 * Experimental PythonCallable.develop() and NotebookRunner.develop()
 * Experimental NotebookRunner.debug()
 
