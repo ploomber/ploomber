@@ -7,6 +7,7 @@ import os
 import pytest
 from pathlib import Path
 import tempfile
+from functools import wraps
 import test_pkg
 from ploomber.clients import SQLAlchemyClient
 from ploomber import Env
@@ -15,6 +16,33 @@ import pandas as pd
 
 def _path_to_tests():
     return Path(__file__).absolute().parent
+
+
+def fixture_tmp_dir(source):
+    """
+    A lot of our fixtures are copying a few files into a temporary location,
+    making that location the current working directory and deleting after
+    the test is done. This decorator allows us to build such fixture
+    """
+    # NOTE: I tried not making this a decorator and just do:
+    # some_fixture = factory('some/path')
+    # but didn't work
+    def decorator(function):
+        @wraps(function)
+        def wrapper():
+            old = os.getcwd()
+            tmp_dir = tempfile.mkdtemp()
+            tmp = Path(tmp_dir,  'content')
+            # we have to add extra folder content/, otherwise copytree complains
+            shutil.copytree(str(source), str(tmp))
+            os.chdir(str(tmp))
+            yield tmp
+            os.chdir(old)
+            shutil.rmtree(tmp_dir)
+
+        return pytest.fixture(wrapper)
+
+    return decorator
 
 
 @pytest.fixture(scope='session')
@@ -184,27 +212,6 @@ def tmp_sample_subdir():
     shutil.rmtree(str(tmp))
     os.chdir(old)
 
-
-from functools import wraps
-
-
-def fixture_tmp_dir(source):
-    def decorator(function):
-        @wraps(function)
-        def wrapper():
-            old = os.getcwd()
-            tmp_dir = tempfile.mkdtemp()
-            tmp = Path(tmp_dir,  'content')
-            # we have to add extra folder content/, otherwise copytree complains
-            shutil.copytree(str(source), str(tmp))
-            os.chdir(str(tmp))
-            yield tmp
-            os.chdir(old)
-            shutil.rmtree(tmp_dir)
-
-        return pytest.fixture(wrapper)
-
-    return decorator
 
 
 def _backup_dir(source):

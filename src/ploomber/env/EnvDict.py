@@ -147,7 +147,7 @@ def load_from_source(source):
             else:
                 source = source_found
 
-    with open(source) as f:
+    with open(str(source)) as f:
         try:
             raw = yaml.load(f, Loader=yaml.SafeLoader)
         except Exception as e:
