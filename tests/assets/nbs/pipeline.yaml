@@ -1,5 +1,4 @@
 - class: NotebookRunner
-  name: load
   source: load.py
   product:
     nb: output/load.ipynb
@@ -11,7 +10,7 @@
   product:
     nb: output/clean.ipynb
     data: output/clean.csv
-  upstream: [load]
+  upstream: [load.py]
 
 - class: NotebookRunner
   name: plot

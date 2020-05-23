@@ -41,11 +41,11 @@ def init_task(task_dict, dag):
 
     product = _pop_product(task_dict)
     source_raw = task_dict.pop('source')
-    name_raw = task_dict.pop('name')
+    name_raw = task_dict.pop('name', None)
 
     task = class_(source=Path(source_raw),
                   product=product,
-                  name=name_raw,
+                  name=name_raw or source_raw,
                   dag=dag,
                   **task_dict)
 
