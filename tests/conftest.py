@@ -185,6 +185,45 @@ def tmp_sample_subdir():
     os.chdir(old)
 
 
+from functools import wraps
+
+
+def fixture_tmp_dir(source):
+    def decorator(function):
+        @wraps(function)
+        def wrapper():
+            old = os.getcwd()
+            tmp_dir = tempfile.mkdtemp()
+            tmp = Path(tmp_dir,  'content')
+            # we have to add extra folder content/, otherwise copytree complains
+            shutil.copytree(str(source), str(tmp))
+            os.chdir(str(tmp))
+            yield tmp
+            os.chdir(old)
+            shutil.rmtree(tmp_dir)
+
+        return pytest.fixture(wrapper)
+
+    return decorator
+
+
+def _backup_dir(source):
+    old = os.getcwd()
+    tmp_dir = tempfile.mkdtemp()
+    tmp = Path(tmp_dir,  'content')
+    # we have to add extra folder content/, otherwise copytree complains
+    shutil.copytree(str(source), str(tmp))
+    os.chdir(str(tmp))
+    yield tmp
+    os.chdir(old)
+    shutil.rmtree(tmp_dir)
+
+
+@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs')
+def tmp_nbs():
+    pass
+
+
 @pytest.fixture(scope='session')
 def path_to_source_code_file():
     return (_path_to_tests() / 'assets' / 'sample' /

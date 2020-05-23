@@ -1,0 +1,24 @@
+- class: NotebookRunner
+  name: load
+  source: load.py
+  product:
+    nb: output/load.ipynb
+    data: output/data.csv
+  kernelspec_name: python3
+
+- class: NotebookRunner
+  name: clean
+  source: clean.py
+  product:
+    nb: output/clean.ipynb
+    data: output/clean.csv
+  upstream: [load]
+  kernelspec_name: python3
+
+- class: NotebookRunner
+  name: plot
+  source: plot.py
+  product:
+    nb: output/plot.ipynb
+  upstream: [clean]
+  kernelspec_name: python3
