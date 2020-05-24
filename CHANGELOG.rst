@@ -7,8 +7,8 @@ CHANGELOG
 * Experimental NotebookRunner.develop()
 * Experimental support to specify DAGs with yaml files
 
-0.4.2dev
---------
+0.4.2 (2020-05-24)
+-------------------
 * Adds NotebookRunner.debug()
 
 0.4.1 (2020-05-19)
