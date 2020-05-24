@@ -16,12 +16,12 @@ when using --help
 
 To build the dag returned by the entry point:
 
-    ``$ python -m ploomber.entry module.sub_module.entry_point build``
+    ``$ python -m ploomber.entry module.sub_module.entry_point``
 
 
 To start an interactive session by loading the entry point first:
 
-    ``$ python -i -m ploomber.entry module.sub_module.entry_point status``
+    ``$ python -i -m ploomber.entry module.sub_module.entry_point --action status``
 
 ``ipython -i -m`` also works. Once the interactive session starts, the object
 returned by the entry point will be available in the "dag" variable.
@@ -100,9 +100,10 @@ def _parse_module(s):
 def _main():
     parser = argparse.ArgumentParser()
     parser.add_argument('entry_point', help='Entry point (DAG)')
-    parser.add_argument('action', help='Action to execute')
     parser.add_argument('--log', help='Enables logging to stdout at the '
                         'specified level', default=None)
+    parser.add_argument('--action', help='Action to execute, defaults to '
+                        'build', default='build')
 
     n_positional = len([arg for arg in sys.argv if not arg.startswith('-')])
 

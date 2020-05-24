@@ -8,46 +8,53 @@ from ploomber.entry import entry
 
 def test_complete_case(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
-                        ['python', 'test_pkg.entry.with_doc', 'build'])
+                        ['python', 'test_pkg.entry.with_doc',
+                         '--action', 'build'])
     entry._main()
 
 
 def test_log_enabled(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
-                        ['python', 'test_pkg.entry.with_doc', 'build',
+                        ['python', 'test_pkg.entry.with_doc',
+                         '--action', 'build',
                          '--log', 'INFO'])
     entry._main()
 
 
 def test_replace_env_value(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
-                        ['python', 'test_pkg.entry.with_doc', 'build',
+                        ['python', 'test_pkg.entry.with_doc',
+                         '--action', 'build',
                          '--env__path__data', '/another/path'])
     entry._main()
 
 
 def test_w_param(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
-                        ['python', 'test_pkg.entry.with_param', 'build',
+                        ['python', 'test_pkg.entry.with_param',
+                         '--action', 'build',
                          'some_value_for_param'])
     entry._main()
 
 
 def test_no_doc(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
-                        ['python', 'test_pkg.entry.no_doc', 'build'])
+                        ['python', 'test_pkg.entry.no_doc', '--action',
+                         'build'])
     entry._main()
 
 
 def test_incomplete_doc(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
-                        ['python', 'test_pkg.entry.incomplete_doc', 'build'])
+                        ['python', 'test_pkg.entry.incomplete_doc',
+                         '--action', 'build'])
     entry._main()
 
 
 def test_invalid_doc(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
-                        ['python', 'test_pkg.entry.invalid_doc', 'build'])
+                        ['python', 'test_pkg.entry.invalid_doc',
+                         '--action', 'build'])
     entry._main()
 
 
@@ -77,7 +84,8 @@ def test_invalid_function(monkeypatch):
 
 def test_undecorated_function(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
-                        ['python', 'test_pkg.entry.plain_function', 'build'])
+                        ['python', 'test_pkg.entry.plain_function',
+                         '--action', 'build'])
 
     entry._main()
 
@@ -86,7 +94,7 @@ def test_undecorated_function_w_param(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
                         ['python',
                          'test_pkg.entry.plain_function_w_param',
-                         'build',
+                         '--action', 'build',
                          'some_value_for_param'])
 
     entry._main()
