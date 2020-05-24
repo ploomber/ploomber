@@ -3,7 +3,7 @@ import pytest
 import importlib
 import sys
 
-from ploomber import entry
+from ploomber.entry import entry
 
 
 def test_complete_case(monkeypatch, tmp_sample_dir):

@@ -69,29 +69,3 @@ def init_dag(dag_dict):
             task.set_upstream(dag[task_up])
 
     return dag
-
-
-def _main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('spec', help='Path to DAG spec')
-    parser.add_argument('--log', help='Enables logging to stdout at the '
-                        'specified level', default=None)
-    parser.add_argument('--action', help='Action to perform, defaults to '
-                        'status', default='status')
-    args = parser.parse_args()
-
-    if args.log is not None:
-        logging.basicConfig(level=args.log)
-
-    with open(args.spec) as f:
-        dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
-
-    dag = init_dag(dag_dict)
-
-    getattr(dag, args.action)()
-
-    return dag
-
-
-if __name__ == '__main__':
-    dag = _main()

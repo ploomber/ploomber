@@ -57,7 +57,12 @@ import sys
 import importlib
 import argparse
 import inspect
+from pathlib import Path
 from collections.abc import Mapping
+
+import yaml
+
+from ploomber.dag.DAGSpec import init_dag
 
 
 def _parse_doc(doc):
@@ -95,6 +100,7 @@ def _parse_module(s):
 def _main():
     parser = argparse.ArgumentParser()
     parser.add_argument('entry_point', help='Entry point (DAG)')
+    parser.add_argument('action', help='Action to execute')
     parser.add_argument('--log', help='Enables logging to stdout at the '
                         'specified level', default=None)
 
@@ -103,74 +109,90 @@ def _main():
     if n_positional < 2:
         args = parser.parse_args()
     else:
-        parser.add_argument('action', help='Action to execute')
+        # parse entry_point
+        entry_point = sys.argv[1]
 
-        mod, name = _parse_module(sys.argv[1])
+        if Path(entry_point).exists():
+            args = parser.parse_args()
 
-        try:
-            module = importlib.import_module(mod)
-        except ImportError as e:
-            raise ImportError('An error happened when trying to '
-                              'import module "{}"'.format(mod)) from e
+            if args.log is not None:
+                logging.basicConfig(level=args.log)
 
-        try:
-            entry = getattr(module, name)
-        except AttributeError as e:
-            raise AttributeError('Could not get attribute "{}" from module '
-                                 '"{}", make sure it is a valid callable'
-                                 .format(name, mod)) from e
+            with open(entry_point) as f:
+                dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
 
-        doc = _parse_doc(entry.__doc__)
+            dag = init_dag(dag_dict)
+            getattr(dag, args.action)()
+            return dag
 
-        def get_desc(arg):
-            arg_data = doc['params'].get(arg)
-            return None if arg_data is None else arg_data['desc']
+        else:
 
-        sig = inspect.signature(entry)
+            mod, name = _parse_module(entry_point)
 
-        defaults = {k: v.default for k, v in sig.parameters.items()
-                    if v.default != inspect._empty}
-        required = [k for k, v in sig.parameters.items()
-                    if v.default == inspect._empty]
+            try:
+                module = importlib.import_module(mod)
+            except ImportError as e:
+                raise ImportError('An error happened when trying to '
+                                  'import module "{}"'.format(mod)) from e
 
-        for arg, default in defaults.items():
-            parser.add_argument('--'+arg,
-                                help=get_desc(arg))
+            try:
+                entry = getattr(module, name)
+            except AttributeError as e:
+                raise AttributeError('Could not get attribute "{}" from module '
+                                     '"{}", make sure it is a valid callable'
+                                     .format(name, mod)) from e
 
-        for arg in required:
-            parser.add_argument(arg, help=get_desc(arg))
+            doc = _parse_doc(entry.__doc__)
 
-        # if entry point was decorated with @with_env, add arguments
-        # to replace declared variables in env.yaml
-        if hasattr(entry, '_env_dict'):
-            flat_env_dict = _flatten_dict(entry._env_dict._data)
-            for arg, val in flat_env_dict.items():
-                parser.add_argument('--env__'+arg,
-                                    help='Default: {}'.format(val))
+            def get_desc(arg):
+                arg_data = doc['params'].get(arg)
+                return None if arg_data is None else arg_data['desc']
 
-        args = parser.parse_args()
+            sig = inspect.signature(entry)
 
-        if args.log is not None:
-            logging.basicConfig(level=args.log)
+            defaults = {k: v.default for k, v in sig.parameters.items()
+                        if v.default != inspect._empty}
+            required = [k for k, v in sig.parameters.items()
+                        if v.default == inspect._empty]
 
-        # required by the function signature
-        kwargs = {key: getattr(args, key) for key in required}
+            for arg, default in defaults.items():
+                parser.add_argument('--'+arg,
+                                    help=get_desc(arg))
 
-        # env and function defaults replaced
-        replaced = {name: getattr(args, name)
-                    for name in dir(args)
-                    if not name.startswith('_')
-                    if getattr(args, name) is not None
-                    if name not in {'entry_point', 'action', 'log'}}
+            for arg in required:
+                parser.add_argument(arg, help=get_desc(arg))
 
-        # TODO: add a way of test this by the parameters it will use to
-        # call the function, have an aux function to get those then another
-        # to execute, test using the first one
-        obj = entry(**{**kwargs, **replaced})
+            # if entry point was decorated with @with_env, add arguments
+            # to replace declared variables in env.yaml
+            if hasattr(entry, '_env_dict'):
+                flat_env_dict = _flatten_dict(entry._env_dict._data)
+                for arg, val in flat_env_dict.items():
+                    parser.add_argument('--env__'+arg,
+                                        help='Default: {}'.format(val))
 
-        print(getattr(obj, args.action)())
+            args = parser.parse_args()
 
-        return obj
+            if args.log is not None:
+                logging.basicConfig(level=args.log)
+
+            # required by the function signature
+            kwargs = {key: getattr(args, key) for key in required}
+
+            # env and function defaults replaced
+            replaced = {name: getattr(args, name)
+                        for name in dir(args)
+                        if not name.startswith('_')
+                        if getattr(args, name) is not None
+                        if name not in {'entry_point', 'action', 'log'}}
+
+            # TODO: add a way of test this by the parameters it will use to
+            # call the function, have an aux function to get those then another
+            # to execute, test using the first one
+            obj = entry(**{**kwargs, **replaced})
+
+            print(getattr(obj, args.action)())
+
+            return obj
 
 
 def _flatten_dict(d, prefix=''):
@@ -186,7 +208,3 @@ def _flatten_dict(d, prefix=''):
             out[prefix+k] = v
 
     return out
-
-
-if __name__ == '__main__':
-    dag = _main()
