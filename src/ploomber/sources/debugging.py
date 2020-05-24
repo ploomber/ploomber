@@ -140,7 +140,3 @@ def body_to_nb(body_elements, path):
     }
 
     nbformat.write(nb, path)
-
-
-def nb_to_callable_source(path):
-    pass

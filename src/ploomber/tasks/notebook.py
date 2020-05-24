@@ -52,13 +52,13 @@ def _get_exporter(nbconvert_exporter_name, extension):
     return exporter
 
 
-def _from_ipynb(path_to_nb, exporter):
+def _from_ipynb(path_to_nb, exporter, nbconvert_export_kwargs):
 
     path = Path(path_to_nb)
 
     nb = nbformat.reads(path.read_text(), as_version=nbformat.NO_CONVERT)
     content, _ = nbconvert.export(exporter, nb,
-                                  exclude_input=True)
+                                  **nbconvert_export_kwargs)
 
     path.write_text(content)
 
@@ -114,6 +114,11 @@ class NotebookRunner(Task):
         detect errors before executing the notebook. If the task has
         upstream dependencies an upstream parameter should also be declared
         "upstream = None"
+    nbconvert_export_kwargs : dict
+        Keyword arguments to pass to the nbconvert.export function (this is
+        only used if exporting the output ipynb notebook to another format).
+        You can use this for example to hide code cells using the exclude_input
+        parameter
     """
     PRODUCT_CLASSES_ALLOWED = (File, )
 
@@ -121,8 +126,10 @@ class NotebookRunner(Task):
     def __init__(self, source, product, dag, name=None, params=None,
                  papermill_params=None, kernelspec_name='python3',
                  nbconvert_exporter_name=None, ext_in=None,
-                 nb_product_key='nb', static_analysis=False):
+                 nb_product_key='nb', static_analysis=False,
+                 nbconvert_export_kwargs=None):
         self.papermill_params = papermill_params or {}
+        self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name
         self.nbconvert_exporter_name = nbconvert_exporter_name
         self.ext_in = ext_in
@@ -267,7 +274,8 @@ class NotebookRunner(Task):
         # and overwrite
         if self._exporter is not None:
             path_to_out_nb.rename(path_to_out)
-            _from_ipynb(path_to_out, self._exporter)
+            _from_ipynb(path_to_out, self._exporter,
+                        self.nbconvert_export_kwargs)
 
 
 def _read_rendered_notebook(path):

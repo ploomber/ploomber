@@ -55,6 +55,7 @@ class PythonCallable(Task):
         params = self.params.to_dict()
         params['product'] = params['product'].to_json_serializable()
 
+        # TODO: rename this, perhaps CallableInteractiveDeveloper?
         with CallableDebugger(self.source.primitive, params) as tmp:
             try:
                 subprocess.call(['jupyter', 'notebook', tmp])
