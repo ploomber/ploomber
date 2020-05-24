@@ -5,11 +5,13 @@ User Guide
     :maxdepth: 1
 
     guide/core
+    guide/param-resolution
     guide/env
     guide/static
     guide/hooks
-    guide/testing
     guide/structuring
+    guide/testing
+    guide/debugging
     guide/dag-configurator
     guide/env-life-cycle
     guide/versioning
