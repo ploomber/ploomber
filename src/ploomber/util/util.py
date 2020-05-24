@@ -213,3 +213,33 @@ def signature_check(fn, params, task_name):
                               .format(task_name, fn_name, msg))
 
     return True
+
+
+def _parse_module(dotted_path):
+    parts = dotted_path.split('.')
+
+    if len(parts) < 2:
+        raise ImportError('Invalid module name, must be a dot separated '
+                          'string, with at least '
+                          '[module_name].[function_name]')
+
+    return '.'.join(parts[:-1]), parts[-1]
+
+
+def _load_factory(dotted_path):
+    mod, name = _parse_module(dotted_path)
+
+    try:
+        module = importlib.import_module(mod)
+    except ImportError as e:
+        raise ImportError('An error happened when trying to '
+                          'import module "{}"'.format(mod)) from e
+
+    try:
+        factory = getattr(module, name)
+    except AttributeError as e:
+        raise AttributeError('Could not get attribute "{}" from module '
+                             '"{}", make sure it is a valid callable'
+                             .format(name, mod)) from e
+
+    return factory

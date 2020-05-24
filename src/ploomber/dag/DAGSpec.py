@@ -1,15 +1,12 @@
 """
 Build DAGs from dictionaries
 """
-import logging
-import argparse
 from pathlib import Path
 from collections.abc import Mapping, Iterable
 
-import yaml
-
 from ploomber.products import File
 from ploomber import DAG, tasks
+from ploomber.util.util import _load_factory
 
 
 def _make_iterable(o):
@@ -57,15 +54,18 @@ def init_task(task_dict, dag):
     return task, upstream
 
 
-def init_dag(dag_dict):
+def init_dag(dag_spec):
     """Create a dag from a dictionary
     """
-    dag = DAG()
+    if isinstance(dag_spec, Mapping):
+        factory = _load_factory(dag_spec['location'])
+        return factory()
+    else:
+        dag = DAG()
 
-    for task_dict in dag_dict:
-        task, upstream = init_task(task_dict, dag)
+        for task_dict in dag_spec:
+            task, upstream = init_task(task_dict, dag)
 
-        for task_up in upstream:
-            task.set_upstream(dag[task_up])
-
-    return dag
+            for task_up in upstream:
+                task.set_upstream(dag[task_up])
+        return dag

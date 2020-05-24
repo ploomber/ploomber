@@ -1,3 +1,5 @@
+from copy import copy
+import sys
 import importlib
 import string
 import random
@@ -238,3 +240,11 @@ def fake_conn():
     o = object()
 
     yield o
+
+
+@pytest.fixture
+def add_current_to_sys_path():
+    old = copy(sys.path)
+    sys.path.append('')
+    yield sys.path
+    sys.path = old
