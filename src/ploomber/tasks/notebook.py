@@ -1,3 +1,4 @@
+import pdb
 import tempfile
 import subprocess
 from pathlib import Path
@@ -116,7 +117,7 @@ class NotebookRunner(Task):
     """
     PRODUCT_CLASSES_ALLOWED = (File, )
 
-    @requires(['jupyter', 'papermill'], 'NotebookRunner')
+    @requires(['jupyter', 'papermill', 'jupytext'], 'NotebookRunner')
     def __init__(self, source, product, dag, name=None, params=None,
                  papermill_params=None, kernelspec_name='python3',
                  nbconvert_exporter_name=None, ext_in=None,
@@ -153,50 +154,16 @@ class NotebookRunner(Task):
 
     def develop(self):
         """
-        Opens the notebook (unmodified and in its original location)
-        """
-        # TODO: put debug() contents here and make debug() start an actual
-        # debugging sessions (with the parameters injected)
-        if self.source.loc is None:
-            raise ValueError('Can only use develop in notebooks loaded '
-                             'from files, not from str')
-
-        try:
-            subprocess.call(['jupyter', 'notebook', self.source.loc])
-        except KeyboardInterrupt:
-            print('Jupyter notebook server closed...')
-
-    def debug(self):
-        """
         Opens the rendered notebook (with a new cell that includes injected
-        parameters and in a temporary location) with debug settings turned on.
+        parameters and in a temporary location).
         Changes to this notebook can be exported to the original notebook
-        (the injected parameters cell and cells that turn debugging on are
-        excluded).
+        (the injected parameters cell is excluded).
         """
         if self.source.loc is None:
             raise ValueError('Can only use develop in notebooks loaded '
                              'from files, not from str')
 
-        # load original notebook content
-        content_original = Path(self.source.loc_rendered).read_text()
-
-        # add debug cells
-        nb = nbformat.reads(content_original, as_version=nbformat.NO_CONVERT)
-        nbformat_v = nbformat.versions[nb.nbformat]
-
-        source = """
-# Debugging settings (this cell will be removed before saving)
-# change the current working directory to the one when .debug() happen
-# to make relative paths work
-from os import chdir
-chdir("{}")
-""".format(Path('.').resolve())
-
-        cell = nbformat_v.new_code_cell(source,
-                                        metadata={'tags':
-                                                  ['debugging-settings']})
-        nb.cells.insert(0, cell)
+        nb = _read_rendered_notebook(self.source.loc_rendered)
 
         # save modified notebook
         _, tmp = tempfile.mkstemp(suffix='.ipynb')
@@ -241,6 +208,39 @@ chdir("{}")
         # remove tmp file
         Path(tmp).unlink()
 
+    def debug(self, kind='ipdb'):
+        """
+        Opens the notebook (with injected parameters) in debug mode in a
+        temporary location
+        """
+        opts = {'ipdb', 'pdb'}
+
+        if kind not in opts:
+            raise ValueError('kind must be one of {}'.format(opts))
+
+        nb = _read_rendered_notebook(self.source.loc_rendered)
+        _, tmp_path = tempfile.mkstemp(suffix='.ipynb')
+        code = jupytext.writes(nb, version=nbformat.NO_CONVERT, fmt='py')
+        Path(tmp_path).write_text(code)
+
+        if kind == 'ipdb':
+            from IPython.terminal.debugger import TerminalPdb, Pdb
+            code = compile(source=code, filename=tmp_path, mode='exec')
+
+            try:
+                # this seems to only work in a Terminal
+                debugger = TerminalPdb()
+            except AttributeError:
+                # this works in a Jupyter notebook
+                debugger = Pdb()
+        elif kind == 'pdb':
+            debugger = pdb
+
+        try:
+            debugger.run(code)
+        finally:
+            Path(tmp_path).unlink()
+
     def run(self):
         if isinstance(self.product, MetaProduct):
             path_to_out = Path(str(self.product[self.nb_product_key]))
@@ -268,3 +268,30 @@ chdir("{}")
         if self._exporter is not None:
             path_to_out_nb.rename(path_to_out)
             _from_ipynb(path_to_out, self._exporter)
+
+
+def _read_rendered_notebook(path):
+    """
+    Read rendered notebook and inject cell with debugging settings
+    """
+    # load original notebook content
+    content_original = Path(path).read_text()
+
+    # add debug cells
+    nb = nbformat.reads(content_original, as_version=nbformat.NO_CONVERT)
+    nbformat_v = nbformat.versions[nb.nbformat]
+
+    source = """
+# Debugging settings (this cell will be removed before saving)
+# change the current working directory to the one when .debug() happen
+# to make relative paths work
+from os import chdir
+chdir("{}")
+""".format(Path('.').resolve())
+
+    cell = nbformat_v.new_code_cell(source,
+                                    metadata={'tags':
+                                              ['debugging-settings']})
+    nb.cells.insert(0, cell)
+
+    return nb

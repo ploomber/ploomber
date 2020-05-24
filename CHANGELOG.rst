@@ -4,13 +4,12 @@ CHANGELOG
 0.4.2dev
 --------
 * Experimental support to specify DAGs with yaml files
-* Experimental PythonCallable.develop() and NotebookRunner.develop()
-* Experimental NotebookRunner.debug()
+* Experimental PythonCallable.develop() and NotebookRunner.debug()
+* Experimental NotebookRunner.develop() and NotebookRunner.debug()
 
 0.4.1 (2020-05-19)
 -------------------
 * PythonCallable.debug() now works in Jupyter notebooks
-
 
 0.4.0 (2020-05-18)
 -------------------
