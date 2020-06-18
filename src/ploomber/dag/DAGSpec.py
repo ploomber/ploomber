@@ -95,7 +95,7 @@ def init_dag(dag_spec):
             return dag
     else:
         dag = DAG()
-        process_tasks(dag, dag_spec, None)
+        process_tasks(dag, dag_spec, {})
         return dag
 
 
