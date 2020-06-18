@@ -12,5 +12,5 @@ USING some_column
 
 def test_infer_dependencies_from_path(path_to_tests):
     path = path_to_tests / 'assets' / 'pipeline-sql'
-    expected = {'filter.sql': {'load'}, 'transform.sql': {'filter'}}
+    expected = {'filter.sql': {'load.sql'}, 'transform.sql': {'filter.sql'}}
     assert infer_depencies_from_path(path) == expected
