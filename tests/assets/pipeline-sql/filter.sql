@@ -1,2 +1,3 @@
-SELECT * FROM {{upstream['load']}}
-WHERE purchase_date > TO_DATE('2015-01-01', 'YYYY-MM-DD')
+CREATE TABLE {{product}} AS
+SELECT * FROM {{upstream['load.sql']}}
+WHERE strftime(purchase_date) > date('2015-01-01')
