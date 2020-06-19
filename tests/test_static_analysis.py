@@ -23,7 +23,8 @@ if True:
 @pytest.mark.parametrize('code, expected',
                          [cell_case_1, cell_case_2])
 def test_infer_from_code_cell(code, expected):
-    assert notebook.infer_dependencies_from_code_cell(code) == expected
+    assert (sorted(notebook.infer_dependencies_from_code_cell(code))
+            == sorted(expected))
 
 
 case_error_1 = "some_variable = 1"
@@ -53,8 +54,9 @@ upstream = {'a': None, 'b': None}
 @pytest.mark.parametrize('code, expected',
                          [nb_case_1, nb_case_2])
 def test_infer_from_code_str(code, expected):
-    assert notebook.infer_dependencies_from_code_str(code,
-                                                     fmt='py') == expected
+    assert (sorted(notebook.infer_dependencies_from_code_str(code,
+                                                             fmt='py'))
+            == sorted(expected))
 
 
 def test_extract_upstream_sql():
