@@ -62,12 +62,46 @@ def _pop_product(task_dict, dag_spec):
         return CLASS(product_raw)
 
 
+suffix2class = {
+    '.py': tasks.NotebookRunner,
+    '.sql': tasks.SQLScript,
+    '.sh': tasks.ShellScript
+}
+
+
+def get_task_class(task_dict):
+    """
+    Pops 'class' key if it exists
+
+    Task class is determined by the 'class' key, if missing. Defaults
+    are used by inspecting the 'source' key: NoteboonRunner (.py),
+    SQLScript (.sql) and BashScript (.sh).
+    """
+    class_name = task_dict.pop('class', None)
+
+    if class_name:
+        class_ = getattr(tasks, class_name)
+    else:
+        suffix = Path(task_dict['source']).suffix
+
+        if suffix2class.get(suffix):
+            class_ = suffix2class[suffix]
+        else:
+            raise KeyError('No default available for task with source: '
+                           '"{}". Default class is only available for '
+                           'files with extensions {}, otherwise you should '
+                           'set an explicit class key'
+                           .format(task_dict['source'], set(suffix2class)))
+
+    return class_
+
+
 def init_task(task_dict, dag, dag_spec):
     """Create a task from a dictionary
+
     """
     upstream = _pop_upstream(task_dict)
-    class_raw = task_dict.pop('class')
-    class_ = getattr(tasks, class_raw)
+    class_ = get_task_class(task_dict)
 
     product = _pop_product(task_dict, dag_spec)
     source_raw = task_dict.pop('source')

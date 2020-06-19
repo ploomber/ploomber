@@ -1,23 +1,18 @@
-# TODO: default class based on source extension
-# .py: NoteboonRunner
-# .sql: SQLScript
-# .sh: BashScript
+# TODO:test cases: explciit vs implicit task.class
+# TODO: test with sh files
 meta:
   infer_upstream: True
 
 tasks:
-  - class: NotebookRunner
-    source: load.py
+  - source: load.py
     product:
       nb: output/load.ipynb
       data: output/data.csv
   
-  - class: NotebookRunner
-    source: clean.py
+  - source: clean.py
     product:
       nb: output/clean.ipynb
       data: output/clean.csv
   
-  - class: NotebookRunner
-    source: plot.py
+  - source: plot.py
     product: output/plot.ipynb
