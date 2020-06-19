@@ -18,13 +18,25 @@ def extract_upstream(sql):
     return set(upstream.keys) if len(upstream.keys) else None
 
 
-def infer_depencies_from_path(path):
+def infer_depencies_from_path(root_path, templates=None):
     """
     Process a directory with SQL templates by creating a jinja environment
     and extracting upstream dependencies on each file
+
+    Parameters
+    ----------
+    root_path : str
+        Root path to load the paths from
+
+    templates : list, optional
+        List of templates (relative to root_path), if None, loads all files
+        available
     """
-    loader = SourceLoader(path=path)
-    templates = loader.env.list_templates()
+    loader = SourceLoader(path=root_path)
+
+    if not templates:
+        templates = loader.env.list_templates()
+
     dependencies = {}
 
     for template_name in templates:

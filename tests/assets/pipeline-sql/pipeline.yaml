@@ -15,7 +15,7 @@ tasks:
   - class: SQLScript
     source: load.sql
     # TODO: make a simple string work as [None, data, 'table']
-    # dicts here are interpreted as named products
+    # dicts here are interpreted as multiple products
     product: [data, table]
 
   - class: SQLScript
