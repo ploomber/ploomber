@@ -419,6 +419,10 @@ def _cleanup_rendered_nb(nb):
 
 
 def _find_cell_with_tag(nb, tag):
+    """
+    Find a cell with a given tag, returns a cell, index tuple. Otherwise
+    (None, None)
+    """
     for i, c in enumerate(nb.cells):
         cell_tags = c.metadata.get('tags')
         if cell_tags:
