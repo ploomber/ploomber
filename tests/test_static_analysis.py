@@ -1,5 +1,5 @@
 import pytest
-from ploomber.static_analysis import notebook
+from ploomber.static_analysis import notebook, sql, project
 
 case_1 = """
 upstream = {'some_key': 'some_value'}
@@ -37,3 +37,22 @@ case_error_3 = "upstream = 1"
 def test_error_from_code_str(code):
     with pytest.raises(ValueError):
         notebook.infer_dependencies_from_code_str(code)
+
+
+def test_extract_upstream_sql():
+    code = """CREATE TABLE {{product}} something AS
+SELECT * FROM {{upstream['some_task']}}
+JOIN {{upstream['another_task']}}
+USING some_column
+"""
+    assert sql.extract_upstream_from_sql(code) == {'some_task', 'another_task'}
+
+
+@pytest.mark.parametrize('templates', [None,
+                                       ['filter.sql',
+                                        'load.sql', 'transform.sql']])
+def test_infer_dependencies_from_path(path_to_tests, templates):
+    path = path_to_tests / 'assets' / 'pipeline-sql'
+    expected = {'filter.sql': {'load.sql'}, 'transform.sql': {'filter.sql'}}
+    assert project.infer_depencies_from_path(path,
+                                             templates=templates) == expected

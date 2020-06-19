@@ -1,7 +1,3 @@
-"""
-%load_ext autoreload
-%autoreload 2
-"""
 from ploomber.sql import infer
 
 
