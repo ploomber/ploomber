@@ -97,7 +97,8 @@ setup(
     install_requires=[
         'pyyaml', 'networkx', 'jinja2', 'tabulate',  'humanize', 'tqdm',
         'importlib_resources;python_version<"3.7"',
-        # for code normalization
+        # for code normalization, parso is also needed for inferring upstream
+        # dependencies in jupyter notebooks
         'sqlparse', 'autopep8', 'parso',
         # for generating dag.to_markup(fmt='html')
         'mistune',

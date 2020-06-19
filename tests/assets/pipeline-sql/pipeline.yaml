@@ -1,0 +1,29 @@
+meta:
+  # if not defined, defaults to File
+  product_class: SQLiteRelation
+  # infer upstream structure 
+  infer_upstreams: False
+
+config:
+  # only sqlalchemy clients supported
+  clients:
+    SQLScript: sqlite:///my.db
+    SQLiteRelation: sqlite:///my.db
+
+
+tasks:
+  - class: SQLScript
+    source: load.sql
+    # TODO: make a simple string work as [None, data, 'table']
+    # dicts here are interpreted as multiple products
+    product: [data, table]
+
+  - class: SQLScript
+    source: filter.sql
+    product: [filtered, table]
+    upstream: [load.sql]
+
+  - class: SQLScript
+    source: transform.sql
+    product: [transformed, table]
+    upstream: [filter.sql]
