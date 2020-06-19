@@ -53,3 +53,18 @@ def test_sql_spec(tmp_pipeline_sql):
     assert not dag['load.sql'].upstream
     assert list(dag['filter.sql'].upstream.keys()) == ['load.sql']
     assert list(dag['transform.sql'].upstream.keys()) == ['filter.sql']
+
+
+def test_infer_upstream_with_empty_data():
+    spec = DAGSpec.DAGSpec({})
+    assert spec['meta']['infer_upstream']
+
+
+def test_infer_upstream_with_empty_meta_infer_upstream():
+    spec = DAGSpec.DAGSpec({'meta': {'some_key': None}})
+    assert spec['meta']['infer_upstream']
+
+
+def test_infer_upstream():
+    spec = DAGSpec.DAGSpec({'meta': {'infer_upstream': False}})
+    assert not spec['meta']['infer_upstream']

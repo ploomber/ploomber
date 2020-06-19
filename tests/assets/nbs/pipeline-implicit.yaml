@@ -1,8 +1,5 @@
 # TODO:test cases: explciit vs implicit task.class
 # TODO: test with sh files
-meta:
-  infer_upstream: True
-
 tasks:
   - source: load.py
     product:

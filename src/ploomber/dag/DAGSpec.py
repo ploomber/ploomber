@@ -7,7 +7,7 @@ and instantiate DAGs, only simple use cases should be handled by this API,
 otherwise the dictionary schema will be too complex, defeating the purpose.
 """
 from pathlib import Path
-from collections.abc import Mapping, Iterable
+from collections.abc import MutableMapping, Mapping, Iterable
 
 from ploomber import products
 from ploomber import DAG, tasks
@@ -18,6 +18,36 @@ from ploomber.static_analysis import project
 # TODO: make DAGSpec object which should validate schema and automatically
 # fill with defaults all required but mussing sections, to avoid using
 #  get_value_at
+
+
+class DAGSpec(MutableMapping):
+
+    def __init__(self, data):
+        self.data = data
+        self.validate_meta()
+
+    def validate_meta(self):
+        if 'meta' not in self.data:
+            self.data['meta'] = {}
+
+        if 'infer_upstream' not in self.data['meta']:
+            self.data['meta']['infer_upstream'] = True
+
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
+    def __delitem__(self, key):
+        del self.data[key]
+
+    def __iter__(self):
+        for key in self.data:
+            yield key
+
+    def __len__(self):
+        return len(self.data)
 
 
 def get_value_at(d, dotted_path):
@@ -124,6 +154,9 @@ def init_dag(dag_spec, root_path=None):
             factory = _load_factory(dag_spec['location'])
             return factory()
         else:
+            # validate and initialize defaults
+            dag_spec = DAGSpec(dag_spec)
+
             tasks = dag_spec.pop('tasks')
 
             dag = DAG()
