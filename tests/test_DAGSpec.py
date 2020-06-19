@@ -15,7 +15,8 @@ def tmp_pipeline_sql():
 
 
 @pytest.mark.parametrize('spec', ['pipeline.yaml',
-                                  'pipeline-w-location.yaml'])
+                                  'pipeline-w-location.yaml',
+                                  'pipeline-implicit.yaml'])
 def test_notebook_spec(spec, tmp_nbs, add_current_to_sys_path):
 
     Path('output').mkdir()

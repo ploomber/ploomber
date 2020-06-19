@@ -48,6 +48,9 @@ class Source(abc.ABC):
         (e.g. the code with the injected parameters) should access this
         so hot_reload is propagated.
         """
+        # FIXME: there are some API inconsistencies. Most soruces just
+        # return the raw argument that initialized them but NotebookSource
+        # loads the file if it's a path
         pass
 
     # TODO: rename to params

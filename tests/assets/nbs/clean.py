@@ -1,8 +1,8 @@
 import pandas as pd
 
 # + tags=["parameters"]
+upstream = {'load.py': None}
 product = None
-upstream = None
 
 # +
 df = pd.read_csv(str(upstream['load.py']['data']))

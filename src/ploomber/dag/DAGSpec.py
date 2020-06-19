@@ -13,18 +13,23 @@ from ploomber import products
 from ploomber import DAG, tasks
 from ploomber.clients import SQLAlchemyClient
 from ploomber.util.util import _load_factory
+from ploomber.static_analysis import project
+
+# TODO: make DAGSpec object which should validate schema and automatically
+# fill with defaults all required but mussing sections, to avoid using
+#  get_value_at
 
 
-def has_value_at(d, dotted_path):
+def get_value_at(d, dotted_path):
     current = d
 
     for key in dotted_path.split('.'):
         try:
             current = current[key]
         except KeyError:
-            return False
+            return None
 
-    return True
+    return current
 
 
 def _make_iterable(o):
@@ -44,8 +49,10 @@ def _pop_upstream(task_dict):
 def _pop_product(task_dict, dag_spec):
     product_raw = task_dict.pop('product')
 
-    if has_value_at(dag_spec, 'meta.product_class'):
-        CLASS = getattr(products, dag_spec['meta']['product_class'])
+    product_class = get_value_at(dag_spec, 'meta.product_class')
+
+    if product_class:
+        CLASS = getattr(products, product_class)
     else:
         CLASS = products.File
 
@@ -75,7 +82,7 @@ def init_task(task_dict, dag, dag_spec):
     return task, upstream
 
 
-def init_dag(dag_spec):
+def init_dag(dag_spec, root_path=None):
     """Create a dag from a dictionary
     """
     if isinstance(dag_spec, Mapping):
@@ -87,24 +94,42 @@ def init_dag(dag_spec):
 
             dag = DAG()
 
-            if has_value_at(dag_spec, 'config.clients'):
-                init_clients(dag, dag_spec['config']['clients'])
+            config_clients = get_value_at(dag_spec, 'config.clients')
+
+            if config_clients:
+                init_clients(dag, config_clients)
 
             process_tasks(dag, tasks, dag_spec)
 
             return dag
     else:
         dag = DAG()
-        process_tasks(dag, dag_spec, {})
+        process_tasks(dag, dag_spec, {}, root_path)
         return dag
 
 
-def process_tasks(dag, tasks, dag_spec):
+def process_tasks(dag, tasks, dag_spec, root_path='.'):
     for task_dict in tasks:
         task, upstream = init_task(task_dict, dag, dag_spec)
 
-        for task_up in upstream:
-            task.set_upstream(dag[task_up])
+        infer_upstream = get_value_at(dag_spec, 'meta.infer_upstream')
+        # TODO: validate. if infer_upstream, tasks should not have upstream
+        # key
+
+        if not infer_upstream:
+            for task_up in upstream:
+                task.set_upstream(dag[task_up])
+
+    if infer_upstream:
+        # FIXME: make the path relative root_path for this to work in all
+        # cases
+        # get all arguments used to initialize tasks (template names)
+        templates = [str(task.source.loc) for task in dag.values()]
+        dependencies = project.infer_depencies_from_path(root_path,
+                                                         templates=templates)
+        for name, upstream in dependencies.items():
+            for task_up in upstream:
+                dag[name].set_upstream(dag[task_up])
 
 
 def init_clients(dag, clients):

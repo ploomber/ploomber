@@ -5,7 +5,7 @@
     data: output/data.csv
 
 - class: NotebookRunner
-  name: clean
+  name: clean.py
   source: clean.py
   product:
     nb: output/clean.ipynb
@@ -13,7 +13,7 @@
   upstream: [load.py]
 
 - class: NotebookRunner
-  name: plot
+  name: plot.py
   source: plot.py
   product: output/plot.ipynb
-  upstream: clean
+  upstream: clean.py

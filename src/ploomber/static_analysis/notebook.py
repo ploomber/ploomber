@@ -21,8 +21,11 @@ def infer_dependencies_from_code_str(code_str, fmt):
 
 
 def infer_dependencies_from_code_cell(code_str):
-    """Infer dependencies from a single Python cell
     """
+    Infer dependencies from a single Python cell. Looks for a cell that
+    defines an upstream variable which must be either a dictionary or None
+    """
+    upstream_found = False
     upstream = None
 
     p = parso.parse(code_str)
@@ -39,10 +42,20 @@ def infer_dependencies_from_code_cell(code_str):
             defined = stmt.get_defined_names()
 
             if len(defined) == 1 and defined[0].value == 'upstream':
+                upstream_found = True
                 upstream = eval(stmt.children[2].get_code())
 
-    if not isinstance(upstream, Mapping):
+    if not upstream_found:
         raise ValueError("Could not parse a valid dictionary called "
-                         "'upstream' from code:\n'%s'" % code_str)
-
-    return list(upstream.keys())
+                         "'upstream' from code:\n'%s'. If the notebook "
+                         "does not have dependencies add "
+                         "upstream = None" % code_str)
+    else:
+        if not (isinstance(upstream, Mapping) or upstream is None):
+            raise ValueError("Found an upstream variable but it is not a "
+                             "dictionary nor None, got '%s' type from code:\n"
+                             "'%s'" % (type(upstream), code_str))
+        elif isinstance(upstream, Mapping):
+            return list(upstream.keys())
+        else:
+            return None

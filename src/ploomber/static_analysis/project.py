@@ -1,3 +1,4 @@
+from functools import partial
 import logging
 import fnmatch
 
@@ -7,7 +8,8 @@ from ploomber.static_analysis.notebook import infer_dependencies_from_code_str
 
 mapping = {
     '.sql': extract_upstream_from_sql,
-    '.ipynb': infer_dependencies_from_code_str,
+    '.ipynb': partial(infer_dependencies_from_code_str, fmt='ipynb'),
+    '.py': partial(infer_dependencies_from_code_str, fmt='py'),
 }
 
 

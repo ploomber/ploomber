@@ -23,12 +23,12 @@ def make():
                            product={'nb': File(out / 'clean.ipynb'),
                                     'data': File(out / 'clean.csv')},
                            dag=dag,
-                           name='clean')
+                           name='clean.py')
 
     plot = NotebookRunner(Path('plot.py'),
                           File(out / 'plot.ipynb'),
                           dag=dag,
-                          name='plot')
+                          name='plot.py')
 
     load >> clean >> plot
 
