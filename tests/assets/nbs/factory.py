@@ -15,7 +15,8 @@ def make():
     load = NotebookRunner(Path('load.py'),
                           product={'nb': File(out / 'load.ipynb'),
                                    'data': File(out / 'data.csv')},
-                          dag=dag)
+                          dag=dag,
+                          name='load')
 
     clean = NotebookRunner(Path('clean.py'),
                            # this task generates two files, the .ipynb
@@ -23,12 +24,12 @@ def make():
                            product={'nb': File(out / 'clean.ipynb'),
                                     'data': File(out / 'clean.csv')},
                            dag=dag,
-                           name='clean.py')
+                           name='clean')
 
     plot = NotebookRunner(Path('plot.py'),
                           File(out / 'plot.ipynb'),
                           dag=dag,
-                          name='plot.py')
+                          name='plot')
 
     load >> clean >> plot
 

@@ -5,7 +5,10 @@ The Python API provides great flexibility to build DAGs but some users
 not need all of this. This module implements functions to parse dictionaries
 and instantiate DAGs, only simple use cases should be handled by this API,
 otherwise the dictionary schema will be too complex, defeating the purpose.
+
+NOTE: CLI is implemented in the entry module
 """
+import logging
 from pathlib import Path
 from collections.abc import MutableMapping, Mapping, Iterable
 
@@ -19,10 +22,15 @@ from ploomber.static_analysis import project
 # fill with defaults all required but mussing sections, to avoid using
 #  get_value_at
 
+logger = logging.getLogger(__name__)
+
 
 class DAGSpec(MutableMapping):
 
     def __init__(self, data):
+        if isinstance(data, list):
+            data = {'tasks': data}
+
         self.data = data
         self.validate_meta()
 
@@ -94,6 +102,7 @@ def _pop_product(task_dict, dag_spec):
 
 suffix2class = {
     '.py': tasks.NotebookRunner,
+    '.ipynb': tasks.NotebookRunner,
     '.sql': tasks.SQLScript,
     '.sh': tasks.ShellScript
 }
@@ -117,7 +126,8 @@ def get_task_class(task_dict):
         if suffix2class.get(suffix):
             class_ = suffix2class[suffix]
         else:
-            raise KeyError('No default available for task with source: '
+            raise KeyError('No default task class available for task with '
+                           'source: '
                            '"{}". Default class is only available for '
                            'files with extensions {}, otherwise you should '
                            'set an explicit class key'
@@ -149,30 +159,24 @@ def init_task(task_dict, dag, dag_spec):
 def init_dag(dag_spec, root_path=None):
     """Create a dag from a dictionary
     """
-    if isinstance(dag_spec, Mapping):
-        if 'location' in dag_spec:
-            factory = _load_factory(dag_spec['location'])
-            return factory()
-        else:
-            # validate and initialize defaults
-            dag_spec = DAGSpec(dag_spec)
+    dag_spec = DAGSpec(dag_spec)
 
-            tasks = dag_spec.pop('tasks')
+    if 'location' in dag_spec:
+        factory = _load_factory(dag_spec['location'])
+        return factory()
 
-            dag = DAG()
+    tasks = dag_spec.pop('tasks')
 
-            config_clients = get_value_at(dag_spec, 'config.clients')
+    dag = DAG()
 
-            if config_clients:
-                init_clients(dag, config_clients)
+    config_clients = get_value_at(dag_spec, 'config.clients')
 
-            process_tasks(dag, tasks, dag_spec)
+    if config_clients:
+        init_clients(dag, config_clients)
 
-            return dag
-    else:
-        dag = DAG()
-        process_tasks(dag, dag_spec, {}, root_path)
-        return dag
+    process_tasks(dag, tasks, dag_spec)
+
+    return dag
 
 
 def process_tasks(dag, tasks, dag_spec, root_path='.'):
@@ -188,15 +192,18 @@ def process_tasks(dag, tasks, dag_spec, root_path='.'):
                 task.set_upstream(dag[task_up])
 
     if infer_upstream:
+        logger.debug('Inferring upstream dependencies...')
+
         # FIXME: make the path relative root_path for this to work in all
         # cases
         # get all arguments used to initialize tasks (template names)
-        templates = [str(task.source.loc) for task in dag.values()]
+        loc2name = {str(task.source.loc): name for name, task in dag.items()}
+        templates = list(loc2name.keys())
         dependencies = project.infer_depencies_from_path(root_path,
                                                          templates=templates)
-        for name, upstream in dependencies.items():
+        for loc, upstream in dependencies.items():
             for task_up in upstream:
-                dag[name].set_upstream(dag[task_up])
+                dag[loc2name[loc]].set_upstream(dag[task_up])
 
 
 def init_clients(dag, clients):

@@ -3,11 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # + tags=["parameters"]
-upstream = {'clean.py': None}
+upstream = {'clean': None}
 product = None
 
 # +
-df = pd.read_csv(str(upstream['clean.py']['data']))
+df = pd.read_csv(str(upstream['clean']['data']))
 
 
 plt.plot(np.random.rand(10))

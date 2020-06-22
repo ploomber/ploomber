@@ -7,6 +7,9 @@ import pytest
 from ploomber.dag import DAGSpec
 import yaml
 from conftest import _path_to_tests, fixture_tmp_dir
+import jupytext
+import nbformat
+import jupyter_client
 
 
 @fixture_tmp_dir(_path_to_tests() / 'assets' / 'pipeline-sql')
@@ -14,14 +17,66 @@ def tmp_pipeline_sql():
     pass
 
 
-@pytest.mark.parametrize('spec', ['pipeline.yaml',
-                                  'pipeline-w-location.yaml',
-                                  'pipeline-implicit.yaml'])
-def test_notebook_spec(spec, tmp_nbs, add_current_to_sys_path):
+def to_ipynb(dag_spec):
+    for source in ['load.py', 'clean.py', 'plot.py']:
+        nb = jupytext.read(source)
+        Path(source).unlink()
+
+        k = jupyter_client.kernelspec.get_kernel_spec('python3')
+
+        nb.metadata.kernelspec = {
+            "display_name": k.display_name,
+            "language": k.language,
+            "name": 'python3'
+        }
+
+        nbformat.write(nb, source.replace('.py', '.ipynb'))
+
+    for task in dag_spec['tasks']:
+        task['source'] = task['source'].replace('.py', '.ipynb')
+
+    return dag_spec
+
+
+def tasks_list(dag_spec):
+    return dag_spec['tasks']
+
+
+def remove_task_class(dag_spec):
+    for task in dag_spec['tasks']:
+        del task['class']
+
+    return dag_spec
+
+
+def infer_upstream(dag_spec):
+    dag_spec['meta']['infer_upstream'] = True
+
+    for task in dag_spec['tasks']:
+        task.pop('upstream', None)
+
+    return dag_spec
+
+
+@pytest.mark.parametrize('processor', [to_ipynb, tasks_list, remove_task_class,
+                                       infer_upstream])
+def test_notebook_spec(processor, tmp_nbs, add_current_to_sys_path):
+    Path('output').mkdir()
+
+    with open('pipeline.yaml') as f:
+        dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
+
+    dag_spec = processor(dag_spec)
+
+    dag = DAGSpec.init_dag(dag_spec)
+    dag.build()
+
+
+def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
 
     Path('output').mkdir()
 
-    with open(spec) as f:
+    with open('pipeline-w-location.yaml') as f:
         dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
 
     dag = DAGSpec.init_dag(dag_spec)
@@ -53,6 +108,13 @@ def test_sql_spec(tmp_pipeline_sql):
     assert not dag['load.sql'].upstream
     assert list(dag['filter.sql'].upstream.keys()) == ['load.sql']
     assert list(dag['transform.sql'].upstream.keys()) == ['filter.sql']
+
+
+def test_init_with_tasks_list():
+    spec_raw = [{'source': 'load.py', 'product': 'load.ipynb'}]
+    spec = DAGSpec.DAGSpec(spec_raw)
+    assert spec['meta']['infer_upstream']
+    assert spec['tasks'] == spec_raw
 
 
 def test_infer_upstream_with_empty_data():
