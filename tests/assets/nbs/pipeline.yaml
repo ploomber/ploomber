@@ -1,6 +1,7 @@
 # TODO: test with sh files
 meta:
   infer_upstream: False
+  extract_product: False
 
 tasks:
   - source: load.py

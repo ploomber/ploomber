@@ -1,19 +1,31 @@
 from functools import partial
+from collections import defaultdict
 import logging
 import fnmatch
 
 from ploomber import SourceLoader
-from ploomber.static_analysis.sql import extract_upstream_from_sql
-from ploomber.static_analysis.notebook import infer_dependencies_from_code_str
+from ploomber.static_analysis.sql import extract_upstream_from_sql, extract_product_from_sql
+from ploomber.static_analysis.notebook import extract_variable_from_parameters
 
-mapping = {
+suffix2upstream_extractor = {
     '.sql': extract_upstream_from_sql,
-    '.ipynb': partial(infer_dependencies_from_code_str, fmt='ipynb'),
-    '.py': partial(infer_dependencies_from_code_str, fmt='py'),
+    '.ipynb': partial(extract_variable_from_parameters, fmt='ipynb',
+                      variable='upstream'),
+    '.py': partial(extract_variable_from_parameters, fmt='py',
+                   variable='upstream'),
+}
+
+suffix2product_extractor = {
+    '.sql': extract_product_from_sql,
+    '.ipynb': partial(extract_variable_from_parameters, fmt='ipynb',
+                      variable='product'),
+    '.py': partial(extract_variable_from_parameters, fmt='py',
+                   variable='product'),
 }
 
 
-def infer_depencies_from_path(root_path, templates=None, match=None):
+def infer_from_path(root_path, templates=None, match=None,
+                    upstream=True, product=True):
     """
     Process a directory with SQL/ipynb files and extracts upstream dependencies
     on each file. Creates a jinja environment in root_path.
@@ -53,27 +65,44 @@ def infer_depencies_from_path(root_path, templates=None, match=None):
 
         logger.info('Available files after pattern matching: %s', templates)
 
-    dependencies = {}
+    out = defaultdict(lambda: {})
 
     for template_name in templates:
         logger.info('Processing file: %s...' % template_name)
 
         template = loader[template_name]
 
-        if template.path.suffix not in mapping:
-            raise KeyError('Error processing file "%s". Extracting upstream '
-                           'dependencies from files with extension "%s" '
-                           'is not supported' % (template.path,
-                                                 template.path.suffix))
+        if upstream:
+            if template.path.suffix not in suffix2upstream_extractor:
+                raise KeyError('Error processing file "%s". Extracting upstream '
+                               'dependencies from files with extension "%s" '
+                               'is not supported' % (template.path,
+                                                     template.path.suffix))
 
-        extractor_fn = mapping[template.path.suffix]
+            up_extractor = suffix2upstream_extractor[template.path.suffix]
 
-        deps = extractor_fn(template._raw)
+            deps = up_extractor(template._raw)
 
-        if deps:
-            logger.info('Dependencies: %s', deps)
-            dependencies[template_name] = deps
-        else:
-            logger.info('No dependencies found')
+            if deps:
+                logger.info('Dependencies: %s', deps)
+                out['upstream'][template_name] = deps
+            else:
+                out['upstream'][template_name] = set()
+                logger.info('No dependencies found')
 
-    return dependencies
+        if product:
+            if template.path.suffix not in suffix2product_extractor:
+                raise KeyError('Error processing file "%s". Extracting product '
+                               'from files with extension "%s" '
+                               'is not supported' % (template.path,
+                                                     template.path.suffix))
+
+            prod_extractor = suffix2product_extractor[template.path.suffix]
+            prod = prod_extractor(template._raw)
+
+            if prod:
+                out['product'][template_name] = prod
+            else:
+                logger.info('No product found')
+
+    return dict(out)

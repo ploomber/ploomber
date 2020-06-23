@@ -1,3 +1,4 @@
+from glob import glob
 from datetime import timedelta, datetime
 from sqlalchemy import create_engine
 import numpy as np
@@ -14,6 +15,11 @@ import jupyter_client
 
 @fixture_tmp_dir(_path_to_tests() / 'assets' / 'pipeline-sql')
 def tmp_pipeline_sql():
+    pass
+
+
+@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-auto')
+def tmp_nbs_auto():
     pass
 
 
@@ -58,9 +64,18 @@ def infer_upstream(dag_spec):
     return dag_spec
 
 
+def extract_product(dag_spec):
+    dag_spec['meta']['extract_product'] = True
+
+    for task in dag_spec['tasks']:
+        task.pop('product', None)
+
+    return dag_spec
+
+
 @pytest.mark.parametrize('processor', [to_ipynb, tasks_list, remove_task_class,
-                                       infer_upstream])
-def test_notebook_spec(processor, tmp_nbs, add_current_to_sys_path):
+                                       infer_upstream, extract_product])
+def test_notebook_spec(processor, tmp_nbs):
     Path('output').mkdir()
 
     with open('pipeline.yaml') as f:
@@ -80,6 +95,12 @@ def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
         dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
 
     dag = DAGSpec.init_dag(dag_spec)
+    dag.build()
+
+
+def test_spec_from_list_of_files(tmp_nbs_auto):
+    Path('output').mkdir()
+    dag = DAGSpec.init_dag(glob('*.py'))
     dag.build()
 
 
@@ -117,16 +138,16 @@ def test_init_with_tasks_list():
     assert spec['tasks'] == spec_raw
 
 
-def test_infer_upstream_with_empty_data():
-    spec = DAGSpec.DAGSpec({})
+def test_infer_upstream_with_empty_meta():
+    spec = DAGSpec.DAGSpec(['load.py'])
     assert spec['meta']['infer_upstream']
 
 
 def test_infer_upstream_with_empty_meta_infer_upstream():
-    spec = DAGSpec.DAGSpec({'meta': {'some_key': None}})
+    spec = DAGSpec.DAGSpec({'meta': {'some_key': None}, 'tasks': []})
     assert spec['meta']['infer_upstream']
 
 
 def test_infer_upstream():
-    spec = DAGSpec.DAGSpec({'meta': {'infer_upstream': False}})
+    spec = DAGSpec.DAGSpec({'meta': {'infer_upstream': False}, 'tasks': []})
     assert not spec['meta']['infer_upstream']

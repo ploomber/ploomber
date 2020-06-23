@@ -25,11 +25,20 @@ from ploomber.static_analysis import project
 logger = logging.getLogger(__name__)
 
 
+def normalize_task(task):
+    if isinstance(task, str):
+        return {'source': task}
+    else:
+        return task
+
+
 class DAGSpec(MutableMapping):
 
     def __init__(self, data):
         if isinstance(data, list):
             data = {'tasks': data}
+
+        data['tasks'] = [normalize_task(task) for task in data['tasks']]
 
         self.data = data
         self.validate_meta()
@@ -40,6 +49,9 @@ class DAGSpec(MutableMapping):
 
         if 'infer_upstream' not in self.data['meta']:
             self.data['meta']['infer_upstream'] = True
+
+        if 'extract_product' not in self.data['meta']:
+            self.data['meta']['extract_product'] = True
 
     def __getitem__(self, key):
         return self.data[key]
@@ -157,13 +169,13 @@ def init_task(task_dict, dag, dag_spec):
 
 
 def init_dag(dag_spec, root_path=None):
-    """Create a dag from a dictionary
+    """Create a dag from a spec
     """
-    dag_spec = DAGSpec(dag_spec)
-
     if 'location' in dag_spec:
         factory = _load_factory(dag_spec['location'])
         return factory()
+
+    dag_spec = DAGSpec(dag_spec)
 
     tasks = dag_spec.pop('tasks')
 
@@ -180,30 +192,30 @@ def init_dag(dag_spec, root_path=None):
 
 
 def process_tasks(dag, tasks, dag_spec, root_path='.'):
+    # determine if we need to run static analysis
+    sources = [task_dict['source'] for task_dict in tasks]
+    extracted = project.infer_from_path(root_path, templates=sources,
+                                        upstream=dag_spec['meta']['infer_upstream'],
+                                        product=dag_spec['meta']['extract_product'])
+
+    upstream = {}
+
     for task_dict in tasks:
-        task, upstream = init_task(task_dict, dag, dag_spec)
+        source = task_dict['source']
 
-        infer_upstream = get_value_at(dag_spec, 'meta.infer_upstream')
-        # TODO: validate. if infer_upstream, tasks should not have upstream
-        # key
+        if dag_spec['meta']['infer_upstream']:
+            task_dict['upstream'] = extracted['upstream'][source]
 
-        if not infer_upstream:
-            for task_up in upstream:
-                task.set_upstream(dag[task_up])
+        if dag_spec['meta']['extract_product']:
+            task_dict['product'] = extracted['product'][source]
 
-    if infer_upstream:
-        logger.debug('Inferring upstream dependencies...')
+        task, up = init_task(task_dict, dag, dag_spec)
+        upstream[task] = up
 
-        # FIXME: make the path relative root_path for this to work in all
-        # cases
-        # get all arguments used to initialize tasks (template names)
-        loc2name = {str(task.source.loc): name for name, task in dag.items()}
-        templates = list(loc2name.keys())
-        dependencies = project.infer_depencies_from_path(root_path,
-                                                         templates=templates)
-        for loc, upstream in dependencies.items():
-            for task_up in upstream:
-                dag[loc2name[loc]].set_upstream(dag[task_up])
+    # once we added all tasks, set upstream dependencies
+    for task in list(dag.values()):
+        for task_dep in upstream[task]:
+            task.set_upstream(dag[task_dep])
 
 
 def init_clients(dag, clients):

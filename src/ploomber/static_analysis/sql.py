@@ -15,3 +15,7 @@ def extract_upstream_from_sql(sql):
     upstream = JinjaUpstreamIntrospector()
     Template(sql).render({'upstream': upstream})
     return set(upstream.keys) if len(upstream.keys) else None
+
+
+def extract_product_from_sql(sql):
+    raise NotImplementedError

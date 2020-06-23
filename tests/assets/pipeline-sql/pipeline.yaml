@@ -3,6 +3,7 @@ meta:
   product_class: SQLiteRelation
   # infer upstream structure 
   infer_upstream: False
+  extract_product: False
 
 config:
   # only sqlalchemy clients supported
