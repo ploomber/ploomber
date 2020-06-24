@@ -1,0 +1,29 @@
+meta:
+  infer_upstream: False
+  extract_product: False
+
+config:
+  clients:
+    PostgresRelation: config.get_pg_uri
+    SQLiteRelation: config.get_uri
+
+
+tasks:
+  - class: SQLScript
+    client:
+    source: load.sql
+    product: [raw, table]
+    product_class: PostgresRelation
+
+  - class: SQLScript
+    client:
+    source: load.sql
+    product: [raw, table]
+    product_class: SQLiteRelation
+
+  - class: SQLScript
+    client:
+    source: load.sql
+    product: [raw, table]
+    product_class: GenericSQLRelation
+    product_client: config.get_metadata_uri

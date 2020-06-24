@@ -46,7 +46,13 @@ def to_ipynb(dag_spec):
 
 
 def tasks_list(dag_spec):
-    return dag_spec['tasks']
+    tasks = dag_spec['tasks']
+
+    # we have to pop this, since a list of tasks gets meta default params
+    for t in tasks:
+        t.pop('product', None)
+        t.pop('upstream', None)
+    return tasks
 
 
 def remove_task_class(dag_spec):

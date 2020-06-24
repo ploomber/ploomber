@@ -9,14 +9,14 @@ otherwise the dictionary schema will be too complex, defeating the purpose.
 NOTE: CLI is implemented in the entry module
 """
 import logging
-from pathlib import Path
-from collections.abc import MutableMapping, Mapping, Iterable
+from collections.abc import MutableMapping
 
 from ploomber import products
 from ploomber import DAG, tasks
 from ploomber.clients import SQLAlchemyClient
 from ploomber.util.util import _load_factory
 from ploomber.static_analysis import project
+from ploomber.spec.TaskDict import TaskDict
 
 # TODO: make DAGSpec object which should validate schema and automatically
 # fill with defaults all required but mussing sections, to avoid using
@@ -82,94 +82,6 @@ def get_value_at(d, dotted_path):
     return current
 
 
-def _make_iterable(o):
-    if isinstance(o, Iterable) and not isinstance(o, str):
-        return o
-    elif o is None:
-        return []
-    else:
-        return [o]
-
-
-def _pop_upstream(task_dict):
-    upstream = task_dict.pop('upstream', None)
-    return _make_iterable(upstream)
-
-
-def _pop_product(task_dict, dag_spec):
-    product_raw = task_dict.pop('product')
-
-    product_class = get_value_at(dag_spec, 'meta.product_class')
-
-    if 'product_class' in task_dict:
-        CLASS = getattr(products, task_dict.pop('product_class'))
-    elif product_class:
-        CLASS = getattr(products, product_class)
-    else:
-        CLASS = products.File
-
-    if isinstance(product_raw, Mapping):
-        return {key: CLASS(value) for key, value in product_raw.items()}
-    else:
-        return CLASS(product_raw)
-
-
-suffix2class = {
-    '.py': tasks.NotebookRunner,
-    '.ipynb': tasks.NotebookRunner,
-    '.sql': tasks.SQLScript,
-    '.sh': tasks.ShellScript
-}
-
-
-def get_task_class(task_dict):
-    """
-    Pops 'class' key if it exists
-
-    Task class is determined by the 'class' key, if missing. Defaults
-    are used by inspecting the 'source' key: NoteboonRunner (.py),
-    SQLScript (.sql) and BashScript (.sh).
-    """
-    class_name = task_dict.pop('class', None)
-
-    if class_name:
-        class_ = getattr(tasks, class_name)
-    else:
-        suffix = Path(task_dict['source']).suffix
-
-        if suffix2class.get(suffix):
-            class_ = suffix2class[suffix]
-        else:
-            raise KeyError('No default task class available for task with '
-                           'source: '
-                           '"{}". Default class is only available for '
-                           'files with extensions {}, otherwise you should '
-                           'set an explicit class key'
-                           .format(task_dict['source'], set(suffix2class)))
-
-    return class_
-
-
-def init_task(task_dict, dag, dag_spec):
-    """Create a task from a dictionary
-
-    """
-    upstream = _pop_upstream(task_dict)
-    class_ = get_task_class(task_dict)
-
-    product = _pop_product(task_dict, dag_spec)
-    source_raw = task_dict.pop('source')
-    name_raw = task_dict.pop('name', None)
-
-    task = class_(source=Path(source_raw),
-                  product=product,
-                  name=name_raw or source_raw,
-                  dag=dag,
-                  **task_dict)
-
-    return task, upstream
-
-
 def init_dag(dag_spec, root_path=None):
     """Create a dag from a spec
     """
@@ -205,13 +117,15 @@ def process_tasks(dag, tasks, dag_spec, root_path='.'):
     for task_dict in tasks:
         source = task_dict['source']
 
+        task_dict_obj = TaskDict(task_dict, dag_spec['meta'])
+
         if dag_spec['meta']['infer_upstream']:
-            task_dict['upstream'] = extracted['upstream'][source]
+            task_dict_obj['upstream'] = extracted['upstream'][source]
 
         if dag_spec['meta']['extract_product']:
-            task_dict['product'] = extracted['product'][source]
+            task_dict_obj['product'] = extracted['product'][source]
 
-        task, up = init_task(task_dict, dag, dag_spec)
+        task, up = task_dict_obj.init(dag)
         upstream[task] = up
 
     # once we added all tasks, set upstream dependencies
