@@ -1,6 +1,7 @@
+from collections.abc import MutableMapping
 
 
-class TaskDict:
+class TaskDict(MutableMapping):
     def __init__(self, data, meta):
         self.data = data
         self.meta = meta
@@ -20,7 +21,23 @@ class TaskDict:
                              'should not have a "product" key'
                              .format(self.data))
 
-    def init(self):
+    def init(self, dag):
         """Returns a Task instance
         """
         pass
+
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def __setitem__(self, key, value):
+        self.data[key] = value
+
+    def __delitem__(self, key):
+        del self.data[key]
+
+    def __iter__(self):
+        for e in self.data:
+            yield e
+
+    def __len__(self):
+        return len(self.data)
