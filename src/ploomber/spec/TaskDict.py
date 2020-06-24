@@ -5,7 +5,6 @@ from pathlib import Path
 from collections.abc import MutableMapping, Iterable, Mapping
 
 from ploomber import tasks, products
-from ploomber.clients import SQLAlchemyClient
 from ploomber.util.util import _load_factory
 
 suffix2class = {
@@ -30,9 +29,9 @@ class TaskDict(MutableMapping):
         Task name
 
     client: str, optional
-        Dotted path to a function to load the uri. By default the
-        class-level client at config.clients is used, this value
-        overrides it
+        Dotted path to a function that has no parameters and returns the
+        client to use. By default the class-level client at config.clients is
+        used, this value overrides it
 
     source: str
         Path to the source file
@@ -49,10 +48,6 @@ class TaskDict(MutableMapping):
     upstream: str or list, optional
         Dependencies for this task (names). Should not exist if
         meta.infer_upstream is set to True
-
-    Notes
-    -----
-    Currently, only SQLAlchemyClient clients are supported
 
     """
     def __init__(self, data, meta):
@@ -142,7 +137,7 @@ def _init_product(task_dict, meta):
 
     if 'product_client' in task_dict:
         dotted_path = task_dict.pop('product_client')
-        kwargs = {'client': SQLAlchemyClient(_load_factory(dotted_path)())}
+        kwargs = {'client': _load_factory(dotted_path)()}
     else:
         kwargs = {}
 
@@ -156,7 +151,7 @@ def _init_product(task_dict, meta):
 def _init_client(task_dict):
     if 'client' in task_dict:
         dotted_path = task_dict.pop('client')
-        task_dict['client'] = SQLAlchemyClient(_load_factory(dotted_path)())
+        task_dict['client'] = _load_factory(dotted_path)()
 
 
 def get_task_class(task_dict):

@@ -126,10 +126,9 @@ def test_postgres_sql_spec(tmp_pipeline_sql, pg_client_and_schema,
                        'value': np.random.rand(100),
                        'purchase_date': dates})
     loader = _load_factory(dag_spec['config']['clients']['SQLScript'])
-    uri = loader()
-    engine = create_engine(uri)
-    df.to_sql('sales', engine, if_exists='replace')
-    engine.dispose()
+    client = loader()
+    df.to_sql('sales', client.engine, if_exists='replace')
+    client.engine.dispose()
 
     dag = DAGSpec.init_dag(dag_spec)
 
@@ -150,10 +149,9 @@ def test_sqlite_sql_spec(tmp_pipeline_sql, add_current_to_sys_path):
                        'value': np.random.rand(100),
                        'purchase_date': dates})
     loader = _load_factory(dag_spec['config']['clients']['SQLScript'])
-    uri = loader()
-    engine = create_engine(uri)
-    df.to_sql('sales', engine)
-    engine.dispose()
+    client = loader()
+    df.to_sql('sales', client.engine)
+    client.engine.dispose()
 
     dag = DAGSpec.init_dag(dag_spec)
 
@@ -176,17 +174,15 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
                        'purchase_date': dates})
     # make sales data for pg and sqlite
     loader = _load_factory(dag_spec['config']['clients']['PostgresRelation'])
-    uri = loader()
-    engine = create_engine(uri)
-    df.to_sql('sales', engine, if_exists='replace')
-    engine.dispose()
+    client = loader()
+    df.to_sql('sales', client.engine, if_exists='replace')
+    client.engine.dispose()
 
     # make sales data for pg and sqlite
     loader = _load_factory(dag_spec['config']['clients']['SQLiteRelation'])
-    uri = loader()
-    engine = create_engine(uri)
-    df.to_sql('sales', engine)
-    engine.dispose()
+    client = loader()
+    df.to_sql('sales', client.engine)
+    client.engine.dispose()
 
     dag = DAGSpec.init_dag(dag_spec)
 

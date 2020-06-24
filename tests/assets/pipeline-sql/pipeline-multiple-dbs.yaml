@@ -4,29 +4,29 @@ meta:
 
 config:
   clients:
-    PostgresRelation: config.get_pg_uri
-    SQLiteRelation: config.get_uri
+    PostgresRelation: config.get_pg_client
+    SQLiteRelation: config.get_client
 
 
 tasks:
   - class: SQLScript
     name: load-pg
-    client: config.get_pg_uri
+    client: config.get_pg_client
     source: load.sql
     product: [raw, table]
     product_class: PostgresRelation
 
   - class: SQLScript
     name: load-lite
-    client: config.get_uri
+    client: config.get_client
     source: load.sql
     product: [raw, table]
     product_class: SQLiteRelation
 
   - class: SQLScript
     name: load-lite-generic
-    client: config.get_uri
+    client: config.get_client
     source: load.sql
     product: [raw_generic, table]
     product_class: GenericSQLRelation
-    product_client: config.get_metadata_uri
+    product_client: config.get_metadata_client

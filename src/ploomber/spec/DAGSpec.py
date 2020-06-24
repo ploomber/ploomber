@@ -13,7 +13,6 @@ from collections.abc import MutableMapping
 
 from ploomber import products
 from ploomber import DAG, tasks
-from ploomber.clients import SQLAlchemyClient
 from ploomber.util.util import _load_factory
 from ploomber.static_analysis import project
 from ploomber.spec.TaskDict import TaskDict
@@ -142,4 +141,4 @@ def init_clients(dag, clients):
         if not class_:
             class_ = getattr(products, class_name)
 
-        dag.clients[class_] = SQLAlchemyClient(_load_factory(dotted_path)())
+        dag.clients[class_] = _load_factory(dotted_path)()

@@ -1,3 +1,4 @@
+from ploomber.clients import SQLAlchemyClient
 from pathlib import Path
 import json
 
@@ -6,7 +7,11 @@ def get_uri():
     return 'sqlite:///my.db'
 
 
-def get_pg_uri():
+def get_client():
+    return SQLAlchemyClient(get_uri())
+
+
+def get_pg_client():
     p = str(Path('~', '.auth', 'postgres-ploomber.json').expanduser())
 
     try:
@@ -18,8 +23,8 @@ def get_pg_uri():
     except FileNotFoundError:
         uri = 'postgresql://localhost:5432/db'
 
-    return uri
+    return SQLAlchemyClient(uri)
 
 
-def get_metadata_uri():
-    return 'sqlite:///metadata.db'
+def get_metadata_client():
+    return SQLAlchemyClient('sqlite:///metadata.db')

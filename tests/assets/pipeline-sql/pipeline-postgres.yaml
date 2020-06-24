@@ -5,8 +5,8 @@ meta:
 
 config:
   clients:
-    SQLScript: config.get_pg_uri
-    PostgresRelation: config.get_pg_uri
+    SQLScript: config.get_pg_client
+    PostgresRelation: config.get_pg_client
 
 
 tasks:

@@ -8,8 +8,8 @@ meta:
 config:
   # only sqlalchemy clients supported
   clients:
-    SQLScript: config.get_uri
-    SQLiteRelation: config.get_uri
+    SQLScript: config.get_client
+    SQLiteRelation: config.get_client
 
 
 tasks:
