@@ -28,3 +28,9 @@ tasks:
     source: transform.sql
     product: [transformed, table]
     upstream: [filter.sql]
+
+  - class: NotebookRunner
+    source: plot.py
+    product: plot.ipynb
+    product_class: File
+    upstream: transform.sql

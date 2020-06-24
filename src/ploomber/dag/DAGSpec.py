@@ -101,7 +101,9 @@ def _pop_product(task_dict, dag_spec):
 
     product_class = get_value_at(dag_spec, 'meta.product_class')
 
-    if product_class:
+    if 'product_class' in task_dict:
+        CLASS = getattr(products, task_dict.pop('product_class'))
+    elif product_class:
         CLASS = getattr(products, product_class)
     else:
         CLASS = products.File
