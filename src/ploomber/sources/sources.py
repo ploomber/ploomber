@@ -1,3 +1,4 @@
+from copy import deepcopy
 import abc
 import warnings
 import re
@@ -6,6 +7,7 @@ from ploomber.products import Product
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.exceptions import SourceInitializationError
 from ploomber.sql import infer
+from ploomber.placeholders import util
 
 
 class Source(abc.ABC):
@@ -269,6 +271,26 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
         #         warnings.warn('Infered relations ({}) did not match products'
         #                       ' {}'
         #                       .format(infered_relations, actual_len))
+
+    def render(self, params):
+        defined = util.get_defined_variables(self._placeholder._raw)
+
+        if 'product' in defined and 'product' in params:
+            # FIXME: raise error if they point to a different relation
+            params2render = deepcopy(params)
+            del params2render['product']
+        else:
+            params2render = params
+
+        if params.get('upstream'):
+            with params.get('upstream'):
+                self._placeholder.render(params2render)
+        else:
+            self._placeholder.render(params2render)
+
+        self._post_render_validation(str(self._placeholder), params)
+
+        return self
 
 
 class SQLQuerySource(SQLSourceMixin, PlaceholderSource):

@@ -214,7 +214,8 @@ class Placeholder(AbstractPlaceholder):
         """
         """
         optional = optional or set()
-        optional = set(optional)
+        defined = util.get_defined_variables(self._raw)
+        optional = set(optional) | set(defined)
 
         passed = set(params.keys())
 

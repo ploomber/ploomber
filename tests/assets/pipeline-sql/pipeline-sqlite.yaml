@@ -8,8 +8,8 @@ meta:
 config:
   # only sqlalchemy clients supported
   clients:
-    SQLScript: sqlite:///my.db
-    SQLiteRelation: sqlite:///my.db
+    SQLScript: config.get_uri
+    SQLiteRelation: config.get_uri
 
 
 tasks:
@@ -17,7 +17,7 @@ tasks:
     source: load.sql
     # TODO: make a simple string work as [None, data, 'table']
     # dicts here are interpreted as multiple products
-    product: [data, table]
+    product: [raw, table]
 
   - class: SQLScript
     source: filter.sql

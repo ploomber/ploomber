@@ -7,12 +7,24 @@ from pathlib import Path
 
 import pytest
 from ploomber.placeholders.Placeholder import Placeholder, SQLRelationPlaceholder
-from ploomber.placeholders.util import get_tags_in_str
+from ploomber.placeholders.util import get_tags_in_str, get_defined_variables
 from ploomber.tasks.Upstream import Upstream
 from ploomber.tasks.Params import Params
+from ploomber.sql.infer import ParsedSQLRelation
 from ploomber import SourceLoader
 from jinja2 import Template, Environment, PackageLoader, FileSystemLoader, StrictUndefined
 from ploomber.exceptions import UpstreamKeyError
+
+
+@pytest.mark.parametrize("s,expected", [
+    ("{% set x = 1 %} {{hello}}", {'x': 1}),
+    ("{% set x = ('a', 'b') %} {% for n in numbers %} {%endfor%}",
+        {'x': ('a', 'b')}),
+    ("{% set x = ['a', 'b'] %}", {'x': ['a', 'b']}),
+    ("{% set x = {'y': 1} %}", {'x': {'y': 1}})
+])
+def test_get_defined_variables(s, expected):
+    assert get_defined_variables(s) == expected
 
 
 def test_get_tags_in_str():

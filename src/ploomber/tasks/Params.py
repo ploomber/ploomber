@@ -56,3 +56,6 @@ class Params(abc.Mapping):
 
     def get(self, key):
         return self._dict.get(key)
+
+    def __delitem__(self, key):
+        del self._dict[key]

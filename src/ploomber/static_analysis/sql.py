@@ -1,4 +1,5 @@
 from jinja2 import Template
+from ploomber.placeholders.util import get_defined_variables
 
 
 class JinjaUpstreamIntrospector:
@@ -18,4 +19,5 @@ def extract_upstream_from_sql(sql):
 
 
 def extract_product_from_sql(sql):
-    raise NotImplementedError
+    variables = get_defined_variables(sql)
+    return variables.get('product')

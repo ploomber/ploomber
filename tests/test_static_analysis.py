@@ -69,16 +69,16 @@ USING some_column
     assert sql.extract_upstream_from_sql(code) == {'some_task', 'another_task'}
 
 
-@pytest.mark.parametrize('templates', [None,
-                                       ['filter.sql',
-                                        'load.sql', 'transform.sql']])
-def test_infer_dependencies_from_path(path_to_tests, templates):
+@pytest.mark.parametrize('kwargs', [
+    {'templates': ['filter.sql', 'load.sql', 'transform.sql'], 'match': None}
+])
+def test_infer_dependencies_from_path(path_to_tests, kwargs):
     path = path_to_tests / 'assets' / 'pipeline-sql'
     expected = {'filter.sql': {'load.sql'}, 'transform.sql': {'filter.sql'},
                 'load.sql': set()}
     out = project.infer_from_path(path,
-                                  templates=templates,
-                                  upstream=True, product=False)
+                                  upstream=True, product=False,
+                                  **kwargs)
     assert out['upstream'] == expected
 
 

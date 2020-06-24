@@ -1,0 +1,23 @@
+meta:
+  # if not defined, defaults to File
+  product_class: SQLiteRelation
+  # infer upstream structure 
+  infer_upstream: True
+  extract_product: True
+
+config:
+  # only sqlalchemy clients supported
+  clients:
+    SQLScript: sqlite:///my.db
+    SQLiteRelation: sqlite:///my.db
+
+
+tasks:
+  - class: SQLScript
+    source: load.sql
+
+  - class: SQLScript
+    source: filter.sql
+
+  - class: SQLScript
+    source: transform.sql

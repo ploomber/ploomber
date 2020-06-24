@@ -219,11 +219,11 @@ def process_tasks(dag, tasks, dag_spec, root_path='.'):
 
 
 def init_clients(dag, clients):
-    for class_name, uri in clients.items():
+    for class_name, dotted_path in clients.items():
 
         class_ = getattr(tasks, class_name, None)
 
         if not class_:
             class_ = getattr(products, class_name)
 
-        dag.clients[class_] = SQLAlchemyClient(uri)
+        dag.clients[class_] = SQLAlchemyClient(_load_factory(dotted_path)())
