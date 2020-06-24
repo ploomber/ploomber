@@ -295,8 +295,7 @@ class PostgresRelation(ProductWithClientMixin, Product):
         else:
             # if schema is empty, we have to find out the default one
             query = """
-            SELECT replace(setting, '"$user", ', '')
-            FROM pg_settings WHERE name = 'search_path';
+            SELECT current_schema()
             """
             cur.execute(query)
             schema = cur.fetchone()[0]
