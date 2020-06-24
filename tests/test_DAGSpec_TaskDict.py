@@ -1,6 +1,6 @@
 import pytest
 from ploomber.spec.TaskDict import TaskDict
-from ploomber.dag.DAGSpec import DAGSpec
+from ploomber.spec.DAGSpec import DAGSpec
 
 
 @pytest.mark.parametrize('task', [

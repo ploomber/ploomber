@@ -81,7 +81,7 @@ def get_value_at(d, dotted_path):
 
     return current
 
-
+# TODO: make it a method in DAGSpec
 def init_dag(dag_spec, root_path=None):
     """Create a dag from a spec
     """

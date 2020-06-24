@@ -62,7 +62,7 @@ from collections.abc import Mapping
 
 import yaml
 
-from ploomber.dag.DAGSpec import init_dag
+from ploomber.spec.DAGSpec import init_dag
 
 
 def _parse_doc(doc):

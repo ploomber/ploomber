@@ -19,3 +19,7 @@ def get_pg_uri():
         uri = 'postgresql://localhost:5432/db'
 
     return uri
+
+
+def get_metadata_uri():
+    return 'sqlite:///metadata.db'

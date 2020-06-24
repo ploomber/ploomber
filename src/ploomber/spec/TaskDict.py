@@ -1,12 +1,59 @@
+"""
+Create Tasks from dictionaries
+"""
 from pathlib import Path
 from collections.abc import MutableMapping, Iterable, Mapping
 
 from ploomber import tasks, products
+from ploomber.clients import SQLAlchemyClient
+from ploomber.util.util import _load_factory
+
+suffix2class = {
+    '.py': tasks.NotebookRunner,
+    '.ipynb': tasks.NotebookRunner,
+    '.sql': tasks.SQLScript,
+    '.sh': tasks.ShellScript
+}
 
 
 class TaskDict(MutableMapping):
     """Converts a dictionaty to a Task object
-    NOTE: document schema
+
+    Parameters
+    ----------
+    class: str, optional
+        Class name. If missing, it will be inferred from "source".
+        NotebookRunner for .py and .ipynb files, SQLScript for .sql
+        and ShellScript for .sh
+
+    name: str, optional
+        Task name
+
+    client: str, optional
+        Dotted path to a function to load the uri. By default the
+        class-level client at config.clients is used, this value
+        overrides it
+
+    source: str
+        Path to the source file
+
+    product: str or dict
+        Source to initialize the product, the type depends on the type
+        of product. Should not exist if meta.extract_product is set to True.
+        If the task generates more than one product, this can be a dictionary
+
+    product_class:
+
+    product_client:
+
+    upstream: str or list, optional
+        Dependencies for this task (names). Should not exist if
+        meta.infer_upstream is set to True
+
+    Notes
+    -----
+    Currently, only SQLAlchemyClient clients are supported
+
     """
     def __init__(self, data, meta):
         # FIXME: make sure data and meta are immutable structures
@@ -35,7 +82,10 @@ class TaskDict(MutableMapping):
         upstream = _pop_upstream(task_dict)
         class_ = get_task_class(task_dict)
 
-        product = _pop_product(task_dict, self.meta)
+        product = _init_product(task_dict, self.meta)
+
+        _init_client(task_dict)
+
         source_raw = task_dict.pop('source')
         name_raw = task_dict.pop('name', None)
 
@@ -78,7 +128,7 @@ def _pop_upstream(task_dict):
     return _make_iterable(upstream)
 
 
-def _pop_product(task_dict, meta):
+def _init_product(task_dict, meta):
     product_raw = task_dict.pop('product')
 
     product_class = meta.get('product_class')
@@ -90,10 +140,23 @@ def _pop_product(task_dict, meta):
     else:
         CLASS = products.File
 
-    if isinstance(product_raw, Mapping):
-        return {key: CLASS(value) for key, value in product_raw.items()}
+    if 'product_client' in task_dict:
+        dotted_path = task_dict.pop('product_client')
+        kwargs = {'client': SQLAlchemyClient(_load_factory(dotted_path)())}
     else:
-        return CLASS(product_raw)
+        kwargs = {}
+
+    if isinstance(product_raw, Mapping):
+        return {key: CLASS(value, **kwargs)
+                for key, value in product_raw.items()}
+    else:
+        return CLASS(product_raw, **kwargs)
+
+
+def _init_client(task_dict):
+    if 'client' in task_dict:
+        dotted_path = task_dict.pop('client')
+        task_dict['client'] = SQLAlchemyClient(_load_factory(dotted_path)())
 
 
 def get_task_class(task_dict):
@@ -122,14 +185,6 @@ def get_task_class(task_dict):
                            .format(task_dict['source'], set(suffix2class)))
 
     return class_
-
-
-suffix2class = {
-    '.py': tasks.NotebookRunner,
-    '.ipynb': tasks.NotebookRunner,
-    '.sql': tasks.SQLScript,
-    '.sh': tasks.ShellScript
-}
 
 
 def get_value_at(d, dotted_path):
