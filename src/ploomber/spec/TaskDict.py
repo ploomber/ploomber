@@ -7,7 +7,7 @@ from collections.abc import MutableMapping, Iterable, Mapping
 from ploomber import tasks, products
 from ploomber.util.util import _load_factory
 
-suffix2class = {
+suffix2taskclass = {
     '.py': tasks.NotebookRunner,
     '.ipynb': tasks.NotebookRunner,
     '.sql': tasks.SQLScript,
@@ -25,6 +25,9 @@ class TaskDict(MutableMapping):
         NotebookRunner for .py and .ipynb files, SQLScript for .sql
         and ShellScript for .sh
 
+    source: str
+        Path to the source file
+
     name: str, optional
         Task name
 
@@ -32,9 +35,6 @@ class TaskDict(MutableMapping):
         Dotted path to a function that has no parameters and returns the
         client to use. By default the class-level client at config.clients is
         used, this value overrides it
-
-    source: str
-        Path to the source file
 
     product: str or dict
         Source to initialize the product, the type depends on the type
@@ -47,7 +47,13 @@ class TaskDict(MutableMapping):
 
     upstream: str or list, optional
         Dependencies for this task (names). Should not exist if
-        meta.infer_upstream is set to True
+        meta.extract_upstream is set to True
+
+
+    Notes
+    -----
+    All remaining values are passed to the task constructor as keyword
+    arguments.
 
     """
     def __init__(self, data, meta):
@@ -58,9 +64,9 @@ class TaskDict(MutableMapping):
 
     def validate(self):
 
-        if self.meta['infer_upstream'] and self.data.get('upstream'):
+        if self.meta['extract_upstream'] and self.data.get('upstream'):
             raise ValueError('Error validating task "{}", if '
-                             'meta.infer_upstream is set to True, tasks '
+                             'meta.extract_upstream is set to True, tasks '
                              'should not have an "upstream" key'
                              .format(self.data))
 
@@ -77,7 +83,7 @@ class TaskDict(MutableMapping):
         upstream = _pop_upstream(task_dict)
         class_ = get_task_class(task_dict)
 
-        product = _init_product(task_dict, self.meta)
+        product = _init_product(task_dict, self.meta, class_)
 
         _init_client(task_dict)
 
@@ -123,17 +129,31 @@ def _pop_upstream(task_dict):
     return _make_iterable(upstream)
 
 
-def _init_product(task_dict, meta):
+def _init_product(task_dict, meta, task_class):
+    """
+    Resolution logic order:
+        task.product_class
+        meta.{task_class}.product_default_class
+
+    Current limitation: When there is more than one product, they all must
+    be from the same class.
+    """
     product_raw = task_dict.pop('product')
 
-    product_class = meta.get('product_class')
+    key = 'product_default_class.'+task_class.__name__
+    meta_product_default_class = get_value_at(meta, key)
 
     if 'product_class' in task_dict:
         CLASS = getattr(products, task_dict.pop('product_class'))
-    elif product_class:
-        CLASS = getattr(products, product_class)
+    elif meta_product_default_class:
+        CLASS = getattr(products, meta_product_default_class)
     else:
-        CLASS = products.File
+        raise ValueError('Could not determine a product class for task: '
+                         '"{}". Add an explicity value in the '
+                         '"product_class" key or provide a default value in '
+                         'meta.product_default_class by setting the '
+                         'key to the applicable task class'
+                         .format(task_dict))
 
     if 'product_client' in task_dict:
         dotted_path = task_dict.pop('product_client')
@@ -169,15 +189,15 @@ def get_task_class(task_dict):
     else:
         suffix = Path(task_dict['source']).suffix
 
-        if suffix2class.get(suffix):
-            class_ = suffix2class[suffix]
+        if suffix2taskclass.get(suffix):
+            class_ = suffix2taskclass[suffix]
         else:
             raise KeyError('No default task class available for task with '
                            'source: '
                            '"{}". Default class is only available for '
                            'files with extensions {}, otherwise you should '
                            'set an explicit class key'
-                           .format(task_dict['source'], set(suffix2class)))
+                           .format(task_dict['source'], set(suffix2taskclass)))
 
     return class_
 

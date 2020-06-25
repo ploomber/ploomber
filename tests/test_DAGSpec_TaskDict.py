@@ -7,7 +7,7 @@ from ploomber.spec.DAGSpec import DAGSpec
     {'upstream': 'some_task'},
     {'product': 'report.ipynb'}
 ])
-def test_error_if_infer_upstream_but_upstream_declared(task):
+def test_error_if_extract_upstream_but_upstream_declared(task):
 
     spec = DAGSpec({'tasks': []})
     spec['meta']

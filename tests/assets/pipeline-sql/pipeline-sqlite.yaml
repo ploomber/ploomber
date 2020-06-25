@@ -1,15 +1,14 @@
 meta:
   # if not defined, defaults to File
-  product_class: SQLiteRelation
+  product_default_class:
+    SQLScript: SQLiteRelation
   # infer upstream structure 
-  infer_upstream: False
+  extract_upstream: False
   extract_product: False
 
-config:
-  # only sqlalchemy clients supported
-  clients:
-    SQLScript: config.get_client
-    SQLiteRelation: config.get_client
+clients:
+  SQLScript: config.get_client
+  SQLiteRelation: config.get_client
 
 
 tasks:

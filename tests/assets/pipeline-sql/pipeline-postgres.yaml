@@ -1,12 +1,12 @@
 meta:
-  product_class: PostgresRelation
-  infer_upstream: False
+  product_default_class:
+      SQLScript: PostgresRelation
+  extract_upstream: False
   extract_product: False
 
-config:
-  clients:
-    SQLScript: config.get_pg_client
-    PostgresRelation: config.get_pg_client
+clients:
+  SQLScript: config.get_pg_client
+  PostgresRelation: config.get_pg_client
 
 
 tasks:

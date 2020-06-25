@@ -1,6 +1,5 @@
 from glob import glob
 from datetime import timedelta, datetime
-from sqlalchemy import create_engine
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -62,8 +61,8 @@ def remove_task_class(dag_spec):
     return dag_spec
 
 
-def infer_upstream(dag_spec):
-    dag_spec['meta']['infer_upstream'] = True
+def extract_upstream(dag_spec):
+    dag_spec['meta']['extract_upstream'] = True
 
     for task in dag_spec['tasks']:
         task.pop('upstream', None)
@@ -81,7 +80,7 @@ def extract_product(dag_spec):
 
 
 @pytest.mark.parametrize('processor', [to_ipynb, tasks_list, remove_task_class,
-                                       infer_upstream, extract_product])
+                                       extract_upstream, extract_product])
 def test_notebook_spec(processor, tmp_nbs):
     Path('output').mkdir()
 
@@ -125,7 +124,7 @@ def test_postgres_sql_spec(tmp_pipeline_sql, pg_client_and_schema,
     df = pd.DataFrame({'customer_id': np.random.randint(0, 5, 100),
                        'value': np.random.rand(100),
                        'purchase_date': dates})
-    loader = _load_factory(dag_spec['config']['clients']['SQLScript'])
+    loader = _load_factory(dag_spec['clients']['SQLScript'])
     client = loader()
     df.to_sql('sales', client.engine, if_exists='replace')
     client.engine.dispose()
@@ -148,7 +147,7 @@ def test_sqlite_sql_spec(tmp_pipeline_sql, add_current_to_sys_path):
     df = pd.DataFrame({'customer_id': np.random.randint(0, 5, 100),
                        'value': np.random.rand(100),
                        'purchase_date': dates})
-    loader = _load_factory(dag_spec['config']['clients']['SQLScript'])
+    loader = _load_factory(dag_spec['clients']['SQLScript'])
     client = loader()
     df.to_sql('sales', client.engine)
     client.engine.dispose()
@@ -173,13 +172,13 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
                        'value': np.random.rand(100),
                        'purchase_date': dates})
     # make sales data for pg and sqlite
-    loader = _load_factory(dag_spec['config']['clients']['PostgresRelation'])
+    loader = _load_factory(dag_spec['clients']['PostgresRelation'])
     client = loader()
     df.to_sql('sales', client.engine, if_exists='replace')
     client.engine.dispose()
 
     # make sales data for pg and sqlite
-    loader = _load_factory(dag_spec['config']['clients']['SQLiteRelation'])
+    loader = _load_factory(dag_spec['clients']['SQLiteRelation'])
     client = loader()
     df.to_sql('sales', client.engine)
     client.engine.dispose()
@@ -193,20 +192,20 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
 def test_init_with_tasks_list():
     spec_raw = [{'source': 'load.py', 'product': 'load.ipynb'}]
     spec = DAGSpec.DAGSpec(spec_raw)
-    assert spec['meta']['infer_upstream']
+    assert spec['meta']['extract_upstream']
     assert spec['tasks'] == spec_raw
 
 
-def test_infer_upstream_with_empty_meta():
+def test_extract_upstream_with_empty_meta():
     spec = DAGSpec.DAGSpec(['load.py'])
-    assert spec['meta']['infer_upstream']
+    assert spec['meta']['extract_upstream']
 
 
-def test_infer_upstream_with_empty_meta_infer_upstream():
+def test_extract_upstream_with_empty_meta_extract_upstream():
     spec = DAGSpec.DAGSpec({'meta': {'some_key': None}, 'tasks': []})
-    assert spec['meta']['infer_upstream']
+    assert spec['meta']['extract_upstream']
 
 
-def test_infer_upstream():
-    spec = DAGSpec.DAGSpec({'meta': {'infer_upstream': False}, 'tasks': []})
-    assert not spec['meta']['infer_upstream']
+def test_extract_upstream():
+    spec = DAGSpec.DAGSpec({'meta': {'extract_upstream': False}, 'tasks': []})
+    assert not spec['meta']['extract_upstream']

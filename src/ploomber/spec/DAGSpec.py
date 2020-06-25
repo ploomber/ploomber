@@ -7,6 +7,14 @@ and instantiate DAGs, only simple use cases should be handled by this API,
 otherwise the dictionary schema will be too complex, defeating the purpose.
 
 NOTE: CLI is implemented in the entry module
+
+meta:
+    Settings that cannot be clearly mapped to the OOP Python interface, we
+    don't call it config because there is a DAGConfig object in the Python
+    API and this might cause confusion
+
+All other sections should represent valid DAG properties.
+
 """
 import logging
 from collections.abc import MutableMapping
@@ -18,8 +26,7 @@ from ploomber.static_analysis import project
 from ploomber.spec.TaskDict import TaskDict
 
 # TODO: make DAGSpec object which should validate schema and automatically
-# fill with defaults all required but mussing sections, to avoid using
-#  get_value_at
+# fill with defaults all required but missing sections
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +39,37 @@ def normalize_task(task):
 
 
 class DAGSpec(MutableMapping):
+    """
+
+    Schema
+    ------
+    meta:
+        # TODO: set default to false for now, we cannot extract product from sql files
+        # inspect source code to extract products
+        extract_product: True
+        # inspect source code to extract upstream dependencies
+        extract_upstream: True
+
+        product_default_class:
+            SQLDump: File
+            NotebookRunner: File
+
+    clients:
+        {task or product class name}: {dotted.path.to.function}
+
+    tasks:
+        - {list of tasks, see TaskDict for details}
+
+    Notes
+    -----
+    The whole meta section and clients is optional.
+
+    The spec can also just be a list of tasks for DAGs that don't use clients
+    and do not want to modify meta default values.
+
+    If using a factory, the spec can just be
+        location: {dotted.path.to.factory}
+    """
 
     def __init__(self, data):
         if isinstance(data, list):
@@ -46,11 +84,21 @@ class DAGSpec(MutableMapping):
         if 'meta' not in self.data:
             self.data['meta'] = {}
 
-        if 'infer_upstream' not in self.data['meta']:
-            self.data['meta']['infer_upstream'] = True
+        if 'extract_upstream' not in self.data['meta']:
+            self.data['meta']['extract_upstream'] = True
 
         if 'extract_product' not in self.data['meta']:
             self.data['meta']['extract_product'] = True
+
+        if 'product_default_class' not in self.data['meta']:
+            self.data['meta']['product_default_class'] = {'SQLDump': 'File',
+                                                          'NotebookRunner': 'File'}
+        else:
+            if 'SQLDump' not in self.data['meta']['product_default_class']:
+                self.data['meta']['product_default_class']['SQLDump'] = 'File'
+
+            if 'NotebookRunner' not in self.data['meta']['product_default_class']:
+                self.data['meta']['product_default_class']['NotebookRunner'] = 'File'
 
     def __getitem__(self, key):
         return self.data[key]
@@ -69,17 +117,6 @@ class DAGSpec(MutableMapping):
         return len(self.data)
 
 
-def get_value_at(d, dotted_path):
-    current = d
-
-    for key in dotted_path.split('.'):
-        try:
-            current = current[key]
-        except KeyError:
-            return None
-
-    return current
-
 # TODO: make it a method in DAGSpec
 def init_dag(dag_spec, root_path=None):
     """Create a dag from a spec
@@ -94,10 +131,10 @@ def init_dag(dag_spec, root_path=None):
 
     dag = DAG()
 
-    config_clients = get_value_at(dag_spec, 'config.clients')
+    clients = dag_spec.get('clients')
 
-    if config_clients:
-        init_clients(dag, config_clients)
+    if clients:
+        init_clients(dag, clients)
 
     process_tasks(dag, tasks, dag_spec)
 
@@ -108,7 +145,7 @@ def process_tasks(dag, tasks, dag_spec, root_path='.'):
     # determine if we need to run static analysis
     sources = [task_dict['source'] for task_dict in tasks]
     extracted = project.infer_from_path(root_path, templates=sources,
-                                        upstream=dag_spec['meta']['infer_upstream'],
+                                        upstream=dag_spec['meta']['extract_upstream'],
                                         product=dag_spec['meta']['extract_product'])
 
     upstream = {}
@@ -118,7 +155,7 @@ def process_tasks(dag, tasks, dag_spec, root_path='.'):
 
         task_dict_obj = TaskDict(task_dict, dag_spec['meta'])
 
-        if dag_spec['meta']['infer_upstream']:
+        if dag_spec['meta']['extract_upstream']:
             task_dict_obj['upstream'] = extracted['upstream'][source]
 
         if dag_spec['meta']['extract_product']:
