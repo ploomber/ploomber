@@ -70,6 +70,10 @@ default values.
             NotebookRunner: File
             SQLScript: SQLRelation
 
+    # For allowed keys and values see ploomber.DAGConfigurator
+    config:
+        {config-key}: {config-value}
+
     # clients are objects that connect to databases
     clients:
         {task or product class name}: {dotted.path.to.function}

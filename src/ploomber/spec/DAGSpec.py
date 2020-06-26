@@ -17,6 +17,7 @@ from ploomber import DAG, tasks
 from ploomber.util.util import _load_factory
 from ploomber.static_analysis import project
 from ploomber.spec.TaskDict import TaskDict
+from ploomber.dag.DAGConfiguration import DAGConfiguration
 
 # TODO: make DAGSpec object which should validate schema and automatically
 # fill with defaults all required but missing sections
@@ -91,6 +92,9 @@ def init_dag(dag_spec, root_path=None):
     tasks = dag_spec.pop('tasks')
 
     dag = DAG()
+
+    if 'config' in dag_spec:
+        dag._params = DAGConfiguration.from_dict(dag_spec['config'])
 
     clients = dag_spec.get('clients')
 
