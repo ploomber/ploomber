@@ -12,22 +12,21 @@ Ploomber
  :target: https://mybinder.org/v2/gh/ploomber/projects/master
 
 
-Ploomber is a library to write concise Data Science pipelines. Specify your
-Python, SQL or bash tasks in a `pipeline.yaml` file and Ploomber will resolve
-dependencies and handle execution.
+Ploomber allows you to write concise Data Science pipelines. Specify your
+Python, SQL or bash tasks in a ``pipeline.yaml`` file, Ploomber will figure out execution order based on declared dependencies within each task's source code
+and handle execution.
 
 On top of that, it provides incremental builds to skip up-to-date task. This
-is a great way of interactively develop your projects, sync work within your
-team and quickly recovering from crashes.
+is a great way of interactively develop your projects, sync work with your
+team and quickly recover from crashes (just fix the bug and build again).
 
 
-`Try it out now (no installation required) <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=spec%2FREADME.md>`_.
+`Try out the live demo (no installation required) <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=spec%2FREADME.md>`_.
 
 `Click here for documentation <https://ploomber.readthedocs.io/>`_.
 
-`Code on Github <https://github.com/ploomber/ploomber>`_.
 
-Compatible with Python 3.5 and higher.
+Works with Python 3.5 and higher.
 
 
 Example
@@ -104,7 +103,7 @@ If you want to try out everything ploomber has to offer:
 
     pip install "ploomber[all]"
 
-Note that installing everything will attemp to install pygraphviz, which
+Note that installing everything will attempt to install pygraphviz, which
 depends on graphviz, you have to install that first:
 
 .. code-block:: shell
