@@ -16,46 +16,6 @@ suffix2taskclass = {
 
 
 class TaskDict(MutableMapping):
-    """Converts a dictionaty to a Task object
-
-    Parameters
-    ----------
-    class: str, optional
-        Class name. If missing, it will be inferred from "source".
-        NotebookRunner for .py and .ipynb files, SQLScript for .sql
-        and ShellScript for .sh
-
-    source: str
-        Path to the source file
-
-    name: str, optional
-        Task name
-
-    client: str, optional
-        Dotted path to a function that has no parameters and returns the
-        client to use. By default the class-level client at config.clients is
-        used, this value overrides it
-
-    product: str or dict
-        Source to initialize the product, the type depends on the type
-        of product. Should not exist if meta.extract_product is set to True.
-        If the task generates more than one product, this can be a dictionary
-
-    product_class:
-
-    product_client:
-
-    upstream: str or list, optional
-        Dependencies for this task (names). Should not exist if
-        meta.extract_upstream is set to True
-
-
-    Notes
-    -----
-    All remaining values are passed to the task constructor as keyword
-    arguments.
-
-    """
     def __init__(self, data, meta):
         # FIXME: make sure data and meta are immutable structures
         self.data = data

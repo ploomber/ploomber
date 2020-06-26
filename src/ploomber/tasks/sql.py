@@ -15,7 +15,7 @@ import pandas as pd
 
 
 class SQLScript(Task):
-    """Execute a script in a SQL database
+    """Execute a script in a SQL database to create a relation or view
 
     Parameters
     ----------
@@ -156,8 +156,10 @@ class SQLDump(Task):
 
 # FIXME: this can be a lot faster for clients that transfer chunksize
 # rows over the network
-
-
+# FIXME: this should really have two clients because "client" is where
+# to pull the data from and product.client is to save metadata, and we should
+# require the target database to be the place to save metadata, this restrics
+# this to sqlite and postgres
 class SQLTransfer(Task):
     """
     Transfers data from a SQL database to another (Note: this relies on
@@ -260,7 +262,8 @@ class SQLUpload(Task):
         A str to indentify this task. Should not already exist in the dag
 
     client: ploomber.clients.SQLAlchemyClient, optional
-        The client used to connect to the database. Only required
+        The client used to connect to the database and where the data will be
+        uploaded. Only required
         if no dag-level client has been declared using dag.clients[class]
 
     params : dict, optional
@@ -351,6 +354,11 @@ class PostgresCopyFrom(Task):
     ----------
     source: str or pathlib.Path
         Path to parquet file to upload
+
+    client: ploomber.clients.SQLAlchemyClient, optional
+        The client used to connect to the database and where the data will be
+        uploaded. Only required
+        if no dag-level client has been declared using dag.clients[class]
 
 
     Notes

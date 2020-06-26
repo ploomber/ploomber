@@ -1,20 +1,13 @@
 """
-Build DAGs from dictionaries
-
-The Python API provides great flexibility to build DAGs but some users
-not need all of this. This module implements functions to parse dictionaries
-and instantiate DAGs, only simple use cases should be handled by this API,
-otherwise the dictionary schema will be too complex, defeating the purpose.
-
-NOTE: CLI is implemented in the entry module
+Notes to developers
 
 meta:
-    Settings that cannot be clearly mapped to the OOP Python interface, we
-    don't call it config because there is a DAGConfig object in the Python
-    API and this might cause confusion
+  Settings that cannot be clearly mapped to the OOP Python interface, we
+  don't call it config because there is a DAGConfig object in the Python
+  API and this might cause confusion
+
 
 All other sections should represent valid DAG properties.
-
 """
 import logging
 from collections.abc import MutableMapping
@@ -39,39 +32,6 @@ def normalize_task(task):
 
 
 class DAGSpec(MutableMapping):
-    """
-
-    Schema
-    ------
-    meta:
-        # TODO: set default to false for now, we cannot extract product from sql files
-        # inspect source code to extract products
-        extract_product: True
-        # inspect source code to extract upstream dependencies
-        extract_upstream: True
-
-        product_default_class:
-            SQLDump: File
-            NotebookRunner: File
-            SQLScript: SQLRelation
-
-    clients:
-        {task or product class name}: {dotted.path.to.function}
-
-    tasks:
-        - {list of tasks, see TaskDict for details}
-
-    Notes
-    -----
-    The whole meta section and clients is optional.
-
-    The spec can also just be a list of tasks for DAGs that don't use clients
-    and do not want to modify meta default values.
-
-    If using a factory, the spec can just be
-        location: {dotted.path.to.factory}
-    """
-
     def __init__(self, data):
         if isinstance(data, list):
             data = {'tasks': data}
