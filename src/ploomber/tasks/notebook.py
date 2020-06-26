@@ -190,7 +190,7 @@ class NotebookRunner(Task):
         tmp.write_text(content)
 
         # open notebook with injected debugging cell
-        _open_jupyter_notebook(tmp)
+        _open_jupyter_notebook(str(tmp))
 
         # read tmp file again, to see if the user made any changes
         content_new = Path(tmp).read_text()
