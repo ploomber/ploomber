@@ -4,12 +4,12 @@ CHANGELOG
 0.4.3dev
 --------
 * Experimental PythonCallable.develop()
-* Experimental NotebookRunner.develop()
-* Experimental support to specify DAGs with yaml files
 
 0.4.2dev
 --------
-* Adds NotebookRunner.debug()
+* New spec API to instantiate DAGs using YAML files
+* NotebookRunner.debug() for debugging and .develop() for interacive development
+* Bug fixes
 
 0.4.1 (2020-05-19)
 -------------------
