@@ -1,7 +1,4 @@
 meta:
-  product_default_class:
-    SQLScript: SQLRelation
-
   extract_upstream: False
   extract_product: False
 
@@ -10,17 +7,14 @@ clients:
 
 
 tasks:
-  - class: SQLScript
-    source: load.sql
+  - source: load.sql
     product: [raw, table]
 
-  - class: SQLScript
-    source: filter.sql
+  - source: filter.sql
     product: [filtered, table]
     upstream: [load.sql]
 
-  - class: SQLScript
-    source: transform.sql
+  - source: transform.sql
     product: [transformed, table]
     upstream: [filter.sql]
 

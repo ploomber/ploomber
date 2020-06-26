@@ -53,6 +53,7 @@ class DAGSpec(MutableMapping):
         product_default_class:
             SQLDump: File
             NotebookRunner: File
+            SQLScript: SQLRelation
 
     clients:
         {task or product class name}: {dotted.path.to.function}
@@ -90,15 +91,15 @@ class DAGSpec(MutableMapping):
         if 'extract_product' not in self.data['meta']:
             self.data['meta']['extract_product'] = True
 
-        if 'product_default_class' not in self.data['meta']:
-            self.data['meta']['product_default_class'] = {'SQLDump': 'File',
-                                                          'NotebookRunner': 'File'}
-        else:
-            if 'SQLDump' not in self.data['meta']['product_default_class']:
-                self.data['meta']['product_default_class']['SQLDump'] = 'File'
+        defaults = {'SQLDump': 'File', 'NotebookRunner': 'File',
+                    'SQLScript': 'SQLRelation'}
 
-            if 'NotebookRunner' not in self.data['meta']['product_default_class']:
-                self.data['meta']['product_default_class']['NotebookRunner'] = 'File'
+        if 'product_default_class' not in self.data['meta']:
+            self.data['meta']['product_default_class'] = defaults
+        else:
+            for class_, prod in defaults.items():
+                if class_ not in self.data['meta']['product_default_class']:
+                    self.data['meta']['product_default_class'][class_] = prod
 
     def __getitem__(self, key):
         return self.data[key]
