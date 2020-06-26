@@ -85,7 +85,8 @@ class NotebookSource(Source):
 
         self._python_repr = None
         self._loc = None
-        self._loc_rendered = None
+        self._rendered_nb_str = None
+        self._params = None
         self._nb_repr = None
 
         # this will raise an error if kernelspec_name is invalid
@@ -101,8 +102,6 @@ class NotebookSource(Source):
     def render(self, params):
         """Render notebook (fill parameters using papermill)
         """
-        import papermill as pm
-
         # papermill only allows JSON serializable parameters
         # convert Params object to dict
         params = params.to_dict()
@@ -112,17 +111,28 @@ class NotebookSource(Source):
             params['upstream'] = {k: n.to_json_serializable() for k, n
                                   in params['upstream'].items()}
 
+        self._params = params
+        self._render()
+
+    def _render(self):
+        import papermill as pm
+
         tmp_in = tempfile.mktemp('.ipynb')
         tmp_out = tempfile.mktemp('.ipynb')
         # _get_nb_repr uses hot_reload, this ensures we always get the latest
         # version
         Path(tmp_in).write_text(self._get_nb_repr())
         pm.execute_notebook(tmp_in, tmp_out, prepare_only=True,
-                            parameters=params)
-        self._loc_rendered = tmp_out
-        Path(tmp_in).unlink()
+                            parameters=self._params)
 
-        self._post_render_validation(params)
+        tmp_out = Path(tmp_out)
+
+        self._rendered_nb_str = tmp_out.read_text()
+
+        Path(tmp_in).unlink()
+        tmp_out.unlink()
+
+        self._post_render_validation(self._params)
 
     def _get_python_repr(self):
         """
@@ -186,7 +196,7 @@ class NotebookSource(Source):
             # read the notebook with the injected parameters from the tmp
             # location
             nb_rendered = (nbformat
-                           .reads(Path(self._loc_rendered).read_text(),
+                           .reads(self._rendered_nb_str,
                                   as_version=nbformat.NO_CONVERT))
             check_notebook(nb_rendered, params,
                            filename=self._path or 'notebook')
@@ -205,15 +215,15 @@ class NotebookSource(Source):
         return self._path.name
 
     @property
-    def loc_rendered(self):
-        if self._loc_rendered is None:
+    def rendered_nb_str(self):
+        if self._rendered_nb_str is None:
             raise RuntimeError('Attempted to get location for an unrendered '
                                'notebook, render it first')
-        return self._loc_rendered
 
-    def __del__(self):
-        if self._loc_rendered is not None:
-            Path(self._loc_rendered).unlink()
+        if self._hot_reload:
+            self._render()
+
+        return self._rendered_nb_str
 
     def __str__(self):
         # NOTE: the value returned here is used to determine code differences,

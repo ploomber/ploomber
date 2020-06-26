@@ -161,22 +161,6 @@ def test_error_if_no_parameters_cell():
         excinfo.value)
 
 
-def test_tmp_file_is_deleted():
-    s = NotebookSource("""
-# + tags=['parameters']
-product = None
-    """, ext_in='py', kernelspec_name='python3')
-
-    params = Params()
-    params._dict = {'product': File('output.ipynb')}
-    s.render(params)
-    loc = s.loc_rendered
-
-    assert Path(loc).exists()
-    del s
-    assert not Path(loc).exists()
-
-
 def test_injects_parameters_on_render():
     s = NotebookSource("""
 # + tags=['parameters']
@@ -187,7 +171,7 @@ some_param = 2
     params._dict = {'some_param': 1, 'product': File('output.ipynb')}
     s.render(params)
 
-    nb = nbformat.reads(Path(s.loc_rendered).read_text(),
+    nb = nbformat.reads(s.rendered_nb_str,
                         as_version=nbformat.NO_CONVERT)
 
     # cell 0: empty
