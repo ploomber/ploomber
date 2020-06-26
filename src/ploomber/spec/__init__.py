@@ -3,7 +3,7 @@ Ploomber spec API provides a quick and simple way to use Ploomber using YAML,
 it is not indented to replace the Python API which offers more flexibility and
 advanced features.
 
-Click here for a live demo.
+`Click here for a live demo. <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=spec%2FREADME.md>`_
 
 You can run pipelines with the following command:
 
@@ -24,21 +24,31 @@ Or with `ipython` (note the double dash):
 
     ipython -i -m ploomber.entry pipeline.yaml -- --action status
 
-Once the interactive session opens you can debug and develop Python tasks by
-using the ``dag`` object.
+Once the interactive session opens you interact with your pipeline via
+the ``dag`` object.
 
+
+Visualize dependencies:
 
 .. code-block:: python
 
-    dag['some_task'].debug()
+    dag.plot()
 
+Develop scripts interactively:
 
 .. code-block:: python
 
     dag['some_task'].develop()
 
 
-Or print the rendered source code from SQL scripts:
+Line by line debugging:
+
+.. code-block:: python
+
+    dag['some_task'].debug()
+
+
+Print the rendered source code from SQL scripts:
 
 
 .. code-block:: python

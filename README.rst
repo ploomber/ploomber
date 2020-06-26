@@ -12,10 +12,16 @@ Ploomber
  :target: https://mybinder.org/v2/gh/ploomber/projects/master
 
 
-At its core, Ploomber is a framework to efficiently develop data pipelines: once you declare a pipeline, you can build it with a single command, next time you build it, Ploomber will skip tasks whose source code has not changed, allowing you to quickly run experiments by skipping redundant long-running computations.
+Ploomber is a library to write concise Data Science pipelines. Specify your
+Python, SQL or bash tasks in a `pipeline.yaml` file and Ploomber will resolve
+dependencies and handle execution.
+
+On top of that, it provides incremental builds to skip up-to-date task. This
+is a great way of interactively develop your projects, sync work within your
+team and quickly recovering from crashes.
 
 
-`Try it out now (no installation required) <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=basic-tutorial%2Fnotebook.ipynb>`_.
+`Try it out now (no installation required) <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=spec%2FREADME.md>`_.
 
 `Click here for documentation <https://ploomber.readthedocs.io/>`_.
 
@@ -23,17 +29,70 @@ At its core, Ploomber is a framework to efficiently develop data pipelines: once
 
 Compatible with Python 3.5 and higher.
 
-At a glance
------------
 
-* Airflow-like syntax to declare **pipelines as code**
-* Interactive. Once a pipeline is declared, you can **build it right away**, inspect it, check status or even generate HTML reports, use it in a Python session or a Jupyter notebook
-* Fast experimentation. Modify your source code and ploomber will figure out **which tasks to run** and which ones to skip **based on source code changes**
-* Test-driven. Use `on_finish` hooks to **check data assumptions** (e.g. verify that an output data frame has no NAs, an "age" column has only positive numbers, etc)
-* SQL-friendly. **SQL scripts can be parametrized** for simplicity and consistency using jinja2
-* Notebook-friendly. **Generate reports** in Jupyter notebook format (or HTML) by executing parametrized notebooks using papermill
-* Switch configurations. Automatically **switch pipeline configuration based on the current environment**, for example, make all pipeline output files go to `/data/project/{{user}}`, where `{{user}}` will be automatically replaced depending on the current user
-* Reduce boilerplate code by using the **Tasks library**, for example, dump SQL tables or upload a local file to a database
+Example
+-------
+
+.. code-block:: yaml
+
+    # pipeline.yaml
+    
+    # clean data from the raw table
+    - source: clean.sql
+      product: clean_data
+      # function that returns a db client
+      client: config.get_client
+    
+    # aggregate clean data
+    - source: aggregate.sql
+      product: agg_data
+      client: config.get_client
+    
+    # dump data to a csv file
+    - class: SQLDump
+      source: dump_agg_data.sql
+      product: output/data.csv  
+    
+    # visualize data from csv file
+    - source: plot.py
+      product:
+        # where to save the executed notebook
+        nb: output/executed-notebook-plot.ipynb
+        # tasks can generate other outputs
+        data: output/some_data.csv
+
+
+To run your pipeline:
+
+.. code-block:: bash
+
+    python -m ploomber.entry pipeline.yaml --action build
+
+
+If you build again, tasks whose source code is the same (and all
+upstream dependencies) are skipped.
+
+
+Start an interactive session (note the double dash):
+
+.. code-block:: bash
+
+    ipython -i -m ploomber.entry pipeline.yaml -- --action status
+
+
+During an interactive session:
+
+
+.. code-block:: python
+
+    # visualize dependencies
+    dag.plot()
+
+    # develop your Python script interactively
+    dag['task'].develop()
+
+    # line by line debugging
+    dag['task'].debug()
 
 
 Install
@@ -52,7 +111,7 @@ depends on graphviz, you have to install that first:
 
     # if you are using conda (recommended)
     conda install graphviz
-    # if you are using homebew
+    # if you are using homebrew
     brew install graphviz
     # for other systems, see: https://www.graphviz.org/download/
 
@@ -63,55 +122,9 @@ If you want to start with the minimal amount of dependencies:
     pip install ploomber
 
 
-Example
--------
+Python API
+----------
 
-.. code-block:: python
-
-    from ploomber import DAG
-    from ploomber.products import File
-    from ploomber.tasks import PythonCallable, SQLDump
-    from ploomber.clients import SQLAlchemyClient
-
-    dag = DAG()
-
-    # the first task dumps data from the db to the local filesystem
-    task_dump = SQLDump('SELECT * FROM example',
-                        File(tmp_dir / 'example.csv'),
-                        dag,
-                        name='dump',
-                        client=SQLAlchemyClient(uri),
-                        chunksize=None)
-
-    def _add_one(upstream, product):
-        """Add one to column a
-        """
-        df = pd.read_csv(str(upstream['dump']))
-        df['a'] = df['a'] + 1
-        df.to_csv(str(product), index=False)
-
-    def on_finish(task):
-        df = pd.read_csv(str(task.product))
-        assert not df['a'].isna().sum()
-
-    # we convert the Python function to a Task
-    task_add_one = PythonCallable(_add_one,
-                                  File(tmp_dir / 'add_one.csv'),
-                                  dag,
-                                  name='add_one')
-    # verify there are no NAs in columns a
-    task_add_one.on_finish = on_finish
-
-    # declare how tasks relate to each other
-    task_dump >> task_add_one
-
-    # run the pipeline - incremental builds: ploomber will keep track of each
-    # task's source code and will only execute outdated tasks in the next run
-    dag.build()
-
-    # a DAG also serves as a tool to interact with your pipeline, for example,
-    # status will return a summary table
-    dag.status()
-
-    # start a debugging session (only works if task is a PythonCallable)
-    dag['add_one'].debug()
+There is also a Python API for advanced use cases. This API allows you build
+flexible abstractions such as dynamic pipelines, where the exact number of
+tasks is determined by its parameters.
