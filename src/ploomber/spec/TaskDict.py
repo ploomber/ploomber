@@ -129,6 +129,7 @@ def _pop_upstream(task_dict):
     return _make_iterable(upstream)
 
 
+# FIXME: how do we make a default product client? use the task's client?
 def _init_product(task_dict, meta, task_class):
     """
     Resolution logic order:

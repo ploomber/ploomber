@@ -1,6 +1,7 @@
 meta:
   product_default_class:
       SQLScript: PostgresRelation
+
   extract_upstream: False
   extract_product: False
 

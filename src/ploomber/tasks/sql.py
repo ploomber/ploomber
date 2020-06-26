@@ -6,7 +6,8 @@ from ploomber.sources import (SQLScriptSource,
                               SQLQuerySource,
                               FileSource)
 from ploomber.products import (File, PostgresRelation, SQLiteRelation,
-                               GenericSQLRelation, GenericProduct)
+                               GenericSQLRelation, GenericProduct,
+                               SQLRelation)
 from ploomber import io
 from ploomber.util import requires
 
@@ -39,7 +40,7 @@ class SQLScript(Task):
         refer to jinja2 documentation for details
     """
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation,
-                               GenericSQLRelation)
+                               GenericSQLRelation, SQLRelation)
 
     def __init__(self, source, product, dag, name=None, client=None,
                  params=None):

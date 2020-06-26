@@ -1,13 +1,12 @@
 meta:
   product_default_class:
-    SQLScript: SQLiteRelation
+    SQLScript: SQLRelation
 
   extract_upstream: False
   extract_product: False
 
 clients:
   SQLScript: config.get_client
-  SQLiteRelation: config.get_client
 
 
 tasks:

@@ -139,8 +139,10 @@ def test_postgres_sql_spec(tmp_pipeline_sql, pg_client_and_schema,
     assert list(dag['transform.sql'].upstream.keys()) == ['filter.sql']
 
 
-def test_sqlite_sql_spec(tmp_pipeline_sql, add_current_to_sys_path):
-    with open('pipeline-sqlite.yaml') as f:
+@pytest.mark.parametrize('spec', ['pipeline-sqlite.yaml',
+                                  'pipeline-sqlrelation.yaml'])
+def test_sqlite_sql_spec(spec, tmp_pipeline_sql, add_current_to_sys_path):
+    with open(spec) as f:
         dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
 
     dates = _random_date_from(datetime(2016, 1, 1), 365, 100)
