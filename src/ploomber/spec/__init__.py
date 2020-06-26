@@ -111,6 +111,8 @@ Notes
     # class is looked up in meta.product_default_class using the task class
     product_class: {str, optional}
 
+    # Optional task name, if missing, the value passed in "source" is used
+    # as name
     name: {task name, optional}
 
     # Dotted path to a function that has no parameters and returns the

@@ -161,10 +161,20 @@ class NotebookRunner(Task):
 
     def develop(self):
         """
-        Opens the rendered notebook (with a new cell that includes injected
-        parameters and in a temporary location).
-        Changes to this notebook can be exported to the original notebook
-        (the injected parameters cell is excluded).
+        Opens the rendered notebook (with injected parameters) and adds a
+        "debugging-settings" cell to the that changes directory to the current
+        active directory. This will reflect conditions when callign
+        `DAG.build()`. This modified notebook is saved in the same location as
+        the source with a "-tmp" added to the filename. Changes to this
+        notebook can be exported to the original notebook after the notebook
+        process is shut down. The "injected-parameters" and
+        "debugging-settings" cells are deleted before saving.
+
+        Notes
+        -----
+        If you modify the source code and call develop again, the source
+        code will be updated only if the `hot_reload option` is turned on.
+        See :class:`ploomber.DAGConfigurator` for details.
         """
         if self.source.loc is None:
             raise ValueError('Can only use develop in notebooks loaded '
@@ -172,10 +182,12 @@ class NotebookRunner(Task):
 
         nb = _read_rendered_notebook(self.source.loc_rendered)
 
-        # save modified notebook
-        _, tmp = tempfile.mkstemp(suffix='.ipynb')
+        name = self.source.loc.name
+        suffix = self.source.loc.suffix
+        name_new = name.replace(suffix, '-tmp.ipynb')
+        tmp = self.source.loc.with_name(name_new)
         content = nbformat.writes(nb, version=nbformat.NO_CONVERT)
-        Path(tmp).write_text(content)
+        tmp.write_text(content)
 
         try:
             # open notebook with injected debugging cell

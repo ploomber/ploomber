@@ -30,12 +30,15 @@ class DAGConfigurator:
     to render will not do anything (rendering is implicitely called in build,
     plot, status), otherwise it will always render again.
 
+    hot_reload: Reload sources whenever they are updated
+
     Examples
     --------
     >>> from ploomber import DAGConfigurator
     >>> configurator = DAGConfigurator()
     >>> configurator.params.outdated_by_code = True
     >>> configurator.params.cache_rendered_status = False
+    >>> configurator.params.hot_reload = True
     >>> dag = configurator.create()
     """
     def __init__(self, d=None):
