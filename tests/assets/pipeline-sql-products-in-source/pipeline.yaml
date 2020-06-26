@@ -1,0 +1,21 @@
+meta:
+  product_default_class: SQLiteRelation
+  # TODO: not implemented yet
+  # infer upstream structure 
+  extract_upstream: True
+  extract_product: True
+
+clients:
+  SQLScript: sqlite:///my.db
+  SQLiteRelation: sqlite:///my.db
+
+
+tasks:
+  - class: SQLScript
+    source: load.sql
+
+  - class: SQLScript
+    source: filter.sql
+
+  - class: SQLScript
+    source: transform.sql

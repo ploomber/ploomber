@@ -43,6 +43,12 @@ def test_exists(client_and_prod):
     assert product.exists()
 
 
+def test_exists_with_empty_schema(pg_client_and_schema):
+    client, schema = pg_client_and_schema
+    product = PostgresRelation(('data', 'table'), client)
+    assert product.exists()
+
+
 def test_delete(client_and_prod):
     client, product, schema = client_and_prod
     df = pd.DataFrame({'a': np.arange(0, 100), 'b': np.arange(100, 200)})

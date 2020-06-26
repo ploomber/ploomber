@@ -1,0 +1,25 @@
+meta:
+  extract_upstream: False
+  extract_product: False
+
+clients:
+  SQLScript: config.get_client
+
+
+tasks:
+  - source: load.sql
+    product: [raw, table]
+
+  - source: filter.sql
+    product: [filtered, table]
+    upstream: [load.sql]
+
+  - source: transform.sql
+    product: [transformed, table]
+    upstream: [filter.sql]
+
+  - class: NotebookRunner
+    source: plot.py
+    product: plot.ipynb
+    product_class: File
+    upstream: transform.sql

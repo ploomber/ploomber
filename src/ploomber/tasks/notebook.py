@@ -161,27 +161,36 @@ class NotebookRunner(Task):
 
     def develop(self):
         """
-        Opens the rendered notebook (with a new cell that includes injected
-        parameters and in a temporary location).
-        Changes to this notebook can be exported to the original notebook
-        (the injected parameters cell is excluded).
+        Opens the rendered notebook (with injected parameters) and adds a
+        "debugging-settings" cell to the that changes directory to the current
+        active directory. This will reflect conditions when callign
+        `DAG.build()`. This modified notebook is saved in the same location as
+        the source with a "-tmp" added to the filename. Changes to this
+        notebook can be exported to the original notebook after the notebook
+        process is shut down. The "injected-parameters" and
+        "debugging-settings" cells are deleted before saving.
+
+        Notes
+        -----
+        If you modify the source code and call develop again, the source
+        code will be updated only if the `hot_reload option` is turned on.
+        See :class:`ploomber.DAGConfigurator` for details.
         """
         if self.source.loc is None:
             raise ValueError('Can only use develop in notebooks loaded '
                              'from files, not from str')
 
-        nb = _read_rendered_notebook(self.source.loc_rendered)
+        nb = _read_rendered_notebook(self.source.rendered_nb_str)
 
-        # save modified notebook
-        _, tmp = tempfile.mkstemp(suffix='.ipynb')
+        name = self.source.loc.name
+        suffix = self.source.loc.suffix
+        name_new = name.replace(suffix, '-tmp.ipynb')
+        tmp = self.source.loc.with_name(name_new)
         content = nbformat.writes(nb, version=nbformat.NO_CONVERT)
-        Path(tmp).write_text(content)
+        tmp.write_text(content)
 
-        try:
-            # open notebook with injected debugging cell
-            subprocess.call(['jupyter', 'notebook', tmp])
-        except KeyboardInterrupt:
-            print('Jupyter notebook server closed...')
+        # open notebook with injected debugging cell
+        _open_jupyter_notebook(str(tmp))
 
         # read tmp file again, to see if the user made any changes
         content_new = Path(tmp).read_text()
@@ -190,14 +199,8 @@ class NotebookRunner(Task):
         if content == content_new:
             print('No changes found...')
         else:
-            save = input('Notebook changed, do you want to save changes '
-                         'in the original location? (injected parameters '
-                         'and debugging cells will be removed before '
-                         'saving). Enter "no" to skip saving changes, '
-                         'anything else will be interpreted as "yes": ')
-
             # save changes
-            if save != 'no':
+            if _save():
                 nb = nbformat.reads(content_new,
                                     as_version=nbformat.NO_CONVERT)
 
@@ -225,7 +228,7 @@ class NotebookRunner(Task):
         if kind not in opts:
             raise ValueError('kind must be one of {}'.format(opts))
 
-        nb = _read_rendered_notebook(self.source.loc_rendered)
+        nb = _read_rendered_notebook(self.source.rendered_nb_str)
         _, tmp_path = tempfile.mkstemp(suffix='.ipynb')
         code = jupytext.writes(nb, version=nbformat.NO_CONVERT, fmt='py')
         Path(tmp_path).write_text(code)
@@ -259,9 +262,13 @@ class NotebookRunner(Task):
         # we will change the extension after the notebook runs successfully
         path_to_out_nb = path_to_out.with_suffix('.ipynb')
 
+        _, tmp = tempfile.mkstemp('.ipynb')
+        tmp = Path(tmp)
+        tmp.write_text(self.source.rendered_nb_str)
+
         try:
             # no need to pass parameters, they are already there
-            pm.execute_notebook(self.source.loc_rendered, str(path_to_out_nb),
+            pm.execute_notebook(str(tmp), str(path_to_out_nb),
                                 **self.papermill_params)
         except Exception as e:
             raise TaskBuildError('An error ocurred when calling'
@@ -269,6 +276,8 @@ class NotebookRunner(Task):
                                  ' executed notebook with traceback '
                                  'available at {}'
                                  .format(str(path_to_out_nb))) from e
+        else:
+            tmp.unlink()
 
         # if output format other than ipynb, convert using nbconvert
         # and overwrite
@@ -278,15 +287,12 @@ class NotebookRunner(Task):
                         self.nbconvert_export_kwargs)
 
 
-def _read_rendered_notebook(path):
+def _read_rendered_notebook(nb_str):
     """
     Read rendered notebook and inject cell with debugging settings
     """
-    # load original notebook content
-    content_original = Path(path).read_text()
-
     # add debug cells
-    nb = nbformat.reads(content_original, as_version=nbformat.NO_CONVERT)
+    nb = nbformat.reads(nb_str, as_version=nbformat.NO_CONVERT)
     nbformat_v = nbformat.versions[nb.nbformat]
 
     source = """
@@ -303,3 +309,19 @@ chdir("{}")
     nb.cells.insert(0, cell)
 
     return nb
+
+
+def _open_jupyter_notebook(path):
+    try:
+        subprocess.call(['jupyter', 'notebook', path])
+    except KeyboardInterrupt:
+        print('Jupyter notebook server closed...')
+
+
+def _save():
+    res = input('Notebook changed, do you want to save changes '
+                'in the original location? (injected parameters '
+                'and debugging cells will be removed before '
+                'saving). Enter "no" to skip saving changes, '
+                'anything else will be interpreted as "yes": ')
+    return res != 'no'

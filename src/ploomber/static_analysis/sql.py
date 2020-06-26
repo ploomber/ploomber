@@ -1,4 +1,5 @@
 from jinja2 import Template
+from ploomber.placeholders.util import get_defined_variables
 
 
 class JinjaUpstreamIntrospector:
@@ -15,3 +16,8 @@ def extract_upstream_from_sql(sql):
     upstream = JinjaUpstreamIntrospector()
     Template(sql).render({'upstream': upstream})
     return set(upstream.keys) if len(upstream.keys) else None
+
+
+def extract_product_from_sql(sql):
+    variables = get_defined_variables(sql)
+    return variables.get('product')

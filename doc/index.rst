@@ -8,6 +8,7 @@ Contents
    :maxdepth: 3
 
    quickstart
+   spec
    guide_index
    api_summary
    modules_index

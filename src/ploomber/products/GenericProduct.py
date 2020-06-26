@@ -98,3 +98,41 @@ class GenericSQLRelation(GenericProduct):
     @property
     def kind(self):
         return self._identifier.kind
+
+
+class SQLRelation(Product):
+    """A product that represents a SQL relation but has no metadata
+
+    Parameters
+    ----------
+    identifier : tuple of length 3
+        A tuple with (schema, name, kind) where kind must be either 'table'
+        or 'view'
+
+    """
+    def _init_identifier(self, identifier):
+        return SQLRelationPlaceholder(identifier)
+
+    @property
+    def name(self):
+        return self._identifier.name
+
+    @property
+    def schema(self):
+        return self._identifier.schema
+
+    @property
+    def kind(self):
+        return self._identifier.kind
+
+    def fetch_metadata(self):
+        return None
+
+    def save_metadata(self, metadata):
+        pass
+
+    def exists(self):
+        return True
+
+    def delete(self, force=False):
+        pass

@@ -1,0 +1,27 @@
+meta:
+  product_default_class:
+      SQLScript: PostgresRelation
+
+  extract_upstream: False
+  extract_product: False
+
+clients:
+  SQLScript: config.get_pg_client
+  PostgresRelation: config.get_pg_client
+
+
+tasks:
+  - class: SQLScript
+    source: load.sql
+    product: [raw, table]
+
+  - class: SQLScript
+    source: filter-pg.sql
+    name: filter.sql
+    product: [filtered, table]
+    upstream: [load.sql]
+
+  - class: SQLScript
+    source: transform.sql
+    product: [transformed, table]
+    upstream: [filter.sql]

@@ -204,6 +204,10 @@ def db_credentials():
 
 @pytest.fixture(scope='session')
 def pg_client_and_schema():
+    """
+    Creates a temporary schema for the testing session, drops everything
+    at the end
+    """
     db = _load_db_credentials()
 
     # this client is only used to setup the schema and default schema

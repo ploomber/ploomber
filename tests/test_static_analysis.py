@@ -53,9 +53,10 @@ upstream = {'a': None, 'b': None}
 
 @pytest.mark.parametrize('code, expected',
                          [nb_case_1, nb_case_2])
-def test_infer_from_code_str(code, expected):
-    assert (sorted(notebook.infer_dependencies_from_code_str(code,
-                                                             fmt='py'))
+def test_extract_upstream_from_parameters(code, expected):
+    assert (sorted(notebook.extract_variable_from_parameters(code,
+                                                             fmt='py',
+                                                             variable='upstream'))
             == sorted(expected))
 
 
@@ -68,11 +69,34 @@ USING some_column
     assert sql.extract_upstream_from_sql(code) == {'some_task', 'another_task'}
 
 
-@pytest.mark.parametrize('templates', [None,
-                                       ['filter.sql',
-                                        'load.sql', 'transform.sql']])
-def test_infer_dependencies_from_path(path_to_tests, templates):
+@pytest.mark.parametrize('kwargs', [
+    {'templates': ['filter.sql', 'load.sql', 'transform.sql'], 'match': None}
+])
+def test_infer_dependencies_from_path(path_to_tests, kwargs):
     path = path_to_tests / 'assets' / 'pipeline-sql'
-    expected = {'filter.sql': {'load.sql'}, 'transform.sql': {'filter.sql'}}
-    assert project.infer_depencies_from_path(path,
-                                             templates=templates) == expected
+    expected = {'filter.sql': {'load.sql'}, 'transform.sql': {'filter.sql'},
+                'load.sql': set()}
+    out = project.infer_from_path(path,
+                                  upstream=True, product=False,
+                                  **kwargs)
+    assert out['upstream'] == expected
+
+
+def test_extract_variables_from_notebooks(path_to_tests):
+    path = path_to_tests / 'assets' / 'nbs'
+    expected = {'clean.py': {'load'},
+                'plot.py': {'clean'},
+                'load.py': set()}
+    out = project.infer_from_path(path,
+                                  templates=['load.py', 'clean.py', 'plot.py'],
+                                  upstream=True, product=True)
+    expected_product = {'clean.py':
+                        {'data': 'output/clean.csv',
+                         'nb': 'output/clean.ipynb'},
+                        'load.py':
+                        {'data': 'output/data.csv',
+                         'nb': 'output/load.ipynb'},
+                        'plot.py': 'output/plot.ipynb'}
+
+    assert out['upstream'] == expected
+    assert out['product'] == expected_product
