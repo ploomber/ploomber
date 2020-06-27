@@ -100,7 +100,7 @@ To run your pipeline:
 
 .. code-block:: bash
 
-    python entry pipeline.yaml
+    ploomber entry pipeline.yaml
 
 
 If you build again, tasks whose source code is the same (and all
