@@ -107,12 +107,13 @@ setup(
         # for syntax highlighting when generating dag HTML reports
         'pygments',
         'sqlalchemy',
+        # for cli
+        'click'
     ] + NB,
     extras_require={
         'all': MISC + PLOT + NB,
     },
     entry_points={
-        'console_scripts': [
-        ]
+        'console_scripts': ['ploomber=ploomber.cli:cli'],
     },
 )

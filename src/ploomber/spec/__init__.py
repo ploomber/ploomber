@@ -5,27 +5,26 @@ advanced features.
 
 `Click here for a live demo. <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=spec%2FREADME.md>`_
 
-You can run pipelines with the following command:
+To create a new project with basic structure:
 
 .. code-block:: bash
 
-    python -m ploomber.entry pipeline.yaml --action build
+    ploomber new
+
+
+Build pipeline:
+
+.. code-block:: bash
+
+    python entry pipeline.yaml
 
 To start an interactive session:
 
 .. code-block:: bash
 
-    python -i -m ploomber.entry pipeline.yaml --action status
-
-
-Or with `ipython` (note the double dash):
-
-.. code-block:: bash
-
     ipython -i -m ploomber.entry pipeline.yaml -- --action status
 
-Once the interactive session opens you interact with your pipeline via
-the ``dag`` object.
+Once the interactive session opens, use the ``dag`` object.
 
 
 Visualize dependencies:
