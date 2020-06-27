@@ -23,6 +23,8 @@ It also keeps track of source code changes to speed up builds by skipping up-to-
 
 `Click here for documentation <https://ploomber.readthedocs.io/>`_.
 
+`Our blog <https://ploomber.io/>`_.
+
 
 Works with Python 3.5 and higher.
 
