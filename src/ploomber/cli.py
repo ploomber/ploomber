@@ -56,15 +56,14 @@ def _new():
     copy('clean.py')
     copy('plot.py')
 
+    Path('output').mkdir()
+
     click.echo("""
     Done! Now create your environment with the following command:
       conda env create --file environment.yml
 
     Then activate it:
       conda activate my-ploomber-project
-
-    Make sure the output folder exists (on linux/mac):
-      mkdir output
 
     And build:
       ploomber entry pipeline.yaml

@@ -49,7 +49,6 @@ def tasks_list(dag_spec):
 
     # we have to pop this, since a list of tasks gets meta default params
     for t in tasks:
-        t.pop('product', None)
         t.pop('upstream', None)
     return tasks
 
@@ -104,6 +103,7 @@ def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
     dag.build()
 
 
+@pytest.mark.skip(reason="Won't work until we make extract_product=True the default")
 def test_spec_from_list_of_files(tmp_nbs_auto):
     Path('output').mkdir()
     dag = DAGSpec.init_dag(glob('*.py'))

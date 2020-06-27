@@ -86,7 +86,7 @@ SQL script example
 ------------------
 
 .. code-block:: sql
-    
+
     DROP TABLE IF EXISTS {{product}};
 
     CREATE TABLE {{product}} AS
