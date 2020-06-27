@@ -7,8 +7,8 @@ Contents
 .. toctree::
    :maxdepth: 3
 
-   quickstart
    spec
+   quickstart
    guide_index
    api_summary
    modules_index
