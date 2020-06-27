@@ -1,0 +1,34 @@
+# Documentation:
+
+# To build the pipeline:
+#     $ ploomber entry pipeline.yaml
+#
+# To start an interactive session
+#     $ ipython -i -m ploomber.entry pipeline.yaml -- --action status
+
+meta:
+  product_default_class:
+    # replace for GenericSQLRelation, SQLiteRelation or PostgresRelation
+    # it you want to save metadata (required for incremental builds)
+    SQLScript: SQLRelation
+
+config:
+  # reload source code without having to restart the interactive session
+  hot_reload: True
+
+
+clients:
+  SQLScript: db.get_client
+
+
+tasks:
+  # list tasks here
+  - source: clean.py
+    name: clean
+    product:
+      nb: output/clean.ipynb
+      data: output/clean.csv
+
+  - source: plot.py
+    name: plot
+    product: output/plot.html

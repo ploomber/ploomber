@@ -8,6 +8,7 @@ CHANGELOG
 
 0.4.2dev
 --------
+* Adds CLI
 * New spec API to instantiate DAGs using YAML files
 * NotebookRunner.debug() for debugging and .develop() for interacive development
 * Bug fixes
