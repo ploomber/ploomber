@@ -28,9 +28,6 @@ def read(*names, **kwargs):
     ).read()
 
 
-# matplotlib only needed for dag.plot(output='matplotlib'),
-PLOT = ['matplotlib', 'pygraphviz']
-
 # NOTE: most users just do "pip install jupyter" which installs everything
 # needed to run papermill but we don't strictly need the whole thing and
 # we have to pin specific versions of jupyter_client, nbconvert and
@@ -44,6 +41,11 @@ NB = ['papermill', 'jupytext', 'ipykernel>=1.5.2',
       'jupyter_client>=5.3.1', 'nbconvert>=5.6.0',
       # for notebook validation
       'parso', 'pyflakes']
+
+
+# matplotlib only needed for dag.plot(output='matplotlib'),
+PLOT = ['matplotlib', 'pygraphviz']
+
 MISC = [
     # sql dumps
     'pandas',
@@ -60,7 +62,7 @@ MISC = [
 setup(
     name='ploomber',
     version=VERSION,
-    description='Build, modify, skip, repeat: Ploomber is a Python framework to efficiently develop data pipelines.',
+    description='Spend your time discovering insights from data, not writing plumbing code. Declare your pipeline in a short YAML file and Ploomber will take care of the rest.',
     long_description='%s\n%s' % (
         re.compile('^.. start-badges.*^.. end-badges',
                    re.M | re.S).sub('', read('README.rst')),
@@ -105,10 +107,8 @@ setup(
         # for syntax highlighting when generating dag HTML reports
         'pygments',
         'sqlalchemy',
-    ],
+    ] + NB,
     extras_require={
-        'plot': PLOT,
-        'nb': NB,
         'all': MISC + PLOT + NB,
     },
     entry_points={
