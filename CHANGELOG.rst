@@ -1,13 +1,13 @@
 CHANGELOG
 =========
 
-0.4.3dev
---------
+0.5.1dev
+-----------------
 * Experimental PythonCallable.develop()
 
 
-0.4.2dev
---------
+0.5 (2020-06-27)
+----------------
 * Adds CLI
 * New spec API to instantiate DAGs using YAML files
 * NotebookRunner.debug() for debugging and .develop() for interacive development
