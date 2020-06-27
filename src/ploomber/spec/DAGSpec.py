@@ -50,7 +50,7 @@ class DAGSpec(MutableMapping):
             self.data['meta']['extract_upstream'] = True
 
         if 'extract_product' not in self.data['meta']:
-            self.data['meta']['extract_product'] = True
+            self.data['meta']['extract_product'] = False
 
         defaults = {'SQLDump': 'File', 'NotebookRunner': 'File',
                     'SQLScript': 'SQLRelation'}

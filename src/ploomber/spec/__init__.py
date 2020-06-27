@@ -66,9 +66,7 @@ default values.
 
     # pipeline.yaml
     meta:
-        # TODO: set default to false for now, we cannot extract product from sql files
-        # inspect source code to extract products
-        extract_product: True
+        extract_product: False
 
         # inspect source code to extract upstream dependencies
         extract_upstream: True
