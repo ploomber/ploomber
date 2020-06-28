@@ -30,9 +30,12 @@ install:
   - conda activate conda-env
 
 
-  # Test vanilla installation
+  # Test vanilla installation, make sure core clients are importable
   - pip install .
   - python -c 'import ploomber'
+  - python -c 'import ploomber.tasks'
+  - python -c 'import ploomber.products'
+  - python -c 'import ploomber.clients'
 
   # install requirements
   - pip install -r examples/pipeline/intermediate/requirements.txt
