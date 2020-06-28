@@ -55,22 +55,28 @@ def _new():
     click.echo('Adding clean.py and features.py...')
     copy('clean.py')
     copy('plot.py')
+    click.echo('Done!')
 
     Path('output').mkdir()
 
-    click.echo("""
-    Done! Now create your environment with the following command:
+    out_message = """
+    To build the pipeline:
+      ploomber entry pipeline.yaml
+
+    Start an interactive session (once it starts, use the "dag" object):
+      ipython -i -m ploomber.entry pipeline.yaml -- --action status
+    """
+
+    if conda:
+        out_message = """
+    Now create your environment with the following command:
       conda env create --file environment.yml
 
     Then activate it:
       conda activate my-ploomber-project
+    """ + out_message
 
-    And build:
-      ploomber entry pipeline.yaml
-
-    Or start an interactive session (once it starts, use the "dag" object):
-      ipython -i -m ploomber.entry pipeline.yaml -- --action status
-    """)
+    click.echo(out_message)
 
 
 @cli.command()
