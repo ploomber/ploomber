@@ -53,10 +53,8 @@ MISC = [
     'pyarrow',
     # RemoteShellClient
     'paramiko',
-    # s3 upload
-    'boto3',
     # qa and entry modules
-    'numpydoc'
+    'numpydoc',
 ]
 
 setup(
@@ -111,7 +109,7 @@ setup(
         'click'
     ] + NB,
     extras_require={
-        'all': MISC + PLOT + NB,
+        'all': MISC + PLOT,
     },
     entry_points={
         'console_scripts': ['ploomber=ploomber.cli:cli'],
