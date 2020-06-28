@@ -11,8 +11,6 @@ from ploomber.products import (File, PostgresRelation, SQLiteRelation,
 from ploomber import io
 from ploomber.util import requires
 
-import pandas as pd
-
 
 class SQLScript(Task):
     """Execute a script in a SQL database to create a relation or view
@@ -219,6 +217,8 @@ class SQLTransfer(Task):
         return SQLQuerySource(source, **kwargs)
 
     def run(self):
+        import pandas as pd
+
         source_code = str(self.source)
         product = self.params['product']
 
@@ -316,6 +316,8 @@ class SQLUpload(Task):
         return FileSource(str(source), **kwargs)
 
     def run(self):
+        import pandas as pd
+
         product = self.params['product']
         path = str(self.source)
 
@@ -389,6 +391,8 @@ class PostgresCopyFrom(Task):
         return FileSource(str(source), **kwargs)
 
     def run(self):
+        import pandas as pd
+
         product = self.params['product']
         df = pd.read_parquet(str(self.source))
 
