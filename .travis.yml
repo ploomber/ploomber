@@ -40,7 +40,7 @@ install:
   # install requirements
   - pip install -r examples/pipeline/intermediate/requirements.txt
   - pip install -r requirements.txt
-  - pip install .[all]
+  - pip install .[test]
 
   # install sample package for tests
   - bash test_pkg.sh

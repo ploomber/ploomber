@@ -5,6 +5,7 @@ import io
 import tokenize
 import warnings
 from difflib import Differ
+import parso
 
 try:
     import sqlparse
@@ -16,12 +17,6 @@ try:
     import autopep8
 except ImportError:
     autopep8 = None
-
-
-try:
-    import parso
-except ImportError:
-    parso = None
 
 
 def normalize_null(code):

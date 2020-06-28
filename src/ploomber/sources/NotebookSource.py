@@ -3,6 +3,8 @@ from pathlib import Path
 from io import StringIO
 import warnings
 
+import parso
+
 from ploomber.exceptions import RenderError, SourceInitializationError
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.util import requires
@@ -307,9 +309,6 @@ def compare_params(params_source, params):
     Compare the parameters cell's source with the passed parameters, warn
     on missing parameter and raise error if an extra parameter was passed.
     """
-    # FIXME: we don't really need parso, we can just use the ast module
-    import parso
-
     # params are keys in "params" dictionary
     params = set(params)
 

@@ -31,7 +31,7 @@ def read(*names, **kwargs):
 # NOTE: most users just do "pip install jupyter" which installs everything
 # needed to run papermill but we don't strictly need the whole thing and
 # we have to pin specific versions of jupyter_client, nbconvert and
-# ipykernel are pinned to support parallel execution using papermill
+# ipykernel to support parallel execution using papermill
 # (avoid "kernel did not respond" errors)
 # these are versions are not pinned in papermill (yet) so we put it here
 # more info:
@@ -40,21 +40,32 @@ def read(*names, **kwargs):
 NB = ['papermill', 'jupytext', 'ipykernel>=1.5.2',
       'jupyter_client>=5.3.1', 'nbconvert>=5.6.0',
       # for notebook validation
-      'parso', 'pyflakes']
+      'pyflakes']
 
-
-# matplotlib only needed for dag.plot(output='matplotlib'),
-PLOT = ['matplotlib', 'pygraphviz']
-
-MISC = [
-    # sql dumps
+# Optional dependencies are packages that are used in several modules but are
+# not strictly required. Dependencies that are required for a single use case
+# (e.g. upload to s3) should be included in the "TESTING" list. Both optional
+# and one-time modules should use the @requires decorator to show an error if
+# the dependency is missing
+OPTIONAL = [
+    # sql dumps and uploads
     'pandas',
-    # parquet support
+    # for ParquetIO
     'pyarrow',
-    # RemoteShellClient
-    'paramiko',
     # qa and entry modules
     'numpydoc',
+
+]
+
+TESTING = [
+    # plotting
+    'pygraphviz',
+    # matplotlib only needed for dag.plot(output='matplotlib'),
+    'matplotlib',
+    # RemoteShellClient
+    'paramiko',
+    # Upload to S3
+    'boto3,'
 ]
 
 setup(
@@ -106,10 +117,11 @@ setup(
         'pygments',
         'sqlalchemy',
         # for cli
-        'click'
+        'click',
     ] + NB,
     extras_require={
-        'all': MISC + PLOT,
+        'all': OPTIONAL,
+        'test': OPTIONAL + TESTING,
     },
     entry_points={
         'console_scripts': ['ploomber=ploomber.cli:cli'],
