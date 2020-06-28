@@ -65,7 +65,7 @@ TESTING = [
     # RemoteShellClient
     'paramiko',
     # Upload to S3
-    'boto3,'
+    'boto3',
 ]
 
 setup(
