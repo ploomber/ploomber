@@ -44,10 +44,10 @@ class DBAPIClient(Client):
     connect_kwargs : dict
         Keyword arguments to pass to connect_fn
 
-    split_source : bool, optional
+    split_source : str, optional
         Some database drivers do not support multiple commands, use this
-        optiion to split commands by ';' and send them one at a time. Defaults
-        to False
+        optiion to split commands by a given character (e.g. ';') and send
+        them one at a time. Defaults to False (no spltting)
     """
     def __init__(self, connect_fn, connect_kwargs, split_source=False):
         super().__init__()
@@ -74,7 +74,7 @@ class DBAPIClient(Client):
         cur = self.connection.cursor()
 
         if self.split_source:
-            for command in code_split(code):
+            for command in code_split(code, token=self.split_source):
                 cur.execute(command)
         else:
             cur.execute(code)

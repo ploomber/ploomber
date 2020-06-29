@@ -23,6 +23,22 @@ def test_pickle_dbapiclient(tmp_directory):
     assert pickle.dumps(client)
 
 
+def test_dbapiclient_split_source(tmp_directory):
+    client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'),
+                         split_source=';')
+    client.execute("""DROP TABLE IF EXISTS my_table;
+    CREATE TABLE my_table (num INT)""")
+    assert pickle.dumps(client)
+
+
+def test_dbapiclient_split_source_custom_char(tmp_directory):
+    client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'),
+                         split_source='##')
+    client.execute("""DROP TABLE IF EXISTS my_table##
+    CREATE TABLE my_table (num INT)""")
+    assert pickle.dumps(client)
+
+
 def test_deepcopy_sqlalchemyclient(tmp_directory):
     client = SQLAlchemyClient('sqlite:///my_db.db')
     client.execute('CREATE TABLE my_table (num INT)')
