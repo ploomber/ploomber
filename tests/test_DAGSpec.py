@@ -213,7 +213,7 @@ def test_extract_upstream_with_empty_meta():
 
 
 def test_extract_upstream_with_empty_meta_extract_upstream():
-    spec = DAGSpec.DAGSpec({'meta': {'some_key': None}, 'tasks': []})
+    spec = DAGSpec.DAGSpec({'meta': {}, 'tasks': []})
     assert spec['meta']['extract_upstream']
 
 

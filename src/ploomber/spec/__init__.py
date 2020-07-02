@@ -115,7 +115,8 @@ Notes
 
     # Products that will be generated upon task execution. Should not exist
     # if meta.extract_product is set to True. This can be a dictionary if
-    # the task generates more than one product
+    # the task generates more than one product. Required if extract_product
+    # is False
     product: {str or dict}
 
     # Any of the classes available in the products module, if missing, the

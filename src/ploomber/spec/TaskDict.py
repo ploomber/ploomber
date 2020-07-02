@@ -6,6 +6,7 @@ from collections.abc import MutableMapping, Iterable, Mapping
 
 from ploomber import tasks, products
 from ploomber.util.util import _load_factory
+from ploomber.spec import validate
 
 suffix2taskclass = {
     '.py': tasks.NotebookRunner,
@@ -23,6 +24,14 @@ class TaskDict(MutableMapping):
         self.validate()
 
     def validate(self):
+        if self.meta['extract_product']:
+            required = {'source'}
+        else:
+            required = {'product', 'source'}
+
+        validate.keys(valid=None, passed=self.data,
+                      required=required,
+                      name='task spec')
 
         if self.meta['extract_upstream'] and self.data.get('upstream'):
             raise ValueError('Error validating task "{}", if '

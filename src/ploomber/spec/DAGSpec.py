@@ -17,6 +17,7 @@ from ploomber import DAG, tasks
 from ploomber.util.util import _load_factory
 from ploomber.static_analysis import project
 from ploomber.spec.TaskDict import TaskDict
+from ploomber.spec import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 
 # TODO: make DAGSpec object which should validate schema and automatically
@@ -30,23 +31,6 @@ def normalize_task(task):
         return {'source': task}
     else:
         return task
-
-
-def validate_keys(valid, passed, required=None):
-    passed = set(passed)
-    extra = passed - set(valid)
-
-    if extra:
-        raise KeyError("Error validating spec, the following keys aren't "
-                       "valid: {}. Valid keys are: {}"
-                       .format(extra, valid))
-
-    if required:
-        missing = set(required) - passed
-
-        if missing:
-            raise KeyError("Error validating spec, the following required "
-                           "keys are missing: {}".format(missing))
 
 
 class DAGSpec(MutableMapping):
@@ -63,7 +47,7 @@ class DAGSpec(MutableMapping):
 
     def _validate_top_level_keys(self, spec):
         valid = {'meta', 'config', 'clients', 'tasks'}
-        validate_keys(valid, spec.keys())
+        validate.keys(valid, spec.keys(), name='dag spec')
 
     def _validate_meta(self):
         if 'meta' not in self.data:
@@ -71,7 +55,7 @@ class DAGSpec(MutableMapping):
 
         valid = {'extract_upstream', 'extract_product',
                  'product_default_class'}
-        validate_keys(valid, self.data['meta'])
+        validate.keys(valid, self.data['meta'], name='dag spec')
 
         if 'extract_upstream' not in self.data['meta']:
             self.data['meta']['extract_upstream'] = True
