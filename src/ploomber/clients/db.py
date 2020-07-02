@@ -83,7 +83,7 @@ class DBAPIClient(Client):
         cur.close()
 
     def close(self):
-        """Close connection if there is one active
+        """Close connection if there is an active one
         """
         if self._connection is not None:
             self._connection.close()

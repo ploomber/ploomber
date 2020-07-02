@@ -77,6 +77,15 @@ def extract_product(dag_spec):
 
     return dag_spec
 
+def test_validate_top_level_keys():
+    with pytest.raises(KeyError):
+        DAGSpec.init_dag({'invalid_key': None})
+
+
+def test_validate_meta_keys():
+    with pytest.raises(KeyError):
+        DAGSpec.init_dag({'tasks': [], 'meta': {'invalid_key': None}})
+
 
 @pytest.mark.parametrize('processor', [to_ipynb, tasks_list, remove_task_class,
                                        extract_upstream, extract_product])

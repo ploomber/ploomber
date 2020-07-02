@@ -32,19 +32,46 @@ def normalize_task(task):
         return task
 
 
+def validate_keys(valid, passed, required=None):
+    passed = set(passed)
+    extra = passed - set(valid)
+
+    if extra:
+        raise KeyError("Error validating spec, the following keys aren't "
+                       "valid: {}. Valid keys are: {}"
+                       .format(extra, valid))
+
+    if required:
+        missing = set(required) - passed
+
+        if missing:
+            raise KeyError("Error validating spec, the following required "
+                           "keys are missing: {}".format(missing))
+
+
 class DAGSpec(MutableMapping):
     def __init__(self, data):
         if isinstance(data, list):
             data = {'tasks': data}
 
+        self._validate_top_level_keys(data)
+
         data['tasks'] = [normalize_task(task) for task in data['tasks']]
 
         self.data = data
-        self.validate_meta()
+        self._validate_meta()
 
-    def validate_meta(self):
+    def _validate_top_level_keys(self, spec):
+        valid = {'meta', 'config', 'clients', 'tasks'}
+        validate_keys(valid, spec.keys())
+
+    def _validate_meta(self):
         if 'meta' not in self.data:
             self.data['meta'] = {}
+
+        valid = {'extract_upstream', 'extract_product',
+                 'product_default_class'}
+        validate_keys(valid, self.data['meta'])
 
         if 'extract_upstream' not in self.data['meta']:
             self.data['meta']['extract_upstream'] = True
