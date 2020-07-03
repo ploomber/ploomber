@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import pytest
-from ploomber.spec import DAGSpec
+from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.util.util import _load_factory
 import yaml
 from conftest import _path_to_tests, fixture_tmp_dir
@@ -77,14 +77,15 @@ def extract_product(dag_spec):
 
     return dag_spec
 
+
 def test_validate_top_level_keys():
     with pytest.raises(KeyError):
-        DAGSpec.init_dag({'invalid_key': None})
+        DAGSpec({'invalid_key': None})
 
 
 def test_validate_meta_keys():
     with pytest.raises(KeyError):
-        DAGSpec.init_dag({'tasks': [], 'meta': {'invalid_key': None}})
+        DAGSpec({'tasks': [], 'meta': {'invalid_key': None}})
 
 
 @pytest.mark.parametrize('processor', [to_ipynb, tasks_list, remove_task_class,
@@ -97,7 +98,7 @@ def test_notebook_spec(processor, tmp_nbs):
 
     dag_spec = processor(dag_spec)
 
-    dag = DAGSpec.init_dag(dag_spec)
+    dag = DAGSpec(dag_spec).to_dag()
     dag.build()
 
 
@@ -108,14 +109,14 @@ def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
     with open('pipeline-w-location.yaml') as f:
         dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
 
-    dag = DAGSpec.init_dag(dag_spec)
+    dag = DAGSpec(dag_spec).to_dag()
     dag.build()
 
 
 @pytest.mark.skip(reason="Won't work until we make extract_product=True the default")
 def test_spec_from_list_of_files(tmp_nbs_auto):
     Path('output').mkdir()
-    dag = DAGSpec.init_dag(glob('*.py'))
+    dag = DAGSpec(glob('*.py')).to_dag()
     dag.build()
 
 
@@ -138,7 +139,7 @@ def test_postgres_sql_spec(tmp_pipeline_sql, pg_client_and_schema,
     df.to_sql('sales', client.engine, if_exists='replace')
     client.engine.dispose()
 
-    dag = DAGSpec.init_dag(dag_spec)
+    dag = DAGSpec(dag_spec).to_dag()
 
     # FIXME: this does no show the custom Upstream key missing error
     dag.build()
@@ -163,7 +164,7 @@ def test_sqlite_sql_spec(spec, tmp_pipeline_sql, add_current_to_sys_path):
     df.to_sql('sales', client.engine)
     client.engine.dispose()
 
-    dag = DAGSpec.init_dag(dag_spec)
+    dag = DAGSpec(dag_spec).to_dag()
 
     # FIXME: this does no show the custom Upstream key missing error
     dag.build()
@@ -194,7 +195,7 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
     df.to_sql('sales', client.engine)
     client.engine.dispose()
 
-    dag = DAGSpec.init_dag(dag_spec)
+    dag = DAGSpec(dag_spec).to_dag()
 
     # FIXME: this does no show the custom Upstream key missing error
     dag.build()
@@ -202,21 +203,21 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
 
 def test_init_with_tasks_list():
     spec_raw = [{'source': 'load.py', 'product': 'load.ipynb'}]
-    spec = DAGSpec.DAGSpec(spec_raw)
+    spec = DAGSpec(spec_raw)
     assert spec['meta']['extract_upstream']
     assert spec['tasks'] == spec_raw
 
 
 def test_extract_upstream_with_empty_meta():
-    spec = DAGSpec.DAGSpec(['load.py'])
+    spec = DAGSpec(['load.py'])
     assert spec['meta']['extract_upstream']
 
 
 def test_extract_upstream_with_empty_meta_extract_upstream():
-    spec = DAGSpec.DAGSpec({'meta': {}, 'tasks': []})
+    spec = DAGSpec({'meta': {}, 'tasks': []})
     assert spec['meta']['extract_upstream']
 
 
 def test_extract_upstream():
-    spec = DAGSpec.DAGSpec({'meta': {'extract_upstream': False}, 'tasks': []})
+    spec = DAGSpec({'meta': {'extract_upstream': False}, 'tasks': []})
     assert not spec['meta']['extract_upstream']

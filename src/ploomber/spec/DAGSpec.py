@@ -22,34 +22,45 @@ from ploomber.spec.TaskDict import TaskDict
 from ploomber.spec import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 
-# TODO: make DAGSpec object which should validate schema and automatically
-# fill with defaults all required but missing sections
 
 logger = logging.getLogger(__name__)
 
 
-def normalize_task(task):
-    if isinstance(task, str):
-        return {'source': task}
-    else:
-        return task
-
-
 class DAGSpec(MutableMapping):
+    """
+    A DAG spec is a dictionary with certain structure that can be converted
+    to a DAG using DAGSpec.to_dag().
+
+    There are two cases: the simplest one is just a dictionary with a
+    "location" key with the factory to call, the other explicitely describes
+    the DAG structure as a dictionary.
+    """
     def __init__(self, data):
         if isinstance(data, list):
             data = {'tasks': data}
 
-        self._validate_top_level_keys(data)
-
-        data['tasks'] = [normalize_task(task) for task in data['tasks']]
-
+        load_from_factory = self._validate_top_level_keys(data)
         self.data = data
-        self._validate_meta()
+
+        if not load_from_factory:
+            self.data['tasks'] = [normalize_task(task)
+                                  for task in self.data['tasks']]
+            self._validate_meta()
 
     def _validate_top_level_keys(self, spec):
-        valid = {'meta', 'config', 'clients', 'tasks'}
-        validate.keys(valid, spec.keys(), name='dag spec')
+        load_from_factory = False
+
+        if 'location' in spec:
+            if len(spec) > 1:
+                raise KeyError('If specifying dag through a "location" key '
+                               'it must be the unique key in the spec')
+            else:
+                load_from_factory = True
+        else:
+            valid = {'meta', 'config', 'clients', 'tasks'}
+            validate.keys(valid, spec.keys(), name='dag spec')
+
+        return load_from_factory
 
     def _validate_meta(self):
         if 'meta' not in self.data:
@@ -91,51 +102,51 @@ class DAGSpec(MutableMapping):
     def __len__(self):
         return len(self.data)
 
+    def to_dag(self):
+        """Converts the DAG spec to a DAG object
+        """
+        # FIXME: validate that if there is location, there isn't anything else
+        if 'location' in self:
+            factory = _load_factory(self['location'])
+            return factory()
 
-def auto_load():
-    if not Path('pipeline.yaml').exists():
-        return None
+        tasks = self.pop('tasks')
 
-    with open('pipeline.yaml') as f:
-        dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
+        dag = DAG()
 
-    return init_dag(dag_dict)
+        if 'config' in self:
+            dag._params = DAGConfiguration.from_dict(self['config'])
 
+        clients = self.get('clients')
 
-# TODO: make it a method in DAGSpec
-# FIXME: we are not using root path
-def init_dag(dag_spec, root_path=None):
-    """Create a dag from a spec
-    """
-    if 'location' in dag_spec:
-        factory = _load_factory(dag_spec['location'])
-        return factory()
+        if clients:
+            init_clients(dag, clients)
 
-    dag_spec = DAGSpec(dag_spec)
+        process_tasks(dag, tasks, self)
 
-    tasks = dag_spec.pop('tasks')
+        return dag
 
-    dag = DAG()
+    @classmethod
+    def auto_load(cls):
+        """Looks for a pipeline.yaml, generates a DAGSpec and returns a DAG
+        """
+        if not Path('pipeline.yaml').exists():
+            return None
 
-    if 'config' in dag_spec:
-        dag._params = DAGConfiguration.from_dict(dag_spec['config'])
+        with open('pipeline.yaml') as f:
+            dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
 
-    clients = dag_spec.get('clients')
-
-    if clients:
-        init_clients(dag, clients)
-
-    process_tasks(dag, tasks, dag_spec)
-
-    return dag
+        return cls(dag_dict).to_dag()
 
 
 def process_tasks(dag, tasks, dag_spec, root_path='.'):
     # determine if we need to run static analysis
+    meta = dag_spec['meta']
     sources = [task_dict['source'] for task_dict in tasks]
-    extracted = project.infer_from_path(root_path, templates=sources,
-                                        upstream=dag_spec['meta']['extract_upstream'],
-                                        product=dag_spec['meta']['extract_product'])
+    extracted = project.infer_from_path(root_path,
+                                        templates=sources,
+                                        upstream=meta['extract_upstream'],
+                                        product=meta['extract_product'])
 
     upstream = {}
 
@@ -168,3 +179,10 @@ def init_clients(dag, clients):
             class_ = getattr(products, class_name)
 
         dag.clients[class_] = _load_factory(dotted_path)()
+
+
+def normalize_task(task):
+    if isinstance(task, str):
+        return {'source': task}
+    else:
+        return task

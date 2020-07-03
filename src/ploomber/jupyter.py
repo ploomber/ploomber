@@ -3,7 +3,7 @@ Module for the jupyter extension
 """
 from jupytext.contentsmanager import TextFileContentsManager
 from ploomber.sources.NotebookSource import _cleanup_rendered_nb
-from ploomber.spec.DAGSpec import auto_load
+from ploomber.spec.DAGSpec import DAGSpec
 from papermill.parameterize import parameterize_notebook
 import nbformat
 from papermill import __version__
@@ -27,7 +27,7 @@ class PloomberContentsManager(TextFileContentsManager):
         import sys
         sys.path.append('')
         self.log.info(sys.path)
-        dag = auto_load()
+        dag = DAGSpec.auto_load()
         dag.render()
         self._ploomber_dag = dag
         self._mapping = {str(t.source.loc): t for t in dag.values()}
