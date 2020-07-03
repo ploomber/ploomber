@@ -416,13 +416,13 @@ def _cleanup_rendered_nb(nb):
 
     if i is not None:
         print('Removing injected-parameters cell...')
-        nb.cells.pop(i)
+        nb['cells'].pop(i)
 
     cell, i = _find_cell_with_tag(nb, 'debugging-settings')
 
     if i is not None:
         print('Removing debugging-settings cell...')
-        nb.cells.pop(i)
+        nb['cells'].pop(i)
 
     return nb
 
@@ -432,8 +432,8 @@ def _find_cell_with_tag(nb, tag):
     Find a cell with a given tag, returns a cell, index tuple. Otherwise
     (None, None)
     """
-    for i, c in enumerate(nb.cells):
-        cell_tags = c.metadata.get('tags')
+    for i, c in enumerate(nb['cells']):
+        cell_tags = c['metadata'].get('tags')
         if cell_tags:
             if tag in cell_tags:
                 return c, i
