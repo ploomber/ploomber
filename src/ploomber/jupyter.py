@@ -26,12 +26,20 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         import sys
         sys.path.append('')
-        self.log.info(sys.path)
+
+        # try to automatically locate the dag spec
         dag = DAGSpec.auto_load()
-        dag.render()
-        self._ploomber_dag = dag
-        self._mapping = {str(t.source.loc): t for t in dag.values()}
-        self.log.info("Ploomber dag is {}".format(self._ploomber_dag))
+
+        if dag:
+            dag.render()
+            self._dag = dag
+            self._dag_mapping = {str(t.source.loc): t for t in dag.values()}
+            self.log.info("Initialized Ploomber DAG from pipeline.yaml...")
+        else:
+            # no pipeline.yaml found...
+            self._dag = None
+            self._dag_mapping = None
+
         return super(PloomberContentsManager, self).__init__(*args, **kwargs)
 
     def get(self, *args, **kwargs):
@@ -41,48 +49,62 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         model = super(PloomberContentsManager, self).get(*args, **kwargs)
 
-        # FIXME: if there is no dag, don't do anything
+        if self._model_in_dag(model):
+            self.log.info('{} is part of the pipeline, injecting cell...'
+                          .format(model['name']))
+            _inject_cell(model=model,
+                         params=self._dag_mapping[model['path']]._params)
 
-        if model['content'] and model['type'] == 'notebook':
-            if model['path'] in self._mapping:
-                self.log.info(model['content'])
-                nb = nbformat.from_dict(model['content'])
-
-                # papermill adds a bunch of things before calling
-                # parameterize_notebook
-                # https://github.com/nteract/papermill/blob/0532d499e13e93d8990211be33e9593f1bffbe6c/papermill/iorw.py#L400
-                if not hasattr(nb.metadata, 'papermill'):
-                    nb.metadata['papermill'] = {
-                        'parameters': dict(),
-                        'environment_variables': dict(),
-                        'version': __version__,
-                    }
-
-                for cell in nb.cells:
-                    if not hasattr(cell.metadata, 'tags'):
-                        cell.metadata['tags'] = []
-
-                params = self._mapping[model['path']]._params
-                params = params.to_dict()
-                params['product'] = params['product'].to_json_serializable()
-
-                if params.get('upstream'):
-                    params['upstream'] = {k: n.to_json_serializable() for k, n
-                                          in params['upstream'].items()}
-
-                model['content'] = parameterize_notebook(
-                    nb, params, report_mode=False)
         return model
 
     def save(self, model, path=""):
         """
         This is called when a file is saved
         """
-        # FIXME: if there is no dag, don't do anything
-        self.log.info("This is a test")
-        # FIXME: clean up should also remove empty "tags"
-        _cleanup_rendered_nb(model['content'])
+        if self._model_in_dag(model):
+            self.log.info('Cleaning up injected cell in {}...'
+                          .format(model['name']))
+            _cleanup_rendered_nb(model['content'])
+
         return super(PloomberContentsManager, self).save(model, path)
+
+    def _model_in_dag(self, model):
+        """Determine if the model is part of the  pipeline
+        """
+        if not self._dag:
+            return False
+        else:
+            return (model['content']
+                    and model['type'] == 'notebook'
+                    and model['path'] in self._dag_mapping)
+
+
+def _inject_cell(model, params):
+    nb = nbformat.from_dict(model['content'])
+
+    # papermill adds a bunch of things before calling
+    # parameterize_notebook
+    # https://github.com/nteract/papermill/blob/0532d499e13e93d8990211be33e9593f1bffbe6c/papermill/iorw.py#L400
+    if not hasattr(nb.metadata, 'papermill'):
+        nb.metadata['papermill'] = {
+            'parameters': dict(),
+            'environment_variables': dict(),
+            'version': __version__,
+        }
+
+    for cell in nb.cells:
+        if not hasattr(cell.metadata, 'tags'):
+            cell.metadata['tags'] = []
+
+    params = params.to_dict()
+    params['product'] = params['product'].to_json_serializable()
+
+    if params.get('upstream'):
+        params['upstream'] = {k: n.to_json_serializable() for k, n
+                              in params['upstream'].items()}
+
+    model['content'] = parameterize_notebook(
+        nb, params, report_mode=False)
 
 
 def _load_jupyter_server_extension(app):
