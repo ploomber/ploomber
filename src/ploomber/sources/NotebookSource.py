@@ -4,6 +4,8 @@ from io import StringIO
 import warnings
 
 import parso
+from papermill.parameterize import parameterize_notebook
+import nbformat
 
 from ploomber.exceptions import RenderError, SourceInitializationError
 from ploomber.placeholders.Placeholder import Placeholder
@@ -104,16 +106,7 @@ class NotebookSource(Source):
     def render(self, params):
         """Render notebook (fill parameters using papermill)
         """
-        # papermill only allows JSON serializable parameters
-        # convert Params object to dict
-        params = params.to_dict()
-        params['product'] = params['product'].to_json_serializable()
-
-        if params.get('upstream'):
-            params['upstream'] = {k: n.to_json_serializable() for k, n
-                                  in params['upstream'].items()}
-
-        self._params = params
+        self._params = json_serializable_params(params)
         self._render()
 
     def _render(self):
@@ -304,6 +297,18 @@ def check_notebook(nb, params, filename):
     return True
 
 
+def json_serializable_params(params):
+    # papermill only allows JSON serializable parameters
+    # convert Params object to dict
+    params = params.to_dict()
+    params['product'] = params['product'].to_json_serializable()
+
+    if params.get('upstream'):
+        params['upstream'] = {k: n.to_json_serializable() for k, n
+                              in params['upstream'].items()}
+    return params
+
+
 def compare_params(params_source, params):
     """
     Compare the parameters cell's source with the passed parameters, warn
@@ -411,6 +416,34 @@ def _to_nb_obj(source, extension, kernelspec_name=None):
     return nb
 
 
+def inject_cell(model, params):
+    """Inject params (by adding a new cell) to a model
+
+    Notes
+    -----
+    A model is different than a notebook:
+    https://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html
+    """
+    nb = nbformat.from_dict(model['content'])
+
+    # papermill adds a bunch of things before calling parameterize_notebook
+    # if we don't add those things, parameterize_notebook breaks
+    # https://github.com/nteract/papermill/blob/0532d499e13e93d8990211be33e9593f1bffbe6c/papermill/iorw.py#L400
+    if not hasattr(nb.metadata, 'papermill'):
+        nb.metadata['papermill'] = {
+            'parameters': dict(),
+            'environment_variables': dict(),
+            'version': None,
+        }
+
+    for cell in nb.cells:
+        if not hasattr(cell.metadata, 'tags'):
+            cell.metadata['tags'] = []
+
+    params = json_serializable_params(params)
+    model['content'] = parameterize_notebook(nb, params, report_mode=False)
+
+
 def _cleanup_rendered_nb(nb):
     cell, i = _find_cell_with_tag(nb, 'injected-parameters')
 
@@ -423,6 +456,13 @@ def _cleanup_rendered_nb(nb):
     if i is not None:
         print('Removing debugging-settings cell...')
         nb['cells'].pop(i)
+
+    # papermill adds "tags" to all cells that don't have them, remove them
+    # if they are empty to avoid cluttering the script
+    for cell in nb['cells']:
+        if 'tags' in cell.get('metadata', {}):
+            if not len(cell['metadata']['tags']):
+                del cell.metadata['tags']
 
     return nb
 

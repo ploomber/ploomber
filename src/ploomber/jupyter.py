@@ -2,11 +2,9 @@
 Module for the jupyter extension
 """
 from jupytext.contentsmanager import TextFileContentsManager
-from ploomber.sources.NotebookSource import _cleanup_rendered_nb
+from ploomber.sources.NotebookSource import (_cleanup_rendered_nb,
+                                             inject_cell)
 from ploomber.spec.DAGSpec import DAGSpec
-from papermill.parameterize import parameterize_notebook
-import nbformat
-from papermill import __version__
 
 
 class PloomberContentsManager(TextFileContentsManager):
@@ -52,8 +50,8 @@ class PloomberContentsManager(TextFileContentsManager):
         if self._model_in_dag(model):
             self.log.info('{} is part of the pipeline, injecting cell...'
                           .format(model['name']))
-            _inject_cell(model=model,
-                         params=self._dag_mapping[model['path']]._params)
+            inject_cell(model=model,
+                        params=self._dag_mapping[model['path']]._params)
 
         return model
 
@@ -77,34 +75,6 @@ class PloomberContentsManager(TextFileContentsManager):
             return (model['content']
                     and model['type'] == 'notebook'
                     and model['path'] in self._dag_mapping)
-
-
-def _inject_cell(model, params):
-    nb = nbformat.from_dict(model['content'])
-
-    # papermill adds a bunch of things before calling
-    # parameterize_notebook
-    # https://github.com/nteract/papermill/blob/0532d499e13e93d8990211be33e9593f1bffbe6c/papermill/iorw.py#L400
-    if not hasattr(nb.metadata, 'papermill'):
-        nb.metadata['papermill'] = {
-            'parameters': dict(),
-            'environment_variables': dict(),
-            'version': __version__,
-        }
-
-    for cell in nb.cells:
-        if not hasattr(cell.metadata, 'tags'):
-            cell.metadata['tags'] = []
-
-    params = params.to_dict()
-    params['product'] = params['product'].to_json_serializable()
-
-    if params.get('upstream'):
-        params['upstream'] = {k: n.to_json_serializable() for k, n
-                              in params['upstream'].items()}
-
-    model['content'] = parameterize_notebook(
-        nb, params, report_mode=False)
 
 
 def _load_jupyter_server_extension(app):
