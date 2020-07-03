@@ -9,7 +9,9 @@ meta:
 
 All other sections should represent valid DAG properties.
 """
+import yaml
 import logging
+from pathlib import Path
 from collections.abc import MutableMapping
 
 from ploomber import products
@@ -90,7 +92,18 @@ class DAGSpec(MutableMapping):
         return len(self.data)
 
 
+def auto_load():
+    if not Path('pipeline.yaml').exists():
+        return None
+
+    with open('pipeline.yaml') as f:
+        dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
+
+    return init_dag(dag_dict)
+
+
 # TODO: make it a method in DAGSpec
+# FIXME: we are not using root path
 def init_dag(dag_spec, root_path=None):
     """Create a dag from a spec
     """

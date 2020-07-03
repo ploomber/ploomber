@@ -1,3 +1,5 @@
+from logging import NullHandler
+import logging
 from ploomber.dag.DAG import DAG
 from ploomber.dag.DAGConfigurator import DAGConfigurator
 from ploomber.env.env import Env
@@ -6,11 +8,58 @@ from ploomber.placeholders.SourceLoader import SourceLoader
 
 from jupytext.contentsmanager import TextFileContentsManager
 from ploomber.sources.NotebookSource import _cleanup_rendered_nb
+from ploomber.spec.DAGSpec import auto_load
+from papermill.parameterize import parameterize_notebook
+import nbformat
 
 
 class PloomberContentsManager(TextFileContentsManager):
+
+    def __init__(self, *args, **kwargs):
+        import sys
+        sys.path.append('')
+        self.log.info(sys.path)
+        dag = auto_load()
+        dag.render()
+        self._ploomber_dag = dag
+        self._mapping = {str(t.source.loc): t for t in dag.values()}
+        self.log.info("Ploomber dag is {}".format(self._ploomber_dag))
+        return super(PloomberContentsManager, self).__init__(*args, **kwargs)
+
+    def get(self, *args, **kwargs):
+        model = super(PloomberContentsManager, self).get(*args, **kwargs)
+
+        if model['content'] and model['type'] == 'notebook':
+            if model['path'] in self._mapping:
+                self.log.info(model['content'])
+                nb = nbformat.from_dict(model['content'])
+
+                if not hasattr(nb.metadata, 'papermill'):
+                    nb.metadata['papermill'] = {
+                        'parameters': dict(),
+                        'environment_variables': dict(),
+                        'version': __version__,
+                    }
+
+                for cell in nb.cells:
+                    if not hasattr(cell.metadata, 'tags'):
+                        cell.metadata['tags'] = []
+
+                params = self._mapping[model['path']]._params
+                params = params.to_dict()
+                params['product'] = params['product'].to_json_serializable()
+
+                if params.get('upstream'):
+                    params['upstream'] = {k: n.to_json_serializable() for k, n
+                                          in params['upstream'].items()}
+
+                model['content'] = parameterize_notebook(
+                    nb, params, report_mode=False)
+        return model
+
     def save(self, model, path=""):
         self.log.info("This is a test")
+        # FIXME: clean up should also remove empty "tags"
         _cleanup_rendered_nb(model['content'])
         return super(PloomberContentsManager, self).save(model, path)
 
@@ -18,8 +67,6 @@ class PloomberContentsManager(TextFileContentsManager):
 __version__ = '0.6dev'
 
 # Set default logging handler to avoid "No handler found" warnings.
-import logging
-from logging import NullHandler
 
 logging.getLogger(__name__).addHandler(NullHandler())
 
@@ -58,7 +105,8 @@ def load_jupyter_server_extension(app):  # pragma: no cover
         # 132f27306522b32fa667a6b208034cb7a04025c9/notebook/notebookapp.py#L1634-L1638
 
         # app.init_configurables()
-        app.contents_manager = app.contents_manager_class(parent=app, log=app.log)
+        app.contents_manager = app.contents_manager_class(
+            parent=app, log=app.log)
         app.session_manager.contents_manager = app.contents_manager
 
         # app.init_components()
