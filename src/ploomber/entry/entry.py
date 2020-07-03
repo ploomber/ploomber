@@ -62,7 +62,7 @@ from collections.abc import Mapping
 
 import yaml
 
-from ploomber.spec.DAGSpec import init_dag
+from ploomber.spec.DAGSpec import DAGSpec
 
 
 def _parse_doc(doc):
@@ -122,7 +122,7 @@ def _main():
             with open(entry_point) as f:
                 dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
 
-            dag = init_dag(dag_dict)
+            dag = DAGSpec(dag_dict).to_dag()
             getattr(dag, args.action)()
             return dag
 
