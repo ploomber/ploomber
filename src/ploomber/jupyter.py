@@ -62,21 +62,28 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         This is called when a file is saved
         """
-        if self._model_in_dag(model):
+        # not sure what's the difference between model['path'] and path
+        # but path has leading "/", _model_in_dag strips it
+        if self._model_in_dag(model, path):
             self.log.info('[Ploomber] Cleaning up injected cell in {}...'
-                          .format(model['name']))
-            _cleanup_rendered_nb(model['content'])
+                          .format(model.get('name') or ''))
+            model['content'] = _cleanup_rendered_nb(model['content'])
 
         return super(PloomberContentsManager, self).save(model, path)
 
-    def _model_in_dag(self, model):
+    def _model_in_dag(self, model, path=None):
         """Determine if the model is part of the  pipeline
         """
         model_in_dag = False
 
+        if path is None:
+            path = model['path']
+        else:
+            path = path.strip('/')
+
         if self._dag:
             if (model['content'] and model['type'] == 'notebook'):
-                if model.get('path') in self._dag_mapping:
+                if path in self._dag_mapping:
                     # NOTE: not sure why sometimes the model comes with a
                     # names and sometimes it doesn't
                     self.log.info('[Ploomber] {} is part of the pipeline... '

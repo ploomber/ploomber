@@ -462,7 +462,7 @@ def _cleanup_rendered_nb(nb):
     for cell in nb['cells']:
         if 'tags' in cell.get('metadata', {}):
             if not len(cell['metadata']['tags']):
-                del cell.metadata['tags']
+                del cell['metadata']['tags']
 
     return nb
 
