@@ -28,8 +28,7 @@ def read(*names, **kwargs):
     ).read()
 
 
-# NOTE: most users just do "pip install jupyter" which installs everything
-# needed to run papermill but we don't strictly need the whole thing and
+# NOTE: most users just do "pip install jupyter" but
 # we have to pin specific versions of jupyter_client, nbconvert and
 # ipykernel to support parallel execution using papermill
 # (avoid "kernel did not respond" errors)
@@ -39,6 +38,7 @@ def read(*names, **kwargs):
 # https://github.com/nteract/papermill/issues/239
 NB = ['papermill', 'jupytext', 'ipykernel>=1.5.2',
       'jupyter_client>=5.3.1', 'nbconvert>=5.6.0',
+      'notebook',
       # for notebook validation
       'pyflakes']
 
