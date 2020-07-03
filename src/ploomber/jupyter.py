@@ -84,46 +84,35 @@ def _load_jupyter_server_extension(app):
     we base our implementation on theirs:
     https://github.com/mwouts/jupytext/blob/bc1b15935e096c280b6630f45e65c331f04f7d9c/jupytext/__init__.py#L19
     """
-    # if hasattr(app.contents_manager_class, "default_jupytext_formats"):
-    #     app.log.info(
-    #         "[Ploomber Server Extension] NotebookApp.contents_manager_class is "
-    #         "(a subclass of) jupytext.TextFileContentsManager already - OK"
-    #     )
-    #     return
+    if isinstance(app.contents_manager_class, PloomberContentsManager):
+        app.log.info(
+            "[Ploomber Server Extension] NotebookApp.contents_manager_class "
+            "is a subclass of PloomberContentsManager already - OK"
+        )
+        return
 
     # The server extension call is too late!
     # The contents manager was set at NotebookApp.init_configurables
 
     # Let's change the contents manager class
-    app.log.info(
-        "[Ploomber Server Extension] Deriving a JupytextContentsManager "
-        "from {}".format(app.contents_manager_class.__name__)
-    )
+    app.log.info('[Ploomber Server Extension] setting content manager '
+                 'to PloomberContentsManager')
     app.contents_manager_class = PloomberContentsManager
 
     try:
         # And rerun selected init steps from https://github.com/jupyter/notebook/blob/
         # 132f27306522b32fa667a6b208034cb7a04025c9/notebook/notebookapp.py#L1634-L1638
-
-        # app.init_configurables()
-        app.contents_manager = app.contents_manager_class(
-            parent=app, log=app.log)
+        app.contents_manager = app.contents_manager_class(parent=app,
+                                                          log=app.log)
         app.session_manager.contents_manager = app.contents_manager
-
-        # app.init_components()
-        # app.init_webapp()
         app.web_app.settings["contents_manager"] = app.contents_manager
 
-        # app.init_terminals()
-        # app.init_signal()
-
     except Exception:
-        app.log.error(
-            """[Ploomber Server Extension] An error occured. Please deactivate the server extension with
-    jupyter serverextension disable jupytext
+        error = """[Ploomber Server Extension] An error occured. Please
+deactivate the server extension with "jupyter serverextension disable ploomber"
 and configure the contents manager manually by adding
-    c.NotebookApp.contents_manager_class = "jupytext.TextFileContentsManager"
+c.NotebookApp.contents_manager_class = "ploomber.jupyter.PloomberContentsManager"
 to your .jupyter/jupyter_notebook_config.py file.
 """
-        )
+        app.log.error(error)
         raise
