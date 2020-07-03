@@ -21,6 +21,7 @@ from ploomber.static_analysis import project
 from ploomber.spec.TaskDict import TaskDict
 from ploomber.spec import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
+from ploomber.exceptions import DAGSpecInitializationError
 
 
 logger = logging.getLogger(__name__)
@@ -136,7 +137,12 @@ class DAGSpec(MutableMapping):
         with open('pipeline.yaml') as f:
             dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
 
-        return cls(dag_dict).to_dag()
+        try:
+            return cls(dag_dict).to_dag()
+        except Exception as e:
+            exc = DAGSpecInitializationError('Error initializing DAG from '
+                                             'pipeline.yaml')
+            raise exc from e
 
 
 def process_tasks(dag, tasks, dag_spec, root_path='.'):

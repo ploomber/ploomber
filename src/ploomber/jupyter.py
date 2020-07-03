@@ -5,6 +5,7 @@ from jupytext.contentsmanager import TextFileContentsManager
 from ploomber.sources.NotebookSource import (_cleanup_rendered_nb,
                                              inject_cell)
 from ploomber.spec.DAGSpec import DAGSpec
+from ploomber.exceptions import DAGSpecInitializationError
 
 
 class PloomberContentsManager(TextFileContentsManager):
@@ -32,9 +33,12 @@ class PloomberContentsManager(TextFileContentsManager):
             dag.render()
             self._dag = dag
             self._dag_mapping = {str(t.source.loc): t for t in dag.values()}
-            self.log.info("Initialized Ploomber DAG from pipeline.yaml...")
+            self.log.info('[Ploomber] Initialized Ploomber DAG from '
+                          'pipeline.yaml...')
         else:
             # no pipeline.yaml found...
+            self.log.info('[Ploomber] No pipeline.yaml found, skipping DAG '
+                          'initialization...')
             self._dag = None
             self._dag_mapping = None
 
@@ -48,8 +52,7 @@ class PloomberContentsManager(TextFileContentsManager):
         model = super(PloomberContentsManager, self).get(*args, **kwargs)
 
         if self._model_in_dag(model):
-            self.log.info('{} is part of the pipeline, injecting cell...'
-                          .format(model['name']))
+            self.log.info('[Ploomber] Injecting cell...')
             inject_cell(model=model,
                         params=self._dag_mapping[model['path']]._params)
 
@@ -60,7 +63,7 @@ class PloomberContentsManager(TextFileContentsManager):
         This is called when a file is saved
         """
         if self._model_in_dag(model):
-            self.log.info('Cleaning up injected cell in {}...'
+            self.log.info('[Ploomber] Cleaning up injected cell in {}...'
                           .format(model['name']))
             _cleanup_rendered_nb(model['content'])
 
@@ -69,12 +72,22 @@ class PloomberContentsManager(TextFileContentsManager):
     def _model_in_dag(self, model):
         """Determine if the model is part of the  pipeline
         """
-        if not self._dag:
-            return False
-        else:
-            return (model['content']
-                    and model['type'] == 'notebook'
-                    and model['path'] in self._dag_mapping)
+        model_in_dag = False
+
+        if self._dag:
+            if (model['content'] and model['type'] == 'notebook'):
+                if model.get('path') in self._dag_mapping:
+                    # NOTE: not sure why sometimes the model comes with a
+                    # names and sometimes it doesn't
+                    self.log.info('[Ploomber] {} is part of the pipeline... '
+                                  .format(model.get('name') or ''))
+                    model_in_dag = True
+                else:
+                    self.log.info('[Ploomber] {} is not part of the pipeline, '
+                                  'skipping...'
+                                  .format(model.get('name') or ''))
+
+        return model_in_dag
 
 
 def _load_jupyter_server_extension(app):
@@ -86,7 +99,7 @@ def _load_jupyter_server_extension(app):
     """
     if isinstance(app.contents_manager_class, PloomberContentsManager):
         app.log.info(
-            "[Ploomber Server Extension] NotebookApp.contents_manager_class "
+            "[Ploomber] NotebookApp.contents_manager_class "
             "is a subclass of PloomberContentsManager already - OK"
         )
         return
@@ -95,7 +108,7 @@ def _load_jupyter_server_extension(app):
     # The contents manager was set at NotebookApp.init_configurables
 
     # Let's change the contents manager class
-    app.log.info('[Ploomber Server Extension] setting content manager '
+    app.log.info('[Ploomber] setting content manager '
                  'to PloomberContentsManager')
     app.contents_manager_class = PloomberContentsManager
 
@@ -107,8 +120,13 @@ def _load_jupyter_server_extension(app):
         app.session_manager.contents_manager = app.contents_manager
         app.web_app.settings["contents_manager"] = app.contents_manager
 
+    except DAGSpecInitializationError as e:
+        app.log.error('[Ploomber] An error occured when trying to initialize '
+                      'the pipeline. If you want cells to be injected, '
+                      'fix the issue and restart "jupyter notebook"')
+        raise
     except Exception:
-        error = """[Ploomber Server Extension] An error occured. Please
+        error = """[Ploomber] An error occured. Please
 deactivate the server extension with "jupyter serverextension disable ploomber"
 and configure the contents manager manually by adding
 c.NotebookApp.contents_manager_class = "ploomber.jupyter.PloomberContentsManager"

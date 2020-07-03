@@ -56,3 +56,10 @@ class UpstreamKeyError(Exception):
     See: https://jinja.palletsprojects.com/en/2.11.x/templates/#variables
     """
     pass
+
+
+class DAGSpecInitializationError(Exception):
+    """
+    Raised when failing to initialize a DAGSpec object from a dictionary
+    """
+    pass
