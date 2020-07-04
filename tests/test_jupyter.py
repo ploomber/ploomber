@@ -79,3 +79,15 @@ def test_import(tmp_nbs):
     Path('pipeline.yaml').unlink()
     os.rename('pipeline-w-location.yaml', 'pipeline.yaml')
     PloomberContentsManager()
+
+
+def test_injects_cell_when_initialized_from_sub_directory(tmp_nbs_nested):
+    # simulate initializing from a directory where we have to recursively
+    # look for pipeline.yaml
+    os.chdir('load')
+
+    cm = PloomberContentsManager()
+    model = cm.get('load.py')
+
+    injected = get_injected_cell(model['content'])
+    assert injected

@@ -158,6 +158,11 @@ def tmp_nbs():
     pass
 
 
+@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-nested')
+def tmp_nbs_nested():
+    pass
+
+
 @pytest.fixture(scope='session')
 def path_to_source_code_file():
     return (_path_to_tests() / 'assets' / 'sample' /
