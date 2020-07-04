@@ -1,6 +1,9 @@
 """
 Tests for the custom jupyter contents manager
 """
+import os
+from pathlib import Path
+
 from ipython_genutils.tempdir import TemporaryDirectory
 from notebook.services.contents.tests.test_manager import TestContentsManager
 import jupytext
@@ -67,3 +70,11 @@ def test_skips_if_file_not_in_dag(tmp_nbs):
     # this file is not part of the pipeline, the contents manager should not
     # inject cells
     assert len(model['content']['cells']) == len(nb.cells)
+
+
+def test_import(tmp_nbs):
+    # make sure we are able to import modules in the current working
+    # dicrectory
+    Path('pipeline.yaml').unlink()
+    os.rename('pipeline-w-location.yaml', 'pipeline.yaml')
+    PloomberContentsManager()

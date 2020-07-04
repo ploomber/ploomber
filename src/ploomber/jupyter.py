@@ -23,9 +23,6 @@ class PloomberContentsManager(TextFileContentsManager):
         current directory, if there is one, load it, if there isn't one
         don't do anything
         """
-        import sys
-        sys.path.append('')
-
         # try to automatically locate the dag spec
         dag = DAGSpec.auto_load()
 

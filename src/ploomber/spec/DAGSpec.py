@@ -9,6 +9,7 @@ meta:
 
 All other sections should represent valid DAG properties.
 """
+import sys
 import yaml
 import logging
 from pathlib import Path
@@ -106,6 +107,21 @@ class DAGSpec(MutableMapping):
     def to_dag(self):
         """Converts the DAG spec to a DAG object
         """
+        # In most cases, the current working directory is already in sys.path,
+        # but (for an unknown reason) it's noe when initializing the jupyter
+        # contents manager (PloomberContentsManager constructor), we add it
+        # here to make sure imports needed to build the dag do not break but
+        # remove it at the end
+        sys.path.append('')
+
+        try:
+            dag = self._to_dag()
+        finally:
+            sys.path.remove('')
+
+        return dag
+
+    def _to_dag(self):
         # FIXME: validate that if there is location, there isn't anything else
         if 'location' in self:
             factory = _load_factory(self['location'])
