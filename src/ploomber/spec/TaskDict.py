@@ -147,7 +147,11 @@ def resolve_product(product_raw, relative_to, class_):
     if not relative_to or class_ != products.File:
         return product_raw
     else:
-        return str(Path(relative_to, product_raw).resolve())
+        # we call resolve in relative_to and then append the rest because
+        # Python 3.5 raises a FileNotFoundError is calling resolve in a path
+        # that does not exist
+        relative_to = Path(relative_to).resolve()
+        return str(Path(relative_to, product_raw))
 
 
 def _init_client(task_dict):
