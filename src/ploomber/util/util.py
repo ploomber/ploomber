@@ -1,3 +1,4 @@
+from pathlib import Path
 import importlib
 from functools import wraps, reduce
 import base64
@@ -6,6 +7,8 @@ import base64
 # from collections import defaultdict
 import shutil
 import inspect
+from itertools import chain
+from glob import iglob
 
 # from ploomber.products import File
 from ploomber.exceptions import CallbackSignatureError, TaskRenderError
@@ -243,3 +246,24 @@ def _load_factory(dotted_path):
                              .format(name, mod)) from e
 
     return factory
+
+
+def find_file_recursively(name, max_levels_up=6):
+    """
+    Find environment by looking into the current folder and parent folders,
+    returns None if no file was found otherwise pathlib.Path to the file
+    """
+    def levels_up(n):
+        return chain.from_iterable(iglob('../' * i + '**')
+                                   for i in range(n + 1))
+
+    path_to_file = None
+
+    for filename in levels_up(max_levels_up):
+        p = Path(filename)
+
+        if p.name == name:
+            path_to_file = filename
+            break
+
+    return path_to_file

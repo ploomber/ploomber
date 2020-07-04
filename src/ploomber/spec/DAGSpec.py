@@ -9,6 +9,7 @@ meta:
 
 All other sections should represent valid DAG properties.
 """
+import os
 import sys
 import yaml
 import logging
@@ -17,7 +18,7 @@ from collections.abc import MutableMapping
 
 from ploomber import products
 from ploomber import DAG, tasks
-from ploomber.util.util import _load_factory
+from ploomber.util.util import _load_factory, find_file_recursively
 from ploomber.static_analysis import project
 from ploomber.spec.TaskDict import TaskDict
 from ploomber.spec import validate
@@ -38,6 +39,9 @@ class DAGSpec(MutableMapping):
     the DAG structure as a dictionary.
     """
     def __init__(self, data):
+        # only set when initialized from DAGSpec.from_file
+        self._parent_path = None
+
         if isinstance(data, list):
             data = {'tasks': data}
 
@@ -107,18 +111,25 @@ class DAGSpec(MutableMapping):
     def to_dag(self):
         """Converts the DAG spec to a DAG object
         """
-        # In most cases, the current working directory is already in sys.path,
-        # but (for an unknown reason) it's noe when initializing the jupyter
-        # contents manager (PloomberContentsManager constructor), we add it
-        # here to make sure imports needed to build the dag do not break but
-        # remove it at the end
-        sys.path.append('')
+        cwd_old = os.getcwd()
+
+        # when initializing DAGs from pipeline.yaml files, we have to ensure
+        # that the parent folder is in sys.path for imports to work, this
+        # happens most of the time but for some (unknown) reason, it doesn't
+        # happen when initializing PloomberContentsManager.
+        # pipeline.yaml paths are written relative to that file, for source
+        # scripts to be located we temporarily change the current working
+        # directory
+        if self._parent_path is not None:
+            sys.path.append(self._parent_path)
+            os.chdir(self._parent_path)
 
         try:
             dag = self._to_dag()
         finally:
-            sys.path.remove('')
-
+            if self._parent_path is not None:
+                sys.path.remove(self._parent_path)
+                os.chdir(cwd_old)
         return dag
 
     def _to_dag(self):
@@ -146,19 +157,33 @@ class DAGSpec(MutableMapping):
     @classmethod
     def auto_load(cls):
         """Looks for a pipeline.yaml, generates a DAGSpec and returns a DAG
+
+        The pipeline.yaml parent folder is temporarily added to sys.path when
+        calling DAGSpec.to_dag() to make sure imports work as expected
         """
-        if not Path('pipeline.yaml').exists():
+        path = find_file_recursively('pipeline.yaml')
+
+        if path is None:
             return None
 
-        with open('pipeline.yaml') as f:
-            dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
-
         try:
-            return cls(dag_dict).to_dag()
+            return cls.from_file(path).to_dag()
         except Exception as e:
             exc = DAGSpecInitializationError('Error initializing DAG from '
                                              'pipeline.yaml')
             raise exc from e
+
+    @classmethod
+    def from_file(cls, path):
+        """
+        Initialize dag spec with yaml file
+        """
+        with open(str(path)) as f:
+            dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
+
+        spec = cls(dag_dict)
+        spec._parent_path = str(Path(path).parent)
+        return spec
 
 
 def process_tasks(dag, tasks, dag_spec, root_path='.'):

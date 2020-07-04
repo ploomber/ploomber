@@ -1,6 +1,4 @@
 import importlib
-from itertools import chain
-from glob import iglob
 import platform
 from pathlib import Path
 from collections.abc import Mapping
@@ -10,6 +8,7 @@ import yaml
 from ploomber.env import validate
 from ploomber.env.expand import EnvironmentExpander
 from ploomber.env.FrozenJSON import FrozenJSON
+from ploomber.util.util import find_file_recursively
 
 
 # TODO: custom expanders, this could be done trough another special directive
@@ -138,7 +137,7 @@ def load_from_source(source):
     elif isinstance(source, (str, Path)):
         # if not pointing to a file, try to locate it...
         if not Path(source).exists():
-            source_found = find_env(source)
+            source_found = find_file_recursively(source)
 
             if source_found is None:
                 raise FileNotFoundError('Could not find file "{}" in the '
@@ -229,30 +228,9 @@ def find_env_w_name(name):
     path_to_env : pathlib.Path
         Path to environment file, None if no file could be found
     """
-    path = find_env(name='env.{}.yaml'.format(name))
+    path = find_file_recursively(name='env.{}.yaml'.format(name))
 
     if path is None:
-        return find_env(name='env.yaml')
+        return find_file_recursively(name='env.yaml')
     else:
         return path
-
-
-def find_env(name, max_levels_up=6):
-    """
-    Find environment by looking into the current folder and parent folders,
-    returns None if no file was found otherwise pathlib.Path to the file
-    """
-    def levels_up(n):
-        return chain.from_iterable(iglob('../' * i + '**')
-                                   for i in range(n + 1))
-
-    path_to_env = None
-
-    for filename in levels_up(max_levels_up):
-        p = Path(filename)
-
-        if p.name == name:
-            path_to_env = filename
-            break
-
-    return path_to_env
