@@ -1,18 +1,24 @@
+#  This sample structure shows the simplest possible pipeline workflow.
+#  pipeline.yaml only contains paths (relative to this file) to the source
+#  scripts. Upstream and products are extracted from the scripts.
+#  Scripts are executed in their corresponding source folder (e.g.
+#  load/load.py executes with cwd=load/), this makes import behavior equal
+#  to what we do if we open the script using `jupyter notebook` (jupyter
+#  notebook always sets the current working directory to the notebook's path)
+#  This also makes products with relative paths work. But since products
+#  in scripts include the executed notebook itself, we have to resolve
+#  relative paths otherwise saving the metadata file (.source) will 
+#  because the product variable inside the script is written relative to
+#  but saving metadata happens relative to the current working directory.
+#  To solve this mismatch, all product paths are resolved to their canonical
+#  form
 meta:
   extract_upstream: True
-  extract_product: False
+  extract_product: True
 
 tasks:
   - source: load/load.py
-    class: NotebookRunner
     name: load
-    product:
-      nb: output/load.ipynb
-      data: output/data.csv
   
   - source: clean/clean.py
-    class: NotebookRunner
     name: clean
-    product:
-      nb: output/clean.ipynb
-      data: output/clean.csv

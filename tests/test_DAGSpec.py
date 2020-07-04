@@ -23,6 +23,11 @@ def tmp_nbs_auto():
     pass
 
 
+@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-nested')
+def tmp_nbs_nested():
+    pass
+
+
 def to_ipynb(dag_spec):
     for source in ['load.py', 'clean.py', 'plot.py']:
         nb = jupytext.read(source)
@@ -99,6 +104,12 @@ def test_notebook_spec(processor, tmp_nbs):
     dag_spec = processor(dag_spec)
 
     dag = DAGSpec(dag_spec).to_dag()
+    dag.build()
+
+
+def test_notebook_spec_nested(tmp_nbs_nested):
+    Path('output').mkdir()
+    dag = DAGSpec.from_file('pipeline.yaml').to_dag()
     dag.build()
 
 
