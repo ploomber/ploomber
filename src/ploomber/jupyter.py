@@ -1,11 +1,25 @@
 """
 Module for the jupyter extension
 """
+from pprint import pprint
+from pathlib import Path
 from jupytext.contentsmanager import TextFileContentsManager
 from ploomber.sources.NotebookSource import (_cleanup_rendered_nb,
                                              inject_cell)
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.exceptions import DAGSpecInitializationError
+
+
+def resolve_path(parent, path):
+    """
+    Functions functions resolves paths to make the {source} -> {task} mapping
+    work even then `jupyter notebook` is initialized from a subdirectory
+    of pipeline.yaml
+    """
+    try:
+        return str(Path(parent, path).relative_to(Path('.').resolve()))
+    except ValueError:
+        return None
 
 
 class PloomberContentsManager(TextFileContentsManager):
@@ -24,14 +38,25 @@ class PloomberContentsManager(TextFileContentsManager):
         don't do anything
         """
         # try to automatically locate the dag spec
-        dag = DAGSpec.auto_load()
+        dag, path = DAGSpec.auto_load()
+        path = Path(path).resolve()
+        path_parent = path.parent.resolve()
+
+        self.log.info('[Ploomber] found pipeline.yaml at: {}'.format(path))
 
         if dag:
             dag.render()
             self._dag = dag
-            self._dag_mapping = {str(t.source.loc): t for t in dag.values()}
+
+            tuples = [(resolve_path(path_parent, t.source.loc), t)
+                      for t in dag.values()]
+            self._dag_mapping = {t[0]: t[1]
+                                 for t in tuples if t[0] is not None}
+
             self.log.info('[Ploomber] Initialized Ploomber DAG from '
                           'pipeline.yaml...')
+            self.log.info('[Ploomber] Pipeline mapping: {}'
+                          .format(pprint(self._dag_mapping)))
         else:
             # no pipeline.yaml found...
             self.log.info('[Ploomber] No pipeline.yaml found, skipping DAG '

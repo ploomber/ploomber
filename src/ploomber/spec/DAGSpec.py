@@ -167,7 +167,7 @@ class DAGSpec(MutableMapping):
             return None
 
         try:
-            return cls.from_file(path).to_dag()
+            return cls.from_file(path).to_dag(), path
         except Exception as e:
             exc = DAGSpecInitializationError('Error initializing DAG from '
                                              'pipeline.yaml')

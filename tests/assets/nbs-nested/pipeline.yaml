@@ -1,0 +1,18 @@
+meta:
+  extract_upstream: True
+  extract_product: False
+
+tasks:
+  - source: load/load.py
+    class: NotebookRunner
+    name: load
+    product:
+      nb: output/load.ipynb
+      data: output/data.csv
+  
+  - source: clean/clean.py
+    class: NotebookRunner
+    name: clean
+    product:
+      nb: output/clean.ipynb
+      data: output/clean.csv
