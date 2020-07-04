@@ -5,8 +5,8 @@ CHANGELOG
 --------
 * Experimental PythonCallable.develop()
 
-0.5.1dev
---------
+0.5.1 (2020-06-30)
+------------------
 * Reduces the number of required dependencies
 * A new option in DBAPIClient to split source with a custom separator
 
