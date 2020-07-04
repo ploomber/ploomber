@@ -174,7 +174,7 @@ class DAGSpec(MutableMapping):
         path = find_file_recursively('pipeline.yaml')
 
         if path is None:
-            return None
+            return None, None
 
         try:
             return cls.from_file(path).to_dag(), path

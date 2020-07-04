@@ -39,12 +39,13 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         # try to automatically locate the dag spec
         dag, path = DAGSpec.auto_load()
-        path = Path(path).resolve()
-        path_parent = path.parent.resolve()
-
-        self.log.info('[Ploomber] found pipeline.yaml at: {}'.format(path))
 
         if dag:
+            path = Path(path).resolve()
+            path_parent = path.parent.resolve()
+
+            self.log.info('[Ploomber] found pipeline.yaml at: {}'.format(path))
+
             dag.render()
             self._dag = dag
 
