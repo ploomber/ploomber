@@ -45,7 +45,7 @@ class TaskDict(MutableMapping):
                              'should not have a "product" key'
                              .format(self.data))
 
-    def init(self, dag):
+    def to_task(self, dag):
         """Returns a Task instance
         """
         task_dict = self.data
@@ -131,11 +131,23 @@ def _init_product(task_dict, meta, task_class):
     else:
         kwargs = {}
 
+    relative_to = (Path(task_dict['source']).parent
+                   if meta['product_relative_to_source'] else False)
+
     if isinstance(product_raw, Mapping):
-        return {key: CLASS(value, **kwargs)
+        return {key: CLASS(resolve_product(value,
+                                           relative_to, CLASS), **kwargs)
                 for key, value in product_raw.items()}
     else:
-        return CLASS(product_raw, **kwargs)
+        return CLASS(resolve_product(product_raw,
+                                     relative_to, CLASS), **kwargs)
+
+
+def resolve_product(product_raw, relative_to, class_):
+    if not relative_to or class_ != products.File:
+        return product_raw
+    else:
+        return str(Path(relative_to, product_raw).resolve())
 
 
 def _init_client(task_dict):

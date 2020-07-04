@@ -73,7 +73,7 @@ class DAGSpec(MutableMapping):
             self.data['meta'] = {}
 
         valid = {'extract_upstream', 'extract_product',
-                 'product_default_class'}
+                 'product_default_class', 'product_relative_to_source'}
         validate.keys(valid, self.data['meta'], name='dag spec')
 
         if 'extract_upstream' not in self.data['meta']:
@@ -81,6 +81,9 @@ class DAGSpec(MutableMapping):
 
         if 'extract_product' not in self.data['meta']:
             self.data['meta']['extract_product'] = False
+
+        if 'product_relative_to_source' not in self.data['meta']:
+            self.data['meta']['product_relative_to_source'] = False
 
         defaults = {'SQLDump': 'File', 'NotebookRunner': 'File',
                     'SQLScript': 'SQLRelation'}
@@ -156,7 +159,14 @@ class DAGSpec(MutableMapping):
 
     @classmethod
     def auto_load(cls):
-        """Looks for a pipeline.yaml, generates a DAGSpec and returns a DAG
+        """
+        Looks for a pipeline.yaml, generates a DAGSpec and returns a DAG.
+        Currently, this is only used by the PloomberContentsManager, this is
+        not intended to be a public API since initializing specs from paths
+        where we have to recursively look for a pipeline.yaml has some
+        considerations regarding relative paths that make this confusing,
+        inside the contents manager, all those things are all handled for that
+        use case.
 
         The pipeline.yaml parent folder is temporarily added to sys.path when
         calling DAGSpec.to_dag() to make sure imports work as expected
@@ -208,7 +218,7 @@ def process_tasks(dag, tasks, dag_spec, root_path='.'):
         if dag_spec['meta']['extract_product']:
             task_dict_obj['product'] = extracted['product'][source]
 
-        task, up = task_dict_obj.init(dag)
+        task, up = task_dict_obj.to_task(dag)
         upstream[task] = up
 
     # once we added all tasks, set upstream dependencies

@@ -119,6 +119,10 @@ class NotebookRunner(Task):
         only used if exporting the output ipynb notebook to another format).
         You can use this for example to hide code cells using the exclude_input
         parameter
+    local_execution : bool, optional
+        Change working directory to be the parent of the notebook's source.
+        Defaults to False. This resembles the default behavior when
+        running notebooks interactively via `jupyter notebook`
     """
     PRODUCT_CLASSES_ALLOWED = (File, )
 
@@ -127,7 +131,7 @@ class NotebookRunner(Task):
                  papermill_params=None, kernelspec_name='python3',
                  nbconvert_exporter_name=None, ext_in=None,
                  nb_product_key='nb', static_analysis=False,
-                 nbconvert_export_kwargs=None):
+                 nbconvert_export_kwargs=None, local_execution=False):
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name
@@ -135,7 +139,13 @@ class NotebookRunner(Task):
         self.ext_in = ext_in
         self.nb_product_key = nb_product_key
         self.static_analysis = static_analysis
+        self.local_execution = local_execution
         super().__init__(source, product, dag, name, params)
+
+        if 'cwd' in self.papermill_params and self.local_execution:
+            raise KeyError('If local_execution is set to True, "cwd" should '
+                           'not appear in papermill_params, as such '
+                           'parameter will be set by the task itself')
 
         if isinstance(self.product, MetaProduct):
             if self.product.get(nb_product_key) is None:
@@ -266,6 +276,9 @@ class NotebookRunner(Task):
         tmp = Path(tmp)
         tmp.write_text(self.source.rendered_nb_str)
 
+        if self.local_execution:
+            self.papermill_params['cwd'] = str(self.source.loc.parent)
+
         try:
             # no need to pass parameters, they are already there
             pm.execute_notebook(str(tmp), str(path_to_out_nb),
@@ -276,7 +289,7 @@ class NotebookRunner(Task):
                                  ' executed notebook with traceback '
                                  'available at {}'
                                  .format(str(path_to_out_nb))) from e
-        else:
+        finally:
             tmp.unlink()
 
         # if output format other than ipynb, convert using nbconvert

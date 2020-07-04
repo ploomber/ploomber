@@ -65,10 +65,16 @@ default values.
 
     # pipeline.yaml
     meta:
+        # inspect source code to extract product
         extract_product: False
 
         # inspect source code to extract upstream dependencies
         extract_upstream: True
+
+        # Make paths in File products relative to their sources, otherwise
+        # they are arelative to the current working directory, defaults to
+        # false
+        product_relative_to_source: False
 
         # if any task does not have a "product_class" key, it will look up this
         # dictionary using the task class
