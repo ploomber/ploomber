@@ -51,10 +51,18 @@ def test_injects_cell_if_file_in_dag(tmp_nbs):
                                    "data": "output/clean.csv"}}
     product_expected = "output/plot.ipynb"
 
-    _, upstream, product, _ = injected['source'].split('\n')
+    upstream = None
+    product = None
 
-    assert upstream_expected == eval(upstream.split('=')[1])
-    assert product_expected == eval(product.split('=')[1])
+    # there is no order guarantee in Python 3.5, so we look for the definitions
+    for line in injected['source'].split('\n'):
+        if line.startswith('upstream'):
+            upstream = line.split('=')[1]
+        elif line.startswith('product'):
+            product = line.split('=')[1]
+
+    assert upstream_expected == eval(upstream)
+    assert product_expected == eval(product)
 
 
 def test_removes_injected_cell(tmp_nbs):
