@@ -1,3 +1,4 @@
+from inspect import getargspec
 import tempfile
 from pathlib import Path
 from io import StringIO
@@ -441,7 +442,23 @@ def inject_cell(model, params):
             cell.metadata['tags'] = []
 
     params = json_serializable_params(params)
-    model['content'] = parameterize_notebook(nb, params, report_mode=False)
+
+    comment = ('This cell was injected automatically based on your stated '
+               'upstream dependencies (cell above) and pipeline.yaml '
+               'preferences. It is temporary and will be removed when you '
+               'save this notebook')
+
+    # a PR was merged to include this, but it hasn't been released yet,
+    # so we check here
+    # https://github.com/nteract/papermill/pull/521
+    if 'comment' in getargspec(parameterize_notebook).args:
+        kwargs = {'comment': comment}
+    else:
+        kwargs = {}
+
+    model['content'] = parameterize_notebook(nb, params,
+                                             report_mode=False,
+                                             **kwargs)
 
 
 def _cleanup_rendered_nb(nb):
