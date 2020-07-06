@@ -47,11 +47,14 @@ def test_injects_cell_if_file_in_dag(tmp_nbs):
     injected = get_injected_cell(model['content'])
 
     assert injected
-    expected = ('# Parameters\nupstream = '
-                '{"clean": {"nb": "output/clean.ipynb", "data": '
-                '"output/clean.csv"}}\nproduct = '
-                '"output/plot.ipynb"\n')
-    assert expected == injected['source']
+    upstream_expected = {"clean": {"nb": "output/clean.ipynb",
+                                   "data": "output/clean.csv"}}
+    product_expected = "output/plot.ipynb"
+
+    _, upstream, product, _ = injected['source'].split('\n')
+
+    assert upstream_expected == eval(upstream.split('=')[1])
+    assert product_expected == eval(product.split('=')[1])
 
 
 def test_removes_injected_cell(tmp_nbs):
