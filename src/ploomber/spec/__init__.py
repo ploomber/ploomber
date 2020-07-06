@@ -72,7 +72,7 @@ default values.
         extract_upstream: True
 
         # Make paths in File products relative to their sources, otherwise
-        # they are arelative to the current working directory, defaults to
+        # they are relative to the current working directory, defaults to
         # false
         product_relative_to_source: False
 
