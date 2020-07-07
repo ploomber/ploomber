@@ -76,11 +76,13 @@ def infer_dependencies_from_code_cell(code_str):
                          "does not have dependencies add "
                          "upstream = None" % code_str)
     else:
-        if not (isinstance(upstream, Mapping) or upstream is None):
+        valid_types = (Mapping, list, tuple, set)
+        if not (isinstance(upstream, valid_types) or upstream is None):
             raise ValueError("Found an upstream variable but it is not a "
-                             "dictionary nor None, got '%s' type from code:\n"
+                             "valid type (dictionary, list, tuple set or None "
+                             ", got '%s' type from code:\n"
                              "'%s'" % (type(upstream), code_str))
-        elif isinstance(upstream, Mapping):
-            return set(upstream.keys())
+        elif isinstance(upstream, valid_types):
+            return set(upstream)
         else:
             return None

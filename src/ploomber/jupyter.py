@@ -43,27 +43,27 @@ class PloomberContentsManager(TextFileContentsManager):
                     '[Ploomber] An error occured when trying to initialize '
                     'the pipeline. If you want cells to be injected, '
                     'fix the issue and restart "jupyter notebook"')
-
-            if self.dag is not None:
-                self.dag.render()
-
-                path = Path(self.path).resolve()
-                path_parent = path.parent.resolve()
-
-                tuples = [(resolve_path(path_parent, t.source.loc), t)
-                          for t in self.dag.values()]
-                self.dag_mapping = {t[0]: t[1]
-                                    for t in tuples if t[0] is not None}
-
-                self.log.info('[Ploomber] Initialized dag from '
-                              'pipeline.yaml at'': {}'.format(path))
-                self.log.info('[Ploomber] Pipeline mapping: {}'
-                              .format(pprint(self.dag_mapping)))
             else:
-                # no pipeline.yaml found...
-                self.log.info('[Ploomber] No pipeline.yaml found, skipping '
-                              'DAG initialization...')
-                self.dag_mapping = None
+                if self.dag is not None:
+                    self.dag.render()
+
+                    path = Path(self.path).resolve()
+                    path_parent = path.parent.resolve()
+
+                    tuples = [(resolve_path(path_parent, t.source.loc), t)
+                              for t in self.dag.values()]
+                    self.dag_mapping = {t[0]: t[1]
+                                        for t in tuples if t[0] is not None}
+
+                    self.log.info('[Ploomber] Initialized dag from '
+                                  'pipeline.yaml at'': {}'.format(path))
+                    self.log.info('[Ploomber] Pipeline mapping: {}'
+                                  .format(pprint(self.dag_mapping)))
+                else:
+                    # no pipeline.yaml found...
+                    self.log.info('[Ploomber] No pipeline.yaml found, '
+                                  'skipping DAG initialization...')
+                    self.dag_mapping = None
 
     def reset_dag(self):
         self.spec = None
