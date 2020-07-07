@@ -54,10 +54,8 @@ def get_product(code_str):
                                                              'product')
 
     if not product_found:
-        raise ValueError("Could not parse a valid dictionary called "
-                         "'upstream' from code:\n'%s'. If the notebook "
-                         "does not have dependencies add "
-                         "upstream = None" % code_str)
+        raise ValueError("Could not parse a valid 'product' variable "
+                         "from code:\n%s" % code_str)
     else:
         return product
 
@@ -71,8 +69,8 @@ def infer_dependencies_from_code_cell(code_str):
                                                                'upstream')
 
     if not upstream_found:
-        raise ValueError("Could not parse a valid dictionary called "
-                         "'upstream' from code:\n'%s'. If the notebook "
+        raise ValueError("Could not parse a valid 'upstream' variable "
+                         "from code:\n'%s'. If the notebook "
                          "does not have dependencies add "
                          "upstream = None" % code_str)
     else:
