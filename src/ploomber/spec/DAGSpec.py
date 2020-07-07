@@ -73,7 +73,8 @@ class DAGSpec(MutableMapping):
             self.data['meta'] = {}
 
         valid = {'extract_upstream', 'extract_product',
-                 'product_default_class', 'product_relative_to_source'}
+                 'product_default_class', 'product_relative_to_source',
+                 'jupyter_hot_reload'}
         validate.keys(valid, self.data['meta'], name='dag spec')
 
         if 'extract_upstream' not in self.data['meta']:
@@ -84,6 +85,9 @@ class DAGSpec(MutableMapping):
 
         if 'product_relative_to_source' not in self.data['meta']:
             self.data['meta']['product_relative_to_source'] = False
+
+        if 'jupyter_hot_reload' not in self.data['meta']:
+            self.data['meta']['jupyter_hot_reload'] = False
 
         defaults = {'SQLDump': 'File', 'NotebookRunner': 'File',
                     'SQLScript': 'SQLRelation'}
@@ -174,10 +178,11 @@ class DAGSpec(MutableMapping):
         path = find_file_recursively('pipeline.yaml')
 
         if path is None:
-            return None, None
+            return None, None, None
 
         try:
-            return cls.from_file(path).to_dag(), path
+            spec = cls.from_file(path)
+            return spec, spec.to_dag(), path
         except Exception as e:
             exc = DAGSpecInitializationError('Error initializing DAG from '
                                              'pipeline.yaml')

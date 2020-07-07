@@ -31,39 +31,56 @@ class PloomberContentsManager(TextFileContentsManager):
     are deleted before saving the file
     """
 
+    def load_dag(self):
+        if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
+            self.log.info('[Ploomber] Loading dag...')
+
+            try:
+                self.spec, self.dag, self.path = DAGSpec.auto_load()
+            except DAGSpecInitializationError as e:
+                self.reset_dag()
+                self.log.exception(
+                    '[Ploomber] An error occured when trying to initialize '
+                    'the pipeline. If you want cells to be injected, '
+                    'fix the issue and restart "jupyter notebook"')
+
+            if self.dag is not None:
+                self.dag.render()
+
+                path = Path(self.path).resolve()
+                path_parent = path.parent.resolve()
+
+                tuples = [(resolve_path(path_parent, t.source.loc), t)
+                          for t in self.dag.values()]
+                self.dag_mapping = {t[0]: t[1]
+                                    for t in tuples if t[0] is not None}
+
+                self.log.info('[Ploomber] Initialized dag from '
+                              'pipeline.yaml at'': {}'.format(path))
+                self.log.info('[Ploomber] Pipeline mapping: {}'
+                              .format(pprint(self.dag_mapping)))
+            else:
+                # no pipeline.yaml found...
+                self.log.info('[Ploomber] No pipeline.yaml found, skipping '
+                              'DAG initialization...')
+                self.dag_mapping = None
+
+    def reset_dag(self):
+        self.spec = None
+        self.dag = None
+        self.path = None
+        self.dag_mapping = None
+
     def __init__(self, *args, **kwargs):
         """
         Initialize the content manger, look for a pipeline.yaml file in the
         current directory, if there is one, load it, if there isn't one
         don't do anything
         """
+        self.reset_dag()
+
         # try to automatically locate the dag spec
-        dag, path = DAGSpec.auto_load()
-
-        if dag:
-            path = Path(path).resolve()
-            path_parent = path.parent.resolve()
-
-            self.log.info('[Ploomber] found pipeline.yaml at: {}'.format(path))
-
-            dag.render()
-            self._dag = dag
-
-            tuples = [(resolve_path(path_parent, t.source.loc), t)
-                      for t in dag.values()]
-            self._dag_mapping = {t[0]: t[1]
-                                 for t in tuples if t[0] is not None}
-
-            self.log.info('[Ploomber] Initialized Ploomber DAG from '
-                          'pipeline.yaml...')
-            self.log.info('[Ploomber] Pipeline mapping: {}'
-                          .format(pprint(self._dag_mapping)))
-        else:
-            # no pipeline.yaml found...
-            self.log.info('[Ploomber] No pipeline.yaml found, skipping DAG '
-                          'initialization...')
-            self._dag = None
-            self._dag_mapping = None
+        self.load_dag()
 
         return super(PloomberContentsManager, self).__init__(*args, **kwargs)
 
@@ -74,10 +91,14 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         model = super(PloomberContentsManager, self).get(*args, **kwargs)
 
+        # if opening a file (ignore file listing), load dag again
+        if (model['content'] and model['type'] == 'notebook'):
+            self.load_dag()
+
         if self._model_in_dag(model):
             self.log.info('[Ploomber] Injecting cell...')
             inject_cell(model=model,
-                        params=self._dag_mapping[model['path']]._params)
+                        params=self.dag_mapping[model['path']]._params)
 
         return model
 
@@ -104,9 +125,9 @@ class PloomberContentsManager(TextFileContentsManager):
         else:
             path = path.strip('/')
 
-        if self._dag:
+        if self.dag:
             if (model['content'] and model['type'] == 'notebook'):
-                if path in self._dag_mapping:
+                if path in self.dag_mapping:
                     # NOTE: not sure why sometimes the model comes with a
                     # names and sometimes it doesn't
                     self.log.info('[Ploomber] {} is part of the pipeline... '
@@ -149,12 +170,6 @@ def _load_jupyter_server_extension(app):
                                                           log=app.log)
         app.session_manager.contents_manager = app.contents_manager
         app.web_app.settings["contents_manager"] = app.contents_manager
-
-    except DAGSpecInitializationError as e:
-        app.log.error('[Ploomber] An error occured when trying to initialize '
-                      'the pipeline. If you want cells to be injected, '
-                      'fix the issue and restart "jupyter notebook"')
-        raise
     except Exception:
         error = """[Ploomber] An error occured. Please
 deactivate the server extension with "jupyter serverextension disable ploomber"

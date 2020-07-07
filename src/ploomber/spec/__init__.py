@@ -83,6 +83,11 @@ default values.
             NotebookRunner: File
             SQLScript: SQLRelation
 
+        # Reload your pipeline every time you open a Jupyter notebook. Only
+        # applies if the server extension is enabled. Not recommended for
+        # large pipelines
+        jupyter_hot_reload: False
+
     # For allowed keys and values see ploomber.DAGConfigurator
     config:
         {config-key}: {config-value}
