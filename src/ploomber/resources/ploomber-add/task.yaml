@@ -1,0 +1,11 @@
+- source: [[source]]
+  # Optionally add a name
+  # name: some_name
+  [% if not extract_upstream -%]
+  upstream: # add upstream dependencies here
+  [% endif %]
+  [% if not extract_product -%]
+  product:
+    nb: # add path to executed notebook here
+    # and any other generated files here
+  [% endif %]

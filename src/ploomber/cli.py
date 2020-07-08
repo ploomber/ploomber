@@ -2,11 +2,12 @@ import sys
 from functools import partial
 from pathlib import Path
 
+from jinja2 import Environment, PackageLoader
+import click
+import yaml
 from ploomber import __version__
 from ploomber.entry import entry as entry_module
 from ploomber.spec.DAGSpec import DAGSpec
-from jinja2 import Environment, PackageLoader
-import click
 
 
 def _copy(filename, env):
@@ -58,10 +59,19 @@ def _add(name):
                        'you want to replace it.'.format(name))
         else:
             if name.suffix in {'.py', '.sql'}:
-                click.echo('Added {}...'.format(name))
+                click.echo('Adding {}...'.format(name))
                 template = env.get_template('task'+name.suffix)
                 content = template.render(**spec['meta'])
                 name.write_text(content)
+
+                template_task = env.get_template('task.yaml')
+                content_task = template_task.render(source=str(name),
+                                                    **spec['meta'])
+
+                click.echo('Done!\nAdd the following entry to your '
+                           'pipeline.yaml in the tasks section:\n\n{}'
+                           .format(content_task))
+
             else:
                 click.echo('Error: This command does not support adding tasks '
                            'with extension "{}", valid ones are .py and .sql'
