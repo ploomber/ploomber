@@ -20,7 +20,7 @@ from ploomber import products
 from ploomber import DAG, tasks
 from ploomber.util.util import load_dotted_path, find_file_recursively
 from ploomber.static_analysis import project
-from ploomber.spec.TaskDict import TaskDict
+from ploomber.spec.TaskSpec import TaskSpec
 from ploomber.spec import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.exceptions import DAGSpecInitializationError
@@ -53,7 +53,7 @@ class DAGSpec(MutableMapping):
                                   for task in self.data['tasks']]
             self._validate_meta()
 
-            self.data['tasks'] = [TaskDict(t, self.data['meta'])
+            self.data['tasks'] = [TaskSpec(t, self.data['meta'])
                                   for t in self.data['tasks']]
 
     def _validate_top_level_keys(self, spec):

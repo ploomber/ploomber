@@ -16,7 +16,7 @@ suffix2taskclass = {
 }
 
 
-class TaskDict(MutableMapping):
+class TaskSpec(MutableMapping):
     def __init__(self, data, meta):
         # FIXME: make sure data and meta are immutable structures
         self.data = data
