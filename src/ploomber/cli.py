@@ -7,6 +7,7 @@ import click
 from ploomber import __version__
 from ploomber.entry import entry as entry_module
 from ploomber.spec.DAGSpec import DAGSpec
+from ploomber.spec.TaskDict import TaskDict
 
 
 def _copy(filename, env):
@@ -19,7 +20,7 @@ def _copy(filename, env):
 def cli():
     """Ploomber command line interface.
 
-    To start an nteractive session:
+    To start an nteractive session (use "dag" variable when it starts):
 
     ipython -i -m ploomber.entry pipeline.yaml -- --action status
     """
@@ -34,16 +35,13 @@ def new():
 
 
 @cli.command()
-@click.argument('name')
-def add(name):
-    """Add a task to a current project
+def add():
+    """Add tasks declared in pipeline.yaml whose source code files do not exist
     """
-    _add(name)
+    _add()
 
 
-def _add(name):
-    name = Path(name)
-
+def _add():
     spec, path = DAGSpec.auto_load(to_dag=False)
 
     if path:
@@ -57,28 +55,25 @@ def _add(name):
             block_end_string='%]'
         )
 
-        if name.exists():
-            click.echo('Error: File "{}" already exists, delete it first if '
-                       'you want to replace it.'.format(name))
-        else:
-            if name.suffix in {'.py', '.sql'}:
-                click.echo('Adding {}...'.format(name))
-                template = env.get_template('task'+name.suffix)
-                content = template.render(**spec['meta'])
-                name.write_text(content)
+        for task in spec['tasks']:
+            source = Path(task['source'])
+            # FIXME: create parent folders, add test
+            # FIXME: remove this once DAGSpec is refactored and this happens
+            # automatically
+            task = TaskDict(task, meta=spec['meta'])
 
-                template_task = env.get_template('task.yaml')
-                content_task = template_task.render(source=str(name),
-                                                    **spec['meta'])
+            if not source.exists():
+                if source.suffix in {'.py', '.sql'}:
+                    click.echo('Adding {}...'.format(source))
+                    template = env.get_template('task'+source.suffix)
+                    content = template.render(**spec['meta'])
+                    source.write_text(content)
 
-                click.echo('Done!\nAdd the following entry to your '
-                           'pipeline.yaml in the tasks section:\n\n{}'
-                           .format(content_task))
-
-            else:
-                click.echo('Error: This command does not support adding tasks '
-                           'with extension "{}", valid ones are .py and .sql'
-                           .format(name.suffix))
+                else:
+                    click.echo('Error: This command does not support adding '
+                               'tasks with extension "{}", valid ones are '
+                               '.py and .sql. Skipping {}'
+                               .format(source.suffix, source))
 
     else:
         click.echo('Error: No pipeline.yaml spec found...')
@@ -86,12 +81,12 @@ def _add(name):
 
 def _new():
     env = Environment(
-            loader=PackageLoader('ploomber', 'resources/ploomber-new'),
-            variable_start_string='[[',
-            variable_end_string=']]',
-            block_start_string='[%',
-            block_end_string='%]'
-        )
+        loader=PackageLoader('ploomber', 'resources/ploomber-new'),
+        variable_start_string='[[',
+        variable_end_string=']]',
+        block_start_string='[%',
+        block_end_string='%]'
+    )
     copy = partial(_copy, env=env)
 
     click.echo('This utility will guide you through the process of starting '

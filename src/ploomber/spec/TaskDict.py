@@ -24,6 +24,9 @@ class TaskDict(MutableMapping):
         self.validate()
 
     def validate(self):
+        if 'upstream' not in self.data:
+            self.data['upstream'] = None
+
         if self.meta['extract_product']:
             required = {'source'}
         else:
@@ -49,7 +52,7 @@ class TaskDict(MutableMapping):
         """Returns a Task instance
         """
         task_dict = self.data
-        upstream = _pop_upstream(task_dict)
+        upstream = _make_iterable(task_dict.pop('upstream'))
         class_ = get_task_class(task_dict)
 
         product = _init_product(task_dict, self.meta, class_)
@@ -104,11 +107,6 @@ def _make_iterable(o):
         return []
     else:
         return [o]
-
-
-def _pop_upstream(task_dict):
-    upstream = task_dict.pop('upstream', None)
-    return _make_iterable(upstream)
 
 
 # FIXME: how do we make a default product client? use the task's client?

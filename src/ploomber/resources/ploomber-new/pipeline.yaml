@@ -3,7 +3,7 @@
 # To build the pipeline:
 #     $ ploomber entry pipeline.yaml
 #
-# To start an interactive session
+# To start an interactive session (use "dag" variable when it starts):
 #     $ ipython -i -m ploomber.entry pipeline.yaml -- --action status
 
 meta:

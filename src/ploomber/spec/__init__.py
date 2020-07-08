@@ -16,12 +16,11 @@ To create a new project with basic structure:
 
     ploomber new
 
-To add tasks to an existing project:
-
+To add tasks to an existing project, update your pipeline.yaml file and execute:
 
 .. code-block:: bash
 
-    ploomber add my_new_task.py # or .sql
+    ploomber add
 
 
 Build pipeline:

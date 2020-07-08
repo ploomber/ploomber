@@ -24,13 +24,19 @@ def test_ploomber_new(answer, tmp_directory, monkeypatch):
 def test_ploomber_add(file, header, extract_flag, tmp_directory):
     sample_spec = {'meta':
                    {'extract_upstream': extract_flag,
-                    'extract_product': extract_flag},
-                   'tasks': []}
+                    'extract_product': extract_flag}}
+
+    task = {'source': file}
+
+    if not extract_flag:
+        task['product'] = 'nb.ipynb'
+
+    sample_spec['tasks'] = [task]
 
     with open('pipeline.yaml', 'w') as f:
         yaml.dump(sample_spec, f)
 
-    _add(file)
+    _add()
 
     content = Path(file).read_text()
 
@@ -45,12 +51,12 @@ def test_ploomber_add_unknown_extension(tmp_directory, capsys):
     sample_spec = {'meta':
                    {'extract_upstream': False,
                     'extract_product': False},
-                   'tasks': []}
+                   'tasks': [{'source': 'task.txt', 'product': 'nb.ipynb'}]}
 
     with open('pipeline.yaml', 'w') as f:
         yaml.dump(sample_spec, f)
 
-    _add('task.txt')
+    _add()
 
     captured = capsys.readouterr()
     out = ('Error: This command does not support adding tasks with '
@@ -59,13 +65,13 @@ def test_ploomber_add_unknown_extension(tmp_directory, capsys):
 
 
 def test_ploomber_add_missing_spec(tmp_directory, capsys):
-    _add('task.py')
+    _add()
 
     captured = capsys.readouterr()
     assert 'Error: No pipeline.yaml spec found...' in captured.out
 
 
-def test_ploomber_add_file_exists(tmp_directory, capsys):
+def test_ploomber_add_skip_if_file_exists(tmp_directory, capsys):
     sample_spec = {'meta':
                    {'extract_upstream': False,
                     'extract_product': False},
@@ -76,8 +82,6 @@ def test_ploomber_add_file_exists(tmp_directory, capsys):
 
     Path('task.py').touch()
 
-    _add('task.py')
+    _add()
 
-    captured = capsys.readouterr()
-    out = 'Error: File "task.py" already exists'
-    assert out in captured.out
+    assert Path('task.py').read_text() == ''

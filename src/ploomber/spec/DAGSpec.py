@@ -29,6 +29,8 @@ from ploomber.exceptions import DAGSpecInitializationError
 logger = logging.getLogger(__name__)
 
 
+# FIXME: dagspec shuld initialize TaskDict automatically, currently, it delays
+# this until the spec is converted to DAG
 class DAGSpec(MutableMapping):
     """
     A DAG spec is a dictionary with certain structure that can be converted
