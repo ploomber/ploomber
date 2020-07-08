@@ -46,6 +46,7 @@ class SourceLoader:
     """
 
     def __init__(self, path=None, module=None):
+
         if path is None and module is None:
             raise TypeError('Path cannot be None if module is None')
 

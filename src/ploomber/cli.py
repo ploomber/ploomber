@@ -5,6 +5,8 @@ from pathlib import Path
 
 from ploomber import __version__
 from ploomber.entry import entry as entry_module
+from ploomber.spec.DAGSpec import DAGSpec
+from jinja2 import Environment, PackageLoader
 from ploomber import SourceLoader
 import click
 
@@ -23,12 +25,50 @@ def cli():
 
 @cli.command()
 def new():
+    """Create a base project
+    """
     _new()
 
 
-def _new():
-    """Create a base project
+@cli.command()
+@click.argument('name')
+def add(name):
+    """Add a new task
     """
+    _add(name)
+
+
+def _add(name):
+    name = Path(name)
+
+    spec, path = DAGSpec.auto_load(to_dag=False)
+
+    if path:
+        click.echo('Found spec at {}'.format(path))
+
+        env = Environment(
+            loader=PackageLoader('ploomber', 'resources/ploomber-add'),
+            variable_start_string='[[',
+            variable_end_string=']]',
+            block_start_string='[%',
+            block_end_string='%]'
+        )
+
+        if name.exists():
+            click.echo('Error: File "{}" already exists, delete it first if '
+                       'you want to replace it.'.format(name))
+        else:
+            if name.suffix == '.py':
+                click.echo('Added {}...'.format(name))
+                template = env.get_template('task.py')
+                content = template.render(**spec['meta'])
+                name.write_text(content)
+
+    else:
+        click.echo('Error: No pipeline.yaml spec found...')
+
+
+def _new():
     loader = SourceLoader(path=str(Path('resources', 'ploomber-new')),
                           module='ploomber')
     copy = partial(_copy, loader=loader)

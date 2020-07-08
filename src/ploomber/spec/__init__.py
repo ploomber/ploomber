@@ -73,7 +73,7 @@ default values.
 
         # Make paths in File products relative to their sources, otherwise
         # they are relative to the current working directory, defaults to
-        # false
+        # False
         product_relative_to_source: False
 
         # if any task does not have a "product_class" key, it will look up this
