@@ -60,6 +60,8 @@ class TaskDict(MutableMapping):
         name_raw = task_dict.pop('name', None)
 
         on_finish = task_dict.pop('on_finish', None)
+        on_render = task_dict.pop('on_render', None)
+        on_failure = task_dict.pop('on_failure', None)
 
         task = class_(source=Path(source_raw),
                       product=product,
@@ -69,6 +71,12 @@ class TaskDict(MutableMapping):
 
         if on_finish:
             task.on_finish = load_dotted_path(on_finish)
+
+        if on_render:
+            task.on_render = load_dotted_path(on_render)
+
+        if on_failure:
+            task.on_failure = load_dotted_path(on_failure)
 
         return task, upstream
 

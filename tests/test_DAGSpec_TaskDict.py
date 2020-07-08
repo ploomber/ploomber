@@ -23,19 +23,22 @@ def test_error_if_extract_but_keys_declared(task, meta):
         TaskDict(task, meta)
 
 
-def test_include_on_finish(tmp_directory, add_current_to_sys_path):
+def test_add_hook(tmp_directory, add_current_to_sys_path):
     task = {'product': 'notebook.ipynb', 'source': 'source.py',
-            'on_finish': 'hooks.on_finish'}
+            'on_finish': 'hooks.some_hook', 'on_render': 'hooks.some_hook',
+            'on_failure': 'hooks.some_hook'}
     meta = DAGSpec.default_meta()
 
     Path('source.py').touch()
 
     Path('hooks.py').write_text("""
 
-def on_finish():
+def some_hook():
     pass
     """)
 
     dag = DAG()
     t, _ = TaskDict(task, meta).to_task(dag)
     assert t.on_finish
+    assert t.on_render
+    assert t.on_failure
