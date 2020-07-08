@@ -7,7 +7,6 @@ import click
 from ploomber import __version__
 from ploomber.entry import entry as entry_module
 from ploomber.spec.DAGSpec import DAGSpec
-from ploomber.spec.TaskDict import TaskDict
 
 
 def _copy(filename, env):
@@ -57,9 +56,6 @@ def _add():
 
         for task in spec['tasks']:
             source = Path(task['source'])
-            # FIXME: remove this once DAGSpec is refactored and this happens
-            # automatically
-            task = TaskDict(task, meta=spec['meta'])
 
             if not source.exists():
                 # create parent folders if needed

@@ -215,7 +215,7 @@ def test_init_with_tasks_list():
 
 
 def test_extract_upstream_with_empty_meta():
-    spec = DAGSpec(['load.py'])
+    spec = DAGSpec([{'source': 'load.py', 'product': 'load.html'}])
     assert spec['meta']['extract_upstream']
 
 

@@ -29,8 +29,6 @@ from ploomber.exceptions import DAGSpecInitializationError
 logger = logging.getLogger(__name__)
 
 
-# FIXME: dagspec shuld initialize TaskDict automatically, currently, it delays
-# this until the spec is converted to DAG
 class DAGSpec(MutableMapping):
     """
     A DAG spec is a dictionary with certain structure that can be converted
@@ -54,6 +52,9 @@ class DAGSpec(MutableMapping):
             self.data['tasks'] = [normalize_task(task)
                                   for task in self.data['tasks']]
             self._validate_meta()
+
+            self.data['tasks'] = [TaskDict(t, self.data['meta'])
+                                  for t in self.data['tasks']]
 
     def _validate_top_level_keys(self, spec):
         load_from_factory = False
@@ -236,15 +237,13 @@ def process_tasks(dag, tasks, dag_spec, root_path='.'):
     for task_dict in tasks:
         source = task_dict['source']
 
-        task_dict_obj = TaskDict(task_dict, dag_spec['meta'])
-
         if dag_spec['meta']['extract_upstream']:
-            task_dict_obj['upstream'] = extracted['upstream'][source]
+            task_dict['upstream'] = extracted['upstream'][source]
 
         if dag_spec['meta']['extract_product']:
-            task_dict_obj['product'] = extracted['product'][source]
+            task_dict['product'] = extracted['product'][source]
 
-        task, up = task_dict_obj.to_task(dag)
+        task, up = task_dict.to_task(dag)
         upstream[task] = up
 
     # once we added all tasks, set upstream dependencies
