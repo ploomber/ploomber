@@ -11,9 +11,9 @@
 # + tags=["parameters"]
 [% if extract_upstream -%]
 # extract_upstream is set to True in your pipeline.yaml. If this task has
-# upstream dependencies, list their names here. If there are no dependencies,
-# make it equal to None
-upstream = {'some_task', 'another_task'}
+# upstream dependencies, list their names here (e.g. {'some_task',
+# 'another_task'}. If there are no dependencies, leave it as None
+upstream = None
 [% else -%]
 # extract_upstream is set to False in your pipeline.yaml, keep it equal to
 # None here and declare "upstream" dependencies directly in the YAML spec
