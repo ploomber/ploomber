@@ -18,7 +18,7 @@ from collections.abc import MutableMapping
 
 from ploomber import products
 from ploomber import DAG, tasks
-from ploomber.util.util import _load_factory, find_file_recursively
+from ploomber.util.util import load_dotted_path, find_file_recursively
 from ploomber.static_analysis import project
 from ploomber.spec.TaskDict import TaskDict
 from ploomber.spec import validate
@@ -142,7 +142,7 @@ class DAGSpec(MutableMapping):
     def _to_dag(self):
         # FIXME: validate that if there is location, there isn't anything else
         if 'location' in self:
-            factory = _load_factory(self['location'])
+            factory = load_dotted_path(self['location'])
             return factory()
 
         tasks = self.pop('tasks')
@@ -240,7 +240,7 @@ def init_clients(dag, clients):
         if not class_:
             class_ = getattr(products, class_name)
 
-        dag.clients[class_] = _load_factory(dotted_path)()
+        dag.clients[class_] = load_dotted_path(dotted_path)()
 
 
 def normalize_task(task):

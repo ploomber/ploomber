@@ -229,7 +229,7 @@ def _parse_module(dotted_path):
     return '.'.join(parts[:-1]), parts[-1]
 
 
-def _load_factory(dotted_path):
+def load_dotted_path(dotted_path):
     mod, name = _parse_module(dotted_path)
 
     try:

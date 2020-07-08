@@ -5,7 +5,7 @@ import pandas as pd
 from pathlib import Path
 import pytest
 from ploomber.spec.DAGSpec import DAGSpec
-from ploomber.util.util import _load_factory
+from ploomber.util.util import load_dotted_path
 import yaml
 from conftest import _path_to_tests, fixture_tmp_dir
 import jupytext
@@ -140,7 +140,7 @@ def test_postgres_sql_spec(tmp_pipeline_sql, pg_client_and_schema,
     df = pd.DataFrame({'customer_id': np.random.randint(0, 5, 100),
                        'value': np.random.rand(100),
                        'purchase_date': dates})
-    loader = _load_factory(dag_spec['clients']['SQLScript'])
+    loader = load_dotted_path(dag_spec['clients']['SQLScript'])
     client = loader()
     df.to_sql('sales', client.engine, if_exists='replace')
     client.engine.dispose()
@@ -165,7 +165,7 @@ def test_sqlite_sql_spec(spec, tmp_pipeline_sql, add_current_to_sys_path):
     df = pd.DataFrame({'customer_id': np.random.randint(0, 5, 100),
                        'value': np.random.rand(100),
                        'purchase_date': dates})
-    loader = _load_factory(dag_spec['clients']['SQLScript'])
+    loader = load_dotted_path(dag_spec['clients']['SQLScript'])
     client = loader()
     df.to_sql('sales', client.engine)
     client.engine.dispose()
@@ -190,13 +190,13 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
                        'value': np.random.rand(100),
                        'purchase_date': dates})
     # make sales data for pg and sqlite
-    loader = _load_factory(dag_spec['clients']['PostgresRelation'])
+    loader = load_dotted_path(dag_spec['clients']['PostgresRelation'])
     client = loader()
     df.to_sql('sales', client.engine, if_exists='replace')
     client.engine.dispose()
 
     # make sales data for pg and sqlite
-    loader = _load_factory(dag_spec['clients']['SQLiteRelation'])
+    loader = load_dotted_path(dag_spec['clients']['SQLiteRelation'])
     client = loader()
     df.to_sql('sales', client.engine)
     client.engine.dispose()

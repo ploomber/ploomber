@@ -5,7 +5,7 @@ from pathlib import Path
 from collections.abc import MutableMapping, Iterable, Mapping
 
 from ploomber import tasks, products
-from ploomber.util.util import _load_factory
+from ploomber.util.util import load_dotted_path
 from ploomber.spec import validate
 
 suffix2taskclass = {
@@ -127,7 +127,7 @@ def _init_product(task_dict, meta, task_class):
 
     if 'product_client' in task_dict:
         dotted_path = task_dict.pop('product_client')
-        kwargs = {'client': _load_factory(dotted_path)()}
+        kwargs = {'client': load_dotted_path(dotted_path)()}
     else:
         kwargs = {}
 
@@ -157,7 +157,7 @@ def resolve_product(product_raw, relative_to, class_):
 def _init_client(task_dict):
     if 'client' in task_dict:
         dotted_path = task_dict.pop('client')
-        task_dict['client'] = _load_factory(dotted_path)()
+        task_dict['client'] = load_dotted_path(dotted_path)()
 
 
 def get_task_class(task_dict):
