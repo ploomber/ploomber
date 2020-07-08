@@ -7,19 +7,22 @@
 #     $ ipython -i -m ploomber.entry pipeline.yaml -- --action status
 
 meta:
+  [% if db -%]
   product_default_class:
     # replace for GenericSQLRelation, SQLiteRelation or PostgresRelation
     # it you want to save metadata (required for incremental builds)
     SQLScript: SQLRelation
+  [% endif %]
+  # inspect source code to extract upstream dependencies
+  extract_upstream: True
 
-config:
-  # reload source code without having to restart the interactive session
-  hot_reload: True
+  # do not inspect source code to extract product (declare them here)
+  extract_product: False
 
-
+[% if db -%]
 clients:
   SQLScript: db.get_client
-
+[% endif %]
 
 tasks:
   # list tasks here

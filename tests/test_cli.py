@@ -7,8 +7,9 @@ import click
 from ploomber.cli import _new, _add
 
 
-def test_ploomber_new(tmp_directory, monkeypatch):
-    monkeypatch.setattr(click, 'confirm', lambda x: True)
+@pytest.mark.parametrize('answer', [False, True])
+def test_ploomber_new(answer, tmp_directory, monkeypatch):
+    monkeypatch.setattr(click, 'confirm', lambda x: answer)
     _new()
     assert not subprocess.call(['ploomber', 'entry', 'pipeline.yaml'])
 

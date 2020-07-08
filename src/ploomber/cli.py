@@ -1,18 +1,17 @@
 import sys
 from functools import partial
-import shutil
 from pathlib import Path
 
 from ploomber import __version__
 from ploomber.entry import entry as entry_module
 from ploomber.spec.DAGSpec import DAGSpec
 from jinja2 import Environment, PackageLoader
-from ploomber import SourceLoader
 import click
 
 
-def _copy(filename, loader):
-    shutil.copy(str(loader[filename].path), filename)
+def _copy(filename, env):
+    content = env.get_template(filename).render()
+    Path(filename).write_text(content)
 
 
 @click.group()
@@ -73,20 +72,26 @@ def _add(name):
 
 
 def _new():
-    loader = SourceLoader(path=str(Path('resources', 'ploomber-new')),
-                          module='ploomber')
-    copy = partial(_copy, loader=loader)
+    env = Environment(
+            loader=PackageLoader('ploomber', 'resources/ploomber-new'),
+            variable_start_string='[[',
+            variable_end_string=']]',
+            block_start_string='[%',
+            block_end_string='%]'
+        )
+    copy = partial(_copy, env=env)
 
     click.echo('This utility will guide you through the process of starting '
                'a new project')
-    click.echo('Adding pipeline.yaml...')
-    copy('pipeline.yaml')
-
     db = click.confirm('Do you need to connect to a database?')
 
     if db:
         click.echo('Adding db.py...')
         copy('db.py')
+
+    click.echo('Adding pipeline.yaml...')
+    content = env.get_template('pipeline.yaml').render(db=db)
+    Path('pipeline.yaml').write_text(content)
 
     conda = click.confirm('Do you you want to use conda to '
                           'manage virtual environments (recommended)?')
