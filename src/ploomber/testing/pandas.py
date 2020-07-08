@@ -19,6 +19,10 @@ def load_product(product):
         return loader(product)
 
 
+def no_nulls_in_columns(cols, product):
+    return not nulls_in_columns(cols, product)
+
+
 def nulls_in_columns(cols, product):
     """Check if any column has NULL values, returns bool
     """
@@ -38,6 +42,10 @@ def duplicates_in_column(col, product):
     """
     df = load_product(product)
     return (df[col].value_counts() > 1).sum() > 0
+
+
+def no_duplicates_in_column(col, product):
+    return not duplicates_in_column(col, product)
 
 
 def range_in_column(col, product):
