@@ -18,6 +18,10 @@ def _copy(filename, env):
 @click.version_option(version=__version__)
 def cli():
     """Ploomber command line interface.
+
+    To start an nteractive session:
+
+    ipython -i -m ploomber.entry pipeline.yaml -- --action status
     """
     pass
 
