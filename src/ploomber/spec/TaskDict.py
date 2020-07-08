@@ -59,11 +59,16 @@ class TaskDict(MutableMapping):
         source_raw = task_dict.pop('source')
         name_raw = task_dict.pop('name', None)
 
+        on_finish = task_dict.pop('on_finish', None)
+
         task = class_(source=Path(source_raw),
                       product=product,
                       name=name_raw or source_raw,
                       dag=dag,
                       **task_dict)
+
+        if on_finish:
+            task.on_finish = load_dotted_path(on_finish)
 
         return task, upstream
 

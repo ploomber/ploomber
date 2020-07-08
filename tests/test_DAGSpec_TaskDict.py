@@ -1,5 +1,8 @@
+from pathlib import Path
 import pytest
 from ploomber.spec.TaskDict import TaskDict
+from ploomber.spec.DAGSpec import DAGSpec
+from ploomber import DAG
 
 
 @pytest.mark.parametrize('key', ['source', 'product'])
@@ -18,3 +21,21 @@ def test_validate_missing_source(key):
 def test_error_if_extract_but_keys_declared(task, meta):
     with pytest.raises(ValueError):
         TaskDict(task, meta)
+
+
+def test_include_on_finish(tmp_directory, add_current_to_sys_path):
+    task = {'product': 'notebook.ipynb', 'source': 'source.py',
+            'on_finish': 'hooks.on_finish'}
+    meta = DAGSpec.default_meta()
+
+    Path('source.py').touch()
+
+    Path('hooks.py').write_text("""
+
+def on_finish():
+    pass
+    """)
+
+    dag = DAG()
+    t, _ = TaskDict(task, meta).to_task(dag)
+    assert t.on_finish

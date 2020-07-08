@@ -72,32 +72,42 @@ class DAGSpec(MutableMapping):
         if 'meta' not in self.data:
             self.data['meta'] = {}
 
+        self.default_meta(self.data['meta'])
+
+    @classmethod
+    def default_meta(cls, meta=None):
+        """Fill missing values in a meta dictionary
+        """
+        meta = meta or {}
+
         valid = {'extract_upstream', 'extract_product',
                  'product_default_class', 'product_relative_to_source',
                  'jupyter_hot_reload'}
-        validate.keys(valid, self.data['meta'], name='dag spec')
+        validate.keys(valid, meta, name='dag spec')
 
-        if 'extract_upstream' not in self.data['meta']:
-            self.data['meta']['extract_upstream'] = True
+        if 'extract_upstream' not in meta:
+            meta['extract_upstream'] = True
 
-        if 'extract_product' not in self.data['meta']:
-            self.data['meta']['extract_product'] = False
+        if 'extract_product' not in meta:
+            meta['extract_product'] = False
 
-        if 'product_relative_to_source' not in self.data['meta']:
-            self.data['meta']['product_relative_to_source'] = False
+        if 'product_relative_to_source' not in meta:
+            meta['product_relative_to_source'] = False
 
-        if 'jupyter_hot_reload' not in self.data['meta']:
-            self.data['meta']['jupyter_hot_reload'] = False
+        if 'jupyter_hot_reload' not in meta:
+            meta['jupyter_hot_reload'] = False
 
         defaults = {'SQLDump': 'File', 'NotebookRunner': 'File',
                     'SQLScript': 'SQLRelation'}
 
-        if 'product_default_class' not in self.data['meta']:
-            self.data['meta']['product_default_class'] = defaults
+        if 'product_default_class' not in meta:
+            meta['product_default_class'] = defaults
         else:
             for class_, prod in defaults.items():
-                if class_ not in self.data['meta']['product_default_class']:
-                    self.data['meta']['product_default_class'][class_] = prod
+                if class_ not in meta['product_default_class']:
+                    meta['product_default_class'][class_] = prod
+
+        return meta
 
     def __getitem__(self, key):
         return self.data[key]
