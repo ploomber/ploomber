@@ -28,7 +28,7 @@ product = {'nb': 'path/to/notebook.ipynb', 'data': 'path/to/output.csv'}
 [% else -%]
 # extract_product is set to False in your pipeline.yaml, keep it equal to
 # None here and declare a "product" directly in the YAML spec
-upstream = None
+product = None
 [% endif %]
 # NOTE: During execution, a cell will be injected below to resolve "upstream"
 # and "product" based on preferences in your pipeline.yaml spec. If you
