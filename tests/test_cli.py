@@ -19,7 +19,9 @@ def test_ploomber_new(answer, tmp_directory, monkeypatch):
                              ('task.py', 'Python task', False),
                              ('task.py', 'Python task', True),
                              ('task.sql', 'SQL task', False),
-                             ('task.sql', 'SQL task', True)
+                             ('task.sql', 'SQL task', True),
+                             # test file with sub-directories
+                             ('sql/task.sql', 'SQL task', True)
                          ])
 def test_ploomber_add(file, header, extract_flag, tmp_directory):
     sample_spec = {'meta':

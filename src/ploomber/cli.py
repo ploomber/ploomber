@@ -57,12 +57,14 @@ def _add():
 
         for task in spec['tasks']:
             source = Path(task['source'])
-            # FIXME: create parent folders, add test
             # FIXME: remove this once DAGSpec is refactored and this happens
             # automatically
             task = TaskDict(task, meta=spec['meta'])
 
             if not source.exists():
+                # create parent folders if needed
+                source.parent.mkdir(parents=True, exist_ok=True)
+
                 if source.suffix in {'.py', '.sql'}:
                     click.echo('Adding {}...'.format(source))
                     template = env.get_template('task'+source.suffix)
