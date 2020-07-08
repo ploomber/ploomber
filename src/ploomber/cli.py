@@ -58,11 +58,15 @@ def _add(name):
             click.echo('Error: File "{}" already exists, delete it first if '
                        'you want to replace it.'.format(name))
         else:
-            if name.suffix == '.py':
+            if name.suffix in {'.py', '.sql'}:
                 click.echo('Added {}...'.format(name))
-                template = env.get_template('task.py')
+                template = env.get_template('task'+name.suffix)
                 content = template.render(**spec['meta'])
                 name.write_text(content)
+            else:
+                click.echo('Error: This command does not support adding tasks '
+                           'with extension "{}", valid ones are .py and .sql'
+                           .format(name.suffix))
 
     else:
         click.echo('Error: No pipeline.yaml spec found...')
