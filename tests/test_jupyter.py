@@ -7,6 +7,7 @@ from pathlib import Path
 import yaml
 from ipython_genutils.tempdir import TemporaryDirectory
 from notebook.services.contents.tests.test_manager import TestContentsManager
+from notebook.notebookapp import NotebookApp
 import jupytext
 
 from ploomber.jupyter import PloomberContentsManager
@@ -138,3 +139,9 @@ def test_hot_reload(tmp_nbs):
     path.write_text(original_code)
     model = cm.get('plot.py')
     assert get_injected_cell(model['content'])
+
+
+def test_server_extension_is_initialized():
+    app = NotebookApp()
+    app.initialize()
+    assert isinstance(app.contents_manager, PloomberContentsManager)

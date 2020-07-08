@@ -10,6 +10,7 @@ dependencies:
   - numpy
   - pandas
   - matplotlib
+  - pip
   # if you need to install something using pip, list it here
   - pip:
     - ploomber
