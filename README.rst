@@ -97,40 +97,6 @@ SQL script example
     WHERE x > 10
 
 
-
-To run your pipeline:
-
-.. code-block:: bash
-
-    ploomber entry pipeline.yaml
-
-
-If you build again, tasks whose source code is the same (and all
-upstream dependencies) are skipped.
-
-
-Start an interactive session (note the double dash):
-
-.. code-block:: bash
-
-    ipython -i -m ploomber.entry pipeline.yaml -- --action status
-
-
-During an interactive session:
-
-
-.. code-block:: python
-
-    # visualize dependencies
-    dag.plot()
-
-    # develop your Python script interactively
-    dag['task'].develop()
-
-    # line by line debugging
-    dag['task'].debug()
-
-
 Install
 -------
 
@@ -156,8 +122,8 @@ To install Ploomber along with all optional dependencies:
     # for more options, see: https://www.graphviz.org/download/
 
 
-Create a project with basic structure
--------------------------------------
+Create a new project
+--------------------
 
 .. code-block:: shell
 
