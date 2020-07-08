@@ -1,4 +1,4 @@
-# Documentation:
+# Commonly used commands:
 
 # To build the pipeline:
 #     $ ploomber entry pipeline.yaml

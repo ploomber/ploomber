@@ -2,3 +2,4 @@ include CHANGELOG.rst
 include README.rst
 include src/ploomber/resources/*
 include src/ploomber/resources/ploomber-new/*
+include src/ploomber/resources/ploomber-add/*
