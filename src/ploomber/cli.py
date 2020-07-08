@@ -127,8 +127,8 @@ def _new():
     Now create your environment with the following command:
       conda env create --file environment.yml
 
-    Then activate it:
-      conda activate my-ploomber-project
+    Then activate it (you can change the name by editing environment.yml):
+      conda activate my-project
     """ + out_message
 
     click.echo(out_message)

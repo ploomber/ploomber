@@ -1,7 +1,7 @@
 # Install environment:
 #   $ conda env create --file environment.yml
 
-name: my-ploomber-project
+name: my-project
 
 dependencies:
   # change the version here if you need to
