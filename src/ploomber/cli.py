@@ -4,7 +4,6 @@ from pathlib import Path
 
 from jinja2 import Environment, PackageLoader
 import click
-import yaml
 from ploomber import __version__
 from ploomber.entry import entry as entry_module
 from ploomber.spec.DAGSpec import DAGSpec
@@ -18,14 +17,14 @@ def _copy(filename, env):
 @click.group()
 @click.version_option(version=__version__)
 def cli():
-    """Ploomber command line interface
+    """Ploomber command line interface.
     """
     pass
 
 
 @cli.command()
 def new():
-    """Create a base project
+    """Create a new project
     """
     _new()
 
@@ -33,7 +32,7 @@ def new():
 @cli.command()
 @click.argument('name')
 def add(name):
-    """Add a new task
+    """Add a task to a current project
     """
     _add(name)
 
@@ -141,6 +140,8 @@ def _new():
 @cli.command()
 @click.argument('entry_point')
 def entry(entry_point):
+    """Call an entry point (pipeline.yaml or dotted path to factory)
+    """
     # NOTE: we don't use the argument here, it is parsed by _main
     # pop the second element ('entry') to make the CLI behave as expected
     sys.argv.pop(1)
