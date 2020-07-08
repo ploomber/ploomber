@@ -153,6 +153,15 @@ Notes
     # set to True
     upstream: {str or list, optional}
 
+    # Function to execute when the task renders successfully
+    on_render: {dotted.path.to.function, optional}
+
+    # Function to execute when the task finishes successfully
+    on_finish: {dotted.path.to.function, optional}
+
+    # Function to execute when the task fails
+    on_failure: {dotted.path.to.function, optional}
+
     # NOTE: All remaining values are passed to the task constructor as keyword
     arguments
 

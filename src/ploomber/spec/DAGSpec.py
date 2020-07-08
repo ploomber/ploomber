@@ -78,7 +78,8 @@ class DAGSpec(MutableMapping):
     def default_meta(cls, meta=None):
         """Fill missing values in a meta dictionary
         """
-        meta = meta or {}
+        if meta is None:
+            meta = {}
 
         valid = {'extract_upstream', 'extract_product',
                  'product_default_class', 'product_relative_to_source',
