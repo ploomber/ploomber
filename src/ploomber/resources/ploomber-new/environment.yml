@@ -1,5 +1,6 @@
 # Install environment:
-#   conda env create --file environment.yml
+#   $ conda env create --file environment.yml
+
 name: my-ploomber-project
 
 dependencies:
@@ -9,6 +10,6 @@ dependencies:
   - numpy
   - pandas
   - matplotlib
-  # if you need to install something using pip, list them here
+  # if you need to install something using pip, list it here
   - pip:
     - ploomber

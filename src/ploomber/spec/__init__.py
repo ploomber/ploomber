@@ -237,6 +237,12 @@ parameters and deletes them before saving changes. To enable it:
 
     jupyter serverextension enable ploomber
 
+To disable it:
+
+.. code-block:: bash
+
+    jupyter serverextension disable ploomber
+
 
 `Click here for documentation on Jupyter extensions <https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/Distributing%20Jupyter%20Extensions%20as%20Python%20Packages.html#Enable-a-Server-Extension`_
 

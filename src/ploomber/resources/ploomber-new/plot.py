@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # + tags=["parameters"]
-upstream = {'clean': None}
+upstream = {'clean'}
 product = None
 
 # +

@@ -1,3 +1,6 @@
+"""
+Documentation: https://ploomber.readthedocs.io/en/stable/modules/clients.html
+"""
 from ploomber.clients import SQLAlchemyClient
 
 
