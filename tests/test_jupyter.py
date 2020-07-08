@@ -29,7 +29,6 @@ class PloomberContentsManagerTestCase(TestContentsManager):
         self.contents_manager = PloomberContentsManager(root_dir=self.td)
 
 
-# FIXME: test with nested notebooks
 # the following tests check our custom logic
 
 def get_injected_cell(nb):

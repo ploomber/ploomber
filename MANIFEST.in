@@ -1,5 +1,6 @@
 include CHANGELOG.rst
 include README.rst
+recursive-include jupyter-config *.json
 include src/ploomber/resources/*
 include src/ploomber/resources/ploomber-new/*
 include src/ploomber/resources/ploomber-add/*
