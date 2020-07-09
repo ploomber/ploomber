@@ -11,6 +11,9 @@ Ploomber
 .. image:: https://mybinder.org/badge_logo.svg
  :target: https://mybinder.org/v2/gh/ploomber/projects/master
 
+ .. image:: https://badge.fury.io/py/ploomber.svg
+    :target: https://badge.fury.io/py/ploomber
+
 
 
 Point Ploomber to your Python and SQL scripts in a ``pipeline.yaml`` file and it will figure out execution order by extracting dependencies from them.
