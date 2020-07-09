@@ -11,8 +11,8 @@ Ploomber
 .. image:: https://mybinder.org/badge_logo.svg
  :target: https://mybinder.org/v2/gh/ploomber/projects/master
 
- .. image:: https://badge.fury.io/py/ploomber.svg
-    :target: https://badge.fury.io/py/ploomber
+.. image:: https://badge.fury.io/py/ploomber.svg
+  :target: https://badge.fury.io/py/ploomber
 
 
 
