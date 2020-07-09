@@ -53,6 +53,6 @@ before_script:
   - psql -c 'create database db;' -U postgres
 
 script:
-  - pytest
+  - pytest --cov=ploomber
 
 after_success: coveralls
