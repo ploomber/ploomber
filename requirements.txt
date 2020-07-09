@@ -4,7 +4,8 @@ numpy>=1.16
 
 # testing
 pytest>=3.5
-# pytest-cov
+pytest-cov
+coveralls
 # pytest-flake8
 
 # to convert notebooks and execute them as python scripts
