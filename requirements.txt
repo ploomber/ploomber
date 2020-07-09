@@ -4,6 +4,7 @@ numpy>=1.16
 
 # testing
 pytest>=3.5
+coveralls
 # pytest-cov
 # pytest-flake8
 
