@@ -15,8 +15,11 @@ Ploomber
   :target: https://badge.fury.io/py/ploomber
 
 
-
 Point Ploomber to your Python and SQL scripts in a ``pipeline.yaml`` file and it will figure out execution order by extracting dependencies from them.
+
+
+.. image:: https://asciinema.org/a/346484.svg
+  :target: https://asciinema.org/a/346484
 
 
 It also keeps track of source code changes to speed up builds by skipping up-to-date tasks. This is a great way to interactively develop your projects, sync work with your team and quickly recover from crashes (just fix the bug and build again).
