@@ -18,7 +18,7 @@ from ploomber.exceptions import DAGSpecInitializationError
 def chdir(directory):
     old_dir = os.getcwd()
     try:
-        os.chdir(directory)
+        os.chdir(str(directory))
         yield
     finally:
         os.chdir(old_dir)
