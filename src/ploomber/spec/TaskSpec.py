@@ -163,18 +163,14 @@ def resolve_product(product_raw, relative_to, class_):
         # when using DAGSpec.auto_load(), in such case, relative paths won't
         # work if the current working directory is different  to the
         # pipeline.yaml folder (this happens sometimes in the Jupyter UI).
-        # Resolve to an absolute path if needed
-        resolved = Path(relative_to).resolve()
-        current = Path('.').resolve()
-
-        if resolved == current:
-            relative_to = '.'
+        # We resolve paths to avoid ambiguity on this
 
         # we call resolve in relative_to and then append the rest because
         # Python 3.5 raises a FileNotFoundError is calling resolve in a path
         # that does not exist
 
-        return str(Path(relative_to, product_raw))
+        resolved = Path(relative_to).resolve()
+        return str(Path(resolved, product_raw))
 
 
 def _init_client(task_dict):

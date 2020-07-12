@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import pytest
 from ploomber.spec.TaskSpec import TaskSpec
@@ -38,7 +39,7 @@ def some_hook():
     """)
 
     dag = DAG()
-    t, _ = TaskSpec(task, meta).to_task(dag)
+    t, _ = TaskSpec(task, meta).to_task(dag, root_path=os.getcwd())
     assert t.on_finish
     assert t.on_render
     assert t.on_failure
