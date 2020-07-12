@@ -65,6 +65,13 @@ def test_injects_cell_if_file_in_dag(tmp_nbs):
     assert upstream_expected == eval(upstream)
     assert product_expected == eval(product)
 
+def test_injects_cell_even_if_pipeline_yaml_in_subdirectory(tmp_nbs):
+    os.chdir('..')
+    cm = PloomberContentsManager()
+    model = cm.get('content/plot.py')
+    injected = get_injected_cell(model['content'])
+    assert injected
+
 
 def test_removes_injected_cell(tmp_nbs):
     cm = PloomberContentsManager()

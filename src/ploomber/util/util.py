@@ -1,16 +1,13 @@
+import os
 from pathlib import Path
 import importlib
 from functools import wraps, reduce
 import base64
-# from glob import glob
-# from pathlib import Path
-# from collections import defaultdict
 import shutil
 import inspect
 from itertools import chain
 from glob import iglob
 
-# from ploomber.products import File
 from ploomber.exceptions import CallbackSignatureError, TaskRenderError
 
 
@@ -248,22 +245,22 @@ def load_dotted_path(dotted_path):
     return factory
 
 
-def find_file_recursively(name, max_levels_up=6):
+def find_file_recursively(name, max_levels_up=6, starting_dir=None):
     """
     Find environment by looking into the current folder and parent folders,
     returns None if no file was found otherwise pathlib.Path to the file
     """
-    def levels_up(n):
-        return chain.from_iterable(iglob('../' * i + '**')
-                                   for i in range(n + 1))
-
+    current_dir = starting_dir or os.getcwd()
+    current_dir = Path(current_dir)
     path_to_file = None
 
-    for filename in levels_up(max_levels_up):
-        p = Path(filename)
+    for _ in range(max_levels_up):
+        current_path = Path(current_dir, name)
 
-        if p.name == name:
-            path_to_file = filename
+        if current_path.exists():
+            path_to_file = current_path.resolve()
             break
+
+        current_dir = current_dir.parent
 
     return path_to_file

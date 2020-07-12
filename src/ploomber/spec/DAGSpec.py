@@ -176,7 +176,7 @@ class DAGSpec(MutableMapping):
         return dag
 
     @classmethod
-    def auto_load(cls, to_dag=True):
+    def auto_load(cls, to_dag=True, starting_dir=None):
         """
         Looks for a pipeline.yaml, generates a DAGSpec and returns a DAG.
         Currently, this is only used by the PloomberContentsManager, this is
@@ -189,7 +189,8 @@ class DAGSpec(MutableMapping):
         The pipeline.yaml parent folder is temporarily added to sys.path when
         calling DAGSpec.to_dag() to make sure imports work as expected
         """
-        path = find_file_recursively('pipeline.yaml')
+        path = find_file_recursively('pipeline.yaml',
+                                     starting_dir=starting_dir or os.getcwd())
 
         if path is None:
             if to_dag:
