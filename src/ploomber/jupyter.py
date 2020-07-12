@@ -1,13 +1,27 @@
 """
 Module for the jupyter extension
 """
+import os
+import contextlib
 from pprint import pprint
 from pathlib import Path
+
 from jupytext.contentsmanager import TextFileContentsManager
+
 from ploomber.sources.NotebookSource import (_cleanup_rendered_nb,
                                              inject_cell)
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.exceptions import DAGSpecInitializationError
+
+
+@contextlib.contextmanager
+def chdir(directory):
+    old_dir = os.getcwd()
+    try:
+        os.chdir(str(directory))
+        yield
+    finally:
+        os.chdir(old_dir)
 
 
 def resolve_path(parent, path):
@@ -31,12 +45,13 @@ class PloomberContentsManager(TextFileContentsManager):
     are deleted before saving the file
     """
 
-    def load_dag(self):
+    def load_dag(self, starting_dir=None):
         if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
             self.log.info('[Ploomber] Loading dag...')
 
             try:
-                self.spec, self.dag, self.path = DAGSpec.auto_load()
+                (self.spec, self.dag,
+                 self.path) = DAGSpec.auto_load(starting_dir=starting_dir)
             except DAGSpecInitializationError as e:
                 self.reset_dag()
                 self.log.exception(
@@ -45,10 +60,12 @@ class PloomberContentsManager(TextFileContentsManager):
                     'fix the issue and restart "jupyter notebook"')
             else:
                 if self.dag is not None:
-                    self.dag.render()
 
                     path = Path(self.path).resolve()
                     path_parent = path.parent.resolve()
+
+                    with chdir(path_parent):
+                        self.dag.render()
 
                     tuples = [(resolve_path(path_parent, t.source.loc), t)
                               for t in self.dag.values()]
@@ -93,7 +110,12 @@ class PloomberContentsManager(TextFileContentsManager):
 
         # if opening a file (ignore file listing), load dag again
         if (model['content'] and model['type'] == 'notebook'):
-            self.load_dag()
+
+            # Look for the pipeline.yaml file from the file we are rendering
+            # and search recursively. This is required to cover the case when
+            # pipeline.yaml is in a subdirectory from the folder where the
+            # user executed "jupyter notebook"
+            self.load_dag(starting_dir=Path(os.getcwd(), model['path']).parent)
 
         if self._model_in_dag(model):
             self.log.info('[Ploomber] Injecting cell...')
