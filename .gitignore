@@ -8,6 +8,7 @@ doc/auto_examples/
 examples/pipeline/results/
 
 .pytest_cache/
+.vscode/
 
 #### joe made this: https://goel.io/joe
 
