@@ -35,8 +35,30 @@ class DAGSpec(MutableMapping):
     to a DAG using DAGSpec.to_dag().
 
     There are two cases: the simplest one is just a dictionary with a
-    "location" key with the factory to call, the other explicitely describes
+    "location" key with the factory to call, the other explicitly describes
     the DAG structure as a dictionary.
+
+    Notes
+    -----
+    Relative paths are heavily used for pointing to source files and products,
+    before the introduction of the Spec API, this was unambiguous: all paths
+    were relative to the current working directory, you only had to make sure
+    to start the session at the right place. Initially, the Spec API didn't
+    change a thing since the assumption was that one would convert a spec to
+    a DAG in a folder containing a pipeline.yaml file and paths in such file
+    would be relative to the file itself, no ambiguity. However, when we
+    introduced the Jupyter custom contents manager things changed because the
+    DAG can be initialized from directories where there isn't a pipeline.yaml
+    but we have to recursively look for one. Furthermore, if extract_upstream
+    or extract_product are True and the source files are not in the same folder
+    as pipeline.yaml an ambiguity arises: are paths inside a source file
+    relative to the source file or pipeline.yaml? To make this consistent,
+    all relative paths (whether in a pipeline.yaml or in a source file) are
+    relative to the pipeline.yaml folder but this can be changed with the
+    product_relative_to_source option. Furthermore, when usign the custom
+    contents manager, we convert relative paths to absolute in special cases
+    to make sure they work. This is why we need to keep the pipeline.yaml
+    location when initializing a DAG from a spec.
     """
     def __init__(self, data):
         # only set when initialized from DAGSpec.from_file
@@ -171,7 +193,7 @@ class DAGSpec(MutableMapping):
         if clients:
             init_clients(dag, clients)
 
-        process_tasks(dag, tasks, self)
+        process_tasks(dag, tasks, self, root_path=self._parent_path)
 
         return dag
 
@@ -224,7 +246,9 @@ class DAGSpec(MutableMapping):
         return spec
 
 
-def process_tasks(dag, tasks, dag_spec, root_path='.'):
+def process_tasks(dag, tasks, dag_spec, root_path=None):
+    root_path = root_path or '.'
+
     # determine if we need to run static analysis
     meta = dag_spec['meta']
     sources = [task_dict['source'] for task_dict in tasks]
@@ -244,7 +268,7 @@ def process_tasks(dag, tasks, dag_spec, root_path='.'):
         if dag_spec['meta']['extract_product']:
             task_dict['product'] = extracted['product'][source]
 
-        task, up = task_dict.to_task(dag)
+        task, up = task_dict.to_task(dag, root_path)
         upstream[task] = up
 
     # once we added all tasks, set upstream dependencies

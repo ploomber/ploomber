@@ -48,14 +48,14 @@ class TaskSpec(MutableMapping):
                              'should not have a "product" key'
                              .format(self.data))
 
-    def to_task(self, dag):
+    def to_task(self, dag, root_path):
         """Returns a Task instance
         """
         task_dict = self.data
         upstream = _make_iterable(task_dict.pop('upstream'))
         class_ = get_task_class(task_dict)
 
-        product = _init_product(task_dict, self.meta, class_)
+        product = _init_product(task_dict, self.meta, class_, root_path)
 
         _init_client(task_dict)
 
@@ -110,7 +110,7 @@ def _make_iterable(o):
 
 
 # FIXME: how do we make a default product client? use the task's client?
-def _init_product(task_dict, meta, task_class):
+def _init_product(task_dict, meta, task_class, root_path):
     """
     Resolution logic order:
         task.product_class
@@ -143,7 +143,7 @@ def _init_product(task_dict, meta, task_class):
         kwargs = {}
 
     relative_to = (Path(task_dict['source']).parent
-                   if meta['product_relative_to_source'] else False)
+                   if meta['product_relative_to_source'] else root_path)
 
     if isinstance(product_raw, Mapping):
         return {key: CLASS(resolve_product(value,
@@ -155,13 +155,25 @@ def _init_product(task_dict, meta, task_class):
 
 
 def resolve_product(product_raw, relative_to, class_):
-    if not relative_to or class_ != products.File:
+    if class_ != products.File:
         return product_raw
     else:
+        # When a DAG is initialized, paths are usually relative to the folder
+        # that has the pipeline.yaml, the only case when this isn't true is
+        # when using DAGSpec.auto_load(), in such case, relative paths won't
+        # work if the current working directory is different  to the
+        # pipeline.yaml folder (this happens sometimes in the Jupyter UI).
+        # Resolve to an absolute path if needed
+        resolved = Path(relative_to).resolve()
+        current = Path('.').resolve()
+
+        if resolved == current:
+            relative_to = '.'
+
         # we call resolve in relative_to and then append the rest because
         # Python 3.5 raises a FileNotFoundError is calling resolve in a path
         # that does not exist
-        relative_to = Path(relative_to).resolve()
+
         return str(Path(relative_to, product_raw))
 
 
