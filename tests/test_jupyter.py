@@ -9,6 +9,7 @@ from ipython_genutils.tempdir import TemporaryDirectory
 from notebook.services.contents.tests.test_manager import TestContentsManager
 from notebook.notebookapp import NotebookApp
 import jupytext
+import parso
 
 from ploomber.jupyter import PloomberContentsManager
 
@@ -59,20 +60,15 @@ def test_injects_cell_if_file_in_dag(tmp_nbs):
     upstream = None
     product = None
 
-    line_split = None
+    for node in parso.parse(injected['source']).children:
+        code = node.get_code()
+        if 'upstream' in code:
+            upstream = code.split('=')[1]
+        elif 'product' in code:
+            product = code.split('=')[1]
 
-    source_lines = injected['source'].split('\n')
-
-    # there is no order guarantee in Python 3.5, so we look for the definitions
-    for i, line in enumerate(source_lines):
-        if line.startswith('product'):
-            line_split = i
-
-    upstream_eval = eval('\n'.join(source_lines[:line_split]).split('=')[1])
-    product_eval = eval('\n'.join(source_lines[line_split:]).split('=')[1])
-
-    assert upstream_expected == upstream_eval
-    assert product_expected == product_eval
+    assert upstream_expected == eval(upstream)
+    assert product_expected == eval(product)
 
 def test_injects_cell_even_if_pipeline_yaml_in_subdirectory(tmp_nbs):
     os.chdir('..')
