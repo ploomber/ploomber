@@ -43,7 +43,7 @@ def get_injected_cell(nb):
 
 def test_injects_cell_if_file_in_dag(tmp_nbs):
     def resolve(path):
-        return str(Path(path).resolve())
+        return str(Path('.').resolve() / path)
 
     cm = PloomberContentsManager()
     model = cm.get('plot.py')
