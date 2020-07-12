@@ -1,0 +1,13 @@
+# pipeline.yaml
+tasks:
+  - source: users.sql
+    name: users
+    product: [my_schema, users, table]
+
+  - source: actions.sql
+    name: actions
+    product: [my_schema, actions, table]
+
+  - source: agg.sql
+    name: agg
+    product: [my_schema, agg, table]

@@ -1,0 +1,10 @@
+meta:
+  extract_product: True
+  extract_upstream: True
+
+
+# pipeline.yaml
+tasks:
+  - source: raw.py
+  - source: clean.py
+  - source: plot.py
