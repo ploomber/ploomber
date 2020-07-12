@@ -42,28 +42,37 @@ def get_injected_cell(nb):
 
 
 def test_injects_cell_if_file_in_dag(tmp_nbs):
+    def resolve(path):
+        return str(Path('.').resolve() / path)
+
     cm = PloomberContentsManager()
     model = cm.get('plot.py')
 
     injected = get_injected_cell(model['content'])
 
     assert injected
-    upstream_expected = {"clean": {"nb": "output/clean.ipynb",
-                                   "data": "output/clean.csv"}}
-    product_expected = "output/plot.ipynb"
+
+    upstream_expected = {"clean": {"nb": resolve("output/clean.ipynb"),
+                                   "data": resolve("output/clean.csv")}}
+    product_expected = resolve("output/plot.ipynb")
 
     upstream = None
     product = None
 
-    # there is no order guarantee in Python 3.5, so we look for the definitions
-    for line in injected['source'].split('\n'):
-        if line.startswith('upstream'):
-            upstream = line.split('=')[1]
-        elif line.startswith('product'):
-            product = line.split('=')[1]
+    line_split = None
 
-    assert upstream_expected == eval(upstream)
-    assert product_expected == eval(product)
+    source_lines = injected['source'].split('\n')
+
+    # there is no order guarantee in Python 3.5, so we look for the definitions
+    for i, line in enumerate(source_lines):
+        if line.startswith('product'):
+            line_split = i
+
+    upstream_eval = eval('\n'.join(source_lines[:line_split]).split('=')[1])
+    product_eval = eval('\n'.join(source_lines[line_split:]).split('=')[1])
+
+    assert upstream_expected == upstream_eval
+    assert product_expected == product_eval
 
 def test_injects_cell_even_if_pipeline_yaml_in_subdirectory(tmp_nbs):
     os.chdir('..')

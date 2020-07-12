@@ -83,8 +83,8 @@ default values.
         extract_upstream: True
 
         # Make paths in File products relative to their sources, otherwise
-        # they are relative to the current working directory, defaults to
-        # False
+        # they are relative to folder where pipeline.yaml is located, defaults
+        # to False
         product_relative_to_source: False
 
         # if any task does not have a "product_class" key, it will look up this
