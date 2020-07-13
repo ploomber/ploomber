@@ -12,26 +12,26 @@ uses product(s) from A as inputs.
 
 To create a new project with basic structure:
 
-.. code-block:: bash
+.. code-block:: console
 
     ploomber new
 
 To add tasks to an existing project, update your pipeline.yaml file and execute:
 
-.. code-block:: bash
+.. code-block:: console
 
     ploomber add
 
 
 Build pipeline:
 
-.. code-block:: bash
+.. code-block:: console
 
     python entry pipeline.yaml
 
 To start an interactive session:
 
-.. code-block:: bash
+.. code-block:: console
 
     ipython -i -m ploomber.entry pipeline.yaml -- --action status
 
@@ -77,9 +77,9 @@ Values within {curly brackets} contain explanations, otherwise, they represent
 default values.
 
 .. code-block:: yaml
-    :linenos:
+    :class: text-editor
+    :name: pipeline-yaml
 
-    # pipeline.yaml
     meta:
         # inspect source code to extract product
         extract_product: False
@@ -123,7 +123,7 @@ Notes
 * If using a factory, the spec can just be
 
 .. code-block:: yaml
-    :linenos:
+    :class: text-editor
 
     # pipeline.yaml
     location: {dotted.path.to.factory}
@@ -132,7 +132,8 @@ Notes
 ---------------
 
 .. code-block:: yaml
-    :linenos:
+    :class: text-editor
+    :name: task-schema-yaml
 
     # Any of the classes available in the tasks module
     # If missing, it will be inferred from "source".
@@ -180,8 +181,7 @@ Notes
     # Function to execute when the task fails
     on_failure: {dotted.path.to.function, optional}
 
-    # NOTE: All remaining values are passed to the task constructor as keyword
-    arguments
+    # NOTE: All remaining values are passed to the task constructor as keyword arguments
 
 
 Click here to go to :doc:`faq_index/`.
@@ -202,7 +202,8 @@ If your task is a script, this leads to a cell injection. Say you have a script
 that looks like this:
 
 .. code-block:: python
-    :linenos:
+    :class: text-editor
+    :name: task-py
 
     # annotated python file (converted to a notebook during execution)
 
@@ -219,7 +220,8 @@ This is not the code that Ploomber executes, but rather one with an injected
 cell:
 
 .. code-block:: python
-    :linenos:
+    :class: text-editor
+    :name: task-rendered-py
 
     # annotated python file (converted to a notebook during execution)
 
@@ -242,13 +244,13 @@ To eliminate the gap between the code you write and the one that gets executed,
 a Jupyter notebook extension is provided. Which automatically injects
 parameters and deletes them before saving changes. To enable it:
 
-.. code-block:: bash
+.. code-block:: console
 
     jupyter serverextension enable ploomber
 
 To disable it:
 
-.. code-block:: bash
+.. code-block:: console
 
     jupyter serverextension disable ploomber
 
@@ -262,8 +264,9 @@ SQL scripts details
 When tasks execute SQL, upstream dependencies are propagated in the upstream
 dictionary:
 
-.. code-block:: sql
-    :linenos:
+.. code-block:: postgresql
+    :class: text-editor
+    :name: task-sql
 
     DROP TABLE IF EXISTS {{product}};
 

@@ -2,7 +2,15 @@
 
 /* Based on https://codeeverywhere.ca/post.php?id=10 */
 
+/* Available code lexers in sphinx 
+https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCodeExamplesInSphinx.html
+*/
+
 .highlight * { margin: 0; padding: 0; }
+
+.highlight {
+    background-color: black;
+}
 
 .highlight pre {
     background-color: RGB(2, 3, 3);
@@ -19,15 +27,41 @@
 }
 
 
-
-
-.highlight-bash .highlight pre {
-    color: white;
+.btns {
+    position: absolute;
+    top: 7px;
+    left: 5px;
 }
 
+.highlight-console { position: relative; }
+.highlight-yaml { position: relative; }
+.highlight-python { position: relative; }
+.highlight-postgresql { position: relative; }
 
-.highlight-bash .highlight pre::before {
+/* Terminal window buttons shapes */
+
+.btns .circle {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    border-radius: 15px;
+    margin-left: 2px;
+    border-width: 1px;
+    border-style: solid;
+}
+
+/* Terminal window buttons colors */
+
+.red { background: #EC6A5F; border-color: #D04E42; }
+.green { background: #64CC57; border-color: #4EA73B; }
+.yellow{ background: #F5C04F; border-color: #D6A13D; }
+
+
+/* Prompts to differentiate shell vs ipython */
+
+.highlight-console .highlight pre::before {
   content: "$ ";
+  color: RGB(255, 255, 255);
 }
 
 .ipython pre::before {

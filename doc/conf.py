@@ -77,3 +77,13 @@ sphinx_gallery_conf = {
     'filename_pattern': '/',
     'ignore_pattern': r'__init__\.py',
 }
+
+nbsphinx_prolog = """
+.. raw:: html
+
+    <style>
+        div.nbinput.container div.input_area {
+            background: black;
+        }
+    </style>
+"""
