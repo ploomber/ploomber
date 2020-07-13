@@ -41,12 +41,14 @@ Once the interactive session opens, use the ``dag`` object.
 Visualize dependencies:
 
 .. code-block:: python
+    :class: ipython
 
     dag.plot()
 
 Develop scripts interactively:
 
 .. code-block:: python
+    :class: ipython
 
     dag['some_task'].develop()
 
@@ -54,6 +56,7 @@ Develop scripts interactively:
 Line by line debugging:
 
 .. code-block:: python
+    :class: ipython
 
     dag['some_task'].debug()
 
@@ -62,6 +65,7 @@ Print the rendered source code from SQL scripts:
 
 
 .. code-block:: python
+    :class: ipython
 
     print(dag['some_sql_task'].source)
 
@@ -73,6 +77,7 @@ Values within {curly brackets} contain explanations, otherwise, they represent
 default values.
 
 .. code-block:: yaml
+    :linenos:
 
     # pipeline.yaml
     meta:
@@ -118,6 +123,7 @@ Notes
 * If using a factory, the spec can just be
 
 .. code-block:: yaml
+    :linenos:
 
     # pipeline.yaml
     location: {dotted.path.to.factory}
@@ -126,6 +132,7 @@ Notes
 ---------------
 
 .. code-block:: yaml
+    :linenos:
 
     # Any of the classes available in the tasks module
     # If missing, it will be inferred from "source".
@@ -195,6 +202,7 @@ If your task is a script, this leads to a cell injection. Say you have a script
 that looks like this:
 
 .. code-block:: python
+    :linenos:
 
     # annotated python file (converted to a notebook during execution)
 
@@ -211,6 +219,7 @@ This is not the code that Ploomber executes, but rather one with an injected
 cell:
 
 .. code-block:: python
+    :linenos:
 
     # annotated python file (converted to a notebook during execution)
 
@@ -254,6 +263,7 @@ When tasks execute SQL, upstream dependencies are propagated in the upstream
 dictionary:
 
 .. code-block:: sql
+    :linenos:
 
     DROP TABLE IF EXISTS {{product}};
 

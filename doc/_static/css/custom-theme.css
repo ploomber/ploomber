@@ -1,0 +1,36 @@
+@import '../nature.css';
+
+/* Based on https://codeeverywhere.ca/post.php?id=10 */
+
+.highlight * { margin: 0; padding: 0; }
+
+.highlight pre {
+    background-color: RGB(2, 3, 3);
+    padding: 10px;
+}
+
+.terminal-top {
+    background: #E8E6E8;
+    color: black;
+    padding: 5px;
+    border-radius: 5px 5px 0 0;
+    text-align: center;
+    font-size: 12px;
+}
+
+
+
+
+.highlight-bash .highlight pre {
+    color: white;
+}
+
+
+.highlight-bash .highlight pre::before {
+  content: "$ ";
+}
+
+.ipython pre::before {
+  content: "In []: ";
+  color: RGB(0, 200, 0);
+}
