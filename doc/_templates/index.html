@@ -1,0 +1,61 @@
+<!-- https://ofosos.org/2018/12/28/landing-page-template/ -->
+
+<style type="text/css">
+
+.button {
+  background-color: RGB(107, 168, 30);
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 18px;
+  border-radius: 12px;
+  width: 100%;
+}
+</style>
+
+{% extends "layout.html" %}
+
+{% block body %}
+<h1>Ploomber</h1>
+
+
+<p>
+List your pipeline tasks in a <code>pipeline.yaml</code> file, declare which upstream tasks to use as inputs and where to save outputs. Ploomber will propagate inputs to downstream consumers and orchestrate pipeline end-to-end execution.
+
+You can open your Python scripts as Jupyter notebooks for development. During execution, they are converted to notebooks to embed tables and charts.
+</p>
+
+<p>Here's a short video demonstrating how it works:</p>
+
+<a href="https://asciinema.org/a/346484"><img alt="1-minute video" src="https://asciinema.org/a/346484.svg"></a>
+
+
+<h2>Installation</h2>
+
+<p><code>pip install ploomber</code></p>
+
+
+<h2>If you're new to Plomber...</h2>
+
+<form action="{{ pathto('getting-started') }}">
+   <button class="button" type="submit">Getting started</button>
+</form>
+
+<h2>If you want to dive into the details...</h2>
+
+<form action="{{ pathto('documentation') }}">
+   <button class="button" type="submit">Documentation</button>
+</form>
+
+<h2>If you want to see the code...</h2>
+
+<form action="{{ pathto('documentation') }}">
+   <button class="button" type="submit">Github</button>
+</form>
+
+
+
+{% endblock %}

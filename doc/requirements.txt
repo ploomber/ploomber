@@ -4,6 +4,9 @@ git+https://github.com/sphinx-gallery/sphinx-gallery
 # sphinx-gallery requires this
 pillow
 
+# markdown support for sphinx
+recommonmark
+
 # needed for the examples
 joblib
 scikit-learn

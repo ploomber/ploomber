@@ -7,6 +7,7 @@ Contents
 .. toctree::
    :maxdepth: 3
 
+   getting-started
    spec
    quickstart
    guide_index

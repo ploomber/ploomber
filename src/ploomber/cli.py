@@ -1,17 +1,22 @@
+import re
 import sys
 from functools import partial
 from pathlib import Path
 
-from jinja2 import Environment, PackageLoader
+from jinja2 import Environment, PackageLoader, Template
 import click
 from ploomber import __version__
 from ploomber.entry import entry as entry_module
 from ploomber.spec.DAGSpec import DAGSpec
 
+def _is_valid_name(package_name):
+    match = re.match(r'^[\w-]+$', package_name) or False
+    return match and not package_name[0].isnumeric()
 
-def _copy(filename, env):
+
+def _copy(filename, env, name):
     content = env.get_template(filename).render()
-    Path(filename).write_text(content)
+    Path(name, filename).write_text(content)
 
 
 @click.group()
@@ -85,10 +90,25 @@ def _new():
         block_start_string='[%',
         block_end_string='%]'
     )
-    copy = partial(_copy, env=env)
-
-    click.echo('This utility will guide you through the process of starting '
+    click.echo('This utility will guide you through the process of creating '
                'a new project')
+
+    valid_name = False
+
+    while not valid_name:
+        name = click.prompt('Enter a name for your project (allowed: '
+                            'alphanumeric, underscores and hyphens)', type=str)
+        valid_name = _is_valid_name(name)
+
+        if not valid_name:
+            click.echo('"%s" is not a valid project name, choose another.'
+                       % name)
+
+    click.echo('Creating %s/' % name)
+    Path(name).mkdir()
+
+    copy = partial(_copy, env=env, name=name)
+
     db = click.confirm('Do you need to connect to a database?')
 
     if db:
@@ -97,7 +117,7 @@ def _new():
 
     click.echo('Adding pipeline.yaml...')
     content = env.get_template('pipeline.yaml').render(db=db)
-    Path('pipeline.yaml').write_text(content)
+    Path(name, 'pipeline.yaml').write_text(content)
 
     conda = click.confirm('Do you you want to use conda to '
                           'manage virtual environments (recommended)?')
@@ -105,31 +125,21 @@ def _new():
     if conda:
         # check if conda is installed...
         click.echo('Adding environment.yml...')
-        copy('environment.yml')
+        content = env.get_template('environment.yml').render(name=name)
+        Path(name, 'environment.yml').write_text(content)
 
     click.echo('Adding clean.py and features.py...')
     copy('clean.py')
     copy('plot.py')
     click.echo('Done!')
 
-    Path('output').mkdir()
+    Path(name, 'output').mkdir()
 
-    out_message = """
-    To build the pipeline:
-      ploomber entry pipeline.yaml
+    # FIXME: put this in a readme file, also remove commands from pipeline.yaml
+    out_message = Template("""
 
-    Start an interactive session (once it starts, use the "dag" object):
-      ipython -i -m ploomber.entry pipeline.yaml -- --action status
-    """
+    """).render(name=name, conda=conda)
 
-    if conda:
-        out_message = """
-    Now create your environment with the following command:
-      conda env create --file environment.yml
-
-    Then activate it (you can change the name by editing environment.yml):
-      conda activate my-project
-    """ + out_message
 
     click.echo(out_message)
 

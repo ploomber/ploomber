@@ -4,7 +4,19 @@ import subprocess
 import pytest
 import yaml
 import click
-from ploomber.cli import _new, _add
+from ploomber.cli import _new, _add, _is_valid_name
+
+
+@pytest.mark.parametrize('name,valid', [
+    ('project', True),
+    ('project123', True),
+    ('pro_jec_t', True),
+    ('pro-ject', True),
+    ('1234', False),
+    ('a project', False)
+])
+def test_project_name(name, valid):
+    assert _is_valid_name(name) is valid
 
 
 @pytest.mark.parametrize('answer', [False, True])

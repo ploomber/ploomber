@@ -1,7 +1,4 @@
-# Install environment:
-#   $ conda env create --file environment.yml
-
-name: my-project
+name: [[name]]
 
 dependencies:
   # change the version here if you need to

@@ -38,7 +38,8 @@ extensions = ['sphinx.ext.autodoc',
               'IPython.sphinxext.ipython_directive',
               'sphinx_gallery.gen_gallery',
               'sphinx.ext.autosectionlabel',
-              'nbsphinx']
+              'nbsphinx',
+              'recommonmark']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -62,7 +63,10 @@ html_theme = 'nature'
 html_static_path = ['_static']
 
 # https://github.com/readthedocs/readthedocs.org/issues/2569
-master_doc = 'index'
+master_doc = 'contents'
+
+# landing page
+html_additional_pages = {'index': 'index.html'}
 
 # sphinx-gallery
 

@@ -1,19 +1,5 @@
 # Documentation: https://ploomber.readthedocs.io/en/stable/spec.html
 
-# Commonly used commands:
-#
-# Build the pipeline:
-#   $ ploomber entry pipeline.yaml
-#
-# Create sample files for tasks (once you included them here):
-#   $ ploomber add
-#
-# Start an interactive session (use "dag" variable when it starts):
-#   $ ipython -i -m ploomber.entry pipeline.yaml -- --action status
-#
-# Enable/disable jupyter extension:
-#   $ jupyter serverextension {enable/disable} ploomber
-
 meta:
   [% if db -%]
   product_default_class:
