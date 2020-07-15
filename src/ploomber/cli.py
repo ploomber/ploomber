@@ -128,20 +128,20 @@ def _new():
         content = env.get_template('environment.yml').render(name=name)
         Path(name, 'environment.yml').write_text(content)
 
+
+    click.echo('Adding README.md...')
+    content = env.get_template('README.md').render(name=name, db=db,
+                                                   conda=conda)
+    path_to_readme = Path(name, 'README.md')
+    path_to_readme.write_text(content)
+
     click.echo('Adding clean.py and features.py...')
     copy('clean.py')
     copy('plot.py')
     click.echo('Done!')
 
     Path(name, 'output').mkdir()
-
-    # FIXME: put this in a readme file, also remove commands from pipeline.yaml
-    out_message = Template("""
-
-    """).render(name=name, conda=conda)
-
-
-    click.echo(out_message)
+    click.echo('Check out {} to get started'.format(path_to_readme))
 
 
 @cli.command()

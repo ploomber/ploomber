@@ -35,13 +35,3 @@ ploomber entry pipeline.yaml
 ```
 
 All output is saved in `output/`
-
-## Development
-
-The best way to use Ploomber is via `jupyter notebook` or `jupyter lab`
-
-Add links to docs explaining the workflow
-
-how to add tasks, declared dependencies, products, etc
-
-
