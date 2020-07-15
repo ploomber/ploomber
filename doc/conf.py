@@ -55,7 +55,14 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '.ipynb_checkpoints/']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'nature'
+# https://docs.readthedocs.io/en/stable/guides/adding-custom-css.html
+html_style = 'css/custom-theme.css'
+
+html_js_files = [
+    'js/custom.js',
+]
+
+pygments_style = 'monokai'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -74,3 +81,13 @@ sphinx_gallery_conf = {
     'filename_pattern': '/',
     'ignore_pattern': r'__init__\.py',
 }
+
+nbsphinx_prolog = """
+.. raw:: html
+
+    <style>
+        div.nbinput.container div.input_area {
+            background: black;
+        }
+    </style>
+"""
