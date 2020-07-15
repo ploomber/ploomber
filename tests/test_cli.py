@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import subprocess
 
@@ -22,7 +23,9 @@ def test_project_name(name, valid):
 @pytest.mark.parametrize('answer', [False, True])
 def test_ploomber_new(answer, tmp_directory, monkeypatch):
     monkeypatch.setattr(click, 'confirm', lambda x: answer)
+    monkeypatch.setattr(click, 'prompt', lambda x, type: 'my-project')
     _new()
+    os.chdir('my-project')
     assert not subprocess.call(['ploomber', 'entry', 'pipeline.yaml'])
 
 

@@ -104,9 +104,6 @@ def _main():
                         'specified level', default=None)
     parser.add_argument('--action', help='Action to execute, defaults to '
                         'build', default='build')
-    parser.add_argument('--force', help='Force execution of all tasks, '
-                        'only valid when --action build',
-                        action='store_true')
 
     n_positional = len([arg for arg in sys.argv if not arg.startswith('-')])
 
