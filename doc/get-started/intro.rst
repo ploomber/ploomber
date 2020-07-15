@@ -111,5 +111,14 @@ Once you have a ``pipeline.yaml`` file, you can run your pipeline by executing t
 
 Ploomber keeps track of source changes to skip up-to-date tasks, if you run that command again, only tasks whose source code has changed will be executed.
 
-Where to go from here
----------------------
+
+The full picture
+----------------
+
+The following diagram shows the full picture: a pipeline where the A -> B means
+A is an upstream dependency of B, the source code for each script, the location of the injected cell and its contents.
+
+
+.. image:: https://ploomber.io/doc/python/diag.png
+   :target: https://ploomber.io/doc/python/diag.png
+   :alt: python-diag
