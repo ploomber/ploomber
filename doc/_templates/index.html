@@ -14,6 +14,21 @@
   border-radius: 12px;
   width: 100%;
 }
+
+ th, td {
+  padding: 10px;
+  text-align: left;
+}
+
+p {
+    padding-left: 10px;
+    font-size: 16px;
+}
+
+table {
+    width:100%,
+}
+
 </style>
 
 {% extends "layout.html" %}
@@ -33,22 +48,47 @@ You can open your Python scripts as Jupyter notebooks for development. During ex
 <a href="https://asciinema.org/a/346484"><img alt="1-minute video" src="https://asciinema.org/a/346484.svg"></a>
 
 
-<h2>Installation</h2>
+<h2>Get started</h2>
 
-<p><code>pip install ploomber</code></p>
+<p>If you're new to Ploomber, start here.</p>
+
+ <table>
+  <tr>
+    <td><a href="{{ pathto('get-started/install') }}">Install</a></td>
+    <td>How to install Ploomber</td>
+  </tr>
+  <tr>
+    <td><a href="{{ pathto('get-started/intro') }}">Introduction</a></td>
+    <td>Learn fundamental concepts</td>
+  </tr>
+</table> 
+
+<h2>Tutorials</h2>
+
+<p>One you know the basics, learn common patterns.</p>
 
 
-<h2>If you're new to Plomber...</h2>
+ <table>
+  <tr>
+    <td><a href="{{ pathto('spec-tutorials/new-project') }}">Create new project</a></td>
+    <td>Quickly create a sample project to understand the concepts</td>
+  </tr>
+  <tr>
+    <td><a href="{{ pathto('spec-tutorials/interactive') }}">Interactive sessions</a></td>
+    <td>Use the terminal to interact with your pipeline</td>
+  </tr>
+</table> 
 
-<form action="{{ pathto('getting-started') }}">
-   <button class="button" type="submit">Getting started</button>
-</form>
 
-<h2>If you want to dive into the details...</h2>
+<h2>API</h2>
 
-<form action="{{ pathto('documentation') }}">
-   <button class="button" type="submit">Documentation</button>
-</form>
+ <table style="width:100%">
+  <tr>
+    <td><a href="{{ pathto('spec') }}">API</a></td>
+    <td>How to customize your <code>pipeline.yaml</code> to support distinct workflows</td>
+  </tr>
+</table> 
+
 
 <h2>If you want to see the code...</h2>
 

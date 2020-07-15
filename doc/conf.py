@@ -38,8 +38,7 @@ extensions = ['sphinx.ext.autodoc',
               'IPython.sphinxext.ipython_directive',
               'sphinx_gallery.gen_gallery',
               'sphinx.ext.autosectionlabel',
-              'nbsphinx',
-              'recommonmark']
+              'nbsphinx']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -55,6 +54,10 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '.ipynb_checkpoints/']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
+
+html_theme = 'nature'
+
+
 # https://docs.readthedocs.io/en/stable/guides/adding-custom-css.html
 html_style = 'css/custom-theme.css'
 
