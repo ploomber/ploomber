@@ -1,4 +1,3 @@
-from copy import deepcopy
 import abc
 import warnings
 import re
@@ -7,7 +6,6 @@ from ploomber.products import Product
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.exceptions import SourceInitializationError
 from ploomber.sql import infer
-from ploomber.placeholders import util
 
 
 class Source(abc.ABC):
@@ -31,7 +29,6 @@ class Source(abc.ABC):
     matches their use case, they can either use a GenericSource or implement
     their own.
     """
-
     @abc.abstractmethod
     def __init__(self, primitive, hot_reload=False):
         pass
@@ -147,7 +144,6 @@ class PlaceholderSource(Source):
     """
     Source concrete class for the ones that use a Placeholder
     """
-
     def __init__(self, value, hot_reload=False):
         self._primitive = value
         # rename, and make it private
@@ -181,8 +177,8 @@ class PlaceholderSource(Source):
         return str(self._placeholder)
 
     def __repr__(self):
-        return "{}({})".format(type(self).__name__,
-                               self._placeholder.best_str(shorten=True))
+        return "{}({})".format(
+            type(self).__name__, self._placeholder.best_str(shorten=True))
 
     @property
     def name(self):
@@ -218,15 +214,14 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
     version in the same object and raises an Exception if attempted. It also
     passes some of its attributes
     """
-
     def _post_init_validation(self, value):
         if not value.needs_render:
             raise SourceInitializationError(
                 '{} cannot be initialized with literals as '
                 'they are meant to create a persistent '
                 'change in the database, they need to '
-                'include the {} placeholder'
-                .format(self.__class__.__name__, '{{product}}'))
+                'include the {} placeholder'.format(self.__class__.__name__,
+                                                    '{{product}}'))
 
         # FIXME: validate {{product}} exists, does this also catch
         # {{product['key']}} ?
@@ -234,6 +229,7 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
     def _post_render_validation(self, rendered_value, params):
         """Analyze code and warn if issues are found
         """
+        return
         # print(params)
         infered_relations = infer.created_relations(rendered_value)
         # print(infered_relations)
@@ -254,18 +250,17 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
         if not infered_len:
             warnings.warn('It seems like your task "{task}" will not create '
                           'any tables or views but the task has product '
-                          '"{product}"'
-                          .format(task='some task',
-                                  product=params['product']))
+                          '"{product}"'.format(task='some task',
+                                               product=params['product']))
 
         elif infered_len != actual_len:
             warnings.warn('It seems like your task "{task}" will create '
                           '{infered_len} relation(s) but you declared '
-                          '{actual_len} product(s): "{product}"'
-                          .format(task='some task',
-                                  infered_len=infered_len,
-                                  actual_len=actual_len,
-                                  product=params['product']))
+                          '{actual_len} product(s): "{product}"'.format(
+                              task='some task',
+                              infered_len=infered_len,
+                              actual_len=actual_len,
+                              product=params['product']))
         # parsing infered_relations is still WIP
         # elif set(infered_relations) != set(infered_relations):
         #         warnings.warn('Infered relations ({}) did not match products'
@@ -299,6 +294,7 @@ class SQLQuerySource(SQLSourceMixin, PlaceholderSource):
     the database (in contrast with SQLScriptSource), so its validation is
     different
     """
+
     # TODO: validate this is a SELECT statement
     # a query needs to return a result, also validate that {{product}}
     # does not exist in the template, instead of just making it optional
@@ -336,11 +332,11 @@ class GenericSource(PlaceholderSource):
     pathlib.Path objects are read and str are converted to jinja2.Template
     objects, for more details see Placeholder documentation
     """
-
     def __init__(self, value, hot_reload=False, optional=None, required=None):
         self._primitive = value
         # rename, and make it private
-        self._placeholder = Placeholder(value, hot_reload=hot_reload,
+        self._placeholder = Placeholder(value,
+                                        hot_reload=hot_reload,
                                         required=required)
         self._post_init_validation(self._placeholder)
         self._optional = optional
@@ -380,7 +376,6 @@ class FileSource(GenericSource):
     This source is utilized by Tasks that move/upload files.
 
     """
-
     def __init__(self, value, hot_reload=False):
         # hot_reload does not apply here, ignored
         value = str(value)
@@ -389,8 +384,8 @@ class FileSource(GenericSource):
     def render(self, params):
         if params.get('upstream'):
             with params.get('upstream'):
-                self._placeholder.render(
-                    params, optional=['product', 'upstream'])
+                self._placeholder.render(params,
+                                         optional=['product', 'upstream'])
         else:
             self._placeholder.render(params, optional=['product', 'upstream'])
 
@@ -406,7 +401,6 @@ class FileSource(GenericSource):
 class EmptySource(Source):
     """A source that does not do anything, used for sourceless tasks
     """
-
     def __init__(self, primitive, **kwargs):
         pass
 
