@@ -54,8 +54,11 @@ def tasks_list(dag_spec):
     tasks = dag_spec['tasks']
 
     # we have to pop this, since a list of tasks gets meta default params
+    # which extracts both upstream and product from source code
     for t in tasks:
         t.pop('upstream', None)
+        t.pop('product', None)
+
     return tasks
 
 
@@ -243,23 +246,31 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
     dag.build()
 
 
-def test_init_with_tasks_list():
-    spec_raw = [{'source': 'load.py', 'product': 'load.ipynb'}]
-    spec = DAGSpec(spec_raw)
-    assert spec['meta']['extract_upstream']
-    assert spec['tasks'] == spec_raw
+@pytest.mark.parametrize('raw', [[{
+    'source': 'load.py'
+}], {
+    'tasks': [{
+        'source': 'load.py'
+    }]
+}, {
+    'meta': {},
+    'tasks': []
+}])
+def test_meta_defaults(raw):
+    spec = DAGSpec(raw)
+    meta = spec['meta']
+    assert meta['extract_upstream']
+    assert meta['extract_product']
+    assert not meta['product_relative_to_source']
+    assert not meta['jupyter_hot_reload']
 
 
-def test_extract_upstream_with_empty_meta():
-    spec = DAGSpec([{'source': 'load.py', 'product': 'load.html'}])
-    assert spec['meta']['extract_upstream']
-
-
-def test_extract_upstream_with_empty_meta_extract_upstream():
-    spec = DAGSpec({'meta': {}, 'tasks': []})
-    assert spec['meta']['extract_upstream']
-
-
-def test_extract_upstream():
-    spec = DAGSpec({'meta': {'extract_upstream': False}, 'tasks': []})
-    assert not spec['meta']['extract_upstream']
+@pytest.mark.parametrize('name, value', [
+    ['extract_upstream', False],
+    ['extract_product', False],
+    ['product_relative_to_source', True],
+    ['jupyter_hot_reload', True],
+])
+def test_changing_defaults(name, value):
+    spec = DAGSpec({'meta': {name: value}, 'tasks': []})
+    assert spec['meta'][name] is value
