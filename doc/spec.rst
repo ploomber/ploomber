@@ -19,7 +19,7 @@ default values.
         extract_upstream: True
 
         # Make paths in File products relative to their sources, otherwise
-        # they are relative to folder where pipeline.yaml is located, defaults
+        # they are relative to the folder where pipeline.yaml is located, defaults
         # to False
         product_relative_to_source: False
 

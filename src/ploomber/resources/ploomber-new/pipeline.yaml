@@ -1,22 +1,13 @@
 # Documentation: https://ploomber.readthedocs.io/en/stable/spec.html
 
+[% if db -%]
 meta:
-  [% if db -%]
   product_default_class:
     # replace for GenericSQLRelation, SQLiteRelation or PostgresRelation
     # it you want to save metadata (required for incremental builds)
     SQLScript: SQLRelation
-  [% endif %]
-  # inspect source code to extract upstream dependencies
-  extract_upstream: True
+[% endif %]
 
-  # do not inspect source code to extract product (declare them here)
-  extract_product: False
-
-  # only relevant if using the jupyter notebook extension: assemble the dag
-  # during jupyter notebook initialization, setting it to True will assemble
-  # it on every file render
-  jupyter_hot_reload: False
 
 [% if db -%]
 clients:
@@ -24,13 +15,8 @@ clients:
 [% endif %]
 
 tasks:
-  # list tasks here
   - source: clean.py
     name: clean
-    product:
-      nb: output/clean.ipynb
-      data: output/clean.csv
 
   - source: plot.py
     name: plot
-    product: output/plot.html
