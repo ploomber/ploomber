@@ -1,2 +1,0 @@
-Creating your first pipeline
-============================

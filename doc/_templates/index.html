@@ -1,17 +1,12 @@
 <!-- https://ofosos.org/2018/12/28/landing-page-template/ -->
 
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+  integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
 <style type="text/css">
-  .button {
-    background-color: RGB(107, 168, 30);
-    border: none;
-    color: white;
-    padding: 15px 32px;
+  .button-container {
     text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 18px;
-    border-radius: 12px;
-    width: 100%;
+    padding-top: 20px;
   }
 
   th,
@@ -48,8 +43,15 @@
 
 <a href="https://asciinema.org/a/346484"><img alt="1-minute video" src="https://asciinema.org/a/346484.svg"></a>
 
+<div class="button-container">
+  <a href="https://github.com/ploomber/ploomber" class="btn btn-outline-success btn-lg" role="button">Github</a>
+  <a href="https://ploomber.io" class="btn btn-outline-success btn-lg" role="button">Blog</a>
+</div>
 
-<h2>Get started</h2>
+
+<h2>Tutorials</h2>
+
+<h3>Get started</h3>
 
 <p>If you're new to Ploomber, start here.</p>
 
@@ -62,41 +64,29 @@
     <td><a href="{{ pathto('get-started/intro') }}">Introduction</a></td>
     <td>Learn fundamental concepts</td>
   </tr>
-</table>
-
-<h2>Tutorials</h2>
-
-<p>One you know the basics, learn common patterns.</p>
-
-
-<table>
   <tr>
-    <td><a href="{{ pathto('spec-tutorials/new-project') }}">Create new project</a></td>
-    <td>Quickly create a sample project to understand the concepts</td>
-  </tr>
-  <tr>
-    <td><a href="{{ pathto('spec-tutorials/interactive') }}">Interactive sessions</a></td>
-    <td>Use the terminal to interact with your pipeline</td>
+    <td><a href="{{ pathto('get-started/basic-workflow') }}">Basic workflow</a></td>
+    <td>Get some hands-on experience using a project template</td>
   </tr>
 </table>
 
 
-<h2>API</h2>
+
+
+<h2>Cookbook</h2>
+
+
+<h2>Reference</h2>
 
 <table style="width:100%">
   <tr>
-    <td><a href="{{ pathto('spec') }}">API</a></td>
+    <td><a href="{{ pathto('reference/spec') }}">Spec API</a></td>
     <td>How to customize your <code>pipeline.yaml</code> to support distinct workflows</td>
   </tr>
+  <tr>
+    <td><a href="{{ pathto('reference/cli') }}">CLI</a></td>
+    <td>Ploomber's command line interface</td>
+  </tr>
 </table>
-
-
-<h2>If you want to see the code...</h2>
-
-<form action="{{ pathto('documentation') }}">
-  <button class="button" type="submit">Github</button>
-</form>
-
-
 
 {% endblock %}

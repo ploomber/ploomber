@@ -101,8 +101,15 @@ data files.
 Updating the pipeline
 ---------------------
 
+Quick experimentation is essential to develop your pipeline and Ploomber allows
+you to quickly run new experiments without having to keep track of your tasks
+dependencies.
 
-Let's now a few changes to the pipeline (the scrpts, not the output notebooks)
+Let's say you found a problematic column in the data and want to add more
+cleaning logic to your ``clean.py`` script. ``raw.py`` does not depend
+on ``clean.py`` (it's actually the other way around), but ``plot.py`` does.
+To bring your pipeline up-to-date, you'd have to execute ``clean.py`` and
+then ``plot.py``:
 
 .. raw:: html
 
@@ -111,6 +118,30 @@ Let's now a few changes to the pipeline (the scrpts, not the output notebooks)
         raw.py --> clean.py --> plot.py
 
         class raw.py done;
-        class clean.py done;
+        class clean.py pending;
         class plot.py pending;
     </div>
+
+
+This might not seem like a big deal but as your pipeline grows in number of
+tasks (and if there are other people modifying the source code), keeping track
+of task dependencies isn't fun. Automatic dependency tracking guarantees that
+your tasks are using the right inputs without having to re-compute the whole
+thing again.
+
+Go back to the list of files and make some changes to the ``clean.py`` script,
+then run this again:
+
+
+.. code-block:: console
+
+    ploomber entry pipeline.yaml
+
+Wrapping up
+-----------
+
+That's it! This tutorial showcases the most basic workflow you can implement
+with Ploomber, the idea is to get a minimal pipeline up and running when you
+begin your project, once it runs (even if it doesn't do anything useful), you
+can quickly iterate by changing your task's source code and re-building your
+pipeline.
