@@ -1,12 +1,12 @@
 # [[name]]
 
-Make sure you execute these commands inside your project's root folder (the one that contains the `pipeline.yaml` file)
-
 ## File layout
 
 * `pipeline.yaml` - Contains the pipeline's configuration and list of tasks
+[% if conda %]
 * `environment.yml` - Project dependencies
-* `clean.py`, `plot.py` - Pipeline tasks
+[% endif %]
+* `raw.py`, `clean.py`, `plot.py` - Pipeline tasks
 * `output/` - Executed notebooks generate from pipeline tasks and other generated files
 [% if db %]
 * `db.py` - Function to create a connection to the database
@@ -34,4 +34,6 @@ Then activate it:
 ploomber entry pipeline.yaml
 ```
 
-All output is saved in `output/`
+Make sure you execute this command inside your project's root folder (the one that contains the `pipeline.yaml` file).
+
+All output is saved in `output/`.

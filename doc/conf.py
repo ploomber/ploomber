@@ -15,7 +15,6 @@
 # sys.path.insert(0, os.path.abspath('.'))
 from ploomber import __version__
 
-
 # -- Project information -----------------------------------------------------
 
 project = 'ploomber'
@@ -24,21 +23,22 @@ author = 'ploomber'
 version = __version__
 release = version
 
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.napoleon',
-              'sphinx.ext.autosummary',
-              # remove these two
-              'IPython.sphinxext.ipython_console_highlighting',
-              'IPython.sphinxext.ipython_directive',
-              'sphinx_gallery.gen_gallery',
-              'sphinx.ext.autosectionlabel',
-              'nbsphinx']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.autosummary',
+    # remove these two
+    'IPython.sphinxext.ipython_console_highlighting',
+    'IPython.sphinxext.ipython_directive',
+    'sphinx_gallery.gen_gallery',
+    'sphinx.ext.autosectionlabel',
+    'nbsphinx'
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -48,7 +48,6 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '.ipynb_checkpoints/']
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -57,13 +56,14 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '.ipynb_checkpoints/']
 
 html_theme = 'nature'
 
-
 # https://docs.readthedocs.io/en/stable/guides/adding-custom-css.html
 html_style = 'css/custom-theme.css'
 
 html_js_files = [
-    'js/custom.js',
+    'js/custom.js', 'https://unpkg.com/mermaid@8.6.0/dist/mermaid.min.js'
 ]
+
+html_css_files = ['css/mermaid-style.css']
 
 pygments_style = 'monokai'
 

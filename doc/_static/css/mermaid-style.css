@@ -1,0 +1,16 @@
+.pending > rect{
+    fill:#ffbc40 !important;
+    stroke:#ffa600 !important;
+    stroke-width:4px !important;
+}
+
+.done > rect{
+    fill:#c1ffb5 !important;
+    stroke:#6bfc4e !important;
+    stroke-width:4px !important;
+}
+
+.mermaid {
+    margin: auto;
+    width: 50%;
+}
