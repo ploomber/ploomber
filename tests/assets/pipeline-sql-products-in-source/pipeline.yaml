@@ -1,13 +1,12 @@
 meta:
-  product_default_class: SQLiteRelation
   # TODO: not implemented yet
   # infer upstream structure 
   extract_upstream: True
   extract_product: True
 
 clients:
-  SQLScript: sqlite:///my.db
-  SQLiteRelation: sqlite:///my.db
+  SQLScript: config.get_client
+  SQLiteRelation: config.get_client
 
 
 tasks:

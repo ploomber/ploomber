@@ -32,21 +32,22 @@ class TaskSpec(MutableMapping):
         else:
             required = {'product', 'source'}
 
-        validate.keys(valid=None, passed=self.data,
+        validate.keys(valid=None,
+                      passed=self.data,
                       required=required,
                       name='task spec')
 
         if self.meta['extract_upstream'] and self.data.get('upstream'):
             raise ValueError('Error validating task "{}", if '
                              'meta.extract_upstream is set to True, tasks '
-                             'should not have an "upstream" key'
-                             .format(self.data))
+                             'should not have an "upstream" key'.format(
+                                 self.data))
 
         if self.meta['extract_product'] and self.data.get('product'):
             raise ValueError('Error validating task "{}", if '
                              'meta.extract_product is set to True, tasks '
-                             'should not have a "product" key'
-                             .format(self.data))
+                             'should not have a "product" key'.format(
+                                 self.data))
 
     def to_task(self, dag, root_path):
         """Returns a Task instance
@@ -121,7 +122,12 @@ def _init_product(task_dict, meta, task_class, root_path):
     """
     product_raw = task_dict.pop('product')
 
-    key = 'product_default_class.'+task_class.__name__
+    # if the product is not yet initialized (e.g. scripts extract products
+    # as dictionaries, lists or strings)
+    if isinstance(product_raw, products.Product):
+        return product_raw
+
+    key = 'product_default_class.' + task_class.__name__
     meta_product_default_class = get_value_at(meta, key)
 
     if 'product_class' in task_dict:
@@ -133,8 +139,7 @@ def _init_product(task_dict, meta, task_class, root_path):
                          '"{}". Add an explicity value in the '
                          '"product_class" key or provide a default value in '
                          'meta.product_default_class by setting the '
-                         'key to the applicable task class'
-                         .format(task_dict))
+                         'key to the applicable task class'.format(task_dict))
 
     if 'product_client' in task_dict:
         dotted_path = task_dict.pop('product_client')
@@ -146,12 +151,13 @@ def _init_product(task_dict, meta, task_class, root_path):
                    if meta['product_relative_to_source'] else root_path)
 
     if isinstance(product_raw, Mapping):
-        return {key: CLASS(resolve_product(value,
-                                           relative_to, CLASS), **kwargs)
-                for key, value in product_raw.items()}
+        return {
+            key: CLASS(resolve_product(value, relative_to, CLASS), **kwargs)
+            for key, value in product_raw.items()
+        }
     else:
-        return CLASS(resolve_product(product_raw,
-                                     relative_to, CLASS), **kwargs)
+        return CLASS(resolve_product(product_raw, relative_to, CLASS),
+                     **kwargs)
 
 
 def resolve_product(product_raw, relative_to, class_):
@@ -201,8 +207,8 @@ def get_task_class(task_dict):
                            'source: '
                            '"{}". Default class is only available for '
                            'files with extensions {}, otherwise you should '
-                           'set an explicit class key'
-                           .format(task_dict['source'], set(suffix2taskclass)))
+                           'set an explicit class key'.format(
+                               task_dict['source'], set(suffix2taskclass)))
 
     return class_
 

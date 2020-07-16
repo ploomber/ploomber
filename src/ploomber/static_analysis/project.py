@@ -4,28 +4,35 @@ import logging
 import fnmatch
 
 from ploomber import SourceLoader
-from ploomber.static_analysis.sql import extract_upstream_from_sql, extract_product_from_sql
+from ploomber.static_analysis.sql import (extract_upstream_from_sql,
+                                          extract_product_from_sql)
 from ploomber.static_analysis.notebook import extract_variable_from_parameters
 
 suffix2upstream_extractor = {
-    '.sql': extract_upstream_from_sql,
-    '.ipynb': partial(extract_variable_from_parameters, fmt='ipynb',
-                      variable='upstream'),
-    '.py': partial(extract_variable_from_parameters, fmt='py',
-                   variable='upstream'),
+    '.sql':
+    extract_upstream_from_sql,
+    '.ipynb':
+    partial(extract_variable_from_parameters, fmt='ipynb',
+            variable='upstream'),
+    '.py':
+    partial(extract_variable_from_parameters, fmt='py', variable='upstream'),
 }
 
 suffix2product_extractor = {
-    '.sql': extract_product_from_sql,
-    '.ipynb': partial(extract_variable_from_parameters, fmt='ipynb',
-                      variable='product'),
-    '.py': partial(extract_variable_from_parameters, fmt='py',
-                   variable='product'),
+    '.sql':
+    extract_product_from_sql,
+    '.ipynb':
+    partial(extract_variable_from_parameters, fmt='ipynb', variable='product'),
+    '.py':
+    partial(extract_variable_from_parameters, fmt='py', variable='product'),
 }
 
 
-def infer_from_path(root_path, templates=None, match=None,
-                    upstream=True, product=True):
+def infer_from_path(root_path,
+                    templates=None,
+                    match=None,
+                    upstream=True,
+                    product=True):
     """
     Process a directory with SQL/ipynb files and extracts upstream dependencies
     on each file. Creates a jinja environment in root_path.
@@ -74,10 +81,10 @@ def infer_from_path(root_path, templates=None, match=None,
 
         if upstream:
             if template.path.suffix not in suffix2upstream_extractor:
-                raise KeyError('Error processing file "%s". Extracting upstream '
-                               'dependencies from files with extension "%s" '
-                               'is not supported' % (template.path,
-                                                     template.path.suffix))
+                raise KeyError(
+                    'Error processing file "%s". Extracting upstream '
+                    'dependencies from files with extension "%s" '
+                    'is not supported' % (template.path, template.path.suffix))
 
             up_extractor = suffix2upstream_extractor[template.path.suffix]
 
@@ -92,10 +99,10 @@ def infer_from_path(root_path, templates=None, match=None,
 
         if product:
             if template.path.suffix not in suffix2product_extractor:
-                raise KeyError('Error processing file "%s". Extracting product '
-                               'from files with extension "%s" '
-                               'is not supported' % (template.path,
-                                                     template.path.suffix))
+                raise KeyError(
+                    'Error processing file "%s". Extracting product '
+                    'from files with extension "%s" '
+                    'is not supported' % (template.path, template.path.suffix))
 
             prod_extractor = suffix2product_extractor[template.path.suffix]
             prod = prod_extractor(template._raw)

@@ -1,4 +1,4 @@
-{% set product = 'filtered' %}
+{% set product = SQLiteRelation(['filter', 'table']) %}
 
 CREATE TABLE {{product}} AS
 SELECT * FROM {{upstream['load.sql']}}

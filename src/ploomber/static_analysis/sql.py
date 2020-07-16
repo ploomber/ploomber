@@ -15,7 +15,16 @@ def extract_upstream_from_sql(sql):
     """Extract upstream keys used in a templated SQL script
     """
     upstream = JinjaUpstreamIntrospector()
-    Template(sql).render({'upstream': upstream})
+    params = {'upstream': upstream}
+
+    product = extract_product_from_sql(sql)
+
+    # FIXME: we need to pass the class if the product is declared there and
+    # want to call render, but this is inefficient, find a better way
+    if product:
+        params[type(product).__name__] = type(product)
+
+    Template(sql).render(params)
     return set(upstream.keys) if len(upstream.keys) else None
 
 

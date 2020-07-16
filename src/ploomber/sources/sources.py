@@ -276,8 +276,8 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
         # the code itself might already define the product, no need to pass it
         # TODO: verify that the product passed and the one defined are the same
         if extracted:
-            params.pop('product', None)
-            params[type(extracted).__name__] = type(extracted)
+            del params['product']
+            params._dict[type(extracted).__name__] = type(extracted)
 
         return super().render(params)
 

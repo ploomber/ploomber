@@ -18,6 +18,12 @@ def tmp_pipeline_sql():
     pass
 
 
+@fixture_tmp_dir(_path_to_tests() / 'assets' /
+                 'pipeline-sql-products-in-source')
+def tmp_pipeline_sql_products_in_source():
+    pass
+
+
 @fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-auto')
 def tmp_nbs_auto():
     pass
@@ -88,8 +94,9 @@ def test_validate_meta_keys():
         DAGSpec({'tasks': [], 'meta': {'invalid_key': None}})
 
 
-@pytest.mark.parametrize('processor', [to_ipynb, tasks_list, remove_task_class,
-                                       extract_upstream, extract_product])
+@pytest.mark.parametrize('processor', [
+    to_ipynb, tasks_list, remove_task_class, extract_upstream, extract_product
+])
 def test_notebook_spec(processor, tmp_nbs):
     Path('output').mkdir()
 
@@ -119,7 +126,8 @@ def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
     dag.build()
 
 
-@pytest.mark.skip(reason="Won't work until we make extract_product=True the default")
+@pytest.mark.skip(
+    reason="Won't work until we make extract_product=True the default")
 def test_spec_from_list_of_files(tmp_nbs_auto):
     Path('output').mkdir()
     dag = DAGSpec(glob('*.py')).to_dag()
@@ -127,8 +135,10 @@ def test_spec_from_list_of_files(tmp_nbs_auto):
 
 
 def _random_date_from(date, max_days, n):
-    return [date + timedelta(days=int(days))
-            for days in np.random.randint(0, max_days, n)]
+    return [
+        date + timedelta(days=int(days))
+        for days in np.random.randint(0, max_days, n)
+    ]
 
 
 def test_postgres_sql_spec(tmp_pipeline_sql, pg_client_and_schema,
@@ -137,9 +147,11 @@ def test_postgres_sql_spec(tmp_pipeline_sql, pg_client_and_schema,
         dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
 
     dates = _random_date_from(datetime(2016, 1, 1), 365, 100)
-    df = pd.DataFrame({'customer_id': np.random.randint(0, 5, 100),
-                       'value': np.random.rand(100),
-                       'purchase_date': dates})
+    df = pd.DataFrame({
+        'customer_id': np.random.randint(0, 5, 100),
+        'value': np.random.rand(100),
+        'purchase_date': dates
+    })
     loader = load_dotted_path(dag_spec['clients']['SQLScript'])
     client = loader()
     df.to_sql('sales', client.engine, if_exists='replace')
@@ -155,16 +167,38 @@ def test_postgres_sql_spec(tmp_pipeline_sql, pg_client_and_schema,
     assert list(dag['transform.sql'].upstream.keys()) == ['filter.sql']
 
 
-@pytest.mark.parametrize('spec', ['pipeline-sqlite.yaml',
-                                  'pipeline-sqlrelation.yaml'])
+def test_sql_spec_w_products_in_source(tmp_pipeline_sql_products_in_source,
+                                       add_current_to_sys_path):
+    with open('pipeline.yaml') as f:
+        dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
+
+    dates = _random_date_from(datetime(2016, 1, 1), 365, 100)
+    df = pd.DataFrame({
+        'customer_id': np.random.randint(0, 5, 100),
+        'value': np.random.rand(100),
+        'purchase_date': dates
+    })
+    loader = load_dotted_path(dag_spec['clients']['SQLScript'])
+    client = loader()
+    df.to_sql('sales', client.engine, if_exists='replace')
+    client.engine.dispose()
+
+    dag = DAGSpec(dag_spec).to_dag()
+    dag.build()
+
+
+@pytest.mark.parametrize('spec',
+                         ['pipeline-sqlite.yaml', 'pipeline-sqlrelation.yaml'])
 def test_sqlite_sql_spec(spec, tmp_pipeline_sql, add_current_to_sys_path):
     with open(spec) as f:
         dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
 
     dates = _random_date_from(datetime(2016, 1, 1), 365, 100)
-    df = pd.DataFrame({'customer_id': np.random.randint(0, 5, 100),
-                       'value': np.random.rand(100),
-                       'purchase_date': dates})
+    df = pd.DataFrame({
+        'customer_id': np.random.randint(0, 5, 100),
+        'value': np.random.rand(100),
+        'purchase_date': dates
+    })
     loader = load_dotted_path(dag_spec['clients']['SQLScript'])
     client = loader()
     df.to_sql('sales', client.engine)
@@ -186,9 +220,11 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
         dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
 
     dates = _random_date_from(datetime(2016, 1, 1), 365, 100)
-    df = pd.DataFrame({'customer_id': np.random.randint(0, 5, 100),
-                       'value': np.random.rand(100),
-                       'purchase_date': dates})
+    df = pd.DataFrame({
+        'customer_id': np.random.randint(0, 5, 100),
+        'value': np.random.rand(100),
+        'purchase_date': dates
+    })
     # make sales data for pg and sqlite
     loader = load_dotted_path(dag_spec['clients']['PostgresRelation'])
     client = loader()
