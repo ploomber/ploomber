@@ -6,6 +6,8 @@ from ploomber.products import Product
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.exceptions import SourceInitializationError
 from ploomber.sql import infer
+from ploomber.util import util
+from ploomber import static_analysis
 
 
 class Source(abc.ABC):
@@ -229,63 +231,55 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
     def _post_render_validation(self, rendered_value, params):
         """Analyze code and warn if issues are found
         """
-        return
-        # print(params)
-        infered_relations = infer.created_relations(rendered_value)
-        # print(infered_relations)
+        if 'product' in params:
+            infered_relations = infer.created_relations(rendered_value)
+            # print(infered_relations)
 
-        if isinstance(params['product'], Product):
-            actual_rel = {params['product']._identifier}
-        else:
-            # metaproduct
-            actual_rel = {p._identifier for p in params['product']}
+            if isinstance(params['product'], Product):
+                actual_rel = {params['product']._identifier}
+            else:
+                # metaproduct
+                actual_rel = {p._identifier for p in params['product']}
 
-        infered_len = len(infered_relations)
-        # print(infered_len)
-        actual_len = len(actual_rel)
+            infered_len = len(infered_relations)
+            # print(infered_len)
+            actual_len = len(actual_rel)
 
-        # print(set(infered_relations) != set(actual_rel),
-        #         set(infered_relations) ,set(actual_rel))
+            # print(set(infered_relations) != set(actual_rel),
+            #         set(infered_relations) ,set(actual_rel))
 
-        if not infered_len:
-            warnings.warn('It seems like your task "{task}" will not create '
-                          'any tables or views but the task has product '
-                          '"{product}"'.format(task='some task',
-                                               product=params['product']))
+            if not infered_len:
+                warnings.warn(
+                    'It seems like your task "{task}" will not create '
+                    'any tables or views but the task has product '
+                    '"{product}"'.format(task='some task',
+                                         product=params['product']))
 
-        elif infered_len != actual_len:
-            warnings.warn('It seems like your task "{task}" will create '
-                          '{infered_len} relation(s) but you declared '
-                          '{actual_len} product(s): "{product}"'.format(
-                              task='some task',
-                              infered_len=infered_len,
-                              actual_len=actual_len,
-                              product=params['product']))
-        # parsing infered_relations is still WIP
-        # elif set(infered_relations) != set(infered_relations):
-        #         warnings.warn('Infered relations ({}) did not match products'
-        #                       ' {}'
-        #                       .format(infered_relations, actual_len))
+            elif infered_len != actual_len:
+                warnings.warn('It seems like your task "{task}" will create '
+                              '{infered_len} relation(s) but you declared '
+                              '{actual_len} product(s): "{product}"'.format(
+                                  task='some task',
+                                  infered_len=infered_len,
+                                  actual_len=actual_len,
+                                  product=params['product']))
+            # parsing infered_relations is still WIP
+            # elif set(infered_relations) != set(infered_relations):
+            #         warnings.warn('Infered relations ({}) did not match products'
+            #                       ' {}'
+            #                       .format(infered_relations, actual_len))
 
-    # def render(self, params):
-    #     defined = util.get_defined_variables(self._placeholder._raw)
+    def render(self, params):
+        extracted = (static_analysis.sql.extract_product_from_sql(
+            self._placeholder._raw))
 
-    #     if 'product' in defined and 'product' in params:
-    #         # FIXME: raise error if they point to a different relation
-    #         params2render = deepcopy(params)
-    #         del params2render['product']
-    #     else:
-    #         params2render = params
+        # the code itself might already define the product, no need to pass it
+        # TODO: verify that the product passed and the one defined are the same
+        if extracted:
+            params.pop('product', None)
+            params[type(extracted).__name__] = type(extracted)
 
-    #     if params.get('upstream'):
-    #         with params.get('upstream'):
-    #             self._placeholder.render(params2render)
-    #     else:
-    #         self._placeholder.render(params2render)
-
-    #     self._post_render_validation(str(self._placeholder), params)
-
-    #     return self
+        return super().render(params)
 
 
 class SQLQuerySource(SQLSourceMixin, PlaceholderSource):
