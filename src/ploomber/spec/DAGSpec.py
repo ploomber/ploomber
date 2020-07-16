@@ -25,7 +25,6 @@ from ploomber.spec import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.exceptions import DAGSpecInitializationError
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -71,12 +70,14 @@ class DAGSpec(MutableMapping):
         self.data = data
 
         if not load_from_factory:
-            self.data['tasks'] = [normalize_task(task)
-                                  for task in self.data['tasks']]
+            self.data['tasks'] = [
+                normalize_task(task) for task in self.data['tasks']
+            ]
             self._validate_meta()
 
-            self.data['tasks'] = [TaskSpec(t, self.data['meta'])
-                                  for t in self.data['tasks']]
+            self.data['tasks'] = [
+                TaskSpec(t, self.data['meta']) for t in self.data['tasks']
+            ]
 
     def _validate_top_level_keys(self, spec):
         load_from_factory = False
@@ -106,16 +107,17 @@ class DAGSpec(MutableMapping):
         if meta is None:
             meta = {}
 
-        valid = {'extract_upstream', 'extract_product',
-                 'product_default_class', 'product_relative_to_source',
-                 'jupyter_hot_reload'}
+        valid = {
+            'extract_upstream', 'extract_product', 'product_default_class',
+            'product_relative_to_source', 'jupyter_hot_reload'
+        }
         validate.keys(valid, meta, name='dag spec')
 
         if 'extract_upstream' not in meta:
             meta['extract_upstream'] = True
 
         if 'extract_product' not in meta:
-            meta['extract_product'] = False
+            meta['extract_product'] = True
 
         if 'product_relative_to_source' not in meta:
             meta['product_relative_to_source'] = False
@@ -123,8 +125,11 @@ class DAGSpec(MutableMapping):
         if 'jupyter_hot_reload' not in meta:
             meta['jupyter_hot_reload'] = False
 
-        defaults = {'SQLDump': 'File', 'NotebookRunner': 'File',
-                    'SQLScript': 'SQLRelation'}
+        defaults = {
+            'SQLDump': 'File',
+            'NotebookRunner': 'File',
+            'SQLScript': 'SQLRelation'
+        }
 
         if 'product_default_class' not in meta:
             meta['product_default_class'] = defaults

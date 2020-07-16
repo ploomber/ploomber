@@ -13,7 +13,7 @@ default values.
 
     meta:
         # inspect source code to extract product
-        extract_product: False
+        extract_product: True
 
         # inspect source code to extract upstream dependencies
         extract_upstream: True
