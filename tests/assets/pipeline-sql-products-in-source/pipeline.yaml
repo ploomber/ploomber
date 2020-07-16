@@ -1,6 +1,4 @@
 meta:
-  # TODO: not implemented yet
-  # infer upstream structure 
   extract_upstream: True
   extract_product: True
 
