@@ -1,19 +1,14 @@
 # Documentation: https://ploomber.readthedocs.io/en/stable/spec.html
-
 [% if db -%]
 meta:
   product_default_class:
     # replace for GenericSQLRelation, SQLiteRelation or PostgresRelation
     # it you want to save metadata (required for incremental builds)
     SQLScript: SQLRelation
-[% endif %]
 
-
-[% if db -%]
 clients:
   SQLScript: db.get_client
 [% endif %]
-
 tasks:
   - source: clean.py
     name: clean
