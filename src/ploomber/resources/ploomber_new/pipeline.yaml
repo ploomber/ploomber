@@ -10,6 +10,9 @@ clients:
   SQLScript: db.get_client
 [% endif %]
 tasks:
+  - source: raw.py
+    name: raw
+
   - source: clean.py
     name: clean
 

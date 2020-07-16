@@ -1,13 +1,18 @@
-import numpy as np
+"""
+Clean raw data
+"""
 import pandas as pd
 
 # + tags=["parameters"]
-upstream = None
+upstream = ['raw']
 product = {'nb': 'output/clean.ipynb', 'data': 'output/clean.csv'}
+# -
 
 # +
-df = pd.DataFrame({'x': np.random.rand(100), 'y': np.random.rand(100)})
-df.head()
+df = pd.read_csv(upstream['raw']['data'])
+df['sex'] = df.sex.str.strip()
+# -
 
 # +
 df.to_csv(str(product['data']), index=False)
+# -
