@@ -54,7 +54,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '.ipynb_checkpoints/']
 # a list of builtin themes.
 #
 
-html_theme = 'nature'
+html_theme = 'basic'
 
 # https://docs.readthedocs.io/en/stable/guides/adding-custom-css.html
 html_style = 'css/custom-theme.css'
@@ -63,7 +63,7 @@ html_js_files = [
     'js/custom.js', 'https://unpkg.com/mermaid@8.6.0/dist/mermaid.min.js'
 ]
 
-html_css_files = ['css/mermaid-style.css']
+html_css_files = ['css/mermaid-style.css', 'css/mermaid-layout.css']
 
 pygments_style = 'monokai'
 

@@ -1,8 +1,5 @@
-.. include:: ../README.rst
-
-
-Contents
-========
+Ploomber documentation
+======================
 
 .. toctree::
    :maxdepth: 3

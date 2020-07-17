@@ -1,154 +1,181 @@
-<!-- https://ofosos.org/2018/12/28/landing-page-template/ -->
+<!doctype html>
+<html lang="en">
 
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
-  integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Ploomber</title>
 
-<style type="text/css">
-  .button-container {
-    text-align: center;
-    padding-top: 20px;
-  }
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
-  th,
-  td {
-    padding: 10px;
-    text-align: left;
-  }
-
-  p {
-    padding-left: 10px;
-    font-size: 16px;
-  }
-
-  li {
-    font-size: 16px;
-  }
-
-  table {
-    width: 100%,
-  }
-
-  #pipeline {
-    width: 0%;
-    padding-top: 20px;
-    padding-bottom: 20px;
-  }
-
-  svg[id^="mermaid-"] {
-    min-width: 200px;
-    max-width: 700px;
-  }
-</style>
-
-{% extends "layout.html" %}
-
-{% block body %}
-<h1>Ploomber</h1>
+  <link rel="stylesheet" href="_static/css/mermaid-style.css">
 
 
-<div id="pipeline">
-  <div class="mermaid">
-    graph LR
-    r1[Get<br />dataset A] --> c1[Clean] --> f1[Features] --> f[Join features] --> t[Train model] --> e[Evaluate model]
-    r2[Get<br />dataset B] --> c2[Clean] --> f2[Features] --> f
+  <style>
+    .bd-placeholder-img {
+      font-size: 1.125rem;
+      text-anchor: middle;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
 
-    class r1 done;
-    class c1 done;
-    class f1 done;
+    @media (min-width: 768px) {
+      .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+      }
+    }
+  </style>
+  <!-- Custom styles for this template -->
+  <style>
+    /* Move down content because we have a fixed navbar that is 3.5rem tall */
+    body {
+      padding-top: 3.5rem;
+    }
 
-    class r2 pending;
-    class c2 pending;
-    class f2 pending;
+    #pipeline {
+      width: 0%;
+      padding-top: 20px;
+      padding-bottom: 20px;
+    }
 
-    class f pending;
-    class t pending;
-    class e pending;
-  </div>
+    svg[id^="mermaid-"] {
+      min-width: 200px;
+      max-width: 1000px;
+    }
+  </style>
+</head>
 
-</div>
+<body>
+  <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    <a class="navbar-brand" href="#">Ploomber</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
+      aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="">User Guide</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="">API</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
 
-<div class="button-container">
-  <a href="https://github.com/ploomber/ploomber" class="btn btn-outline-success btn-lg" role="button">Github</a>
-  <a href="#docs" class="btn btn-outline-success btn-lg" role="button">Documentation</a>
-  <a href="https://ploomber.io" class="btn btn-outline-success btn-lg" role="button">Blog</a>
-  <a href="https://asciinema.org/a/346484" class="btn btn-outline-success btn-lg" role="button">1-minute demo</a>
-</div>
-
-<h2>How?</h2>
-
-<div>
-  <ol>
-    <li>List your pipeline task (scripts) in a <code>pipeline.yaml</code> file</li>
-    <li>Inside each script, declare an <code>upstream</code> variable to state dependencies (other scripts)</li>
-    <li>Declare a <code>product</code> to declare output files (that the next script will use as inputs)</li>
-  </ol>
-
-  <p>That's it!</p>
-</div>
-
-
-<h2>Why?</h2>
-
-<div>
-  <p> Once you structure your pipeline this way, Ploomber can do a lot of things for
-    you, here are some of them:
-  </p>
-  <ol>
-    <li>Automated end-to-end-testing
-    </li>
-    <li>Sync teamwork</li>
-    <li>Incremental builds (skip up-to-date tasks)
-    </li>
-    <li>Task parallelization</li>
-  </ol>
-</div>
-
-<h2>Integration with Jupyter</h2>
-
-<img src="https://ploomber.io/doc/script-and-injected.png" alt="">
-
-<p>Ploomber does not compromise structure with interactivity, a Jupyter
-  extension allows your scripts to be rendered as notebooks paths to inputs
-  be automatically added based on your declared task dependencies.</p>
-
-
-<h2 id="docs">Documentation</h2>
-
-<h3>Tutorials</h3>
-
-<table>
-  <tr>
-    <td><a href="{{ pathto('get-started/install') }}">Install</a></td>
-    <td>How to install Ploomber</td>
-  </tr>
-  <tr>
-    <td><a href="{{ pathto('get-started/intro') }}">Introduction</a></td>
-    <td>Learn fundamental concepts</td>
-  </tr>
-  <tr>
-    <td><a href="{{ pathto('get-started/basic-workflow') }}">Basic workflow</a></td>
-    <td>Get some hands-on experience using a project template</td>
-  </tr>
-</table>
+  <main role="main">
 
 
 
+    <main role="main">
 
-<h3>Cookbook</h3>
+      <!-- Main jumbotron for a primary marketing message or call to action -->
+      <div class="jumbotron">
+        <div class="container">
+          <h1 class="display-3">Ploomber</h1>
+          <div>
+            <div class="mermaid">
+              graph LR
+              r1[Get<br />dataset A] --> c1[Clean] --> f1[Features] --> f[Join features]
+              f --> t[Train model] --> e[Evaluate model]
+              r2[Get<br />dataset B] --> c2[Clean] --> f2[Features] --> f
 
+              class r1 done;
+              class c1 done;
+              class f1 done;
 
-<h3>Reference</h3>
+              class r2 pending;
+              class c2 pending;
+              class f2 pending;
 
-<table style="width:100%">
-  <tr>
-    <td><a href="{{ pathto('reference/spec') }}">Spec API</a></td>
-    <td>How to customize your <code>pipeline.yaml</code> to support distinct workflows</td>
-  </tr>
-  <tr>
-    <td><a href="{{ pathto('reference/cli') }}">CLI</a></td>
-    <td>Ploomber's command line interface</td>
-  </tr>
-</table>
+              class f pending;
+              class t pending;
+              class e pending;
+            </div>
 
-{% endblock %}
+          </div>
+
+          <p>This is a template for a simple marketing or informational website. It includes a large callout called a
+            jumbotron and three supporting pieces of content. Use it as a starting point to create something more
+            unique.</p>
+
+          <div>
+
+            <div>
+              <a href="#docs" class="btn btn-primary btn-lg" role="button">Get started</a>
+              <a href="https://github.com/ploomber/ploomber" class="btn btn-outline-secondary btn-lg"
+                role="button">Github</a>
+              <a href="https://ploomber.io" class="btn btn-outline-secondary btn-lg" role="button">Blog</a>
+              <a href="https://asciinema.org/a/346484" class="btn btn-outline-secondary btn-lg" role="button">1-minute
+                demo</a>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <div class="container">
+        <!-- Example row of columns -->
+        <div class="row">
+          <div class="col-md-4">
+            <h2>Simple</h2>
+            <ol>
+              <li>List your pipeline task (scripts) in a <code>pipeline.yaml</code> file</li>
+              <li>Inside each script, declare an <code>upstream</code> variable to state dependencies (other scripts)
+              </li>
+              <li>Declare a <code>product</code> to declare output files (that the next script will use as inputs)</li>
+            </ol>
+
+          </div>
+          <div class="col-md-4">
+            <h2>Convenient</h2>
+            <ol>
+              <li>Automated end-to-end-testing
+              </li>
+              <li>Sync teamwork</li>
+              <li>Incremental builds (skip up-to-date tasks)
+              </li>
+              <li>Task parallelization</li>
+            </ol>
+          </div>
+          <div class="col-md-4">
+            <h2>Integrates with Jupyter</h2>
+            <p>Ploomber does not compromise structure with interactivity, a Jupyter
+              extension allows your scripts to be rendered as notebooks paths to inputs
+              be automatically added based on your declared task dependencies.</p>
+
+          </div>
+        </div>
+
+        <hr>
+
+      </div> <!-- /container -->
+
+    </main>
+  </main>
+
+  <footer class="container">
+  </footer>
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/mermaid@8.6.0/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true });</script>
+</body>
+
+</html>
