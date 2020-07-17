@@ -20,8 +20,23 @@
     font-size: 16px;
   }
 
+  li {
+    font-size: 16px;
+  }
+
   table {
     width: 100%,
+  }
+
+  #pipeline {
+    width: 0%;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+
+  svg[id^="mermaid-"] {
+    min-width: 200px;
+    max-width: 700px;
   }
 </style>
 
@@ -31,29 +46,76 @@
 <h1>Ploomber</h1>
 
 
-<p>
-  List your pipeline tasks in a <code>pipeline.yaml</code> file, declare which upstream tasks to use as inputs and where
-  to save outputs. Ploomber will propagate inputs to downstream consumers and orchestrate pipeline end-to-end execution.
+<div id="pipeline">
+  <div class="mermaid">
+    graph LR
+    r1[Get<br />dataset A] --> c1[Clean] --> f1[Features] --> f[Join features] --> t[Train model] --> e[Evaluate model]
+    r2[Get<br />dataset B] --> c2[Clean] --> f2[Features] --> f
 
-  You can open your Python scripts as Jupyter notebooks for development. During execution, they are converted to
-  notebooks to embed tables and charts.
-</p>
+    class r1 done;
+    class c1 done;
+    class f1 done;
 
-<p>Here's a short video demonstrating how it works:</p>
+    class r2 pending;
+    class c2 pending;
+    class f2 pending;
 
-<a href="https://asciinema.org/a/346484"><img alt="1-minute video" src="https://asciinema.org/a/346484.svg"></a>
+    class f pending;
+    class t pending;
+    class e pending;
+  </div>
 
-<div class="button-container">
-  <a href="https://github.com/ploomber/ploomber" class="btn btn-outline-success btn-lg" role="button">Github</a>
-  <a href="https://ploomber.io" class="btn btn-outline-success btn-lg" role="button">Blog</a>
 </div>
 
 
-<h2>Tutorials</h2>
+<div class="button-container">
+  <a href="https://github.com/ploomber/ploomber" class="btn btn-outline-success btn-lg" role="button">Github</a>
+  <a href="#docs" class="btn btn-outline-success btn-lg" role="button">Documentation</a>
+  <a href="https://ploomber.io" class="btn btn-outline-success btn-lg" role="button">Blog</a>
+  <a href="https://asciinema.org/a/346484" class="btn btn-outline-success btn-lg" role="button">1-minute demo</a>
+</div>
 
-<h3>Get started</h3>
+<h2>How?</h2>
 
-<p>If you're new to Ploomber, start here.</p>
+<div>
+  <ol>
+    <li>List your pipeline task (scripts) in a <code>pipeline.yaml</code> file</li>
+    <li>Inside each script, declare an <code>upstream</code> variable to state dependencies (other scripts)</li>
+    <li>Declare a <code>product</code> to declare output files (that the next script will use as inputs)</li>
+  </ol>
+
+  <p>That's it!</p>
+</div>
+
+
+<h2>Why?</h2>
+
+<div>
+  <p> Once you structure your pipeline this way, Ploomber can do a lot of things for
+    you, here are some of them:
+  </p>
+  <ol>
+    <li>Automated end-to-end-testing
+    </li>
+    <li>Sync teamwork</li>
+    <li>Incremental builds (skip up-to-date tasks)
+    </li>
+    <li>Task parallelization</li>
+  </ol>
+</div>
+
+<h2>Integration with Jupyter</h2>
+
+<img src="https://ploomber.io/doc/script-and-injected.png" alt="">
+
+<p>Ploomber does not compromise structure with interactivity, a Jupyter
+  extension allows your scripts to be rendered as notebooks paths to inputs
+  be automatically added based on your declared task dependencies.</p>
+
+
+<h2 id="docs">Documentation</h2>
+
+<h3>Tutorials</h3>
 
 <table>
   <tr>
@@ -73,10 +135,10 @@
 
 
 
-<h2>Cookbook</h2>
+<h3>Cookbook</h3>
 
 
-<h2>Reference</h2>
+<h3>Reference</h3>
 
 <table style="width:100%">
   <tr>

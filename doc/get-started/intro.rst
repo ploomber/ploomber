@@ -18,6 +18,7 @@ Inputs for a task come from other "upstream" tasks. When a given task is finishe
 
 Since tasks need to talk to each other, having a standard interface helps stitch all the piece together without any extra work.
 
+
 A simple pipeline
 -----------------
 
@@ -26,17 +27,25 @@ Let's say we want to build a pipeline to generate a chart. We can divide the pip
 Scripts as notebooks
 --------------------
 
+tl;dr; Write tasks as scripts, but execute them as notebooks to keep results
 
 .. image:: https://ploomber.io/doc/script-and-notebook.png
    :target: https://ploomber.io/doc/script-and-notebook.png
    :alt: script-and-nb
 
 
-A very popular format for developing Data Science projects is through Jupyter notebooks. Such format allows to store both code and rich output, while this is great for reviewing results, it's terrible for development because it complicates source code version control (i.e. git).
+A very popular format for developing Data Science projects is through Jupyter
+notebooks. Such format allows to store both code and rich output, while this is
+great for reviewing results, it's terrible for development because it
+complicates source code version control (i.e. git).
 
 Ploomber follows an alternative approach: code your tasks as scripts but execute them as notebooks. This way you can keep a lean git workflow for development but still have the opportunity to embed rich output without extra work.
 
-The fact that you use scripts for development does not mean you cannot develop them interactively, Ploomber relies on the great `jupytext <https://github.com/mwouts/jupytext>`_ package to seamlessly convert between scripts and notebooks when needed. This allows you to open your scripts just like notebooks.
+The fact that you use scripts for development does not mean you cannot develop
+them interactively, Ploomber relies on the great
+`jupytext <https://github.com/mwouts/jupytext>`_ package to seamlessly convert
+between scripts and notebooks when needed. This allows you to open your scripts
+just like notebooks.
 
 Defining a standard interface
 -----------------------------

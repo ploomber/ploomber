@@ -33,10 +33,11 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
     left: 5px;
 }
 
-.highlight-console { position: relative; }
-.highlight-yaml { position: relative; }
-.highlight-python { position: relative; }
-.highlight-postgresql { position: relative; }
+[class*="highlight-"] {
+    width: 80%;
+    position: relative;
+    margin: auto;
+}
 
 /* Terminal window buttons shapes */
 
