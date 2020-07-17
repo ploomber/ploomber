@@ -1,9 +1,7 @@
-
 User Guide
 ==========
 
+.. toctree::
+    :maxdepth: 2
 
-Get Started
------------
-
-
+    faq_index

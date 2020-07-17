@@ -39,12 +39,50 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
     integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
     crossorigin="anonymous"></script>
+
+<script>
+    $(document).ready(function () {
+        console.log("helooooo")
+        var path = window.location.pathname
+        pages = ['get-started', 'user-guide', 'api'];
+
+        $('.nav-item').each(function (i) {
+            if (path.includes(pages[i])) {
+                $(this).addClass('active');
+            } else {
+                $(this).removeClass('active');
+            }
+        });
+
+    });
+</script>
+
 {% endblock %}
+
+{%- macro sidebar2() %}
+{%- if render_sidebar %}
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+        {%- include "localtoc.html" %}
+        {%- include "sourcelink.html" %}
+    </div>
+</div>
+{%- endif %}
+{%- endmacro %}
+
+
+{%- macro sidebar1() %}
+{% set global_toc = toctree(maxdepth=2,
+                            collapse=1,
+                            includehidden=1,
+                            titles_only=0) %}
+{{ global_toc }}
+{%- endmacro %}
 
 
 {%- block relbar1 %}
 <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-    <a class="navbar-brand" href="#">Navbar</a>
+    <a class="navbar-brand" href="/">Ploomber</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
         aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -53,26 +91,18 @@
     <div class="collapse navbar-collapse" id="navbarsExampleDefault">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="{{ pathto('contents') }}">Documentation <span
+                        class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Link</a>
+                <a class="nav-link" href="{{ pathto('api/index') }}">Github</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-            </li>
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false">Dropdown</a>
-                <div class="dropdown-menu" aria-labelledby="dropdown01">
-                    <a class="dropdown-item" href="#">Action</a>
-                    <a class="dropdown-item" href="#">Another action</a>
-                    <a class="dropdown-item" href="#">Something else here</a>
-                </div>
+                <a class="nav-link" href="{{ pathto('api/index') }}">Blog</a>
             </li>
         </ul>
-        <form class="form-inline my-2 my-lg-0">
-            <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+        <form class="search form-inline my-2 my-lg-0" action="search.html" method="get">
+            <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
             <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
         </form>
     </div>
@@ -85,9 +115,9 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-2">
-            {%- block sidebar1 %} {{ sidebar() }} {% endblock %}
+            {{ sidebar1() }}
         </div>
-        <div class="col-10">
+        <div class="col-8">
             <div class="document">
                 {%- block document %}
                 <div class="documentwrapper">
@@ -106,11 +136,9 @@
                 <div class="clearer"></div>
             </div>
         </div>
+        <div class="col-2">
+            {{ sidebar2() }}
+        </div>
     </div>
 </div>
-
-
-
-
-
 {%- endblock %}

@@ -127,7 +127,7 @@ execute A before B, but it also makes output from A available to B.
 
 
 Python scripts details
-======================
+----------------------
 
 If your task is a script, this leads to a cell injection. Say you have a script
 that looks like this:
@@ -190,7 +190,7 @@ To disable it:
 
 
 SQL scripts details
-===================
+-------------------
 
 When tasks execute SQL, upstream dependencies are propagated in the upstream
 dictionary:

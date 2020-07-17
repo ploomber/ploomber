@@ -2,28 +2,9 @@ Ploomber documentation
 ======================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
-   getting-started
-   spec
-   quickstart
-   guide_index
-   api_summary
-   modules_index
-   faq_index
-   changelog
+   get-started/index
+   user-guide/index
+   api/index
 
-..
-  The include below will render an orphan: text, due to this bug:
-  https://github.com/sphinx-doc/sphinx/issues/1545
-
-
-.. include:: auto_examples/index.rst
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

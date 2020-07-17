@@ -60,10 +60,13 @@
     <div class="collapse navbar-collapse" id="navbarsExampleDefault">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item">
-          <a class="nav-link" href="">User Guide</a>
+          <a class="nav-link" href="{{ pathto('contents') }}">Documentation</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="">API</a>
+          <a class="nav-link" href="https://github.com/ploomber/ploomber">Github</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://ploomber.io">Blog</a>
         </li>
       </ul>
     </div>
@@ -108,10 +111,7 @@
           <div>
 
             <div>
-              <a href="#docs" class="btn btn-primary btn-lg" role="button">Get started</a>
-              <a href="https://github.com/ploomber/ploomber" class="btn btn-outline-secondary btn-lg"
-                role="button">Github</a>
-              <a href="https://ploomber.io" class="btn btn-outline-secondary btn-lg" role="button">Blog</a>
+              <a href="{{ pathto('get-started/index') }}" class="btn btn-primary btn-lg" role="button">Get started</a>
               <a href="https://asciinema.org/a/346484" class="btn btn-outline-secondary btn-lg" role="button">1-minute
                 demo</a>
             </div>
@@ -176,6 +176,7 @@
     crossorigin="anonymous"></script>
   <script src="https://unpkg.com/mermaid@8.6.0/dist/mermaid.min.js"></script>
   <script>mermaid.initialize({ startOnLoad: true });</script>
+
 </body>
 
 </html>
