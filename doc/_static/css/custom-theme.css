@@ -37,6 +37,8 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
     width: 80%;
     position: relative;
     margin: auto;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
 }
 
 /* Terminal window buttons shapes */
@@ -69,3 +71,85 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
   content: "In []: ";
   color: RGB(0, 200, 0);
 }
+
+.toctree-l1 > a {
+    font-size: larger;
+    color: black;
+}
+
+.toctree-l1.current > a {
+    font-size: larger;
+    color: black;
+    font-weight: 800;
+}
+
+.toctree-l2 > a {
+    color: gray;
+}
+
+.toctree-l2.current > a {
+    color: gray;
+    font-weight: 600;
+}
+
+
+ul {
+    list-style-type: none;
+    padding-left: 0px;
+}
+
+li {
+    padding-left: 5px;
+}
+
+.global-toc {
+    position: fixed;
+}
+
+div.sphinxsidebarwrapper {
+    position: fixed;
+    border-left: 2px solid #eee;
+    padding-left: 5px;
+    padding-right: 8px;
+}
+
+div.sphinxsidebarwrapper > ul > li > a {
+    font-size: larger;
+    color: black;
+    font-weight: 800;
+}
+
+div.sphinxsidebarwrapper > ul > li > ul > li > a {
+    color: gray;
+}
+
+div.sphinxsidebarwrapper > ul > li > ul > li {
+    padding-left: 20px;
+}
+
+a.headerlink {
+    color: white;
+}
+
+a.headerlink:hover {
+    color: gray;
+}
+
+div.section {
+    margin-top: 3rem;
+}
+
+p {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+div.document img {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+/* 
+h1 {
+    margin-bottom: 2rem;
+    font-weight: 700;
+} */

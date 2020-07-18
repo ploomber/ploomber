@@ -64,7 +64,6 @@
 <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
     <div class="sphinxsidebarwrapper">
         {%- include "localtoc.html" %}
-        {%- include "sourcelink.html" %}
     </div>
 </div>
 {%- endif %}
@@ -76,7 +75,7 @@
                             collapse=1,
                             includehidden=1,
                             titles_only=0) %}
-{{ global_toc }}
+<div class="global-toc">{{ global_toc }}</div>
 {%- endmacro %}
 
 
@@ -140,5 +139,24 @@
             {{ sidebar2() }}
         </div>
     </div>
+</div>
+{%- endblock %}
+
+
+{%- block relbar2 %}{% endblock %}
+
+{%- block footer %}
+<div class="footer" role="contentinfo">
+    {%- if show_copyright %}
+    {%- if hasdoc('copyright') %}
+    {% trans path=pathto('copyright'), copyright=copyright|e %}&#169; <a href="{{ path }}">Copyright</a>
+    {{ copyright }}.{% endtrans %}
+    {%- else %}
+    {% trans copyright=copyright|e %}&#169; Copyright {{ copyright }}.{% endtrans %}
+    {%- endif %}
+    {%- endif %}
+    {%- if last_updated %}
+    {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}
+    {%- endif %}
 </div>
 {%- endblock %}
