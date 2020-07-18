@@ -149,6 +149,11 @@ p {
     max-width: 90%;
 }
 
+p.lead {
+    font-size: 1.5rem;
+    font-weight: 300;
+}
+
 div.document img {
     margin-top: 2rem;
     margin-bottom: 2rem;

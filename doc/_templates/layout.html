@@ -40,23 +40,6 @@
     integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
     crossorigin="anonymous"></script>
 
-<script>
-    $(document).ready(function () {
-        console.log("helooooo")
-        var path = window.location.pathname
-        pages = ['get-started', 'user-guide', 'api'];
-
-        $('.nav-item').each(function (i) {
-            if (path.includes(pages[i])) {
-                $(this).addClass('active');
-            } else {
-                $(this).removeClass('active');
-            }
-        });
-
-    });
-</script>
-
 {% endblock %}
 
 {%- macro sidebar2() %}
