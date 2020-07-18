@@ -150,6 +150,13 @@ a.headerlink {
     color: white;
 }
 
+:target::before {
+    content: '';
+    display: block;
+    height:      48px;
+    margin-top: -48px;
+}
+
 a.headerlink:hover {
     color: gray;
 }
