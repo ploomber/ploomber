@@ -6,4 +6,4 @@ API
 
    spec
    cli
-   modules_index
+   python_api

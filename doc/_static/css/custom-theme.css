@@ -110,6 +110,17 @@ div.document {
     padding-left: 40px;
 }
 
+div.document .toctree-l1 {
+    font-size: large;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+div.document .toctree-l2 {
+    font-weight: 300;
+    padding-left: 1.5rem;
+}
+
 .global-toc {
     position: fixed;
 }
@@ -167,4 +178,21 @@ div.document h1 {
 
 div.document h2 {
     margin-top: 3rem;
+}
+
+table.longtable {
+    width: 100%;
+}
+
+table.longtable td {
+    width: 50%;
+}
+
+table.longtable tr {
+    border-bottom: 2px solid #eee
+}
+
+table.longtable p {
+    width: 100%;
+    margin-bottom: 0px;
 }

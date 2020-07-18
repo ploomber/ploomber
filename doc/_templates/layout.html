@@ -55,9 +55,9 @@
 
 {%- macro sidebar1() %}
 {% set global_toc = toctree(maxdepth=2,
-                            collapse=1,
-                            includehidden=1,
-                            titles_only=0) %}
+                            collapse=true,
+                            includehidden=false,
+                            titles_only=false) %}
 <div class="global-toc">{{ global_toc }}</div>
 {%- endmacro %}
 
@@ -77,10 +77,10 @@
                         class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ pathto('api/index') }}">Github</a>
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">Github</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ pathto('api/index') }}">Blog</a>
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
             </li>
         </ul>
         <form class="search form-inline my-2 my-lg-0" action="search.html" method="get">

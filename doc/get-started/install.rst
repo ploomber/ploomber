@@ -1,6 +1,9 @@
 Installation
 ============
 
+Using ``pip``
+-----------
+
 .. code-block:: console
 
     pip install ploomber
@@ -12,8 +15,8 @@ To install Ploomber along with all optional dependencies:
 
     pip install "ploomber[all]"
 
-Install graphviz (Optional)
----------------------------
+Optional: Install graphviz
+--------------------------
 
 Only required if you want to plot your pipeline.
 
