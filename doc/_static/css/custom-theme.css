@@ -102,6 +102,14 @@ li {
     padding-left: 5px;
 }
 
+.first-column {
+    border-right: 2px solid #eee;
+}
+
+div.document {
+    padding-left: 40px;
+}
+
 .global-toc {
     position: fixed;
 }
@@ -135,21 +143,23 @@ a.headerlink:hover {
     color: gray;
 }
 
-div.section {
-    margin-top: 3rem;
-}
-
 p {
     margin-top: 0;
     margin-bottom: 1rem;
+    max-width: 90%;
 }
 
 div.document img {
     margin-top: 2rem;
     margin-bottom: 2rem;
 }
-/* 
-h1 {
+
+div.document h1 {
+    margin-top: 2rem;
     margin-bottom: 2rem;
     font-weight: 700;
-} */
+}
+
+div.document h2 {
+    margin-top: 3rem;
+}
