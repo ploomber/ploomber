@@ -15,12 +15,12 @@ To install Ploomber along with all optional dependencies:
 
     pip install "ploomber[all]"
 
-Optional: Install graphviz
---------------------------
+To plot your pipeline (Optional)
+--------------------------------
 
-Only required if you want to plot your pipeline.
 
-Install it with conda:
+
+Install ``graphviz`` it with conda:
 
 .. code-block:: console
 

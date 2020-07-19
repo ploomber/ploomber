@@ -24,6 +24,7 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
     border-radius: 5px 5px 0 0;
     text-align: center;
     font-size: 12px;
+    display: flex;
 }
 
 
@@ -31,6 +32,12 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
     position: absolute;
     top: 7px;
     left: 5px;
+    float: left;
+}
+
+.copy-message {
+    float: right;
+    opacity: 0;
 }
 
 [class*="highlight-"] {
@@ -140,6 +147,8 @@ div.sphinxsidebarwrapper > ul > li > a {
 
 div.sphinxsidebarwrapper > ul > li > ul > li > a {
     color: gray;
+    font-weight: 100;
+
 }
 
 div.sphinxsidebarwrapper > ul > li > ul > li {
