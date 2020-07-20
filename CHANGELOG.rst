@@ -5,8 +5,8 @@ CHANGELOG
 --------
 * Experimental PythonCallable.develop()
 
-0.6dev
-------
+0.6 (2020-07-08)
+------------------
 * Adds Jupyter notebook extension to inject parameters when opening a task
 * Improved CLI `ploombe new`, `ploombe add` and `ploombe entry`
 * Spec API documentation additions
