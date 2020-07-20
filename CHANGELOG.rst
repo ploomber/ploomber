@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.6.1dev
---------
+0.6.1 (2020-07-20)
+------------------
 * Changes pipeline.yaml default (extract_product: True)
 * Documentation re-design
 * Simplified "ploomber new" generated files
@@ -11,7 +11,7 @@ CHANGELOG
 * Bug fixes
 
 0.6 (2020-07-08)
-------------------
+----------------
 * Adds Jupyter notebook extension to inject parameters when opening a task
 * Improved CLI `ploombe new`, `ploombe add` and `ploombe entry`
 * Spec API documentation additions
