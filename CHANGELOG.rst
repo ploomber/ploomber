@@ -3,7 +3,12 @@ CHANGELOG
 
 0.6.1dev
 --------
-* Experimental PythonCallable.develop()
+* Changes pipeline.yaml default (extract_product: True)
+* Documentation re-design
+* Simplified "ploomber new" generated files
+* Ability to define "product" in SQL scripts
+* Products are resolved to absolute paths to avoid ambiguity
+* Bug fixes
 
 0.6 (2020-07-08)
 ------------------
