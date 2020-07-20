@@ -30,19 +30,24 @@ function addTerminalStyle(elements, title, buttons = false) {
     for (i = 0; i < elements.length; i++) {
         var element = elements[i]
 
+        var container = document.createElement('div');
+        container.setAttribute('class', 'terminal-top container');
+
         var top_div = document.createElement('div');
-        top_div.setAttribute('class', 'terminal-top');
-        element.insertBefore(top_div, element.childNodes[0])
+        container.appendChild(top_div)
+
+        top_div.setAttribute('class', 'row');
+        element.insertBefore(container, element.childNodes[0])
 
 
         var btns_div = document.createElement('div');
-        btns_div.setAttribute('class', 'btns');
+        btns_div.setAttribute('class', 'col d-flex justify-content-start btns');
 
         var title_div = document.createElement('div');
-        title_div.setAttribute('class', 'title');
+        title_div.setAttribute('class', 'title col d-flex justify-content-center');
 
         var copy_div = document.createElement('div');
-        copy_div.setAttribute('class', 'copy-message');
+        copy_div.setAttribute('class', 'copy-message col d-flex justify-content-end');
         copy_div.textContent = "Click to copy"
 
         if (element.id) {
@@ -81,14 +86,14 @@ $(document).ready(function () {
         navigator.clipboard.writeText($(this).text());
     });
 
-    $(".highlight-python").hover(function () {
+    $("[class*='highlight-']").hover(function () {
         $(this).find('.copy-message').css('opacity', 1)
     }, function () {
         $(this).find('.copy-message').css('opacity', 0)
         $(this).find('.copy-message').text('Click to copy')
     })
 
-    $(".highlight-python").click(function () {
+    $("[class*='highlight-']").click(function () {
         $(this).find('.copy-message').text('Copied!')
     })
 

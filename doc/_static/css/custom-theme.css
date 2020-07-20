@@ -6,6 +6,10 @@
 https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCodeExamplesInSphinx.html
 */
 
+.navbar {
+    background-color: black;
+}
+
 .highlight * { margin: 0; padding: 0; }
 
 .highlight {
@@ -24,19 +28,14 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
     border-radius: 5px 5px 0 0;
     text-align: center;
     font-size: 12px;
-    display: flex;
 }
 
 
 .btns {
-    position: absolute;
-    top: 7px;
-    left: 5px;
-    float: left;
+    padding-top: 3px;
 }
 
 .copy-message {
-    float: right;
     opacity: 0;
 }
 
