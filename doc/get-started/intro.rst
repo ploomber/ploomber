@@ -2,29 +2,24 @@
 Introduction
 ============
 
-Ploomber helps you manage your data analysis projects. Its design is based on a simple principle: *It is easier to understand (and solve) a problem when it is structured as small, isolated tasks.*
+Ploomber is based on a simple principle: *It is easier to understand (and
+solve) a problem when it is structured as small, isolated tasks.* By adopting
+a *convention over configuration* philosophy, Ploomber allows you to quickly
+turn a collection scripts in a cohesive data pipeline.
 
-When working on a solo project, we might get away with a single big file that process all our data, but as soon as we want to work with someone else or share our work, structuring our project pays off.
+Conventions
+-----------
 
-**One task = one script**
-
-Think of your data project as a series of ordered tasks (which we call "a pipeline"). A task can be a lot of things, but for the sake of this introduction it will be a Python script.
-
-**Inputs and outputs**
-
-Inputs for a task come from other "upstream" tasks. When a given task is finished, its outputs are consumed by its "downstream" tasks, this continues until we reach the final task.
-
-**Standardizing tasks**
-
-Since tasks need to talk to each other, having a standard interface helps stitch all the piece together without any extra work.
-
+1. Each task is a script
+2. Scripts declare their dependencies in the ``upstream`` variable
+3. Scripts declare their outputs in the ``product`` variable
 
 A simple pipeline
 -----------------
 
 Let's say we want to build a pipeline to generate a chart. We can organize it
 in three tasks: get raw data (\ ``raw.py``\ ), clean data (\ ``clean.py``\ )
-and generate plot (\ ``plot.py``\ ).
+and generate plot (\ ``plot.py``\ ):
 
 .. raw:: html
 
@@ -34,35 +29,36 @@ and generate plot (\ ``plot.py``\ ).
     </div>
 
 
-Scripts as notebooks
---------------------
+Outputs from one task become inputs to "downstream" tasks. Dependencies go in
+the opposite direction. For example ``raw.py`` is an "upstream" dependency
+of ``clean.py``.
 
-tl;dr; Write tasks as scripts, but execute them as notebooks to keep results
+Why scripts?
+------------
 
 .. image:: https://ploomber.io/doc/script-and-notebook.png
    :target: https://ploomber.io/doc/script-and-notebook.png
    :alt: script-and-nb
-
 
 A very popular format for developing Data Science projects is through Jupyter
 notebooks. Such format allows to store both code and rich output, while this is
 great for reviewing results, it's terrible for development because it
 complicates source code version control (i.e. git).
 
-Ploomber follows an alternative approach: code your tasks as scripts but execute them as notebooks. This way you can keep a lean git workflow for development but still have the opportunity to embed rich output without extra work.
+Ploomber follows an alternative approach: code your tasks as scripts but
+execute them as notebooks. This way you can keep a lean git workflow for
+development but still have the opportunity to embed rich output without extra
+work.
 
-The fact that you use scripts for development does not mean you cannot develop
-them interactively, Ploomber relies on the great
-`jupytext <https://github.com/mwouts/jupytext>`_ package to seamlessly convert
-between scripts and notebooks when needed. This allows you to open your scripts
-just like notebooks.
 
-Defining a standard interface
------------------------------
+``upstream`` dependencies and ``product``
+-----------------------------------------
 
-We don't need to know any specifics about each script, as long as they respect the standard interface, we should be able to integrate them all in a pipeline.
+To state task dependencies and outputs, declare an ``upstream`` and a
+``product`` variable. ``upstream`` must be a list with names of other tasks and
+product a dictionary mapping keys to paths.
 
-In Ploomber, the task interface looks like this:
+Both variables must be enclosed by special markup as follows:
 
 .. code-block:: python
     :class: text-editor
@@ -73,18 +69,23 @@ In Ploomber, the task interface looks like this:
     product = {'nb': 'path/to/task.ipynb', 'some_output': 'path/to/output.csv'}
     # -
 
-The ``# +`` and ``# -`` markers define the *parameters cell* which is how we define our interface. Each task must contain this cell before any other logic (but after all imports).
+The ``# +`` and ``# -`` markers define the *parameters cell*.
 
-The interface must define two variables:
+Since all tasks are converted to notebooks to be executed, use the special
+``nb`` key to declare where to save the executed notebook.
 
-
-#. ``upstream``\ : a list of task dependencies, the example above implies that the current task will use the outputs from ``one_task`` and ``another_task`` as inputs.
-#. ``product``\ : a dictionary where whe specify output location. Keys are arbitrary names and values are paths.
-
-As we mention in the previous section, all tasks are converted to notebooks before execution. Because of this, all scripts generate at least one file, to indicate where to save the executed notebook use the special ``nb`` key.
+We use `jupytext <https://github.com/mwouts/jupytext>`_ to convert scripts to
+notebooks, see the documentation for details on available markup options.
 
 Cell injection
 --------------
+
+When you declare ``upstream`` dependencies you only specify the upstream task
+name, but your code needs to know the exact file location to load it! Ploomber
+automates this process.
+
+When executing your pipeline, a new cell is automatically injected by
+extracting the product from the upstream task.
 
 
 .. image:: https://ploomber.io/doc/injected-cell.png
@@ -92,18 +93,19 @@ Cell injection
    :alt: injected-cell
 
 
-After converting your scripts to notebooks, there is one step left: cell injection.
+Integration with Jupyter
+------------------------
 
-When you declare ``upstream`` dependencies you only specify the upstream task name, but your code needs to know the exact file location to load it! While you could copy it from the upstream task source code, this leads to redundant logic which gets out of sync real quick.
+Ploomber integrates with Jupyter to enable interactive development. Your
+scripts are automatically rendered as notebooks when you open and the cell
+with paths to inputs is automatically added.
 
-Instead, s new cell is automatically injected by extracting the product from the upstream task, so you can use it as input.
-
-To enable interactive development, cell injection also happens when you open your script in the Jupyter notebook app.
 
 Defining a pipeline
 -------------------
 
-To perform all this logic, Ploomber needs to know which files to use as tasks of your pipeline, to do so, you only have to write a short ``pipeline.yaml`` file:
+To execute your pipeline, Ploomber needs to know which files to use as tasks,
+do so in a ``pipeline.yaml`` file:
 
 .. code-block:: yaml
     :class: text-editor
@@ -120,24 +122,34 @@ To perform all this logic, Ploomber needs to know which files to use as tasks of
         name: plot
 
 
-``name`` is optional, but it can be helpful when your tasks are spread in different folders.
+``name`` is optional, but it can be helpful when your tasks are spread in
+different folders.
 
-Once you have a ``pipeline.yaml`` file, you can run your pipeline by executing the following command in the terminal:
+Once you have a ``pipeline.yaml`` file, you can run your pipeline by executing
+the following command:
 
 .. code-block:: console
 
    ploomber entry pipeline.yaml
 
-Ploomber keeps track of source changes to skip up-to-date tasks, if you run that command again, only tasks whose source code has changed will be executed.
+Ploomber keeps track of source changes to skip up-to-date tasks, if you run
+that command again, only tasks whose source code has changed will be executed.
 
 
-The full picture
-----------------
+Summary
+-------
 
-The following diagram shows the full picture: a pipeline where the A -> B means
-A is an upstream dependency of B, the source code for each script, the location of the injected cell and its contents.
+The following diagram shows our example pipeline along with some sample
+source code for each task and the injected cell source code.
 
 
 .. image:: https://ploomber.io/doc/python/diag.png
    :target: https://ploomber.io/doc/python/diag.png
    :alt: python-diag
+
+
+Wrapping up
+-----------
+
+Now that you now the basic concepts, go to the next tutorial to run your first
+pipeline.

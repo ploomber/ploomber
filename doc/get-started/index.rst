@@ -10,4 +10,4 @@ Get Started
 
     install
     intro
-    basic-workflow
+    first-pipeline
