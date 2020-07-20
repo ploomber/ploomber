@@ -12,6 +12,9 @@ session (does not have setup but takes a few minutes to be ready):
 
 Continue once you have a terminal window.
 
+Create sample project
+---------------------
+
 Note: if you are using the service from the button above, execute the following
 command once the terminal shows up:
 
@@ -66,6 +69,9 @@ If you recall from our previous tutorial, dependencies are declared inside
 each script. Take a look a the three Python scripts to check out dependencies
 declared in in the ``upstream`` variable. You should see that those dependencies
 match the diagram above.
+
+Executing the pipeline
+----------------------
 
 Let's now execute the pipeline, go back to the terminal. If you closed the tab,
 you can open it again by going to "Running" -> "Terminals":
