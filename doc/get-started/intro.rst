@@ -22,7 +22,17 @@ Since tasks need to talk to each other, having a standard interface helps stitch
 A simple pipeline
 -----------------
 
-Let's say we want to build a pipeline to generate a chart. We can divide the pipeline in three tasks: get raw data (\ ``raw.py``\ ), clean data (\ ``clean.py``\ ) and generate plot (\ ``plot.py``\ ). Our pipeline has the following order: ``raw -> clean -> plot``
+Let's say we want to build a pipeline to generate a chart. We can organize it
+in three tasks: get raw data (\ ``raw.py``\ ), clean data (\ ``clean.py``\ )
+and generate plot (\ ``plot.py``\ ).
+
+.. raw:: html
+
+    <div class="mermaid">
+    graph LR
+        raw.py --> clean.py --> plot.py
+    </div>
+
 
 Scripts as notebooks
 --------------------

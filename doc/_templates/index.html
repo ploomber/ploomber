@@ -47,6 +47,10 @@
       min-width: 200px;
       max-width: 1000px;
     }
+
+    .lead {
+      margin-top: 20px;
+    }
   </style>
 </head>
 
@@ -105,10 +109,10 @@
 
           </div>
 
-          <p>This is a template for a simple marketing or informational website. It includes a large callout called a
-            jumbotron and three supporting pieces of content. Use it as a starting point to create something more
-            unique.</p>
-
+          <p class="lead">Adopt better software development practices without
+            having to learn a new framework. By adopting the <i>convention over
+              configuration</i> philosophy, Ploomber streamlines pipeline
+            execution, allowing teams to <b>confidently develop data pipelines</b>.</p>
           <div>
 
             <div>
@@ -128,7 +132,7 @@
           <div class="col-md-4">
             <h2>Simple</h2>
             <ol>
-              <li>List your pipeline task (scripts) in a <code>pipeline.yaml</code> file</li>
+              <li>List your pipeline scripts in a <code>pipeline.yaml</code> file</li>
               <li>Inside each script, declare an <code>upstream</code> variable to state dependencies (other scripts)
               </li>
               <li>Declare a <code>product</code> to declare output files (that the next script will use as inputs)</li>
@@ -136,9 +140,9 @@
 
           </div>
           <div class="col-md-4">
-            <h2>Convenient</h2>
+            <h2>Powerful</h2>
             <ol>
-              <li>Automated end-to-end-testing
+              <li>Automates end-to-end-testing
               </li>
               <li>Sync teamwork</li>
               <li>Incremental builds (skip up-to-date tasks)
@@ -148,9 +152,9 @@
           </div>
           <div class="col-md-4">
             <h2>Integrates with Jupyter</h2>
-            <p>Ploomber does not compromise structure with interactivity, a Jupyter
-              extension allows your scripts to be rendered as notebooks paths to inputs
-              be automatically added based on your declared task dependencies.</p>
+            <p>A Jupyter plugin allows your scripts to be rendered as notebooks,
+              a new cell with upstream dependencies is automatically inserted.
+            </p>
 
           </div>
         </div>
