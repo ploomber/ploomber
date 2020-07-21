@@ -46,20 +46,21 @@ def cast(value):
     Reference to env in specs must be strings, but we would like the rendered
     value to still
     """
-    if value.lower() == 'false':
-        return False
-    elif value.lower() == 'true':
-        return True
+    if isinstance(value, str):
+        if value.lower() == 'false':
+            return False
+        elif value.lower() == 'true':
+            return True
 
-    try:
-        return int(value)
-    except ValueError:
-        pass
+        try:
+            return int(value)
+        except ValueError:
+            pass
 
-    try:
-        return float(value)
-    except ValueError:
-        pass
+        try:
+            return float(value)
+        except ValueError:
+            pass
 
     return value
 

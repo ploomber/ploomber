@@ -477,7 +477,9 @@ def test_iterate_nested_dict():
 
 @pytest.mark.parametrize('value, expected', [('True', True), ('false', False),
                                              ('100', 100), ('0.11', 0.11),
-                                             ('string', 'string')])
+                                             ('string', 'string'),
+                                             (True, True), (False, False),
+                                             (10, 10), (10.1, 10.1)])
 def test_cast(value, expected):
     assert cast(value) == expected
 
