@@ -92,6 +92,29 @@ def _parse_doc(doc):
     return {'params': parameters, 'summary': summary}
 
 
+def _args_to_replace_in_env(args):
+    """
+    Returns a dictionary with all extra parameters passed, all these must
+    be parameters to replace env values
+    """
+    return {
+        name: getattr(args, name)
+        for name in dir(args) if not name.startswith('_')
+        if getattr(args, name) is not None
+        if name not in {'entry_point', 'action', 'log'}
+    }
+
+
+def _add_args_from_env_dict(parser, env_dict):
+    """
+    Add one parameter to the args parser by taking a look at all values
+    defined in an env dict object
+    """
+    flat_env_dict = _flatten_dict(env_dict._data)
+    for arg, val in flat_env_dict.items():
+        parser.add_argument('--env__' + arg, help='Default: {}'.format(val))
+
+
 def _parse_module(s):
     parts = s.split('.')
 
@@ -127,10 +150,7 @@ def _main():
 
             if Path('env.yaml').exists():
                 env_dict = EnvDict('env.yaml')
-                flat_env_dict = _flatten_dict(env_dict._data)
-                for arg, val in flat_env_dict.items():
-                    parser.add_argument('--env__' + arg,
-                                        help='Default: {}'.format(val))
+                _add_args_from_env_dict(parser, env_dict)
 
             args = parser.parse_args()
 
@@ -142,15 +162,8 @@ def _main():
 
             if Path('env.yaml').exists():
                 env = EnvDict('env.yaml')
-
-                replaced = {
-                    name: getattr(args, name)
-                    for name in dir(args) if not name.startswith('_')
-                    if getattr(args, name) is not None
-                    if name not in {'entry_point', 'action', 'log'}
-                }
+                replaced = _args_to_replace_in_env(args)
                 env = env._replace_flatten_keys(replaced)
-
                 dag = DAGSpec(dag_dict, env=env).to_dag()
             else:
                 dag = DAGSpec(dag_dict).to_dag()
@@ -203,10 +216,7 @@ def _main():
             # if entry point was decorated with @with_env, add arguments
             # to replace declared variables in env.yaml
             if hasattr(entry, '_env_dict'):
-                flat_env_dict = _flatten_dict(entry._env_dict._data)
-                for arg, val in flat_env_dict.items():
-                    parser.add_argument('--env__' + arg,
-                                        help='Default: {}'.format(val))
+                _add_args_from_env_dict(parser, entry._env_dict)
 
             args = parser.parse_args()
 
@@ -217,12 +227,7 @@ def _main():
             kwargs = {key: getattr(args, key) for key in required}
 
             # env and function defaults replaced
-            replaced = {
-                name: getattr(args, name)
-                for name in dir(args) if not name.startswith('_')
-                if getattr(args, name) is not None
-                if name not in {'entry_point', 'action', 'log'}
-            }
+            replaced = _args_to_replace_in_env(args)
 
             # TODO: add a way of test this by the parameters it will use to
             # call the function, have an aux function to get those then another
