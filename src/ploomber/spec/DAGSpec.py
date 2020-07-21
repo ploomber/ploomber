@@ -69,7 +69,7 @@ class DAGSpec(MutableMapping):
         if isinstance(data, list):
             data = {'tasks': data}
 
-        logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env._data))
+        logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env))
 
         # expand if there's an env.yaml file
         if env is not None:
