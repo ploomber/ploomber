@@ -38,6 +38,29 @@ def expand_if_needed(raw_value, mapping):
             raise KeyError('Failed to replace placeholders: %s' %
                            str(e)) from e
 
+    return cast(value)
+
+
+def cast(value):
+    """
+    Reference to env in specs must be strings, but we would like the rendered
+    value to still
+    """
+    if value.lower() == 'false':
+        return False
+    elif value.lower() == 'true':
+        return True
+
+    try:
+        return int(value)
+    except ValueError:
+        pass
+
+    try:
+        return float(value)
+    except ValueError:
+        pass
+
     return value
 
 
@@ -184,7 +207,7 @@ class EnvironmentExpander:
         return repo.get_env_metadata(module)['git_location']
 
 
-def iterate_nested_dict(d, preffix=[]):
+def iterate_nested_dict(d):
     """
     Iterate over all values (possibly nested) in a dictionary
 
@@ -192,18 +215,22 @@ def iterate_nested_dict(d, preffix=[]):
     to get to this value
     """
     for k, v in d.items():
-        if isinstance(v, Mapping):
+        for i in _iterate(d, k, v, preffix=[k]):
+            yield i
+
+
+def _iterate(parent, key, value, preffix):
+    if isinstance(value, Mapping):
+        for k, v in value.items():
             preffix_new = copy(preffix)
             preffix_new.append(k)
-            for i in iterate_nested_dict(v, preffix_new):
+            for i in _iterate(value, k, v, preffix_new):
                 yield i
-        elif isinstance(v, list):
+    elif isinstance(value, list):
+        for idx, some_val in enumerate(value):
             preffix_new = copy(preffix)
-            preffix_new.append(k)
-            for some_val in v:
-                for i in iterate_nested_dict(some_val, preffix_new):
-                    yield i
-        else:
-            preffix_new = copy(preffix)
-            preffix_new.append(k)
-            yield d, k, v, preffix_new
+            preffix_new.append(idx)
+            for i in _iterate(value, idx, some_val, preffix_new):
+                yield i
+    else:
+        yield parent, key, value, preffix

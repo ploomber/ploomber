@@ -12,7 +12,8 @@ from ploomber.env.env import Env
 from ploomber.env.decorators import with_env, load_env
 from ploomber.env import validate
 from ploomber.env.EnvDict import EnvDict
-from ploomber.env.expand import EnvironmentExpander, expand_raw_dictionary
+from ploomber.env.expand import (EnvironmentExpander, expand_raw_dictionary,
+                                 cast, iterate_nested_dict)
 from ploomber import repo
 
 
@@ -430,11 +431,17 @@ def test_expand_raw_dict():
 
 def test_expand_raw_dict_nested():
     mapping = {'key': 'value'}
-    d = {'section': {'some_settting': '{{key}}'}}
+    d = {
+        'section': {
+            'some_settting': '{{key}}'
+        },
+        'list': ['{{key}}', '{{key}}']
+    }
     assert (expand_raw_dictionary(d, mapping) == {
         'section': {
             'some_settting': 'value'
-        }
+        },
+        'list': ['value', 'value']
     })
 
 
@@ -444,6 +451,35 @@ def test_expand_raw_dict_error_if_missing_key():
 
     with pytest.raises(KeyError):
         expand_raw_dictionary(d, mapping)
+
+
+def test_iterate_nested_dict():
+    numbers = [1, 2, 3]
+    c = {'c': numbers}
+    b = {'b': c}
+    g = iterate_nested_dict({'a': b})
+
+    parent, key, value, preffix = next(g)
+    assert parent is numbers and key == 0 and value == 1, preffix == [
+        'a', 'b', 'c', 0
+    ]
+
+    parent, key, value, preffix = next(g)
+    assert parent is numbers and key == 1 and value == 2, preffix == [
+        'a', 'b', 'c', 1
+    ]
+
+    parent, key, value, preffix = next(g)
+    assert parent is numbers and key == 2 and value == 3, preffix == [
+        'a', 'b', 'c', 2
+    ]
+
+
+@pytest.mark.parametrize('value, expected', [('True', True), ('false', False),
+                                             ('100', 100), ('0.11', 0.11),
+                                             ('string', 'string')])
+def test_cast(value, expected):
+    assert cast(value) == expected
 
 
 # TODO: {{here}} allowed in _module

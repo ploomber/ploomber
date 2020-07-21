@@ -4,13 +4,14 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import pytest
-from ploomber.spec.DAGSpec import DAGSpec
-from ploomber.util.util import load_dotted_path
 import yaml
 from conftest import _path_to_tests, fixture_tmp_dir
 import jupytext
 import nbformat
 import jupyter_client
+
+from ploomber.spec.DAGSpec import DAGSpec
+from ploomber.util.util import load_dotted_path
 
 
 @fixture_tmp_dir(_path_to_tests() / 'assets' / 'pipeline-sql')
@@ -277,13 +278,13 @@ def test_changing_defaults(name, value):
 
 
 def test_expand_env(tmp_directory):
-    Path('env.yaml').write_text('sample: true')
     spec = DAGSpec(
         {'tasks': [{
             'source': 'plot.py',
             'params': {
                 'sample': '{{sample}}'
             }
-        }]})
+        }]},
+        env={'sample': True})
 
     assert spec['tasks'][0]['params']['sample'] is True
