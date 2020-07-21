@@ -274,3 +274,16 @@ def test_meta_defaults(raw):
 def test_changing_defaults(name, value):
     spec = DAGSpec({'meta': {name: value}, 'tasks': []})
     assert spec['meta'][name] is value
+
+
+def test_expand_env(tmp_directory):
+    Path('env.yaml').write_text('sample: true')
+    spec = DAGSpec(
+        {'tasks': [{
+            'source': 'plot.py',
+            'params': {
+                'sample': '{{sample}}'
+            }
+        }]})
+
+    assert spec['tasks'][0]['params']['sample'] is True

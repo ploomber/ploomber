@@ -24,6 +24,8 @@ from ploomber.spec.TaskSpec import TaskSpec
 from ploomber.spec import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.env.expand import expand_raw_dictionary
+from ploomber.env.EnvDict import EnvDict
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +67,10 @@ class DAGSpec(MutableMapping):
 
         if isinstance(data, list):
             data = {'tasks': data}
+
+        # expand if there's an env.yaml file
+        if Path('env.yaml').exists():
+            data = expand_raw_dictionary(data, EnvDict('env.yaml'))
 
         load_from_factory = self._validate_top_level_keys(data)
         self.data = data

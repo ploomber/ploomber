@@ -19,8 +19,7 @@ def expand_raw_dictionary(raw, mapping):
     """
     data = deepcopy(raw)
 
-    for (d, current_key, current_val,
-         parent_keys) in iterate_nested_dict(data):
+    for (d, current_key, current_val, _) in iterate_nested_dict(data):
         d[current_key] = expand_if_needed(current_val, mapping)
 
     return data
@@ -198,6 +197,12 @@ def iterate_nested_dict(d, preffix=[]):
             preffix_new.append(k)
             for i in iterate_nested_dict(v, preffix_new):
                 yield i
+        elif isinstance(v, list):
+            preffix_new = copy(preffix)
+            preffix_new.append(k)
+            for some_val in v:
+                for i in iterate_nested_dict(some_val, preffix_new):
+                    yield i
         else:
             preffix_new = copy(preffix)
             preffix_new.append(k)
