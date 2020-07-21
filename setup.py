@@ -13,19 +13,17 @@ from os.path import splitext
 from setuptools import find_packages
 from setuptools import setup
 
-
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
 
 with open('src/ploomber/__init__.py', 'rb') as f:
-    VERSION = str(ast.literal_eval(_version_re.search(
-        f.read().decode('utf-8')).group(1)))
+    VERSION = str(
+        ast.literal_eval(
+            _version_re.search(f.read().decode('utf-8')).group(1)))
 
 
 def read(*names, **kwargs):
-    return io.open(
-        join(dirname(__file__), *names),
-        encoding=kwargs.get('encoding', 'utf8')
-    ).read()
+    return io.open(join(dirname(__file__), *names),
+                   encoding=kwargs.get('encoding', 'utf8')).read()
 
 
 # NOTE: most users just do "pip install jupyter" but
@@ -36,11 +34,16 @@ def read(*names, **kwargs):
 # more info:
 # https://discourse.jupyter.org/t/nbconvert-5-6-0-release/1867
 # https://github.com/nteract/papermill/issues/239
-NB = ['papermill', 'jupytext', 'ipykernel>=1.5.2',
-      'jupyter_client>=5.3.1', 'nbconvert>=5.6.0',
-      'notebook',
-      # for notebook validation
-      'pyflakes']
+NB = [
+    'papermill',
+    'jupytext',
+    'ipykernel>=1.5.2',
+    'jupyter_client>=5.3.1',
+    'nbconvert>=5.6.0',
+    'notebook',
+    # for notebook validation
+    'pyflakes'
+]
 
 # Optional dependencies are packages that are used in several modules but are
 # not strictly required. Dependencies that are required for a single use case
@@ -54,7 +57,6 @@ OPTIONAL = [
     'pyarrow',
     # qa and entry modules
     'numpydoc',
-
 ]
 
 TESTING = [
@@ -74,12 +76,12 @@ TESTING = [
 setup(
     name='ploomber',
     version=VERSION,
-    description='Spend your time discovering insights from data, not writing plumbing code. Declare your pipeline in a short YAML file and Ploomber will take care of the rest.',
-    long_description='%s\n%s' % (
-        re.compile('^.. start-badges.*^.. end-badges',
-                   re.M | re.S).sub('', read('README.rst')),
-        re.sub(':[a-z]+:`~?(.*?)`', r'``\1``', read('CHANGELOG.rst'))
-    ),
+    description=
+    'Spend your time discovering insights from data, not writing plumbing code. Declare your pipeline in a short YAML file and Ploomber will take care of the rest.',
+    long_description='%s\n%s' %
+    (re.compile('^.. start-badges.*^.. end-badges', re.M | re.S).sub(
+        '', read('README.rst')),
+     re.sub(':[a-z]+:`~?(.*?)`', r'``\1``', read('CHANGELOG.rst'))),
     author='',
     author_email='',
     url='https://github.com/ploomber/ploomber',
@@ -89,9 +91,8 @@ setup(
     include_package_data=True,
     data_files=[
         # like `jupyter serverextension enable --sys-prefix`
-        ("etc/jupyter/jupyter_notebook_config.d", [
-            "jupyter-config/jupyter_notebook_config.d/ploomber.json"
-        ])
+        ("etc/jupyter/jupyter_notebook_config.d",
+         ["jupyter-config/jupyter_notebook_config.d/ploomber.json"])
     ],
     zip_safe=False,
     classifiers=[
@@ -115,11 +116,18 @@ setup(
         # eg: 'keyword1', 'keyword2', 'keyword3',
     ],
     install_requires=[
-        'pyyaml', 'networkx', 'jinja2', 'tabulate',  'humanize', 'tqdm',
+        'pyyaml',
+        'networkx',
+        'jinja2',
+        'tabulate',
+        'humanize',
+        'tqdm',
         'importlib_resources;python_version<"3.7"',
         # for code normalization, parso is also needed for inferring upstream
         # dependencies in jupyter notebooks
-        'sqlparse', 'autopep8', 'parso',
+        'sqlparse',
+        'autopep8',
+        'parso',
         # for generating dag.to_markup(fmt='html')
         'mistune',
         # for syntax highlighting when generating dag HTML reports
@@ -133,6 +141,6 @@ setup(
         'test': OPTIONAL + TESTING,
     },
     entry_points={
-        'console_scripts': ['ploomber=ploomber.cli:cli'],
+        'console_scripts': ['ploomber=ploomber.cli:cmd_router'],
     },
 )

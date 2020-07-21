@@ -153,15 +153,16 @@ def _new():
     click.echo('Check out {} to get started'.format(path_to_readme))
 
 
-@cli.command()
-@click.argument('entry_point')
-def entry(entry_point):
-    """Call an entry point (pipeline.yaml or dotted path to factory)
-    """
-    # NOTE: we don't use the argument here, it is parsed by _main
-    # pop the second element ('entry') to make the CLI behave as expected
-    sys.argv.pop(1)
-    # Add the current working directory, this is done automatically when
-    # calling "python -m ploomber.entry" but not here ("ploomber entry")
-    sys.path.append('')
-    entry_module._main()
+def cmd_router():
+    cmd_name = sys.argv[1]
+
+    if cmd_name == 'entry':
+        # NOTE: we don't use the argument here, it is parsed by _main
+        # pop the second element ('entry') to make the CLI behave as expected
+        sys.argv.pop(1)
+        # Add the current working directory, this is done automatically when
+        # calling "python -m ploomber.entry" but not here ("ploomber entry")
+        sys.path.append('')
+        entry_module._main()
+    else:
+        cli()

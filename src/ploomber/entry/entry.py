@@ -211,7 +211,7 @@ def _process_factory_entry_point(parser, entry_point):
                              '"{}", make sure it is a valid callable'.format(
                                  name, mod)) from e
 
-    required, _ = _add_args_from_callable(entry)
+    required, _ = _add_args_from_callable(parser, entry)
 
     # if entry point was decorated with @with_env, add arguments
     # to replace declared variables in env.yaml
@@ -255,7 +255,9 @@ def _process_entry_point(parser, entry_point):
 
 
 def _main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='Call an entry point '
+        '(pipeline.yaml or dotted path to factory)')
     parser.add_argument('entry_point', help='Entry point (DAG)')
     parser.add_argument('--log',
                         help='Enables logging to stdout at the '
