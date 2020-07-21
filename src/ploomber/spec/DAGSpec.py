@@ -15,6 +15,7 @@ import yaml
 import logging
 from pathlib import Path
 from collections.abc import MutableMapping
+import pprint
 
 from ploomber import products
 from ploomber import DAG, tasks
@@ -27,6 +28,7 @@ from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.env.expand import expand_raw_dictionary
 
 logger = logging.getLogger(__name__)
+pp = pprint.PrettyPrinter(indent=4)
 
 
 class DAGSpec(MutableMapping):
@@ -67,9 +69,13 @@ class DAGSpec(MutableMapping):
         if isinstance(data, list):
             data = {'tasks': data}
 
+        logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env._data))
+
         # expand if there's an env.yaml file
         if env is not None:
             data = expand_raw_dictionary(data, env)
+
+        logger.debug('Expanded DAGSpec:\n%s', pp.pformat(data))
 
         load_from_factory = self._validate_top_level_keys(data)
         self.data = data
