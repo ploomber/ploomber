@@ -12,7 +12,7 @@ from ploomber.env.env import Env
 from ploomber.env.decorators import with_env, load_env
 from ploomber.env import validate
 from ploomber.env.EnvDict import EnvDict
-from ploomber.env.expand import EnvironmentExpander
+from ploomber.env.expand import EnvironmentExpander, expand_raw_dictionary
 from ploomber import repo
 
 
@@ -420,6 +420,30 @@ def test_error_when_flatten_key_doesnt_exist():
     env = EnvDict({'a': 1})
     with pytest.raises(KeyError):
         env._replace_flatten_key(2, 'env__b')
+
+
+def test_expand_raw_dict():
+    mapping = {'key': 'value'}
+    d = {'some_setting': '{{key}}'}
+    assert expand_raw_dictionary(d, mapping) == {'some_setting': 'value'}
+
+
+def test_expand_raw_dict_nested():
+    mapping = {'key': 'value'}
+    d = {'section': {'some_settting': '{{key}}'}}
+    assert (expand_raw_dictionary(d, mapping) == {
+        'section': {
+            'some_settting': 'value'
+        }
+    })
+
+
+def test_expand_raw_dict_error_if_missing_key():
+    mapping = {'another_key': 'value'}
+    d = {'some_settting': '{{key}}'}
+
+    with pytest.raises(KeyError):
+        expand_raw_dictionary(d, mapping)
 
 
 # TODO: {{here}} allowed in _module

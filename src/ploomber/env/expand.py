@@ -6,10 +6,40 @@ from copy import deepcopy, copy
 from collections.abc import Mapping
 from pathlib import Path
 
-from jinja2 import Template
+from jinja2 import Template, StrictUndefined, UndefinedError
 
 from ploomber.placeholders import util
 from ploomber import repo
+
+
+def expand_raw_dictionary(raw, mapping):
+    """
+    Expands a dictionary where some values are {{tags}} using their values
+    in a mapping
+    """
+    data = deepcopy(raw)
+
+    for (d, current_key, current_val,
+         parent_keys) in iterate_nested_dict(data):
+        d[current_key] = expand_if_needed(current_val, mapping)
+
+    return data
+
+
+def expand_if_needed(raw_value, mapping):
+    placeholders = util.get_tags_in_str(raw_value)
+
+    if not placeholders:
+        value = raw_value
+    else:
+        try:
+            value = Template(raw_value,
+                             undefined=StrictUndefined).render(**mapping)
+        except UndefinedError as e:
+            raise KeyError('Failed to replace placeholders: %s' %
+                           str(e)) from e
+
+    return value
 
 
 class EnvironmentExpander:
@@ -17,14 +47,15 @@ class EnvironmentExpander:
     Conver values in the raw dictionary by expanding tags such as {{git}},
     {{version}} or {{here}}. See `expand_raw_value` for more details
     """
-
-    def __init__(self, preprocessed, path_to_env=None,
+    def __init__(self,
+                 preprocessed,
+                 path_to_env=None,
                  version_requires_import=False):
         self._preprocessed = preprocessed
 
         # {{here}} resolves to this value
-        self._path_to_here = (None if path_to_env is None
-                              else str(Path(path_to_env).parent))
+        self._path_to_here = (None if path_to_env is None else str(
+            Path(path_to_env).parent))
         # we compute every placeholder's value so we only do it once
         self._placeholders = {}
 
@@ -33,8 +64,8 @@ class EnvironmentExpander:
     def expand_raw_dictionary(self, raw):
         data = deepcopy(raw)
 
-        for (d, current_key,
-             current_val, parent_keys) in iterate_nested_dict(data):
+        for (d, current_key, current_val,
+             parent_keys) in iterate_nested_dict(data):
             d[current_key] = self.expand_raw_value(current_val, parent_keys)
 
         return data
@@ -89,8 +120,8 @@ class EnvironmentExpander:
 
     def load_placeholder(self, key):
         if key not in self._placeholders:
-            if hasattr(self, 'get_'+key):
-                self._placeholders[key] = getattr(self, 'get_'+key)()
+            if hasattr(self, 'get_' + key):
+                self._placeholders[key] = getattr(self, 'get_' + key)()
             else:
                 raise RuntimeError('Unknown placeholder "{}"'.format(key))
 
@@ -108,8 +139,8 @@ class EnvironmentExpander:
         module = pydoc.locate(module_name)
 
         if module is None:
-            raise ImportError('Unabe to import module with name "{}"'
-                              .format(module_name))
+            raise ImportError(
+                'Unabe to import module with name "{}"'.format(module_name))
 
         if hasattr(module, '__version__'):
             return module.__version__
@@ -126,8 +157,7 @@ class EnvironmentExpander:
 
         version_re = re.compile(r'__version__\s+=\s+(.*)')
 
-        version = str(ast.literal_eval(version_re.search(
-                      content).group(1)))
+        version = str(ast.literal_eval(version_re.search(content).group(1)))
         return version
 
     def get_version(self):

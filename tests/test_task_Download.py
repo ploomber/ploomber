@@ -7,7 +7,7 @@ def test_can_download_file(tmp_directory):
     dag = DAG()
 
     url = """
-    https://github.com
+    https://google.com
     """
     DownloadFromURL(url, File('file'), dag=dag, name='download')
 
