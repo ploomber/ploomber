@@ -18,14 +18,13 @@ def _validate_and_modify_signature(fn):
     if not len(sig.parameters):
         raise RuntimeError('Function "{}" does not take arguments, '
                            '@with_env decorated functions should '
-                           'have env as their first artgument'
-                           .format(fn.__name__))
+                           'have env as their first artgument'.format(
+                               fn.__name__))
 
     if list(sig.parameters.keys())[0] != 'env':
         raise RuntimeError('Function "{}" does not "env" as its first '
                            'argument, which is required to use the '
-                           '@with_env decorator'
-                           .format(fn.__name__))
+                           '@with_env decorator'.format(fn.__name__))
 
     # https://www.python.org/dev/peps/pep-0362/#examples
     new_sig = sig.replace(parameters=tuple(sig.parameters.values())[1:])
@@ -78,49 +77,38 @@ def with_env(source):
         try:
             env_dict = EnvDict(source)
         except Exception as e:
-            raise RuntimeError(
-                'Failed to resolve environment using '
-                '@with_env decorator in function "{}". '
-                'Tried to call Env with argument: {}'
-                .format(_get_function_name_w_module(fn), source)) from e
+            raise RuntimeError('Failed to resolve environment using '
+                               '@with_env decorator in function "{}". '
+                               'Tried to call Env with argument: {}'.format(
+                                   _get_function_name_w_module(fn),
+                                   source)) from e
 
         fn._env_dict = env_dict
 
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            to_replace = {k: v for k, v in kwargs.items()
-                          if k.startswith('env__')}
+            to_replace = {
+                k: v
+                for k, v in kwargs.items() if k.startswith('env__')
+            }
 
             for key in to_replace.keys():
                 kwargs.pop(key)
 
+            env_dict_new = env_dict._replace_flatten_keys(to_replace)
+
             try:
-                env = Env._init_from_decorator(env_dict,
-                                               _get_function_name_w_module(fn))
+                Env._init_from_decorator(env_dict_new,
+                                         _get_function_name_w_module(fn))
             except Exception as e:
                 current = Env.load()
-                raise RuntimeError(
-                    'Failed to initialize environment using '
-                    '@with_env decorator in function "{}". '
-                    'Current environment: {}'
-                    .format(_get_function_name_w_module(fn),
-                            repr(current))) from e
+                raise RuntimeError('Failed to initialize environment using '
+                                   '@with_env decorator in function "{}". '
+                                   'Current environment: {}'.format(
+                                       _get_function_name_w_module(fn),
+                                       repr(current))) from e
 
             Env._ref = _get_function_name_w_module(fn)
-
-            for key, new_value in to_replace.items():
-                # convert env__a__b__c -> ['a', 'b', 'c']
-                keys_all = key.split('__')[1:]
-
-                # catch errors here so we end the env if anything goes
-                # wrong
-                try:
-                    env._replace_value(new_value, keys_all)
-                except Exception as e:
-                    Env.end()
-                    raise KeyError('Failed to replace value using '
-                                   '{}'
-                                   .format(key)) from e
 
             try:
                 res = fn(Env.load(), *args, **kwargs)

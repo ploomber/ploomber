@@ -26,7 +26,8 @@ def test_env_repr_and_str_when_loaded_from_file(tmp_directory, cleanup_env):
     path_env = Path('env.yaml')
     path_env.write_text(yaml.dump({'a': 1}))
     env = Env()
-    assert repr(env) == "Env({'a': 1}) (from file: %s)" % str(path_env.resolve())
+    assert repr(env) == "Env({'a': 1}) (from file: %s)" % str(
+        path_env.resolve())
     assert str(env) == "{'a': 1}"
 
 
@@ -107,8 +108,11 @@ def test_load_env_hostname(tmp_directory, cleanup_env):
 
 
 def test_path_returns_Path_objects(cleanup_env):
-    env = Env({'path': {'a': '/tmp/path/file.txt',
-                        'b': '/another/path/file.csv'}})
+    env = Env(
+        {'path': {
+            'a': '/tmp/path/file.txt',
+            'b': '/another/path/file.csv'
+        }})
     assert isinstance(env.path.a, Path)
     assert isinstance(env.path.b, Path)
 
@@ -178,8 +182,8 @@ def test_can_instantiate_env_if_located_in_sample_dir(tmp_sample_dir,
     Env()
 
 
-def test_can_instantiate_env_if_located_in_sample_subdir(tmp_sample_subdir,
-                                                         cleanup_env):
+def test_can_instantiate_env_if_located_in_sample_subdir(
+        tmp_sample_subdir, cleanup_env):
     Env()
 
 
@@ -219,6 +223,7 @@ def test_with_env_casts_paths(cleanup_env):
 
 def test_with_env_fails_if_no_env_arg(cleanup_env):
     with pytest.raises(RuntimeError):
+
         @with_env({'a': 1})
         def my_fn(not_env):
             pass
@@ -226,6 +231,7 @@ def test_with_env_fails_if_no_env_arg(cleanup_env):
 
 def test_with_env_fails_if_fn_takes_no_args(cleanup_env):
     with pytest.raises(RuntimeError):
+
         @with_env({'a': 1})
         def my_fn():
             pass
@@ -281,6 +287,7 @@ def test_replacing_raises_error_if_key_does_not_exist():
 
 def test_with_env_shows_name_and_module_if_invalid_env(cleanup_env):
     with pytest.raises(RuntimeError) as excinfo:
+
         @with_env({'_a': 1})
         def some_function(env):
             pass
@@ -356,7 +363,6 @@ def test_load_env_decorator(cleanup_env):
 
 
 def test_expand_tags(monkeypatch):
-
     def mockreturn():
         return 'username'
 
@@ -389,6 +395,31 @@ def test_serialize_env_dict():
     # expected to be serialized but we have fix it anyway
     env = EnvDict({'a': 1})
     assert pickle.loads(pickle.dumps(env))
+
+
+def test_replace_flatten_key_env_dict():
+    env = EnvDict({'a': 1})
+    new_env = env._replace_flatten_key(2, 'env__a')
+    assert new_env.a == 2 and env is not new_env  # must return a copy
+
+
+def test_replace_nested_flatten_key_env_dict():
+    env = EnvDict({'a': {'b': 1}})
+    new_env = env._replace_flatten_key(2, 'env__a__b')
+    assert new_env.a.b == 2 and env is not new_env  # must return a copy
+
+
+def test_replace_nested_flatten_keys_env_dict():
+    env = EnvDict({'a': {'b': 1, 'c': 1}})
+    new_env = env._replace_flatten_keys({'env__a__b': 2, 'env__a__c': 2})
+    assert (new_env.a.b == 2 and new_env.a.c == 2
+            and env is not new_env)  # must return a copy
+
+
+def test_error_when_flatten_key_doesnt_exist():
+    env = EnvDict({'a': 1})
+    with pytest.raises(KeyError):
+        env._replace_flatten_key(2, 'env__b')
 
 
 # TODO: {{here}} allowed in _module

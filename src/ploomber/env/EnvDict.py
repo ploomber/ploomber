@@ -1,3 +1,4 @@
+from copy import copy
 import importlib
 import platform
 from pathlib import Path
@@ -25,20 +26,19 @@ class EnvDict(Mapping):
         If str, it will be interpreted as a path to a YAML file
 
     """
-
     def __init__(self, source):
 
         # load data
-        (self._raw_data,
-         # this will be None if source is a dict
-         self.path_to_env) = load_from_source(source)
+        (
+            self._raw_data,
+            # this will be None if source is a dict
+            self.path_to_env) = load_from_source(source)
 
         # check raw data is ok
         validate.raw_data_keys(self._raw_data)
 
         # expand _module special key, return its expanded value
-        self.preprocessed = raw_preprocess(self._raw_data,
-                                           self.path_to_env)
+        self.preprocessed = raw_preprocess(self._raw_data, self.path_to_env)
 
         # initialize expander, which converts placeholders to their values
         # we need to pass path_to_env since the {{here}} placeholder resolves
@@ -50,8 +50,8 @@ class EnvDict(Mapping):
         self._data = self.expander.expand_raw_dictionary(self._raw_data)
 
     def __getattr__(self, key):
-        error = AttributeError("'{}' object has no attribute '{}'"
-                               .format(type(self).__name__, key))
+        error = AttributeError("'{}' object has no attribute '{}'".format(
+            type(self).__name__, key))
         # do not look up special atttributes this way!
         if key.startswith('__') and key.endswith('__'):
             raise error
@@ -81,6 +81,13 @@ class EnvDict(Mapping):
         return '{}({})'.format(type(self).__name__, str(self))
 
     def _replace_value(self, value, keys_all):
+        """
+        Replace a value in the underlying dictionary, by passing a value and
+        a list of keys
+
+        e.g. given {'a': {'b': 1}}, we can replace 1 by doing
+        _replace_value(2, ['a', 'b'])
+        """
         keys_to_final_dict = keys_all[:-1]
         key_to_edit = keys_all[-1]
 
@@ -92,12 +99,50 @@ class EnvDict(Mapping):
         if dict_to_edit.get(key_to_edit) is None:
             dotted_path = '.'.join(keys_all)
             raise KeyError('Trying to replace key "{}" in env, '
-                           'but it does not exist'
-                           .format(dotted_path))
+                           'but it does not exist'.format(dotted_path))
 
-        dict_to_edit[key_to_edit] = (self.expander
-                                     .expand_raw_value(value,
-                                                       keys_all))
+        dict_to_edit[key_to_edit] = (self.expander.expand_raw_value(
+            value, keys_all))
+
+    def _inplace_replace_flatten_key(self, value, key_flatten):
+        """
+        Replace a value in the underlying dictionary, by passing a value and
+        a list of keys
+
+        e.g. given {'a': {'b': 1}}, we can replace 1 by doing
+        _replace_flatten_keys(2, 'env__a__b'). This function is used
+        internally to overrive env values when calling factories (functions
+        decorated with @with_env or when doing so via the command line
+        interface - ploomber entry pipeline.yaml --env__a__b 2)
+
+        Returns a copy
+        """
+        # convert env__a__b__c -> ['a', 'b', 'c']
+        parts = key_flatten.split('__')
+
+        if parts[0] != 'env':
+            raise ValueError('keys_flatten must start with env__')
+
+        keys_all = parts[1:]
+        self._replace_value(value, keys_all)
+
+    def _replace_flatten_key(self, value, key_flatten):
+        obj = copy(self)
+        obj._inplace_replace_flatten_key(value, key_flatten)
+        return obj
+
+    def _inplace_replace_flatten_keys(self, to_replace):
+        """Replace multiple keys at once
+
+        Returns a copy
+        """
+        for key, value in to_replace.items():
+            self._inplace_replace_flatten_key(value, key)
+
+    def _replace_flatten_keys(self, to_replace):
+        obj = copy(self)
+        obj._inplace_replace_flatten_keys(to_replace)
+        return obj
 
 
 def load_from_source(source):
@@ -125,12 +170,12 @@ def load_from_source(source):
         path_found = find_env_w_name(name)
 
         if path_found is None:
-            raise FileNotFoundError('Tried to initialize environment with '
-                                    'None, but automatic '
-                                    'file search failed to locate '
-                                    'env.{}.yaml nor env.yaml in the '
-                                    'current directory nor 6 levels up'
-                                    .format(name))
+            raise FileNotFoundError(
+                'Tried to initialize environment with '
+                'None, but automatic '
+                'file search failed to locate '
+                'env.{}.yaml nor env.yaml in the '
+                'current directory nor 6 levels up'.format(name))
         else:
             source = path_found
 
@@ -202,12 +247,10 @@ def raw_preprocess(raw, path_to_raw):
             if not module_spec:
                 path_to_module = Path(module)
 
-                if not (path_to_module.exists()
-                        and path_to_module.is_dir()):
+                if not (path_to_module.exists() and path_to_module.is_dir()):
                     raise ValueError('Could not resolve _module "{}", '
                                      'failed to import as a module '
-                                     'and is not a directory'
-                                     .format(module))
+                                     'and is not a directory'.format(module))
 
             else:
                 path_to_module = Path(module_spec.origin).parent
