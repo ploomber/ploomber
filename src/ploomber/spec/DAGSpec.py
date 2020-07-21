@@ -25,7 +25,6 @@ from ploomber.spec import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.env.expand import expand_raw_dictionary
-from ploomber.env.EnvDict import EnvDict
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +60,7 @@ class DAGSpec(MutableMapping):
     to make sure they work. This is why we need to keep the pipeline.yaml
     location when initializing a DAG from a spec.
     """
-    def __init__(self, data):
+    def __init__(self, data, env=None):
         # only set when initialized from DAGSpec.from_file
         self._parent_path = None
 
@@ -69,8 +68,8 @@ class DAGSpec(MutableMapping):
             data = {'tasks': data}
 
         # expand if there's an env.yaml file
-        if Path('env.yaml').exists():
-            data = expand_raw_dictionary(data, EnvDict('env.yaml'))
+        if env is not None:
+            data = expand_raw_dictionary(data, env)
 
         load_from_factory = self._validate_top_level_keys(data)
         self.data = data

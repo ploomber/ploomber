@@ -63,6 +63,7 @@ from collections.abc import Mapping
 import yaml
 
 from ploomber.spec.DAGSpec import DAGSpec
+from ploomber.env.EnvDict import EnvDict
 
 
 def _parse_doc(doc):
@@ -80,8 +81,13 @@ def _parse_doc(doc):
         return {'params': {}, 'summary': None}
 
     doc = docscrape.NumpyDocString(doc)
-    parameters = {p.name: {'desc': ' '.join(p.desc), 'type': p.type}
-                  for p in doc['Parameters']}
+    parameters = {
+        p.name: {
+            'desc': ' '.join(p.desc),
+            'type': p.type
+        }
+        for p in doc['Parameters']
+    }
     summary = doc['Summary']
     return {'params': parameters, 'summary': summary}
 
@@ -100,10 +106,14 @@ def _parse_module(s):
 def _main():
     parser = argparse.ArgumentParser()
     parser.add_argument('entry_point', help='Entry point (DAG)')
-    parser.add_argument('--log', help='Enables logging to stdout at the '
-                        'specified level', default=None)
-    parser.add_argument('--action', help='Action to execute, defaults to '
-                        'build', default='build')
+    parser.add_argument('--log',
+                        help='Enables logging to stdout at the '
+                        'specified level',
+                        default=None)
+    parser.add_argument('--action',
+                        help='Action to execute, defaults to '
+                        'build',
+                        default='build')
 
     n_positional = len([arg for arg in sys.argv if not arg.startswith('-')])
 
@@ -114,6 +124,14 @@ def _main():
         entry_point = sys.argv[1]
 
         if Path(entry_point).exists():
+
+            if Path('env.yaml').exists():
+                env_dict = EnvDict('env.yaml')
+                flat_env_dict = _flatten_dict(env_dict._data)
+                for arg, val in flat_env_dict.items():
+                    parser.add_argument('--env__' + arg,
+                                        help='Default: {}'.format(val))
+
             args = parser.parse_args()
 
             if args.log is not None:
@@ -122,7 +140,21 @@ def _main():
             with open(entry_point) as f:
                 dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
 
-            dag = DAGSpec(dag_dict).to_dag()
+            if Path('env.yaml').exists():
+                env = EnvDict('env.yaml')
+
+                replaced = {
+                    name: getattr(args, name)
+                    for name in dir(args) if not name.startswith('_')
+                    if getattr(args, name) is not None
+                    if name not in {'entry_point', 'action', 'log'}
+                }
+                env = env._replace_flatten_keys(replaced)
+
+                dag = DAGSpec(dag_dict, env=env).to_dag()
+            else:
+                dag = DAGSpec(dag_dict).to_dag()
+
             getattr(dag, args.action)()
             return dag
 
@@ -139,9 +171,10 @@ def _main():
             try:
                 entry = getattr(module, name)
             except AttributeError as e:
-                raise AttributeError('Could not get attribute "{}" from module '
-                                     '"{}", make sure it is a valid callable'
-                                     .format(name, mod)) from e
+                raise AttributeError(
+                    'Could not get attribute "{}" from module '
+                    '"{}", make sure it is a valid callable'.format(
+                        name, mod)) from e
 
             doc = _parse_doc(entry.__doc__)
 
@@ -151,14 +184,18 @@ def _main():
 
             sig = inspect.signature(entry)
 
-            defaults = {k: v.default for k, v in sig.parameters.items()
-                        if v.default != inspect._empty}
-            required = [k for k, v in sig.parameters.items()
-                        if v.default == inspect._empty]
+            defaults = {
+                k: v.default
+                for k, v in sig.parameters.items()
+                if v.default != inspect._empty
+            }
+            required = [
+                k for k, v in sig.parameters.items()
+                if v.default == inspect._empty
+            ]
 
             for arg, default in defaults.items():
-                parser.add_argument('--'+arg,
-                                    help=get_desc(arg))
+                parser.add_argument('--' + arg, help=get_desc(arg))
 
             for arg in required:
                 parser.add_argument(arg, help=get_desc(arg))
@@ -168,7 +205,7 @@ def _main():
             if hasattr(entry, '_env_dict'):
                 flat_env_dict = _flatten_dict(entry._env_dict._data)
                 for arg, val in flat_env_dict.items():
-                    parser.add_argument('--env__'+arg,
+                    parser.add_argument('--env__' + arg,
                                         help='Default: {}'.format(val))
 
             args = parser.parse_args()
@@ -180,11 +217,12 @@ def _main():
             kwargs = {key: getattr(args, key) for key in required}
 
             # env and function defaults replaced
-            replaced = {name: getattr(args, name)
-                        for name in dir(args)
-                        if not name.startswith('_')
-                        if getattr(args, name) is not None
-                        if name not in {'entry_point', 'action', 'log'}}
+            replaced = {
+                name: getattr(args, name)
+                for name in dir(args) if not name.startswith('_')
+                if getattr(args, name) is not None
+                if name not in {'entry_point', 'action', 'log'}
+            }
 
             # TODO: add a way of test this by the parameters it will use to
             # call the function, have an aux function to get those then another
@@ -206,6 +244,6 @@ def _flatten_dict(d, prefix=''):
         if isinstance(v, Mapping):
             out = {**out, **_flatten_dict(v, prefix=prefix + k + '__')}
         else:
-            out[prefix+k] = v
+            out[prefix + k] = v
 
     return out
