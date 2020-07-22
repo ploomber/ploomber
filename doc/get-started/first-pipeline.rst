@@ -1,6 +1,6 @@
 
-Your first pipeline
-===================
+Your first Python pipeline
+==========================
 
 This tutorial will guide you to run your first pipeline with Ploomber. You can
 either install Ploomber or click the button below to start an interactive
@@ -103,7 +103,7 @@ Let's say you found a problematic column in the data and want to add more
 cleaning logic to your ``clean.py`` script. ``raw.py`` does not depend
 on ``clean.py`` (it's actually the other way around), but ``plot.py`` does.
 
-If you modify ``clean.pt``, you'd have to execute ``clean.py`` and
+If you modify ``clean.py``, you'd have to execute ``clean.py`` and
 then ``plot.py`` to bring your pipeline up-to-date.
 
 .. raw:: html
