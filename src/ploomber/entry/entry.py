@@ -171,6 +171,9 @@ def _add_args_from_callable(parser, callable_):
 
 
 def _process_file_entry_point(parser, entry_point):
+    """
+    Process a file entry point, returns the initialized dag and parsed args
+    """
     if Path('env.yaml').exists():
         env_dict = EnvDict('env.yaml')
         _add_args_from_env_dict(parser, env_dict)
@@ -191,11 +194,12 @@ def _process_file_entry_point(parser, entry_point):
     else:
         dag = DAGSpec(dag_dict).to_dag()
 
-    getattr(dag, args.action)()
-    return dag
+    return dag, args
 
 
 def _process_factory_entry_point(parser, entry_point):
+    """Parse a factory entry point, returns initialized dag and parsed args
+    """
     mod, name = _parse_module(entry_point)
 
     try:
@@ -234,9 +238,7 @@ def _process_factory_entry_point(parser, entry_point):
     # to execute, test using the first one
     dag = entry(**{**kwargs, **replaced})
 
-    print(getattr(dag, args.action)())
-
-    return dag
+    return dag, args
 
 
 def _process_entry_point(parser, entry_point):
@@ -245,13 +247,28 @@ def _process_entry_point(parser, entry_point):
     """
     # first check if the entry point is an existing file
     if Path(entry_point).exists():
-        dag = _process_file_entry_point(parser, entry_point)
-
+        dag, args = _process_file_entry_point(parser, entry_point)
     # assume it's a dotted path to a factory
     else:
-        dag = _process_factory_entry_point(parser, entry_point)
+        dag, args = _process_factory_entry_point(parser, entry_point)
 
-    return dag
+    return dag, args
+
+
+def _custom_command(parser):
+    # we add args dynamically based on positional arguments, we need
+    # to know how many we got
+    n_positional = len([arg for arg in sys.argv if not arg.startswith('-')])
+
+    # this happens when calling python -m ploomber.entry
+    if n_positional <= 1:
+        # just parse args, this is needed to make --help work
+        parser.parse_args()
+    # we got an actual positional argument parse entry_point
+    else:
+        entry_point = sys.argv[1]
+        dag, args = _process_entry_point(parser, entry_point)
+        return dag, args
 
 
 def _main():
@@ -268,19 +285,8 @@ def _main():
                         'build',
                         default='build')
 
-    # we add args dynamically based on positional arguments, we need
-    # to know how many we got
-    n_positional = len([arg for arg in sys.argv if not arg.startswith('-')])
-
-    # this happens when calling python -m ploomber.entry
-    if n_positional <= 1:
-        # just parse args, this is needed to make --help work
-        parser.parse_args()
-    # we got an actual positional argument parse entry_point
-    else:
-        entry_point = sys.argv[1]
-        dag = _process_entry_point(parser, entry_point)
-        return dag
+    dag, args = _custom_command(parser)
+    print(getattr(dag, args.action)())
 
 
 def _flatten_dict(d, prefix=''):

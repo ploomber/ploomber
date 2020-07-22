@@ -6,6 +6,7 @@ from jinja2 import Environment, PackageLoader
 import click
 from ploomber import __version__
 from ploomber.entry import entry as entry_module
+from ploomber.entry import plot
 from ploomber.spec.DAGSpec import DAGSpec
 
 try:
@@ -156,13 +157,16 @@ def _new():
 def cmd_router():
     cmd_name = sys.argv[1]
 
-    if cmd_name == 'entry':
+    custom = {'entry': entry_module._main, 'plot': plot.main}
+
+    if cmd_name in custom:
         # NOTE: we don't use the argument here, it is parsed by _main
         # pop the second element ('entry') to make the CLI behave as expected
         sys.argv.pop(1)
         # Add the current working directory, this is done automatically when
         # calling "python -m ploomber.entry" but not here ("ploomber entry")
         sys.path.append('')
-        entry_module._main()
+        fn = custom[cmd_name]
+        fn()
     else:
         cli()
