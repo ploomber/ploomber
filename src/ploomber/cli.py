@@ -6,7 +6,7 @@ from jinja2 import Environment, PackageLoader
 import click
 from ploomber import __version__
 from ploomber.entry import entry as entry_module
-from ploomber.entry import plot
+from ploomber.entry import plot, task
 from ploomber.spec.DAGSpec import DAGSpec
 
 try:
@@ -157,7 +157,11 @@ def _new():
 def cmd_router():
     cmd_name = sys.argv[1]
 
-    custom = {'entry': entry_module._main, 'plot': plot.main}
+    custom = {
+        'entry': entry_module._main,
+        'plot': plot.main,
+        'task': task.main
+    }
 
     if cmd_name in custom:
         # NOTE: we don't use the argument here, it is parsed by _main

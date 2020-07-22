@@ -160,25 +160,27 @@ class Task(abc.ABC):
             if self.PRODUCT_CLASSES_ALLOWED is not None:
                 if not isinstance(self._product, self.PRODUCT_CLASSES_ALLOWED):
                     raise TypeError('{} only supports the following product '
-                                    'classes: {}, got {}'
-                                    .format(type(self).__name__,
-                                            self.PRODUCT_CLASSES_ALLOWED,
-                                            type(self._product).__name__))
+                                    'classes: {}, got {}'.format(
+                                        type(self).__name__,
+                                        self.PRODUCT_CLASSES_ALLOWED,
+                                        type(self._product).__name__))
         else:
             # if assigned a tuple/list of products, create a MetaProduct
             self._product = MetaProduct(product)
 
             if self.PRODUCT_CLASSES_ALLOWED is not None:
-                if not all(isinstance(p, self.PRODUCT_CLASSES_ALLOWED)
-                           for p in self._product):
+                if not all(
+                        isinstance(p, self.PRODUCT_CLASSES_ALLOWED)
+                        for p in self._product):
                     raise TypeError('{} only supports the following product '
-                                    'classes: {}, got {}'
-                                    .format(type(self).__name__,
-                                            self.PRODUCT_CLASSES_ALLOWED,
-                                            type(self._product).__name__))
+                                    'classes: {}, got {}'.format(
+                                        type(self).__name__,
+                                        self.PRODUCT_CLASSES_ALLOWED,
+                                        type(self._product).__name__))
 
-        self._logger = logging.getLogger('{}.{}'.format(__name__,
-                                                        type(self).__name__))
+        self._logger = logging.getLogger('{}.{}'.format(
+            __name__,
+            type(self).__name__))
 
         self.product.task = self
         self.client = None
@@ -193,9 +195,7 @@ class Task(abc.ABC):
     def _available_callback_kwargs(self):
         # make it a property so we always get the latest value for self.client
         # given that could be None during init
-        return {'task': self,
-                'client': self.client,
-                'product': self.product}
+        return {'task': self, 'client': self.client, 'product': self.product}
 
     @property
     def name(self):
@@ -258,8 +258,9 @@ class Task(abc.ABC):
         else:
             # retrieve lineage: upstream tasks + lineage from upstream tasks
             up = list(self.upstream.keys())
-            lineage_up = [up._lineage for up in self.upstream.values() if
-                          up._lineage]
+            lineage_up = [
+                up._lineage for up in self.upstream.values() if up._lineage
+            ]
             lineage = up + [task for lineage in lineage_up for task in lineage]
             return set(lineage)
 
@@ -285,8 +286,7 @@ class Task(abc.ABC):
                 self.on_finish(**kwargs)
             except Exception as e:
                 msg = ('Exception when running on_finish '
-                       'for task "{}": {}'
-                       .format(self.name, e))
+                       'for task "{}": {}'.format(self.name, e))
                 self._logger.exception(msg)
                 self.exec_status = TaskStatus.Errored
                 raise type(e)(msg) from e
@@ -303,15 +303,15 @@ class Task(abc.ABC):
                     'Error building task "{}": '
                     'the task ran successfully but product '
                     '"{}" does not exist yet '
-                    '(task.product.exists() returned False). '
-                    .format(self, self.product))
+                    '(task.product.exists() returned False). '.format(
+                        self, self.product))
             else:
                 raise TaskBuildError(
                     'Error building task "{}": '
                     'the task ran successfully but at least one of the '
                     'products in "{}" does not exist yet '
-                    '(task.product.exists() returned False). '
-                    .format(self, self.product))
+                    '(task.product.exists() returned False). '.format(
+                        self, self.product))
 
     @property
     def on_failure(self):
@@ -351,8 +351,7 @@ class Task(abc.ABC):
                 self.on_render(**kwargs)
             except Exception as e:
                 msg = ('Exception when running on_render '
-                       'for task "{}": {}'
-                       .format(self.name, e))
+                       'for task "{}": {}'.format(self.name, e))
                 self._logger.exception(msg)
                 self.exec_status = TaskStatus.ErroredRender
                 raise type(e)(msg) from e
@@ -367,8 +366,9 @@ class Task(abc.ABC):
         # status Executed or Errored, reject all other cases, those are handled
         # internally
         if value not in list(TaskStatus):
-            raise ValueError('Setting task.exec_status to an unknown '
-                             'value: %s', value)
+            raise ValueError(
+                'Setting task.exec_status to an unknown '
+                'value: %s', value)
 
         self._logger.debug('Setting "%s" status to %s', self.name, value)
         self._exec_status = value
@@ -448,15 +448,16 @@ class Task(abc.ABC):
             try:
                 res = self._run()
             except Exception as e:
-                msg = 'Error building task "{}"' .format(self.name)
+                msg = 'Error building task "{}"'.format(self.name)
                 self._logger.exception(msg)
                 self.exec_status = TaskStatus.Errored
 
                 # if there isn't anything left to run, raise exception here
                 if self.on_failure is None:
                     if isinstance(e, DAGBuildEarlyStop):
-                        raise DAGBuildEarlyStop('Stopping task {} gracefully'
-                                                .format(self.name)) from e
+                        raise DAGBuildEarlyStop(
+                            'Stopping task {} gracefully'.format(
+                                self.name)) from e
                     else:
                         raise TaskBuildError(msg) from e
 
@@ -474,13 +475,13 @@ class Task(abc.ABC):
                 except Exception as e:
                     self.exec_status = TaskStatus.Errored
                     msg = ('Exception when running on_finish '
-                           'for task "{}": {}'
-                           .format(self.name, e))
+                           'for task "{}": {}'.format(self.name, e))
                     self._logger.exception(msg)
 
                     if isinstance(e, DAGBuildEarlyStop):
-                        raise DAGBuildEarlyStop('Stopping task {} gracefully'
-                                                .format(self.name)) from e
+                        raise DAGBuildEarlyStop(
+                            'Stopping task {} gracefully'.format(
+                                self.name)) from e
                     else:
                         raise TaskBuildError(msg) from e
                 else:
@@ -492,17 +493,16 @@ class Task(abc.ABC):
                     self._run_on_failure()
                 except Exception as e:
                     msg = ('Exception when running on_failure '
-                           'for task "{}": {}'
-                           .format(self.name, e))
+                           'for task "{}": {}'.format(self.name, e))
                     self._logger.exception(msg)
                     raise TaskBuildError(msg) from e
 
                 if isinstance(build_exception, DAGBuildEarlyStop):
                     raise DAGBuildEarlyStop(
-                        'Stopping task {} gracefully'
-                        .format(self.name)) from build_exception
+                        'Stopping task {} gracefully'.format(
+                            self.name)) from build_exception
                 else:
-                    msg = 'Error building task "{}"' .format(self.name)
+                    msg = 'Error building task "{}"'.format(self.name)
                     raise TaskBuildError(msg) from build_exception
 
     def _run(self):
@@ -515,19 +515,18 @@ class Task(abc.ABC):
         if self.exec_status == TaskStatus.WaitingRender:
             raise TaskBuildError('Error building task "{}". '
                                  'Cannot build task that has not been '
-                                 'rendered, call DAG.render() first'
-                                 .format(self.name))
+                                 'rendered, call DAG.render() first'.format(
+                                     self.name))
 
         elif self.exec_status == TaskStatus.Aborted:
             raise TaskBuildError('Attempted to run task "{}", whose '
-                                 'status is TaskStatus.Aborted'
-                                 .format(self.name))
+                                 'status is TaskStatus.Aborted'.format(
+                                     self.name))
         elif self.exec_status == TaskStatus.Skipped:
             raise TaskBuildError('Attempted to run task "{}", whose '
-                                 'status TaskStatus.Skipped. Render again and'
+                                 'status TaskStatus.Skipped. Render again and '
                                  'set force=True if you want to force '
-                                 'execution'
-                                 .format(self.name))
+                                 'execution'.format(self.name))
 
         # NOTE: should i fetch metadata here? I need to make sure I have
         # the latest before building
@@ -538,8 +537,8 @@ class Task(abc.ABC):
         now = datetime.now()
 
         elapsed = (now - then).total_seconds()
-        self._logger.info('Done. Operation took {:.1f} seconds'
-                          .format(elapsed))
+        self._logger.info(
+            'Done. Operation took {:.1f} seconds'.format(elapsed))
 
         # TODO: also check that the Products were updated:
         # if they did not exist, they must exist now, if they alredy
@@ -574,8 +573,8 @@ class Task(abc.ABC):
         except Exception as e:
             self.exec_status = TaskStatus.ErroredRender
             raise type(e)('Error rendering product from Task "{}", '
-                          ' check the full traceback above for details'
-                          .format(repr(self), self.params)) from e
+                          ' check the full traceback above for details'.format(
+                              repr(self), self.params)) from e
 
         # Params are read-only for users, but we have to add the product
         # so we do it directly to the dictionary
@@ -586,26 +585,27 @@ class Task(abc.ABC):
         except Exception as e:
             self.exec_status = TaskStatus.ErroredRender
             raise type(e)('Error rendering source from Task "{}", '
-                          ' check the full traceback above for details'
-                          .format(repr(self), self.params)) from e
+                          ' check the full traceback above for details'.format(
+                              repr(self), self.params)) from e
 
         # Maybe set ._exec_status directly, since no downstream propagation
         # is needed here.
-        is_outdated = (self.product
-                       ._is_outdated(outdated_by_code=outdated_by_code))
+        is_outdated = (self.product._is_outdated(
+            outdated_by_code=outdated_by_code))
 
         if not self.upstream:
             if not is_outdated and not force:
                 self._exec_status = TaskStatus.Skipped
             else:
                 self._exec_status = TaskStatus.WaitingExecution
-                self._logger.debug('Forcing status "%s", outdated conditions'
-                                   ' ignored...', self.name)
+                self._logger.debug(
+                    'Forcing status "%s", outdated conditions'
+                    ' ignored...', self.name)
         else:
-            all_upstream_done = all([t.exec_status
-                                     in {TaskStatus.Executed,
-                                         TaskStatus.Skipped}
-                                     for t in self.upstream.values()])
+            all_upstream_done = all([
+                t.exec_status in {TaskStatus.Executed, TaskStatus.Skipped}
+                for t in self.upstream.values()
+            ])
 
             if all_upstream_done and is_outdated:
                 self._exec_status = TaskStatus.WaitingExecution
@@ -613,8 +613,9 @@ class Task(abc.ABC):
                 self._exec_status = TaskStatus.Skipped
             else:
                 self._exec_status = TaskStatus.WaitingUpstream
-                self._logger.debug('Forcing status "%s", outdated conditions'
-                                   ' ignored...', self.name)
+                self._logger.debug(
+                    'Forcing status "%s", outdated conditions'
+                    ' ignored...', self.name)
 
         self._run_on_render()
 
@@ -648,8 +649,7 @@ class Task(abc.ABC):
         data['status'] = self.exec_status.name
         # FIXME: all tasks should have a client property
         data['client'] = (repr(self.client)
-                          if hasattr(self, 'client')
-                          else None)
+                          if hasattr(self, 'client') else None)
 
         if p.metadata.timestamp is not None:
             dt = datetime.fromtimestamp(p.metadata.timestamp)
@@ -679,20 +679,18 @@ class Task(abc.ABC):
         data['Outdated code'] = outd_code
 
         if outd_code and return_code_diff:
-            data['Code diff'] = (self.dag
-                                 .differ
-                                 .get_diff(p.metadata.stored_source_code,
-                                           str(self.source),
-                                           extension=self.source.extension))
+            data['Code diff'] = (self.dag.differ.get_diff(
+                p.metadata.stored_source_code,
+                str(self.source),
+                extension=self.source.extension))
         else:
             outd_code = ''
 
         data['Product type'] = type(self.product).__name__
         data['Product'] = str(self.product)
         # FIXME: all products should have a client property
-        data['Product client'] = (repr(self.product.client)
-                                  if hasattr(self.product, 'client')
-                                  else None)
+        data['Product client'] = (repr(self.product.client) if hasattr(
+            self.product, 'client') else None)
         data['Doc (short)'] = _doc_short(self.source.doc)
         data['Location'] = self.source.loc
 
@@ -703,7 +701,8 @@ class Task(abc.ABC):
         Returns a dict representation of the Task, only includes a few
         attributes
         """
-        return dict(name=self.name, product=str(self.product),
+        return dict(name=self.name,
+                    product=str(self.product),
                     source_code=str(self.source))
 
     def _render_product(self):
@@ -713,9 +712,10 @@ class Task(abc.ABC):
         # Params are read-only for users, but we have to add upstream
         # dependencies so we do it directly to the dictionary
         if self.upstream:
-            self.params._dict['upstream'] = Upstream({n: t.product for n, t in
-                                                      self.upstream.items()},
-                                                     name=self.name)
+            self.params._dict['upstream'] = Upstream(
+                {n: t.product
+                 for n, t in self.upstream.items()},
+                name=self.name)
 
         # render the current product
         try:
@@ -726,8 +726,8 @@ class Task(abc.ABC):
                                 optional=set(params_names + ['upstream']))
         except Exception as e:
             raise type(e)('Error rendering Product from Task "{}", '
-                          ' check the full traceback above for details'
-                          .format(repr(self), self.params)) from e
+                          ' check the full traceback above for details'.format(
+                              repr(self), self.params)) from e
 
     def _get_downstream(self):
         # make the _get_downstream more efficient by
@@ -744,21 +744,22 @@ class Task(abc.ABC):
         # this change
         # TODO: move to DAG
         def update_status(task):
-            any_upstream_errored_or_aborted = any([t.exec_status
-                                                   in (TaskStatus.Errored,
-                                                       TaskStatus.Aborted)
-                                                   for t
-                                                   in task.upstream.values()])
-            all_upstream_done = all([t.exec_status
-                                     in {TaskStatus.Executed,
-                                         TaskStatus.Skipped}
-                                     for t in task.upstream.values()])
+            any_upstream_errored_or_aborted = any([
+                t.exec_status in (TaskStatus.Errored, TaskStatus.Aborted)
+                for t in task.upstream.values()
+            ])
+            all_upstream_done = all([
+                t.exec_status in {TaskStatus.Executed, TaskStatus.Skipped}
+                for t in task.upstream.values()
+            ])
 
             if any_upstream_errored_or_aborted:
                 task.exec_status = TaskStatus.Aborted
-            elif any([t.exec_status in (TaskStatus.ErroredRender,
-                                        TaskStatus.AbortedRender)
-                      for t in task.upstream.values()]):
+            elif any([
+                    t.exec_status
+                    in (TaskStatus.ErroredRender, TaskStatus.AbortedRender)
+                    for t in task.upstream.values()
+            ]):
                 task.exec_status = TaskStatus.AbortedRender
             elif all_upstream_done:
                 task.exec_status = TaskStatus.WaitingExecution
@@ -782,8 +783,8 @@ class Task(abc.ABC):
             return TaskGroup((self, other))
 
     def __repr__(self):
-        return ('{}: {} -> {}'
-                .format(type(self).__name__, self.name, repr(self.product)))
+        return ('{}: {} -> {}'.format(
+            type(self).__name__, self.name, repr(self.product)))
 
     def __str__(self):
         return str(self.product)
@@ -797,8 +798,9 @@ class Task(abc.ABC):
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self._logger = logging.getLogger('{}.{}'.format(__name__,
-                                                        type(self).__name__))
+        self._logger = logging.getLogger('{}.{}'.format(
+            __name__,
+            type(self).__name__))
 
 
 def _doc_short(doc):

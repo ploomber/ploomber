@@ -1,10 +1,8 @@
-import argparse
-
-from ploomber.entry.parsers import _custom_command
+from ploomber.entry.parsers import _custom_command, CustomParser
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Plot a pipeline')
+    parser = CustomParser(description='Plot a pipeline')
     parser.add_argument('entry_point', help='Entry point (DAG)')
     parser.add_argument(
         '--output',
@@ -15,5 +13,5 @@ def main():
                         help='Enables logging to stdout at the '
                         'specified level',
                         default=None)
-    dag, args = _custom_command(parser, static_args=['entry_point', 'output'])
+    dag, args = _custom_command(parser)
     dag.plot(output=args.output)

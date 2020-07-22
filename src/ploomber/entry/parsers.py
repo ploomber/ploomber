@@ -3,12 +3,31 @@ import sys
 import importlib
 import inspect
 from pathlib import Path
+import argparse
 from collections.abc import Mapping
 
 import yaml
 
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.env.EnvDict import EnvDict
+
+
+class CustomParser(argparse.ArgumentParser):
+    """
+    A custom ArgumentParser that keeps track of arguments
+    """
+    def __init__(self, *args, **kwargs):
+        self.static_args = []
+        self.finished_static_api = False
+        super().__init__(*args, **kwargs)
+
+    def add_argument(self, *args, **kwargs):
+        if not self.finished_static_api:
+            self.static_args.extend([arg.replace('-', '') for arg in args])
+        return super().add_argument(*args, **kwargs)
+
+    def done_with_static_api(self):
+        self.finished_static_api = True
 
 
 def _parse_doc(doc):
@@ -124,8 +143,9 @@ def _process_file_entry_point(parser, entry_point, static_args):
 
     args = parser.parse_args()
 
-    if args.log is not None:
-        logging.basicConfig(level=args.log)
+    if hasattr(args, 'log'):
+        if args.log is not None:
+            logging.basicConfig(level=args.log)
 
     with open(entry_point) as f:
         dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
@@ -168,8 +188,9 @@ def _process_factory_entry_point(parser, entry_point, static_args):
 
     args = parser.parse_args()
 
-    if args.log is not None:
-        logging.basicConfig(level=args.log)
+    if hasattr(args, 'log'):
+        if args.log is not None:
+            logging.basicConfig(level=args.log)
 
     # required by the function signature
     kwargs = {key: getattr(args, key) for key in required}
@@ -200,7 +221,7 @@ def _process_entry_point(parser, entry_point, static_args):
     return dag, args
 
 
-def _custom_command(parser, static_args):
+def _custom_command(parser):
     """
     Parses an entry point, adding arguments by extracting them from the env.
     Returns a dag and the parsed args
@@ -216,7 +237,9 @@ def _custom_command(parser, static_args):
     # we got an actual positional argument parse entry_point
     else:
         entry_point = sys.argv[1]
-        dag, args = _process_entry_point(parser, entry_point, static_args)
+
+        dag, args = _process_entry_point(parser, entry_point,
+                                         parser.static_args)
         return dag, args
 
 
