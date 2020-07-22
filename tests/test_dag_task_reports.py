@@ -20,6 +20,7 @@ def touch(upstream, product):
 
 # TODO: test dag.status(), task.status()
 
+
 def test_task_report_after_building(tmp_directory):
     dag = DAG()
 
@@ -64,8 +65,7 @@ def test_dag_reports_sub_select_cols(sqlite_client_and_tmp_dir):
 
     PythonCallable(touch_root, File('some_file.txt'), dag, name='task')
     sql = 'CREATE TABLE {{product}} AS SELECT * FROM data'
-    SQLScript(sql, SQLiteRelation(('data2', 'table')),
-              dag, name='task2')
+    SQLScript(sql, SQLiteRelation(('data2', 'table')), dag, name='task2')
 
-    assert dag.status()[['name', 'type']]
+    assert dag.status()[['name', 'Last run']]
     assert dag.build()[['Ran?', 'Elapsed (s)']]
