@@ -637,27 +637,45 @@ class Task(abc.ABC):
 
         print(plan)
 
-    def status(self, return_code_diff=False):
+    def status(self, return_code_diff=False, sections=None):
         """Prints the current task status
+
+        Parameters
+        ----------
+        sections : list, optional
+            Sections to include. Defaults to "name", "last_run",
+            "oudated", "product", "doc", "location"
         """
+        sections = sections or [
+            'name', 'last_run', 'outdated', 'product', 'doc', 'location'
+        ]
+
         p = self.product
 
         data = {}
 
-        data['name'] = self.name
-        data['type'] = type(self).__name__
-        data['status'] = self.exec_status.name
-        # FIXME: all tasks should have a client property
-        data['client'] = (repr(self.client)
-                          if hasattr(self, 'client') else None)
+        if 'name' in sections:
+            data['name'] = self.name
 
-        if p.metadata.timestamp is not None:
-            dt = datetime.fromtimestamp(p.metadata.timestamp)
-            date_h = dt.strftime('%b %d, %y at %H:%M')
-            time_h = humanize.naturaltime(dt)
-            data['Last updated'] = '{} ({})'.format(time_h, date_h)
-        else:
-            data['Last updated'] = 'Has not been run'
+        if 'type' in sections:
+            data['type'] = type(self).__name__
+
+        if 'status' in sections:
+            data['status'] = self.exec_status.name
+
+        if 'client' in sections:
+            # FIXME: all tasks should have a client property
+            data['client'] = (repr(self.client)
+                              if hasattr(self, 'client') else None)
+
+        if 'last_run' in sections:
+            if p.metadata.timestamp is not None:
+                dt = datetime.fromtimestamp(p.metadata.timestamp)
+                date_h = dt.strftime('%b %d, %y at %H:%M')
+                time_h = humanize.naturaltime(dt)
+                data['Last run'] = '{} ({})'.format(time_h, date_h)
+            else:
+                data['Last run'] = 'Has not been run'
 
         outd_data = p._outdated_data_dependencies()
         outd_code = p._outdated_code_dependency()
@@ -673,10 +691,14 @@ class Task(abc.ABC):
             else:
                 outd += ' & Upstream'
 
-        data['Outdated?'] = outd
+        if 'outdated' in sections:
+            data['Outdated?'] = outd
 
-        data['Outdated dependencies'] = outd_data
-        data['Outdated code'] = outd_code
+        if 'outdated_dependencies' in sections:
+            data['Outdated dependencies'] = outd_data
+
+        if 'outdated_code' in sections:
+            data['Outdated code'] = outd_code
 
         if outd_code and return_code_diff:
             data['Code diff'] = (self.dag.differ.get_diff(
@@ -686,13 +708,22 @@ class Task(abc.ABC):
         else:
             outd_code = ''
 
-        data['Product type'] = type(self.product).__name__
-        data['Product'] = str(self.product)
-        # FIXME: all products should have a client property
-        data['Product client'] = (repr(self.product.client) if hasattr(
-            self.product, 'client') else None)
-        data['Doc (short)'] = _doc_short(self.source.doc)
-        data['Location'] = self.source.loc
+        if 'product_type' in sections:
+            data['Product type'] = type(self.product).__name__
+
+        if 'product' in sections:
+            data['Product'] = str(self.product)
+
+        if 'product_client' in sections:
+            # FIXME: all products should have a client property
+            data['Product client'] = (repr(self.product.client) if hasattr(
+                self.product, 'client') else None)
+
+        if 'doc' in sections:
+            data['Doc (short)'] = _doc_short(self.source.doc)
+
+        if 'location' in sections:
+            data['Location'] = self.source.loc
 
         return Row(data)
 

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import click
 import pytest
-from ploomber.entry import plot, entry, parsers, task
+from ploomber.entry import plot, entry, parsers, task, report
 from ploomber import cli
 
 
@@ -24,6 +24,11 @@ def test_plot(custom_args, monkeypatch, tmp_sample_dir):
     args_defaults = ['python', 'test_pkg.entry.with_doc']
     monkeypatch.setattr(sys, 'argv', args_defaults + custom_args)
     plot.main()
+
+
+def test_report(monkeypatch, tmp_sample_dir):
+    monkeypatch.setattr(sys, 'argv', ['python', 'test_pkg.entry.with_doc'])
+    report.main()
 
 
 def test_log_enabled(monkeypatch, tmp_sample_dir):
