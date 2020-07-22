@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 import click
-from ploomber.entry import entry, parsers
+from ploomber.entry import plot, entry, parsers
 from ploomber import cli
 
 
@@ -15,6 +15,11 @@ def test_complete_case(monkeypatch, tmp_sample_dir):
         sys, 'argv',
         ['python', 'test_pkg.entry.with_doc', '--action', 'build'])
     entry._main()
+
+
+def test_plot(monkeypatch, tmp_sample_dir):
+    monkeypatch.setattr(sys, 'argv', ['python', 'test_pkg.entry.with_doc'])
+    plot.main()
 
 
 def test_log_enabled(monkeypatch, tmp_sample_dir):
