@@ -33,4 +33,4 @@ def main():
         print(task.status())
 
     if args.build:
-        task.build()
+        task.build(force=args.force)

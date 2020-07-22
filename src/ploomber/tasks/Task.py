@@ -424,7 +424,7 @@ class Task(abc.ABC):
                                  'has upstream dependencies, call '
                                  'dag.render() first'.format(self.name))
 
-        # This is the public API for uses who'd to run tasks in isolation,
+        # This is the public API for users who'd to run tasks in isolation,
         # we have to make sure we clear product cache status, otherwise
         # this will interfer with other render calls
         self.render(force=force)
