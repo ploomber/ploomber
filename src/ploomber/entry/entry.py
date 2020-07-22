@@ -57,10 +57,6 @@ def _main():
     parser = CustomParser(description='Call an entry point '
                           '(pipeline.yaml or dotted path to factory)')
     parser.add_argument('entry_point', help='Entry point (DAG)')
-    parser.add_argument('--log',
-                        help='Enables logging to stdout at the '
-                        'specified level',
-                        default=None)
     parser.add_argument('--action',
                         help='Action to execute, defaults to '
                         'build',

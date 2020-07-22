@@ -21,6 +21,12 @@ class CustomParser(argparse.ArgumentParser):
         self.finished_static_api = False
         super().__init__(*args, **kwargs)
 
+        self.add_argument('--log',
+                          '-l',
+                          help='Enables logging to stdout at the '
+                          'specified level',
+                          default=None)
+
     def add_argument(self, *args, **kwargs):
         if not self.finished_static_api:
             self.static_args.extend([arg.replace('-', '') for arg in args])
@@ -145,7 +151,7 @@ def _process_file_entry_point(parser, entry_point, static_args):
 
     if hasattr(args, 'log'):
         if args.log is not None:
-            logging.basicConfig(level=args.log)
+            logging.basicConfig(level=args.log.upper())
 
     with open(entry_point) as f:
         dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
@@ -190,7 +196,7 @@ def _process_factory_entry_point(parser, entry_point, static_args):
 
     if hasattr(args, 'log'):
         if args.log is not None:
-            logging.basicConfig(level=args.log)
+            logging.basicConfig(level=args.log.upper())
 
     # required by the function signature
     kwargs = {key: getattr(args, key) for key in required}
