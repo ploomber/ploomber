@@ -1,3 +1,4 @@
+import subprocess
 import os
 import importlib
 import sys
@@ -37,6 +38,15 @@ def test_log_enabled(monkeypatch, tmp_sample_dir):
         'INFO'
     ])
     entry._main()
+
+
+def test_interactive_session(monkeypatch, tmp_sample_dir):
+    res = subprocess.run(
+        ['ipython', '-i', '-m', 'ploomber.entry', 'test_pkg.entry.with_doc'],
+        input=b'type(dag)',
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+    assert 'Out[1]: ploomber.dag.DAG.DAG' in res.stdout.decode()
 
 
 def test_replace_env_value(monkeypatch, tmp_sample_dir):

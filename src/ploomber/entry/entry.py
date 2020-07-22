@@ -73,3 +73,5 @@ def _main():
         dag.build_partially(args.partially)
     else:
         print(getattr(dag, args.action)())
+
+    return dag
