@@ -5,8 +5,7 @@ from pathlib import Path
 from jinja2 import Environment, PackageLoader
 import click
 from ploomber import __version__
-from ploomber.entry import entry as entry_module
-from ploomber.entry import plot, task
+from ploomber import entry as entry_module
 from ploomber.spec.DAGSpec import DAGSpec
 
 try:
@@ -41,7 +40,7 @@ def new():
 
 @cli.command()
 def add():
-    """Add tasks declared in pipeline.yaml whose source code files do not exist
+    """Create soource files tasks registered in pipeline.yaml
     """
     _add()
 
@@ -158,9 +157,9 @@ def cmd_router():
     cmd_name = sys.argv[1]
 
     custom = {
-        'entry': entry_module._main,
-        'plot': plot.main,
-        'task': task.main
+        'entry': entry_module.entry._main,
+        'plot': entry_module.plot.main,
+        'task': entry_module.task.main
     }
 
     if cmd_name in custom:
@@ -174,3 +173,26 @@ def cmd_router():
         fn()
     else:
         cli()
+
+
+# the commands below are handled by the router, thy are just here so they
+# show up when doing ploomber --help
+@cli.command()
+def entry():
+    """Call entry points
+    """
+    pass
+
+
+@cli.command()
+def plot():
+    """Plot pipeline
+    """
+    pass
+
+
+@cli.command()
+def task():
+    """Interact with specific tasks
+    """
+    pass
