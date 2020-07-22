@@ -36,6 +36,18 @@ Plot
 
 Will create a plot and save it in a ``pipeline.png`` file.
 
+Report
+******
+
+.. code-block:: console
+
+    ploomber report pipeline.yaml
+
+
+Will create an HTML report and save it in a ``pipeline.html`` file. The fil
+includes the pipeline plot and a table with a summary for each task.
+
+
 Build a single task
 *******************
 

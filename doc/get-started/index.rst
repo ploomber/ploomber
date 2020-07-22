@@ -11,4 +11,3 @@ Get Started
     install
     intro
     first-pipeline
-    sql-pipeline
