@@ -1,12 +1,11 @@
-import pytest
-
 import os
 import importlib
 import sys
 from pathlib import Path
 
 import click
-from ploomber.entry import plot, entry, parsers
+import pytest
+from ploomber.entry import plot, entry, parsers, task
 from ploomber import cli
 
 
@@ -17,8 +16,13 @@ def test_complete_case(monkeypatch, tmp_sample_dir):
     entry._main()
 
 
-def test_plot(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv', ['python', 'test_pkg.entry.with_doc'])
+@pytest.mark.parametrize(
+    'custom_args',
+    [[], ['--output', 'custom.png'], ['-o', 'custom.png'], ['--log', 'DEBUG'],
+     ['-o', 'custom.png', '--log', 'DEBUG']])
+def test_plot(custom_args, monkeypatch, tmp_sample_dir):
+    args_defaults = ['python', 'test_pkg.entry.with_doc']
+    monkeypatch.setattr(sys, 'argv', args_defaults + custom_args)
     plot.main()
 
 
@@ -137,13 +141,28 @@ def test_parse_doc_if_missing_numpydoc(monkeypatch):
     })
 
 
-def test_run_spec(monkeypatch, tmp_directory):
+@pytest.mark.parametrize('custom', [[], ['--partially', 'plot']])
+def test_run_spec(custom, monkeypatch, tmp_directory):
     monkeypatch.setattr(click, 'confirm', lambda text: False)
     monkeypatch.setattr(click, 'prompt', lambda text, type: 'my-project')
     cli._new()
     os.chdir('my-project')
-    monkeypatch.setattr(sys, 'argv', ['python', 'pipeline.yaml'])
+    args = ['python', 'pipeline.yaml'] + custom
+    monkeypatch.setattr(sys, 'argv', args)
     entry._main()
+
+
+@pytest.mark.parametrize('custom',
+                         ['--source', '--build', '--force', '--status'])
+def test_task(custom, monkeypatch, tmp_directory):
+    monkeypatch.setattr(click, 'confirm', lambda text: False)
+    monkeypatch.setattr(click, 'prompt', lambda text, type: 'my-project')
+    cli._new()
+    os.chdir('my-project')
+
+    args = ['task', 'pipeline.yaml', 'raw'] + [custom]
+    monkeypatch.setattr(sys, 'argv', args)
+    task.main()
 
 
 def test_run_spec_replace_value(monkeypatch, tmp_directory):
@@ -152,6 +171,7 @@ def test_run_spec_replace_value(monkeypatch, tmp_directory):
     cli._new()
     os.chdir('my-project')
     Path('env.yaml').write_text('sample: false')
+
     monkeypatch.setattr(sys, 'argv',
                         ['python', 'pipeline.yaml', '--env__sample', 'True'])
     entry._main()
