@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 import click
-from ploomber.entry import entry
+from ploomber.entry import entry, parsers
 from ploomber import cli
 
 
@@ -120,13 +120,16 @@ def test_parse_doc():
         'summary': ['Some description']
     }
 
-    assert entry._parse_doc(doc) == expected
+    assert parsers._parse_doc(doc) == expected
 
 
 def test_parse_doc_if_missing_numpydoc(monkeypatch):
     monkeypatch.setattr(importlib, 'import_module', lambda x: None)
 
-    assert entry._parse_doc("""docstring""") == {'params': {}, 'summary': None}
+    assert (parsers._parse_doc("""docstring""") == {
+        'params': {},
+        'summary': None
+    })
 
 
 def test_run_spec(monkeypatch, tmp_directory):
