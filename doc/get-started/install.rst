@@ -19,19 +19,29 @@ To plot your pipeline (Optional)
 --------------------------------
 
 
-
-Install ``graphviz`` it with conda:
+Install ``pygraphviz`` with conda:
 
 .. code-block:: console
 
-    conda install graphviz
+    conda install pygraphviz
 
 
-Homebrew:
+``pygraphviz`` depends on another library called ``graphviz``.
+
+``graphviz`` cannot be installed via ``pip``, but you can install it with
+``brew``:
 
 .. code-block:: console
 
     brew install graphviz
 
 
-For more options, `click here <https://www.graphviz.org/download/>`_
+Then you can install ``pygraphviz``
+
+.. code-block:: console
+
+    pip install pygraphviz
+
+
+If you are not using ``conda`` nor ``brew``, check out more options for
+installing ``graphviz`` `here <https://www.graphviz.org/download/>`_
