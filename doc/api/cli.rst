@@ -1,33 +1,81 @@
 Command line interface
 ======================
 
-Entry points: ``ploomber entry``
---------------------------------
+This document summarizes commonly used commands, to get full details, execute
+``ploomber --help`` or ``ploomber {command_name} --help``.
 
-
-Building your pipeline
-**********************
-
-Building your pipeline means executing your pipeline end-to-end but speed it up
-by skipping tasks whose source code has not changed, this is the most common
-command as it takes care of dependencies and brings your pipeline up-to-date:
-
+Build pipeline
+**************
 
 .. code-block:: console
 
     ploomber entry pipeline.yaml
 
-Or:
+Building your pipeline means executing your pipeline end-to-end but speed it up
+by skipping tasks whose source code has not changed.
+
+
+Build pipeline partially
+************************
 
 .. code-block:: console
 
-    ploomber entry pipeline.yaml --action build
+    ploomber entry pipeline.yaml --partially task_name
 
+
+Builds your pipeline until it reaches task named ``task_name``.
+
+
+Plot
+****
+
+.. code-block:: console
+
+    ploomber plot pipeline.yaml
+
+
+Will create a plot and save it in a ``pipeline.png`` file.
+
+Build a single task
+*******************
+
+.. code-block:: console
+
+    ploomber task pipeline.yaml task_name --build
+
+
+Optionally add ``--force`` to force execution (ignore status).
+
+
+Get task status
+***************
+
+.. code-block:: console
+
+    ploomber task pipeline.yaml task_name --status
+
+
+Task source code
+****************
+
+.. code-block:: console
+
+    ploomber task pipeline.yaml task_name --source
+
+
+Create new project
+******************
+
+.. code-block:: console
+
+    ploomber new
 
 
 Interactive sessions
 ********************
 
+Interactive sessions are a great way to develop your pipeline. Everything you
+can do with the commands above, you can do it with an interactive session.
 
 To start an interactive session:
 
@@ -35,42 +83,33 @@ To start an interactive session:
 
     ipython -i -m ploomber.entry pipeline.yaml -- --action status
 
-Once the interactive session opens, use the ``dag`` object.
+The command above starts a Python session, parses your pipeline and exposes it
+in a ``dag`` variable, which is an instance of the :py:mod:`ploomber.DAG` class.
 
-
-Visualize dependencies:
+For example, to generate the plot:
 
 .. code-block:: python
     :class: ipython
 
     dag.plot()
 
-Develop scripts interactively:
+You can also interact with tasks, the specific API depends on which type of
+task you are dealing with, see the :py:mod:`ploomber.tasks` documentation for
+more information.
 
-.. code-block:: python
-    :class: ipython
-
-    dag['some_task'].develop()
-
-
-Line by line debugging:
+If you are working with Python scripts, you an start a line by line debugging
+session:
 
 .. code-block:: python
     :class: ipython
 
     dag['some_task'].debug()
 
-
-Print the rendered source code from SQL scripts:
-
+To print the rendered source code from SQL scripts:
 
 .. code-block:: python
     :class: ipython
 
     print(dag['some_sql_task'].source)
 
-
-
-Creating new projects: ``ploomber new``
----------------------------------------
 
