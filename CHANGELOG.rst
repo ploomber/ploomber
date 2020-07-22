@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.6.2dev
---------
+0.6.2 (2020-07-22)
+-------------------
 * Support for `env.yaml` in `pipeline.yaml`
 * Improved CLI. Adds `plot`, `report` and `task` commands
 
