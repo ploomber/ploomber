@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+0.6.2dev
+--------
+* Support for `env.yaml` in `pipeline.yaml`
+* Improved CLI. Adds `plot`, `report` and `task` commands
+
 0.6.1 (2020-07-20)
 ------------------
 * Changes pipeline.yaml default (extract_product: True)
