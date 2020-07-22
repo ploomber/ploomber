@@ -1,3 +1,3 @@
-from ploomber.entry import entry, plot, task
+from ploomber.entry import entry, plot, task, report
 
-__all__ = ['task', 'plot', 'entry']
+__all__ = ['task', 'plot', 'entry', 'report']

@@ -43,7 +43,6 @@ except ImportError:
     # backported
     import importlib_resources
 
-
 import networkx as nx
 from tqdm.auto import tqdm
 from jinja2 import Template
@@ -105,7 +104,6 @@ class DAG(collections.abc.Mapping):
         which contains the build error traceback and "on_finish" which contains
         the on_finish hook traceback, if any.
     """
-
     def __init__(self, name=None, clients=None, executor='serial'):
         self._G = nx.DiGraph()
 
@@ -122,9 +120,10 @@ class DAG(collections.abc.Mapping):
         elif isinstance(executor, executors.Executor.Executor):
             self._executor = executor
         else:
-            raise TypeError('executor must be "serial", "parallel" or '
-                            'an instance of executors.Executor, got type {}'
-                            .format(type(executor)))
+            raise TypeError(
+                'executor must be "serial", "parallel" or '
+                'an instance of executors.Executor, got type {}'.format(
+                    type(executor)))
 
         self._did_render = False
 
@@ -171,25 +170,28 @@ class DAG(collections.abc.Mapping):
 
         # render errored
         elif value == DAGStatus.ErroredRender:
-            allowed = {TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream,
-                       TaskStatus.ErroredRender, TaskStatus.AbortedRender,
-                       TaskStatus.Skipped}
+            allowed = {
+                TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream,
+                TaskStatus.ErroredRender, TaskStatus.AbortedRender,
+                TaskStatus.Skipped
+            }
             self.check_tasks_have_allowed_status(allowed, value)
 
         # rendering ok, waiting execution
         elif value == DAGStatus.WaitingExecution:
             exec_values = set(task.exec_status for task in self.values())
-            allowed = {TaskStatus.WaitingExecution,
-                       TaskStatus.WaitingUpstream,
-                       TaskStatus.Skipped}
+            allowed = {
+                TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream,
+                TaskStatus.Skipped
+            }
             self.check_tasks_have_allowed_status(allowed, value)
 
         # attempted execution but failed
         elif value == DAGStatus.Executed:
             exec_values = set(task.exec_status for task in self.values())
             # check len(self) to prevent this from failing on an empty DAG
-            if not exec_values <= {TaskStatus.Executed,
-                                   TaskStatus.Skipped} and len(self):
+            if not exec_values <= {TaskStatus.Executed, TaskStatus.Skipped
+                                   } and len(self):
                 warnings.warn('The DAG "{}" entered in an inconsistent '
                               'state: trying to set DAG status to '
                               'DAGStatus.Executed but executor '
@@ -202,8 +204,7 @@ class DAG(collections.abc.Mapping):
             # DAG executor ends up abrubtly
             pass
         else:
-            raise RuntimeError('Unknown DAGStatus value: {}'
-                               .format(value))
+            raise RuntimeError('Unknown DAGStatus value: {}'.format(value))
 
         self.__exec_status = value
 
@@ -293,22 +294,24 @@ class DAG(collections.abc.Mapping):
                     continue
 
                 if show_progress:
-                    tasks.set_description('Rendering DAG "{}"'
-                                          .format(self.name))
+                    tasks.set_description('Rendering DAG "{}"'.format(
+                        self.name))
 
                 with warnings.catch_warnings(record=True) as warnings_current:
                     try:
-                        t.render(force=force,
-                                 outdated_by_code=self._params.outdated_by_code)
+                        t.render(
+                            force=force,
+                            outdated_by_code=self._params.outdated_by_code)
                     except Exception:
                         tr = traceback.format_exc()
                         exceptions.append(message=tr, task_str=repr(t))
 
                 if warnings_current:
-                    w = [str(a_warning.message) for a_warning
-                         in warnings_current]
-                    warnings_.append(task_str=t.name,
-                                     message='\n'.join(w))
+                    w = [
+                        str(a_warning.message)
+                        for a_warning in warnings_current
+                    ]
+                    warnings_.append(task_str=t.name, message='\n'.join(w))
 
             if warnings_:
                 # FIXME: maybe raise one by one to keep the warning type
@@ -320,8 +323,7 @@ class DAG(collections.abc.Mapping):
                 raise DAGRenderError('DAG render failed, the following '
                                      'tasks could not render '
                                      '(corresponding tasks aborted '
-                                     'rendering):\n{}'
-                                     .format(str(exceptions)))
+                                     'rendering):\n{}'.format(str(exceptions)))
 
         self._exec_status = DAGStatus.WaitingExecution
 
@@ -391,8 +393,8 @@ class DAG(collections.abc.Mapping):
             except DAGBuildError as e:
                 tb['build'] = traceback.format_exc()
                 # error build dag, log exception and set status
-                self._logger.exception('Failure when building DAG "{}"'
-                                       .format(self.name))
+                self._logger.exception('Failure when building DAG "{}"'.format(
+                    self.name))
                 self._exec_status = DAGStatus.Errored
                 build_exception = e
             except DAGBuildEarlyStop:
@@ -406,9 +408,10 @@ class DAG(collections.abc.Mapping):
                 build_exception = None
 
             if build_exception is None:
-                empty = [TaskReport.empty_with_name(t.name)
-                         for t in self.values()
-                         if t.exec_status == TaskStatus.Skipped]
+                empty = [
+                    TaskReport.empty_with_name(t.name) for t in self.values()
+                    if t.exec_status == TaskStatus.Skipped
+                ]
 
                 build_report = BuildReport(task_reports + empty)
                 self._logger.info(' DAG report:\n{}'.format(build_report))
@@ -420,8 +423,7 @@ class DAG(collections.abc.Mapping):
                     tb['on_finish'] = traceback.format_exc()
                     # on_finish error, log exception and set status
                     msg = ('Exception when running on_finish '
-                           'for DAG "{}": {}'
-                           .format(self.name, e))
+                           'for DAG "{}": {}'.format(self.name, e))
                     self._logger.exception(msg)
                     self._exec_status = DAGStatus.Errored
 
@@ -447,8 +449,7 @@ class DAG(collections.abc.Mapping):
                 except Exception as e:
                     # error in hook, log exception
                     msg = ('Exception when running on_failure '
-                           'for DAG "{}": {}'
-                           .format(self.name, e))
+                           'for DAG "{}": {}'.format(self.name, e))
                     self._logger.exception(msg)
 
                     # do not raise exception if early stop
@@ -514,8 +515,8 @@ class DAG(collections.abc.Mapping):
 
         self.render()
 
-        return Table([self._G.nodes[name]['task'].status(**kwargs)
-                      for name in self._G])
+        return Table(
+            [self._G.nodes[name]['task'].status(**kwargs) for name in self._G])
 
     def to_dict(self, include_plot=False):
         """Returns a dict representation of the dag's Tasks,
@@ -528,26 +529,43 @@ class DAG(collections.abc.Mapping):
         """
         # self._clear_cached_status()
 
-        d = {name: self._G.nodes[name]['task'].to_dict()
-             for name in self._G}
+        d = {name: self._G.nodes[name]['task'].to_dict() for name in self._G}
 
         if include_plot:
             d['_plot'] = self.plot(open_image=False)
 
         return d
 
-    def to_markup(self, path=None, fmt='html'):
+    def to_markup(self, path=None, fmt='html', sections=None):
         """Returns a str (md or html) with the pipeline's description
+
+        Parameters
+        ----------
+        sections : list
+            Which sections to include, possible values are "plot", "status"
+            and "source". Defaults to ["plot", "status"]
         """
+        sections = sections or ['plot', 'status']
+
         if fmt not in ['html', 'md']:
             raise ValueError('fmt must be html or md, got {}'.format(fmt))
 
-        status = self.status().to_format('html')
-        path_to_plot = Path(self.plot())
-        plot = image_bytes2html(path_to_plot.read_bytes())
+        if 'status' in sections:
+            status = self.status().to_format('html')
+        else:
+            status = False
+
+        if 'plot' in sections:
+            path_to_plot = Path(self.plot())
+            plot = image_bytes2html(path_to_plot.read_bytes())
+        else:
+            plot = False
 
         template_md = importlib_resources.read_text(resources, 'dag.md')
-        out = Template(template_md).render(plot=plot, status=status, dag=self)
+        out = Template(template_md).render(plot=plot,
+                                           status=status,
+                                           source='source' in sections,
+                                           dag=self)
 
         if fmt == 'html':
             renderer = markup.HighlightRenderer()
@@ -628,8 +646,8 @@ class DAG(collections.abc.Mapping):
             G.add_node(task)
 
             if only_current_dag:
-                G.add_edges_from([(up, task) for up
-                                  in task.upstream.values() if up.dag is self])
+                G.add_edges_from([(up, task) for up in task.upstream.values()
+                                  if up.dag is self])
             else:
                 G.add_edges_from([(up, task) for up in task.upstream.values()])
 
@@ -718,8 +736,9 @@ class DAG(collections.abc.Mapping):
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self._logger = logging.getLogger('{}.{}'.format(__name__,
-                                                        type(self).__name__))
+        self._logger = logging.getLogger('{}.{}'.format(
+            __name__,
+            type(self).__name__))
 
 
 def _single_product_short_repr(product):
@@ -739,8 +758,8 @@ def _single_product_short_repr(product):
 
 
 def _meta_product_short_repr(metaproduct):
-    return ', '.join([_single_product_short_repr(p)
-                      for p in metaproduct.products])
+    return ', '.join(
+        [_single_product_short_repr(p) for p in metaproduct.products])
 
 
 def _product_short_repr(product):
@@ -755,6 +774,5 @@ def _task_short_repr(task):
         max_l = 30
         return s if len(s) <= max_l else s[:max_l - 3] + '...'
 
-    return ('{} -> \n{}'
-            .format(short(str(task.name)),
-                    _product_short_repr(task.product)))
+    return ('{} -> \n{}'.format(short(str(task.name)),
+                                _product_short_repr(task.product)))

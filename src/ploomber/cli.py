@@ -159,7 +159,8 @@ def cmd_router():
     custom = {
         'entry': entry_module.entry._main,
         'plot': entry_module.plot.main,
-        'task': entry_module.task.main
+        'task': entry_module.task.main,
+        'report': entry_module.report.main,
     }
 
     if cmd_name in custom:
@@ -194,5 +195,12 @@ def plot():
 @cli.command()
 def task():
     """Interact with specific tasks
+    """
+    pass
+
+
+@cli.command()
+def report():
+    """Make a pipeline report
     """
     pass
