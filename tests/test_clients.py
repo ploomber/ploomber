@@ -4,6 +4,8 @@ import copy
 from pathlib import Path
 from urllib.parse import urlparse
 
+import pytest
+
 from ploomber import DAG
 from ploomber.tasks import ShellScript
 from ploomber.products import File
@@ -24,7 +26,8 @@ def test_pickle_dbapiclient(tmp_directory):
 
 
 def test_dbapiclient_split_source(tmp_directory):
-    client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'),
+    client = DBAPIClient(sqlite3.connect,
+                         dict(database='my_db.db'),
                          split_source=';')
     client.execute("""DROP TABLE IF EXISTS my_table;
     CREATE TABLE my_table (num INT)""")
@@ -32,7 +35,8 @@ def test_dbapiclient_split_source(tmp_directory):
 
 
 def test_dbapiclient_split_source_custom_char(tmp_directory):
-    client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'),
+    client = DBAPIClient(sqlite3.connect,
+                         dict(database='my_db.db'),
                          split_source='##')
     client.execute("""DROP TABLE IF EXISTS my_table##
     CREATE TABLE my_table (num INT)""")
@@ -51,12 +55,14 @@ def test_pickle_sqlalchemyclient(tmp_directory):
     assert pickle.dumps(client)
 
 
-def test_send_more_than_one_command_in_sqlite(tmp_directory):
-    client = SQLAlchemyClient('sqlite:///my_db.db')
-    code = """
-    CREATE TABLE my_table (num INT);
-    SELECT * FROM my_table
-    """
+@pytest.mark.parametrize(
+    'code,split_source',
+    [['CREATE TABLE my_table (num INT); SELECT * FROM my_table', 'default'],
+     ['CREATE TABLE my_table (num INT); SELECT * FROM my_table', ';'],
+     ['CREATE TABLE my_table (num INT)## SELECT * FROM my_table', '##']])
+def test_send_more_than_one_command_in_sqlite(code, split_source,
+                                              tmp_directory):
+    client = SQLAlchemyClient('sqlite:///my_db.db', split_source=split_source)
     client.execute(code)
 
 

@@ -45,11 +45,12 @@ class DBAPIClient(Client):
         Keyword arguments to pass to connect_fn
 
     split_source : str, optional
-        Some database drivers do not support multiple commands, use this
-        optiion to split commands by a given character (e.g. ';') and send
-        them one at a time. Defaults to False (no spltting)
+        Some database drivers do not support multiple commands in a single
+        execute statement. Use this optiion to split commands by a given
+        character (e.g. ';') and send them one at a time. Defaults to
+        None (no spltting)
     """
-    def __init__(self, connect_fn, connect_kwargs, split_source=False):
+    def __init__(self, connect_fn, connect_kwargs, split_source=None):
         super().__init__()
         self.connect_fn = connect_fn
         self.connect_kwargs = connect_kwargs
@@ -102,22 +103,33 @@ class SQLAlchemyClient(Client):
     uri: str
         URI to pass to sqlalchemy.create_engine
 
+    split_source : str, optional
+        Some database drivers do not support multiple commands in a single
+        execute statement. Use this optiion to split commands by a given
+        character (e.g. ';') and send them one at a time. Defaults to
+        'default', which splits by ';' if the dealing with a SQLite database,
+        but does not perform any splitting with other databases. If None,
+        it will never split, a string value is interpreted as the token
+        to use for splitting statements regardless of the database type
+
     Notes
     -----
     SQLite client does not support sending more than one command at a time,
     if using such backend code will be split and several calls to the db
     will be performed.
     """
-    split_source = ['sqlite']
+    split_source_mapping = {'sqlite': ';'}
 
     @requires(['sqlalchemy'], 'SQLAlchemyClient')
-    def __init__(self, uri):
+    def __init__(self, uri, split_source='default'):
         super().__init__()
         self._uri = uri
         self._uri_parsed = urlparse(uri)
         self._uri_safe = safe_uri(self._uri_parsed)
         self.flavor = self._uri_parsed.scheme
         self._engine = None
+        self.split_source = split_source
+
         self._connection = None
 
     @property
@@ -141,9 +153,18 @@ class SQLAlchemyClient(Client):
     def execute(self, code):
         cur = self.connection.cursor()
 
-        if self.flavor in self.split_source:
-            for command in code_split(code):
+        # if split_source is default, and there's a default token defined,
+        # use it
+        if (self.split_source == 'default'
+                and self.flavor in self.split_source_mapping):
+            token = self.split_source_mapping[self.flavor]
+            for command in code_split(code, token=token):
                 cur.execute(command)
+        # otherwise interpret split_source as the token
+        elif self.split_source:
+            for command in code_split(code, token=self.split_source):
+                cur.execute(command)
+        # if no split_source, execute all at once
         else:
             cur.execute(code)
 

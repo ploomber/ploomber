@@ -44,7 +44,7 @@ Report
     ploomber report pipeline.yaml
 
 
-Will create an HTML report and save it in a ``pipeline.html`` file. The fil
+Will create an HTML report and save it in a ``pipeline.html`` file. The file
 includes the pipeline plot and a table with a summary for each task.
 
 
@@ -56,7 +56,7 @@ Build a single task
     ploomber task pipeline.yaml task_name --build
 
 
-Optionally add ``--force`` to force execution (ignore status).
+Optionally add ``--force`` to force execution (ignore up-to-date status).
 
 
 Get task status
