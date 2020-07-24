@@ -169,6 +169,7 @@ placeholder. Let's see a complete example:
     SELECT * FROM {{upstream['clean']}}
     WHERE x > 10
 
+
 Let's say there is task named ``clean`` that generates a product
 ``schema.clean``, the script above renders to the following:
 
@@ -192,6 +193,18 @@ the terminal:
     ploomber task pipeline.yaml task_name --source
 
 (Change ``task_name`` for the task you want)
+
+**Note**: when executing a SQL script, you usually want to replace any existing
+table/view with the same name. Some databases support the
+``DROP TABLE IF EXISTS`` statement to do so, but other databases (e.g. Oracle)
+have different procedures. Check your database's documentation for details.
+
+**Important**: Some database drivers do not support sending multiple statements to the
+database in a single call (e.g. SQLite), in such case, you can use the
+``split_source`` parameter in either ``SQLAlchemyClient`` or ``DBAPIClient``
+to split your statements and execute them one at a time. This allows you
+to write a single ``.sql`` file to perform the
+``DROP TABLE IF EXISTS ... CREATE TABLE AS ...`` logic.
 
 
 Mixing Python and SQL scripts via ``SQLDump``
