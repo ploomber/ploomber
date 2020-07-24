@@ -142,5 +142,5 @@ That's it! This tutorial showcases the basic Ploomber workflow:
 3. Review results
 4. Add tasks as needed
 
-The next tutorial goes a little deeper into the workflow to show some extra
-options that come in handy.
+The next tutorial shows how you can seamlessly mix SQL and Python code using
+the same basic concepts.

@@ -211,3 +211,9 @@ table.longtable p {
     width: 100%;
     margin-bottom: 0px;
 }
+
+div.body img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}

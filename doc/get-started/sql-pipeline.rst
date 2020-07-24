@@ -8,7 +8,9 @@ The first step to write a SQL pipeline is to tell Ploomber how to connect to
 the database, this is done by providing a function that returns either a
 :py:mod:`ploomber.clients.SQLAlchemyClient` or a
 :py:mod:`ploomber.clients.DBAPIClient`. The former are a bit simpler to
-configure, we'll cover such case for this example.
+configure, we'll cover such case for this example. These two clients cover
+all databases supported by Python, even systems like Snowflake or Apache
+Hive.
 
 ``SQLAlchemyClient`` takes a single argument, the database URI. As the name
 suggests, it uses SQLAlchemy under the hood, so any database supported by such
@@ -55,7 +57,11 @@ loads your client. If your ``pipeline.yaml`` and ``clients.py`` are in the same
 folder, you should be able to do this directly. If they are in a different
 folder, you'll have to make sure that the function is importable.
 
-Since it is common that most or all your SQL tasks peform operations in the
+You can reuse the same dotted path in several tasks in as many places as you
+want, under the hood, Ploomber calls the function every time it encounters it
+on your ``pipeline.yaml``.
+
+Since it is common that most or all your SQL tasks perform operations in the
 same database, you can also declare a task-level client like this:
 
 
@@ -235,12 +241,23 @@ Wrapping up
 
 This tutorial introduced several new ideas. It might be hard to wrap your head
 around all these concepts, to make things clearer, feel free to go to our
-interactive example, which implements a simple SQL pipeline.
+interactive example, which implements a pieline with some SQL tasks, a
+``SQLDump`` and a Python task:
 
-(add link)
+.. image:: https://img.shields.io/badge/launch-session-579ACA.svg?logo=data:image/png;base64,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
+   :target: https://mybinder.org/v2/gh/ploomber/projects/master?filepath=spec%2FREADME.md
 
 Once you start developing SQL pipelines this way, you'll realize how much
 faster it is than the old way. Instead of managing database connections,
-making sure you read from the right tables, that dependencies are up-to-date
+making sure you read from the right tables, checking if dependencies are up-to-date
 or writing custom code to dump data from a database, you can focus on writing
 the SQL and let Ploomber take care of the rest.
+
+
+Where to go next
+----------------
+
+Through these initial three tutorials, you learned the fundamental concepts.
+This will help you start using Ploomber in your data projects. There are other
+important features that can help you improve your development workflow, check
+out the :doc:`../user-guide/index` to learn more advanced techniques.

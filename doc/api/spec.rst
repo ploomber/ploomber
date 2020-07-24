@@ -115,7 +115,7 @@ Notes
     # NOTE: All remaining values are passed to the task constructor as keyword arguments
 
 
-Click here to go to :doc:`faq_index/`.
+Click here to go to :doc:`../faq_index/`.
 
 Upstream dependencies
 ---------------------
@@ -186,7 +186,7 @@ To disable it:
     jupyter serverextension disable ploomber
 
 
-`Click here for documentation on Jupyter extensions <https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/Distributing%20Jupyter%20Extensions%20as%20Python%20Packages.html#Enable-a-Server-Extension`_
+`Click here for documentation on Jupyter extensions <https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/Distributing%20Jupyter%20Extensions%20as%20Python%20Packages.html#Enable-a-Server-Extension>`_
 
 
 SQL scripts details
