@@ -129,17 +129,17 @@
       <div class="container">
         <!-- Example row of columns -->
         <div class="row">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <h2>Simple</h2>
             <ol>
               <li>List your pipeline scripts in a <code>pipeline.yaml</code> file</li>
-              <li>Inside each script, declare an <code>upstream</code> variable to state dependencies (other scripts)
+              <li>Inside each script, state dependencies (other scripts) via an <code>upstream</code> variable
               </li>
-              <li>Declare a <code>product</code> to declare output files (that the next script will use as inputs)</li>
+              <li>Use a <code>product</code> to declare output file(s) that the next script will use as inputs</li>
             </ol>
 
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <h2>Powerful</h2>
             <ol>
               <li>Automates end-to-end-testing
@@ -150,10 +150,19 @@
               <li>Task parallelization</li>
             </ol>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <h2>Integrates with Jupyter</h2>
-            <p>A Jupyter plugin allows your scripts to be rendered as notebooks,
-              a new cell with upstream dependencies is automatically inserted.
+            <p>A Jupyter plugin allows your scripts to be rendered as notebooks
+              in the <code>jupyter notebook</code> app. Once rendered,
+              a new cell with input paths (inferred from your
+              <code>upstream</code> dependencies) is injected.
+            </p>
+
+          </div>
+          <div class="col-md-3">
+            <h2>Polyglot</h2>
+            <p>Python and SQL are officially supported. Other languages can be
+              easily integrated via Jupyter kernels or through shell scripts.
             </p>
 
           </div>
