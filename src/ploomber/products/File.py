@@ -68,8 +68,8 @@ class File(Product):
         (self._path_to_stored_source_code.write_text(json.dumps(metadata)))
 
     def delete_metadata(self):
-        if Path(self._path_to_stored_source_code).exists():
-            os.remove(self._path_to_stored_source_code)
+        if self._path_to_stored_source_code.exists():
+            os.remove(str(self._path_to_stored_source_code))
 
     def exists(self):
         return self._path_to_file.exists()
