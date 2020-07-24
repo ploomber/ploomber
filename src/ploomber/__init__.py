@@ -8,7 +8,7 @@ from ploomber.placeholders.SourceLoader import SourceLoader
 from ploomber.jupyter import _load_jupyter_server_extension
 
 
-__version__ = '0.6.3'
+__version__ = '0.6.4dev'
 
 # Set default logging handler to avoid "No handler found" warnings.
 
