@@ -11,15 +11,15 @@ class AbstractMetadata(abc.ABC):
     If product does not exist, initialize empty metadata, otherwise use
     product.fetch_metadata, and accept it after doing some validations
     """
-
     def __init__(self, product):
         # NOTE: cannot fetch initial metadata here, since product is not
         # rendered on Metadata initialization, we have to do lazy loading
         self._data = None
         self._product = product
 
-        self._logger = logging.getLogger('{}.{}'.format(__name__,
-                                                        type(self).__name__))
+        self._logger = logging.getLogger('{}.{}'.format(
+            __name__,
+            type(self).__name__))
 
     @property
     @abc.abstractmethod
@@ -42,6 +42,12 @@ class AbstractMetadata(abc.ABC):
         pass
 
     @abc.abstractmethod
+    def delete(self):
+        """Delete metadata
+        """
+        pass
+
+    @abc.abstractmethod
     def load(self):
         """Load metadata
         """
@@ -60,8 +66,9 @@ class AbstractMetadata(abc.ABC):
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self._logger = logging.getLogger('{}.{}'.format(__name__,
-                                                        type(self).__name__))
+        self._logger = logging.getLogger('{}.{}'.format(
+            __name__,
+            type(self).__name__))
 
 
 class Metadata(AbstractMetadata):
@@ -90,9 +97,9 @@ class Metadata(AbstractMetadata):
             metadata_fetched = self._product.fetch_metadata()
 
             if metadata_fetched is None:
-                self._logger.debug('fetch_metadata for product %s returned '
-                                   'None',
-                                   self._product)
+                self._logger.debug(
+                    'fetch_metadata for product %s returned '
+                    'None', self._product)
                 metadata = dict(timestamp=None, stored_source_code=None)
             else:
                 # FIXME: we need to further validate this, need to check
@@ -110,12 +117,17 @@ class Metadata(AbstractMetadata):
         self.data['stored_source_code'] = source_code
 
         kwargs = callback_check(self._product.prepare_metadata,
-                                available={'metadata': self.data,
-                                           'product': self._product})
+                                available={
+                                    'metadata': self.data,
+                                    'product': self._product
+                                })
 
         data = self._product.prepare_metadata(**kwargs)
 
         self._product.save_metadata(data)
+
+    def delete(self):
+        self._product.delete_metadata()
 
     def __getitem__(self, key):
         return self._data[key]
@@ -124,7 +136,6 @@ class Metadata(AbstractMetadata):
 class MetadataCollection(AbstractMetadata):
     """Metadata class used for MetaProduct
     """
-
     def __init__(self, products):
         self._products = products
 
@@ -133,9 +144,10 @@ class MetadataCollection(AbstractMetadata):
         """When the product was originally created
         """
         # TODO: refactor, all products should have the same metadata
-        timestamps = [p.metadata.timestamp
-                      for p in self._products
-                      if p.metadata.timestamp is not None]
+        timestamps = [
+            p.metadata.timestamp for p in self._products
+            if p.metadata.timestamp is not None
+        ]
         if timestamps:
             return max(timestamps)
         else:
@@ -145,15 +157,16 @@ class MetadataCollection(AbstractMetadata):
     def stored_source_code(self):
         """Source code that generated the product
         """
-        stored_source_code = set([p.metadata.stored_source_code
-                                  for p in self._products
-                                  if p.metadata.stored_source_code
-                                  is not None])
+        stored_source_code = set([
+            p.metadata.stored_source_code for p in self._products
+            if p.metadata.stored_source_code is not None
+        ])
         if len(stored_source_code):
-            warnings.warn('Stored source codes for products {} '
-                          'are different, but they are part of the same '
-                          'MetaProduct, returning stored_source_code as None'
-                          .format(self._products))
+            warnings.warn(
+                'Stored source codes for products {} '
+                'are different, but they are part of the same '
+                'MetaProduct, returning stored_source_code as None'.format(
+                    self._products))
             return None
         else:
             return list(stored_source_code)[0]
@@ -163,6 +176,10 @@ class MetadataCollection(AbstractMetadata):
         """
         for p in self._products:
             p.metadata.update(source_code)
+
+    def delete(self):
+        for p in self._products:
+            p.delete_metadata()
 
     def load(self):
         for p in self._products:
@@ -175,7 +192,6 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
     """
     Metadata for Link tasks (always up-to-date)
     """
-
     def __init__(self):
         pass
 
@@ -191,6 +207,9 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
         pass
 
     def update(self, source_code):
+        pass
+
+    def delete(self):
         pass
 
     # TODO: add getitem

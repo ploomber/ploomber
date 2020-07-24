@@ -20,7 +20,6 @@ class File(Product):
         The path to the file (or directory), can contain placeholders
         (e.g. {{placeholder}})
     """
-
     def _init_identifier(self, identifier):
         if not isinstance(identifier, (str, Path)):
             raise TypeError('File must be initialized with a str or a '
@@ -66,8 +65,11 @@ class File(Product):
             return empty
 
     def save_metadata(self, metadata):
-        (self._path_to_stored_source_code
-            .write_text(json.dumps(metadata)))
+        (self._path_to_stored_source_code.write_text(json.dumps(metadata)))
+
+    def delete_metadata(self):
+        if Path(self._path_to_stored_source_code).exists():
+            os.remove(self._path_to_stored_source_code)
 
     def exists(self):
         return self._path_to_file.exists()

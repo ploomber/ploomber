@@ -49,3 +49,14 @@ def test_suffix():
 
 def test_suffix_when_tags_present():
     assert File('{{some}}/{{file}}.txt').suffix == '.txt'
+
+
+def test_delete_non_existing_metadata(tmp_directory):
+    File('some_file').delete_metadata()
+    assert not Path('some_file.source').exists()
+
+
+def test_delete_metadata(tmp_directory):
+    Path('some_file.source').touch()
+    File('some_file').delete_metadata()
+    assert not Path('some_file.source').exists()

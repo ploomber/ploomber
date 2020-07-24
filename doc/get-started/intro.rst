@@ -92,7 +92,7 @@ extracting the product from the upstream task.
    :alt: injected-cell
 
 
-Via a Jupyter plugin, your scripts are rendered as notebooks. The cell
+Via a Jupyter plug-in, your scripts are rendered as notebooks. The cell
 injection process happens as well, this enables interactive sessions that
 exactly reproduce pipeline runtime conditions.
 

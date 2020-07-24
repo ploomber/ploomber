@@ -32,7 +32,7 @@ Let's get started, to create a project with basic structure:
 You'll be asked a few questions, for this tutorial answer the following:
 
 1. Project name: ``project``
-2. Do you need to connnect to a database? ``n``
+2. Do you need to connect to a database? ``n``
 3. Do you want to use conda? ``n``
 
 Let's take a look at the generate files, you can do so by clicking in the
