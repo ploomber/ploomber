@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.6.3dev
---------
+0.6.3 (2020-07-24)
+-------------------
 * Adding `--log` option to CLI commands
 * Fixes a bug that caused the `dag` variable not to be exposed during interactive sessions
 * Fixes `ploomber task` forced run
