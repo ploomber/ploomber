@@ -23,7 +23,6 @@ class PloomberContentsManagerTestCase(TestContentsManager):
 
     Docs: https://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html#testing
     """
-
     def setUp(self):
         self._temp_dir = TemporaryDirectory()
         self.td = self._temp_dir.name
@@ -31,6 +30,7 @@ class PloomberContentsManagerTestCase(TestContentsManager):
 
 
 # the following tests check our custom logic
+
 
 def get_injected_cell(nb):
     injected = None
@@ -53,8 +53,12 @@ def test_injects_cell_if_file_in_dag(tmp_nbs):
 
     assert injected
 
-    upstream_expected = {"clean": {"nb": resolve("output/clean.ipynb"),
-                                   "data": resolve("output/clean.csv")}}
+    upstream_expected = {
+        "clean": {
+            "nb": resolve("output/clean.ipynb"),
+            "data": resolve("output/clean.csv")
+        }
+    }
     product_expected = resolve("output/plot.ipynb")
 
     upstream = None
@@ -69,6 +73,7 @@ def test_injects_cell_if_file_in_dag(tmp_nbs):
 
     assert upstream_expected == eval(upstream)
     assert product_expected == eval(product)
+
 
 def test_injects_cell_even_if_pipeline_yaml_in_subdirectory(tmp_nbs):
     os.chdir('..')
@@ -85,6 +90,18 @@ def test_removes_injected_cell(tmp_nbs):
 
     nb = jupytext.read('plot.py')
     assert get_injected_cell(nb) is None
+
+
+def test_deletes_metadata_on_save(tmp_nbs):
+    Path('output').mkdir()
+    metadata = Path('output/plot.ipynb.source')
+    metadata.touch()
+
+    cm = PloomberContentsManager()
+    model = cm.get('plot.py')
+    cm.save(model, path='/plot.py')
+
+    assert not metadata.exists()
 
 
 def test_skips_if_file_not_in_dag(tmp_nbs):

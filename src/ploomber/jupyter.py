@@ -8,8 +8,7 @@ from pathlib import Path
 
 from jupytext.contentsmanager import TextFileContentsManager
 
-from ploomber.sources.NotebookSource import (_cleanup_rendered_nb,
-                                             inject_cell)
+from ploomber.sources.NotebookSource import (_cleanup_rendered_nb, inject_cell)
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.exceptions import DAGSpecInitializationError
 
@@ -44,7 +43,6 @@ class PloomberContentsManager(TextFileContentsManager):
     are part of a pipeline defined in pipeline.yaml, these injected parameters
     are deleted before saving the file
     """
-
     def load_dag(self, starting_dir=None):
         if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
             self.log.info('[Ploomber] Loading dag...')
@@ -69,13 +67,16 @@ class PloomberContentsManager(TextFileContentsManager):
 
                     tuples = [(resolve_path(path_parent, t.source.loc), t)
                               for t in self.dag.values()]
-                    self.dag_mapping = {t[0]: t[1]
-                                        for t in tuples if t[0] is not None}
+                    self.dag_mapping = {
+                        t[0]: t[1]
+                        for t in tuples if t[0] is not None
+                    }
 
                     self.log.info('[Ploomber] Initialized dag from '
-                                  'pipeline.yaml at'': {}'.format(path))
-                    self.log.info('[Ploomber] Pipeline mapping: {}'
-                                  .format(pprint(self.dag_mapping)))
+                                  'pipeline.yaml at'
+                                  ': {}'.format(path))
+                    self.log.info('[Ploomber] Pipeline mapping: {}'.format(
+                        pprint(self.dag_mapping)))
                 else:
                     # no pipeline.yaml found...
                     self.log.info('[Ploomber] No pipeline.yaml found, '
@@ -131,9 +132,13 @@ class PloomberContentsManager(TextFileContentsManager):
         # not sure what's the difference between model['path'] and path
         # but path has leading "/", _model_in_dag strips it
         if self._model_in_dag(model, path):
-            self.log.info('[Ploomber] Cleaning up injected cell in {}...'
-                          .format(model.get('name') or ''))
+            self.log.info(
+                '[Ploomber] Cleaning up injected cell in {}...'.format(
+                    model.get('name') or ''))
             model['content'] = _cleanup_rendered_nb(model['content'])
+
+            self.log.info("[Ploomber] Deleting product's metadata...")
+            self.dag_mapping[model['path']].product.metadata.delete()
 
         return super(PloomberContentsManager, self).save(model, path)
 
@@ -152,13 +157,14 @@ class PloomberContentsManager(TextFileContentsManager):
                 if path in self.dag_mapping:
                     # NOTE: not sure why sometimes the model comes with a
                     # names and sometimes it doesn't
-                    self.log.info('[Ploomber] {} is part of the pipeline... '
-                                  .format(model.get('name') or ''))
+                    self.log.info(
+                        '[Ploomber] {} is part of the pipeline... '.format(
+                            model.get('name') or ''))
                     model_in_dag = True
                 else:
                     self.log.info('[Ploomber] {} is not part of the pipeline, '
-                                  'skipping...'
-                                  .format(model.get('name') or ''))
+                                  'skipping...'.format(
+                                      model.get('name') or ''))
 
         return model_in_dag
 
@@ -171,10 +177,8 @@ def _load_jupyter_server_extension(app):
     https://github.com/mwouts/jupytext/blob/bc1b15935e096c280b6630f45e65c331f04f7d9c/jupytext/__init__.py#L19
     """
     if isinstance(app.contents_manager_class, PloomberContentsManager):
-        app.log.info(
-            "[Ploomber] NotebookApp.contents_manager_class "
-            "is a subclass of PloomberContentsManager already - OK"
-        )
+        app.log.info("[Ploomber] NotebookApp.contents_manager_class "
+                     "is a subclass of PloomberContentsManager already - OK")
         return
 
     # The server extension call is too late!
