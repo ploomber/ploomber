@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+0.6.3dev
+--------
+* Adding `--log` option to CLI commands
+* Fixes a bug that caused the `dag` variable not to be exposed during interactive sessions
+* Fixes `ploomber task` forced run
+* Adds SQL pipeline tutorial to get started docs
+* Minor CSS changes to docs
+
 0.6.2 (2020-07-22)
 -------------------
 * Support for `env.yaml` in `pipeline.yaml`
@@ -18,7 +26,7 @@ CHANGELOG
 0.6 (2020-07-08)
 ----------------
 * Adds Jupyter notebook extension to inject parameters when opening a task
-* Improved CLI `ploombe new`, `ploombe add` and `ploombe entry`
+* Improved CLI `ploomber new`, `ploomber add` and `ploomber entry`
 * Spec API documentation additions
 * Support for `on_finish`, `on_failure` and `on_render` hooks in spec API
 * Improved validation for DAG specs
