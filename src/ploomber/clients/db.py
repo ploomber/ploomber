@@ -199,27 +199,3 @@ class SQLAlchemyClient(Client):
 
     def __repr__(self):
         return '{}({})'.format(type(self).__name__, self._uri_safe)
-
-
-class DrillClient(Client):
-    def __init__(self, params=dict(host='localhost', port=8047)):
-        self.params = params
-        self._set_logger()
-        self._connection = None
-
-    @property
-    def connection(self):
-        from pydrill.client import PyDrill
-
-        if self._connection is None:
-            self._connection = PyDrill(**self.params)
-
-        return self._connection
-
-    def execute(self, code):
-        """Run code
-        """
-        return self.connection.query(code)
-
-    def close(self):
-        pass
