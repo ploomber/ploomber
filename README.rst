@@ -14,6 +14,9 @@ Ploomber
 .. image:: https://badge.fury.io/py/ploomber.svg
   :target: https://badge.fury.io/py/ploomber
 
+.. image:: https://coveralls.io/repos/github/ploomber/ploomber/badge.svg?branch=master
+  :target: https://coveralls.io/github/ploomber/ploomber?branch=master
+
 
 List your pipeline tasks in a ``pipeline.yaml`` file, declare which upstream tasks to use as inputs and where to save outputs. Ploomber will propagate inputs to downstream consumers and orchestrate pipeline end-to-end execution.
 
