@@ -19,7 +19,7 @@ def test_interval():
 
 def test_param_grid():
     pg = ParamGrid({'a': [1, 2, 3], 'b': [2, 4, 6]})
-    assert list(pg.zip()) == [{
+    assert sorted(list(pg.zip())) == sorted([{
         'a': 1,
         'b': 2
     }, {
@@ -28,8 +28,8 @@ def test_param_grid():
     }, {
         'a': 3,
         'b': 6
-    }]
-    assert list(pg.product()) == [{
+    }])
+    assert sorted(list(pg.product())) == sorted([{
         'a': 1,
         'b': 2
     }, {
@@ -56,12 +56,12 @@ def test_param_grid():
     }, {
         'a': 3,
         'b': 6
-    }]
+    }])
 
 
 def test_param_grid_w_interval():
     pg = ParamGrid({'a': Interval(0, 10, 2), 'b': [2, 4, 6, 8, 10]})
-    assert list(pg.zip()) == [{
+    assert sorted(list(pg.zip())) == sorted([{
         'a': (0, 2),
         'b': 2
     }, {
@@ -76,4 +76,4 @@ def test_param_grid_w_interval():
     }, {
         'a': (8, 10),
         'b': 10
-    }]
+    }])
