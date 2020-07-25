@@ -26,7 +26,7 @@ def _run_command(path, command):
     return s
 
 
-def one_line_git_summary(path):
+def get_git_summary(path):
     """Get one line git summary"""
     return _run_command(path, 'git show --oneline -s')
 
@@ -66,29 +66,28 @@ def get_version(package_name):
     else:
         parent = str(Path(installation_path).parent)
 
-    return one_line_git_summary(parent)
+    return get_git_summary(parent)
 
 
 def get_diff(path):
     return _run_command(path, "git diff -- . ':(exclude)*.ipynb'")
 
 
-def get_env_metadata(path):
-    git_summary = one_line_git_summary(path)
+def get_git_info(path):
     hash_ = git_hash(path)
-    git_diff = get_diff(path)
-    git_timestamp = get_git_timestamp(path)
     git_branch = current_branch(path)
-
     git_location = git_branch or hash_
 
-    return dict(git_summary=git_summary, git_hash=hash_, git_diff=git_diff,
-                git_timestamp=git_timestamp, git_branch=git_branch,
+    return dict(git_summary=get_git_summary(path),
+                git_hash=hash_,
+                git_diff=get_diff(path),
+                git_timestamp=get_git_timestamp(path),
+                git_branch=git_branch,
                 git_location=git_location)
 
 
 def save_env_metadata(env, path_to_output):
-    summary = one_line_git_summary(env.path.home)
+    summary = get_git_summary(env.path.home)
     hash_ = git_hash(env.path.home)
     diff = get_diff(env.path.home)
 

@@ -167,7 +167,7 @@ def test_expand_git(monkeypatch, cleanup_env):
     def mockreturn(module_path):
         return {'git_location': 'some_version_string'}
 
-    monkeypatch.setattr(repo, 'get_env_metadata', mockreturn)
+    monkeypatch.setattr(repo, 'get_git_info', mockreturn)
 
     env = Env({'_module': 'test_pkg', 'git': '{{git}}'})
     assert env.git == 'some_version_string'

@@ -205,7 +205,7 @@ class EnvironmentExpander:
         if not module:
             raise KeyError('_module key is required to use git placeholder')
 
-        return repo.get_env_metadata(module)['git_location']
+        return repo.get_git_info(module)['git_location']
 
 
 def iterate_nested_dict(d):
