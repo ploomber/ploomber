@@ -50,7 +50,7 @@ In IPython:
 Note: you need to add ``--`` to prevent IPython from parsing your custom args
 
 """
-from ploomber.entry.parsers import _custom_command, CustomParser
+from ploomber.cli.parsers import _custom_command, CustomParser
 
 
 def _main():

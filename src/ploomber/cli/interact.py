@@ -1,5 +1,5 @@
 import subprocess
-from ploomber.entry.parsers import CustomParser
+from ploomber.cli.parsers import CustomParser
 
 
 def main():
@@ -8,6 +8,6 @@ def main():
     args = parser.parse_args()
 
     subprocess.run([
-        'ipython', '-i', '-m', 'ploomber.entry', '--', '--action', 'status',
+        'ipython', '-i', '-m', 'ploomber.cli', '--', '--action', 'status',
         '--entry_point', args.entry_point
     ])

@@ -1,4 +1,4 @@
-from ploomber.entry.parsers import _custom_command, CustomParser
+from ploomber.cli.parsers import _custom_command, CustomParser
 
 
 def main():

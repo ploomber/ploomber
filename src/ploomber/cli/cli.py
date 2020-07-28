@@ -1,4 +1,3 @@
-import subprocess
 import re
 import sys
 from pathlib import Path
@@ -6,7 +5,7 @@ from pathlib import Path
 from jinja2 import Environment, PackageLoader
 import click
 from ploomber import __version__
-from ploomber import entry as entry_module
+from ploomber import cli as cli_module
 from ploomber.spec.DAGSpec import DAGSpec
 
 try:
@@ -154,11 +153,11 @@ def cmd_router():
     cmd_name = sys.argv[1]
 
     custom = {
-        'entry': entry_module.entry._main,
-        'plot': entry_module.plot.main,
-        'task': entry_module.task.main,
-        'report': entry_module.report.main,
-        'interact': entry_module.interact.main,
+        'entry': cli_module.entry._main,
+        'plot': cli_module.plot.main,
+        'task': cli_module.task.main,
+        'report': cli_module.report.main,
+        'interact': cli_module.interact.main,
     }
 
     if cmd_name in custom:

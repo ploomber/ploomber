@@ -6,8 +6,7 @@ from pathlib import Path
 
 import click
 import pytest
-from ploomber.entry import plot, entry, parsers, task, report
-from ploomber import cli
+from ploomber.cli import plot, entry, parsers, task, report, cli
 
 
 def test_complete_case(monkeypatch, tmp_sample_dir):

@@ -5,7 +5,7 @@ import subprocess
 import pytest
 import yaml
 import click
-from ploomber.cli import _new, _add, _is_valid_name
+from ploomber.cli.cli import _new, _add, _is_valid_name
 
 
 @pytest.mark.parametrize('name,valid',
