@@ -47,9 +47,8 @@ class CustomParser(argparse.ArgumentParser):
         except ValueError:
             pass
 
-        return self.DEFAULT_ENTRY_POINT if index is None else sys.argv[index + 1]
-
-
+        return self.DEFAULT_ENTRY_POINT if index is None else sys.argv[index +
+                                                                       1]
 
     def add_argument(self, *args, **kwargs):
         if not self.finished_static_api:
@@ -257,10 +256,8 @@ def _custom_command(parser):
     Returns a dag and the parsed args
     """
     entry_point = parser.parse_entry_point_value()
-    dag, args = _process_entry_point(parser, entry_point,
-                                        parser.static_args)
+    dag, args = _process_entry_point(parser, entry_point, parser.static_args)
     return dag, args
-
 
 
 def _flatten_dict(d, prefix=''):

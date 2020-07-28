@@ -43,13 +43,11 @@ def test_log_enabled(monkeypatch, tmp_sample_dir):
 
 
 def test_interactive_session(monkeypatch, tmp_sample_dir):
-    res = subprocess.run([
-        'ipython', '-i', '-m', 'ploomber.entry', '--', '--entry_point',
-        'test_pkg.entry.with_doc'
-    ],
-                         input=b'type(dag)',
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
+    res = subprocess.run(
+        ['ploomber', 'interact', '--entry_point', 'test_pkg.entry.with_doc'],
+        input=b'type(dag)',
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
     assert 'Out[1]: ploomber.dag.DAG.DAG' in res.stdout.decode()
 
 

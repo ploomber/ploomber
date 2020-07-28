@@ -1,3 +1,4 @@
+import subprocess
 import re
 import sys
 from pathlib import Path
@@ -23,10 +24,6 @@ def _is_valid_name(package_name):
 @click.version_option(version=__version__)
 def cli():
     """Ploomber command line interface.
-
-    To start an nteractive session (use "dag" variable when it starts):
-
-    ipython -i -m ploomber.entry pipeline.yaml -- --action status
     """
     pass
 
@@ -161,6 +158,7 @@ def cmd_router():
         'plot': entry_module.plot.main,
         'task': entry_module.task.main,
         'report': entry_module.report.main,
+        'interact': entry_module.interact.main,
     }
 
     if cmd_name in custom:
@@ -202,5 +200,12 @@ def task():
 @cli.command()
 def report():
     """Make a pipeline report
+    """
+    pass
+
+
+@cli.command()
+def interact():
+    """Start an interactive session (use the "dag" variable)
     """
     pass
