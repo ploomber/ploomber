@@ -3,7 +3,6 @@ from ploomber.entry.parsers import _custom_command, CustomParser
 
 def main():
     parser = CustomParser(description='Make a pipeline report')
-    parser.add_argument('entry_point', help='Entry point (DAG)')
     parser.add_argument(
         '--output',
         '-o',

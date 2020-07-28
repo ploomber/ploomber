@@ -56,7 +56,6 @@ from ploomber.entry.parsers import _custom_command, CustomParser
 def _main():
     parser = CustomParser(description='Call an entry point '
                           '(pipeline.yaml or dotted path to factory)')
-    parser.add_argument('entry_point', help='Entry point (DAG)')
     parser.add_argument('--action',
                         help='Action to execute, defaults to '
                         'build',

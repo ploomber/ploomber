@@ -40,7 +40,7 @@ def new():
 
 @cli.command()
 def add():
-    """Create soource files tasks registered in pipeline.yaml
+    """Create source files tasks registered in pipeline.yaml
     """
     _add()
 

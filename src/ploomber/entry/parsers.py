@@ -16,6 +16,8 @@ class CustomParser(argparse.ArgumentParser):
     """
     A custom ArgumentParser that keeps track of arguments
     """
+    DEFAULT_ENTRY_POINT = 'pipeline.yaml'
+
     def __init__(self, *args, **kwargs):
         self.static_args = []
         self.finished_static_api = False
@@ -26,6 +28,28 @@ class CustomParser(argparse.ArgumentParser):
                           help='Enables logging to stdout at the '
                           'specified level',
                           default=None)
+
+        self.add_argument('--entry_point',
+                          '-e',
+                          help='Entry point(DAG), defaults to pipeline.yaml',
+                          default=self.DEFAULT_ENTRY_POINT)
+
+    def parse_entry_point_value(self):
+        index = None
+
+        try:
+            index = sys.argv.index('--entry_point')
+        except ValueError:
+            pass
+
+        try:
+            index = sys.argv.index('-e')
+        except ValueError:
+            pass
+
+        return self.DEFAULT_ENTRY_POINT if index is None else sys.argv[index + 1]
+
+
 
     def add_argument(self, *args, **kwargs):
         if not self.finished_static_api:
@@ -232,21 +256,11 @@ def _custom_command(parser):
     Parses an entry point, adding arguments by extracting them from the env.
     Returns a dag and the parsed args
     """
-    # we add args dynamically based on positional arguments, we need
-    # to know how many we got
-    n_positional = len([arg for arg in sys.argv if not arg.startswith('-')])
+    entry_point = parser.parse_entry_point_value()
+    dag, args = _process_entry_point(parser, entry_point,
+                                        parser.static_args)
+    return dag, args
 
-    # this happens when calling python -m ploomber.entry
-    if n_positional <= 1:
-        # just parse args, this is needed to make --help work
-        parser.parse_args()
-    # we got an actual positional argument parse entry_point
-    else:
-        entry_point = sys.argv[1]
-
-        dag, args = _process_entry_point(parser, entry_point,
-                                         parser.static_args)
-        return dag, args
 
 
 def _flatten_dict(d, prefix=''):

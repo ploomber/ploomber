@@ -3,7 +3,6 @@ from ploomber.entry.parsers import _custom_command, CustomParser
 
 def main():
     parser = CustomParser(description='Get task information')
-    parser.add_argument('entry_point', help='Entry point (DAG)')
     parser.add_argument('task_name')
     parser.add_argument('--source',
                         '-s',
