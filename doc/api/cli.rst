@@ -8,27 +8,108 @@ This document summarizes commonly used commands, to get full details, execute
 working directory, if your pipeline file is in a different location use the
 ``--entry_point/-e`` option.
 
+When applicable, we use this sample pipeline to demonstrate which tasks will
+be executed after issuing a given command:
+
+.. raw:: html
+
+    <div class="mermaid">
+    graph LR
+        A --> B1 --> C --> D
+        A --> B2 --> C
+
+        class A outdated
+        class B1 outdated
+        class B2 uptodate
+        class C outdated
+        class D outdated
+    </div>
+
+Assume green tasks are up-to-date, yellow ones are outdated. Executed tasks
+are shown in blue and skipped tasks are shown in white.
+
 Build pipeline
 **************
 
+Execute your pipeline end-to-end and speed it up by skipping tasks whose
+source code has not changed.
+
+
 .. code-block:: console
 
-    ploomber entry
+    ploomber build
 
-Building your pipeline means executing your pipeline end-to-end but speed it up
-by skipping tasks whose source code has not changed.
+.. raw:: html
 
+    <div class="mermaid">
+    graph LR
+        A --> B1 --> C --> D
+        A --> B2 --> C
+
+        class A executed
+        class B1 executed
+        class B2 skipped
+        class C executed
+        class D executed
+    </div>
+
+(Skips ``B2`` because it's up-to-date)
+
+
+Build pipeline (forced)
+***********************
+
+.. code-block:: console
+
+    ploomber build --force
+
+
+.. raw:: html
+
+    <div class="mermaid">
+    graph LR
+        A --> B1 --> C --> D
+        A --> B2 --> C
+
+        class A executed
+        class B1 executed
+        class B2 executed
+        class C executed
+        class D executed
+    </div>
 
 Build pipeline partially
 ************************
 
+
 .. code-block:: console
 
-    ploomber entry --partially task_name
+    ploomber build --partially C
 
 
-Builds your pipeline until it reaches task named ``task_name``.
+Builds your pipeline until it reaches task named ``C``.
 
+.. raw:: html
+
+    <div class="mermaid">
+    graph LR
+        A --> B1 --> C --> D
+        A --> B2 --> C
+
+        class A executed
+        class B1 executed
+        class B2 skipped
+        class C executed
+        class D skipped
+    </div>
+
+
+(Skips ``B2`` because it's up-to-date)
+
+(Skips ``D`` because it's not needed to build ``C``)
+
+
+To force execution of tasks regardless of status use the ``--force/-f`` option.
 
 Plot
 ****
@@ -55,13 +136,26 @@ includes the pipeline plot and a table with a summary for each task.
 Build a single task
 *******************
 
+.. raw:: html
+
+    <div class="mermaid">
+    graph LR
+        A --> B1 --> C --> D
+        A --> B2 --> C
+
+        class A skipped
+        class B1 skipped
+        class B2 skipped
+        class C executed
+        class D skipped
+    </div>
+
 .. code-block:: console
 
-    ploomber task task_name --build
+    ploomber task C --build
 
 
-Optionally add ``--force`` to force execution (ignore up-to-date status).
-
+To force execution regardless of status use the ``--force/-f`` option.
 
 Get task status
 ***************

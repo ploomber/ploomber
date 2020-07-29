@@ -1,4 +1,4 @@
-from ploomber.cli.entry import _main
+from ploomber.cli.build import main
 
 if __name__ == '__main__':
-    dag = _main()
+    dag = main()

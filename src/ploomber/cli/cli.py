@@ -153,7 +153,7 @@ def cmd_router():
     cmd_name = sys.argv[1]
 
     custom = {
-        'entry': cli_module.entry._main,
+        'build': cli_module.build.main,
         'plot': cli_module.plot.main,
         'task': cli_module.task.main,
         'report': cli_module.report.main,
@@ -176,8 +176,8 @@ def cmd_router():
 # the commands below are handled by the router, thy are just here so they
 # show up when doing ploomber --help
 @cli.command()
-def entry():
-    """Call entry points
+def build():
+    """Build pipeline
     """
     pass
 

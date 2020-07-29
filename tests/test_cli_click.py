@@ -22,7 +22,7 @@ def test_ploomber_new(answer, tmp_directory, monkeypatch):
     monkeypatch.setattr(click, 'prompt', lambda x, type: 'my-project')
     _new()
     os.chdir('my-project')
-    assert not subprocess.call(['ploomber', 'entry'])
+    assert not subprocess.call(['ploomber', 'build'])
 
 
 @pytest.mark.parametrize(
