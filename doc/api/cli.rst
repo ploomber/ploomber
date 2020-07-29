@@ -1,7 +1,7 @@
 Command line interface
 ======================
 
-This document summarizes commonly used commands, to get full details, execute
+This document summarizes commonly used commands. To get full details, execute
 ``ploomber --help`` or ``ploomber {command_name} --help``.
 
 **Note:** All commands assume there is a ``pipeline.yaml`` file in the current
@@ -27,18 +27,19 @@ be executed after issuing a given command:
 
 Assume yellow tasks are outdated and green tasks are up-to-date.
 
-Executed tasks are shown in blue and skipped tasks are shown in white.
+Executed tasks are shown in blue and skipped tasks are shown in white in
+diagrams below.
 
 Build pipeline
 **************
 
-Execute your pipeline end-to-end and speed it up by skipping tasks whose
-source code has not changed.
-
-
 .. code-block:: console
 
     ploomber build
+
+
+Execute your pipeline end-to-end and speed it up by skipping tasks whose
+source code has not changed.
 
 .. raw:: html
 
@@ -64,6 +65,8 @@ Build pipeline (forced)
 
     ploomber build --force
 
+
+Execute all tasks regardless of status.
 
 .. raw:: html
 
@@ -120,7 +123,7 @@ Plot
     ploomber plot
 
 
-Will create a plot and save it in a ``pipeline.png`` file.
+Create a pipeline plot and save it in a ``pipeline.png`` file.
 
 Status
 ******
@@ -130,7 +133,7 @@ Status
     ploomber status
 
 
-Shows a table with pipeline status. For each task: name, last execution time,
+Show a table with pipeline status. For each task: name, last execution time,
 status, product, docstring (first line) and file location.
 
 Report
@@ -141,7 +144,7 @@ Report
     ploomber report
 
 
-Will create an HTML report and save it in a ``pipeline.html`` file. The file
+Create an HTML report and save it in a ``pipeline.html`` file. The file
 includes the pipeline plot and a table with a summary for each task.
 
 
@@ -201,7 +204,8 @@ Interactive sessions
 ********************
 
 Interactive sessions are a great way to develop your pipeline. Everything you
-can do with the commands above, you can do it with an interactive session.
+can do with the commands above (and more), you can do it with an interactive
+session.
 
 To start an interactive session:
 
@@ -223,7 +227,7 @@ You can also interact with tasks, the specific API depends on which type of
 task you are dealing with, see the :py:mod:`ploomber.tasks` documentation for
 more information.
 
-If you are working with Python scripts, you an start a line by line debugging
+If you are working with Python scripts, you can start a line by line debugging
 session:
 
 .. code-block:: python
