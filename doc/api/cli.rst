@@ -122,6 +122,17 @@ Plot
 
 Will create a plot and save it in a ``pipeline.png`` file.
 
+Status
+******
+
+.. code-block:: console
+
+    ploomber status
+
+
+Shows a table with pipeline status. For each task: name, last execution time,
+status, product, docstring (first line) and file location.
+
 Report
 ******
 

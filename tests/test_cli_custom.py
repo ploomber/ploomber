@@ -6,15 +6,19 @@ from pathlib import Path
 
 import click
 import pytest
-from ploomber.cli import plot, build, parsers, task, report, cli
+from ploomber.cli import plot, build, parsers, task, report, cli, status
 
 
-def test_complete_case(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv', [
-        'python', '--entry-point', 'test_pkg.entry.with_doc', '--action',
-        'build'
-    ])
+def test_build(monkeypatch, tmp_sample_dir):
+    monkeypatch.setattr(sys, 'argv',
+                        ['python', '--entry-point', 'test_pkg.entry.with_doc'])
     build.main()
+
+
+def test_status(monkeypatch, tmp_sample_dir):
+    monkeypatch.setattr(sys, 'argv',
+                        ['python', '--entry-point', 'test_pkg.entry.with_doc'])
+    status.main()
 
 
 @pytest.mark.parametrize(
@@ -35,8 +39,7 @@ def test_report(monkeypatch, tmp_sample_dir):
 
 def test_log_enabled(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
-        'python', '--entry-point', 'test_pkg.entry.with_doc', '--action',
-        'build', '--log', 'INFO'
+        'python', '--entry-point', 'test_pkg.entry.with_doc', '--log', 'INFO'
     ])
     build.main()
 
@@ -52,40 +55,36 @@ def test_interactive_session(monkeypatch, tmp_sample_dir):
 
 def test_replace_env_value(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
-        'python', '--entry-point', 'test_pkg.entry.with_doc', '--action',
-        'build', '--env__path__data', '/another/path'
+        'python', '--entry-point', 'test_pkg.entry.with_doc',
+        '--env__path__data', '/another/path'
     ])
     build.main()
 
 
 def test_w_param(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
-        'python', '--entry-point', 'test_pkg.entry.with_param', '--action',
-        'build', 'some_value_for_param'
+        'python', '--entry-point', 'test_pkg.entry.with_param',
+        'some_value_for_param'
     ])
     build.main()
 
 
 def test_no_doc(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv', [
-        'python', '--entry-point', 'test_pkg.entry.no_doc', '--action', 'build'
-    ])
+    monkeypatch.setattr(sys, 'argv',
+                        ['python', '--entry-point', 'test_pkg.entry.no_doc'])
     build.main()
 
 
 def test_incomplete_doc(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv', [
-        'python', '--entry-point', 'test_pkg.entry.incomplete_doc', '--action',
-        'build'
-    ])
+    monkeypatch.setattr(
+        sys, 'argv',
+        ['python', '--entry-point', 'test_pkg.entry.incomplete_doc'])
     build.main()
 
 
 def test_invalid_doc(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv', [
-        'python', '--entry-point', 'test_pkg.entry.invalid_doc', '--action',
-        'build'
-    ])
+    monkeypatch.setattr(
+        sys, 'argv', ['python', '--entry-point', 'test_pkg.entry.invalid_doc'])
     build.main()
 
 
@@ -115,10 +114,9 @@ def test_invalid_function(monkeypatch):
 
 
 def test_undecorated_function(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv', [
-        'python', '--entry-point', 'test_pkg.entry.plain_function', '--action',
-        'build'
-    ])
+    monkeypatch.setattr(
+        sys, 'argv',
+        ['python', '--entry-point', 'test_pkg.entry.plain_function'])
 
     build.main()
 
@@ -126,7 +124,7 @@ def test_undecorated_function(monkeypatch, tmp_sample_dir):
 def test_undecorated_function_w_param(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
         'python', '--entry-point', 'test_pkg.entry.plain_function_w_param',
-        '--action', 'build', 'some_value_for_param'
+        'some_value_for_param'
     ])
 
     build.main()

@@ -158,6 +158,7 @@ def cmd_router():
         'task': cli_module.task.main,
         'report': cli_module.report.main,
         'interact': cli_module.interact.main,
+        'status': cli_module.status.main,
     }
 
     if cmd_name in custom:
@@ -178,6 +179,13 @@ def cmd_router():
 @cli.command()
 def build():
     """Build pipeline
+    """
+    pass
+
+
+@cli.command()
+def status():
+    """Show pipeline status
     """
     pass
 

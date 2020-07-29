@@ -8,6 +8,6 @@ def main():
     args = parser.parse_args()
 
     subprocess.run([
-        'ipython', '-i', '-m', 'ploomber.cli', '--', '--action', 'status',
-        '--entry-point', args.entry_point
+        'ipython', '-i', '-m', 'ploomber.cli', '--', '--entry-point',
+        args.entry_point
     ])

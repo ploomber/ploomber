@@ -1,20 +1,14 @@
 from ploomber.cli.parsers import _custom_command, CustomParser
 
 
-def main():
-    parser = CustomParser(description='Call an entry point '
-                          '(pipeline.yaml or dotted path to factory)')
-    parser.add_argument('--action',
-                        '-a',
-                        help='Action to execute, defaults to '
-                        'build',
-                        default='build')
+# this parameter is only set to True when calling "ploomber interactive"
+def main(render_only=False):
+    parser = CustomParser(description='Build pipeline')
     parser.add_argument('--force',
                         '-f',
                         help='Force execution by ignoring status',
                         action='store_true',
                         default=False)
-    # TODO: should ignore action
     parser.add_argument('--partially',
                         '-p',
                         help='Build a pipeline partially until certain task',
@@ -22,11 +16,14 @@ def main():
 
     dag, args = _custom_command(parser)
 
-    kwargs = {'force': args.force}
-
-    if args.partially:
-        dag.build_partially(args.partially, **kwargs)
+    if render_only:
+        dag.render()
     else:
-        print(getattr(dag, args.action)(**kwargs))
+        if args.partially:
+            report = dag.build_partially(args.partially, force=args.force)
+        else:
+            report = dag.build(force=args.force)
+
+        print(report)
 
     return dag
