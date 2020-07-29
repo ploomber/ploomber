@@ -10,3 +10,4 @@ def main():
         default='pipeline.html')
     dag, args = _custom_command(parser)
     dag.to_markup(path=args.output)
+    print('Report saved at:', args.output)

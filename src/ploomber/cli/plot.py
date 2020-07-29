@@ -10,3 +10,4 @@ def main():
         default='pipeline.png')
     dag, args = _custom_command(parser)
     dag.plot(output=args.output)
+    print('Plot saved at:', args.output)
