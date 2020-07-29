@@ -9,5 +9,5 @@ def main():
 
     subprocess.run([
         'ipython', '-i', '-m', 'ploomber.cli', '--', '--action', 'status',
-        '--entry_point', args.entry_point
+        '--entry-point', args.entry_point
     ])

@@ -12,6 +12,19 @@ from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.env.EnvDict import EnvDict
 
 
+def process_arg(s):
+    clean = None
+
+    if s.startswith('--'):
+        clean = s[2:]
+    elif s.startswith('-'):
+        clean = s[1:]
+    else:
+        clean = s
+
+    return clean.replace('-', '_')
+
+
 class CustomParser(argparse.ArgumentParser):
     """
     A custom ArgumentParser that keeps track of arguments
@@ -29,7 +42,7 @@ class CustomParser(argparse.ArgumentParser):
                           'specified level',
                           default=None)
 
-        self.add_argument('--entry_point',
+        self.add_argument('--entry-point',
                           '-e',
                           help='Entry point(DAG), defaults to pipeline.yaml',
                           default=self.DEFAULT_ENTRY_POINT)
@@ -38,7 +51,7 @@ class CustomParser(argparse.ArgumentParser):
         index = None
 
         try:
-            index = sys.argv.index('--entry_point')
+            index = sys.argv.index('--entry-point')
         except ValueError:
             pass
 
@@ -52,7 +65,7 @@ class CustomParser(argparse.ArgumentParser):
 
     def add_argument(self, *args, **kwargs):
         if not self.finished_static_api:
-            self.static_args.extend([arg.replace('-', '') for arg in args])
+            self.static_args.extend([process_arg(arg) for arg in args])
         return super().add_argument(*args, **kwargs)
 
     def done_with_static_api(self):

@@ -6,7 +6,7 @@ This document summarizes commonly used commands, to get full details, execute
 
 **Note:** All commands assume there is a ``pipeline.yaml`` file in the current
 working directory, if your pipeline file is in a different location use the
-``--entry_point/-e`` option.
+``--entry-point/-e`` option.
 
 When applicable, we use this sample pipeline to demonstrate which tasks will
 be executed after issuing a given command:
@@ -25,8 +25,9 @@ be executed after issuing a given command:
         class D outdated
     </div>
 
-Assume green tasks are up-to-date, yellow ones are outdated. Executed tasks
-are shown in blue and skipped tasks are shown in white.
+Assume yellow tasks are outdated and green tasks are up-to-date.
+
+Executed tasks are shown in blue and skipped tasks are shown in white.
 
 Build pipeline
 **************
