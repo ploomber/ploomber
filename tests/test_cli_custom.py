@@ -175,15 +175,16 @@ def test_run_spec(custom, monkeypatch, tmp_directory):
     build.main()
 
 
-@pytest.mark.parametrize('custom',
-                         ['--source', '--build', '--force', '--status'])
+@pytest.mark.parametrize(
+    'custom', [[], ['--source'], ['--source', '--build'], ['--force'],
+               ['--force', '--build'], ['--status'], ['--status', '--build']])
 def test_task(custom, monkeypatch, tmp_directory):
     monkeypatch.setattr(click, 'confirm', lambda text: False)
     monkeypatch.setattr(click, 'prompt', lambda text, type: 'my-project')
     cli._new()
     os.chdir('my-project')
 
-    args = ['task', '--entry-point', 'pipeline.yaml', 'raw'] + [custom]
+    args = ['task', '--entry-point', 'pipeline.yaml', 'raw'] + custom
     monkeypatch.setattr(sys, 'argv', args)
     task.main()
 

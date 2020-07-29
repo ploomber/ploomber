@@ -153,7 +153,7 @@ Build a single task
 
 .. code-block:: console
 
-    ploomber task C --build
+    ploomber task C
 
 
 To force execution regardless of status use the ``--force/-f`` option.
@@ -166,6 +166,8 @@ Get task status
     ploomber task task_name --status
 
 
+If you also want to build the task, you need to explicitly pass ``--build``.
+
 Task source code
 ****************
 
@@ -173,6 +175,8 @@ Task source code
 
     ploomber task task_name --source
 
+
+If you also want to build the task, you need to explicitly pass ``--build``.
 
 Create new project
 ******************
