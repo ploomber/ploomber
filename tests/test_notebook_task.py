@@ -3,12 +3,49 @@ from pathlib import Path
 import pytest
 import jupytext
 import nbformat
+import nbconvert
 
 from ploomber import DAG, DAGConfigurator
 from ploomber.tasks import NotebookRunner
 from ploomber.products import File
 from ploomber.exceptions import DAGBuildError
 from ploomber.tasks import notebook
+
+
+@pytest.mark.parametrize(
+    'path, exporter',
+    [('file.ipynb', None), ('file.pdf', nbconvert.exporters.pdf.PDFExporter),
+     ('file.html', nbconvert.exporters.html.HTMLExporter),
+     ('file.md', nbconvert.exporters.markdown.MarkdownExporter)])
+def test_notebook_converter_get_exporter_from_path(path, exporter):
+    converter = notebook.NotebookConverter(path)
+    assert converter.exporter == exporter
+
+
+@pytest.mark.parametrize(
+    'exporter_name, exporter',
+    [('ipynb', None), ('pdf', nbconvert.exporters.pdf.PDFExporter),
+     ('html', nbconvert.exporters.html.HTMLExporter),
+     ('md', nbconvert.exporters.markdown.MarkdownExporter),
+     ('markdown', nbconvert.exporters.markdown.MarkdownExporter),
+     ('slides', nbconvert.exporters.slides.SlidesExporter)])
+def test_notebook_converter_get_exporter_from_name(exporter_name, exporter):
+    converter = notebook.NotebookConverter('file.ext', exporter_name)
+    assert converter.exporter == exporter
+
+
+@pytest.mark.parametrize('output',
+                         ['file.ipynb', 'file.pdf', 'file.html', 'file.md'])
+def test_notebook_conversion(output, tmp_directory):
+    nb = nbformat.v4.new_notebook()
+    cell = nbformat.v4.new_code_cell('1 + 1')
+    nb.cells.append(cell)
+
+    with open(output, 'w') as f:
+        nbformat.write(nb, f)
+
+    conv = notebook.NotebookConverter(output)
+    conv.convert()
 
 
 def test_can_execute_from_ipynb(path_to_assets, tmp_directory):
@@ -69,8 +106,10 @@ from pathlib import Path
 Path(product['model']).touch()
     """
 
-    product = {'nb': File(Path(tmp_directory, 'out.ipynb')),
-               'model': File(Path(tmp_directory, 'model.pkl'))}
+    product = {
+        'nb': File(Path(tmp_directory, 'out.ipynb')),
+        'model': File(Path(tmp_directory, 'model.pkl'))
+    }
 
     NotebookRunner(code,
                    product=product,
@@ -86,8 +125,10 @@ Path(product['model']).touch()
 def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory):
     dag = DAG()
 
-    product = {'some_notebook': File(Path(tmp_directory, 'out.ipynb')),
-               'model': File(Path(tmp_directory, 'model.pkl'))}
+    product = {
+        'some_notebook': File(Path(tmp_directory, 'out.ipynb')),
+        'model': File(Path(tmp_directory, 'model.pkl'))
+    }
 
     with pytest.raises(KeyError) as excinfo:
         NotebookRunner('',
@@ -135,7 +176,8 @@ def test_error_if_wrong_exporter_name(path_to_assets, tmp_directory):
                        dag=dag,
                        nbconvert_exporter_name='wrong_name')
 
-    assert 'Unknown exporter "wrong_name"' in str(excinfo.value)
+    assert ('Could not determine nbconvert exporter with nane "wrong_name"'
+            in str(excinfo.value))
 
 
 def test_error_if_cant_determine_exporter_name(path_to_assets, tmp_directory):
@@ -152,6 +194,7 @@ def test_error_if_cant_determine_exporter_name(path_to_assets, tmp_directory):
 
 # TODO: we are not testing output, we have to make sure params are inserted
 # correctly
+
 
 def test_develop_saves_changes(tmp_directory, monkeypatch):
     dag = DAG()
@@ -178,8 +221,7 @@ def test_develop_saves_changes(tmp_directory, monkeypatch):
 
     monkeypatch.setattr(notebook, '_open_jupyter_notebook',
                         mock_jupyter_notebook)
-    monkeypatch.setattr(notebook, '_save',
-                        lambda: True)
+    monkeypatch.setattr(notebook, '_save', lambda: True)
 
     t.develop()
 
@@ -213,15 +255,15 @@ def test_develop_workflow_with_hot_reload(tmp_directory, monkeypatch):
 
     monkeypatch.setattr(notebook, '_open_jupyter_notebook',
                         mock_jupyter_notebook)
-    monkeypatch.setattr(notebook, '_save',
-                        lambda: True)
+    monkeypatch.setattr(notebook, '_save', lambda: True)
 
     t.develop()
 
     # source code must be updated
     assert str(t.source).strip() == '2 + 2'
 
-    nb = nbformat.reads(t.source.rendered_nb_str, as_version=nbformat.NO_CONVERT)
+    nb = nbformat.reads(t.source.rendered_nb_str,
+                        as_version=nbformat.NO_CONVERT)
     source = jupytext.writes(nb, fmt='py')
 
     assert '2 + 2' in source

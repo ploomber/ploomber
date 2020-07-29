@@ -23,7 +23,6 @@ try:
 except ImportError:
     nbconvert = None
 
-
 from ploomber.exceptions import TaskBuildError
 from ploomber.sources import NotebookSource
 from ploomber.sources.NotebookSource import _cleanup_rendered_nb
@@ -32,37 +31,92 @@ from ploomber.tasks.Task import Task
 from ploomber.util import requires
 
 
-def _get_exporter(nbconvert_exporter_name, extension):
-    if nbconvert_exporter_name is not None:
-        exporter = nbconvert.get_exporter(nbconvert_exporter_name)
-    else:
-        if extension == '.ipynb':
-            return None
+class NotebookConverter:
+    """
+    Thin wrapper around nbconvert to provide a simple API to convert .ipynb
+    files to different formats.
+
+    Notes
+    -----
+    The exporter is searched at initialization time to raise an appropriate
+    error during Task setup rather than raising it at Task runtime
+
+    Handles cases where the output representation is text (e.g. HTML) or bytes
+    (e.g. PDF)
+    """
+    def __init__(self,
+                 path_to_output,
+                 exporter_name=None,
+                 nbconvert_export_kwargs=None):
+        if exporter_name is None:
+            #  try to infer it from the extension
+            exporter_name = Path(path_to_output).suffix[1:]
+
+        self.exporter = self._get_exporter(exporter_name)
+        self.path_to_output = path_to_output
+        self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
+
+    def convert(self):
+        if self.exporter is not None:
+            self._from_ipynb(self.path_to_output, self.exporter,
+                             self.nbconvert_export_kwargs)
+
+    @staticmethod
+    def _get_exporter(exporter_name):
+        """
+        Get function to convert notebook to another format using nbconvert,
+        first. In some cases, the exporter name matches the file extension
+        (e.g html) but other times it doesn't (e.g. slides), use
+        `nbconvert.get_export_names()` to get available exporter_names
+
+        Returns None if passed exported name is 'ipynb', raises ValueError
+        if an exporter can't be located
+        """
+        extension2exporter_name = {'md': 'markdown'}
+
+        # sometimes extension does not match with the exporter name, fix
+        # if needed
+        if exporter_name in extension2exporter_name:
+            exporter_name = extension2exporter_name[exporter_name]
+
+        if exporter_name == 'ipynb':
+            exporter = None
         else:
             try:
-                exporter = nbconvert.get_exporter(extension.replace('.', ''))
+                exporter = nbconvert.get_exporter(exporter_name)
             except ValueError:
                 raise ValueError('Could not determine nbconvert exporter '
+                                 'with nane "{}" '
                                  'either specify in the path extension '
                                  'or pass a valid exporter name in '
                                  'the NotebookRunner constructor, '
-                                 'valid exporters are: {}'
-                                 .format(nbconvert.get_export_names()))
+                                 'valid exporters are: {}'.format(
+                                     exporter_name,
+                                     nbconvert.get_export_names()))
 
-    return exporter
+        return exporter
 
+    @staticmethod
+    def _from_ipynb(path_to_nb, exporter, nbconvert_export_kwargs):
+        """
+        Convert ipynb to another format
+        """
 
-def _from_ipynb(path_to_nb, exporter, nbconvert_export_kwargs):
+        path = Path(path_to_nb)
 
-    path = Path(path_to_nb)
+        nb = nbformat.reads(path.read_text(), as_version=nbformat.NO_CONVERT)
+        content, _ = nbconvert.export(exporter, nb, **nbconvert_export_kwargs)
 
-    nb = nbformat.reads(path.read_text(), as_version=nbformat.NO_CONVERT)
-    content, _ = nbconvert.export(exporter, nb,
-                                  **nbconvert_export_kwargs)
+        if isinstance(content, str):
+            path.write_text(content)
+        elif isinstance(content, bytes):
+            path.write_bytes(content)
+        else:
+            raise TypeError('nbconvert returned a converted notbeook with'
+                            'unknown format, only text and binary objects '
+                            'are supported')
 
-    path.write_text(content)
-
-    return content
+        return content
 
 
 class NotebookRunner(Task):
@@ -127,11 +181,20 @@ class NotebookRunner(Task):
     PRODUCT_CLASSES_ALLOWED = (File, )
 
     @requires(['jupyter', 'papermill', 'jupytext'], 'NotebookRunner')
-    def __init__(self, source, product, dag, name=None, params=None,
-                 papermill_params=None, kernelspec_name='python3',
-                 nbconvert_exporter_name=None, ext_in=None,
-                 nb_product_key='nb', static_analysis=False,
-                 nbconvert_export_kwargs=None, local_execution=False):
+    def __init__(self,
+                 source,
+                 product,
+                 dag,
+                 name=None,
+                 params=None,
+                 papermill_params=None,
+                 kernelspec_name='python3',
+                 nbconvert_exporter_name=None,
+                 ext_in=None,
+                 nb_product_key='nb',
+                 static_analysis=False,
+                 nbconvert_export_kwargs=None,
+                 local_execution=False):
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name
@@ -156,11 +219,15 @@ class NotebookRunner(Task):
                                                  str(self.product)))
 
         if isinstance(self.product, MetaProduct):
-            ext_out = self.product[self.nb_product_key].suffix
+            product_nb = (
+                self.product[self.nb_product_key]._identifier.best_str(
+                    shorten=False))
         else:
-            ext_out = self.product.suffix
+            product_nb = self.product._identifier.best_str(shorten=False)
 
-        self._exporter = _get_exporter(nbconvert_exporter_name, ext_out)
+        self._converter = NotebookConverter(product_nb,
+                                            nbconvert_exporter_name,
+                                            nbconvert_export_kwargs)
 
     def _init_source(self, source, kwargs):
         return NotebookSource(source,
@@ -270,7 +337,7 @@ class NotebookRunner(Task):
         # we will run the notebook with this extension, regardless of the
         # user's choice, if any error happens, this will allow them to debug
         # we will change the extension after the notebook runs successfully
-        path_to_out_nb = path_to_out.with_suffix('.ipynb')
+        path_to_out_ipynb = path_to_out.with_suffix('.ipynb')
 
         _, tmp = tempfile.mkstemp('.ipynb')
         tmp = Path(tmp)
@@ -281,23 +348,19 @@ class NotebookRunner(Task):
 
         try:
             # no need to pass parameters, they are already there
-            pm.execute_notebook(str(tmp), str(path_to_out_nb),
+            pm.execute_notebook(str(tmp), str(path_to_out_ipynb),
                                 **self.papermill_params)
         except Exception as e:
             raise TaskBuildError('An error ocurred when calling'
                                  ' papermil.execute_notebook, partially'
                                  ' executed notebook with traceback '
-                                 'available at {}'
-                                 .format(str(path_to_out_nb))) from e
+                                 'available at {}'.format(
+                                     str(path_to_out_ipynb))) from e
         finally:
             tmp.unlink()
 
-        # if output format other than ipynb, convert using nbconvert
-        # and overwrite
-        if self._exporter is not None:
-            path_to_out_nb.rename(path_to_out)
-            _from_ipynb(path_to_out, self._exporter,
-                        self.nbconvert_export_kwargs)
+        path_to_out_ipynb.rename(path_to_out)
+        self._converter.convert()
 
 
 def _read_rendered_notebook(nb_str):
@@ -317,8 +380,7 @@ chdir("{}")
 """.format(Path('.').resolve())
 
     cell = nbformat_v.new_code_cell(source,
-                                    metadata={'tags':
-                                              ['debugging-settings']})
+                                    metadata={'tags': ['debugging-settings']})
     nb.cells.insert(0, cell)
 
     return nb
