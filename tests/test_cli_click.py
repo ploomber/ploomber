@@ -5,17 +5,13 @@ import subprocess
 import pytest
 import yaml
 import click
-from ploomber.cli import _new, _add, _is_valid_name
+from ploomber.cli.cli import _new, _add, _is_valid_name
 
 
-@pytest.mark.parametrize('name,valid', [
-    ('project', True),
-    ('project123', True),
-    ('pro_jec_t', True),
-    ('pro-ject', True),
-    ('1234', False),
-    ('a project', False)
-])
+@pytest.mark.parametrize('name,valid',
+                         [('project', True), ('project123', True),
+                          ('pro_jec_t', True), ('pro-ject', True),
+                          ('1234', False), ('a project', False)])
 def test_project_name(name, valid):
     assert _is_valid_name(name) is valid
 
@@ -26,22 +22,26 @@ def test_ploomber_new(answer, tmp_directory, monkeypatch):
     monkeypatch.setattr(click, 'prompt', lambda x, type: 'my-project')
     _new()
     os.chdir('my-project')
-    assert not subprocess.call(['ploomber', 'entry', 'pipeline.yaml'])
+    assert not subprocess.call(['ploomber', 'build'])
 
 
-@pytest.mark.parametrize('file, header, extract_flag',
-                         [
-                             ('task.py', 'Python task', False),
-                             ('task.py', 'Python task', True),
-                             ('task.sql', 'SQL task', False),
-                             ('task.sql', 'SQL task', True),
-                             # test file with sub-directories
-                             ('sql/task.sql', 'SQL task', True)
-                         ])
+@pytest.mark.parametrize(
+    'file, header, extract_flag',
+    [
+        ('task.py', 'Python task', False),
+        ('task.py', 'Python task', True),
+        ('task.sql', 'SQL task', False),
+        ('task.sql', 'SQL task', True),
+        # test file with sub-directories
+        ('sql/task.sql', 'SQL task', True)
+    ])
 def test_ploomber_add(file, header, extract_flag, tmp_directory):
-    sample_spec = {'meta':
-                   {'extract_upstream': extract_flag,
-                    'extract_product': extract_flag}}
+    sample_spec = {
+        'meta': {
+            'extract_upstream': extract_flag,
+            'extract_product': extract_flag
+        }
+    }
 
     task = {'source': file}
 
@@ -65,10 +65,16 @@ def test_ploomber_add(file, header, extract_flag, tmp_directory):
 
 
 def test_ploomber_add_unknown_extension(tmp_directory, capsys):
-    sample_spec = {'meta':
-                   {'extract_upstream': False,
-                    'extract_product': False},
-                   'tasks': [{'source': 'task.txt', 'product': 'nb.ipynb'}]}
+    sample_spec = {
+        'meta': {
+            'extract_upstream': False,
+            'extract_product': False
+        },
+        'tasks': [{
+            'source': 'task.txt',
+            'product': 'nb.ipynb'
+        }]
+    }
 
     with open('pipeline.yaml', 'w') as f:
         yaml.dump(sample_spec, f)
@@ -89,10 +95,13 @@ def test_ploomber_add_missing_spec(tmp_directory, capsys):
 
 
 def test_ploomber_add_skip_if_file_exists(tmp_directory, capsys):
-    sample_spec = {'meta':
-                   {'extract_upstream': False,
-                    'extract_product': False},
-                   'tasks': []}
+    sample_spec = {
+        'meta': {
+            'extract_upstream': False,
+            'extract_product': False
+        },
+        'tasks': []
+    }
 
     with open('pipeline.yaml', 'w') as f:
         yaml.dump(sample_spec, f)

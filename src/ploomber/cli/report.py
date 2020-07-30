@@ -1,9 +1,8 @@
-from ploomber.entry.parsers import _custom_command, CustomParser
+from ploomber.cli.parsers import _custom_command, CustomParser
 
 
 def main():
     parser = CustomParser(description='Make a pipeline report')
-    parser.add_argument('entry_point', help='Entry point (DAG)')
     parser.add_argument(
         '--output',
         '-o',
@@ -11,3 +10,4 @@ def main():
         default='pipeline.html')
     dag, args = _custom_command(parser)
     dag.to_markup(path=args.output)
+    print('Report saved at:', args.output)

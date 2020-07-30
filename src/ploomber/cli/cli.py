@@ -5,7 +5,7 @@ from pathlib import Path
 from jinja2 import Environment, PackageLoader
 import click
 from ploomber import __version__
-from ploomber import entry as entry_module
+from ploomber import cli as cli_module
 from ploomber.spec.DAGSpec import DAGSpec
 
 try:
@@ -23,10 +23,6 @@ def _is_valid_name(package_name):
 @click.version_option(version=__version__)
 def cli():
     """Ploomber command line interface.
-
-    To start an nteractive session (use "dag" variable when it starts):
-
-    ipython -i -m ploomber.entry pipeline.yaml -- --action status
     """
     pass
 
@@ -40,7 +36,7 @@ def new():
 
 @cli.command()
 def add():
-    """Create soource files tasks registered in pipeline.yaml
+    """Create source files tasks registered in pipeline.yaml
     """
     _add()
 
@@ -157,10 +153,12 @@ def cmd_router():
     cmd_name = sys.argv[1]
 
     custom = {
-        'entry': entry_module.entry._main,
-        'plot': entry_module.plot.main,
-        'task': entry_module.task.main,
-        'report': entry_module.report.main,
+        'build': cli_module.build.main,
+        'plot': cli_module.plot.main,
+        'task': cli_module.task.main,
+        'report': cli_module.report.main,
+        'interact': cli_module.interact.main,
+        'status': cli_module.status.main,
     }
 
     if cmd_name in custom:
@@ -179,8 +177,15 @@ def cmd_router():
 # the commands below are handled by the router, thy are just here so they
 # show up when doing ploomber --help
 @cli.command()
-def entry():
-    """Call entry points
+def build():
+    """Build pipeline
+    """
+    pass
+
+
+@cli.command()
+def status():
+    """Show pipeline status
     """
     pass
 
@@ -202,5 +207,12 @@ def task():
 @cli.command()
 def report():
     """Make a pipeline report
+    """
+    pass
+
+
+@cli.command()
+def interact():
+    """Start an interactive session (use the "dag" variable)
     """
     pass

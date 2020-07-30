@@ -190,7 +190,7 @@ the terminal:
 
 .. code-block:: console
 
-    ploomber task pipeline.yaml task_name --source
+    ploomber task task_name --source
 
 (Change ``task_name`` for the task you want)
 

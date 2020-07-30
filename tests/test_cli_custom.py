@@ -6,15 +6,19 @@ from pathlib import Path
 
 import click
 import pytest
-from ploomber.entry import plot, entry, parsers, task, report
-from ploomber import cli
+from ploomber.cli import plot, build, parsers, task, report, cli, status
 
 
-def test_complete_case(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(
-        sys, 'argv',
-        ['python', 'test_pkg.entry.with_doc', '--action', 'build'])
-    entry._main()
+def test_build(monkeypatch, tmp_sample_dir):
+    monkeypatch.setattr(sys, 'argv',
+                        ['python', '--entry-point', 'test_pkg.entry.with_doc'])
+    build.main()
+
+
+def test_status(monkeypatch, tmp_sample_dir):
+    monkeypatch.setattr(sys, 'argv',
+                        ['python', '--entry-point', 'test_pkg.entry.with_doc'])
+    status.main()
 
 
 @pytest.mark.parametrize(
@@ -22,27 +26,27 @@ def test_complete_case(monkeypatch, tmp_sample_dir):
     [[], ['--output', 'custom.png'], ['-o', 'custom.png'], ['--log', 'DEBUG'],
      ['-o', 'custom.png', '--log', 'DEBUG']])
 def test_plot(custom_args, monkeypatch, tmp_sample_dir):
-    args_defaults = ['python', 'test_pkg.entry.with_doc']
+    args_defaults = ['python', '--entry-point', 'test_pkg.entry.with_doc']
     monkeypatch.setattr(sys, 'argv', args_defaults + custom_args)
     plot.main()
 
 
 def test_report(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv', ['python', 'test_pkg.entry.with_doc'])
+    monkeypatch.setattr(sys, 'argv',
+                        ['python', '--entry-point', 'test_pkg.entry.with_doc'])
     report.main()
 
 
 def test_log_enabled(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
-        'python', 'test_pkg.entry.with_doc', '--action', 'build', '--log',
-        'INFO'
+        'python', '--entry-point', 'test_pkg.entry.with_doc', '--log', 'INFO'
     ])
-    entry._main()
+    build.main()
 
 
 def test_interactive_session(monkeypatch, tmp_sample_dir):
     res = subprocess.run(
-        ['ipython', '-i', '-m', 'ploomber.entry', 'test_pkg.entry.with_doc'],
+        ['ploomber', 'interact', '--entry-point', 'test_pkg.entry.with_doc'],
         input=b'type(dag)',
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
@@ -51,77 +55,79 @@ def test_interactive_session(monkeypatch, tmp_sample_dir):
 
 def test_replace_env_value(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
-        'python', 'test_pkg.entry.with_doc', '--action', 'build',
+        'python', '--entry-point', 'test_pkg.entry.with_doc',
         '--env__path__data', '/another/path'
     ])
-    entry._main()
+    build.main()
 
 
 def test_w_param(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
-        'python', 'test_pkg.entry.with_param', '--action', 'build',
+        'python', '--entry-point', 'test_pkg.entry.with_param',
         'some_value_for_param'
     ])
-    entry._main()
+    build.main()
 
 
 def test_no_doc(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(
-        sys, 'argv', ['python', 'test_pkg.entry.no_doc', '--action', 'build'])
-    entry._main()
+    monkeypatch.setattr(sys, 'argv',
+                        ['python', '--entry-point', 'test_pkg.entry.no_doc'])
+    build.main()
 
 
 def test_incomplete_doc(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(
         sys, 'argv',
-        ['python', 'test_pkg.entry.incomplete_doc', '--action', 'build'])
-    entry._main()
+        ['python', '--entry-point', 'test_pkg.entry.incomplete_doc'])
+    build.main()
 
 
 def test_invalid_doc(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(
-        sys, 'argv',
-        ['python', 'test_pkg.entry.invalid_doc', '--action', 'build'])
-    entry._main()
+        sys, 'argv', ['python', '--entry-point', 'test_pkg.entry.invalid_doc'])
+    build.main()
 
 
 def test_invalid_module_arg(monkeypatch):
-    monkeypatch.setattr(sys, 'argv', ['python', 'invalid_module'])
+    monkeypatch.setattr(sys, 'argv',
+                        ['python', '--entry-point', 'invalid_module'])
 
     with pytest.raises(ImportError):
-        entry._main()
+        build.main()
 
 
 def test_nonexisting_module(monkeypatch):
-    monkeypatch.setattr(sys, 'argv', ['python', 'some_module.some_function'])
+    monkeypatch.setattr(
+        sys, 'argv', ['python', '--entry-point', 'some_module.some_function'])
 
     with pytest.raises(ImportError):
-        entry._main()
+        build.main()
 
 
 def test_invalid_function(monkeypatch):
-    monkeypatch.setattr(sys, 'argv',
-                        ['python', 'test_pkg.entry.invalid_function'])
+    monkeypatch.setattr(
+        sys, 'argv',
+        ['python', '--entry-point', 'test_pkg.entry.invalid_function'])
 
     with pytest.raises(AttributeError):
-        entry._main()
+        build.main()
 
 
 def test_undecorated_function(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(
         sys, 'argv',
-        ['python', 'test_pkg.entry.plain_function', '--action', 'build'])
+        ['python', '--entry-point', 'test_pkg.entry.plain_function'])
 
-    entry._main()
+    build.main()
 
 
 def test_undecorated_function_w_param(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
-        'python', 'test_pkg.entry.plain_function_w_param', '--action', 'build',
+        'python', '--entry-point', 'test_pkg.entry.plain_function_w_param',
         'some_value_for_param'
     ])
 
-    entry._main()
+    build.main()
 
 
 def test_parse_doc():
@@ -162,20 +168,21 @@ def test_run_spec(custom, monkeypatch, tmp_directory):
     monkeypatch.setattr(click, 'prompt', lambda text, type: 'my-project')
     cli._new()
     os.chdir('my-project')
-    args = ['python', 'pipeline.yaml'] + custom
+    args = ['python', '--entry-point', 'pipeline.yaml'] + custom
     monkeypatch.setattr(sys, 'argv', args)
-    entry._main()
+    build.main()
 
 
-@pytest.mark.parametrize('custom',
-                         ['--source', '--build', '--force', '--status'])
+@pytest.mark.parametrize(
+    'custom', [[], ['--source'], ['--source', '--build'], ['--force'],
+               ['--force', '--build'], ['--status'], ['--status', '--build']])
 def test_task(custom, monkeypatch, tmp_directory):
     monkeypatch.setattr(click, 'confirm', lambda text: False)
     monkeypatch.setattr(click, 'prompt', lambda text, type: 'my-project')
     cli._new()
     os.chdir('my-project')
 
-    args = ['task', 'pipeline.yaml', 'raw'] + [custom]
+    args = ['task', '--entry-point', 'pipeline.yaml', 'raw'] + custom
     monkeypatch.setattr(sys, 'argv', args)
     task.main()
 
@@ -187,6 +194,7 @@ def test_run_spec_replace_value(monkeypatch, tmp_directory):
     os.chdir('my-project')
     Path('env.yaml').write_text('sample: false')
 
-    monkeypatch.setattr(sys, 'argv',
-                        ['python', 'pipeline.yaml', '--env__sample', 'True'])
-    entry._main()
+    monkeypatch.setattr(
+        sys, 'argv',
+        ['python', '--entry-point', 'pipeline.yaml', '--env__sample', 'True'])
+    build.main()

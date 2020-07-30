@@ -1,18 +1,18 @@
-from ploomber.entry.parsers import _custom_command, CustomParser
+from ploomber.cli.parsers import _custom_command, CustomParser
 
 
 def main():
     parser = CustomParser(description='Get task information')
-    parser.add_argument('entry_point', help='Entry point (DAG)')
     parser.add_argument('task_name')
     parser.add_argument('--source',
                         '-s',
                         help='Print task source code',
                         action='store_true')
-    parser.add_argument('--build',
-                        '-b',
-                        help='Build task',
-                        action='store_true')
+    parser.add_argument(
+        '--build',
+        '-b',
+        help='Build task (default if no other option is passed)',
+        action='store_true')
     parser.add_argument('--force',
                         '-f',
                         help='Force build task (ignore up-to-date status)',
@@ -32,5 +32,8 @@ def main():
     if args.status:
         print(task.status())
 
-    if args.build:
+    # task if built by default, but when --source or --status are passed,
+    # the --build flag is required
+    no_flags = not any((args.build, args.status, args.source))
+    if no_flags or args.build:
         task.build(force=args.force)
