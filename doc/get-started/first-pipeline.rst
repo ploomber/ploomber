@@ -80,16 +80,20 @@ you can open it again by going to "Running" -> "Terminals":
     :width: 50%
 
 
-Run the following command in yout project's root folder (the one where
+Run the following command in your project's root folder (the one where
 the ``pipeline.yaml`` file is located):
+
+*Hint:* If you're following this from the hosted tutorial, just run
+``cd project`` in the terminal).
 
 .. code-block:: console
 
     ploomber build
 
-If you go back to the file list you'll see that ``output/`` is no longer empty.
-Each script was converted to a notebook and executed, you'll also see a few
-data files.
+
+If you go back to the file list you'll see that ``output/`` is no longer
+empty. Each script was converted to a notebook and executed, you'll also see a
+few data files.
 
 
 Updating the pipeline
