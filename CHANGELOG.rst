@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+0.7
+---
+* Simplified CLI (breaking changes)
+* Refactors internal API for notebook conversion, adds tests for common formats
+* Metadata is deleted when saving a script from the Jupyter notebook app to make sure the task runs in the next pipeline build
+* SQLAlchemyClient now supports custom tokens to split source
+
 0.6.3 (2020-07-24)
 -------------------
 * Adding `--log` option to CLI commands
