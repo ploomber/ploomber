@@ -12,6 +12,10 @@ from ploomber.exceptions import DAGBuildError
 from ploomber.tasks import notebook
 
 
+def fake_from_notebook_node(self, nb, resources):
+    return bytes(42), None
+
+
 @pytest.mark.parametrize(
     'path, exporter',
     [('file.ipynb', None), ('file.pdf', nbconvert.exporters.pdf.PDFExporter),
@@ -36,7 +40,12 @@ def test_notebook_converter_get_exporter_from_name(exporter_name, exporter):
 
 @pytest.mark.parametrize('output',
                          ['file.ipynb', 'file.pdf', 'file.html', 'file.md'])
-def test_notebook_conversion(output, tmp_directory):
+def test_notebook_conversion(monkeypatch, output, tmp_directory):
+    # we mock the method that does the conversion to avoid having to
+    # intstall tex for testing
+    monkeypatch.setattr(nbconvert.exporters.pdf.PDFExporter,
+                        'from_notebook_node', fake_from_notebook_node)
+
     nb = nbformat.v4.new_notebook()
     cell = nbformat.v4.new_code_cell('1 + 1')
     nb.cells.append(cell)

@@ -48,9 +48,6 @@ install:
 
 before_install:
   - sudo apt-get -y install graphviz
-  # required to test notebook conversion to pdf
-  - sudo apt-get -y install texlive-xetex texlive-fonts-recommended texlive-generic-recommended
-
 
 before_script:
   - psql -c 'create database db;' -U postgres
