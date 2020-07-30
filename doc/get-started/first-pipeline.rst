@@ -85,7 +85,7 @@ the ``pipeline.yaml`` file is located):
 
 .. code-block:: console
 
-    ploomber entry
+    ploomber build
 
 If you go back to the file list you'll see that ``output/`` is no longer empty.
 Each script was converted to a notebook and executed, you'll also see a few
@@ -127,7 +127,7 @@ then run this again:
 
 .. code-block:: console
 
-    ploomber entry
+    ploomber build
 
 
 You'll see that ``raw.py`` didn't run because it was not affected by the change!

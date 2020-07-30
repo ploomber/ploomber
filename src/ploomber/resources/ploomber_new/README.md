@@ -31,7 +31,7 @@ Then activate it:
 ## Execute pipeline
 
 ```sh
-ploomber entry pipeline.yaml
+ploomber build
 ```
 
 Make sure you execute this command inside your project's root folder (the one that contains the `pipeline.yaml` file).

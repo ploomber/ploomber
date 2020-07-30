@@ -166,7 +166,7 @@ def cmd_router():
         # pop the second element ('entry') to make the CLI behave as expected
         sys.argv.pop(1)
         # Add the current working directory, this is done automatically when
-        # calling "python -m ploomber.entry" but not here ("ploomber entry")
+        # calling "python -m ploomber.build" but not here ("ploomber build")
         sys.path.append('')
         fn = custom[cmd_name]
         fn()

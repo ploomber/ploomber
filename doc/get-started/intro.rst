@@ -130,7 +130,7 @@ the following command:
 
 .. code-block:: console
 
-   ploomber entry
+   ploomber build
 
 Ploomber keeps track of source changes to skip up-to-date tasks, if you run
 that command again, only tasks whose source code has changed will be executed.
