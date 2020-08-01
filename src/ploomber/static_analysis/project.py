@@ -1,31 +1,9 @@
-from functools import partial
 from collections import defaultdict
 import logging
 import fnmatch
 
 from ploomber import SourceLoader
-from ploomber.static_analysis.sql import (extract_upstream_from_sql,
-                                          extract_product_from_sql)
-from ploomber.static_analysis.notebook import extract_variable_from_parameters
-
-suffix2upstream_extractor = {
-    '.sql':
-    extract_upstream_from_sql,
-    '.ipynb':
-    partial(extract_variable_from_parameters, fmt='ipynb',
-            variable='upstream'),
-    '.py':
-    partial(extract_variable_from_parameters, fmt='py', variable='upstream'),
-}
-
-suffix2product_extractor = {
-    '.sql':
-    extract_product_from_sql,
-    '.ipynb':
-    partial(extract_variable_from_parameters, fmt='ipynb', variable='product'),
-    '.py':
-    partial(extract_variable_from_parameters, fmt='py', variable='product'),
-}
+from ploomber.static_analysis.extractors import _EXTRACTOR_FOR_SUFFIX
 
 
 def infer_from_path(root_path,
@@ -78,17 +56,30 @@ def infer_from_path(root_path,
         logger.info('Processing file: %s...' % template_name)
 
         template = loader[template_name]
+        code = template._raw
 
         if upstream:
-            if template.path.suffix not in suffix2upstream_extractor:
+            if template.path.suffix not in _EXTRACTOR_FOR_SUFFIX:
                 raise KeyError(
                     'Error processing file "%s". Extracting upstream '
                     'dependencies from files with extension "%s" '
                     'is not supported' % (template.path, template.path.suffix))
 
-            up_extractor = suffix2upstream_extractor[template.path.suffix]
+            extractor = _EXTRACTOR_FOR_SUFFIX[template.path.suffix]
 
-            deps = up_extractor(template._raw)
+            if template.path.suffix in ['.py', '.ipynb']:
+                import jupytext
+                from ploomber.sources.NotebookSource import find_cell_with_tag
+                nb = jupytext.reads(code, fmt=None)
+                cell, _ = find_cell_with_tag(nb, 'parameters')
+                if cell is None:
+                    raise ValueError(
+                        'Notebook does not have a cell with the tag '
+                        '"parameters"')
+
+                deps = extractor(cell['source']).extract_upstream()
+            else:
+                deps = extractor(code).extract_upstream()
 
             if deps:
                 logger.info('Dependencies: %s', deps)
@@ -98,14 +89,28 @@ def infer_from_path(root_path,
                 logger.info('No dependencies found')
 
         if product:
-            if template.path.suffix not in suffix2product_extractor:
+            if template.path.suffix not in _EXTRACTOR_FOR_SUFFIX:
                 raise KeyError(
                     'Error processing file "%s". Extracting product '
                     'from files with extension "%s" '
                     'is not supported' % (template.path, template.path.suffix))
 
-            prod_extractor = suffix2product_extractor[template.path.suffix]
-            prod = prod_extractor(template._raw)
+            extractor = _EXTRACTOR_FOR_SUFFIX[template.path.suffix]
+
+            if template.path.suffix in ['.py', '.ipynb']:
+                import jupytext
+                from ploomber.sources.NotebookSource import find_cell_with_tag
+                nb = jupytext.reads(code, fmt=None)
+                cell, _ = find_cell_with_tag(nb, 'parameters')
+
+                if cell is None:
+                    raise ValueError(
+                        'Notebook does not have a cell with the tag '
+                        '"parameters"')
+
+                prod = extractor(cell['source']).extract_product()
+            else:
+                prod = extractor(code).extract_product()
 
             if prod:
                 out['product'][template_name] = prod

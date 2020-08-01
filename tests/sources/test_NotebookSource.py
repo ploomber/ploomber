@@ -4,7 +4,7 @@ import nbformat
 from jupyter_client.kernelspec import NoSuchKernel
 
 from ploomber.tasks.Params import Params
-from ploomber.sources.NotebookSource import NotebookSource, infer_language
+from ploomber.sources.NotebookSource import NotebookSource, is_python
 from ploomber.products import File
 from ploomber.exceptions import RenderError
 
@@ -224,11 +224,11 @@ def nb_R_meta():
     return nb
 
 
-@pytest.mark.parametrize('nb, expected', [(nb_python_meta(), 'python'),
-                                          (nb_python_inferred(), 'python'),
-                                          (nb_R_meta(), 'R')])
+@pytest.mark.parametrize('nb, expected', [(nb_python_meta(), True),
+                                          (nb_python_inferred(), True),
+                                          (nb_R_meta(), False)])
 def test_infer_language(nb, expected):
-    assert infer_language(nb) == expected
+    assert is_python(nb) is expected
 
 
 def nb_unknown(metadata):
@@ -245,6 +245,22 @@ def nb_unknown(metadata):
     nb_unknown({'kernel_info': {}}),
 ])
 def test_error_with_unknown_language(nb):
+    assert not is_python(nb)
 
-    with pytest.raises(ValueError):
-        infer_language(nb)
+
+nb_case_1 = """
+# + tags=["parameters"]
+upstream = {'some_key': 'some_value'}
+""", ['some_key']
+
+nb_case_2 = """
+# + tags=["parameters"]
+upstream = {'a': None, 'b': None}
+""", ['a', 'b']
+
+
+@pytest.mark.parametrize('code, expected', [nb_case_1, nb_case_2])
+def test_extract_upstream_from_parameters(code, expected):
+    source = NotebookSource(code, ext_in='py', kernelspec_name='python3')
+    upstream = source.extract_upstream()
+    assert sorted(upstream) == sorted(expected)

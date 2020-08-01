@@ -1,31 +1,25 @@
-import jupytext
-from collections.abc import Mapping
+"""
+Extract "upstream" and "product" from Python notebooks
+"""
 import parso
+from collections.abc import Mapping
 
-from ploomber.sources.NotebookSource import _find_cell_with_tag
+from ploomber.static_analysis.abstract import NotebookExtractor
 
 
-def extract_variable_from_parameters(code_str, fmt, variable):
+class PythonNotebookExtractor(NotebookExtractor):
+    def extract_upstream(self):
+        return extract_upstream(self.parameters_cell)
+
+    def extract_product(self):
+        return extract_product(self.parameters_cell)
+
+
+def extract_variable(code_str, name):
     """
-    Infer upstream dependencies from a .py or .ipynb source string.
-    Must contain a "parameters" cell
+    Get the value assigned to a variable with name "name" by passing a code
+    string
     """
-    nb = jupytext.reads(code_str, fmt)
-    cell, _ = _find_cell_with_tag(nb, 'parameters')
-
-    if cell is None:
-        raise ValueError('Notebook does not have a cel with the tag '
-                         '"parameters"')
-
-    if variable == 'upstream':
-        return infer_dependencies_from_code_cell(cell.source)
-    elif variable == 'product':
-        return get_product(cell.source)
-    else:
-        raise ValueError('variable must be upstream or product')
-
-
-def extract_variable_from_code_cell(code_str, name):
     variable_found = False
     value = None
 
@@ -49,37 +43,38 @@ def extract_variable_from_code_cell(code_str, name):
     return variable_found, value
 
 
-def get_product(code_str):
-    product_found, product = extract_variable_from_code_cell(code_str,
-                                                             'product')
+def extract_product(cell_code):
+    """
+    Extract "product" from a Python code string
+    """
+    product_found, product = extract_variable(cell_code, 'product')
 
     if not product_found:
         raise ValueError("Could not parse a valid 'product' variable "
-                         "from code:\n%s" % code_str)
+                         "from code:\n%s" % cell_code)
     else:
         return product
 
 
-def infer_dependencies_from_code_cell(code_str):
+def extract_upstream(cell_code):
     """
     Infer dependencies from a single Python cell. Looks for a cell that
     defines an upstream variable which must be either a dictionary or None
     """
-    upstream_found, upstream = extract_variable_from_code_cell(code_str,
-                                                               'upstream')
+    upstream_found, upstream = extract_variable(cell_code, 'upstream')
 
     if not upstream_found:
         raise ValueError("Could not parse a valid 'upstream' variable "
                          "from code:\n'%s'. If the notebook "
                          "does not have dependencies add "
-                         "upstream = None" % code_str)
+                         "upstream = None" % cell_code)
     else:
         valid_types = (Mapping, list, tuple, set)
         if not (isinstance(upstream, valid_types) or upstream is None):
             raise ValueError("Found an upstream variable but it is not a "
                              "valid type (dictionary, list, tuple set or None "
                              ", got '%s' type from code:\n"
-                             "'%s'" % (type(upstream), code_str))
+                             "'%s'" % (type(upstream), cell_code))
         elif isinstance(upstream, valid_types):
             return set(upstream)
         else:

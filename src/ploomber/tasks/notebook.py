@@ -112,7 +112,7 @@ class NotebookConverter:
         elif isinstance(content, bytes):
             path.write_bytes(content)
         else:
-            raise TypeError('nbconvert returned a converted notbeook with'
+            raise TypeError('nbconvert returned a converted notebook with'
                             'unknown format, only text and binary objects '
                             'are supported')
 

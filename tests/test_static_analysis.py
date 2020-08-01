@@ -1,5 +1,7 @@
 import pytest
-from ploomber.static_analysis import notebook, sql, project
+from ploomber.static_analysis import project
+from ploomber.static_analysis.python import PythonNotebookExtractor
+from ploomber.static_analysis.sql import SQLExtractor
 from ploomber.products import (PostgresRelation, SQLiteRelation,
                                GenericSQLRelation, SQLRelation)
 
@@ -24,8 +26,9 @@ if True:
 
 @pytest.mark.parametrize('code, expected', [cell_case_1, cell_case_2])
 def test_infer_from_code_cell(code, expected):
-    assert (sorted(
-        notebook.infer_dependencies_from_code_cell(code)) == sorted(expected))
+    extractor = PythonNotebookExtractor(parameters_cell=code)
+    inferred = extractor.extract_upstream()
+    assert sorted(inferred) == sorted(expected)
 
 
 case_error_1 = "some_variable = 1"
@@ -37,26 +40,10 @@ case_error_3 = "upstream = 1"
 
 @pytest.mark.parametrize('code', [case_error_1, case_error_2, case_error_3])
 def test_error_from_code_cell(code):
+    extractor = PythonNotebookExtractor(parameters_cell=code)
+
     with pytest.raises(ValueError):
-        notebook.infer_dependencies_from_code_cell(code)
-
-
-nb_case_1 = """
-# + tags=["parameters"]
-upstream = {'some_key': 'some_value'}
-""", ['some_key']
-
-nb_case_2 = """
-# + tags=["parameters"]
-upstream = {'a': None, 'b': None}
-""", ['a', 'b']
-
-
-@pytest.mark.parametrize('code, expected', [nb_case_1, nb_case_2])
-def test_extract_upstream_from_parameters(code, expected):
-    assert (sorted(
-        notebook.extract_variable_from_parameters(
-            code, fmt='py', variable='upstream')) == sorted(expected))
+        extractor.extract_upstream()
 
 
 def test_extract_upstream_sql():
@@ -65,7 +52,8 @@ SELECT * FROM {{upstream['some_task']}}
 JOIN {{upstream['another_task']}}
 USING some_column
 """
-    assert sql.extract_upstream_from_sql(code) == {'some_task', 'another_task'}
+    extractor = SQLExtractor(code)
+    assert extractor.extract_upstream() == {'some_task', 'another_task'}
 
 
 @pytest.mark.parametrize('code, class_, schema, name, kind', [
@@ -87,7 +75,7 @@ USING some_column
     ]
 ])
 def test_extract_product_from_sql(code, class_, schema, name, kind):
-    extracted = sql.extract_product_from_sql(code)
+    extracted = SQLExtractor(code).extract_product()
     assert isinstance(extracted, class_)
     assert extracted.name == name
     assert extracted.schema == schema
@@ -96,7 +84,7 @@ def test_extract_product_from_sql(code, class_, schema, name, kind):
 
 def test_extract_product_from_sql_none_case():
     code = 'some code that does not define a product variable'
-    assert sql.extract_product_from_sql(code) is None
+    assert SQLExtractor(code).extract_product() is None
 
 
 @pytest.mark.parametrize(

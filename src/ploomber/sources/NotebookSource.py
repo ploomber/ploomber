@@ -13,6 +13,7 @@ from ploomber.exceptions import RenderError, SourceInitializationError
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources import Source
+from ploomber.static_analysis.python import PythonNotebookExtractor
 
 
 # TODO: make sure this works with R, Julia and other notebooks supported
@@ -98,6 +99,7 @@ class NotebookSource(Source):
         self._rendered_nb_str = None
         self._params = None
         self._nb_repr = None
+        self._nb_obj = None
 
         # this will raise an error if kernelspec_name is invalid
         self._get_nb_repr()
@@ -162,7 +164,9 @@ class NotebookSource(Source):
         source code passed, does not contain injected parameters.
 
         Adds kernelspec info if not present based on the kernelspec_name,
-        this metadata is required for papermill to know which kernel to use
+        this metadata is required for papermill to know which kernel to use.
+
+        An exception is raised if we cannot determine kernel information.
         """
         import nbformat
 
@@ -171,10 +175,11 @@ class NotebookSource(Source):
             if self._ext_in == 'ipynb':
                 self._nb_repr = self.primitive
             else:
-                nb = _to_nb_obj(self.primitive,
-                                extension='py',
-                                kernelspec_name=self._kernelspec_name)
-                self._nb_repr = nbformat.writes(nb,
+                self._nb_obj = _to_nb_obj(
+                    self.primitive,
+                    extension='py',
+                    kernelspec_name=self._kernelspec_name)
+                self._nb_repr = nbformat.writes(self._nb_obj,
                                                 version=nbformat.NO_CONVERT)
 
         return self._nb_repr
@@ -247,7 +252,39 @@ class NotebookSource(Source):
         # One approach is to use the ext if loaded from file, otherwise None
         return None
 
+    # FIXME: add this to the abstract class, probably get rid of "extension"
+    # since it's not informative (ipynb files can be Python, R, etc)
+    @property
+    def language(self):
+        self._get_nb_repr()
+        return self._nb_obj.metadata.kernelspec.language
 
+    def _get_parameters_cell(self):
+        self._get_nb_repr()
+        cell, _ = find_cell_with_tag(self._nb_obj, tag='parameters')
+        return cell.source
+
+    # FIXME: A bit inefficient to initialize the extractor every time
+    def extract_upstream(self):
+        if self.language == 'python':
+            return PythonNotebookExtractor(
+                self._get_parameters_cell()).extract_upstream()
+        else:
+            raise NotImplementedError
+
+    # FIXME: A bit inefficient to initialize the extractor every time
+    def extract_product(self):
+        if self.language == 'python':
+            return PythonNotebookExtractor(
+                self._get_parameters_cell()).extract_product()
+        else:
+            raise NotImplementedError
+
+
+# FIXME: some of this only applies to Python notebooks (error about missing
+# parameters cells applies to every notebook), make sure the source takes
+# this into account, also check if there are any other functions that
+# are python specific
 def check_notebook(nb, params, filename):
     """
     Perform static analysis on a Jupyter notebook code cell sources
@@ -274,7 +311,7 @@ def check_notebook(nb, params, filename):
     # variable to collect all error messages
     error_message = '\n'
 
-    params_cell, _ = _find_cell_with_tag(nb, 'parameters')
+    params_cell, _ = find_cell_with_tag(nb, 'parameters')
 
     if params_cell is None:
         error_message += ('Notebook does not have a cell tagged '
@@ -377,8 +414,12 @@ def check_source(nb, filename):
 
 def _to_nb_obj(source, extension, kernelspec_name=None):
     """
-    Convert to jupyter notebook via jupytext, adding kernelspec details if
-    missing
+    Convert to jupyter notebook via jupytext, if the notebook does not contain
+    kernel information and the user did not pass a kernelspec_name explicitly,
+    we will try to infer the language and select a kernel appropriately.
+
+    If a valid kernel is found, it is added to the notebook. If none of this
+    works, an exception is raised.
 
     Parameters
     ----------
@@ -404,11 +445,14 @@ def _to_nb_obj(source, extension, kernelspec_name=None):
     """
     import jupytext
     import jupyter_client
+
     # NOTE: how is this different to just doing fmt='.py'
     nb = jupytext.reads(source, fmt={'extension': '.' + extension})
-    nb_kernelspec = nb.metadata.get('kernelspec')
 
-    if nb_kernelspec is None and kernelspec_name is None:
+    kernel_name = determine_kernel_name(nb, kernelspec_name)
+
+    # cannot keep going if we don't have the kernel name
+    if kernel_name is None:
         raise SourceInitializationError(
             'Notebook does not contains kernelspec metadata and '
             'kernelspec_name was not specified, either add '
@@ -418,17 +462,37 @@ def _to_nb_obj(source, extension, kernelspec_name=None):
             'indicates the name). Python is usually named "python3", '
             'R usually "ir"')
 
-    # only use kernelspec_name when there is no kernelspec info in the nb
-    if nb_kernelspec is None and kernelspec_name is not None:
-        k = jupyter_client.kernelspec.get_kernel_spec(kernelspec_name)
+    kernel = jupyter_client.kernelspec.get_kernel_spec(kernel_name)
 
-        nb.metadata.kernelspec = {
-            "display_name": k.display_name,
-            "language": k.language,
-            "name": kernelspec_name
-        }
+    nb.metadata.kernelspec = {
+        "display_name": kernel.display_name,
+        "language": kernel.language,
+        "name": kernelspec_name
+    }
 
     return nb
+
+
+def determine_kernel_name(nb, kernelspec_name):
+    """
+    Try to determine kernel name, first check notebook metadata, then
+    check if the user explicitly provided a kernelspec_name, then, try
+    to guess if this is a Python notebook
+    """
+    try:
+        return nb.metadata.kernelspec.name
+    except AttributeError:
+        pass
+
+    if kernelspec_name is not None:
+        return kernelspec_name
+
+    is_python_ = is_python(nb)
+
+    if is_python_:
+        return 'python3'
+    else:
+        return None
 
 
 def inject_cell(model, params):
@@ -477,13 +541,13 @@ def inject_cell(model, params):
 
 
 def _cleanup_rendered_nb(nb):
-    cell, i = _find_cell_with_tag(nb, 'injected-parameters')
+    cell, i = find_cell_with_tag(nb, 'injected-parameters')
 
     if i is not None:
         print('Removing injected-parameters cell...')
         nb['cells'].pop(i)
 
-    cell, i = _find_cell_with_tag(nb, 'debugging-settings')
+    cell, i = find_cell_with_tag(nb, 'debugging-settings')
 
     if i is not None:
         print('Removing debugging-settings cell...')
@@ -499,7 +563,46 @@ def _cleanup_rendered_nb(nb):
     return nb
 
 
-def _find_cell_with_tag(nb, tag):
+def is_python(nb):
+    """
+    Determine if the notebook is Python code for a given notebook object, look
+    for metadata.kernel_info.language first, if not defined, try to guess if
+    it's Python, it's conservative and it returns False if the code is valid
+    Python but contains (<-), in which case it's much more likely to be R
+    """
+    is_python_ = None
+
+    # check metadata first
+    try:
+        language = nb.metadata.kernel_info.language
+    except AttributeError:
+        pass
+    else:
+        is_python_ = language == 'python'
+
+    # no language defined in metadata, check if it's valid python
+    if is_python_ is None:
+        code_str = '\n'.join([c.source for c in nb.cells])
+
+        try:
+            ast.parse(code_str)
+        except SyntaxError:
+            is_python_ = False
+        else:
+            # there is a lot of R code which is also valid Python code! So let's
+            # run a quick test. It is very unlikely to have "<-" in Python (
+            # {less than} {negative} but extremely common {assignment}
+            if '<-' not in code_str:
+                is_python_ = True
+
+    # inconclusive test...
+    if is_python_ is None:
+        is_python_ = False
+
+    return is_python_
+
+
+def find_cell_with_tag(nb, tag):
     """
     Find a cell with a given tag, returns a cell, index tuple. Otherwise
     (None, None)
@@ -511,42 +614,3 @@ def _find_cell_with_tag(nb, tag):
                 return c, i
 
     return None, None
-
-
-def infer_language(nb):
-    """
-    Determine the language for a given notebook object, look for
-    metadata.kernel_info.language first, if not defined, try to guess if it's
-    Python, otherwise, raise an exception
-    """
-    language = None
-
-    # check metadata first
-    try:
-        language = nb.metadata.kernel_info.language
-    except AttributeError:
-        language = None
-
-    # no language defined in metadata, check if it's valid python
-    if language is None:
-        code_str = '\n'.join([c.source for c in nb.cells])
-
-        try:
-            ast.parse(code_str)
-        except SyntaxError:
-            pass
-        else:
-            # there is a lot of R code which is also valid Python code! So let's
-            # run a quick test. It is very unlikely to have "<-" in Python (
-            # {less than} {negative} but extremely common {assignment}
-            if '<-' not in code_str:
-                language = 'python'
-
-    if language is None:
-        # TODO: add link to FAQ on nb metadata and kernelspec
-        raise ValueError('Your notebook does not contain language '
-                         'information and we could not automatically '
-                         'determine it, please add language metadata '
-                         'explicitly')
-
-    return language

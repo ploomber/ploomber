@@ -45,53 +45,51 @@ def test_generic_source_rendered():
     assert repr(s) == 'GenericSource(some placeholder...)'
 
 
-@pytest.mark.parametrize('class_',
-                         [SQLScriptSource, SQLQuerySource])
+@pytest.mark.parametrize('class_', [SQLScriptSource, SQLQuerySource])
 def test_sql_repr_unrendered(class_):
     name = class_.__name__
 
     # short case
     s = class_('SELECT * FROM {{product}}')
-    assert repr(s) == name+'(SELECT * FROM {{product}})'
+    assert repr(s) == name + '(SELECT * FROM {{product}})'
 
     # long case, adds ...
     s = class_(("SELECT * FROM {{product}} WHERE "
                 "some_very_very_long_column "
                 "= 'some_very_large_value'"))
-    assert repr(s) == name+("(SELECT * FROM {{product}} "
-                            "WHERE some_very_very_long_column "
-                            "= 'some_very_large...)")
+    assert repr(s) == name + ("(SELECT * FROM {{product}} "
+                              "WHERE some_very_very_long_column "
+                              "= 'some_very_large...)")
 
     # multi line case, adds ...
     s = class_(("SELECT * FROM {{product}}\nWHERE "
                 "some_very_very_long_column"
                 " = 'some_very_large_value'"))
-    assert repr(s) == name+'(SELECT * FROM {{product}}...)'
+    assert repr(s) == name + '(SELECT * FROM {{product}}...)'
 
 
-@pytest.mark.parametrize('class_',
-                         [SQLScriptSource, SQLQuerySource])
+@pytest.mark.parametrize('class_', [SQLScriptSource, SQLQuerySource])
 def test_sql_repr_rendered(class_):
     name = class_.__name__
     render_arg = {'product': GenericSQLRelation(('schema', 'name', 'table'))}
     s = class_('SELECT * FROM {{product}}')
     s.render(render_arg)
 
-    assert repr(s) == name+'(SELECT * FROM schema.name)'
+    assert repr(s) == name + '(SELECT * FROM schema.name)'
 
     s = class_(("SELECT * FROM {{product}} WHERE "
                 "some_very_very_long_column "
                 "= 'some_very_large_value'"))
     s.render(render_arg)
-    assert repr(s) == name+("(SELECT * FROM schema.name "
-                            "WHERE some_very_very_long_column "
-                            "= 'some_very_large...)")
+    assert repr(s) == name + ("(SELECT * FROM schema.name "
+                              "WHERE some_very_very_long_column "
+                              "= 'some_very_large...)")
 
     s = class_(("SELECT * FROM {{product}}\nWHERE "
                 "some_very_very_long_column"
                 " = 'some_very_large_value'"))
     s.render(render_arg)
-    assert repr(s) == name+'(SELECT * FROM schema.name...)'
+    assert repr(s) == name + '(SELECT * FROM schema.name...)'
 
 
 def test_can_parse_sql_docstring():
@@ -117,7 +115,8 @@ def test_cannot_initialize_sql_script_with_literals():
         SQLScriptSource('SELECT * FROM my_table')
 
 
-def test_warns_if_sql_scipt_does_not_create_relation(sqlite_client_and_tmp_dir):
+def test_warns_if_sql_scipt_does_not_create_relation(
+        sqlite_client_and_tmp_dir):
     client, _ = sqlite_client_and_tmp_dir
     dag = DAG()
     dag.clients[SQLiteRelation] = client
@@ -134,7 +133,8 @@ def test_warns_if_sql_scipt_does_not_create_relation(sqlite_client_and_tmp_dir):
         t.render()
 
 
-def test_warns_if_number_of_relations_does_not_match_products(sqlite_client_and_tmp_dir):
+def test_warns_if_number_of_relations_does_not_match_products(
+        sqlite_client_and_tmp_dir):
     client, _ = sqlite_client_and_tmp_dir
     dag = DAG()
     dag.clients[SQLiteRelation] = client
@@ -145,9 +145,10 @@ def test_warns_if_number_of_relations_does_not_match_products(sqlite_client_and_
     SELECT * FROM my_table
     """
 
-    t = SQLScript(sql,
-                  [SQLiteRelation((None, 'my_table', 'table')),
-                   SQLiteRelation((None, 'another_table', 'table'))],
+    t = SQLScript(sql, [
+        SQLiteRelation((None, 'my_table', 'table')),
+        SQLiteRelation((None, 'another_table', 'table'))
+    ],
                   dag=dag,
                   client=Mock(),
                   name='sql')
@@ -167,7 +168,6 @@ def test_warns_if_number_of_relations_does_not_match_products(sqlite_client_and_
 #                   dag, 't', client=Mock())
 #     t.render()
 
-
 # templates
 
 # def test_warns_if_no_product_found_using_template(fake_conn):
@@ -186,8 +186,7 @@ def test_warns_if_number_of_relations_does_not_match_products(sqlite_client_and_
 # TODO: check all other relevant properties are updated as well
 def test_hot_reload(path_to_test_pkg):
     path_to_functions = Path(path_to_test_pkg, 'functions.py')
-    source = PythonCallableSource(functions.some_function,
-                                  hot_reload=True)
+    source = PythonCallableSource(functions.some_function, hot_reload=True)
 
     source_old = path_to_functions.read_text()
     source_new = 'def some_function():\n    1 + 1\n'

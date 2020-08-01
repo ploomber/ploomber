@@ -269,9 +269,10 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
             #                       .format(infered_relations, actual_len))
 
     def render(self, params):
-        extracted = (static_analysis.sql.extract_product_from_sql(
-            self._placeholder._raw))
-
+        # FIXME: inefficient, initialize once and only update if needed
+        # (i.e. hot reload is on)
+        extracted = static_analysis.sql.SQLExtractor(
+            self._placeholder._raw).extract_product()
         # the code itself might already define the product, no need to pass it
         # TODO: verify that the product passed and the one defined are the same
         if extracted:
