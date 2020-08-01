@@ -317,3 +317,6 @@ def test_extract_upstream_from_parameters(code, expected):
     source = NotebookSource(code, ext_in='py', kernelspec_name='python3')
     upstream = source.extract_upstream()
     assert sorted(upstream) == sorted(expected)
+
+
+# TODO: extract product

@@ -602,6 +602,8 @@ def inject_cell(model, params):
                                              **kwargs)
 
 
+# FIXME: this is used in the task itself in the .develop() feature, maybe
+# move there?
 def _cleanup_rendered_nb(nb):
     cell, i = find_cell_with_tag(nb, 'injected-parameters')
 
