@@ -99,8 +99,12 @@ class RLexer(Lexer):
                 self.advance(n=2)
                 yield Assignment('<-')
 
+            elif self.current_char == '=':
+                self.advance()
+                yield Assignment('=')
+
             # Other operators
-            elif self.current_char in ['(', ')', ',', '=']:
+            elif self.current_char in ['(', ')', ',']:
                 op = Operator(self.current_char)
                 self.advance()
                 yield op
