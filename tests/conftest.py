@@ -1,3 +1,7 @@
+"""
+Note: tests organized in folders must contain an init file:
+https://github.com/pytest-dev/pytest/issues/3151#issuecomment-360493948
+"""
 from copy import copy
 import sys
 import importlib
@@ -26,6 +30,7 @@ def fixture_tmp_dir(source):
     making that location the current working directory and deleting after
     the test is done. This decorator allows us to build such fixture
     """
+
     # NOTE: I tried not making this a decorator and just do:
     # some_fixture = factory('some/path')
     # but didn't work
@@ -34,7 +39,7 @@ def fixture_tmp_dir(source):
         def wrapper():
             old = os.getcwd()
             tmp_dir = tempfile.mkdtemp()
-            tmp = Path(tmp_dir,  'content')
+            tmp = Path(tmp_dir, 'content')
             # we have to add extra folder content/, otherwise copytree
             # complains
             shutil.copytree(str(source), str(tmp))
@@ -112,8 +117,8 @@ def cleanup_env():
     Env.end()
 
 
-@fixture_tmp_dir(_path_to_tests() / '..' / 'examples' / 'pipeline'
-                 / 'intermediate')
+@fixture_tmp_dir(_path_to_tests() / '..' / 'examples' / 'pipeline' /
+                 'intermediate')
 def tmp_intermediate_example_directory():
     pass
 
@@ -165,8 +170,8 @@ def tmp_nbs_nested():
 
 @pytest.fixture(scope='session')
 def path_to_source_code_file():
-    return (_path_to_tests() / 'assets' / 'sample' /
-            'src' / 'pkg' / 'module' / 'functions.py')
+    return (_path_to_tests() / 'assets' / 'sample' / 'src' / 'pkg' / 'module' /
+            'functions.py')
 
 
 @pytest.fixture(scope='session')
@@ -227,8 +232,8 @@ def pg_client_and_schema():
                       for i in range(12))).lower()
 
     client_tmp.execute('CREATE SCHEMA {};'.format(schema))
-    client_tmp.execute('ALTER USER "{}" SET search_path TO {};'
-                       .format(db['user'], schema))
+    client_tmp.execute('ALTER USER "{}" SET search_path TO {};'.format(
+        db['user'], schema))
     client_tmp.close()
 
     client = SQLAlchemyClient(db['uri'])
