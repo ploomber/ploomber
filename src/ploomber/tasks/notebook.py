@@ -143,9 +143,10 @@ class NotebookRunner(Task):
     papermill_params : dict, optional
         Other parameters passed to papermill.execute_notebook, defaults to None
     kernelspec_name: str, optional
-        Kernelspec name to use, if the notebook already includes kernelspec
-        data (in metadata.kernelspec), this is ignored, otherwise, the kernel
-        is looked up using the jupyter_client.kernelspec.get_kernel_spec
+        Kernelspec name to use, if the file extension provides with enough
+        information to choose a kernel or the notebook already includes
+        kernelspec data (in metadata.kernelspec), this is ignored, otherwise,
+        the kernel is looked up using jupyter_client.kernelspec.get_kernel_spec
     nbconvert_exporter_name: str, optional
         Once the notebook is run, this parameter controls whether to export
         the notebook to a different parameter using the nbconvert package,
@@ -188,7 +189,7 @@ class NotebookRunner(Task):
                  name=None,
                  params=None,
                  papermill_params=None,
-                 kernelspec_name='python3',
+                 kernelspec_name=None,
                  nbconvert_exporter_name=None,
                  ext_in=None,
                  nb_product_key='nb',

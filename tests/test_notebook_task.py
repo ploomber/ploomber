@@ -77,14 +77,13 @@ def test_can_execute_to_html(path_to_assets, tmp_directory):
     dag.build()
 
 
-def test_can_execute_from_py(path_to_assets, tmp_directory):
+@pytest.mark.parametrize('name', ['sample.py', 'sample.R', 'sample.ipynb'])
+def test_execute_sample_nb(name, path_to_assets, tmp_directory):
     dag = DAG()
 
-    NotebookRunner(path_to_assets / 'sample.py',
+    NotebookRunner(path_to_assets / name,
                    product=File(Path(tmp_directory, 'out.ipynb')),
-                   dag=dag,
-                   kernelspec_name='python3',
-                   name='nb')
+                   dag=dag)
     dag.build()
 
 
