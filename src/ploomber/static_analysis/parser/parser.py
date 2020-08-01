@@ -29,6 +29,8 @@ class Parser:
         return self.tokens[self.pos + 1 + int(exclude_next):]
 
     def parse(self):
+        """The current implementation can only parse one expression at a time
+        """
         if not isinstance(self.current_token, Name):
             raise SyntaxError('First token must be a valid name')
 

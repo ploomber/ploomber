@@ -28,9 +28,6 @@ install:
   # Create a conda env with the current travis python version
   - conda create -q -n conda-env python=$TRAVIS_PYTHON_VERSION
   - conda activate conda-env
-  - conda install -y r-base r-irkernel
-  - echo "IRkernel::installspec()" | Rscript -
-
 
   # Test vanilla installation, make sure core clients are importable
   - pip install .
@@ -43,6 +40,10 @@ install:
   - pip install -r examples/pipeline/intermediate/requirements.txt
   - pip install -r requirements.txt
   - pip install .[test]
+
+  # install R and IR kernel
+  - conda install -y r-base r-irkernel
+  - echo "IRkernel::installspec()" | Rscript -
 
   # install sample package for tests
   - bash test_pkg.sh

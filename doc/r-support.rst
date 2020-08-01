@@ -1,3 +1,5 @@
+R support
+---------
 
 Using conda to install an isolated R environment:
 
@@ -16,5 +18,5 @@ TODO: inline command
 
 .. code-block:: r
 
-    IRkernel::installspec()
+    echo "IRkernel::installspec()" | Rscript -
 
