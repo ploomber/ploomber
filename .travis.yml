@@ -28,6 +28,8 @@ install:
   # Create a conda env with the current travis python version
   - conda create -q -n conda-env python=$TRAVIS_PYTHON_VERSION
   - conda activate conda-env
+  - conda install -y r-base r-irkernel
+  - echo "IRkernel::installspec()" | Rscript -
 
 
   # Test vanilla installation, make sure core clients are importable
