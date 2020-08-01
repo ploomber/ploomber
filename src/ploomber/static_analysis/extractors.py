@@ -4,8 +4,7 @@ from ploomber.static_analysis.sql import SQLExtractor
 
 _EXTRACTOR_FOR_LANGUAGE = {
     'python': PythonNotebookExtractor,
-    # uppercase to match the name from the jupyter kernel
-    'R': RNotebookExtractor,
+    'r': RNotebookExtractor,
     'sql': SQLExtractor
 }
 
@@ -17,9 +16,9 @@ _EXTRACTOR_FOR_SUFFIX = {
 }
 
 
-def extractor_for_language(language):
+def extractor_class_for_language(language):
     if language not in _EXTRACTOR_FOR_LANGUAGE:
-        raise KeyError(
+        raise NotImplementedError(
             '"{}" is unsupported, supported languages are {}'.format(
                 language, list(_EXTRACTOR_FOR_LANGUAGE)))
 

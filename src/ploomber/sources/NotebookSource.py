@@ -39,7 +39,7 @@ from ploomber.exceptions import RenderError, SourceInitializationError
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources import Source
-from ploomber.static_analysis.python import PythonNotebookExtractor
+from ploomber.static_analysis.extractors import extractor_class_for_language
 
 
 class NotebookSource(Source):
@@ -322,19 +322,13 @@ class NotebookSource(Source):
 
     # FIXME: A bit inefficient to initialize the extractor every time
     def extract_upstream(self):
-        if self.language == 'python':
-            return PythonNotebookExtractor(
-                self._get_parameters_cell()).extract_upstream()
-        else:
-            raise NotImplementedError
+        extractor_class = extractor_class_for_language(self.language)
+        return extractor_class(self._get_parameters_cell()).extract_upstream()
 
     # FIXME: A bit inefficient to initialize the extractor every time
     def extract_product(self):
-        if self.language == 'python':
-            return PythonNotebookExtractor(
-                self._get_parameters_cell()).extract_product()
-        else:
-            raise NotImplementedError
+        extractor_class = extractor_class_for_language(self.language)
+        return extractor_class(self._get_parameters_cell()).extract_product()
 
 
 # FIXME: some of this only applies to Python notebooks (error about missing

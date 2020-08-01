@@ -303,20 +303,42 @@ def test_error_with_unknown_language(nb):
 
 nb_case_1 = """
 # + tags=["parameters"]
+product = {'a': 'path/a.csv'}
 upstream = {'some_key': 'some_value'}
-""", ['some_key']
+""", 'py', ['some_key'], {
+    'a': 'path/a.csv'
+}
 
 nb_case_2 = """
 # + tags=["parameters"]
 upstream = {'a': None, 'b': None}
-""", ['a', 'b']
+product = {'a': 'path/a.csv'}
+""", 'py', ['a', 'b'], {
+    'a': 'path/a.csv'
+}
+
+nb_case_3 = """
+# + tags=["parameters"]
+product = list(a="path/a.csv")
+upstream <- list('a', 'b')
+""", 'R', ['a', 'b'], {
+    'a': 'path/a.csv'
+}
+
+nb_case_4 = """
+# + tags=["parameters"]
+upstream = list('x', 'y')
+product  <-  list(a="path/a.csv")
+""", 'r', ['x', 'y'], {
+    'a': 'path/a.csv'
+}
 
 
-@pytest.mark.parametrize('code, expected', [nb_case_1, nb_case_2])
-def test_extract_upstream_from_parameters(code, expected):
-    source = NotebookSource(code, ext_in='py', kernelspec_name='python3')
+@pytest.mark.parametrize('code, ext, expected_up, expected_prod',
+                         [nb_case_1, nb_case_2, nb_case_3, nb_case_4])
+def test_extract_upstream_from_parameters(code, ext, expected_up,
+                                          expected_prod):
+    source = NotebookSource(code, ext_in=ext)
     upstream = source.extract_upstream()
-    assert sorted(upstream) == sorted(expected)
-
-
-# TODO: extract product
+    assert sorted(upstream) == sorted(expected_up)
+    assert source.extract_product() == expected_prod
