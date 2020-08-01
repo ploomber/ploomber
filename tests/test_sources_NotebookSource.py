@@ -1,14 +1,12 @@
-from pathlib import Path
 import pytest
 
 import nbformat
 from jupyter_client.kernelspec import NoSuchKernel
 
 from ploomber.tasks.Params import Params
-from ploomber.sources.NotebookSource import NotebookSource
+from ploomber.sources.NotebookSource import NotebookSource, infer_language
 from ploomber.products import File
 from ploomber.exceptions import RenderError
-
 
 notebook_ab = """
 # + tags=['parameters']
@@ -45,8 +43,9 @@ x = 1
     with pytest.raises(RenderError) as excinfo:
         source.render(params)
 
-    assert ('\nNotebook does not have a cell tagged "parameters"'
-            == str(excinfo.value))
+    assert ('\nNotebook does not have a cell tagged "parameters"' == str(
+        excinfo.value))
+
 
 # add test on missing kernelspec_name
 
@@ -75,8 +74,8 @@ def test_warn_if_using_default_value():
         source.render(params)
 
     assert len(record) == 1
-    assert (str(record[0].message)
-            == "Missing parameters: {'b'}, will use default value")
+    assert (str(record[0].message) ==
+            "Missing parameters: {'b'}, will use default value")
 
 
 def test_error_if_passing_undeclared_parameter():
@@ -166,13 +165,14 @@ def test_injects_parameters_on_render():
 # + tags=['parameters']
 product = None
 some_param = 2
-    """, ext_in='py', kernelspec_name='python3')
+    """,
+                       ext_in='py',
+                       kernelspec_name='python3')
     params = Params()
     params._dict = {'some_param': 1, 'product': File('output.ipynb')}
     s.render(params)
 
-    nb = nbformat.reads(s.rendered_nb_str,
-                        as_version=nbformat.NO_CONVERT)
+    nb = nbformat.reads(s.rendered_nb_str, as_version=nbformat.NO_CONVERT)
 
     # cell 0: empty
     # cell 1: parameters
@@ -195,9 +195,56 @@ def test_cleanup_rendered_notebook():
 1 + 1
     """
 
-    source = NotebookSource(source,
-                            ext_in='py',
-                            kernelspec_name='python3')
+    source = NotebookSource(source, ext_in='py', kernelspec_name='python3')
     params = Params()
     params._dict = {'product': File('output.ipynb')}
     source.render(params)
+
+
+# extracting language from notebook objects
+
+
+def nb_python_meta():
+    nb = nbformat.v4.new_notebook()
+    nb.metadata = {'kernel_info': {'language': 'python'}}
+    return nb
+
+
+def nb_python_inferred():
+    nb = nbformat.v4.new_notebook()
+    nb.metadata = {'kernel_info': {'language': 'python'}}
+    code = nbformat.v4.new_code_cell(source='1+1')
+    nb.cells.append(code)
+    return nb
+
+
+def nb_R_meta():
+    nb = nbformat.v4.new_notebook()
+    nb.metadata = {'kernel_info': {'language': 'R'}}
+    return nb
+
+
+@pytest.mark.parametrize('nb, expected', [(nb_python_meta(), 'python'),
+                                          (nb_python_inferred(), 'python'),
+                                          (nb_R_meta(), 'R')])
+def test_infer_language(nb, expected):
+    assert infer_language(nb) == expected
+
+
+def nb_unknown(metadata):
+    # second most popular case is R, but we don't have a way to know for sure
+    nb = nbformat.v4.new_notebook()
+    nb.metadata = metadata
+    code = nbformat.v4.new_code_cell(source='a <- 1')
+    nb.cells.append(code)
+    return nb
+
+
+@pytest.mark.parametrize('nb', [
+    nb_unknown({}),
+    nb_unknown({'kernel_info': {}}),
+])
+def test_error_with_unknown_language(nb):
+
+    with pytest.raises(ValueError):
+        infer_language(nb)

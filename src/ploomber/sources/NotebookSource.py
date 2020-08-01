@@ -1,3 +1,4 @@
+import ast
 from inspect import getargspec
 import tempfile
 from pathlib import Path
@@ -37,10 +38,14 @@ class NotebookSource(Source):
     The render method prepares the notebook for execution: it adds the
     parameters and it makes sure kernelspec is defined
     """
-
-    @requires(['parso', 'pyflakes', 'jupytext', 'nbformat', 'papermill',
-               'jupyter_client'])
-    def __init__(self, primitive, hot_reload=False, ext_in=None,
+    @requires([
+        'parso', 'pyflakes', 'jupytext', 'nbformat', 'papermill',
+        'jupyter_client'
+    ])
+    def __init__(self,
+                 primitive,
+                 hot_reload=False,
+                 ext_in=None,
                  kernelspec_name=None,
                  static_analysis=False):
         # any non-py file must first be converted using jupytext, we need
@@ -62,8 +67,8 @@ class NotebookSource(Source):
             self._primitive = primitive.read_text()
         else:
             raise TypeError('Notebooks must be initialized from strings, '
-                            'Placeholder or pathlib.Path, got {}'
-                            .format(type(primitive)))
+                            'Placeholder or pathlib.Path, got {}'.format(
+                                type(primitive)))
 
         self.static_analysis = static_analysis
         self._kernelspec_name = kernelspec_name
@@ -118,7 +123,9 @@ class NotebookSource(Source):
         # _get_nb_repr uses hot_reload, this ensures we always get the latest
         # version
         Path(tmp_in).write_text(self._get_nb_repr())
-        pm.execute_notebook(tmp_in, tmp_out, prepare_only=True,
+        pm.execute_notebook(tmp_in,
+                            tmp_out,
+                            prepare_only=True,
                             parameters=self._params)
 
         tmp_out = Path(tmp_out)
@@ -191,10 +198,10 @@ class NotebookSource(Source):
             import nbformat
             # read the notebook with the injected parameters from the tmp
             # location
-            nb_rendered = (nbformat
-                           .reads(self._rendered_nb_str,
-                                  as_version=nbformat.NO_CONVERT))
-            check_notebook(nb_rendered, params,
+            nb_rendered = (nbformat.reads(self._rendered_nb_str,
+                                          as_version=nbformat.NO_CONVERT))
+            check_notebook(nb_rendered,
+                           params,
                            filename=self._path or 'notebook')
 
     @property
@@ -305,8 +312,10 @@ def json_serializable_params(params):
     params['product'] = params['product'].to_json_serializable()
 
     if params.get('upstream'):
-        params['upstream'] = {k: n.to_json_serializable() for k, n
-                              in params['upstream'].items()}
+        params['upstream'] = {
+            k: n.to_json_serializable()
+            for k, n in params['upstream'].items()
+        }
     return params
 
 
@@ -360,8 +369,10 @@ def check_source(nb, filename):
     err.seek(0)
 
     # return any error messages returned by pyflakes
-    return {'warnings': '\n'.join(warn.readlines()),
-            'errors': '\n'.join(err.readlines())}
+    return {
+        'warnings': '\n'.join(warn.readlines()),
+        'errors': '\n'.join(err.readlines())
+    }
 
 
 def _to_nb_obj(source, extension, kernelspec_name=None):
@@ -394,7 +405,7 @@ def _to_nb_obj(source, extension, kernelspec_name=None):
     import jupytext
     import jupyter_client
     # NOTE: how is this different to just doing fmt='.py'
-    nb = jupytext.reads(source, fmt={'extension': '.'+extension})
+    nb = jupytext.reads(source, fmt={'extension': '.' + extension})
     nb_kernelspec = nb.metadata.get('kernelspec')
 
     if nb_kernelspec is None and kernelspec_name is None:
@@ -402,7 +413,10 @@ def _to_nb_obj(source, extension, kernelspec_name=None):
             'Notebook does not contains kernelspec metadata and '
             'kernelspec_name was not specified, either add '
             'kernelspec info to your source file or specify '
-            'a kernelspec by name')
+            'a kernelspec by name. To see list of installed kernels run '
+            '"jupyter kernelspec list" in the terminal (first column '
+            'indicates the name). Python is usually named "python3", '
+            'R usually "ir"')
 
     # only use kernelspec_name when there is no kernelspec info in the nb
     if nb_kernelspec is None and kernelspec_name is not None:
@@ -456,7 +470,8 @@ def inject_cell(model, params):
     else:
         kwargs = {}
 
-    model['content'] = parameterize_notebook(nb, params,
+    model['content'] = parameterize_notebook(nb,
+                                             params,
                                              report_mode=False,
                                              **kwargs)
 
@@ -496,3 +511,42 @@ def _find_cell_with_tag(nb, tag):
                 return c, i
 
     return None, None
+
+
+def infer_language(nb):
+    """
+    Determine the language for a given notebook object, look for
+    metadata.kernel_info.language first, if not defined, try to guess if it's
+    Python, otherwise, raise an exception
+    """
+    language = None
+
+    # check metadata first
+    try:
+        language = nb.metadata.kernel_info.language
+    except AttributeError:
+        language = None
+
+    # no language defined in metadata, check if it's valid python
+    if language is None:
+        code_str = '\n'.join([c.source for c in nb.cells])
+
+        try:
+            ast.parse(code_str)
+        except SyntaxError:
+            pass
+        else:
+            # there is a lot of R code which is also valid Python code! So let's
+            # run a quick test. It is very unlikely to have "<-" in Python (
+            # {less than} {negative} but extremely common {assignment}
+            if '<-' not in code_str:
+                language = 'python'
+
+    if language is None:
+        # TODO: add link to FAQ on nb metadata and kernelspec
+        raise ValueError('Your notebook does not contain language '
+                         'information and we could not automatically '
+                         'determine it, please add language metadata '
+                         'explicitly')
+
+    return language

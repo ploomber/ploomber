@@ -6,7 +6,6 @@ from ploomber.products import Product
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.exceptions import SourceInitializationError
 from ploomber.sql import infer
-from ploomber.util import util
 from ploomber import static_analysis
 
 
