@@ -14,8 +14,10 @@ mod.children
 
 import pytest
 
-from ploomber.static_analysis.parser.lexer import Lexer
-from ploomber.static_analysis.parser.tokens import Integer, BinaryOperator, Assignment, Name, Operator, String
+from ploomber.static_analysis.parser.RLexer import RLexer
+from ploomber.static_analysis.parser.tokens import (Integer, BinaryOperator,
+                                                    Assignment, Name, Operator,
+                                                    String)
 
 
 @pytest.mark.parametrize('code, tokens', [
@@ -51,4 +53,4 @@ from ploomber.static_analysis.parser.tokens import Integer, BinaryOperator, Assi
     ('"hello"', [String('hello')]),
 ])
 def test_lexer(code, tokens):
-    assert list(Lexer(code)) == tokens
+    assert list(RLexer(code)) == tokens

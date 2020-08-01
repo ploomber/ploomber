@@ -1,6 +1,42 @@
 import itertools
-from ploomber.static_analysis.parser.lexer import Lexer
-from ploomber.static_analysis.parser.tokens import Integer, BinaryOperator, Assignment, Name, Operator
+from ploomber.static_analysis.parser.tokens import Assignment, Name, Operator
+
+
+class Parser:
+    """
+    The current implementation is very simple and does not even
+    build an AST. It just parses one statement at a time. Fine for our
+    purposes with some limitations.
+
+    Parameters
+    ----------
+    tokens : list
+        Tokens, obtained from a Lexer
+    """
+    def __init__(self, tokens):
+        self.tokens = tokens
+        self.pos = 0
+
+    @property
+    def current_token(self):
+        return self.tokens[self.pos]
+
+    @property
+    def next_token(self):
+        return self.tokens[self.pos + 1]
+
+    def get_tail(self, exclude_next=True):
+        return self.tokens[self.pos + 1 + int(exclude_next):]
+
+    def parse(self):
+        if not isinstance(self.current_token, Name):
+            raise SyntaxError('First token must be a valid name')
+
+        if not isinstance(self.next_token, Assignment):
+            raise SyntaxError('Second token must be an assignment')
+
+        return Expression(self.current_token, self.next_token,
+                          build_node(self.get_tail()))
 
 
 def get_slicer(elements, size):
@@ -17,11 +53,6 @@ def get_slicer(elements, size):
             slice_.append(None)
 
         yield slice_
-
-
-class AST:
-    def __init__(self, children):
-        self.children = children
 
 
 class Node:
@@ -68,30 +99,3 @@ def build_node(tokens):
 
     else:
         raise SyntaxError('Must be a list object')
-
-
-class Parser:
-    def __init__(self, code):
-        self.tokens = list(Lexer(code))
-        self.pos = 0
-
-    @property
-    def current_token(self):
-        return self.tokens[self.pos]
-
-    @property
-    def next_token(self):
-        return self.tokens[self.pos + 1]
-
-    def get_tail(self, exclude_next=True):
-        return self.tokens[self.pos + 1 + int(exclude_next):]
-
-    def parse(self):
-        if not isinstance(self.current_token, Name):
-            raise SyntaxError('First token must be a valid name')
-
-        if not isinstance(self.next_token, Assignment):
-            raise SyntaxError('Second token must be an assignment')
-
-        return Expression(self.current_token, self.next_token,
-                          build_node(self.get_tail()))

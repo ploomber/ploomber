@@ -1,5 +1,6 @@
 import pytest
 from ploomber.static_analysis.parser.parser import Parser
+from ploomber.static_analysis.parser.RLexer import RLexer
 
 
 @pytest.mark.parametrize('code, expected', [
@@ -7,7 +8,7 @@ from ploomber.static_analysis.parser.parser import Parser
     ("upstream <- list('a', 'b', 'c')", ['a', 'b', 'c']),
 ])
 def test_parse_list(code, expected):
-    parser = Parser(code)
+    parser = Parser(tokens=list(RLexer(code)))
     expression = parser.parse()
     assert expression.left.value == 'upstream'
     assert expression.right.to_python() == expected
@@ -26,7 +27,7 @@ def test_parse_list(code, expected):
     }),
 ])
 def test_parse_namedlist(code, expected):
-    parser = Parser(code)
+    parser = Parser(tokens=list(RLexer(code)))
     expression = parser.parse()
     assert expression.left.value == 'product'
     assert expression.right.to_python() == expected

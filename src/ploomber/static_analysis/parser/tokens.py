@@ -1,3 +1,9 @@
+"""
+Tokens, given the limited scope our parser, we can reuse them for several
+languages
+"""
+
+
 class Token:
     def __init__(self, value):
         self.value = value

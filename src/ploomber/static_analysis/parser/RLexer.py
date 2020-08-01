@@ -1,8 +1,11 @@
 import string
-from ploomber.static_analysis.parser.tokens import Integer, BinaryOperator, Assignment, Name, Operator, String
+from ploomber.static_analysis.parser.tokens import (Integer, BinaryOperator,
+                                                    Assignment, Name, Operator,
+                                                    String)
+from ploomber.static_analysis.parser.abstract import Lexer
 
 
-class Lexer:
+class RLexer(Lexer):
     """
     Parses a code string and returns one token at a time
 
