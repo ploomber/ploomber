@@ -120,8 +120,6 @@ class NotebookSource(Source):
         # mught be inconclusive if dealing with a ipynb file
         self._language = determine_language(self._ext_in)
 
-        self._post_init_validation(str(self._primitive))
-
         self._python_repr = None
         self._loc = None
         self._rendered_nb_str = None
@@ -131,6 +129,8 @@ class NotebookSource(Source):
 
         # this will raise an error if kernelspec_name is invalid
         self._get_nb_repr()
+
+        self._post_init_validation(str(self._primitive))
 
     @property
     def primitive(self):
@@ -200,7 +200,6 @@ class NotebookSource(Source):
 
         # hot_reload causes to always re-evalaute the notebook representation
         if self._nb_repr is None or self._hot_reload:
-
             # this is the notebook node representation
             self._nb_obj = _to_nb_obj(
                 self.primitive,
@@ -210,11 +209,10 @@ class NotebookSource(Source):
                 language=self._language,
                 kernelspec_name=self._kernelspec_name)
 
-            if self._ext_in == 'ipynb':
-                self._nb_repr = self.primitive
-            else:
-                self._nb_repr = nbformat.writes(self._nb_obj,
-                                                version=nbformat.NO_CONVERT)
+            # always write from nb_obj, even if this was initialized
+            # with a ipynb file, nb_obj contains kernelspec info
+            self._nb_repr = nbformat.writes(self._nb_obj,
+                                            version=nbformat.NO_CONVERT)
 
         return self._nb_repr
 
@@ -227,21 +225,32 @@ class NotebookSource(Source):
         # maybe we don't need to use pyflakes after all
         # we can also use compile. can pyflakes detect things that
         # compile cannot?
-        pass
+
+        params_cell, _ = find_cell_with_tag(self._nb_obj, 'parameters')
+
+        if params_cell is None:
+            raise SourceInitializationError(
+                'Notebook does not have a cell tagged '
+                '"parameters"')
 
     def _post_render_validation(self, params):
         """
         Validate params passed against parameters in the notebook
         """
         if self.static_analysis:
-            import nbformat
-            # read the notebook with the injected parameters from the tmp
-            # location
-            nb_rendered = (nbformat.reads(self._rendered_nb_str,
-                                          as_version=nbformat.NO_CONVERT))
-            check_notebook(nb_rendered,
-                           params,
-                           filename=self._path or 'notebook')
+            if self.language == 'python':
+                import nbformat
+                # read the notebook with the injected parameters from the tmp
+                # location
+                nb_rendered = (nbformat.reads(self._rendered_nb_str,
+                                              as_version=nbformat.NO_CONVERT))
+                check_notebook(nb_rendered,
+                               params,
+                               filename=self._path or 'notebook')
+            else:
+                raise NotImplementedError(
+                    'static_analysis is only implemented for Python notebooks'
+                    ', set the option to False')
 
     @property
     def doc(self):
@@ -360,17 +369,13 @@ def check_notebook(nb, params, filename):
 
     params_cell, _ = find_cell_with_tag(nb, 'parameters')
 
-    if params_cell is None:
-        error_message += ('Notebook does not have a cell tagged '
-                          '"parameters"')
-    else:
-        # compare passed parameters with declared
-        # parameters. This will make our notebook behave more
-        # like a "function", if any parameter is passed but not
-        # declared, this will return an error message, if any parameter
-        # is declared but not passed, a warning is shown
-        res_params = compare_params(params_cell['source'], params)
-        error_message += res_params
+    # compare passed parameters with declared
+    # parameters. This will make our notebook behave more
+    # like a "function", if any parameter is passed but not
+    # declared, this will return an error message, if any parameter
+    # is declared but not passed, a warning is shown
+    res_params = compare_params(params_cell['source'], params)
+    error_message += res_params
 
     # run pyflakes and collect errors
     res = check_source(nb, filename=filename)

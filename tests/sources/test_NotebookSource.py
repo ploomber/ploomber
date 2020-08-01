@@ -8,12 +8,12 @@ from jupyter_client.kernelspec import NoSuchKernel
 from ploomber.tasks.Params import Params
 from ploomber.sources.NotebookSource import NotebookSource, is_python
 from ploomber.products import File
-from ploomber.exceptions import RenderError
+from ploomber.exceptions import RenderError, SourceInitializationError
 
 # Functions for generating notebooks with different characteristics for testing
 
 
-def nb_no_code(fmt=None, kname=None, klang=None):
+def new_nb(fmt=None, kname=None, klang=None, code='1+1', add_tag=True):
     nb = nbformat.v4.new_notebook()
 
     if kname or klang:
@@ -24,6 +24,14 @@ def nb_no_code(fmt=None, kname=None, klang=None):
 
         if klang:
             nb.metadata.kernelspec['language'] = klang
+
+    if code:
+        cell = nbformat.v4.new_code_cell(source=code)
+
+        if add_tag:
+            cell.metadata = {'tags': ['parameters']}
+
+        nb.cells.append(cell)
 
     if fmt:
         nb = jupytext.writes(nb, fmt=fmt)
@@ -69,18 +77,20 @@ a + b
 @pytest.mark.parametrize(
     'nb_str, ext, expected',
     [
-        (nb_no_code(fmt='py:light'), 'py', 'python'),
-        (nb_no_code(fmt='r:light'), 'r', 'r'),
-        (nb_no_code(fmt='r:light'), 'R', 'r'),
-        (nb_no_code(fmt='ipynb', klang='python'), 'ipynb', 'python'),
-        (nb_no_code(fmt='ipynb', klang='R', kname='ir'), 'ipynb', 'r'),
+        (new_nb(fmt='py:light'), 'py', 'python'),
+        (new_nb(fmt='r:light'), 'r', 'r'),
+        (new_nb(fmt='r:light'), 'R', 'r'),
+        (new_nb(fmt='ipynb', klang='python'), 'ipynb', 'python'),
+        (new_nb(fmt='ipynb', klang='R', kname='ir'), 'ipynb', 'r'),
         # if there is nothing and it's an ipynb, assume python
-        (nb_no_code(fmt='ipynb'), 'ipynb', 'python'),
+        (new_nb(fmt='ipynb'), 'ipynb', 'python'),
     ])
 def test_language_and_kernel(nb_str, ext, expected, tmp_directory):
     path = Path('nb.' + ext)
     path.write_text(nb_str)
     source = NotebookSource(path)
+
+    assert source._ext_in == ext
     assert source.language == expected
 
     # jupyter sets as "R" (and not "r") as the language for R notebooks
@@ -97,35 +107,48 @@ def test_language_and_kernel(nb_str, ext, expected, tmp_directory):
     assert source._nb_obj.metadata.kernelspec.name == expected_kernel
 
 
+def test_kernelspec_overrides_nb_kernel_info():
+    source = NotebookSource(new_nb(fmt='ipynb'),
+                            ext_in='ipynb',
+                            kernelspec_name='ir')
+    assert source._nb_obj.metadata.kernelspec.name == 'ir'
+    assert source._nb_obj.metadata.kernelspec.language == 'R'
+
+
 def test_error_if_kernelspec_name_is_invalid():
     with pytest.raises(NoSuchKernel):
-        NotebookSource('1 + 1',
-                       ext_in='py',
+        NotebookSource(new_nb(fmt='ipynb'),
+                       ext_in='ipynb',
                        kernelspec_name='invalid_kernelspec')
 
 
 def test_error_if_parameters_cell_doesnt_exist():
-    notebook_no_parameters_tag = """
-x = 1
-    """
+    with pytest.raises(SourceInitializationError) as excinfo:
+        NotebookSource(new_nb(fmt='ipynb', add_tag=False), ext_in='ipynb')
 
-    source = NotebookSource(notebook_no_parameters_tag,
-                            ext_in='py',
-                            kernelspec_name='python3',
+    assert 'Notebook does not have a cell tagged "parameters"' in str(
+        excinfo.value)
+
+
+def test_nb_str_contains_kernel_info():
+    source = NotebookSource(new_nb(fmt='ipynb'), ext_in='ipynb')
+    nb = nbformat.reads(source._nb_repr, as_version=nbformat.NO_CONVERT)
+    assert (set(
+        nb.metadata.kernelspec.keys()) == {'display_name', 'language', 'name'})
+
+
+# Static analysis tests (Pytnon only)
+
+
+def test_error_if_static_analysis_on_a_non_python_nb():
+    source = NotebookSource(new_nb(fmt='r:light'),
+                            ext_in='R',
                             static_analysis=True)
-
     params = Params()
-    # set private attribute to allow init with product
     params._dict = {'product': File('output.ipynb')}
 
-    with pytest.raises(RenderError) as excinfo:
+    with pytest.raises(NotImplementedError):
         source.render(params)
-
-    assert ('\nNotebook does not have a cell tagged "parameters"' == str(
-        excinfo.value))
-
-
-# add test on missing kernelspec_name
 
 
 def test_no_error_if_declared_and_passed_params_match():
@@ -219,45 +242,28 @@ if
     assert 'invalid syntax' in str(excinfo.value)
 
 
-def test_error_if_no_parameters_cell():
-    source = """
-1 + 1
-    """
-
-    source = NotebookSource(source,
-                            ext_in='py',
-                            kernelspec_name='python3',
-                            static_analysis=True)
-
-    params = Params()
-    params._dict = {'product': File('output.ipynb'), 'a': 1, 'b': 2}
-
-    with pytest.raises(RenderError) as excinfo:
-        source.render(params)
-
-    assert 'Notebook does not have a cell tagged "parameters"' in str(
-        excinfo.value)
+# Parameter injection
 
 
-def test_injects_parameters_on_render():
-    s = NotebookSource("""
-# + tags=['parameters']
-product = None
-some_param = 2
-    """,
-                       ext_in='py',
-                       kernelspec_name='python3')
+@pytest.mark.parametrize('nb_str, ext', [
+    (new_nb(fmt='py:light', code='# some code'), 'py'),
+    (new_nb(fmt='py:percent', code='# some code'), 'py'),
+    (new_nb(fmt='ipynb', code='# some code'), 'ipynb'),
+    (new_nb(fmt='r:light', code='# some code'), 'R'),
+    (new_nb(fmt='r:percent', code='# some code'), 'r'),
+])
+def test_injects_parameters_on_render(nb_str, ext):
+    s = NotebookSource(nb_str, ext_in=ext)
     params = Params()
     params._dict = {'some_param': 1, 'product': File('output.ipynb')}
     s.render(params)
 
     nb = nbformat.reads(s.rendered_nb_str, as_version=nbformat.NO_CONVERT)
 
-    # cell 0: empty
-    # cell 1: parameters
-    # cell 2: injected-parameters
+    # cell 0: parameters
+    # cell 1: injected-parameters
 
-    injected = nb.cells[2]
+    injected = nb.cells[1]
     tags = injected['metadata']['tags']
 
     assert len(tags) == 1
@@ -266,18 +272,6 @@ some_param = 2
     # py 3.5 does not gurantee order, so we check them separately
     assert 'some_param = 1' in injected['source']
     assert 'product = "output.ipynb"' in injected['source']
-
-
-def test_cleanup_rendered_notebook():
-    # simulate a rendered notebook (with injected parameters)
-    source = """
-1 + 1
-    """
-
-    source = NotebookSource(source, ext_in='py', kernelspec_name='python3')
-    params = Params()
-    params._dict = {'product': File('output.ipynb')}
-    source.render(params)
 
 
 # extracting language from notebook objects
