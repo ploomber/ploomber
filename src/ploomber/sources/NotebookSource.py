@@ -1,3 +1,29 @@
+"""
+
+On languages and kernels
+------------------------
+NotebookSource represents source code in a Jupyter notebook format (language
+agnostic). Apart from .ipynb, we also support any other extension supported
+by jupytext.
+
+Given a notebook, we have to know which language it is written in to extract
+upstream/product variables (though this only happens when the option of
+extracting dependencies automatically is on), we also have to determine the
+Jupyter kernel to use (this is always needed).
+
+The unequivocal place to store this information is in the notebook metadata
+section, but given that we advocate for the use of scripts (converted to
+notebooks via jupytext), they most likely won't contain metadata (metadata
+saving is turned off by default in jupytext), so we have to infer this
+ourselves.
+
+To make things more complex, jupytext adds its own metadata section but we are
+ignoring that for now.
+
+Given that there are many places where this information might be stored, we
+have a few rules to automatically determine language and kernel given a
+script/notebook.
+"""
 import ast
 from inspect import getargspec
 import tempfile
@@ -16,8 +42,6 @@ from ploomber.sources import Source
 from ploomber.static_analysis.python import PythonNotebookExtractor
 
 
-# TODO: make sure this works with R, Julia and other notebooks supported
-# by Jupyter
 class NotebookSource(Source):
     """
     A source object representing a jupyter notebook (or any format supported
@@ -91,6 +115,10 @@ class NotebookSource(Source):
                              'initialized from a file')
         elif self._path is None and ext_in is not None:
             self._ext_in = ext_in
+
+        # try to determine language based on extension, though this test
+        # mught be inconclusive if dealing with a ipynb file
+        self._language = determine_language(self._ext_in)
 
         self._post_init_validation(str(self._primitive))
 
@@ -172,13 +200,19 @@ class NotebookSource(Source):
 
         # hot_reload causes to always re-evalaute the notebook representation
         if self._nb_repr is None or self._hot_reload:
+
+            # this is the notebook node representation
+            self._nb_obj = _to_nb_obj(
+                self.primitive,
+                # passing the underscored version
+                # because that's the only one available
+                # when this is initialized
+                language=self._language,
+                kernelspec_name=self._kernelspec_name)
+
             if self._ext_in == 'ipynb':
                 self._nb_repr = self.primitive
             else:
-                self._nb_obj = _to_nb_obj(
-                    self.primitive,
-                    extension='py',
-                    kernelspec_name=self._kernelspec_name)
                 self._nb_repr = nbformat.writes(self._nb_obj,
                                                 version=nbformat.NO_CONVERT)
 
@@ -256,8 +290,21 @@ class NotebookSource(Source):
     # since it's not informative (ipynb files can be Python, R, etc)
     @property
     def language(self):
-        self._get_nb_repr()
-        return self._nb_obj.metadata.kernelspec.language
+        """
+        Notebook Language (Python, R, etc), this is a best-effort property,
+        can be None if we could not determine the language
+        """
+        if self._language is None:
+            self._get_nb_repr()
+
+            try:
+                # make sure you return "r" instead of "R"
+                return self._nb_obj.metadata.kernelspec.language.lower()
+            except AttributeError:
+                return None
+
+        else:
+            return self._language
 
     def _get_parameters_cell(self):
         self._get_nb_repr()
@@ -412,7 +459,7 @@ def check_source(nb, filename):
     }
 
 
-def _to_nb_obj(source, extension, kernelspec_name=None):
+def _to_nb_obj(source, language, kernelspec_name=None):
     """
     Convert to jupyter notebook via jupytext, if the notebook does not contain
     kernel information and the user did not pass a kernelspec_name explicitly,
@@ -421,13 +468,16 @@ def _to_nb_obj(source, extension, kernelspec_name=None):
     If a valid kernel is found, it is added to the notebook. If none of this
     works, an exception is raised.
 
+    If also converts the code string to its notebook node representation,
+    adding kernel data accordingly.
+
     Parameters
     ----------
     source : str
         Jupyter notebook (or jupytext compatible formatted) document
 
-    extension : str
-        Document format
+    language : str
+        Programming language
 
     Returns
     -------
@@ -446,15 +496,15 @@ def _to_nb_obj(source, extension, kernelspec_name=None):
     import jupytext
     import jupyter_client
 
-    # NOTE: how is this different to just doing fmt='.py'
-    nb = jupytext.reads(source, fmt={'extension': '.' + extension})
+    # let jupytext figure out the format
+    nb = jupytext.reads(source, fmt=None)
 
-    kernel_name = determine_kernel_name(nb, kernelspec_name)
+    kernel_name = determine_kernel_name(nb, language, kernelspec_name)
 
     # cannot keep going if we don't have the kernel name
     if kernel_name is None:
         raise SourceInitializationError(
-            'Notebook does not contains kernelspec metadata and '
+            'Notebook does not contain kernelspec metadata and '
             'kernelspec_name was not specified, either add '
             'kernelspec info to your source file or specify '
             'a kernelspec by name. To see list of installed kernels run '
@@ -462,22 +512,23 @@ def _to_nb_obj(source, extension, kernelspec_name=None):
             'indicates the name). Python is usually named "python3", '
             'R usually "ir"')
 
-    kernel = jupyter_client.kernelspec.get_kernel_spec(kernel_name)
+    kernelspec = jupyter_client.kernelspec.get_kernel_spec(kernel_name)
 
     nb.metadata.kernelspec = {
-        "display_name": kernel.display_name,
-        "language": kernel.language,
-        "name": kernelspec_name
+        "display_name": kernelspec.display_name,
+        "language": kernelspec.language,
+        "name": kernel_name
     }
 
     return nb
 
 
-def determine_kernel_name(nb, kernelspec_name):
+def determine_kernel_name(nb, language, kernelspec_name):
     """
     Try to determine kernel name, first check notebook metadata, then
-    check if the user explicitly provided a kernelspec_name, then, try
-    to guess if this is a Python notebook
+    check if the user explicitly provided a kernelspec_name. If None of this
+    works use the language info, which should not be empty by the time this
+    is executed
     """
     try:
         return nb.metadata.kernelspec.name
@@ -486,6 +537,12 @@ def determine_kernel_name(nb, kernelspec_name):
 
     if kernelspec_name is not None:
         return kernelspec_name
+
+    # two most common cases
+    lang2kernel = {'python': 'python3', 'r': 'ir'}
+
+    if language in lang2kernel:
+        return lang2kernel[language]
 
     is_python_ = is_python(nb)
 
@@ -566,7 +623,7 @@ def _cleanup_rendered_nb(nb):
 def is_python(nb):
     """
     Determine if the notebook is Python code for a given notebook object, look
-    for metadata.kernel_info.language first, if not defined, try to guess if
+    for metadata.kernelspec.language first, if not defined, try to guess if
     it's Python, it's conservative and it returns False if the code is valid
     Python but contains (<-), in which case it's much more likely to be R
     """
@@ -574,7 +631,7 @@ def is_python(nb):
 
     # check metadata first
     try:
-        language = nb.metadata.kernel_info.language
+        language = nb.metadata.kernelspec.language
     except AttributeError:
         pass
     else:
@@ -614,3 +671,18 @@ def find_cell_with_tag(nb, tag):
                 return c, i
 
     return None, None
+
+
+def determine_language(extension):
+    """
+    A function to determine programming language given file extension,
+    returns programming language name (all lowercase) if could be determined,
+    None if the test is inconclusive
+    """
+    if extension.startswith('.'):
+        extension = extension[1:]
+
+    mapping = {'py': 'python', 'r': 'r', 'R': 'r'}
+
+    # ipynb can be many languages, it must return None
+    return mapping.get(extension)

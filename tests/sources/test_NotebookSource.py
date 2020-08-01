@@ -1,5 +1,7 @@
-import pytest
+from pathlib import Path
 
+import pytest
+import jupytext
 import nbformat
 from jupyter_client.kernelspec import NoSuchKernel
 
@@ -7,6 +9,51 @@ from ploomber.tasks.Params import Params
 from ploomber.sources.NotebookSource import NotebookSource, is_python
 from ploomber.products import File
 from ploomber.exceptions import RenderError
+
+# Functions for generating notebooks with different characteristics for testing
+
+
+def nb_no_code(fmt=None, kname=None, klang=None):
+    nb = nbformat.v4.new_notebook()
+
+    if kname or klang:
+        nb.metadata = {'kernelspec': {}}
+
+        if kname:
+            nb.metadata.kernelspec['name'] = kname
+
+        if klang:
+            nb.metadata.kernelspec['language'] = klang
+
+    if fmt:
+        nb = jupytext.writes(nb, fmt=fmt)
+
+    return nb
+
+
+def nb_python_meta(dumps=False):
+    nb = nbformat.v4.new_notebook()
+    nb.metadata = {'kernelspec': {'language': 'python'}}
+
+    if dumps:
+        nb = jupytext.writes(nb, fmt='py:light')
+
+    return nb
+
+
+def nb_python_inferred():
+    nb = nbformat.v4.new_notebook()
+    nb.metadata = {'kernelspec': {'language': 'python'}}
+    code = nbformat.v4.new_code_cell(source='1+1')
+    nb.cells.append(code)
+    return nb
+
+
+def nb_R_meta():
+    nb = nbformat.v4.new_notebook()
+    nb.metadata = {'kernelspec': {'language': 'R'}}
+    return nb
+
 
 notebook_ab = """
 # + tags=['parameters']
@@ -19,9 +66,40 @@ a + b
 """
 
 
+@pytest.mark.parametrize(
+    'nb_str, ext, expected',
+    [
+        (nb_no_code(fmt='py:light'), 'py', 'python'),
+        (nb_no_code(fmt='r:light'), 'r', 'r'),
+        (nb_no_code(fmt='r:light'), 'R', 'r'),
+        (nb_no_code(fmt='ipynb', klang='python'), 'ipynb', 'python'),
+        (nb_no_code(fmt='ipynb', klang='R', kname='ir'), 'ipynb', 'r'),
+        # if there is nothing and it's an ipynb, assume python
+        (nb_no_code(fmt='ipynb'), 'ipynb', 'python'),
+    ])
+def test_language_and_kernel(nb_str, ext, expected, tmp_directory):
+    path = Path('nb.' + ext)
+    path.write_text(nb_str)
+    source = NotebookSource(path)
+    assert source.language == expected
+
+    # jupyter sets as "R" (and not "r") as the language for R notebooks
+    if expected == 'r':
+        expected_lang = expected.upper()
+    else:
+        expected_lang = expected
+
+    # most common kernels
+    lang2kernel = {'python': 'python3', 'r': 'ir'}
+    expected_kernel = lang2kernel[expected]
+
+    assert source._nb_obj.metadata.kernelspec.language == expected_lang
+    assert source._nb_obj.metadata.kernelspec.name == expected_kernel
+
+
 def test_error_if_kernelspec_name_is_invalid():
     with pytest.raises(NoSuchKernel):
-        NotebookSource(notebook_ab,
+        NotebookSource('1 + 1',
                        ext_in='py',
                        kernelspec_name='invalid_kernelspec')
 
@@ -50,13 +128,14 @@ x = 1
 # add test on missing kernelspec_name
 
 
-def test_sucess_if_parameters_match():
+def test_no_error_if_declared_and_passed_params_match():
     source = NotebookSource(notebook_ab,
                             ext_in='py',
                             kernelspec_name='python3',
                             static_analysis=True)
 
     params = Params()
+    # notebook has params a and b, we are passing a and b as well
     params._dict = {'product': File('output.ipynb'), 'a': 1, 'b': 2}
     source.render(params)
 
@@ -204,26 +283,6 @@ def test_cleanup_rendered_notebook():
 # extracting language from notebook objects
 
 
-def nb_python_meta():
-    nb = nbformat.v4.new_notebook()
-    nb.metadata = {'kernel_info': {'language': 'python'}}
-    return nb
-
-
-def nb_python_inferred():
-    nb = nbformat.v4.new_notebook()
-    nb.metadata = {'kernel_info': {'language': 'python'}}
-    code = nbformat.v4.new_code_cell(source='1+1')
-    nb.cells.append(code)
-    return nb
-
-
-def nb_R_meta():
-    nb = nbformat.v4.new_notebook()
-    nb.metadata = {'kernel_info': {'language': 'R'}}
-    return nb
-
-
 @pytest.mark.parametrize('nb, expected', [(nb_python_meta(), True),
                                           (nb_python_inferred(), True),
                                           (nb_R_meta(), False)])
@@ -242,7 +301,7 @@ def nb_unknown(metadata):
 
 @pytest.mark.parametrize('nb', [
     nb_unknown({}),
-    nb_unknown({'kernel_info': {}}),
+    nb_unknown({'kernelspec': {}}),
 ])
 def test_error_with_unknown_language(nb):
     assert not is_python(nb)
