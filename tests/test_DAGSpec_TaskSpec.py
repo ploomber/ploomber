@@ -48,7 +48,10 @@ def test_add_hook(tmp_directory, add_current_to_sys_path):
     meta = DAGSpec.default_meta()
     meta['extract_product'] = False
 
-    Path('source.py').touch()
+    Path('source.py').write_text("""
+# + tags=["parameters"]
+# some code
+    """)
 
     Path('hooks.py').write_text("""
 

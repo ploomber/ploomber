@@ -92,7 +92,8 @@ def test_can_execute_with_parameters(tmp_directory):
     dag = DAG()
 
     code = """
-    1 + 1
+# + tags=["parameters"]
+1 + 1
     """
 
     NotebookRunner(code,
@@ -109,7 +110,10 @@ def test_can_execute_when_product_is_metaproduct(tmp_directory):
     dag = DAG()
 
     code = """
+# + tags=["parameters"]
+# something
 
+# +
 from pathlib import Path
 
 Path(product['model']).touch()
@@ -139,8 +143,15 @@ def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory):
         'model': File(Path(tmp_directory, 'model.pkl'))
     }
 
+    code = """
+# + tags=["parameters"]
+# some code
+
+# +
+    """
+
     with pytest.raises(KeyError) as excinfo:
-        NotebookRunner('',
+        NotebookRunner(code,
                        product=product,
                        dag=dag,
                        kernelspec_name='python3',
@@ -156,7 +167,10 @@ def test_failing_notebook_saves_partial_result(tmp_directory):
     dag = DAG()
 
     code = """
-    raise Exception('failing notebook')
+# + tags=["parameters"]
+# some code
+
+raise Exception('failing notebook')
     """
 
     # attempting to generate an HTML report
@@ -209,7 +223,11 @@ def test_develop_saves_changes(tmp_directory, monkeypatch):
     dag = DAG()
 
     code = """
-    1 + 1
+# + tags=["parameters"]
+# some code
+
+# +
+1 + 1
     """
     p = Path('some_notebook.py')
 
@@ -243,7 +261,11 @@ def test_develop_workflow_with_hot_reload(tmp_directory, monkeypatch):
     dag = cfg.create()
 
     code = """
-    1 + 1
+# + tags=["parameters"]
+# some code
+
+# +
+1 + 1
     """
     p = Path('some_notebook.py')
 
@@ -290,6 +312,10 @@ def test_hot_reload(tmp_directory):
 
     path = Path('nb.py')
     path.write_text("""
+# + tags=["parameters"]
+# some code
+
+# +
 1 + 1
     """)
 
@@ -301,6 +327,10 @@ def test_hot_reload(tmp_directory):
     t.render()
 
     path.write_text("""
+# + tags=["parameters"]
+# some code
+
+# +
 2 + 2
     """)
 
