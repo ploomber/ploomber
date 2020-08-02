@@ -7,8 +7,7 @@ such as a bash or a SQL script
 import subprocess
 import pdb
 from ploomber.tasks.Task import Task
-from ploomber.sources import (PythonCallableSource,
-                              GenericSource, EmptySource)
+from ploomber.sources import (PythonCallableSource, GenericSource, EmptySource)
 from ploomber.clients import ShellClient
 from ploomber.products.Metadata import MetadataAlwaysUpToDate
 from ploomber.exceptions import TaskBuildError
@@ -36,11 +35,13 @@ class PythonCallable(Task):
         It will also include a "upstream" parameter if the task has upstream
         dependencies along with any parameters declared here
     """
-
     def __init__(self, source, product, dag, name=None, params=None):
-        super().__init__(source, product, dag, name, params)
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = type(self)._init_source(source, kwargs)
+        super().__init__(product, dag, name, params)
 
-    def _init_source(self, source, kwargs):
+    @staticmethod
+    def _init_source(source, kwargs):
         return PythonCallableSource(source, **kwargs)
 
     def run(self):
@@ -80,8 +81,8 @@ class PythonCallable(Task):
         if self.exec_status == TaskStatus.WaitingRender:
             raise TaskBuildError('Error in task "{}". '
                                  'Cannot debug task that has not been '
-                                 'rendered, call DAG.render() first'
-                                 .format(self.name))
+                                 'rendered, call DAG.render() first'.format(
+                                     self.name))
 
         if kind == 'ipdb':
             from IPython.terminal.debugger import TerminalPdb, Pdb
@@ -124,19 +125,28 @@ class ShellScript(Task):
         code is converted to a jinja2.Template for passing parameters,
         refer to jinja2 documentation for details
     """
-
-    def __init__(self, source, product, dag, name=None, client=None,
+    def __init__(self,
+                 source,
+                 product,
+                 dag,
+                 name=None,
+                 client=None,
                  params=None):
-        super().__init__(source, product, dag, name, params)
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = type(self)._init_source(source, kwargs)
+        super().__init__(product, dag, name, params)
 
         self.client = client or self.dag.clients.get(type(self))
 
         if self.client is None:
             self.client = ShellClient()
 
-    def _init_source(self, source, kwargs):
-        required = {'product': ('ShellScript must include {{product}} in '
-                                'its source')}
+    @staticmethod
+    def _init_source(source, kwargs):
+        required = {
+            'product': ('ShellScript must include {{product}} in '
+                        'its source')
+        }
 
         return GenericSource(source, **kwargs, required=required)
 
@@ -159,13 +169,19 @@ class DownloadFromURL(Task):
     name: str
         A str to indentify this task. Should not already exist in the dag
     """
+    def __init__(self, source, product, dag, name=None, params=None):
+        params = params or {}
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = type(self)._init_source(source, kwargs)
+        super().__init__(product, dag, name, params)
 
     def run(self):
         # lazily load urllib as it is slow to import
         from urllib import request
         request.urlretrieve(str(self.source), filename=str(self.product))
 
-    def _init_source(self, source, kwargs):
+    @staticmethod
+    def _init_source(source, kwargs):
         return GenericSource(str(source), **kwargs, optional=['product'])
 
 
@@ -173,7 +189,9 @@ class DownloadFromURL(Task):
 # for partitioned execution)
 class _Partition(Task):
     def __init__(self, product, dag, name):
-        super().__init__(None, product, dag, name, None)
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = type(self)._init_source(kwargs)
+        super().__init__(product, dag, name, None)
 
     def run(self):
         """This Task does not run anything
@@ -182,7 +200,7 @@ class _Partition(Task):
         # is this the best place to check?
         pass
 
-    def _init_source(self, source, kwargs):
+    def _init_source(self, kwargs):
         return EmptySource(None, **kwargs)
 
     def _null(self):
@@ -226,10 +244,10 @@ class Link(Task):
     name: str
         A str to indentify this task. Should not already exist in the dag
     """
-
     def __init__(self, product, dag, name):
-        # there is no source nor params for this product
-        super().__init__(None, product, dag, name, None)
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = type(self)._init_source(kwargs)
+        super().__init__(product, dag, name, None)
 
         # patch product's metadata
         self.product.metadata = MetadataAlwaysUpToDate()
@@ -247,7 +265,8 @@ class Link(Task):
     def set_upstream(self, other):
         raise RuntimeError('Link tasks should not have upstream dependencies')
 
-    def _init_source(self, source, kwargs):
+    @staticmethod
+    def _init_source(kwargs):
         return EmptySource(None, **kwargs)
 
     def _null_save_metadata(self, metadata):
@@ -276,10 +295,10 @@ class Input(Task):
     name: str
         A str to indentify this task. Should not already exist in the dag
     """
-
     def __init__(self, product, dag, name):
-        # there is no source nor params for this product
-        super().__init__(None, product, dag, name, None)
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = type(self)._init_source(kwargs)
+        super().__init__(product, dag, name, None)
 
         # do not save metadata (Product's location is read-only)
         self.product._save_metadata = self._null_save_metadata
@@ -300,7 +319,8 @@ class Input(Task):
         raise RuntimeError('Input tasks should not have upstream '
                            'dependencies')
 
-    def _init_source(self, source, kwargs):
+    @staticmethod
+    def _init_source(kwargs):
         return EmptySource(None, **kwargs)
 
     def _null_save_metadata(self, metadata):

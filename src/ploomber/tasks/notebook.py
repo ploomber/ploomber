@@ -204,12 +204,17 @@ class NotebookRunner(Task):
         self.nb_product_key = nb_product_key
         self.static_analysis = static_analysis
         self.local_execution = local_execution
-        super().__init__(source, product, dag, name, params)
 
         if 'cwd' in self.papermill_params and self.local_execution:
             raise KeyError('If local_execution is set to True, "cwd" should '
                            'not appear in papermill_params, as such '
                            'parameter will be set by the task itself')
+
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = NotebookRunner._init_source(source, ext_in,
+                                                   kernelspec_name,
+                                                   static_analysis, kwargs)
+        super().__init__(product, dag, name, params)
 
         if isinstance(self.product, MetaProduct):
             if self.product.get(nb_product_key) is None:
@@ -230,11 +235,12 @@ class NotebookRunner(Task):
                                             nbconvert_exporter_name,
                                             nbconvert_export_kwargs)
 
-    def _init_source(self, source, kwargs):
+    @staticmethod
+    def _init_source(source, ext_in, kernelspec_name, static_analysis, kwargs):
         return NotebookSource(source,
-                              ext_in=self.ext_in,
-                              kernelspec_name=self.kernelspec_name,
-                              static_analysis=self.static_analysis,
+                              ext_in=ext_in,
+                              kernelspec_name=kernelspec_name,
+                              static_analysis=static_analysis,
                               **kwargs)
 
     def develop(self):

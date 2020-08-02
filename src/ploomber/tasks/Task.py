@@ -116,15 +116,12 @@ class Task(abc.ABC):
         """
         pass
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def _init_source(self, source, kwargs):
         pass
 
-    def __init__(self, source, product, dag, name=None, params=None):
+    def __init__(self, product, dag, name=None, params=None):
         self._params = Params(params)
-
-        kwargs = dict(hot_reload=dag._params.hot_reload)
-        self._source = self._init_source(source, kwargs)
 
         if name is None:
             # use name inferred from the source object
@@ -148,8 +145,10 @@ class Task(abc.ABC):
         self.dag = dag
         dag._add_task(self)
 
-        if self._source is None:
-            raise TypeError('_init_source must return a value, got None')
+        if not hasattr(self, '_source'):
+            raise RuntimeError(
+                'self._source must be initialized before calling '
+                '__init__ in Task')
 
         if not isinstance(self._source, Source):
             raise TypeError('_init_source must return a subclass of Source')

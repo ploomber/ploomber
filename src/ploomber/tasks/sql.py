@@ -2,12 +2,9 @@ from pathlib import Path
 from io import StringIO
 
 from ploomber.tasks.Task import Task
-from ploomber.sources import (SQLScriptSource,
-                              SQLQuerySource,
-                              FileSource)
+from ploomber.sources import (SQLScriptSource, SQLQuerySource, FileSource)
 from ploomber.products import (File, PostgresRelation, SQLiteRelation,
-                               GenericSQLRelation, GenericProduct,
-                               SQLRelation)
+                               GenericSQLRelation, GenericProduct, SQLRelation)
 from ploomber import io
 from ploomber.util import requires
 
@@ -40,21 +37,30 @@ class SQLScript(Task):
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation,
                                GenericSQLRelation, SQLRelation)
 
-    def __init__(self, source, product, dag, name=None, client=None,
+    def __init__(self,
+                 source,
+                 product,
+                 dag,
+                 name=None,
+                 client=None,
                  params=None):
         params = params or {}
-        super().__init__(source, product, dag, name, params)
+
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = type(self)._init_source(source, kwargs)
+        super().__init__(product, dag, name, params)
 
         self.client = client or self.dag.clients.get(type(self))
 
         if self.client is None:
-            raise ValueError('{} must be initialized with a client'
-                             .format(type(self).__name__))
+            raise ValueError('{} must be initialized with a client'.format(
+                type(self).__name__))
 
     def run(self):
         return self.client.execute(str(self.source))
 
-    def _init_source(self, source, kwargs):
+    @staticmethod
+    def _init_source(source, kwargs):
         return SQLScriptSource(source, **kwargs)
 
 
@@ -99,21 +105,31 @@ class SQLDump(Task):
     """
     PRODUCT_CLASSES_ALLOWED = (File, GenericProduct)
 
-    def __init__(self, source, product, dag, name=None, client=None,
+    def __init__(self,
+                 source,
+                 product,
+                 dag,
+                 name=None,
+                 client=None,
                  params=None,
-                 chunksize=10000, io_handler=io.CSVIO):
+                 chunksize=10000,
+                 io_handler=io.CSVIO):
         params = params or {}
-        super().__init__(source, product, dag, name, params)
+
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = type(self)._init_source(source, kwargs)
+        super().__init__(product, dag, name, params)
 
         self.client = client or self.dag.clients.get(type(self))
         self.chunksize = chunksize
         self.io_handler = io_handler
 
         if self.client is None:
-            raise ValueError('{} must be initialized with a client'
-                             .format(type(self).__name__))
+            raise ValueError('{} must be initialized with a client'.format(
+                type(self).__name__))
 
-    def _init_source(self, source, kwargs):
+    @staticmethod
+    def _init_source(source, kwargs):
         return SQLQuerySource(source, **kwargs)
 
     def run(self):
@@ -151,6 +167,7 @@ class SQLDump(Task):
             handler.write(data, headers)
 
         cursor.close()
+
 
 # FIXME: this can be a lot faster for clients that transfer chunksize
 # rows over the network
@@ -199,20 +216,29 @@ class SQLTransfer(Task):
                                GenericSQLRelation)
 
     @requires(['pandas'], 'SQLTransfer')
-    def __init__(self, source, product, dag, name=None, client=None,
-                 params=None, chunksize=10000):
+    def __init__(self,
+                 source,
+                 product,
+                 dag,
+                 name=None,
+                 client=None,
+                 params=None,
+                 chunksize=10000):
         params = params or {}
-        super().__init__(source, product, dag, name, params)
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = type(self)._init_source(source, kwargs)
+        super().__init__(product, dag, name, params)
 
         self.client = client or self.dag.clients.get(type(self))
 
         if self.client is None:
-            raise ValueError('{} must be initialized with a connection'
-                             .format(type(self).__name__))
+            raise ValueError('{} must be initialized with a connection'.format(
+                type(self).__name__))
 
         self.chunksize = chunksize
 
-    def _init_source(self, source, kwargs):
+    @staticmethod
+    def _init_source(source, kwargs):
         # TODO: this shoule be a FileSource
         return SQLQuerySource(source, **kwargs)
 
@@ -224,7 +250,8 @@ class SQLTransfer(Task):
 
         # read from source_code, use connection from the Task
         self._logger.info('Fetching data...')
-        dfs = pd.read_sql_query(source_code, self.client.engine,
+        dfs = pd.read_sql_query(source_code,
+                                self.client.engine,
                                 chunksize=self.chunksize)
         self._logger.info('Done fetching data...')
 
@@ -296,23 +323,33 @@ class SQLUpload(Task):
                                GenericSQLRelation)
 
     @requires(['pandas'], 'SQLUpload')
-    def __init__(self, source, product, dag, name=None, client=None,
-                 params=None, chunksize=None, io_handler=None,
+    def __init__(self,
+                 source,
+                 product,
+                 dag,
+                 name=None,
+                 client=None,
+                 params=None,
+                 chunksize=None,
+                 io_handler=None,
                  to_sql_kwargs=None):
         params = params or {}
-        super().__init__(source, product, dag, name, params)
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = type(self)._init_source(source, kwargs)
+        super().__init__(product, dag, name, params)
 
         self.client = client or self.dag.clients.get(type(self))
 
         if self.client is None:
-            raise ValueError('{} must be initialized with a connection'
-                             .format(type(self).__name__))
+            raise ValueError('{} must be initialized with a connection'.format(
+                type(self).__name__))
 
         self.chunksize = chunksize
         self.io_handler = io_handler
         self.to_sql_kwargs = to_sql_kwargs or {}
 
-    def _init_source(self, source, kwargs):
+    @staticmethod
+    def _init_source(source, kwargs):
         return FileSource(str(source), **kwargs)
 
     def run(self):
@@ -331,10 +368,11 @@ class SQLUpload(Task):
             read_fn = mapping.get(extension)
 
             if not read_fn:
-                raise ValueError('Could not infer reading function for '
-                                 'file with extension: {}'.format(extension),
-                                 'pass the function directly in the '
-                                 'io_handler argument')
+                raise ValueError(
+                    'Could not infer reading function for '
+                    'file with extension: {}'.format(extension),
+                    'pass the function directly in the '
+                    'io_handler argument')
 
         self._logger.info('Reading data...')
         df = read_fn(path)
@@ -369,25 +407,36 @@ class PostgresCopyFrom(Task):
     needs it to dynamically create the table, after the table is created
     the COPY statement is used to upload the data
     """
-    PRODUCT_CLASSES_ALLOWED = (PostgresRelation,)
+    PRODUCT_CLASSES_ALLOWED = (PostgresRelation, )
 
     @requires(['pandas', 'psycopg2'], 'PostgresCopyFrom')
-    def __init__(self, source, product, dag, name=None, client=None,
-                 params=None, sep='\t', null='\\N', columns=None):
+    def __init__(self,
+                 source,
+                 product,
+                 dag,
+                 name=None,
+                 client=None,
+                 params=None,
+                 sep='\t',
+                 null='\\N',
+                 columns=None):
         params = params or {}
-        super().__init__(source, product, dag, name, params)
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = type(self)._init_source(source, kwargs)
+        super().__init__(product, dag, name, params)
 
         self.client = client or self.dag.clients.get(type(self))
 
         if self.client is None:
-            raise ValueError('{} must be initialized with a connection'
-                             .format(type(self).__name__))
+            raise ValueError('{} must be initialized with a connection'.format(
+                type(self).__name__))
 
         self.sep = sep
         self.null = null
         self.columns = columns
 
-    def _init_source(self, source, kwargs):
+    @staticmethod
+    def _init_source(source, kwargs):
         return FileSource(str(source), **kwargs)
 
     def run(self):
@@ -417,10 +466,7 @@ class PostgresCopyFrom(Task):
         cur = self.client.connection.cursor()
 
         self._logger.info('Copying data...')
-        cur.copy_from(f,
-                      table=str(product),
-                      sep='\t',
-                      null='\\N')
+        cur.copy_from(f, table=str(product), sep='\t', null='\\N')
 
         f.close()
         cur.close()
