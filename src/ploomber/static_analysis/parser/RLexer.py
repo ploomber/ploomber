@@ -1,7 +1,7 @@
 import string
 from ploomber.static_analysis.parser.tokens import (Integer, BinaryOperator,
                                                     Assignment, Name, Operator,
-                                                    String)
+                                                    String, Null)
 from ploomber.static_analysis.parser.abstract import Lexer
 
 
@@ -85,6 +85,11 @@ class RLexer(Lexer):
                 op = Operator('list')
                 self.advance(n=len('list'))
                 yield op
+
+            elif self.comes_next('NULL'):
+                null = Null()
+                self.advance(n=len('NULL'))
+                yield null
 
             # Vector definiton start
             elif self.current_char == 'c' and self.next_char == '(':

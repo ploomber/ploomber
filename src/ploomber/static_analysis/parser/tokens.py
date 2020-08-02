@@ -27,6 +27,11 @@ class Integer(Token):
     pass
 
 
+class Null(Token):
+    def __init__(self):
+        self.value = None
+
+
 class String(Token):
     pass
 
