@@ -19,6 +19,11 @@ def tmp_pipeline_sql():
     pass
 
 
+@fixture_tmp_dir(_path_to_tests() / 'assets' / 'pipeline-r')
+def tmp_pipeline_r():
+    pass
+
+
 @fixture_tmp_dir(_path_to_tests() / 'assets' /
                  'pipeline-sql-products-in-source')
 def tmp_pipeline_sql_products_in_source():
@@ -244,6 +249,16 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
     dag = DAGSpec(dag_spec).to_dag()
 
     # FIXME: this does no show the custom Upstream key missing error
+    dag.build()
+
+
+def test_pipeline_r(tmp_pipeline_r):
+    Path('output').mkdir()
+
+    with open('pipeline.yaml') as f:
+        dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
+
+    dag = DAGSpec(dag_spec).to_dag()
     dag.build()
 
 

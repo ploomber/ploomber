@@ -1,0 +1,9 @@
+tasks:
+  - source: raw.R
+    name: raw
+
+  - source: clean.R
+    name: clean
+
+  - source: plot.R
+    name: plot
