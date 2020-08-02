@@ -2,8 +2,41 @@ import os
 from pathlib import Path
 import pytest
 from ploomber.spec.TaskSpec import TaskSpec
-from ploomber.spec.DAGSpec import DAGSpec
+from ploomber.spec.DAGSpec import DAGSpec, Meta
+from ploomber.tasks import NotebookRunner, SQLScript, SQLDump
 from ploomber import DAG
+
+
+@pytest.mark.parametrize('spec, expected', [
+    [{
+        'source': 'sample.py',
+        'product': 'out.ipynb'
+    }, NotebookRunner],
+    [{
+        'source': 'sample.sql',
+        'product': ['schema', 'table'],
+        'client': 'db.get_client'
+    }, SQLScript],
+    [{
+        'source': 'sample-select.sql',
+        'product': 'file.csv',
+        'class': 'SQLDump',
+        'client': 'db.get_client'
+    }, SQLDump],
+])
+def test_initialization(spec, expected, tmp_sample_tasks,
+                        add_current_to_sys_path):
+    meta = Meta.default_meta({
+        'extract_product': False,
+        'extract_upstream': True
+    })
+
+    spec = TaskSpec(spec, meta=meta)
+    assert spec['class'] == expected
+    # from IPython import embed
+    # embed()
+
+    spec.to_task(dag=DAG(), root_path='.')
 
 
 @pytest.mark.parametrize('key', ['source', 'product'])
@@ -45,7 +78,7 @@ def test_add_hook(tmp_directory, add_current_to_sys_path):
         'on_render': 'hooks.some_hook',
         'on_failure': 'hooks.some_hook'
     }
-    meta = DAGSpec.default_meta()
+    meta = Meta.default_meta()
     meta['extract_product'] = False
 
     Path('source.py').write_text("""

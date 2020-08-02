@@ -1,6 +1,7 @@
 """
 Create Tasks from dictionaries
 """
+from copy import copy
 from pathlib import Path
 from collections.abc import MutableMapping, Iterable, Mapping
 
@@ -22,6 +23,8 @@ class TaskSpec(MutableMapping):
         self.data = data
         self.meta = meta
         self.validate()
+
+        self.data['class'] = get_class_obj(self.data)
 
     def validate(self):
         if 'upstream' not in self.data:
@@ -52,11 +55,11 @@ class TaskSpec(MutableMapping):
     def to_task(self, dag, root_path):
         """Returns a Task instance
         """
-        task_dict = self.data
+        task_dict = copy(self.data)
         upstream = _make_iterable(task_dict.pop('upstream'))
-        class_ = get_task_class(task_dict)
+        class_ = task_dict.pop('class')
 
-        product = _init_product(task_dict, self.meta, class_, root_path)
+        product = init_product(task_dict, self.meta, class_, root_path)
 
         _init_client(task_dict)
 
@@ -101,18 +104,41 @@ class TaskSpec(MutableMapping):
         return len(self.data)
 
 
-def _make_iterable(o):
-    if isinstance(o, Iterable) and not isinstance(o, str):
-        return o
-    elif o is None:
-        return []
+def get_class_obj(task_spec):
+    """
+    Returns the class for the TaskSpec, if the spec already has the class
+    name (str), it just returns the actual class object with such name,
+    otherwise it tries to guess based on the file extension
+
+    Task class is determined by the 'class' key, if missing. Defaults
+    are used by inspecting the 'source' key: NoteboonRunner (.py),
+    SQLScript (.sql) and BashScript (.sh).
+    """
+    class_name = task_spec.get('class', None)
+
+    if class_name:
+        class_ = getattr(tasks, class_name)
     else:
-        return [o]
+        suffix = Path(task_spec['source']).suffix
+
+        if suffix2taskclass.get(suffix):
+            class_ = suffix2taskclass[suffix]
+        else:
+            raise KeyError('No default task class available for task with '
+                           'source: '
+                           '"{}". Default class is only available for '
+                           'files with extensions {}, otherwise you should '
+                           'set an explicit class key'.format(
+                               task_spec['source'], set(suffix2taskclass)))
+
+    return class_
 
 
 # FIXME: how do we make a default product client? use the task's client?
-def _init_product(task_dict, meta, task_class, root_path):
+def init_product(task_dict, meta, task_class, root_path):
     """
+    Initialize product.
+
     Resolution logic order:
         task.product_class
         meta.{task_class}.product_default_class
@@ -160,6 +186,15 @@ def _init_product(task_dict, meta, task_class, root_path):
                      **kwargs)
 
 
+def _make_iterable(o):
+    if isinstance(o, Iterable) and not isinstance(o, str):
+        return o
+    elif o is None:
+        return []
+    else:
+        return [o]
+
+
 def resolve_product(product_raw, relative_to, class_):
     if class_ != products.File:
         return product_raw
@@ -183,34 +218,6 @@ def _init_client(task_dict):
     if 'client' in task_dict:
         dotted_path = task_dict.pop('client')
         task_dict['client'] = load_dotted_path(dotted_path)()
-
-
-def get_task_class(task_dict):
-    """
-    Pops 'class' key if it exists
-
-    Task class is determined by the 'class' key, if missing. Defaults
-    are used by inspecting the 'source' key: NoteboonRunner (.py),
-    SQLScript (.sql) and BashScript (.sh).
-    """
-    class_name = task_dict.pop('class', None)
-
-    if class_name:
-        class_ = getattr(tasks, class_name)
-    else:
-        suffix = Path(task_dict['source']).suffix
-
-        if suffix2taskclass.get(suffix):
-            class_ = suffix2taskclass[suffix]
-        else:
-            raise KeyError('No default task class available for task with '
-                           'source: '
-                           '"{}". Default class is only available for '
-                           'files with extensions {}, otherwise you should '
-                           'set an explicit class key'.format(
-                               task_dict['source'], set(suffix2taskclass)))
-
-    return class_
 
 
 def get_value_at(d, dotted_path):

@@ -143,6 +143,11 @@ def tmp_sample_dir():
     pass
 
 
+@fixture_tmp_dir(_path_to_tests() / 'assets' / 'sample_tasks')
+def tmp_sample_tasks():
+    pass
+
+
 @pytest.fixture()
 def tmp_sample_subdir():
     old = os.getcwd()

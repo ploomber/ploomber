@@ -109,47 +109,7 @@ class DAGSpec(MutableMapping):
         if 'meta' not in self.data:
             self.data['meta'] = {}
 
-        self.default_meta(self.data['meta'])
-
-    @classmethod
-    def default_meta(cls, meta=None):
-        """Fill missing values in a meta dictionary
-        """
-        if meta is None:
-            meta = {}
-
-        valid = {
-            'extract_upstream', 'extract_product', 'product_default_class',
-            'product_relative_to_source', 'jupyter_hot_reload'
-        }
-        validate.keys(valid, meta, name='dag spec')
-
-        if 'extract_upstream' not in meta:
-            meta['extract_upstream'] = True
-
-        if 'extract_product' not in meta:
-            meta['extract_product'] = True
-
-        if 'product_relative_to_source' not in meta:
-            meta['product_relative_to_source'] = False
-
-        if 'jupyter_hot_reload' not in meta:
-            meta['jupyter_hot_reload'] = False
-
-        defaults = {
-            'SQLDump': 'File',
-            'NotebookRunner': 'File',
-            'SQLScript': 'SQLRelation'
-        }
-
-        if 'product_default_class' not in meta:
-            meta['product_default_class'] = defaults
-        else:
-            for class_, prod in defaults.items():
-                if class_ not in meta['product_default_class']:
-                    meta['product_default_class'][class_] = prod
-
-        return meta
+        self.data['meta'] = Meta.default_meta(self.data['meta'])
 
     def __getitem__(self, key):
         return self.data[key]
@@ -262,6 +222,50 @@ class DAGSpec(MutableMapping):
         return spec
 
 
+class Meta:
+    """Schema for meta section in pipeline.yaml
+    """
+    @classmethod
+    def default_meta(cls, meta=None):
+        """Fill missing values in a meta dictionary
+        """
+        if meta is None:
+            meta = {}
+
+        valid = {
+            'extract_upstream', 'extract_product', 'product_default_class',
+            'product_relative_to_source', 'jupyter_hot_reload'
+        }
+        validate.keys(valid, meta, name='dag spec')
+
+        if 'extract_upstream' not in meta:
+            meta['extract_upstream'] = True
+
+        if 'extract_product' not in meta:
+            meta['extract_product'] = True
+
+        if 'product_relative_to_source' not in meta:
+            meta['product_relative_to_source'] = False
+
+        if 'jupyter_hot_reload' not in meta:
+            meta['jupyter_hot_reload'] = False
+
+        defaults = {
+            'SQLDump': 'File',
+            'NotebookRunner': 'File',
+            'SQLScript': 'SQLRelation'
+        }
+
+        if 'product_default_class' not in meta:
+            meta['product_default_class'] = defaults
+        else:
+            for class_, prod in defaults.items():
+                if class_ not in meta['product_default_class']:
+                    meta['product_default_class'][class_] = prod
+
+        return meta
+
+
 def process_tasks(dag, tasks, dag_spec, root_path=None):
     root_path = root_path or '.'
 
@@ -274,6 +278,9 @@ def process_tasks(dag, tasks, dag_spec, root_path=None):
                                         product=meta['extract_product'])
 
     upstream = {}
+
+    for task_dict in tasks:
+        task_dict['class']._init_source
 
     for task_dict in tasks:
         source = task_dict['source']

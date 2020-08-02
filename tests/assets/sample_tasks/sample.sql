@@ -1,0 +1,1 @@
+CREATE TABLE {{product}} AS SELECT * FROM another_table
