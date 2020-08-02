@@ -9,6 +9,10 @@ import pytest
 from ploomber.cli import plot, build, parsers, task, report, cli, status
 
 
+def test_help_commands():
+    subprocess.run(['ploomber', 'build', '--help'], check=True)
+
+
 def test_build(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
                         ['python', '--entry-point', 'test_pkg.entry.with_doc'])
