@@ -46,7 +46,7 @@ from ploomber.static_analysis.parser.tokens import (Integer, BinaryOperator,
         Operator('list'),
         Operator('('),
         Name('a'),
-        Operator('='),
+        Assignment('='),
         Integer(100),
         Operator(')')
     ]),
