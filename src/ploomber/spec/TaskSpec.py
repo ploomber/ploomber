@@ -130,8 +130,8 @@ def get_class_obj(task_spec):
             raise KeyError('No default task class available for task with '
                            'source: '
                            '"{}". Default class is only available for '
-                           'files with extensions {}, otherwise you should '
-                           'set an explicit class key'.format(
+                           'files with extensions {}. '
+                           'Set an explicit class key'.format(
                                task_spec['source'], set(suffix2taskclass)))
 
     return class_

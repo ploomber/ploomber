@@ -72,7 +72,8 @@ def test_ploomber_add_unknown_extension(tmp_directory, capsys):
         },
         'tasks': [{
             'source': 'task.txt',
-            'product': 'nb.ipynb'
+            'product': 'nb.ipynb',
+            'class': 'NotebookRunner',
         }]
     }
 

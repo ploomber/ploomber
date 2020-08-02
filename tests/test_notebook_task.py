@@ -57,33 +57,24 @@ def test_notebook_conversion(monkeypatch, output, tmp_directory):
     conv.convert()
 
 
-def test_can_execute_from_ipynb(path_to_assets, tmp_directory):
-    dag = DAG()
-
-    NotebookRunner(path_to_assets / 'sample.ipynb',
-                   product=File(Path(tmp_directory, 'out.ipynb')),
-                   dag=dag,
-                   name='nb')
-    dag.build()
-
-
-def test_can_execute_to_html(path_to_assets, tmp_directory):
-    dag = DAG()
-
-    NotebookRunner(path_to_assets / 'sample.ipynb',
-                   product=File(Path(tmp_directory, 'out.html')),
-                   dag=dag,
-                   name='nb')
-    dag.build()
-
-
 @pytest.mark.parametrize('name', ['sample.py', 'sample.R', 'sample.ipynb'])
-def test_execute_sample_nb(name, path_to_assets, tmp_directory):
+def test_execute_sample_nb(name, tmp_sample_tasks):
     dag = DAG()
 
-    NotebookRunner(path_to_assets / name,
-                   product=File(Path(tmp_directory, 'out.ipynb')),
+    NotebookRunner(Path(name),
+                   product=File(Path(name + '.'
+                                     'out.ipynb')),
                    dag=dag)
+    dag.build()
+
+
+def test_can_convert_to_html(tmp_sample_tasks):
+    dag = DAG()
+
+    NotebookRunner(Path('sample.ipynb'),
+                   product=File(Path('out.html')),
+                   dag=dag,
+                   name='nb')
     dag.build()
 
 
@@ -189,12 +180,12 @@ raise Exception('failing notebook')
     assert Path('out.ipynb').exists()
 
 
-def test_error_if_wrong_exporter_name(path_to_assets, tmp_directory):
+def test_error_if_wrong_exporter_name(tmp_sample_tasks):
     dag = DAG()
 
     with pytest.raises(ValueError) as excinfo:
-        NotebookRunner(path_to_assets / 'sample.ipynb',
-                       product=File(Path(tmp_directory, 'out.ipynb')),
+        NotebookRunner(Path('sample.ipynb'),
+                       product=File(Path('out.ipynb')),
                        dag=dag,
                        nbconvert_exporter_name='wrong_name')
 
@@ -202,12 +193,12 @@ def test_error_if_wrong_exporter_name(path_to_assets, tmp_directory):
             in str(excinfo.value))
 
 
-def test_error_if_cant_determine_exporter_name(path_to_assets, tmp_directory):
+def test_error_if_cant_determine_exporter_name(tmp_sample_tasks):
     dag = DAG()
 
     with pytest.raises(ValueError) as excinfo:
-        NotebookRunner(path_to_assets / 'sample.ipynb',
-                       product=File(Path(tmp_directory, 'out.wrong_ext')),
+        NotebookRunner(Path('sample.ipynb'),
+                       product=File(Path('out.wrong_ext')),
                        dag=dag,
                        nbconvert_exporter_name=None)
 
