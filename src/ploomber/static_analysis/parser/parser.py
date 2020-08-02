@@ -1,5 +1,6 @@
 import itertools
-from ploomber.static_analysis.parser.tokens import Assignment, Name, Operator
+from ploomber.static_analysis.parser.tokens import (Assignment, Name, Operator,
+                                                    Null)
 
 
 class Parser:
@@ -99,5 +100,7 @@ def build_node(tokens):
         else:
             return ListNode(elements)
 
+    elif tokens[0] == Null():
+        return tokens[0]
     else:
-        raise SyntaxError('Must be a list object')
+        raise SyntaxError('Must be a list or NULL')
