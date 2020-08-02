@@ -24,7 +24,10 @@ class TaskSpec(MutableMapping):
         self.meta = meta
         self.validate()
 
+        # initialie required elements
         self.data['class'] = get_class_obj(self.data)
+        # in task specs, we assume source is always a path to a file
+        self.data['source'] = Path(self.data['source'])
 
     def validate(self):
         if 'upstream' not in self.data:
@@ -70,7 +73,7 @@ class TaskSpec(MutableMapping):
         on_render = task_dict.pop('on_render', None)
         on_failure = task_dict.pop('on_failure', None)
 
-        task = class_(source=Path(source_raw),
+        task = class_(source=source_raw,
                       product=product,
                       name=name_raw or source_raw,
                       dag=dag,

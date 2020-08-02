@@ -32,10 +32,12 @@ def test_initialization(spec, expected, tmp_sample_tasks,
     })
 
     spec = TaskSpec(spec, meta=meta)
-    assert spec['class'] == expected
-    # from IPython import embed
-    # embed()
 
+    # check values after initialization
+    assert spec['class'] == expected
+    assert isinstance(spec['source'], Path)
+
+    # check we can convert it to a Task
     spec.to_task(dag=DAG(), root_path='.')
 
 
