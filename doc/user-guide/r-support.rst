@@ -1,9 +1,9 @@
 R support
----------
+=========
 
 R is officially supported by Ploomber. The same concepts that apply to Python
-scripts apply to R scripts. The only difference is how you declare your
-parameters:
+scripts apply to R scripts. The only difference is how to declare ``upstream``
+dependencies and ``product``:
 
 .. code-block:: R
     :class: text-editor
@@ -15,20 +15,25 @@ parameters:
     # -
 
 
-Installing the IRkernel
------------------------
+Configuring R environment
+-------------------------
 
-Kernel https://github.com/IRkernel/IRkernel
-https://docs.anaconda.com/anaconda/user-guide/tasks/using-r-language/
+To run R scripts as Jupyter notebooks you need to install Jupyter first, have 
+an existing R installation and install the IRkernel package.
+
+If you are using ``conda`` and a ``environment.yml`` file to manage
+dependencies, keep on reading. Otherwise, read the `IRkernel installation
+instructions <https://github.com/IRkernel/IRkernel>`_.
 
 
-To allow Jupyter to execute R scripts, you need an R installation and install
-IRkernel (R package).
+Setting up R and IRkernel via ``conda``
+---------------------------------------
 
-It is a good practice to isolate your environments from one project to another,
-to avoid messing with your current R installation (if any), we highly recommend
-you to have a local installation for your Ploomber project. The easiest way to
-do so is via ``conda``, add the following lines to your ``environment.yaml``:
+Even if you already have R installed, it is a good practice to isolate your
+environments from one project to another. ``conda`` can install R inside your
+project's environment.
+
+Add the following lines to your ``environment.yaml``:
 
 .. code-block:: yaml
     :class: text-editor
@@ -37,24 +42,31 @@ do so is via ``conda``, add the following lines to your ``environment.yaml``:
     name: some_project
 
     dependencies:
-      # dependencies...
+      # ...
+      # existing conda dependencies...
       - r-base
       - r-irkernel
-      # optionally add r-essentials to install commonly used packages
+      # optionally add r-essentials to install commonly used R packages
+
+      - pip:
+        # ...
+        # existing pip dependencies...
+        - ploomber
 
 
-The update your environment:
+For more information on installing R via ``conda``
+`click here <https://docs.anaconda.com/anaconda/user-guide/tasks/using-r-language/>`_.
+
+
+Once you update your ``environment.yml``, re-create or update your environment.
+
+
+
+Finally, activate the R kernel for Jupyter. If you're using Linux or MacOS:
 
 .. code-block:: console
-
-    conda env update --file environment.yml  --prune
-
-
-.. code-block:: console
-
-    type R
-
-
-.. code-block:: r
 
     echo "IRkernel::installspec()" | Rscript -
+
+
+If using Windows, start an R session and run ``IRkernel::installspec()`` on it.

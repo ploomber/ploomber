@@ -45,6 +45,8 @@ here's an example with common dependencies to get you started:
 
     dependencies:
       # having a pkg here is the same as "conda install {pkg}"
+      - python==3.8
+      - pip
       - numpy
       - scipy
       - pandas
