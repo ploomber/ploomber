@@ -22,6 +22,29 @@ def test_help_commands(cmd):
     subprocess.run(elements + ['--help'], check=True)
 
 
+@pytest.mark.parametrize('cmd', ['build', 'plot', 'report', 'status', 'task'])
+def test_help_shows_env_keys(cmd, tmp_nbs):
+    res = subprocess.run(['ploomber', 'build', '--help'],
+                         stdout=subprocess.PIPE,
+                         check=True)
+
+    out = res.stdout.decode()
+
+    assert '--env__sample' in out
+
+
+@pytest.mark.parametrize('cmd', ['build', 'plot', 'report', 'status', 'task'])
+def test_help_shows_env_keys_w_entry_point(cmd, tmp_nbs,
+                                           add_current_to_sys_path):
+    res = subprocess.run(['ploomber', 'build', '-e', 'factory.make', '--help'],
+                         stdout=subprocess.PIPE,
+                         check=True)
+
+    out = res.stdout.decode()
+
+    assert '--env__sample' in out
+
+
 def test_build(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
                         ['python', '--entry-point', 'test_pkg.entry.with_doc'])

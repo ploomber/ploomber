@@ -10,6 +10,7 @@ import yaml
 
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.env.EnvDict import EnvDict
+from ploomber.util.util import load_dotted_path
 
 
 def process_arg(s):
@@ -120,17 +121,6 @@ def _add_args_from_env_dict(parser, env_dict):
         parser.add_argument('--env__' + arg, help='Default: {}'.format(val))
 
 
-def _parse_module(s):
-    parts = s.split('.')
-
-    if len(parts) < 2:
-        raise ImportError('Invalid module name, must be a dot separated '
-                          'string, with at least '
-                          '[module_name].[function_name]')
-
-    return '.'.join(parts[:-1]), parts[-1]
-
-
 def _parse_signature_from_callable(callable_):
     """
     Parse a callable signature, return a dictionary with
@@ -203,23 +193,11 @@ def _process_file_entry_point(parser, entry_point, static_args):
     return dag, args
 
 
-def _process_factory_entry_point(parser, entry_point, static_args):
+def _process_factory_dotted_path(parser, dotted_path, static_args):
     """Parse a factory entry point, returns initialized dag and parsed args
+
     """
-    mod, name = _parse_module(entry_point)
-
-    try:
-        module = importlib.import_module(mod)
-    except ImportError as e:
-        raise ImportError('An error happened when trying to '
-                          'import module "{}"'.format(mod)) from e
-
-    try:
-        entry = getattr(module, name)
-    except AttributeError as e:
-        raise AttributeError('Could not get attribute "{}" from module '
-                             '"{}", make sure it is a valid callable'.format(
-                                 name, mod)) from e
+    entry = load_dotted_path(dotted_path, raise_=True)
 
     required, _ = _add_args_from_callable(parser, entry)
 
@@ -249,19 +227,30 @@ def _process_factory_entry_point(parser, entry_point, static_args):
 
 
 def _process_entry_point(parser, entry_point, static_args):
-    """
-    Process an entry point (either a file or a dotted path to a factory)
+    """Process an entry point from the user
+
+    Parameters
+    ----------
+    parser : CustomParser
+        The cli parser object
+
+    entry_point : str
+        An entry point string, this can be either path to a file or a dotted
+        path to a function that returns a DAG
     """
     help_cmd = '--help' in sys.argv or '-h' in sys.argv
 
-    if (help_cmd and not Path(entry_point).exists()):
+    entry_file_exists = Path(entry_point).exists()
+    entry_obj = load_dotted_path(entry_point, raise_=False)
+
+    if (help_cmd and not entry_file_exists and not entry_obj):
         args = parser.parse_args()
     # first check if the entry point is an existing file
     elif Path(entry_point).exists():
         dag, args = _process_file_entry_point(parser, entry_point, static_args)
     # assume it's a dotted path to a factory
     else:
-        dag, args = _process_factory_entry_point(parser, entry_point,
+        dag, args = _process_factory_dotted_path(parser, entry_point,
                                                  static_args)
 
     return dag, args

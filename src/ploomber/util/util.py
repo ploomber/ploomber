@@ -235,25 +235,37 @@ def _parse_module(dotted_path):
     return '.'.join(parts[:-1]), parts[-1]
 
 
-def load_dotted_path(dotted_path):
-    """
-    Load an object/function/module by passing a dotted path, example:
-    ploomber.clients.SQLAlchemyClient
+def load_dotted_path(dotted_path, raise_=True):
+    """Load an object/function/module by passing a dotted path
+
+    Parameters
+    ----------
+    dotted_path : str
+        Dotted path to a module, e.g. ploomber.tasks.NotebookRunner
+    raise_ : bool, optional
+        If True, an exception is raised if the module can't be imported,
+        otherwise return None if that happens
     """
     mod, name = _parse_module(dotted_path)
+
+    obj, module = None, None
 
     try:
         module = importlib.import_module(mod)
     except ImportError as e:
-        raise ImportError('An error happened when trying to '
-                          'import module "{}"'.format(mod)) from e
+        if raise_:
+            raise ImportError('An error happened when trying to '
+                              'import module "{}"'.format(mod)) from e
 
-    try:
-        obj = getattr(module, name)
-    except AttributeError as e:
-        raise AttributeError('Could not get attribute "{}" from module '
-                             '"{}", make sure it is a valid callable'.format(
-                                 name, mod)) from e
+    if module:
+        try:
+            obj = getattr(module, name)
+        except AttributeError as e:
+            if raise_:
+                raise AttributeError(
+                    'Could not get attribute "{}" from module '
+                    '"{}", make sure it is a valid callable'.format(
+                        name, mod)) from e
 
     return obj
 
