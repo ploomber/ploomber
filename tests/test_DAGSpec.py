@@ -288,3 +288,60 @@ def test_expand_env(tmp_directory):
         env={'sample': True})
 
     assert spec['tasks'][0]['params']['sample'] is True
+
+
+def test_infer_dependencies_sql(tmp_pipeline_sql, add_current_to_sys_path):
+    expected = {
+        'filter.sql': {'load.sql'},
+        'transform.sql': {'filter.sql'},
+        'load.sql': set()
+    }
+
+    with open('pipeline-postgres.yaml') as f:
+        d = yaml.load(f)
+
+    d['meta']['extract_upstream'] = True
+
+    for t in d['tasks']:
+        t.pop('upstream', None)
+
+    dag = DAGSpec(d).to_dag()
+
+    deps = {name: set(task.upstream) for name, task in dag.items()}
+    assert deps == expected
+
+
+def test_extract_variables_from_notebooks(tmp_nbs):
+    from IPython import embed
+    embed()
+
+    with open('pipeline.yaml') as f:
+        d = yaml.load(f)
+
+    d['meta']['extract_upstream'] = True
+    d['meta']['extract_product'] = True
+
+    for t in d['tasks']:
+        t.pop('upstream', None)
+        t.pop('product', None)
+
+    dag = DAGSpec(d).to_dag()
+    deps = {name: set(task.upstream) for name, task in dag.items()}
+    prods = {name: task.product for name, task in dag.items()}
+
+    expected_deps = {'clean': {'load'}, 'plot': {'clean'}, 'load': set()}
+
+    # expected_prod = {
+    #     'clean.py': {
+    #         'data': 'output/clean.csv',
+    #         'nb': 'output/clean.ipynb'
+    #     },
+    #     'load.py': {
+    #         'data': 'output/data.csv',
+    #         'nb': 'output/load.ipynb'
+    #     },
+    #     'plot.py': 'output/plot.ipynb'
+    # }
+
+    assert deps == expected_deps
+    # assert prods == expected_prod

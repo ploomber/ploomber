@@ -148,6 +148,11 @@ def tmp_sample_tasks():
     pass
 
 
+@fixture_tmp_dir(_path_to_tests() / 'assets' / 'pipeline-sql')
+def tmp_pipeline_sql():
+    pass
+
+
 @pytest.fixture()
 def tmp_sample_subdir():
     old = os.getcwd()
