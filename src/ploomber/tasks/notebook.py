@@ -211,9 +211,9 @@ class NotebookRunner(Task):
                            'parameter will be set by the task itself')
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
-        self._source = NotebookRunner._init_source(source, ext_in,
+        self._source = NotebookRunner._init_source(source, kwargs, ext_in,
                                                    kernelspec_name,
-                                                   static_analysis, kwargs)
+                                                   static_analysis)
         super().__init__(product, dag, name, params)
 
         if isinstance(self.product, MetaProduct):
@@ -236,7 +236,11 @@ class NotebookRunner(Task):
                                             nbconvert_export_kwargs)
 
     @staticmethod
-    def _init_source(source, ext_in, kernelspec_name, static_analysis, kwargs):
+    def _init_source(source,
+                     kwargs,
+                     ext_in=None,
+                     kernelspec_name=None,
+                     static_analysis=False):
         return NotebookSource(source,
                               ext_in=ext_in,
                               kernelspec_name=kernelspec_name,

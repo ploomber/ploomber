@@ -19,21 +19,21 @@ def requires(pkgs, name=None):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            missing = [pkg for pkg in pkgs if importlib.util.find_spec(pkg)
-                       is None]
+            missing = [
+                pkg for pkg in pkgs if importlib.util.find_spec(pkg) is None
+            ]
 
             if missing:
-                msg = reduce(lambda x, y: x+' '+y, missing)
+                msg = reduce(lambda x, y: x + ' ' + y, missing)
                 fn_name = name or f.__name__
 
                 raise ImportError('{} {} required to use {}. Install {} by '
-                                  'running "pip install {}"'
-                                  .format(msg,
-                                          'is' if len(missing) == 1 else 'are',
-                                          fn_name,
-                                          'it' if len(
-                                              missing) == 1 else 'them',
-                                          msg))
+                                  'running "pip install {}"'.format(
+                                      msg,
+                                      'is' if len(missing) == 1 else 'are',
+                                      fn_name,
+                                      'it' if len(missing) == 1 else 'them',
+                                      msg))
 
             return f(*args, **kwargs)
 
@@ -154,19 +154,25 @@ def callback_check(fn, available, allow_default=True):
         Dictionary with requested parameters
     """
     parameters = inspect.signature(fn).parameters
-    optional = {name for name, param in parameters.items()
-                if param.default != inspect._empty}
+    optional = {
+        name
+        for name, param in parameters.items()
+        if param.default != inspect._empty
+    }
     # not all functions have __name__ (e.g. partials)
     fn_name = getattr(fn, '__name__', fn)
 
     if optional and not allow_default:
         raise CallbackSignatureError('Callback functions cannot have '
                                      'parameters with default values, '
-                                     'got: {} in "{}"'.format(optional,
-                                                              fn_name))
+                                     'got: {} in "{}"'.format(
+                                         optional, fn_name))
 
-    required = {name for name, param in parameters.items()
-                if param.default == inspect._empty}
+    required = {
+        name
+        for name, param in parameters.items()
+        if param.default == inspect._empty
+    }
 
     available_set = set(available)
     extra = required - available_set
@@ -187,8 +193,11 @@ def signature_check(fn, params, task_name):
     """
     params = set(params)
     parameters = inspect.signature(fn).parameters
-    required = {name for name, param in parameters.items()
-                if param.default == inspect._empty}
+    required = {
+        name
+        for name, param in parameters.items()
+        if param.default == inspect._empty
+    }
 
     extra = params - set(parameters.keys())
     missing = set(required) - params
@@ -209,8 +218,8 @@ def signature_check(fn, params, task_name):
         # not all functions have __name__ (e.g. partials)
         fn_name = getattr(fn, '__name__', fn)
         raise TaskRenderError('Error rendering task "{}" initialized with '
-                              'function "{}". {}'
-                              .format(task_name, fn_name, msg))
+                              'function "{}". {}'.format(
+                                  task_name, fn_name, msg))
 
     return True
 
@@ -227,6 +236,10 @@ def _parse_module(dotted_path):
 
 
 def load_dotted_path(dotted_path):
+    """
+    Load an object/function/module by passing a dotted path, example:
+    ploomber.clients.SQLAlchemyClient
+    """
     mod, name = _parse_module(dotted_path)
 
     try:
@@ -236,13 +249,13 @@ def load_dotted_path(dotted_path):
                           'import module "{}"'.format(mod)) from e
 
     try:
-        factory = getattr(module, name)
+        obj = getattr(module, name)
     except AttributeError as e:
         raise AttributeError('Could not get attribute "{}" from module '
-                             '"{}", make sure it is a valid callable'
-                             .format(name, mod)) from e
+                             '"{}", make sure it is a valid callable'.format(
+                                 name, mod)) from e
 
-    return factory
+    return obj
 
 
 def find_file_recursively(name, max_levels_up=6, starting_dir=None):
@@ -264,3 +277,14 @@ def find_file_recursively(name, max_levels_up=6, starting_dir=None):
         current_dir = current_dir.parent
 
     return path_to_file
+
+
+def call_with_dictionary(fn, kwargs):
+    """
+    Call a function by passing elements from a dictionary that appear in the
+    function signature
+    """
+    parameters = inspect.signature(fn).parameters
+    common = set(parameters) & set(kwargs)
+    sub_kwargs = {k: kwargs[k] for k in common}
+    return fn(**sub_kwargs)

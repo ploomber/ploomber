@@ -198,6 +198,14 @@ class SQLSourceMixin:
     def extension(self):
         return 'sql'
 
+    def extract_product(self):
+        return static_analysis.sql.SQLExtractor(
+            self._placeholder._raw).extract_product()
+
+    def extract_upstream(self):
+        return static_analysis.sql.SQLExtractor(
+            self._placeholder._raw).extract_upstream()
+
 
 class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
     """

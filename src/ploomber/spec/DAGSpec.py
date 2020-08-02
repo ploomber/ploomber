@@ -19,8 +19,8 @@ import pprint
 
 from ploomber import products
 from ploomber import DAG, tasks
-from ploomber.util.util import load_dotted_path, find_file_recursively
-from ploomber.static_analysis import project
+from ploomber.util.util import (load_dotted_path, find_file_recursively,
+                                call_with_dictionary)
 from ploomber.spec.TaskSpec import TaskSpec
 from ploomber.spec import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
@@ -267,37 +267,40 @@ class Meta:
 
 
 def process_tasks(dag, tasks, dag_spec, root_path=None):
+    """
+    Initialize Task objects from TaskSpec, extract product and dependencies
+    if needed and set the dag dependencies structure
+    """
     root_path = root_path or '.'
 
-    # determine if we need to run static analysis
-    meta = dag_spec['meta']
-    sources = [task_dict['source'] for task_dict in tasks]
-    extracted = project.infer_from_path(root_path,
-                                        templates=sources,
-                                        upstream=meta['extract_upstream'],
-                                        product=meta['extract_product'])
-
     upstream = {}
+    source_obj = {}
+    extract_up = dag_spec['meta']['extract_upstream']
+    extract_prod = dag_spec['meta']['extract_product']
 
+    # first pass: init tasks and them to dag
     for task_dict in tasks:
-        task_dict['class']._init_source
+        fn = task_dict['class']._init_source
+        kwargs = {'kwargs': {}, **task_dict}
+        source = call_with_dictionary(fn, kwargs=kwargs)
 
-    for task_dict in tasks:
-        source = task_dict['source']
-
-        if dag_spec['meta']['extract_upstream']:
-            task_dict['upstream'] = extracted['upstream'][source]
-
-        if dag_spec['meta']['extract_product']:
-            task_dict['product'] = extracted['product'][source]
+        if extract_prod:
+            task_dict['product'] = source.extract_product()
 
         task, up = task_dict.to_task(dag, root_path)
         upstream[task] = up
+        source_obj[task] = source
 
-    # once we added all tasks, set upstream dependencies
+    # second optional pass: extract upstream
+    if extract_up:
+        for task in list(dag.values()):
+            upstream[task] = task.source.extract_upstream()
+
+    # Last pass: set upstream dependencies
     for task in list(dag.values()):
-        for task_dep in upstream[task]:
-            task.set_upstream(dag[task_dep])
+        if upstream[task]:
+            for task_name in upstream[task]:
+                task.set_upstream(dag[task_name])
 
 
 def init_clients(dag, clients):
