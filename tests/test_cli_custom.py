@@ -9,8 +9,17 @@ import pytest
 from ploomber.cli import plot, build, parsers, task, report, cli, status
 
 
-def test_help_commands():
-    subprocess.run(['ploomber', 'build', '--help'], check=True)
+@pytest.mark.parametrize('cmd', [
+    None, 'add', 'build', 'interact', 'new', 'plot', 'report', 'status', 'task'
+])
+def test_help_commands(cmd):
+
+    elements = ['ploomber']
+
+    if cmd:
+        elements.append(cmd)
+
+    subprocess.run(elements + ['--help'], check=True)
 
 
 def test_build(monkeypatch, tmp_sample_dir):

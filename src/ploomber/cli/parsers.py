@@ -252,8 +252,12 @@ def _process_entry_point(parser, entry_point, static_args):
     """
     Process an entry point (either a file or a dotted path to a factory)
     """
+    help_cmd = '--help' in sys.argv or '-h' in sys.argv
+
+    if (help_cmd and not Path(entry_point).exists()):
+        args = parser.parse_args()
     # first check if the entry point is an existing file
-    if Path(entry_point).exists():
+    elif Path(entry_point).exists():
         dag, args = _process_file_entry_point(parser, entry_point, static_args)
     # assume it's a dotted path to a factory
     else:
