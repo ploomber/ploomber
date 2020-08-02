@@ -5,3 +5,5 @@ User Guide
     :maxdepth: 2
 
     faq_index
+    conda
+    r-support
