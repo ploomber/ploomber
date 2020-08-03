@@ -50,7 +50,7 @@ class PloomberContentsManager(TextFileContentsManager):
             try:
                 (self.spec, self.dag,
                  self.path) = DAGSpec.auto_load(starting_dir=starting_dir)
-            except DAGSpecInitializationError as e:
+            except DAGSpecInitializationError:
                 self.reset_dag()
                 self.log.exception(
                     '[Ploomber] An error occured when trying to initialize '
@@ -131,14 +131,16 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         # not sure what's the difference between model['path'] and path
         # but path has leading "/", _model_in_dag strips it
-        if self._model_in_dag(model, path):
+        key = self._model_in_dag(model, path)
+
+        if key:
             self.log.info(
                 '[Ploomber] Cleaning up injected cell in {}...'.format(
                     model.get('name') or ''))
             model['content'] = _cleanup_rendered_nb(model['content'])
 
             self.log.info("[Ploomber] Deleting product's metadata...")
-            self.dag_mapping[model['path']].product.metadata.delete()
+            self.dag_mapping[key].product.metadata.delete()
 
         return super(PloomberContentsManager, self).save(model, path)
 
@@ -166,7 +168,7 @@ class PloomberContentsManager(TextFileContentsManager):
                                   'skipping...'.format(
                                       model.get('name') or ''))
 
-        return model_in_dag
+        return path if model_in_dag else False
 
 
 def _load_jupyter_server_extension(app):

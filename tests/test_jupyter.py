@@ -83,13 +83,24 @@ def test_injects_cell_even_if_pipeline_yaml_in_subdirectory(tmp_nbs):
     assert injected
 
 
-def test_removes_injected_cell(tmp_nbs):
+def test_save(tmp_nbs):
     cm = PloomberContentsManager()
     model = cm.get('plot.py')
+
+    # I found a bug when saving a .py file in jupyter notebook: the model
+    # received by .save does not have a path, could not reproduce this issue
+    # when running this test so I'm deleting it on purpose to simulate that
+    # behavior - not sure why this is happening
+    del model['path']
+
+    source = model['content']['cells'][0]['source']
+    model['content']['cells'][0]['source'] = '# modification\n' + source
     cm.save(model, path='/plot.py')
 
     nb = jupytext.read('plot.py')
+    code = Path('plot.py').read_text()
     assert get_injected_cell(nb) is None
+    assert '# modification' in code
 
 
 def test_deletes_metadata_on_save(tmp_nbs):
