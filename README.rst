@@ -64,15 +64,20 @@ To install Ploomber along with all optional dependencies:
 
     pip install "ploomber[all]"
 
-``graphviz`` is required for plotting pipelines:
+``pygraphviz`` is required for plotting pipelines:
 
 .. code-block:: shell
 
     # if you use conda (recommended)
-    conda install graphviz
-    # if you use homebrew
+    conda install pygraphviz
+
+    # if you use homebrew, install graphviz first
     brew install graphviz
-    # for more options, see: https://www.graphviz.org/download/
+    # then pygraphviz
+    pip install pygraphviz
+
+
+For more options, see: https://www.graphviz.org/download/
 
 
 Create a new project
