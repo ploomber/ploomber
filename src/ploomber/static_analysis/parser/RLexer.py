@@ -125,4 +125,7 @@ class RLexer(Lexer):
                 self.advance()
                 yield op
             else:
-                raise SyntaxError
+                raise SyntaxError('Could not parse parameters in R notebook. '
+                                  'Verify they have the right format: '
+                                  '"upstream = list(\'a\', \'b\')" or '
+                                  '"product = list(name=\'path/to/file\')"')

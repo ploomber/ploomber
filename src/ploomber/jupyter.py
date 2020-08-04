@@ -35,6 +35,24 @@ def resolve_path(parent, path):
         return None
 
 
+def check_metadata_filter(log, model):
+    try:
+        cell_metadata_filter = (
+            model['content']['metadata']['jupytext']['cell_metadata_filter'])
+    except Exception:
+        cell_metadata_filter = None
+
+    if cell_metadata_filter == '-all':
+        log.warning('Your notebook has filter that strips out '
+                    'cell metadata when saving it from the Jupyter notebook '
+                    'app. This will prevent you from tagging your '
+                    '"parameters" cell. It is possible that this comes '
+                    'from jupytext defaults, either add the tag by '
+                    'editing the notebook in a text editor or enable '
+                    'metadata in the Jupyter app: File -> Jupytext -> '
+                    'Include metadata')
+
+
 class PloomberContentsManager(TextFileContentsManager):
     """
     Ploomber content manager subclasses jupytext TextFileContentsManager
@@ -43,19 +61,25 @@ class PloomberContentsManager(TextFileContentsManager):
     are part of a pipeline defined in pipeline.yaml, these injected parameters
     are deleted before saving the file
     """
+    restart_msg = (' Fix the issue and and restart "jupyter notebook"')
+
     def load_dag(self, starting_dir=None):
         if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
             self.log.info('[Ploomber] Loading dag...')
+
+            msg = ('[Ploomber] An error occured when trying to initialize '
+                   'the pipeline. Cells won\' be injected until your '
+                   'pipeline processes correctly. See error details below.')
+
+            if self.spec and not self.spec['meta']['jupyter_hot_reload']:
+                msg += self.restart_msg
 
             try:
                 (self.spec, self.dag,
                  self.path) = DAGSpec.auto_load(starting_dir=starting_dir)
             except DAGSpecInitializationError:
                 self.reset_dag()
-                self.log.exception(
-                    '[Ploomber] An error occured when trying to initialize '
-                    'the pipeline. If you want cells to be injected, '
-                    'fix the issue and restart "jupyter notebook"')
+                self.log.exception(msg)
             else:
                 if self.dag is not None:
 
@@ -108,6 +132,7 @@ class PloomberContentsManager(TextFileContentsManager):
         view)
         """
         model = super(PloomberContentsManager, self).get(*args, **kwargs)
+        check_metadata_filter(self.log, model)
 
         # if opening a file (ignore file listing), load dag again
         if (model['content'] and model['type'] == 'notebook'):
@@ -129,6 +154,7 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         This is called when a file is saved
         """
+        check_metadata_filter(self.log, model)
         # not sure what's the difference between model['path'] and path
         # but path has leading "/", _model_in_dag strips it
         key = self._model_in_dag(model, path)

@@ -230,8 +230,8 @@ class NotebookSource(Source):
 
         if params_cell is None:
             raise SourceInitializationError(
-                'Notebook does not have a cell tagged '
-                '"parameters"')
+                'Notebook "{}" does not have a cell tagged '
+                '"parameters"'.format(self.loc))
 
     def _post_render_validation(self, params):
         """

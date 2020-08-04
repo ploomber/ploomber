@@ -8,13 +8,6 @@ _EXTRACTOR_FOR_LANGUAGE = {
     'sql': SQLExtractor
 }
 
-# FIXME: tmp, will delete once the refactoring is finished
-_EXTRACTOR_FOR_SUFFIX = {
-    '.sql': SQLExtractor,
-    '.ipynb': PythonNotebookExtractor,
-    '.py': PythonNotebookExtractor,
-}
-
 
 def extractor_class_for_language(language):
     if language not in _EXTRACTOR_FOR_LANGUAGE:
