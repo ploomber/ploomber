@@ -229,9 +229,10 @@ class NotebookSource(Source):
         params_cell, _ = find_cell_with_tag(self._nb_obj, 'parameters')
 
         if params_cell is None:
+            loc = ' "{}"'.format(self.loc) if self.loc else ''
             raise SourceInitializationError(
-                'Notebook "{}" does not have a cell tagged '
-                '"parameters"'.format(self.loc))
+                'Notebook{} does not have a cell tagged '
+                '"parameters"'.format(loc))
 
     def _post_render_validation(self, params):
         """
