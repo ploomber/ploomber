@@ -16,6 +16,14 @@ def fake_from_notebook_node(self, nb, resources):
     return bytes(42), None
 
 
+def test_error_when_path_has_no_extension():
+    with pytest.raises(ValueError) as excinfo:
+        notebook.NotebookConverter('a')
+
+    msg = 'Could not determine output format for product: "a"'
+    assert msg in str(excinfo.value)
+
+
 @pytest.mark.parametrize(
     'path, exporter',
     [('file.ipynb', None), ('file.pdf', nbconvert.exporters.pdf.PDFExporter),

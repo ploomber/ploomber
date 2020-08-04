@@ -50,7 +50,18 @@ class NotebookConverter:
                  nbconvert_export_kwargs=None):
         if exporter_name is None:
             #  try to infer it from the extension
-            exporter_name = Path(path_to_output).suffix[1:]
+            suffix = Path(path_to_output).suffix
+
+            if not suffix:
+                raise ValueError('Could not determine output format for '
+                                 'product: "{}" because it has no extension. '
+                                 'Either add an extension '
+                                 'or explicitly pass a '
+                                 '"nbconvert_exporter_name" to the task '
+                                 'constructor'.format(path_to_output))
+
+            exporter_name = suffix[1:]
+
 
         self.exporter = self._get_exporter(exporter_name)
         self.path_to_output = path_to_output
