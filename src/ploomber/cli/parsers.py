@@ -183,9 +183,10 @@ def _add_args_from_callable(parser, callable_):
     return required, defaults
 
 
-def _process_file_entry_point(parser, entry_point, static_args):
+def _process_file_or_entry_point(parser, entry_point, static_args):
     """
-    Process a file entry point, returns the initialized dag and parsed args
+    Process a file entry point file or directory), returns the initialized dag
+    and parsed args
     """
     if Path('env.yaml').exists():
         env_dict = EnvDict('env.yaml')
@@ -197,16 +198,19 @@ def _process_file_entry_point(parser, entry_point, static_args):
         if args.log is not None:
             logging.basicConfig(level=args.log.upper())
 
-    with open(entry_point) as f:
-        dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
-
-    if Path('env.yaml').exists():
-        env = EnvDict('env.yaml')
-        replaced = _args_to_replace_in_env(args, static_args)
-        env = env._replace_flatten_keys(replaced)
-        dag = DAGSpec(dag_dict, env=env).to_dag()
+    if Path(entry_point).is_dir():
+        dag = DAGSpec.from_directory(entry_point).to_dag()
     else:
-        dag = DAGSpec(dag_dict).to_dag()
+        with open(entry_point) as f:
+            dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
+
+        if Path('env.yaml').exists():
+            env = EnvDict('env.yaml')
+            replaced = _args_to_replace_in_env(args, static_args)
+            env = env._replace_flatten_keys(replaced)
+            dag = DAGSpec(dag_dict, env=env).to_dag()
+        else:
+            dag = DAGSpec(dag_dict).to_dag()
 
     return dag, args
 
@@ -265,7 +269,8 @@ def _process_entry_point(parser, entry_point, static_args):
         args = parser.parse_args()
     # first check if the entry point is an existing file
     elif Path(entry_point).exists():
-        dag, args = _process_file_entry_point(parser, entry_point, static_args)
+        dag, args = _process_file_or_entry_point(parser, entry_point,
+                                                 static_args)
     # assume it's a dotted path to a factory
     else:
         dag, args = _process_factory_dotted_path(parser, entry_point,

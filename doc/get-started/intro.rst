@@ -136,6 +136,11 @@ Ploomber keeps track of source changes to skip up-to-date tasks, if you run
 that command again, only tasks whose source code has changed will be executed.
 
 
+**Note:** Writing a ``pipeline.yaml`` file is optional, you can also create
+pipelines by pointing to a directory with scripts. For more information, see the
+:doc:`../user-guide/entry-points` guide.
+
+
 Summary
 -------
 

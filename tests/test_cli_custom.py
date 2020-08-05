@@ -51,6 +51,12 @@ def test_build(monkeypatch, tmp_sample_dir):
     build.main()
 
 
+def test_build_from_directory(monkeypatch, tmp_nbs_no_yaml):
+    Path('output').mkdir()
+    monkeypatch.setattr(sys, 'argv', ['python', '--entry-point', '.'])
+    build.main()
+
+
 def test_status(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
                         ['python', '--entry-point', 'test_pkg.entry.with_doc'])

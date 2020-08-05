@@ -5,9 +5,11 @@ CHANGELOG
 --------
 * Support for R
 * Adding section on R pipeline to the documentation
+* Construct pipeline from a directory (no need to write a ``pipeline.yaml`` file)
 * Improved error messages when DAG fails to initialize (jupyter notebook app)
 * Bug fixes
-* CLI now shows env variables (if any) when using `--help`
+* CLI accepts factory function parameters as positional arguments, types are inferred using type hints, displayed when calling ``--help``
+* CLI accepts env variables (if any), displayed when calling ``--help``
 
 
 0.7 (2020-07-30)

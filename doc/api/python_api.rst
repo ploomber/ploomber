@@ -49,6 +49,7 @@ Products
     GenericProduct
     GenericSQLRelation
 
+
 Clients
 -------
 
@@ -61,6 +62,19 @@ Clients
     DBAPIClient
     SQLAlchemyClient
     ShellClient
+
+
+Spec
+----
+
+.. currentmodule:: ploomber.spec
+
+.. autosummary::
+    :toctree:
+
+    DAGSpec
+
+
 
 Env
 ---

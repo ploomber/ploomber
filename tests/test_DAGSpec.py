@@ -1,4 +1,3 @@
-from glob import glob
 from datetime import timedelta, datetime
 import numpy as np
 import pandas as pd
@@ -27,11 +26,6 @@ def tmp_pipeline_r():
 @fixture_tmp_dir(_path_to_tests() / 'assets' /
                  'pipeline-sql-products-in-source')
 def tmp_pipeline_sql_products_in_source():
-    pass
-
-
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-auto')
-def tmp_nbs_auto():
     pass
 
 
@@ -135,11 +129,9 @@ def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
     dag.build()
 
 
-@pytest.mark.skip(
-    reason="Won't work until we make extract_product=True the default")
-def test_spec_from_list_of_files(tmp_nbs_auto):
+def test_spec_from_directory(tmp_nbs_no_yaml):
     Path('output').mkdir()
-    dag = DAGSpec(glob('*.py')).to_dag()
+    dag = DAGSpec.from_directory('.').to_dag()
     dag.build()
 
 

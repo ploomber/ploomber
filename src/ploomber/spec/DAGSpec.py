@@ -15,17 +15,20 @@ import yaml
 import logging
 from pathlib import Path
 from collections.abc import MutableMapping
+from glob import iglob
+from itertools import chain
 import pprint
 
 from ploomber import products
 from ploomber import DAG, tasks
 from ploomber.util.util import (load_dotted_path, find_file_recursively,
                                 call_with_dictionary)
-from ploomber.spec.TaskSpec import TaskSpec
+from ploomber.spec.TaskSpec import TaskSpec, suffix2taskclass
 from ploomber.spec import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.env.expand import expand_raw_dictionary
+from ploomber.tasks import NotebookRunner
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4)
@@ -208,6 +211,29 @@ class DAGSpec(MutableMapping):
             exc = DAGSpecInitializationError('Error initializing DAG from '
                                              'pipeline.yaml')
             raise exc from e
+
+    @classmethod
+    def from_directory(cls, path_to_dir):
+        """Construct a DAGSpec from a directory
+
+        Look for scripts (``.py``, ``.R`` or ``.ipynb``) in the directory and
+        interpret them as task sources, file names are assigned as task names
+        (without extension). The spec is generated with the default values in
+        the "meta" section.
+        """
+        extensions = [
+            name for name, class_ in suffix2taskclass.items()
+            if class_ is NotebookRunner
+        ]
+
+        files = chain.from_iterable(iglob('*' + ext) for ext in extensions)
+
+        tasks = [{
+            'source': file_,
+            'name': str(Path(file_).with_suffix(''))
+        } for file_ in files]
+
+        return cls({'tasks': tasks})
 
     @classmethod
     def from_file(cls, path):

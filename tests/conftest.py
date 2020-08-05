@@ -178,6 +178,11 @@ def tmp_nbs_nested():
     pass
 
 
+@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-no-yaml')
+def tmp_nbs_no_yaml():
+    pass
+
+
 @pytest.fixture(scope='session')
 def path_to_source_code_file():
     return (_path_to_tests() / 'assets' / 'sample' / 'src' / 'pkg' / 'module' /

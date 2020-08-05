@@ -6,4 +6,5 @@ User Guide
 
     conda
     r-support
+    entry-points
     faq_index

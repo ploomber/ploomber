@@ -224,13 +224,16 @@ def signature_check(fn, params, task_name):
     return True
 
 
-def _parse_module(dotted_path):
+def _parse_module(dotted_path, raise_=True):
     parts = dotted_path.split('.')
 
-    if len(parts) < 2:
-        raise ImportError('Invalid module name, must be a dot separated '
-                          'string, with at least '
-                          '[module_name].[function_name]')
+    if len(parts) < 2 or not all(parts):
+        if raise_:
+            raise ValueError('Invalid module name, must be a dot separated '
+                             'string, with at least '
+                             '[module_name].[function_name]')
+        else:
+            return False
 
     return '.'.join(parts[:-1]), parts[-1]
 
@@ -246,28 +249,35 @@ def load_dotted_path(dotted_path, raise_=True):
         If True, an exception is raised if the module can't be imported,
         otherwise return None if that happens
     """
-    mod, name = _parse_module(dotted_path)
-
     obj, module = None, None
 
-    try:
-        module = importlib.import_module(mod)
-    except ImportError as e:
-        if raise_:
-            raise ImportError('An error happened when trying to '
-                              'import module "{}"'.format(mod)) from e
+    parsed = _parse_module(dotted_path, raise_=raise_)
 
-    if module:
+    if parsed:
+        mod, name = parsed
+
         try:
-            obj = getattr(module, name)
-        except AttributeError as e:
+            module = importlib.import_module(mod)
+        except ImportError as e:
             if raise_:
-                raise AttributeError(
-                    'Could not get attribute "{}" from module '
-                    '"{}", make sure it is a valid callable'.format(
-                        name, mod)) from e
+                raise ImportError('An error happened when trying to '
+                                  'import module "{}"'.format(mod)) from e
 
-    return obj
+        if module:
+            try:
+                obj = getattr(module, name)
+            except AttributeError as e:
+                if raise_:
+                    raise AttributeError(
+                        'Could not get attribute "{}" from module '
+                        '"{}", make sure it is a valid callable'.format(
+                            name, mod)) from e
+
+        return obj
+    else:
+        if raise_:
+            raise ImportError('Could not import dotted path "{}", '
+                              'it is invalid'.format(dotted_path))
 
 
 def find_file_recursively(name, max_levels_up=6, starting_dir=None):
