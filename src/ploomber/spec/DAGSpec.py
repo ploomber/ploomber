@@ -312,6 +312,8 @@ def process_tasks(dag, tasks, dag_spec, root_path=None):
 
         if extract_prod:
             task_dict['product'] = source.extract_product()
+            logger.debug('Extracted productfor task "%s": %s',
+                         task_dict['name'], task_dict['product'])
 
         task, up = task_dict.to_task(dag, root_path)
         upstream[task] = up
@@ -321,6 +323,8 @@ def process_tasks(dag, tasks, dag_spec, root_path=None):
     if extract_up:
         for task in list(dag.values()):
             upstream[task] = task.source.extract_upstream()
+            logger.debug('Extracted upstream dependencies for task %s: %s',
+                         task.name, upstream[task])
 
     # Last pass: set upstream dependencies
     for task in list(dag.values()):
