@@ -134,8 +134,10 @@ def test_invalid_module_arg(monkeypatch):
     monkeypatch.setattr(sys, 'argv',
                         ['python', '--entry-point', 'invalid_module'])
 
-    with pytest.raises(ImportError):
+    with pytest.raises(ValueError) as excinfo:
         build.main()
+
+    assert 'Invalid module name' in str(excinfo.value)
 
 
 def test_nonexisting_module(monkeypatch):
