@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.7
----
+0.7 (2020-07-30)
+----------------
 * Simplified CLI (breaking changes)
 * Refactors internal API for notebook conversion, adds tests for common formats
 * Metadata is deleted when saving a script from the Jupyter notebook app to make sure the task runs in the next pipeline build
