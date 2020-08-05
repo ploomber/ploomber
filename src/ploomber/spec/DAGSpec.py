@@ -312,10 +312,13 @@ def process_tasks(dag, tasks, dag_spec, root_path=None):
 
         if extract_prod:
             task_dict['product'] = source.extract_product()
-            logger.debug('Extracted productfor task "%s": %s',
-                         task_dict['name'], task_dict['product'])
 
         task, up = task_dict.to_task(dag, root_path)
+
+        if extract_prod:
+            logger.debug('Extracted product for task "%s": %s', task.name,
+                         task.product)
+
         upstream[task] = up
         source_obj[task] = source
 
