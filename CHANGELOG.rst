@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+0.7.1dev
+--------
+* Support for R
+* Adding section on R pipeline to the documentation
+* Improved error messages when DAG fails to initialize (jupyter notebook app)
+* Bug fixes
+* CLI now shows env variables (if any) when using `--help`
+
+
 0.7 (2020-07-30)
 ----------------
 * Simplified CLI (breaking changes)
