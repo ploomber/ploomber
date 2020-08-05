@@ -137,12 +137,26 @@ def _parse_signature_from_callable(callable_):
         for k, v in sig.parameters.items() if v.default != inspect._empty
     }
 
-    return required, defaults
+    return required, defaults, sig.parameters
 
 
 def get_desc(doc, arg):
     arg_data = doc['params'].get(arg)
     return None if arg_data is None else arg_data['desc']
+
+
+def add_argument_kwargs(params, arg):
+    """
+    Build kwargs for parser.add_argument function
+    """
+    valid_hints = [int, float, str, bool]
+
+    if params[arg].annotation in valid_hints:
+        kwargs = {'type': params[arg].annotation}
+    else:
+        kwargs = {}
+
+    return kwargs
 
 
 def _add_args_from_callable(parser, callable_):
@@ -154,13 +168,17 @@ def _add_args_from_callable(parser, callable_):
     Returns parsed args: required (list) and defaults (dict)
     """
     doc = _parse_doc(callable_.__doc__)
-    required, defaults = _parse_signature_from_callable(callable_)
+    required, defaults, params = _parse_signature_from_callable(callable_)
 
     for arg, default in defaults.items():
-        parser.add_argument('--' + arg, help=get_desc(doc, arg))
+        parser.add_argument('--' + arg,
+                            help=get_desc(doc, arg),
+                            **add_argument_kwargs(params, arg))
 
     for arg in required:
-        parser.add_argument(arg, help=get_desc(doc, arg))
+        parser.add_argument(arg,
+                            help=get_desc(doc, arg),
+                            **add_argument_kwargs(params, arg))
 
     return required, defaults
 
@@ -212,7 +230,7 @@ def _process_factory_dotted_path(parser, dotted_path, static_args):
         if args.log is not None:
             logging.basicConfig(level=args.log.upper())
 
-    # required by the function signature
+    # extract required (by using function signature) params from the cli args
     kwargs = {key: getattr(args, key) for key in required}
 
     # env and function defaults replaced

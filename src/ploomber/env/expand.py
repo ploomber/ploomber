@@ -44,7 +44,7 @@ def expand_if_needed(raw_value, mapping):
 def cast(value):
     """
     Reference to env in specs must be strings, but we would like the rendered
-    value to still
+    value to still have the appropriate type
     """
     if isinstance(value, str):
         if value.lower() == 'false':
