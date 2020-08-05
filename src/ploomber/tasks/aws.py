@@ -13,8 +13,8 @@ class UploadToS3(Task):
     ----------
     source: str
         Path to file to upload
-    product: ploomber.products.File
-        Product generated upon successful execution
+    product: ploomber.products.GenericProduct
+        Product must be initialized with the desired Key
     dag: ploomber.DAG
         A DAG to add this task to
     name: str
@@ -22,10 +22,18 @@ class UploadToS3(Task):
     bucket: str
         Bucked to upload
     """
-
-    def __init__(self, source, product, dag, bucket, name=None, params=None,
-                 client_kwargs=None, upload_file_kwargs=None):
-        super().__init__(source, product, dag, name, params)
+    def __init__(self,
+                 source,
+                 product,
+                 dag,
+                 bucket,
+                 name=None,
+                 params=None,
+                 client_kwargs=None,
+                 upload_file_kwargs=None):
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = type(self)._init_source(source, kwargs)
+        super().__init__(product, dag, name, params)
         self._bucket = bucket
         self._client_kwargs = client_kwargs
         self._upload_file_kwargs = upload_file_kwargs
@@ -46,5 +54,6 @@ class UploadToS3(Task):
         except ClientError as e:
             logging.error(e)
 
-    def _init_source(self, source, kwargs):
+    @staticmethod
+    def _init_source(source, kwargs):
         return FileSource(source, **kwargs)

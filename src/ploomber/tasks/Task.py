@@ -128,7 +128,7 @@ class Task(abc.ABC):
             self._name = self._source.name
 
             if self._name is None:
-                raise AttributeError('Task name can only be None if a name'
+                raise AttributeError('Task name can only be None if it '
                                      'can be inferred from the source object. '
                                      'This only works when the task receives a'
                                      'pathlib.Path, when using SourceLoader '
