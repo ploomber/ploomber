@@ -17,9 +17,9 @@ Ploomber
 .. image:: https://coveralls.io/repos/github/ploomber/ploomber/badge.svg?branch=master
   :target: https://coveralls.io/github/ploomber/ploomber?branch=master
 
-Adopt better software development practices without having to learn a new
-framework. Ploomber streamlines pipeline execution, allowing teams to
-confidently develop data pipelines.
+Write better data pipelines without having to learn a specialized framework. By
+adopting a convention over configuration philosophy, Ploomber streamlines
+pipeline execution, allowing teams to confidently develop data products.
 
 Installation
 ------------
@@ -53,8 +53,8 @@ What you get
 2. Sync teamwork
 3. Incremental builds (skip up-to-date tasks)
 4. Integration with Jupyter
-5. Seamlessly integrate SQL with Python/R (i.e. extract data with SQl, plot it with Python/R)
-
+5. Seamlessly integrate SQL with Python/R (i.e. extract data with SQL, plot it with Python/R)
+6. Generate a graphical representation of your pipeline using ``ploomber plot``
 
 How it looks like
 -----------------
@@ -91,7 +91,7 @@ Notebook (Python or R):
 
 SQL scripts:
 
-.. code-block:: postgresql
+.. code-block:: sql
 
     {% set product = SQLRelation(['schema', 'name', 'table']) %}
 
@@ -103,13 +103,18 @@ SQL scripts:
     USING (some_column)
 
 
+Ploomber uses `jinja <https://jinja.palletsprojects.com/en/2.11.x/api/>`_ for
+generating SQL on the fly. You can leverage existing jinja features to improve
+SQL code reusability, for example, define a SQL snippet and reuse it in another
+script using ``{{placeholders}}``.
+
 How it works
 ------------
 
 1. Ploomber extracts dependencies from your code to infer execution order
 2. Python/R: Replaces the original ``upstream`` variable with one that maps tasks to their products (see example below). SQL: Replaces placeholders with the actual table names
 3. Python/R: Each script converted to a notebook so you have a log for each execution
-4. Each task is executed
+4. Tasks are executed
 
 Example
 -------
