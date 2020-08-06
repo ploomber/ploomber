@@ -248,6 +248,16 @@ Note that ``SQLDump`` only works with
 ``SQLAlchemyClient``, it is designed to be flexible, but it comes with some
 performance considerations. Review the task's documentation for details.
 
+Example pipeline
+----------------
+
+The following diagram shows our example pipeline along with some sample
+source code for each task and the rendered version.
+
+.. image:: https://ploomber.io/doc/sql/diag.png
+   :target: https://ploomber.io/doc/sql/diag.png
+   :alt: sql-diag
+
 
 Wrapping up
 -----------
