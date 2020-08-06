@@ -38,7 +38,7 @@ Workflow
 Assume you have a collection of scripts, where each one is a task in your
 pipeline.
 
-To do an end-to-end pipeline run:
+To execute your pipeline end-to-end:
 
 1. Inside each script, state dependencies (other scripts) via an ``upstream`` variable
 2. Use a ``product`` variable to declare output file(s) that the next script will use as inputs
@@ -105,16 +105,16 @@ SQL scripts:
 
 Ploomber uses `jinja <https://jinja.palletsprojects.com/en/2.11.x/api/>`_ for
 generating SQL on the fly. You can leverage existing jinja features to improve
-SQL code reusability, for example, define a SQL snippet and reuse it in another
-script using ``{{placeholders}}``.
+SQL code reusability. For example, you can define a SQL snippet and import it
+in another file using ``{{placeholders}}``.
 
 How it works
 ------------
 
 1. Ploomber extracts dependencies from your code to infer execution order
-2. Python/R: Replaces the original ``upstream`` variable with one that maps tasks to their products (see example below). SQL: Replaces placeholders with the actual table names
-3. Python/R: Each script converted to a notebook so you have a log for each execution
-4. Tasks are executed
+2. Replace the original ``upstream`` variable with one that maps tasks to their products (Python/R), see example below. Replaces placeholders with the actual table names (SQL)
+3. Each script is copied and converted to a notebook (Python/R)
+4. Tasks are executed. Each script generates an executed notebook for you to review results
 
 Example
 -------
