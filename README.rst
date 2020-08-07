@@ -50,16 +50,16 @@ What you get
 ------------
 
 1. Automated end-to-end execution
-2. Sync teamwork
-3. Incremental builds (skip up-to-date tasks)
-4. Integration with Jupyter
-5. Seamlessly integrate SQL with Python/R (i.e. extract data with SQL, plot it with Python/R)
-6. Generate a graphical representation of your pipeline using ``ploomber plot``
+2. Incremental builds (skip up-to-date tasks)
+3. Integration with Jupyter
+4. Seamlessly integrate SQL with Python/R (i.e. extract data with SQL, plot it with Python/R)
+5. Generate a graphical representation of your pipeline using ``ploomber plot``
+6. Sync teamwork
 
 How it looks like
 -----------------
 
-For Python scripts, declare your parameters like this:
+In Python scripts, declare your parameters like this:
 
 .. code-block:: python
 
@@ -112,9 +112,9 @@ How it works
 ------------
 
 1. Ploomber extracts dependencies from your code to infer execution order
-2. Replace the original ``upstream`` variable with one that maps tasks to their products (Python/R), see example below. Replaces placeholders with the actual table names (SQL)
-3. Each script is copied and converted to a notebook (Python/R)
-4. Tasks are executed. Each script generates an executed notebook for you to review results
+2. Replaces the original ``upstream`` variable with one that maps tasks to their products (Python/R), see example below. Replaces placeholders with the actual table names (SQL)
+3. Tasks are executed
+4. Each script (Python/R) generates an executed notebook for you to review results visually
 
 Example
 -------
