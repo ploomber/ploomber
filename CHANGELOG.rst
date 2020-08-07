@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.7.1dev
---------
+0.7.1 (2020-08-06)
+------------------
 * Support for R
 * Adding section on R pipeline to the documentation
 * Construct pipeline from a directory (no need to write a ``pipeline.yaml`` file)
