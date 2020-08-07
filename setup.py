@@ -75,11 +75,16 @@ TESTING = [
     'nose',
 ]
 
+DESCRIPTION = (
+    'Write better data pipelines without having to learn a specialized '
+    'framework. By adopting a convention over configuration philosophy, '
+    'Ploomber streamlines pipeline execution, allowing teams to confidently '
+    'develop data products.')
+
 setup(
     name='ploomber',
     version=VERSION,
-    description=
-    'Spend your time discovering insights from data, not writing plumbing code. Declare your pipeline in a short YAML file and Ploomber will take care of the rest.',
+    description=DESCRIPTION,
     long_description='%s\n%s' %
     (re.compile('^.. start-badges.*^.. end-badges', re.M | re.S).sub(
         '', read('README.rst')),
