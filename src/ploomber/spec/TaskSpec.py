@@ -167,7 +167,7 @@ def init_product(task_dict, meta, task_class, root_path):
         CLASS = getattr(products, meta_product_default_class)
     else:
         raise ValueError('Could not determine a product class for task: '
-                         '"{}". Add an explicity value in the '
+                         '"{}". Add an explicit value in the '
                          '"product_class" key or provide a default value in '
                          'meta.product_default_class by setting the '
                          'key to the applicable task class'.format(task_dict))

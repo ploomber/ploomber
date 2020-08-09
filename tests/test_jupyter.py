@@ -1,6 +1,7 @@
 """
 Tests for the custom jupyter contents manager
 """
+import sys
 import os
 from pathlib import Path
 
@@ -184,3 +185,53 @@ def test_server_extension_is_initialized():
     app = NotebookApp()
     app.initialize()
     assert isinstance(app.contents_manager, PloomberContentsManager)
+
+
+def test_ignores_tasks_whose_source_is_not_a_file(monkeypatch, capsys,
+                                                  tmp_directory):
+    """
+    Context: jupyter extension only applies to tasks whose source is a script,
+    otherwise it will break, trying to get the source location. This test
+    checks that a SQLUpload (whose source is a data file) task is ignored
+    from the extension
+    """
+    monkeypatch.setattr(sys, 'argv', ['jupyter'])
+    spec = {
+        'meta': {
+            'extract_product': False,
+            'extract_upstream': False,
+            'product_default_class': {
+                'SQLUpload': 'SQLiteRelation'
+            }
+        },
+        'clients': {
+            'SQLUpload': 'db.get_client',
+            'SQLiteRelation': 'db.get_client'
+        },
+        'tasks': [{
+            'source': 'some_file.csv',
+            'name': 'task',
+            'class': 'SQLUpload',
+            'product': ['some_table', 'table']
+        }]
+    }
+
+    with open('pipeline.yaml', 'w') as f:
+        yaml.dump(spec, f)
+
+    Path('db.py').write_text("""
+from ploomber.clients import SQLAlchemyClient
+
+def get_client():
+    return SQLAlchemyClient('sqlite://')
+""")
+
+    Path('file.py').touch()
+
+    app = NotebookApp()
+    app.initialize()
+    app.contents_manager.get('file.py')
+
+    out, err = capsys.readouterr()
+
+    assert 'Traceback' not in err

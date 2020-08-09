@@ -25,10 +25,12 @@ def test_select_multiple_cols_in_row():
 def test_empty_table():
     return Table({})
 
+
 def test_select_col_in_table():
     r = Row({'a': 1, 'b': 2})
     t = Table([r, r])
     assert t['a'] == [1, 1]
+
 
 def test_select_multiple_cols_in_table():
     d = {'a': 1, 'b': 2}
@@ -50,6 +52,7 @@ def test_create_build_report():
     row_out = {'Elapsed (s)': 1, 'Percentage': 50}
     assert report == [row_out, row_out]
 
+
 def test_convert_to_pandas():
     d = {'a': 1, 'b': 2}
     r = Row(d)
@@ -62,5 +65,4 @@ def test_convert_to_dict():
     d = {'a': 1, 'b': 2}
     r = Row(d)
     t = Table([r, r])
-    expected = pd.DataFrame({'a': [1, 1], 'b': [2, 2]})
     assert t.to_dict() == {'a': [1, 1], 'b': [2, 2]}
