@@ -236,14 +236,14 @@ class DAGSpec(MutableMapping):
         return cls({'tasks': tasks})
 
     @classmethod
-    def from_file(cls, path):
+    def from_file(cls, path, env=None):
         """
         Initialize dag spec with yaml file
         """
         with open(str(path)) as f:
             dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
 
-        spec = cls(dag_dict)
+        spec = cls(dag_dict, env=env)
         spec._parent_path = str(Path(path).parent)
         return spec
 
