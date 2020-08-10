@@ -7,6 +7,7 @@ from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.exceptions import SourceInitializationError
 from ploomber.sql import infer
 from ploomber import static_analysis
+from ploomber.static_analysis.string import StringExtractor
 
 
 class Source(abc.ABC):
@@ -139,6 +140,16 @@ class Source(abc.ABC):
     @abc.abstractmethod
     def name(self):
         pass
+
+    # optional
+
+    def extract_product(self):
+        raise NotImplementedError('extract_product is not implemented in '
+                                  '{}'.format(type(self).__name__))
+
+    def extract_upstream(self):
+        raise NotImplementedError('extract_upstream is not implemented in '
+                                  '{}'.format(type(self).__name__))
 
 
 class PlaceholderSource(Source):
@@ -372,7 +383,7 @@ class GenericSource(PlaceholderSource):
 class FileSource(GenericSource):
     """
     A source that represents a path to a file, similar to GenericSource,
-    but it casts the value arument to str, hence pathlib.Path will be
+    but it casts the value argument to str, hence pathlib.Path will be
     interpreted as literals.
 
     This source is utilized by Tasks that move/upload files.
@@ -398,6 +409,9 @@ class FileSource(GenericSource):
 
     def _post_init_validation(self, value):
         pass
+
+    def extract_upstream(self):
+        return StringExtractor(self._placeholder._raw).extract_upstream()
 
 
 class EmptySource(Source):

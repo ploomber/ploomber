@@ -5,7 +5,7 @@ import pytest
 
 from ploomber.exceptions import SourceInitializationError
 from ploomber.sources import (SQLQuerySource, SQLScriptSource, GenericSource,
-                              PythonCallableSource)
+                              PythonCallableSource, FileSource)
 from ploomber.tasks import SQLScript
 from ploomber.products import SQLiteRelation
 from ploomber import DAG
@@ -245,3 +245,15 @@ def test_python_callable_properties(path_to_test_pkg):
     assert source.name == 'simple_w_docstring'
     assert file == functions.__file__
     assert line == '21'
+
+
+@pytest.mark.parametrize('source, expected', [
+    ['{{upstream["key"]}}', {'key'}],
+    [
+        '{{upstream["key"]}} - {{upstream["another_key"]}}',
+        {'key', 'another_key'}
+    ],
+    ['{{hello}}', None],
+])
+def test_extract_upstream_from_file_source(source, expected):
+    assert FileSource(source).extract_upstream() == expected

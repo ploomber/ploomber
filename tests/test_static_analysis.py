@@ -1,6 +1,7 @@
 import pytest
 from ploomber.static_analysis.python import PythonNotebookExtractor
 from ploomber.static_analysis.sql import SQLExtractor
+from ploomber.static_analysis.string import StringExtractor
 from ploomber.products import (PostgresRelation, SQLiteRelation,
                                GenericSQLRelation, SQLRelation)
 
@@ -84,3 +85,15 @@ def test_extract_product_from_sql(code, class_, schema, name, kind):
 def test_extract_product_from_sql_none_case():
     code = 'some code that does not define a product variable'
     assert SQLExtractor(code).extract_product() is None
+
+
+@pytest.mark.parametrize('source, expected', [
+    ['{{upstream["key"]}}', {'key'}],
+    [
+        '{{upstream["key"]}} - {{upstream["another_key"]}}',
+        {'key', 'another_key'}
+    ],
+    ['{{hello}}', None],
+])
+def test_string_extractor(source, expected):
+    assert StringExtractor(source).extract_upstream() == expected

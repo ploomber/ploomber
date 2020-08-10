@@ -2,6 +2,7 @@ from jinja2 import Environment, Template
 from jinja2.nodes import Assign
 from ploomber import products
 from ploomber.static_analysis.abstract import Extractor
+from ploomber.static_analysis.jinja import JinjaUpstreamIntrospector
 
 
 class SQLExtractor(Extractor):
@@ -53,11 +54,3 @@ class SQLExtractor(Extractor):
             class_ = getattr(products, product.node.name)
             arg = product.args[0].as_const()
             return class_(arg)
-
-
-class JinjaUpstreamIntrospector:
-    def __init__(self):
-        self.keys = []
-
-    def __getitem__(self, key):
-        self.keys.append(key)
