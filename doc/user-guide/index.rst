@@ -7,4 +7,5 @@ User Guide
     conda
     r-support
     entry-points
+    parametrized
     faq_index
