@@ -26,3 +26,7 @@ nbsphinx
 
 # for plotting
 pygraphviz
+
+# for running notebooks from the projects repo
+papermill
+jupytext
