@@ -284,6 +284,7 @@ def _custom_command(parser):
     Parses an entry point, adding arguments by extracting them from the env.
     Returns a dag and the parsed args
     """
+    parser.done_with_static_api()
     entry_point = parser.parse_entry_point_value()
     dag, args = _process_entry_point(parser, entry_point, parser.static_args)
     return dag, args
