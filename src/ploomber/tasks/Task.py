@@ -225,9 +225,9 @@ class Task(abc.ABC):
     @property
     def upstream(self):
         """
-        A mapping for upstream dependencies {task name} -> [task obkect]
+        A mapping for upstream dependencies {task name} -> [task object]
         """
-        # this is jus syntactic sugar, upstream relations are tracked by the
+        # this is just syntactic sugar, upstream relations are tracked by the
         # DAG object
 
         # this always return a copy to prevent global state if contents
