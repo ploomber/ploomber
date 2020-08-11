@@ -28,13 +28,23 @@ def process_arg(s):
 
 class CustomParser(argparse.ArgumentParser):
     """
-    A custom ArgumentParser that keeps track of arguments
+    Most of our CLI commands operate on entry points, the CLI signature is
+    defined by a few static arguments (they always appear when doing
+    ploomber {cmd} --entry-point {entry} --help) and dynamic arguments
+    (they are generated depending on the entry point). To support this, we
+    have this CustomParser that distinguishes between static and dynamic args
+
+    Once initialized, static args must be added using this as a context
+    manager, only after this has happened, other arguments can be added using
+    parser.add_argument.
     """
     DEFAULT_ENTRY_POINT = 'pipeline.yaml'
 
     def __init__(self, *args, **kwargs):
         self.static_args = []
         self.finished_static_api = False
+        self.in_context = False
+        self.finished_init = False
         super().__init__(*args, **kwargs)
 
         self.add_argument('--log',
@@ -47,6 +57,8 @@ class CustomParser(argparse.ArgumentParser):
                           '-e',
                           help='Entry point(DAG), defaults to pipeline.yaml',
                           default=self.DEFAULT_ENTRY_POINT)
+
+        self.finished_init = True
 
     def parse_entry_point_value(self):
         index = None
@@ -66,10 +78,19 @@ class CustomParser(argparse.ArgumentParser):
 
     def add_argument(self, *args, **kwargs):
         if not self.finished_static_api:
-            self.static_args.extend([process_arg(arg) for arg in args])
+            if not self.in_context and self.finished_init:
+                raise RuntimeError('Cannot aadd arguments until the static '
+                                   'API has been declared')
+            else:
+                self.static_args.extend([process_arg(arg) for arg in args])
         return super().add_argument(*args, **kwargs)
 
-    def done_with_static_api(self):
+    def __enter__(self):
+        self.in_context = True
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.in_context = False
         self.finished_static_api = True
 
 
@@ -284,7 +305,6 @@ def _custom_command(parser):
     Parses an entry point, adding arguments by extracting them from the env.
     Returns a dag and the parsed args
     """
-    parser.done_with_static_api()
     entry_point = parser.parse_entry_point_value()
     dag, args = _process_entry_point(parser, entry_point, parser.static_args)
     return dag, args
