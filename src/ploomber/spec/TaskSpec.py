@@ -29,7 +29,15 @@ class TaskSpec(MutableMapping):
         # initialie required elements
         self.data['class'] = get_class_obj(self.data)
         # in task specs, we assume source is always a path to a file
-        self.data['source'] = Path(self.data['source'])
+
+        source_loader = meta['source_loader']
+
+        if source_loader:
+            # if there is a source loader, use it...
+            self.data['source'] = source_loader[self.data['source']]
+        else:
+            # otherwise just initialize a path
+            self.data['source'] = Path(self.data['source'])
 
     def validate(self):
         if 'upstream' not in self.data:

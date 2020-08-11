@@ -349,3 +349,46 @@ def test_extract_variables_from_notebooks(tmp_nbs):
 
     assert deps == expected_deps
     # assert prods == expected_prod
+
+
+def test_source_loader(add_current_to_sys_path, tmp_directory):
+    spec = DAGSpec({
+        'meta': {
+            'source_loader': {
+                'path': 'templates',
+                'module': 'test_pkg'
+            },
+            'extract_product': False,
+            # FIXME: an uninformative error is raised when this is true
+            'extract_upstream': False
+        },
+        'tasks': [{
+            'source': 'create-table.sql',
+            'product': ['some_table', 'table'],
+            # FIXME: when name is missing, this breaks with an uninformative
+            # error because an unrendered placeholder is tried to be casted to
+            # str
+            'name': 'create-table',
+            'client': 'db.get_client'
+        }]
+    })
+
+    Path('db.py').write_text("""
+from ploomber.clients import SQLAlchemyClient
+
+def get_client():
+    return SQLAlchemyClient('sqlite://')
+""")
+
+    # check source loader is working correctly with a template that has a macro
+    loader = spec['meta']['source_loader']
+    template = loader['create-table.sql']
+
+    expected = ('\nDROP TABLE IF EXISTS some_table;\nCREATE TABLE '
+                'some_table AS\nSELECT * FROM table')
+    assert template.render({'product': 'some_table'}) == expected
+
+    # test the task source is correctly resolved when converted to a dag
+    dag = spec.to_dag()
+    dag.render()
+    assert str(dag['create-table'].source) == expected

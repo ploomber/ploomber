@@ -20,7 +20,7 @@ from itertools import chain
 import pprint
 
 from ploomber import products
-from ploomber import DAG, tasks
+from ploomber import DAG, tasks, SourceLoader
 from ploomber.util.util import (load_dotted_path, find_file_recursively,
                                 call_with_dictionary)
 from ploomber.spec.TaskSpec import TaskSpec, suffix2taskclass
@@ -260,7 +260,7 @@ class Meta:
 
         valid = {
             'extract_upstream', 'extract_product', 'product_default_class',
-            'product_relative_to_source', 'jupyter_hot_reload'
+            'product_relative_to_source', 'jupyter_hot_reload', 'source_loader'
         }
         validate.keys(valid, meta, name='dag spec')
 
@@ -275,6 +275,11 @@ class Meta:
 
         if 'jupyter_hot_reload' not in meta:
             meta['jupyter_hot_reload'] = False
+
+        if 'source_loader' not in meta:
+            meta['source_loader'] = None
+        else:
+            meta['source_loader'] = SourceLoader(**meta['source_loader'])
 
         defaults = {
             'SQLDump': 'File',
