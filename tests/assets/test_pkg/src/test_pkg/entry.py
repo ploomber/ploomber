@@ -3,7 +3,9 @@ from ploomber import DAG, with_env
 
 @with_env({'path': {'data': '/{{user}}/data'}})
 def with_doc(env):
-    """
+    """This is some description
+
+    second line
 
     Parameters
     ----------

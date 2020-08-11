@@ -51,6 +51,20 @@ def test_build(monkeypatch, tmp_sample_dir):
     build.main()
 
 
+def test_build_help_shows_docstring(capsys, monkeypatch):
+    monkeypatch.setattr(
+        sys, 'argv',
+        ['python', '--entry-point', 'test_pkg.entry.with_doc', '--help'])
+
+    with pytest.raises(SystemExit) as excinfo:
+        build.main()
+
+    out, _ = capsys.readouterr()
+
+    assert not excinfo.value.code
+    assert 'This is some description' in out
+
+
 def test_build_from_directory(monkeypatch, tmp_nbs_no_yaml):
     Path('output').mkdir()
     monkeypatch.setattr(sys, 'argv', ['python', '--entry-point', '.'])

@@ -186,6 +186,8 @@ def _add_args_from_callable(parser, callable_):
     parameters with default values as optional and parameters with no defaults
     as mandatory. Adds descriptions from parsing the callable's docstring
 
+    It also adds the description from the docstring, if any
+
     Returns parsed args: required (list) and defaults (dict)
     """
     doc = _parse_doc(callable_.__doc__)
@@ -200,6 +202,13 @@ def _add_args_from_callable(parser, callable_):
         parser.add_argument(arg,
                             help=get_desc(doc, arg),
                             **add_argument_kwargs(params, arg))
+
+    if doc['summary']:
+        # summary should return the first line only, but we do this just in
+        # case the numpydoc implementation changes
+        summary = '\n'.join(doc['summary'])
+        desc = parser.description
+        parser.description = '{}. Docstring: {}'.format(desc, summary)
 
     return required, defaults
 
