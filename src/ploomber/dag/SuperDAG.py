@@ -22,9 +22,9 @@ class SuperDAG:
         self.G = G
         self.dags = dags
 
-    def plot(self):
+    def plot(self, path):
         G_ = nx.nx_agraph.to_agraph(self.G)
-        G_.draw('pip.png', prog='dot', args='-Grankdir=LR')
+        G_.draw(path, prog='dot', args='-Grankdir=LR')
 
     def build(self):
         for dag in self.dags:
