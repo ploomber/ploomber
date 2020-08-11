@@ -15,6 +15,11 @@ class SuperDAG:
 
         dags = []
 
+        # this only works for simple cases: where sink nodes from one dag
+        # are upstream dependencies for root nodes from the next one,
+        # it's enough for now - another would be to call build on each
+        # task individually but that's gonna make this implementation much
+        # more complicated
         for task in nx.algorithms.topological_sort(G):
             if task.dag not in dags:
                 dags.append(task.dag)
