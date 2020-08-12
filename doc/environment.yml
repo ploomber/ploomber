@@ -36,3 +36,6 @@ dependencies:
     # for running notebooks from the projects repo
     - papermill
     - jupytext
+
+    # some notebooks use functions defined here
+    - pip install git+https://github.com/ploomber/projects.git#subdirectory=pkg
