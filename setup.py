@@ -73,6 +73,8 @@ TESTING = [
     # we need this because we are re-using the original jupyter test suite for
     # testing our contents manager (which imports nose), see test_jupyter.py
     'nose',
+    # backport for py 3.5
+    'mock;python_version<"3.6"',
 ]
 
 DESCRIPTION = (
