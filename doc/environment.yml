@@ -1,0 +1,35 @@
+name: stats2
+channels:
+  - conda-forge
+dependencies:
+  - python=3.7
+  - tree
+  - pip:
+    # the fix has not been release, we install from git
+    - git+https://github.com/sphinx-gallery/sphinx-gallery
+    # sphinx-gallery requires this
+    - pillow
+    # needed for the examples
+    - joblib
+    - scikit-learn
+    - seaborn
+    - psycopg2
+    # for the ipython directive
+    - ipython
+    # for some reason, read the docs command to install the package fails due to
+    # a version mismatch (it uses the setup.py file directly instead of pip),
+    # adding this to fix it - we are now using the readthedocs.yaml for config
+    # (as opposed to the website) which lets us install using pip-
+    # this might no longer be necessary
+    - Pygments==2.5.2
+    - mistune<2
+
+    # for converting notebooks
+    - nbsphinx
+
+    # for plotting
+    - pygraphviz
+
+    # for running notebooks from the projects repo
+    - papermill
+    - jupytext

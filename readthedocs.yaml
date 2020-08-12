@@ -10,10 +10,11 @@ sphinx:
 formats: all
 
 python:
-  version: 3.7
   install:
-    - requirements: doc/requirements.txt
     - method: pip
       path: .
       extra_requirements:
         - all
+
+conda:
+  environment: doc/environment.yml
