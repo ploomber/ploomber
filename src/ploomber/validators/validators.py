@@ -4,6 +4,19 @@ from collections.abc import Mapping
 
 
 class Assert:
+    """
+    An object to collect assertions and print results after they've all been
+    evaluated
+
+    Examples
+    --------
+    >>> from ploomber.validators import Assert
+    >>> assert_ = Assert()
+    >>> assert_(True, 'This wont be displayed')
+    >>> assert_(False, 'This will be displayed')
+    >>> assert_(False, 'This will also be displayed')
+    >>> assert_.check() # raise an exception, show all error messages
+    """
     def __init__(self):
         self.messages_error = []
         self.messages_warning = []
@@ -46,6 +59,10 @@ class Assert:
         return str_
 
     def check(self):
+        """
+        Raise AsserionError with all error messages if there is at least one
+        error
+        """
         if len(self):
             raise AssertionError(str(self))
 
@@ -151,8 +168,8 @@ def validate_values(assert_, data, values):
             min_expected, max_expected = params
             min_ = data[column].min()
             max_ = data[column].max()
-            msg = ('validate_values: expected range of "{}" to be ({}, {}), '
-                   'got ({}, {})'.format(column, min_expected, max_expected,
+            msg = ('validate_values: expected range of "{}" to be [{}, {}], '
+                   'got [{}, {}]'.format(column, min_expected, max_expected,
                                          min_, max_))
             assert_(min_expected <= min_ and max_ <= max_expected, msg)
         else:
