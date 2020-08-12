@@ -4,7 +4,6 @@ from collections.abc import Mapping
 
 
 class Assert:
-
     def __init__(self):
         self.messages_error = []
         self.messages_warning = []
@@ -34,18 +33,21 @@ class Assert:
         elif len(self.messages_error) == 1:
             str_ = '1 error found: {}'.format(self.messages_error[0])
         else:
-            str_ = ('{} errors found: \n * {}'
-                    .format(len(self.messages_error),
-                            '\n * '.join(self.messages_error)))
+            str_ = ('{} errors found: \n * {}'.format(
+                len(self.messages_error), '\n * '.join(self.messages_error)))
 
         if len(self.messages_warning) == 1:
             str_ += '\n\n 1 warning: {}'.format(self.messages_warning[0])
         elif len(self.messages_warning) > 1:
-            str_ += ('\n\n {} warnings: \n * {}'
-                     .format(len(self.messages_warning),
-                             '\n * '.join(self.messages_warning)))
+            str_ += ('\n\n {} warnings: \n * {}'.format(
+                len(self.messages_warning),
+                '\n * '.join(self.messages_warning)))
 
         return str_
+
+    def check(self):
+        if len(self):
+            raise AssertionError(str(self))
 
 
 def validator(fn):
@@ -68,7 +70,10 @@ def validator(fn):
 
 
 @validator
-def validate_schema(assert_, data, schema, optional=None,
+def validate_schema(assert_,
+                    data,
+                    schema,
+                    optional=None,
                     on_unexpected_cols='raise'):
     """Check if a data frame complies with a schema
 
@@ -103,8 +108,8 @@ def validate_schema(assert_, data, schema, optional=None,
     assert_(not missing, msg)
 
     if on_unexpected_cols is not None:
-        msg = ('validate_schema: unexpected columns {unexpected}'
-               .format(unexpected=unexpected))
+        msg = ('validate_schema: unexpected columns {unexpected}'.format(
+            unexpected=unexpected))
         caller = assert_ if on_unexpected_cols == 'raise' else assert_.warn
         caller(not unexpected, msg)
 
@@ -117,8 +122,8 @@ def validate_schema(assert_, data, schema, optional=None,
 
             if expected is not None:
                 msg = ('validate_schema: wrong dtype for column "{name}". '
-                       'Expected: "{expected}". Got: "{dtype}"'
-                       .format(name=name, expected=expected, dtype=dtype))
+                       'Expected: "{expected}". Got: "{dtype}"'.format(
+                           name=name, expected=expected, dtype=dtype))
                 assert_(dtype == expected, msg)
 
     return assert_
@@ -137,8 +142,7 @@ def validate_values(assert_, data, values):
             expected = set(params)
             unique = set(data[column].unique())
             msg = ('validate_values:: expected unique values of  "{}" to be a'
-                   ' subset of {}, got: {}'
-                   .format(column, expected, unique))
+                   ' subset of {}, got: {}'.format(column, expected, unique))
             assert_(expected >= unique, msg)
         elif kind == 'range':
             if len(params) != 2:
@@ -148,8 +152,8 @@ def validate_values(assert_, data, values):
             min_ = data[column].min()
             max_ = data[column].max()
             msg = ('validate_values: expected range of "{}" to be ({}, {}), '
-                   'got ({}, {})'
-                   .format(column, min_expected, max_expected, min_, max_))
+                   'got ({}, {})'.format(column, min_expected, max_expected,
+                                         min_, max_))
             assert_(min_expected <= min_ and max_ <= max_expected, msg)
         else:
             raise ValueError('Got invalid kind, must be "unique" or "range"')
