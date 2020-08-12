@@ -99,18 +99,28 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
 }
 
 
-ul {
+.first-column ul {
     list-style-type: none;
     padding-left: 0px;
 }
 
-li {
+.first-column li {
     padding-left: 5px;
 }
 
 .first-column {
     border-right: 2px solid #eee;
 }
+
+.sphinxsidebarwrapper ul {
+    list-style-type: none;
+    padding-left: 0px;
+}
+
+.sphinxsidebarwrapper li {
+    padding-left: 5px;
+}
+
 
 div.document {
     padding-left: 40px;

@@ -1,5 +1,6 @@
 doc/_build
 doc/auto_examples/
+doc/projects-tmp/
 *.sublime-project
 *.sublime-workspace
 *.txt

@@ -9,8 +9,12 @@ import papermill
 
 
 def config_init(app, config):
+    tmp = Path('projects-tmp/')
 
-    Path('projects-tmp/').mkdir()
+    if tmp.exists():
+        return
+
+    tmp.mkdir()
 
     os.chdir('projects-tmp')
 
