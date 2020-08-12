@@ -24,6 +24,7 @@ class TaskGroup:
 
     (task1 + task2) >> task3
     """
+
     # TODO: implement mapping interface, task.upstream should return
     # a TaskGroup object, make ipython autocomplete work in getitem,
     # also add logic to verify if all keys were used, to detect tasks
@@ -64,6 +65,9 @@ class TaskGroup:
     def __iter__(self):
         for t in self.tasks:
             yield t
+
+    def __len__(self):
+        return len(self.tasks)
 
     def __add__(self, other):
         if isiterable(other):

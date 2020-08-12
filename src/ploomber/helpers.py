@@ -35,34 +35,37 @@ def partitioned_execution(upstream_partitioned,
     assert isinstance(upstream_partitioned.product, File)
 
     dag = upstream_partitioned.dag
-    partition_template_w_suffix = Template(
-        downstream_prefix + '_' + partition_template)
+    partition_template_w_suffix = Template(downstream_prefix + '_' +
+                                           partition_template)
     partition_template_t = Template(partition_template)
 
     # instantiate null tasks
-    nulls = [_Partition
-             (product=PartitionedFile(Path(str(upstream_partitioned.product),
-                                           partition_template_t.render(id=id_))),
-              dag=dag,
-              name=Template('null_'+partition_template).render(id=id_))
-             for id_ in partition_ids]
+    nulls = [
+        _Partition(product=PartitionedFile(
+            Path(str(upstream_partitioned.product),
+                 partition_template_t.render(id=id_))),
+                   dag=dag,
+                   name=Template('null_' + partition_template).render(id=id_))
+        for id_ in partition_ids
+    ]
 
     def make_file(id_):
-        f = PartitionedFile(Path(downstream_path,
-                                 partition_template_t.render(id=id_)))
+        f = PartitionedFile(
+            Path(downstream_path, partition_template_t.render(id=id_)))
         return f
 
     # TODO: validate downstream product is File
-    tasks = [PythonCallable(downstream_callable,
-                            product=make_file(id_),
-                            dag=dag,
-                            name=(partition_template_w_suffix
-                                  .render(id=id_)),
-                            params={'upstream_key':
-                                    (Template('null_'+partition_template)
-                                     .render(id=id_))}
-                            )
-             for id_ in partition_ids]
+    tasks = [
+        PythonCallable(downstream_callable,
+                       product=make_file(id_),
+                       dag=dag,
+                       name=(partition_template_w_suffix.render(id=id_)),
+                       params={
+                           'upstream_key':
+                           (Template('null_' +
+                                     partition_template).render(id=id_))
+                       }) for id_ in partition_ids
+    ]
 
     gather = _Gather(source=downstream_callable,
                      product=File(downstream_path),
@@ -81,8 +84,40 @@ def partitioned_execution(upstream_partitioned,
     return gather
 
 
-def make_task_group(task_class, task_kwargs, dag, name, params_array,
+def make_task_group(task_class,
+                    task_kwargs,
+                    dag,
+                    name,
+                    params_array,
                     namer=None):
+    """
+    Build a group of tasks of the same class that operate over an array of
+    parameters but have the same source. This is better than using a for
+    loop to create multiple tasks as it takes care of validation and proper
+    object creation.
+
+    Parameters
+    ----------
+    task_class : class
+        The task class for all generated tasks
+
+    task_kwargs : dict
+        Task keyword arguments passed to the constructor, must not contain:
+        dag, name, params, nor product, as this parameters are passed by this
+        function. Must include source
+
+    dag : ploomber.DAG
+        The DAG object to add these tasks to
+
+    name : str
+        The name for the task group
+
+    params_array : list
+        Each element is passed to the "params" argument on each task. This
+        determines the number of tasks to be created. "name" is added to each
+        element.
+
+    """
     # validate task_kwargs
     if 'dag' in task_kwargs:
         raise KeyError('dag should not be part of task_kwargs')
@@ -115,13 +150,10 @@ def make_task_group(task_class, task_kwargs, dag, name, params_array,
             task_name = namer(params)
             params['name'] = task_name
         else:
-            task_name = name+str(i)
+            task_name = name + str(i)
             params['name'] = i
 
-        t = task_class(**kwargs,
-                       dag=dag,
-                       name=task_name,
-                       params=params)
+        t = task_class(**kwargs, dag=dag, name=task_name, params=params)
         tasks_all.append(t)
 
-    return TaskGroup(tasks_all, False, name)
+    return TaskGroup(tasks_all, treat_as_single_task=False, name=name)
