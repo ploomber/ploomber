@@ -1,9 +1,12 @@
-name: stats2
+name: ploomber-docs
+
 channels:
   - conda-forge
+
 dependencies:
   - python=3.7
   - tree
+  - pip
   - pip:
     # the fix has not been release, we install from git
     - git+https://github.com/sphinx-gallery/sphinx-gallery

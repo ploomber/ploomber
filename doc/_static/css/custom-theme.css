@@ -217,3 +217,18 @@ div.body img {
     margin-left: auto;
     margin-right: auto;
 }
+
+/* notebooks (nbsphinx) */
+
+.output_area {
+    background-color: black !important;
+    margin: 0px 10px 30px 10px !important;
+}
+
+.input_area {
+    margin: 10px 10px 5px 10px !important;
+}
+
+.highlight pre {
+    color: white !important;
+}
