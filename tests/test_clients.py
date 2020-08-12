@@ -3,13 +3,16 @@ import pickle
 import copy
 from pathlib import Path
 from urllib.parse import urlparse
+from unittest.mock import MagicMock
 
+import paramiko
 import pytest
 
 from ploomber import DAG
 from ploomber.tasks import ShellScript
 from ploomber.products import File
-from ploomber.clients import ShellClient, SQLAlchemyClient, DBAPIClient
+from ploomber.clients import (ShellClient, SQLAlchemyClient, DBAPIClient,
+                              RemoteShellClient)
 from ploomber.clients import db
 
 
@@ -132,3 +135,24 @@ def test_custom_client_in_dag(tmp_directory):
 def test_db_code_split():
     assert list(db.code_split('a;b;c;')) == ['a', 'b', 'c']
     assert list(db.code_split('a;b;c;\n')) == ['a', 'b', 'c']
+
+
+def test_remote_shell(monkeypatch):
+    m = MagicMock()
+    stdout = MagicMock()
+    stdout.readline = lambda: ''
+    stdout.channel.recv_exit_status.return_value = 0
+    m.exec_command.return_value = 'input', stdout, 'err'
+
+    sftp = MagicMock()
+    m.open_sftp.return_value = sftp
+
+    monkeypatch.setattr(paramiko, 'SSHClient', lambda: m)
+
+    client = RemoteShellClient(connect_kwargs={}, path_to_directory='/tmp')
+    client.execute('some code')
+
+    m.open_sftp.assert_called_once()
+    m.exec_command.assert_called_once()
+    sftp.put.assert_called_once()
+    sftp.close.assert_called_once()

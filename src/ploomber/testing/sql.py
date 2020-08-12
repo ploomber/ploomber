@@ -3,6 +3,7 @@ Testing SQL relations
 """
 from jinja2 import Template
 from ploomber.util.util import _make_iterable
+from typing import Union, List
 
 
 def nulls_in_columns(client, cols, product):
@@ -38,9 +39,13 @@ def distinct_values_in_column(client, col, product):
     return set(o[0] for o in output)
 
 
-def duplicates_in_column(client, col, product):
+def duplicates_in_column(client, col: Union[str, List[str]], product) -> bool:
     """Check if a column (or group of columns) has duplicated values
 
+    Parameters
+    ----------
+    col
+        Column(s) to validate
     """
     cols = ','.join(_make_iterable(col))
 
