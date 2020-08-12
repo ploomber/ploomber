@@ -5,8 +5,7 @@ from functools import wraps, reduce
 import base64
 import shutil
 import inspect
-from itertools import chain
-from glob import iglob
+from collections.abc import Iterable
 
 from ploomber.exceptions import CallbackSignatureError, TaskRenderError
 
@@ -310,3 +309,12 @@ def call_with_dictionary(fn, kwargs):
     common = set(parameters) & set(kwargs)
     sub_kwargs = {k: kwargs[k] for k in common}
     return fn(**sub_kwargs)
+
+
+def _make_iterable(o):
+    if isinstance(o, Iterable) and not isinstance(o, str):
+        return o
+    elif o is None:
+        return []
+    else:
+        return [o]

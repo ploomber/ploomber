@@ -2,6 +2,7 @@
 Testing SQL relations
 """
 from jinja2 import Template
+from ploomber.util.util import _make_iterable
 
 
 def nulls_in_columns(client, cols, product):
@@ -38,16 +39,19 @@ def distinct_values_in_column(client, col, product):
 
 
 def duplicates_in_column(client, col, product):
-    """Check if a column has duplicated values, returns bool
+    """Check if a column (or group of columns) has duplicated values
+
     """
+    cols = ','.join(_make_iterable(col))
+
     sql = Template("""
     SELECT EXISTS(
-        SELECT {{col}}, COUNT(*)
+        SELECT {{cols}}, COUNT(*)
         FROM {{product}}
-        GROUP BY {{col}}
+        GROUP BY {{cols}}
         HAVING COUNT(*) > 1
     )
-    """).render(col=col, product=product)
+    """).render(cols=cols, product=product)
 
     cur = client.connection.cursor()
     cur.execute(sql)

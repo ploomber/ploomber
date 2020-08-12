@@ -3,10 +3,10 @@ Create Tasks from dictionaries
 """
 from copy import copy
 from pathlib import Path
-from collections.abc import MutableMapping, Iterable, Mapping
+from collections.abc import MutableMapping, Mapping
 
 from ploomber import tasks, products
-from ploomber.util.util import load_dotted_path
+from ploomber.util.util import load_dotted_path, _make_iterable
 from ploomber.spec import validate
 
 suffix2taskclass = {
@@ -197,15 +197,6 @@ def init_product(task_dict, meta, task_class, root_path):
     else:
         return CLASS(resolve_product(product_raw, relative_to, CLASS),
                      **kwargs)
-
-
-def _make_iterable(o):
-    if isinstance(o, Iterable) and not isinstance(o, str):
-        return o
-    elif o is None:
-        return []
-    else:
-        return [o]
 
 
 def resolve_product(product_raw, relative_to, class_):
