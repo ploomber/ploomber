@@ -4,6 +4,7 @@ import copy
 from pathlib import Path
 from urllib.parse import urlparse
 from unittest.mock import MagicMock
+from subprocess import CalledProcessError
 
 import paramiko
 import pytest
@@ -138,21 +139,40 @@ def test_db_code_split():
 
 
 def test_remote_shell(monkeypatch):
-    m = MagicMock()
+    fake_client = MagicMock(spec=paramiko.SSHClient)
     stdout = MagicMock()
     stdout.readline = lambda: ''
     stdout.channel.recv_exit_status.return_value = 0
-    m.exec_command.return_value = 'input', stdout, 'err'
-
+    fake_client.exec_command.return_value = 'input', stdout, 'err'
     sftp = MagicMock()
-    m.open_sftp.return_value = sftp
+    fake_client.open_sftp.return_value = sftp
 
-    monkeypatch.setattr(paramiko, 'SSHClient', lambda: m)
+    monkeypatch.setattr(paramiko, 'SSHClient', lambda: fake_client)
 
     client = RemoteShellClient(connect_kwargs={}, path_to_directory='/tmp')
     client.execute('some code')
 
-    m.open_sftp.assert_called_once()
-    m.exec_command.assert_called_once()
+    fake_client.open_sftp.assert_called_once()
+    fake_client.exec_command.assert_called_once()
     sftp.put.assert_called_once()
     sftp.close.assert_called_once()
+
+    client.close()
+
+    fake_client.close.assert_called_once()
+
+
+def test_remote_shell_error(monkeypatch):
+    fake_client = MagicMock(spec=paramiko.SSHClient)
+    stdout = MagicMock()
+    stdout.readline = lambda: ''
+    stdout.channel.recv_exit_status.return_value = 1
+    fake_client.exec_command.return_value = 'input', stdout, 'err'
+    sftp = MagicMock()
+    fake_client.open_sftp.return_value = sftp
+
+    monkeypatch.setattr(paramiko, 'SSHClient', lambda: fake_client)
+    client = RemoteShellClient(connect_kwargs={}, path_to_directory='/tmp')
+
+    with pytest.raises(CalledProcessError):
+        client.execute('some code')
