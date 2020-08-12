@@ -38,4 +38,4 @@ dependencies:
     - jupytext
 
     # some notebooks use functions defined here
-    - pip install git+https://github.com/ploomber/projects.git#subdirectory=pkg
+    - git+https://github.com/ploomber/projects.git#subdirectory=pkg
