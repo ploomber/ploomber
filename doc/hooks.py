@@ -8,6 +8,24 @@ import jupytext
 import papermill
 
 
+def process_tutorial(name):
+    nb = jupytext.read(f'projects-master/{name}/nb.md')
+    jupytext.write(nb, f'projects-master/{name}/nb.ipynb')
+
+    if Path(f'projects-master/{name}/setup.sh').exists():
+        subprocess.run(f'cd projects-master/{name} && bash setup.sh',
+                       shell=True,
+                       check=True)
+
+    papermill.execute_notebook(f'projects-master/{name}/nb.ipynb',
+                               f'projects-master/{name}/nb.ipynb',
+                               kernel_name='python3',
+                               cwd=f'projects-master/{name}')
+
+    shutil.copy(f'projects-master/{name}/nb.ipynb',
+                f'../user-guide/{name}.ipynb')
+
+
 def config_init(app, config):
     tmp = Path('projects-tmp/')
 
@@ -24,23 +42,10 @@ def config_init(app, config):
     with zipfile.ZipFile('master.zip', 'r') as f:
         f.extractall('.')
 
-    folders = ['parametrized']
+    directories = ['parametrized', 'sql-templating']
 
-    nb = jupytext.read('projects-master/parametrized/nb.md')
-    jupytext.write(nb, 'projects-master/parametrized/nb.ipynb')
-
-    if Path('projects-master/parametrized/setup.sh').exists():
-        subprocess.run('cd projects-master/parametrized && bash setup.sh',
-                       shell=True,
-                       check=True)
-
-    papermill.execute_notebook('projects-master/parametrized/nb.ipynb',
-                               'projects-master/parametrized/nb.ipynb',
-                               kernel_name='python3',
-                               cwd='projects-master/parametrized')
-
-    shutil.copy('projects-master/parametrized/nb.ipynb',
-                '../user-guide/parametrized.ipynb')
+    for dir_ in directories:
+        process_tutorial(dir_)
 
     os.chdir('..')
 

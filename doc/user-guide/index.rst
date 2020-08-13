@@ -7,5 +7,6 @@ User Guide
     conda
     cli    
     parametrized
+    sql-templating
     r-support
     faq_index
