@@ -5,7 +5,7 @@ User Guide
     :maxdepth: 2
 
     conda
-    r-support
-    entry-points
+    cli    
     parametrized
+    r-support
     faq_index

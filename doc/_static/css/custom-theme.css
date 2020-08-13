@@ -231,14 +231,24 @@ div.body img {
 /* notebooks (nbsphinx) */
 
 .output_area {
-    background-color: black !important;
+    background-color: rgb(40, 40, 40) !important;
     margin: 0px 10px 30px 10px !important;
 }
 
+.output_area .highlight pre {
+    color: white !important;
+}
+
 .input_area {
+    background-color: rgb(24, 24, 24) !important;
     margin: 10px 10px 5px 10px !important;
 }
 
-.highlight pre {
+.input_area .highlight pre {
     color: white !important;
+}
+
+
+.prompt {
+    margin-top: 10px !important;
 }
