@@ -1,6 +1,5 @@
 import json
 import subprocess
-from subprocess import CalledProcessError
 from shlex import quote
 import sys
 from pathlib import Path
@@ -48,7 +47,7 @@ def current_branch(path):
     # version 2.22, for older versions, the one below works
     try:
         return _run_command(path, 'git symbolic-ref --short HEAD')
-    except CalledProcessError:
+    except subprocess.CalledProcessError:
         # if detached head, the command above does not work, since there is
         # no current branch
         return None

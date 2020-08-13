@@ -8,7 +8,6 @@ import string
 import logging
 import shlex
 import subprocess
-from subprocess import CalledProcessError
 
 from ploomber.clients.Client import Client
 from ploomber.placeholders.Placeholder import Placeholder
@@ -28,18 +27,20 @@ class ShellClient(Client):
         Keyword arguments to pass to the subprocess.run when running
         run_template
     """
-
     def __init__(self,
                  run_template='bash {{path_to_code}}',
-                 subprocess_run_kwargs={'stderr': subprocess.PIPE,
-                                        'stdout': subprocess.PIPE,
-                                        'shell': False}):
+                 subprocess_run_kwargs={
+                     'stderr': subprocess.PIPE,
+                     'stdout': subprocess.PIPE,
+                     'shell': False
+                 }):
         """
         """
         self.subprocess_run_kwargs = subprocess_run_kwargs
         self.run_template = run_template
-        self._logger = logging.getLogger('{}.{}'.format(__name__,
-                                                        type(self).__name__))
+        self._logger = logging.getLogger('{}.{}'.format(
+            __name__,
+            type(self).__name__))
 
     @property
     def connection(self):
@@ -60,21 +61,18 @@ class ShellClient(Client):
 
         if res.returncode != 0:
             # log source code without expanded params
-            self._logger.info(('{} returned stdout: '
-                               '{}\nstderr: {}\n'
-                               'exit status {}')
-                              .format(code, stdout, stderr,
-                                      res.returncode))
-            raise RuntimeError(('Error executing code.\nReturned stdout: '
-                                '{}\nstderr: {}\n'
-                                'exit status {}')
-                               .format(stdout, stderr,
-                                       res.returncode))
+            self._logger.info(
+                ('{} returned stdout: '
+                 '{}\nstderr: {}\n'
+                 'exit status {}').format(code, stdout, stderr,
+                                          res.returncode))
+            raise RuntimeError(
+                ('Error executing code.\nReturned stdout: '
+                 '{}\nstderr: {}\n'
+                 'exit status {}').format(stdout, stderr, res.returncode))
         else:
             self._logger.info(('Finished running {}. stdout: {},'
-                               ' stderr: {}').format(self,
-                                                     stdout,
-                                                     stderr))
+                               ' stderr: {}').format(self, stdout, stderr))
 
     def close(self):
         pass
@@ -83,9 +81,10 @@ class ShellClient(Client):
 class RemoteShellClient(Client):
     """EXPERIMENTAL: Client to run commands in a remote shell
     """
-
     @requires(['paramiko'], 'RemoteShellClient')
-    def __init__(self, connect_kwargs, path_to_directory,
+    def __init__(self,
+                 connect_kwargs,
+                 path_to_directory,
                  run_template='bash {{path_to_code}}'):
         """
 
@@ -99,8 +98,9 @@ class RemoteShellClient(Client):
         self.connect_kwargs = connect_kwargs
         self.run_template = run_template
         self._raw_client = None
-        self._logger = logging.getLogger('{}.{}'.format(__name__,
-                                                        type(self).__name__))
+        self._logger = logging.getLogger('{}.{}'.format(
+            __name__,
+            type(self).__name__))
 
     @property
     def connection(self):
@@ -130,8 +130,8 @@ class RemoteShellClient(Client):
         return self._raw_client
 
     def _random_name(self):
-        filename = (''.join(random.choice(string.ascii_letters)
-                            for i in range(16)))
+        filename = (''.join(
+            random.choice(string.ascii_letters) for i in range(16)))
         return filename
 
     def read_file(self, path):
@@ -191,11 +191,11 @@ class RemoteShellClient(Client):
 
         if returncode != 0:
             # log source code without expanded params
-            self._logger.info('%s returned stdout: '
-                              '%s and stderr: %s '
-                              'and exit status %s',
-                              code, stdout, stderr, returncode)
-            raise CalledProcessError(returncode, code)
+            self._logger.info(
+                '%s returned stdout: '
+                '%s and stderr: %s '
+                'and exit status %s', code, stdout, stderr, returncode)
+            raise subprocess.CalledProcessError(returncode, code)
         else:
             self._logger.info('Finished running %s. stdout: %s,'
                               ' stderr: %s', self, stdout, stderr)

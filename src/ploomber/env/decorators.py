@@ -1,7 +1,6 @@
 import inspect
 import types
 from functools import wraps
-from inspect import signature
 
 from ploomber.env.env import Env
 from ploomber.env.EnvDict import EnvDict
@@ -13,7 +12,7 @@ def _get_function_name_w_module(fn):
 
 
 def _validate_and_modify_signature(fn):
-    sig = signature(fn)
+    sig = inspect.signature(fn)
 
     if not len(sig.parameters):
         raise RuntimeError('Function "{}" does not take arguments, '

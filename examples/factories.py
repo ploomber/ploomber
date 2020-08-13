@@ -15,7 +15,7 @@ from sklearn import datasets
 
 from ploomber import DAG, Env, load_env
 from ploomber.clients import SQLAlchemyClient
-from ploomber.tasks import SQLUpload, PythonCallable, NotebookRunner
+from ploomber.tasks import SQLUpload, PythonCallable
 from ploomber.products import SQLiteRelation, File
 
 # NOTE: we need this to make sphinx-gallery happy
@@ -44,11 +44,14 @@ db_uri = 'sqlite:///' + str(tmp_dir / 'my_db.db')
 # so each one will write to a different schema
 
 # NOTE: adding trailing / so Env detects them as directories and creates them
-env = Env({'path': {'raw': str(tmp_dir / 'raw') + '/',
-                    'report': str(tmp_dir / '{{user}}/') + '/'},
-           'schema': '{{user}}', 'db_uri': db_uri})
-
-
+env = Env({
+    'path': {
+        'raw': str(tmp_dir / 'raw') + '/',
+        'report': str(tmp_dir / '{{user}}/') + '/'
+    },
+    'schema': '{{user}}',
+    'db_uri': db_uri
+})
 """
 # Do not do this!
 
@@ -69,9 +72,9 @@ def _dump(product):
     df = pd.DataFrame(d['data'])
     df.columns = d['feature_names']
     df['target'] = d['target']
-    df['target'] = (df
-                    .target.replace({i: name for i, name
-                                     in enumerate(d.target_names)}))
+    df['target'] = (df.target.replace(
+        {i: name
+         for i, name in enumerate(d.target_names)}))
 
     df.to_parquet(str(product))
 
@@ -101,6 +104,7 @@ def make_task_clean_setosa(env):
 @load_env
 def make_task_clean_virginica(env):
     pass
+
 
 # TODO: add processed dataset task, use env.schema
 
@@ -144,6 +148,7 @@ sns.distplot(df.price)
     # return NotebookRunner(report,
     #     product=)
 
+
 ###############################################################################
 # This introduces a subtle but important distinction between Env and Task.params,
 # Env is a read-only object for storing rarely changing configuration parameters
@@ -175,7 +180,6 @@ params_all = [{'kind': 'setosa'}, {'kind': 'virginica'}]
 
 dags = [make_dag(params) for params in params_all]
 
-
 ###############################################################################
 # Pipeline (setosa) status
 # ------------------------
@@ -187,7 +191,6 @@ dags[0].status()
 # ------------------------
 
 dags[1].status()
-
 
 ###############################################################################
 # Pipeline plots

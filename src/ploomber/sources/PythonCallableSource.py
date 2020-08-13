@@ -6,7 +6,6 @@ from ploomber.util.util import signature_check
 
 
 class CallableLoader:
-
     def __init__(self, callable_, hot_reload):
         self.hot_reload = hot_reload
 
@@ -29,14 +28,13 @@ class PythonCallableSource(Source):
     """
     A source object to encapsulate a Python callable (i.e. functions).
     """
-
     def __init__(self, primitive, hot_reload=False):
         if not callable(primitive):
             raise TypeError('{} must be initialized'
                             'with a Python callable, got '
-                            '"{}"'
-                            .format(type(self).__name__),
-                            type(primitive).__name__)
+                            '"{}"'.format(
+                                type(self).__name__,
+                                type(primitive).__name__))
         self._callable_loader = CallableLoader(primitive, hot_reload)
         self._source_as_str = None
         self._loc = None

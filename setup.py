@@ -41,8 +41,9 @@ NB = [
     'jupyter_client>=5.3.1',
     'nbconvert>=5.6.0',
     'notebook',
+    'nbformat',
     # for notebook validation
-    'pyflakes'
+    'pyflakes',
 ]
 
 # Optional dependencies are packages that are used in several modules but are

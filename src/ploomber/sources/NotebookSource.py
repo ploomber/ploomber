@@ -34,6 +34,7 @@ import warnings
 import parso
 from papermill.parameterize import parameterize_notebook
 import nbformat
+import jupytext
 
 from ploomber.exceptions import RenderError, SourceInitializationError
 from ploomber.placeholders.Placeholder import Placeholder
@@ -172,9 +173,6 @@ class NotebookSource(Source):
         Returns the Python representation for this notebook, this is the
         raw source code passed, does not contain injected parameters
         """
-        import jupytext
-        import nbformat
-
         if self._python_repr is None:
             if self._ext_in == 'py':
                 self._python_repr = self._primitive
@@ -196,8 +194,6 @@ class NotebookSource(Source):
 
         An exception is raised if we cannot determine kernel information.
         """
-        import nbformat
-
         # hot_reload causes to always re-evalaute the notebook representation
         if self._nb_repr is None or self._hot_reload:
             # this is the notebook node representation
@@ -240,7 +236,6 @@ class NotebookSource(Source):
         """
         if self.static_analysis:
             if self.language == 'python':
-                import nbformat
                 # read the notebook with the injected parameters from the tmp
                 # location
                 nb_rendered = (nbformat.reads(self._rendered_nb_str,

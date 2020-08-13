@@ -3,6 +3,6 @@ from ploomber.clients.db import DBAPIClient, SQLAlchemyClient
 from ploomber.clients.shell import ShellClient, RemoteShellClient
 
 __all__ = [
-    'Client', 'DBAPIClient', 'SQLAlchemyClient', 'DrillClient', 'ShellClient',
+    'Client', 'DBAPIClient', 'SQLAlchemyClient', 'ShellClient',
     'RemoteShellClient'
 ]

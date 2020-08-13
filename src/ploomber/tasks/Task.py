@@ -572,8 +572,9 @@ class Task(abc.ABC):
         except Exception as e:
             self.exec_status = TaskStatus.ErroredRender
             raise type(e)('Error rendering product from Task "{}", '
-                          ' check the full traceback above for details'.format(
-                              repr(self), self.params)) from e
+                          ' check the full traceback above for details. '
+                          'Task params: {}'.format(repr(self),
+                                                   self.params)) from e
 
         # Params are read-only for users, but we have to add the product
         # so we do it directly to the dictionary
@@ -584,8 +585,9 @@ class Task(abc.ABC):
         except Exception as e:
             self.exec_status = TaskStatus.ErroredRender
             raise type(e)('Error rendering source from Task "{}", '
-                          ' check the full traceback above for details'.format(
-                              repr(self), self.params)) from e
+                          ' check the full traceback above for details. '
+                          'Task params: {}'.format(repr(self),
+                                                   self.params)) from e
 
         # Maybe set ._exec_status directly, since no downstream propagation
         # is needed here.
