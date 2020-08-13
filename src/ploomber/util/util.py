@@ -269,8 +269,9 @@ def load_dotted_path(dotted_path, raise_=True):
                 if raise_:
                     raise AttributeError(
                         'Could not get attribute "{}" from module '
-                        '"{}", make sure it is a valid callable'.format(
-                            name, mod)) from e
+                        '"{}" (loaded from: {}), make sure it is a valid '
+                        'callable defined in such module'.format(
+                            name, mod, module.__file__)) from e
 
         return obj
     else:

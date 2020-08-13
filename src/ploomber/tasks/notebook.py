@@ -62,7 +62,6 @@ class NotebookConverter:
 
             exporter_name = suffix[1:]
 
-
         self.exporter = self._get_exporter(exporter_name)
         self.path_to_output = path_to_output
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
@@ -322,33 +321,41 @@ class NotebookRunner(Task):
         Opens the notebook (with injected parameters) in debug mode in a
         temporary location
         """
-        opts = {'ipdb', 'pdb'}
+        opts = {'ipdb', 'pdb', 'pm'}
 
         if kind not in opts:
             raise ValueError('kind must be one of {}'.format(opts))
 
         nb = _read_rendered_notebook(self.source.rendered_nb_str)
-        _, tmp_path = tempfile.mkstemp(suffix='.ipynb')
+        _, tmp_path = tempfile.mkstemp(suffix='.py')
         code = jupytext.writes(nb, version=nbformat.NO_CONVERT, fmt='py')
         Path(tmp_path).write_text(code)
 
-        if kind == 'ipdb':
-            from IPython.terminal.debugger import TerminalPdb, Pdb
-            code = compile(source=code, filename=tmp_path, mode='exec')
+        if kind == 'pm':
+            # post-mortem debugging
+            try:
+                subprocess.run(['ipython', tmp_path, '--pdb'])
+            finally:
+                Path(tmp_path).unlink()
+        else:
+            if kind == 'ipdb':
+                from IPython.terminal.debugger import TerminalPdb, Pdb
+                code = compile(source=code, filename=tmp_path, mode='exec')
+
+                try:
+                    # this seems to only work in a Terminal
+                    debugger = TerminalPdb()
+                except AttributeError:
+                    # this works in a Jupyter notebook
+                    debugger = Pdb()
+
+            elif kind == 'pdb':
+                debugger = pdb
 
             try:
-                # this seems to only work in a Terminal
-                debugger = TerminalPdb()
-            except AttributeError:
-                # this works in a Jupyter notebook
-                debugger = Pdb()
-        elif kind == 'pdb':
-            debugger = pdb
-
-        try:
-            debugger.run(code)
-        finally:
-            Path(tmp_path).unlink()
+                debugger.run(code)
+            finally:
+                Path(tmp_path).unlink()
 
     def run(self):
         if isinstance(self.product, MetaProduct):
