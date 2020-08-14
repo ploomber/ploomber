@@ -12,8 +12,12 @@ def process_tutorial(name):
     nb = jupytext.read(f'projects-master/{name}/nb.md')
     jupytext.write(nb, f'projects-master/{name}/nb.ipynb')
 
-    if Path(f'projects-master/{name}/setup.sh').exists():
-        subprocess.run(f'cd projects-master/{name} && bash setup.sh',
+    if Path(f'projects-master/{name}/setup/script.sh').exists():
+        subprocess.run(f'cd projects-master/{name}/setup && bash script.sh',
+                       shell=True,
+                       check=True)
+    if Path(f'projects-master/{name}/setup/script.py').exists():
+        subprocess.run(f'cd projects-master/{name}/setup && python script.py',
                        shell=True,
                        check=True)
 
@@ -42,7 +46,7 @@ def config_init(app, config):
     with zipfile.ZipFile('master.zip', 'r') as f:
         f.extractall('.')
 
-    directories = ['parametrized', 'sql-templating']
+    directories = ['parametrized', 'sql-templating', 'testing']
 
     for dir_ in directories:
         process_tutorial(dir_)

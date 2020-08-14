@@ -8,5 +8,6 @@ User Guide
     cli    
     parametrized
     sql-templating
+    testing
     r-support
     faq_index
