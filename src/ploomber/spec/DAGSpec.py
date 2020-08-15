@@ -150,7 +150,7 @@ class DAGSpec(MutableMapping):
             dag = self._to_dag()
         finally:
             if self._parent_path is not None:
-                sys.path.remove(self._parent_path)
+                sys.path.remove(os.path.abspath(self._parent_path))
                 os.chdir(cwd_old)
         return dag
 

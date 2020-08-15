@@ -351,7 +351,9 @@ def test_extract_variables_from_notebooks(tmp_nbs):
     # assert prods == expected_prod
 
 
-def test_source_loader(add_current_to_sys_path, tmp_directory):
+def test_source_loader(monkeypatch, tmp_directory):
+    monkeypatch.syspath_prepend(tmp_directory)
+
     spec = DAGSpec({
         'meta': {
             'source_loader': {
