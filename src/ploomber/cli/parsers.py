@@ -1,3 +1,4 @@
+import os
 import logging
 import sys
 import importlib
@@ -38,9 +39,10 @@ class CustomParser(argparse.ArgumentParser):
     manager, only after this has happened, other arguments can be added using
     parser.add_argument.
     """
-    DEFAULT_ENTRY_POINT = 'pipeline.yaml'
-
     def __init__(self, *args, **kwargs):
+        self.DEFAULT_ENTRY_POINT = os.environ.get(
+            'ENTRY_POINT') or 'pipeline.yaml'
+
         self.static_args = []
         self.finished_static_api = False
         self.in_context = False
@@ -55,7 +57,9 @@ class CustomParser(argparse.ArgumentParser):
 
         self.add_argument('--entry-point',
                           '-e',
-                          help='Entry point(DAG), defaults to pipeline.yaml',
+                          help='Entry point(DAG), defaults to pipeline.yaml. '
+                          'Replaced if there is an ENTRY_POINT env '
+                          'variable defined',
                           default=self.DEFAULT_ENTRY_POINT)
 
         self.finished_init = True

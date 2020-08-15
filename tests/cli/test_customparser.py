@@ -1,3 +1,5 @@
+import sys
+import os
 import pytest
 from ploomber.cli.parsers import CustomParser
 
@@ -37,3 +39,15 @@ def test_add_dynamic_arguments():
 
     added = {'dynamic_arg', 'd'}
     assert not set(parser.static_args) & added
+
+
+def test_default_loaded_from_env_var(monkeypatch):
+    monkeypatch.setenv('ENTRY_POINT', 'dag.yaml')
+    monkeypatch.setattr(sys, 'argv', ['ploomber'])
+
+    parser = CustomParser()
+
+    assert parser.DEFAULT_ENTRY_POINT == 'dag.yaml'
+
+    args = parser.parse_args()
+    assert args.entry_point == 'dag.yaml'
