@@ -19,6 +19,7 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
 .highlight pre {
     background-color: RGB(2, 3, 3);
     padding: 10px;
+    color: white;
 }
 
 .terminal-top {

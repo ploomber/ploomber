@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+0.7.2dev
+--------
+* New guides: parametrized pipelines, SQL templating, pipeline testing and debugging
+* ``NotebookRunner.debug(kind='pm')`` for post-mortem debugging
+* Fixes bug in Jupyter extension when the pipeline has a task whose source is not a file (e.g. SQLDump)
+* Fixes a bug in the CLI custom arg parser that caused dynamic params not to show up
+* ``DAGspec`` now supports ``SourceLoader``
+* Docstring (from dotted path entry point) is shown in the CLI summary
+* Customized sphinx build to execute guides from notebooks
+
+
+
 0.7.1 (2020-08-06)
 ------------------
 * Support for R
