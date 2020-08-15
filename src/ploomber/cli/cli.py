@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 from pathlib import Path
@@ -167,7 +168,7 @@ def cmd_router():
         sys.argv.pop(1)
         # Add the current working directory, this is done automatically when
         # calling "python -m ploomber.build" but not here ("ploomber build")
-        sys.path.append('')
+        sys.path.insert(0, os.path.abspath('.'))
         fn = custom[cmd_name]
         fn()
     else:

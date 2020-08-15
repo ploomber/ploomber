@@ -46,7 +46,7 @@ def config_init(app, config):
     with zipfile.ZipFile('master.zip', 'r') as f:
         f.extractall('.')
 
-    directories = ['parametrized', 'sql-templating', 'testing']
+    directories = ['parametrized', 'sql-templating', 'testing', 'debugging']
 
     for dir_ in directories:
         process_tutorial(dir_)

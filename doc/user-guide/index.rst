@@ -9,5 +9,6 @@ User Guide
     parametrized
     sql-templating
     testing
+    debugging
     r-support
     faq_index

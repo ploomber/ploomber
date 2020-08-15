@@ -274,6 +274,6 @@ def fake_conn():
 @pytest.fixture
 def add_current_to_sys_path():
     old = copy(sys.path)
-    sys.path.append('')
+    sys.path.insert(0, os.path.abspath('.'))
     yield sys.path
     sys.path = old

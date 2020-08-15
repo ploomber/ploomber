@@ -143,7 +143,7 @@ class DAGSpec(MutableMapping):
         # scripts to be located we temporarily change the current working
         # directory
         if self._parent_path is not None:
-            sys.path.append(self._parent_path)
+            sys.path.insert(0, os.path.abspath(self._parent_path))
             os.chdir(self._parent_path)
 
         try:

@@ -380,7 +380,7 @@ class NotebookRunner(Task):
             pm.execute_notebook(str(tmp), str(path_to_out_ipynb),
                                 **self.papermill_params)
         except Exception as e:
-            raise TaskBuildError('An error ocurred when calling'
+            raise TaskBuildError('An error occurred when calling'
                                  ' papermil.execute_notebook, partially'
                                  ' executed notebook with traceback '
                                  'available at {}'.format(
