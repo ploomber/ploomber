@@ -1,3 +1,4 @@
+# TODO: move to ploomebutils (projects repository)
 import os
 from pathlib import Path
 import subprocess
@@ -6,10 +7,21 @@ from urllib import request
 import zipfile
 import jupytext
 import papermill
+import nbformat
+
+
+def add_links(nb, name):
+    source = f'**Note:** This page was generated form a Jupyter notebook. [Click here](https://github.com/ploomber/projects/tree/master/{name}/nb.md) to see the source code. [Or here](https://mybinder.org/v2/gh/ploomber/projects/master?filepath={name}%2Fnb.md) to launch an interactive demo.'
+    version = nbformat.versions[nb.nbformat]
+    cell = version.new_markdown_cell(source=source)
+    nb.cells.insert(0, cell)
 
 
 def process_tutorial(name):
     nb = jupytext.read(f'projects-master/{name}/nb.md')
+
+    add_links(nb, name)
+
     jupytext.write(nb, f'projects-master/{name}/nb.ipynb')
 
     if Path(f'projects-master/{name}/setup/script.sh').exists():
@@ -40,11 +52,14 @@ def config_init(app, config):
 
     os.chdir('projects-tmp')
 
-    url = 'https://github.com/ploomber/projects/archive/master.zip'
-    request.urlretrieve(url, 'master.zip')
+    path = '../../../projects-ploomber'
 
-    with zipfile.ZipFile('master.zip', 'r') as f:
-        f.extractall('.')
+    if Path(path).exists():
+        print('Local copy...')
+        shutil.copytree(path, 'projects-master')
+    else:
+        print('Cloning from git...')
+        git_clone()
 
     directories = ['parametrized', 'sql-templating', 'testing', 'debugging']
 
@@ -54,3 +69,11 @@ def config_init(app, config):
     os.chdir('..')
 
     shutil.rmtree('projects-tmp/')
+
+
+def git_clone():
+    url = 'https://github.com/ploomber/projects/archive/master.zip'
+    request.urlretrieve(url, 'master.zip')
+
+    with zipfile.ZipFile('master.zip', 'r') as f:
+        f.extractall('.')

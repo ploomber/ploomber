@@ -61,7 +61,9 @@ html_theme = 'basic'
 html_style = 'css/custom-theme.css'
 
 html_js_files = [
-    'js/custom.js', 'https://unpkg.com/mermaid@8.6.0/dist/mermaid.min.js'
+    'js/custom.js',
+    'https://unpkg.com/mermaid@8.6.0/dist/mermaid.min.js',
+    'js/terminal.js',
 ]
 
 html_css_files = ['css/mermaid-style.css', 'css/mermaid-layout.css']
@@ -86,6 +88,7 @@ sphinx_gallery_conf = {
     'ignore_pattern': r'__init__\.py',
 }
 
+# This is inserted only in pages that load generate from notebooks
 nbsphinx_prolog = """
 .. raw:: html
 
@@ -94,6 +97,8 @@ nbsphinx_prolog = """
             background: black;
         }
     </style>
+
+    <script src="../_static/js/nbsphinx.js"></script>
 """
 
 
