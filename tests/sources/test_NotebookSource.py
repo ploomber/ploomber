@@ -125,6 +125,9 @@ def test_read_file(nb_str, ext, expected, tmp_directory):
     assert source._nb_obj.metadata.kernelspec.name == expected_kernel
 
 
+# trying out a few variants, looks like the official one is to have the comma
+# and c('value')
+# see: https://bookdown.org/yihui/rmarkdown-cookbook/dev-vector.html
 @pytest.mark.parametrize('code', [
     "```{r tags=['parameters']}\n```\n```{r}\n```\n",
     "```{r, tags=['parameters']}\n```\n```{r}\n```\n",
