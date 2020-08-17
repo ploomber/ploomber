@@ -13,10 +13,18 @@ from ploomber.exceptions import RenderError, SourceInitializationError
 # Functions for generating notebooks with different characteristics for testing
 
 
-def new_nb(fmt=None, kname=None, klang=None, code='1+1', add_tag=True):
+def new_nb(fmt=None,
+           kname=None,
+           klang=None,
+           kdisplay=None,
+           code=None,
+           add_tag=True):
+
+    code = ['1', '2']
+
     nb = nbformat.v4.new_notebook()
 
-    if kname or klang:
+    if kname or klang or kdisplay:
         nb.metadata = {'kernelspec': {}}
 
         if kname:
@@ -25,13 +33,20 @@ def new_nb(fmt=None, kname=None, klang=None, code='1+1', add_tag=True):
         if klang:
             nb.metadata.kernelspec['language'] = klang
 
+        if kdisplay:
+            nb.metadata.kernelspec['display_name'] = kdisplay
+
+    if isinstance(code, str):
+        code = [code]
+
     if code:
-        cell = nbformat.v4.new_code_cell(source=code)
+        for i, code_ in enumerate(code):
+            cell = nbformat.v4.new_code_cell(source=code_)
 
-        if add_tag:
-            cell.metadata = {'tags': ['parameters']}
+            if add_tag and i == 0:
+                cell.metadata = {'tags': ['parameters']}
 
-        nb.cells.append(cell)
+            nb.cells.append(cell)
 
     if fmt:
         nb = jupytext.writes(nb, fmt=fmt)
@@ -82,10 +97,11 @@ a + b
         (new_nb(fmt='r:light'), 'R', 'r'),
         (new_nb(fmt='ipynb', klang='python'), 'ipynb', 'python'),
         (new_nb(fmt='ipynb', klang='R', kname='ir'), 'ipynb', 'r'),
+        (new_nb(fmt='Rmd', klang='R', kname='ir', kdisplay='R'), 'Rmd', 'r'),
         # if there is nothing and it's an ipynb, assume python
         (new_nb(fmt='ipynb'), 'ipynb', 'python'),
     ])
-def test_language_and_kernel(nb_str, ext, expected, tmp_directory):
+def test_read_file(nb_str, ext, expected, tmp_directory):
     path = Path('nb.' + ext)
     path.write_text(nb_str)
     source = NotebookSource(path)
@@ -103,8 +119,20 @@ def test_language_and_kernel(nb_str, ext, expected, tmp_directory):
     lang2kernel = {'python': 'python3', 'r': 'ir'}
     expected_kernel = lang2kernel[expected]
 
+    assert len(source._nb_obj.cells) == 2
+
     assert source._nb_obj.metadata.kernelspec.language == expected_lang
     assert source._nb_obj.metadata.kernelspec.name == expected_kernel
+
+
+def test_rmd(tmp_directory):
+    # check we can initialize from Rmd files with no kernelspec metadata,
+    # we need this because the new_nb utility function always creates nbs
+    # with metadata (because it uses jupytext.writes)
+    path = Path('notebook.Rmd')
+    path.write_text("```{r tags=['parameters']}\n```\n```{r}\n```\n")
+    source = NotebookSource(path)
+    assert len(source._nb_obj.cells) == 2
 
 
 def test_kernelspec_overrides_nb_kernel_info():
