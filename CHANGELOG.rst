@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.7.2dev
---------
+0.7.2 (2020-08-17)
+-------------------
 * New guides: parametrized pipelines, SQL templating, pipeline testing and debugging
 * ``NotebookRunner.debug(kind='pm')`` for post-mortem debugging
 * Fixes bug in Jupyter extension when the pipeline has a task whose source is not a file (e.g. SQLDump)
