@@ -125,12 +125,18 @@ def test_read_file(nb_str, ext, expected, tmp_directory):
     assert source._nb_obj.metadata.kernelspec.name == expected_kernel
 
 
-def test_rmd(tmp_directory):
+@pytest.mark.parametrize('code', [
+    "```{r tags=['parameters']}\n```\n```{r}\n```\n",
+    "```{r, tags=['parameters']}\n```\n```{r}\n```\n",
+    "```{r tags=c('parameters')}\n```\n```{r}\n```\n",
+    "```{r, tags=c('parameters')}\n```\n```{r}\n```\n",
+])
+def test_rmd(code, tmp_directory):
     # check we can initialize from Rmd files with no kernelspec metadata,
     # we need this because the new_nb utility function always creates nbs
     # with metadata (because it uses jupytext.writes)
     path = Path('notebook.Rmd')
-    path.write_text("```{r tags=['parameters']}\n```\n```{r}\n```\n")
+    path.write_text(code)
     source = NotebookSource(path)
     assert len(source._nb_obj.cells) == 2
 
