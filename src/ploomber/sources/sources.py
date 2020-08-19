@@ -290,11 +290,13 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
     def render(self, params):
         # FIXME: inefficient, initialize once and only update if needed
         # (i.e. hot reload is on)
+        # NOTE: using private method because we don't want to raise an
+        # exception if the value is None
         extracted = static_analysis.sql.SQLExtractor(
-            self._placeholder._raw).extract_product()
+            self._placeholder._raw)._extract_product()
         # the code itself might already define the product, no need to pass it
         # TODO: verify that the product passed and the one defined are the same
-        if extracted:
+        if extracted is not None:
             del params['product']
             params._dict[type(extracted).__name__] = type(extracted)
 
