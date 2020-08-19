@@ -79,3 +79,24 @@ def range_in_column(client, col, product):
     cur.close()
 
     return output
+
+
+def exists_row_where(client, criteria, product):
+    """
+    Check whether at least one row exists matching the criteria by running a
+    ``SELECT EXISTS (SELECT * FROM {{product}} WHERE {{criteria}})`` query
+    """
+    sql = Template("""
+    SELECT EXISTS(
+        SELECT *
+        FROM {{product}}
+        WHERE {{criteria}}
+    )
+    """).render(product=product, criteria=criteria)
+
+    cur = client.connection.cursor()
+    cur.execute(sql)
+    output = bool(cur.fetchone()[0])
+    cur.close()
+
+    return output

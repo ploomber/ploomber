@@ -55,3 +55,13 @@ def test_can_check_range(tmp_directory):
     df.to_sql('my_table', client.engine)
 
     assert testing.sql.range_in_column(client, 'x', 'my_table') == (1, 1000)
+
+
+def test_exists_row_where(tmp_directory):
+    client = SQLAlchemyClient('sqlite:///' + str(Path(tmp_directory, 'db.db')))
+
+    df = pd.DataFrame({'x': [1, 2, 3, 4]})
+    df.to_sql('my_table', client.engine)
+
+    assert testing.sql.exists_row_where(client, 'x > 1', 'my_table')
+    assert not testing.sql.exists_row_where(client, 'x > 4', 'my_table')
