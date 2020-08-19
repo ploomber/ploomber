@@ -7,3 +7,4 @@ API
    spec
    cli
    python_api
+   testing

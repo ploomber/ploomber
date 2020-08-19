@@ -1,13 +1,27 @@
 """
-Testing SQL relations
+Function for testing testing SQL relations
 """
 from jinja2 import Template
 from ploomber.util.util import _make_iterable
 from typing import Union, List
 
 
-def nulls_in_columns(client, cols, product):
+def nulls_in_columns(client, cols: Union[str, List[str]], product):
     """Check if any column has NULL values, returns bool
+
+    Parameters
+    ----------
+    client
+        Database client
+    cols
+        Column(s) to check
+    product
+        The relation to check
+
+    Returns
+    -------
+    bool
+        True if there is at least one NULL in any of the columns
     """
     sql = Template("""
     SELECT EXISTS(
@@ -24,9 +38,24 @@ def nulls_in_columns(client, cols, product):
     return output
 
 
-def distinct_values_in_column(client, col, product):
-    """Get distinct values in a column, returns a set
+def distinct_values_in_column(client, col: str, product):
+    """Get distinct values in a column
+
+    Parameters
+    ----------
+    client
+        Database client
+    col
+        Column to check
+    product
+        The relation to check
+
+    Returns
+    -------
+    set
+       Distinct values in column
     """
+
     sql = Template("""
     SELECT DISTINCT {{col}} FROM {{product}}
     """).render(col=col, product=product)
@@ -44,8 +73,18 @@ def duplicates_in_column(client, col: Union[str, List[str]], product) -> bool:
 
     Parameters
     ----------
-    col
-        Column(s) to validate
+    client
+        Database client
+    cols
+        Column(s) to check
+    product
+        The relation to check
+
+    Returns
+    -------
+    bool
+        True if there are duplicates in the column(s). If passed more than
+        one column, they are considered as a whole, not individually
     """
     cols = ','.join(_make_iterable(col))
 
@@ -66,8 +105,22 @@ def duplicates_in_column(client, col: Union[str, List[str]], product) -> bool:
     return output
 
 
-def range_in_column(client, col, product):
-    """Get range for a column, returns a (min_value, max_value) tuple
+def range_in_column(client, col: str, product):
+    """Get range for a column
+
+    Parameters
+    ----------
+    client
+        Database client
+    cols
+        Column to check
+    product
+        The relation to check
+
+    Returns
+    -------
+    tuple
+        (minimum, maximum) values
     """
     sql = Template("""
     SELECT MIN({{col}}), MAX({{col}}) FROM {{product}}
@@ -81,10 +134,28 @@ def range_in_column(client, col, product):
     return output
 
 
-def exists_row_where(client, criteria, product):
+def exists_row_where(client, criteria: str, product):
     """
-    Check whether at least one row exists matching the criteria by running a
-    ``SELECT EXISTS (SELECT * FROM {{product}} WHERE {{criteria}})`` query
+    Check whether at least one row exists matching the criteria
+
+    Parameters
+    ----------
+    client
+        Database client
+    criteria
+        Criteria to evaluate (passed as argument to a WHERE clause)
+    product
+        The relation to check
+
+    Notes
+    -----
+    Runs a ``SELECT EXISTS (SELECT * FROM {{product}} WHERE {{criteria}})``
+    query
+
+    Returns
+    -------
+    bool
+        True if exists at least one row matching the criteria
     """
     sql = Template("""
     SELECT EXISTS(
