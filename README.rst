@@ -49,12 +49,14 @@ Optional: List your tasks in a ``pipeline.yaml`` file for more flexibility.
 What you get
 ------------
 
-1. Automated end-to-end execution
+1. Pipeline end-to-end execution
 2. Incremental builds (skip up-to-date tasks)
 3. Integration with Jupyter
 4. Seamlessly integrate SQL with Python/R (i.e. extract data with SQL, plot it with Python/R)
-5. Generate a graphical representation of your pipeline using ``ploomber plot``
-6. Sync teamwork
+5. `Parametrized pipelines with automatic command line interface generation <https://ploomber.readthedocs.io/en/stable/user-guide/parametrized.html>`_
+6. `Templated SQL tasks (using jinja) <https://ploomber.readthedocs.io/en/stable/user-guide/sql-templating.html>`_
+7. `Hooks for pipeline testing <https://ploomber.readthedocs.io/en/stable/user-guide/testing.html>`_
+8. `Integration with debugging tools <https://ploomber.readthedocs.io/en/stable/user-guide/debugging.html>`_
 
 How it looks like
 -----------------
@@ -102,11 +104,6 @@ SQL scripts:
     JOIN {{upstream['another_task']}}
     USING (some_column)
 
-
-Ploomber uses `jinja <https://jinja.palletsprojects.com/en/2.11.x/api/>`_ for
-generating SQL on the fly. You can leverage existing jinja features to improve
-SQL code reusability. For example, you can define a SQL snippet and import it
-in another file using ``{{placeholders}}``.
 
 How it works
 ------------

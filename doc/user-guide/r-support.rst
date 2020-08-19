@@ -3,7 +3,21 @@ R support
 
 R is officially supported by Ploomber. The same concepts that apply to Python
 scripts apply to R scripts. The only difference is how to declare ``upstream``
-dependencies and ``product``:
+dependencies and ``product``.
+
+For the R Markdown format (``.Rmd``):
+
+.. code-block:: md
+    :class: text-editor
+    :name: task-Rmd
+
+    ```{r, tags=c("parameters")}
+    upstream = list('one_task', 'another_task')
+    product = list(nb='path/to/task.ipynb', some_output='path/to/output.csv')
+    ```
+
+
+If you prefer, you can also use plain R scripts:
 
 .. code-block:: R
     :class: text-editor

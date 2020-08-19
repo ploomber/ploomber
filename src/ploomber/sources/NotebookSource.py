@@ -168,6 +168,7 @@ class NotebookSource(Source):
 
         self._post_render_validation(self._params)
 
+    # FIXME: looks like we are not using this, remove
     def _get_python_repr(self):
         """
         Returns the Python representation for this notebook, this is the
@@ -199,6 +200,7 @@ class NotebookSource(Source):
             # this is the notebook node representation
             self._nb_obj = _to_nb_obj(
                 self.primitive,
+                ext=self._ext_in,
                 # passing the underscored version
                 # because that's the only one available
                 # when this is initialized
@@ -221,7 +223,6 @@ class NotebookSource(Source):
         # maybe we don't need to use pyflakes after all
         # we can also use compile. can pyflakes detect things that
         # compile cannot?
-
         params_cell, _ = find_cell_with_tag(self._nb_obj, 'parameters')
 
         if params_cell is None:
@@ -454,7 +455,7 @@ def check_source(nb, filename):
     }
 
 
-def _to_nb_obj(source, language, kernelspec_name=None):
+def _to_nb_obj(source, language, ext=None, kernelspec_name=None):
     """
     Convert to jupyter notebook via jupytext, if the notebook does not contain
     kernel information and the user did not pass a kernelspec_name explicitly,
@@ -492,7 +493,7 @@ def _to_nb_obj(source, language, kernelspec_name=None):
     import jupyter_client
 
     # let jupytext figure out the format
-    nb = jupytext.reads(source, fmt=None)
+    nb = jupytext.reads(source, fmt=ext)
 
     kernel_name = determine_kernel_name(nb, language, kernelspec_name)
 
@@ -679,7 +680,7 @@ def determine_language(extension):
     if extension.startswith('.'):
         extension = extension[1:]
 
-    mapping = {'py': 'python', 'r': 'r', 'R': 'r'}
+    mapping = {'py': 'python', 'r': 'r', 'R': 'r', 'Rmd': 'r', 'rmd': 'r'}
 
     # ipynb can be many languages, it must return None
     return mapping.get(extension)

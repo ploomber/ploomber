@@ -12,6 +12,7 @@ from ploomber.spec import validate
 suffix2taskclass = {
     '.py': tasks.NotebookRunner,
     '.R': tasks.NotebookRunner,
+    '.Rmd': tasks.NotebookRunner,
     '.r': tasks.NotebookRunner,
     '.ipynb': tasks.NotebookRunner,
     '.sql': tasks.SQLScript,
