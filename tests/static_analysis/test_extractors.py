@@ -135,11 +135,6 @@ def test_extract_product_from_sql(code, class_, schema, name, kind):
     assert extracted.kind == kind
 
 
-def test_extract_product_from_sql_none_case():
-    code = 'some code that does not define a product variable'
-    assert SQLExtractor(code).extract_product() is None
-
-
 @pytest.mark.parametrize('source, expected', [
     ['{{upstream["key"]}}', {'key'}],
     [
