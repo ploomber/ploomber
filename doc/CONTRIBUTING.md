@@ -18,3 +18,12 @@ Summary:
 * `postgresql` For SQL templated scripts (`sql` does not work)
 
 If nothing applies, don't add any lexer.
+
+
+## Pages generated from notebooks
+
+Link to other pages using relative paths so they work locally as well:
+
+e.g.: [some-label](../api/testing.rst)
+
+Reference: https://nbsphinx.readthedocs.io/en/0.7.1/markdown-cells.html#Links-to-*.rst-Files-(and-Other-Sphinx-Source-Files)

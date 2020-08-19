@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+0.7.3dev
+--------
+* Improved support for R notebooks (``.Rmd``)
+* New section for ``testing.sql`` module in the documentation
+
+
 0.7.2 (2020-08-17)
 -------------------
 * New guides: parametrized pipelines, SQL templating, pipeline testing and debugging
