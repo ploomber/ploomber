@@ -12,7 +12,17 @@ class PythonNotebookExtractor(NotebookExtractor):
         return extract_upstream(self.parameters_cell)
 
     def extract_product(self):
-        return extract_product(self.parameters_cell)
+        """
+        Extract "product" from a Python code string
+        """
+        product_found, product = extract_variable(self.parameters_cell,
+                                                  'product')
+
+        if not product_found or product is None:
+            raise ValueError("Couldn't extract 'product' "
+                             "from code:\n%s" % self.parameters_cell)
+        else:
+            return product
 
 
 def extract_variable(code_str, name):
@@ -41,19 +51,6 @@ def extract_variable(code_str, name):
                 value = eval(stmt.children[2].get_code())
 
     return variable_found, value
-
-
-def extract_product(cell_code):
-    """
-    Extract "product" from a Python code string
-    """
-    product_found, product = extract_variable(cell_code, 'product')
-
-    if not product_found:
-        raise ValueError("Could not parse a valid 'product' variable "
-                         "from code:\n%s" % cell_code)
-    else:
-        return product
 
 
 def extract_upstream(cell_code):

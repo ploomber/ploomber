@@ -9,6 +9,7 @@ class SQLExtractor(Extractor):
     def __init__(self, code):
         super().__init__(code)
         self._product = None
+        self._extracted_product = False
 
     def extract_upstream(self):
         """Extract upstream keys used in a templated SQL script
@@ -17,7 +18,7 @@ class SQLExtractor(Extractor):
         params = {'upstream': upstream}
 
         # we need to pass the class if the product is declared here
-        product = self.extract_product()
+        product = self._extract_product()
 
         if product:
             params[type(product).__name__] = type(product)
@@ -28,10 +29,13 @@ class SQLExtractor(Extractor):
     def extract_product(self):
         # only compute it the first time, might be computed already if
         # called extract_upstream first
-        if self._product is None:
-            self._product = self._extract_product()
+        product = self._extract_product()
 
-        return self._product
+        if product is None:
+            raise ValueError("Couldn't extract 'product' from code:\n" +
+                             self.code)
+
+        return product
 
     def _extract_product(self):
         """
@@ -42,15 +46,29 @@ class SQLExtractor(Extractor):
         Where SOME_CLASS is a class defined in ploomber.products. If no product
         variable is defined, returns None
         """
-        env = Environment()
-        ast = env.parse(self.code)
-        variables = {n.target.name: n.node for n in ast.find_all(Assign)}
-
-        if 'product' not in variables:
-            return None
+        if self._extracted_product:
+            return self._product
         else:
-            product = variables['product']
-            # TODO: check product.node.ctx == 'load'
-            class_ = getattr(products, product.node.name)
-            arg = product.args[0].as_const()
-            return class_(arg)
+            env = Environment()
+            ast = env.parse(self.code)
+            variables = {n.target.name: n.node for n in ast.find_all(Assign)}
+
+            if 'product' not in variables:
+                self._product = None
+            else:
+                product = variables['product']
+
+                try:
+                    class_ = getattr(products, product.node.name)
+                    arg = product.args[0].as_const()
+                    self._product = class_(arg)
+                except Exception as e:
+                    exc = ValueError(
+                        "Found a variable named 'product' in "
+                        "code: {} but it does not appear to "
+                        "be a valid SQL product, verify it ".format(self.code))
+                    raise exc from e
+
+            self._extracted_product = True
+
+            return self._product
