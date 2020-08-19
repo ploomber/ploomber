@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.7.3dev
---------
+0.7.3 (2020-08-19)
+-------------------
 * Improved support for R notebooks (``.Rmd``)
 * New section for ``testing.sql`` module in the documentation
 
