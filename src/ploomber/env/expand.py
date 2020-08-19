@@ -38,10 +38,10 @@ def expand_if_needed(raw_value, mapping):
             raise KeyError('Failed to replace placeholders: %s' %
                            str(e)) from e
 
-    return cast(value)
+    return cast_if_possible(value)
 
 
-def cast(value):
+def cast_if_possible(value):
     """
     Reference to env in specs must be strings, but we would like the rendered
     value to still have the appropriate type
@@ -132,7 +132,7 @@ class EnvironmentExpander:
 
                 return Path(value).expanduser()
             else:
-                return value
+                return cast_if_possible(value)
 
     def _try_create_dir(self, value):
         # make sure to expand user to avoid creating a "~" folder

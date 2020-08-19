@@ -13,7 +13,7 @@ from ploomber.env.decorators import with_env, load_env
 from ploomber.env import validate
 from ploomber.env.EnvDict import EnvDict
 from ploomber.env.expand import (EnvironmentExpander, expand_raw_dictionary,
-                                 cast, iterate_nested_dict)
+                                 cast_if_possible, iterate_nested_dict)
 from ploomber import repo
 
 
@@ -480,8 +480,18 @@ def test_iterate_nested_dict():
                                              ('string', 'string'),
                                              (True, True), (False, False),
                                              (10, 10), (10.1, 10.1)])
-def test_cast(value, expected):
-    assert cast(value) == expected
+def test_cast_if_possible(value, expected):
+    assert cast_if_possible(value) == expected
+
+
+def test_replace_value_casts_if_possible():
+    env = EnvDict({'a': False, 'b': 1, 'c': 1.1})
+    env._replace_value('True', ['a'])
+    env._replace_value('2', ['b'])
+    env._replace_value('2.2', ['c'])
+    assert env.a is True
+    assert env.b == 2
+    assert env.c == 2.2
 
 
 # TODO: {{here}} allowed in _module
