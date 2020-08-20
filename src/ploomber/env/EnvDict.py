@@ -208,6 +208,16 @@ def load_from_source(source):
         except Exception as e:
             raise type(e)('yaml.load failed to parse your YAML file '
                           'fix syntax errors and try again') from e
+        finally:
+            # yaml.load returns None for empty files and str if file just
+            # contains a string - those aren't valid for our use case, raise
+            # an error
+            if not isinstance(raw, Mapping):
+                raise ValueError("Expected object loaded from '{}' to be "
+                                 "a dict but got '{}' instead, "
+                                 "verify the content".format(
+                                     source,
+                                     type(raw).__name__))
 
     path = Path(source).resolve()
 
