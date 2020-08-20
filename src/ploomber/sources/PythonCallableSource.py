@@ -52,6 +52,10 @@ class PythonCallableSource(Source):
 
         return self.__source_lineno
 
+    def __repr__(self):
+        return "{}({}) (defined at: '{}')".format(
+            type(self).__name__, self.name, self.loc)
+
     def __str__(self):
         if self._source_as_str is None or self._hot_reload:
             self._source_as_str = inspect.getsource(self.primitive)
