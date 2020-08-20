@@ -59,9 +59,20 @@ class EnvDict(Mapping):
         if key in self:
             return self[key]
         else:
-            raise error
+            raise AttributeError("{} object has no atttribute '{}'".format(
+                repr(self), key))
 
     def __getitem__(self, key):
+        try:
+            return self._getitem(key)
+        except KeyError as e:
+            # custom error will be displayed around quotes, but it's fine.
+            # this is due to the KeyError.__str__ implementation
+            msg = "{} object has no key '{}'".format(repr(self), key)
+            e.args = (msg, )
+            raise
+
+    def _getitem(self, key):
         if key in self.preprocessed:
             return FrozenJSON(self.preprocessed[key])
         else:
