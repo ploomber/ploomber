@@ -390,3 +390,15 @@ def test_extract_upstream_from_parameters(code, ext, expected_up,
     upstream = source.extract_upstream()
     assert sorted(upstream) == sorted(expected_up)
     assert source.extract_product() == expected_prod
+
+
+def test_and_repr_from_str():
+    source = NotebookSource(notebook_ab, ext_in='py')
+    assert repr(source) == 'NotebookSource(loaded from string)'
+
+
+def test_and_repr_from_path(tmp_directory):
+    path = Path(tmp_directory, 'nb.py')
+    Path('nb.py').write_text(notebook_ab)
+    source = NotebookSource(path)
+    assert repr(source) == "NotebookSource('{}')".format(path)

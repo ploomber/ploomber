@@ -251,7 +251,8 @@ class NotebookSource(Source):
 
     @property
     def doc(self):
-        # TODO: look for a cell tagged "docstring?"
+        # TODO: look for a cell tagged "docstring?" or maybe look for it in
+        # the first cell
         return None
 
     @property
@@ -280,6 +281,12 @@ class NotebookSource(Source):
         # depending on what we want we could either just concatenate the code
         # cells or use jupytext to keep metadata
         return self.primitive
+
+    def __repr__(self):
+        if self.loc is not None:
+            return "{}('{}')".format(type(self).__name__, self.loc)
+        else:
+            return "{}(loaded from string)".format(type(self).__name__)
 
     @property
     def variables(self):
