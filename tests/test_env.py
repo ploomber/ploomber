@@ -525,4 +525,3 @@ def test_error_when_loaded_obj_is_not_dict(content, type_, tmp_directory):
 
 
 # TODO: {{here}} allowed in _module
-# TODO: test invalid YAML shows error message

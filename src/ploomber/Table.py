@@ -1,6 +1,7 @@
 """
 A mapping object with text and HTML representations
 """
+from textwrap import TextWrapper
 from copy import deepcopy
 from pathlib import Path
 import tempfile
@@ -14,17 +15,23 @@ def _is_iterable(obj):
 
 class Row:
     """A class to represent a dictionary as a table row
-    """
 
+    Parameters
+    ----------
+    mapping
+        Maps column names to a single value
+
+    Examples
+    --------
+    >>> from ploomber.Table import Row
+    >>> row = Row({'a': 'some value', 'b': 'another value'})
+    >>> row # returns a table representation
+    """
     def __init__(self, mapping):
         if not isinstance(mapping, Mapping):
             raise TypeError('Rows must be initialized with mappings')
 
-        self._mapping = mapping
-        self._str = tabulate([self._mapping], headers='keys',
-                             tablefmt='simple')
-        self._html = tabulate([self._mapping], headers='keys',
-                              tablefmt='html')
+        self._set_mapping(mapping)
 
     def __str__(self):
         return self._str
@@ -51,19 +58,39 @@ class Row:
     def columns(self):
         return tuple(self._mapping.keys())
 
+    def _set_mapping(self, mapping):
+        self._mapping = mapping
+        self._str = tabulate([self._mapping],
+                             headers='keys',
+                             tablefmt='simple')
+        self._html = tabulate([self._mapping], headers='keys', tablefmt='html')
+
+    def _wrap_with(self, wrapper):
+        wrapped = {k: wrapper.fill(v) for k, v in self._mapping.items()}
+        self._set_mapping(wrapped)
+
 
 class Table:
     """A collection of rows
-    """
 
-    def __init__(self, rows):
+    Parameters
+    ----------
+    rows
+        List of Row objects
+    """
+    def __init__(self, rows, column_width=20):
+        if column_width:
+            wrapper = TextWrapper(width=column_width,
+                                  break_long_words=False,
+                                  break_on_hyphens=True)
+            for row in rows:
+                row._wrap_with(wrapper)
+
         # TODO: remove this, only use ._values
         self._rows = self.data_preprocessing(rows)
         self._values = self._transform(rows)
-        self._str = tabulate(self.values, headers='keys',
-                             tablefmt='simple')
-        self._html = tabulate(self.values, headers='keys',
-                              tablefmt='html')
+        self._str = tabulate(self.values, headers='keys', tablefmt='simple')
+        self._html = tabulate(self.values, headers='keys', tablefmt='html')
 
     def _transform(self, rows):
         """Convert [{key: value}, {key: value2}] to [{key: [value, value2]}]
@@ -133,12 +160,9 @@ class Table:
 
 
 class TaskReport(Row):
-
     @classmethod
     def with_data(cls, name, ran, elapsed):
-        return cls({'name': name,
-                    'Ran?': ran,
-                    'Elapsed (s)': elapsed})
+        return cls({'name': name, 'Ran?': ran, 'Elapsed (s)': elapsed})
 
     @classmethod
     def empty_with_name(cls, name):
@@ -148,7 +172,6 @@ class TaskReport(Row):
 class BuildReport(Table):
     """A Table that adds a columns for checking task elapsed time
     """
-
     def data_preprocessing(self, rows):
         """Create a build report from several tasks
         """
