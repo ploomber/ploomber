@@ -27,9 +27,11 @@ from ploomber.executors import Serial, Parallel
 # such function, to avoid comparing images
 
 # parametrize tests over these executors
-_executors = [Serial(build_in_subprocess=False),
-              Serial(build_in_subprocess=True),
-              Parallel()]
+_executors = [
+    Serial(build_in_subprocess=False),
+    Serial(build_in_subprocess=True),
+    Parallel()
+]
 
 
 class FailedTask(Exception):
@@ -135,28 +137,31 @@ def test_forced_build(executor, tmp_directory):
 @pytest.mark.parametrize('executor', _executors)
 def test_build_partially(tmp_directory, executor):
     dag = DAG(executor=executor)
-    PythonCallable(touch_root, File('1.txt'), dag, name=1)
-    PythonCallable(touch_root, File('2.txt'), dag, name=2)
+    PythonCallable(touch_root, File('a.txt'), dag, name='a')
+    PythonCallable(touch_root, File('b.txt'), dag, name='b')
 
-    report = dag.build_partially(2)
+    report = dag.build_partially('b')
 
     # check it only ran task 2
     assert report['Ran?'] == [True]
-    assert report['name'] == [2]
+    assert report['name'] == ['b']
 
     # task status in original dag are the same
-    assert (set(t.exec_status for t in dag.values())
-            == {TaskStatus.WaitingRender})
+    assert (set(t.exec_status
+                for t in dag.values()) == {TaskStatus.WaitingRender})
 
     dag.render()
 
     # new task status reflect partial execution
-    assert ({n: t.exec_status for n, t in dag.items()}
-            == {1: TaskStatus.WaitingExecution, 2: TaskStatus.Skipped})
+    assert ({n: t.exec_status
+             for n, t in dag.items()} == {
+                 'a': TaskStatus.WaitingExecution,
+                 'b': TaskStatus.Skipped
+             })
 
 
-@pytest.mark.parametrize('function_name', ['render', 'build', 'to_markup',
-                                           'plot'])
+@pytest.mark.parametrize('function_name',
+                         ['render', 'build', 'to_markup', 'plot'])
 def test_dag_functions_clear_up_product_status(function_name, tmp_directory):
     dag = DAG()
     t = PythonCallable(touch_root, File('1.txt'), dag, name=1)
@@ -204,10 +209,10 @@ def test_can_get_upstream_tasks():
     dag = DAG('dag')
 
     ta = ShellScript('echo "a" > {{product}}', File('a.txt'), dag, 'ta')
-    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}',
-                     File('b.txt'), dag, 'tb')
-    tc = ShellScript('cat {{upstream["tb"]}} > {{product}}',
-                     File('c.txt'), dag, 'tc')
+    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}', File('b.txt'),
+                     dag, 'tb')
+    tc = ShellScript('cat {{upstream["tb"]}} > {{product}}', File('c.txt'),
+                     dag, 'tc')
 
     ta >> tb >> tc
 
@@ -220,10 +225,10 @@ def test_can_access_sub_dag():
     sub_dag = DAG('sub_dag')
 
     ta = ShellScript('echo "a" > {{product}}', File('a.txt'), sub_dag, 'ta')
-    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}',
-                     File('b.txt'), sub_dag, 'tb')
-    tc = ShellScript('tcat {{upstream["tb"]}} > {{product}}',
-                     File('c.txt'), sub_dag, 'tc')
+    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}', File('b.txt'),
+                     sub_dag, 'tb')
+    tc = ShellScript('tcat {{upstream["tb"]}} > {{product}}', File('c.txt'),
+                     sub_dag, 'tc')
 
     ta >> tb >> tc
 
@@ -259,8 +264,8 @@ def test_can_access_tasks_inside_dag_using_getitem():
 def test_partial_build(tmp_directory):
     dag = DAG('dag')
 
-    ta = ShellScript('echo "hi" >> {{product}}',
-                     File(Path('a.txt')), dag, 'ta')
+    ta = ShellScript('echo "hi" >> {{product}}', File(Path('a.txt')), dag,
+                     'ta')
     code = 'cat {{upstream.first}} >> {{product}}'
     tb = ShellScript(code, File(Path('b.txt')), dag, 'tb')
     tc = ShellScript(code, File(Path('c.txt')), dag, 'tc')
@@ -296,8 +301,8 @@ def test_dag_task_status_life_cycle(executor, tmp_directory):
     t2 >> t3 >> t4
 
     assert dag._exec_status == DAGStatus.WaitingRender
-    assert {TaskStatus.WaitingRender} == set([t.exec_status
-                                              for t in dag.values()])
+    assert {TaskStatus.WaitingRender
+            } == set([t.exec_status for t in dag.values()])
 
     dag.render()
 
@@ -334,14 +339,18 @@ def test_dag_task_status_life_cycle(executor, tmp_directory):
 
 
 @pytest.mark.parametrize('executor', _executors)
-def test_executor_keeps_running_until_no_more_tasks_can_run(executor,
-                                                            tmp_directory):
+def test_executor_keeps_running_until_no_more_tasks_can_run(
+        executor, tmp_directory):
     dag = DAG(executor=executor)
     t_fail = PythonCallable(failing_root, File('t_fail'), dag, name='t_fail')
-    t_fail_downstream = PythonCallable(failing, File('t_fail_downstream'),
-                                       dag, name='t_fail_downstream')
-    t_touch_aborted = PythonCallable(touch, File('t_touch_aborted'),
-                                     dag, name='t_touch_aborted')
+    t_fail_downstream = PythonCallable(failing,
+                                       File('t_fail_downstream'),
+                                       dag,
+                                       name='t_fail_downstream')
+    t_touch_aborted = PythonCallable(touch,
+                                     File('t_touch_aborted'),
+                                     dag,
+                                     name='t_touch_aborted')
 
     t_fail >> t_fail_downstream >> t_touch_aborted
 
@@ -360,18 +369,31 @@ def test_executor_keeps_running_until_no_more_tasks_can_run(executor,
 def test_status_on_render_source_fail():
     def make():
         dag = DAG()
-        SQLDump('SELECT * FROM my_table', File('ok.txt'), dag, name='t1',
+        SQLDump('SELECT * FROM my_table',
+                File('ok.txt'),
+                dag,
+                name='t1',
                 client=object())
-        t2 = SQLDump('SELECT * FROM {{table}}', File('a_file.txt'), dag,
+        t2 = SQLDump('SELECT * FROM {{table}}',
+                     File('a_file.txt'),
+                     dag,
                      name='t2',
                      client=object())
-        t3 = SQLDump('SELECT * FROM another', File('another_file.txt'), dag,
+        t3 = SQLDump('SELECT * FROM another',
+                     File('another_file.txt'),
+                     dag,
                      name='t3',
                      client=object())
-        t4 = SQLDump('SELECT * FROM something', File('yet_another'), dag,
-                     name='t4', client=object())
-        SQLDump('SELECT * FROM my_table_2', File('ok_2'), dag,
-                name='t5', client=object())
+        t4 = SQLDump('SELECT * FROM something',
+                     File('yet_another'),
+                     dag,
+                     name='t4',
+                     client=object())
+        SQLDump('SELECT * FROM my_table_2',
+                File('ok_2'),
+                dag,
+                name='t5',
+                client=object())
         t2 >> t3 >> t4
         return dag
 
@@ -397,17 +419,31 @@ def test_status_on_render_source_fail():
 def test_status_on_product_source_fail():
     def make():
         dag = DAG()
-        SQLDump('SELECT * FROM my_table', File('ok.txt'), dag, name='t1',
+        SQLDump('SELECT * FROM my_table',
+                File('ok.txt'),
+                dag,
+                name='t1',
                 client=object())
-        t2 = SQLDump('SELECT * FROM my_table', File('{{unknown}}'), dag,
-                     name='t2', client=object())
-        t3 = SQLDump('SELECT * FROM another', File('another_file.txt'), dag,
+        t2 = SQLDump('SELECT * FROM my_table',
+                     File('{{unknown}}'),
+                     dag,
+                     name='t2',
+                     client=object())
+        t3 = SQLDump('SELECT * FROM another',
+                     File('another_file.txt'),
+                     dag,
                      name='t3',
                      client=object())
-        t4 = SQLDump('SELECT * FROM something', File('yet_another'), dag,
-                     name='t4', client=object())
-        SQLDump('SELECT * FROM my_table_2', File('ok_2'), dag,
-                name='t5', client=object())
+        t4 = SQLDump('SELECT * FROM something',
+                     File('yet_another'),
+                     dag,
+                     name='t4',
+                     client=object())
+        SQLDump('SELECT * FROM my_table_2',
+                File('ok_2'),
+                dag,
+                name='t5',
+                client=object())
         t2 >> t3 >> t4
         return dag
 
@@ -432,10 +468,16 @@ def test_status_on_product_source_fail():
 
 def test_tracebacks_are_shown_for_all_on_render_failing_tasks():
     dag = DAG()
-    SQLDump('SELECT * FROM {{one_table}}', File('one_table'), dag,
-            name='t1', client=object())
-    SQLDump('SELECT * FROM {{another_table}}', File('another_table'), dag,
-            name='t2',         client=object())
+    SQLDump('SELECT * FROM {{one_table}}',
+            File('one_table'),
+            dag,
+            name='t1',
+            client=object())
+    SQLDump('SELECT * FROM {{another_table}}',
+            File('another_table'),
+            dag,
+            name='t2',
+            client=object())
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
@@ -504,11 +546,10 @@ def test_warnings_are_shown(tmp_directory):
     # assert isinstance(record[1], WarningB)
 
 
-@pytest.mark.parametrize('executor',
-                         [Serial(build_in_subprocess=True,
-                                 catch_exceptions=False),
-                          Serial(build_in_subprocess=False,
-                                 catch_exceptions=False)])
+@pytest.mark.parametrize('executor', [
+    Serial(build_in_subprocess=True, catch_exceptions=False),
+    Serial(build_in_subprocess=False, catch_exceptions=False)
+])
 def test_exception_is_not_masked_if_not_catching_them(executor):
     dag = DAG(executor=executor)
     PythonCallable(failing_root, File('file.txt'), dag)
@@ -520,12 +561,10 @@ def test_exception_is_not_masked_if_not_catching_them(executor):
 # this feture only works for the serial executor
 _bools = (False, True)
 
-
-_serial = [Serial(build_in_subprocess=a,
-                  catch_exceptions=b,
-                  catch_warnings=c)
-           for a, b, c in
-           product(_bools, _bools, _bools)]
+_serial = [
+    Serial(build_in_subprocess=a, catch_exceptions=b, catch_warnings=c)
+    for a, b, c in product(_bools, _bools, _bools)
+]
 
 
 @pytest.mark.parametrize('executor', _serial)
@@ -541,6 +580,7 @@ def test_early_stop_from_on_finish(executor, tmp_directory):
     t = PythonCallable(touch_root, File('file.txt'), dag)
     t.on_finish = early_stop_on_finish
     assert dag.build() is None
+
 
 # test early stop when registered an on_failure hook, maybe don't run hook?
 
