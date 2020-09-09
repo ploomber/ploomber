@@ -92,7 +92,7 @@ class Table:
     def __init__(self, rows, column_width=20):
         if column_width:
             wrapper = TextWrapper(width=column_width,
-                                  break_long_words=False,
+                                  break_long_words=True,
                                   break_on_hyphens=True)
             for row in rows:
                 row._wrap_with(wrapper, exclude=self.EXCLUDE_WRAP)
