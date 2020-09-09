@@ -65,8 +65,13 @@ class Row:
                              tablefmt='simple')
         self._html = tabulate([self._mapping], headers='keys', tablefmt='html')
 
-    def _wrap_with(self, wrapper):
-        wrapped = {k: wrapper.fill(v) for k, v in self._mapping.items()}
+    def _wrap_with(self, wrapper, exclude=None):
+        exclude = exclude or []
+
+        wrapped = {
+            k: v if k in exclude else wrapper.fill(str(v))
+            for k, v in self._mapping.items()
+        }
         self._set_mapping(wrapped)
 
 
@@ -77,15 +82,22 @@ class Table:
     ----------
     rows
         List of Row objects
+    column_width
+        Maximum column width, if None, no trimming happens, otherwise values
+        are converted to string and trimmed
     """
+    # Columns to exclude from wrapping
+    EXCLUDE_WRAP = None
+
     def __init__(self, rows, column_width=20):
         if column_width:
             wrapper = TextWrapper(width=column_width,
                                   break_long_words=False,
                                   break_on_hyphens=True)
             for row in rows:
-                row._wrap_with(wrapper)
+                row._wrap_with(wrapper, exclude=self.EXCLUDE_WRAP)
 
+        self.column_width = column_width
         # TODO: remove this, only use ._values
         self._rows = self.data_preprocessing(rows)
         self._values = self._transform(rows)
@@ -119,7 +131,8 @@ class Table:
 
     def __getitem__(self, key):
         if _is_iterable(key):
-            return Table([row[key] for row in self._rows])
+            return Table([row[key] for row in self._rows],
+                         column_width=self.column_width)
         else:
             return self.values[key]
 
@@ -160,6 +173,8 @@ class Table:
 
 
 class TaskReport(Row):
+    EXCLUDE_WRAP = ['Ran?', 'Elapsed (s)']
+
     @classmethod
     def with_data(cls, name, ran, elapsed):
         return cls({'name': name, 'Ran?': ran, 'Elapsed (s)': elapsed})
@@ -172,6 +187,8 @@ class TaskReport(Row):
 class BuildReport(Table):
     """A Table that adds a columns for checking task elapsed time
     """
+    EXCLUDE_WRAP = ['Ran?', 'Elapsed (s)']
+
     def data_preprocessing(self, rows):
         """Create a build report from several tasks
         """

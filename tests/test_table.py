@@ -43,21 +43,21 @@ def test_empty_table():
 
 def test_select_col_in_table():
     r = Row({'a': 1, 'b': 2})
-    t = Table([r, r])
+    t = Table([r, r], column_width=None)
     assert t['a'] == [1, 1]
 
 
 def test_select_multiple_cols_in_table():
     d = {'a': 1, 'b': 2}
     r = Row(d)
-    t = Table([r, r])
+    t = Table([r, r], column_width=None)
     assert t[['a', 'b']] == [d, d]
 
 
 def test_table_values():
     d = {'a': 1, 'b': 2}
     r = Row(d)
-    t = Table([r, r])
+    t = Table([r, r], column_width=None)
     assert t.values == {'a': [1, 1], 'b': [2, 2]}
 
 
@@ -71,7 +71,7 @@ def test_create_build_report():
 def test_convert_to_pandas():
     d = {'a': 1, 'b': 2}
     r = Row(d)
-    t = Table([r, r])
+    t = Table([r, r], column_width=None)
     expected = pd.DataFrame({'a': [1, 1], 'b': [2, 2]})
     assert expected.equals(t.to_pandas())
 
@@ -79,5 +79,5 @@ def test_convert_to_pandas():
 def test_convert_to_dict():
     d = {'a': 1, 'b': 2}
     r = Row(d)
-    t = Table([r, r])
+    t = Table([r, r], column_width=None)
     assert t.to_dict() == {'a': [1, 1], 'b': [2, 2]}
