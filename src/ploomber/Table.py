@@ -82,7 +82,7 @@ class Table:
     # Columns to exclude from wrapping
     EXCLUDE_WRAP = None
 
-    def __init__(self, rows, column_width=20):
+    def __init__(self, rows, column_width='auto'):
         self.column_width = column_width
 
         if isinstance(rows, list):
