@@ -180,7 +180,10 @@ class BuildReport(Table):
     def data_preprocessing(self, values):
         """Create a build report from several tasks
         """
-        total = sum(values['Elapsed (s)'])
+        # in case the pipeline has no tasks...
+        elapsed = values.get('Elapsed (s)', [])
+
+        total = sum(elapsed)
 
         def compute_pct(elapsed, total):
             if not elapsed:
@@ -188,9 +191,7 @@ class BuildReport(Table):
             else:
                 return 100 * elapsed / total
 
-        values['Percentage'] = [
-            compute_pct(r, total) for r in values['Elapsed (s)']
-        ]
+        values['Percentage'] = [compute_pct(r, total) for r in elapsed]
 
         return values
 
