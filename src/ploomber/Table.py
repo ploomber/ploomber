@@ -84,13 +84,6 @@ class Table:
 
     def __init__(self, rows, column_width=20):
         self.column_width = column_width
-        self._set_rows(rows, self.column_width)
-
-    def _set_rows(self, rows, column_width):
-        if column_width == 'auto':
-            column_width = int(shutil.get_terminal_size().columns /
-                               # offset due to col separator
-                               len(rows[0].columns)) - 2
 
         if isinstance(rows, list):
             self._values = rows2columns(rows)
@@ -99,24 +92,28 @@ class Table:
 
         self._values = self.data_preprocessing(self._values)
 
-        if column_width:
-            wrapper = TextWrapper(width=column_width,
-                                  break_long_words=True,
-                                  break_on_hyphens=True)
-            self._values = wrap_mapping(self._values,
-                                        wrapper,
-                                        exclude=self.EXCLUDE_WRAP)
-
-        self._str = tabulate(self._values, headers='keys', tablefmt='simple')
-        self._html = tabulate(self._values, headers='keys', tablefmt='html')
+        self._str = None
+        self._html = None
 
     def __str__(self):
+        if self._str is None or self.column_width == 'auto':
+            values = wrap_table_values(self._values, self.column_width,
+                                       self.EXCLUDE_WRAP)
+
+            self._str = tabulate(values, headers='keys', tablefmt='simple')
+
         return self._str
 
     def __repr__(self):
         return str(self)
 
     def _repr_html_(self):
+        if self._html is None or self.column_width == 'auto':
+            values = wrap_table_values(self._values, self.column_width,
+                                       self.EXCLUDE_WRAP)
+
+            self._html = tabulate(values, headers='keys', tablefmt='html')
+
         return self._html
 
     def __getitem__(self, key):
@@ -213,6 +210,22 @@ def rows2columns(rows):
     columns = rows[0].columns
 
     return {col: [row[col] for row in rows] for col in columns}
+
+
+def wrap_table_values(values, column_width, exclude):
+    if column_width is None:
+        return values
+
+    if column_width == 'auto':
+        column_width = int(shutil.get_terminal_size().columns /
+                           # offset due to col separator
+                           len(values) - 2)
+
+    wrapper = TextWrapper(width=column_width,
+                          break_long_words=True,
+                          break_on_hyphens=True)
+
+    return wrap_mapping(values, wrapper, exclude=exclude)
 
 
 def wrap_mapping(mapping, wrapper, exclude=None):

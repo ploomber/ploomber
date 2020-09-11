@@ -67,12 +67,16 @@ def test_table_wrap():
 
 def test_table_auto_size(monkeypatch):
     TerminalSize = namedtuple('TerminalSize', ['columns'])
-    terminal_size = TerminalSize(80)
-    monkeypatch.setattr(shutil, 'get_terminal_size', lambda: terminal_size)
+    monkeypatch.setattr(shutil, 'get_terminal_size', lambda: TerminalSize(80))
 
     r = Row({'a': '1' * 60, 'b': '1' * 60})
     table = Table([r, r], column_width='auto')
+
     assert max([len(line) for line in str(table).splitlines()]) == 78
+
+    # simulate resize
+    monkeypatch.setattr(shutil, 'get_terminal_size', lambda: TerminalSize(120))
+    assert max([len(line) for line in str(table).splitlines()]) == 118
 
 
 def test_select_multiple_cols_in_row():
