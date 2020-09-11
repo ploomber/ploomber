@@ -72,11 +72,11 @@ def test_table_auto_size(monkeypatch):
     r = Row({'a': '1' * 60, 'b': '1' * 60})
     table = Table([r, r], column_width='auto')
 
-    assert max([len(line) for line in str(table).splitlines()]) == 78
+    assert max([len(line) for line in str(table).splitlines()]) == 80
 
     # simulate resize
     monkeypatch.setattr(shutil, 'get_terminal_size', lambda: TerminalSize(120))
-    assert max([len(line) for line in str(table).splitlines()]) == 118
+    assert max([len(line) for line in str(table).splitlines()]) == 120
 
 
 def test_select_multiple_cols_in_row():

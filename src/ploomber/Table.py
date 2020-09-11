@@ -218,9 +218,10 @@ def wrap_table_values(values, column_width, exclude):
         return values
 
     if column_width == 'auto':
-        column_width = int(shutil.get_terminal_size().columns /
-                           # offset due to col separator
-                           len(values) - 2)
+        n_cols = len(values)
+        # space available: total space - offset (size 2) between columns
+        width = shutil.get_terminal_size().columns - (n_cols - 1) * 2
+        column_width = int(width / n_cols)
 
     wrapper = TextWrapper(width=column_width,
                           break_long_words=True,
