@@ -66,15 +66,6 @@ class Row:
                              tablefmt='simple')
         self._html = tabulate([self._mapping], headers='keys', tablefmt='html')
 
-    def _wrap_with(self, wrapper, exclude=None):
-        exclude = exclude or []
-
-        wrapped = {
-            k: v if k in exclude else wrapper.fill(str(v))
-            for k, v in self._mapping.items()
-        }
-        self._set_mapping(wrapped)
-
 
 class Table:
     """A collection of rows
@@ -101,34 +92,23 @@ class Table:
                                # offset due to col separator
                                len(rows[0].columns)) - 2
 
+        if isinstance(rows, list):
+            self._values = rows2columns(rows)
+        else:
+            self._values = rows
+
+        self._values = self.data_preprocessing(self._values)
+
         if column_width:
             wrapper = TextWrapper(width=column_width,
                                   break_long_words=True,
                                   break_on_hyphens=True)
-            for row in rows:
-                row._wrap_with(wrapper, exclude=self.EXCLUDE_WRAP)
+            self._values = wrap_mapping(self._values,
+                                        wrapper,
+                                        exclude=self.EXCLUDE_WRAP)
 
-        # TODO: remove this, only use ._values
-        self._rows = self.data_preprocessing(rows)
-        self._values = self._transform(rows)
-        self._str = tabulate(self.values, headers='keys', tablefmt='simple')
-        self._html = tabulate(self.values, headers='keys', tablefmt='html')
-
-    def _transform(self, rows):
-        """Convert [{key: value}, {key: value2}] to [{key: [value, value2]}]
-        """
-        if not len(rows):
-            return {}
-
-        cols_combinations = set(tuple(sorted(row.columns)) for row in rows)
-
-        if len(cols_combinations) > 1:
-            raise KeyError('All rows should have the same columns, got: '
-                           '{}'.format(cols_combinations))
-
-        columns = rows[0].columns
-
-        return {col: [row[col] for row in rows] for col in columns}
+        self._str = tabulate(self._values, headers='keys', tablefmt='simple')
+        self._html = tabulate(self._values, headers='keys', tablefmt='html')
 
     def __str__(self):
         return self._str
@@ -141,7 +121,8 @@ class Table:
 
     def __getitem__(self, key):
         if _is_iterable(key):
-            return Table([row[key] for row in self._rows],
+            return Table({k: v
+                          for k, v in self.values.items() if k in key},
                          column_width=self.column_width)
         else:
             return self.values[key]
@@ -154,10 +135,10 @@ class Table:
         return len(self._values.keys())
 
     def __eq__(self, other):
-        return self._rows == other
+        return self.values == other
 
-    def data_preprocessing(self, data):
-        return data
+    def data_preprocessing(self, values):
+        return values
 
     def save(self, path=None):
         if path is None:
@@ -197,12 +178,12 @@ class TaskReport(Row):
 class BuildReport(Table):
     """A Table that adds a columns for checking task elapsed time
     """
-    EXCLUDE_WRAP = ['Ran?', 'Elapsed (s)']
+    EXCLUDE_WRAP = ['Ran?', 'Elapsed (s)', 'Percentage']
 
-    def data_preprocessing(self, rows):
+    def data_preprocessing(self, values):
         """Create a build report from several tasks
         """
-        total = sum([row['Elapsed (s)'] or 0 for row in rows])
+        total = sum(values['Elapsed (s)'])
 
         def compute_pct(elapsed, total):
             if not elapsed:
@@ -210,7 +191,43 @@ class BuildReport(Table):
             else:
                 return 100 * elapsed / total
 
-        for row in rows:
-            row['Percentage'] = compute_pct(row['Elapsed (s)'], total)
+        values['Percentage'] = [
+            compute_pct(r, total) for r in values['Elapsed (s)']
+        ]
 
-        return rows
+        return values
+
+
+def rows2columns(rows):
+    """Convert [{key: value}, {key: value2}] to [{key: [value, value2]}]
+    """
+    if not len(rows):
+        return {}
+
+    cols_combinations = set(tuple(sorted(row.columns)) for row in rows)
+
+    if len(cols_combinations) > 1:
+        raise KeyError('All rows should have the same columns, got: '
+                       '{}'.format(cols_combinations))
+
+    columns = rows[0].columns
+
+    return {col: [row[col] for row in rows] for col in columns}
+
+
+def wrap_mapping(mapping, wrapper, exclude=None):
+    exclude = exclude or []
+
+    wrapped = {
+        k: v if k in exclude else wrap_value(v, wrapper)
+        for k, v in mapping.items()
+    }
+
+    return wrapped
+
+
+def wrap_value(value, wrapper):
+    if isinstance(value, Iterable) and not isinstance(value, str):
+        return [wrapper.fill(str(v)) for v in value]
+    else:
+        return wrapper.fill(str(value))
