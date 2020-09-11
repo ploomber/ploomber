@@ -349,7 +349,8 @@ def test_error_with_unknown_language(nb):
     assert not is_python(nb)
 
 
-nb_case_1 = """
+nb_case_1 = """# This is a markdown docstring
+
 # + tags=["parameters"]
 product = {'a': 'path/a.csv'}
 upstream = {'some_key': 'some_value'}
@@ -357,7 +358,8 @@ upstream = {'some_key': 'some_value'}
     'a': 'path/a.csv'
 }
 
-nb_case_2 = """
+nb_case_2 = """'''This is a string docstring'''
+
 # + tags=["parameters"]
 upstream = {'a': None, 'b': None}
 product = {'a': 'path/a.csv'}
@@ -402,3 +404,13 @@ def test_and_repr_from_path(tmp_directory):
     Path('nb.py').write_text(notebook_ab)
     source = NotebookSource(path)
     assert repr(source) == "NotebookSource('{}')".format(path)
+
+
+@pytest.mark.parametrize('code, docstring', [
+    [nb_case_1[0], 'This is a markdown docstring'],
+    [nb_case_2[0], 'This is a string docstring'],
+    [nb_case_3[0], ''],
+])
+def test_parse_docstring(code, docstring):
+    source = NotebookSource(code, ext_in='py')
+    assert source.doc == docstring

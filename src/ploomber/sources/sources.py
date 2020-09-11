@@ -1,6 +1,5 @@
 import abc
 import warnings
-import re
 
 from ploomber.products import Product
 from ploomber.placeholders.Placeholder import Placeholder

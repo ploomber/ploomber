@@ -41,6 +41,7 @@ from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources import Source
 from ploomber.static_analysis.extractors import extractor_class_for_language
+from ploomber.sources import docstring
 
 
 class NotebookSource(Source):
@@ -251,9 +252,11 @@ class NotebookSource(Source):
 
     @property
     def doc(self):
-        # TODO: look for a cell tagged "docstring?" or maybe look for it in
-        # the first cell
-        return None
+        """
+        Returns notebook docstring parsed either from a triple quoted string
+        in the top cell or a top markdown markdown cell
+        """
+        return docstring.extract_from_nb(self._nb_obj)
 
     @property
     def loc(self):
