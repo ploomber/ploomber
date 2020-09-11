@@ -494,5 +494,34 @@ def test_replace_value_casts_if_possible():
     assert env.c == 2.2
 
 
+def test_attribute_error_message():
+    env = EnvDict({'a': 1})
+
+    with pytest.raises(AttributeError) as excinfo_attr:
+        env.aa
+
+    with pytest.raises(KeyError) as excinfo_key:
+        env['aa']
+
+    assert str(excinfo_attr.value
+               ) == "EnvDict({'a': 1}) object has no atttribute 'aa'"
+    assert str(
+        excinfo_key.value) == '"EnvDict({\'a\': 1}) object has no key \'aa\'"'
+
+
+@pytest.mark.parametrize('content, type_',
+                         [['a', 'str'], ['- a', 'list'], ['', 'NoneType']])
+def test_error_when_loaded_obj_is_not_dict(content, type_, tmp_directory):
+    path = Path(tmp_directory, 'file.yaml')
+    path.write_text(content)
+
+    with pytest.raises(ValueError) as excinfo:
+        EnvDict('file.yaml')
+
+    expected = ("Expected object loaded from 'file.yaml' to be "
+                "a dict but got '{}' instead, "
+                "verify the content").format(type_)
+    assert str(excinfo.value) == expected
+
+
 # TODO: {{here}} allowed in _module
-# TODO: test invalid YAML shows error message

@@ -216,7 +216,7 @@ class DAGSpec(MutableMapping):
     def from_directory(cls, path_to_dir):
         """Construct a DAGSpec from a directory
 
-        Look for scripts (``.py``, ``.R`` or ``.ipynb``) in the directory and
+        Looks for scripts (``.py``, ``.R`` or ``.ipynb``) in the directory and
         interpret them as task sources, file names are assigned as task names
         (without extension). The spec is generated with the default values in
         the "meta" section.

@@ -1,7 +1,9 @@
 """
 A mapping object with text and HTML representations
 """
+from textwrap import TextWrapper
 from copy import deepcopy
+import shutil
 from pathlib import Path
 import tempfile
 from collections.abc import Mapping, Iterable
@@ -14,17 +16,23 @@ def _is_iterable(obj):
 
 class Row:
     """A class to represent a dictionary as a table row
-    """
 
+    Parameters
+    ----------
+    mapping
+        Maps column names to a single value
+
+    Examples
+    --------
+    >>> from ploomber.Table import Row
+    >>> row = Row({'a': 'some value', 'b': 'another value'})
+    >>> row # returns a table representation
+    """
     def __init__(self, mapping):
         if not isinstance(mapping, Mapping):
             raise TypeError('Rows must be initialized with mappings')
 
-        self._mapping = mapping
-        self._str = tabulate([self._mapping], headers='keys',
-                             tablefmt='simple')
-        self._html = tabulate([self._mapping], headers='keys',
-                              tablefmt='html')
+        self._set_mapping(mapping)
 
     def __str__(self):
         return self._str
@@ -51,48 +59,68 @@ class Row:
     def columns(self):
         return tuple(self._mapping.keys())
 
+    def _set_mapping(self, mapping):
+        self._mapping = mapping
+        self._str = tabulate([self._mapping],
+                             headers='keys',
+                             tablefmt='simple')
+        self._html = tabulate([self._mapping], headers='keys', tablefmt='html')
+
 
 class Table:
     """A collection of rows
+
+    Parameters
+    ----------
+    rows
+        List of Row objects
+    column_width
+        Maximum column width, if None, no trimming happens, otherwise values
+        are converted to string and trimmed. If 'auto' width is determined
+        based on terminal sized (using ``shutil.get_terminal_size()``)
     """
+    # Columns to exclude from wrapping
+    EXCLUDE_WRAP = None
 
-    def __init__(self, rows):
-        # TODO: remove this, only use ._values
-        self._rows = self.data_preprocessing(rows)
-        self._values = self._transform(rows)
-        self._str = tabulate(self.values, headers='keys',
-                             tablefmt='simple')
-        self._html = tabulate(self.values, headers='keys',
-                              tablefmt='html')
+    def __init__(self, rows, column_width='auto'):
+        self.column_width = column_width
 
-    def _transform(self, rows):
-        """Convert [{key: value}, {key: value2}] to [{key: [value, value2]}]
-        """
-        if not len(rows):
-            return {}
+        if isinstance(rows, list):
+            self._values = rows2columns(rows)
+        else:
+            self._values = rows
 
-        cols_combinations = set(tuple(sorted(row.columns)) for row in rows)
+        self._values = self.data_preprocessing(self._values)
 
-        if len(cols_combinations) > 1:
-            raise KeyError('All rows should have the same columns, got: '
-                           '{}'.format(cols_combinations))
-
-        columns = rows[0].columns
-
-        return {col: [row[col] for row in rows] for col in columns}
+        self._str = None
+        self._html = None
 
     def __str__(self):
+        if self._str is None or self.column_width == 'auto':
+            values = wrap_table_values(self._values, self.column_width,
+                                       self.EXCLUDE_WRAP)
+
+            self._str = tabulate(values, headers='keys', tablefmt='simple')
+
         return self._str
 
     def __repr__(self):
         return str(self)
 
     def _repr_html_(self):
+        if self._html is None or self.column_width == 'auto':
+            values = wrap_table_values(self._values, self.column_width,
+                                       self.EXCLUDE_WRAP)
+
+            self._html = tabulate(values, headers='keys', tablefmt='html')
+
         return self._html
 
     def __getitem__(self, key):
         if _is_iterable(key):
-            return Table([row[key] for row in self._rows])
+            return Table({k: v
+                          for k, v in self.values.items() if k in key},
+                         column_width=self.column_width)
         else:
             return self.values[key]
 
@@ -104,10 +132,10 @@ class Table:
         return len(self._values.keys())
 
     def __eq__(self, other):
-        return self._rows == other
+        return self.values == other
 
-    def data_preprocessing(self, data):
-        return data
+    def data_preprocessing(self, values):
+        return values
 
     def save(self, path=None):
         if path is None:
@@ -133,12 +161,11 @@ class Table:
 
 
 class TaskReport(Row):
+    EXCLUDE_WRAP = ['Ran?', 'Elapsed (s)']
 
     @classmethod
     def with_data(cls, name, ran, elapsed):
-        return cls({'name': name,
-                    'Ran?': ran,
-                    'Elapsed (s)': elapsed})
+        return cls({'name': name, 'Ran?': ran, 'Elapsed (s)': elapsed})
 
     @classmethod
     def empty_with_name(cls, name):
@@ -148,11 +175,15 @@ class TaskReport(Row):
 class BuildReport(Table):
     """A Table that adds a columns for checking task elapsed time
     """
+    EXCLUDE_WRAP = ['Ran?', 'Elapsed (s)', 'Percentage']
 
-    def data_preprocessing(self, rows):
+    def data_preprocessing(self, values):
         """Create a build report from several tasks
         """
-        total = sum([row['Elapsed (s)'] or 0 for row in rows])
+        # in case the pipeline has no tasks...
+        elapsed = values.get('Elapsed (s)', [])
+
+        total = sum(elapsed)
 
         def compute_pct(elapsed, total):
             if not elapsed:
@@ -160,7 +191,58 @@ class BuildReport(Table):
             else:
                 return 100 * elapsed / total
 
-        for row in rows:
-            row['Percentage'] = compute_pct(row['Elapsed (s)'], total)
+        values['Percentage'] = [compute_pct(r, total) for r in elapsed]
 
-        return rows
+        return values
+
+
+def rows2columns(rows):
+    """Convert [{key: value}, {key: value2}] to [{key: [value, value2]}]
+    """
+    if not len(rows):
+        return {}
+
+    cols_combinations = set(tuple(sorted(row.columns)) for row in rows)
+
+    if len(cols_combinations) > 1:
+        raise KeyError('All rows should have the same columns, got: '
+                       '{}'.format(cols_combinations))
+
+    columns = rows[0].columns
+
+    return {col: [row[col] for row in rows] for col in columns}
+
+
+def wrap_table_values(values, column_width, exclude):
+    if column_width is None:
+        return values
+
+    if column_width == 'auto':
+        n_cols = len(values)
+        # space available: total space - offset (size 2) between columns
+        width = shutil.get_terminal_size().columns - (n_cols - 1) * 2
+        column_width = int(width / n_cols)
+
+    wrapper = TextWrapper(width=column_width,
+                          break_long_words=True,
+                          break_on_hyphens=True)
+
+    return wrap_mapping(values, wrapper, exclude=exclude)
+
+
+def wrap_mapping(mapping, wrapper, exclude=None):
+    exclude = exclude or []
+
+    wrapped = {
+        k: v if k in exclude else wrap_value(v, wrapper)
+        for k, v in mapping.items()
+    }
+
+    return wrapped
+
+
+def wrap_value(value, wrapper):
+    if isinstance(value, Iterable) and not isinstance(value, str):
+        return [wrapper.fill(str(v)) for v in value]
+    else:
+        return wrapper.fill(str(value))

@@ -245,6 +245,9 @@ def test_python_callable_properties(path_to_test_pkg):
     assert source.name == 'simple_w_docstring'
     assert file == functions.__file__
     assert line == '21'
+    assert PythonCallableSource.__name__ in repr(source)
+    assert functions.simple_w_docstring.__name__ in repr(source)
+    assert source.loc in repr(source)
 
 
 @pytest.mark.parametrize('source, expected', [

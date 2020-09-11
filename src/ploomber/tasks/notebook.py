@@ -2,6 +2,7 @@ import pdb
 import tempfile
 import subprocess
 from pathlib import Path
+from nbconvert import ExporterNameError
 
 try:
     import papermill as pm
@@ -94,7 +95,10 @@ class NotebookConverter:
         else:
             try:
                 exporter = nbconvert.get_exporter(exporter_name)
-            except ValueError:
+            # nbconvert 5.6.1 raises ValueError, beginning in version 6,
+            # it raises ExporterNameError. However the exception is defined
+            # since 5.6.1 so we can safely import it
+            except (ValueError, ExporterNameError):
                 raise ValueError('Could not determine nbconvert exporter '
                                  'with nane "{}" '
                                  'either specify in the path extension '

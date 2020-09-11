@@ -59,9 +59,20 @@ class EnvDict(Mapping):
         if key in self:
             return self[key]
         else:
-            raise error
+            raise AttributeError("{} object has no atttribute '{}'".format(
+                repr(self), key))
 
     def __getitem__(self, key):
+        try:
+            return self._getitem(key)
+        except KeyError as e:
+            # custom error will be displayed around quotes, but it's fine.
+            # this is due to the KeyError.__str__ implementation
+            msg = "{} object has no key '{}'".format(repr(self), key)
+            e.args = (msg, )
+            raise
+
+    def _getitem(self, key):
         if key in self.preprocessed:
             return FrozenJSON(self.preprocessed[key])
         else:
@@ -197,6 +208,16 @@ def load_from_source(source):
         except Exception as e:
             raise type(e)('yaml.load failed to parse your YAML file '
                           'fix syntax errors and try again') from e
+        finally:
+            # yaml.load returns None for empty files and str if file just
+            # contains a string - those aren't valid for our use case, raise
+            # an error
+            if not isinstance(raw, Mapping):
+                raise ValueError("Expected object loaded from '{}' to be "
+                                 "a dict but got '{}' instead, "
+                                 "verify the content".format(
+                                     source,
+                                     type(raw).__name__))
 
     path = Path(source).resolve()
 

@@ -1,6 +1,5 @@
 import abc
 import warnings
-import re
 
 from ploomber.products import Product
 from ploomber.placeholders.Placeholder import Placeholder
@@ -8,6 +7,7 @@ from ploomber.exceptions import SourceInitializationError
 from ploomber.sql import infer
 from ploomber import static_analysis
 from ploomber.static_analysis.string import StringExtractor
+from ploomber.sources import docstring
 
 
 class Source(abc.ABC):
@@ -201,9 +201,8 @@ class PlaceholderSource(Source):
 class SQLSourceMixin:
     @property
     def doc(self):
-        regex = r'^\s*\/\*([\w\W]+)\*\/[\w\W]*'
-        match = re.match(regex, self._placeholder.best_str(shorten=False))
-        return '' if match is None else match.group(1)
+        return docstring.extract_from_sql(
+            self._placeholder.best_str(shorten=False))
 
     @property
     def extension(self):
