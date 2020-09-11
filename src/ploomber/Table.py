@@ -3,6 +3,7 @@ A mapping object with text and HTML representations
 """
 from textwrap import TextWrapper
 from copy import deepcopy
+import shutil
 from pathlib import Path
 import tempfile
 from collections.abc import Mapping, Iterable
@@ -84,12 +85,22 @@ class Table:
         List of Row objects
     column_width
         Maximum column width, if None, no trimming happens, otherwise values
-        are converted to string and trimmed
+        are converted to string and trimmed. If 'auto' width is determined
+        based on terminal sized (using ``shutil.get_terminal_size()``)
     """
     # Columns to exclude from wrapping
     EXCLUDE_WRAP = None
 
     def __init__(self, rows, column_width=20):
+        self.column_width = column_width
+        self._set_rows(rows, self.column_width)
+
+    def _set_rows(self, rows, column_width):
+        if column_width == 'auto':
+            column_width = int(shutil.get_terminal_size().columns /
+                               # offset due to col separator
+                               len(rows[0].columns)) - 2
+
         if column_width:
             wrapper = TextWrapper(width=column_width,
                                   break_long_words=True,
@@ -97,7 +108,6 @@ class Table:
             for row in rows:
                 row._wrap_with(wrapper, exclude=self.EXCLUDE_WRAP)
 
-        self.column_width = column_width
         # TODO: remove this, only use ._values
         self._rows = self.data_preprocessing(rows)
         self._values = self._transform(rows)

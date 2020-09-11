@@ -1,4 +1,7 @@
+import shutil
 from textwrap import TextWrapper
+from collections import namedtuple
+
 import pandas as pd
 from ploomber.Table import Row, Table, BuildReport
 
@@ -30,6 +33,16 @@ def test_table_wrap():
     table = Table([r, r], column_width=3)
     # Max expected length: 3 (col a) + 2 (whitespace) + 3 (col b) = 8
     assert max([len(line) for line in str(table).splitlines()]) == 8
+
+
+def test_table_auto_size(monkeypatch):
+    TerminalSize = namedtuple('TerminalSize', ['columns'])
+    terminal_size = TerminalSize(80)
+    monkeypatch.setattr(shutil, 'get_terminal_size', lambda: terminal_size)
+
+    r = Row({'a': '1' * 60, 'b': '1' * 60})
+    table = Table([r, r], column_width='auto')
+    assert max([len(line) for line in str(table).splitlines()]) == 78
 
 
 def test_select_multiple_cols_in_row():
