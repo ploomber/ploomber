@@ -21,7 +21,7 @@ def test_auto_determine_column_width(space, sizes, excluded, excluded_expected,
     excluded_out, width_out = auto_determine_column_width(
         values, excluded, space)
 
-    assert excluded_out == excluded_expected
+    assert sorted(excluded_out) == sorted(excluded_expected)
     assert width_out == width_expected
 
 
