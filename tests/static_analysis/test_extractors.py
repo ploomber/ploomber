@@ -79,6 +79,10 @@ def test_error_when_sql_product_is_invalid(code, class_):
         "upstream = ['a', 'b', 'c']\n\nproduct={'d': 'path/d.csv'}"),
     PythonNotebookExtractor(
         "product={'d': 'path/d.csv'}\n\nupstream = ['a', 'b', 'c']\n\n"),
+    PythonNotebookExtractor(
+        "upstream = ['a', 'b', 'c']\nproduct={'d': 'path/d.csv'}\nfn(x)\n"),
+    PythonNotebookExtractor(
+        "upstream = ['a', 'b', 'c']\nproduct={'d': 'path/d.csv'}\nx\n"),
     RNotebookExtractor(
         "upstream <- list('a', 'b', 'c')\n\nproduct <- list(d='path/d.csv')"),
     RNotebookExtractor(

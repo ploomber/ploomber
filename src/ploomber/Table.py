@@ -214,20 +214,71 @@ def rows2columns(rows):
 
 
 def wrap_table_values(values, column_width, exclude):
+    exclude = exclude or []
+
     if column_width is None:
         return values
 
     if column_width == 'auto':
-        n_cols = len(values)
-        # space available: total space - offset (size 2) between columns
-        width = shutil.get_terminal_size().columns - (n_cols - 1) * 2
-        column_width = int(width / n_cols)
+        width_available = shutil.get_terminal_size().columns
+        (exclude,
+         column_width) = auto_determine_column_width(values, exclude,
+                                                     width_available)
 
     wrapper = TextWrapper(width=column_width,
                           break_long_words=True,
                           break_on_hyphens=True)
 
     return wrap_mapping(values, wrapper, exclude=exclude)
+
+
+def auto_determine_column_width(values, exclude, width_available):
+    values_max_width = {
+        k: max([len(str(value)) for value in v] + [len(k)])
+        for k, v in values.items()
+    }
+
+    col_widths = {}
+
+    # excluded columns should be left as is
+    for k in exclude:
+        # edge case: key might exist if the dag is empty and the excluded
+        # column is addded in the Tabble.data_preprocessing, this happens
+        # with the Ran? column in a build report
+        if k in values_max_width:
+            col_widths[k] = values_max_width.pop(k)
+
+    def split_evenly(values, used):
+        n_cols = len(values)
+
+        if n_cols:
+            # space available: total space - offset (size 2) between columns
+            width = width_available - (n_cols - 1) * 2 - used
+            return int(width / n_cols)
+        else:
+            return 0
+
+    def space_required(values):
+        n_cols = len(values)
+        return sum(values.values()) + n_cols * 2
+
+    # split remaining space evenly in the rest of the cols
+    column_width = split_evenly(values_max_width, space_required(col_widths))
+
+    # if any column requires less space than that, just give that max width
+    short = [k for k, v in values_max_width.items() if v <= column_width]
+    for k in short:
+        col_widths[k] = values_max_width.pop(k)
+
+    # TODO: we could keep running the greedy algorithm to maximize space used
+    # split the rest of the space evenly
+    if values_max_width:
+        column_width = split_evenly(values_max_width,
+                                    space_required(col_widths))
+    else:
+        column_width = 0
+
+    return list(col_widths), column_width
 
 
 def wrap_mapping(mapping, wrapper, exclude=None):

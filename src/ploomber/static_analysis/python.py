@@ -44,11 +44,12 @@ def extract_variable(code_str, name):
             elif ch.type == 'expr_stmt':
                 stmt = ch
 
-            defined = stmt.get_defined_names()
+            if hasattr(stmt, 'get_defined_names'):
+                defined = stmt.get_defined_names()
 
-            if len(defined) == 1 and defined[0].value == name:
-                variable_found = True
-                value = eval(stmt.children[2].get_code())
+                if len(defined) == 1 and defined[0].value == name:
+                    variable_found = True
+                    value = eval(stmt.children[2].get_code())
 
     return variable_found, value
 

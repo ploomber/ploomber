@@ -1,3 +1,4 @@
+import string
 import shutil
 from textwrap import TextWrapper
 from collections import namedtuple
@@ -5,7 +6,23 @@ from collections import namedtuple
 import pytest
 import pandas as pd
 from ploomber.Table import (Row, Table, BuildReport, rows2columns, wrap_value,
-                            wrap_mapping)
+                            wrap_mapping, auto_determine_column_width)
+
+
+@pytest.mark.parametrize(
+    'space, sizes, excluded, excluded_expected, width_expected', [
+        [100, [2, 3, 5], [], ['a', 'b', 'c'], 0],
+        [15, [2, 3, 10], ['a'], ['a', 'b'], 6],
+    ])
+def test_auto_determine_column_width(space, sizes, excluded, excluded_expected,
+                                     width_expected):
+    values = {k: [k * s] for k, s in zip(string.ascii_letters, sizes)}
+
+    excluded_out, width_out = auto_determine_column_width(
+        values, excluded, space)
+
+    assert sorted(excluded_out) == sorted(excluded_expected)
+    assert width_out == width_expected
 
 
 @pytest.mark.parametrize('value, wrapped', [
