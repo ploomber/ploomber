@@ -294,8 +294,9 @@ class DAG(collections.abc.Mapping):
                     continue
 
                 if show_progress:
-                    tasks.set_description('Rendering DAG "{}"'.format(
-                        self.name))
+                    tasks.set_description(
+                        'Rendering DAG "{}"'.format(self.name)
+                        if self.name != 'No name' else 'Rendering DAG')
 
                 with warnings.catch_warnings(record=True) as warnings_current:
                     try:
