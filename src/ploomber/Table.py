@@ -234,7 +234,7 @@ def wrap_table_values(values, column_width, exclude):
 
 def auto_determine_column_width(values, exclude, width_available):
     values_max_width = {
-        k: max(max([len(str(value)) for value in v]), len(k))
+        k: max([len(str(value)) for value in v] + [len(k)])
         for k, v in values.items()
     }
 
@@ -242,13 +242,21 @@ def auto_determine_column_width(values, exclude, width_available):
 
     # excluded columns should be left as is
     for k in exclude:
-        col_widths[k] = values_max_width.pop(k)
+        # edge case: key might exist if the dag is empty and the excluded
+        # column is addded in the Tabble.data_preprocessing, this happens
+        # with the Ran? column in a build report
+        if k in values_max_width:
+            col_widths[k] = values_max_width.pop(k)
 
     def split_evenly(values, used):
         n_cols = len(values)
-        # space available: total space - offset (size 2) between columns
-        width = width_available - (n_cols - 1) * 2 - used
-        return int(width / n_cols)
+
+        if n_cols:
+            # space available: total space - offset (size 2) between columns
+            width = width_available - (n_cols - 1) * 2 - used
+            return int(width / n_cols)
+        else:
+            return 0
 
     def space_required(values):
         n_cols = len(values)
