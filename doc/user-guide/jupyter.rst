@@ -6,12 +6,42 @@ process that replaces the original upstream variable (which only contains
 names for dependencies) with a dictionary that maps these names to output
 files, so you can use it as inputs in the current task.
 
-This means your code cannot be executed *as is*. To enable interactive
-development, Ploomber integrates with the Jupyter notebook. If you open
-a script which is a script in a pipeline, it will render as a Jupyter notebook
-and the cell injection process will happen automatically (this cell is not
-saved, though). The Jupyter extension is configured when you install Ploomber,
-you don't have to setup anything.
+For example if a Python script (``task.py``) declares the following dependency:
+
+.. code-block:: python
+    :class: text-editor
+    :name: task-py
+
+    upstream = ['another-task']
+
+
+And ``another-task`` has the following product:
+
+.. code-block:: python
+    :class: text-editor
+    :name: another-task-py
+
+    product = {'nb': 'output/another-task.ipynb',
+               'data': 'output/another-task.parquet'}
+
+
+The following cell will be injected (below the original cell that defines
+``upstream`` as a list) in ``task.py`` before execution:
+
+.. code-block:: python
+    :class: text-editor
+
+    upstream = {'another_task': {'nb': 'output/another-task.ipynb',
+                                 'data': 'output/another-task.parquet'}}
+
+This means your code cannot be executed *as is*, because it needs the injected
+cell for you to know the location of input files. To enable interactive
+development, Ploomber integrates with the Jupyter notebook app.
+
+If you open a script which a task in a pipeline, it will render as a
+Jupyter notebook and the cell injection process will happen automatically
+(this cell is just temporary and not saved). The Jupyter extension is
+configured when you install Ploomber, you don't have to setup anything.
 
 
 Pipeline loading
@@ -20,12 +50,12 @@ Pipeline loading
 When you start the Jupyter app (via the ``jupyter notebook`` command), the
 extension looks for a ``pipeline.yaml`` file in the current directory and
 parent directories. If it finds one, it will load the pipeline and inject
-the appropriate cell if the file is task in the loaded pipeline.
+the appropriate cell if the current file is task in the loaded pipeline.
 
 If your are not using a ``pipeline.yaml`` file, but using just a directory with
-scripts, you can override this behavior by setting the ``ENTRY_POINT``
-environment variable. For example, to load a pipeline from the current
-directory:
+scripts, you can override the default behavior by setting an ``ENTRY_POINT``
+environment variable. For example, to load a pipeline from scripts in the
+current directory:
 
 .. code-block:: console
 
