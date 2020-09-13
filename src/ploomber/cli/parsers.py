@@ -313,6 +313,9 @@ def _process_entry_point(parser, entry_point, static_args):
     return dag, args
 
 
+# TODO: the next two functions are only used to override default behavior
+# when using the jupyter extension, but they have to be integrated with the CLI
+# to provide consistent behavior
 def find_entry_point_type(entry_point):
     """
 
