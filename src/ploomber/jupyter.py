@@ -11,6 +11,7 @@ from jupytext.contentsmanager import TextFileContentsManager
 from ploomber.sources.NotebookSource import (_cleanup_rendered_nb, inject_cell)
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.cli import parsers
 
 
 @contextlib.contextmanager
@@ -74,22 +75,27 @@ class PloomberContentsManager(TextFileContentsManager):
             if self.spec and not self.spec['meta']['jupyter_hot_reload']:
                 msg += self.restart_msg
 
+            env_var = os.environ.get('ENTRY_POINT')
+
             try:
-                (self.spec, self.dag,
-                 self.path) = DAGSpec.auto_load(starting_dir=starting_dir)
+                if env_var:
+                    (self.spec, self.dag,
+                     self.path) = parsers.load_entry_point(env_var)
+                else:
+                    (self.spec, self.dag,
+                     self.path) = DAGSpec.auto_load(starting_dir=starting_dir)
             except DAGSpecInitializationError:
                 self.reset_dag()
                 self.log.exception(msg)
             else:
                 if self.dag is not None:
 
-                    path = Path(self.path).resolve()
-                    path_parent = path.parent.resolve()
+                    base_path = Path(self.path).resolve()
 
-                    with chdir(path_parent):
+                    with chdir(base_path):
                         self.dag.render()
 
-                    tuples = [(resolve_path(path_parent, t.source.loc), t)
+                    tuples = [(resolve_path(base_path, t.source.loc), t)
                               for t in self.dag.values()
                               if t.source.loc is not None]
                     self.dag_mapping = {
@@ -99,7 +105,7 @@ class PloomberContentsManager(TextFileContentsManager):
 
                     self.log.info('[Ploomber] Initialized dag from '
                                   'pipeline.yaml at'
-                                  ': {}'.format(path))
+                                  ': {}'.format(base_path))
                     self.log.info('[Ploomber] Pipeline mapping: {}'.format(
                         pprint(self.dag_mapping)))
                 else:

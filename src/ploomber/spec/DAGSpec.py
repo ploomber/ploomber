@@ -189,6 +189,8 @@ class DAGSpec(MutableMapping):
 
         The pipeline.yaml parent folder is temporarily added to sys.path when
         calling DAGSpec.to_dag() to make sure imports work as expected
+
+        Returns DAG and the directory where the pipeline.yaml file is located.
         """
         path = find_file_recursively('pipeline.yaml',
                                      starting_dir=starting_dir or os.getcwd())
@@ -203,9 +205,9 @@ class DAGSpec(MutableMapping):
             spec = cls.from_file(path)
 
             if to_dag:
-                return spec, spec.to_dag(), path
+                return spec, spec.to_dag(), Path(path).parent
             else:
-                return spec, path
+                return spec, Path(path).parent
 
         except Exception as e:
             exc = DAGSpecInitializationError('Error initializing DAG from '
