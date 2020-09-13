@@ -41,7 +41,32 @@ development, Ploomber integrates with the Jupyter notebook app.
 If you open a script which a task in a pipeline, it will render as a
 Jupyter notebook and the cell injection process will happen automatically
 (this cell is just temporary and not saved). The Jupyter extension is
-configured when you install Ploomber, you don't have to setup anything.
+configured when you install Ploomber.
+
+Activating the Jupyter extension
+--------------------------------
+
+In most cases, the extension is automatically enabled when you install
+Ploomber, you can verify this by running:
+
+
+.. code-block:: console
+
+    jupyter serverextension list
+
+
+If Ploomber appears in the list, it means it's activated. If it doesn't show
+up, you can manually activate it with:
+
+.. code-block:: console
+
+    jupyter serverextension enable ploomber
+
+To disable it:
+
+.. code-block:: console
+
+    jupyter serverextension disable ploomber
 
 
 Pipeline loading
@@ -63,8 +88,8 @@ current directory:
 
 
 
-Troubleshooting
----------------
+Troubleshooting pipeline loading
+--------------------------------
 
 If a pipeline is not detected, the Jupyter notebook application will just work
 as expected, but no cell injection will happen. You can see if Ploomber could
