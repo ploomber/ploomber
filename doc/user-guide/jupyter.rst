@@ -1,10 +1,10 @@
 Integration with Jupyter
 ========================
 
-As described in the get started guide, scripts go through a cell injection
-process that replaces the original upstream variable (which only contains
-names for dependencies) with a dictionary that maps these names to output
-files, so you can use it as inputs in the current task.
+Scripts go through a cell injection process that replaces the original upstream
+variable (which only contains names for dependencies) with a dictionary that
+maps these names to output files, so you can use it as inputs in the current
+task.
 
 For example if a Python script (``task.py``) declares the following dependency:
 
