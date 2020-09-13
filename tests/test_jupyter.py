@@ -84,6 +84,19 @@ def test_injects_cell_even_if_pipeline_yaml_in_subdirectory(tmp_nbs):
     assert injected
 
 
+def test_dag_from_directory(monkeypatch, tmp_nbs):
+    # remove files we don't need for this test case
+    Path('pipeline.yaml').unlink()
+    Path('factory.py').unlink()
+
+    monkeypatch.setenv('ENTRY_POINT', '.')
+
+    cm = PloomberContentsManager()
+    model = cm.get('plot.py')
+    injected = get_injected_cell(model['content'])
+    assert injected
+
+
 def test_save(tmp_nbs):
     cm = PloomberContentsManager()
     model = cm.get('plot.py')

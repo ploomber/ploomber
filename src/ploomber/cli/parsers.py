@@ -313,6 +313,49 @@ def _process_entry_point(parser, entry_point, static_args):
     return dag, args
 
 
+# TODO: the next two functions are only used to override default behavior
+# when using the jupyter extension, but they have to be integrated with the CLI
+# to provide consistent behavior
+def find_entry_point_type(entry_point):
+    """
+
+    Step 1: If not ENTRY_POINT is defined nor a value is passed, a default
+    value is used (pipeline.yaml for CLI, recursive lookup for Jupyter client).
+    If ENTRY_POINT is defined, this simply overrides the default value, but
+    passing a value overrides the default value. Once the value is determined.
+
+    Step 2: If value is a valid directory, DAG is loaded from such directory,
+    if it's a file, it's loaded from that file (spec), finally, it's
+    interpreted as a dotted path
+    """
+    if Path(entry_point).exists():
+        if Path(entry_point).is_dir():
+            return 'directory'
+        else:
+            return 'file'
+    else:
+        return 'dotted-path'
+
+
+def load_entry_point(entry_point):
+    type_ = find_entry_point_type(entry_point)
+
+    if type_ == 'directory':
+        spec = DAGSpec.from_directory(entry_point)
+        path = Path(entry_point)
+    elif type_ == 'file':
+        spec = DAGSpec.from_file(entry_point)
+        path = Path(entry_point).parent
+    elif type_ == 'dotted-path':
+        raise ValueError('dotted paths are currently unsupported')
+        # fn = load_dotted_path(entry_point, raise_=True)
+        # dag = fn()
+    else:
+        raise ValueError('Unknown entry point type {}'.format(type_))
+
+    return spec, spec.to_dag(), path
+
+
 def _custom_command(parser):
     """
     Parses an entry point, adding arguments by extracting them from the env.
