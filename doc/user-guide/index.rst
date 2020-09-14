@@ -5,7 +5,8 @@ User Guide
     :maxdepth: 2
 
     conda
-    cli    
+    cli
+    jupyter
     parametrized
     sql-templating
     testing

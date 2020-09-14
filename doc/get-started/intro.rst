@@ -92,6 +92,10 @@ extracting the product from the upstream task.
    :alt: injected-cell
 
 
+As you can see in the image, the task has an upstream dependency called
+``raw``, thus, the cell injected is a map that contains a ``raw`` key whose
+value is the ``product`` declared for ``raw``.
+
 Via a Jupyter plug-in, your scripts are rendered as notebooks. The cell
 injection process happens as well, this enables interactive sessions that
 exactly reproduce pipeline runtime conditions.
@@ -138,7 +142,7 @@ that command again, only tasks whose source code has changed will be executed.
 
 **Note:** Writing a ``pipeline.yaml`` file is optional, you can also create
 pipelines by pointing to a directory with scripts. For more information, see the
-:doc:`../user-guide/entry-points` guide.
+:doc:`../user-guide/cli` guide.
 
 
 Summary

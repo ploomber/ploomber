@@ -70,7 +70,8 @@ This is the default entry point because it allows a greater level of
 flexibility without requiring you to write Python code to specify your
 pipeline. It is a good choice for simple to moderately sophisticated pipelines.
 
-It is a ``YAML`` file with certain structure.
+It is a ``YAML`` file with certain structure, for schema details see:
+:doc:`../api/spec`.
 
 
 Factory function
