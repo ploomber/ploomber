@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+0.7.4dev
+--------
+* Improved ``__repr__`` methods in PythonCallableSource and NotebookSource
+* Improved output layout for tables
+* Support for nbconvert>=6
+* "Docstrings" are parsed from notebooks and displayed in DAG status table (#242)
+* Jupyter extension now works for DAGs defined via directories (via ``ENTRY_POINT`` env variable)
+* Adds Jupyter integration guide to documentation
+* Several bug fixes
+
+
 0.7.3 (2020-08-19)
 -------------------
 * Improved support for R notebooks (``.Rmd``)
