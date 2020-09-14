@@ -270,8 +270,9 @@ def auto_determine_column_width(values, exclude, width_available):
     for k in short:
         col_widths[k] = values_max_width.pop(k)
 
-    # TODO: we could keep running the greedy algorithm to maximize space used
-    # split the rest of the space evenly
+    # NOTE: we could keep running the greedy algorithm to maximize space used
+    # split the rest of the space evenly - the problem is that this is going
+    # to increase runtime and highly favor short columns over large ones
     if values_max_width:
         column_width = split_evenly(values_max_width,
                                     space_required(col_widths))
