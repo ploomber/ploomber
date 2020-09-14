@@ -315,7 +315,9 @@ def _process_entry_point(parser, entry_point, static_args):
 
 # TODO: the next two functions are only used to override default behavior
 # when using the jupyter extension, but they have to be integrated with the CLI
-# to provide consistent behavior
+# to provide consistent behavior. The problem is that logic implemented
+# in _process_file_or_entry_point and _process_factory_dotted_path
+# also contains some CLI specific parts that we don't require here
 def find_entry_point_type(entry_point):
     """
 
