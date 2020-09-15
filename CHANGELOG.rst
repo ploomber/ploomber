@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.7.4dev
---------
+0.7.4 (2020-09-14)
+-------------------
 * Improved ``__repr__`` methods in PythonCallableSource and NotebookSource
 * Improved output layout for tables
 * Support for nbconvert>=6
