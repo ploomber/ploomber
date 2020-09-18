@@ -261,7 +261,7 @@ class NotebookRunner(Task):
                               static_analysis=static_analysis,
                               **kwargs)
 
-    def develop(self):
+    def develop(self, extra_jupyter_args=None):
         """
         Opens the rendered notebook (with injected parameters) and adds a
         "debugging-settings" cell to the that changes directory to the current
@@ -271,6 +271,11 @@ class NotebookRunner(Task):
         notebook can be exported to the original notebook after the notebook
         process is shut down. The "injected-parameters" and
         "debugging-settings" cells are deleted before saving.
+
+        Parameters
+        ----------
+        extra_jupyter_args : list
+            Extra parameters passed to the "jupyter notebook" command
 
         Notes
         -----
@@ -292,7 +297,7 @@ class NotebookRunner(Task):
         tmp.write_text(content)
 
         # open notebook with injected debugging cell
-        _open_jupyter_notebook(str(tmp))
+        _open_jupyter_notebook(str(tmp), extra_jupyter_args)
 
         # read tmp file again, to see if the user made any changes
         content_new = Path(tmp).read_text()
@@ -419,9 +424,20 @@ chdir("{}")
     return nb
 
 
-def _open_jupyter_notebook(path):
+def _open_jupyter_notebook(path, extra_args=None):
+    """
+    Open notebook using the jupyter notebook application
+
+    Parameters
+    ----------
+    extra_args : list
+        List of extra arguments, executed command becomes:
+        "jupyter notebook {path} {extra_args}"
+    """
+    extra_args = extra_args or []
+
     try:
-        subprocess.call(['jupyter', 'notebook', path])
+        subprocess.call(['jupyter', 'notebook', path] + extra_args)
     except KeyboardInterrupt:
         print('Jupyter notebook server closed...')
 
