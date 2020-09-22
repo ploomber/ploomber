@@ -238,9 +238,9 @@ def test_develop_saves_changes(tmp_directory, monkeypatch):
                        params={'var': 1},
                        name='nb')
 
-    def mock_jupyter_notebook(tmp):
+    def mock_jupyter_notebook(path, extra_args=None):
         nb = jupytext.reads('2 + 2', fmt='py')
-        nbformat.write(nb, tmp)
+        nbformat.write(nb, path)
 
     dag.render()
 
@@ -276,9 +276,9 @@ def test_develop_workflow_with_hot_reload(tmp_directory, monkeypatch):
                        params={'var': 1},
                        name='nb')
 
-    def mock_jupyter_notebook(tmp):
+    def mock_jupyter_notebook(path, extra_args=None):
         nb = jupytext.reads('2 + 2', fmt='py')
-        nbformat.write(nb, tmp)
+        nbformat.write(nb, path)
 
     dag.render()
 

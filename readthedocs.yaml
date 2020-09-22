@@ -9,12 +9,15 @@ sphinx:
 
 formats: all
 
+# create conda env from that file
+conda:
+  environment: doc/environment.yml
+
+
+# install package with pip[all] from this directory
 python:
   install:
     - method: pip
       path: .
       extra_requirements:
         - all
-
-conda:
-  environment: doc/environment.yml

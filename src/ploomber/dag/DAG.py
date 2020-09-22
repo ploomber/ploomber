@@ -686,6 +686,12 @@ class DAG(collections.abc.Mapping):
         upstream = self._G.predecessors(task_name)
         return {u: self._G.nodes[u]['task'] for u in upstream}
 
+    def get_downstream(self, task_name):
+        """
+        Get downstream tasks for a given task name
+        """
+        return list(self._G.successors(task_name))
+
     def _clear_cached_status(self):
         # NOTE: maybe make this a context manager and/or a decorator
         self._logger.debug('Clearing product status')

@@ -205,7 +205,7 @@ def test_dag_build_clears_cached_status(tmp_directory):
 #     assert Path('b.txt').read_text() == 'hello'
 
 
-def test_can_get_upstream_tasks():
+def test_can_get_upstream_and_downstream_tasks():
     dag = DAG('dag')
 
     ta = ShellScript('echo "a" > {{product}}', File('a.txt'), dag, 'ta')
@@ -219,6 +219,10 @@ def test_can_get_upstream_tasks():
     assert set(ta.upstream) == set()
     assert set(tb.upstream) == {'ta'}
     assert set(tc.upstream) == {'tb'}
+
+    assert dag.get_downstream('ta') == ['tb']
+    assert dag.get_downstream('tb') == ['tc']
+    assert not dag.get_downstream('tc')
 
 
 def test_can_access_sub_dag():
