@@ -13,8 +13,6 @@ from ploomber.products import GenericSQLRelation
 
 from test_pkg import functions
 
-# def test retrieve .name
-
 
 def test_generic_source_unrendered():
     s = GenericSource('some {{placeholder}}')

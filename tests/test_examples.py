@@ -1,14 +1,15 @@
 """
-Runs examples form examples/
+Runs examples from examples/
 """
 import os
 import pytest
 import subprocess
 from conftest import _path_to_tests
 
-
-_examples = [f for f in os.listdir(str(_path_to_tests().parent / 'examples'))
-             if f.endswith('.py')]
+_examples = [
+    f for f in os.listdir(str(_path_to_tests().parent / 'examples'))
+    if f.endswith('.py')
+]
 
 
 def test_pipeline_runs(tmp_intermediate_example_directory):

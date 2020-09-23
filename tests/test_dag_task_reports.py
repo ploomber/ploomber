@@ -1,13 +1,10 @@
-from unittest.mock import Mock
 from pathlib import Path
 
 import pytest
 
 from ploomber import DAG
-from ploomber.tasks import ShellScript, PythonCallable, SQLScript
+from ploomber.tasks import PythonCallable, SQLScript
 from ploomber.products import File, SQLiteRelation
-from ploomber.constants import TaskStatus, DAGStatus
-from ploomber.exceptions import DAGBuildError, DAGRenderError
 
 
 def touch_root(product):

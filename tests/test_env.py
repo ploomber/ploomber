@@ -75,10 +75,12 @@ def test_can_initialize_env_after_failed_attempt(cleanup_env):
         # underscores are not allowed, this will fail, but before raising
         # the exception, the instance (created in __new__) must be discarded
         Env({'_a': 1})
-    except Exception as e:
+    except ValueError:
         pass
 
-    Env({'a': 1})
+    # if we can initialize another object, it means the previous call was
+    # corerctly discarded
+    assert Env({'a': 1}).a == 1
 
 
 def test_context_manager(cleanup_env):

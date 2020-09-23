@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import pytest
 from ploomber.spec.TaskSpec import TaskSpec
-from ploomber.spec.DAGSpec import DAGSpec, Meta
+from ploomber.spec.DAGSpec import Meta
 from ploomber.tasks import NotebookRunner, SQLScript, SQLDump
 from ploomber import DAG
 

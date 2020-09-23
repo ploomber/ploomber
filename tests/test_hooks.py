@@ -1,14 +1,12 @@
 import logging
-from unittest.mock import Mock
 from pathlib import Path
 
 import pytest
 
-from tests_util import expand_grid, executors_w_exception_logging
+from tests_util import executors_w_exception_logging
 from ploomber import DAG
 from ploomber.tasks import PythonCallable, SQLScript
 from ploomber.products import File, SQLiteRelation
-from ploomber.clients import SQLAlchemyClient
 from ploomber.exceptions import (DAGBuildError, CallbackSignatureError,
                                  DAGRenderError)
 from ploomber.executors import Serial
@@ -74,28 +72,27 @@ def hook_crashing():
     raise Exception
 
 
-_executors = [Serial(build_in_subprocess=False, catch_exceptions=False),
-              Serial(build_in_subprocess=False, catch_exceptions=True),
-              Serial(build_in_subprocess=True, catch_exceptions=False),
-              Serial(build_in_subprocess=True, catch_exceptions=True),
-              'parallel']
+_executors = [
+    Serial(build_in_subprocess=False, catch_exceptions=False),
+    Serial(build_in_subprocess=False, catch_exceptions=True),
+    Serial(build_in_subprocess=True, catch_exceptions=False),
+    Serial(build_in_subprocess=True, catch_exceptions=True), 'parallel'
+]
 
+_executors_catch_exc = [
+    Serial(build_in_subprocess=False, catch_exceptions=True),
+    Serial(build_in_subprocess=True, catch_exceptions=True), 'parallel'
+]
 
-_executors_catch_exc = [Serial(build_in_subprocess=False,
-                               catch_exceptions=True),
-                        Serial(build_in_subprocess=True,
-                               catch_exceptions=True),
-                        'parallel']
+_executors_serial_catch_exc = [
+    Serial(build_in_subprocess=False, catch_exceptions=True),
+    Serial(build_in_subprocess=True, catch_exceptions=True)
+]
 
-_executors_serial_catch_exc = [Serial(build_in_subprocess=False,
-                                      catch_exceptions=True),
-                               Serial(build_in_subprocess=True,
-                                      catch_exceptions=True)]
-
-_executors_current_process = [Serial(build_in_subprocess=False,
-                                     catch_exceptions=False),
-                              Serial(build_in_subprocess=False,
-                                     catch_exceptions=True)]
+_executors_current_process = [
+    Serial(build_in_subprocess=False, catch_exceptions=False),
+    Serial(build_in_subprocess=False, catch_exceptions=True)
+]
 
 
 @pytest.mark.parametrize('executor', _executors_current_process)
@@ -157,8 +154,8 @@ def test_runs_on_failure(tmp_directory):
     hook_2.count = 0
     hook_3.count = 0
 
-    dag = DAG(executor=Serial(build_in_subprocess=False,
-                              catch_exceptions=True))
+    dag = DAG(
+        executor=Serial(build_in_subprocess=False, catch_exceptions=True))
     t = PythonCallable(fn_that_fails, File('file1.txt'), dag, 't')
     t.on_failure = hook
     t2 = PythonCallable(fn_that_fails, File('file2'), dag, 't2')
@@ -174,6 +171,7 @@ def test_runs_on_failure(tmp_directory):
     assert hook.count == 1
     assert hook_2.count == 1
     assert hook_3.count == 1
+
 
 ########################
 # Logging hook crashes #
@@ -220,6 +218,7 @@ def test_on_failure_exceptions_are_logged(executor, caplog):
 
 
 # TODO: parametrize by executor since reported status depends on it
+
 
 @pytest.mark.parametrize('method', ['render', 'build'])
 def test_task_status_when_on_render_crashes(method, tmp_directory):
@@ -280,7 +279,6 @@ def test_task_status_and_output_when_on_failure_crashes(tmp_directory):
 
 @pytest.mark.parametrize('callback', ['on_finish', 'on_render', 'on_failure'])
 def test_hook_with_wrong_signature(callback):
-
     def my_callback(unknown_arg):
         pass
 

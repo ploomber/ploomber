@@ -3,19 +3,20 @@ Test notebooks in doc/
 """
 import subprocess
 from pathlib import Path
-import shutil
-import os
 from glob import glob
 
 # we have to use this, nbconvert removes cells that execute shell comands
 import jupytext
+
 import pytest
 from conftest import _path_to_tests
 
 path_to_doc = _path_to_tests().parent / 'doc'
 
-nbs = [f for f in glob(str(Path(path_to_doc, '**', '*.ipynb')))
-       if 'auto_examples' not in f]
+nbs = [
+    f for f in glob(str(Path(path_to_doc, '**', '*.ipynb')))
+    if 'auto_examples' not in f
+]
 
 
 # we cannot use papermill since some notebooks use papermill via NotebookRunner
