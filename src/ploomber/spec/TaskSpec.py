@@ -20,6 +20,31 @@ suffix2taskclass = {
 }
 
 
+def task_class_from_source_str(source_str):
+    """
+    The source field in a DAG spec is a string. The actual value needed to
+    instantiate the task depends on the task class, but to make task class
+    optional, we try to guess the appropriate task here
+    """
+    path = Path(source_str)
+    extension = path.suffix
+
+    # try to guess based on the extension and make sure file exists
+    if extension and extension in suffix2taskclass and path.exists():
+        return suffix2taskclass[extension]
+    else:
+        imported = load_dotted_path(source_str, raise_=False)
+
+        if imported is not None:
+            return tasks.PythonCallable
+        else:
+            raise ValueError('Could not find an appropriate task class for '
+                             'source "{}", verify that the value is either '
+                             'a valid script or dotted path. Alternatively, '
+                             'pass an explicit task class using the "class" '
+                             'key'.format(source_str))
+
+
 class TaskSpec(MutableMapping):
     def __init__(self, data, meta):
         # FIXME: make sure data and meta are immutable structures
@@ -27,7 +52,7 @@ class TaskSpec(MutableMapping):
         self.meta = meta
         self.validate()
 
-        # initialie required elements
+        # initialize required elements
         self.data['class'] = get_class_obj(self.data)
         # in task specs, we assume source is always a path to a file
 
