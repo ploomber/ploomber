@@ -31,17 +31,9 @@ def fn():
     assert task_class_from_source_str(dotted_path) is PythonCallable
 
 
-@pytest.mark.parametrize('source_str', [
-    'invalid.extension',
-    'file_not_found.py',
-    'not_a_module.not_a_function',
-])
-def test_task_class_from_source_str_error(source_str):
-    if source_str == 'invalid.extension':
-        Path(source_str).touch()
-
+def test_task_class_from_source_str_error():
     with pytest.raises(ValueError):
-        task_class_from_source_str(source_str)
+        task_class_from_source_str('not_a_module.not_a_function')
 
 
 @pytest.mark.parametrize('spec, expected', [

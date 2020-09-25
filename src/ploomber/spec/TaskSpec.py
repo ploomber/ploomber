@@ -24,13 +24,13 @@ def task_class_from_source_str(source_str):
     """
     The source field in a DAG spec is a string. The actual value needed to
     instantiate the task depends on the task class, but to make task class
-    optional, we try to guess the appropriate task here
+    optional, we try to guess the appropriate task here. If the source_str
+    needs any pre-processing to pass it to the task constructor, it also
+    happens here
     """
-    path = Path(source_str)
-    extension = path.suffix
+    extension = Path(source_str).suffix
 
-    # try to guess based on the extension and make sure file exists
-    if extension and extension in suffix2taskclass and path.exists():
+    if extension and extension in suffix2taskclass:
         return suffix2taskclass[extension]
     else:
         imported = load_dotted_path(source_str, raise_=False)
@@ -40,7 +40,8 @@ def task_class_from_source_str(source_str):
         else:
             raise ValueError('Could not find an appropriate task class for '
                              'source "{}", verify that the value is either '
-                             'a valid script or dotted path. Alternatively, '
+                             'a script with a valid extension or a valid '
+                             'dotted path. Alternatively, '
                              'pass an explicit task class using the "class" '
                              'key'.format(source_str))
 
