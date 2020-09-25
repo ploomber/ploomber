@@ -28,6 +28,8 @@ default values.
         product_default_class:
             SQLDump: File
             NotebookRunner: File
+            ShellScript: File
+            PythonCallable: File
             SQLScript: SQLRelation
 
         # Reload your pipeline every time you open a Jupyter notebook. Only
@@ -72,7 +74,7 @@ Notes
     # and ShellScript for .sh
     class: {task class, optional}
 
-    source: {path to source file}
+    source: {path to source file or dotted path}
 
     # Products that will be generated upon task execution. Should not exist
     # if meta.extract_product is set to True. This can be a dictionary if
