@@ -46,6 +46,29 @@ def task_class_from_source_str(source_str):
                              'key'.format(source_str))
 
 
+def task_class_from_spec(task_spec):
+    """
+    Returns the class for the TaskSpec, if the spec already has the class
+    name (str), it just returns the actual class object with such name,
+    otherwise it tries to guess based on the source string
+    """
+    class_name = task_spec.get('class', None)
+
+    if class_name:
+        class_ = getattr(tasks, class_name)
+    else:
+        class_ = task_class_from_source_str(task_spec['source'])
+
+    return class_
+
+
+def source_for_task_class(source_str, task_class):
+    if task_class is tasks.PythonCallable:
+        return load_dotted_path(source_str)
+    else:
+        return Path(source_str)
+
+
 class TaskSpec(MutableMapping):
     def __init__(self, data, meta):
         # FIXME: make sure data and meta are immutable structures
@@ -54,17 +77,20 @@ class TaskSpec(MutableMapping):
         self.validate()
 
         # initialize required elements
-        self.data['class'] = get_class_obj(self.data)
-        # in task specs, we assume source is always a path to a file
+        self.data['class'] = task_class_from_spec(self.data)
+        # preprocess source obj, at this point it will either be a Path
+        # if the task requires a file or a callable if it's a PythonCallable
+        # task
+        self.data['source'] = source_for_task_class(self.data['source'],
+                                                    self.data['class'])
 
         source_loader = meta['source_loader']
 
-        if source_loader:
+        is_a_file = isinstance(self.data['source'], Path)
+
+        if source_loader and is_a_file:
             # if there is a source loader, use it...
             self.data['source'] = source_loader[self.data['source']]
-        else:
-            # otherwise just initialize a path
-            self.data['source'] = Path(self.data['source'])
 
     def validate(self):
         if 'upstream' not in self.data:
@@ -103,16 +129,16 @@ class TaskSpec(MutableMapping):
 
         _init_client(task_dict)
 
-        source_raw = task_dict.pop('source')
-        name_raw = task_dict.pop('name', None)
+        source = task_dict.pop('source')
+        name = task_dict.pop('name', None)
 
         on_finish = task_dict.pop('on_finish', None)
         on_render = task_dict.pop('on_render', None)
         on_failure = task_dict.pop('on_failure', None)
 
-        task = class_(source=source_raw,
+        task = class_(source=source,
                       product=product,
-                      name=name_raw or str(source_raw),
+                      name=name or str(source),
                       dag=dag,
                       **task_dict)
 
@@ -142,22 +168,6 @@ class TaskSpec(MutableMapping):
 
     def __len__(self):
         return len(self.data)
-
-
-def get_class_obj(task_spec):
-    """
-    Returns the class for the TaskSpec, if the spec already has the class
-    name (str), it just returns the actual class object with such name,
-    otherwise it tries to guess based on the source string
-    """
-    class_name = task_spec.get('class', None)
-
-    if class_name:
-        class_ = getattr(tasks, class_name)
-    else:
-        class_ = task_class_from_source_str(task_spec['source'])
-
-    return class_
 
 
 # FIXME: how do we make a default product client? use the task's client?
