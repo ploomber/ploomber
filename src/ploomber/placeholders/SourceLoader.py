@@ -44,7 +44,6 @@ class SourceLoader:
     >>> loader['load_customers.sql'] # ipython autocompletion available
     >>> loader.get_template('load_customers.sql') # same as above
     """
-
     def __init__(self, path=None, module=None):
 
         if path is None and module is None:
@@ -98,7 +97,9 @@ class SourceLoader:
         return self.get_template(key)
 
     def get_template(self, name):
-        template = self.env.get_template(name)
+        """Load a template by name
+        """
+        template = self.env.get_template(str(name))
         return Placeholder(template)
 
     def _ipython_key_completions_(self):
