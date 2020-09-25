@@ -138,7 +138,7 @@ class TaskSpec(MutableMapping):
 
         task = class_(source=source,
                       product=product,
-                      name=name or str(source),
+                      name=name,
                       dag=dag,
                       **task_dict)
 

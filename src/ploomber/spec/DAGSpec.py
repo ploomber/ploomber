@@ -286,7 +286,9 @@ class Meta:
         defaults = {
             'SQLDump': 'File',
             'NotebookRunner': 'File',
-            'SQLScript': 'SQLRelation'
+            'SQLScript': 'SQLRelation',
+            'PythonCallable': 'File',
+            'ShellScript': 'File',
         }
 
         if 'product_default_class' not in meta:
