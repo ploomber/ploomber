@@ -147,28 +147,14 @@ def get_class_obj(task_spec):
     """
     Returns the class for the TaskSpec, if the spec already has the class
     name (str), it just returns the actual class object with such name,
-    otherwise it tries to guess based on the file extension
-
-    Task class is determined by the 'class' key, if missing. Defaults
-    are used by inspecting the 'source' key: NoteboonRunner (.py),
-    SQLScript (.sql) and BashScript (.sh).
+    otherwise it tries to guess based on the source string
     """
     class_name = task_spec.get('class', None)
 
     if class_name:
         class_ = getattr(tasks, class_name)
     else:
-        suffix = Path(task_spec['source']).suffix
-
-        if suffix2taskclass.get(suffix):
-            class_ = suffix2taskclass[suffix]
-        else:
-            raise KeyError('No default task class available for task with '
-                           'source: '
-                           '"{}". Default class is only available for '
-                           'files with extensions {}. '
-                           'Set an explicit class key'.format(
-                               task_spec['source'], set(suffix2taskclass)))
+        class_ = task_class_from_source_str(task_spec['source'])
 
     return class_
 
