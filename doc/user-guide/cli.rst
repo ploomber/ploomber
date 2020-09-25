@@ -41,6 +41,7 @@ There are three types of entry points (ordered by flexibility):
 2. Spec (aka ``pipeline.yaml``)
 3. Factory function (a function that returns a ``DAG`` object)
 
+For more information on entry points, see :doc:`/user-guide/spec-vs-python`.
 
 Directory
 *********
