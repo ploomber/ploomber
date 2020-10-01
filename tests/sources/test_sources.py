@@ -248,6 +248,18 @@ def test_python_callable_properties(path_to_test_pkg):
     assert source.loc in repr(source)
 
 
+@pytest.mark.parametrize(
+    'class_', [SQLScriptSource, SQLQuerySource, GenericSource, FileSource])
+def test_file_location_included_if_initialized_from_file(
+        class_, tmp_directory):
+    path = Path('source.txt')
+    path.write_text("""
+    CREATE TAVLE {{product}} AS SELECT * FROM X
+    """)
+    source = class_(path)
+    assert 'source.txt' in repr(source)
+
+
 @pytest.mark.parametrize('source, expected', [
     ['{{upstream["key"]}}', {'key'}],
     [

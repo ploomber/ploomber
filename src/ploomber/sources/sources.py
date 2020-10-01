@@ -189,8 +189,13 @@ class PlaceholderSource(Source):
         return str(self._placeholder)
 
     def __repr__(self):
-        return "{}({})".format(
+        repr_ = "{}({})".format(
             type(self).__name__, self._placeholder.best_str(shorten=True))
+
+        if self._placeholder.path:
+            repr_ += ' Loaded from: {}'.format(self._placeholder.path)
+
+        return repr_
 
     @property
     def name(self):
