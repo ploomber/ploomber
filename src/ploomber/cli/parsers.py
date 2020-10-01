@@ -309,8 +309,15 @@ def _process_entry_point(parser, entry_point, static_args):
                       'suggests a spec file, but the file doesn\'t '
                       'exist'.format(entry_point, path.suffix))
 
+    # even if the entry file is not a file nor a valid module, show the help
+    # menu, but show a warning because this will prevent pipeline parameters
+    # from showing up
     if (help_cmd and not entry_file_exists and not entry_obj):
+        warnings.warn('Failed to load entry point "{}". It is not a file '
+                      'nor a valid dotted path'.format(entry_point))
+
         args = parser.parse_args()
+
     # first check if the entry point is an existing file
     elif path.exists():
         dag, args = _process_file_or_entry_point(parser, entry_point,
