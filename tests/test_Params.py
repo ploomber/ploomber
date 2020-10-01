@@ -35,5 +35,5 @@ def test_cannot_modify_param():
 @pytest.mark.parametrize('copy, expected', [[False, True], [True, False]])
 def test_init_from_dict(copy, expected):
     d = {'upstream': None, 'product': None}
-    params = Params._from_dict(d, copy_=copy)
+    params = Params._from_dict(d, copy=copy)
     assert (params._dict is d) is expected
