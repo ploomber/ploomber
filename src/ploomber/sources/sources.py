@@ -30,6 +30,10 @@ class Source(abc.ABC):
     implemented cover most use cases, if none of the current implementations
     matches their use case, they can either use a GenericSource or implement
     their own.
+
+    Concrete classes should implement its own __repr__ method, which should
+    display the source class, code (first few lines if long) and file location,
+    if loaded from a file (sources can also load from strings)
     """
     @abc.abstractmethod
     def __init__(self, primitive, hot_reload=False):
@@ -101,10 +105,6 @@ class Source(abc.ABC):
         the task to execute).
         """
         pass
-
-    # NOTE: should __repr__ contain: human-readable code + class name +
-    # parameters? That's one option, we currently do not have a useful
-    # __repr__ for sources
 
     @property
     @abc.abstractmethod
