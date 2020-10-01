@@ -90,12 +90,40 @@ def test_error_if_a_task_returns_none():
     assert str(excinfo.value) == expected
 
 
-def test_not_copy():
-    pass
+@pytest.mark.parametrize('copy', [True, False])
+def test_copy(copy):
+    def _assign_upstream(upstream, product):
+        _assign_upstream.obj = upstream
+        return 42
 
+    dag_ = DAG()
 
-def test_copy():
-    pass
+    root = PythonCallable(_root,
+                          File('root.parquet'),
+                          dag_,
+                          name='root',
+                          serializer=serializer,
+                          params={'input_dict': {
+                              'x': [0, 0, 0]
+                          }})
+
+    task = PythonCallable(_assign_upstream,
+                          File('task.parquet'),
+                          dag_,
+                          name='task',
+                          unserializer=unserializer,
+                          serializer=serializer)
+
+    root >> task
+
+    dag = InMemoryDAG(dag_)
+
+    out = dag.build({'root': {'input_dict': {'x': [1]}}}, copy=copy)
+
+    # test that the function _assign_upstream received the same object
+    # the task root returned in the upstream argument if copy is disabled.
+    # if copying, then it should be a different object
+    assert (_assign_upstream.obj['root'] is out['root']) is (not copy)
 
 
 @pytest.mark.parametrize(
