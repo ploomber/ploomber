@@ -10,10 +10,25 @@ from collections.abc import Iterable
 from ploomber.exceptions import CallbackSignatureError, TaskRenderError
 
 
-def requires(pkgs, name=None):
+def requires(pkgs, name=None, extra_msg=None):
     """
     Check if packages were imported, raise ImportError with an appropriate
     message for missing ones
+
+    Error message:
+    a, b are required to use function. Install them by running pip install a b
+
+    Parameters
+    ----------
+    pkgs
+        The names of the packages required
+
+    name
+        The name of the module/function/class to show in the error message,
+        if None, the decorated function __name__ attribute is used
+
+    extra_msg
+        Append this extra message to the end
     """
     def decorator(f):
         @wraps(f)
@@ -25,14 +40,16 @@ def requires(pkgs, name=None):
             if missing:
                 msg = reduce(lambda x, y: x + ' ' + y, missing)
                 fn_name = name or f.__name__
+                error_msg = ('{} {} required to use {}. Install {} by '
+                             'running "pip install {}"'.format(
+                                 msg, 'is' if len(missing) == 1 else 'are',
+                                 fn_name,
+                                 'it' if len(missing) == 1 else 'them', msg))
 
-                raise ImportError('{} {} required to use {}. Install {} by '
-                                  'running "pip install {}"'.format(
-                                      msg,
-                                      'is' if len(missing) == 1 else 'are',
-                                      fn_name,
-                                      'it' if len(missing) == 1 else 'them',
-                                      msg))
+                if extra_msg:
+                    error_msg += ('. ' + extra_msg)
+
+                raise ImportError(error_msg)
 
             return f(*args, **kwargs)
 
@@ -259,25 +276,34 @@ def load_dotted_path(dotted_path, raise_=True):
             module = importlib.import_module(mod)
         except ImportError as e:
             if raise_:
-                raise ImportError('An error happened when trying to '
-                                  'import module "{}"'.format(mod)) from e
+                # we want to rais ethe same error type but chaining exceptions
+                # produces a long verbose output, so we just modify the
+                # original message to add more context, it's ok to hide the
+                # original traceback since it will just point to lines
+                # in the importlib module, which isn't useful for the user
+                e.msg = ('An error happened when trying to '
+                         'import dotted path "{}": {}'.format(
+                             dotted_path, str(e)))
+                raise
 
         if module:
             try:
                 obj = getattr(module, name)
             except AttributeError as e:
                 if raise_:
-                    raise AttributeError(
-                        'Could not get attribute "{}" from module '
-                        '"{}" (loaded from: {}), make sure it is a valid '
-                        'callable defined in such module'.format(
-                            name, mod, module.__file__)) from e
-
+                    # same as in the comment above
+                    e.msg = ('Could not get attribute "{}" from module '
+                             '"{}" (loaded from: {}), make sure it is a valid '
+                             'callable defined in such module'.format(
+                                 name, mod, module.__file__))
+                    raise
         return obj
     else:
         if raise_:
-            raise ImportError('Could not import dotted path "{}", '
-                              'it is invalid'.format(dotted_path))
+            raise ValueError(
+                'Invalid dotted path value "{}", must be a dot separated '
+                'string, with at least '
+                '[module_name].[function_name]'.format(dotted_path))
 
 
 def find_file_recursively(name, max_levels_up=6, starting_dir=None):

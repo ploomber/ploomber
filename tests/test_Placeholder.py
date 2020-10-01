@@ -6,23 +6,30 @@ from copy import copy, deepcopy
 from pathlib import Path
 
 import pytest
-from ploomber.placeholders.Placeholder import Placeholder, SQLRelationPlaceholder
+from ploomber.placeholders.Placeholder import (Placeholder,
+                                               SQLRelationPlaceholder)
 from ploomber.placeholders.util import get_tags_in_str, get_defined_variables
 from ploomber.tasks.Upstream import Upstream
-from ploomber.tasks.Params import Params
-from ploomber.sql.infer import ParsedSQLRelation
 from ploomber import SourceLoader
-from jinja2 import Template, Environment, PackageLoader, FileSystemLoader, StrictUndefined
+from jinja2 import (Template, Environment, PackageLoader, FileSystemLoader,
+                    StrictUndefined)
 from ploomber.exceptions import UpstreamKeyError
 
 
-@pytest.mark.parametrize("s,expected", [
-    ("{% set x = 1 %} {{hello}}", {'x': 1}),
-    ("{% set x = ('a', 'b') %} {% for n in numbers %} {%endfor%}",
-        {'x': ('a', 'b')}),
-    ("{% set x = ['a', 'b'] %}", {'x': ['a', 'b']}),
-    ("{% set x = {'y': 1} %}", {'x': {'y': 1}})
-])
+@pytest.mark.parametrize(
+    "s,expected",
+    [("{% set x = 1 %} {{hello}}", {
+        'x': 1
+    }),
+     ("{% set x = ('a', 'b') %} {% for n in numbers %} {%endfor%}", {
+         'x': ('a', 'b')
+     }), ("{% set x = ['a', 'b'] %}", {
+         'x': ['a', 'b']
+     }), ("{% set x = {'y': 1} %}", {
+         'x': {
+             'y': 1
+         }
+     })])
 def test_get_defined_variables(s, expected):
     assert get_defined_variables(s) == expected
 
@@ -50,8 +57,7 @@ def test_raises_error_if_missing_parameter():
 
 def test_raises_error_if_extra_parameter():
     with pytest.raises(TypeError):
-        (Placeholder('SELECT * FROM {{table}}')
-         .render(table=1, not_a_param=1))
+        (Placeholder('SELECT * FROM {{table}}').render(table=1, not_a_param=1))
 
 
 def test_strict_templates_initialized_from_jinja_template(path_to_assets):
@@ -139,19 +145,18 @@ def test_repr_shows_tags_if_unrendered():
 
 def test_sql_placeholder_repr_shows_tags_if_unrendered_sql():
     expected = 'SQLRelationPlaceholder({{schema}}.{{name}})'
-    assert (repr(SQLRelationPlaceholder(('{{schema}}', '{{name}}', 'table')))
-            == expected)
+    assert (repr(SQLRelationPlaceholder(
+        ('{{schema}}', '{{name}}', 'table'))) == expected)
 
 
 def _filesystem_loader(path_to_test_pkg):
-    return Environment(loader=FileSystemLoader(str(Path(path_to_test_pkg,
-                                                        'templates'))),
+    return Environment(loader=FileSystemLoader(
+        str(Path(path_to_test_pkg, 'templates'))),
                        undefined=StrictUndefined)
 
 
 def _package_loader(path_to_test_pkg):
-    return Environment(loader=PackageLoader('test_pkg',
-                                            'templates'),
+    return Environment(loader=PackageLoader('test_pkg', 'templates'),
                        undefined=StrictUndefined)
 
 
@@ -164,8 +169,10 @@ def _source_loader_module(path_to_test_pkg):
     return SourceLoader(path='templates', module='test_pkg')
 
 
-_env_initializers = [_filesystem_loader, _package_loader, _source_loader_path,
-                     _source_loader_module]
+_env_initializers = [
+    _filesystem_loader, _package_loader, _source_loader_path,
+    _source_loader_module
+]
 
 
 @pytest.mark.parametrize('env_init', _env_initializers)

@@ -13,3 +13,4 @@ User Guide
     debugging
     r-support
     faq_index
+    spec-vs-python

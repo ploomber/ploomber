@@ -11,6 +11,7 @@ DAG
 
     DAG
     DAGConfigurator
+    InMemoryDAG
 
 Tasks
 -----

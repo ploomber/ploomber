@@ -103,4 +103,5 @@ def build_node(tokens):
     elif tokens[0] == Null():
         return tokens[0]
     else:
-        raise SyntaxError('Must be a list or NULL')
+        raise SyntaxError('Variables should be assigned to values of type '
+                          'list (e.g. list("a", "b"))  or NULL')

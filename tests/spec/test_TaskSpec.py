@@ -1,10 +1,39 @@
 import os
 from pathlib import Path
 import pytest
-from ploomber.spec.TaskSpec import TaskSpec
-from ploomber.spec.DAGSpec import DAGSpec, Meta
-from ploomber.tasks import NotebookRunner, SQLScript, SQLDump
+from ploomber.spec.TaskSpec import TaskSpec, task_class_from_source_str
+from ploomber.spec.DAGSpec import Meta
+from ploomber.tasks import (NotebookRunner, SQLScript, SQLDump, ShellScript,
+                            PythonCallable)
 from ploomber import DAG
+
+
+@pytest.mark.parametrize('source_str, expected', [
+    ['script.py', NotebookRunner],
+    ['script.R', NotebookRunner],
+    ['script.r', NotebookRunner],
+    ['script.Rmd', NotebookRunner],
+    ['script.ipynb', NotebookRunner],
+    ['script.sql', SQLScript],
+    ['script.sh', ShellScript],
+])
+def test_task_class_from_script(tmp_directory, source_str, expected):
+    Path(source_str).touch()
+    assert task_class_from_source_str(source_str) is expected
+
+
+def test_task_class_from_dotted_path(tmp_directory, add_current_to_sys_path):
+    Path('test_task_class_from_dotted_path.py').write_text("""
+def fn():
+    pass
+""")
+    dotted_path = 'test_task_class_from_dotted_path.fn'
+    assert task_class_from_source_str(dotted_path) is PythonCallable
+
+
+def test_task_class_from_source_str_error():
+    with pytest.raises(ValueError):
+        task_class_from_source_str('not_a_module.not_a_function')
 
 
 @pytest.mark.parametrize('spec, expected', [

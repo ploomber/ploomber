@@ -1,3 +1,4 @@
+import pytest
 import tempfile
 from pathlib import Path
 
@@ -7,12 +8,19 @@ from ploomber.products import SQLiteRelation
 from ploomber import DAG
 
 
-def test_load_template():
+@pytest.mark.parametrize(
+    'processor',
+    [
+        # should work with strings and paths
+        lambda s: s,
+        lambda s: Path(s),
+    ])
+def test_load_template(processor):
     tmp_directory = tempfile.mkdtemp()
     Path(tmp_directory, 'template.sql').write_text('{{file}}')
     source_loader = SourceLoader(str(tmp_directory))
 
-    t = source_loader['template.sql']
+    t = source_loader[processor('template.sql')]
     assert t.render({'file': 'some file'})
 
 

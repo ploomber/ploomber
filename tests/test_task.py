@@ -3,7 +3,7 @@ from pathlib import Path
 from ploomber.exceptions import RenderError, TaskBuildError
 from ploomber import DAG
 from ploomber.products import (File, PostgresRelation, GenericProduct,
-                               GenericSQLRelation, SQLiteRelation)
+                               GenericSQLRelation)
 from ploomber.tasks import (PythonCallable, SQLScript, ShellScript, SQLDump,
                             SQLTransfer, SQLUpload, PostgresCopyFrom,
                             NotebookRunner)

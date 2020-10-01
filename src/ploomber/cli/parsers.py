@@ -6,6 +6,7 @@ import inspect
 from pathlib import Path
 import argparse
 from collections.abc import Mapping
+import warnings
 
 import yaml
 
@@ -296,13 +297,29 @@ def _process_entry_point(parser, entry_point, static_args):
     """
     help_cmd = '--help' in sys.argv or '-h' in sys.argv
 
-    entry_file_exists = Path(entry_point).exists()
+    path = Path(entry_point)
+    entry_file_exists = path.exists()
     entry_obj = load_dotted_path(entry_point, raise_=False)
 
+    # if the file does not exist but the value has sufix yaml/yml, show a
+    # warning because the last thing to try is to interpret it as a dotted
+    # path and that's probably not what the user wants
+    if not entry_file_exists and path.suffix in {'.yaml', '.yml'}:
+        warnings.warn('Entry point value "{}" has extension "{}", which '
+                      'suggests a spec file, but the file doesn\'t '
+                      'exist'.format(entry_point, path.suffix))
+
+    # even if the entry file is not a file nor a valid module, show the help
+    # menu, but show a warning because this will prevent pipeline parameters
+    # from showing up
     if (help_cmd and not entry_file_exists and not entry_obj):
+        warnings.warn('Failed to load entry point "{}". It is not a file '
+                      'nor a valid dotted path'.format(entry_point))
+
         args = parser.parse_args()
+
     # first check if the entry point is an existing file
-    elif Path(entry_point).exists():
+    elif path.exists():
         dag, args = _process_file_or_entry_point(parser, entry_point,
                                                  static_args)
     # assume it's a dotted path to a factory

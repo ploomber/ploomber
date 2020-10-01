@@ -11,6 +11,7 @@ import jupyter_client
 
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.util.util import load_dotted_path
+from ploomber.tasks import PythonCallable
 
 
 @fixture_tmp_dir(_path_to_tests() / 'assets' / 'pipeline-sql')
@@ -95,6 +96,29 @@ def test_validate_top_level_keys():
 def test_validate_meta_keys():
     with pytest.raises(KeyError):
         DAGSpec({'tasks': [], 'meta': {'invalid_key': None}})
+
+
+def test_python_callables_spec(tmp_directory, add_current_to_sys_path):
+    Path('test_python_callables_spec.py').write_text("""
+def task1(product):
+    pass
+""")
+
+    spec = DAGSpec({
+        'tasks': [
+            {
+                'source': 'test_python_callables_spec.task1',
+                'product': 'some_file.csv'
+            },
+        ],
+        'meta': {
+            'extract_product': False,
+            'extract_upstream': False
+        }
+    })
+
+    dag = spec.to_dag()
+    assert isinstance(dag['task1'], PythonCallable)
 
 
 @pytest.mark.parametrize('processor', [

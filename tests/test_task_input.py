@@ -5,7 +5,6 @@ import pytest
 from ploomber import DAG
 from ploomber.tasks import Input, PythonCallable
 from ploomber.products import File
-from ploomber.exceptions import DAGRenderError
 
 
 def touch_root(product):

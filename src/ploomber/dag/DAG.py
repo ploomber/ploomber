@@ -516,8 +516,7 @@ class DAG(collections.abc.Mapping):
 
         self.render()
 
-        return Table(
-            [self._G.nodes[name]['task'].status(**kwargs) for name in self._G])
+        return Table([self[name].status(**kwargs) for name in self])
 
     def to_dict(self, include_plot=False):
         """Returns a dict representation of the dag's Tasks,
@@ -582,7 +581,13 @@ class DAG(collections.abc.Mapping):
 
         return out
 
-    @requires(['pygraphviz'])
+    @requires(
+        ['pygraphviz'],
+        extra_msg=(
+            'Beware that "graphviz" (which is not pip-installable) is a '
+            'dependency of "pygraphviz", the easiest way to install both is '
+            'through conda "conda install pygraphviz", for more options see: '
+            'https://graphviz.org/'))
     def plot(self, output='tmp'):
         """Plot the DAG
         """
@@ -710,11 +715,28 @@ class DAG(collections.abc.Mapping):
         return self._G.remove_node(key)
 
     def __iter__(self):
-        """Iterate task names in topological order
+        """
+        Iterate task names in topological order. Topological order is
+        desirable in many situations, this order guarantees that for any given
+        task, its dependencies are executed first, but it's also useful for
+        other purposes, such as listing tasks, because it shows a more natural
+        order to see how data flows start to finish. For cases where this
+        sorting is not required, used the DAG._iter() method instead.
+
+
+        Notes
+        -----
+        https://en.wikipedia.org/wiki/Topological_sorting
         """
         # TODO: raise a warning if this any of this dag tasks have tasks
         # from other tasks as dependencies (they won't show up here)
         for name in nx.algorithms.topological_sort(self._G):
+            yield name
+
+    def _iter(self):
+        """Iterate over tasks names (unordered but more efficient than __iter__
+        """
+        for name in self._G:
             yield name
 
     def __len__(self):

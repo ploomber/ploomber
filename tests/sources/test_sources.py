@@ -13,8 +13,6 @@ from ploomber.products import GenericSQLRelation
 
 from test_pkg import functions
 
-# def test retrieve .name
-
 
 def test_generic_source_unrendered():
     s = GenericSource('some {{placeholder}}')
@@ -248,6 +246,18 @@ def test_python_callable_properties(path_to_test_pkg):
     assert PythonCallableSource.__name__ in repr(source)
     assert functions.simple_w_docstring.__name__ in repr(source)
     assert source.loc in repr(source)
+
+
+@pytest.mark.parametrize(
+    'class_', [SQLScriptSource, SQLQuerySource, GenericSource, FileSource])
+def test_file_location_included_if_initialized_from_file(
+        class_, tmp_directory):
+    path = Path('source.txt')
+    path.write_text("""
+    CREATE TAVLE {{product}} AS SELECT * FROM X
+    """)
+    source = class_(path)
+    assert 'source.txt' in repr(source)
 
 
 @pytest.mark.parametrize('source, expected', [

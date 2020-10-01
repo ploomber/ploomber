@@ -1,5 +1,4 @@
 import sys
-import os
 import pytest
 from ploomber.cli.parsers import CustomParser
 

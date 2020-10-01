@@ -13,6 +13,7 @@ from ploomber.products.Metadata import MetadataAlwaysUpToDate
 from ploomber.exceptions import TaskBuildError
 from ploomber.constants import TaskStatus
 from ploomber.sources.debugging import CallableDebugger
+from ploomber.tasks.Params import Params
 
 
 class PythonCallable(Task):
@@ -34,10 +35,29 @@ class PythonCallable(Task):
         be executed with a "product" (which will contain the product object).
         It will also include a "upstream" parameter if the task has upstream
         dependencies along with any parameters declared here
+    unserializer: callable, optional
+        A callable to unserialize upstream products, the product object
+        is passed as unique argument. If None, the source function receives
+        the product object directly. If the task has no upstream dependencies,
+        this argument has no effect
+    serializer: callable, optional
+        A callable to serialize this task's product, must take two arguments,
+        the first argument passed is the value returned by the task's
+        source, the second argument is the product oject. If None, the
+        task's source is responsible for serializing its own product
     """
-    def __init__(self, source, product, dag, name=None, params=None):
+    def __init__(self,
+                 source,
+                 product,
+                 dag,
+                 name=None,
+                 params=None,
+                 unserializer=None,
+                 serializer=None):
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(source, kwargs)
+        self._unserializer = unserializer
+        self._serializer = serializer
         super().__init__(product, dag, name, params)
 
     @staticmethod
@@ -45,7 +65,26 @@ class PythonCallable(Task):
         return PythonCallableSource(source, **kwargs)
 
     def run(self):
-        self.source.primitive(**self.params)
+        params = self.params.to_dict()
+
+        # unserialize upstream dependencies if needed
+        if 'upstream' in params and self._unserializer:
+            params['upstream'] = {
+                k: self._unserializer(v)
+                for k, v in params['upstream'].items()
+            }
+
+        # call function
+        out = self.source.primitive(**Params._from_dict(params, copy=False))
+
+        # serialize output if needed
+        if self._serializer:
+            if out is None:
+                raise ValueError('Callable {} must return a value if task '
+                                 'is initialized with a serializer'.format(
+                                     self.source.primitive))
+            else:
+                self._serializer(out, params['product'])
 
     def develop(self):
         # TODO: Params should implement an option to call to_json_serializable

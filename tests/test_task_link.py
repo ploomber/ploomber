@@ -5,7 +5,6 @@ import pytest
 from ploomber import DAG
 from ploomber.tasks import Link, PythonCallable
 from ploomber.products import File
-from ploomber.exceptions import DAGRenderError
 
 # TODO: merge this with test_task_input.py and parametrize tests
 
