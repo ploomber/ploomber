@@ -1,4 +1,5 @@
 import pytest
+from ploomber import SourceLoader
 from ploomber.static_analysis.python import PythonNotebookExtractor
 from ploomber.static_analysis.r import RNotebookExtractor
 from ploomber.static_analysis.sql import SQLExtractor
@@ -137,6 +138,35 @@ def test_extract_product_from_sql(code, class_, schema, name, kind):
     assert extracted.name == name
     assert extracted.schema == schema
     assert extracted.kind == kind
+
+
+def test_extract_from_placeholder():
+    loader = SourceLoader(path='templates', module='test_pkg')
+    extractor = SQLExtractor(loader['inline-product.sql'])
+    product = extractor.extract_product()
+    upstream = extractor.extract_upstream()
+
+    assert product.name == 'name'
+    assert product.schema == 'schema'
+    assert product.kind == 'table'
+    assert upstream == {'some_other_table'}
+
+
+def test_extract_from_placeholder_missing_product_and_upstream():
+    loader = SourceLoader(path='templates', module='test_pkg')
+    extractor = SQLExtractor(loader['query.sql'])
+
+    with pytest.raises(ValueError) as excinfo:
+        extractor.extract_product()
+
+    assert "Couldn't extract 'product' from code" in str(excinfo.value)
+    assert extractor.extract_upstream() is None
+
+
+def test_type_error():
+    # only accept strings or Placeholder
+    with pytest.raises(TypeError):
+        SQLExtractor(1)
 
 
 @pytest.mark.parametrize('source, expected', [

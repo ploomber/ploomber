@@ -3,10 +3,22 @@ from jinja2.nodes import Assign
 from ploomber import products
 from ploomber.static_analysis.abstract import Extractor
 from ploomber.static_analysis.jinja import JinjaUpstreamIntrospector
+from ploomber.placeholders.Placeholder import Placeholder
 
 
 class SQLExtractor(Extractor):
+    """
+
+    Parameters
+    ----------
+    code : str or Placeholder
+        SQL code
+    """
     def __init__(self, code):
+        if not isinstance(code, (str, Placeholder)):
+            raise TypeError('Code must be a str or Placeholder object, got: '
+                            '{}'.format(type(code)))
+
         super().__init__(code)
         self._product = None
         self._extracted_product = False
@@ -23,7 +35,12 @@ class SQLExtractor(Extractor):
         if product:
             params[type(product).__name__] = type(product)
 
-        Template(self.code).render(params)
+        if isinstance(self.code, str):
+            Template(self.code).render(params)
+        else:
+            # placeholder
+            self.code._template.render(params)
+
         return set(upstream.keys) if len(upstream.keys) else None
 
     def extract_product(self):
@@ -31,9 +48,11 @@ class SQLExtractor(Extractor):
         # called extract_upstream first
         product = self._extract_product()
 
+        code_str = self.code if isinstance(self.code, str) else self.code._raw
+
         if product is None:
             raise ValueError("Couldn't extract 'product' from code:\n" +
-                             self.code)
+                             code_str)
 
         return product
 
@@ -49,8 +68,7 @@ class SQLExtractor(Extractor):
         if self._extracted_product:
             return self._product
         else:
-            env = Environment()
-            ast = env.parse(self.code)
+            ast = self._get_ast()
             variables = {n.target.name: n.node for n in ast.find_all(Assign)}
 
             if 'product' not in variables:
@@ -72,3 +90,12 @@ class SQLExtractor(Extractor):
             self._extracted_product = True
 
             return self._product
+
+    def _get_ast(self):
+        if isinstance(self.code, str):
+            env = Environment()
+            return env.parse(self.code)
+        else:
+            # placeholder
+            env = self.code._template.environment
+            return env.parse(self.code._raw)
