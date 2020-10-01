@@ -13,6 +13,7 @@ from ploomber.products.Metadata import MetadataAlwaysUpToDate
 from ploomber.exceptions import TaskBuildError
 from ploomber.constants import TaskStatus
 from ploomber.sources.debugging import CallableDebugger
+from ploomber.tasks.Params import Params
 
 
 class PythonCallable(Task):
@@ -74,7 +75,7 @@ class PythonCallable(Task):
             }
 
         # call function
-        out = self.source.primitive(**params)
+        out = self.source.primitive(**Params._from_dict(params, copy=False))
 
         # serialize output if needed
         if self._serializer:
