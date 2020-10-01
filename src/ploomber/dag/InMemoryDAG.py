@@ -1,5 +1,8 @@
 import copy as copy_module
 
+from ploomber.util import validate
+from ploomber.tasks import PythonCallable
+
 
 def _do_nothing(x):
     return x
@@ -17,6 +20,14 @@ class InMemoryDAG:
         The DAG to use
     """
     def __init__(self, dag):
+        types = {type(dag[t]) for t in dag._iter()}
+
+        if not {PythonCallable} >= types:
+            extra = ','.join(
+                [type_.__name__ for type_ in types - {PythonCallable}])
+            raise TypeError('All tasks in the DAG must be PythonCallable, '
+                            'got unallowed types: {}'.format(extra))
+
         dag.render()
 
         self.dag = dag
@@ -54,11 +65,11 @@ class InMemoryDAG:
         """
         outs = {}
 
-        extra = set(root_params) - set(self.root_nodes)
-        missing = set(self.root_nodes) - set(root_params)
-
-        if missing or extra:
-            raise ValueError
+        root_params_names = set(self.root_nodes)
+        validate.keys(valid=root_params_names,
+                      passed=set(root_params),
+                      required=root_params_names,
+                      name='root_params')
 
         if copy is True:
             copying_function = copy_module.copy
@@ -74,7 +85,8 @@ class InMemoryDAG:
             # if root node, replace input params (but do not replace upstream
             # not product)
             if task_name in self.root_nodes:
-                params = {**params, **root_params[task_name]}
+                passed_params = root_params[task_name] or {}
+                params = {**params, **passed_params}
 
             # replace params with output
             if 'upstream' in params:
@@ -83,6 +95,14 @@ class InMemoryDAG:
                     for k, v in params['upstream'].items()
                 }
 
-            outs[task_name] = task.source.primitive(**params)
+            output = task.source.primitive(**params)
+
+            if output is None:
+                raise ValueError(
+                    'All callables in a {} must return a value. '
+                    'Callable "{}", from task "{}" returned None'.format(
+                        type(self).__name__, task.source.name, task_name))
+
+            outs[task_name] = output
 
         return outs

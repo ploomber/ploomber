@@ -717,6 +717,12 @@ class DAG(collections.abc.Mapping):
         for name in nx.algorithms.topological_sort(self._G):
             yield name
 
+    def _iter(self):
+        """Iterate over tasks names (unordered but more efficient)
+        """
+        for name in self._G:
+            yield name
+
     def __len__(self):
         return len(self._G)
 

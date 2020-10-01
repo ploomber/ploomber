@@ -7,7 +7,7 @@ from collections.abc import MutableMapping, Mapping
 
 from ploomber import tasks, products
 from ploomber.util.util import load_dotted_path, _make_iterable
-from ploomber.spec import validate
+from ploomber.util import validate
 
 suffix2taskclass = {
     '.py': tasks.NotebookRunner,

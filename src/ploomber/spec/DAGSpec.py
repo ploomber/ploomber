@@ -24,7 +24,7 @@ from ploomber import DAG, tasks, SourceLoader
 from ploomber.util.util import (load_dotted_path, find_file_recursively,
                                 call_with_dictionary)
 from ploomber.spec.TaskSpec import TaskSpec, suffix2taskclass
-from ploomber.spec import validate
+from ploomber.util import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.env.expand import expand_raw_dictionary
