@@ -35,9 +35,18 @@ class PythonCallable(Task):
         It will also include a "upstream" parameter if the task has upstream
         dependencies along with any parameters declared here
     """
-    def __init__(self, source, product, dag, name=None, params=None):
+    def __init__(self,
+                 source,
+                 product,
+                 dag,
+                 name=None,
+                 params=None,
+                 unserializer=None,
+                 serializer=None):
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(source, kwargs)
+        self._unserializer = unserializer
+        self._serializer = serializer
         super().__init__(product, dag, name, params)
 
     @staticmethod
@@ -45,7 +54,23 @@ class PythonCallable(Task):
         return PythonCallableSource(source, **kwargs)
 
     def run(self):
-        self.source.primitive(**self.params)
+        params = self.params.to_dict()
+
+        if 'upstream' in params and self._unserializer:
+            params['upstream'] = {
+                k: self._unserializer(v)
+                for k, v in params['upstream'].items()
+            }
+
+        out = self.source.primitive(**params)
+
+        if self._serializer:
+            if out is None:
+                raise ValueError('Callable {} must return a value if task '
+                                 'is initialized with a serializer'.format(
+                                     self.source.primitive))
+            else:
+                self._serializer(out, params['product'])
 
     def develop(self):
         # TODO: Params should implement an option to call to_json_serializable

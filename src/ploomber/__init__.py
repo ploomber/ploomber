@@ -1,5 +1,6 @@
 import logging
 from ploomber.dag.DAG import DAG
+from ploomber.dag.InMemoryDAG import InMemoryDAG
 from ploomber.dag.DAGConfigurator import DAGConfigurator
 from ploomber.env.env import Env
 from ploomber.env.decorators import load_env, with_env
@@ -13,7 +14,8 @@ __version__ = '0.7.4dev'
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = [
-    'DAG', 'Env', 'SourceLoader', 'load_env', 'with_env', 'DAGConfigurator'
+    'DAG', 'Env', 'SourceLoader', 'load_env', 'with_env', 'DAGConfigurator',
+    'InMemoryDAG'
 ]
 
 
