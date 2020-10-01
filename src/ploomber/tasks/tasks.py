@@ -34,6 +34,16 @@ class PythonCallable(Task):
         be executed with a "product" (which will contain the product object).
         It will also include a "upstream" parameter if the task has upstream
         dependencies along with any parameters declared here
+    unserializer: callable, optional
+        A callable to unserialize upstream products, the product object
+        is passed as unique argument. If None, the source function receives
+        the product object directly. If the task has no upstream dependencies,
+        this argument has no effect
+    serializer: callable, optional
+        A callable to serialize this task's product, must take two arguments,
+        the first argument passed is the value returned by the task's
+        source, the second argument is the product oject. If None, the
+        task's source is responsible for serializing its own product
     """
     def __init__(self,
                  source,
@@ -56,14 +66,17 @@ class PythonCallable(Task):
     def run(self):
         params = self.params.to_dict()
 
+        # unserialize upstream dependencies if needed
         if 'upstream' in params and self._unserializer:
             params['upstream'] = {
                 k: self._unserializer(v)
                 for k, v in params['upstream'].items()
             }
 
+        # call function
         out = self.source.primitive(**params)
 
+        # serialize output if needed
         if self._serializer:
             if out is None:
                 raise ValueError('Callable {} must return a value if task '

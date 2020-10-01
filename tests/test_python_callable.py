@@ -1,6 +1,8 @@
 import pytest
 from pathlib import Path
 
+import pandas as pd
+
 from test_pkg import functions
 from ploomber import DAG, DAGConfigurator
 from ploomber.tasks import PythonCallable
@@ -20,18 +22,32 @@ def fn_w_exception(product):
     raise MyException
 
 
+def fn_data_frame(product):
+    return pd.DataFrame({'x': [1, 2, 3]})
+
+
+def fn_adds_one(upstream, product):
+    return upstream['root'] + 1
+
+
+def df_serializer(output, product):
+    output.to_parquet(str(product))
+
+
+def df_unserializer(product):
+    return pd.read_parquet(str(product))
+
+
 def test_params_are_accesible_after_init():
     dag = DAG()
-    t = PythonCallable(fn, File('file.txt'), dag, 'callable',
-                       params=dict(a=1))
+    t = PythonCallable(fn, File('file.txt'), dag, 'callable', params=dict(a=1))
     assert t.params == dict(a=1)
 
 
 def test_upstream_and_me_are_added():
     dag = DAG()
     product = File('file.txt')
-    t = PythonCallable(fn, product, dag, 'callable',
-                       params=dict(a=1))
+    t = PythonCallable(fn, product, dag, 'callable', params=dict(a=1))
     dag.render()
 
     assert t.params['product'] is product
@@ -39,15 +55,13 @@ def test_upstream_and_me_are_added():
 
 def test_can_execute_python_callable(tmp_directory):
     dag = DAG()
-    PythonCallable(fn, File('file.txt'), dag, 'callable',
-                   params=dict(a=1))
+    PythonCallable(fn, File('file.txt'), dag, 'callable', params=dict(a=1))
     assert dag.build()
 
 
 def test_exceptions_are_raised_with_serial_executor():
     dag = DAG()
-    PythonCallable(fn_w_exception, File('file.txt'),
-                   dag, 'callable')
+    PythonCallable(fn_w_exception, File('file.txt'), dag, 'callable')
 
     with pytest.raises(DAGBuildError):
         dag.build()
@@ -55,7 +69,10 @@ def test_exceptions_are_raised_with_serial_executor():
 
 def test_catches_signature_errors_at_render_time():
     dag = DAG()
-    t = PythonCallable(fn, File('file.txt'), dag, 'callable',
+    t = PythonCallable(fn,
+                       File('file.txt'),
+                       dag,
+                       'callable',
                        params=dict(non_param=1))
 
     with pytest.raises(TaskRenderError):
@@ -70,10 +87,8 @@ def test_hot_reload(backup_test_pkg, tmp_directory):
     cfg.params.hot_reload = True
     dag = cfg.create()
 
-    t1 = PythonCallable(functions.touch_root,
-                        File('file1.txt'), dag)
-    t2 = PythonCallable(functions.touch_upstream,
-                        File('file2.txt'), dag)
+    t1 = PythonCallable(functions.touch_root, File('file1.txt'), dag)
+    t2 = PythonCallable(functions.touch_upstream, File('file2.txt'), dag)
     t1 >> t2
 
     path_to_functions = Path(backup_test_pkg, 'functions.py')
@@ -90,3 +105,24 @@ def touch_upstream(product, upstream):
 
     assert Path('file1.txt').read_text() == 'hi'
     assert Path('file2.txt').read_text() == 'hello'
+
+
+def test_serialize_unserialize(tmp_directory):
+    dag = DAG()
+
+    t1 = PythonCallable(fn_data_frame,
+                        File('t1.parquet'),
+                        dag,
+                        name='root',
+                        serializer=df_serializer)
+    t2 = PythonCallable(fn_adds_one,
+                        File('t2.parquet'),
+                        dag,
+                        unserializer=df_unserializer,
+                        serializer=df_serializer)
+    t1 >> t2
+
+    dag.build()
+
+    assert pd.read_parquet('t1.parquet')['x'].tolist() == [1, 2, 3]
+    assert pd.read_parquet('t2.parquet')['x'].tolist() == [2, 3, 4]
