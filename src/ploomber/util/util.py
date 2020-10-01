@@ -10,10 +10,25 @@ from collections.abc import Iterable
 from ploomber.exceptions import CallbackSignatureError, TaskRenderError
 
 
-def requires(pkgs, name=None):
+def requires(pkgs, name=None, extra_msg=None):
     """
     Check if packages were imported, raise ImportError with an appropriate
     message for missing ones
+
+    Error message:
+    a, b are required to use function. Install them by running pip install a b
+
+    Parameters
+    ----------
+    pkgs
+        The names of the packages required
+
+    name
+        The name of the module/function/class to show in the error message,
+        if None, the decorated function __name__ attribute is used
+
+    extra_msg
+        Append this extra message to the end
     """
     def decorator(f):
         @wraps(f)
@@ -25,14 +40,16 @@ def requires(pkgs, name=None):
             if missing:
                 msg = reduce(lambda x, y: x + ' ' + y, missing)
                 fn_name = name or f.__name__
+                error_msg = ('{} {} required to use {}. Install {} by '
+                             'running "pip install {}"'.format(
+                                 msg, 'is' if len(missing) == 1 else 'are',
+                                 fn_name,
+                                 'it' if len(missing) == 1 else 'them', msg))
 
-                raise ImportError('{} {} required to use {}. Install {} by '
-                                  'running "pip install {}"'.format(
-                                      msg,
-                                      'is' if len(missing) == 1 else 'are',
-                                      fn_name,
-                                      'it' if len(missing) == 1 else 'them',
-                                      msg))
+                if extra_msg:
+                    error_msg += ('. ' + extra_msg)
+
+                raise ImportError(error_msg)
 
             return f(*args, **kwargs)
 

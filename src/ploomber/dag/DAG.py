@@ -582,7 +582,13 @@ class DAG(collections.abc.Mapping):
 
         return out
 
-    @requires(['pygraphviz'])
+    @requires(
+        ['pygraphviz'],
+        extra_msg=(
+            'Beware that "graphviz" (which is not pip-installable) is a '
+            'dependency of "pygraphviz", the easiest way to install both is '
+            'through conda "conda install pygraphviz", for more options see: '
+            'https://graphviz.org/'))
     def plot(self, output='tmp'):
         """Plot the DAG
         """
