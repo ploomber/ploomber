@@ -259,25 +259,34 @@ def load_dotted_path(dotted_path, raise_=True):
             module = importlib.import_module(mod)
         except ImportError as e:
             if raise_:
-                raise ImportError('An error happened when trying to '
-                                  'import module "{}"'.format(mod)) from e
+                # we want to rais ethe same error type but chaining exceptions
+                # produces a long verbose output, so we just modify the
+                # original message to add more context, it's ok to hide the
+                # original traceback since it will just point to lines
+                # in the importlib module, which isn't useful for the user
+                e.msg = ('An error happened when trying to '
+                         'import dotted path "{}": {}'.format(
+                             dotted_path, str(e)))
+                raise
 
         if module:
             try:
                 obj = getattr(module, name)
             except AttributeError as e:
                 if raise_:
-                    raise AttributeError(
-                        'Could not get attribute "{}" from module '
-                        '"{}" (loaded from: {}), make sure it is a valid '
-                        'callable defined in such module'.format(
-                            name, mod, module.__file__)) from e
-
+                    # same as in the comment above
+                    e.msg = ('Could not get attribute "{}" from module '
+                             '"{}" (loaded from: {}), make sure it is a valid '
+                             'callable defined in such module'.format(
+                                 name, mod, module.__file__))
+                    raise
         return obj
     else:
         if raise_:
-            raise ImportError('Could not import dotted path "{}", '
-                              'it is invalid'.format(dotted_path))
+            raise ValueError(
+                'Invalid dotted path value "{}", must be a dot separated '
+                'string, with at least '
+                '[module_name].[function_name]'.format(dotted_path))
 
 
 def find_file_recursively(name, max_levels_up=6, starting_dir=None):
