@@ -516,8 +516,7 @@ class DAG(collections.abc.Mapping):
 
         self.render()
 
-        return Table(
-            [self._G.nodes[name]['task'].status(**kwargs) for name in self._G])
+        return Table([self[name].status(**kwargs) for name in self])
 
     def to_dict(self, include_plot=False):
         """Returns a dict representation of the dag's Tasks,
@@ -716,7 +715,8 @@ class DAG(collections.abc.Mapping):
         return self._G.remove_node(key)
 
     def __iter__(self):
-        """Iterate task names in topological order
+        """
+        Iterate task names in topological order
         """
         # TODO: raise a warning if this any of this dag tasks have tasks
         # from other tasks as dependencies (they won't show up here)
