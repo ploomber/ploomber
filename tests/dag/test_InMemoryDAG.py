@@ -6,14 +6,13 @@ from ploomber.products import File
 
 
 # TODO: product should be optional when serializer is passed
-def _root(product, input_):
-    df = pd.DataFrame(input_)
+def _root(product, input_dict):
+    df = pd.DataFrame(input_dict)
     return df
 
 
-def _task(upstream, product):
-    df = upstream['root']
-    return df + 1
+def _add_one(upstream, product):
+    return upstream['root'] + 1
 
 
 def unserializer(upstream_product):
@@ -32,11 +31,11 @@ def test_in_memory_dag():
                           dag,
                           name='root',
                           serializer=serializer,
-                          params={'input_': {
-                              'x': [1, 2, 3]
+                          params={'input_dict': {
+                              'x': [0, 0, 0]
                           }})
 
-    task = PythonCallable(_task,
+    task = PythonCallable(_add_one,
                           File('task.parquet'),
                           dag,
                           name='task',
@@ -47,4 +46,7 @@ def test_in_memory_dag():
 
     dag_in_memory = InMemoryDAG(dag)
 
-    dag_in_memory.build({'root': {'input_': {'x': [10, 20, 30]}}})
+    out = dag_in_memory.build({'root': {'input_dict': {'x': [1, 2, 3]}}})
+
+    assert out['root']['x'].tolist() == [1, 2, 3]
+    assert out['task']['x'].tolist() == [2, 3, 4]
