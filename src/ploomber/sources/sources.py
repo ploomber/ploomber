@@ -30,6 +30,10 @@ class Source(abc.ABC):
     implemented cover most use cases, if none of the current implementations
     matches their use case, they can either use a GenericSource or implement
     their own.
+
+    Concrete classes should implement its own __repr__ method, which should
+    display the source class, code (first few lines if long) and file location,
+    if loaded from a file (sources can also load from strings)
     """
     @abc.abstractmethod
     def __init__(self, primitive, hot_reload=False):
@@ -101,10 +105,6 @@ class Source(abc.ABC):
         the task to execute).
         """
         pass
-
-    # NOTE: should __repr__ contain: human-readable code + class name +
-    # parameters? That's one option, we currently do not have a useful
-    # __repr__ for sources
 
     @property
     @abc.abstractmethod
@@ -215,11 +215,11 @@ class SQLSourceMixin:
 
     def extract_product(self):
         return static_analysis.sql.SQLExtractor(
-            self._placeholder._raw).extract_product()
+            self._placeholder).extract_product()
 
     def extract_upstream(self):
         return static_analysis.sql.SQLExtractor(
-            self._placeholder._raw).extract_upstream()
+            self._placeholder).extract_upstream()
 
 
 class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
@@ -294,10 +294,8 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
     def render(self, params):
         # FIXME: inefficient, initialize once and only update if needed
         # (i.e. hot reload is on)
-        # NOTE: using private method because we don't want to raise an
-        # exception if the value is None
         extracted = static_analysis.sql.SQLExtractor(
-            self._placeholder._raw)._extract_product()
+            self._placeholder).extract_product(raise_if_none=False)
         # the code itself might already define the product, no need to pass it
         # TODO: verify that the product passed and the one defined are the same
         if extracted is not None:

@@ -1,43 +1,27 @@
-from jinja2 import Environment, Template
-from jinja2.nodes import Assign
 from ploomber import products
 from ploomber.static_analysis.abstract import Extractor
-from ploomber.static_analysis.jinja import JinjaUpstreamIntrospector
+from ploomber.static_analysis.jinja import JinjaExtractor
 
 
 class SQLExtractor(Extractor):
+    """
+
+    Parameters
+    ----------
+    code : str or Placeholder
+        SQL code
+    """
     def __init__(self, code):
-        super().__init__(code)
+        self._jinja_extractor = JinjaExtractor(code)
         self._product = None
         self._extracted_product = False
 
     def extract_upstream(self):
         """Extract upstream keys used in a templated SQL script
         """
-        upstream = JinjaUpstreamIntrospector()
-        params = {'upstream': upstream}
+        return self._jinja_extractor.find_variable_access(variable='upstream')
 
-        # we need to pass the class if the product is declared here
-        product = self._extract_product()
-
-        if product:
-            params[type(product).__name__] = type(product)
-
-        Template(self.code).render(params)
-        return set(upstream.keys) if len(upstream.keys) else None
-
-    def extract_product(self):
-        # only compute it the first time, might be computed already if
-        # called extract_upstream first
-        product = self._extract_product()
-
-        if product is None:
-            raise ValueError("Couldn't extract 'product' from code:\n" +
-                             self.code)
-
-        return product
-
-    def _extract_product(self):
+    def extract_product(self, raise_if_none=True):
         """
         Extract an object from a SQL template that defines as product variable:
 
@@ -46,29 +30,25 @@ class SQLExtractor(Extractor):
         Where SOME_CLASS is a class defined in ploomber.products. If no product
         variable is defined, returns None
         """
-        if self._extracted_product:
-            return self._product
+        product = self._jinja_extractor.find_variable_assignment(
+            variable='product')
+
+        if product is None:
+            if raise_if_none:
+                raise ValueError("Couldn't extract 'product' from code:\n" +
+                                 self._jinja_extractor.get_code_as_str())
         else:
-            env = Environment()
-            ast = env.parse(self.code)
-            variables = {n.target.name: n.node for n in ast.find_all(Assign)}
-
-            if 'product' not in variables:
-                self._product = None
-            else:
-                product = variables['product']
-
-                try:
-                    class_ = getattr(products, product.node.name)
-                    arg = product.args[0].as_const()
-                    self._product = class_(arg)
-                except Exception as e:
-                    exc = ValueError(
-                        "Found a variable named 'product' in "
-                        "code: {} but it does not appear to "
-                        "be a valid SQL product, verify it ".format(self.code))
-                    raise exc from e
-
-            self._extracted_product = True
-
-            return self._product
+            # validate product
+            try:
+                # get the class name used
+                class_ = getattr(products, product.node.name)
+                # get the arg passed to the class
+                arg = product.args[0].as_const()
+                # try to initialize object
+                return class_(arg)
+            except Exception as e:
+                exc = ValueError("Found a variable named 'product' in "
+                                 "code: {} but it does not appear to "
+                                 "be a valid SQL product, verify it ".format(
+                                     self._jinja_extractor.code))
+                raise exc from e

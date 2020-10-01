@@ -254,7 +254,7 @@ def test_file_location_included_if_initialized_from_file(
         class_, tmp_directory):
     path = Path('source.txt')
     path.write_text("""
-    CREATE TAVLE {{product}} AS SELECT * FROM X
+    CREATE TABLE {{product}} AS SELECT * FROM X
     """)
     source = class_(path)
     assert 'source.txt' in repr(source)

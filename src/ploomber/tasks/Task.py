@@ -623,21 +623,6 @@ class Task(abc.ABC):
     def set_upstream(self, other):
         self.dag._add_edge(other, self)
 
-    # FIXME: delete
-    def plan(self):
-        """Shows a text summary of what this task will execute
-        """
-
-        plan = """
-        Input parameters: {}
-        Product: {}
-
-        Source code:
-        {}
-        """.format(self.params, self.product, str(self.source))
-
-        print(plan)
-
     def status(self, return_code_diff=False, sections=None):
         """Prints the current task status
 
