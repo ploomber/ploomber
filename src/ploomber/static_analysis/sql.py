@@ -21,7 +21,7 @@ class SQLExtractor(Extractor):
         """
         return self._jinja_extractor.find_variable_access(variable='upstream')
 
-    def extract_product(self):
+    def extract_product(self, raise_if_none=True):
         """
         Extract an object from a SQL template that defines as product variable:
 
@@ -34,8 +34,9 @@ class SQLExtractor(Extractor):
             variable='product')
 
         if product is None:
-            raise ValueError("Couldn't extract 'product' from code:\n" +
-                             self._jinja_extractor.get_code_as_str())
+            if raise_if_none:
+                raise ValueError("Couldn't extract 'product' from code:\n" +
+                                 self._jinja_extractor.get_code_as_str())
         else:
             # validate product
             try:
