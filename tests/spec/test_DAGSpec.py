@@ -390,10 +390,6 @@ def test_source_loader(monkeypatch, tmp_directory):
         'tasks': [{
             'source': 'create-table.sql',
             'product': ['some_table', 'table'],
-            # FIXME: when name is missing, this breaks with an uninformative
-            # error because an unrendered placeholder is tried to be casted to
-            # str
-            'name': 'create-table',
             'client': 'db.get_client'
         }]
     })
@@ -416,4 +412,5 @@ def get_client():
     # test the task source is correctly resolved when converted to a dag
     dag = spec.to_dag()
     dag.render()
-    assert str(dag['create-table'].source) == expected
+
+    assert str(dag['create-table.sql'].source) == expected

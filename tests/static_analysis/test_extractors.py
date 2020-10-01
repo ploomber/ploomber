@@ -4,7 +4,7 @@ from ploomber.static_analysis.python import PythonNotebookExtractor
 from ploomber.static_analysis.r import RNotebookExtractor
 from ploomber.static_analysis.sql import SQLExtractor
 from ploomber.static_analysis.string import StringExtractor
-from ploomber.static_analysis import jinja
+from ploomber.static_analysis.jinja import JinjaExtractor
 from ploomber.products import (PostgresRelation, SQLiteRelation,
                                GenericSQLRelation, SQLRelation)
 
@@ -34,11 +34,13 @@ case_error_3 = "upstream = 1"
 
 
 def test_jinja_variable_access():
-    from jinja2 import Environment
-    env = Environment()
-    assert jinja.find_variable_access(
-        env.parse('{{upstream.a}} {{upstream["b"]}}'),
-        'upstream') == {'a', 'b'}
+    extractor = JinjaExtractor("""
+{{upstream.a}} {{upstream["b"]}}
+{% set some_var = 100 %}
+""")
+    assert extractor.find_variable_access('upstream') == {'a', 'b'}
+    assert extractor.find_variable_assignment('some_var').as_const() == 100
+    assert extractor.find_variable_assignment('non_var') is None
 
 
 @pytest.mark.parametrize('code', [case_error_1, case_error_2, case_error_3])
