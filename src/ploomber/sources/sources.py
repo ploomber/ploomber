@@ -215,11 +215,11 @@ class SQLSourceMixin:
 
     def extract_product(self):
         return static_analysis.sql.SQLExtractor(
-            self._placeholder._raw).extract_product()
+            self._placeholder).extract_product()
 
     def extract_upstream(self):
         return static_analysis.sql.SQLExtractor(
-            self._placeholder._raw).extract_upstream()
+            self._placeholder).extract_upstream()
 
 
 class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
@@ -297,7 +297,7 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
         # NOTE: using private method because we don't want to raise an
         # exception if the value is None
         extracted = static_analysis.sql.SQLExtractor(
-            self._placeholder._raw)._extract_product()
+            self._placeholder)._extract_product()
         # the code itself might already define the product, no need to pass it
         # TODO: verify that the product passed and the one defined are the same
         if extracted is not None:

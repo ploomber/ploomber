@@ -385,8 +385,7 @@ def test_source_loader(monkeypatch, tmp_directory):
                 'module': 'test_pkg'
             },
             'extract_product': False,
-            # FIXME: an uninformative error is raised when this is true
-            'extract_upstream': False
+            'extract_upstream': False,
         },
         'tasks': [{
             'source': 'create-table.sql',

@@ -1,8 +1,8 @@
-from jinja2 import Environment, Template
+from jinja2 import Environment
 from jinja2.nodes import Assign
 from ploomber import products
 from ploomber.static_analysis.abstract import Extractor
-from ploomber.static_analysis.jinja import JinjaUpstreamIntrospector
+from ploomber.static_analysis.jinja import find_variable_access
 from ploomber.placeholders.Placeholder import Placeholder
 
 
@@ -26,22 +26,7 @@ class SQLExtractor(Extractor):
     def extract_upstream(self):
         """Extract upstream keys used in a templated SQL script
         """
-        upstream = JinjaUpstreamIntrospector()
-        params = {'upstream': upstream}
-
-        # we need to pass the class if the product is declared here
-        product = self._extract_product()
-
-        if product:
-            params[type(product).__name__] = type(product)
-
-        if isinstance(self.code, str):
-            Template(self.code).render(params)
-        else:
-            # placeholder
-            self.code._template.render(params)
-
-        return set(upstream.keys) if len(upstream.keys) else None
+        return find_variable_access(self._get_ast(), variable='upstream')
 
     def extract_product(self):
         # only compute it the first time, might be computed already if
