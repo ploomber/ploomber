@@ -228,11 +228,12 @@ class DAGSpec(MutableMapping):
             if class_ is NotebookRunner
         ]
 
-        files = chain.from_iterable(iglob('*' + ext) for ext in extensions)
+        pattern = str(Path(path_to_dir, '*'))
+        files = chain.from_iterable(iglob(pattern + ext) for ext in extensions)
 
         tasks = [{
             'source': file_,
-            'name': str(Path(file_).with_suffix(''))
+            'name': str(Path(file_).with_suffix('').name)
         } for file_ in files]
 
         return cls({'tasks': tasks})

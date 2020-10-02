@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta, datetime
 import numpy as np
 import pandas as pd
@@ -153,10 +154,23 @@ def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
     dag.build()
 
 
-def test_spec_from_directory(tmp_nbs_no_yaml):
+@pytest.mark.parametrize(
+    'chdir, dir_',
+    [
+        # test with the current directory
+        ['.', '.'],
+        # and one level up
+        ['..', 'content'],
+    ])
+def test_spec_from_directory(tmp_nbs_no_yaml, chdir, dir_):
+    os.chdir(chdir)
+
     Path('output').mkdir()
-    dag = DAGSpec.from_directory('.').to_dag()
+
+    dag = DAGSpec.from_directory(dir_).to_dag()
     dag.build()
+
+    assert list(dag) == ['load', 'clean', 'plot']
 
 
 def _random_date_from(date, max_days, n):
