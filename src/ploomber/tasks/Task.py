@@ -558,7 +558,7 @@ class Task(abc.ABC):
         ----------
         force : bool
             If True, mark status as WaitingExecution/WaitingUpstream even if
-            the task is up to, otherwise up to date tasks are marked as
+            the task is up-to-date, otherwise up-to-date tasks are marked as
             Skipped
 
         outdated_by_code : str
@@ -587,34 +587,38 @@ class Task(abc.ABC):
                           'Task params: {}'.format(repr(self),
                                                    self.params)) from e
 
-        # Maybe set ._exec_status directly, since no downstream propagation
-        # is needed here.
-        is_outdated = (self.product._is_outdated(
-            outdated_by_code=outdated_by_code))
-
-        if not self.upstream:
-            if not is_outdated and not force:
-                self._exec_status = TaskStatus.Skipped
-            else:
-                self._exec_status = TaskStatus.WaitingExecution
-                self._logger.debug(
-                    'Forcing status "%s", outdated conditions'
-                    ' ignored...', self.name)
+        if force == 'skip':
+            # fast rendering option: checking product outdated status is
+            # slow, especially for remote products. If we are not going to
+            # build the pipeline, we can save a lot of time by skipping that
+            self._exec_status = TaskStatus.Skipped
         else:
-            all_upstream_done = all([
-                t.exec_status in {TaskStatus.Executed, TaskStatus.Skipped}
-                for t in self.upstream.values()
-            ])
+            is_outdated = (self.product._is_outdated(
+                outdated_by_code=outdated_by_code))
 
-            if all_upstream_done and is_outdated:
-                self._exec_status = TaskStatus.WaitingExecution
-            elif all_upstream_done and not is_outdated and not force:
-                self._exec_status = TaskStatus.Skipped
+            if not self.upstream:
+                if not is_outdated and not force:
+                    self._exec_status = TaskStatus.Skipped
+                else:
+                    self._exec_status = TaskStatus.WaitingExecution
+                    self._logger.debug(
+                        'Forcing status "%s", outdated conditions'
+                        ' ignored...', self.name)
             else:
-                self._exec_status = TaskStatus.WaitingUpstream
-                self._logger.debug(
-                    'Forcing status "%s", outdated conditions'
-                    ' ignored...', self.name)
+                all_upstream_done = all([
+                    t.exec_status in {TaskStatus.Executed, TaskStatus.Skipped}
+                    for t in self.upstream.values()
+                ])
+
+                if all_upstream_done and is_outdated:
+                    self._exec_status = TaskStatus.WaitingExecution
+                elif all_upstream_done and not is_outdated and not force:
+                    self._exec_status = TaskStatus.Skipped
+                else:
+                    self._exec_status = TaskStatus.WaitingUpstream
+                    self._logger.debug(
+                        'Forcing status "%s", outdated conditions'
+                        ' ignored...', self.name)
 
         self._run_on_render()
 
