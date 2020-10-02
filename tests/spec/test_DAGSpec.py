@@ -149,6 +149,9 @@ def test_python_callables_with_extract_upstream(tmp_directory):
     dag.build()
 
     assert set(dag) == {'a', 'b', 'root'}
+    assert not dag['root'].upstream
+    assert set(dag['a'].upstream) == {'root'}
+    assert set(dag['b'].upstream) == {'root'}
 
 
 @pytest.mark.parametrize('processor', [
