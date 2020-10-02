@@ -559,7 +559,7 @@ class Task(abc.ABC):
         force : bool
             If True, mark status as WaitingExecution/WaitingUpstream even if
             the task is up-to-date, otherwise up-to-date tasks are marked as
-            Skipped
+            Skipped.
 
         outdated_by_code : str
             Factors to determine if Task.product is marked outdated when source

@@ -249,7 +249,11 @@ class DAG(collections.abc.Mapping):
         Parameters
         ----------
         force
-            Ignore product metadata status and prepare all tasks to be executed
+            Ignore product metadata status and prepare all tasks to be
+            executed. This option renders much faster in DAGs with products
+            whose metadata is stored in remote systems, because there is no
+            need to fetch metadata over the network. If the DAG won't be
+            built, this option is recommended.
         """
         g = self._to_graph()
 
