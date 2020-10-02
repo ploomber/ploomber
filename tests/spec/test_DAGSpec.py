@@ -122,6 +122,35 @@ def task1(product):
     assert isinstance(dag['task1'], PythonCallable)
 
 
+def test_python_callables_with_extract_upstream(tmp_directory):
+    spec = DAGSpec({
+        'tasks': [
+            {
+                'source': 'test_pkg.callables.root',
+                'product': 'root.csv'
+            },
+            {
+                'source': 'test_pkg.callables.a',
+                'product': 'a.csv'
+            },
+            {
+                'source': 'test_pkg.callables.b',
+                'product': 'b.csv'
+            },
+        ],
+        'meta': {
+            'extract_product': False,
+            'extract_upstream': True
+        }
+    })
+
+    dag = spec.to_dag()
+
+    dag.build()
+
+    assert set(dag) == {'a', 'b', 'root'}
+
+
 @pytest.mark.parametrize('processor', [
     to_ipynb, tasks_list, remove_task_class, extract_upstream, extract_product
 ])
