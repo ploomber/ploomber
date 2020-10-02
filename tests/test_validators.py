@@ -28,6 +28,22 @@ def test_allows_optional_columns():
         df, [validate_schema(schema={'a': 'int64'}, optional=['b'])])
 
 
+def test_validates_optional_schema():
+    df = pd.DataFrame({'a': [0], 'b': [0]})
+
+    with pytest.raises(AssertionError):
+        data_frame_validator(
+            df,
+            [validate_schema(schema={'a': 'int64'}, optional={'b': 'object'})])
+
+
+def test_ignores_dtype_validation_if_none():
+    df = pd.DataFrame({'a': [0], 'b': [0]})
+
+    data_frame_validator(
+        df, [validate_schema(schema={'a': None}, optional={'b': None})])
+
+
 def test_raises_on_unexpected_columns():
     df = pd.DataFrame({'a': [0], 'b': [0]})
 

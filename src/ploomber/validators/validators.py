@@ -114,12 +114,12 @@ def validate_schema(assert_,
         raise ValueError("'on_unexpected_cols' must be one of 'warn', 'raise' "
                          "or None")
 
-    optional = set() if optional is None else set(optional)
+    optional = optional or {}
     cols = set(data.columns)
     expected = set(schema)
 
     missing = expected - cols
-    unexpected = cols - expected - optional
+    unexpected = cols - expected - set(optional)
 
     msg = 'validate_schema: missing columns {missing}.'.format(missing=missing)
     assert_(not missing, msg)
@@ -130,18 +130,20 @@ def validate_schema(assert_,
         caller = assert_ if on_unexpected_cols == 'raise' else assert_.warn
         caller(not unexpected, msg)
 
-    if isinstance(schema, Mapping):
-        # validate column types (as many as you can)
-        dtypes = data.dtypes.astype(str).to_dict()
+    # if passing a mapping, schema is validated (even for optional columns)
+    for schema_to_validate in [schema, optional]:
+        if isinstance(schema_to_validate, Mapping):
+            # validate column types (as many as you can)
+            dtypes = data.dtypes.astype(str).to_dict()
 
-        for name, dtype in dtypes.items():
-            expected = schema.get(name)
+            for name, dtype in dtypes.items():
+                expected = schema_to_validate.get(name)
 
-            if expected is not None:
-                msg = ('validate_schema: wrong dtype for column "{name}". '
-                       'Expected: "{expected}". Got: "{dtype}"'.format(
-                           name=name, expected=expected, dtype=dtype))
-                assert_(dtype == expected, msg)
+                if expected is not None:
+                    msg = ('validate_schema: wrong dtype for column "{name}". '
+                           'Expected: "{expected}". Got: "{dtype}"'.format(
+                               name=name, expected=expected, dtype=dtype))
+                    assert_(dtype == expected, msg)
 
     return assert_
 
