@@ -558,8 +558,8 @@ class Task(abc.ABC):
         ----------
         force : bool
             If True, mark status as WaitingExecution/WaitingUpstream even if
-            the task is up to, otherwise up to date tasks are marked as
-            Skipped
+            the task is up-to-date, otherwise up-to-date tasks are marked as
+            Skipped.
 
         outdated_by_code : str
             Factors to determine if Task.product is marked outdated when source
@@ -587,34 +587,32 @@ class Task(abc.ABC):
                           'Task params: {}'.format(repr(self),
                                                    self.params)) from e
 
-        # Maybe set ._exec_status directly, since no downstream propagation
-        # is needed here.
-        is_outdated = (self.product._is_outdated(
-            outdated_by_code=outdated_by_code))
+        is_outdated = ProductEvaluator(self.product, outdated_by_code)
 
         if not self.upstream:
-            if not is_outdated and not force:
-                self._exec_status = TaskStatus.Skipped
-            else:
+            # NOTE: is_outdated goes second so it's lazily evaluated
+            if force or is_outdated.check():
                 self._exec_status = TaskStatus.WaitingExecution
                 self._logger.debug(
                     'Forcing status "%s", outdated conditions'
                     ' ignored...', self.name)
+
+            else:
+                self._exec_status = TaskStatus.Skipped
+
         else:
-            all_upstream_done = all([
+            all_upstream_ready = all([
                 t.exec_status in {TaskStatus.Executed, TaskStatus.Skipped}
                 for t in self.upstream.values()
             ])
 
-            if all_upstream_done and is_outdated:
-                self._exec_status = TaskStatus.WaitingExecution
-            elif all_upstream_done and not is_outdated and not force:
-                self._exec_status = TaskStatus.Skipped
-            else:
+            if not all_upstream_ready:
                 self._exec_status = TaskStatus.WaitingUpstream
-                self._logger.debug(
-                    'Forcing status "%s", outdated conditions'
-                    ' ignored...', self.name)
+            else:
+                if force or is_outdated.check():
+                    self._exec_status = TaskStatus.WaitingExecution
+                else:
+                    self._exec_status = TaskStatus.Skipped
 
         self._run_on_render()
 
@@ -764,7 +762,7 @@ class Task(abc.ABC):
                 t.exec_status in (TaskStatus.Errored, TaskStatus.Aborted)
                 for t in task.upstream.values()
             ])
-            all_upstream_done = all([
+            all_upstream_ready = all([
                 t.exec_status in {TaskStatus.Executed, TaskStatus.Skipped}
                 for t in task.upstream.values()
             ])
@@ -777,7 +775,7 @@ class Task(abc.ABC):
                     for t in task.upstream.values()
             ]):
                 task.exec_status = TaskStatus.AbortedRender
-            elif all_upstream_done:
+            elif all_upstream_ready:
                 task.exec_status = TaskStatus.WaitingExecution
 
         for t in self._get_downstream():
@@ -824,3 +822,21 @@ def _doc_short(doc):
         return doc.split('\n')[0]
     else:
         return None
+
+
+class ProductEvaluator:
+    """
+    A class to temporarily keep the outdated status of a product, when products
+    are remote, this operation is expensive
+    """
+    def __init__(self, product, outdated_by_code):
+        self.product = product
+        self.outdated_by_code = outdated_by_code
+        self._is_outdated = None
+
+    def check(self):
+        if self._is_outdated is None:
+            self._is_outdated = (self.product._is_outdated(
+                outdated_by_code=self.outdated_by_code))
+
+        return self._is_outdated

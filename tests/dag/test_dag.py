@@ -134,6 +134,24 @@ def test_forced_build(executor, tmp_directory):
     assert report['Ran?'] == [True]
 
 
+def test_forced_render(monkeypatch):
+    """
+    Forced render should not call Product._is_oudated. For products whose
+    metadata is stored remotely this is an expensive operation
+    """
+    dag = DAG()
+    t1 = PythonCallable(touch_root, File('1.txt'), dag, name=1)
+    t2 = PythonCallable(touch, File('2.txt'), dag, name=2)
+    t1 >> t2
+
+    def patched(self, outdated_by_code):
+        raise ValueError
+
+    monkeypatch.setattr(File, '_is_outdated', patched)
+
+    dag.render(force=True)
+
+
 @pytest.mark.parametrize('executor', _executors)
 def test_build_partially(tmp_directory, executor):
     dag = DAG(executor=executor)

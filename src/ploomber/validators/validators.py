@@ -103,8 +103,7 @@ def validate_schema(assert_,
         or dict with column names as keys, dtypes as values (will validate
         names and dtypes)
     optional : list, optional
-        List of optional column names, it won't warn nor raise any errors if
-        they appear
+        List of optional column names, no warns nor errors if they appear
     on_unexpected_cols : str, optional
         One of 'warn', 'raise' or None. If 'warn', it will warn on extra
         columns, if 'raise' it will raise an error, if None it will completely

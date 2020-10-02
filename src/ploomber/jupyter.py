@@ -93,7 +93,9 @@ class PloomberContentsManager(TextFileContentsManager):
                     base_path = Path(self.path).resolve()
 
                     with chdir(base_path):
-                        self.dag.render()
+                        # this dag object won't be executed, forcing speeds
+                        # rendering up
+                        self.dag.render(force=True)
 
                     tuples = [(resolve_path(base_path, t.source.loc), t)
                               for t in self.dag.values()
