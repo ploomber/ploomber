@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+
+0.7.5dev
+--------
+* NotebookRunner.develop accepts passing arguments to jupyter notebook
+* Spec API now supports PythonCallable (by passing a dotted path)
+* Upstream dependencies of PythonCallables can be inferred via the ``extract_upstream`` option in the Spec API
+* Faster ``DAG.render(force=True)`` (avoid checking metadata when possible)
+* Faster notebook rendering when using the extension thanks to the improvement above
+* ``data_frame_validator`` improvement: ``validate_schema`` can now validate optional columns dtypes
+* Bug fixes
+
 0.7.4 (2020-09-14)
 -------------------
 * Improved ``__repr__`` methods in PythonCallableSource and NotebookSource
