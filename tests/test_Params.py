@@ -37,3 +37,9 @@ def test_init_from_dict(copy, expected):
     d = {'upstream': None, 'product': None}
     params = Params._from_dict(d, copy=copy)
     assert (params._dict is d) is expected
+
+
+def test_set_item():
+    params = Params._from_dict({'a': 1})
+    params._setitem('a', 2)
+    assert params['a'] == 2

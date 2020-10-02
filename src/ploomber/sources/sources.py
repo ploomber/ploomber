@@ -300,7 +300,7 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
         # TODO: verify that the product passed and the one defined are the same
         if extracted is not None:
             del params['product']
-            params._dict[type(extracted).__name__] = type(extracted)
+            params._setitem(type(extracted).__name__, type(extracted))
 
         return super().render(params)
 

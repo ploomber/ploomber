@@ -9,6 +9,5 @@ def test_script_source():
 CREATE TABLE {{product}} AS
 SELECT * FROM some_table
 """)
-    params = Params()
-    params._dict['product'] = 'this should be ignored'
+    params = Params._from_dict({'product': 'this should be ignored'})
     assert source.render(params)

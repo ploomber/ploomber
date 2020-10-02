@@ -576,9 +576,7 @@ class Task(abc.ABC):
                           'Task params: {}'.format(repr(self),
                                                    self.params)) from e
 
-        # Params are read-only for users, but we have to add the product
-        # so we do it directly to the dictionary
-        self.params._dict['product'] = self.product
+        self.params._setitem('product', self.product)
 
         try:
             self.source.render(self.params)
@@ -729,10 +727,11 @@ class Task(abc.ABC):
         # Params are read-only for users, but we have to add upstream
         # dependencies so we do it directly to the dictionary
         if self.upstream:
-            self.params._dict['upstream'] = Upstream(
-                {n: t.product
-                 for n, t in self.upstream.items()},
-                name=self.name)
+            self.params._setitem(
+                'upstream',
+                Upstream({n: t.product
+                          for n, t in self.upstream.items()},
+                         name=self.name))
 
         # render the current product
         try:

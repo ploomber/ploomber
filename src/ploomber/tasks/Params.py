@@ -39,6 +39,11 @@ class Params(abc.Mapping):
 
         return obj
 
+    def _setitem(self, key, value):
+        """Private method for updating the underlying data
+        """
+        self._dict[key] = value
+
     def to_dict(self):
         return copy_module.copy(self._dict)
 
