@@ -587,38 +587,32 @@ class Task(abc.ABC):
                           'Task params: {}'.format(repr(self),
                                                    self.params)) from e
 
-        if force == 'skip':
-            # fast rendering option: checking product outdated status is
-            # slow, especially for remote products. If we are not going to
-            # build the pipeline, we can save a lot of time by skipping that
-            self._exec_status = TaskStatus.Skipped
-        else:
-            is_outdated = (self.product._is_outdated(
-                outdated_by_code=outdated_by_code))
+        is_outdated = ProductEvaluator(self.product, outdated_by_code)
 
-            if not self.upstream:
-                if not is_outdated and not force:
-                    self._exec_status = TaskStatus.Skipped
-                else:
-                    self._exec_status = TaskStatus.WaitingExecution
-                    self._logger.debug(
-                        'Forcing status "%s", outdated conditions'
-                        ' ignored...', self.name)
+        if not self.upstream:
+            # NOTE: is_outdated goes second so it's lazily evaluated
+            if force or is_outdated.check():
+                self._exec_status = TaskStatus.WaitingExecution
+                self._logger.debug(
+                    'Forcing status "%s", outdated conditions'
+                    ' ignored...', self.name)
+
             else:
-                all_upstream_done = all([
-                    t.exec_status in {TaskStatus.Executed, TaskStatus.Skipped}
-                    for t in self.upstream.values()
-                ])
+                self._exec_status = TaskStatus.Skipped
 
-                if all_upstream_done and is_outdated:
+        else:
+            all_upstream_ready = all([
+                t.exec_status in {TaskStatus.Executed, TaskStatus.Skipped}
+                for t in self.upstream.values()
+            ])
+
+            if not all_upstream_ready:
+                self._exec_status = TaskStatus.WaitingUpstream
+            else:
+                if force or is_outdated.check():
                     self._exec_status = TaskStatus.WaitingExecution
-                elif all_upstream_done and not is_outdated and not force:
-                    self._exec_status = TaskStatus.Skipped
                 else:
-                    self._exec_status = TaskStatus.WaitingUpstream
-                    self._logger.debug(
-                        'Forcing status "%s", outdated conditions'
-                        ' ignored...', self.name)
+                    self._exec_status = TaskStatus.Skipped
 
         self._run_on_render()
 
@@ -768,7 +762,7 @@ class Task(abc.ABC):
                 t.exec_status in (TaskStatus.Errored, TaskStatus.Aborted)
                 for t in task.upstream.values()
             ])
-            all_upstream_done = all([
+            all_upstream_ready = all([
                 t.exec_status in {TaskStatus.Executed, TaskStatus.Skipped}
                 for t in task.upstream.values()
             ])
@@ -781,7 +775,7 @@ class Task(abc.ABC):
                     for t in task.upstream.values()
             ]):
                 task.exec_status = TaskStatus.AbortedRender
-            elif all_upstream_done:
+            elif all_upstream_ready:
                 task.exec_status = TaskStatus.WaitingExecution
 
         for t in self._get_downstream():
@@ -828,3 +822,21 @@ def _doc_short(doc):
         return doc.split('\n')[0]
     else:
         return None
+
+
+class ProductEvaluator:
+    """
+    A class to temporarily keep the outdated status of a product, when products
+    are remote, this operation is expensive
+    """
+    def __init__(self, product, outdated_by_code):
+        self.product = product
+        self.outdated_by_code = outdated_by_code
+        self._is_outdated = None
+
+    def check(self):
+        if self._is_outdated is None:
+            self._is_outdated = (self.product._is_outdated(
+                outdated_by_code=self.outdated_by_code))
+
+        return self._is_outdated
