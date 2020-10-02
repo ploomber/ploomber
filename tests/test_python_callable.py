@@ -126,3 +126,55 @@ def test_serialize_unserialize(tmp_directory):
 
     assert pd.read_parquet('t1.parquet')['x'].tolist() == [1, 2, 3]
     assert pd.read_parquet('t2.parquet')['x'].tolist() == [2, 3, 4]
+
+
+def test_uses_default_serializer_and_deserializer():
+    dag = DAG()
+
+    def _serializer():
+        pass
+
+    def _unserializer():
+        pass
+
+    dag.serializer = _serializer
+    dag.unserializer = _unserializer
+
+    t = PythonCallable(fn_data_frame,
+                       File('t1.parquet'),
+                       dag,
+                       name='root',
+                       serializer=None,
+                       unserializer=None)
+
+    assert t._serializer is _serializer
+    assert t._unserializer is _unserializer
+
+
+def test_uses_override_default_serializer_and_deserializer():
+    dag = DAG()
+
+    def _serializer():
+        pass
+
+    def _unserializer():
+        pass
+
+    def _new_serializer():
+        pass
+
+    def _new_unserializer():
+        pass
+
+    dag.serializer = _serializer
+    dag.unserializer = _unserializer
+
+    t = PythonCallable(fn_data_frame,
+                       File('t1.parquet'),
+                       dag,
+                       name='root',
+                       serializer=_new_serializer,
+                       unserializer=_new_unserializer)
+
+    assert t._serializer is _new_serializer
+    assert t._unserializer is _new_unserializer

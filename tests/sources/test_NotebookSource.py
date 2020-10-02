@@ -192,8 +192,7 @@ def test_error_if_static_analysis_on_a_non_python_nb():
     source = NotebookSource(new_nb(fmt='r:light'),
                             ext_in='R',
                             static_analysis=True)
-    params = Params()
-    params._dict = {'product': File('output.ipynb')}
+    params = Params._from_dict({'product': File('output.ipynb')})
 
     with pytest.raises(NotImplementedError):
         source.render(params)
@@ -205,9 +204,12 @@ def test_no_error_if_declared_and_passed_params_match():
                             kernelspec_name='python3',
                             static_analysis=True)
 
-    params = Params()
+    params = Params._from_dict({
+        'product': File('output.ipynb'),
+        'a': 1,
+        'b': 2
+    })
     # notebook has params a and b, we are passing a and b as well
-    params._dict = {'product': File('output.ipynb'), 'a': 1, 'b': 2}
     source.render(params)
 
 
@@ -217,8 +219,7 @@ def test_warn_if_using_default_value():
                             kernelspec_name='python3',
                             static_analysis=True)
 
-    params = Params()
-    params._dict = {'product': File('output.ipynb'), 'a': 1}
+    params = Params._from_dict({'product': File('output.ipynb'), 'a': 1})
 
     with pytest.warns(UserWarning) as record:
         source.render(params)
@@ -234,8 +235,12 @@ def test_error_if_passing_undeclared_parameter():
                             kernelspec_name='python3',
                             static_analysis=True)
 
-    params = Params()
-    params._dict = {'product': File('output.ipynb'), 'a': 1, 'b': 2, 'c': 3}
+    params = Params._from_dict({
+        'product': File('output.ipynb'),
+        'a': 1,
+        'b': 2,
+        'c': 3
+    })
 
     with pytest.raises(RenderError) as excinfo:
         source.render(params)
@@ -258,8 +263,11 @@ a + b + c
                             kernelspec_name='python3',
                             static_analysis=True)
 
-    params = Params()
-    params._dict = {'product': File('output.ipynb'), 'a': 1, 'b': 2}
+    params = Params._from_dict({
+        'product': File('output.ipynb'),
+        'a': 1,
+        'b': 2
+    })
 
     with pytest.raises(RenderError) as excinfo:
         source.render(params)
@@ -281,8 +289,11 @@ if
                             kernelspec_name='python3',
                             static_analysis=True)
 
-    params = Params()
-    params._dict = {'product': File('output.ipynb'), 'a': 1, 'b': 2}
+    params = Params._from_dict({
+        'product': File('output.ipynb'),
+        'a': 1,
+        'b': 2
+    })
 
     with pytest.raises(RenderError) as excinfo:
         source.render(params)
@@ -302,8 +313,10 @@ if
 ])
 def test_injects_parameters_on_render(nb_str, ext):
     s = NotebookSource(nb_str, ext_in=ext)
-    params = Params()
-    params._dict = {'some_param': 1, 'product': File('output.ipynb')}
+    params = Params._from_dict({
+        'some_param': 1,
+        'product': File('output.ipynb')
+    })
     s.render(params)
 
     nb = nbformat.reads(s.rendered_nb_str, as_version=nbformat.NO_CONVERT)

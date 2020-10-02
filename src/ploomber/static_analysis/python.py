@@ -1,15 +1,16 @@
 """
 Extract "upstream" and "product" from Python notebooks
 """
+import ast
 import parso
 from collections.abc import Mapping
 
-from ploomber.static_analysis.abstract import NotebookExtractor
+from ploomber.static_analysis.abstract import NotebookExtractor, Extractor
 
 
 class PythonNotebookExtractor(NotebookExtractor):
     def extract_upstream(self):
-        return extract_upstream(self.parameters_cell)
+        return extract_upstream_assign(self.parameters_cell)
 
     def extract_product(self):
         """
@@ -23,6 +24,23 @@ class PythonNotebookExtractor(NotebookExtractor):
                              "from code:\n%s" % self.parameters_cell)
         else:
             return product
+
+
+class PythonCallableExtractor(Extractor):
+    def extract_upstream(self):
+        """
+        Extract keys requested to an upstream variable (e.g. upstream['key'])
+        """
+        module = ast.parse(self.code)
+        return {
+            node.slice.value.s
+            for node in ast.walk(module)
+            if isinstance(node, ast.Subscript) and node.value.id == 'upstream'
+            and isinstance(node.slice.value, ast.Str)
+        } or None
+
+    def extract_product(self):
+        raise NotImplementedError
 
 
 def extract_variable(code_str, name):
@@ -54,7 +72,7 @@ def extract_variable(code_str, name):
     return variable_found, value
 
 
-def extract_upstream(cell_code):
+def extract_upstream_assign(cell_code):
     """
     Infer dependencies from a single Python cell. Looks for a cell that
     defines an upstream variable which must be either a dictionary or None

@@ -1,6 +1,10 @@
+import pandas as pd
+import inspect
 import pytest
+
 from ploomber import SourceLoader
-from ploomber.static_analysis.python import PythonNotebookExtractor
+from ploomber.static_analysis.python import (PythonNotebookExtractor,
+                                             PythonCallableExtractor)
 from ploomber.static_analysis.r import RNotebookExtractor
 from ploomber.static_analysis.sql import SQLExtractor
 from ploomber.static_analysis.string import StringExtractor
@@ -190,3 +194,27 @@ def test_type_error():
 ])
 def test_string_extractor(source, expected):
     assert StringExtractor(source).extract_upstream() == expected
+
+
+def fn1():
+    pass
+
+
+def fn2(upstream):
+    a = pd.read_parquet(upstream['a'])
+    b = pd.read_parquet(str(upstream['b']))
+    x = upstream['a']
+
+    d = {'x': 1, 'y': 2}
+
+    if a + b + x:
+        print(d['x'])
+
+    name = 'some_name'
+    upstream[name]
+
+
+@pytest.mark.parametrize('fn, expected', [[fn1, None], [fn2, {'a', 'b'}]])
+def test_extract_from_python_callable(fn, expected):
+    extractor = PythonCallableExtractor(inspect.getsource(fn))
+    assert extractor.extract_upstream() == expected

@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta, datetime
 import numpy as np
 import pandas as pd
@@ -121,6 +122,38 @@ def task1(product):
     assert isinstance(dag['task1'], PythonCallable)
 
 
+def test_python_callables_with_extract_upstream(tmp_directory):
+    spec = DAGSpec({
+        'tasks': [
+            {
+                'source': 'test_pkg.callables.root',
+                'product': 'root.csv'
+            },
+            {
+                'source': 'test_pkg.callables.a',
+                'product': 'a.csv'
+            },
+            {
+                'source': 'test_pkg.callables.b',
+                'product': 'b.csv'
+            },
+        ],
+        'meta': {
+            'extract_product': False,
+            'extract_upstream': True
+        }
+    })
+
+    dag = spec.to_dag()
+
+    dag.build()
+
+    assert set(dag) == {'a', 'b', 'root'}
+    assert not dag['root'].upstream
+    assert set(dag['a'].upstream) == {'root'}
+    assert set(dag['b'].upstream) == {'root'}
+
+
 @pytest.mark.parametrize('processor', [
     to_ipynb, tasks_list, remove_task_class, extract_upstream, extract_product
 ])
@@ -153,10 +186,23 @@ def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
     dag.build()
 
 
-def test_spec_from_directory(tmp_nbs_no_yaml):
+@pytest.mark.parametrize(
+    'chdir, dir_',
+    [
+        # test with the current directory
+        ['.', '.'],
+        # and one level up
+        ['..', 'content'],
+    ])
+def test_spec_from_directory(tmp_nbs_no_yaml, chdir, dir_):
+    os.chdir(chdir)
+
     Path('output').mkdir()
-    dag = DAGSpec.from_directory('.').to_dag()
+
+    dag = DAGSpec.from_directory(dir_).to_dag()
     dag.build()
+
+    assert list(dag) == ['load', 'clean', 'plot']
 
 
 def _random_date_from(date, max_days, n):

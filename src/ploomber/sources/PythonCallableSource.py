@@ -3,6 +3,7 @@ import inspect
 
 from ploomber.sources.sources import Source
 from ploomber.util.util import signature_check
+from ploomber.static_analysis.python import PythonCallableExtractor
 
 
 class CallableLoader:
@@ -97,3 +98,9 @@ class PythonCallableSource(Source):
     @property
     def variables(self):
         raise NotImplementedError
+
+    def extract_upstream(self):
+        return PythonCallableExtractor(str(self)).extract_upstream()
+
+    def extract_product(self):
+        return PythonCallableExtractor(str(self)).extract_product()
