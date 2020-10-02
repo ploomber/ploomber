@@ -56,8 +56,8 @@ class PythonCallable(Task):
                  serializer=None):
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(source, kwargs)
-        self._unserializer = unserializer
-        self._serializer = serializer
+        self._serializer = serializer or dag.serializer
+        self._unserializer = unserializer or dag.unserializer
         super().__init__(product, dag, name, params)
 
     @staticmethod

@@ -136,6 +136,9 @@ class DAG(collections.abc.Mapping):
         # task access differ using .dag.differ
         self.differ = self._params.differ
 
+        self.serializer = None
+        self.unserializer = None
+
     @property
     def executor(self):
         return self._executor
