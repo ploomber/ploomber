@@ -288,6 +288,12 @@ class NotebookRunner(Task):
         code will be updated only if the `hot_reload option` is turned on.
         See :class:`ploomber.DAGConfigurator` for details.
         """
+        if self.source.language != 'python':
+            raise NotImplementedError(
+                'develop is not implemented for "{}" '
+                'notebooks, only python is supported'.format(
+                    self.source.language))
+
         if self.source.loc is None:
             raise ValueError('Can only use develop in notebooks loaded '
                              'from files, not from str')
@@ -335,6 +341,12 @@ class NotebookRunner(Task):
         Opens the notebook (with injected parameters) in debug mode in a
         temporary location
         """
+        if self.source.language != 'python':
+            raise NotImplementedError(
+                'debug is not implemented for "{}" '
+                'notebooks, only python is supported'.format(
+                    self.source.language))
+
         opts = {'ipdb', 'pdb', 'pm'}
 
         if kind not in opts:

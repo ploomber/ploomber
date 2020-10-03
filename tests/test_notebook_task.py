@@ -298,6 +298,20 @@ def test_develop_workflow_with_hot_reload(tmp_directory, monkeypatch):
     assert '2 + 2' in source
 
 
+def test_develop_error_if_r_notebook(tmp_sample_tasks):
+    dag = DAG()
+
+    t = NotebookRunner(Path('sample.R'), product=File('out.ipynb'), dag=dag)
+
+    dag.render()
+
+    with pytest.raises(NotImplementedError):
+        t.develop()
+
+    with pytest.raises(NotImplementedError):
+        t.debug()
+
+
 # TODO: make a more general text and parametrize by all task types
 # but we also have to test it at the source level
 # also test at the DAG level, we have to make sure the property that

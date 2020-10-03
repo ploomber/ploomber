@@ -718,6 +718,20 @@ class Task(abc.ABC):
                     product=str(self.product),
                     source_code=str(self.source))
 
+    def debug(self):
+        """Debug task, only implemented in certain tasks
+        """
+        raise NotImplementedError(
+            'debug is not implemented in "{}" tasks'.format(
+                type(self).__name__))
+
+    def develop(self):
+        """Develop task, only implemented in certain tasks
+        """
+        raise NotImplementedError(
+            'debug is not implemented in "{}" tasks'.format(
+                type(self).__name__))
+
     def _render_product(self):
         params_names = list(self.params)
 
