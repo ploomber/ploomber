@@ -1,21 +1,26 @@
 Spec API
 ========
 
+**Note:** The `projects repository <https://github.com/ploomber/projects>`_
+contains several ``pipeline.yaml`` examples.
+
+
 ``pipeline.yaml`` schema
 ------------------------
 
-Values within {curly brackets} contain explanations, otherwise, they represent
-default values.
+(Values displayed are defaults)
 
 .. code-block:: yaml
     :class: text-editor
     :name: pipeline-yaml
 
     meta:
-        # inspect source code to extract product
+        # inspect source code to extract product. If False, tasks must have a
+        # "product" key
         extract_product: True
 
-        # inspect source code to extract upstream dependencies
+        # inspect source code to extract upstream dependencies. If False, tasks
+        # must contain an "upstream" key (if the task has dependencies)
         extract_upstream: True
 
         # Make paths in File products relative to their sources, otherwise
@@ -37,16 +42,30 @@ default values.
         # large pipelines
         jupyter_hot_reload: False
 
-    # For allowed keys and values see ploomber.DAGConfigurator
+
+    # DAG configuration
     config:
+        # For allowed keys and values see ploomber.DAGConfigurator
         {config-key}: {config-value}
 
-    # clients are objects that connect to databases
+    # DAG clients
     clients:
+        # Clients for connecting to databases
         {task or product class name}: {dotted.path.to.function}
+        # Example:
+        SQLScript: db.get_client
+        PostgresRelation: db.get_client
 
     tasks:
         - {task dictionary, see below}
+        # Example (notebook task)
+        - source: clean_data.py
+          # assuming meta.extract_product: False
+          product:
+            nb: output/clean_data.ipynb
+            data: output/clean.csv
+          # assuming meta.extract_upstream: False
+          upstream: [get_raw_data]
 
 
 Notes
@@ -74,7 +93,9 @@ Notes
     # and ShellScript for .sh
     class: {task class, optional}
 
-    source: {path to source file or dotted path}
+    # Path to script (for Python/R notebooks, bash or SQL), dotted path to
+    # execute Python functions
+    source: {path/to/source/file or dotted.path.to.function}
 
     # Products that will be generated upon task execution. Should not exist
     # if meta.extract_product is set to True. This can be a dictionary if
@@ -102,7 +123,7 @@ Notes
     product_client: {dotted.path.to.function, optional}
 
     # Dependencies for this task. Only required if meta.extract_upstream is
-    # set to True
+    # set to True. If False, only required if the task has dependencies
     upstream: {str or list, optional}
 
     # Function to execute when the task renders successfully
