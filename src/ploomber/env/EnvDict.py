@@ -78,6 +78,9 @@ class EnvDict(Mapping):
         else:
             return FrozenJSON(self._data[key])
 
+    def __setitem__(self, key, value):
+        self._data[key] = value
+
     def __iter__(self):
         for k in self._data:
             yield k

@@ -66,6 +66,11 @@ class CustomParser(argparse.ArgumentParser):
         self.finished_init = True
 
     def parse_entry_point_value(self):
+        """
+        Returns the entry_point value pased without calling parse_args(),
+        this is required to find env params to show, if we call parse_args()
+        the CLI stops there and shows available params
+        """
         index = None
 
         try:
@@ -84,7 +89,7 @@ class CustomParser(argparse.ArgumentParser):
     def add_argument(self, *args, **kwargs):
         if not self.finished_static_api:
             if not self.in_context and self.finished_init:
-                raise RuntimeError('Cannot aadd arguments until the static '
+                raise RuntimeError('Cannot add arguments until the static '
                                    'API has been declared')
             else:
                 self.static_args.extend([process_arg(arg) for arg in args])
@@ -218,10 +223,15 @@ def _add_args_from_callable(parser, callable_):
     return required, defaults
 
 
-def _process_file_or_entry_point(parser, entry_point, static_args):
+def _process_file_or_entry_point(parser):
     """
     Process a file entry point file or directory), returns the initialized dag
     and parsed args
+
+    Parameters
+    ----------
+    parser : CustomParser
+        CLI arg parser
     """
     if Path('env.yaml').exists():
         env_dict = EnvDict('env.yaml')
@@ -233,19 +243,21 @@ def _process_file_or_entry_point(parser, entry_point, static_args):
         if args.log is not None:
             logging.basicConfig(level=args.log.upper())
 
-    if Path(entry_point).is_dir():
-        dag = DAGSpec.from_directory(entry_point).to_dag()
+    if Path(args.entry_point).is_dir():
+        dag = DAGSpec.from_directory(args.entry_point).to_dag()
     else:
-        with open(entry_point) as f:
+        with open(args.entry_point) as f:
             dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
 
+        # load env.yaml if there is one
         if Path('env.yaml').exists():
             env = EnvDict('env.yaml')
-            replaced = _args_to_replace_in_env(args, static_args)
+            # and replace keys depending on passed cli args
+            replaced = _args_to_replace_in_env(args, parser.static_args)
             env = env._replace_flatten_keys(replaced)
             dag = DAGSpec(dag_dict, env=env).to_dag()
         else:
-            dag = DAGSpec(dag_dict).to_dag()
+            dag = DAGSpec(dag_dict, env=None).to_dag()
 
     return dag, args
 
@@ -320,8 +332,7 @@ def _process_entry_point(parser, entry_point, static_args):
 
     # first check if the entry point is an existing file
     elif path.exists():
-        dag, args = _process_file_or_entry_point(parser, entry_point,
-                                                 static_args)
+        dag, args = _process_file_or_entry_point(parser)
     # assume it's a dotted path to a factory
     else:
         dag, args = _process_factory_dotted_path(parser, entry_point,

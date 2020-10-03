@@ -27,6 +27,7 @@ from ploomber.spec.TaskSpec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.env.EnvDict import EnvDict
 from ploomber.env.expand import expand_raw_dictionary
 from ploomber.tasks import NotebookRunner
 
@@ -42,6 +43,17 @@ class DAGSpec(MutableMapping):
     There are two cases: the simplest one is just a dictionary with a
     "location" key with the factory to call, the other explicitly describes
     the DAG structure as a dictionary.
+
+    Parameters
+    ----------
+    data : dict
+        Specification to construct the DAG
+
+    env : dict, pathlib.path or str
+        Dictionary or path/str to a YAML file with the environment to use,
+        tags in any of the keys (i.e. {{some_tag}}) in "data" will be replaced
+        by the corresponding values in "env". A regular :py:mod:`ploomber.Env`
+        object is created, see documentation for details
 
     Notes
     -----
@@ -60,7 +72,7 @@ class DAGSpec(MutableMapping):
     relative to the source file or pipeline.yaml? To make this consistent,
     all relative paths (whether in a pipeline.yaml or in a source file) are
     relative to the pipeline.yaml folder but this can be changed with the
-    product_relative_to_source option. Furthermore, when usign the custom
+    product_relative_to_source option. Furthermore, when using the custom
     contents manager, we convert relative paths to absolute in special cases
     to make sure they work. This is why we need to keep the pipeline.yaml
     location when initializing a DAG from a spec.
@@ -74,9 +86,11 @@ class DAGSpec(MutableMapping):
 
         logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env))
 
-        # expand if there's an env.yaml file
         if env is not None:
-            data = expand_raw_dictionary(data, env)
+            self.env = EnvDict(env)
+            data = expand_raw_dictionary(data, self.env)
+        else:
+            self.env = None
 
         logger.debug('Expanded DAGSpec:\n%s', pp.pformat(data))
 
@@ -177,7 +191,7 @@ class DAGSpec(MutableMapping):
         return dag
 
     @classmethod
-    def auto_load(cls, to_dag=True, starting_dir=None):
+    def auto_load(cls, to_dag=True, starting_dir=None, env=None):
         """
         Looks for a pipeline.yaml, generates a DAGSpec and returns a DAG.
         Currently, this is only used by the PloomberContentsManager, this is
@@ -202,7 +216,7 @@ class DAGSpec(MutableMapping):
                 return None, None
 
         try:
-            spec = cls.from_file(path)
+            spec = cls.from_file(path, env=env)
 
             if to_dag:
                 return spec, spec.to_dag(), Path(path).parent
@@ -222,6 +236,11 @@ class DAGSpec(MutableMapping):
         interpret them as task sources, file names are assigned as task names
         (without extension). The spec is generated with the default values in
         the "meta" section.
+
+        Notes
+        -----
+        ``env`` is not supported because the spec is generated from files
+        in ``path_to_dir``, hence, there is no way to embed tags
         """
         extensions = [
             name for name, class_ in suffix2taskclass.items()
