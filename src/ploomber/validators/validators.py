@@ -44,15 +44,15 @@ class Assert:
         if not self.messages_error:
             str_ = 'No errors found'
         elif len(self.messages_error) == 1:
-            str_ = '1 error found: {}'.format(self.messages_error[0])
+            str_ = '1 error found:\n{}'.format(self.messages_error[0])
         else:
-            str_ = ('{} errors found: \n * {}'.format(
+            str_ = ('{} errors found:\n * {}'.format(
                 len(self.messages_error), '\n * '.join(self.messages_error)))
 
         if len(self.messages_warning) == 1:
-            str_ += '\n\n 1 warning: {}'.format(self.messages_warning[0])
+            str_ += '\n\n1 warning: {}'.format(self.messages_warning[0])
         elif len(self.messages_warning) > 1:
-            str_ += ('\n\n {} warnings: \n * {}'.format(
+            str_ += ('\n\n{} warnings:\n * {}'.format(
                 len(self.messages_warning),
                 '\n * '.join(self.messages_warning)))
 
@@ -120,11 +120,12 @@ def validate_schema(assert_,
     missing = expected - cols
     unexpected = cols - expected - set(optional)
 
-    msg = 'validate_schema: missing columns {missing}.'.format(missing=missing)
+    msg = '(validate_schema) Missing columns {missing}.'.format(
+        missing=missing)
     assert_(not missing, msg)
 
     if on_unexpected_cols is not None:
-        msg = ('validate_schema: unexpected columns {unexpected}'.format(
+        msg = ('(validate_schema) Unexpected columns {unexpected}'.format(
             unexpected=unexpected))
         caller = assert_ if on_unexpected_cols == 'raise' else assert_.warn
         caller(not unexpected, msg)
@@ -139,9 +140,10 @@ def validate_schema(assert_,
                 expected = schema_to_validate.get(name)
 
                 if expected is not None:
-                    msg = ('validate_schema: wrong dtype for column "{name}". '
-                           'Expected: "{expected}". Got: "{dtype}"'.format(
-                               name=name, expected=expected, dtype=dtype))
+                    msg = (
+                        '(validate_schema) Wrong dtype for column "{name}". '
+                        'Expected: "{expected}". Got: "{dtype}"'.format(
+                            name=name, expected=expected, dtype=dtype))
                     assert_(dtype == expected, msg)
 
     return assert_
@@ -154,12 +156,12 @@ def validate_values(assert_, data, values):
     for column, (kind, params) in values.items():
         if column not in data_cols:
             assert_.warn(False,
-                         ('validate_values: declared spec for column "{}" but'
+                         ('(validate_values) Declared spec for column "{}" but'
                           ' it does not appear in the data').format(column))
         elif kind == 'unique':
             expected = set(params)
             unique = set(data[column].unique())
-            msg = ('validate_values:: expected unique values of  "{}" to be a'
+            msg = ('(validate_values) Expected unique values of  "{}" to be a'
                    ' subset of {}, got: {}'.format(column, expected, unique))
             assert_(expected >= unique, msg)
         elif kind == 'range':
@@ -169,7 +171,7 @@ def validate_values(assert_, data, values):
             min_expected, max_expected = params
             min_ = data[column].min()
             max_ = data[column].max()
-            msg = ('validate_values: expected range of "{}" to be [{}, {}], '
+            msg = ('(validate_values) Expected range of "{}" to be [{}, {}], '
                    'got [{}, {}]'.format(column, min_expected, max_expected,
                                          min_, max_))
             assert_(min_expected <= min_ and max_ <= max_expected, msg)
@@ -201,6 +203,6 @@ def data_frame_validator(df, validators):
         validator(assert_=assert_, data=df)
 
     if len(assert_):
-        raise AssertionError(str(assert_))
+        raise AssertionError('Data frame validation failed. ' + str(assert_))
 
     return True

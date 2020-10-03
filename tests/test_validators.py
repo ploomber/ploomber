@@ -18,7 +18,7 @@ def test_Assert():
     with pytest.raises(AssertionError) as excinfo:
         assert_.check()
 
-    assert str(excinfo.value) == '1 error found: Error message'
+    assert str(excinfo.value) == '1 error found:\nError message'
 
 
 def test_allows_optional_columns():
@@ -90,6 +90,7 @@ def test_validate_values_invalid():
                 'z': ('range', (0, 1)),
             })])
 
-    expected = ('1 error found: validate_values: expected range of "z" to be '
-                '[0, 1], got [0, 2]')
+    expected = (
+        'Data frame validation failed. 1 error found:\n(validate_values) '
+        'Expected range of "z" to be [0, 1], got [0, 2]')
     assert expected == str(excinfo.value)
