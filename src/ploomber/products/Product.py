@@ -28,7 +28,6 @@ class Product(abc.ABC):
         any of the existing keys but additional key-value pairs might be
         included
     """
-
     def __init__(self, identifier):
         self._identifier = self._init_identifier(identifier)
 
@@ -135,8 +134,8 @@ class Product(abc.ABC):
                 return ((up_prod.metadata.timestamp > self.metadata.timestamp)
                         or up_prod._is_outdated())
 
-        outdated = any([is_outdated(up.product) for up
-                        in self.task.upstream.values()])
+        outdated = any(
+            [is_outdated(up.product) for up in self.task.upstream.values()])
 
         self._outdated_data_dependencies_status = outdated
 
@@ -165,8 +164,7 @@ class Product(abc.ABC):
         self._outdated_code_dependency_status = outdated
 
         self.logger.debug(('Finished checking code status for task "%s" '
-                           'Outdated? %s'),
-                          self.task.name,
+                           'Outdated? %s'), self.task.name,
                           self._outdated_code_dependency_status)
 
         if outdated:
@@ -178,19 +176,26 @@ class Product(abc.ABC):
     def _clear_cached_status(self):
         # These flags keep a cache of the Product's outdated status, they
         # are computed using the Product's metadata, hence they will only
-        # change when the metadata changes. Metadata changes in three
-        # situations: 1) at startup (loaded from disk), 2) after build
-        # (metadata is updated and then saved to disk) and 3) Forced load
-        # (if we force loading, currently not implemented).
+        # change when the metadata changes. Saving status speeds rendering
+        # because retrieving metadata is slow (especially if it's stored
+        # remotely)
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
+
+        # We also have to clear metadata (in memory copy) or we might get a
+        # wrong output if the metadata changed from a different proces or
+        # the user just modified/deleted it. The only case where this step
+        # is not necessary is when doing DAG.build(), in such case, we already
+        # have the latest metadata because the current process has to store
+        # it in memory and then save it
+        self.metadata.clear()
 
     def __str__(self):
         return str(self._identifier)
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__,
-                               self._identifier.best_str(shorten=True))
+        return '{}({})'.format(
+            type(self).__name__, self._identifier.best_str(shorten=True))
 
     def __getstate__(self):
         state = self.__dict__.copy()
