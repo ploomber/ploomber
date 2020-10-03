@@ -9,6 +9,7 @@ from conftest import _path_to_tests, fixture_tmp_dir
 import jupytext
 import nbformat
 import jupyter_client
+import getpass
 
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.util.util import load_dotted_path
@@ -354,17 +355,57 @@ def test_changing_defaults(name, value):
     assert spec['meta'][name] is value
 
 
-def test_expand_env(tmp_directory):
+@pytest.mark.parametrize('save', [True, False])
+def test_expand_env(save, tmp_directory):
+    env = {'sample': True, 'user': '{{user}}'}
+
+    if save:
+        with open('env.yaml', 'w') as f:
+            yaml.dump(env, f)
+        env = 'env.yaml'
+
     spec = DAGSpec(
-        {'tasks': [{
-            'source': 'plot.py',
-            'params': {
-                'sample': '{{sample}}'
-            }
-        }]},
-        env={'sample': True})
+        {
+            'tasks': [{
+                'source': 'plot.py',
+                'params': {
+                    'sample': '{{sample}}',
+                    'user': '{{user}}'
+                }
+            }]
+        },
+        env=env)
 
     assert spec['tasks'][0]['params']['sample'] is True
+    assert spec['tasks'][0]['params']['user'] == getpass.getuser()
+
+
+@pytest.mark.parametrize('method, kwargs', [
+    ['from_file', dict(path='pipeline.yaml')],
+    ['auto_load', dict(to_dag=False)],
+])
+def test_passing_env_in_class_methods(method, kwargs, tmp_directory):
+
+    spec_dict = {
+        'tasks': [{
+            'source': 'plot.py',
+            'params': {
+                'some_param': '{{key}}',
+            }
+        }]
+    }
+
+    with open('pipeline.yaml', 'w') as f:
+        yaml.dump(spec_dict, f)
+
+    class_method = getattr(DAGSpec, method)
+    spec = class_method(**kwargs, env={'key': 'value'})
+
+    # auto_load returns a tuple
+    if isinstance(spec, tuple):
+        spec = spec[0]
+
+    assert spec['tasks'][0]['params']['some_param'] == 'value'
 
 
 def test_infer_dependencies_sql(tmp_pipeline_sql, add_current_to_sys_path):
