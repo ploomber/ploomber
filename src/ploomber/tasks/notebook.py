@@ -63,7 +63,7 @@ class NotebookConverter:
 
             exporter_name = suffix[1:]
 
-        self.exporter = self._get_exporter(exporter_name)
+        self.exporter = self._get_exporter(exporter_name, path_to_output)
         self.path_to_output = path_to_output
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
 
@@ -73,7 +73,7 @@ class NotebookConverter:
                              self.nbconvert_export_kwargs)
 
     @staticmethod
-    def _get_exporter(exporter_name):
+    def _get_exporter(exporter_name, path_to_output):
         """
         Get function to convert notebook to another format using nbconvert,
         first. In some cases, the exporter name matches the file extension
@@ -99,14 +99,19 @@ class NotebookConverter:
             # it raises ExporterNameError. However the exception is defined
             # since 5.6.1 so we can safely import it
             except (ValueError, ExporterNameError):
-                raise ValueError('Could not determine nbconvert exporter '
-                                 'with nane "{}" '
-                                 'either specify in the path extension '
-                                 'or pass a valid exporter name in '
-                                 'the NotebookRunner constructor, '
-                                 'valid exporters are: {}'.format(
+                raise ValueError('Could not find nbconvert exporter '
+                                 'with name "{}". '
+                                 'Either change the extension '
+                                 'or pass a valid "nbconvert_exporter_name" '
+                                 'value. Valid exporters are: {}. If "{}" '
+                                 'is not intended to be the output noteboook, '
+                                 'pass a dictionary with "nb" as the key '
+                                 'for the output notebook, and other '
+                                 'keys for the rest of the outputs'.format(
                                      exporter_name,
-                                     nbconvert.get_export_names()))
+                                     nbconvert.get_export_names(),
+                                     path_to_output,
+                                 ))
 
         return exporter
 

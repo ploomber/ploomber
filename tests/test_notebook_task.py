@@ -197,11 +197,11 @@ def test_error_if_wrong_exporter_name(tmp_sample_tasks):
                        dag=dag,
                        nbconvert_exporter_name='wrong_name')
 
-    assert ('Could not determine nbconvert exporter with nane "wrong_name"'
+    assert ('Could not find nbconvert exporter with name "wrong_name"'
             in str(excinfo.value))
 
 
-def test_error_if_cant_determine_exporter_name(tmp_sample_tasks):
+def test_error_if_cant_find_exporter_name(tmp_sample_tasks):
     dag = DAG()
 
     with pytest.raises(ValueError) as excinfo:
@@ -210,7 +210,7 @@ def test_error_if_cant_determine_exporter_name(tmp_sample_tasks):
                        dag=dag,
                        nbconvert_exporter_name=None)
 
-    assert 'Could not determine nbconvert exporter' in str(excinfo.value)
+    assert 'Could not find nbconvert exporter' in str(excinfo.value)
 
 
 # TODO: we are not testing output, we have to make sure params are inserted
