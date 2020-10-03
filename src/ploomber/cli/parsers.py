@@ -239,13 +239,15 @@ def _process_file_or_entry_point(parser, entry_point, static_args):
         with open(entry_point) as f:
             dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
 
+        # load env.yaml if there is one
         if Path('env.yaml').exists():
             env = EnvDict('env.yaml')
+            # and replace keys depending on passed cli args
             replaced = _args_to_replace_in_env(args, static_args)
             env = env._replace_flatten_keys(replaced)
             dag = DAGSpec(dag_dict, env=env).to_dag()
         else:
-            dag = DAGSpec(dag_dict).to_dag()
+            dag = DAGSpec(dag_dict, env=None).to_dag()
 
     return dag, args
 
