@@ -139,12 +139,15 @@ class Metadata(AbstractMetadata):
         self._product._outdated_data_dependencies_status = None
         self._product._outdated_code_dependency_status = None
 
-        self.data['timestamp'] = datetime.now().timestamp()
-        self.data['stored_source_code'] = source_code
+        if self._data is None:
+            self._data = dict(timestamp=None, stored_source_code=None)
+
+        self._data['timestamp'] = datetime.now().timestamp()
+        self._data['stored_source_code'] = source_code
 
         kwargs = callback_check(self._product.prepare_metadata,
                                 available={
-                                    'metadata': self.data,
+                                    'metadata': self._data,
                                     'product': self._product
                                 })
 
@@ -152,6 +155,7 @@ class Metadata(AbstractMetadata):
 
         self._product.save_metadata(data)
 
+    # NOTE: I don't think I'm using this anywhere
     def delete(self):
         self._product.delete_metadata()
 

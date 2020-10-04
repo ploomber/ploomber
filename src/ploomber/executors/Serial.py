@@ -39,8 +39,9 @@ class Serial(Executor):
         shown before raising the collected exceptions.
 
     """
-
-    def __init__(self, build_in_subprocess=True, catch_exceptions=True,
+    def __init__(self,
+                 build_in_subprocess=True,
+                 catch_exceptions=True,
                  catch_warnings=True):
         self._logger = logging.getLogger(__name__)
         self._build_in_subprocess = build_in_subprocess
@@ -49,9 +50,9 @@ class Serial(Executor):
 
     def __repr__(self):
         return ('Serial(build_in_subprocess={}, '
-                'catch_exceptions={}, catch_warnings={})'
-                .format(self._build_in_subprocess,
-                        self._catch_exceptions, self._catch_warnings))
+                'catch_exceptions={}, catch_warnings={})'.format(
+                    self._build_in_subprocess, self._catch_exceptions,
+                    self._catch_warnings))
 
     def __call__(self, dag, show_progress):
         super().__call__(dag)
@@ -75,20 +76,26 @@ class Serial(Executor):
                 tasks.set_description('Building task "{}"'.format(t.name))
 
             if self._build_in_subprocess:
-                fn = LazyFunction(build_in_subprocess,
-                                  {'task': t, 'build_kwargs': task_kwargs,
-                                   'reports_all': task_reports},
-                                  t)
+                fn = LazyFunction(
+                    build_in_subprocess, {
+                        'task': t,
+                        'build_kwargs': task_kwargs,
+                        'reports_all': task_reports
+                    }, t)
             else:
-                fn = LazyFunction(build_in_current_process,
-                                  {'task': t, 'build_kwargs': task_kwargs,
-                                   'reports_all': task_reports},
-                                  t)
+                fn = LazyFunction(
+                    build_in_current_process, {
+                        'task': t,
+                        'build_kwargs': task_kwargs,
+                        'reports_all': task_reports
+                    }, t)
 
             if self._catch_exceptions:
                 fn = LazyFunction(fn=catch_warnings,
-                                  kwargs={'fn': fn,
-                                          'warnings_all': warnings_all},
+                                  kwargs={
+                                      'fn': fn,
+                                      'warnings_all': warnings_all
+                                  },
                                   task=t)
             else:
                 fn = LazyFunction(fn=pass_exceptions,
@@ -97,8 +104,10 @@ class Serial(Executor):
 
             if self._catch_exceptions:
                 fn = LazyFunction(fn=catch_exceptions,
-                                  kwargs={'fn': fn,
-                                          'exceptions_all': exceptions_all},
+                                  kwargs={
+                                      'fn': fn,
+                                      'exceptions_all': exceptions_all
+                                  },
                                   task=t)
 
             fn()
@@ -111,20 +120,20 @@ class Serial(Executor):
                           '"{}":\n{}'.format(dag.name, str(warnings_all)))
 
         if exceptions_all and self._catch_exceptions:
-            early_stop = any([isinstance(m.obj, DAGBuildEarlyStop)
-                              for m in exceptions_all])
+            early_stop = any(
+                [isinstance(m.obj, DAGBuildEarlyStop) for m in exceptions_all])
             if early_stop:
                 raise DAGBuildEarlyStop('Ealy stopping DAG execution, '
                                         'at least one of the tasks that '
                                         'failed raised a DAGBuildEarlyStop '
-                                        'exception:\n{}'
-                                        .format(str(exceptions_all)))
+                                        'exception:\n{}'.format(
+                                            str(exceptions_all)))
             else:
                 raise DAGBuildError('DAG build failed, the following '
                                     'tasks crashed '
                                     '(corresponding downstream tasks aborted '
-                                    'execution):\n{}'
-                                    .format(str(exceptions_all)))
+                                    'execution):\n{}'.format(
+                                        str(exceptions_all)))
 
         # only close when tasks are executed in this process (otherwise
         # this won't have any effect anyway)
@@ -159,10 +168,8 @@ def catch_warnings(fn, warnings_all):
         result = fn()
 
     if warnings_current:
-        w = [str(a_warning.message) for a_warning
-             in warnings_current]
-        warnings_all.append(task_str=fn.task.name,
-                            message='\n'.join(w))
+        w = [str(a_warning.message) for a_warning in warnings_current]
+        warnings_all.append(task_str=fn.task.name, message='\n'.join(w))
 
     return result
 
@@ -191,8 +198,7 @@ def pass_exceptions(fn):
 
 
 def build_in_current_process(task, build_kwargs, reports_all):
-    report = task._build(**build_kwargs)
-    # print('Report: ', report, build_kwargs)
+    report, meta = task._build(**build_kwargs)
     reports_all.append(report)
 
 
@@ -208,9 +214,9 @@ def build_in_subprocess(task, build_kwargs, reports_all):
         # get().
         # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.AsyncResult.get
         try:
-            report = res.get()
+            report, meta = res.get()
         # we have to updat status since this is running in a different process
-        except Exception as e:
+        except Exception:
             task.exec_status = TaskStatus.Errored
             raise
         else:

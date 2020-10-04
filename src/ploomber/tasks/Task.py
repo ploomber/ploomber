@@ -42,6 +42,11 @@ When a Task is marked as Errored, on_failure hook is executed and downstream
 dependencies are marked as Aborted.
 
 
+Beware that sometimes executors call Task._build in a different process, hence
+updates won't be visible in Task objects that exist in the main process.
+For that reason, executors have to report back status to the original Task
+object using Task.exec_status, see executors documentation for details
+
 TODO: describe BrokenProcesssPool status
 """
 import abc
@@ -377,8 +382,8 @@ class Task(abc.ABC):
         # some executors run this in a subprocess, the metadata in the main
         # process becomes outdated, make sure you retrieve it again next time
         # you need it
-        if value == TaskStatus.Executed:
-            self.product.metadata.clear()
+        # if value == TaskStatus.Executed:
+        # self.product.metadata.clear()
 
         # process might crash, propagate now or changes might not be
         # reflected (e.g. if a Task is marked as Aborted, all downtream
@@ -431,7 +436,7 @@ class Task(abc.ABC):
         # this will interfer with other render calls
         self.render(force=force)
 
-        res = self._build(catch_exceptions=catch_exceptions)
+        res, _ = self._build(catch_exceptions=catch_exceptions)
         self.product.metadata.clear()
         return res
 
@@ -445,7 +450,7 @@ class Task(abc.ABC):
         if not catch_exceptions:
             res = self._run()
             self._run_on_finish()
-            return res
+            return res, self.product.metadata._data
         else:
             try:
                 res = self._run()
@@ -491,7 +496,7 @@ class Task(abc.ABC):
                 else:
                     self.exec_status = TaskStatus.Executed
 
-                return res
+                return res, self.product.metadata._data
             else:
                 try:
                     self._run_on_failure()
