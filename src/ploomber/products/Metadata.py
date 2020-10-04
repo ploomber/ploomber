@@ -139,6 +139,9 @@ class Metadata(AbstractMetadata):
 
     def clear(self):
         self._data = None
+        # FIXME: product._clear_cached status is also setting these to None
+        self._product._outdated_data_dependencies_status = None
+        self._product._outdated_code_dependency_status = None
 
     def __getitem__(self, key):
         return self._data[key]

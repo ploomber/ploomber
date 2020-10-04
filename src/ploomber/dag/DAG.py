@@ -125,6 +125,7 @@ class DAG(collections.abc.Mapping):
                 'an instance of executors.Executor, got type {}'.format(
                     type(executor)))
 
+        # FIXME: delete, no longer used
         self._did_render = False
 
         self.on_finish = None

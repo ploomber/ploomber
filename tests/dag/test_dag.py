@@ -569,6 +569,32 @@ def test_sucessful_execution(executor, tmp_directory):
     assert set(t.exec_status for t in dag.values()) == {TaskStatus.Skipped}
 
 
+@pytest.mark.parametrize('executor', _executors)
+def test_status_cleared_after_reporting_status(executor, tmp_directory):
+    # this is a pesky scenario, we try to avoid retrieving metdata when we
+    # don't have to because it's slow, so we keep a local copy, but this means
+    # we have to keep an eye on conditions where we must retrieve again, here's
+    # one edge case
+    dag = DAG(executor=executor)
+    PythonCallable(touch_root, File('ok.txt'), dag, name='t1')
+
+    # dag status requires retrieving metadata, we have a local copy now...
+    dag.status()
+
+    # building a task means saving metadata again, if the task was executed
+    # in the process where the dag lives, metadata is still up-to-date because
+    # to save metadata, we first have to override the local copy, the edge
+    # case happens when task is executed in a child process, which means
+    # the local copy in the DAG process is now outdated and should be cleared
+    # up
+    dag.build()
+
+    # this should not trigger any execution, because we just built
+    dag.build()
+
+    assert set(t.exec_status for t in dag.values()) == {TaskStatus.Skipped}
+
+
 def test_warnings_are_shown(tmp_directory):
     dag = DAG(executor=Serial(build_in_subprocess=False))
     t1 = PythonCallable(touch_root_w_warning, File('file.txt'), dag)
