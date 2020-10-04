@@ -220,7 +220,7 @@ def build_in_subprocess(task, build_kwargs, reports_all):
             task.exec_status = TaskStatus.Errored
             raise
         else:
-            task.product.metadata._data = meta
+            task.product.metadata.update_locally(meta)
             task.exec_status = TaskStatus.Executed
             reports_all.append(report)
 
@@ -228,5 +228,5 @@ def build_in_subprocess(task, build_kwargs, reports_all):
         p.join()
     else:
         report, meta = task._build(**build_kwargs)
-        task.product.metadata._data = meta
+        task.product.metadata.update_locally(meta)
         reports_all.append(report)

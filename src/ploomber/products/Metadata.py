@@ -155,6 +155,13 @@ class Metadata(AbstractMetadata):
 
         self._product.save_metadata(data)
 
+    def update_locally(self, data):
+        """Updates metadata locally
+        """
+        # NOTE: do we have to copy here? is it a problem if all products
+        # in a metadproduct have the same obj in metadata?
+        self._data = data
+
     # NOTE: I don't think I'm using this anywhere
     def delete(self):
         self._product.delete_metadata()
@@ -222,6 +229,12 @@ class MetadataCollection(AbstractMetadata):
         for p in self._products:
             p.metadata.update(source_code)
 
+    def update_locally(self, data):
+        """Updates metadata locally
+        """
+        for p in self._products:
+            p.metadata.update_locally(data)
+
     def delete(self):
         for p in self._products:
             p.delete_metadata()
@@ -233,6 +246,10 @@ class MetadataCollection(AbstractMetadata):
     def clear(self):
         for p in self._products:
             p.metadata.clear()
+
+    @property
+    def _data(self):
+        return list(self._products)[0].metadata._data
 
     # TODO: add getitem
 

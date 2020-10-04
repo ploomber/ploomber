@@ -215,13 +215,15 @@ def test_build_partially_diff_sessions(tmp_directory):
 
 
 @pytest.mark.parametrize('function_name', ['render', 'build', 'plot'])
-def test_dag_functions_do_not_fetch_metadata(function_name, tmp_directory):
+@pytest.mark.parametrize('executor', _executors)
+def test_dag_functions_do_not_fetch_metadata(function_name, executor,
+                                             tmp_directory):
     """
     these function should not look up metadata, since the products do not
     exist, the status can be determined without it
     """
     product = File('1.txt')
-    dag = DAG(executor=Serial(build_in_subprocess=True))
+    dag = DAG(executor=executor)
     PythonCallable(touch_root, product, dag, name=1)
 
     m = Mock(wraps=product.fetch_metadata)
