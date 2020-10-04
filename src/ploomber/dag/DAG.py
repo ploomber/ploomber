@@ -506,17 +506,21 @@ class DAG(collections.abc.Mapping):
         """Partially build a dag until certain task
         """
         lineage = self[target]._lineage
-        dag = deepcopy(self)
+        dag_copy = deepcopy(self)
 
-        to_pop = set(dag) - {target}
+        to_pop = set(dag_copy) - {target}
 
         if lineage:
             to_pop = to_pop - lineage
 
         for task in to_pop:
-            dag.pop(task)
+            dag_copy.pop(task)
 
-        return dag.build(force=force, show_progress=show_progress)
+        # clear metadata in the original dag, because building the copy
+        # will make it outdated, we have to force reload from disk
+        self._clear_cached_status()
+
+        return dag_copy.build(force=force, show_progress=show_progress)
 
     def status(self, **kwargs):
         """Returns a table with tasks status

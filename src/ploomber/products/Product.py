@@ -186,7 +186,7 @@ class Product(abc.ABC):
         # wrong output if the metadata changed from a different proces or
         # the user just modified/deleted it. The only case where this step
         # is not necessary is when doing DAG.build(), in such case, we already
-        # have the latest metadata because the current process has to store
+        # have the latest metadata because the product object has to store
         # it in memory and then save it
         self.metadata.clear()
 

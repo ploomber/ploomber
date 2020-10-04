@@ -160,7 +160,7 @@ def test_build_partially(tmp_directory, executor):
 
     report = dag.build_partially('b')
 
-    # check it only ran task 2
+    # check it only ran task b
     assert report['Ran?'] == [True]
     assert report['name'] == ['b']
 
@@ -168,14 +168,49 @@ def test_build_partially(tmp_directory, executor):
     assert (set(t.exec_status
                 for t in dag.values()) == {TaskStatus.WaitingRender})
 
+    # this triggers metadata loading for the first time
     dag.render()
 
     # new task status reflect partial execution
     assert ({n: t.exec_status
              for n, t in dag.items()} == {
                  'a': TaskStatus.WaitingExecution,
-                 'b': TaskStatus.Skipped
+                 'b': TaskStatus.Skipped,
              })
+
+
+def test_build_partially_diff_sessions(tmp_directory):
+    def make():
+        dag = DAG()
+        a = PythonCallable(touch_root, File('a.txt'), dag, name='a')
+        b = PythonCallable(touch, File('b.txt'), dag, name='b')
+        a >> b
+        return dag
+
+    # build dag
+    make().build()
+
+    # force outdated "a" task by deleting metadata
+    Path('a.txt.source').unlink()
+
+    # create another dag
+    dag = make()
+
+    # render, this triggers metadata loading, which is going to be empty for
+    # "a", hence, this dag thinks it has to run "a"
+    dag.render()
+
+    # build partially - this copies the dag and runs "a", this must trigger
+    # the "clear metadata" procedure in the original dag object to let it know
+    # that it has to load the metadata again before building
+    dag.build_partially('a')
+
+    # dag should reload metadata and realize it only has to run "b"
+    report = dag.build()
+
+    df = report.to_pandas().set_index('name')
+    assert not df.loc['a']['Ran?']
+    assert df.loc['b']['Ran?']
 
 
 @pytest.mark.parametrize('function_name',
