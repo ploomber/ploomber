@@ -89,7 +89,7 @@ class Parallel(Executor):
             self._logger.debug('Added %s to the list of finished tasks...',
                                task.name)
             try:
-                result, meta = future.result()
+                result = future.result()
             except BrokenProcessPool:
                 # ignore the error here but flag the task,
                 # so next_task is able to stop the iteration,
@@ -99,7 +99,10 @@ class Parallel(Executor):
             else:
                 if isinstance(result, Message):
                     task.exec_status = TaskStatus.Errored
+                # sucessfully run task._build
                 else:
+                    # ignore report here, we just need to update metadata
+                    _, meta = result
                     task.product.metadata.update_locally(meta)
                     task.exec_status = TaskStatus.Executed
 
@@ -163,7 +166,8 @@ class Parallel(Executor):
 
         results = [
             # results are the output of Task._build: (report, metadata)
-            get_future_result(f, future_mapping)[0]
+            # OR a Message
+            get_future_result(f, future_mapping)
             for f in future_mapping.keys()
         ]
 
@@ -176,7 +180,8 @@ class Parallel(Executor):
                                 'execution):\n{}'.format(
                                     str(MessageCollector(exps))))
 
-        return results
+        # if we reach this, it means no tasks failed. only return reports
+        return [r[0] for r in results]
 
     def __getstate__(self):
         state = self.__dict__.copy()
