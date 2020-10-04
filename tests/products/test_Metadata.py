@@ -27,6 +27,8 @@ def test_clear():
     prod = Mock(wraps=FakeProduct(identifier='fake-product'))
     # we need this because if it doesn't exist, fetch_metata is skipped
     prod.exists.return_value = True
+    prod.fetch_metadata.return_value = dict(timestamp=None,
+                                            stored_source_code=None)
     metadata = Metadata(prod)
 
     # this should trigger one fetch call
