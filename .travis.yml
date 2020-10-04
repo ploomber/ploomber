@@ -48,7 +48,7 @@ install:
   # install sample package for tests
   - bash test_pkg.sh
 
-  - pip install pytest-parallel
+  # - pip install pytest-parallel
 
 
 before_install:
@@ -58,7 +58,8 @@ before_script:
   - psql -c 'create database db;' -U postgres
 
 script:
-  - pytest --cov=ploomber --ignore tests/test_examples.py
-  - pytest --cov=ploomber --workers auto tests/test_examples.py
+  - pytest  --cov=ploomber 
+  # - pytest --cov=ploomber --ignore tests/test_examples.py
+  # - pytest --cov=ploomber --workers auto tests/test_examples.py
 
 after_success: coveralls
