@@ -48,6 +48,8 @@ install:
   # install sample package for tests
   - bash test_pkg.sh
 
+  - pip install pytest-parallel
+
 
 before_install:
   - sudo apt-get -y install graphviz
@@ -56,6 +58,7 @@ before_script:
   - psql -c 'create database db;' -U postgres
 
 script:
-  - pytest --cov=ploomber
+  - pytest --cov=ploomber --ignore tests/test_examples.py
+  - pytest --cov=ploomber --workers auto tests/test_examples.py
 
 after_success: coveralls
