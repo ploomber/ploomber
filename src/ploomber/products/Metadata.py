@@ -162,6 +162,11 @@ class Metadata(AbstractMetadata):
         # in a metadproduct have the same obj in metadata?
         self._data = data
 
+        # clear up caching flags. maybe embed this logic when modifying
+        # ._data? when we modify it we should always reset flags
+        self._product._outdated_data_dependencies_status = None
+        self._product._outdated_code_dependency_status = None
+
     # NOTE: I don't think I'm using this anywhere
     def delete(self):
         self._product.delete_metadata()
