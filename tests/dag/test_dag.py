@@ -2,7 +2,7 @@ import logging
 from itertools import product
 import warnings
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import Mock
 
 import pytest
 
@@ -214,21 +214,25 @@ def test_build_partially_diff_sessions(tmp_directory):
     assert df.loc['b']['Ran?']
 
 
-@pytest.mark.parametrize('function_name', ['render', 'plot'])
-def test_dag_functions_do_not_require_metadata(function_name, tmp_directory):
+@pytest.mark.parametrize('function_name', ['render', 'build', 'plot'])
+def test_dag_functions_do_not_fetch_metadata(function_name, tmp_directory):
     """
     these function should not look up metadata, since the products do not
-    exist, the status can be determined without metadata
+    exist, the status can be determined without it
     """
-    dag = DAG(
-        executor=Serial(build_in_subprocess=False, catch_exceptions=False))
-    t = PythonCallable(touch_root, File('1.txt'), dag, name=1)
+    if function_name == 'build':
+        pytest.xfail('Storing metadata has to first fetch it, fix not'
+                     'implemented yet')
 
-    t.product.fetch_metadata = MagicMock(return_value={})
+    product = File('1.txt')
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+    PythonCallable(touch_root, product, dag, name=1)
+
+    product.fetch_metadata = Mock(wraps=product.fetch_metadata)
 
     getattr(dag, function_name)()
 
-    t.product.fetch_metadata.assert_not_called()
+    product.fetch_metadata.assert_not_called()
 
 
 # def test_can_use_null_task(tmp_directory):

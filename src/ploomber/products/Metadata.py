@@ -83,6 +83,7 @@ class Metadata(AbstractMetadata):
     """
     Internal class to standardize access to Product's metadata
     """
+
     # TODO: this should be _data, since it is an internal API
     @property
     def data(self):
@@ -98,10 +99,23 @@ class Metadata(AbstractMetadata):
     def stored_source_code(self):
         return self.data.get('stored_source_code')
 
+    # FIXME: this should be a private method
     def load(self):
+        # important edge case: if the product does not exist, don't even
+        # try to fetch metadata: product existing but no metadata saved
+        # means something went wrong and we have to ignore any stored
+        # values to fix it
+
+        # FIXME: cache the output of this command, we are using it in several
+        # places, sometimes we have to re-fetch but sometimes we can cache,
+        # look for product.exists() references and .exists() references
+        # in the Product definition
         if not self._product.exists():
             metadata = dict(timestamp=None, stored_source_code=None)
         else:
+            # FIXME: if anything goes wrong when fetching metadata, warn
+            # and set it to a valid dictionary with None values, validation
+            # should happen here, not in the fetch_metadata method
             metadata_fetched = self._product.fetch_metadata()
 
             if metadata_fetched is None:
@@ -140,11 +154,16 @@ class Metadata(AbstractMetadata):
     def clear(self):
         self._data = None
         # FIXME: product._clear_cached status is also setting these to None
+        # refactor
         self._product._outdated_data_dependencies_status = None
         self._product._outdated_code_dependency_status = None
 
     def __getitem__(self, key):
         return self._data[key]
+
+    # FIXME: add a private method to replace the metadata, this should
+    # be used when tasks run in a subprocess: it's more efficient to
+    # send the copy of the new metadata than fetch over the network
 
 
 class MetadataCollection(AbstractMetadata):

@@ -1,9 +1,9 @@
-from unittest.mock import MagicMock
+from unittest.mock import Mock
 from ploomber.products.Metadata import Metadata
 
 
 def test_clear():
-    prod = MagicMock()
+    prod = Mock()
     prod.exists.return_value = True
     metadata = Metadata(prod)
 
@@ -21,7 +21,7 @@ def test_clear():
 
 
 def test_delete():
-    prod = MagicMock()
+    prod = Mock()
     metadata = Metadata(prod)
     assert not prod.delete_metadata.call_count
 
@@ -31,7 +31,7 @@ def test_delete():
 
 
 def test_update():
-    prod = MagicMock()
+    prod = Mock()
     # FIXME: delete once we get rid of this
     prod.prepare_metadata = lambda product, metadata: None
     prod.fetch_metadata.return_value = dict(timestamp=1,
