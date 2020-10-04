@@ -2,8 +2,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from ploomber.products.Metadata import Metadata
+from ploomber.products.Metadata import Metadata, AbstractMetadata
 from ploomber.products import Product
+from ploomber._testing_utils import assert_no_extra_attributes_in_class
 
 
 class FakeProduct(Product):
@@ -21,6 +22,11 @@ class FakeProduct(Product):
 
     def delete(self, force=False):
         pass
+
+
+@pytest.mark.parametrize('concrete_class', AbstractMetadata.__subclasses__())
+def test_interfaces(concrete_class):
+    assert_no_extra_attributes_in_class(AbstractMetadata, concrete_class)
 
 
 def test_clear():

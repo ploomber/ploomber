@@ -1,0 +1,45 @@
+"""
+Utlity functions to run Ploomber tests. This is not a public module
+"""
+
+
+def assert_no_extra_attributes_in_class(abstract_class,
+                                        concrete_class,
+                                        allowed=None):
+    """
+    Ploomber makes heavy use of abstract classes to provide a uniform API for
+    tasks, products, metadata, etc. WHen defining abstract classes, the
+    interpreter refused to instantiate an object where the concrete class
+    misses implementation for abstract methods. However, it does not complain
+    if the concrete class implements *extra methods*
+
+    This has been problematic to remove old code. As we simplify the API,
+    sometimes concrete classes become outdated. For example, before creating
+    Metadata, all metadata logic was embedded in the Product objects, when
+    we made the change, we removed some abstract methods from the Product class
+    but it took a long time to realize that we sould've removed these mehods
+    from the MetaProduct class as well. We use this function to alert us
+    when there are things we can remove.
+
+    The other case also happens: we add functionality to concrete classes but
+    we do not do it in the abstract class, when this happens we have to decide
+    whether to add them to the abstract class (recommended) or make an
+    exception in such case, those new methods should be named with double
+    leading underscore to be ignored by this check and to prevent polluting the
+    public interface. Single leading uncerscore methods are flagged to allow
+    abstract classes define its own private API, which is also important
+    for consistency, even if the end user does not use these methods.
+    """
+    allowed = allowed or set()
+
+    extra_attrs = {
+        attr
+        for attr in set(dir(concrete_class)) - set(dir(abstract_class))
+        if not attr.startswith('__')
+    } - allowed
+
+    if extra_attrs:
+        raise ValueError('The following methods/attributes in {} '
+                         'are not part of the {} interface: {}'.format(
+                             concrete_class.__name__, abstract_class.__name__,
+                             extra_attrs))

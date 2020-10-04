@@ -22,6 +22,14 @@ class AbstractMetadata(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def _data(self):
+        """
+        Private API, returns the dictionary representation of the metadata
+        """
+        pass
+
+    @property
+    @abc.abstractmethod
     def timestamp(self):
         """When the product was originally created
         """
@@ -60,7 +68,18 @@ class AbstractMetadata(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def update_locally(self, data):
+        """
+        Updates metadata locally. Called then tasks are successfully
+        executed in a subproces, to make the local copy synced again (because
+        the call to .update() happens in the subprocess as well)
+        """
+        pass
+
     def to_dict(self):
+        """Returns a dict copy of ._data
+        """
         return deepcopy(self._data)
 
     def __eq__(self, other):
@@ -198,11 +217,6 @@ class Metadata(AbstractMetadata):
         self._data = new_data
 
     def update_locally(self, data):
-        """
-        Updates metadata locally. Should be called then tasks are successfully
-        executed in a subproces, to make the local copy synced again (because
-        the call to .update() happens in the subprocess as well)
-        """
         # NOTE: do we have to copy here? is it a problem if all products
         # in a metadproduct have the same obj in metadata?
         self._data = data
@@ -237,8 +251,6 @@ class MetadataCollection(AbstractMetadata):
 
     @property
     def timestamp(self):
-        """When the product was originally created
-        """
         # TODO: refactor, all products should have the same metadata
         timestamps = [
             p.metadata.timestamp for p in self._products
@@ -251,8 +263,6 @@ class MetadataCollection(AbstractMetadata):
 
     @property
     def stored_source_code(self):
-        """Source code that generated the product
-        """
         stored_source_code = set([
             p.metadata.stored_source_code for p in self._products
             if p.metadata.stored_source_code is not None
@@ -268,14 +278,10 @@ class MetadataCollection(AbstractMetadata):
             return list(stored_source_code)[0]
 
     def update(self, source_code):
-        """
-        """
         for p in self._products:
             p.metadata.update(source_code)
 
     def update_locally(self, data):
-        """Updates metadata locally
-        """
         for p in self._products:
             p.metadata.update_locally(data)
 
@@ -293,6 +299,10 @@ class MetadataCollection(AbstractMetadata):
 
     def to_dict(self):
         return list(self._products)[0].metadata.to_dict()
+
+    @property
+    def _data(self):
+        return list(self._products)[0].metadata._data
 
 
 class MetadataAlwaysUpToDate(AbstractMetadata):
@@ -315,6 +325,13 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
 
     def update(self, source_code):
         pass
+
+    def update_locally(self, data):
+        pass
+
+    @property
+    def _data(self):
+        return {'timestamp': 0, 'stored_source_code': None}
 
     def delete(self):
         pass
