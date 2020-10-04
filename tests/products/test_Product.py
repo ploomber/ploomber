@@ -15,14 +15,13 @@ def test_interface(concrete_class):
         'SQLRelation': {'schema', 'name', 'kind', 'client'},
         'SQLiteRelation': {'schema', 'name', 'kind', 'client'},
         'PostgresRelation': {'schema', 'name', 'kind', 'client'},
+        'GenericProduct': {'client', 'name'},
+        # these come from collections.abc.Mapping
         'MetaProduct': {'get', 'keys', 'items', 'values'},
-        'GenericProduct': {'client', 'name'}
     }
 
     allowed = allowed_mapping.get(concrete_class.__name__, {})
 
-    # look for extra attrs, but allow the ones we get from
-    # collections.abc.Mapping
     assert_no_extra_attributes_in_class(Product,
                                         concrete_class,
                                         allowed=allowed)

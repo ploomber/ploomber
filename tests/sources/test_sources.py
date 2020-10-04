@@ -5,13 +5,32 @@ import pytest
 
 from ploomber.exceptions import SourceInitializationError
 from ploomber.sources import (SQLQuerySource, SQLScriptSource, GenericSource,
-                              PythonCallableSource, FileSource)
+                              PythonCallableSource, FileSource, Source,
+                              NotebookSource)
 from ploomber.tasks import SQLScript
-from ploomber.products import SQLiteRelation
+from ploomber.products import SQLiteRelation, GenericSQLRelation
 from ploomber import DAG
-from ploomber.products import GenericSQLRelation
+from ploomber._testing_utils import assert_no_extra_attributes_in_class
 
 from test_pkg import functions
+
+
+@pytest.mark.parametrize('concrete_class', Source.__subclasses__())
+def test_interface(concrete_class):
+    """
+    Look for unnecessary implemeneted methods/attributes in MetaProduct,
+    this helps us keep the API up-to-date if the Product interface changes
+    """
+    if concrete_class in {PythonCallableSource, NotebookSource}:
+        pytest.xfail()
+
+    allowed_mapping = {}
+
+    allowed = allowed_mapping.get(concrete_class.__name__, {})
+
+    assert_no_extra_attributes_in_class(Source,
+                                        concrete_class,
+                                        allowed=allowed)
 
 
 def test_generic_source_unrendered():
