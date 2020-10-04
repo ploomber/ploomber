@@ -285,7 +285,7 @@ class Link(Task):
         # patch product's metadata
         self.product.metadata = MetadataAlwaysUpToDate()
         # product's code will never be considered outdated
-        self.product._outdated_code_dependency = self.__false
+        self.product._outdated_code_dependency = self._false
 
         if not self.product.exists():
             raise RuntimeError('Link tasks should point to Products that '
@@ -302,7 +302,9 @@ class Link(Task):
     def _init_source(kwargs):
         return EmptySource(None, **kwargs)
 
-    def __false(self):
+    def _false(self):
+        # this should be __false but we can't due to
+        # https://bugs.python.org/issue33007
         return False
 
 
@@ -331,11 +333,11 @@ class Input(Task):
         super().__init__(product, dag, name, None)
 
         # do not save metadata (Product's location is read-only)
-        self.product.metadata.update = self.__null_update_metadata
+        self.product.metadata.update = self._null_update_metadata
 
         # the product will always be considered outdated
-        self.product._outdated_data_dependencies = self.__true
-        self.product._outdated_code_dependency = self.__true
+        self.product._outdated_data_dependencies = self._true
+        self.product._outdated_code_dependency = self._true
 
         if not self.product.exists():
             raise RuntimeError('Input tasks should point to Products that '
@@ -353,8 +355,12 @@ class Input(Task):
     def _init_source(kwargs):
         return EmptySource(None, **kwargs)
 
-    def __null_update_metadata(self, metadata):
+    def _null_update_metadata(self, metadata):
+        # this should be __null_update_metadata but we can't due to
+        # https://bugs.python.org/issue33007
         pass
 
-    def __true(self):
+    def _true(self):
+        # this should be __true but we can't due to
+        # https://bugs.python.org/issue33007
         return True
