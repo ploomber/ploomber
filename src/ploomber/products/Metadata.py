@@ -135,6 +135,10 @@ class Metadata(AbstractMetadata):
     def update(self, source_code):
         """
         """
+        # if metadata changes, these flags become outdated
+        self._product._outdated_data_dependencies_status = None
+        self._product._outdated_code_dependency_status = None
+
         self.data['timestamp'] = datetime.now().timestamp()
         self.data['stored_source_code'] = source_code
 

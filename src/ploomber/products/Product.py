@@ -45,14 +45,6 @@ class Product(abc.ABC):
 
         self.prepare_metadata = _prepare_metadata
 
-    def _save_metadata(self, source_code):
-        # if metadata changes, these flags become outdated
-        self._outdated_data_dependencies_status = None
-        self._outdated_code_dependency_status = None
-
-        # this is called by task in the exec_status setter
-        self.metadata.update(source_code)
-
     @property
     def task(self):
         if self._task is None:

@@ -284,13 +284,15 @@ class Task(abc.ABC):
             try:
                 self.on_finish(**kwargs)
             except Exception as e:
+                # FIXME: There's duplicated logic here, _build also catches
+                # this errors
                 msg = ('Exception when running on_finish '
                        'for task "{}": {}'.format(self.name, e))
                 self._logger.exception(msg)
                 self.exec_status = TaskStatus.Errored
                 raise type(e)(msg) from e
 
-        self.product._save_metadata(str(self.source))
+        self.product.metadata.update(str(self.source))
 
         # For most Products, it's ok to do this check before
         # saving metadata, but not for GenericProduct, since the way
