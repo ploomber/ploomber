@@ -1,3 +1,4 @@
+import abc
 import sqlite3
 import json
 
@@ -36,7 +37,14 @@ class ProductWithClientMixin:
         return self._client
 
 
-class SQLiteBackedProductMixin(ProductWithClientMixin):
+class SQLiteBackedProductMixin(abc.ABC, ProductWithClientMixin):
+    @property
+    @abc.abstractmethod
+    def name(self):
+        """Used as identifier in the database
+        """
+        pass
+
     def __create_metadata_relation(self):
         create_metadata = """
         CREATE TABLE IF NOT EXISTS _metadata (

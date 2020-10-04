@@ -8,8 +8,8 @@ def assert_no_extra_attributes_in_class(abstract_class,
                                         allowed=None):
     """
     Ploomber makes heavy use of abstract classes to provide a uniform API for
-    tasks, products, metadata, etc. WHen defining abstract classes, the
-    interpreter refused to instantiate an object where the concrete class
+    tasks, products, metadata, etc. When defining abstract classes, the
+    interpreter refuses to instantiate an object where the concrete class
     misses implementation for abstract methods. However, it does not complain
     if the concrete class implements *extra methods*
 
@@ -26,9 +26,21 @@ def assert_no_extra_attributes_in_class(abstract_class,
     whether to add them to the abstract class (recommended) or make an
     exception in such case, those new methods should be named with double
     leading underscore to be ignored by this check and to prevent polluting the
-    public interface. Single leading underscore methods are flagged to allow
+    public interface. Single leading underscore methods are checked to allow
     abstract classes define its own private API, which is also important
     for consistency, even if the end user does not use these methods.
+
+    Convention:
+        - no leading underscode: public API
+        - one leading underscore: private Ploomber API. Not meant to be used by
+            end-users but can be user by developers
+        - two leading underscores: private class API. Not meant to be used
+            outside the implementation of the class itself. Abstract classes
+            should not define these, these are intended to carry logic
+            specific to concrete classes
+
+    NOTE: maybe a better alternative to allowed is to create an abstract
+    class that adds new abstract methods
     """
     allowed = allowed or set()
 

@@ -22,7 +22,7 @@ def test_interface(concrete_class):
         'SQLiteRelation': {'schema', 'name', 'kind', 'client'},
         'PostgresRelation': {'schema', 'name', 'kind', 'client'},
         'MetaProduct': {'get', 'keys', 'items', 'values'},
-        'GenericProduct': {'client'}
+        'GenericProduct': {'client', 'name'}
     }
 
     allowed = allowed_mapping.get(concrete_class.__name__, {})
