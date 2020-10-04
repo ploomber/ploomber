@@ -227,3 +227,11 @@ class Product(abc.ABC):
         """Deletes the product
         """
         pass
+
+    # NOTE: currently optional but there is a conflict with this. metadata
+    # defines a delete public method which calls product._delete_metadata
+    # but not all products implement this
+    def _delete_metadata(self):
+        raise NotImplementedError(
+            '_delete_metadata not implemented in {}'.format(
+                type(self).__name__))

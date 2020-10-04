@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from ploomber import DAG
 from ploomber.tasks import ShellScript
 from ploomber.products import File, MetaProduct, Product
@@ -8,7 +10,9 @@ from ploomber._testing_utils import assert_no_extra_attributes_in_class
 
 # FIXME: move this to a test_Product file and check other Product concrete
 # classes
-def test_interface():
+@pytest.mark.parametrize('concrete_class',
+                         Product.__subclasses__() + [MetaProduct])
+def test_interface(concrete_class):
     """
     Look for unnecessary implemeneted methods/attributes in MetaProduct,
     this helps us keep the API up-to-date if the Product interface changes
@@ -16,7 +20,7 @@ def test_interface():
     # look for extra attrs, but allow the ones we get from
     # collections.abc.Mapping
     assert_no_extra_attributes_in_class(
-        Product, MetaProduct, allowed={'get', 'keys', 'items', 'values'})
+        Product, concrete_class, allowed={'get', 'keys', 'items', 'values'})
 
 
 def test_get():

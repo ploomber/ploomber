@@ -26,7 +26,7 @@ def assert_no_extra_attributes_in_class(abstract_class,
     whether to add them to the abstract class (recommended) or make an
     exception in such case, those new methods should be named with double
     leading underscore to be ignored by this check and to prevent polluting the
-    public interface. Single leading uncerscore methods are flagged to allow
+    public interface. Single leading underscore methods are flagged to allow
     abstract classes define its own private API, which is also important
     for consistency, even if the end user does not use these methods.
     """
@@ -35,7 +35,8 @@ def assert_no_extra_attributes_in_class(abstract_class,
     extra_attrs = {
         attr
         for attr in set(dir(concrete_class)) - set(dir(abstract_class))
-        if not attr.startswith('__')
+        if not (attr.startswith('__')
+                or attr.startswith('_{}__'.format(concrete_class.__name__)))
     } - allowed
 
     if extra_attrs:

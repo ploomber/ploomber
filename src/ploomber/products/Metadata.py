@@ -223,7 +223,7 @@ class Metadata(AbstractMetadata):
 
     # NOTE: I don't think I'm using this anywhere
     def delete(self):
-        self._product.delete_metadata()
+        self._product._delete_metadata()
         self._data = dict(timestamp=None, stored_source_code=None)
 
     def clear(self):
@@ -287,7 +287,7 @@ class MetadataCollection(AbstractMetadata):
 
     def delete(self):
         for p in self._products:
-            p.delete_metadata()
+            p._delete_metadata()
 
     def _get(self):
         for p in self._products:
