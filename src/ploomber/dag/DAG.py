@@ -245,7 +245,7 @@ class DAG(collections.abc.Mapping):
         """
         Render resolves all placeholders in tasks and determines whether
         a task should run or not based on the task.product metadata, this
-        allows up-to-date tasks to be skipped.
+        allows up-to-date tasks to be skipped
 
         Parameters
         ----------
@@ -255,6 +255,7 @@ class DAG(collections.abc.Mapping):
             whose metadata is stored in remote systems, because there is no
             need to fetch metadata over the network. If the DAG won't be
             built, this option is recommended.
+
         """
         g = self._to_graph()
 

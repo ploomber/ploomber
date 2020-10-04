@@ -2,6 +2,7 @@ import logging
 from itertools import product
 import warnings
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -213,15 +214,21 @@ def test_build_partially_diff_sessions(tmp_directory):
     assert df.loc['b']['Ran?']
 
 
-@pytest.mark.parametrize('function_name',
-                         ['render', 'build', 'to_markup', 'plot'])
-def test_dag_functions_clear_up_product_status(function_name, tmp_directory):
-    dag = DAG()
+@pytest.mark.parametrize('function_name', ['render', 'plot'])
+def test_dag_functions_do_not_require_metadata(function_name, tmp_directory):
+    """
+    these function should not look up metadata, since the products do not
+    exist, the status can be determined without metadata
+    """
+    dag = DAG(
+        executor=Serial(build_in_subprocess=False, catch_exceptions=False))
     t = PythonCallable(touch_root, File('1.txt'), dag, name=1)
+
+    t.product.fetch_metadata = MagicMock(return_value={})
+
     getattr(dag, function_name)()
 
-    assert t.product._outdated_code_dependency_status is None
-    assert t.product._outdated_data_dependencies_status is None
+    t.product.fetch_metadata.assert_not_called()
 
 
 # def test_can_use_null_task(tmp_directory):

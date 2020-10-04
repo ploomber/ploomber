@@ -469,6 +469,8 @@ class Task(abc.ABC):
 
             if build_success:
                 try:
+                    # FIXME: move metadata saving and product checking,
+                    # the error message is misleading
                     # this not only runs the hook, but also
                     # calls save metadata and checks that the product exists
                     self._run_on_finish()
