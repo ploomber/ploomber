@@ -34,7 +34,6 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
     exists does not check for product existence, just checks if metadata exists
     delete does not perform actual deletion, just deletes metadata
     """
-
     def __init__(self, identifier, client=None):
         super().__init__(identifier)
         self._client = client
@@ -46,8 +45,8 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
             default = self.task.dag.clients.get(type(self))
 
             if default is None:
-                raise ValueError('{} must be initialized with a client'
-                                 .format(type(self).__name__))
+                raise ValueError('{} must be initialized with a client'.format(
+                    type(self).__name__))
             else:
                 self._client = default
 
@@ -65,10 +64,6 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
         """
         # just delete the metadata, we cannot do anything else
         return self._delete_metadata()
-
-    @property
-    def name(self):
-        return str(self._identifier)
 
 
 class GenericSQLRelation(GenericProduct):

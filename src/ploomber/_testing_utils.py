@@ -32,11 +32,14 @@ def assert_no_extra_attributes_in_class(abstract_class,
     """
     allowed = allowed or set()
 
+    preffixes = [
+        '_{}__'.format(class_.__name__) for class_ in concrete_class.__bases__
+    ] + ['__', '_{}__'.format(concrete_class.__name__)]
+
     extra_attrs = {
         attr
         for attr in set(dir(concrete_class)) - set(dir(abstract_class))
-        if not (attr.startswith('__')
-                or attr.startswith('_{}__'.format(concrete_class.__name__)))
+        if not any(attr.startswith(p) for p in preffixes)
     } - allowed
 
     if extra_attrs:
