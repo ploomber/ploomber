@@ -32,6 +32,9 @@ def test_delete():
 
 def test_update():
     prod = Mock()
+    prod._outdated_data_dependencies_status = 1
+    prod._outdated_code_dependency_status = 1
+
     # FIXME: delete once we get rid of this
     prod.prepare_metadata = lambda product, metadata: None
     prod.fetch_metadata.return_value = dict(timestamp=1,
@@ -40,4 +43,8 @@ def test_update():
 
     metadata.update('new code')
 
+    # check code was updated
     assert metadata._data['stored_source_code'] == 'new code'
+    # check cache flags were cleared up
+    assert prod._outdated_data_dependencies_status is None
+    assert prod._outdated_code_dependency_status is None
