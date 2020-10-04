@@ -616,10 +616,6 @@ class DAG(collections.abc.Mapping):
         G_ = nx.nx_agraph.to_agraph(G)
         G_.draw(path, prog='dot', args='-Grankdir=LR')
 
-        # plot function uses _is_outdated, which casues caching, clear up
-        # to avoid re-using this in any other operation
-        self._clear_cached_status()
-
         if output == 'matplotlib':
             return path2fig(path)
         else:
