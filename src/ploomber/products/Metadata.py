@@ -157,8 +157,12 @@ class Metadata(AbstractMetadata):
 
     def clear(self):
         self._data = None
-        # FIXME: product._clear_cached status is also setting these to None
-        # refactor
+
+        # These flags keep a cache of the Product's outdated status, they
+        # are computed using the Product's metadata, hence they will only
+        # change when the metadata changes. Saving status speeds rendering
+        # because retrieving metadata is slow (especially if it's stored
+        # remotely)
         self._product._outdated_data_dependencies_status = None
         self._product._outdated_code_dependency_status = None
 

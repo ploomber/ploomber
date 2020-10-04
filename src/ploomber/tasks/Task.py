@@ -432,7 +432,7 @@ class Task(abc.ABC):
         self.render(force=force)
 
         res = self._build(catch_exceptions=catch_exceptions)
-        self.product._clear_cached_status()
+        self.product.metadata.clear()
         return res
 
     def _build(self, catch_exceptions):
