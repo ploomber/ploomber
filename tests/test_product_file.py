@@ -2,11 +2,6 @@ from pathlib import Path
 from ploomber.products import File
 
 
-def test_initializes_metadata():
-    f = File('/path/to/file')
-    assert f.metadata == {'timestamp': None, 'stored_source_code': None}
-
-
 def test_file_initialized_with_str():
     f = File('/path/to/file')
     f.render({})

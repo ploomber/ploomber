@@ -2,7 +2,27 @@ from pathlib import Path
 
 from ploomber import DAG
 from ploomber.tasks import ShellScript
-from ploomber.products import File, MetaProduct
+from ploomber.products import File, MetaProduct, Product
+
+
+def test_interface():
+    """
+    Look for unnecessary implemeneted methods/attributes in MetaProduct,
+    this helps us keep the API up-to-date if the Product interface changes
+    """
+
+    # look for extra attrs, but allow the ones we get from
+    # collections.abc.Mapping
+    extra_attrs = {
+        attr
+        for attr in set(dir(MetaProduct)) - set(dir(Product))
+        if not attr.startswith('__')
+    } - {'get', 'keys', 'items', 'values'}
+
+    if extra_attrs:
+        raise ValueError(
+            'The following methods/attributes in MetaProduc '
+            'are not part of the Product interface: {}'.format(extra_attrs))
 
 
 def test_get():

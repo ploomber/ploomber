@@ -64,7 +64,7 @@ class AbstractMetadata(abc.ABC):
         return deepcopy(self._data)
 
     def __eq__(self, other):
-        return self.data == other
+        return self._data == other
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -224,10 +224,6 @@ class Metadata(AbstractMetadata):
         self._did_fetch = False
         self._data = dict(timestamp=None, stored_source_code=None)
 
-    # FIXME: I don't think I'm using this
-    def __getitem__(self, key):
-        return self._data[key]
-
 
 class MetadataCollection(AbstractMetadata):
     """Metadata class used for MetaProduct
@@ -298,8 +294,6 @@ class MetadataCollection(AbstractMetadata):
     def to_dict(self):
         return list(self._products)[0].metadata.to_dict()
 
-    # TODO: add getitem
-
 
 class MetadataAlwaysUpToDate(AbstractMetadata):
     """
@@ -327,5 +321,3 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
 
     def clear(self):
         pass
-
-    # TODO: add getitem

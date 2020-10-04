@@ -46,7 +46,7 @@ class ProductsContainer:
 
 
 # NOTE: rename this to ProductCollection?
-class MetaProduct:
+class MetaProduct(Mapping):
     """
     Exposes a Product-like API to allow Tasks to create more than one Product,
     it is automatically instantiated when a Task is initialized with a
@@ -63,14 +63,6 @@ class MetaProduct:
         self.metadata = MetadataCollection(container)
 
     @property
-    def timestamp(self):
-        return self.metadata.timestamp
-
-    @property
-    def stored_source_code(self):
-        return self.metadata.stored_source_code
-
-    @property
     def task(self):
         # TODO: validate same task
         return self.products[0].task
@@ -79,16 +71,6 @@ class MetaProduct:
     def task(self, value):
         for p in self.products:
             p.task = value
-
-    @timestamp.setter
-    def timestamp(self, value):
-        for p in self.products:
-            p.metadata['timestamp'] = value
-
-    @stored_source_code.setter
-    def stored_source_code(self, value):
-        for p in self.products:
-            p.metadata['stored_source_code'] = value
 
     def exists(self):
         return all([p.exists() for p in self.products])
@@ -116,9 +98,6 @@ class MetaProduct:
         # are supported such as NotebookRunner that depends on papermill
         return self.products.to_json_serializable()
 
-    def _save_metadata(self, source_code):
-        self.metadata.update(source_code)
-
     def render(self, params, **kwargs):
         for p in self.products:
             p.render(params, **kwargs)
@@ -135,12 +114,6 @@ class MetaProduct:
 
     def __getitem__(self, key):
         return self.products[key]
-
-    def get(self, key):
-        try:
-            return self[key]
-        except KeyError:
-            return None
 
     def __len__(self):
         return len(self.products)
