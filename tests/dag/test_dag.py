@@ -2,7 +2,7 @@ import logging
 from itertools import product
 import warnings
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 
 import pytest
 
@@ -220,19 +220,24 @@ def test_dag_functions_do_not_fetch_metadata(function_name, tmp_directory):
     these function should not look up metadata, since the products do not
     exist, the status can be determined without it
     """
-    if function_name == 'build':
-        pytest.xfail('Storing metadata has to first fetch it, fix not'
-                     'implemented yet')
-
     product = File('1.txt')
-    dag = DAG(executor=Serial(build_in_subprocess=False))
+    dag = DAG(executor=Serial(build_in_subprocess=True))
     PythonCallable(touch_root, product, dag, name=1)
 
-    product.fetch_metadata = Mock(wraps=product.fetch_metadata)
+    m = Mock(wraps=product.fetch_metadata)
+    m.__reduce__ = lambda self: (MagicMock, ())
+
+    product.fetch_metadata = m
 
     getattr(dag, function_name)()
 
+    # not called
     product.fetch_metadata.assert_not_called()
+
+    if function_name == 'build':
+        # if building, we should still see the metadata
+        assert product.metadata._data['stored_source_code']
+        assert product.metadata._data['timestamp']
 
 
 # def test_can_use_null_task(tmp_directory):
