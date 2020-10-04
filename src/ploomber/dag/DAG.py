@@ -412,8 +412,6 @@ class DAG(collections.abc.Mapping):
             except DAGBuildEarlyStop:
                 # early stop and empty on_failure, nothing left to do
                 if self.on_failure is None:
-                    # FIXME: remove this, only needed after rendering
-                    self._clear_cached_status()
                     return
             else:
                 # no error when building dag
@@ -441,8 +439,6 @@ class DAG(collections.abc.Mapping):
 
                     if isinstance(e, DAGBuildEarlyStop):
                         # early stop, nothing left to co
-                        # FIXME: remove this, only needed after rendering
-                        self._clear_cached_status()
                         return
                     else:
                         # otherwise raise exception
@@ -450,8 +446,6 @@ class DAG(collections.abc.Mapping):
                 else:
                     # DAG success and on_finish did not raise exception
                     self._exec_status = DAGStatus.Executed
-                    # FIXME: remove this, only needed after rendering
-                    self._clear_cached_status()
                     return build_report
 
             else:
@@ -471,9 +465,6 @@ class DAG(collections.abc.Mapping):
                         raise DAGBuildError(msg) from e
 
                 # on_failure hook executed, raise original exception
-                # FIXME: remove this, only needed after rendering
-                self._clear_cached_status()
-
                 raise DAGBuildError(
                     'Failed to build DAG {}'.format(self)) from build_exception
 
