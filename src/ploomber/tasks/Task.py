@@ -372,10 +372,11 @@ class Task(abc.ABC):
         self._logger.debug('Setting "%s" status to %s', self.name, value)
         self._exec_status = value
 
-        # some executors run this in a subprocess, the main process will not
-        # get the new metadata since it was not saved from there, reload
+        # some executors run this in a subprocess, the metadata in the main
+        # process becomes outdated, make sure you retrieve it again next time
+        # you need it
         if value == TaskStatus.Executed:
-            self.product.metadata.load()
+            self.product.metadata.clear()
 
         # process might crash, propagate now or changes might not be
         # reflected (e.g. if a Task is marked as Aborted, all downtream
@@ -468,6 +469,8 @@ class Task(abc.ABC):
 
             if build_success:
                 try:
+                    # FIXME: move metadata saving and product checking,
+                    # the error message is misleading
                     # this not only runs the hook, but also
                     # calls save metadata and checks that the product exists
                     self._run_on_finish()
@@ -564,6 +567,12 @@ class Task(abc.ABC):
         outdated_by_code : str
             Factors to determine if Task.product is marked outdated when source
             code changes. Otherwise just the upstream timestamps are used.
+
+        Notes
+        -----
+        This method tries to avoid calls to check for product status whenever
+        possible (for efficiency), for example, when passing the force flag,
+        there is no need to check it
         """
         self._logger.debug('Calling render on task %s', self.name)
 
@@ -593,9 +602,10 @@ class Task(abc.ABC):
             # NOTE: is_outdated goes second so it's lazily evaluated
             if force or is_outdated.check():
                 self._exec_status = TaskStatus.WaitingExecution
-                self._logger.debug(
-                    'Forcing status "%s", outdated conditions'
-                    ' ignored...', self.name)
+                if force:
+                    self._logger.debug(
+                        'Forcing status "%s", outdated conditions'
+                        ' ignored...', self.name)
 
             else:
                 self._exec_status = TaskStatus.Skipped

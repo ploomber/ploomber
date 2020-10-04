@@ -144,6 +144,12 @@ that command again, only tasks whose source code has changed will be executed.
 pipelines by pointing to a directory with scripts. For more information, see the
 :doc:`../user-guide/cli` guide.
 
+**Note:** You can also define functions, instead of scripts, to be tasks in
+your pipeline. Just add a dotted path in the ``source`` key, and make sure the
+function can be imported. For example if you have a function that you can import
+using ``from my_project.tasks import my_task``, add
+``source: my_project.tasks.my_task`` to your ``pipeline.yaml`` file. See this
+`example pipeline <https://github.com/ploomber/projects/tree/master/basic-ml/spec>`_
 
 Summary
 -------

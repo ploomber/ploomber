@@ -125,6 +125,7 @@ class DAG(collections.abc.Mapping):
                 'an instance of executors.Executor, got type {}'.format(
                     type(executor)))
 
+        # FIXME: delete, no longer used
         self._did_render = False
 
         self.on_finish = None
@@ -244,7 +245,7 @@ class DAG(collections.abc.Mapping):
         """
         Render resolves all placeholders in tasks and determines whether
         a task should run or not based on the task.product metadata, this
-        allows up-to-date tasks to be skipped.
+        allows up-to-date tasks to be skipped
 
         Parameters
         ----------
@@ -254,6 +255,7 @@ class DAG(collections.abc.Mapping):
             whose metadata is stored in remote systems, because there is no
             need to fetch metadata over the network. If the DAG won't be
             built, this option is recommended.
+
         """
         g = self._to_graph()
 
@@ -412,8 +414,6 @@ class DAG(collections.abc.Mapping):
             except DAGBuildEarlyStop:
                 # early stop and empty on_failure, nothing left to do
                 if self.on_failure is None:
-                    # FIXME: remove this, only needed after rendering
-                    self._clear_cached_status()
                     return
             else:
                 # no error when building dag
@@ -441,8 +441,6 @@ class DAG(collections.abc.Mapping):
 
                     if isinstance(e, DAGBuildEarlyStop):
                         # early stop, nothing left to co
-                        # FIXME: remove this, only needed after rendering
-                        self._clear_cached_status()
                         return
                     else:
                         # otherwise raise exception
@@ -450,8 +448,6 @@ class DAG(collections.abc.Mapping):
                 else:
                     # DAG success and on_finish did not raise exception
                     self._exec_status = DAGStatus.Executed
-                    # FIXME: remove this, only needed after rendering
-                    self._clear_cached_status()
                     return build_report
 
             else:
@@ -471,9 +467,6 @@ class DAG(collections.abc.Mapping):
                         raise DAGBuildError(msg) from e
 
                 # on_failure hook executed, raise original exception
-                # FIXME: remove this, only needed after rendering
-                self._clear_cached_status()
-
                 raise DAGBuildError(
                     'Failed to build DAG {}'.format(self)) from build_exception
 
@@ -506,25 +499,26 @@ class DAG(collections.abc.Mapping):
         """Partially build a dag until certain task
         """
         lineage = self[target]._lineage
-        dag = deepcopy(self)
+        dag_copy = deepcopy(self)
 
-        to_pop = set(dag) - {target}
+        to_pop = set(dag_copy) - {target}
 
         if lineage:
             to_pop = to_pop - lineage
 
         for task in to_pop:
-            dag.pop(task)
+            dag_copy.pop(task)
 
-        return dag.build(force=force, show_progress=show_progress)
+        # clear metadata in the original dag, because building the copy
+        # will make it outdated, we have to force reload from disk
+        self._clear_cached_status()
+
+        return dag_copy.build(force=force, show_progress=show_progress)
 
     def status(self, **kwargs):
         """Returns a table with tasks status
         """
         # FIXME: delete this, make dag.render() return this
-
-        # self._clear_cached_status()
-
         self.render()
 
         return Table([self[name].status(**kwargs) for name in self])
@@ -538,8 +532,6 @@ class DAG(collections.abc.Mapping):
         include_plot: bool, optional
             If True, the path to a PNG file with the plot in "_plot"
         """
-        # self._clear_cached_status()
-
         d = {name: self._G.nodes[name]['task'].to_dict() for name in self._G}
 
         if include_plot:
@@ -607,8 +599,6 @@ class DAG(collections.abc.Mapping):
         else:
             path = output
 
-        # self._clear_cached_status()
-
         # attributes docs:
         # https://graphviz.gitlab.io/_pages/doc/info/attrs.html
 
@@ -626,10 +616,6 @@ class DAG(collections.abc.Mapping):
         # NOTE: requires pygraphviz and pygraphviz
         G_ = nx.nx_agraph.to_agraph(G)
         G_.draw(path, prog='dot', args='-Grankdir=LR')
-
-        # plot function uses _is_outdated, which casues caching, clear up
-        # to avoid re-using this in any other operation
-        self._clear_cached_status()
 
         if output == 'matplotlib':
             return path2fig(path)
@@ -709,7 +695,23 @@ class DAG(collections.abc.Mapping):
         return list(self._G.successors(task_name))
 
     def _clear_cached_status(self):
-        # NOTE: maybe make this a context manager and/or a decorator
+        """
+        Getting product status (outdated/up-to-date) is slow, especially for
+        product whose metadata is stored remotely. This is critical when
+        rendering because we need to do a forward pass to know which tasks to run
+        and a product's status depends on its upstream product's status, and we
+        have to make sure we only retrieve metadata once, so we save a local
+        copy. But even with this implementation, we don't throw away product
+        status after rendering, otherwise calls that need project status
+        (like DAG.plot, DAG.status, DAG.to_markup) would have to get product
+        status before running its logic, so once we get it, we stick with it.
+        The only caveat is that status updates won't be reflected immediately
+        (e.g. if the user manually deletes a product's metadata), but that's
+        a small price to pay given that this is not expected to happen often.
+        The only case when we *must* be sure that we have up-to-date metadata
+        is when calling DAG.build(), so we call this method before building,
+        which forces metadata reload.
+        """
         self._logger.debug('Clearing product status')
         # clearing out this way is only useful after building, but not
         # if the metadata changed since it wont be reloaded

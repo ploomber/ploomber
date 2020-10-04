@@ -65,7 +65,7 @@ class File(Product):
             return empty
 
     def save_metadata(self, metadata):
-        (self._path_to_stored_source_code.write_text(json.dumps(metadata)))
+        self._path_to_stored_source_code.write_text(json.dumps(metadata))
 
     def delete_metadata(self):
         if self._path_to_stored_source_code.exists():

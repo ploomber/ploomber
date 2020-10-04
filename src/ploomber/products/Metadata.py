@@ -53,6 +53,14 @@ class AbstractMetadata(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def clear(self):
+        """
+        Clear tne in-memory copy, if the metadata is accessed again, it should
+        trigger another call to load()
+        """
+        pass
+
     def __eq__(self, other):
         return self.data == other
 
@@ -129,6 +137,12 @@ class Metadata(AbstractMetadata):
     def delete(self):
         self._product.delete_metadata()
 
+    def clear(self):
+        self._data = None
+        # FIXME: product._clear_cached status is also setting these to None
+        self._product._outdated_data_dependencies_status = None
+        self._product._outdated_code_dependency_status = None
+
     def __getitem__(self, key):
         return self._data[key]
 
@@ -185,6 +199,10 @@ class MetadataCollection(AbstractMetadata):
         for p in self._products:
             p.metadata.load()
 
+    def clear(self):
+        for p in self._products:
+            p.metadata.clear()
+
     # TODO: add getitem
 
 
@@ -210,6 +228,9 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
         pass
 
     def delete(self):
+        pass
+
+    def clear(self):
         pass
 
     # TODO: add getitem

@@ -2,6 +2,7 @@ import logging
 from itertools import product
 import warnings
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -160,7 +161,7 @@ def test_build_partially(tmp_directory, executor):
 
     report = dag.build_partially('b')
 
-    # check it only ran task 2
+    # check it only ran task b
     assert report['Ran?'] == [True]
     assert report['name'] == ['b']
 
@@ -168,43 +169,66 @@ def test_build_partially(tmp_directory, executor):
     assert (set(t.exec_status
                 for t in dag.values()) == {TaskStatus.WaitingRender})
 
+    # this triggers metadata loading for the first time
     dag.render()
 
     # new task status reflect partial execution
     assert ({n: t.exec_status
              for n, t in dag.items()} == {
                  'a': TaskStatus.WaitingExecution,
-                 'b': TaskStatus.Skipped
+                 'b': TaskStatus.Skipped,
              })
 
 
-@pytest.mark.parametrize('function_name',
-                         ['render', 'build', 'to_markup', 'plot'])
-def test_dag_functions_clear_up_product_status(function_name, tmp_directory):
-    dag = DAG()
+def test_build_partially_diff_sessions(tmp_directory):
+    def make():
+        dag = DAG()
+        a = PythonCallable(touch_root, File('a.txt'), dag, name='a')
+        b = PythonCallable(touch, File('b.txt'), dag, name='b')
+        a >> b
+        return dag
+
+    # build dag
+    make().build()
+
+    # force outdated "a" task by deleting metadata
+    Path('a.txt.source').unlink()
+
+    # create another dag
+    dag = make()
+
+    # render, this triggers metadata loading, which is going to be empty for
+    # "a", hence, this dag thinks it has to run "a"
+    dag.render()
+
+    # build partially - this copies the dag and runs "a", this must trigger
+    # the "clear metadata" procedure in the original dag object to let it know
+    # that it has to load the metadata again before building
+    dag.build_partially('a')
+
+    # dag should reload metadata and realize it only has to run "b"
+    report = dag.build()
+
+    df = report.to_pandas().set_index('name')
+    assert not df.loc['a']['Ran?']
+    assert df.loc['b']['Ran?']
+
+
+@pytest.mark.parametrize('function_name', ['render', 'plot'])
+def test_dag_functions_do_not_require_metadata(function_name, tmp_directory):
+    """
+    these function should not look up metadata, since the products do not
+    exist, the status can be determined without metadata
+    """
+    dag = DAG(
+        executor=Serial(build_in_subprocess=False, catch_exceptions=False))
     t = PythonCallable(touch_root, File('1.txt'), dag, name=1)
+
+    t.product.fetch_metadata = MagicMock(return_value={})
+
     getattr(dag, function_name)()
 
-    assert t.product._outdated_code_dependency_status is None
-    assert t.product._outdated_data_dependencies_status is None
-
-
-def test_dag_build_clears_cached_status(tmp_directory):
-    dag = DAG()
-    t = PythonCallable(touch_root, File('my_file.txt'), dag)
-
-    assert t.product._outdated_data_dependencies_status is None
-    assert t.product._outdated_code_dependency_status is None
-
-    dag.status()
-
-    assert t.product._outdated_data_dependencies_status is not None
-    assert t.product._outdated_code_dependency_status is not None
-
-    dag.build()
-
-    assert t.product._outdated_data_dependencies_status is None
-    assert t.product._outdated_code_dependency_status is None
+    t.product.fetch_metadata.assert_not_called()
 
 
 # def test_can_use_null_task(tmp_directory):
@@ -552,6 +576,32 @@ def test_sucessful_execution(executor, tmp_directory):
     assert set(t.exec_status for t in dag.values()) == {TaskStatus.Skipped}
 
 
+@pytest.mark.parametrize('executor', _executors)
+def test_status_cleared_after_reporting_status(executor, tmp_directory):
+    # this is a pesky scenario, we try to avoid retrieving metdata when we
+    # don't have to because it's slow, so we keep a local copy, but this means
+    # we have to keep an eye on conditions where we must retrieve again, here's
+    # one edge case
+    dag = DAG(executor=executor)
+    PythonCallable(touch_root, File('ok.txt'), dag, name='t1')
+
+    # dag status requires retrieving metadata, we have a local copy now...
+    dag.status()
+
+    # building a task means saving metadata again, if the task was executed
+    # in the process where the dag lives, metadata is still up-to-date because
+    # to save metadata, we first have to override the local copy, the edge
+    # case happens when task is executed in a child process, which means
+    # the local copy in the DAG process is now outdated and should be cleared
+    # up
+    dag.build()
+
+    # this should not trigger any execution, because we just built
+    dag.build()
+
+    assert set(t.exec_status for t in dag.values()) == {TaskStatus.Skipped}
+
+
 def test_warnings_are_shown(tmp_directory):
     dag = DAG(executor=Serial(build_in_subprocess=False))
     t1 = PythonCallable(touch_root_w_warning, File('file.txt'), dag)
@@ -607,13 +657,13 @@ def test_early_stop_from_on_finish(executor, tmp_directory):
 # test early stop when registered an on_failure hook, maybe don't run hook?
 
 
-def test_reporting_status_triggers_metadata_reload(tmp_directory):
+def test_reporting_status_triggers_metadata_clear(tmp_directory):
     dag = DAG(executor=Serial(build_in_subprocess=True))
     t = PythonCallable(touch_root, File('file.txt'), dag)
 
     dag.build()
 
-    assert t.product.metadata._data is not None
+    assert t.product.metadata._data is None
 
 
 @pytest.mark.parametrize('executor', executors_w_exception_logging)
