@@ -2,6 +2,7 @@ import logging
 import warnings
 import abc
 from datetime import datetime
+from copy import deepcopy
 from ploomber.util.util import callback_check
 
 
@@ -58,6 +59,9 @@ class AbstractMetadata(abc.ABC):
         trigger another call to load()
         """
         pass
+
+    def to_dict(self):
+        return deepcopy(self._data)
 
     def __eq__(self, other):
         return self.data == other
@@ -218,8 +222,9 @@ class Metadata(AbstractMetadata):
         DAG. hence our local copy in the original DAG is not valid anymore
         """
         self._did_fetch = False
-        self._data = None
+        self._data = dict(timestamp=None, stored_source_code=None)
 
+    # FIXME: I don't think I'm using this
     def __getitem__(self, key):
         return self._data[key]
 
@@ -227,6 +232,10 @@ class Metadata(AbstractMetadata):
 class MetadataCollection(AbstractMetadata):
     """Metadata class used for MetaProduct
     """
+
+    # FIXME: this can be optimized. instead of keeping separate copies for each
+    # the metadata objects can share the underlying dictionary, since they
+    # must have the same values anyway, this allows to remove the looping logic
     def __init__(self, products):
         self._products = products
 
@@ -285,6 +294,9 @@ class MetadataCollection(AbstractMetadata):
     def clear(self):
         for p in self._products:
             p.metadata.clear()
+
+    def to_dict(self):
+        return list(self._products)[0].metadata.to_dict()
 
     # TODO: add getitem
 

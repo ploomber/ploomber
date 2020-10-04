@@ -450,7 +450,7 @@ class Task(abc.ABC):
         if not catch_exceptions:
             res = self._run()
             self._run_on_finish()
-            return res, self.product.metadata._data
+            return res, self.product.metadata.to_dict()
         else:
             try:
                 res = self._run()
@@ -496,7 +496,7 @@ class Task(abc.ABC):
                 else:
                     self.exec_status = TaskStatus.Executed
 
-                return res, self.product.metadata._data
+                return res, self.product.metadata.to_dict()
             else:
                 try:
                     self._run_on_failure()
