@@ -28,3 +28,16 @@ def test_delete():
     metadata.delete()
 
     assert prod.delete_metadata.call_count == 1
+
+
+def test_update():
+    prod = MagicMock()
+    # FIXME: delete once we get rid of this
+    prod.prepare_metadata = lambda product, metadata: None
+    prod.fetch_metadata.return_value = dict(timestamp=1,
+                                            stored_source_code='code')
+    metadata = Metadata(prod)
+
+    metadata.update('new code')
+
+    assert metadata._data['stored_source_code'] == 'new code'
