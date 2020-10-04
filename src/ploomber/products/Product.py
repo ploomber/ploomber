@@ -185,7 +185,7 @@ class Product(abc.ABC):
         # We also have to clear metadata (in memory copy) or we might get a
         # wrong output if the metadata changed from a different proces or
         # the user just modified/deleted it. The only case where this step
-        # is not necessary is when doing DAG.build(), in such case, we already
+        # is not necessary is after doing DAG.build(), in such case, we already
         # have the latest metadata because the product object has to store
         # it in memory and then save it
         self.metadata.clear()

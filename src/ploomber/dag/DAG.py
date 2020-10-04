@@ -517,9 +517,6 @@ class DAG(collections.abc.Mapping):
         """Returns a table with tasks status
         """
         # FIXME: delete this, make dag.render() return this
-
-        # self._clear_cached_status()
-
         self.render()
 
         return Table([self[name].status(**kwargs) for name in self])
@@ -533,8 +530,6 @@ class DAG(collections.abc.Mapping):
         include_plot: bool, optional
             If True, the path to a PNG file with the plot in "_plot"
         """
-        # self._clear_cached_status()
-
         d = {name: self._G.nodes[name]['task'].to_dict() for name in self._G}
 
         if include_plot:
@@ -601,8 +596,6 @@ class DAG(collections.abc.Mapping):
             path = tempfile.mktemp(suffix='.png')
         else:
             path = output
-
-        # self._clear_cached_status()
 
         # attributes docs:
         # https://graphviz.gitlab.io/_pages/doc/info/attrs.html
@@ -704,7 +697,23 @@ class DAG(collections.abc.Mapping):
         return list(self._G.successors(task_name))
 
     def _clear_cached_status(self):
-        # NOTE: maybe make this a context manager and/or a decorator
+        """
+        Getting product status (outdated/up-to-date) is slow, especially for
+        product whose metadata is stored remotely. This is critical when
+        rendering because we need to do a forward pass to know which tasks to run
+        and a product's status depends on its upstream product's status, and we
+        have to make sure we only retrieve metadata once, so we save a local
+        copy. But even with this implementation, we don't throw away product
+        status after rendering, otherwise calls that need project status
+        (like DAG.plot, DAG.status, DAG.to_markup) would have to get product
+        status before running its logic, so once we get it, we stick with it.
+        The only caveat is that status updates won't be reflected immediately
+        (e.g. if the user manually deletes a product's metadata), but that's
+        a small price to pay given that this is not expected to happen often.
+        The only case when we *must* be sure that we have up-to-date metadata
+        is when calling DAG.build(), so we call this method before building,
+        which forces metadata reload.
+        """
         self._logger.debug('Clearing product status')
         # clearing out this way is only useful after building, but not
         # if the metadata changed since it wont be reloaded

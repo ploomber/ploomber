@@ -224,24 +224,6 @@ def test_dag_functions_clear_up_product_status(function_name, tmp_directory):
     assert t.product._outdated_data_dependencies_status is None
 
 
-def test_dag_build_clears_cached_status(tmp_directory):
-    dag = DAG()
-    t = PythonCallable(touch_root, File('my_file.txt'), dag)
-
-    assert t.product._outdated_data_dependencies_status is None
-    assert t.product._outdated_code_dependency_status is None
-
-    dag.status()
-
-    assert t.product._outdated_data_dependencies_status is not None
-    assert t.product._outdated_code_dependency_status is not None
-
-    dag.build()
-
-    assert t.product._outdated_data_dependencies_status is None
-    assert t.product._outdated_code_dependency_status is None
-
-
 # def test_can_use_null_task(tmp_directory):
 #     dag = DAG('dag')
 
