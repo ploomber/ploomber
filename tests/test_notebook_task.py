@@ -364,7 +364,7 @@ def test_hot_reload(tmp_directory):
 
 
 @pytest.mark.parametrize('kind', ['ipdb', 'pdb', 'pm'])
-def test_debug(kind, tmp_directory):
+def test_debug(monkeypatch, kind, tmp_directory):
     dag = DAG()
 
     code = """
@@ -382,5 +382,6 @@ def test_debug(kind, tmp_directory):
 
     dag.render()
 
-    with mock.patch.object(builtins, 'input', lambda *args: 'quit'):
-        t.debug(kind=kind)
+    monkeypatch.setattr(builtins, 'input', lambda *args: 'quit')
+
+    t.debug(kind=kind)
