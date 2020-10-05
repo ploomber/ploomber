@@ -1,4 +1,4 @@
-import builtins
+from unittest.mock import Mock
 from pathlib import Path
 
 import pytest
@@ -362,8 +362,12 @@ def test_hot_reload(tmp_directory):
     # TODO: check task is not marked as outdated
 
 
-@pytest.mark.parametrize('kind', ['ipdb', 'pdb', 'pm'])
-def test_debug(monkeypatch, kind, tmp_directory):
+@pytest.mark.parametrize('kind, to_patch', [
+    ['ipdb', 'IPython.terminal.debugger.Pdb.run'],
+    ['pdb', 'pdb.run'],
+    ['pm', None],
+])
+def test_debug(monkeypatch, kind, to_patch, tmp_directory):
     dag = DAG()
 
     code = """
@@ -381,6 +385,11 @@ def test_debug(monkeypatch, kind, tmp_directory):
 
     dag.render()
 
-    monkeypatch.setattr(builtins, 'input', lambda *args: 'quit')
+    if to_patch:
+        mock = Mock()
+        monkeypatch.setattr(to_patch, mock)
 
     t.debug(kind=kind)
+
+    if to_patch:
+        mock.assert_called_once()
