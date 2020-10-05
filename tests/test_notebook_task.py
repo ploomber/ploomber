@@ -1,3 +1,5 @@
+import mock
+import builtins
 from pathlib import Path
 
 import pytest
@@ -359,3 +361,26 @@ def test_hot_reload(tmp_directory):
     assert report['Ran?'] == [True]
 
     # TODO: check task is not marked as outdated
+
+
+@pytest.mark.parametrize('kind', ['ipdb', 'pdb', 'pm'])
+def test_debug(kind, tmp_directory):
+    dag = DAG()
+
+    code = """
+# + tags=["parameters"]
+1 + 1
+    """
+
+    t = NotebookRunner(code,
+                       product=File(Path(tmp_directory, 'out.ipynb')),
+                       dag=dag,
+                       kernelspec_name='python3',
+                       params={'var': 1},
+                       ext_in='py',
+                       name='nb')
+
+    dag.render()
+
+    with mock.patch.object(builtins, 'input', lambda *args: 'quit'):
+        t.debug(kind=kind)
