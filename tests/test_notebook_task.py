@@ -1,4 +1,3 @@
-import mock
 import builtins
 from pathlib import Path
 
