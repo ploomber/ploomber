@@ -50,7 +50,9 @@ NB = [
 # not strictly required. Dependencies that are required for a single use case
 # (e.g. upload to s3) should be included in the "TESTING" list. Both optional
 # and one-time modules should use the @requires decorator to show an error if
-# the dependency is missing
+# the dependency is missing. numpydoc is an special case because it's an
+# optional dependency but not having it installed does not trigger an error
+# it will just not print the parsed docstring.
 OPTIONAL = [
     # sql dumps and uploads
     'pandas',
@@ -61,7 +63,9 @@ OPTIONAL = [
 ]
 
 TESTING = [
-    # plotting
+    # plotting. strictly speaking pygrapviz is an optional dependency but we
+    # don't add it as such because it's gonna break installation for most
+    # setups, since we don't expect users to have graphviz installed
     'pygraphviz',
     # matplotlib only needed for dag.plot(output='matplotlib'),
     'matplotlib',
