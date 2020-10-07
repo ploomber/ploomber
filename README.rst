@@ -143,9 +143,9 @@ Try it out
 
 
 Resources
-------------------
+---------
 
-* `Examples repository <https://github.com/ploomber/projects>`_
+* `Sample projects <https://github.com/ploomber/projects>`_
 * `Documentation <https://ploomber.readthedocs.io/>`_
 * `Blog <https://ploomber.io/>`_
 
