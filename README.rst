@@ -142,12 +142,12 @@ Try it out
 `Try out the hosted demo (no installation required) <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=spec%2FREADME.md>`_.
 
 
-External resources
+Resources
 ------------------
 
+* `Examples repository <github.com/ploomber/projects>`_
 * `Documentation <https://ploomber.readthedocs.io/>`_
 * `Blog <https://ploomber.io/>`_
-
 
 
 Python API
