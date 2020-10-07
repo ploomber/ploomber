@@ -237,11 +237,12 @@ class NotebookRunner(Task):
 
         if isinstance(self.product, MetaProduct):
             if self.product.get(nb_product_key) is None:
-                raise KeyError('Key "{}" does not exist in product: {}. '
-                               'nb_product_key should be an existing '
-                               'key to know where to save the output '
-                               'notebook'.format(nb_product_key,
-                                                 str(self.product)))
+                raise KeyError("Key '{}' does not exist in product: {}. "
+                               "Either add it to specify the output notebook "
+                               "location or pass a 'nb_product_key' to the "
+                               "task constructor with the key that contains "
+                               " the output location".format(
+                                   nb_product_key, str(self.product)))
 
         if isinstance(self.product, MetaProduct):
             product_nb = (

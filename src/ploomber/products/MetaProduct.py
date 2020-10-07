@@ -10,7 +10,6 @@ class ProductsContainer:
     keys), this non-standard behavior but it is needed to simpplify the
     MetaProduct API since it has to work with lists and dictionaries
     """
-
     def __init__(self, products):
         self.products = products
 
@@ -29,8 +28,10 @@ class ProductsContainer:
         """Returns a JSON serializable version of this product
         """
         if isinstance(self.products, Mapping):
-            return {name: str(product) for name, product
-                    in self.products.items()}
+            return {
+                name: str(product)
+                for name, product in self.products.items()
+            }
         else:
             return list(str(product) for product in self.products)
 
@@ -38,7 +39,7 @@ class ProductsContainer:
         return len(self.products)
 
     def __repr__(self):
-        return '{}: {}'.format(type(self).__name__, repr(self.products))
+        return '{}({})'.format(type(self).__name__, str(self.products))
 
     def __str__(self):
         return str(self.products)
@@ -55,7 +56,6 @@ class MetaProduct:
     (executed via NotebookRunner), for fitting a model might as well serialize
     the things such as the model and any data preprocessors
     """
-
     def __init__(self, products):
         container = ProductsContainer(products)
 
@@ -98,16 +98,16 @@ class MetaProduct:
             product.delete(force)
 
     def _is_outdated(self, outdated_by_code=True):
-        return any([p._is_outdated(outdated_by_code=outdated_by_code)
-                    for p in self.products])
+        return any([
+            p._is_outdated(outdated_by_code=outdated_by_code)
+            for p in self.products
+        ])
 
     def _outdated_data_dependencies(self):
-        return any([p._outdated_data_dependencies()
-                    for p in self.products])
+        return any([p._outdated_data_dependencies() for p in self.products])
 
     def _outdated_code_dependency(self):
-        return any([p._outdated_code_dependency()
-                    for p in self.products])
+        return any([p._outdated_code_dependency() for p in self.products])
 
     def _clear_cached_status(self):
         for p in self.products:
@@ -128,7 +128,7 @@ class MetaProduct:
             p.render(params, **kwargs)
 
     def __repr__(self):
-        return '{}: {}'.format(type(self).__name__, str(self.products))
+        return '{}({})'.format(type(self).__name__, str(self.products))
 
     def __str__(self):
         return str(self.products)

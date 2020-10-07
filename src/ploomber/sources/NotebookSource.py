@@ -208,8 +208,9 @@ class NotebookSource(Source):
                 language=self._language,
                 kernelspec_name=self._kernelspec_name)
 
-            # always write from nb_obj, even if this was initialized
-            # with a ipynb file, nb_obj contains kernelspec info
+            # get the str representation. always write from nb_obj, even if
+            # this was initialized with a ipynb file, nb_obj contains
+            # kernelspec info
             self._nb_repr = nbformat.writes(self._nb_obj,
                                             version=nbformat.NO_CONVERT)
 
