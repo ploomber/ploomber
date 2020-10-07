@@ -41,7 +41,7 @@ def test_outdated_data_simple_dependency(tmp_directory):
 
     dag.build()
 
-    dag._clear_cached_status()
+    dag._clear_metadata()
 
     # they both exist now
     assert ta.product.exists()
@@ -54,7 +54,7 @@ def test_outdated_data_simple_dependency(tmp_directory):
     # let's make b outdated
     ta.build(force=True)
 
-    dag._clear_cached_status()
+    dag._clear_metadata()
 
     assert not ta.product._is_outdated()
     assert tb.product._is_outdated()
@@ -69,12 +69,11 @@ def test_many_upstream(tmp_directory):
     fb = Path('b.txt')
     fc = Path('c.txt')
 
-    ta = ShellScript('touch {{product}}', File(fa),
-                     dag, 'ta')
-    tb = ShellScript('touch {{product}} > {{product}}', File(fb),
-                     dag, 'tb')
-    tc = ShellScript('cat {{upstream["ta"]}} {{upstream["tb"]}} >  {{product}}',
-                     File(fc), dag, 'tc')
+    ta = ShellScript('touch {{product}}', File(fa), dag, 'ta')
+    tb = ShellScript('touch {{product}} > {{product}}', File(fb), dag, 'tb')
+    tc = ShellScript(
+        'cat {{upstream["ta"]}} {{upstream["tb"]}} >  {{product}}', File(fc),
+        dag, 'tc')
 
     (ta + tb) >> tc
 
@@ -89,7 +88,7 @@ def test_many_upstream(tmp_directory):
     assert not tc.product._is_outdated()
 
     ta.build(force=True)
-    dag._clear_cached_status()
+    dag._clear_metadata()
 
     assert not ta.product._is_outdated()
     assert not tb.product._is_outdated()
@@ -97,7 +96,7 @@ def test_many_upstream(tmp_directory):
 
     dag.build()
     tb.build(force=True)
-    dag._clear_cached_status()
+    dag._clear_metadata()
 
     assert not ta.product._is_outdated()
     assert not tb.product._is_outdated()

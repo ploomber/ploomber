@@ -45,7 +45,7 @@ def run_notebook(nb):
     return exit_code
 
 
-@pytest.mark.parametrize('nb', nbs)
+@pytest.mark.parametrize('nb', nbs, ids=[Path(nb).name for nb in nbs])
 def test_examples(nb, tmp_directory):
     # TODO: add timeout
     assert run_notebook(nb) == 0

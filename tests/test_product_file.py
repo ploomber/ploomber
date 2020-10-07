@@ -2,11 +2,6 @@ from pathlib import Path
 from ploomber.products import File
 
 
-def test_initializes_metadata():
-    f = File('/path/to/file')
-    assert f.metadata == {'timestamp': None, 'stored_source_code': None}
-
-
 def test_file_initialized_with_str():
     f = File('/path/to/file')
     f.render({})
@@ -43,20 +38,12 @@ def test_file_delete_directory(tmp_directory):
     assert not d.exists()
 
 
-def test_suffix():
-    assert File('some/file.txt').suffix == '.txt'
-
-
-def test_suffix_when_tags_present():
-    assert File('{{some}}/{{file}}.txt').suffix == '.txt'
-
-
 def test_delete_non_existing_metadata(tmp_directory):
-    File('some_file').delete_metadata()
+    File('some_file')._delete_metadata()
     assert not Path('some_file.source').exists()
 
 
 def test_delete_metadata(tmp_directory):
     Path('some_file.source').touch()
-    File('some_file').delete_metadata()
+    File('some_file')._delete_metadata()
     assert not Path('some_file.source').exists()

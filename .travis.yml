@@ -49,6 +49,7 @@ install:
   - bash test_pkg.sh
 
 
+
 before_install:
   - sudo apt-get -y install graphviz
 
@@ -56,6 +57,6 @@ before_script:
   - psql -c 'create database db;' -U postgres
 
 script:
-  - pytest --cov=ploomber
+  - pytest  --cov=ploomber
 
 after_success: coveralls

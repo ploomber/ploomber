@@ -2,7 +2,7 @@ import logging
 from itertools import product
 import warnings
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 
 import pytest
 
@@ -215,24 +215,31 @@ def test_build_partially_diff_sessions(tmp_directory):
 
 
 @pytest.mark.parametrize('function_name', ['render', 'build', 'plot'])
-def test_dag_functions_do_not_fetch_metadata(function_name, tmp_directory):
+@pytest.mark.parametrize('executor', _executors)
+def test_dag_functions_do_not_fetch_metadata(function_name, executor,
+                                             tmp_directory):
     """
     these function should not look up metadata, since the products do not
     exist, the status can be determined without it
     """
-    if function_name == 'build':
-        pytest.xfail('Storing metadata has to first fetch it, fix not'
-                     'implemented yet')
-
     product = File('1.txt')
-    dag = DAG(executor=Serial(build_in_subprocess=False))
+    dag = DAG(executor=executor)
     PythonCallable(touch_root, product, dag, name=1)
 
-    product.fetch_metadata = Mock(wraps=product.fetch_metadata)
+    m = Mock(wraps=product.fetch_metadata)
+    m.__reduce__ = lambda self: (MagicMock, ())
+
+    product.fetch_metadata = m
 
     getattr(dag, function_name)()
 
+    # not called
     product.fetch_metadata.assert_not_called()
+
+    if function_name == 'build':
+        # if building, we should still see the metadata
+        assert product.metadata._data['stored_source_code']
+        assert product.metadata._data['timestamp']
 
 
 # def test_can_use_null_task(tmp_directory):
@@ -661,13 +668,13 @@ def test_early_stop_from_on_finish(executor, tmp_directory):
 # test early stop when registered an on_failure hook, maybe don't run hook?
 
 
-def test_reporting_status_triggers_metadata_clear(tmp_directory):
+def test_metadata_is_synced_when_executing_in_subprocess(tmp_directory):
     dag = DAG(executor=Serial(build_in_subprocess=True))
     t = PythonCallable(touch_root, File('file.txt'), dag)
 
     dag.build()
 
-    assert t.product.metadata._data is None
+    assert t.product.metadata._data is not None
 
 
 @pytest.mark.parametrize('executor', executors_w_exception_logging)

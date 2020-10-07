@@ -1,3 +1,7 @@
+try:
+    from mock import Mock
+except ImportError:
+    from unittest.mock import Mock
 from pathlib import Path
 
 import pytest
@@ -359,3 +363,36 @@ def test_hot_reload(tmp_directory):
     assert report['Ran?'] == [True]
 
     # TODO: check task is not marked as outdated
+
+
+@pytest.mark.parametrize('kind, to_patch', [
+    ['ipdb', 'IPython.terminal.debugger.Pdb.run'],
+    ['pdb', 'pdb.run'],
+    ['pm', None],
+])
+def test_debug(monkeypatch, kind, to_patch, tmp_directory):
+    dag = DAG()
+
+    code = """
+# + tags=["parameters"]
+1 + 1
+    """
+
+    t = NotebookRunner(code,
+                       product=File(Path(tmp_directory, 'out.ipynb')),
+                       dag=dag,
+                       kernelspec_name='python3',
+                       params={'var': 1},
+                       ext_in='py',
+                       name='nb')
+
+    dag.render()
+
+    if to_patch:
+        mock = Mock()
+        monkeypatch.setattr(to_patch, mock)
+
+    t.debug(kind=kind)
+
+    if to_patch:
+        mock.assert_called_once()

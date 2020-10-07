@@ -4,7 +4,8 @@ exists/delete methods are bash commands
 """
 from ploomber.products.Product import Product
 from ploomber.products.sql import SQLiteBackedProductMixin
-from ploomber.placeholders.Placeholder import Placeholder, SQLRelationPlaceholder
+from ploomber.placeholders.Placeholder import (Placeholder,
+                                               SQLRelationPlaceholder)
 
 
 # TODO: add check_product and run tests: e.g .name should return a string
@@ -34,7 +35,6 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
     exists does not check for product existence, just checks if metadata exists
     delete does not perform actual deletion, just deletes metadata
     """
-
     def __init__(self, identifier, client=None):
         super().__init__(identifier)
         self._client = client
@@ -46,8 +46,8 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
             default = self.task.dag.clients.get(type(self))
 
             if default is None:
-                raise ValueError('{} must be initialized with a client'
-                                 .format(type(self).__name__))
+                raise ValueError('{} must be initialized with a client'.format(
+                    type(self).__name__))
             else:
                 self._client = default
 

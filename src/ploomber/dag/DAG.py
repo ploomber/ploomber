@@ -511,7 +511,7 @@ class DAG(collections.abc.Mapping):
 
         # clear metadata in the original dag, because building the copy
         # will make it outdated, we have to force reload from disk
-        self._clear_cached_status()
+        self._clear_metadata()
 
         return dag_copy.build(force=force, show_progress=show_progress)
 
@@ -694,7 +694,7 @@ class DAG(collections.abc.Mapping):
         """
         return list(self._G.successors(task_name))
 
-    def _clear_cached_status(self):
+    def _clear_metadata(self):
         """
         Getting product status (outdated/up-to-date) is slow, especially for
         product whose metadata is stored remotely. This is critical when
@@ -716,7 +716,7 @@ class DAG(collections.abc.Mapping):
         # clearing out this way is only useful after building, but not
         # if the metadata changed since it wont be reloaded
         for task in self.values():
-            task.product._clear_cached_status()
+            task.product.metadata.clear()
 
     def __getitem__(self, key):
         return self._G.nodes[key]['task']
