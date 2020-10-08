@@ -267,10 +267,10 @@ around all these, to make things clearer, we have a few example SQL pipelines fo
 you to explore.
 
 
-- **Basic SQL example:** Pipeline with some SQL tasks, a ``SQLDump`` task (dumps data to a local file) and a Python task
+- **SQL example:** Pipeline with some SQL tasks, a ``SQLDump`` task (dumps data to a local file) and a Python task
 
-  - `Source code <https://github.com/ploomber/projects/tree/master/spec>`_
-  - `Interactive demo <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=spec%2FREADME.md>`_
+  - `Source code <https://github.com/ploomber/projects/tree/master/spec-api-sql>`_
+  - `Interactive demo <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=spec-api-sql%2FREADME.md>`_
 
 - **ETL example:** Advanced example, implements a full ETL pipeline
 
