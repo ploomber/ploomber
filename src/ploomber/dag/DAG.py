@@ -719,7 +719,12 @@ class DAG(collections.abc.Mapping):
             task.product.metadata.clear()
 
     def __getitem__(self, key):
-        return self._G.nodes[key]['task']
+        try:
+            return self._G.nodes[key]['task']
+        except KeyError as e:
+            e.args = ('DAG does not have a task with name {}'.format(
+                repr(key)), )
+            raise
 
     def __delitem__(self, key):
         # TODO: this implementation is correct but perhaps we should raise

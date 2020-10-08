@@ -122,6 +122,17 @@ def test_mapping_interface():
     del dag[3]
     assert list(dag) == [1, 2]
 
+    with pytest.raises(KeyError) as excinfo:
+        dag[100]
+
+    # check no quotes are added to distinguish between dag[10] and dag["10"]
+    assert '100' in str(excinfo.value)
+
+    with pytest.raises(KeyError) as excinfo:
+        dag['100']
+
+    assert "'100'" in str(excinfo.value)
+
 
 @pytest.mark.parametrize('executor', _executors)
 def test_forced_build(executor, tmp_directory):
