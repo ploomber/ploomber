@@ -162,7 +162,7 @@ def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory):
                        nb_product_key='nb',
                        name='nb')
 
-    assert 'Key "nb" does not exist in product' in str(excinfo.value)
+    assert "Key 'nb' does not exist in product" in str(excinfo.value)
 
 
 def test_failing_notebook_saves_partial_result(tmp_directory):
