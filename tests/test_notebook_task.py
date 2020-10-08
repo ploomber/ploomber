@@ -1,9 +1,4 @@
-try:
-    from mock import Mock
-except ImportError:
-    from unittest.mock import Mock
-from pathlib import Path
-
+from unittest.mock import Mock
 import pytest
 import jupytext
 import nbformat

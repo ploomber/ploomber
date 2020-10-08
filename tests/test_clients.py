@@ -3,11 +3,7 @@ import pickle
 import copy
 from pathlib import Path
 from urllib.parse import urlparse
-
-try:
-    from mock import MagicMock
-except ImportError:
-    from unittest.mock import MagicMock
+from unittest.mock import MagicMock
 
 from subprocess import CalledProcessError
 

@@ -29,7 +29,7 @@ Installation
     pip install ploomber
 
 
-Compatible with Python 3.5 and higher.
+Compatible with Python 3.6 and higher.
 
 
 Workflow
