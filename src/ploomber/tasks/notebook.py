@@ -172,8 +172,8 @@ class NotebookRunner(Task):
         it is not needed unless the extension cannot be used to infer the
         final output format, in which case the nbconvert.get_exporter is used
     ext_in: str, optional
-        The input extension format. If source is a pathlib.Path, the extension
-        from there is used, if loaded from a str, this parameter is needed
+        Source extension. Required if loading from a str. If source is a
+        ``pathlib.Path``, the extension from the file is used.
     nb_product_key: str, optional
         If the notebook is expected to generate other products, pass the key
         to identify the output notebook (i.e. if product is a list with 3
@@ -191,8 +191,8 @@ class NotebookRunner(Task):
     nbconvert_export_kwargs : dict
         Keyword arguments to pass to the nbconvert.export function (this is
         only used if exporting the output ipynb notebook to another format).
-        You can use this for example to hide code cells using the exclude_input
-        parameter
+        You can use this, for example, to hide code cells using the
+        exclude_input parameter
     local_execution : bool, optional
         Change working directory to be the parent of the notebook's source.
         Defaults to False. This resembles the default behavior when

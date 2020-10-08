@@ -110,11 +110,14 @@ class NotebookSource(Source):
         if self._path is not None and ext_in is None:
             self._ext_in = self._path.suffix[1:]
         elif self._path is None and ext_in is None:
-            raise ValueError('ext_in cannot be None if notebook is '
-                             'initialized from a string')
+            raise ValueError('"ext_in" cannot be None if the notebook is '
+                             'initialized from a string. Either pass '
+                             'a pathlib.Path object with the notebook file '
+                             'location or pass the source code as string '
+                             'and include the "ext_in" parameter')
         elif self._path is not None and ext_in is not None:
-            raise ValueError('ext_in must be None if notebook is '
-                             'initialized from a file')
+            raise ValueError('"ext_in" must be None if notebook is '
+                             'initialized from a pathlib.Path object')
         elif self._path is None and ext_in is not None:
             self._ext_in = ext_in
 
