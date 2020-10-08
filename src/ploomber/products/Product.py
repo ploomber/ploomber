@@ -74,38 +74,32 @@ class Product(abc.ABC):
         bool
             True if the Task should execute
         """
-        run = False
-
-        self.logger.info('Checking status for task "%s"', self.task.name)
-
         # check product...
         p_exists = self.exists()
 
         # check dependencies only if the product exists
         if p_exists:
 
-            if self._outdated_data_dependencies():
-                run = True
-                self.logger.info('Outdated data deps...')
+            oudated_data = self._outdated_data_dependencies()
+            outdated_code = (outdated_by_code
+                             and self._outdated_code_dependency())
+            run = oudated_data or outdated_code
+
+            if run:
+                self.logger.info(
+                    'Task "%s" is up-to-date, it will be skipped...',
+                    self.task.name)
             else:
-                self.logger.info('Up-to-date data deps...')
+                self.logger.info(
+                    'Task "%s" is outdated, it will be executed...',
+                    self.task.name)
 
-            if outdated_by_code:
-                if self._outdated_code_dependency():
-                    run = True
-                    self.logger.info('Outdated code dep...')
-                else:
-                    self.logger.info('Up-to-date code dep...')
+            return run
         else:
-            run = True
-
-            # just log why it will run
-            if not p_exists:
-                self.logger.info('Product does not exist...')
-
-        self.logger.info('Should run? %s', run)
-
-        return run
+            self.logger.info(
+                'Product of task "%s" does not exist, it will be executed...',
+                self.task.name)
+            return True
 
     def _outdated_data_dependencies(self):
         """
