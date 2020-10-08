@@ -1,4 +1,6 @@
 from unittest.mock import Mock
+from pathlib import Path
+
 import pytest
 import jupytext
 import nbformat
