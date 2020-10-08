@@ -105,6 +105,14 @@ current directory, you can build the pipeline with the following command:
     ploomber build --entry-point factory.make
 
 
+**Note:** If your factory function has a docstring, the first line will be
+displayed in the CLI help menu (e.g.
+``ploomber build --entry-point factory.make --help``). If the docstring is in
+the `numpydoc format <https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard>`_
+(and numpydoc is installed, ``pip install numpydoc``), descriptions for
+documented parameters will be displayed as well.
+
+
 Where to go next
 ****************
 

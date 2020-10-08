@@ -198,6 +198,13 @@ def test_parse_doc():
         Description
     """
 
+    # simulate function with __doc__ attr
+    class FakeCallable:
+        pass
+
+    callable_ = FakeCallable()
+    callable_.__doc__ = doc
+
     expected = {
         'params': {
             'param': {
@@ -205,18 +212,35 @@ def test_parse_doc():
                 'type': 'int'
             }
         },
-        'summary': ['Some description']
+        'summary': 'Docstring: Some description'
     }
 
-    assert parsers._parse_doc(doc) == expected
+    assert parsers._parse_doc(callable_) == expected
 
 
-def test_parse_doc_if_missing_numpydoc(monkeypatch):
-    monkeypatch.setattr(importlib, 'import_module', lambda x: None)
+@pytest.mark.parametrize('docstring, expected_summary', [
+    ['docstring', 'docstring'],
+    ['first line\nsecond line\nthird line', 'first line'],
+    ['\nsecond line\nthird line', 'second line'],
+])
+def test_parse_doc_if_missing_numpydoc(docstring, expected_summary,
+                                       monkeypatch):
+    def _module_not_found(arg):
+        raise ModuleNotFoundError
 
-    assert (parsers._parse_doc("""docstring""") == {
+    # simulate numpydoc isn't installed
+    monkeypatch.setattr(importlib, 'import_module', _module_not_found)
+
+    # simulate function with __doc__ attr
+    class FakeCallable:
+        pass
+
+    callable_ = FakeCallable()
+    callable_.__doc__ = docstring
+
+    assert (parsers._parse_doc(callable_) == {
         'params': {},
-        'summary': None
+        'summary': expected_summary
     })
 
 

@@ -104,29 +104,41 @@ class CustomParser(argparse.ArgumentParser):
         self.finished_static_api = True
 
 
-def _parse_doc(doc):
+def _first_non_empty_line(doc):
+    for line in doc.split('\n'):
+        if line:
+            return line.strip()
+
+
+def _parse_doc(callable_):
     """
     Convert numpydoc docstring to a list of dictionaries
     """
+    doc = callable_.__doc__
+
     # no docstring
     if doc is None:
         return {'params': {}, 'summary': None}
 
-    # try to import numpydoc
-    docscrape = importlib.import_module('numpydoc.docscrape')
+    # try to import numpydoc, if can't find it, just returnt the first line
+    try:
+        docscrape = importlib.import_module('numpydoc.docscrape')
+    except ModuleNotFoundError:
+        return {'params': {}, 'summary': _first_non_empty_line(doc)}
 
-    if not docscrape:
-        return {'params': {}, 'summary': None}
+    doc_parsed = docscrape.NumpyDocString(doc)
 
-    doc = docscrape.NumpyDocString(doc)
     parameters = {
         p.name: {
             'desc': ' '.join(p.desc),
             'type': p.type
         }
-        for p in doc['Parameters']
+        for p in doc_parsed['Parameters']
     }
-    summary = doc['Summary']
+
+    # docscrape returns one element per line
+    summary = 'Docstring: {}'.format('\n'.join(doc_parsed['Summary']))
+
     return {'params': parameters, 'summary': summary}
 
 
@@ -200,7 +212,7 @@ def _add_args_from_callable(parser, callable_):
 
     Returns parsed args: required (list) and defaults (dict)
     """
-    doc = _parse_doc(callable_.__doc__)
+    doc = _parse_doc(callable_)
     required, defaults, params = _parse_signature_from_callable(callable_)
 
     for arg, default in defaults.items():
@@ -214,11 +226,8 @@ def _add_args_from_callable(parser, callable_):
                             **add_argument_kwargs(params, arg))
 
     if doc['summary']:
-        # summary should return the first line only, but we do this just in
-        # case the numpydoc implementation changes
-        summary = '\n'.join(doc['summary'])
         desc = parser.description
-        parser.description = '{}. Docstring: {}'.format(desc, summary)
+        parser.description = '{}. {}'.format(desc, doc['summary'])
 
     return required, defaults
 
