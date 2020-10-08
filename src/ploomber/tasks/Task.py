@@ -42,6 +42,11 @@ When a Task is marked as Errored, on_failure hook is executed and downstream
 dependencies are marked as Aborted.
 
 
+Beware that sometimes executors call Task._build in a different process, hence
+updates won't be visible in Task objects that exist in the main process.
+For that reason, executors have to report back status to the original Task
+object using Task.exec_status, see executors documentation for details
+
 TODO: describe BrokenProcesssPool status
 """
 import abc
@@ -284,13 +289,15 @@ class Task(abc.ABC):
             try:
                 self.on_finish(**kwargs)
             except Exception as e:
+                # FIXME: There's duplicated logic here, _build also catches
+                # this errors
                 msg = ('Exception when running on_finish '
                        'for task "{}": {}'.format(self.name, e))
                 self._logger.exception(msg)
                 self.exec_status = TaskStatus.Errored
                 raise type(e)(msg) from e
 
-        self.product._save_metadata(str(self.source))
+        self.product.metadata.update(str(self.source))
 
         # For most Products, it's ok to do this check before
         # saving metadata, but not for GenericProduct, since the way
@@ -375,8 +382,8 @@ class Task(abc.ABC):
         # some executors run this in a subprocess, the metadata in the main
         # process becomes outdated, make sure you retrieve it again next time
         # you need it
-        if value == TaskStatus.Executed:
-            self.product.metadata.clear()
+        # if value == TaskStatus.Executed:
+        # self.product.metadata.clear()
 
         # process might crash, propagate now or changes might not be
         # reflected (e.g. if a Task is marked as Aborted, all downtream
@@ -429,8 +436,8 @@ class Task(abc.ABC):
         # this will interfer with other render calls
         self.render(force=force)
 
-        res = self._build(catch_exceptions=catch_exceptions)
-        self.product._clear_cached_status()
+        res, _ = self._build(catch_exceptions=catch_exceptions)
+        self.product.metadata.clear()
         return res
 
     def _build(self, catch_exceptions):
@@ -443,7 +450,7 @@ class Task(abc.ABC):
         if not catch_exceptions:
             res = self._run()
             self._run_on_finish()
-            return res
+            return res, self.product.metadata.to_dict()
         else:
             try:
                 res = self._run()
@@ -489,7 +496,7 @@ class Task(abc.ABC):
                 else:
                     self.exec_status = TaskStatus.Executed
 
-                return res
+                return res, self.product.metadata.to_dict()
             else:
                 try:
                     self._run_on_failure()

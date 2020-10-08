@@ -28,8 +28,16 @@ class Executor(abc.ABC):
 
     Executors do not run hooks, these are triggered by the DAG object
     (DAG-level hooks) and Task objects (task-level hooks). These translates
-    in DAG hooks to be executed in the main process and Task hooks in the same
-    process where Task.build() is called.
+    DAG hooks to be executed in the main process and Task hooks in the same
+    process where Task._build() is called, this is an important detail for
+    executors that run tasks in different processes, they have to report
+    back the returned value from  Task._build and assign it to the
+    corresponding copy of the Task in the main process. Upon sucessful
+    execution, metadata is cleared up (FIXME: we should really be sending new
+    metadata instead of clearing it to force a new fetch).
+
+    Runnning tasks and task hooks in subprocesses has the advantage ensuring
+    memory is cleared after the task finishes.
 
     To allow finishing dag.build() gracefully, executors should raise
     DAGBuildError (this will trigger the DAG.on_failure hook)
@@ -40,16 +48,15 @@ class Executor(abc.ABC):
     The following is still being defined: do we need to send the whole dag
     object? Looks like we are good by just sending the tasks
     """
-
     @abc.abstractmethod
     def __call__(self, dag):
         exec_status = set([t.exec_status for t in dag.values()])
 
-        if exec_status - {TaskStatus.WaitingExecution,
-                          TaskStatus.WaitingUpstream,
-                          TaskStatus.Skipped}:
+        if exec_status - {
+                TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream,
+                TaskStatus.Skipped
+        }:
             raise ValueError('Tasks should only have either '
                              'TaskStatus.WaitingExecution or '
                              'TaskStatus.WaitingUpstream before attempting '
-                             'to execute, got status: {}'
-                             .format(exec_status))
+                             'to execute, got status: {}'.format(exec_status))

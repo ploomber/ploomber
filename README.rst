@@ -139,15 +139,15 @@ Try it out
 
 **Note:** The demo project requires ``pandas`` and ``matplotlib``.
 
-`Try out the hosted demo (no installation required) <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=spec%2FREADME.md>`_.
+`Try out the hosted demo (no installation required) <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=spec-api-sql%2FREADME.md>`_.
 
 
-External resources
-------------------
+Resources
+---------
 
+* `Sample projects <https://github.com/ploomber/projects>`_
 * `Documentation <https://ploomber.readthedocs.io/>`_
 * `Blog <https://ploomber.io/>`_
-
 
 
 Python API

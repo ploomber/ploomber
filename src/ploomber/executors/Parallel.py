@@ -30,7 +30,6 @@ class TaskBuildWrapper:
     here and return it so at the end of the DAG execution, a message with the
     traceback can be printed
     """
-
     def __init__(self, task):
         self.task = task
 
@@ -51,6 +50,7 @@ class Parallel(Executor):
     If any task crashes, downstream tasks execution is aborted, building
     continues until no more tasks can be executed
     """
+
     # NOTE: Tasks should not create child processes
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.daemon
 
@@ -77,8 +77,9 @@ class Parallel(Executor):
         # this is a bit confusing, so maybe change WaitingExecution
         # to WaitingBuild?
         for name in dag:
-            if dag[name].exec_status in {TaskStatus.Executed,
-                                         TaskStatus.Skipped}:
+            if dag[name].exec_status in {
+                    TaskStatus.Executed, TaskStatus.Skipped
+            }:
                 done.append(dag[name])
 
         def callback(future):
@@ -98,7 +99,11 @@ class Parallel(Executor):
             else:
                 if isinstance(result, Message):
                     task.exec_status = TaskStatus.Errored
+                # sucessfully run task._build
                 else:
+                    # ignore report here, we just need to update metadata
+                    _, meta = result
+                    task.product.metadata.update_locally(meta)
                     task.exec_status = TaskStatus.Executed
 
             done.append(task)
@@ -130,10 +135,9 @@ class Parallel(Executor):
 
             if not self._i % 1000:
                 self._logger.debug('Finished tasks so far: %s', set_done)
-                self._logger.debug('Remaining tasks: %s',
-                                   set_all - set_done)
-                self._logger.info('Finished %i out of %i tasks',
-                                  len(set_done), len(set_all))
+                self._logger.debug('Remaining tasks: %s', set_all - set_done)
+                self._logger.info('Finished %i out of %i tasks', len(set_done),
+                                  len(set_all))
 
             if set_done == set_all:
                 self._logger.debug('All tasks done')
@@ -152,16 +156,20 @@ class Parallel(Executor):
                     break
                 else:
                     if task is not None:
-                        future = pool.submit(
-                            TaskBuildWrapper(task), **task_kwargs)
+                        future = pool.submit(TaskBuildWrapper(task),
+                                             **task_kwargs)
                         future.add_done_callback(callback)
                         started.append(task)
                         future_mapping[future] = task
                         logging.info('Added %s to the pool...', task.name)
                         # time.sleep(3)
 
-        results = [get_future_result(f, future_mapping)
-                   for f in future_mapping.keys()]
+        results = [
+            # results are the output of Task._build: (report, metadata)
+            # OR a Message
+            get_future_result(f, future_mapping)
+            for f in future_mapping.keys()
+        ]
 
         exps = [r for r in results if isinstance(r, Message)]
 
@@ -169,10 +177,11 @@ class Parallel(Executor):
             raise DAGBuildError('DAG build failed, the following '
                                 'tasks crashed '
                                 '(corresponding downstream tasks aborted '
-                                'execution):\n{}'
-                                .format(str(MessageCollector(exps))))
+                                'execution):\n{}'.format(
+                                    str(MessageCollector(exps))))
 
-        return results
+        # if we reach this, it means no tasks failed. only return reports
+        return [r[0] for r in results]
 
     def __getstate__(self):
         state = self.__dict__.copy()

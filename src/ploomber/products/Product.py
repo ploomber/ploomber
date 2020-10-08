@@ -45,14 +45,6 @@ class Product(abc.ABC):
 
         self.prepare_metadata = _prepare_metadata
 
-    def _save_metadata(self, source_code):
-        # if metadata changes, these flags become outdated
-        self._outdated_data_dependencies_status = None
-        self._outdated_code_dependency_status = None
-
-        # this is called by task in the exec_status setter
-        self.metadata.update(source_code)
-
     @property
     def task(self):
         if self._task is None:
@@ -177,23 +169,6 @@ class Product(abc.ABC):
 
         return self._outdated_code_dependency_status
 
-    def _clear_cached_status(self):
-        # These flags keep a cache of the Product's outdated status, they
-        # are computed using the Product's metadata, hence they will only
-        # change when the metadata changes. Saving status speeds rendering
-        # because retrieving metadata is slow (especially if it's stored
-        # remotely)
-        self._outdated_data_dependencies_status = None
-        self._outdated_code_dependency_status = None
-
-        # We also have to clear metadata (in memory copy) or we might get a
-        # wrong output if the metadata changed from a different proces or
-        # the user just modified/deleted it. The only case where this step
-        # is not necessary is after doing DAG.build(), in such case, we already
-        # have the latest metadata because the product object has to store
-        # it in memory and then save it
-        self.metadata.clear()
-
     def __str__(self):
         return str(self._identifier)
 
@@ -252,3 +227,11 @@ class Product(abc.ABC):
         """Deletes the product
         """
         pass
+
+    # NOTE: currently optional but there is a conflict with this. metadata
+    # defines a delete public method which calls product._delete_metadata
+    # but not all products implement this
+    def _delete_metadata(self):
+        raise NotImplementedError(
+            '_delete_metadata not implemented in {}'.format(
+                type(self).__name__))

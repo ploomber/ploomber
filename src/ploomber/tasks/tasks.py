@@ -242,12 +242,6 @@ class _Partition(Task):
     def _init_source(self, kwargs):
         return EmptySource(None, **kwargs)
 
-    def _null(self):
-        pass
-
-    def _false(self):
-        return False
-
 
 class _Gather(PythonCallable):
     def run(self):
@@ -308,10 +302,9 @@ class Link(Task):
     def _init_source(kwargs):
         return EmptySource(None, **kwargs)
 
-    def _null_save_metadata(self, metadata):
-        pass
-
     def _false(self):
+        # this should be __false but we can't due to
+        # https://bugs.python.org/issue33007
         return False
 
 
@@ -340,7 +333,7 @@ class Input(Task):
         super().__init__(product, dag, name, None)
 
         # do not save metadata (Product's location is read-only)
-        self.product._save_metadata = self._null_save_metadata
+        self.product.metadata.update = self._null_update_metadata
 
         # the product will always be considered outdated
         self.product._outdated_data_dependencies = self._true
@@ -362,8 +355,12 @@ class Input(Task):
     def _init_source(kwargs):
         return EmptySource(None, **kwargs)
 
-    def _null_save_metadata(self, metadata):
+    def _null_update_metadata(self, metadata):
+        # this should be __null_update_metadata but we can't due to
+        # https://bugs.python.org/issue33007
         pass
 
     def _true(self):
+        # this should be __true but we can't due to
+        # https://bugs.python.org/issue33007
         return True

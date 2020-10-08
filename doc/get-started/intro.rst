@@ -149,7 +149,7 @@ your pipeline. Just add a dotted path in the ``source`` key, and make sure the
 function can be imported. For example if you have a function that you can import
 using ``from my_project.tasks import my_task``, add
 ``source: my_project.tasks.my_task`` to your ``pipeline.yaml`` file. See this
-`example pipeline <https://github.com/ploomber/projects/tree/master/basic-ml/spec>`_
+`example pipeline <https://github.com/ploomber/projects/tree/master/ml-basic/spec>`_
 
 Summary
 -------

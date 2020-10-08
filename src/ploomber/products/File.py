@@ -28,13 +28,12 @@ class File(Product):
         return Placeholder(str(identifier))
 
     @property
-    def _path_to_file(self):
+    def __path_to_file(self):
         return Path(str(self._identifier))
 
-    # TODO: rename this to path_to_metadata?
     @property
-    def _path_to_stored_source_code(self):
-        return Path(str(self._path_to_file) + '.source')
+    def __path_to_metadata(self):
+        return Path(str(self.__path_to_file) + '.source')
 
     def fetch_metadata(self):
         empty = dict(timestamp=None, stored_source_code=None)
@@ -42,16 +41,15 @@ class File(Product):
         # so we check, we also require the file to exists: even if the
         # .source file exists, missing the actual data file means something
         # if wrong anf the task should run again
-        if (self._path_to_stored_source_code.exists()
-                and self._path_to_file.exists()):
-            content = self._path_to_stored_source_code.read_text()
+        if (self.__path_to_metadata.exists() and self.__path_to_file.exists()):
+            content = self.__path_to_metadata.read_text()
 
             try:
                 parsed = json.loads(content)
             except json.JSONDecodeError:
                 # for compatibility with the previous version
                 stored_source_code = content
-                timestamp = self._path_to_stored_source_code.stat().st_mtime
+                timestamp = self.__path_to_metadata.stat().st_mtime
 
                 warnings.warn('Migrating metadata to new format...')
                 loaded = dict(timestamp=timestamp,
@@ -65,28 +63,24 @@ class File(Product):
             return empty
 
     def save_metadata(self, metadata):
-        self._path_to_stored_source_code.write_text(json.dumps(metadata))
+        self.__path_to_metadata.write_text(json.dumps(metadata))
 
-    def delete_metadata(self):
-        if self._path_to_stored_source_code.exists():
-            os.remove(str(self._path_to_stored_source_code))
+    def _delete_metadata(self):
+        if self.__path_to_metadata.exists():
+            os.remove(str(self.__path_to_metadata))
 
     def exists(self):
-        return self._path_to_file.exists()
+        return self.__path_to_file.exists()
 
     def delete(self, force=False):
         # force is not used for this product but it is left for API
         # compatibility
         if self.exists():
-            self.logger.debug('Deleting %s', self._path_to_file)
-            if self._path_to_file.is_dir():
-                shutil.rmtree(str(self._path_to_file))
+            self.logger.debug('Deleting %s', self.__path_to_file)
+            if self.__path_to_file.is_dir():
+                shutil.rmtree(str(self.__path_to_file))
             else:
-                os.remove(str(self._path_to_file))
+                os.remove(str(self.__path_to_file))
         else:
             self.logger.debug('%s does not exist ignoring...',
-                              self._path_to_file)
-
-    @property
-    def suffix(self):
-        return Path(self._identifier.best_str(shorten=False)).suffix
+                              self.__path_to_file)

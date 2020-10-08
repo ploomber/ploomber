@@ -1,39 +1,27 @@
-"""
-Tests for the abstract class
-"""
-from ploomber.products import Product
+import pytest
+
+from ploomber.products import MetaProduct, Product
+from ploomber._testing_utils import assert_no_extra_attributes_in_class
 
 
-class FakeProduct(Product):
-    """Fakes a Product concrete class by implementing abstract methods
+@pytest.mark.parametrize('concrete_class',
+                         Product.__subclasses__() + [MetaProduct])
+def test_interface(concrete_class):
     """
-    def _init_identifier(self, identifier):
-        return identifier
-
-    def fetch_metadata(self):
-        pass
-
-    def save_metadata(self, source_code):
-        pass
-
-    def delete(self):
-        pass
-
-    def exists(self):
-        pass
-
-
-def test_save_metadata_resets_cached_status():
+    Look for unnecessary implemeneted methods/attributes in MetaProduct,
+    this helps us keep the API up-to-date if the Product interface changes
     """
-    WHen saving metadata, we must reset cached status because they are outdated
-    when the metadata changes
-    """
-    p = FakeProduct(True)
+    allowed_mapping = {
+        'SQLRelation': {'schema', 'name', 'kind', 'client'},
+        'SQLiteRelation': {'schema', 'name', 'kind', 'client'},
+        'PostgresRelation': {'schema', 'name', 'kind', 'client'},
+        'GenericProduct': {'client', 'name'},
+        # these come from collections.abc.Mapping
+        'MetaProduct': {'get', 'keys', 'items', 'values'},
+    }
 
-    p._outdated_data_dependencies_status = True
-    p._outdated_code_dependency_status = True
+    allowed = allowed_mapping.get(concrete_class.__name__, {})
 
-    p._save_metadata('some new code')
-
-    assert p._outdated_data_dependencies_status is None
-    assert p._outdated_code_dependency_status is None
+    assert_no_extra_attributes_in_class(Product,
+                                        concrete_class,
+                                        allowed=allowed)
