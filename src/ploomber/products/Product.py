@@ -87,11 +87,11 @@ class Product(abc.ABC):
 
             if run:
                 self.logger.info(
-                    'Task "%s" is up-to-date, it will be skipped...',
+                    'Task "%s" is outdated, it will be executed...',
                     self.task.name)
             else:
                 self.logger.info(
-                    'Task "%s" is outdated, it will be executed...',
+                    'Task "%s" is up-to-date, it will be skipped...',
                     self.task.name)
 
             return run
