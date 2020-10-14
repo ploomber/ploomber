@@ -235,9 +235,12 @@ def add_argument_kwargs(params, arg):
             'store_true' if not params[arg].default else 'store_false'
         }
     elif params[arg].annotation in valid_hints:
-        kwargs = {'type': params[arg].annotation}
+        kwargs = {
+            'type': params[arg].annotation,
+            'default': params[arg].default
+        }
     else:
-        kwargs = {}
+        kwargs = {'default': params[arg].default}
 
     return kwargs
 

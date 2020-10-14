@@ -68,11 +68,11 @@ def test_process_file_or_entry_point_param_replace(argv, expected, monkeypatch,
 
 
 @pytest.mark.parametrize('default', [False, True])
-def test_args_from_bool_flag(default, monkeypatch):
+def test_cli_from_bool_flag(default, monkeypatch):
     def factory(flag: bool = default):
         pass
 
-    monkeypatch.setattr(sys, 'argv', ['--flag'])
+    monkeypatch.setattr(sys, 'argv', ['python', '--flag'])
     monkeypatch.setattr(test_pkg, 'mocked_factory', factory, raising=False)
 
     parser = CustomParser()
@@ -88,3 +88,46 @@ def test_args_from_bool_flag(default, monkeypatch):
     assert actions['flag'].default is default
     # passing the flag should flip the value
     assert actions['flag'].const is not default
+
+
+@pytest.mark.parametrize('default', ['hi', 1, 1.1])
+def test_cli_from_param(default, monkeypatch):
+    def factory(param=default):
+        return param
+
+    monkeypatch.setattr(sys, 'argv', ['python', '--param', 'value'])
+    monkeypatch.setattr(test_pkg, 'mocked_factory', factory, raising=False)
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    returned, args = parser.process_factory_dotted_path(
+        'test_pkg.mocked_factory')
+    actions = {a.dest: a for a in parser._actions}
+
+    assert actions['param'].default == default
+    assert args.param == 'value'
+    assert returned == 'value'
+
+
+def test_cli_from_param_with_annotation(monkeypatch):
+    def factory(param: int = 42):
+        return param
+
+    monkeypatch.setattr(sys, 'argv', ['python', '--param', '41'])
+    monkeypatch.setattr(test_pkg, 'mocked_factory', factory, raising=False)
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    returned, args = parser.process_factory_dotted_path(
+        'test_pkg.mocked_factory')
+    actions = {a.dest: a for a in parser._actions}
+
+    assert actions['param'].default == 42
+    assert args.param == 41
+    assert returned == 41
