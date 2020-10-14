@@ -25,6 +25,7 @@ def test_add_type_to_arg_parser():
     assert actions['b'].type is float
     assert actions['c'].type is str
     assert actions['d'].type is bool
+    assert actions['e'].type is None
 
 
 @pytest.mark.parametrize('argv, expected', [

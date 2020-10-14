@@ -228,19 +228,16 @@ def add_argument_kwargs(params, arg):
     """
     valid_hints = [int, float, str, bool]
 
-    # special case, bool - add as a store_true/false
-    if params[arg].annotation is bool:
-        kwargs = {
-            'action':
-            'store_true' if not params[arg].default else 'store_false'
-        }
-    elif params[arg].annotation in valid_hints:
-        kwargs = {
-            'type': params[arg].annotation,
-            'default': params[arg].default
-        }
+    fn_default = params[arg].default
+    fn_annotation = params[arg].annotation
+
+    # special case, bool with default value becomes a flag
+    if fn_annotation is bool and fn_default is not inspect._empty:
+        kwargs = {'action': 'store_true' if not fn_default else 'store_false'}
+    elif fn_annotation in valid_hints:
+        kwargs = {'type': fn_annotation, 'default': fn_default}
     else:
-        kwargs = {'default': params[arg].default}
+        kwargs = {'default': fn_default}
 
     return kwargs
 
