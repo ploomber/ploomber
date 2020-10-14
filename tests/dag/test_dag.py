@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import Mock, MagicMock
 
 import pytest
+import tqdm.auto
 
 from tests_util import executors_w_exception_logging
 from ploomber import DAG
@@ -13,17 +14,11 @@ from ploomber.products import File
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop)
-from ploomber.executors import Serial, Parallel
+from ploomber.executors import Serial, Parallel, serial
 
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
 # is done by the executor
-# TODO: check build successful execution does not run anything if tried a
-# # second time
-# TODO: once a successful dag build happens, check task.should_execute
-# TODO: check skipped status
-# TODO: test once a task is skipped, downstream tasks go from WaitingUpstream
-# to WaitingExecution
 # TODO: test dag.plot(), create a function that returns an object and test
 # such function, to avoid comparing images
 
@@ -106,6 +101,29 @@ def failing(upstream, product):
 #     t1 >> t2
 
 #     dag.to_html('a.html')
+
+
+def test_count_in_progress_bar(monkeypatch, tmp_directory):
+    dag = DAG()
+    dag.executor = Serial()
+    t1 = PythonCallable(touch_root, File('1.txt'), dag, name=1)
+    t2 = PythonCallable(touch, File('2.txt'), dag, name=2)
+    t3 = PythonCallable(touch, File('3.txt'), dag, name=3)
+    t1 >> t2 >> t3
+
+    mock = Mock(wraps=tqdm.auto.tqdm)
+
+    monkeypatch.setattr(serial, 'tqdm', mock)
+
+    # first time it builds everything
+    dag.build()
+    # this time it doesn't run anything
+    dag.build()
+
+    first, second = mock.call_args_list
+
+    assert first[1] == dict(total=3)
+    assert second[1] == dict(total=0)
 
 
 def test_mapping_interface():
@@ -238,6 +256,7 @@ def test_dag_functions_do_not_fetch_metadata(function_name, executor,
     PythonCallable(touch_root, product, dag, name=1)
 
     m = Mock(wraps=product.fetch_metadata)
+    # to make this work with pickle
     m.__reduce__ = lambda self: (MagicMock, ())
 
     product.fetch_metadata = m
@@ -593,6 +612,7 @@ def test_sucessful_execution(executor, tmp_directory):
     assert set(t.exec_status for t in dag.values()) == {TaskStatus.Executed}
     assert set(t.product._is_outdated() for t in dag.values()) == {False}
 
+    # nothing executed cause everything is up-to-date
     dag.build()
 
     assert set(t.exec_status for t in dag.values()) == {TaskStatus.Skipped}

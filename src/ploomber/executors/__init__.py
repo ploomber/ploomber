@@ -1,4 +1,4 @@
-from ploomber.executors.Serial import Serial
-from ploomber.executors.Parallel import Parallel
+from ploomber.executors.serial import Serial
+from ploomber.executors.parallel import Parallel
 
 __all__ = ['Serial', 'Parallel']
