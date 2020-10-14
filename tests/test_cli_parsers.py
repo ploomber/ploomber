@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 from argparse import ArgumentParser
 
+import test_pkg
 import yaml
 import pytest
 
@@ -64,3 +65,26 @@ def test_process_file_or_entry_point_param_replace(argv, expected, monkeypatch,
     dag, args = _process_file_or_entry_point(parser)
 
     assert dag['plot'].params['some_param'] == expected
+
+
+@pytest.mark.parametrize('default', [False, True])
+def test_args_from_bool_flag(default, monkeypatch):
+    def factory(flag: bool = default):
+        pass
+
+    monkeypatch.setattr(sys, 'argv', ['--flag'])
+    monkeypatch.setattr(test_pkg, 'mocked_factory', factory, raising=False)
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    parser.process_factory_dotted_path('test_pkg.mocked_factory')
+
+    actions = {a.dest: a for a in parser._actions}
+
+    # default should match with function's signature
+    assert actions['flag'].default is default
+    # passing the flag should flip the value
+    assert actions['flag'].const is not default

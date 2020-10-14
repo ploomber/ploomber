@@ -103,6 +103,39 @@ class CustomParser(argparse.ArgumentParser):
         self.in_context = False
         self.finished_static_api = True
 
+    def process_factory_dotted_path(self, dotted_path):
+        """Parse a factory entry point, returns initialized dag and parsed args
+        """
+        entry = load_dotted_path(dotted_path, raise_=True)
+
+        # add args using the function's signature
+        required, _ = _add_args_from_callable(self, entry)
+
+        # if entry point was decorated with @with_env, add arguments
+        # to replace declared variables in env.yaml
+        if hasattr(entry, '_env_dict'):
+            _add_args_from_env_dict(self, entry._env_dict)
+
+        args = self.parse_args()
+
+        if hasattr(args, 'log'):
+            if args.log is not None:
+                logging.basicConfig(level=args.log.upper())
+
+        # extract required (by using function signature) params from the cli
+        # args
+        kwargs = {key: getattr(args, key) for key in required}
+
+        # env and function defaults replaced
+        replaced = _args_to_replace_in_env(args, self.static_args)
+
+        # TODO: add a way of test this by the parameters it will use to
+        # call the function, have an aux function to get those then another
+        # to execute, test using the first one
+        dag = entry(**{**kwargs, **replaced})
+
+        return dag, args
+
 
 def _first_non_empty_line(doc):
     for line in doc.split('\n'):
@@ -144,8 +177,9 @@ def _parse_doc(callable_):
 
 def _args_to_replace_in_env(args, static_args):
     """
-    Returns a dictionary with all extra parameters passed, all these must
-    be parameters to replace env values
+    Returns a dictionary with all extra cli parameters passed, all these must
+    be parameters that part of the env or params (with no defaults) if
+    entry point is a factory function
     """
     return {
         name: getattr(args, name)
@@ -194,7 +228,13 @@ def add_argument_kwargs(params, arg):
     """
     valid_hints = [int, float, str, bool]
 
-    if params[arg].annotation in valid_hints:
+    # special case, bool - add as a store_true/false
+    if params[arg].annotation is bool:
+        kwargs = {
+            'action':
+            'store_true' if not params[arg].default else 'store_false'
+        }
+    elif params[arg].annotation in valid_hints:
         kwargs = {'type': params[arg].annotation}
     else:
         kwargs = {}
@@ -271,39 +311,6 @@ def _process_file_or_entry_point(parser):
     return dag, args
 
 
-def _process_factory_dotted_path(parser, dotted_path, static_args):
-    """Parse a factory entry point, returns initialized dag and parsed args
-
-    """
-    entry = load_dotted_path(dotted_path, raise_=True)
-
-    required, _ = _add_args_from_callable(parser, entry)
-
-    # if entry point was decorated with @with_env, add arguments
-    # to replace declared variables in env.yaml
-    if hasattr(entry, '_env_dict'):
-        _add_args_from_env_dict(parser, entry._env_dict)
-
-    args = parser.parse_args()
-
-    if hasattr(args, 'log'):
-        if args.log is not None:
-            logging.basicConfig(level=args.log.upper())
-
-    # extract required (by using function signature) params from the cli args
-    kwargs = {key: getattr(args, key) for key in required}
-
-    # env and function defaults replaced
-    replaced = _args_to_replace_in_env(args, static_args)
-
-    # TODO: add a way of test this by the parameters it will use to
-    # call the function, have an aux function to get those then another
-    # to execute, test using the first one
-    dag = entry(**{**kwargs, **replaced})
-
-    return dag, args
-
-
 def _process_entry_point(parser, entry_point, static_args):
     """Process an entry point from the user
 
@@ -331,8 +338,7 @@ def _process_entry_point(parser, entry_point, static_args):
                       'exist'.format(entry_point, path.suffix))
 
     # even if the entry file is not a file nor a valid module, show the help
-    # menu, but show a warning because this will prevent pipeline parameters
-    # from showing up
+    # menu, but show a warning
     if (help_cmd and not entry_file_exists and not entry_obj):
         warnings.warn('Failed to load entry point "{}". It is not a file '
                       'nor a valid dotted path'.format(entry_point))
@@ -344,8 +350,7 @@ def _process_entry_point(parser, entry_point, static_args):
         dag, args = _process_file_or_entry_point(parser)
     # assume it's a dotted path to a factory
     else:
-        dag, args = _process_factory_dotted_path(parser, entry_point,
-                                                 static_args)
+        dag, args = parser.process_factory_dotted_path(entry_point)
 
     return dag, args
 
