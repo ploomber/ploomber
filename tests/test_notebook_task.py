@@ -66,13 +66,20 @@ def test_notebook_conversion(monkeypatch, output, tmp_directory):
     conv.convert()
 
 
-@pytest.mark.parametrize('name', ['sample.py', 'sample.R', 'sample.ipynb'])
-def test_execute_sample_nb(name, tmp_sample_tasks):
+@pytest.mark.parametrize(
+    'name, out_dir',
+    [
+        ['sample.py', '.'],
+        ['sample.R', '.'],
+        ['sample.ipynb', '.'],
+        # check still works even if the folder does not exit yet
+        ['sample.ipynb', 'missing_folder']
+    ])
+def test_execute_sample_nb(name, out_dir, tmp_sample_tasks):
     dag = DAG()
 
     NotebookRunner(Path(name),
-                   product=File(Path(name + '.'
-                                     'out.ipynb')),
+                   product=File(Path(out_dir, name + '.out.ipynb')),
                    dag=dag)
     dag.build()
 

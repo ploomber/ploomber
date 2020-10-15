@@ -402,6 +402,9 @@ class NotebookRunner(Task):
         if self.local_execution:
             self.papermill_params['cwd'] = str(self.source.loc.parent)
 
+        # create parent folders if they don't exist
+        Path(path_to_out_ipynb).parent.mkdir(parents=True, exist_ok=True)
+
         try:
             # no need to pass parameters, they are already there
             pm.execute_notebook(str(tmp), str(path_to_out_ipynb),

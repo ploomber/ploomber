@@ -5,9 +5,11 @@ CHANGELOG
 ------
 * Dropping support for Python 3.5
 * Removes ``DAGSpec.from_file``, loading from a file is now handled directly by the ``DAGSpec`` constructor
-* Bug fixes
 * Performance improvements, DAG does not fetch metadata when it doesn't need to
-* Factory functions: Bool parameters with default values are now represented as flags when called from the cli
+* Factory functions: Bool parameters with default values are now represented as flags when called from the CLI
+* CLI arguments to replace values from `env.yaml` are now built with double hyphens instead of double underscores
+* ``NotebookRunner`` creates parent folders for output file if they don't exist
+* Bug fixes
 
 0.7.5 (2020-10-02)
 -------------------
