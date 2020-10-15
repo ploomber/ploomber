@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.8dev
-------
+0.8 (2020-10-15)
+-----------------
 * Dropping support for Python 3.5
 * Removes ``DAGSpec.from_file``, loading from a file is now handled directly by the ``DAGSpec`` constructor
 * Performance improvements, DAG does not fetch metadata when it doesn't need to
