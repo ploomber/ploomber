@@ -100,7 +100,7 @@ class Versioner(object):
         # if just released a major version, add a 0 so we bump up a subversion
         # e.g. from 0.8 -> 0.8.0, then new dev version becomes 0.8.1dev
         if len(tokens) == 2:
-            current = '.'.join(tokens + ['0'])
+            tokens.append('0')
 
         new_subversion = int(tokens[-1]) + 1
 
