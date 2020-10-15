@@ -2,8 +2,8 @@ CHANGELOG
 =========
 
 
-0.7.5dev
---------
+0.7.5 (2020-10-02)
+-------------------
 * NotebookRunner.develop accepts passing arguments to jupyter notebook
 * Spec API now supports PythonCallable (by passing a dotted path)
 * Upstream dependencies of PythonCallables can be inferred via the ``extract_upstream`` option in the Spec API
