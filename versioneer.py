@@ -55,7 +55,6 @@ def call(*args, **kwargs):
 class Versioner(object):
     """Utility functions to manage versions
     """
-
     @classmethod
     def current_version(cls):
         """Returns the current version in __init__.py
@@ -63,8 +62,9 @@ class Versioner(object):
         _version_re = re.compile(r'__version__\s+=\s+(.*)')
 
         with open('{package}/__init__.py'.format(package=PACKAGE), 'rb') as f:
-            VERSION = str(ast.literal_eval(_version_re.search(
-                f.read().decode('utf-8')).group(1)))
+            VERSION = str(
+                ast.literal_eval(
+                    _version_re.search(f.read().decode('utf-8')).group(1)))
 
         return VERSION
 
@@ -95,12 +95,20 @@ class Versioner(object):
                              'versions can only be made from release versions')
 
         # Get Z from X.Y.Z and sum 1
-        new_subversion = int(current.split('.')[-1]) + 1
+        tokens = current.split('.')
+
+        # if just released a major version, add a 0 so we bump up a subversion
+        # e.g. from 0.8 -> 0.8.0, then new dev version becomes 0.8.1dev
+        if len(tokens) == 2:
+            current = '.'.join(tokens + ['0'])
+
+        new_subversion = int(tokens[-1]) + 1
 
         # Replace new_subversion in current version
         elements = current.split('.')
         elements[-1] = new_subversion
-        new_version = reduce(lambda x, y: str(x)+'.'+str(y), elements)+'dev'
+        new_version = reduce(lambda x, y: str(x) + '.' + str(y),
+                             elements) + 'dev'
 
         return new_version
 
@@ -140,19 +148,18 @@ class Versioner(object):
         current = cls.current_version()
 
         # update CHANGELOG header
-        header_current = '{ver}\n'.format(ver=current)+'-'*len(current)
+        header_current = '{ver}\n'.format(ver=current) + '-' * len(current)
         today = datetime.datetime.now().strftime('%Y-%m-%d')
         header_new = '{ver} ({today})\n'.format(ver=new_version, today=today)
-        header_new = header_new+'-'*len(header_new)
+        header_new = header_new + '-' * len(header_new)
         replace_in_file('CHANGELOG.rst', header_current, header_new)
 
     @classmethod
     def add_changelog_dev_section(cls, dev_version):
         # add new CHANGELOG section
         start_current = 'Changelog\n========='
-        start_new = (('Changelog\n=========\n\n{dev_version}\n'
-                      .format(dev_version=dev_version)
-                      + '-' * len(dev_version)) + '\n')
+        start_new = (('Changelog\n=========\n\n{dev_version}\n'.format(
+            dev_version=dev_version) + '-' * len(dev_version)) + '\n')
         replace_in_file('CHANGELOG.rst', start_current, start_new)
 
 
@@ -171,7 +178,10 @@ def cli():
     pass
 
 
-@cli.command(help='Sets a new version for the project: Updates __version__, changelog and commits')
+@cli.command(
+    help=
+    'Sets a new version for the project: Updates __version__, changelog and commits'
+)
 def new():
     """
     Create a new version for the project: updates __init__.py, CHANGELOG,
@@ -184,14 +194,16 @@ def new():
     release = click.prompt('Current version in app.yaml is {current}. Enter'
                            ' release version'.format(current=current,
                                                      release=release),
-                           default=release, type=str)
+                           default=release,
+                           type=str)
 
     Versioner.update_changelog_release(release)
 
     changelog = read_file('CHANGELOG.rst')
 
     click.confirm('\nCHANGELOG.rst:\n\n{}\n Continue?'.format(changelog),
-                  'done', abort=True)
+                  'done',
+                  abort=True)
 
     # Replace version number and create tag
     click.echo('Commiting release version: {}'.format(release))
@@ -216,8 +228,8 @@ def new():
     call(['git', 'commit', '-m', msg])
     call(['git', 'push'])
 
-    click.echo('Version {} was created, you are now in {}'
-               .format(release, bumped_version))
+    click.echo('Version {} was created, you are now in {}'.format(
+        release, bumped_version))
 
 
 @cli.command(help='Merges changes in dev with master')
@@ -243,12 +255,12 @@ def release(tag, production):
     Merges dev with master and pushes
     """
     click.echo('Checking out tag {}'.format(tag))
-    call(['git', 'checkout',  tag])
+    call(['git', 'checkout', tag])
 
     current = Versioner.current_version()
 
-    click.confirm('Version in {} tag is {}. Do you want to continue?'
-                  .format(tag, current))
+    click.confirm('Version in {} tag is {}. Do you want to continue?'.format(
+        tag, current))
 
     # create distribution
     call(['rm', '-rf', 'dist/'])
@@ -257,8 +269,10 @@ def release(tag, production):
     click.echo('Publishing to PyPI...')
 
     if not production:
-        call(['twine', 'upload', '--repository-url',
-              'https://test.pypi.org/legacy/', 'dist/*'])
+        call([
+            'twine', 'upload', '--repository-url',
+            'https://test.pypi.org/legacy/', 'dist/*'
+        ])
     else:
         call(['twine', 'upload', 'dist/*'])
 
