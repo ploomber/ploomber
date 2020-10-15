@@ -1,0 +1,7 @@
+meta:
+  extract_product: False
+
+
+tasks:
+  - source: tasks.some_function
+    product: some_file.txt

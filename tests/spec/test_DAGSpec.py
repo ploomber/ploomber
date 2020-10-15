@@ -501,3 +501,12 @@ def get_client():
     dag.render()
 
     assert str(dag['create-table.sql'].source) == expected
+
+
+def test_spec_with_functions(tmp_spec_with_functions):
+    """
+    Check we can create pipeline where the task is a function defined in a
+    local file
+    """
+    spec = DAGSpec('pipeline.yaml')
+    spec.to_dag().build()

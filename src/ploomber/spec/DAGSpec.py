@@ -22,7 +22,7 @@ import pprint
 from ploomber import products
 from ploomber import DAG, tasks, SourceLoader
 from ploomber.util.util import (load_dotted_path, find_file_recursively,
-                                call_with_dictionary)
+                                call_with_dictionary, add_to_sys_path)
 from ploomber.spec.TaskSpec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
@@ -78,8 +78,13 @@ class DAGSpec(MutableMapping):
     location when initializing a DAG from a spec.
     """
     def __init__(self, data, env=None):
-        # only set when initialized from DAGSpec.from_file
-        self._parent_path = None
+        if isinstance(data, (str, Path)):
+            self._parent_path = str(Path(data).parent)
+
+            with open(str(data)) as f:
+                data = yaml.load(f, Loader=yaml.SafeLoader)
+        else:
+            self._parent_path = None
 
         if isinstance(data, list):
             data = {'tasks': data}
@@ -103,9 +108,12 @@ class DAGSpec(MutableMapping):
             ]
             self._validate_meta()
 
-            self.data['tasks'] = [
-                TaskSpec(t, self.data['meta']) for t in self.data['tasks']
-            ]
+            # make sure the folder where the pipeline is located is in sys.path
+            # otherwise dynamic imports needed by TaskSpec will fail
+            with add_to_sys_path(self._parent_path):
+                self.data['tasks'] = [
+                    TaskSpec(t, self.data['meta']) for t in self.data['tasks']
+                ]
 
     def _validate_top_level_keys(self, spec):
         load_from_factory = False
@@ -150,8 +158,9 @@ class DAGSpec(MutableMapping):
         cwd_old = os.getcwd()
 
         # when initializing DAGs from pipeline.yaml files, we have to ensure
-        # that the parent folder is in sys.path for imports to work, this
-        # happens most of the time but for some (unknown) reason, it doesn't
+        # that the folder where pipeline.yaml is located is in sys.path for
+        # imports to work (for dag clients), this happens most of the time but
+        # for some (unknown) reason, it doesn't
         # happen when initializing PloomberContentsManager.
         # pipeline.yaml paths are written relative to that file, for source
         # scripts to be located we temporarily change the current working
@@ -377,6 +386,8 @@ def init_clients(dag, clients):
 
 
 def normalize_task(task):
+    # NOTE: we haven't documented that we support tasks as just strings,
+    # should we keep this or deprecate it?
     if isinstance(task, str):
         return {'source': task}
     else:

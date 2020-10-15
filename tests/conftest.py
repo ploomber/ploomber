@@ -153,6 +153,11 @@ def tmp_pipeline_sql():
     pass
 
 
+@fixture_tmp_dir(_path_to_tests() / 'assets' / 'spec-with-functions')
+def tmp_spec_with_functions():
+    pass
+
+
 @pytest.fixture()
 def tmp_sample_subdir():
     old = os.getcwd()

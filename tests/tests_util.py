@@ -1,3 +1,6 @@
+"""
+This functions are imported in some tests
+"""
 from ploomber.executors import Serial
 from itertools import product
 
@@ -13,9 +16,12 @@ def to_tuple(k, values):
 
 
 # only these configurations log errors
-grid = {'build_in_subprocess': [True, False],
-        'catch_exceptions': [True],
-        'catch_warnings': [True, False]}
+grid = {
+    'build_in_subprocess': [True, False],
+    'catch_exceptions': [True],
+    'catch_warnings': [True, False]
+}
 
-executors_w_exception_logging = [Serial(**kwargs) for kwargs in
-                                 expand_grid(grid)]
+executors_w_exception_logging = [
+    Serial(**kwargs) for kwargs in expand_grid(grid)
+]
