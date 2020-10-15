@@ -309,7 +309,8 @@ def add_to_sys_path(path):
         path = os.path.abspath(path)
         sys.path.insert(0, path)
 
-    yield
-
-    if path is not None:
-        sys.path.remove(path)
+    try:
+        yield
+    finally:
+        if path is not None:
+            sys.path.remove(path)
