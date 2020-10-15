@@ -4,7 +4,7 @@ import copy
 import sys
 
 import pytest
-from ploomber.util.util import add_to_sys_path
+from ploomber.util.util import add_to_sys_path, load_dotted_path
 
 
 def test_add_to_sys_path():
@@ -48,3 +48,11 @@ def test_add_to_sys_path_with_exception():
             raise Exception
 
     assert path not in sys.path
+
+
+def test_load_dotted_path_custom_error_message():
+    with pytest.raises(AttributeError) as excinfo:
+        load_dotted_path('test_pkg.not_a_function')
+
+    assert ('Could not get "not_a_function" from module "test_pkg"'
+            in str(excinfo.value))

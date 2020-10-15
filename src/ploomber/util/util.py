@@ -232,7 +232,7 @@ def load_dotted_path(dotted_path, raise_=True):
             module = importlib.import_module(mod)
         except ImportError as e:
             if raise_:
-                # we want to rais ethe same error type but chaining exceptions
+                # we want to raise ethe same error type but chaining exceptions
                 # produces a long verbose output, so we just modify the
                 # original message to add more context, it's ok to hide the
                 # original traceback since it will just point to lines
@@ -248,10 +248,11 @@ def load_dotted_path(dotted_path, raise_=True):
             except AttributeError as e:
                 if raise_:
                     # same as in the comment above
-                    e.msg = ('Could not get attribute "{}" from module '
-                             '"{}" (loaded from: {}), make sure it is a valid '
-                             'callable defined in such module'.format(
-                                 name, mod, module.__file__))
+                    e.args = (
+                        'Could not get "{}" from module '
+                        '"{}" (loaded from: {}), make sure it is a valid '
+                        'callable defined in such module'.format(
+                            name, mod, module.__file__), )
                     raise
         return obj
     else:
