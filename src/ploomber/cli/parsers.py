@@ -193,7 +193,15 @@ def _add_args_from_env_dict(parser, env_dict):
     Add one parameter to the args parser by taking a look at all values
     defined in an env dict object
     """
+    # flatten keys from the env dictionary. e.g. from {'a': {'b': 1}} is
+    # converted to {'a--b': 1}. This allows us to add cli args such as --a--b
+    # to modify any key in the env. Note that we use double hyphens to have
+    # an unambious section separator. Environments are commonly loaded from
+    # YAML files. Keys in such files might contain hyphens/underscores, we
+    # allow users to have those characters but double hyphens/underscores are
+    # not permitted as they'd conflict with the CLI generation logic
     flat_env_dict = _flatten_dict(env_dict._data)
+
     for arg, val in flat_env_dict.items():
         parser.add_argument('--env--' + arg, help='Default: {}'.format(val))
 
