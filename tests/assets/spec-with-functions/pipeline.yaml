@@ -3,5 +3,5 @@ meta:
 
 
 tasks:
-  - source: tasks.some_function
+  - source: my_tasks.some_function
     product: some_file.txt

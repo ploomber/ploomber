@@ -46,7 +46,7 @@ install:
   - echo "IRkernel::installspec()" | Rscript -
 
   # install sample package for tests
-  - bash test_pkg.sh
+  - bash install_test_pkg.sh
 
 
 
