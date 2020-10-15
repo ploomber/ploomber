@@ -216,7 +216,7 @@ class DAGSpec(MutableMapping):
                 return None, None
 
         try:
-            spec = cls.from_file(path, env=env)
+            spec = cls(path, env=env)
 
             if to_dag:
                 return spec, spec.to_dag(), Path(path).parent
@@ -256,18 +256,6 @@ class DAGSpec(MutableMapping):
         } for file_ in files]
 
         return cls({'tasks': tasks})
-
-    @classmethod
-    def from_file(cls, path, env=None):
-        """
-        Initialize dag spec with yaml file
-        """
-        with open(str(path)) as f:
-            dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
-
-        spec = cls(dag_dict, env=env)
-        spec._parent_path = str(Path(path).parent)
-        return spec
 
 
 class Meta:

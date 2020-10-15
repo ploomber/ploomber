@@ -388,7 +388,7 @@ def load_entry_point(entry_point):
         spec = DAGSpec.from_directory(entry_point)
         path = Path(entry_point)
     elif type_ == 'file':
-        spec = DAGSpec.from_file(entry_point)
+        spec = DAGSpec(entry_point)
         path = Path(entry_point).parent
     elif type_ == 'dotted-path':
         raise ValueError('dotted paths are currently unsupported')

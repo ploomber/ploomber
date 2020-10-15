@@ -172,7 +172,7 @@ def test_notebook_spec(processor, tmp_nbs):
 
 def test_notebook_spec_nested(tmp_nbs_nested):
     Path('output').mkdir()
-    dag = DAGSpec.from_file('pipeline.yaml').to_dag()
+    dag = DAGSpec('pipeline.yaml').to_dag()
     dag.build()
 
 
@@ -381,7 +381,7 @@ def test_expand_env(save, tmp_directory):
 
 
 @pytest.mark.parametrize('method, kwargs', [
-    ['from_file', dict(path='pipeline.yaml')],
+    [None, dict(data='pipeline.yaml')],
     ['auto_load', dict(to_dag=False)],
 ])
 def test_passing_env_in_class_methods(method, kwargs, tmp_directory):
@@ -398,8 +398,12 @@ def test_passing_env_in_class_methods(method, kwargs, tmp_directory):
     with open('pipeline.yaml', 'w') as f:
         yaml.dump(spec_dict, f)
 
-    class_method = getattr(DAGSpec, method)
-    spec = class_method(**kwargs, env={'key': 'value'})
+    if method:
+        callable_ = getattr(DAGSpec, method)
+    else:
+        callable_ = DAGSpec
+
+    spec = callable_(**kwargs, env={'key': 'value'})
 
     # auto_load returns a tuple
     if isinstance(spec, tuple):
