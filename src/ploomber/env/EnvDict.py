@@ -127,7 +127,7 @@ class EnvDict(Mapping):
         _replace_flatten_keys(2, 'env__a__b'). This function is used
         internally to overrive env values when calling factories (functions
         decorated with @with_env or when doing so via the command line
-        interface - ploomber build pipeline.yaml --env__a__b 2)
+        interface - ploomber build pipeline.yaml --env--a--b 2)
 
         Returns a copy
         """

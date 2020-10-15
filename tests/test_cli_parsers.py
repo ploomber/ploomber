@@ -30,7 +30,7 @@ def test_add_type_to_arg_parser():
 
 @pytest.mark.parametrize('argv, expected', [
     [['ploomber'], 'some_value'],
-    [['ploomber', '--env__tag', 'another_value'], 'another_value'],
+    [['ploomber', '--env--tag', 'another_value'], 'another_value'],
 ])
 def test_process_file_or_entry_point_param_replace(argv, expected, monkeypatch,
                                                    tmp_directory):

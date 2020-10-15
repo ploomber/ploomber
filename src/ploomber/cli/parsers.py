@@ -195,7 +195,7 @@ def _add_args_from_env_dict(parser, env_dict):
     """
     flat_env_dict = _flatten_dict(env_dict._data)
     for arg, val in flat_env_dict.items():
-        parser.add_argument('--env__' + arg, help='Default: {}'.format(val))
+        parser.add_argument('--env--' + arg, help='Default: {}'.format(val))
 
 
 def _parse_signature_from_callable(callable_):
@@ -412,13 +412,13 @@ def _custom_command(parser):
 
 def _flatten_dict(d, prefix=''):
     """
-    Convert a nested dict: {'a': {'b': 1}} -> {'a__b': 1}
+    Convert a nested dict: {'a': {'b': 1}} -> {'a--b': 1}
     """
     out = {}
 
     for k, v in d.items():
         if isinstance(v, Mapping):
-            out = {**out, **_flatten_dict(v, prefix=prefix + k + '__')}
+            out = {**out, **_flatten_dict(v, prefix=prefix + k + '--')}
         else:
             out[prefix + k] = v
 
