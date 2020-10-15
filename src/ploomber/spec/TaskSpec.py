@@ -33,17 +33,23 @@ def task_class_from_source_str(source_str):
     if extension and extension in suffix2taskclass:
         return suffix2taskclass[extension]
     else:
-        imported = load_dotted_path(source_str, raise_=False)
+        try:
+            imported = load_dotted_path(source_str, raise_=True)
+            error = None
+        except Exception as e:
+            imported = None
+            error = e
 
-        if imported is not None:
-            return tasks.PythonCallable
-        else:
+        if imported is None:
             raise ValueError('Could not find an appropriate task class for '
                              'source "{}", verify that the value is either '
                              'a script with a valid extension or a valid '
-                             'dotted path. Alternatively, '
+                             'dotted path (got error: "{}" when attempted to '
+                             ' import it). Alternatively, '
                              'pass an explicit task class using the "class" '
-                             'key'.format(source_str))
+                             'key'.format(source_str, error))
+        else:
+            return tasks.PythonCallable
 
 
 def task_class_from_spec(task_spec):
