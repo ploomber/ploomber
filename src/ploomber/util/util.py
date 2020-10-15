@@ -305,9 +305,11 @@ def _make_iterable(o):
 
 @contextmanager
 def add_to_sys_path(path):
-    path = os.path.abspath(path)
+    if path is not None:
+        path = os.path.abspath(path)
+        sys.path.insert(0, path)
 
-    try:
-        yield sys.path.insert(0, path)
-    finally:
+    yield
+
+    if path is not None:
         sys.path.remove(path)
