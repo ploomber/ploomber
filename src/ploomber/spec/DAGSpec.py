@@ -110,7 +110,7 @@ class DAGSpec(MutableMapping):
 
             # make sure the folder where the pipeline is located is in sys.path
             # otherwise dynamic imports needed by TaskSpec will fail
-            with add_to_sys_path(self._parent_path):
+            with add_to_sys_path(self._parent_path, chdir=False):
                 self.data['tasks'] = [
                     TaskSpec(t, self.data['meta']) for t in self.data['tasks']
                 ]
@@ -155,8 +155,6 @@ class DAGSpec(MutableMapping):
     def to_dag(self):
         """Converts the DAG spec to a DAG object
         """
-        cwd_old = os.getcwd()
-
         # when initializing DAGs from pipeline.yaml files, we have to ensure
         # that the folder where pipeline.yaml is located is in sys.path for
         # imports to work (for dag clients), this happens most of the time but
@@ -165,16 +163,9 @@ class DAGSpec(MutableMapping):
         # pipeline.yaml paths are written relative to that file, for source
         # scripts to be located we temporarily change the current working
         # directory
-        if self._parent_path is not None:
-            sys.path.insert(0, os.path.abspath(self._parent_path))
-            os.chdir(self._parent_path)
-
-        try:
+        with add_to_sys_path(self._parent_path, chdir=True):
             dag = self._to_dag()
-        finally:
-            if self._parent_path is not None:
-                sys.path.remove(os.path.abspath(self._parent_path))
-                os.chdir(cwd_old)
+
         return dag
 
     def _to_dag(self):

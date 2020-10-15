@@ -304,13 +304,19 @@ def _make_iterable(o):
 
 
 @contextmanager
-def add_to_sys_path(path):
+def add_to_sys_path(path, chdir):
+    cwd_old = os.getcwd()
+
     if path is not None:
         path = os.path.abspath(path)
         sys.path.insert(0, path)
+
+        if chdir:
+            os.chdir(path)
 
     try:
         yield
     finally:
         if path is not None:
             sys.path.remove(path)
+            os.chdir(cwd_old)
