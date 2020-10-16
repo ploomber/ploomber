@@ -1,3 +1,4 @@
+from itertools import chain
 from pathlib import Path
 import tempfile
 import inspect
@@ -9,16 +10,21 @@ import nbformat
 
 
 class CallableDebugger:
-    """
+    """Convert callables to notebooks, edit and save back
+
+    Parameters
+    ----------
+    fn : callable
+        Function to edit
+    params : dict
+        Parameters to call the function
 
     Examples
     --------
-    >>> CallableDebugger(fn, {'param': 1})
-    >>> tmp = debugger._to_nb()
-    >>> tmp # modify tmp notebook
-    >>> debugger._overwrite_from_nb(tmp)
+    >>> wih CallableDebugger(fn, {'param': 1}) as path_to_nb:
+    ...     # do stuff with the notebook file
+    ...     pass
     """
-
     def __init__(self, fn, params):
         self.fn = fn
         self.file = inspect.getsourcefile(fn)
@@ -31,18 +37,19 @@ class CallableDebugger:
 
     def _to_nb(self):
         """
-        Returns the function's body in a notebook (tmp location), insert
-        injected parameters
+        Returns the function's body in a notebook (tmp location), inserts
+        params as variables at the top
         """
-        body_elements, self.body_start = parse(self.fn)
-        body_to_nb(body_elements, self.tmp_path)
+        body_elements, self.body_start, imports_cell = parse_function(self.fn)
+        function_to_nb(body_elements, self.tmp_path, imports_cell)
 
         # TODO: inject cells with imports + functions + classes defined
         # in the file (should make this the cwd for imports in non-packages
         # to work though) - if i do that, then I should probably do the same
         # for notebook runner to be consistent
 
-        papermill.execute_notebook(self.tmp_path, self.tmp_path,
+        papermill.execute_notebook(self.tmp_path,
+                                   self.tmp_path,
                                    prepare_only=True,
                                    parameters=self.params)
 
@@ -51,15 +58,12 @@ class CallableDebugger:
     def _overwrite_from_nb(self, path):
         """
         Overwrite the function's body with the notebook contents, excluding
-        injected parameters and cells whose first line is #
+        injected parameters and cells whose first line is "#"
         """
         # add leading space
         nb = nbformat.read(path, as_version=nbformat.NO_CONVERT)
 
-        code_cells = [c['source'] for c in nb.cells if c['cell_type'] == 'code'
-                      and 'injected-parameters'
-                      not in c['metadata'].get('tags', [])
-                      and c['source'][:2] != '#\n']
+        code_cells = [c['source'] for c in nb.cells if keep_cell(c)]
 
         # add 4 spaces to each code cell, exclude white space lines
         code_cells = [indent_cell(code) for code in code_cells]
@@ -71,8 +75,8 @@ class CallableDebugger:
         # second: new body
         # third: the rest of the file
         keep_until = self.lines[0] + self.body_start
-        new_content = (content[:keep_until]
-                       + code_cells + ['\n'] + content[self.lines[1]:])
+        new_content = (content[:keep_until] + code_cells + ['\n'] +
+                       content[self.lines[1]:])
 
         Path(self.file).write_text('\n'.join(new_content))
 
@@ -90,22 +94,39 @@ class CallableDebugger:
             tmp.unlink()
 
 
-def indent_line(l):
-    return '    ' + l if l else ''
+def keep_cell(cell):
+    """
+    Rule to decide whether to keep a cell or not. This is executed before
+    converting the notebook back to a function
+    """
+    tags = set(cell['metadata'].get('tags', {}))
+    tmp_tags = {'injected-parameters', 'imports'}
+    has_tmp_tags = len(tags & tmp_tags)
+
+    return (cell['cell_type'] == 'code' and not has_tmp_tags
+            and cell['source'][:2] != '#\n')
+
+
+def indent_line(lline):
+    return '    ' + lline if lline else ''
 
 
 def indent_cell(code):
-    return '\n'.join([indent_line(l) for l in code.splitlines()])
+    return '\n'.join([indent_line(line) for line in code.splitlines()])
 
 
-def parse(fn):
+def parse_function(fn):
+    """
+    Extract function's source code, parse it and return function body
+    elements along with the # of the last line for the signature (which
+    marks the beginning of the function's body) and all the imports
+    """
     # TODO: exclude return at the end, what if we find more than one?
     # maybe do not support functions with return statements for now
     # getsource adds a new line at the end of the the function, we don't need
     # this
     s = inspect.getsource(fn).rstrip()
-    module = parso.parse(s)
-    body = module.children[0].children[-1]
+    body = parso.parse(s).children[0].children[-1]
 
     # parso is adding a new line as first element, not sure if this
     # happens always though
@@ -114,20 +135,51 @@ def parse(fn):
     else:
         body_elements = body.children
 
-    # return body and the last line of the signature
-    return body_elements, body.start_pos[0] - 1
+    # get imports in the corresponding module
+    module = parso.parse(Path(inspect.getfile(fn)).read_text())
+    imports_statements = '\n'.join(
+        [imp.get_code() for imp in module.iter_imports()])
+    # add local definitions
+    imports_local = make_import_from_definitions(module, fn)
+    imports_cell = imports_statements + '\n' + imports_local
+
+    return body_elements, body.start_pos[0] - 1, imports_cell
 
 
-def body_to_nb(body_elements, path):
+def get_func_and_class_names(module):
+    return [
+        defs.name.get_code().strip()
+        for defs in chain(module.iter_funcdefs(), module.iter_classdefs())
+    ]
+
+
+def make_import_from_definitions(module, fn):
+    module_name = inspect.getmodule(fn).__name__
+    names = [
+        name for name in get_func_and_class_names(module)
+        if name != fn.__name__
+    ]
+    names_all = ', '.join(names)
+    return f'from {module_name} import {names_all}'
+
+
+def function_to_nb(body_elements, path, imports_cell):
     """
-    Converts a Python function to a notebook
+    Save function body elements to a notebook
     """
     nb_format = nbformat.versions[nbformat.current_nbformat]
     nb = nb_format.new_notebook()
 
+    # add imports cell
+    nb.cells.append(
+        nb_format.new_code_cell(source=imports_cell,
+                                metadata=dict(tags=['imports'])))
+
     for statement in body_elements:
         # parso incluses new line tokens, remove any trailing whitespace
-        lines = [l[4:] for l in statement.get_code().rstrip().split('\n')]
+        lines = [
+            line[4:] for line in statement.get_code().rstrip().split('\n')
+        ]
         cell = nb_format.new_code_cell(source='\n'.join(lines))
         nb.cells.append(cell)
 

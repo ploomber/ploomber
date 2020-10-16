@@ -1,10 +1,11 @@
-import pytest
+from unittest.mock import Mock
 from pathlib import Path
 
+import pytest
 import pandas as pd
 
 from test_pkg import functions
-from ploomber import DAG, DAGConfigurator
+from ploomber import DAG, DAGConfigurator, tasks
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
 from ploomber.exceptions import DAGBuildError, TaskRenderError, DAGRenderError
@@ -36,6 +37,22 @@ def df_serializer(output, product):
 
 def df_unserializer(product):
     return pd.read_parquet(str(product))
+
+
+
+def touch(product):
+    Path(str(product)).touch()
+
+
+
+
+
+
+
+
+
+def touch_with_upstream(upstream, product):
+    Path(str(product)).touch()
 
 
 def test_params_are_accesible_after_init():
@@ -178,3 +195,22 @@ def test_uses_override_default_serializer_and_deserializer():
 
     assert t._serializer is _new_serializer
     assert t._unserializer is _new_unserializer
+
+
+@pytest.mark.parametrize('task_name', [1, 2])
+def test_develop(task_name, monkeypatch, tmp_directory):
+    dag = DAG()
+
+    t1 = PythonCallable(touch, File('1.txt'), dag=dag, name=1)
+    t2 = PythonCallable(touch_with_upstream, File('2.txt'), dag=dag, name=2)
+    t1 >> t2
+
+    mock = Mock()
+    monkeypatch.setattr(tasks.tasks.subprocess, 'call', mock)
+
+    dag.render()
+
+    dag[task_name].develop()
+
+    mock.assert_called_once()
+    assert mock.call_args[0][0][:2] == ['jupyter', 'notebook']

@@ -92,7 +92,7 @@ class PythonCallable(Task):
         # runner. Also raise error if any of the params is not
         # json serializable
         # TODO: resolve to absolute to make relative paths work
-        params = self.params.to_dict()
+        params = self.params.to_json_serializable()
         params['product'] = params['product'].to_json_serializable()
 
         # TODO: rename this, perhaps CallableInteractiveDeveloper?

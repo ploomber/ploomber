@@ -45,7 +45,16 @@ class Params(abc.Mapping):
         self._dict[key] = value
 
     def to_dict(self):
+        # NOTE: do we need this?
         return copy_module.copy(self._dict)
+
+    def to_json_serializable(self):
+        out = self.to_dict()
+
+        if 'upstream' in out:
+            out['upstream'] = out['upstream'].to_json_serializable()
+
+        return out
 
     def __getitem__(self, key):
         try:

@@ -1,9 +1,11 @@
+from unittest.mock import Mock
 import inspect
 import pytest
 from pathlib import Path
 import importlib
 import tempfile
 
+import parso
 from test_pkg import functions
 import nbformat
 
@@ -28,23 +30,22 @@ def replace_first_cell(nb, source, replacement):
     raise Exception('Cell with source "{}" not found'.format(source))
 
 
-@pytest.mark.parametrize('fn,start',
-                         [
-                             (functions.simple, 0),
-                             (functions.multiple_lines_signature, 2)
-                         ])
+@pytest.mark.parametrize('fn,start', [(functions.simple, 0),
+                                      (functions.multiple_lines_signature, 2)])
 def test_find_signature_last_line(fn, start):
-    assert debugging.parse(fn)[1] == start
+    assert debugging.parse_function(fn)[1] == start
 
 
-@pytest.mark.parametrize('fn_name', ['simple',
-                                     'simple_w_docstring',
-                                     'simple_w_docstring_long',
-                                     'multiple_lines_signature'])
+@pytest.mark.parametrize('fn_name', [
+    'simple', 'simple_w_docstring', 'simple_w_docstring_long',
+    'multiple_lines_signature'
+])
 def test_editing_function(fn_name, tmp_file, backup_test_pkg):
 
-    with CallableDebugger(getattr(functions, fn_name),
-                          {'upstream': None, 'product': None}) as tmp_nb:
+    with CallableDebugger(getattr(functions, fn_name), {
+            'upstream': None,
+            'product': None
+    }) as tmp_nb:
 
         nb = nbformat.read(tmp_nb, as_version=nbformat.NO_CONVERT)
         replace_first_cell(nb, 'x = 1', 'x = 2')
@@ -56,19 +57,53 @@ def test_editing_function(fn_name, tmp_file, backup_test_pkg):
     assert Path(tmp_file).read_text() == '2'
 
 
-@pytest.mark.parametrize('fn_name', ['simple',
-                                     'simple_w_docstring',
-                                     'simple_w_docstring_long',
-                                     'multiple_lines_signature'])
+@pytest.mark.parametrize('fn_name', [
+    'simple', 'simple_w_docstring', 'simple_w_docstring_long',
+    'multiple_lines_signature'
+])
 def test_unmodified_function(fn_name, tmp_file, backup_test_pkg):
     print(Path(functions.__file__).read_text())
     source_original = inspect.getsource(getattr(functions, fn_name))
 
-    with CallableDebugger(getattr(functions, fn_name),
-                          {'upstream': None, 'product': None}):
+    with CallableDebugger(getattr(functions, fn_name), {
+            'upstream': None,
+            'product': None
+    }):
         pass
 
     reloaded = importlib.reload(functions)
     source_new = inspect.getsource(getattr(reloaded, fn_name))
     print(Path(functions.__file__).read_text())
     assert source_original == source_new
+
+
+def test_get_func_and_class_names():
+    source = """
+def x():\n    pass
+\n
+class A:\n    pass
+"""
+
+    assert set(debugging.get_func_and_class_names(
+        parso.parse(source))) == {'x', 'A'}
+
+
+def test_make_import_from_definitions(monkeypatch):
+    source = """
+def x():\n    pass
+\n
+class A:\n    pass
+
+def some_function():
+    pass
+"""
+    mock_fn = Mock()
+    mock_fn.__name__ = 'some_function'
+
+    mock_mod = Mock()
+    mock_mod.__name__ = 'some.module'
+
+    monkeypatch.setattr(inspect, 'getmodule', lambda _: mock_mod)
+
+    assert (debugging.make_import_from_definitions(
+        parso.parse(source), mock_fn) == 'from some.module import x, A')

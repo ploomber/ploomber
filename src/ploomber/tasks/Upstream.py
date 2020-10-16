@@ -24,7 +24,6 @@ class Upstream(abc.Mapping):
         Task name, only used to give more context when raising an exception
         (e.g. trying to access a key that does not exist)
     """
-
     def __init__(self, data=None, name=None):
         self._dict = (data or {})
         self._init_counts()
@@ -39,18 +38,19 @@ class Upstream(abc.Mapping):
     def _init_counts(self):
         # lambdas do not work with pickle, must define a function
         self._counts = defaultdict(self._zero,
-                                   {key: 0 for key in self._dict.keys()})
+                                   {key: 0
+                                    for key in self._dict.keys()})
 
     @property
     def first(self):
         if not self._dict:
             raise KeyError('Cannot obtain first upstream task, task "{}" has '
-                           'no upstream dependencies declared'
-                           .format(self._name))
+                           'no upstream dependencies declared'.format(
+                               self._name))
         if len(self._dict) > 1:
             raise ValueError('first can only be used if there is a single '
-                             'upstream dependency, task "{}" has: {}'
-                             .format(self._name, len(self._dict)))
+                             'upstream dependency, task "{}" has: {}'.format(
+                                 self._name, len(self._dict)))
 
         first_key = next(iter(self._dict))
         return self._dict[first_key]
@@ -58,25 +58,33 @@ class Upstream(abc.Mapping):
     def pop(self, key):
         return self._dict.pop(key)
 
+    # NOTE: are we using this?
     def to_dict(self):
         return copy(self._dict)
+
+    def to_json_serializable(self):
+        """
+        Converts the object to a dictionary, calls .to_json_serializable
+        on all values
+        """
+        return {k: v.to_json_serializable() for k, v in self._dict.items()}
 
     def __getitem__(self, key):
         if self._in_context:
             self._counts[key] += 1
 
         if not len(self._dict):
-            raise UpstreamKeyError('Cannot obtain upstream dependency "{}". '
-                                   'Task "{}" has no upstream dependencies'
-                                   .format(key, self._name))
+            raise UpstreamKeyError(
+                'Cannot obtain upstream dependency "{}". '
+                'Task "{}" has no upstream dependencies'.format(
+                    key, self._name))
 
         try:
             return self._dict[key]
         except KeyError:
             raise UpstreamKeyError(
                 'Cannot obtain upstream dependency "{}" for task "{}" '
-                'declared dependencies are: {}'
-                .format(key, self._name, self))
+                'declared dependencies are: {}'.format(key, self._name, self))
 
     def __setitem__(self, key, value):
         self._dict[key] = value
@@ -101,10 +109,9 @@ class Upstream(abc.Mapping):
 
     def __exit__(self, *exc):
         self._in_context = False
-        unused = set([key for key, count in self._counts.items()
-                      if count == 0])
+        unused = set(
+            [key for key, count in self._counts.items() if count == 0])
 
         if unused:
             warnings.warn('The following upstream dependencies in task "{}" '
-                          'were not used {}'
-                          .format(self._name, unused))
+                          'were not used {}'.format(self._name, unused))
