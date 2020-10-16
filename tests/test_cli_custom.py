@@ -3,14 +3,20 @@ import os
 import importlib
 import sys
 from pathlib import Path
+from unittest.mock import Mock
 
 import click
+import jupytext
+import nbformat
 import pytest
-from ploomber.cli import plot, build, parsers, task, report, cli, status
+from ploomber.cli import (plot, build, parsers, task, report, cli, status,
+                          interact)
+from ploomber.tasks import notebook
 
 
 @pytest.mark.parametrize('cmd', [
-    None, 'add', 'build', 'interact', 'new', 'plot', 'report', 'status', 'task'
+    None, 'add', 'build', 'interact', 'new', 'plot', 'report', 'status',
+    'task', 'interact'
 ])
 def test_help_commands(cmd):
 
@@ -22,7 +28,8 @@ def test_help_commands(cmd):
     subprocess.run(elements + ['--help'], check=True)
 
 
-@pytest.mark.parametrize('cmd', ['build', 'plot', 'report', 'status', 'task'])
+@pytest.mark.parametrize(
+    'cmd', ['build', 'plot', 'report', 'status', 'task', 'interact'])
 def test_help_shows_env_keys(cmd, tmp_nbs):
     res = subprocess.run(['ploomber', 'build', '--help'],
                          stdout=subprocess.PIPE,
@@ -33,7 +40,8 @@ def test_help_shows_env_keys(cmd, tmp_nbs):
     assert '--env--sample' in out
 
 
-@pytest.mark.parametrize('cmd', ['build', 'plot', 'report', 'status', 'task'])
+@pytest.mark.parametrize(
+    'cmd', ['build', 'plot', 'report', 'status', 'task', 'interact'])
 def test_help_shows_env_keys_w_entry_point(cmd, tmp_nbs,
                                            add_current_to_sys_path):
     res = subprocess.run(['ploomber', 'build', '-e', 'factory.make', '--help'],
@@ -100,13 +108,34 @@ def test_log_enabled(monkeypatch, tmp_sample_dir):
     build.main()
 
 
-def test_interactive_session(monkeypatch, tmp_sample_dir):
+def test_interactive_session(tmp_sample_dir):
     res = subprocess.run(
         ['ploomber', 'interact', '--entry-point', 'test_pkg.entry.with_doc'],
         input=b'type(dag)',
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
     assert 'Out[1]: ploomber.dag.DAG.DAG' in res.stdout.decode()
+
+
+def test_interactive_session_develop(monkeypatch, tmp_nbs):
+    monkeypatch.setattr(sys, 'argv', ['python'])
+
+    mock = Mock(side_effect=['dag["plot"].develop()', 'quit'])
+
+    def mock_jupyter_notebook(path, extra_args=None):
+        nb = jupytext.reads('2 + 2', fmt='py')
+        nbformat.write(nb, path)
+
+    # NOTE: I tried patching
+    # IPython.terminal.interactiveshell.TerminalInteractiveShell.prompt_for_code
+    # but didn't work, patching builtins input works
+    with monkeypatch.context() as m:
+        m.setattr('builtins.input', mock)
+        m.setattr(notebook, '_open_jupyter_notebook', mock_jupyter_notebook)
+        m.setattr(notebook, '_save', lambda: True)
+        interact.main()
+
+    assert Path('plot.py').read_text().strip() == '2 + 2'
 
 
 def test_replace_env_value(monkeypatch, tmp_sample_dir):
