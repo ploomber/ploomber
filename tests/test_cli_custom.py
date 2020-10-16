@@ -12,6 +12,7 @@ import pytest
 from ploomber.cli import (plot, build, parsers, task, report, cli, status,
                           interact)
 from ploomber.tasks import notebook
+from ploomber import DAG
 
 
 @pytest.mark.parametrize('cmd', [
@@ -136,6 +137,20 @@ def test_interactive_session_develop(monkeypatch, tmp_nbs):
         interact.main()
 
     assert Path('plot.py').read_text().strip() == '2 + 2'
+
+
+def test_interactive_session_render_fails(monkeypatch, tmp_nbs):
+    monkeypatch.setattr(sys, 'argv', ['python'])
+
+    mock = Mock(side_effect=['quit'])
+
+    def fail(self):
+        raise Exception
+
+    with monkeypatch.context() as m:
+        m.setattr('builtins.input', mock)
+        m.setattr(DAG, 'render', fail)
+        interact.main()
 
 
 def test_replace_env_value(monkeypatch, tmp_sample_dir):

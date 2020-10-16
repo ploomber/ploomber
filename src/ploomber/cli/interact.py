@@ -10,7 +10,12 @@ def main():
         pass
 
     dag, args = _custom_command(parser)
-    print(dag.status())
+
+    try:
+        dag.render()
+    except Exception:
+        print('Your dag failed to render, but you can still inspect the '
+              'object to debug it.\n')
 
     del parser
     del args
