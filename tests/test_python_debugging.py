@@ -30,6 +30,12 @@ def replace_first_cell(nb, source, replacement):
     raise Exception('Cell with source "{}" not found'.format(source))
 
 
+def find_cell_tagged(nb, tag):
+    for cell in nb.cells:
+        if tag in cell['metadata'].get('tags', {}):
+            return cell
+
+
 @pytest.mark.parametrize(
     'fn,start',
     [(functions.simple, 0),
@@ -103,6 +109,20 @@ def test_unmodified_function(fn_name, remove_trailing_newline,
     assert fn_source_original == fn_source_new
     assert mod_source_original == mod_source_new
     assert not Path(tmp_nb).exists()
+
+
+def test_added_imports(backup_test_pkg):
+    params = {'upstream': None, 'product': None}
+    added_imports = 'import os\nimport sys\n'
+
+    with CallableDebugger(functions.simple, params) as tmp_nb:
+        nb = nbformat.read(tmp_nb, as_version=nbformat.NO_CONVERT)
+        cell = find_cell_tagged(nb, 'imports-new')
+        cell.source += f'\n{added_imports}'
+        nbformat.write(nb, tmp_nb)
+
+    content = Path(inspect.getfile(functions.simple)).read_text()
+    assert added_imports in content
 
 
 def test_error_if_source_is_modified_while_editing(backup_test_pkg):

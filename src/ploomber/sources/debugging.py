@@ -95,6 +95,12 @@ class CallableDebugger:
         if trailing_newline:
             new_content += '\n'
 
+        # finally add new imports, if any
+        imports_new = get_imports_new_source(nb)
+
+        if imports_new:
+            new_content = imports_new + new_content
+
         self.path_to_source.write_text(new_content)
 
     def __enter__(self):
@@ -129,7 +135,7 @@ def keep_cell(cell):
     converting the notebook back to a function
     """
     tags = set(cell['metadata'].get('tags', {}))
-    tmp_tags = {'injected-parameters', 'imports'}
+    tmp_tags = {'injected-parameters', 'imports', 'imports-new'}
     has_tmp_tags = len(tags & tmp_tags)
 
     return (cell['cell_type'] == 'code' and not has_tmp_tags
@@ -183,6 +189,27 @@ def get_func_and_class_names(module):
     ]
 
 
+def get_imports_new_source(nb):
+    """
+    Returns the source code of the first cell tagged 'imports-new', strips
+    out comments
+    """
+    source = None
+
+    for cell in nb.cells:
+        if 'imports-new' in cell['metadata'].get('tags', {}):
+            source = cell.source
+            break
+
+    if source:
+        lines = [
+            line for line in source.splitlines() if not line.startswith('#')
+        ]
+
+        if lines:
+            return '\n'.join(lines) + '\n'
+
+
 def make_import_from_definitions(module, fn):
     module_name = inspect.getmodule(fn).__name__
     names = [
@@ -200,10 +227,20 @@ def function_to_nb(body_elements, path, imports_cell):
     nb_format = nbformat.versions[nbformat.current_nbformat]
     nb = nb_format.new_notebook()
 
-    # add imports cell
+    # first cell: add imports cell
     nb.cells.append(
         nb_format.new_code_cell(source=imports_cell,
                                 metadata=dict(tags=['imports'])))
+
+    # second cell: added imports, in case the user wants to add any imports
+    # back to the original module
+    imports_new_comment = (
+        '# Use this cell to include any imports that you '
+        'want to save back\n# to the top of the module, comments will be '
+        'ignored')
+    nb.cells.append(
+        nb_format.new_code_cell(source=imports_new_comment,
+                                metadata=dict(tags=['imports-new'])))
 
     for statement in body_elements:
         # parso incluses new line tokens, remove any trailing whitespace
