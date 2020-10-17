@@ -34,8 +34,12 @@ def simple_w_docstring_long(upstream, product, path):
     Path(path).write_text(str(x))
 
 
-def multiple_lines_signature(upstream,
-                             product,
-                             path):
+def multiple_lines_signature(upstream, product, path):
+    x = 1
+    Path(path).write_text(str(x))
+
+
+def this_is_a_function_with_a_very_long_name_with_forces_us_to_split_params(
+        upstream, product, path):
     x = 1
     Path(path).write_text(str(x))

@@ -28,9 +28,8 @@ class CallableDebugger:
     def __init__(self, fn, params):
         self.fn = fn
         self.file = inspect.getsourcefile(fn)
-        # how do we deal with def taking more than one line?
         lines, start = inspect.getsourcelines(fn)
-        self.lines = (start, start + len(lines))
+        self.lines_num_limits = (start, start + len(lines))
         self.params = params
         _, self.tmp_path = tempfile.mkstemp(suffix='.ipynb')
         self.body_start = None
@@ -60,25 +59,41 @@ class CallableDebugger:
         Overwrite the function's body with the notebook contents, excluding
         injected parameters and cells whose first line is "#"
         """
-        # add leading space
         nb = nbformat.read(path, as_version=nbformat.NO_CONVERT)
 
+        # remove cells that are only needed for the nb but not for the function
         code_cells = [c['source'] for c in nb.cells if keep_cell(c)]
 
         # add 4 spaces to each code cell, exclude white space lines
         code_cells = [indent_cell(code) for code in code_cells]
 
-        content = Path(self.file).read_text().splitlines()
+        # get the original file where the function is defined
+        content = Path(self.file).read_text()
+        content_lines = content.splitlines()
+        trailing_newline = content[-1] == '\n'
+        fn_starts, fn_ends = self.lines_num_limits
 
-        # first element: where the function starts + offset due to signature
-        # line break
-        # second: new body
-        # third: the rest of the file
-        keep_until = self.lines[0] + self.body_start
-        new_content = (content[:keep_until] + code_cells + ['\n'] +
-                       content[self.lines[1]:])
+        # keep the file the same until you reach the function definition plus
+        # an offset to account for the signature (which might span >1 line)
+        keep_until = fn_starts + self.body_start
+        header = content_lines[:keep_until]
 
-        Path(self.file).write_text('\n'.join(new_content))
+        # the footer is everything below the end of the original definition
+        footer = content_lines[fn_ends:]
+
+        # if there is anything at the end, we have to add an empty line to
+        # properly end the function definition, if this is the last definition
+        # in the file, we don't have to add this
+        if footer:
+            footer = [''] + footer
+
+        new_content = '\n'.join(header + code_cells + footer)
+
+        # if the original hile had a trailing newline, keep it
+        if trailing_newline:
+            new_content += '\n'
+
+        Path(self.file).write_text(new_content)
 
     def __enter__(self):
         self.tmp_path = self._to_nb()
@@ -123,6 +138,7 @@ def parse_function(fn):
     """
     # TODO: exclude return at the end, what if we find more than one?
     # maybe do not support functions with return statements for now
+
     # getsource adds a new line at the end of the the function, we don't need
     # this
     s = inspect.getsource(fn).rstrip()
