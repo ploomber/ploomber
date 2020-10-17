@@ -27,12 +27,14 @@ class CallableDebugger:
     """
     def __init__(self, fn, params):
         self.fn = fn
-        self.file = inspect.getsourcefile(fn)
+        self.path_to_source = Path(inspect.getsourcefile(fn))
         lines, start = inspect.getsourcelines(fn)
         self.lines_num_limits = (start, start + len(lines))
         self.params = params
-        _, self.tmp_path = tempfile.mkstemp(suffix='.ipynb')
+        self.tmp_path = self.path_to_source.with_name(
+            self.path_to_source.with_suffix('').name + '-tmp.ipynb')
         self.body_start = None
+        self._source_code = None
 
     def _to_nb(self):
         """
@@ -47,8 +49,8 @@ class CallableDebugger:
         # to work though) - if i do that, then I should probably do the same
         # for notebook runner to be consistent
 
-        papermill.execute_notebook(self.tmp_path,
-                                   self.tmp_path,
+        papermill.execute_notebook(str(self.tmp_path),
+                                   str(self.tmp_path),
                                    prepare_only=True,
                                    parameters=self.params)
 
@@ -68,7 +70,7 @@ class CallableDebugger:
         code_cells = [indent_cell(code) for code in code_cells]
 
         # get the original file where the function is defined
-        content = Path(self.file).read_text()
+        content = self.path_to_source.read_text()
         content_lines = content.splitlines()
         trailing_newline = content[-1] == '\n'
         fn_starts, fn_ends = self.lines_num_limits
@@ -93,13 +95,25 @@ class CallableDebugger:
         if trailing_newline:
             new_content += '\n'
 
-        Path(self.file).write_text(new_content)
+        self.path_to_source.write_text(new_content)
 
     def __enter__(self):
+        self._source_code = self.path_to_source.read_text()
         self.tmp_path = self._to_nb()
-        return self.tmp_path
+        return str(self.tmp_path)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        current_source_code = self.path_to_source.read_text()
+
+        if self._source_code != current_source_code:
+            raise ValueError(f'File "{self.path_to_source}" (where '
+                             f'callable "{self.fn.__name__}" is defined) '
+                             'changed while editing the function in the '
+                             'notebook app. This might lead to corrupted '
+                             'source files. Changes from the notebook were '
+                             'not saved back to the module. Notebook '
+                             f'available at "{self.tmp_path}')
+
         self._overwrite_from_nb(self.tmp_path)
         Path(self.tmp_path).unlink()
 

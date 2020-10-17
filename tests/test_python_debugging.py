@@ -60,6 +60,7 @@ def test_editing_function(fn_name, tmp_file, backup_test_pkg):
     getattr(reloaded, fn_name)(None, None, tmp_file)
     print(Path(functions.__file__).read_text())
     assert Path(tmp_file).read_text() == '2'
+    assert not Path(tmp_nb).exists()
 
 
 @pytest.mark.parametrize('fn_name', [
@@ -92,7 +93,7 @@ def test_unmodified_function(fn_name, remove_trailing_newline,
     with CallableDebugger(getattr(functions_reloaded, fn_name), {
             'upstream': None,
             'product': None
-    }):
+    }) as tmp_nb:
         pass
 
     functions_edited = importlib.reload(functions)
@@ -101,6 +102,22 @@ def test_unmodified_function(fn_name, remove_trailing_newline,
 
     assert fn_source_original == fn_source_new
     assert mod_source_original == mod_source_new
+    assert not Path(tmp_nb).exists()
+
+
+def test_error_if_source_is_modified_while_editing(backup_test_pkg):
+    path_to_file = Path(inspect.getfile(functions.simple))
+
+    with pytest.raises(ValueError) as excinfo:
+        with CallableDebugger(functions.simple, {
+                'upstream': None,
+                'product': None
+        }) as nb:
+            path_to_file.write_text('')
+
+    assert ('Changes from the notebook were not saved back to the module'
+            in str(excinfo.value))
+    assert Path(nb).exists()
 
 
 def test_get_func_and_class_names():
