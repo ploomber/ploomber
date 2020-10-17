@@ -1,6 +1,5 @@
 from itertools import chain
 from pathlib import Path
-import tempfile
 import inspect
 
 import jupyter_client
