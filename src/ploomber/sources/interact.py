@@ -8,7 +8,7 @@ import parso
 import nbformat
 
 
-class CallableDebugger:
+class CallableInteractiveDeveloper:
     """Convert callables to notebooks, edit and save back
 
     Parameters
@@ -20,7 +20,7 @@ class CallableDebugger:
 
     Examples
     --------
-    >>> wih CallableDebugger(fn, {'param': 1}) as path_to_nb:
+    >>> wih CallableInteractiveDeveloper(fn, {'param': 1}) as path_to_nb:
     ...     # do stuff with the notebook file
     ...     pass
     """

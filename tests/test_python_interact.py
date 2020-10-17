@@ -9,7 +9,7 @@ import parso
 from test_pkg import functions
 import nbformat
 
-from ploomber.sources.debugging import CallableDebugger
+from ploomber.sources.interact import CallableInteractiveDeveloper
 from ploomber.sources import debugging
 
 
@@ -53,7 +53,7 @@ def test_find_signature_last_line(fn, start):
 ])
 def test_editing_function(fn_name, tmp_file, backup_test_pkg):
 
-    with CallableDebugger(getattr(functions, fn_name), {
+    with CallableInteractiveDeveloper(getattr(functions, fn_name), {
             'upstream': None,
             'product': None
     }) as tmp_nb:
@@ -96,7 +96,7 @@ def test_unmodified_function(fn_name, remove_trailing_newline,
     fn_source_original = inspect.getsource(fn)
     mod_source_original = path_to_file.read_text()
 
-    with CallableDebugger(getattr(functions_reloaded, fn_name), {
+    with CallableInteractiveDeveloper(getattr(functions_reloaded, fn_name), {
             'upstream': None,
             'product': None
     }) as tmp_nb:
@@ -115,7 +115,7 @@ def test_added_imports(backup_test_pkg):
     params = {'upstream': None, 'product': None}
     added_imports = 'import os\nimport sys\n'
 
-    with CallableDebugger(functions.simple, params) as tmp_nb:
+    with CallableInteractiveDeveloper(functions.simple, params) as tmp_nb:
         nb = nbformat.read(tmp_nb, as_version=nbformat.NO_CONVERT)
         cell = find_cell_tagged(nb, 'imports-new')
         cell.source += f'\n{added_imports}'
@@ -129,7 +129,7 @@ def test_error_if_source_is_modified_while_editing(backup_test_pkg):
     path_to_file = Path(inspect.getfile(functions.simple))
 
     with pytest.raises(ValueError) as excinfo:
-        with CallableDebugger(functions.simple, {
+        with CallableInteractiveDeveloper(functions.simple, {
                 'upstream': None,
                 'product': None
         }) as nb:

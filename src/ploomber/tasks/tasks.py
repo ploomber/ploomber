@@ -12,7 +12,7 @@ from ploomber.clients import ShellClient
 from ploomber.products.Metadata import MetadataAlwaysUpToDate
 from ploomber.exceptions import TaskBuildError
 from ploomber.constants import TaskStatus
-from ploomber.sources.debugging import CallableDebugger
+from ploomber.sources.interact import CallableInteractiveDeveloper
 from ploomber.tasks.Params import Params
 
 
@@ -95,8 +95,8 @@ class PythonCallable(Task):
         params = self.params.to_json_serializable()
         params['product'] = params['product'].to_json_serializable()
 
-        # TODO: rename this, perhaps CallableInteractiveDeveloper?
-        with CallableDebugger(self.source.primitive, params) as tmp:
+        with CallableInteractiveDeveloper(self.source.primitive,
+                                          params) as tmp:
             try:
                 subprocess.call(['jupyter', 'notebook', tmp])
             except KeyboardInterrupt:
