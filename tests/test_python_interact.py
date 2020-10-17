@@ -10,7 +10,7 @@ from test_pkg import functions
 import nbformat
 
 from ploomber.sources.interact import CallableInteractiveDeveloper
-from ploomber.sources import debugging
+from ploomber.sources import interact
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def find_cell_tagged(nb, tag):
       this_is_a_function_with_a_very_long_name_with_forces_us_to_split_params,
       1)])
 def test_find_signature_last_line(fn, start):
-    assert debugging.parse_function(fn)[1] == start
+    assert interact.parse_function(fn)[1] == start
 
 
 @pytest.mark.parametrize('fn_name', [
@@ -147,7 +147,7 @@ def x():\n    pass
 class A:\n    pass
 """
 
-    assert set(debugging.get_func_and_class_names(
+    assert set(interact.get_func_and_class_names(
         parso.parse(source))) == {'x', 'A'}
 
 
@@ -168,5 +168,5 @@ def some_function():
 
     monkeypatch.setattr(inspect, 'getmodule', lambda _: mock_mod)
 
-    assert (debugging.make_import_from_definitions(
+    assert (interact.make_import_from_definitions(
         parso.parse(source), mock_fn) == 'from some.module import x, A')
