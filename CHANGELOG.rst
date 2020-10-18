@@ -1,8 +1,14 @@
 CHANGELOG
 =========
 
+0.8.1dev
+--------
+* ``ploomber interact`` allows to switch DAG parameters, just like ``ploomber build``
+*  Adds ``PythonCallable.develop()`` to develop Python functions interactively
+
+
 0.8 (2020-10-15)
------------------
+----------------
 * Dropping support for Python 3.5
 * Removes ``DAGSpec.from_file``, loading from a file is now handled directly by the ``DAGSpec`` constructor
 * Performance improvements, DAG does not fetch metadata when it doesn't need to
@@ -12,7 +18,7 @@ CHANGELOG
 * Bug fixes
 
 0.7.5 (2020-10-02)
--------------------
+------------------
 * NotebookRunner.develop accepts passing arguments to jupyter notebook
 * Spec API now supports PythonCallable (by passing a dotted path)
 * Upstream dependencies of PythonCallables can be inferred via the ``extract_upstream`` option in the Spec API
@@ -22,7 +28,7 @@ CHANGELOG
 * Bug fixes
 
 0.7.4 (2020-09-14)
--------------------
+------------------
 * Improved ``__repr__`` methods in PythonCallableSource and NotebookSource
 * Improved output layout for tables
 * Support for nbconvert>=6
