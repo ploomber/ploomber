@@ -123,7 +123,7 @@ def test_interactive_session_develop(monkeypatch, tmp_nbs):
 
     mock = Mock(side_effect=['dag["plot"].develop()', 'quit'])
 
-    def mock_jupyter_notebook(path, extra_args=None):
+    def mock_jupyter_notebook(path, app, args):
         nb = jupytext.reads('2 + 2', fmt='py')
         nbformat.write(nb, path)
 

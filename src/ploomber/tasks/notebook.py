@@ -445,8 +445,8 @@ def _read_rendered_notebook(nb_str):
 
     source = """
 # Debugging settings (this cell will be removed before saving)
-# change the current working directory to the one when .debug() happen
-# to make relative paths work
+# change the current working directory to directory of the session that
+# invoked the jupyter app to make relative paths work
 from os import chdir
 chdir("{}")
 """.format(Path('.').resolve())
@@ -458,13 +458,13 @@ chdir("{}")
     return nb
 
 
-def _open_jupyter_notebook(path, app, args=None):
+def _open_jupyter_notebook(path, app, args):
     """
     Open notebook using the jupyter notebook application
 
     Parameters
     ----------
-    args : list
+    args : str
         List of extra arguments, executed command becomes:
         "jupyter notebook {path} {args}"
     """
