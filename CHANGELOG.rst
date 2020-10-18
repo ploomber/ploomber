@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.8.1dev
---------
+0.8.1 (2020-10-18)
+-------------------
 * ``ploomber interact`` allows to switch DAG parameters, just like ``ploomber build``
 *  Adds ``PythonCallable.develop()`` to develop Python functions interactively
 *  ``NotebookRunner.develop()`` to develop now also works with Jupyter lab
