@@ -80,6 +80,24 @@ def backup_test_pkg():
     shutil.rmtree(backup)
 
 
+@pytest.fixture
+def backup_spec_with_functions():
+    old = os.getcwd()
+    backup = tempfile.mkdtemp()
+    root = _path_to_tests() / 'assets' / 'spec-with-functions'
+    shutil.copytree(str(root), str(Path(backup, 'spec-with-functions')))
+
+    os.chdir(root)
+
+    yield root
+
+    shutil.rmtree(str(root))
+    shutil.copytree(str(Path(backup, 'spec-with-functions')), str(root))
+    shutil.rmtree(backup)
+
+    os.chdir(old)
+
+
 @pytest.fixture()
 def tmp_directory():
     old = os.getcwd()
@@ -150,11 +168,6 @@ def tmp_sample_tasks():
 
 @fixture_tmp_dir(_path_to_tests() / 'assets' / 'pipeline-sql')
 def tmp_pipeline_sql():
-    pass
-
-
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'spec-with-functions')
-def tmp_spec_with_functions():
     pass
 
 

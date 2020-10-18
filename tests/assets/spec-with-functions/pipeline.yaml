@@ -1,7 +1,12 @@
 meta:
   extract_product: False
-
+  extract_upstream: True
 
 tasks:
-  - source: my_tasks.some_function
+  - source: my_tasks.raw.functions.function
     product: some_file.txt
+    name: raw
+  
+  - source: my_tasks.clean.functions.function
+    product: another.txt
+    name: clean

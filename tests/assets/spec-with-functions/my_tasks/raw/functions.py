@@ -1,5 +1,5 @@
 from pathlib import Path
 
 
-def some_function(product):
+def function(product):
     Path(str(product)).touch()

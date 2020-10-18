@@ -8,7 +8,26 @@ from test_pkg import functions
 from ploomber import DAG, DAGConfigurator, tasks
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
-from ploomber.exceptions import DAGBuildError, TaskRenderError, DAGRenderError
+from ploomber.exceptions import (DAGBuildError, TaskRenderError,
+                                 DAGRenderError, TaskBuildError)
+
+
+@pytest.fixture
+def dag():
+    dag = DAG()
+
+    t1 = PythonCallable(touch,
+                        File('1.txt'),
+                        dag=dag,
+                        name='without_dependencies')
+    t2 = PythonCallable(touch_with_upstream,
+                        File('2.txt'),
+                        dag=dag,
+                        name='with_dependencies',
+                        params={'param': 42})
+    t1 >> t2
+
+    return dag
 
 
 class MyException(Exception):
@@ -39,19 +58,11 @@ def df_unserializer(product):
     return pd.read_parquet(str(product))
 
 
-
 def touch(product):
     Path(str(product)).touch()
 
 
-
-
-
-
-
-
-
-def touch_with_upstream(upstream, product):
+def touch_with_upstream(upstream, product, param):
     Path(str(product)).touch()
 
 
@@ -197,20 +208,82 @@ def test_uses_override_default_serializer_and_deserializer():
     assert t._unserializer is _new_unserializer
 
 
-@pytest.mark.parametrize('task_name', [1, 2])
-def test_develop(task_name, monkeypatch, tmp_directory):
-    dag = DAG()
-
-    t1 = PythonCallable(touch, File('1.txt'), dag=dag, name=1)
-    t2 = PythonCallable(touch_with_upstream, File('2.txt'), dag=dag, name=2)
-    t1 >> t2
-
+@pytest.mark.parametrize(
+    'task_name',
+    ['without_dependencies', 'with_dependencies'],
+)
+def test_develop(dag, task_name, monkeypatch):
     mock = Mock()
     monkeypatch.setattr(tasks.tasks.subprocess, 'call', mock)
-
     dag.render()
-
     dag[task_name].develop()
 
     mock.assert_called_once()
     assert mock.call_args[0][0][:2] == ['jupyter', 'notebook']
+
+
+@pytest.mark.parametrize('app', ['notebook', 'lab'])
+def test_develop_with_custom_args(app, dag, monkeypatch):
+    mock = Mock()
+    monkeypatch.setattr(tasks.tasks.subprocess, 'call', mock)
+    dag.render()
+    dag['without_dependencies'].develop(app=app, args='--port=8081; rm file')
+
+    mock.assert_called_once()
+    assert mock.call_args[0][0][:2] == ['jupyter', app]
+    # make sure args are quoted
+    assert mock.call_args[0][0][3:] == ['"--port=8081;"', '"rm"', '"file"']
+
+
+def test_develop_unknown_app(dag):
+    dag.render()
+
+    with pytest.raises(ValueError) as excinfo:
+        dag['without_dependencies'].develop(app='unknown')
+
+    assert '"app" must be one of' in str(excinfo.value)
+
+
+@pytest.mark.parametrize(
+    'task_name',
+    ['without_dependencies', 'with_dependencies'],
+)
+@pytest.mark.parametrize(
+    'kind, module',
+    [
+        ['pdb', tasks.tasks.pdb],
+        ['ipdb', tasks.tasks.Pdb],
+    ],
+)
+def test_debug(kind, module, dag, task_name, monkeypatch):
+    mock = Mock()
+    monkeypatch.setattr(module, 'runcall', mock)
+    dag.render()
+    dag[task_name].debug(kind=kind)
+
+    mock.assert_called_once()
+
+    assert mock.call_args[0][0] is dag[task_name].source.primitive
+    assert mock.call_args[1] == dag[task_name].params.to_dict()
+
+
+def test_debug_unknown_kind(dag):
+    dag.render()
+
+    with pytest.raises(ValueError) as excinfo:
+        dag['without_dependencies'].debug(kind='unknown')
+
+    assert '"kind" must be one of' in str(excinfo.value)
+
+
+@pytest.mark.parametrize('method', ['debug', 'develop'])
+def test_calling_unrendered_task(method):
+    dag = DAG()
+    t = PythonCallable(touch, File('1.txt'), dag)
+
+    msg = f'Cannot call task.{method}() on a task that has'
+
+    with pytest.raises(TaskBuildError) as excinfo:
+        getattr(t, method)()
+
+    assert msg in str(excinfo.value)

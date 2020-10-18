@@ -8,9 +8,11 @@ import tempfile
 import parso
 from test_pkg import functions
 import nbformat
+import papermill as pm
 
 from ploomber.sources.interact import CallableInteractiveDeveloper
 from ploomber.sources import interact
+from ploomber.spec.DAGSpec import DAGSpec
 
 
 @pytest.fixture
@@ -34,6 +36,8 @@ def find_cell_tagged(nb, tag):
     for cell in nb.cells:
         if tag in cell['metadata'].get('tags', {}):
             return cell
+
+    raise Exception('Cell with rag "{}" not found'.format(tag))
 
 
 @pytest.mark.parametrize(
@@ -125,6 +129,19 @@ def test_added_imports(backup_test_pkg):
     assert added_imports in content
 
 
+def test_changes_cwd(backup_test_pkg):
+    params = {'upstream': None, 'product': None}
+    source = None
+
+    with CallableInteractiveDeveloper(functions.simple, params) as tmp_nb:
+        nb = nbformat.read(tmp_nb, as_version=nbformat.NO_CONVERT)
+        cell = find_cell_tagged(nb, 'debugging-settings')
+        source = cell.source
+
+    current = Path('.').resolve()
+    assert f'chdir("{current}")' in source
+
+
 def test_error_if_source_is_modified_while_editing(backup_test_pkg):
     path_to_file = Path(inspect.getfile(functions.simple))
 
@@ -170,3 +187,23 @@ def some_function():
 
     assert (interact.make_import_from_definitions(
         parso.parse(source), mock_fn) == 'from some.module import x, A')
+
+
+@pytest.mark.parametrize('task_name', ['raw', 'clean'])
+def test_develop_spec_with_local_functions(task_name,
+                                           backup_spec_with_functions):
+    """
+    Check we can develop functions defined locally, the sample project includes
+    relative imports, which should work when generating the temporary notebook
+    """
+    # from IPython import embed
+    # embed()
+
+    dag = DAGSpec('pipeline.yaml').to_dag()
+    dag.render()
+
+    fn = dag[task_name].source.primitive
+    params = dag[task_name].params.to_json_serializable()
+
+    with CallableInteractiveDeveloper(fn, params) as tmp_nb:
+        pm.execute_notebook(tmp_nb, tmp_nb)

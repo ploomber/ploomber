@@ -312,16 +312,3 @@ def test_building_a_single_task_when_rendered_upstream():
 
     dag.render()
     t2.build()
-
-
-def test_attempt_to_debug_unrendered_task():
-    dag = DAG()
-    t = PythonCallable(touch, File('1.txt'), dag)
-
-    msg = ('Cannot debug task that has not been rendered, call '
-           'DAG.render() first')
-
-    with pytest.raises(TaskBuildError) as excinfo:
-        t.debug()
-
-    assert msg in str(excinfo.value)
