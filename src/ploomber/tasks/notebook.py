@@ -1,3 +1,4 @@
+import shlex
 import pdb
 import tempfile
 import subprocess
@@ -267,7 +268,7 @@ class NotebookRunner(Task):
                               static_analysis=static_analysis,
                               **kwargs)
 
-    def develop(self, extra_jupyter_args=None):
+    def develop(self, app='notebook', args=None):
         """
         Opens the rendered notebook (with injected parameters) and adds a
         "debugging-settings" cell to the that changes directory to the current
@@ -280,8 +281,10 @@ class NotebookRunner(Task):
 
         Parameters
         ----------
-        extra_jupyter_args : list
-            Extra parameters passed to the "jupyter notebook" command
+        app : {'notebook', 'lab'}, default: 'notebook'
+            Which Jupyter application to use
+        args : str
+            Extra parameters passed to the jupyter application
 
         Notes
         -----
@@ -289,6 +292,16 @@ class NotebookRunner(Task):
         code will be updated only if the `hot_reload option` is turned on.
         See :class:`ploomber.DAGConfigurator` for details.
         """
+        # TODO: this code needs refactoring, should be a context manager
+        # like the one we have for PythonCallable.develop that abstracts
+        # the handling of the temporary notebook while editing
+
+        apps = {'notebook', 'lab'}
+
+        if app not in apps:
+            raise ValueError('"app" must be one of {}, got: "{}"'.format(
+                apps, app))
+
         if self.source.language != 'python':
             raise NotImplementedError(
                 'develop is not implemented for "{}" '
@@ -309,7 +322,7 @@ class NotebookRunner(Task):
         tmp.write_text(content)
 
         # open notebook with injected debugging cell
-        _open_jupyter_notebook(str(tmp), extra_jupyter_args)
+        _open_jupyter_notebook(str(tmp), app=app, args=args)
 
         # read tmp file again, to see if the user made any changes
         content_new = Path(tmp).read_text()
@@ -445,20 +458,20 @@ chdir("{}")
     return nb
 
 
-def _open_jupyter_notebook(path, extra_args=None):
+def _open_jupyter_notebook(path, app, args=None):
     """
     Open notebook using the jupyter notebook application
 
     Parameters
     ----------
-    extra_args : list
+    args : list
         List of extra arguments, executed command becomes:
-        "jupyter notebook {path} {extra_args}"
+        "jupyter notebook {path} {args}"
     """
-    extra_args = extra_args or []
+    args = [f'"{token}"' for token in shlex.split(args or '')]
 
     try:
-        subprocess.call(['jupyter', 'notebook', path] + extra_args)
+        subprocess.call(['jupyter', app, path] + args)
     except KeyboardInterrupt:
         print('Jupyter notebook server closed...')
 

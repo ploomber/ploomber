@@ -223,9 +223,8 @@ def test_error_if_cant_find_exporter_name(tmp_sample_tasks):
 
 # TODO: we are not testing output, we have to make sure params are inserted
 # correctly
-
-
-def test_develop_saves_changes(tmp_directory, monkeypatch):
+@pytest.fixture
+def tmp_dag(tmp_directory):
     dag = DAG()
 
     code = """
@@ -239,26 +238,54 @@ def test_develop_saves_changes(tmp_directory, monkeypatch):
 
     p.write_text(code)
 
-    t = NotebookRunner(p,
-                       product=File(Path(tmp_directory, 'out.ipynb')),
-                       dag=dag,
-                       kernelspec_name='python3',
-                       params={'var': 1},
-                       name='nb')
-
-    def mock_jupyter_notebook(path, extra_args=None):
-        nb = jupytext.reads('2 + 2', fmt='py')
-        nbformat.write(nb, path)
+    NotebookRunner(p,
+                   product=File(Path(tmp_directory, 'out.ipynb')),
+                   dag=dag,
+                   kernelspec_name='python3',
+                   params={'var': 1},
+                   name='nb')
 
     dag.render()
+
+    return dag
+
+
+def test_develop_saves_changes(tmp_dag, monkeypatch):
+    def mock_jupyter_notebook(path, app, args):
+        nb = jupytext.reads('2 + 2', fmt='py')
+        nbformat.write(nb, path)
 
     monkeypatch.setattr(notebook, '_open_jupyter_notebook',
                         mock_jupyter_notebook)
     monkeypatch.setattr(notebook, '_save', lambda: True)
 
-    t.develop()
+    tmp_dag['nb'].develop()
+    path = str(tmp_dag['nb'].source.loc)
 
-    assert Path(p).read_text().strip() == '2 + 2'
+    assert Path(path).read_text().strip() == '2 + 2'
+
+
+@pytest.mark.parametrize('app', ['notebook', 'lab'])
+def test_develop_with_custom_args(app, tmp_dag, monkeypatch):
+    mock = Mock()
+
+    monkeypatch.setattr(notebook.subprocess, 'call', mock)
+    monkeypatch.setattr(notebook, '_save', lambda: True)
+
+    tmp_dag['nb'].develop(app=app, args='--port=8888; rm file')
+
+    # make sure params are quoted to prevent code injection
+    mock.assert_called_once_with([
+        'jupyter', app, 'some_notebook-tmp.ipynb', '"--port=8888;"', '"rm"',
+        '"file"'
+    ])
+
+
+def test_develop_unknown_app(tmp_dag):
+    with pytest.raises(ValueError) as excinfo:
+        tmp_dag['nb'].develop(app='unknown')
+
+    assert '"app" must be one of' in str(excinfo.value)
 
 
 def test_develop_workflow_with_hot_reload(tmp_directory, monkeypatch):
@@ -284,7 +311,7 @@ def test_develop_workflow_with_hot_reload(tmp_directory, monkeypatch):
                        params={'var': 1},
                        name='nb')
 
-    def mock_jupyter_notebook(path, extra_args=None):
+    def mock_jupyter_notebook(path, app, args):
         nb = jupytext.reads('2 + 2', fmt='py')
         nbformat.write(nb, path)
 
@@ -374,29 +401,12 @@ def test_hot_reload(tmp_directory):
     ['pdb', 'pdb.run'],
     ['pm', None],
 ])
-def test_debug(monkeypatch, kind, to_patch, tmp_directory):
-    dag = DAG()
-
-    code = """
-# + tags=["parameters"]
-1 + 1
-    """
-
-    t = NotebookRunner(code,
-                       product=File(Path(tmp_directory, 'out.ipynb')),
-                       dag=dag,
-                       kernelspec_name='python3',
-                       params={'var': 1},
-                       ext_in='py',
-                       name='nb')
-
-    dag.render()
-
+def test_debug(monkeypatch, kind, to_patch, tmp_dag):
     if to_patch:
         mock = Mock()
         monkeypatch.setattr(to_patch, mock)
 
-    t.debug(kind=kind)
+    tmp_dag['nb'].debug(kind=kind)
 
     if to_patch:
         mock.assert_called_once()
