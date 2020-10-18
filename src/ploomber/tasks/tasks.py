@@ -4,8 +4,12 @@ Task implementations
 A Task is a unit of work that produces a persistent change (Product)
 such as a bash or a SQL script
 """
+import shlex
 import subprocess
 import pdb
+
+from IPython.terminal.debugger import TerminalPdb, Pdb
+
 from ploomber.tasks.Task import Task
 from ploomber.sources import (PythonCallableSource, GenericSource, EmptySource)
 from ploomber.clients import ShellClient
@@ -86,7 +90,30 @@ class PythonCallable(Task):
             else:
                 self._serializer(out, params['product'])
 
-    def develop(self):
+    def develop(self, app='notebook', args=None):
+        """Edit function interactively using Jupyter
+
+        Parameters
+        ----------
+        app : str, {'notebook', 'lab'}, default='notebook'
+            Which jupyter application to use
+
+        args : str
+            Extra args passed to the selected jupyter application
+        """
+        apps = {'notebook', 'lab'}
+
+        if app not in apps:
+            raise ValueError('"app" must be one of {}, got: "{}"'.format(
+                apps, app))
+
+        if self.exec_status == TaskStatus.WaitingRender:
+            raise TaskBuildError(
+                'Error in task "{}". '
+                'Cannot call task.develop() on a task that has '
+                'not been '
+                'rendered, call DAG.render() first'.format(self.name))
+
         # TODO: Params should implement an option to call to_json_serializable
         # on product to avoid repetition I'm using this same code in notebook
         # runner. Also raise error if any of the params is not
@@ -95,10 +122,12 @@ class PythonCallable(Task):
         params = self.params.to_json_serializable()
         params['product'] = params['product'].to_json_serializable()
 
+        args = [f'"{token}"' for token in shlex.split(args or '')]
+
         with CallableInteractiveDeveloper(self.source.primitive,
                                           params) as tmp:
             try:
-                subprocess.call(['jupyter', 'notebook', tmp])
+                subprocess.call(['jupyter', app, tmp] + args)
             except KeyboardInterrupt:
                 print('Jupyter notebook server closed...')
 
@@ -115,17 +144,16 @@ class PythonCallable(Task):
         opts = {'ipdb', 'pdb'}
 
         if kind not in opts:
-            raise ValueError('kind must be one of {}'.format(opts))
+            raise ValueError('"kind" must be one of {}, got: "{}"'.format(
+                opts, kind))
 
         if self.exec_status == TaskStatus.WaitingRender:
             raise TaskBuildError('Error in task "{}". '
-                                 'Cannot debug task that has not been '
+                                 'Cannot call task.debug() on a task that has '
+                                 'not been '
                                  'rendered, call DAG.render() first'.format(
                                      self.name))
-
         if kind == 'ipdb':
-            from IPython.terminal.debugger import TerminalPdb, Pdb
-
             try:
                 # this seems to only work in a Terminal
                 ipdb = TerminalPdb()

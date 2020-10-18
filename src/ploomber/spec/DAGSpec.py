@@ -10,7 +10,6 @@ meta:
 All other sections should represent valid DAG properties.
 """
 import os
-import sys
 import yaml
 import logging
 from pathlib import Path
