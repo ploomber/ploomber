@@ -196,9 +196,6 @@ def test_develop_spec_with_local_functions(task_name,
     Check we can develop functions defined locally, the sample project includes
     relative imports, which should work when generating the temporary notebook
     """
-    # from IPython import embed
-    # embed()
-
     dag = DAGSpec('pipeline.yaml').to_dag()
     dag.render()
 
