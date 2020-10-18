@@ -146,6 +146,8 @@ setup(
         'sqlalchemy',
         # for cli
         'click',
+        # for ploomber interact and {PythonCallable, NotebookRunner}.debug()
+        'ipython',
     ] + NB,
     extras_require={
         'all': OPTIONAL,
