@@ -55,9 +55,16 @@ def test_find_signature_last_line(fn, start):
     'multiple_lines_signature',
     'this_is_a_function_with_a_very_long_name_with_forces_us_to_split_params'
 ])
-def test_editing_function(fn_name, tmp_file, backup_test_pkg):
+@pytest.mark.parametrize('switch_indent', [True, False])
+def test_editing_function(fn_name, switch_indent, tmp_file, backup_test_pkg):
+    if switch_indent:
+        p = Path(functions.__file__)
+        p.write_text(p.read_text().replace('    ', '\t'))
+        functions_ = importlib.reload(functions)
+    else:
+        functions_ = functions
 
-    with CallableInteractiveDeveloper(getattr(functions, fn_name), {
+    with CallableInteractiveDeveloper(getattr(functions_, fn_name), {
             'upstream': None,
             'product': None
     }) as tmp_nb:
@@ -68,7 +75,6 @@ def test_editing_function(fn_name, tmp_file, backup_test_pkg):
 
     reloaded = importlib.reload(functions)
     getattr(reloaded, fn_name)(None, None, tmp_file)
-    print(Path(functions.__file__).read_text())
     assert Path(tmp_file).read_text() == '2'
     assert not Path(tmp_nb).exists()
 

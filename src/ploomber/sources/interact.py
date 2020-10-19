@@ -298,9 +298,11 @@ __package__ = "{}"
                                 metadata=dict(tags=['imports-new'])))
 
     for statement in body_elements:
-        # parso incluses new line tokens, remove any trailing whitespace
         lines = [
-            line[4:] for line in statement.get_code().rstrip().split('\n')
+            # remove indentation
+            line.lstrip() for line
+            # parso includes new line tokens, remove any trailing whitespace
+            in statement.get_code().rstrip().split('\n')
         ]
         cell = nb_format.new_code_cell(source='\n'.join(lines))
         nb.cells.append(cell)
