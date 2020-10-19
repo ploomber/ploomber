@@ -196,8 +196,8 @@ dags[1].status()
 # Pipeline plots
 # --------------
 
-dags[0].plot(output='matplotlib')
-dags[1].plot(output='matplotlib')
+dags[0].plot()
+dags[1].plot()
 
 ###############################################################################
 # Pipelines build

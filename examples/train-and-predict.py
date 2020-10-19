@@ -56,7 +56,8 @@ def _fit(upstream, product):
     X = df.drop('target', axis='columns')
     y = df.target
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y,
+    X_train, X_test, y_train, y_test = train_test_split(X,
+                                                        y,
                                                         test_size=0.33,
                                                         random_state=42)
 
@@ -75,8 +76,10 @@ def _new_obs(product, values):
     """Save an observation as a data frame
     """
     df = pd.DataFrame([values + [None]])
-    df.columns = ['sepal length (cm)', 'sepal width (cm)',
-                  'petal length (cm)', 'petal width (cm)', 'target']
+    df.columns = [
+        'sepal length (cm)', 'sepal width (cm)', 'petal length (cm)',
+        'petal width (cm)', 'target'
+    ]
     df.to_parquet(str(product))
 
 
@@ -94,9 +97,13 @@ def _pred(product, upstream, model):
 def add_fts(dag):
     """Modify a pipeline with a "get" task to generate features and join them
     """
-    fts = PythonCallable(_features, File('features.parquet'), dag,
+    fts = PythonCallable(_features,
+                         File('features.parquet'),
+                         dag,
                          name='features')
-    join = PythonCallable(_join_features, File('join.parquet'), dag,
+    join = PythonCallable(_join_features,
+                          File('join.parquet'),
+                          dag,
                           name='join')
 
     dag['get'] >> fts
@@ -108,25 +115,21 @@ def add_fts(dag):
 
 tmp_dir = Path(tempfile.mkdtemp())
 
-
 # build training pipeline
 dag_fit = DAG()
-get = PythonCallable(_get,
-                     File(tmp_dir / 'data.parquet'),
-                     dag_fit,
-                     name='get')
+get = PythonCallable(_get, File(tmp_dir / 'data.parquet'), dag_fit, name='get')
 dag_fit = add_fts(dag_fit)
-fit = PythonCallable(_fit, {'report': File(tmp_dir / 'report.txt'),
-                            'model': File(tmp_dir / 'model.joblib')},
+fit = PythonCallable(_fit, {
+    'report': File(tmp_dir / 'report.txt'),
+    'model': File(tmp_dir / 'model.joblib')
+},
                      dag_fit,
                      name='fit')
 dag_fit['join'] >> fit
 
-
 ###############################################################################
 # Fit pipeline plot
-dag_fit.plot(output='matplotlib')
-
+dag_fit.plot()
 
 dag_fit.build()
 
@@ -139,7 +142,9 @@ get = PythonCallable(_new_obs,
                      params={'values': [1, 0, 10, 2]})
 
 dag_pred = add_fts(dag_pred)
-pred = PythonCallable(_pred, File(tmp_dir / 'pred.csv'), dag_pred,
+pred = PythonCallable(_pred,
+                      File(tmp_dir / 'pred.csv'),
+                      dag_pred,
                       name='pred',
                       params={'model': tmp_dir / 'model.joblib'})
 
@@ -147,7 +152,7 @@ dag_pred['join'] >> pred
 
 ###############################################################################
 # Prediction pipeline plot
-dag_pred.plot(output='matplotlib')
+dag_pred.plot()
 
 dag_pred.build()
 
