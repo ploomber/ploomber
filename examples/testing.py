@@ -29,7 +29,6 @@ engine = create_engine(uri)
 df = pd.DataFrame({'a': [1, 2, 3, 4, 5]})
 df.to_sql('example', engine)
 
-
 ###############################################################################
 # Pipeline declaration
 # ---------------------
@@ -70,12 +69,10 @@ task_add_one.on_finish = check_a_has_no_nas
 
 task_dump >> task_add_one
 
-
 ###############################################################################
 # Pipeline plot
 # -------------
-dag.plot(output='matplotlib')
-
+dag.plot()
 
 ###############################################################################
 # Pipeline build

@@ -24,15 +24,14 @@ from ploomber.tasks import PythonCallable, SQLUpload, SQLScript
 from ploomber.products import SQLiteRelation, File
 from ploomber.clients import SQLAlchemyClient
 
-
 tmp_dir = Path(tempfile.mkdtemp())
 db_uri = 'sqlite:///' + str(tmp_dir / 'my_db.db')
 client = SQLAlchemyClient(db_uri)
 
-
 ###############################################################################
 # Pipeline declaration
 # --------------------
+
 
 def _get_data(product):
     wine = datasets.load_wine()
@@ -57,7 +56,6 @@ upload = SQLUpload('{{upstream["get"]}}',
                    dag=dag,
                    name='upload')
 
-
 ###############################################################################
 # In a real project, your SQL scripts should be separate files, we include
 # this here to make this example standalone. SQL is a language that people
@@ -79,7 +77,6 @@ clean = SQLScript(_clean,
                   dag=dag,
                   name='clean')
 
-
 get_data >> upload >> clean
 
 ###############################################################################
@@ -88,12 +85,11 @@ get_data >> upload >> clean
 
 dag.build()
 
-
 ###############################################################################
 # Pipeline plot
 # -------------
 
-dag.plot(output='matplotlib')
+dag.plot()
 
 ###############################################################################
 # Generate report
@@ -105,7 +101,6 @@ dag.plot(output='matplotlib')
 # pipeline visual overview.
 
 html = dag.to_markup()
-
 
 ###############################################################################
 # Report

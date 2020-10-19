@@ -50,8 +50,7 @@ path_to_db = tmp_dir / 'my_db.db'
 ###############################################################################
 # first generate some sample data, one daily observation from 2010 to 2020
 dates = pd.date_range('2010', '2020', freq='D')
-df = pd.DataFrame({'date': dates,
-                   'x': np.random.rand(len(dates))})
+df = pd.DataFrame({'date': dates, 'x': np.random.rand(len(dates))})
 
 conn = sqlite3.connect(str(path_to_db))
 df.to_sql('data', conn)
@@ -77,7 +76,10 @@ def make_task(date_start, date_end, path, dag):
                    product=File(Path(path / name)),
                    dag=dag,
                    name='dump_' + name,
-                   params={'date_start': date_start, 'date_end': date_end},
+                   params={
+                       'date_start': date_start,
+                       'date_end': date_end
+                   },
                    chunksize=None)
 
 
@@ -85,15 +87,13 @@ def make_task(date_start, date_end, path, dag):
 dates = [(date(2010, 1, 1) + relativedelta(years=i),
           date(2010, 1, 1) + relativedelta(years=i + 1)) for i in range(10)]
 
-
 # run the task factory for each date pair
 for date_start, date_end in dates:
     make_task(date_start, date_end, tmp_dir, dag)
 
-
 ###############################################################################
 # plot
-dag.plot(output='matplotlib')
+dag.plot()
 
 ###############################################################################
 # Execute pipeline

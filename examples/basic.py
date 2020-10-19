@@ -26,7 +26,6 @@ engine = create_engine(uri)
 df = pd.DataFrame({'a': [1, 2, 3, 4, 5]})
 df.to_sql('example', engine)
 
-
 ###############################################################################
 # There are three core concepts in ``ploomber``: :class:`Tasks <ploomber.tasks>`,
 # :class:`Products <ploomber.products>` and :class:`DAGs <ploomber.DAG>`. Tasks
@@ -64,13 +63,11 @@ task_add_one = PythonCallable(_add_one,
 # declare how tasks relate to each other: first dump then add one
 task_dump >> task_add_one
 
-
 # plot the workflow, pending tasks are shown in red
-dag.plot(output='matplotlib')
+dag.plot()
 
 # run our sample pipeline
 dag.build()
-
 
 ###############################################################################
 # Each time the DAG is run it will save the current timestamp and the
@@ -86,10 +83,8 @@ dag.build()
 # source code, if the pipeline is run again, it will skip tasks that are not
 # affected by the changes.
 
-
 # the pipeline is up-to-date, no need to run again
 dag.build()
-
 
 ###############################################################################
 # Inspecting a pipeline
@@ -100,12 +95,10 @@ dag.build()
 # DAG object serves as the primary reference for anyone seeking to understand
 # the pipeline.
 
-
 # Making a pipeline transparent helps others quickly understand it without
 # going through the code details and eases debugging for developers.
 # status returns a summary of each task status
 dag.status()
-
 
 ###############################################################################
 # Inspecting the `DAG` object
@@ -120,7 +113,6 @@ dag.status()
 # run your task
 dag['add_one'].build(force=True)
 
-
 ###############################################################################
 # avoid hardcoding paths to files by loading them directly
 # from the DAG, casting a Task to a str, will cause them
@@ -130,11 +122,9 @@ dag['add_one'].build(force=True)
 # products makes sure you don't have to hardcode paths to files and that
 # given your pipeline definition, you always read from the right place
 
-
 # explore results - reading the file this way guarantees you are using
 # the right file
 df = pd.read_csv(str(dag['add_one']))
 df
 
 ""
-

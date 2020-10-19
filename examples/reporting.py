@@ -36,12 +36,12 @@ def _clean_data(upstream, product):
     clean = df[df.AGE > 50]
     clean.to_parquet(str(product))
 
+
 ###############################################################################
 # In a real project, you want so separate your code in files and import them
 # to declare your pipeline. For this example we declare it here.
 # NotebookRunner supports any input format that jupytext supports and any
 # output format that nbconverter does.
-
 
 report = """
 # +
@@ -92,7 +92,6 @@ clean_data = PythonCallable(_clean_data,
                             dag=dag,
                             name='clean')
 
-
 report = NotebookRunner(report,
                         product=File(tmp_dir / 'report.html'),
                         dag=dag,
@@ -100,9 +99,7 @@ report = NotebookRunner(report,
                         kernelspec_name='python3',
                         ext_in='py')
 
-
 get_data >> clean_data >> report
-
 
 dag.build()
 
@@ -110,7 +107,7 @@ dag.build()
 # Pipeline plot
 # -------------
 
-dag.plot(output='matplotlib')
+dag.plot()
 
 ###############################################################################
 # Output

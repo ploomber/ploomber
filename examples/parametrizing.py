@@ -19,7 +19,6 @@ from ploomber.tasks import PythonCallable, SQLUpload, SQLScript
 from ploomber.products import File, SQLiteRelation
 from ploomber.clients import SQLAlchemyClient
 
-
 tmp_dir = Path(tempfile.mkdtemp())
 path_to_db = 'sqlite:///' + str(tmp_dir / 'my_db.db')
 print('temporary dir: ', tmp_dir)
@@ -37,8 +36,7 @@ def get_data(product, filename):
     """
     url = ('http://archive.ics.uci.edu/ml/machine-learning-databases/'
            'wine-quality/' + filename)
-    df = pd.read_csv(url,
-                     sep=';', index_col=False)
+    df = pd.read_csv(url, sep=';', index_col=False)
     df.to_parquet(str(product))
 
 
@@ -70,14 +68,13 @@ white_task = PythonCallable(get_data,
 
 concat_task = PythonCallable(concat_data,
                              product=File(tmp_dir / 'all.parquet'),
-                             dag=dag, name='all')
-
+                             dag=dag,
+                             name='all')
 
 upload_task = SQLUpload(tmp_dir / 'all.parquet',
                         product=SQLiteRelation((None, 'data', 'table')),
                         dag=dag,
                         name='upload')
-
 
 ###############################################################################
 # you can use jinja2 to parametrize SQL, {{upstream}} and {{product}}
@@ -96,7 +93,6 @@ features = SQLScript(sql,
                      dag=dag,
                      name='features')
 
-
 red_task >> concat_task
 white_task >> concat_task
 
@@ -111,6 +107,6 @@ dag.render()
 # print source code for task "features"
 print(dag['features'].source)
 
-# dag.plot(output='matplotlib')
+# dag.plot()
 
 dag.build()

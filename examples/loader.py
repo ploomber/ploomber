@@ -22,7 +22,6 @@ from ploomber.tasks import SQLTransfer, SQLScript
 from ploomber.products import SQLiteRelation
 from ploomber import DAG, SourceLoader
 
-
 ###############################################################################
 # We first setup our sample environment, a sqlite database with some data
 
@@ -47,8 +46,7 @@ Path(tmp_dir, 'macros.sql').write_text("""
 {%- endmacro %}
 """)
 
-_ = (Path(tmp_dir, 'subset_create.sql')
-     .write_text("""
+_ = (Path(tmp_dir, 'subset_create.sql').write_text("""
 {% from 'macros.sql' import my_macro %}
 
 {{my_macro()}}
@@ -87,10 +85,9 @@ dag.render()
 
 print(dag['subset'].source)
 
-
 ###############################################################################
 # Plot and execute pipeline:
 
-dag.plot(output='matplotlib')
+dag.plot()
 
 dag.build()
