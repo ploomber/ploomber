@@ -251,12 +251,12 @@ def tmp_dag(tmp_directory):
 
 
 def test_develop_saves_changes(tmp_dag, monkeypatch):
-    def mock_jupyter_notebook(path, app, args):
+    def mock_jupyter_notebook(args, check):
         nb = jupytext.reads('2 + 2', fmt='py')
-        nbformat.write(nb, path)
+        # args: "jupyter" {app} {path} {other args, ...}
+        nbformat.write(nb, args[2])
 
-    monkeypatch.setattr(notebook, '_open_jupyter_notebook',
-                        mock_jupyter_notebook)
+    monkeypatch.setattr(notebook.subprocess, 'run', mock_jupyter_notebook)
     monkeypatch.setattr(notebook, '_save', lambda: True)
 
     tmp_dag['nb'].develop()
@@ -269,16 +269,17 @@ def test_develop_saves_changes(tmp_dag, monkeypatch):
 def test_develop_with_custom_args(app, tmp_dag, monkeypatch):
     mock = Mock()
 
-    monkeypatch.setattr(notebook.subprocess, 'call', mock)
+    monkeypatch.setattr(notebook.subprocess, 'run', mock)
     monkeypatch.setattr(notebook, '_save', lambda: True)
 
-    tmp_dag['nb'].develop(app=app, args='--port=8888; rm file')
+    tmp_dag['nb'].develop(app=app, args='--port=8888 --no-browser')
 
     # make sure params are quoted to prevent code injection
     mock.assert_called_once_with([
-        'jupyter', app, 'some_notebook-tmp.ipynb', '"--port=8888;"', '"rm"',
-        '"file"'
-    ])
+        'jupyter', app, 'some_notebook-tmp.ipynb', '--port=8888',
+        '--no-browser'
+    ],
+                                 check=True)
 
 
 def test_develop_unknown_app(tmp_dag):
@@ -311,14 +312,14 @@ def test_develop_workflow_with_hot_reload(tmp_directory, monkeypatch):
                        params={'var': 1},
                        name='nb')
 
-    def mock_jupyter_notebook(path, app, args):
+    def mock_jupyter_notebook(args, check):
         nb = jupytext.reads('2 + 2', fmt='py')
-        nbformat.write(nb, path)
+        # args: "jupyter" {app} {path} {others, ...}
+        nbformat.write(nb, args[2])
 
     dag.render()
 
-    monkeypatch.setattr(notebook, '_open_jupyter_notebook',
-                        mock_jupyter_notebook)
+    monkeypatch.setattr(notebook.subprocess, 'run', mock_jupyter_notebook)
     monkeypatch.setattr(notebook, '_save', lambda: True)
 
     t.develop()

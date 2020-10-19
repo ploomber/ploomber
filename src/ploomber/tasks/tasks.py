@@ -122,14 +122,13 @@ class PythonCallable(Task):
         params = self.params.to_json_serializable()
         params['product'] = params['product'].to_json_serializable()
 
-        args = [f'"{token}"' for token in shlex.split(args or '')]
-
         with CallableInteractiveDeveloper(self.source.primitive,
                                           params) as tmp:
             try:
-                subprocess.call(['jupyter', app, tmp] + args)
+                subprocess.run(['jupyter', app, tmp] + shlex.split(args or ''),
+                               check=True)
             except KeyboardInterrupt:
-                print('Jupyter notebook server closed...')
+                print(f'Jupyter {app} application closed...')
 
     def debug(self, kind='ipdb'):
         """

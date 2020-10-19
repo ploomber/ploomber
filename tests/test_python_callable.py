@@ -214,7 +214,7 @@ def test_uses_override_default_serializer_and_deserializer():
 )
 def test_develop(dag, task_name, monkeypatch):
     mock = Mock()
-    monkeypatch.setattr(tasks.tasks.subprocess, 'call', mock)
+    monkeypatch.setattr(tasks.tasks.subprocess, 'run', mock)
     dag.render()
     dag[task_name].develop()
 
@@ -225,14 +225,15 @@ def test_develop(dag, task_name, monkeypatch):
 @pytest.mark.parametrize('app', ['notebook', 'lab'])
 def test_develop_with_custom_args(app, dag, monkeypatch):
     mock = Mock()
-    monkeypatch.setattr(tasks.tasks.subprocess, 'call', mock)
+    monkeypatch.setattr(tasks.tasks.subprocess, 'run', mock)
     dag.render()
-    dag['without_dependencies'].develop(app=app, args='--port=8081; rm file')
+    dag['without_dependencies'].develop(app=app,
+                                        args='--port=8081 --no-browser')
 
     mock.assert_called_once()
     assert mock.call_args[0][0][:2] == ['jupyter', app]
     # make sure args are quoted
-    assert mock.call_args[0][0][3:] == ['"--port=8081;"', '"rm"', '"file"']
+    assert mock.call_args[0][0][3:] == ['--port=8081', '--no-browser']
 
 
 def test_develop_unknown_app(dag):

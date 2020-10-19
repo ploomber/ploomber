@@ -322,7 +322,12 @@ class NotebookRunner(Task):
         tmp.write_text(content)
 
         # open notebook with injected debugging cell
-        _open_jupyter_notebook(str(tmp), app=app, args=args)
+        try:
+            subprocess.run(['jupyter', app, str(tmp)] +
+                           shlex.split(args or ''),
+                           check=True)
+        except KeyboardInterrupt:
+            print(f'Jupyter {app} application closed...')
 
         # read tmp file again, to see if the user made any changes
         content_new = Path(tmp).read_text()
@@ -456,24 +461,6 @@ chdir("{}")
     nb.cells.insert(0, cell)
 
     return nb
-
-
-def _open_jupyter_notebook(path, app, args):
-    """
-    Open notebook using the jupyter notebook application
-
-    Parameters
-    ----------
-    args : str
-        List of extra arguments, executed command becomes:
-        "jupyter notebook {path} {args}"
-    """
-    args = [f'"{token}"' for token in shlex.split(args or '')]
-
-    try:
-        subprocess.call(['jupyter', app, path] + args)
-    except KeyboardInterrupt:
-        print('Jupyter notebook server closed...')
 
 
 def _save():
