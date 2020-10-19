@@ -67,8 +67,6 @@ TESTING = [
     # don't add it as such because it's gonna break installation for most
     # setups, since we don't expect users to have graphviz installed
     'pygraphviz',
-    # matplotlib only needed for dag.plot(output='matplotlib'),
-    'matplotlib',
     # RemoteShellClient
     'paramiko',
     # Upload to S3

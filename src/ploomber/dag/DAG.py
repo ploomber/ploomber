@@ -47,11 +47,11 @@ import networkx as nx
 from tqdm.auto import tqdm
 from jinja2 import Template
 import mistune
+from IPython.display import Image
 
 from ploomber.Table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
-from ploomber.util import (image_bytes2html, isiterable, path2fig, requires,
-                           markup)
+from ploomber.util import (image_bytes2html, isiterable, requires, markup)
 from ploomber import resources
 from ploomber import executors
 from ploomber.constants import TaskStatus, DAGStatus
@@ -550,7 +550,7 @@ class DAG(collections.abc.Mapping):
         """
         sections = sections or ['plot', 'status']
 
-        if fmt not in ['html', 'md']:
+        if fmt not in {'html', 'md'}:
             raise ValueError('fmt must be html or md, got {}'.format(fmt))
 
         if 'status' in sections:
@@ -559,8 +559,9 @@ class DAG(collections.abc.Mapping):
             status = False
 
         if 'plot' in sections:
-            path_to_plot = Path(self.plot())
-            plot = image_bytes2html(path_to_plot.read_bytes())
+            _, path_to_plot = tempfile.mkstemp(suffix='.png')
+            self.plot(output=path_to_plot)
+            plot = image_bytes2html(Path(path_to_plot).read_bytes())
         else:
             plot = False
 
@@ -591,13 +592,13 @@ class DAG(collections.abc.Mapping):
             'dependency of "pygraphviz", the easiest way to install both is '
             'through conda "conda install pygraphviz", for more options see: '
             'https://graphviz.org/'))
-    def plot(self, output='tmp'):
+    def plot(self, output='embed'):
         """Plot the DAG
         """
-        if output in {'tmp', 'matplotlib'}:
-            path = tempfile.mktemp(suffix='.png')
+        if output == 'embed':
+            _, path = tempfile.mkstemp(suffix='.png')
         else:
-            path = output
+            path = str(output)
 
         # attributes docs:
         # https://graphviz.gitlab.io/_pages/doc/info/attrs.html
@@ -617,10 +618,12 @@ class DAG(collections.abc.Mapping):
         G_ = nx.nx_agraph.to_agraph(G)
         G_.draw(path, prog='dot', args='-Grankdir=LR')
 
-        if output == 'matplotlib':
-            return path2fig(path)
-        else:
-            return path
+        image = Image(filename=path)
+
+        if output == 'embed':
+            Path(path).unlink()
+
+        return image
 
     def _add_task(self, task):
         """Adds a task to the DAG

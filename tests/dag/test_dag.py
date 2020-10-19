@@ -6,9 +6,11 @@ from unittest.mock import Mock, MagicMock
 
 import pytest
 import tqdm.auto
+from IPython import display
 
 from tests_util import executors_w_exception_logging
 from ploomber import DAG
+from ploomber import dag as dag_module
 from ploomber.tasks import ShellScript, PythonCallable, SQLDump
 from ploomber.products import File
 from ploomber.constants import TaskStatus, DAGStatus
@@ -19,8 +21,6 @@ from ploomber.executors import Serial, Parallel, serial
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
 # is done by the executor
-# TODO: test dag.plot(), create a function that returns an object and test
-# such function, to avoid comparing images
 
 # parametrize tests over these executors
 _executors = [
@@ -87,20 +87,57 @@ def failing(upstream, product):
     raise FailedTask('Bad things happened')
 
 
-# can test this since this uses dag.plot(), which needs dot for plotting
-# def test_to_html():
-#     def fn1(product):
-#         pass
+@pytest.fixture
+def dag():
+    def fn1(product):
+        pass
 
-#     def fn2(product):
-#         pass
+    def fn2(upstream, product):
+        pass
 
-#     dag = DAG()
-#     t1 = PythonCallable(fn1, File('file1.txt'), dag)
-#     t2 = PythonCallable(fn2, File('file2.txt'), dag)
-#     t1 >> t2
+    dag = DAG()
+    t1 = PythonCallable(fn1, File('file1.txt'), dag)
+    t2 = PythonCallable(fn2, File('file2.txt'), dag)
+    t1 >> t2
 
-#     dag.to_html('a.html')
+    return dag
+
+
+def test_plot_embed(dag, monkeypatch):
+
+    obj = object()
+    mock = Mock(wraps=display.Image, return_value=obj)
+    monkeypatch.setattr(dag_module.DAG, 'Image', mock)
+
+    img = dag.plot()
+
+    kwargs = mock.call_args[1]
+    mock.assert_called_once()
+    assert set(kwargs) == {'filename'}
+    # file should not exist, it's just temporary
+    assert not Path(kwargs['filename']).exists()
+    assert img is obj
+
+
+def test_plot_path(dag, tmp_directory, monkeypatch):
+
+    obj = object()
+    mock = Mock(wraps=display.Image, return_value=obj)
+    monkeypatch.setattr(dag_module.DAG, 'Image', mock)
+
+    img = dag.plot(output='pipeline.png')
+
+    kwargs = mock.call_args[1]
+    mock.assert_called_once()
+    assert kwargs == {'filename': 'pipeline.png'}
+    assert Path('pipeline.png').exists()
+    assert img is obj
+
+
+@pytest.mark.parametrize('fmt', ['html', 'md'])
+@pytest.mark.parametrize('sections', [None, 'plot', 'status', 'source'])
+def test_to_markup(fmt, sections, dag):
+    dag.to_markup(fmt=fmt, sections=sections)
 
 
 def test_count_in_progress_bar(monkeypatch, tmp_directory):

@@ -60,26 +60,6 @@ def requires(pkgs, name=None, extra_msg=None):
     return decorator
 
 
-@requires(['matplotlib'])
-def path2fig(path_to_image, dpi=50):
-    # FIXME: having this import at the top causes trouble with the
-    # multiprocessing library, moving it here solves the problem but we
-    # have to find a better solution.
-    # more info: https://stackoverflow.com/q/16254191/709975
-    import matplotlib.pyplot as plt
-
-    data = plt.imread(path_to_image)
-    height, width, _ = data.shape
-    fig = plt.figure()
-    fig.set_size_inches((width / dpi, height / dpi))
-    ax = plt.Axes(fig, [0, 0, 1, 1])
-    ax.set_axis_off()
-    fig.add_axes(ax)
-    ax.imshow(data)
-
-    return fig
-
-
 def safe_remove(path):
     if path.exists():
         if path.is_file():
