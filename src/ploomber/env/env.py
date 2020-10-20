@@ -3,8 +3,8 @@ Environment management
 """
 from ploomber.env.EnvDict import EnvDict
 
-
 # TODO: add defaults functionality if defined in {module}/env.defaults.yaml
+
 
 class Env:
     """Return the current environment
@@ -47,6 +47,7 @@ class Env:
     using the @with_env and @load_env decorators
     """
     __instance = None
+
     # just a variable to display in error messages so users know where
     # the env was initialized if they try to create a new one
 
@@ -122,7 +123,7 @@ class Env:
         return str(self._data)
 
     def __repr__(self):
-        s = 'Env({})'.format(str(self._data)[:20])
+        s = 'Env({})'.format(str(self._data))
 
         if self._fn_name:
             s += ' (initialized in function: %s)' % self._fn_name
