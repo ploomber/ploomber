@@ -119,10 +119,12 @@ def test_read_file(nb_str, ext, expected, tmp_directory):
     lang2kernel = {'python': 'python3', 'r': 'ir'}
     expected_kernel = lang2kernel[expected]
 
-    assert len(source._nb_obj.cells) == 2
+    assert len(source._nb_obj_unrendered.cells) == 2
 
-    assert source._nb_obj.metadata.kernelspec.language == expected_lang
-    assert source._nb_obj.metadata.kernelspec.name == expected_kernel
+    assert (source._nb_obj_unrendered.metadata.kernelspec.language ==
+            expected_lang)
+    assert (
+        source._nb_obj_unrendered.metadata.kernelspec.name == expected_kernel)
 
 
 # trying out a few variants, looks like the official one is to have the comma
@@ -141,15 +143,15 @@ def test_rmd(code, tmp_directory):
     path = Path('notebook.Rmd')
     path.write_text(code)
     source = NotebookSource(path)
-    assert len(source._nb_obj.cells) == 2
+    assert len(source._nb_obj_unrendered.cells) == 2
 
 
 def test_kernelspec_overrides_nb_kernel_info():
     source = NotebookSource(new_nb(fmt='ipynb'),
                             ext_in='ipynb',
                             kernelspec_name='ir')
-    assert source._nb_obj.metadata.kernelspec.name == 'ir'
-    assert source._nb_obj.metadata.kernelspec.language == 'R'
+    assert source._nb_obj_unrendered.metadata.kernelspec.name == 'ir'
+    assert source._nb_obj_unrendered.metadata.kernelspec.language == 'R'
 
 
 def test_error_if_kernelspec_name_is_invalid():
@@ -180,7 +182,8 @@ def test_error_missing_params_cell_shows_path_if_available(tmp_directory):
 
 def test_nb_str_contains_kernel_info():
     source = NotebookSource(new_nb(fmt='ipynb'), ext_in='ipynb')
-    nb = nbformat.reads(source._nb_repr, as_version=nbformat.NO_CONVERT)
+    nb = nbformat.reads(source._nb_str_unrendered,
+                        as_version=nbformat.NO_CONVERT)
     assert (set(
         nb.metadata.kernelspec.keys()) == {'display_name', 'language', 'name'})
 
@@ -319,7 +322,7 @@ def test_injects_parameters_on_render(nb_str, ext):
     })
     s.render(params)
 
-    nb = nbformat.reads(s.rendered_nb_str, as_version=nbformat.NO_CONVERT)
+    nb = nbformat.reads(s.nb_str_rendered, as_version=nbformat.NO_CONVERT)
 
     # cell 0: parameters
     # cell 1: injected-parameters
@@ -407,12 +410,20 @@ def test_extract_upstream_from_parameters(code, ext, expected_up,
     assert source.extract_product() == expected_prod
 
 
-def test_and_repr_from_str():
+def test_repr_from_str():
     source = NotebookSource(notebook_ab, ext_in='py')
     assert repr(source) == 'NotebookSource(loaded from string)'
 
 
-def test_and_repr_from_path(tmp_directory):
+def test_str():
+    source = NotebookSource(notebook_ab, ext_in='py')
+    source.render(Params._from_dict({'product':
+                                     File('path/to/file/data.csv')}))
+    assert str(source) == ('\na = 1\nb = 2\nproduct = None\n# Parameters'
+                           '\nproduct = "path/to/file/data.csv"\n\na + b')
+
+
+def test_repr_from_path(tmp_directory):
     path = Path(tmp_directory, 'nb.py')
     Path('nb.py').write_text(notebook_ab)
     source = NotebookSource(path)

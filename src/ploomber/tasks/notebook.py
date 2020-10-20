@@ -312,7 +312,7 @@ class NotebookRunner(Task):
             raise ValueError('Can only use develop in notebooks loaded '
                              'from files, not from str')
 
-        nb = _read_rendered_notebook(self.source.rendered_nb_str)
+        nb = _read_rendered_notebook(self.source.nb_str_rendered)
 
         name = self.source.loc.name
         suffix = self.source.loc.suffix
@@ -371,7 +371,7 @@ class NotebookRunner(Task):
         if kind not in opts:
             raise ValueError('kind must be one of {}'.format(opts))
 
-        nb = _read_rendered_notebook(self.source.rendered_nb_str)
+        nb = _read_rendered_notebook(self.source.nb_str_rendered)
         _, tmp_path = tempfile.mkstemp(suffix='.py')
         code = jupytext.writes(nb, version=nbformat.NO_CONVERT, fmt='py')
         Path(tmp_path).write_text(code)
@@ -415,7 +415,7 @@ class NotebookRunner(Task):
 
         _, tmp = tempfile.mkstemp('.ipynb')
         tmp = Path(tmp)
-        tmp.write_text(self.source.rendered_nb_str)
+        tmp.write_text(self.source.nb_str_rendered)
 
         if self.local_execution:
             self.papermill_params['cwd'] = str(self.source.loc.parent)

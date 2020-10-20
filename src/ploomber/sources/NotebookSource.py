@@ -34,7 +34,6 @@ import warnings
 import parso
 from papermill.parameterize import parameterize_notebook
 import nbformat
-import jupytext
 
 from ploomber.exceptions import RenderError, SourceInitializationError
 from ploomber.placeholders.Placeholder import Placeholder
@@ -126,13 +125,15 @@ class NotebookSource(Source):
         self._language = determine_language(self._ext_in)
 
         self._loc = None
-        self._rendered_nb_str = None
         self._params = None
-        self._nb_repr = None
-        self._nb_obj = None
+
+        self._nb_str_unrendered = None
+        self._nb_obj_unrendered = None
+        self._nb_str_rendered = None
+        self._nb_obj_rendered = None
 
         # this will raise an error if kernelspec_name is invalid
-        self._get_nb_repr()
+        self._read_nb_str_unrendered()
 
         self._post_init_validation(str(self._primitive))
 
@@ -154,9 +155,9 @@ class NotebookSource(Source):
 
         tmp_in = tempfile.mktemp('.ipynb')
         tmp_out = tempfile.mktemp('.ipynb')
-        # _get_nb_repr uses hot_reload, this ensures we always get the latest
-        # version
-        Path(tmp_in).write_text(self._get_nb_repr())
+        # _read_nb_str_unrendered uses hot_reload, this ensures we always get
+        # the latest version
+        Path(tmp_in).write_text(self._read_nb_str_unrendered())
         pm.execute_notebook(tmp_in,
                             tmp_out,
                             prepare_only=True,
@@ -164,14 +165,14 @@ class NotebookSource(Source):
 
         tmp_out = Path(tmp_out)
 
-        self._rendered_nb_str = tmp_out.read_text()
+        self._nb_str_rendered = tmp_out.read_text()
 
         Path(tmp_in).unlink()
         tmp_out.unlink()
 
         self._post_render_validation(self._params)
 
-    def _get_nb_repr(self):
+    def _read_nb_str_unrendered(self):
         """
         Returns the notebook representation (JSON string), this is the raw
         source code passed, does not contain injected parameters.
@@ -182,9 +183,9 @@ class NotebookSource(Source):
         An exception is raised if we cannot determine kernel information.
         """
         # hot_reload causes to always re-evalaute the notebook representation
-        if self._nb_repr is None or self._hot_reload:
+        if self._nb_str_unrendered is None or self._hot_reload:
             # this is the notebook node representation
-            self._nb_obj = _to_nb_obj(
+            self._nb_obj_unrendered = _to_nb_obj(
                 self.primitive,
                 ext=self._ext_in,
                 # passing the underscored version
@@ -196,10 +197,10 @@ class NotebookSource(Source):
             # get the str representation. always write from nb_obj, even if
             # this was initialized with a ipynb file, nb_obj contains
             # kernelspec info
-            self._nb_repr = nbformat.writes(self._nb_obj,
-                                            version=nbformat.NO_CONVERT)
+            self._nb_str_unrendered = nbformat.writes(
+                self._nb_obj_unrendered, version=nbformat.NO_CONVERT)
 
-        return self._nb_repr
+        return self._nb_str_unrendered
 
     def _post_init_validation(self, value):
         """
@@ -210,7 +211,8 @@ class NotebookSource(Source):
         # maybe we don't need to use pyflakes after all
         # we can also use compile. can pyflakes detect things that
         # compile cannot?
-        params_cell, _ = find_cell_with_tag(self._nb_obj, 'parameters')
+        params_cell, _ = find_cell_with_tag(self._nb_obj_unrendered,
+                                            'parameters')
 
         if params_cell is None:
             loc = ' "{}"'.format(self.loc) if self.loc else ''
@@ -226,9 +228,7 @@ class NotebookSource(Source):
             if self.language == 'python':
                 # read the notebook with the injected parameters from the tmp
                 # location
-                nb_rendered = (nbformat.reads(self._rendered_nb_str,
-                                              as_version=nbformat.NO_CONVERT))
-                check_notebook(nb_rendered,
+                check_notebook(self.nb_obj_rendered,
                                params,
                                filename=self._path or 'notebook')
             else:
@@ -242,7 +242,7 @@ class NotebookSource(Source):
         Returns notebook docstring parsed either from a triple quoted string
         in the top cell or a top markdown markdown cell
         """
-        return docstring.extract_from_nb(self._nb_obj)
+        return docstring.extract_from_nb(self._nb_obj_unrendered)
 
     @property
     def loc(self):
@@ -253,23 +253,26 @@ class NotebookSource(Source):
         return self._path.name
 
     @property
-    def rendered_nb_str(self):
-        if self._rendered_nb_str is None:
+    def nb_str_rendered(self):
+        if self._nb_str_rendered is None:
             raise RuntimeError('Attempted to get location for an unrendered '
                                'notebook, render it first')
 
         if self._hot_reload:
             self._render()
 
-        return self._rendered_nb_str
+        return self._nb_str_rendered
+
+    @property
+    def nb_obj_rendered(self):
+        if self._nb_obj_rendered is None:
+            self._nb_obj_rendered = (nbformat.reads(
+                self.nb_str_rendered, as_version=nbformat.NO_CONVERT))
+
+        return self._nb_obj_rendered
 
     def __str__(self):
-        # NOTE: the value returned here is used to determine code differences,
-        # if this is initialized with a ipynb file, any change in the structure
-        # will trigger execution, we could make this return a text-only version
-        # depending on what we want we could either just concatenate the code
-        # cells or use jupytext to keep metadata
-        return self.primitive
+        return '\n'.join([c.source for c in self.nb_obj_rendered.cells])
 
     def __repr__(self):
         if self.loc is not None:
@@ -297,11 +300,12 @@ class NotebookSource(Source):
         can be None if we could not determine the language
         """
         if self._language is None:
-            self._get_nb_repr()
+            self._read_nb_str_unrendered()
 
             try:
                 # make sure you return "r" instead of "R"
-                return self._nb_obj.metadata.kernelspec.language.lower()
+                return (self._nb_obj_unrendered.metadata.kernelspec.language.
+                        lower())
             except AttributeError:
                 return None
 
@@ -309,16 +313,14 @@ class NotebookSource(Source):
             return self._language
 
     def _get_parameters_cell(self):
-        self._get_nb_repr()
-        cell, _ = find_cell_with_tag(self._nb_obj, tag='parameters')
+        self._read_nb_str_unrendered()
+        cell, _ = find_cell_with_tag(self._nb_obj_unrendered, tag='parameters')
         return cell.source
 
-    # FIXME: A bit inefficient to initialize the extractor every time
     def extract_upstream(self):
         extractor_class = extractor_class_for_language(self.language)
         return extractor_class(self._get_parameters_cell()).extract_upstream()
 
-    # FIXME: A bit inefficient to initialize the extractor every time
     def extract_product(self):
         extractor_class = extractor_class_for_language(self.language)
         return extractor_class(self._get_parameters_cell()).extract_product()

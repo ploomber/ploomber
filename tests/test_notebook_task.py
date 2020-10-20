@@ -325,9 +325,9 @@ def test_develop_workflow_with_hot_reload(tmp_directory, monkeypatch):
     t.develop()
 
     # source code must be updated
-    assert str(t.source).strip() == '2 + 2'
+    assert '2 + 2' in str(t.source).strip()
 
-    nb = nbformat.reads(t.source.rendered_nb_str,
+    nb = nbformat.reads(t.source.nb_str_rendered,
                         as_version=nbformat.NO_CONVERT)
     source = jupytext.writes(nb, fmt='py')
 
@@ -388,7 +388,7 @@ def test_hot_reload(tmp_directory):
     assert t.product._outdated_code_dependency()
     assert not t.product._outdated_data_dependencies()
 
-    assert '2 + 2' in t.source.rendered_nb_str
+    assert '2 + 2' in t.source.nb_str_rendered
 
     report = dag.build()
 
