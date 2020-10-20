@@ -125,7 +125,6 @@ class NotebookSource(Source):
         # mught be inconclusive if dealing with a ipynb file
         self._language = determine_language(self._ext_in)
 
-        self._python_repr = None
         self._loc = None
         self._rendered_nb_str = None
         self._params = None
@@ -171,23 +170,6 @@ class NotebookSource(Source):
         tmp_out.unlink()
 
         self._post_render_validation(self._params)
-
-    # FIXME: looks like we are not using this, remove
-    def _get_python_repr(self):
-        """
-        Returns the Python representation for this notebook, this is the
-        raw source code passed, does not contain injected parameters
-        """
-        if self._python_repr is None:
-            if self._ext_in == 'py':
-                self._python_repr = self._primitive
-            else:
-                # convert from ipynb to notebook
-                nb = nbformat.reads(self._primitive,
-                                    as_version=nbformat.NO_CONVERT)
-                self._python_repr = jupytext.writes(nb, fmt='py')
-
-        return self._python_repr
 
     def _get_nb_repr(self):
         """
