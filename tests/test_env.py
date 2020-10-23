@@ -425,6 +425,35 @@ def test_error_when_flatten_key_doesnt_exist():
         env._replace_flatten_key(2, 'env__b')
 
 
+@pytest.mark.parametrize(
+    'data, keys',
+    [
+        [{
+            'a': 1
+        }, ('a', )],
+        # added this to fix an edge case
+        [{
+            'a': {
+                'b': 1
+            }
+        }, ('a', 'b')],
+    ])
+def test_env_dict_initialized_with_env_dict(data, keys):
+    env = EnvDict(EnvDict(data))
+
+    for key in keys:
+        env = env[key]
+
+
+def test_env_dict_initialized_with_replaced_env_dict():
+    a = EnvDict({'a': {'b': 1}})
+    a_mod = a._replace_flatten_keys({'env__a__b': 2})
+    b = EnvDict(a_mod)
+
+    # make sure the new object has the updated values
+    assert b['a']['b'] == 2
+
+
 def test_expand_raw_dict():
     mapping = {'key': 'value'}
     d = {'some_setting': '{{key}}'}

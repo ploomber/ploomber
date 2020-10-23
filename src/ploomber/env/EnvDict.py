@@ -1,4 +1,4 @@
-from copy import copy
+from copy import copy, deepcopy
 import importlib
 import platform
 from pathlib import Path
@@ -27,27 +27,41 @@ class EnvDict(Mapping):
 
     """
     def __init__(self, source):
+        # if initialized from another EnvDict, copy the attributes to
+        # initialize
+        # this happens in the  CLI parser, which instanttiates the env
+        # because it needs to create one and then replace cli args, then
+        # passes this modified object to DAGSpec
+        if isinstance(source, EnvDict):
+            for attr in ('_path_to_env', '_preprocessed', '_expander',
+                         '_data'):
+                original = getattr(source, attr)
+                setattr(self, attr, deepcopy(original))
+        else:
+            # load data
+            (
+                raw_data,
+                # this will be None if source is a dict
+                self._path_to_env) = load_from_source(source)
 
-        # load data
-        (
-            self._raw_data,
-            # this will be None if source is a dict
-            self.path_to_env) = load_from_source(source)
+            # check raw data is ok
+            validate.raw_data_keys(raw_data)
 
-        # check raw data is ok
-        validate.raw_data_keys(self._raw_data)
+            # expand _module special key, return its expanded value
+            self._preprocessed = raw_preprocess(raw_data, self._path_to_env)
 
-        # expand _module special key, return its expanded value
-        self.preprocessed = raw_preprocess(self._raw_data, self.path_to_env)
+            # initialize expander, which converts placeholders to their values
+            # we need to pass path_to_env since the {{here}} placeholder
+            # resolves
+            # to its parent
+            self._expander = EnvironmentExpander(self._preprocessed,
+                                                 self._path_to_env)
+            # now expand all values
+            self._data = self._expander.expand_raw_dictionary(raw_data)
 
-        # initialize expander, which converts placeholders to their values
-        # we need to pass path_to_env since the {{here}} placeholder resolves
-        # to its parent
-        self.expander = EnvironmentExpander(self.preprocessed,
-                                            self.path_to_env)
-
-        # now expand all values
-        self._data = self.expander.expand_raw_dictionary(self._raw_data)
+    @property
+    def path_to_env(self):
+        return self._path_to_env
 
     def __getattr__(self, key):
         error = AttributeError("'{}' object has no attribute '{}'".format(
@@ -73,8 +87,8 @@ class EnvDict(Mapping):
             raise
 
     def _getitem(self, key):
-        if key in self.preprocessed:
-            return FrozenJSON(self.preprocessed[key])
+        if key in self._preprocessed:
+            return FrozenJSON(self._preprocessed[key])
         else:
             return FrozenJSON(self._data[key])
 
@@ -115,7 +129,7 @@ class EnvDict(Mapping):
             raise KeyError('Trying to replace key "{}" in env, '
                            'but it does not exist'.format(dotted_path))
 
-        dict_to_edit[key_to_edit] = (self.expander.expand_raw_value(
+        dict_to_edit[key_to_edit] = (self._expander.expand_raw_value(
             value, keys_all))
 
     def _inplace_replace_flatten_key(self, value, key_flatten):
