@@ -90,9 +90,14 @@ def extract_product(dag_spec):
     return dag_spec
 
 
+def test_error_if_missing_tasks_key():
+    with pytest.raises(KeyError):
+        DAGSpec({'some_key': None})
+
+
 def test_validate_top_level_keys():
     with pytest.raises(KeyError):
-        DAGSpec({'invalid_key': None})
+        DAGSpec({'tasks': [], 'invalid_key': None})
 
 
 def test_validate_meta_keys():
@@ -182,13 +187,23 @@ def test_loads_env_if_exists(tmp_nbs):
     assert spec.env == {'a': 1}
 
 
+def test_loads_env_relative_to_spec(tmp_nbs):
+    files = os.listdir()
+    sub_dir = Path('subdir')
+    sub_dir.mkdir()
+
+    for f in files:
+        Path(f).rename(sub_dir / f)
+
+    Path('env.yaml').write_text("{'a': 100}")
+    Path('subdir', 'env.yaml').write_text("{'a': 1}")
+    spec = DAGSpec('subdir/pipeline.yaml')
+    assert spec.env == {'a': 1}
+
+
 def test_does_not_load_env_if_loading_from_dict(tmp_nbs):
     Path('env.yaml').write_text("{'a': 1}")
-
-    with open('pipeline.yaml') as f:
-        d = yaml.safe_load(f)
-
-    spec = DAGSpec(d)
+    spec = DAGSpec('pipeline.yaml')
     assert spec.env is None
 
 
@@ -196,11 +211,14 @@ def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
 
     Path('output').mkdir()
 
-    with open('pipeline-w-location.yaml') as f:
-        dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
-
-    dag = DAGSpec(dag_spec).to_dag()
+    dag = DAGSpec('pipeline-w-location.yaml').to_dag()
     dag.build()
+
+
+def test_file_spec_resolves_sources_location(tmp_nbs):
+    spec = DAGSpec('pipeline.yaml')
+    absolute = str(tmp_nbs.resolve())
+    assert all(str(t['source']).startswith(absolute) for t in spec['tasks'])
 
 
 @pytest.mark.parametrize(

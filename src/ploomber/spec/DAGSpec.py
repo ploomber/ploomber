@@ -63,43 +63,89 @@ class DAGSpec(MutableMapping):
     Notes
     -----
     Relative paths are heavily used for pointing to source files and products,
-    before the introduction of the Spec API, this was unambiguous: all paths
+    when only the Python API existed, this was unambiguous: all paths
     were relative to the current working directory, you only had to make sure
     to start the session at the right place. Initially, the Spec API didn't
     change a thing since the assumption was that one would convert a spec to
-    a DAG in a folder containing a pipeline.yaml file and paths in such file
-    would be relative to the file itself, no ambiguity. However, when we
-    introduced the Jupyter custom contents manager things changed because the
-    DAG can be initialized from directories where there isn't a pipeline.yaml
-    but we have to recursively look for one. Furthermore, if extract_upstream
-    or extract_product are True and the source files are not in the same folder
-    as pipeline.yaml an ambiguity arises: are paths inside a source file
-    relative to the source file or pipeline.yaml? To make this consistent,
-    all relative paths (whether in a pipeline.yaml or in a source file) are
-    relative to the pipeline.yaml folder but this can be changed with the
-    product_relative_to_source option. Furthermore, when using the custom
-    contents manager, we convert relative paths to absolute in special cases
-    to make sure they work. This is why we need to keep the pipeline.yaml
-    location when initializing a DAG from a spec.
+    a DAG in a folder containing a pipeline.yaml, under this scenario the
+    current directory is also the parent of pipeline.yaml so all relative paths
+    work as expected.
+
+    However, when we introduced the Jupyter custom contents manager things
+    changed because the DAG can be initialized from directories where there
+    isn't a pipeline.yaml but we have to recursively look for one. Furthermore,
+    if extract_upstream or extract_product are True and the source files do
+    not share the parent with pipeline.yaml an ambiguity arises: are paths
+    inside a source file relative to the source file, current directory or
+    pipeline.yaml?
+
+    When we started working on Soopervisor, the concept of "project" arised,
+    which is a folder that contains all necessary files to instantiate a
+    Ploomber pipeline. To take current directory ambiguity out of the situation
+    we decided that projects that use the Spec API should ignore the current
+    directory and assume that *all relative paths in the spec are so to the
+    pipeline.yaml parent folder* this means that we could initialize projects
+    from anywhere by just pointing to the project's root folder (the one that
+    contains pipeline.yaml). This is implemented in TaskSpec.py@init_product
+    where we add the project's root folder to all relative paths. This implies
+    that all relative paths are converted to absolute to make them agnostic
+    from the current working directory. The basic idea is that a person
+    writing a DAG spec should only have to know that paths are relative
+    to the project's root folder and the DAGSpec should do the heavy lifting
+    of instantiating a spec that could be converted to a dag (and reendered)
+    independent of the working directory, because the project's root folder
+    defines the pipelines's scope, and there is no point in looking for files
+    outside of it, except when asking explicity through an absolute path.
+
+    However, this behavior clashes with the Jupyter notebook defaults. Jupyter
+    sets the current working directory not to the directory where
+    "jupyter {notebook/lab}" was called but to the current file parent's.
+    Our current logic would override this default behavior so we added an
+    option to turn it back on (product_relative_to_source).
+
+    Note that this does not affect the Python API, since that would create more
+    confusion. The Python API should work as expected from any other library:
+    paths should be relative to the current working directory.
+
+    The only case where we can't determine a project's root is when a DAGSpec
+    is initialized from a dictionary directly, but this is not something
+    that end-users would do.
     """
     def __init__(self, data, env=None):
         if isinstance(data, (str, Path)):
-            self._parent_path = str(Path(data).parent)
+            path = data
+            # resolve the parent path to make sources and products unambiguous
+            # even if the current working directory changes
+            self._parent_path = str(Path(data).parent.resolve())
 
             with open(str(data)) as f:
                 data = yaml.load(f, Loader=yaml.SafeLoader)
 
-            if env is None and Path('env.yaml').exists():
-                env = 'env.yaml'
+            env_path = Path(self._parent_path, 'env.yaml')
+
+            if env is None and env_path.exists():
+                env = str(env_path)
         else:
+            path = None
             self._parent_path = None
 
         if isinstance(data, list):
             data = {'tasks': data}
 
+        if 'tasks' not in data:
+            path_ = f'(file: "{path}")' if self._parent_path else ''
+            raise KeyError('Invalid data to initialize DAGSpec, missing '
+                           f'key "tasks" {path_}')
+
         logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env))
 
         if env is not None:
+            # NOTE: when loading from a path, EnvDict recursively looks
+            # at parent folders, this is useful when loading envs
+            # in nested directories where scripts/functions need the env
+            # but here, since we just need this for the spec, we might
+            # want to turn it off. should we add a parameter to EnvDict
+            # to control this?
             self.env = EnvDict(env)
             data = expand_raw_dictionary(data, self.env)
         else:
@@ -120,7 +166,10 @@ class DAGSpec(MutableMapping):
             # otherwise dynamic imports needed by TaskSpec will fail
             with add_to_sys_path(self._parent_path, chdir=False):
                 self.data['tasks'] = [
-                    TaskSpec(t, self.data['meta']) for t in self.data['tasks']
+                    TaskSpec(t,
+                             self.data['meta'],
+                             project_root=self._parent_path)
+                    for t in self.data['tasks']
                 ]
 
     def _validate_top_level_keys(self, spec):

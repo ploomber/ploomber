@@ -68,18 +68,24 @@ def task_class_from_spec(task_spec):
     return class_
 
 
-def source_for_task_class(source_str, task_class):
+def source_for_task_class(source_str, task_class, project_root):
     if task_class is tasks.PythonCallable:
         return load_dotted_path(source_str)
     else:
-        return Path(source_str)
+        path = Path(source_str)
+
+        if project_root and not path.is_absolute():
+            return Path(project_root, source_str)
+        else:
+            return path
 
 
 class TaskSpec(MutableMapping):
-    def __init__(self, data, meta):
+    def __init__(self, data, meta, project_root):
         # FIXME: make sure data and meta are immutable structures
         self.data = data
         self.meta = meta
+        self.project_root = project_root
         self.validate()
 
         # initialize required elements
@@ -88,7 +94,8 @@ class TaskSpec(MutableMapping):
         # if the task requires a file or a callable if it's a PythonCallable
         # task
         self.data['source'] = source_for_task_class(self.data['source'],
-                                                    self.data['class'])
+                                                    self.data['class'],
+                                                    self.project_root)
 
         source_loader = meta['source_loader']
 
@@ -136,6 +143,7 @@ class TaskSpec(MutableMapping):
         _init_client(task_dict)
 
         source = task_dict.pop('source')
+
         name = task_dict.pop('name', None)
 
         on_finish = task_dict.pop('on_finish', None)
