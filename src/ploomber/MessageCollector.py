@@ -1,10 +1,8 @@
 from collections import namedtuple
 
-_sep = '\n\n'+'-'*80+'\n'+'-'*80+'\n\n'
+_sep = '\n\n' + '-' * 80 + '\n' + '-' * 80 + '\n\n'
 
-
-Message = namedtuple('Message',
-                     ['task_str', 'message', 'obj'])
+Message = namedtuple('Message', ['task_str', 'message', 'obj'])
 
 
 class MessageCollector:
@@ -19,14 +17,14 @@ class MessageCollector:
         self.messages = messages or []
 
     def append(self, task_str, message, obj=None):
-        self.messages.append(Message(task_str=task_str,
-                                     message=message,
-                                     obj=obj))
+        self.messages.append(
+            Message(task_str=task_str, message=message, obj=obj))
 
     def __str__(self):
-        return _sep.join(['* {}: {}'.format(exp.task_str,
-                                            exp.message)
-                          for exp in self.messages])
+        return _sep.join([
+            '* {}\n{}'.format(exp.task_str, exp.message)
+            for exp in self.messages
+        ])
 
     def __bool__(self):
         return bool(self.messages)

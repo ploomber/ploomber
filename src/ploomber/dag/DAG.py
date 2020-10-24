@@ -467,8 +467,7 @@ class DAG(collections.abc.Mapping):
                         raise DAGBuildError(msg) from e
 
                 # on_failure hook executed, raise original exception
-                raise DAGBuildError(
-                    'Failed to build DAG {}'.format(self)) from build_exception
+                raise build_exception
 
     def _run_on_failure(self, tb):
         if self.on_failure:
