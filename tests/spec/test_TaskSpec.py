@@ -60,14 +60,14 @@ def test_initialization(spec, expected, tmp_sample_tasks,
         'extract_upstream': True
     })
 
-    spec = TaskSpec(spec, meta=meta)
+    spec = TaskSpec(spec, meta=meta, project_root='.')
 
     # check values after initialization
     assert spec['class'] == expected
     assert isinstance(spec['source'], Path)
 
     # check we can convert it to a Task
-    spec.to_task(dag=DAG(), root_path='.')
+    spec.to_task(dag=DAG())
 
 
 @pytest.mark.parametrize('key', ['source', 'product'])
@@ -76,7 +76,8 @@ def test_validate_missing_source(key):
         TaskSpec({key: None}, {
             'extract_product': False,
             'extract_upstream': False
-        })
+        },
+                 project_root='.')
 
 
 @pytest.mark.parametrize('task, meta', [
@@ -98,7 +99,7 @@ def test_validate_missing_source(key):
 ])
 def test_error_if_extract_but_keys_declared(task, meta):
     with pytest.raises(ValueError):
-        TaskSpec(task, meta)
+        TaskSpec(task, meta, project_root='.')
 
 
 def test_add_hook(tmp_directory, add_current_to_sys_path):
@@ -124,7 +125,7 @@ def some_hook():
     """)
 
     dag = DAG()
-    t, _ = TaskSpec(task, meta).to_task(dag, root_path=os.getcwd())
+    t, _ = TaskSpec(task, meta, project_root='.').to_task(dag)
     assert t.on_finish
     assert t.on_render
     assert t.on_failure

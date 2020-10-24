@@ -81,6 +81,13 @@ def source_for_task_class(source_str, task_class, project_root):
 
 
 class TaskSpec(MutableMapping):
+    """A TaskSpec converts dictionaries to Task objects
+
+    Parameters
+    ----------
+    project_root : str or pathlib.Path
+        The project root folder (pipeline.yaml parent)
+    """
     def __init__(self, data, meta, project_root):
         # FIXME: make sure data and meta are immutable structures
         self.data = data
@@ -131,14 +138,14 @@ class TaskSpec(MutableMapping):
                              'should not have a "product" key'.format(
                                  self.data))
 
-    def to_task(self, dag, root_path):
+    def to_task(self, dag):
         """Returns a Task instance
         """
         task_dict = copy(self.data)
         upstream = _make_iterable(task_dict.pop('upstream'))
         class_ = task_dict.pop('class')
 
-        product = init_product(task_dict, self.meta, class_, root_path)
+        product = init_product(task_dict, self.meta, class_, self.project_root)
 
         _init_client(task_dict)
 

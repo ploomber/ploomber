@@ -132,7 +132,7 @@ class DAGSpec(MutableMapping):
         if isinstance(data, list):
             data = {'tasks': data}
 
-        if 'tasks' not in data:
+        if 'tasks' not in data and not 'location' in data:
             path_ = f'(file: "{path}")' if self._parent_path else ''
             raise KeyError('Invalid data to initialize DAGSpec, missing '
                            f'key "tasks" {path_}')

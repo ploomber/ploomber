@@ -203,14 +203,16 @@ def test_loads_env_relative_to_spec(tmp_nbs):
 
 def test_does_not_load_env_if_loading_from_dict(tmp_nbs):
     Path('env.yaml').write_text("{'a': 1}")
-    spec = DAGSpec('pipeline.yaml')
+
+    with open('pipeline.yaml') as f:
+        d = yaml.safe_load(f)
+
+    spec = DAGSpec(d)
     assert spec.env is None
 
 
 def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
-
     Path('output').mkdir()
-
     dag = DAGSpec('pipeline-w-location.yaml').to_dag()
     dag.build()
 
