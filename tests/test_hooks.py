@@ -233,7 +233,7 @@ def test_task_status_when_on_render_crashes(method, tmp_directory):
 
     assert t.exec_status == TaskStatus.ErroredRender
     assert t2.exec_status == TaskStatus.AbortedRender
-    assert '* PythonCallable: fn -> File(file):' in str(excinfo.getrepr())
+    assert '* PythonCallable: fn -> File(file)' in str(excinfo.getrepr())
 
     # let's also check we can recover
     t.on_render = hook
@@ -256,7 +256,7 @@ def test_task_status_and_output_when_on_finish_crashes(tmp_directory):
 
     assert t.exec_status == TaskStatus.Errored
     assert t2.exec_status == TaskStatus.Aborted
-    assert '* PythonCallable: fn -> File(file):' in str(excinfo.getrepr())
+    assert '* PythonCallable: fn -> File(file)' in str(excinfo.getrepr())
 
 
 # TODO: parametrize by executor since reported status depends on it
@@ -273,7 +273,7 @@ def test_task_status_and_output_when_on_failure_crashes(tmp_directory):
 
     assert t.exec_status == TaskStatus.Errored
     assert t2.exec_status == TaskStatus.Aborted
-    assert ('* PythonCallable: fn_that_fails -> File(file):'
+    assert ('* PythonCallable: fn_that_fails -> File(file)'
             in str(excinfo.getrepr()))
 
 
