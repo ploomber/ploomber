@@ -132,7 +132,7 @@ class DAGSpec(MutableMapping):
         if isinstance(data, list):
             data = {'tasks': data}
 
-        if 'tasks' not in data and not 'location' in data:
+        if 'tasks' not in data and 'location' not in data:
             path_ = f'(file: "{path}")' if self._parent_path else ''
             raise KeyError('Invalid data to initialize DAGSpec, missing '
                            f'key "tasks" {path_}')
@@ -387,7 +387,7 @@ def process_tasks(dag, tasks, dag_spec, root_path=None):
         if extract_prod:
             task_dict['product'] = source.extract_product()
 
-        task, up = task_dict.to_task(dag, root_path)
+        task, up = task_dict.to_task(dag)
 
         if extract_prod:
             logger.debug('Extracted product for task "%s": %s', task.name,
