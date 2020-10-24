@@ -43,16 +43,22 @@ class DAGSpec(MutableMapping):
     "location" key with the factory to call, the other explicitly describes
     the DAG structure as a dictionary.
 
+    When .to_dag() is called, the current working directory is temporarily
+    switched to the spec file parent folder (only applies when loading from
+    a file)
+
     Parameters
     ----------
-    data : dict
-        Specification to construct the DAG
+    data : str, pathlib.Path or dict
+        Path to a YAML spec or dict spec to construct the DAG
 
-    env : dict, pathlib.path or str
+    env : dict, pathlib.path or str, optional
         Dictionary or path/str to a YAML file with the environment to use,
         tags in any of the keys (i.e. {{some_tag}}) in "data" will be replaced
         by the corresponding values in "env". A regular :py:mod:`ploomber.Env`
-        object is created, see documentation for details
+        object is created, see documentation for details. If None and
+        data is a dict, no env is loaded. If None and loaded from a YAML spec,
+        it will try to look for a env.yaml file in the YAML spec parent folder.
 
     Notes
     -----
@@ -82,6 +88,9 @@ class DAGSpec(MutableMapping):
 
             with open(str(data)) as f:
                 data = yaml.load(f, Loader=yaml.SafeLoader)
+
+            if env is None and Path('env.yaml').exists():
+                env = 'env.yaml'
         else:
             self._parent_path = None
 

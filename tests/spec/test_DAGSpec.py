@@ -176,6 +176,22 @@ def test_notebook_spec_nested(tmp_nbs_nested):
     dag.build()
 
 
+def test_loads_env_if_exists(tmp_nbs):
+    Path('env.yaml').write_text("{'a': 1}")
+    spec = DAGSpec('pipeline.yaml')
+    assert spec.env == {'a': 1}
+
+
+def test_does_not_load_env_if_loading_from_dict(tmp_nbs):
+    Path('env.yaml').write_text("{'a': 1}")
+
+    with open('pipeline.yaml') as f:
+        d = yaml.safe_load(f)
+
+    spec = DAGSpec(d)
+    assert spec.env is None
+
+
 def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
 
     Path('output').mkdir()
