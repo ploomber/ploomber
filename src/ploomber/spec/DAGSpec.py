@@ -1,11 +1,60 @@
 """
-Notes to developers
+Path management
+---------------
+Relative paths are heavily used for pointing to source files and products,
+when only the Python API existed, this was unambiguous: all paths
+were relative to the current working directory, you only had to make sure
+to start the session at the right place. Initially, the Spec API didn't
+change a thing since the assumption was that one would convert a spec to
+a DAG in a folder containing a pipeline.yaml, under this scenario the
+current directory is also the parent of pipeline.yaml so all relative paths
+work as expected.
 
-meta:
-  Settings that cannot be clearly mapped to the OOP Python interface, we
-  don't call it config because there is a DAGConfig object in the Python
-  API and this might cause confusion
+However, when we introduced the Jupyter custom contents manager things
+changed because the DAG can be initialized from directories where there
+isn't a pipeline.yaml but we have to recursively look for one. Furthermore,
+if extract_upstream or extract_product are True and the source files do
+not share the parent with pipeline.yaml an ambiguity arises: are paths
+inside a source file relative to the source file, current directory or
+pipeline.yaml?
 
+When we started working on Soopervisor, the concept of "project" arised,
+which is a folder that contains all necessary files to instantiate a
+Ploomber pipeline. To take current directory ambiguity out of the situation
+we decided that projects that use the Spec API should ignore the current
+directory and assume that *all relative paths in the spec are so to the
+pipeline.yaml parent folder* this means that we could initialize projects
+from anywhere by just pointing to the project's root folder (the one that
+contains pipeline.yaml). This is implemented in TaskSpec.py@init_product
+where we add the project's root folder to all relative paths. This implies
+that all relative paths are converted to absolute to make them agnostic
+from the current working directory. The basic idea is that a person
+writing a DAG spec should only have to know that paths are relative
+to the project's root folder and the DAGSpec should do the heavy lifting
+of instantiating a spec that could be converted to a dag (and reendered)
+independent of the working directory, because the project's root folder
+defines the pipelines's scope, and there is no point in looking for files
+outside of it, except when asking explicity through an absolute path.
+
+However, this behavior clashes with the Jupyter notebook defaults. Jupyter
+sets the current working directory not to the directory where
+"jupyter {notebook/lab}" was called but to the current file parent's.
+Our current logic would override this default behavior so we added an
+option to turn it back on (product_relative_to_source).
+
+Note that this does not affect the Python API, since that would create more
+confusion. The Python API should work as expected from any other library:
+paths should be relative to the current working directory.
+
+The only case where we can't determine a project's root is when a DAGSpec
+is initialized from a dictionary directly, but this is not something
+that end-users would do.
+
+Spec sections
+-------------
+"meta" is for settings that cannot be clearly mapped to the OOP Python
+interface, we don't call it config because there is a DAGConfig object in
+the Python API and this might cause confusion
 
 All other sections should represent valid DAG properties.
 """
@@ -58,58 +107,8 @@ class DAGSpec(MutableMapping):
         by the corresponding values in "env". A regular :py:mod:`ploomber.Env`
         object is created, see documentation for details. If None and
         data is a dict, no env is loaded. If None and loaded from a YAML spec,
-        it will try to look for a env.yaml file in the YAML spec parent folder.
-
-    Notes
-    -----
-    Relative paths are heavily used for pointing to source files and products,
-    when only the Python API existed, this was unambiguous: all paths
-    were relative to the current working directory, you only had to make sure
-    to start the session at the right place. Initially, the Spec API didn't
-    change a thing since the assumption was that one would convert a spec to
-    a DAG in a folder containing a pipeline.yaml, under this scenario the
-    current directory is also the parent of pipeline.yaml so all relative paths
-    work as expected.
-
-    However, when we introduced the Jupyter custom contents manager things
-    changed because the DAG can be initialized from directories where there
-    isn't a pipeline.yaml but we have to recursively look for one. Furthermore,
-    if extract_upstream or extract_product are True and the source files do
-    not share the parent with pipeline.yaml an ambiguity arises: are paths
-    inside a source file relative to the source file, current directory or
-    pipeline.yaml?
-
-    When we started working on Soopervisor, the concept of "project" arised,
-    which is a folder that contains all necessary files to instantiate a
-    Ploomber pipeline. To take current directory ambiguity out of the situation
-    we decided that projects that use the Spec API should ignore the current
-    directory and assume that *all relative paths in the spec are so to the
-    pipeline.yaml parent folder* this means that we could initialize projects
-    from anywhere by just pointing to the project's root folder (the one that
-    contains pipeline.yaml). This is implemented in TaskSpec.py@init_product
-    where we add the project's root folder to all relative paths. This implies
-    that all relative paths are converted to absolute to make them agnostic
-    from the current working directory. The basic idea is that a person
-    writing a DAG spec should only have to know that paths are relative
-    to the project's root folder and the DAGSpec should do the heavy lifting
-    of instantiating a spec that could be converted to a dag (and reendered)
-    independent of the working directory, because the project's root folder
-    defines the pipelines's scope, and there is no point in looking for files
-    outside of it, except when asking explicity through an absolute path.
-
-    However, this behavior clashes with the Jupyter notebook defaults. Jupyter
-    sets the current working directory not to the directory where
-    "jupyter {notebook/lab}" was called but to the current file parent's.
-    Our current logic would override this default behavior so we added an
-    option to turn it back on (product_relative_to_source).
-
-    Note that this does not affect the Python API, since that would create more
-    confusion. The Python API should work as expected from any other library:
-    paths should be relative to the current working directory.
-
-    The only case where we can't determine a project's root is when a DAGSpec
-    is initialized from a dictionary directly, but this is not something
-    that end-users would do.
+        an env.yaml file is loaded from the YAML spec parent folder, if it
+        exists
     """
     def __init__(self, data, env=None):
         if isinstance(data, (str, Path)):
@@ -129,13 +128,13 @@ class DAGSpec(MutableMapping):
             path = None
             self._parent_path = None
 
-        if isinstance(data, list):
-            data = {'tasks': data}
+        self.data = data
 
-        if 'tasks' not in data and 'location' not in data:
-            path_ = f'(file: "{path}")' if self._parent_path else ''
-            raise KeyError('Invalid data to initialize DAGSpec, missing '
-                           f'key "tasks" {path_}')
+        if isinstance(self.data, list):
+            self.data = data = {'tasks': self.data}
+
+        # validate keys defined at the top (nested keys are not validated here)
+        self._validate_top_keys(self.data, path)
 
         logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env))
 
@@ -147,16 +146,15 @@ class DAGSpec(MutableMapping):
             # want to turn it off. should we add a parameter to EnvDict
             # to control this?
             self.env = EnvDict(env)
-            data = expand_raw_dictionary(data, self.env)
+            self.data = expand_raw_dictionary(self.data, self.env)
         else:
             self.env = None
 
         logger.debug('Expanded DAGSpec:\n%s', pp.pformat(data))
 
-        load_from_factory = self._validate_top_level_keys(data)
-        self.data = data
-
-        if not load_from_factory:
+        # if there is a "location" top key, we don't have to do anything else
+        # as we will just load the dotted path when .to_dag() is called
+        if 'location' not in self.data:
             self.data['tasks'] = [
                 normalize_task(task) for task in self.data['tasks']
             ]
@@ -172,22 +170,25 @@ class DAGSpec(MutableMapping):
                     for t in self.data['tasks']
                 ]
 
-    def _validate_top_level_keys(self, spec):
-        load_from_factory = False
+    def _validate_top_keys(self, spec, path):
+        """Validate keys at the top of the spec
+        """
+        if 'tasks' not in spec and 'location' not in spec:
+            path_ = f'(file: "{path}")' if self._parent_path else ''
+            raise KeyError('Invalid data to initialize DAGSpec, missing '
+                           f'key "tasks" {path_}')
 
         if 'location' in spec:
             if len(spec) > 1:
                 raise KeyError('If specifying dag through a "location" key '
                                'it must be the unique key in the spec')
-            else:
-                load_from_factory = True
         else:
             valid = {'meta', 'config', 'clients', 'tasks'}
             validate.keys(valid, spec.keys(), name='dag spec')
 
-        return load_from_factory
-
     def _validate_meta(self):
+        """Validate and instantiate the "meta" section
+        """
         if 'meta' not in self.data:
             self.data['meta'] = {}
 
@@ -226,7 +227,10 @@ class DAGSpec(MutableMapping):
         return dag
 
     def _to_dag(self):
-        # FIXME: validate that if there is location, there isn't anything else
+        """
+        Internal method to manage the different cases to convert to a DAG
+        object
+        """
         if 'location' in self:
             factory = load_dotted_path(self['location'])
             return factory()

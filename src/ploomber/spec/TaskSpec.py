@@ -81,10 +81,16 @@ def source_for_task_class(source_str, task_class, project_root):
 
 
 class TaskSpec(MutableMapping):
-    """A TaskSpec converts dictionaries to Task objects
+    """
+    A TaskSpec converts dictionaries to Task objects. This class is not
+    intended to be used directly, but through DAGSpec
 
     Parameters
     ----------
+    data : dict
+        The data that holds the spec information
+    meta : dict
+        The "meta" section information from the calling DAGSpec
     project_root : str or pathlib.Path
         The project root folder (pipeline.yaml parent)
     """
@@ -93,13 +99,13 @@ class TaskSpec(MutableMapping):
         self.data = data
         self.meta = meta
         self.project_root = project_root
+
         self.validate()
 
         # initialize required elements
         self.data['class'] = task_class_from_spec(self.data)
-        # preprocess source obj, at this point it will either be a Path
-        # if the task requires a file or a callable if it's a PythonCallable
-        # task
+        # preprocess source obj, at this point it will either be a Path if the
+        # task requires a file or a callable if it's a PythonCallable task
         self.data['source'] = source_for_task_class(self.data['source'],
                                                     self.data['class'],
                                                     self.project_root)
@@ -113,6 +119,9 @@ class TaskSpec(MutableMapping):
             self.data['source'] = source_loader[self.data['source']]
 
     def validate(self):
+        """
+        Validates the data schema
+        """
         if 'upstream' not in self.data:
             self.data['upstream'] = None
 
@@ -139,7 +148,7 @@ class TaskSpec(MutableMapping):
                                  self.data))
 
     def to_task(self, dag):
-        """Returns a Task instance
+        """Converts the spec to a Task instance and adds it to the dag
         """
         task_dict = copy(self.data)
         upstream = _make_iterable(task_dict.pop('upstream'))
@@ -246,20 +255,16 @@ def init_product(task_dict, meta, task_class, root_path):
 def resolve_product(product_raw, relative_to, class_):
     if class_ != products.File:
         return product_raw
-    else:
+    elif relative_to:
         # When a DAG is initialized, paths are usually relative to the folder
         # that has the pipeline.yaml, the only case when this isn't true is
         # when using DAGSpec.auto_load(), in such case, relative paths won't
         # work if the current working directory is different  to the
         # pipeline.yaml folder (this happens sometimes in the Jupyter UI).
         # We resolve paths to avoid ambiguity on this
-
-        # we call resolve in relative_to and then append the rest because
-        # Python 3.5 raises a FileNotFoundError is calling resolve in a path
-        # that does not exist
-
-        resolved = Path(relative_to).resolve()
-        return str(Path(resolved, product_raw))
+        return str(Path(relative_to, product_raw).resolve())
+    else:
+        return Path(product_raw).resolve()
 
 
 def _init_client(task_dict):
