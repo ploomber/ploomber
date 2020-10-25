@@ -543,10 +543,11 @@ def get_client():
     assert str(dag['create-table.sql'].source) == expected
 
 
-def test_spec_with_functions(backup_spec_with_functions):
+@pytest.mark.parametrize('lazy_import', [False, True])
+def test_spec_with_functions(lazy_import, backup_spec_with_functions):
     """
     Check we can create pipeline where the task is a function defined in a
     local file
     """
-    spec = DAGSpec('pipeline.yaml')
+    spec = DAGSpec('pipeline.yaml', lazy_import=lazy_import)
     spec.to_dag().build()

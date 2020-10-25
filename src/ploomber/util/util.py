@@ -251,6 +251,8 @@ def locate_dotted_path(dotted_path):
     if spec is None:
         raise ModuleNotFoundError(f'Module {module!r} does not exist')
 
+    return spec
+
 
 def find_file_recursively(name, max_levels_up=6, starting_dir=None):
     """

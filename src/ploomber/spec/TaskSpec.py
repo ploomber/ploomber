@@ -1,6 +1,7 @@
 """
 Create Tasks from dictionaries
 """
+from functools import partial
 from copy import copy
 from pathlib import Path
 from collections.abc import MutableMapping, Mapping
@@ -32,7 +33,8 @@ def task_class_from_source_str(source_str, lazy_import):
     extension = Path(source_str).suffix
 
     # if lazy load, just locate the module without importing it
-    fn_checker = locate_dotted_path if lazy_import else load_dotted_path
+    fn_checker = locate_dotted_path if lazy_import else partial(
+        load_dotted_path, raise_=True)
 
     if extension and extension in suffix2taskclass:
         return suffix2taskclass[extension]
