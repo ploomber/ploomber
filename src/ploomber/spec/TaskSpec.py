@@ -6,7 +6,8 @@ from pathlib import Path
 from collections.abc import MutableMapping, Mapping
 
 from ploomber import tasks, products
-from ploomber.util.util import load_dotted_path, _make_iterable
+from ploomber.util.util import (load_dotted_path, _make_iterable,
+                                locate_dotted_path)
 from ploomber.util import validate
 
 suffix2taskclass = {
@@ -20,7 +21,7 @@ suffix2taskclass = {
 }
 
 
-def task_class_from_source_str(source_str):
+def task_class_from_source_str(source_str, lazy_import):
     """
     The source field in a DAG spec is a string. The actual value needed to
     instantiate the task depends on the task class, but to make task class
@@ -30,11 +31,14 @@ def task_class_from_source_str(source_str):
     """
     extension = Path(source_str).suffix
 
+    # if lazy load, just locate the module without importing it
+    fn_checker = locate_dotted_path if lazy_import else load_dotted_path
+
     if extension and extension in suffix2taskclass:
         return suffix2taskclass[extension]
     else:
         try:
-            imported = load_dotted_path(source_str, raise_=True)
+            imported = fn_checker(source_str)
             error = None
         except Exception as e:
             imported = None
@@ -52,7 +56,7 @@ def task_class_from_source_str(source_str):
             return tasks.PythonCallable
 
 
-def task_class_from_spec(task_spec):
+def task_class_from_spec(task_spec, lazy_import):
     """
     Returns the class for the TaskSpec, if the spec already has the class
     name (str), it just returns the actual class object with such name,
@@ -63,14 +67,17 @@ def task_class_from_spec(task_spec):
     if class_name:
         class_ = getattr(tasks, class_name)
     else:
-        class_ = task_class_from_source_str(task_spec['source'])
+        class_ = task_class_from_source_str(task_spec['source'], lazy_import)
 
     return class_
 
 
-def source_for_task_class(source_str, task_class, project_root):
+def source_for_task_class(source_str, task_class, project_root, lazy_import):
     if task_class is tasks.PythonCallable:
-        return load_dotted_path(source_str)
+        if lazy_import:
+            return source_str
+        else:
+            return load_dotted_path(source_str)
     else:
         path = Path(source_str)
 
@@ -94,7 +101,7 @@ class TaskSpec(MutableMapping):
     project_root : str or pathlib.Path
         The project root folder (pipeline.yaml parent)
     """
-    def __init__(self, data, meta, project_root):
+    def __init__(self, data, meta, project_root, lazy_import=False):
         # FIXME: make sure data and meta are immutable structures
         self.data = data
         self.meta = meta
@@ -103,12 +110,13 @@ class TaskSpec(MutableMapping):
         self.validate()
 
         # initialize required elements
-        self.data['class'] = task_class_from_spec(self.data)
+        self.data['class'] = task_class_from_spec(self.data, lazy_import)
         # preprocess source obj, at this point it will either be a Path if the
         # task requires a file or a callable if it's a PythonCallable task
         self.data['source'] = source_for_task_class(self.data['source'],
                                                     self.data['class'],
-                                                    self.project_root)
+                                                    self.project_root,
+                                                    lazy_import)
 
         source_loader = meta['source_loader']
 

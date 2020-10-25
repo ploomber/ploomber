@@ -243,6 +243,15 @@ def load_dotted_path(dotted_path, raise_=True):
                 '[module_name].[function_name]'.format(dotted_path))
 
 
+def locate_dotted_path(dotted_path):
+    tokens = dotted_path.split('.')
+    module = '.'.join(tokens[:-1])
+    spec = importlib.util.find_spec(module)
+
+    if spec is None:
+        raise ModuleNotFoundError(f'Module {module!r} does not exist')
+
+
 def find_file_recursively(name, max_levels_up=6, starting_dir=None):
     """
     Find environment by looking into the current folder and parent folders,

@@ -256,15 +256,47 @@ def test_hot_reload_generic_source(tmp_directory):
 def test_python_callable_properties(path_to_test_pkg):
     source = PythonCallableSource(functions.simple_w_docstring)
 
-    file, line = source.loc.split(':')
+    file_, line = source.loc.split(':')
 
     assert source.doc == functions.simple_w_docstring.__doc__
     assert source.name == 'simple_w_docstring'
-    assert file == functions.__file__
+    assert file_ == functions.__file__
     assert line == '21'
     assert PythonCallableSource.__name__ in repr(source)
     assert functions.simple_w_docstring.__name__ in repr(source)
     assert source.loc in repr(source)
+
+
+def test_python_callable_with_dotted_path_does_not_import(
+        tmp_directory, add_current_to_sys_path):
+    Path('some_dotted_path.py').write_text("""
+import some_unknown_package
+
+def some_fn():
+    pass
+""")
+    # doing it this way should not import anything
+    source = PythonCallableSource('some_dotted_path.some_fn')
+
+    assert str(source) == 'def some_fn():\n    pass\n'
+
+
+def test_python_callable_with_dotted_path(tmp_directory,
+                                          add_current_to_sys_path):
+    Path('some_other_dotted_path.py').write_text("""
+def some_fn():
+    pass
+""")
+    # doing it this way should not import anything
+    source = PythonCallableSource('some_other_dotted_path.some_fn')
+    assert callable(source.primitive)
+
+
+def test_dotted_path_and_callable_give_same_source():
+    a = PythonCallableSource(functions.simple_w_docstring)
+    b = PythonCallableSource('test_pkg.functions.simple_w_docstring')
+
+    assert str(a) == str(b)
 
 
 @pytest.mark.parametrize(

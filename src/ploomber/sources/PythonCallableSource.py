@@ -1,20 +1,72 @@
 import importlib
 import inspect
+from pathlib import Path
+
+import parso
 
 from ploomber.sources.sources import Source
-from ploomber.util.util import signature_check
+from ploomber.util.util import signature_check, load_dotted_path
 from ploomber.static_analysis.python import PythonCallableExtractor
 
 
+def find_code_for_fn_dotted_path(dotted_path):
+    """
+    Returns the source code for a function given the dotted path without
+    importting it
+    """
+    tokens = dotted_path.split('.')
+    module, name = '.'.join(tokens[:-1]), tokens[-1]
+    spec = importlib.util.find_spec(module)
+
+    if spec is None:
+        raise ModuleNotFoundError('Error processing dotted '
+                                  f'path {dotted_path!r}, '
+                                  f'there is no module {module!r}')
+
+    module_location = spec.origin
+
+    module_code = Path(module_location).read_text()
+    m = parso.parse(module_code)
+
+    for f in m.iter_funcdefs():
+        if f.name.value == name:
+            # remove leading whitespace that parso keeps, which is not
+            # what inspect.getsource does - this way we get the same code
+            return f.get_code().lstrip()
+
+    raise ValueError(f'Error processing dotted path {dotted_path!r}, '
+                     f'there is no function named {name!r} in module '
+                     f'{module!r}')
+
+
 class CallableLoader:
+    """
+    If initialized with a string, it provies some functionality
+    without importing it.
+    """
+
+    # TODO: this class could be used anywhere where we have to load callables
+    # from dotted paths in the spec (and could also be useful for the Python
+    # API): sources, hooks and clients. We can add a "lazy" option that allows
+    # to keep a reference to the callable and import it until it's called
     def __init__(self, callable_, hot_reload):
         self.hot_reload = hot_reload
+
+        # TODO: should we make hot_reload automatically get the callable
+        # here? we need to add more testing to check that initializing
+        # with a dotted path does not have any undesired effects
 
         if self.hot_reload:
             self.module_name = inspect.getmodule(callable_).__name__
             self.name = callable_.__name__
         else:
-            self.callable_ = callable_
+            self._callable_ = callable_
+
+    def _get_callable(self):
+        if isinstance(self._callable_, str):
+            self._callable_ = load_dotted_path(self._callable_)
+
+        return self._callable_
 
     def __call__(self):
         if self.hot_reload:
@@ -22,7 +74,17 @@ class CallableLoader:
             importlib.reload(module)
             return getattr(module, self.name)
         else:
-            return self.callable_
+            return self._get_callable()
+
+    def get_source(self):
+        if isinstance(self._callable_, str):
+            return find_code_for_fn_dotted_path(self._callable_)
+        else:
+            return inspect.getsource(self._callable_)
+
+    @property
+    def initialized_from_callable(self):
+        return callable(self._callable_)
 
 
 class PythonCallableSource(Source):
@@ -30,9 +92,9 @@ class PythonCallableSource(Source):
     A source object to encapsulate a Python callable (i.e. functions).
     """
     def __init__(self, primitive, hot_reload=False):
-        if not callable(primitive):
+        if not (callable(primitive) or isinstance(primitive, str)):
             raise TypeError('{} must be initialized'
-                            'with a Python callable, got '
+                            'with a Python callable or str, got '
                             '"{}"'.format(
                                 type(self).__name__,
                                 type(primitive).__name__))
@@ -59,7 +121,7 @@ class PythonCallableSource(Source):
 
     def __str__(self):
         if self._source_as_str is None or self._hot_reload:
-            self._source_as_str = inspect.getsource(self.primitive)
+            self._source_as_str = self._callable_loader.get_source()
 
         return self._source_as_str
 
@@ -89,7 +151,8 @@ class PythonCallableSource(Source):
         """
         Validation function executed after rendering
         """
-        signature_check(self.primitive, params, self.name)
+        if self._callable_loader.initialized_from_callable:
+            signature_check(self.primitive, params, self.name)
 
     def _post_init_validation(self, value):
         # TODO: verify the callable has a product parameter

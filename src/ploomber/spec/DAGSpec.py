@@ -109,8 +109,15 @@ class DAGSpec(MutableMapping):
         data is a dict, no env is loaded. If None and loaded from a YAML spec,
         an env.yaml file is loaded from the YAML spec parent folder, if it
         exists
+
+    lazy_import : bool, optional
+        Whether to import dotted paths to initialize PythonCallables with the
+        actual function. If False, PythonCallables are initialized directly
+        with the dotted path, which means some verifications such as import
+        statements in that function's module are delayed until the pipeline
+        is executed
     """
-    def __init__(self, data, env=None):
+    def __init__(self, data, env=None, lazy_import=False):
         if isinstance(data, (str, Path)):
             path = data
             # resolve the parent path to make sources and products unambiguous
@@ -166,7 +173,8 @@ class DAGSpec(MutableMapping):
                 self.data['tasks'] = [
                     TaskSpec(t,
                              self.data['meta'],
-                             project_root=self._parent_path)
+                             project_root=self._parent_path,
+                             lazy_import=lazy_import)
                     for t in self.data['tasks']
                 ]
 
