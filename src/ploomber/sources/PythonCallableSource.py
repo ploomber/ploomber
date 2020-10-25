@@ -49,42 +49,42 @@ class CallableLoader:
     # from dotted paths in the spec (and could also be useful for the Python
     # API): sources, hooks and clients. We can add a "lazy" option that allows
     # to keep a reference to the callable and import it until it's called
-    def __init__(self, callable_, hot_reload):
+    def __init__(self, primitive, hot_reload):
         self.hot_reload = hot_reload
+        self._from_dotted_path = isinstance(primitive, str)
+        self._primitive = primitive
 
-        # TODO: should we make hot_reload automatically get the callable
-        # here? we need to add more testing to check that initializing
-        # with a dotted path does not have any undesired effects
+        if self.hot_reload and not self._from_dotted_path:
+            self.module_name = inspect.getmodule(primitive).__name__
+            self.name = primitive.__name__
 
-        if self.hot_reload:
-            self.module_name = inspect.getmodule(callable_).__name__
-            self.name = callable_.__name__
+            # if using hot reload, we cannot keep the reference to the
+            # original function, otherwise pickle will give errors
+            self._primitive = None
+        elif self.hot_reload and self._from_dotted_path:
+            raise NotImplementedError('hot_reload is not implemented when '
+                                      'initializing from a dotted path')
+
+    def load(self):
+        if self._from_dotted_path:
+            return load_dotted_path(self._primitive)
         else:
-            self._callable_ = callable_
-
-    def _get_callable(self):
-        if isinstance(self._callable_, str):
-            self._callable_ = load_dotted_path(self._callable_)
-
-        return self._callable_
-
-    def __call__(self):
-        if self.hot_reload:
-            module = importlib.import_module(self.module_name)
-            importlib.reload(module)
-            return getattr(module, self.name)
-        else:
-            return self._get_callable()
+            if self.hot_reload:
+                module = importlib.import_module(self.module_name)
+                importlib.reload(module)
+                return getattr(module, self.name)
+            else:
+                return self._primitive
 
     def get_source(self):
-        if isinstance(self._callable_, str):
-            return find_code_for_fn_dotted_path(self._callable_)
+        if self._from_dotted_path:
+            return find_code_for_fn_dotted_path(self._primitive)
         else:
-            return inspect.getsource(self._callable_)
+            return inspect.getsource(self.load())
 
     @property
-    def initialized_from_callable(self):
-        return callable(self._callable_)
+    def from_dotted_path(self):
+        return self._from_dotted_path
 
 
 class PythonCallableSource(Source):
@@ -106,7 +106,7 @@ class PythonCallableSource(Source):
 
     @property
     def primitive(self):
-        return self._callable_loader()
+        return self._callable_loader.load()
 
     @property
     def _source_lineno(self):
@@ -151,7 +151,7 @@ class PythonCallableSource(Source):
         """
         Validation function executed after rendering
         """
-        if self._callable_loader.initialized_from_callable:
+        if not self._callable_loader.from_dotted_path:
             signature_check(self.primitive, params, self.name)
 
     def _post_init_validation(self, value):
