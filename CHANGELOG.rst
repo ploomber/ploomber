@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+0.8.2dev
+--------
+* Removes ``matplotlib`` from dependencies, now using ``IPython.display`` for inline plotting
+* Fixes bug that caused custom args to ``{PythonCallable, NotebookRunner}.develop(args="--arg=value")`` not to be sent correctly to the subprocess
+* ``NotebookRunner`` (initialized from ipynb) only considers the actual code as its source, ignores the rest of the JSON contents
+* Fixes bug when ``EnvDict`` was initialized from another ``EnvDict``
+* ``PythonCallableSource`` can be initialized with dotted paths
+* ``DAGSpec`` loads ``env.yaml`` when initialized with a YAML spec and there is a ``env.yaml`` file in the spec parent folder
+* ``DAGSpec`` converts relative paths in sources to be so to the project's root folder
+* Adds ``lazy_import`` to ``DAGspec``, to avoid importing ``PythonCallable`` sources (passes the dotted paths as strings instead)
+
 0.8.1 (2020-10-18)
 -------------------
 * ``ploomber interact`` allows to switch DAG parameters, just like ``ploomber build``
