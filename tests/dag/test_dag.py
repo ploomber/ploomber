@@ -160,7 +160,10 @@ def test_count_in_progress_bar(monkeypatch, tmp_directory):
     first, second = mock.call_args_list
 
     assert first[1] == dict(total=3)
+    assert len(first[0][0]) == 3
+
     assert second[1] == dict(total=0)
+    assert len(second[0][0]) == 0
 
 
 def test_mapping_interface():

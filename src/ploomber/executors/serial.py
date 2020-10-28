@@ -64,11 +64,11 @@ class Serial(Executor):
         task_kwargs = {'catch_exceptions': self._catch_exceptions}
 
         if show_progress:
-            scheduled = sum([
-                1 for t in dag._iter() if dag[t].exec_status not in
+            scheduled = [
+                dag[t] for t in dag if dag[t].exec_status not in
                 {TaskStatus.Skipped, TaskStatus.Aborted}
-            ])
-            tasks = tqdm(dag.values(), total=scheduled)
+            ]
+            tasks = tqdm(scheduled, total=len(scheduled))
         else:
             tasks = dag.values()
 
