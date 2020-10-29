@@ -64,14 +64,16 @@ class Serial(Executor):
         task_kwargs = {'catch_exceptions': self._catch_exceptions}
 
         scheduled = [
-            dag[t] for t in dag if dag[t].exec_status not in
-            {TaskStatus.Skipped, TaskStatus.Aborted}
+            dag[t] for t in dag if dag[t].exec_status != TaskStatus.Skipped
         ]
 
         if show_progress:
             scheduled = tqdm(scheduled, total=len(scheduled))
 
         for t in scheduled:
+            if t.exec_status == TaskStatus.Aborted:
+                continue
+
             if show_progress:
                 scheduled.set_description('Building task "{}"'.format(t.name))
 
