@@ -63,21 +63,17 @@ class Serial(Executor):
 
         task_kwargs = {'catch_exceptions': self._catch_exceptions}
 
+        scheduled = [
+            dag[t] for t in dag if dag[t].exec_status not in
+            {TaskStatus.Skipped, TaskStatus.Aborted}
+        ]
+
         if show_progress:
-            scheduled = [
-                dag[t] for t in dag if dag[t].exec_status not in
-                {TaskStatus.Skipped, TaskStatus.Aborted}
-            ]
-            tasks = tqdm(scheduled, total=len(scheduled))
-        else:
-            tasks = dag.values()
+            scheduled = tqdm(scheduled, total=len(scheduled))
 
-        for t in tasks:
-            if t.exec_status in {TaskStatus.Skipped, TaskStatus.Aborted}:
-                continue
-
+        for t in scheduled:
             if show_progress:
-                tasks.set_description('Building task "{}"'.format(t.name))
+                scheduled.set_description('Building task "{}"'.format(t.name))
 
             if self._build_in_subprocess:
                 fn = LazyFunction(
