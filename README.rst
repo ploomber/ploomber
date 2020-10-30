@@ -20,7 +20,7 @@ Ploomber
 Coding an entire analysis pipeline in a single notebook file allows you to
 develop your code interactively, but it creates an unmaintainable monolith that
 easily breaks. Ploomber allows you to modularize your analysis in smaller
-tasks without losing the power of notebook interactivity.
+tasks without losing the power of an interactive notebook.
 
 Imagine you have a pipeline that gets (``get.ipynb``), cleans (``clean.ipynb``)
 and plots (``plot.ipynb``) data. All you  have to do to turn this into a data
@@ -45,12 +45,13 @@ Main features
 
 1. **Jupyter integration**. When you open your notebooks, Ploomber will
 automatically inject a new cell with the location of your input files, as
-inferred from your ``upstream`` variable.
+inferred from your ``upstream`` variable. If you open a Python or R script, it
+will be converted to a notebook on the fly.
 
-2. **Incremental builds**. Ploomber speeds up execution by skipping tasks whose
-source hasn't changed.
+2. **Incremental builds**. Speed up execution by skipping tasks whose source
+code hasn't changed.
 
-3. **Pipeline testing**. Run tests upon task execution to verify your output
+3. **Pipeline testing**. Run tests upon task execution to verify that the output
 data has the right properties (e.g. values within expected range).
 
 4. **Pipeline tnspection**. Start an interactive session with
@@ -75,6 +76,9 @@ Try it out
     conda activate ml-basic
     # 2) if you don't have conda
     pip install ploomber pandas scikit-learn pyarrow sklearn-evaluation
+
+    # create output folder
+    mkdir output
 
     # run the pipeline
     ploomber build    
