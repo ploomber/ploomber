@@ -109,9 +109,15 @@
 
           </div>
 
-          <p class="lead">Write better data pipelines without having to learn a specialized framework. By
-            adopting a <i>convention over configuration philosophy</i>, Ploomber streamlines
-            pipeline execution, allowing teams to <b>confidently develop data products</b>.</p>
+          <p class="lead">
+            Coding an entire analysis pipeline in a single notebook file allows you to develop your code interactively,
+            but it creates an unmaintainable monolith that easily breaks. Ploomber allows you to modularize your
+            analysis in smaller tasks without losing the power of an interactive notebook.<br><br>
+            <b>Ploomber is the simplest way to turn your notebooks, (Python/R/SQL) scripts or Python functions into a
+              reproducible data
+              pipeline.</b>
+          </p>
+
           <div>
 
             <div>
@@ -128,42 +134,33 @@
       <div class="container">
         <!-- Example row of columns -->
         <div class="row">
-          <div class="col-md-3">
+          <div class="col-md-4">
             <h2>Simple</h2>
             <ol>
               <li>(Optional) List your pipeline scripts in a <code>pipeline.yaml</code> file</li>
-              <li>Inside each script, state dependencies (other scripts) via an <code>upstream</code> variable
+              <li>Inside each notebook (or script), state dependencies via an <code>upstream</code> variable
               </li>
-              <li>Use a <code>product</code> variable to declare output file(s) that the next script will use as inputs
+              <li>Use a <code>product</code> variable to declare output file(s) that the next notebook (or script) will
+                use as inputs
               </li>
             </ol>
 
           </div>
-          <div class="col-md-3">
+          <div class="col-md-4">
             <h2>Powerful</h2>
             <ol>
-              <li>Automated end-to-end execution</li>
               <li>Incremental builds (skip up-to-date tasks)</li>
-              <li>Parametrized pipelines</li>
-              <li>Hooks for pipeline testing</li>
-              <li>Integration with debugging tools</li>
+              <li>Pipeline testing</li>
+              <li>Pipeline inspection and debugging</li>
             </ol>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-4">
             <h2>Integrates with Jupyter</h2>
-            <p>A Jupyter plugin allows your scripts to be rendered as notebooks
-              in the <code>jupyter notebook</code> app. Once rendered,
-              a new cell with input paths (inferred from your
-              <code>upstream</code> dependencies) is injected.
-            </p>
-
-          </div>
-          <div class="col-md-3">
-            <h2>Polyglot</h2>
-            <p>Python, R and SQL are officially supported. Other languages can be
-              easily integrated via Jupyter kernels or through shell scripts.
-            </p>
-
+            <ol>
+              <li>Automatically inject a new cell with the location of your input files, as inferred from your
+                <code>upstream</code> variable</li>
+              <li>Python and R scripts are converted to a notebook on the fly</li>
+            </ol>
           </div>
         </div>
 

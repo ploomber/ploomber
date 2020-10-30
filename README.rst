@@ -54,7 +54,7 @@ code hasn't changed.
 3. **Pipeline testing**. Run tests upon task execution to verify that the output
 data has the right properties (e.g. values within expected range).
 
-4. **Pipeline tnspection**. Start an interactive session with
+4. **Pipeline inspection**. Start an interactive session with
 ``ploomber interact`` to debug your pipeline. Call
 ``dag['task_name'].debug()`` to start a debugging session.
 
