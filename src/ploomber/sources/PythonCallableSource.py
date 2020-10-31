@@ -56,7 +56,7 @@ class CallableLoader:
 
         if self.hot_reload and not self._from_dotted_path:
             self.module_name = inspect.getmodule(primitive).__name__
-            self.name = primitive.__name__
+            self.fn_name = primitive.__name__
 
             # if using hot reload, we cannot keep the reference to the
             # original function, otherwise pickle will give errors
@@ -72,7 +72,7 @@ class CallableLoader:
             if self.hot_reload:
                 module = importlib.import_module(self.module_name)
                 importlib.reload(module)
-                return getattr(module, self.name)
+                return getattr(module, self.fn_name)
             else:
                 return self._primitive
 
