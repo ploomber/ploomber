@@ -279,6 +279,7 @@ def some_fn():
     source = PythonCallableSource('some_dotted_path.some_fn')
 
     assert str(source) == 'def some_fn():\n    pass\n'
+    assert source.name == 'some_fn'
 
 
 def test_python_callable_with_dotted_path(tmp_directory,

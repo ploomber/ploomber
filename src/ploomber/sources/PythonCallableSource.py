@@ -86,6 +86,13 @@ class CallableLoader:
     def from_dotted_path(self):
         return self._from_dotted_path
 
+    @property
+    def name(self):
+        if self._from_dotted_path:
+            return self._primitive.split('.')[-1]
+        else:
+            return self.load().__name__
+
 
 class PythonCallableSource(Source):
     """
@@ -145,7 +152,7 @@ class PythonCallableSource(Source):
 
     @property
     def name(self):
-        return self.primitive.__name__
+        return self._callable_loader.name
 
     def _post_render_validation(self, rendered_value, params):
         """
