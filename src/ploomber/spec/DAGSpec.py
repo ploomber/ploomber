@@ -177,6 +177,8 @@ class DAGSpec(MutableMapping):
                              lazy_import=lazy_import)
                     for t in self.data['tasks']
                 ]
+        else:
+            self.data['meta'] = Meta.default_meta_location()
 
     def _validate_top_keys(self, spec, path):
         """Validate keys at the top of the spec
@@ -330,6 +332,11 @@ class DAGSpec(MutableMapping):
 class Meta:
     """Schema for meta section in pipeline.yaml
     """
+    VALID = {
+        'extract_upstream', 'extract_product', 'product_default_class',
+        'product_relative_to_source', 'jupyter_hot_reload', 'source_loader'
+    }
+
     @classmethod
     def default_meta(cls, meta=None):
         """Fill missing values in a meta dictionary
@@ -337,11 +344,7 @@ class Meta:
         if meta is None:
             meta = {}
 
-        valid = {
-            'extract_upstream', 'extract_product', 'product_default_class',
-            'product_relative_to_source', 'jupyter_hot_reload', 'source_loader'
-        }
-        validate.keys(valid, meta, name='dag spec')
+        validate.keys(cls.VALID, meta, name='dag spec')
 
         if 'extract_upstream' not in meta:
             meta['extract_upstream'] = True
@@ -376,6 +379,12 @@ class Meta:
                     meta['product_default_class'][class_] = prod
 
         return meta
+
+    @classmethod
+    def default_meta_location(cls):
+        """Default meta values when a spec is initialized with "location"
+        """
+        return {v: None for v in cls.VALID}
 
 
 def process_tasks(dag, tasks, dag_spec, root_path=None):

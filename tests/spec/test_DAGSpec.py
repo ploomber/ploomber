@@ -11,7 +11,7 @@ import nbformat
 import jupyter_client
 import getpass
 
-from ploomber.spec.DAGSpec import DAGSpec
+from ploomber.spec.DAGSpec import DAGSpec, Meta
 from ploomber.util.util import load_dotted_path
 from ploomber.tasks import PythonCallable
 
@@ -551,3 +551,20 @@ def test_spec_with_functions(lazy_import, backup_spec_with_functions):
     """
     spec = DAGSpec('pipeline.yaml', lazy_import=lazy_import)
     spec.to_dag().build()
+
+
+def test_spec_with_location(tmp_directory):
+    Path('pipeline.yaml').write_text('location: some.factory.function')
+    spec = DAGSpec('pipeline.yaml')
+    assert spec['meta'] == {k: None for k in Meta.VALID}
+
+
+def test_spec_with_location_error_if_meta(tmp_directory):
+    Path('pipeline.yaml').write_text(
+        'location: some.factory.function\nmeta: {some: key}')
+
+    with pytest.raises(KeyError) as excinfo:
+        DAGSpec('pipeline.yaml')
+
+    assert ('If specifying dag through a "location" key it must be '
+            'the unique key in the spec') in str(excinfo.value)
