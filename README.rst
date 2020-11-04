@@ -64,8 +64,9 @@ data has the right properties (e.g. values within expected range).
 ``ploomber interact`` to debug your pipeline. Call
 ``dag['task_name'].debug()`` to start a debugging session.
 
-5. **[Beta] Deployment to Kubernetes and Airflow**. Develop locally,
-once you're ready, deploy to `Kubernetes or Airflow <https://github.com/ploomber/soopervisor>`_
+5. **[Beta] Deployment to Kubernetes and Airflow**. You can develop and execute
+locally. But if you want to scale things up, deploy
+to `Kubernetes or Airflow <https://github.com/ploomber/soopervisor>`_
 
 Try it out
 ----------
