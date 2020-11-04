@@ -41,7 +41,10 @@ dependencies and output files:
 That's it! Execute ``ploomber build`` and your pipeline tasks will execute in
 the right order.
 
-`JupyterCon 2020 talk <https://www.youtube.com/watch?v=M6mtgPfsA3M>`_
+Apart from Jupyter notebooks, Ploomber also supports (Python/R/SQL) scripts
+and Python functions as pipeline tasks.
+
+`Watch JupyterCon 2020 talk <https://www.youtube.com/watch?v=M6mtgPfsA3M>`_
 
 Main features
 -------------
