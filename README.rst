@@ -17,6 +17,7 @@ Ploomber
 .. image:: https://coveralls.io/repos/github/ploomber/ploomber/badge.svg?branch=master
   :target: https://coveralls.io/github/ploomber/ploomber?branch=master
 
+
 Coding an entire analysis pipeline in a single notebook file allows you to
 develop your code interactively, but it creates an unmaintainable monolith that
 easily breaks. Ploomber allows you to modularize your analysis in smaller
@@ -39,6 +40,8 @@ dependencies and output files:
 
 That's it! Execute ``ploomber build`` and your pipeline tasks will execute in
 the right order.
+
+`JupyterCon 2020 talk <https://www.youtube.com/watch?v=M6mtgPfsA3M>`_
 
 Main features
 -------------
