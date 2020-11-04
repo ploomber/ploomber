@@ -146,5 +146,8 @@ That's it! This tutorial showcases the basic Ploomber workflow:
 3. Review results
 4. Add tasks as needed
 
-The next tutorial shows how you can seamlessly mix SQL and Python code using
-the same basic concepts.
+Where to go from here
+---------------------
+
+* The next tutorial shows how you can seamlessly mix SQL and Python code using the same basic concepts.
+* Take a look at our `sample projects <https://github.com/ploomber/projects>`_, (Machine Learning pipelines, ETL, R pipelines, among others)

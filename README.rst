@@ -107,6 +107,6 @@ Compatible with Python 3.6 and higher.
 Resources
 ---------
 
-* `Sample projects <https://github.com/ploomber/projects>`_
+* `Sample projects (Machine Learning pipeline, ETL, among others) <https://github.com/ploomber/projects>`_
 * `Documentation <https://ploomber.readthedocs.io/>`_
 * `Blog <https://ploomber.io/>`_
