@@ -93,7 +93,9 @@ class SQLDump(Task):
         a single one. If set, the product will be a folder
     io_handler: ploomber.io.CSVIO or ploomber.io.ParquetIO, optional
         io handler to use (which controls the output format), currently
-        only csv and parquet are supported. Defaults to ploomber.io.CSVIO
+        only csv and parquet are supported. If None, it tries to infer the
+        handler from the product's extension if that doesn't work, if uses
+        io.CSVIO
 
     Notes
     -----
@@ -113,7 +115,7 @@ class SQLDump(Task):
                  client=None,
                  params=None,
                  chunksize=10000,
-                 io_handler=io.CSVIO):
+                 io_handler=None):
         params = params or {}
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
@@ -122,7 +124,14 @@ class SQLDump(Task):
 
         self.client = client or self.dag.clients.get(type(self))
         self.chunksize = chunksize
-        self.io_handler = io_handler
+
+        if io_handler is None:
+            if self.product._identifier._raw.endswith('.parquet'):
+                self.io_handler = io.ParquetIO
+            else:
+                self.io_handler = io.CSVIO
+        else:
+            self.io_handler = io_handler
 
         if self.client is None:
             raise ValueError('{} must be initialized with a client'.format(

@@ -1,5 +1,6 @@
 from sqlite3 import connect
 from pathlib import Path
+from unittest.mock import Mock
 
 from ploomber import DAG
 from ploomber.tasks import SQLDump, SQLTransfer
@@ -7,6 +8,7 @@ from ploomber.products import File, SQLiteRelation
 from ploomber.clients import SQLAlchemyClient
 from ploomber import io
 
+import pytest
 import pandas as pd
 import numpy as np
 
@@ -144,6 +146,25 @@ def test_can_dump_postgres(tmp_directory, pg_client_and_schema):
     assert dump.equals(db)
 
 
+@pytest.mark.parametrize('product_arg, expected_io_handler', [
+    ['out.csv', io.CSVIO],
+    ['out.ext', io.CSVIO],
+    ['{{some_placeholder}}/{{another_placeholder}}.csv', io.CSVIO],
+    ['out.parquet', io.ParquetIO],
+    ['{{some_placeholder}}/{{another_placeholder}}.parquet', io.ParquetIO],
+])
+def test_dump_io_handler(product_arg, expected_io_handler):
+
+    dag = DAG()
+    t = SQLDump('SELECT * FROM some_table',
+                File(product_arg),
+                dag,
+                name='dump',
+                client=Mock())
+
+    assert expected_io_handler is t.io_handler
+
+
 def test_can_transfer_sqlite(tmp_directory):
     """
     >>> import tempfile
@@ -153,7 +174,8 @@ def test_can_transfer_sqlite(tmp_directory):
 
     # create clientections to 2 dbs
     client_in = SQLAlchemyClient('sqlite:///{}'.format(tmp / "database_in.db"))
-    client_out = SQLAlchemyClient('sqlite:///{}'.format(tmp / "database_out.db"))
+    client_out = SQLAlchemyClient('sqlite:///{}'.format(tmp /
+                                                        "database_out.db"))
 
     # make some data and save it in the db
     df = pd.DataFrame({'a': np.arange(0, 100), 'b': np.arange(100, 200)})
@@ -178,7 +200,3 @@ def test_can_transfer_sqlite(tmp_directory):
 
     # make sure they are the same
     assert original.equals(transfer)
-
-
-def test_dump_difference():
-    pass
