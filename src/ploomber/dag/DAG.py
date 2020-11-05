@@ -36,6 +36,7 @@ import logging
 import collections
 import tempfile
 from math import ceil
+from functools import partial
 
 try:
     import importlib.resources as importlib_resources
@@ -52,11 +53,13 @@ from IPython.display import Image
 from ploomber.Table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
 from ploomber.util import (image_bytes2html, isiterable, requires, markup)
+from ploomber.util.debug import debug_if_exception
 from ploomber import resources
 from ploomber import executors
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop)
+from ploomber.executors import Serial
 from ploomber.MessageCollector import MessageCollector
 from ploomber.util.util import callback_check
 from ploomber.dag.DAGConfiguration import DAGConfiguration
@@ -341,16 +344,19 @@ class DAG(collections.abc.Mapping):
 
         self._exec_status = DAGStatus.WaitingExecution
 
-    def build(self, force=False, show_progress=True):
+    def build(self, force=False, show_progress=True, debug=False):
         """
         Runs the DAG in order so that all upstream dependencies are run for
         every task
 
         Parameters
         ----------
-        force: bool, optional
+        force : bool, optional
             If True, it will run all tasks regardless of status, defaults to
             False
+
+        debug : bool, optional
+            Drop a debugging session if building raises an exception
 
         Notes
         -----
@@ -372,8 +378,24 @@ class DAG(collections.abc.Mapping):
         else:
             dag_logger = DAGLogger(handler=res)
 
+        # if debug, we have to change the executor to these settings, if we run
+        # tasks in a subprocess or catch exception, we won't be able to start
+        # the debugging session in the right place
+        if debug:
+            executor_original = self.executor
+            self.executor = Serial(build_in_subprocess=False,
+                                   catch_exceptions=False,
+                                   catch_warnings=False)
+
+        callable_ = partial(self._build, force, show_progress)
+
         with dag_logger:
-            report = self._build(force, show_progress)
+            if debug:
+                report = debug_if_exception(callable_)
+            else:
+                report = callable_()
+
+        self.executor = executor_original
 
         return report
 
@@ -495,7 +517,11 @@ class DAG(collections.abc.Mapping):
             self._logger.debug('No on_finish hook for dag '
                                '"%s", skipping', self.name)
 
-    def build_partially(self, target, force=False, show_progress=True):
+    def build_partially(self,
+                        target,
+                        force=False,
+                        show_progress=True,
+                        debug=False):
         """Partially build a dag until certain task
         """
         lineage = self[target]._lineage
@@ -513,7 +539,9 @@ class DAG(collections.abc.Mapping):
         # will make it outdated, we have to force reload from disk
         self._clear_metadata()
 
-        return dag_copy.build(force=force, show_progress=show_progress)
+        return dag_copy.build(force=force,
+                              show_progress=show_progress,
+                              debug=debug)
 
     def status(self, **kwargs):
         """Returns a table with tasks status
