@@ -368,6 +368,12 @@ class DAG(collections.abc.Mapping):
         -----
         All dag-level clients are closed after calling this function
 
+        ``debug`` is useful to let a pipeline run and start debugging at a
+        failing  PythonCallable task but it won't work with failing
+        ``NotebookRunner`` tasks because notebooks/scripts are executed in a
+        different process. If you want to debug ``NotebookRunner`` tasks, use
+        ``NotebookRunner.debug()`` instead.
+
         Returns
         -------
         BuildReport

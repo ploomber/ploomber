@@ -146,6 +146,7 @@ setup(
         'click',
         # for ploomber interact and {PythonCallable, NotebookRunner}.debug()
         'ipython',
+        'ipdb',
     ] + NB,
     extras_require={
         'all': OPTIONAL,
