@@ -96,8 +96,8 @@ def dag():
         pass
 
     dag = DAG()
-    t1 = PythonCallable(fn1, File('file1.txt'), dag)
-    t2 = PythonCallable(fn2, File('file2.txt'), dag)
+    t1 = PythonCallable(fn1, File('file1.txt'), dag, name='first')
+    t2 = PythonCallable(fn2, File('file2.txt'), dag, name='second')
     t1 >> t2
 
     return dag
@@ -800,3 +800,26 @@ def test_on_failure_exception(caplog):
 
     assert hook_crashing.count == 1
     assert 'Exception when running on_failure for DAG "dag"' in caplog.text
+
+
+@pytest.mark.parametrize('method', ['build', 'build_partially'])
+def test_build_debug(dag, method, monkeypatch):
+    m = Mock()
+    monkeypatch.setattr(dag_module.DAG, 'debug_if_exception', m)
+
+    fake_executor = Mock()
+    dag.executor = fake_executor
+
+    if method == 'build':
+        getattr(dag, method)(debug=True)
+    else:
+        getattr(dag, method)('first', debug=True)
+
+    m.assert_called_once()
+    partial = m.call_args[0][0]
+
+    assert partial.func.__name__ == '_build'
+    assert partial.keywords == {'force': False, 'show_progress': True}
+    # debug has to modify the executor but must restore it back to the original
+    # value
+    assert dag.executor is fake_executor

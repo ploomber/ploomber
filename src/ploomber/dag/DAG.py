@@ -351,11 +351,14 @@ class DAG(collections.abc.Mapping):
 
         Parameters
         ----------
-        force : bool, optional
+        force : bool, default=False
             If True, it will run all tasks regardless of status, defaults to
             False
 
-        debug : bool, optional
+        show_progress : bool, default=True
+            Show progress bar
+
+        debug : bool, default=False
             Drop a debugging session if building raises an exception
 
         Notes
@@ -387,7 +390,9 @@ class DAG(collections.abc.Mapping):
                                    catch_exceptions=False,
                                    catch_warnings=False)
 
-        callable_ = partial(self._build, force, show_progress)
+        callable_ = partial(self._build,
+                            force=force,
+                            show_progress=show_progress)
 
         with dag_logger:
             if debug:
@@ -395,7 +400,8 @@ class DAG(collections.abc.Mapping):
             else:
                 report = callable_()
 
-        self.executor = executor_original
+        if debug:
+            self.executor = executor_original
 
         return report
 
@@ -523,6 +529,21 @@ class DAG(collections.abc.Mapping):
                         show_progress=True,
                         debug=False):
         """Partially build a dag until certain task
+
+        Parameters
+        ----------
+        target : str,
+            Name of the target task (last one to build)
+
+        force : bool, default=False
+            If True, it will run all tasks regardless of status, defaults to
+            False
+
+        show_progress : bool, default=True
+            Show progress bar
+
+        debug : bool, default=False
+            Drop a debugging session if building raises an exception
         """
         lineage = self[target]._lineage
         dag_copy = deepcopy(self)
