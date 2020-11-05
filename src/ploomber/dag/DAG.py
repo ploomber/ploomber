@@ -359,7 +359,10 @@ class DAG(collections.abc.Mapping):
             Show progress bar
 
         debug : bool, default=False
-            Drop a debugging session if building raises an exception
+            Drop a debugging session if building raises an exception. Note that
+            this modifies the executor and temporarily sets it to Serial
+            with subprocess off and catching exceptions/warnings off. Restores
+            the original executor at the end.
 
         Notes
         -----
@@ -543,7 +546,10 @@ class DAG(collections.abc.Mapping):
             Show progress bar
 
         debug : bool, default=False
-            Drop a debugging session if building raises an exception
+            Drop a debugging session if building raises an exception. Note that
+            this modifies the executor and temporarily sets it to Serial
+            with subprocess off and catching exceptions/warnings off. Restores
+            the original executor at the end.
         """
         lineage = self[target]._lineage
         dag_copy = deepcopy(self)
