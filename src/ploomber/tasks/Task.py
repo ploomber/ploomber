@@ -566,20 +566,24 @@ class Task(abc.ABC):
 
         Parameters
         ----------
-        force : bool
+        force : bool, default=False
             If True, mark status as WaitingExecution/WaitingUpstream even if
-            the task is up-to-date, otherwise up-to-date tasks are marked as
-            Skipped.
+            the task is up-to-date, otherwise, the normal process follows and
+            only up-to-date tasks are marked as Skipped.
 
-        outdated_by_code : str
+        outdated_by_code : bool, default=True
             Factors to determine if Task.product is marked outdated when source
             code changes. Otherwise just the upstream timestamps are used.
 
         Notes
         -----
         This method tries to avoid calls to check for product status whenever
-        possible (for efficiency), for example, when passing the force flag,
-        there is no need to check it
+        possible, since checking product's metadata can be a slow operation
+        (e.g. if metadata is stored in a remote database)
+
+        When passing force=True, product's status checking is skipped
+        altogether, this can be useful when we only want to quickly get
+        a rendered DAG object to interact with it
         """
         self._logger.debug('Calling render on task %s', self.name)
 
