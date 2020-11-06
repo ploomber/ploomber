@@ -288,8 +288,13 @@ class NotebookRunner(Task):
 
         Notes
         -----
+        Be careful when developing tasks interacively. If the task has run
+        successfully, you overwrite products but don't save the
+        updated source code, your DAG will enter an inconsistent state where
+        the metadata won't match the overwritten product.
+
         If you modify the source code and call develop again, the source
-        code will be updated only if the `hot_reload option` is turned on.
+        code will be updated only if the ``hot_reload option`` is turned on.
         See :class:`ploomber.DAGConfigurator` for details.
         """
         # TODO: this code needs refactoring, should be a context manager
@@ -359,6 +364,20 @@ class NotebookRunner(Task):
         """
         Opens the notebook (with injected parameters) in debug mode in a
         temporary location
+
+        Parameters
+        ----------
+        kind : str, default='ipdb'
+            Debugger to use, 'ipdb' to use line-by-line IPython debugger,
+            'pdb' to use line-by-line Python debugger or 'pm' to to
+            post-portem debugging using IPython
+
+        Notes
+        -----
+        Be careful when debugging tasks. If the task has run
+        successfully, you overwrite products but don't save the
+        updated source code, your DAG will enter an inconsistent state where
+        the metadata won't match the overwritten product.
         """
         if self.source.language != 'python':
             raise NotImplementedError(

@@ -100,6 +100,13 @@ class PythonCallable(Task):
 
         args : str
             Extra args passed to the selected jupyter application
+
+        Notes
+        -----
+        Be careful when developing tasks interacively. If the task has run
+        successfully, you overwrite products but don't save the
+        updated source code, your DAG will enter an inconsistent state where
+        the metadata won't match the overwritten product.
         """
         apps = {'notebook', 'lab'}
 
@@ -139,6 +146,13 @@ class PythonCallable(Task):
         kind : str ('ipdb' or 'pdb')
             Which debugger to use 'ipdb' for IPython debugger or 'pdb' for
             debugger from the standard library
+
+        Notes
+        -----
+        Be careful when debugging tasks. If the task has run
+        successfully, you overwrite products but don't save the
+        updated source code, your DAG will enter an inconsistent state where
+        the metadata won't match the overwritten product.
         """
         opts = {'ipdb', 'pdb'}
 
