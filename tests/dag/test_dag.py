@@ -222,6 +222,14 @@ def test_forced_render(monkeypatch):
     dag.render(force=True)
 
 
+@pytest.mark.parametrize('show_progress', [True, False])
+def test_hide_progress(show_progress, capsys):
+    dag = DAG()
+    dag.render(show_progress=show_progress)
+    captured = capsys.readouterr()
+    assert bool(captured.err) is show_progress
+
+
 @pytest.mark.parametrize('executor', _executors)
 def test_build_partially(tmp_directory, executor):
     dag = DAG(executor=executor)

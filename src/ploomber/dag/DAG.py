@@ -296,12 +296,14 @@ class DAG(collections.abc.Mapping):
 
             if show_progress:
                 tasks = tqdm(self.values(), total=len(self))
+            else:
+                tasks = self.values()
 
             exceptions = MessageCollector()
             warnings_ = MessageCollector()
 
             # reset all tasks status
-            for task in self.values():
+            for task in tasks:
                 task.exec_status = TaskStatus.WaitingRender
 
             for t in tasks:
