@@ -66,11 +66,10 @@ jobs:
         # install sample package for tests
         bash install_test_pkg.sh
     - name: Run tests
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env
         pytest  --cov=ploomber
-    - name: Coveralls
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        coveralls
