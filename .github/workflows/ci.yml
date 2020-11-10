@@ -55,7 +55,7 @@ jobs:
         pip install .[test]
 
         # install R and IR kernel
-        conda install -y r-base r-irkernel
+        conda install -y r-base r-irkernel -c conda-forge
         echo "IRkernel::installspec()" | Rscript -
 
         # install sample package for tests
