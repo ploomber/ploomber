@@ -21,7 +21,7 @@ def get_pg_client():
     # if that does not work, try connecting to a local db (this is the
     # case when running on Travis)
     except FileNotFoundError:
-        uri = 'postgresql://localhost:5432/db'
+        uri = 'postgresql://postgres:postgres@localhost:5432/postgres'
 
     return SQLAlchemyClient(uri)
 

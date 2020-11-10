@@ -10,11 +10,11 @@ def load_db_uri():
             db = json.load(f)
     except FileNotFoundError:
         db = {
-            'uri': 'postgresql://localhost:5432/db',
-            'dbname': 'db',
+            'uri': 'postgresql://postgres:postgres@localhost:5432/postgres',
+            'dbname': 'postgres',
             'host': 'localhost',
             'user': 'postgres',
-            'password': '',
+            'password': 'postgres',
         }
 
     return db['uri']
