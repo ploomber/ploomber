@@ -32,9 +32,14 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Setup conda
+    - name: Setup
       run: |
         conda create -q -n conda-env python=${{ matrix.python-version }}
+
+        # for the tests that depend on git repos
+        git config --global user.email "someone@example.com"
+        git config --global user.name "Someone"
+
     - name: Install dependencies
       run: |
         eval "$(conda shell.bash hook)"
