@@ -230,11 +230,11 @@ def _load_db_credentials():
     # case when running on Travis)
     except FileNotFoundError:
         db = {
-            'uri': 'postgresql://localhost:5432/db',
-            'dbname': 'db',
+            'uri': 'postgresql://localhost:5432/postgres',
+            'dbname': 'postgres',
             'host': 'localhost',
             'user': 'postgres',
-            'password': '',
+            'password': 'postgres',
         }
 
     return db

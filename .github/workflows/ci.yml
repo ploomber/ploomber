@@ -8,11 +8,23 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
     - uses: actions/checkout@v2
@@ -20,6 +32,35 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Setup conda
       run: |
         conda create -q -n conda-env python=${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        conda activate conda-env
+        # install pygraphviz
+        conda install -y pygraphviz -c conda-forge
+
+        # Test vanilla installation, make sure core modules are importable
+        pip install .
+        python -c 'import ploomber'
+        python -c 'import ploomber.tasks'
+        python -c 'import ploomber.products'
+        python -c 'import ploomber.clients'
+
+        # install requirements
+        pip install -r examples/pipeline/intermediate/requirements.txt
+        pip install -r requirements.txt
+        pip install .[test]
+
+        # install R and IR kernel
+        conda install -y r-base r-irkernel
+        echo "IRkernel::installspec()" | Rscript -
+
+        # install sample package for tests
+        bash install_test_pkg.sh
+    - name: Run tests
+      run: |
+        conda activate conda-env
+        pytest  --cov=ploomber
+        coveralls
