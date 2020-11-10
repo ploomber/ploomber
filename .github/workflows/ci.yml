@@ -37,6 +37,7 @@ jobs:
         conda create -q -n conda-env python=${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        eval "$(conda shell.bash hook)"
         conda activate conda-env
         # install pygraphviz
         conda install -y pygraphviz -c conda-forge
@@ -61,6 +62,7 @@ jobs:
         bash install_test_pkg.sh
     - name: Run tests
       run: |
+        eval "$(conda shell.bash hook)"
         conda activate conda-env
         pytest  --cov=ploomber
         coveralls
