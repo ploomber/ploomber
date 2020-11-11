@@ -106,8 +106,8 @@ def tmp_directory():
 
     yield tmp
 
-    shutil.rmtree(str(tmp))
     os.chdir(old)
+    shutil.rmtree(str(tmp))
 
 
 @pytest.fixture()
