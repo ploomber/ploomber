@@ -1,6 +1,9 @@
-from ploomber.clients import SQLAlchemyClient
+import os
+import base64
 from pathlib import Path
 import json
+
+from ploomber.clients import SQLAlchemyClient
 
 
 def get_uri():
@@ -14,13 +17,19 @@ def get_client():
 def get_pg_client():
     p = str(Path('~', '.auth', 'postgres-ploomber.json').expanduser())
 
-    try:
+    # if running locally, load from file
+    if p.exists():
         with open(p) as f:
             uri = json.load(f)['uri']
 
-    # if that does not work, try connecting to a local db (this is the
-    # case when running on Travis)
-    except FileNotFoundError:
+    # if no credentials file, use env variable (used in windows CI)
+    elif 'POSTGRES' in os.environ:
+        b64 = os.environ['POSTGRES']
+        json_str = base64.b64decode(b64).decode()
+        uri = json.loads(json_str)['uri']
+
+    # otherwise, use local posttgres db (used in linux CI)
+    else:
         uri = 'postgresql://postgres:postgres@localhost:5432/postgres'
 
     return SQLAlchemyClient(uri)
