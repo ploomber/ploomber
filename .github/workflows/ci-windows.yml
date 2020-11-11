@@ -21,11 +21,10 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Setup
       run: |
-        conda create -q -n conda-env python=${{ matrix.python-version }}
+        Invoke-WebRequest https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe -O miniconda.exe
+        start /wait "" miniconda.exe /S
 
-        # for the tests that depend on git repos
-        git config --global user.email "someone@example.com"
-        git config --global user.name "Someone"
+        conda create -q -n conda-env python=${{ matrix.python-version }}
 
     - name: Install dependencies
       run: |
