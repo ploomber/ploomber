@@ -27,8 +27,9 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
 
-        # install pygraphviz
-        # conda install -y pygraphviz -c conda-forge
+        # install graphviz (pygraphviz not available in conda for win-64,
+        # it will be installed from pip)
+        conda install -y graphviz -c conda-forge
 
         # Test vanilla installation, make sure core modules are importable
         pip install .
