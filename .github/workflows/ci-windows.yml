@@ -54,7 +54,9 @@ jobs:
 
     - name: Run tests
       shell: bash -l {0}
+      env:
+        POSTGRES: ${{ secrets.POSTGRES }}
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env
-        pytest tests/test_cli_custom.py::test_run_spec
+        pytest

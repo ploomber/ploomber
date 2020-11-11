@@ -2,6 +2,7 @@
 Note: tests organized in folders must contain an init file:
 https://github.com/pytest-dev/pytest/issues/3151#issuecomment-360493948
 """
+import base64
 from copy import copy
 import sys
 import importlib
@@ -218,17 +219,21 @@ def path_to_assets():
 
 
 def _load_db_credentials():
-
-    # try load credentials from a local file
     p = str(Path('~', '.auth', 'postgres-ploomber.json').expanduser())
 
-    try:
+    # if running locally, load from file
+    if p.exists():
         with open(p) as f:
             db = json.load(f)
 
-    # if that does not work, try connecting to a local db (this is the
-    # case when running on Travis)
-    except FileNotFoundError:
+    # if no credentials file, use env variable (used in windows CI)
+    elif 'POSTGRES' in os.environ:
+        b64 = os.environ['POSTGRES']
+        json_str = base64.b64decode(b64).decode()
+        db = json.loads(json_str)
+
+    # otherwise, use local posttgres db (used in linux CI)
+    else:
         db = {
             'uri': 'postgresql://postgres:postgres@localhost:5432/postgres',
             'dbname': 'postgres',
