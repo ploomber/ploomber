@@ -1,6 +1,7 @@
 """
 Clients that communicate with shell processes
 """
+import os
 import tempfile
 from pathlib import Path
 import random
@@ -49,7 +50,8 @@ class ShellClient(Client):
     def execute(self, code):
         """Run code
         """
-        _, path_to_tmp = tempfile.mkstemp()
+        fd, path_to_tmp = tempfile.mkstemp()
+        os.close(fd)
         Path(path_to_tmp).write_text(code)
 
         run_template = Placeholder(self.run_template)
@@ -137,7 +139,8 @@ class RemoteShellClient(Client):
     def read_file(self, path):
         ftp = self.connection.open_sftp()
 
-        _, path_to_tmp = tempfile.mkstemp()
+        fd, path_to_tmp = tempfile.mkstemp()
+        os.close(fd)
         ftp.get(path, path_to_tmp)
 
         path_to_tmp = Path(path_to_tmp)
@@ -152,7 +155,8 @@ class RemoteShellClient(Client):
     def write_to_file(self, content, path):
         ftp = self.connection.open_sftp()
 
-        _, path_to_tmp = tempfile.mkstemp()
+        fd, path_to_tmp = tempfile.mkstemp()
+        os.close(fd)
         path_to_tmp = Path(path_to_tmp)
         path_to_tmp.write_text(content)
         ftp.put(path_to_tmp, path)
@@ -166,7 +170,8 @@ class RemoteShellClient(Client):
         ftp = self.connection.open_sftp()
         path_remote = self.path_to_directory + self._random_name()
 
-        _, path_to_tmp = tempfile.mkstemp()
+        fd, path_to_tmp = tempfile.mkstemp()
+        os.close(fd)
         Path(path_to_tmp).write_text(code)
 
         ftp.put(path_to_tmp, path_remote)

@@ -392,7 +392,8 @@ class NotebookRunner(Task):
             raise ValueError('kind must be one of {}'.format(opts))
 
         nb = _read_rendered_notebook(self.source.nb_str_rendered)
-        _, tmp_path = tempfile.mkstemp(suffix='.py')
+        fd, tmp_path = tempfile.mkstemp(suffix='.py')
+        os.close(fd)
         code = jupytext.writes(nb, version=nbformat.NO_CONVERT, fmt='py')
         Path(tmp_path).write_text(code)
 

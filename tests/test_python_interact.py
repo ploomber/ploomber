@@ -1,3 +1,4 @@
+import os
 from unittest.mock import Mock
 import inspect
 import pytest
@@ -17,7 +18,8 @@ from ploomber.spec.DAGSpec import DAGSpec
 
 @pytest.fixture
 def tmp_file():
-    _, tmp = tempfile.mkstemp()
+    fd, tmp = tempfile.mkstemp()
+    os.close(fd)
     yield tmp
     Path(tmp).unlink()
 

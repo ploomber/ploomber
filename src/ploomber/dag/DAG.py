@@ -27,6 +27,7 @@ executors adhere to task status and do not build tasks if they are marked
 as Aborted or Skipped.
 
 """
+import os
 from collections.abc import Iterable
 import traceback
 from copy import copy, deepcopy
@@ -622,7 +623,8 @@ class DAG(collections.abc.Mapping):
             status = False
 
         if 'plot' in sections:
-            _, path_to_plot = tempfile.mkstemp(suffix='.png')
+            fd, path_to_plot = tempfile.mkstemp(suffix='.png')
+            os.close(fd)
             self.plot(output=path_to_plot)
             plot = image_bytes2html(Path(path_to_plot).read_bytes())
         else:
@@ -659,7 +661,8 @@ class DAG(collections.abc.Mapping):
         """Plot the DAG
         """
         if output == 'embed':
-            _, path = tempfile.mkstemp(suffix='.png')
+            fd, path = tempfile.mkstemp(suffix='.png')
+            os.close(fd)
         else:
             path = str(output)
 
