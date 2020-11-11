@@ -1,3 +1,4 @@
+import os
 import shlex
 import pdb
 import tempfile
@@ -432,7 +433,9 @@ class NotebookRunner(Task):
         # we will change the extension after the notebook runs successfully
         path_to_out_ipynb = path_to_out.with_suffix('.ipynb')
 
-        _, tmp = tempfile.mkstemp('.ipynb')
+        fd, tmp = tempfile.mkstemp('.ipynb')
+        os.close(fd)
+
         tmp = Path(tmp)
         tmp.write_text(self.source.nb_str_rendered)
 
