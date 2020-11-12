@@ -11,7 +11,7 @@ from IPython import display
 from tests_util import executors_w_exception_logging
 from ploomber import DAG
 from ploomber import dag as dag_module
-from ploomber.tasks import ShellScript, PythonCallable, SQLDump
+from ploomber.tasks import PythonCallable, SQLDump
 from ploomber.products import File
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
@@ -339,11 +339,9 @@ def test_dag_functions_do_not_fetch_metadata(function_name, executor,
 def test_can_get_upstream_and_downstream_tasks():
     dag = DAG('dag')
 
-    ta = ShellScript('echo "a" > {{product}}', File('a.txt'), dag, 'ta')
-    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}', File('b.txt'),
-                     dag, 'tb')
-    tc = ShellScript('cat {{upstream["tb"]}} > {{product}}', File('c.txt'),
-                     dag, 'tc')
+    ta = PythonCallable(touch_root, File('a.txt'), dag, 'ta')
+    tb = PythonCallable(touch, File('b.txt'), dag, 'tb')
+    tc = PythonCallable(touch, File('c.txt'), dag, 'tc')
 
     ta >> tb >> tc
 
@@ -359,18 +357,16 @@ def test_can_get_upstream_and_downstream_tasks():
 def test_can_access_sub_dag():
     sub_dag = DAG('sub_dag')
 
-    ta = ShellScript('echo "a" > {{product}}', File('a.txt'), sub_dag, 'ta')
-    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}', File('b.txt'),
-                     sub_dag, 'tb')
-    tc = ShellScript('tcat {{upstream["tb"]}} > {{product}}', File('c.txt'),
-                     sub_dag, 'tc')
+    ta = PythonCallable(touch_root, File('a.txt'), sub_dag, 'ta')
+    tb = PythonCallable(touch, File('b.txt'), sub_dag, 'tb')
+    tc = PythonCallable(touch, File('c.txt'), sub_dag, 'tc')
 
     ta >> tb >> tc
 
     dag = DAG('dag')
 
     fd = Path('d.txt')
-    td = ShellScript('touch {{product}}', File(fd), dag, 'td')
+    td = PythonCallable(touch, File(fd), dag, 'td')
 
     td.set_upstream(sub_dag)
 
@@ -381,15 +377,15 @@ def test_can_access_tasks_inside_dag_using_getitem():
     dag = DAG('dag')
     dag2 = DAG('dag2')
 
-    ta = ShellScript('touch {{product}}', File(Path('a.txt')), dag, 'ta')
-    tb = ShellScript('touch {{product}}', File(Path('b.txt')), dag, 'tb')
-    tc = ShellScript('touch {{product}}', File(Path('c.txt')), dag, 'tc')
+    ta = PythonCallable(touch, File(Path('a.txt')), dag, 'ta')
+    tb = PythonCallable(touch, File(Path('b.txt')), dag, 'tb')
+    tc = PythonCallable(touch, File(Path('c.txt')), dag, 'tc')
 
     # td is still discoverable from dag even though it was declared in dag2,
     # since it is a dependency for a task in dag
-    td = ShellScript('touch {{product}}', File(Path('c.txt')), dag2, 'td')
+    td = PythonCallable(touch_root, File(Path('c.txt')), dag2, 'td')
     # te is not discoverable since it is not a dependency for any task in dag
-    te = ShellScript('touch {{product}}', File(Path('e.txt')), dag2, 'te')
+    te = PythonCallable(touch, File(Path('e.txt')), dag2, 'te')
 
     td >> ta >> tb >> tc >> te
 
@@ -399,13 +395,11 @@ def test_can_access_tasks_inside_dag_using_getitem():
 def test_partial_build(tmp_directory):
     dag = DAG('dag')
 
-    ta = ShellScript('echo "hi" >> {{product}}', File(Path('a.txt')), dag,
-                     'ta')
-    code = 'cat {{upstream.first}} >> {{product}}'
-    tb = ShellScript(code, File(Path('b.txt')), dag, 'tb')
-    tc = ShellScript(code, File(Path('c.txt')), dag, 'tc')
-    td = ShellScript(code, File(Path('d.txt')), dag, 'td')
-    te = ShellScript(code, File(Path('e.txt')), dag, 'te')
+    ta = PythonCallable(touch_root, File(Path('a.txt')), dag, 'ta')
+    tb = PythonCallable(touch, File(Path('b.txt')), dag, 'tb')
+    tc = PythonCallable(touch, File(Path('c.txt')), dag, 'tc')
+    td = PythonCallable(touch, File(Path('d.txt')), dag, 'td')
+    te = PythonCallable(touch, File(Path('e.txt')), dag, 'te')
 
     ta >> tb >> tc
     tb >> td >> te
