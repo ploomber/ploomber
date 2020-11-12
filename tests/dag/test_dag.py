@@ -316,7 +316,7 @@ def test_build_partially_diff_sessions(tmp_directory):
 @pytest.mark.parametrize('function_name', ['render', 'build', 'plot'])
 @pytest.mark.parametrize('executor', _executors)
 def test_dag_functions_do_not_fetch_metadata(function_name, executor,
-                                             tmp_directory):
+                                             tmp_directory, monkeypatch_plot):
     """
     these function should not look up metadata, since the products do not
     exist, the status can be determined without it
