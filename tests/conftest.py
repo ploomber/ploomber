@@ -92,11 +92,11 @@ def backup_spec_with_functions():
 
     yield root
 
+    os.chdir(old)
+
     shutil.rmtree(str(root))
     shutil.copytree(str(Path(backup, 'spec-with-functions')), str(root))
     shutil.rmtree(backup)
-
-    os.chdir(old)
 
 
 @pytest.fixture()
@@ -183,8 +183,8 @@ def tmp_sample_subdir():
 
     yield tmp
 
-    shutil.rmtree(str(tmp))
     os.chdir(old)
+    shutil.rmtree(str(tmp))
 
 
 @fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs')
