@@ -31,7 +31,8 @@ jobs:
 
         # install graphviz (pygraphviz not available in conda for win-64,
         # it will be installed from pip)
-        conda install -y graphviz -c conda-forge
+        # conda install -y graphviz -c conda-forge
+        conda install -y -c alubbock pygraphviz 
         # seems like pygraphviz just doesnt work on windows
         # https://github.com/pygraphviz/pygraphviz/issues/40
         # pip install pygraphviz
