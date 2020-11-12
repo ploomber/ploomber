@@ -59,4 +59,5 @@ jobs:
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env
-        pytest
+        pytest tests/test_env.py -v
+        pytest tests/dag/test_dag.py -v
