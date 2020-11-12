@@ -103,40 +103,62 @@ def dag():
     return dag
 
 
-def test_plot_embed(dag, monkeypatch):
+@pytest.fixture
+def monkeypatch_plot(monkeypatch):
+    """
+    Monkeypatch logic for making the DAG.plot() work without calling
+    pygraphviz and checking calls are done with the right arguments
+    """
+    image_out = object()
+    mock_Image = Mock(return_value=image_out)
+    mock_to_agraph = Mock()
 
-    obj = object()
-    mock = Mock(wraps=display.Image, return_value=obj)
-    monkeypatch.setattr(dag_module.DAG, 'Image', mock)
+    def touch(*args, **kwargs):
+        Path(args[0]).touch()
+
+    # create file, then make sure it's deleted
+    mock_to_agraph.draw.side_effect = touch
+
+    def to_agraph(*args, **kwargs):
+        return mock_to_agraph
+
+    monkeypatch.setattr(dag_module.DAG, 'Image', mock_Image)
+    monkeypatch.setattr(dag_module.DAG.nx.nx_agraph, 'to_agraph',
+                        Mock(side_effect=to_agraph))
+
+    yield mock_Image, mock_to_agraph, image_out
+
+
+def test_plot_embed(dag, monkeypatch_plot):
+    mock_Image, mock_to_agraph, image_out = monkeypatch_plot
 
     img = dag.plot()
 
-    kwargs = mock.call_args[1]
-    mock.assert_called_once()
+    kwargs = mock_Image.call_args[1]
+    mock_Image.assert_called_once()
     assert set(kwargs) == {'filename'}
     # file should not exist, it's just temporary
     assert not Path(kwargs['filename']).exists()
-    assert img is obj
+    assert img is image_out
+    mock_to_agraph.draw.assert_called_once()
 
 
-def test_plot_path(dag, tmp_directory, monkeypatch):
-
-    obj = object()
-    mock = Mock(wraps=display.Image, return_value=obj)
-    monkeypatch.setattr(dag_module.DAG, 'Image', mock)
+def test_plot_path(dag, tmp_directory, monkeypatch_plot):
+    mock_Image, mock_to_agraph, image_out = monkeypatch_plot
 
     img = dag.plot(output='pipeline.png')
 
-    kwargs = mock.call_args[1]
-    mock.assert_called_once()
+    kwargs = mock_Image.call_args[1]
+    mock_Image.assert_called_once()
     assert kwargs == {'filename': 'pipeline.png'}
     assert Path('pipeline.png').exists()
-    assert img is obj
+    assert img is image_out
+    mock_to_agraph.draw.assert_called_once()
 
 
 @pytest.mark.parametrize('fmt', ['html', 'md'])
 @pytest.mark.parametrize('sections', [None, 'plot', 'status', 'source'])
-def test_to_markup(fmt, sections, dag):
+def test_to_markup(fmt, sections, dag, monkeypatch_plot):
     dag.to_markup(fmt=fmt, sections=sections)
 
 
