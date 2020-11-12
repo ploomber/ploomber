@@ -137,12 +137,6 @@ class Serial(Executor):
                                     'execution):\n{}'.format(
                                         str(exceptions_all)))
 
-        # only close when tasks are executed in this process (otherwise
-        # this won't have any effect anyway)
-        if not self._build_in_subprocess:
-            for client in dag.clients.values():
-                client.close()
-
         return task_reports
 
     def __getstate__(self):

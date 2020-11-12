@@ -407,10 +407,13 @@ class DAG(collections.abc.Mapping):
                             show_progress=show_progress)
 
         with dag_logger:
-            if debug:
-                report = debug_if_exception(callable_)
-            else:
-                report = callable_()
+            try:
+                if debug:
+                    report = debug_if_exception(callable_)
+                else:
+                    report = callable_()
+            finally:
+                self._close_clients()
 
         if debug:
             self.executor = executor_original
@@ -509,6 +512,10 @@ class DAG(collections.abc.Mapping):
                 # on_failure hook executed, raise original exception
                 raise DAGBuildError(
                     'Failed to build DAG {}'.format(self)) from build_exception
+
+    def _close_clients(self):
+        for client in self.clients.values():
+            client.close()
 
     def _run_on_failure(self, tb):
         if self.on_failure:
