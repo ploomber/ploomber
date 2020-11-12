@@ -32,7 +32,9 @@ jobs:
         # install graphviz (pygraphviz not available in conda for win-64,
         # it will be installed from pip)
         conda install -y graphviz -c conda-forge
-        pip install pygraphviz
+        # seems like pygraphviz just doesnt work on windows
+        # https://github.com/pygraphviz/pygraphviz/issues/40
+        # pip install pygraphviz
 
         # Test vanilla installation, make sure core modules are importable
         pip install .
@@ -61,3 +63,4 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
         pytest tests/dag/test_dag.py
+        pytest tests/test_dag_task_reports.py
