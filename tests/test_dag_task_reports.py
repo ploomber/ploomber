@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,8 @@ from ploomber.products import File, SQLiteRelation
 
 
 def touch_root(product):
+    # sleep to ensure the output time is >0
+    time.sleep(0.1)
     Path(str(product)).touch()
 
 
