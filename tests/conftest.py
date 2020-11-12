@@ -125,8 +125,8 @@ def sqlite_client_and_tmp_dir():
     df.to_sql('data', client.engine)
     yield client, tmp_dir
     os.chdir(old)
-    shutil.rmtree(str(tmp_dir))
     client.close()
+    shutil.rmtree(str(tmp_dir))
 
 
 @pytest.fixture
