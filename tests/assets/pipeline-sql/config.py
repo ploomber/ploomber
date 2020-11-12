@@ -15,7 +15,7 @@ def get_client():
 
 
 def get_pg_client():
-    p = str(Path('~', '.auth', 'postgres-ploomber.json').expanduser())
+    p = Path('~', '.auth', 'postgres-ploomber.json').expanduser()
 
     # if running locally, load from file
     if p.exists():

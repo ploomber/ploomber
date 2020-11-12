@@ -1,8 +1,18 @@
 from pathlib import Path
 
 from ploomber import DAG
-from ploomber.tasks import ShellScript
+from ploomber.tasks import PythonCallable
 from ploomber.products import File, MetaProduct
+
+
+def touch_all(product):
+    for p in product:
+        Path(str(p)).touch()
+
+
+def touch_all_upstream(product, upstream):
+    for p in product:
+        Path(str(p)).touch()
 
 
 def test_get():
@@ -48,15 +58,16 @@ def test_can_create_task_with_more_than_one_product(tmp_directory):
     fa = Path('a.txt')
     fb = Path('b.txt')
     fc = Path('c.txt')
+    fd = Path('d.txt')
 
-    ta = ShellScript('touch {{product[0]}} {{product[1]}}',
-                     (File(fa), File(fb)), dag, 'ta')
-    tc = ShellScript(
-        'cat {{upstream["ta"][0]}} {{upstream["ta"][1]}} > '
-        '{{product}}', File(fc), dag, 'tc')
+    ta = PythonCallable(touch_all, (File(fa), File(fb)), dag, 'ta')
+    tc = PythonCallable(touch_all_upstream, (File(fc), File(fd)), dag, 'tc')
 
     ta >> tc
 
-    dag.render()
-
     dag.build()
+
+    assert fa.exists()
+    assert fb.exists()
+    assert fc.exists()
+    assert fd.exists()
