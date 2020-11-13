@@ -544,7 +544,8 @@ def get_client():
 
 
 @pytest.mark.parametrize('lazy_import', [False, True])
-def test_spec_with_functions(lazy_import, backup_spec_with_functions):
+def test_spec_with_functions(lazy_import, backup_spec_with_functions,
+                             add_current_to_sys_path):
     """
     Check we can create pipeline where the task is a function defined in a
     local file
