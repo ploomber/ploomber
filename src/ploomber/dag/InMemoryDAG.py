@@ -19,7 +19,7 @@ class InMemoryDAG:
     dag : ploomber.DAG
         The DAG to use
     """
-    def __init__(self, dag):
+    def __init__(self, dag, return_postprocessor=None):
         types = {type(dag[t]) for t in dag._iter()}
 
         if not {PythonCallable} >= types:
@@ -34,6 +34,7 @@ class InMemoryDAG:
         self.root_nodes = [
             name for name, degree in dag._G.in_degree() if not degree
         ]
+        self.return_postprocessor = return_postprocessor or _do_nothing
 
     def build(self, root_params, copy=False):
         """Run the DAG
@@ -95,7 +96,7 @@ class InMemoryDAG:
                     for k, v in params['upstream'].items()
                 }
 
-            output = task.source.primitive(**params)
+            output = self.return_postprocessor(task.source.primitive(**params))
 
             if output is None:
                 raise ValueError(
