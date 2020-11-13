@@ -54,6 +54,9 @@ jobs:
         pip install -r requirements.txt
         pip install .[test]
 
+        # https://github.com/ipython/ipython/issues/12049
+        pip install prompt-toolkit==2.0.10
+
         # install R and IR kernel
         conda install -y r-base r-irkernel -c conda-forge
         echo "IRkernel::installspec()" | Rscript -
