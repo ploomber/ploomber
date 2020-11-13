@@ -37,7 +37,7 @@ class ProductWithClientMixin:
         return self._client
 
 
-class SQLiteBackedProductMixin(abc.ABC, ProductWithClientMixin):
+class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
     @property
     @abc.abstractmethod
     def name(self):
