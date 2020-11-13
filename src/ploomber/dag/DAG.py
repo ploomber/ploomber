@@ -514,8 +514,19 @@ class DAG(collections.abc.Mapping):
                     'Failed to build DAG {}'.format(self)) from build_exception
 
     def _close_clients(self):
+        """Close all clients (dag-level, task-level and product-level)
+        """
         for client in self.clients.values():
             client.close()
+
+        for task_name in self._iter():
+            task = self[task_name]
+
+            if task.client:
+                task.client.close()
+
+            if task.product.client:
+                task.product.client.close()
 
     def _run_on_failure(self, tb):
         if self.on_failure:

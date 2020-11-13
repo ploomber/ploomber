@@ -3,20 +3,23 @@ from itertools import product
 import warnings
 from pathlib import Path
 from unittest.mock import Mock, MagicMock
+import sqlite3
 
 import pytest
 import tqdm.auto
-from IPython import display
+import pandas as pd
+import numpy as np
 
 from tests_util import executors_w_exception_logging
 from ploomber import DAG
 from ploomber import dag as dag_module
-from ploomber.tasks import PythonCallable, SQLDump
-from ploomber.products import File
+from ploomber.tasks import PythonCallable, SQLDump, SQLScript
+from ploomber.products import File, SQLiteRelation
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop)
 from ploomber.executors import Serial, Parallel, serial
+from ploomber.clients import SQLAlchemyClient
 
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
@@ -847,3 +850,47 @@ def test_build_debug(dag, method, monkeypatch):
     # debug has to modify the executor but must restore it back to the original
     # value
     assert dag.executor is fake_executor
+
+
+def test_clients_are_closed_after_build(tmp_directory):
+    # TODO: same test but when the dag breaks (make sure clients are closed
+    # even on that case)
+    tmp = Path(tmp_directory)
+
+    # create a db
+    conn = sqlite3.connect(str(tmp / "database.db"))
+    uri = 'sqlite:///{}'.format(tmp / "database.db")
+
+    # make some data and save it in the db
+    df = pd.DataFrame({'a': np.arange(0, 100), 'b': np.arange(100, 200)})
+    df.to_sql('numbers', conn)
+    conn.close()
+
+    # create the task and run it
+    dag = DAG()
+
+    clients = [Mock(wraps=SQLAlchemyClient(uri)) for _ in range(4)]
+
+    dag.clients[SQLScript] = clients[0]
+    dag.clients[SQLiteRelation] = clients[1]
+
+    t1 = SQLScript("""
+    CREATE TABLE {{product}} AS SELECT * FROM numbers
+    """,
+                   SQLiteRelation(('another', 'table')),
+                   dag=dag,
+                   name='t1')
+
+    t2 = SQLScript("""
+    CREATE TABLE {{product}} AS SELECT * FROM {{upstream['t1']}}
+    """,
+                   SQLiteRelation(('yet_another', 'table'), client=clients[2]),
+                   dag=dag,
+                   name='t2',
+                   client=clients[3])
+
+    t1 >> t2
+
+    dag.build()
+
+    assert all(client.close.called for client in clients)
