@@ -40,6 +40,8 @@ from papermill.translators import PythonTranslator
 import parso
 import nbformat
 
+from ploomber.util import chdir_code
+
 
 class CallableInteractiveDeveloper:
     """Convert callables to notebooks, edit and save back
@@ -269,10 +271,10 @@ def function_to_nb(body_elements, path, imports_cell, params, fn):
 # Debugging settings (this cell will be removed before saving)
 # change the current working directory to the one when .debug() happen
 # to make relative paths work
-from os import chdir
-chdir("{}")
+from os
+{}
 __package__ = "{}"
-""".format(Path('.').resolve(), module_name)
+""".format(chdir_code(Path('.').resolve()), module_name)
     cell = nb_format.new_code_cell(source,
                                    metadata={'tags': ['debugging-settings']})
     nb.cells.append(cell)
