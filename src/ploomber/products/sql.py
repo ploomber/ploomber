@@ -236,8 +236,8 @@ class PostgresRelation(ProductWithClientMixin, Product):
     # should be required
 
     def __init__(self, identifier, client=None):
-        self._client = client
         super().__init__(identifier)
+        self._client = client
 
     def _init_identifier(self, identifier):
         return SQLRelationPlaceholder(identifier)
