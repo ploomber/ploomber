@@ -95,37 +95,17 @@ def test_shell_client(tmp_directory):
     assert path.exists()
 
 
-def test_shell_client_execute(tmp_directory, monkeypatch):
-    client = ShellClient()
+@pytest.mark.parametrize('run_template', [None, 'ruby {{path_to_code}}'])
+def test_shell_client_execute(run_template, tmp_directory, monkeypatch):
+    if run_template:
+        client = ShellClient(run_template=run_template)
+        expected_command = run_template.split(' ')[0]
+    else:
+        client = ShellClient()
+        expected_command = 'bash'
+
     code = """
     echo 'hello'
-    """
-    mock_execute = Mock()
-    monkeypatch.setattr(shell.ShellClient, 'execute', mock_execute)
-
-    client.execute(code)
-
-    mock_execute.assert_called_once_with(code)
-
-
-def test_shell_client_tmp_file_is_deleted(tmp_directory, monkeypatch):
-    client = ShellClient()
-    code = """
-    echo 'hello'
-    """
-    mock_unlink = Mock()
-    monkeypatch.setattr(shell.Path, 'unlink', mock_unlink)
-
-    client.execute(code)
-
-    mock_unlink.assert_called_once()
-
-
-def test_shell_client_with_template(tmp_directory, monkeypatch):
-    client = ShellClient(run_template='ruby {{path_to_code}}')
-    code = """
-    require 'fileutils'
-    FileUtils.touch "a_file"
     """
 
     mock_res = Mock()
@@ -140,8 +120,21 @@ def test_shell_client_with_template(tmp_directory, monkeypatch):
 
     cmd, path = mock_run_call.call_args[0][0]
 
-    assert cmd == 'ruby'
+    assert cmd == expected_command
     assert Path(path).read_text() == code
+
+
+def test_shell_client_tmp_file_is_deleted(tmp_directory, monkeypatch):
+    client = ShellClient()
+    code = """
+    echo 'hello'
+    """
+    mock_unlink = Mock()
+    monkeypatch.setattr(shell.Path, 'unlink', mock_unlink)
+
+    client.execute(code)
+
+    mock_unlink.assert_called_once()
 
 
 def test_task_level_shell_client(tmp_directory, monkeypatch):
