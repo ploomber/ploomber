@@ -19,7 +19,7 @@ def db_credentials(c):
 def setup(c):
     c.run('conda create --name ploomber python=3.8 --yes')
     c.run('eval "$(conda shell.bash hook)" '
-          '&& conda install graphviz -y'
+          '&& conda install graphviz r-base r-irkernel --yes'
           '&& conda activate ploomber '
           '&& pip install --editable .[all]')
     print('Done! Activate your environment with:\nconda activate ploomber')

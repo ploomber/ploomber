@@ -121,7 +121,10 @@ class NotebookSource(Source):
             self._ext_in = ext_in
 
         # try to determine language based on extension, though this test
-        # mught be inconclusive if dealing with a ipynb file
+        # might be inconclusive if dealing with a ipynb file, though we only
+        # use this to determine the appropriate jupyter kernel when
+        # initializing from a string, when initializing from files, the
+        # extension is used to determine the kernel
         self._language = determine_language(self._ext_in)
 
         self._loc = None
@@ -488,12 +491,21 @@ def _to_nb_obj(source, language, ext=None, kernelspec_name=None):
         have this.
     """
     import jupytext
-    import jupyter_client
 
     # let jupytext figure out the format
     nb = jupytext.reads(source, fmt=ext)
 
-    kernel_name = determine_kernel_name(nb, language, kernelspec_name)
+    ensure_kernelspec(nb, kernelspec_name, ext, language)
+
+    return nb
+
+
+def ensure_kernelspec(nb, kernelspec_name, ext, language):
+    """Make sure the passed notebook has kernel info
+    """
+    import jupyter_client
+
+    kernel_name = determine_kernel_name(nb, kernelspec_name, ext, language)
 
     # cannot keep going if we don't have the kernel name
     if kernel_name is None:
@@ -514,30 +526,33 @@ def _to_nb_obj(source, language, ext=None, kernelspec_name=None):
         "name": kernel_name
     }
 
-    return nb
 
+def determine_kernel_name(nb, kernelspec_name, ext, language):
+    """
+    Determines the kernel name by using the following data (returns whatever
+    gives kernel info first): 1) explicit kernel from the user 2) notebook's
+    metadata 3) file extension 4) language 5) best guess
+    """
+    # explicit kernelspec name
+    if kernelspec_name is not None:
+        return kernelspec_name
 
-def determine_kernel_name(nb, language, kernelspec_name):
-    """
-    Try to determine kernel name, first check notebook metadata, then
-    check if the user explicitly provided a kernelspec_name. If None of this
-    works use the language info, which should not be empty by the time this
-    is executed
-    """
+    # use metadata info
     try:
         return nb.metadata.kernelspec.name
     except AttributeError:
         pass
 
-    if kernelspec_name is not None:
-        return kernelspec_name
+    # use language from extension if passed, otherwise use language variable
+    if ext:
+        language = determine_language(ext)
 
-    # two most common cases
     lang2kernel = {'python': 'python3', 'r': 'ir'}
 
     if language in lang2kernel:
         return lang2kernel[language]
 
+    # nothing worked, try to guess if it's python...
     is_python_ = is_python(nb)
 
     if is_python_:
@@ -555,6 +570,11 @@ def inject_cell(model, params):
     https://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html
     """
     nb = nbformat.from_dict(model['content'])
+
+    # we must ensure nb has kernelspec info, otherwise papermill willf fail to
+    # parametrize
+    ext = model['name'].split('.')[-1]
+    ensure_kernelspec(nb, kernelspec_name=None, ext=ext, language=None)
 
     # papermill adds a bunch of things before calling parameterize_notebook
     # if we don't add those things, parameterize_notebook breaks
@@ -642,7 +662,8 @@ def is_python(nb):
         except SyntaxError:
             is_python_ = False
         else:
-            # there is a lot of R code which is also valid Python code! So let's
+            # there is a lot of R code which is also valid Python code! So
+            # let's
             # run a quick test. It is very unlikely to have "<-" in Python (
             # {less than} {negative} but extremely common {assignment}
             if '<-' not in code_str:

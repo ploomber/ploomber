@@ -6,7 +6,9 @@ import nbformat
 from jupyter_client.kernelspec import NoSuchKernel
 
 from ploomber.tasks.Params import Params
-from ploomber.sources.NotebookSource import NotebookSource, is_python
+from ploomber.sources.NotebookSource import (NotebookSource, is_python,
+                                             inject_cell,
+                                             determine_kernel_name)
 from ploomber.products import File
 from ploomber.exceptions import RenderError, SourceInitializationError
 
@@ -438,3 +440,18 @@ def test_repr_from_path(tmp_directory):
 def test_parse_docstring(code, docstring):
     source = NotebookSource(code, ext_in='py')
     assert source.doc == docstring
+
+
+def test_inject_cell(tmp_directory):
+    nb = jupytext.reads('', fmt=None)
+    model = {'content': nb, 'name': 'script.py'}
+    inject_cell(model,
+                params=Params._from_dict({'product': File('output.ipynb')}))
+
+
+def test_determine_kernel_name_from_ext(tmp_directory):
+    nb = jupytext.reads('', fmt=None)
+    assert determine_kernel_name(nb,
+                                 kernelspec_name=None,
+                                 ext='py',
+                                 language=None) == 'python3'
