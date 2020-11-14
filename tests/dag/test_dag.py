@@ -572,32 +572,34 @@ def test_status_on_render_source_fail():
 
 def test_status_on_product_source_fail():
     def make():
+        mock_client = Mock()
+
         dag = DAG()
         SQLDump('SELECT * FROM my_table',
                 File('ok.txt'),
                 dag,
                 name='t1',
-                client=object())
+                client=mock_client)
         t2 = SQLDump('SELECT * FROM my_table',
                      File('{{unknown}}'),
                      dag,
                      name='t2',
-                     client=object())
+                     client=mock_client)
         t3 = SQLDump('SELECT * FROM another',
                      File('another_file.txt'),
                      dag,
                      name='t3',
-                     client=object())
+                     client=mock_client)
         t4 = SQLDump('SELECT * FROM something',
                      File('yet_another'),
                      dag,
                      name='t4',
-                     client=object())
+                     client=mock_client)
         SQLDump('SELECT * FROM my_table_2',
                 File('ok_2'),
                 dag,
                 name='t5',
-                client=object())
+                client=mock_client)
         t2 >> t3 >> t4
         return dag
 
