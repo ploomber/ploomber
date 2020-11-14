@@ -2,6 +2,7 @@
 Note: tests organized in folders must contain an init file:
 https://github.com/pytest-dev/pytest/issues/3151#issuecomment-360493948
 """
+import stat
 import base64
 from copy import copy
 import sys
@@ -107,7 +108,17 @@ def tmp_directory():
 
     yield tmp
 
+    # some tests create sample git repos, if we are on windows, we need to
+    # change permissions to be able to delete the files
+    if os.name == 'nt' and Path('.git').exists():
+        for root, dirs, files in os.walk('.git'):
+            for dir_ in dirs:
+                os.chmod(Path(root, dir_), stat.S_IRWXU)
+            for file_ in files:
+                os.chmod(Path(root, file_), stat.S_IRWXU)
+
     os.chdir(old)
+
     shutil.rmtree(str(tmp))
 
 
