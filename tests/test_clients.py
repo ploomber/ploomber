@@ -81,20 +81,6 @@ def test_safe_uri():
     assert res == 'postgresql://user@localhost/db'
 
 
-def test_shell_client(tmp_directory):
-    path = Path(tmp_directory, 'a_file')
-
-    client = ShellClient()
-    code = """
-    touch a_file
-    """
-    assert not path.exists()
-
-    client.execute(code)
-
-    assert path.exists()
-
-
 @pytest.mark.parametrize('run_template', [None, 'ruby {{path_to_code}}'])
 def test_shell_client_execute(run_template, tmp_directory, monkeypatch):
     if run_template:
@@ -131,6 +117,10 @@ def test_shell_client_tmp_file_is_deleted(tmp_directory, monkeypatch):
     """
     mock_unlink = Mock()
     monkeypatch.setattr(shell.Path, 'unlink', mock_unlink)
+    mock_res = Mock()
+    mock_res.returncode = 0
+    mock_run_call = Mock(return_value=mock_res)
+    monkeypatch.setattr(shell.subprocess, 'run', mock_run_call)
 
     client.execute(code)
 

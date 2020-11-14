@@ -256,7 +256,8 @@ def test_hot_reload_generic_source(tmp_directory):
 def test_python_callable_properties(path_to_test_pkg):
     source = PythonCallableSource(functions.simple_w_docstring)
 
-    file_, line = source.loc.split(':')
+    tokens = source.loc.split(':')
+    file_, line = ':'.join(tokens[:-1]), tokens[-1]
 
     assert source.doc == functions.simple_w_docstring.__doc__
     assert source.name == 'simple_w_docstring'
