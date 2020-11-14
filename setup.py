@@ -66,13 +66,14 @@ TESTING = [
     # plotting. strictly speaking pygrapviz is an optional dependency but we
     # don't add it as such because it's gonna break installation for most
     # setups, since we don't expect users to have graphviz installed
-    # 'pygraphviz',
+    'pygraphviz',
     # RemoteShellClient
     'paramiko',
     # Upload to S3
     'boto3',
     # testing uplaod to S3 task
     'moto',
+    'pytest',
     # we need this because we are re-using the original jupyter test suite for
     # testing our contents manager (which imports nose), see test_jupyter.py
     'nose',
