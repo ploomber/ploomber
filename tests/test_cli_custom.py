@@ -13,6 +13,7 @@ from ploomber.cli import (plot, build, parsers, task, report, cli, status,
                           interact)
 from ploomber.tasks import notebook
 from ploomber import DAG
+import ploomber.dag.DAG as dag_module
 
 
 @pytest.mark.parametrize('cmd', [
@@ -93,7 +94,11 @@ def test_status(monkeypatch, tmp_sample_dir):
 def test_plot(custom_args, monkeypatch, tmp_sample_dir):
     args_defaults = ['python', '--entry-point', 'test_pkg.entry.with_doc']
     monkeypatch.setattr(sys, 'argv', args_defaults + custom_args)
+    mock = Mock()
+    monkeypatch.setattr(dag_module.DAG, 'plot', mock)
     plot.main()
+
+    mock.assert_called_once()
 
 
 def test_report(monkeypatch, tmp_sample_dir):
