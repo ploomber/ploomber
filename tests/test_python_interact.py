@@ -1,3 +1,4 @@
+import sys
 import os
 from unittest.mock import Mock
 import inspect
@@ -209,6 +210,11 @@ def test_develop_spec_with_local_functions(task_name,
 
     fn = dag[task_name].source.primitive
     params = dag[task_name].params.to_json_serializable()
+
+    if sys.platform == 'win32':
+        # edge case, wee need this to correctly parametrize the notebook
+        # when running the test on windows
+        params['product'] = str(params['product']).replace('\\', '\\\\')
 
     with CallableInteractiveDeveloper(fn, params) as tmp_nb:
         pm.execute_notebook(tmp_nb, tmp_nb)
