@@ -31,7 +31,7 @@ from ploomber.sources import NotebookSource
 from ploomber.sources.NotebookSource import _cleanup_rendered_nb
 from ploomber.products import File, MetaProduct
 from ploomber.tasks.Task import Task
-from ploomber.util import requires
+from ploomber.util import requires, chdir_code
 
 
 class NotebookConverter:
@@ -475,9 +475,9 @@ def _read_rendered_notebook(nb_str):
 # Debugging settings (this cell will be removed before saving)
 # change the current working directory to directory of the session that
 # invoked the jupyter app to make relative paths work
-from os import chdir
-chdir("{}")
-""".format(Path('.').resolve())
+import os
+{}
+""".format(chdir_code(Path('.').resolve()))
 
     cell = nbformat_v.new_code_cell(source,
                                     metadata={'tags': ['debugging-settings']})

@@ -1,6 +1,6 @@
 import sys
 import os
-from pathlib import Path
+from pathlib import Path, WindowsPath
 import importlib
 from functools import wraps, reduce
 import base64
@@ -312,3 +312,15 @@ def add_to_sys_path(path, chdir):
         if path is not None:
             sys.path.remove(path)
             os.chdir(cwd_old)
+
+
+def chdir_code(path):
+    """
+    Returns a string with valid code to chdir to the passed path
+    """
+    path = Path(path).resolve()
+
+    if isinstance(path, WindowsPath):
+        path = str(path).replace('\\', '\\\\')
+
+    return f'os.chdir("{path}")'
