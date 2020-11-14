@@ -3,7 +3,7 @@ import pickle
 import copy
 from pathlib import Path
 from urllib.parse import urlparse
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 from subprocess import CalledProcessError
 
@@ -15,7 +15,7 @@ from ploomber.tasks import ShellScript
 from ploomber.products import File
 from ploomber.clients import (ShellClient, SQLAlchemyClient, DBAPIClient,
                               RemoteShellClient)
-from ploomber.clients import db
+from ploomber.clients import db, shell
 
 
 def test_deepcopy_dbapiclient(tmp_directory):
@@ -95,28 +95,59 @@ def test_shell_client(tmp_directory):
     assert path.exists()
 
 
-def test_shell_client_with_custom_template(tmp_directory):
-    path = Path(tmp_directory, 'a_file')
+def test_shell_client_execute(tmp_directory, monkeypatch):
+    client = ShellClient()
+    code = """
+    echo 'hello'
+    """
+    mock_execute = Mock()
+    monkeypatch.setattr(shell.ShellClient, 'execute', mock_execute)
 
+    client.execute(code)
+
+    mock_execute.assert_called_once_with(code)
+
+
+def test_shell_client_tmp_file_is_deleted(tmp_directory, monkeypatch):
+    client = ShellClient()
+    code = """
+    echo 'hello'
+    """
+    mock_unlink = Mock()
+    monkeypatch.setattr(shell.Path, 'unlink', mock_unlink)
+
+    client.execute(code)
+
+    mock_unlink.assert_called_once()
+
+
+def test_shell_client_with_template(tmp_directory, monkeypatch):
     client = ShellClient(run_template='ruby {{path_to_code}}')
     code = """
     require 'fileutils'
     FileUtils.touch "a_file"
     """
-    assert not path.exists()
+
+    mock_res = Mock()
+    mock_res.returncode = 0
+    mock_run_call = Mock(return_value=mock_res)
+
+    monkeypatch.setattr(shell.subprocess, 'run', mock_run_call)
+    # prevent tmp file from being removed so we can check contents
+    monkeypatch.setattr(shell.Path, 'unlink', Mock())
 
     client.execute(code)
 
-    assert path.exists()
+    cmd, path = mock_run_call.call_args[0][0]
+
+    assert cmd == 'ruby'
+    assert Path(path).read_text() == code
 
 
-def test_custom_client_in_dag(tmp_directory):
+def test_task_level_shell_client(tmp_directory, monkeypatch):
     path = Path(tmp_directory, 'a_file')
-
     dag = DAG()
-
     client = ShellClient(run_template='ruby {{path_to_code}}')
-
     dag.clients[ShellScript] = client
 
     ShellScript("""
@@ -127,11 +158,12 @@ def test_custom_client_in_dag(tmp_directory):
                 dag=dag,
                 name='ruby_script')
 
-    assert not path.exists()
+    mock = Mock(wraps=client.execute)
+    monkeypatch.setattr(client, 'execute', mock)
 
     dag.build()
 
-    assert path.exists()
+    mock.assert_called_once()
 
 
 def test_db_code_split():

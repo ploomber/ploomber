@@ -35,8 +35,6 @@ class ShellClient(Client):
                      'stdout': subprocess.PIPE,
                      'shell': False
                  }):
-        """
-        """
         self.subprocess_run_kwargs = subprocess_run_kwargs
         self.run_template = run_template
         self._logger = logging.getLogger('{}.{}'.format(
@@ -58,6 +56,8 @@ class ShellClient(Client):
         source = run_template.render(dict(path_to_code=path_to_tmp))
 
         res = subprocess.run(shlex.split(source), **self.subprocess_run_kwargs)
+        Path(path_to_tmp).unlink()
+
         stdout = res.stdout.decode('utf-8')
         stderr = res.stderr.decode('utf-8')
 
