@@ -81,6 +81,8 @@ def test_safe_uri():
     assert res == 'postgresql://user@localhost/db'
 
 
+# TODO: some of the following tests no longer need tmp_directory because
+# they use mock and files are no longer created
 @pytest.mark.parametrize('run_template', [None, 'ruby {{path_to_code}}'])
 def test_shell_client_execute(run_template, tmp_directory, monkeypatch):
     if run_template:

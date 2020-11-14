@@ -53,7 +53,10 @@ class ShellClient(Client):
         Path(path_to_tmp).write_text(code)
 
         run_template = Placeholder(self.run_template)
-        source = run_template.render(dict(path_to_code=path_to_tmp))
+        # we need quoting to make windows paths keep their \\ separators when
+        # running shlex.split
+        source = run_template.render(
+            dict(path_to_code=shlex.quote(path_to_tmp)))
 
         res = subprocess.run(shlex.split(source), **self.subprocess_run_kwargs)
         Path(path_to_tmp).unlink()
