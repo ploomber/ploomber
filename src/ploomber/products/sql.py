@@ -23,8 +23,8 @@ class ProductWithClientMixin:
                 raise ValueError('Cannot obtain client for this product, '
                                  'the constructor did not receive a client '
                                  'and this product has not been assigned '
-                                 'to a DAG yet, hence we cannot look up '
-                                 'dag.clients')
+                                 'to a DAG yet (cannot look up for clients in'
+                                 'dag.clients)')
 
             default = self.task.dag.clients.get(type(self))
 

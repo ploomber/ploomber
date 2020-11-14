@@ -46,13 +46,13 @@ class ProductsContainer:
 
 
 class ClientContainer:
-    def __init__(self, clients):
-        self._clients = clients
+    def __init__(self, products):
+        self._products = products
 
     def close(self):
-        for client in self._clients:
-            if client:
-                client.close()
+        for product in self._products:
+            if product.client:
+                product.client.close()
 
 
 # NOTE: rename this to ProductCollection?
@@ -71,8 +71,7 @@ class MetaProduct(Mapping):
 
         self.products = container
         self.metadata = MetadataCollection(container)
-        self.clients = ClientContainer(
-            [product.client for product in container])
+        self.clients = ClientContainer(container)
 
     @property
     def task(self):

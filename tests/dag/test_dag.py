@@ -615,9 +615,9 @@ def test_status_on_product_source_fail():
     assert dag['t4'].exec_status == TaskStatus.AbortedRender
     assert dag['t5'].exec_status == TaskStatus.WaitingExecution
 
-    # building directly should also raise render error
     dag = make()
 
+    # building directly should also raise render error
     with pytest.raises(DAGRenderError):
         dag.build()
 
