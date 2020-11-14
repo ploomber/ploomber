@@ -271,7 +271,7 @@ def function_to_nb(body_elements, path, imports_cell, params, fn):
 # Debugging settings (this cell will be removed before saving)
 # change the current working directory to the one when .debug() happen
 # to make relative paths work
-from os
+import os
 {}
 __package__ = "{}"
 """.format(chdir_code(Path('.').resolve()), module_name)

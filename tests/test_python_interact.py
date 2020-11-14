@@ -14,6 +14,7 @@ import papermill as pm
 from ploomber.sources.interact import CallableInteractiveDeveloper
 from ploomber.sources import interact
 from ploomber.spec.DAGSpec import DAGSpec
+from ploomber.util import chdir_code
 
 
 @pytest.fixture
@@ -146,8 +147,7 @@ def test_changes_cwd(backup_test_pkg):
         cell = find_cell_tagged(nb, 'debugging-settings')
         source = cell.source
 
-    current = Path('.').resolve()
-    assert f'chdir("{current}")' in source
+    assert chdir_code(Path('.').resolve()) in source
 
 
 def test_error_if_source_is_modified_while_editing(backup_test_pkg):
