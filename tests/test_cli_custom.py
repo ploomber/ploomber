@@ -101,10 +101,15 @@ def test_plot(custom_args, monkeypatch, tmp_sample_dir):
     mock.assert_called_once()
 
 
-def test_report(monkeypatch, tmp_sample_dir):
+def test_report_includes_plot(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
                         ['python', '--entry-point', 'test_pkg.entry.with_doc'])
+
+    mock_plot = Mock()
+    monkeypatch.setattr(dag_module.DAG, 'plot', mock_plot)
     report.main()
+
+    mock_plot.assert_called_once()
 
 
 def test_log_enabled(monkeypatch, tmp_sample_dir):
