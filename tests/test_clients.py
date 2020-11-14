@@ -1,3 +1,4 @@
+import subprocess
 import sqlite3
 import pickle
 import copy
@@ -146,9 +147,37 @@ def test_task_level_shell_client(tmp_directory, monkeypatch):
     mock = Mock(wraps=client.execute)
     monkeypatch.setattr(client, 'execute', mock)
 
+    mock_res = Mock()
+    mock_res.returncode = 0
+
+    def side_effect(*args, **kwargs):
+        Path('a_file').touch()
+        return mock_res
+
+    mock_run_call = Mock(side_effect=side_effect)
+    monkeypatch.setattr(shell.subprocess, 'run', mock_run_call)
+    # prevent tmp file from being removed so we can check contents
+    monkeypatch.setattr(shell.Path, 'unlink', Mock())
+
     dag.build()
 
     mock.assert_called_once()
+
+    cmd, path_arg = mock_run_call.call_args[0][0]
+    kwargs = mock_run_call.call_args[1]
+
+    expected_code = """
+    require 'fileutils'
+    FileUtils.touch "{path}"
+    """.format(path=path)
+
+    assert cmd == 'ruby'
+    assert Path(path_arg).read_text() == expected_code
+    assert kwargs == {
+        'stderr': subprocess.PIPE,
+        'stdout': subprocess.PIPE,
+        'shell': False
+    }
 
 
 def test_db_code_split():
