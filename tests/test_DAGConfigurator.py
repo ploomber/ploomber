@@ -61,10 +61,10 @@ def test_from_dict():
 @pytest.mark.parametrize(
     'executor',
     [
-        Serial(build_in_subprocess=True),
-        pytest.param(Serial(build_in_subprocess=False),
+        pytest.param(Serial(build_in_subprocess=True),
                      marks=pytest.mark.xfail(sys.platform == 'win32',
                                              reason='See test docstring')),
+        Serial(build_in_subprocess=False),
         pytest.param(Parallel(),
                      marks=pytest.mark.xfail(sys.platform == 'win32',
                                              reason='See test docstring')),
