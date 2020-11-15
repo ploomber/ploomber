@@ -9,9 +9,10 @@ def test_file_initialized_with_str():
 
 
 def test_file_initialized_with_path():
-    f = File(Path('/path/to/file'))
+    path = Path('/path/to/file')
+    f = File(path)
     f.render({})
-    assert str(f) == '/path/to/file'
+    assert str(f) == str(path)
 
 
 def test_file_is_rendered_correctly():

@@ -1,8 +1,16 @@
 from pathlib import Path
 
 from ploomber import DAG
-from ploomber.tasks import ShellScript
+from ploomber.tasks import ShellScript, PythonCallable
 from ploomber.products import File
+
+
+def touch_root(product):
+    Path(str(product)).touch()
+
+
+def touch(product, upstream):
+    Path(str(product)).touch()
 
 
 def test_non_existent_file(tmp_directory):
@@ -25,9 +33,8 @@ def test_outdated_data_simple_dependency(tmp_directory):
     fa = Path('a.txt')
     fb = Path('b.txt')
 
-    ta = ShellScript('touch {{product}}', File(fa), dag, 'ta')
-    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}', File(fb), dag,
-                     'tb')
+    ta = PythonCallable(touch_root, File(fa), dag, 'ta')
+    tb = PythonCallable(touch, File(fb), dag, 'tb')
 
     ta >> tb
 
@@ -69,11 +76,9 @@ def test_many_upstream(tmp_directory):
     fb = Path('b.txt')
     fc = Path('c.txt')
 
-    ta = ShellScript('touch {{product}}', File(fa), dag, 'ta')
-    tb = ShellScript('touch {{product}} > {{product}}', File(fb), dag, 'tb')
-    tc = ShellScript(
-        'cat {{upstream["ta"]}} {{upstream["tb"]}} >  {{product}}', File(fc),
-        dag, 'tc')
+    ta = PythonCallable(touch_root, File(fa), dag, 'ta')
+    tb = PythonCallable(touch_root, File(fb), dag, 'tb')
+    tc = PythonCallable(touch, File(fc), dag, 'tc')
 
     (ta + tb) >> tc
 
@@ -115,7 +120,7 @@ def test_chained_dependency():
     pass
 
 
-def test_can_create_task_with_many_products():
+def test_can_instantiate_task_with_many_products():
     dag = DAG()
     fa1 = File('a1.txt')
     fa2 = File('a2.txt')

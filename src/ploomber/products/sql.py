@@ -23,8 +23,8 @@ class ProductWithClientMixin:
                 raise ValueError('Cannot obtain client for this product, '
                                  'the constructor did not receive a client '
                                  'and this product has not been assigned '
-                                 'to a DAG yet, hence we cannot look up '
-                                 'dag.clients')
+                                 'to a DAG yet (cannot look up for clients in'
+                                 'dag.clients)')
 
             default = self.task.dag.clients.get(type(self))
 
@@ -37,7 +37,7 @@ class ProductWithClientMixin:
         return self._client
 
 
-class SQLiteBackedProductMixin(abc.ABC, ProductWithClientMixin):
+class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
     @property
     @abc.abstractmethod
     def name(self):
@@ -236,8 +236,8 @@ class PostgresRelation(ProductWithClientMixin, Product):
     # should be required
 
     def __init__(self, identifier, client=None):
-        self._client = client
         super().__init__(identifier)
+        self._client = client
 
     def _init_identifier(self, identifier):
         return SQLRelationPlaceholder(identifier)

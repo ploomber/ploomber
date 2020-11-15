@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
@@ -8,12 +9,24 @@ from ploomber.tasks import ShellScript
 from ploomber.exceptions import SourceInitializationError
 
 
-def test_build_task(tmp_directory):
+def test_build_task(tmp_directory, monkeypatch):
     dag = DAG()
-    ShellScript('touch {{product}}', File('file.txt'), dag, name='touch')
+    task = ShellScript('touch {{product}}',
+                       File('file.txt'),
+                       dag,
+                       name='touch')
+
+    # need this to because dag.build verifies products exist after execution
+    def side_effect(code):
+        Path('file.txt').touch()
+
+    # mock the actual execution to make this test work on windows
+    mock_execute = Mock(side_effect=side_effect)
+    monkeypatch.setattr(task.client, 'execute', mock_execute)
+
     dag.build()
 
-    assert Path('file.txt').exists()
+    mock_execute.assert_called_once_with('touch file.txt')
 
 
 def test_error_if_missing_product(tmp_directory):

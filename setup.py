@@ -73,6 +73,7 @@ TESTING = [
     'boto3',
     # testing uplaod to S3 task
     'moto',
+    'pytest',
     # we need this because we are re-using the original jupyter test suite for
     # testing our contents manager (which imports nose), see test_jupyter.py
     'nose',

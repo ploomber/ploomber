@@ -17,6 +17,8 @@ def test_get_git(tmp_directory, cleanup_env):
     Path('env.yaml').write_text('_module: .\ngit: "{{git}}"')
 
     subprocess.run(['git', 'init'])
+    subprocess.run(['git', 'config', 'user.email', 'ci@ploomberio'])
+    subprocess.run(['git', 'config', 'user.name', 'Ploomber'])
     subprocess.run(['git', 'add', '--all'])
     subprocess.run(['git', 'commit', '-m', 'first commit'])
 

@@ -2,6 +2,8 @@
 Note: tests organized in folders must contain an init file:
 https://github.com/pytest-dev/pytest/issues/3151#issuecomment-360493948
 """
+import stat
+import base64
 from copy import copy
 import sys
 import importlib
@@ -91,11 +93,11 @@ def backup_spec_with_functions():
 
     yield root
 
+    os.chdir(old)
+
     shutil.rmtree(str(root))
     shutil.copytree(str(Path(backup, 'spec-with-functions')), str(root))
     shutil.rmtree(backup)
-
-    os.chdir(old)
 
 
 @pytest.fixture()
@@ -106,8 +108,18 @@ def tmp_directory():
 
     yield tmp
 
-    shutil.rmtree(str(tmp))
+    # some tests create sample git repos, if we are on windows, we need to
+    # change permissions to be able to delete the files
+    if os.name == 'nt' and Path('.git').exists():
+        for root, dirs, files in os.walk('.git'):
+            for dir_ in dirs:
+                os.chmod(Path(root, dir_), stat.S_IRWXU)
+            for file_ in files:
+                os.chmod(Path(root, file_), stat.S_IRWXU)
+
     os.chdir(old)
+
+    shutil.rmtree(str(tmp))
 
 
 @pytest.fixture()
@@ -124,8 +136,8 @@ def sqlite_client_and_tmp_dir():
     df.to_sql('data', client.engine)
     yield client, tmp_dir
     os.chdir(old)
-    shutil.rmtree(str(tmp_dir))
     client.close()
+    shutil.rmtree(str(tmp_dir))
 
 
 @pytest.fixture
@@ -182,8 +194,8 @@ def tmp_sample_subdir():
 
     yield tmp
 
-    shutil.rmtree(str(tmp))
     os.chdir(old)
+    shutil.rmtree(str(tmp))
 
 
 @fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs')
@@ -218,17 +230,21 @@ def path_to_assets():
 
 
 def _load_db_credentials():
+    p = Path('~', '.auth', 'postgres-ploomber.json').expanduser()
 
-    # try load credentials from a local file
-    p = str(Path('~', '.auth', 'postgres-ploomber.json').expanduser())
-
-    try:
+    # if running locally, load from file
+    if p.exists():
         with open(p) as f:
             db = json.load(f)
 
-    # if that does not work, try connecting to a local db (this is the
-    # case when running on Travis)
-    except FileNotFoundError:
+    # if no credentials file, use env variable (used in windows CI)
+    elif 'POSTGRES' in os.environ:
+        b64 = os.environ['POSTGRES']
+        json_str = base64.b64decode(b64).decode()
+        db = json.loads(json_str)
+
+    # otherwise, use local posttgres db (used in linux CI)
+    else:
         db = {
             'uri': 'postgresql://postgres:postgres@localhost:5432/postgres',
             'dbname': 'postgres',

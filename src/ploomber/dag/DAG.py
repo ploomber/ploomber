@@ -27,6 +27,7 @@ executors adhere to task status and do not build tasks if they are marked
 as Aborted or Skipped.
 
 """
+import os
 from collections.abc import Iterable
 import traceback
 from copy import copy, deepcopy
@@ -406,10 +407,13 @@ class DAG(collections.abc.Mapping):
                             show_progress=show_progress)
 
         with dag_logger:
-            if debug:
-                report = debug_if_exception(callable_)
-            else:
-                report = callable_()
+            try:
+                if debug:
+                    report = debug_if_exception(callable_)
+                else:
+                    report = callable_()
+            finally:
+                self._close_clients()
 
         if debug:
             self.executor = executor_original
@@ -508,6 +512,21 @@ class DAG(collections.abc.Mapping):
                 # on_failure hook executed, raise original exception
                 raise DAGBuildError(
                     'Failed to build DAG {}'.format(self)) from build_exception
+
+    def _close_clients(self):
+        """Close all clients (dag-level, task-level and product-level)
+        """
+        for client in self.clients.values():
+            client.close()
+
+        for task_name in self._iter():
+            task = self[task_name]
+
+            if task.client:
+                task.client.close()
+
+            if task.product.client:
+                task.product.client.close()
 
     def _run_on_failure(self, tb):
         if self.on_failure:
@@ -622,7 +641,8 @@ class DAG(collections.abc.Mapping):
             status = False
 
         if 'plot' in sections:
-            _, path_to_plot = tempfile.mkstemp(suffix='.png')
+            fd, path_to_plot = tempfile.mkstemp(suffix='.png')
+            os.close(fd)
             self.plot(output=path_to_plot)
             plot = image_bytes2html(Path(path_to_plot).read_bytes())
         else:
@@ -659,7 +679,8 @@ class DAG(collections.abc.Mapping):
         """Plot the DAG
         """
         if output == 'embed':
-            _, path = tempfile.mkstemp(suffix='.png')
+            fd, path = tempfile.mkstemp(suffix='.png')
+            os.close(fd)
         else:
             path = str(output)
 

@@ -121,6 +121,8 @@ def test_hot_reload(backup_test_pkg, tmp_directory):
 
     path_to_functions = Path(backup_test_pkg, 'functions.py')
     source_new = """
+from pathlib import Path
+
 def touch_root(product):
     Path(str(product)).write_text("hi")
 

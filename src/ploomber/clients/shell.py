@@ -1,6 +1,7 @@
 """
 Clients that communicate with shell processes
 """
+import os
 import tempfile
 from pathlib import Path
 import random
@@ -34,8 +35,6 @@ class ShellClient(Client):
                      'stdout': subprocess.PIPE,
                      'shell': False
                  }):
-        """
-        """
         self.subprocess_run_kwargs = subprocess_run_kwargs
         self.run_template = run_template
         self._logger = logging.getLogger('{}.{}'.format(
@@ -49,13 +48,19 @@ class ShellClient(Client):
     def execute(self, code):
         """Run code
         """
-        _, path_to_tmp = tempfile.mkstemp()
+        fd, path_to_tmp = tempfile.mkstemp()
+        os.close(fd)
         Path(path_to_tmp).write_text(code)
 
         run_template = Placeholder(self.run_template)
-        source = run_template.render(dict(path_to_code=path_to_tmp))
+        # we need quoting to make windows paths keep their \\ separators when
+        # running shlex.split
+        source = run_template.render(
+            dict(path_to_code=shlex.quote(path_to_tmp)))
 
         res = subprocess.run(shlex.split(source), **self.subprocess_run_kwargs)
+        Path(path_to_tmp).unlink()
+
         stdout = res.stdout.decode('utf-8')
         stderr = res.stderr.decode('utf-8')
 
@@ -137,7 +142,8 @@ class RemoteShellClient(Client):
     def read_file(self, path):
         ftp = self.connection.open_sftp()
 
-        _, path_to_tmp = tempfile.mkstemp()
+        fd, path_to_tmp = tempfile.mkstemp()
+        os.close(fd)
         ftp.get(path, path_to_tmp)
 
         path_to_tmp = Path(path_to_tmp)
@@ -152,7 +158,8 @@ class RemoteShellClient(Client):
     def write_to_file(self, content, path):
         ftp = self.connection.open_sftp()
 
-        _, path_to_tmp = tempfile.mkstemp()
+        fd, path_to_tmp = tempfile.mkstemp()
+        os.close(fd)
         path_to_tmp = Path(path_to_tmp)
         path_to_tmp.write_text(content)
         ftp.put(path_to_tmp, path)
@@ -166,7 +173,8 @@ class RemoteShellClient(Client):
         ftp = self.connection.open_sftp()
         path_remote = self.path_to_directory + self._random_name()
 
-        _, path_to_tmp = tempfile.mkstemp()
+        fd, path_to_tmp = tempfile.mkstemp()
+        os.close(fd)
         Path(path_to_tmp).write_text(code)
 
         ftp.put(path_to_tmp, path_remote)

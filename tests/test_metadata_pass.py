@@ -16,20 +16,19 @@ def test_passing_upstream_and_product_in_shellscript(tmp_directory):
     fb = Path('b.txt')
     fc = Path('c.txt')
 
-    ta = ShellScript(('echo a > {{product}} '), File(fa), dag,
-                     'ta')
+    ta = ShellScript(('echo a > {{product}}'), File(fa), dag, 'ta')
     tb = ShellScript(('cat {{upstream["ta"]}} > {{product}}'
-                      '&& echo b >> {{product}} '), File(fb), dag,
-                     'tb')
-    tc = ShellScript(('cat {{upstream["tb"]}} > {{product}} '
-                      '&& echo c >> {{product}}'), File(fc), dag,
-                     'tc')
+                      ' && echo b >> {{product}}'), File(fb), dag, 'tb')
+    tc = ShellScript(('cat {{upstream["tb"]}} > {{product}}'
+                      ' && echo c >> {{product}}'), File(fc), dag, 'tc')
 
     ta >> tb >> tc
 
-    dag.build()
+    dag.render()
 
-    assert fc.read_text() == 'a\nb\nc\n'
+    assert str(ta.source) == 'echo a > a.txt'
+    assert str(tb.source) == 'cat a.txt > b.txt && echo b >> b.txt'
+    assert str(tc.source) == 'cat b.txt > c.txt && echo c >> c.txt'
 
 
 def test_passing_upstream_and_product_in_postgres(pg_client_and_schema,

@@ -2,7 +2,7 @@ name: CI Windows
 
 on:
   push:
-    branches: [ master, dev]
+    branches: '*'
   pull_request:
     branches: [ master ]
 
@@ -27,8 +27,21 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
 
-        # install pygraphviz
-        conda install -y pygraphviz -c conda-forge
+        # there's a bug in jupyter, we need to install this first
+        conda install pywin32
+
+        # install graphviz (pygraphviz not available in conda for win-64,
+        # it will be installed from pip)
+        # conda install -y graphviz -c conda-forge
+        # note: this installation still gives trouble (error when saving png
+        # files but it makes pygraphviz importable), we can get rid of this
+        # once we update the tests to mock the @requires decorator to make
+        # it think that pygraphviz is installed when it's not. the tests
+        # currently do not call pygraphviz (it's mocked), but @requires imports
+        conda install -y -c alubbock pygraphviz 
+        # seems like pygraphviz just doesnt work on windows
+        # https://github.com/pygraphviz/pygraphviz/issues/40
+        # pip install pygraphviz
 
         # Test vanilla installation, make sure core modules are importable
         pip install .
@@ -42,6 +55,9 @@ jobs:
         pip install -r requirements.txt
         pip install .[test]
 
+        # https://github.com/ipython/ipython/issues/12049
+        pip install prompt-toolkit==2.0.10
+
         # install R and IR kernel
         conda install -y r-base r-irkernel -c conda-forge
         echo "IRkernel::installspec()" | Rscript -
@@ -51,7 +67,9 @@ jobs:
 
     - name: Run tests
       shell: bash -l {0}
+      env:
+        POSTGRES: ${{ secrets.POSTGRES }}
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env
-        pytest tests/test_cli_custom.py::test_run_spec
+        pytest --ignore=tests/test_examples.py --ignore=tests/test_guide.py --ignore=tests/test_recipes.py

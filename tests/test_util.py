@@ -4,11 +4,11 @@ import copy
 import sys
 
 import pytest
-from ploomber.util.util import add_to_sys_path, load_dotted_path
+from ploomber.util.util import add_to_sys_path, load_dotted_path, chdir_code
 
 
 def test_add_to_sys_path():
-    path = '/path/to/add'
+    path = str(Path('/path/to/add').resolve())
 
     with add_to_sys_path(path, chdir=False):
         assert path in sys.path
@@ -17,7 +17,7 @@ def test_add_to_sys_path():
 
 
 def test_add_to_sys_path_with_chdir(tmp_directory):
-    path = Path('some_directory').resolve()
+    path = Path('.').resolve() / 'some_directory'
     path.mkdir()
     path = str(path)
     old_dir = os.getcwd()
@@ -40,7 +40,7 @@ def test_add_to_sys_path_with_none():
 
 
 def test_add_to_sys_path_with_exception():
-    path = '/path/to/add'
+    path = str(Path('/path/to/add').resolve())
 
     with pytest.raises(Exception):
         with add_to_sys_path(path, chdir=False):
@@ -56,3 +56,8 @@ def test_load_dotted_path_custom_error_message():
 
     assert ('Could not get "not_a_function" from module "test_pkg"'
             in str(excinfo.value))
+
+
+def test_chdir_code(tmp_directory):
+    # test generated code is valid
+    eval(chdir_code(tmp_directory))

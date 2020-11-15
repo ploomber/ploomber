@@ -1,3 +1,5 @@
+import sys
+import os
 from unittest.mock import Mock
 import inspect
 import pytest
@@ -13,11 +15,13 @@ import papermill as pm
 from ploomber.sources.interact import CallableInteractiveDeveloper
 from ploomber.sources import interact
 from ploomber.spec.DAGSpec import DAGSpec
+from ploomber.util import chdir_code
 
 
 @pytest.fixture
 def tmp_file():
-    _, tmp = tempfile.mkstemp()
+    fd, tmp = tempfile.mkstemp()
+    os.close(fd)
     yield tmp
     Path(tmp).unlink()
 
@@ -144,8 +148,7 @@ def test_changes_cwd(backup_test_pkg):
         cell = find_cell_tagged(nb, 'debugging-settings')
         source = cell.source
 
-    current = Path('.').resolve()
-    assert f'chdir("{current}")' in source
+    assert chdir_code(Path('.').resolve()) in source
 
 
 def test_error_if_source_is_modified_while_editing(backup_test_pkg):
@@ -207,6 +210,11 @@ def test_develop_spec_with_local_functions(task_name,
 
     fn = dag[task_name].source.primitive
     params = dag[task_name].params.to_json_serializable()
+
+    if sys.platform == 'win32':
+        # edge case, wee need this to correctly parametrize the notebook
+        # when running the test on windows
+        params['product'] = str(params['product']).replace('\\', '\\\\')
 
     with CallableInteractiveDeveloper(fn, params) as tmp_nb:
         pm.execute_notebook(tmp_nb, tmp_nb)

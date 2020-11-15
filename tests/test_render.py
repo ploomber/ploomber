@@ -42,19 +42,15 @@ def on_render_failed():
 def dag():
     dag = DAG()
 
-    t1 = ShellScript('echo a > {{product}} ', File('1.txt'), dag,
-                     't1')
+    t1 = ShellScript('echo a > {{product}} ', File('1.txt'), dag, 't1')
 
     t2 = ShellScript(('cat {{upstream["t1"]}} > {{product}}'
                       '&& echo b >> {{product}} '),
-                     File(('2_{{upstream["t1"]}}')),
-                     dag,
-                     't2')
+                     File(('2_{{upstream["t1"]}}')), dag, 't2')
 
     t3 = ShellScript(('cat {{upstream["t2"]}} > {{product}} '
                       '&& echo c >> {{product}}'),
-                     File(('3_{{upstream["t2"]}}')), dag,
-                     't3')
+                     File(('3_{{upstream["t2"]}}')), dag, 't3')
 
     t1 >> t2 >> t3
 
@@ -74,8 +70,8 @@ def test_dag_render_step_by_step():
 
     (t21 + t22) >> t3
 
-    assert (set(t.exec_status for t in dag.values())
-            == {TaskStatus.WaitingRender})
+    assert (set(t.exec_status
+                for t in dag.values()) == {TaskStatus.WaitingRender})
 
     t1.render()
 
@@ -119,8 +115,8 @@ def test_dag_render_step_by_step_w_skipped(tmp_directory):
 
     (t21 + t22) >> t3
 
-    assert (set(t.exec_status for t in dag.values())
-            == {TaskStatus.WaitingRender})
+    assert (set(t.exec_status
+                for t in dag.values()) == {TaskStatus.WaitingRender})
 
     dag.render()
     t1.build()
@@ -160,8 +156,7 @@ def test_dag_render_step_by_step_w_skipped(tmp_directory):
 def test_can_access_product_without_rendering_if_literal():
     dag = DAG()
 
-    ShellScript('echo a > {{product}}', File('1.txt'), dag,
-                't1')
+    ShellScript('echo a > {{product}}', File('1.txt'), dag, 't1')
 
     # no rendering!
 
@@ -195,17 +190,13 @@ def test_can_build_dag_with_templates(dag, tmp_directory):
 def test_rendering_dag_also_renders_upstream_outside_dag(tmp_directory):
     sub_dag = DAG('sub_dag')
 
-    ta = ShellScript('touch {{product}}',
-                     File('a.txt'), sub_dag, 'ta')
-    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}',
-                     File('b.txt'), sub_dag, 'tb')
+    ta = PythonCallable(touch_root, File('a.txt'), sub_dag, 'ta')
+    tb = PythonCallable(touch, File('b.txt'), sub_dag, 'tb')
 
     dag = DAG('dag')
 
-    tc = ShellScript('cat {{upstream["tb"]}} > {{product}}',
-                     File('c.txt'), dag, 'tc')
-    td = ShellScript('cat {{upstream["tc"]}} > {{product}}',
-                     File('d.txt'), dag, 'td')
+    tc = PythonCallable(touch, File('c.txt'), dag, 'tc')
+    td = PythonCallable(touch, File('d.txt'), dag, 'td')
 
     ta >> tb >> tc >> td
 

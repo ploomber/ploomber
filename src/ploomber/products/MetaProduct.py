@@ -45,6 +45,16 @@ class ProductsContainer:
         return str(self.products)
 
 
+class ClientContainer:
+    def __init__(self, products):
+        self._products = products
+
+    def close(self):
+        for product in self._products:
+            if product.client:
+                product.client.close()
+
+
 # NOTE: rename this to ProductCollection?
 class MetaProduct(Mapping):
     """
@@ -61,11 +71,16 @@ class MetaProduct(Mapping):
 
         self.products = container
         self.metadata = MetadataCollection(container)
+        self.clients = ClientContainer(container)
 
     @property
     def task(self):
         # TODO: validate same task
         return self.products[0].task
+
+    @property
+    def client(self):
+        return self.clients
 
     @task.setter
     def task(self, value):

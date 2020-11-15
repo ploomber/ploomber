@@ -3,20 +3,23 @@ from itertools import product
 import warnings
 from pathlib import Path
 from unittest.mock import Mock, MagicMock
+import sqlite3
 
 import pytest
 import tqdm.auto
-from IPython import display
+import pandas as pd
+import numpy as np
 
 from tests_util import executors_w_exception_logging
 from ploomber import DAG
 from ploomber import dag as dag_module
-from ploomber.tasks import ShellScript, PythonCallable, SQLDump
-from ploomber.products import File
+from ploomber.tasks import PythonCallable, SQLDump, SQLScript
+from ploomber.products import File, SQLiteRelation
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop)
 from ploomber.executors import Serial, Parallel, serial
+from ploomber.clients import SQLAlchemyClient
 
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
@@ -103,40 +106,62 @@ def dag():
     return dag
 
 
-def test_plot_embed(dag, monkeypatch):
+@pytest.fixture
+def monkeypatch_plot(monkeypatch):
+    """
+    Monkeypatch logic for making the DAG.plot() work without calling
+    pygraphviz and checking calls are done with the right arguments
+    """
+    image_out = object()
+    mock_Image = Mock(return_value=image_out)
+    mock_to_agraph = Mock()
 
-    obj = object()
-    mock = Mock(wraps=display.Image, return_value=obj)
-    monkeypatch.setattr(dag_module.DAG, 'Image', mock)
+    def touch(*args, **kwargs):
+        Path(args[0]).touch()
+
+    # create file, then make sure it's deleted
+    mock_to_agraph.draw.side_effect = touch
+
+    def to_agraph(*args, **kwargs):
+        return mock_to_agraph
+
+    monkeypatch.setattr(dag_module.DAG, 'Image', mock_Image)
+    monkeypatch.setattr(dag_module.DAG.nx.nx_agraph, 'to_agraph',
+                        Mock(side_effect=to_agraph))
+
+    yield mock_Image, mock_to_agraph, image_out
+
+
+def test_plot_embed(dag, monkeypatch_plot):
+    mock_Image, mock_to_agraph, image_out = monkeypatch_plot
 
     img = dag.plot()
 
-    kwargs = mock.call_args[1]
-    mock.assert_called_once()
+    kwargs = mock_Image.call_args[1]
+    mock_Image.assert_called_once()
     assert set(kwargs) == {'filename'}
     # file should not exist, it's just temporary
     assert not Path(kwargs['filename']).exists()
-    assert img is obj
+    assert img is image_out
+    mock_to_agraph.draw.assert_called_once()
 
 
-def test_plot_path(dag, tmp_directory, monkeypatch):
-
-    obj = object()
-    mock = Mock(wraps=display.Image, return_value=obj)
-    monkeypatch.setattr(dag_module.DAG, 'Image', mock)
+def test_plot_path(dag, tmp_directory, monkeypatch_plot):
+    mock_Image, mock_to_agraph, image_out = monkeypatch_plot
 
     img = dag.plot(output='pipeline.png')
 
-    kwargs = mock.call_args[1]
-    mock.assert_called_once()
+    kwargs = mock_Image.call_args[1]
+    mock_Image.assert_called_once()
     assert kwargs == {'filename': 'pipeline.png'}
     assert Path('pipeline.png').exists()
-    assert img is obj
+    assert img is image_out
+    mock_to_agraph.draw.assert_called_once()
 
 
 @pytest.mark.parametrize('fmt', ['html', 'md'])
 @pytest.mark.parametrize('sections', [None, 'plot', 'status', 'source'])
-def test_to_markup(fmt, sections, dag):
+def test_to_markup(fmt, sections, dag, monkeypatch_plot):
     dag.to_markup(fmt=fmt, sections=sections)
 
 
@@ -294,7 +319,7 @@ def test_build_partially_diff_sessions(tmp_directory):
 @pytest.mark.parametrize('function_name', ['render', 'build', 'plot'])
 @pytest.mark.parametrize('executor', _executors)
 def test_dag_functions_do_not_fetch_metadata(function_name, executor,
-                                             tmp_directory):
+                                             tmp_directory, monkeypatch_plot):
     """
     these function should not look up metadata, since the products do not
     exist, the status can be determined without it
@@ -339,11 +364,9 @@ def test_dag_functions_do_not_fetch_metadata(function_name, executor,
 def test_can_get_upstream_and_downstream_tasks():
     dag = DAG('dag')
 
-    ta = ShellScript('echo "a" > {{product}}', File('a.txt'), dag, 'ta')
-    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}', File('b.txt'),
-                     dag, 'tb')
-    tc = ShellScript('cat {{upstream["tb"]}} > {{product}}', File('c.txt'),
-                     dag, 'tc')
+    ta = PythonCallable(touch_root, File('a.txt'), dag, 'ta')
+    tb = PythonCallable(touch, File('b.txt'), dag, 'tb')
+    tc = PythonCallable(touch, File('c.txt'), dag, 'tc')
 
     ta >> tb >> tc
 
@@ -359,18 +382,16 @@ def test_can_get_upstream_and_downstream_tasks():
 def test_can_access_sub_dag():
     sub_dag = DAG('sub_dag')
 
-    ta = ShellScript('echo "a" > {{product}}', File('a.txt'), sub_dag, 'ta')
-    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}', File('b.txt'),
-                     sub_dag, 'tb')
-    tc = ShellScript('tcat {{upstream["tb"]}} > {{product}}', File('c.txt'),
-                     sub_dag, 'tc')
+    ta = PythonCallable(touch_root, File('a.txt'), sub_dag, 'ta')
+    tb = PythonCallable(touch, File('b.txt'), sub_dag, 'tb')
+    tc = PythonCallable(touch, File('c.txt'), sub_dag, 'tc')
 
     ta >> tb >> tc
 
     dag = DAG('dag')
 
     fd = Path('d.txt')
-    td = ShellScript('touch {{product}}', File(fd), dag, 'td')
+    td = PythonCallable(touch, File(fd), dag, 'td')
 
     td.set_upstream(sub_dag)
 
@@ -381,15 +402,15 @@ def test_can_access_tasks_inside_dag_using_getitem():
     dag = DAG('dag')
     dag2 = DAG('dag2')
 
-    ta = ShellScript('touch {{product}}', File(Path('a.txt')), dag, 'ta')
-    tb = ShellScript('touch {{product}}', File(Path('b.txt')), dag, 'tb')
-    tc = ShellScript('touch {{product}}', File(Path('c.txt')), dag, 'tc')
+    ta = PythonCallable(touch, File(Path('a.txt')), dag, 'ta')
+    tb = PythonCallable(touch, File(Path('b.txt')), dag, 'tb')
+    tc = PythonCallable(touch, File(Path('c.txt')), dag, 'tc')
 
     # td is still discoverable from dag even though it was declared in dag2,
     # since it is a dependency for a task in dag
-    td = ShellScript('touch {{product}}', File(Path('c.txt')), dag2, 'td')
+    td = PythonCallable(touch_root, File(Path('c.txt')), dag2, 'td')
     # te is not discoverable since it is not a dependency for any task in dag
-    te = ShellScript('touch {{product}}', File(Path('e.txt')), dag2, 'te')
+    te = PythonCallable(touch, File(Path('e.txt')), dag2, 'te')
 
     td >> ta >> tb >> tc >> te
 
@@ -399,13 +420,11 @@ def test_can_access_tasks_inside_dag_using_getitem():
 def test_partial_build(tmp_directory):
     dag = DAG('dag')
 
-    ta = ShellScript('echo "hi" >> {{product}}', File(Path('a.txt')), dag,
-                     'ta')
-    code = 'cat {{upstream.first}} >> {{product}}'
-    tb = ShellScript(code, File(Path('b.txt')), dag, 'tb')
-    tc = ShellScript(code, File(Path('c.txt')), dag, 'tc')
-    td = ShellScript(code, File(Path('d.txt')), dag, 'td')
-    te = ShellScript(code, File(Path('e.txt')), dag, 'te')
+    ta = PythonCallable(touch_root, File(Path('a.txt')), dag, 'ta')
+    tb = PythonCallable(touch, File(Path('b.txt')), dag, 'tb')
+    tc = PythonCallable(touch, File(Path('c.txt')), dag, 'tc')
+    td = PythonCallable(touch, File(Path('d.txt')), dag, 'td')
+    te = PythonCallable(touch, File(Path('e.txt')), dag, 'te')
 
     ta >> tb >> tc
     tb >> td >> te
@@ -503,32 +522,33 @@ def test_executor_keeps_running_until_no_more_tasks_can_run(
 
 def test_status_on_render_source_fail():
     def make():
+        mock_client = Mock()
         dag = DAG()
         SQLDump('SELECT * FROM my_table',
                 File('ok.txt'),
                 dag,
                 name='t1',
-                client=object())
+                client=mock_client)
         t2 = SQLDump('SELECT * FROM {{table}}',
                      File('a_file.txt'),
                      dag,
                      name='t2',
-                     client=object())
+                     client=mock_client)
         t3 = SQLDump('SELECT * FROM another',
                      File('another_file.txt'),
                      dag,
                      name='t3',
-                     client=object())
+                     client=mock_client)
         t4 = SQLDump('SELECT * FROM something',
                      File('yet_another'),
                      dag,
                      name='t4',
-                     client=object())
+                     client=mock_client)
         SQLDump('SELECT * FROM my_table_2',
                 File('ok_2'),
                 dag,
                 name='t5',
-                client=object())
+                client=mock_client)
         t2 >> t3 >> t4
         return dag
 
@@ -553,32 +573,34 @@ def test_status_on_render_source_fail():
 
 def test_status_on_product_source_fail():
     def make():
+        mock_client = Mock()
+
         dag = DAG()
         SQLDump('SELECT * FROM my_table',
                 File('ok.txt'),
                 dag,
                 name='t1',
-                client=object())
+                client=mock_client)
         t2 = SQLDump('SELECT * FROM my_table',
                      File('{{unknown}}'),
                      dag,
                      name='t2',
-                     client=object())
+                     client=mock_client)
         t3 = SQLDump('SELECT * FROM another',
                      File('another_file.txt'),
                      dag,
                      name='t3',
-                     client=object())
+                     client=mock_client)
         t4 = SQLDump('SELECT * FROM something',
                      File('yet_another'),
                      dag,
                      name='t4',
-                     client=object())
+                     client=mock_client)
         SQLDump('SELECT * FROM my_table_2',
                 File('ok_2'),
                 dag,
                 name='t5',
-                client=object())
+                client=mock_client)
         t2 >> t3 >> t4
         return dag
 
@@ -594,25 +616,26 @@ def test_status_on_product_source_fail():
     assert dag['t4'].exec_status == TaskStatus.AbortedRender
     assert dag['t5'].exec_status == TaskStatus.WaitingExecution
 
-    # building directly should also raise render error
     dag = make()
 
+    # building directly should also raise render error
     with pytest.raises(DAGRenderError):
         dag.build()
 
 
 def test_tracebacks_are_shown_for_all_on_render_failing_tasks():
     dag = DAG()
+    mock_client = Mock()
     SQLDump('SELECT * FROM {{one_table}}',
             File('one_table'),
             dag,
             name='t1',
-            client=object())
+            client=mock_client)
     SQLDump('SELECT * FROM {{another_table}}',
             File('another_table'),
             dag,
             name='t2',
-            client=object())
+            client=mock_client)
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
@@ -831,3 +854,47 @@ def test_build_debug(dag, method, monkeypatch):
     # debug has to modify the executor but must restore it back to the original
     # value
     assert dag.executor is fake_executor
+
+
+def test_clients_are_closed_after_build(tmp_directory):
+    # TODO: same test but when the dag breaks (make sure clients are closed
+    # even on that case)
+    tmp = Path(tmp_directory)
+
+    # create a db
+    conn = sqlite3.connect(str(tmp / "database.db"))
+    uri = 'sqlite:///{}'.format(tmp / "database.db")
+
+    # make some data and save it in the db
+    df = pd.DataFrame({'a': np.arange(0, 100), 'b': np.arange(100, 200)})
+    df.to_sql('numbers', conn)
+    conn.close()
+
+    # create the task and run it
+    dag = DAG()
+
+    clients = [Mock(wraps=SQLAlchemyClient(uri)) for _ in range(4)]
+
+    dag.clients[SQLScript] = clients[0]
+    dag.clients[SQLiteRelation] = clients[1]
+
+    t1 = SQLScript("""
+    CREATE TABLE {{product}} AS SELECT * FROM numbers
+    """,
+                   SQLiteRelation(('another', 'table')),
+                   dag=dag,
+                   name='t1')
+
+    t2 = SQLScript("""
+    CREATE TABLE {{product}} AS SELECT * FROM {{upstream['t1']}}
+    """,
+                   SQLiteRelation(('yet_another', 'table'), client=clients[2]),
+                   dag=dag,
+                   name='t2',
+                   client=clients[3])
+
+    t1 >> t2
+
+    dag.build()
+
+    assert all(client.close.called for client in clients)

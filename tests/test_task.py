@@ -133,11 +133,9 @@ def test_task_change_in_status(tmp_directory):
     # NOTE: there are some similar tests in test_dag.py - maybe move them?
     dag = DAG('dag')
 
-    ta = ShellScript('echo "a" > {{product}}', File('a.txt'), dag, 'ta')
-    tb = ShellScript('cat {{upstream["ta"]}} > {{product}}', File('b.txt'),
-                     dag, 'tb')
-    tc = ShellScript('cat {{upstream["tb"]}} > {{product}}', File('c.txt'),
-                     dag, 'tc')
+    ta = PythonCallable(touch, File('a.txt'), dag, 'ta')
+    tb = PythonCallable(touch_w_upstream, File('b.txt'), dag, 'tb')
+    tc = PythonCallable(touch_w_upstream, File('c.txt'), dag, 'tc')
 
     assert all(
         [t.exec_status == TaskStatus.WaitingRender for t in [ta, tb, tc]])

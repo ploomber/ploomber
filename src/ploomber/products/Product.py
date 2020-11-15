@@ -41,6 +41,9 @@ class Product(abc.ABC):
 
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
+        # not all products have clients, but they should still have a client
+        # property to keep the API consistent
+        self._client = None
         self.metadata = Metadata(self)
 
         self.prepare_metadata = _prepare_metadata
@@ -51,6 +54,10 @@ class Product(abc.ABC):
             raise ValueError('This product has not been assigned to any Task')
 
         return self._task
+
+    @property
+    def client(self):
+        return self._client
 
     @task.setter
     def task(self, value):

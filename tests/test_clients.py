@@ -1,9 +1,10 @@
+import subprocess
 import sqlite3
 import pickle
 import copy
 from pathlib import Path
 from urllib.parse import urlparse
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 from subprocess import CalledProcessError
 
@@ -15,7 +16,7 @@ from ploomber.tasks import ShellScript
 from ploomber.products import File
 from ploomber.clients import (ShellClient, SQLAlchemyClient, DBAPIClient,
                               RemoteShellClient)
-from ploomber.clients import db
+from ploomber.clients import db, shell
 
 
 def test_deepcopy_dbapiclient(tmp_directory):
@@ -81,42 +82,58 @@ def test_safe_uri():
     assert res == 'postgresql://user@localhost/db'
 
 
-def test_shell_client(tmp_directory):
-    path = Path(tmp_directory, 'a_file')
+# TODO: some of the following tests no longer need tmp_directory because
+# they use mock and files are no longer created
+@pytest.mark.parametrize('run_template', [None, 'ruby {{path_to_code}}'])
+def test_shell_client_execute(run_template, tmp_directory, monkeypatch):
+    if run_template:
+        client = ShellClient(run_template=run_template)
+        expected_command = run_template.split(' ')[0]
+    else:
+        client = ShellClient()
+        expected_command = 'bash'
 
+    code = """
+    echo 'hello'
+    """
+
+    mock_res = Mock()
+    mock_res.returncode = 0
+    mock_run_call = Mock(return_value=mock_res)
+
+    monkeypatch.setattr(shell.subprocess, 'run', mock_run_call)
+    # prevent tmp file from being removed so we can check contents
+    monkeypatch.setattr(shell.Path, 'unlink', Mock())
+
+    client.execute(code)
+
+    cmd, path = mock_run_call.call_args[0][0]
+
+    assert cmd == expected_command
+    assert Path(path).read_text() == code
+
+
+def test_shell_client_tmp_file_is_deleted(tmp_directory, monkeypatch):
     client = ShellClient()
     code = """
-    touch a_file
+    echo 'hello'
     """
-    assert not path.exists()
+    mock_unlink = Mock()
+    monkeypatch.setattr(shell.Path, 'unlink', mock_unlink)
+    mock_res = Mock()
+    mock_res.returncode = 0
+    mock_run_call = Mock(return_value=mock_res)
+    monkeypatch.setattr(shell.subprocess, 'run', mock_run_call)
 
     client.execute(code)
 
-    assert path.exists()
+    mock_unlink.assert_called_once()
 
 
-def test_shell_client_with_custom_template(tmp_directory):
+def test_task_level_shell_client(tmp_directory, monkeypatch):
     path = Path(tmp_directory, 'a_file')
-
-    client = ShellClient(run_template='ruby {{path_to_code}}')
-    code = """
-    require 'fileutils'
-    FileUtils.touch "a_file"
-    """
-    assert not path.exists()
-
-    client.execute(code)
-
-    assert path.exists()
-
-
-def test_custom_client_in_dag(tmp_directory):
-    path = Path(tmp_directory, 'a_file')
-
     dag = DAG()
-
     client = ShellClient(run_template='ruby {{path_to_code}}')
-
     dag.clients[ShellScript] = client
 
     ShellScript("""
@@ -127,11 +144,40 @@ def test_custom_client_in_dag(tmp_directory):
                 dag=dag,
                 name='ruby_script')
 
-    assert not path.exists()
+    mock = Mock(wraps=client.execute)
+    monkeypatch.setattr(client, 'execute', mock)
+
+    mock_res = Mock()
+    mock_res.returncode = 0
+
+    def side_effect(*args, **kwargs):
+        Path('a_file').touch()
+        return mock_res
+
+    mock_run_call = Mock(side_effect=side_effect)
+    monkeypatch.setattr(shell.subprocess, 'run', mock_run_call)
+    # prevent tmp file from being removed so we can check contents
+    monkeypatch.setattr(shell.Path, 'unlink', Mock())
 
     dag.build()
 
-    assert path.exists()
+    mock.assert_called_once()
+
+    cmd, path_arg = mock_run_call.call_args[0][0]
+    kwargs = mock_run_call.call_args[1]
+
+    expected_code = """
+    require 'fileutils'
+    FileUtils.touch "{path}"
+    """.format(path=path)
+
+    assert cmd == 'ruby'
+    assert Path(path_arg).read_text() == expected_code
+    assert kwargs == {
+        'stderr': subprocess.PIPE,
+        'stdout': subprocess.PIPE,
+        'shell': False
+    }
 
 
 def test_db_code_split():

@@ -1,3 +1,4 @@
+import sys
 import logging
 from pathlib import Path
 
@@ -7,6 +8,7 @@ from ploomber import DAG
 from ploomber.dag.DAGConfigurator import DAGConfigurator
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
+from ploomber.executors import Serial, Parallel
 
 
 def touch_root(product):
@@ -56,12 +58,35 @@ def test_from_dict():
     assert not configurator.params.outdated_by_code
 
 
-def test_logging_handler(tmp_directory):
+@pytest.mark.parametrize(
+    'executor',
+    [
+        pytest.param(Serial(build_in_subprocess=True),
+                     marks=pytest.mark.xfail(sys.platform == 'win32',
+                                             reason='See test docstring')),
+        Serial(build_in_subprocess=False),
+        pytest.param(Parallel(),
+                     marks=pytest.mark.xfail(sys.platform == 'win32',
+                                             reason='See test docstring')),
+    ],
+    ids=['serial-subprocess', 'serial', 'parallel'],
+)
+def test_logging_handler(executor, tmp_directory):
+    """
+    Note: this test is a bit weird, when executed in isolation it fails,
+    but when executing the whole file, it works. Not sure why.
+
+    Also, this only works on windows when tasks are executed in the same
+    process. For it to work, we'd have to ensure that the logging objects
+    are re-configured again in the child process, see this:
+    https://stackoverflow.com/a/26168432/709975
+    """
     configurator = DAGConfigurator()
 
     configurator.params.logging_factory = logging_factory
     dag = configurator.create()
     dag.name = 'my_dag'
+    dag.executor = executor
 
     PythonCallable(touch_root, File('file.txt'), dag)
     dag.build()
@@ -71,8 +96,8 @@ def test_logging_handler(tmp_directory):
     assert 'This should not appear...' not in log
 
 
-def test_logging_handler_does_not_modify_root_logger_level(tmp_directory,
-                                                           caplog):
+def test_logging_handler_does_not_modify_root_logger_level(
+        tmp_directory, caplog):
     root = logging.getLogger()
     root.setLevel(logging.INFO)
     configurator = DAGConfigurator()

@@ -137,12 +137,6 @@ class Serial(Executor):
                                     'execution):\n{}'.format(
                                         str(exceptions_all)))
 
-        # only close when tasks are executed in this process (otherwise
-        # this won't have any effect anyway)
-        if not self._build_in_subprocess:
-            for client in dag.clients.values():
-                client.close()
-
         return task_reports
 
     def __getstate__(self):
@@ -225,9 +219,10 @@ def build_in_subprocess(task, build_kwargs, reports_all):
             task.product.metadata.update_locally(meta)
             task.exec_status = TaskStatus.Executed
             reports_all.append(report)
+        finally:
+            p.close()
+            p.join()
 
-        p.close()
-        p.join()
     else:
         report, meta = task._build(**build_kwargs)
         task.product.metadata.update_locally(meta)

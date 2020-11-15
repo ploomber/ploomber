@@ -1,8 +1,8 @@
-name: CI
+name: CI Linux
 
 on:
   push:
-    branches: [ master, dev]
+    branches: '*'
   pull_request:
     branches: [ master ]
 

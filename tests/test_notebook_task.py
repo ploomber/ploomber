@@ -1,3 +1,4 @@
+import sys
 from unittest.mock import Mock
 from pathlib import Path
 
@@ -47,8 +48,15 @@ def test_notebook_converter_get_exporter_from_name(exporter_name, exporter):
     assert converter.exporter == exporter
 
 
-@pytest.mark.parametrize('output',
-                         ['file.ipynb', 'file.pdf', 'file.html', 'file.md'])
+@pytest.mark.parametrize('output', [
+    'file.ipynb', 'file.pdf',
+    pytest.param(
+        'file.html',
+        marks=pytest.mark.xfail(
+            sys.platform == 'win32',
+            reason='nbconvert has a bug when exporting to HTML on windows')),
+    'file.md'
+])
 def test_notebook_conversion(monkeypatch, output, tmp_directory):
     # we mock the method that does the conversion to avoid having to
     # intstall tex for testing
@@ -84,6 +92,9 @@ def test_execute_sample_nb(name, out_dir, tmp_sample_tasks):
     dag.build()
 
 
+@pytest.mark.xfail(
+    sys.platform == 'win32',
+    reason='nbconvert has a bug when exporting to HTML on windows')
 def test_can_convert_to_html(tmp_sample_tasks):
     dag = DAG()
 
@@ -368,7 +379,7 @@ def test_hot_reload(tmp_directory):
     """)
 
     t = NotebookRunner(path,
-                       product=File('out.html'),
+                       product=File('out.ipynb'),
                        dag=dag,
                        kernelspec_name='python3')
 

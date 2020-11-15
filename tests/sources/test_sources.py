@@ -199,10 +199,9 @@ def test_warns_if_number_of_relations_does_not_match_products(
 # comparing metaproduct
 
 
-# TODO: use fixture and backup the entire test_pkg source code
 # TODO: check all other relevant properties are updated as well
-def test_hot_reload(path_to_test_pkg):
-    path_to_functions = Path(path_to_test_pkg, 'functions.py')
+def test_hot_reload(backup_test_pkg):
+    path_to_functions = Path(backup_test_pkg, 'functions.py')
     source = PythonCallableSource(functions.some_function, hot_reload=True)
 
     source_old = path_to_functions.read_text()
@@ -256,7 +255,8 @@ def test_hot_reload_generic_source(tmp_directory):
 def test_python_callable_properties(path_to_test_pkg):
     source = PythonCallableSource(functions.simple_w_docstring)
 
-    file_, line = source.loc.split(':')
+    tokens = source.loc.split(':')
+    file_, line = ':'.join(tokens[:-1]), tokens[-1]
 
     assert source.doc == functions.simple_w_docstring.__doc__
     assert source.name == 'simple_w_docstring'

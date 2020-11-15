@@ -1,3 +1,4 @@
+import os
 import shlex
 import pdb
 import tempfile
@@ -30,7 +31,7 @@ from ploomber.sources import NotebookSource
 from ploomber.sources.NotebookSource import _cleanup_rendered_nb
 from ploomber.products import File, MetaProduct
 from ploomber.tasks.Task import Task
-from ploomber.util import requires
+from ploomber.util import requires, chdir_code
 
 
 class NotebookConverter:
@@ -391,7 +392,8 @@ class NotebookRunner(Task):
             raise ValueError('kind must be one of {}'.format(opts))
 
         nb = _read_rendered_notebook(self.source.nb_str_rendered)
-        _, tmp_path = tempfile.mkstemp(suffix='.py')
+        fd, tmp_path = tempfile.mkstemp(suffix='.py')
+        os.close(fd)
         code = jupytext.writes(nb, version=nbformat.NO_CONVERT, fmt='py')
         Path(tmp_path).write_text(code)
 
@@ -432,7 +434,9 @@ class NotebookRunner(Task):
         # we will change the extension after the notebook runs successfully
         path_to_out_ipynb = path_to_out.with_suffix('.ipynb')
 
-        _, tmp = tempfile.mkstemp('.ipynb')
+        fd, tmp = tempfile.mkstemp('.ipynb')
+        os.close(fd)
+
         tmp = Path(tmp)
         tmp.write_text(self.source.nb_str_rendered)
 
@@ -471,9 +475,9 @@ def _read_rendered_notebook(nb_str):
 # Debugging settings (this cell will be removed before saving)
 # change the current working directory to directory of the session that
 # invoked the jupyter app to make relative paths work
-from os import chdir
-chdir("{}")
-""".format(Path('.').resolve())
+import os
+{}
+""".format(chdir_code(Path('.').resolve()))
 
     cell = nbformat_v.new_code_cell(source,
                                     metadata={'tags': ['debugging-settings']})
