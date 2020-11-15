@@ -16,7 +16,7 @@ def db_credentials(c):
 
 
 @task
-def setup(c):
+def setup(c, doc=True):
     """
     Setup dev environment, requires conda
     """
@@ -27,4 +27,11 @@ def setup(c):
           '&& conda activate ploomber '
           '&& pip install --editable .[test] '
           '&& bash install_test_pkg.sh')
+
+    if doc:
+        with c.cd('doc'):
+            c.run('eval "$(conda shell.bash hook)" '
+                  '&& conda activate ploomber '
+                  '&& conda env update --file environment.yml --name ploomber')
+
     print('Done! Activate your environment with:\nconda activate ploomber')
