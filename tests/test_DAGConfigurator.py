@@ -7,6 +7,7 @@ from ploomber import DAG
 from ploomber.dag.DAGConfigurator import DAGConfigurator
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
+from ploomber.executors import Serial, Parallel
 
 
 def touch_root(product):
@@ -56,12 +57,22 @@ def test_from_dict():
     assert not configurator.params.outdated_by_code
 
 
-def test_logging_handler(tmp_directory):
+@pytest.mark.parametrize('executor', [
+    Serial(build_in_subprocess=True),
+    Serial(build_in_subprocess=False),
+    Parallel(),
+])
+def test_logging_handler(executor, tmp_directory):
+    """
+    Note: this test is a bit weird, when executed in isolation it fails,
+    but when executing the whole file, it works. Not sure why.
+    """
     configurator = DAGConfigurator()
 
     configurator.params.logging_factory = logging_factory
     dag = configurator.create()
     dag.name = 'my_dag'
+    dag.executor = executor
 
     PythonCallable(touch_root, File('file.txt'), dag)
     dag.build()
@@ -71,8 +82,8 @@ def test_logging_handler(tmp_directory):
     assert 'This should not appear...' not in log
 
 
-def test_logging_handler_does_not_modify_root_logger_level(tmp_directory,
-                                                           caplog):
+def test_logging_handler_does_not_modify_root_logger_level(
+        tmp_directory, caplog):
     root = logging.getLogger()
     root.setLevel(logging.INFO)
     configurator = DAGConfigurator()
