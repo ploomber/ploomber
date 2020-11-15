@@ -39,6 +39,11 @@ class NotebookConverter:
     Thin wrapper around nbconvert to provide a simple API to convert .ipynb
     files to different formats.
 
+    Parameters
+    ----------
+    nbconvert_export_kwargs : dict, default=None
+        Keyword arguments passed to ``nbconvert.export``
+
     Notes
     -----
     The exporter is searched at initialization time to raise an appropriate
@@ -191,14 +196,41 @@ class NotebookRunner(Task):
         upstream dependencies an upstream parameter should also be declared
         "upstream = None"
     nbconvert_export_kwargs : dict
-        Keyword arguments to pass to the nbconvert.export function (this is
+        Keyword arguments to pass to the ``nbconvert.export`` function (this is
         only used if exporting the output ipynb notebook to another format).
         You can use this, for example, to hide code cells using the
-        exclude_input parameter
+        exclude_input parameter. See ``nbconvert`` documentation for details.
     local_execution : bool, optional
         Change working directory to be the parent of the notebook's source.
         Defaults to False. This resembles the default behavior when
         running notebooks interactively via `jupyter notebook`
+
+
+    Examples
+    --------
+    >>> from pathlib import Path
+    >>> from ploomber import DAG
+    >>> from ploomber.tasks import NotebookRunner
+    >>> from ploomber.products import File
+    >>> dag = DAG()
+    >>> # do not include input code (only cell's output)
+    >>> NotebookRunner(Path('nb.ipynb'), File('out-1.html'), dag=dag,
+    ...                nbconvert_export_kwargs={'exclude_input': True},
+    ...                name=1)
+    >>> # Selectively remove cells with the tag "remove"
+    >>> config = {'TagRemovePreprocessor': {'remove_cell_tags': ('remove',)},
+    ...           'HTMLExporter':
+    ...             {'preprocessors':
+    ...             ['nbconvert.preprocessors.TagRemovePreprocessor']}}
+    >>> NotebookRunner(Path('nb.ipynb'), File('out-2.html'), dag=dag,
+    ...                nbconvert_export_kwargs={'config': config},
+    ...                name=2)
+    >>> dag.build()
+
+    Notes
+    -----
+    nbconvert's documentation:
+    https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options
     """
     PRODUCT_CLASSES_ALLOWED = (File, )
 
