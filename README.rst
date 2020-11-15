@@ -1,8 +1,13 @@
 Ploomber
 ========
 
-.. image:: https://travis-ci.org/ploomber/ploomber.svg?branch=master
-    :target: https://travis-ci.org/ploomber/ploomber.svg?branch=master
+.. image:: https://github.com/ploomber/ploomber/workflows/CI/badge.svg
+   :target: https://github.com/ploomber/ploomber/workflows/CI/badge.svg
+   :alt: CI
+
+.. image:: https://github.com/ploomber/ploomber/workflows/CI%20Windows/badge.svg
+   :target: https://github.com/ploomber/ploomber/workflows/CI%20Windows/badge.svg
+   :alt: CI Windows
 
 .. image:: https://readthedocs.org/projects/ploomber/badge/?version=latest
     :target: https://ploomber.readthedocs.io/en/latest/?badge=latest

@@ -61,13 +61,15 @@ def test_from_dict():
 @pytest.mark.parametrize(
     'executor',
     [
-        pytest.param(Serial(build_in_subprocess=False),
-                     marks=pytest.mark.xfail(sys.platform == 'win32')),
         Serial(build_in_subprocess=True),
+        pytest.param(Serial(build_in_subprocess=False),
+                     marks=pytest.mark.xfail(sys.platform == 'win32',
+                                             reason='See test docstring')),
         pytest.param(Parallel(),
-                     marks=pytest.mark.xfail(sys.platform == 'win32')),
+                     marks=pytest.mark.xfail(sys.platform == 'win32',
+                                             reason='See test docstring')),
     ],
-    ids=['serial', 'serial-subprocess', 'parallel'],
+    ids=['serial-subprocess', 'serial', 'parallel'],
 )
 def test_logging_handler(executor, tmp_directory):
     """

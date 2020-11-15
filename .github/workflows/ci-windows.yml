@@ -27,6 +27,7 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
 
+        # there's a bug in jupyter, we need to install this first
         conda install pywin32
 
         # install graphviz (pygraphviz not available in conda for win-64,
