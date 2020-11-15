@@ -79,7 +79,8 @@ def test_injects_cell_if_file_in_dag(tmp_nbs):
 def test_injects_cell_even_if_pipeline_yaml_in_subdirectory(tmp_nbs):
     os.chdir('..')
     cm = PloomberContentsManager()
-    model = cm.get('content/plot.py')
+    # use Path to handle windows and linux style paths
+    model = cm.get(str(Path('content/plot.py')))
     injected = get_injected_cell(model['content'])
     assert injected
 
