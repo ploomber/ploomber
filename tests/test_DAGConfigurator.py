@@ -1,3 +1,4 @@
+import sys
 import logging
 from pathlib import Path
 
@@ -57,15 +58,26 @@ def test_from_dict():
     assert not configurator.params.outdated_by_code
 
 
-@pytest.mark.parametrize('executor', [
-    Serial(build_in_subprocess=True),
-    Serial(build_in_subprocess=False),
-    Parallel(),
-])
+@pytest.mark.parametrize(
+    'executor',
+    [
+        pytest.param(Serial(build_in_subprocess=False),
+                     marks=pytest.mark.xfail(sys.platform == 'win32')),
+        Serial(build_in_subprocess=True),
+        pytest.param(Parallel(),
+                     marks=pytest.mark.xfail(sys.platform == 'win32')),
+    ],
+    ids=['serial', 'serial-subprocess', 'parallel'],
+)
 def test_logging_handler(executor, tmp_directory):
     """
     Note: this test is a bit weird, when executed in isolation it fails,
     but when executing the whole file, it works. Not sure why.
+
+    Also, this only works on windows when tasks are executed in the same
+    process. For it to work, we'd have to ensure that the logging objects
+    are re-configured again in the child process, see this:
+    https://stackoverflow.com/a/26168432/709975
     """
     configurator = DAGConfigurator()
 
