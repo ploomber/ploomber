@@ -9,6 +9,6 @@ Get Started
     :maxdepth: 2
 
     install
-    intro
     first-pipeline
+    basic-concepts
     sql-pipeline

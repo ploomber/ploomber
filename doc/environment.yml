@@ -4,12 +4,11 @@ channels:
   - conda-forge
 
 dependencies:
-  - python=3.7
+  - python=3.8
   - tree
   - pip
   - pip:
-    # the fix has not been release, we install from git
-    - git+https://github.com/sphinx-gallery/sphinx-gallery
+    - sphinx-gallery
     # sphinx-gallery requires this
     - pillow
     # needed for the examples

@@ -1,6 +1,9 @@
 
-Introduction
-============
+Basic concepts
+==============
+
+In the previous tutorial, we showed how to run a simple pipeline, this one
+explains the concepts and design rationale.
 
 Ploomber is based on a simple principle: *It is easier to understand (and
 solve) a problem when it is structured as small, isolated tasks.* By adopting
@@ -8,7 +11,7 @@ a *convention over configuration* philosophy, Ploomber allows you to quickly
 turn a collection scripts into a cohesive data pipeline by following three
 simple **conventions**:
 
-1. Each task is a script
+1. Each task is a Python function, (Python/R/SQL) script or Jupyter notebook
 2. Scripts declare their dependencies in the ``upstream`` variable
 3. Scripts declare their outputs in the ``product`` variable
 
@@ -32,8 +35,8 @@ Output(s) from one task become input(s) to "downstream" tasks. This means
 For example, in our pipeline, ``raw.py`` is an "upstream" dependency of
 ``clean.py``.
 
-Why scripts?
-------------
+Scripts that execute as notebooks
+---------------------------------
 
 .. image:: https://ploomber.io/doc/script-and-notebook.png
    :target: https://ploomber.io/doc/script-and-notebook.png
@@ -41,14 +44,18 @@ Why scripts?
 
 A very popular format for developing Data Science projects is through Jupyter
 notebooks. Such format allows to store both code and rich output. While this is
-great for reviewing results, it's terrible for development because it
-complicates source code version control (i.e. git).
+great for reviewing results, it makes source code version control harder
+(i.e. git) because the ``.ipynb`` format embeds source code and output in the
+same file.
 
-Ploomber follows an alternative approach: develop your tasks as scripts but
-generate a copy in notebook format on each pipeline run. This way you can keep a lean
-git workflow for development but still have the opportunity to embed rich
-output without extra work.
+Our recommended approach is to use plain scripts and use notebooks as an output
+format, in the previous tutorial, we showed how Ploomber automatically
+converts the source script to a notebook when you execute your pipeline.
+Furthermore, thanks to the :doc:`../user-guide/jupyter`, you'll be able to
+open scripts as notebooks and develop your pipeline interactively.
 
+However, if you want to, you can still use the original ``.ipynb`` format as
+the source code for your pipeline tasks.
 
 ``upstream`` dependencies and ``product``
 -----------------------------------------
@@ -139,6 +146,7 @@ the following command:
 Ploomber keeps track of source changes to skip up-to-date tasks, if you run
 that command again, only tasks whose source code has changed will be executed.
 
+For a full reference on ``pipeline.yaml`` files see: :doc:`../api/spec`
 
 **Note:** Writing a ``pipeline.yaml`` file is optional, you can also create
 pipelines by pointing to a directory with scripts. For more information, see the
@@ -163,8 +171,13 @@ source code for each task and the injected cell source code.
    :alt: python-diag
 
 
-Wrapping up
------------
+Where to go from here
+---------------------
 
-Now that you've learned basic concepts, go to the next tutorial to run your
-first pipeline.
+Take a look at our `sample projects <https://github.com/ploomber/projects>`_
+to see examples of common pipelines.
+
+* `Basic Machine Learning pipeline <https://github.com/ploomber/projects/tree/master/ml-basic>`_
+* `Intermediate ML pipeline <https://github.com/ploomber/projects/tree/master/ml-intermediate>`_ showing a few other features such as integration testing, parametrization and customization of output notebooks 
+* `Advanced ML pipeline <https://github.com/ploomber/projects/tree/master/ml-advanced>`_ demonstrates a pipeline written using the Python API (as opposed to using a ``pipeline.yaml`` file, how to package your project, parallel execution and testing with ``pytest``
+* The next tutorial (:doc:`../get-started/sql-pipeline`) shows how to build pipelines where some (or even all) the tasks as SQL scripts

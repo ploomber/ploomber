@@ -259,13 +259,14 @@ source code for each task and the rendered version.
    :alt: sql-diag
 
 
-Wrapping up
------------
+Where to go from here
+---------------------
 
 This tutorial introduced several new concepts. It might be hard to wrap your head
 around all these, to make things clearer, we have a few example SQL pipelines for
 you to explore.
 
+- :doc:`../user-guide/sql-templating` guide showing how to use jinja to template SQL scripts
 
 - **SQL example:** Pipeline with some SQL tasks, a ``SQLDump`` task (dumps data to a local file) and a Python task
 
