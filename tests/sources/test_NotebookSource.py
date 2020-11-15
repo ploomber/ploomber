@@ -203,18 +203,20 @@ def test_error_if_static_analysis_on_a_non_python_nb():
         source.render(params)
 
 
-def test_no_error_if_declared_and_passed_params_match():
-    source = NotebookSource(notebook_ab,
-                            ext_in='py',
-                            kernelspec_name='python3',
-                            static_analysis=True)
+@pytest.mark.parametrize('hot_reload', [True, False])
+def test_static_analysis(hot_reload, tmp_directory):
+    nb = jupytext.reads(notebook_ab, fmt='py:light')
+    path = Path('nb.ipynb')
+    path.write_text(jupytext.writes(nb, fmt='ipynb'))
+
+    source = NotebookSource(path, static_analysis=True, hot_reload=hot_reload)
 
     params = Params._from_dict({
         'product': File('output.ipynb'),
         'a': 1,
         'b': 2
     })
-    # notebook has params a and b, we are passing a and b as well
+
     source.render(params)
 
 

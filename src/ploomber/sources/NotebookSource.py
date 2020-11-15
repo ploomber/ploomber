@@ -173,7 +173,7 @@ class NotebookSource(Source):
         Path(tmp_in).unlink()
         tmp_out.unlink()
 
-        self._post_render_validation(self._params)
+        self._post_render_validation(self._params, self._nb_str_rendered)
 
     def _read_nb_str_unrendered(self):
         """
@@ -223,17 +223,14 @@ class NotebookSource(Source):
                 'Notebook{} does not have a cell tagged '
                 '"parameters"'.format(loc))
 
-    def _post_render_validation(self, params):
+    def _post_render_validation(self, params, nb_str):
         """
         Validate params passed against parameters in the notebook
         """
         if self.static_analysis:
             if self.language == 'python':
-                # read the notebook with the injected parameters from the tmp
-                # location
-                check_notebook(self.nb_obj_rendered,
-                               params,
-                               filename=self._path or 'notebook')
+                nb = self._nb_str_to_obj(nb_str)
+                check_notebook(nb, params, filename=self._path or 'notebook')
             else:
                 raise NotImplementedError(
                     'static_analysis is only implemented for Python notebooks'
@@ -269,10 +266,12 @@ class NotebookSource(Source):
     @property
     def nb_obj_rendered(self):
         if self._nb_obj_rendered is None:
-            self._nb_obj_rendered = (nbformat.reads(
-                self.nb_str_rendered, as_version=nbformat.NO_CONVERT))
+            self._nb_obj_rendered = self._nb_str_to_obj(self.nb_str_rendered)
 
         return self._nb_obj_rendered
+
+    def _nb_str_to_obj(self, nb_str):
+        return nbformat.reads(nb_str, as_version=nbformat.NO_CONVERT)
 
     def __str__(self):
         return '\n'.join([c.source for c in self.nb_obj_rendered.cells])
