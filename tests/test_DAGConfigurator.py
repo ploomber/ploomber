@@ -10,6 +10,8 @@ from ploomber.tasks import PythonCallable
 from ploomber.products import File
 from ploomber.executors import Serial, Parallel
 
+WINDOWS_OR_MAC = sys.platform in {'win32', 'darwin'}
+
 
 def touch_root(product):
     logging.debug('This should not appear...')
@@ -62,11 +64,11 @@ def test_from_dict():
     'executor',
     [
         pytest.param(Serial(build_in_subprocess=True),
-                     marks=pytest.mark.xfail(sys.platform == 'win32',
+                     marks=pytest.mark.xfail(WINDOWS_OR_MAC,
                                              reason='See test docstring')),
         Serial(build_in_subprocess=False),
         pytest.param(Parallel(),
-                     marks=pytest.mark.xfail(sys.platform == 'win32',
+                     marks=pytest.mark.xfail(WINDOWS_OR_MAC,
                                              reason='See test docstring')),
     ],
     ids=['serial-subprocess', 'serial', 'parallel'],
@@ -76,7 +78,7 @@ def test_logging_handler(executor, tmp_directory):
     Note: this test is a bit weird, when executed in isolation it fails,
     but when executing the whole file, it works. Not sure why.
 
-    Also, this only works on windows when tasks are executed in the same
+    Also, this only works on windows/mac when tasks are executed in the same
     process. For it to work, we'd have to ensure that the logging objects
     are re-configured again in the child process, see this:
     https://stackoverflow.com/a/26168432/709975
