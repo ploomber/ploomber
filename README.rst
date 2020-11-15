@@ -1,9 +1,9 @@
 Ploomber
 ========
 
-.. image:: https://github.com/ploomber/ploomber/workflows/CI/badge.svg
-   :target: https://github.com/ploomber/ploomber/workflows/CI/badge.svg
-   :alt: CI
+.. image:: https://github.com/ploomber/ploomber/workflows/CI%20Linux/badge.svg
+   :target: https://github.com/ploomber/ploomber/workflows/CI%20Linux/badge.svg
+   :alt: CI Linux
 
 .. image:: https://github.com/ploomber/ploomber/workflows/CI%20Windows/badge.svg
    :target: https://github.com/ploomber/ploomber/workflows/CI%20Windows/badge.svg
