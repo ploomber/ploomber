@@ -27,7 +27,7 @@ jobs:
 
         conda activate conda-env
 
-        conda install -y graphviz -c conda-forge
+        conda install -y graphviz
 
         # Test vanilla installation, make sure core modules are importable
         pip install .
