@@ -4,6 +4,10 @@ Ploomber
 .. image:: https://github.com/ploomber/ploomber/workflows/CI%20Linux/badge.svg
    :target: https://github.com/ploomber/ploomber/workflows/CI%20Linux/badge.svg
    :alt: CI Linux
+  
+.. image:: https://github.com/ploomber/ploomber/workflows/CI%20macOS/badge.svg
+   :target: https://github.com/ploomber/ploomber/workflows/CI%20macOS/badge.svg
+   :alt: CI macOS
 
 .. image:: https://github.com/ploomber/ploomber/workflows/CI%20Windows/badge.svg
    :target: https://github.com/ploomber/ploomber/workflows/CI%20Windows/badge.svg
