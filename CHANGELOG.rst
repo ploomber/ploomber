@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+0.8.3dev
+--------
+* Full Windows compatibility
+* Adds documentation to show how to customize notebook output using ``nbconvert``
+* Improvements to introductory tutorials
+* Adds ``--debug/-d`` option to ``ploomber build`` to drop a debugger if an exception happens
+* Ensuring all dag-level, task-level and product-level clients are closed after ``dag.build()`` is done
+* Minor bug fixes
+
+
 0.8.2 (2020-10-31)
 -------------------
 * Removes ``matplotlib`` from dependencies, now using ``IPython.display`` for inline plotting
