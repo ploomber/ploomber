@@ -254,6 +254,10 @@ class NotebookSource(Source):
 
     @property
     def nb_str_rendered(self):
+        """
+        Returns the notebook (as a string) with parameters injected, hot
+        reloadig if necessary
+        """
         if self._nb_str_rendered is None:
             raise RuntimeError('Attempted to get location for an unrendered '
                                'notebook, render it first')
@@ -265,13 +269,15 @@ class NotebookSource(Source):
 
     @property
     def nb_obj_rendered(self):
+        """
+        Returns the notebook (as an objet) with parameters injected, hot
+        reloadig if necessary
+        """
         if self._nb_obj_rendered is None:
+            # using self.nb_str_rendered triggers hot reload if needed
             self._nb_obj_rendered = self._nb_str_to_obj(self.nb_str_rendered)
 
         return self._nb_obj_rendered
-
-    def _nb_str_to_obj(self, nb_str):
-        return nbformat.reads(nb_str, as_version=nbformat.NO_CONVERT)
 
     def __str__(self):
         return '\n'.join([c.source for c in self.nb_obj_rendered.cells])
@@ -313,6 +319,9 @@ class NotebookSource(Source):
 
         else:
             return self._language
+
+    def _nb_str_to_obj(self, nb_str):
+        return nbformat.reads(nb_str, as_version=nbformat.NO_CONVERT)
 
     def _get_parameters_cell(self):
         self._read_nb_str_unrendered()
