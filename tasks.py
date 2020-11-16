@@ -16,22 +16,32 @@ def db_credentials(c):
 
 
 @task
-def setup(c, doc=True):
+def setup(c, doc=False, version=None):
     """
     Setup dev environment, requires conda
     """
-    c.run('conda create --name ploomber python=3.8 --yes')
+    if doc and version:
+        raise ValueError('doc and version options are incompatible, '
+                         'installing docs will install python 3.8')
+
+    version = version or '3.8'
+    suffix = '' if version == '3.8' else version.replace('.', '')
+    env_name = f'ploomber{suffix}'
+
+    c.run(f'conda create --name {env_name} python={version} --yes')
     c.run('eval "$(conda shell.bash hook)" '
+          f'&& conda activate {env_name} '
           '&& conda install pygraphviz r-base r-irkernel --yes '
           '--channel conda-forge'
-          '&& conda activate ploomber '
           '&& pip install --editable .[test] '
           '&& bash install_test_pkg.sh')
 
     if doc:
         with c.cd('doc'):
-            c.run('eval "$(conda shell.bash hook)" '
-                  '&& conda activate ploomber '
-                  '&& conda env update --file environment.yml --name ploomber')
+            c.run(
+                'eval "$(conda shell.bash hook)" '
+                f'&& conda activate {env_name} '
+                f'&& conda env update --file environment.yml --name {env_name}'
+            )
 
-    print('Done! Activate your environment with:\nconda activate ploomber')
+    print(f'Done! Activate your environment with:\nconda activate {env_name}')
