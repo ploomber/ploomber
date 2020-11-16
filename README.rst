@@ -27,7 +27,7 @@ Ploomber
   :target: https://coveralls.io/github/ploomber/ploomber?branch=master
 
 
-Coding an entire analysis pipeline in a single notebook file allows you to
+Coding an entire analysis pipeline in a single notebook allows you to
 develop your code interactively, but it creates an unmaintainable monolith that
 easily breaks. Ploomber allows you to modularize your analysis in smaller
 tasks without losing the power of an interactive notebook.
@@ -50,8 +50,10 @@ dependencies and output files:
 That's it! Execute ``ploomber build`` and your pipeline tasks will execute in
 the right order.
 
-Apart from Jupyter notebooks, Ploomber also supports (Python/R/SQL) scripts
-and Python functions as pipeline tasks.
+**Pipeline tasks are not limited to notebooks**, they can be scripts
+(Python/R/SQL/shell) or Python functions and you can mix them in the same
+pipeline (e.g. transform data a database with SQL, dump it, and plot with
+Python/R)
 
 `Watch JupyterCon 2020 talk <https://www.youtube.com/watch?v=M6mtgPfsA3M>`_
 
@@ -66,14 +68,16 @@ will be converted to a notebook on the fly.
 2. **Incremental builds**. Speed up execution by skipping tasks whose source
 code hasn't changed.
 
-3. **Pipeline testing**. Run tests upon task execution to verify that the output
+3. **Parallelization**. Run tasks in parallel to speed up computations.
+
+4. **Pipeline testing**. Run tests upon task execution to verify that the output
 data has the right properties (e.g. values within expected range).
 
-4. **Pipeline inspection**. Start an interactive session with
+5. **Pipeline inspection**. Start an interactive session with
 ``ploomber interact`` to debug your pipeline. Call
 ``dag['task_name'].debug()`` to start a debugging session.
 
-5. **[Beta] Deployment to Kubernetes and Airflow**. You can develop and execute
+6. **[Beta] Deployment to Kubernetes and Airflow**. You can develop and execute
 locally. But if you want to scale things up, deploy
 to `Kubernetes or Airflow <https://github.com/ploomber/soopervisor>`_
 

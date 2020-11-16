@@ -13,7 +13,7 @@ Twine docs:
 """
 import ast
 import re
-from subprocess import call as _call
+import subprocess
 from functools import reduce
 import datetime
 
@@ -49,7 +49,7 @@ def call(*args, **kwargs):
         print(args, kwargs)
         return 0
     else:
-        return _call(*args, **kwargs)
+        return subprocess.run(*args, **kwargs, check=True)
 
 
 class Versioner(object):
