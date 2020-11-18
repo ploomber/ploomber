@@ -85,14 +85,19 @@ Main features
 automatically inject a new cell with the location of your input files, as
 inferred from your ``upstream`` variable. If you open a Python or R script, it
 will be converted to a notebook on the fly.
+
 2. **Incremental builds**. Speed up execution by skipping tasks whose source
 code hasn't changed.
+
 3. **Parallelization**. Run tasks in parallel to speed up computations.
+
 4. **Pipeline testing**. Run tests upon task execution to verify that the output
 data has the right properties (e.g. values within expected range).
+
 5. **Pipeline inspection**. Start an interactive session with
 ``ploomber interact`` to debug your pipeline. Call
 ``dag['task_name'].debug()`` to start a debugging session.
+
 6. **[Beta] Deployment to Kubernetes and Airflow**. You can develop and execute
 locally. But if you want to scale things up, deploy
 to `Kubernetes or Airflow <https://github.com/ploomber/soopervisor>`_
