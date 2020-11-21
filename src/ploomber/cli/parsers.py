@@ -172,6 +172,49 @@ class EntryPoint:
     def __str__(self):
         return str(self.value)
 
+    def load(self, parser, argv):
+        """Load DAG from entry point
+
+        Parameters
+        ----------
+        parser : CustomParser
+            The cli parser object
+
+        argv : list
+            Command line arguments
+        """
+        help_cmd = '--help' in argv or '-h' in argv
+
+        # if the file does not exist but the value has sufix yaml/yml, show a
+        # warning because the last thing to try is to interpret it as a dotted
+        # path and that's probably not what the user wants
+        if not self.exists() and self.suffix in {'.yaml', '.yml'}:
+            warnings.warn('Entry point value "{}" has extension "{}", which '
+                          'suggests a spec file, but the file doesn\'t '
+                          'exist'.format(self, self.suffix))
+
+        # even if the entry file is not a file nor a valid module, show the
+        # help menu, but show a warning
+        if (help_cmd and not self.exists()):
+            warnings.warn('Failed to load entry point "{}". It is not a file '
+                          'nor a valid dotted path'.format(self))
+
+            args = parser.parse_args()
+        elif self.type == EntryPoint.DottedPath:
+            # if pipeline.yaml, .type will return dotted path, because that's
+            # a valid dotted-path value but this can trip users over so we
+            # raise a exception here for users to check for name typos
+            if str(self.value) in {'pipeline.yaml', 'pipeline.yml'}:
+                raise ValueError('Error loading entry point. When passing '
+                                 f'{self!r}, a YAML file is expected, but '
+                                 'such file does not exist')
+
+            dag, args = parser.process_factory_dotted_path(self)
+        else:
+            dag, args = _process_file_dir_or_glob(parser)
+
+        return dag, args
+
 
 # TODO: the next two functions are only used to override default behavior
 # when using the jupyter extension, but they have to be integrated with the CLI
@@ -410,61 +453,13 @@ def _process_file_dir_or_glob(parser):
     return dag, args
 
 
-# TODO: move this to the EntryPoiint class
-def _process_entry_point(parser, entry_point, static_args):
-    """Process an entry point from the user
-
-    Parameters
-    ----------
-    parser : CustomParser
-        The cli parser object
-
-    entry_point : str
-        An entry point string, this can be either path to a file or a dotted
-        path to a function that returns a DAG
-    """
-    help_cmd = '--help' in sys.argv or '-h' in sys.argv
-
-    entry_point = EntryPoint(entry_point)
-
-    # if the file does not exist but the value has sufix yaml/yml, show a
-    # warning because the last thing to try is to interpret it as a dotted
-    # path and that's probably not what the user wants
-    if not entry_point.exists() and entry_point.suffix in {'.yaml', '.yml'}:
-        warnings.warn('Entry point value "{}" has extension "{}", which '
-                      'suggests a spec file, but the file doesn\'t '
-                      'exist'.format(entry_point, entry_point.suffix))
-
-    # even if the entry file is not a file nor a valid module, show the help
-    # menu, but show a warning
-    if (help_cmd and not entry_point.exists()):
-        warnings.warn('Failed to load entry point "{}". It is not a file '
-                      'nor a valid dotted path'.format(entry_point))
-
-        args = parser.parse_args()
-    elif entry_point.type == EntryPoint.DottedPath:
-        # if pipeline.yaml, .type will return dotted path, because that's
-        # a valid dotted-path value but this can trip users over so we
-        # raise a exception here for users to check for name typos
-        if str(entry_point.value) in {'pipeline.yaml', 'pipeline.yml'}:
-            raise ValueError('Error loading entry point. When passing '
-                             f'{entry_point!r}, a YAML file is expected, but '
-                             'such file does not exist')
-
-        dag, args = parser.process_factory_dotted_path(entry_point)
-    else:
-        dag, args = _process_file_dir_or_glob(parser)
-
-    return dag, args
-
-
 def _custom_command(parser):
     """
     Parses an entry point, adding arguments by extracting them from the env.
     Returns a dag and the parsed args
     """
     entry_point = parser.parse_entry_point_value()
-    dag, args = _process_entry_point(parser, entry_point, parser.static_args)
+    dag, args = EntryPoint(entry_point).load(parser, sys.argv)
     return dag, args
 
 
