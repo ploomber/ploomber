@@ -198,10 +198,6 @@ def find_entry_point_type(entry_point):
         else:
             return EntryPoint.File
     elif '.' in entry_point:
-        if entry_point in {'pipeline.yaml', 'pipeline.yml'}:
-            raise ValueError('Error loading entry point. When passing '
-                             f'{entry_point!r}, a YAML file is expected, but '
-                             'such file does not exist')
         return EntryPoint.DottedPath
     else:
         raise ValueError(
@@ -414,6 +410,7 @@ def _process_file_dir_or_glob(parser):
     return dag, args
 
 
+# TODO: move this to the EntryPoiint class
 def _process_entry_point(parser, entry_point, static_args):
     """Process an entry point from the user
 
@@ -446,6 +443,14 @@ def _process_entry_point(parser, entry_point, static_args):
 
         args = parser.parse_args()
     elif entry_point.type == EntryPoint.DottedPath:
+        # if pipeline.yaml, .type will return dotted path, because that's
+        # a valid dotted-path value but this can trip users over so we
+        # raise a exception here for users to check for name typos
+        if str(entry_point.value) in {'pipeline.yaml', 'pipeline.yml'}:
+            raise ValueError('Error loading entry point. When passing '
+                             f'{entry_point!r}, a YAML file is expected, but '
+                             'such file does not exist')
+
         dag, args = parser.process_factory_dotted_path(entry_point)
     else:
         dag, args = _process_file_dir_or_glob(parser)
