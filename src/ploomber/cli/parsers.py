@@ -106,7 +106,7 @@ class CustomParser(argparse.ArgumentParser):
     def process_factory_dotted_path(self, dotted_path):
         """Parse a factory entry point, returns initialized dag and parsed args
         """
-        entry = load_dotted_path(dotted_path, raise_=True)
+        entry = load_dotted_path(str(dotted_path), raise_=True)
 
         # add args using the function's signature
         required, _ = _add_args_from_callable(self, entry)
@@ -135,6 +135,93 @@ class CustomParser(argparse.ArgumentParser):
         dag = entry(**{**kwargs, **replaced})
 
         return dag, args
+
+
+class EntryPoint:
+    """
+    Handles common operations on the 4 types of entry points. Exposes a
+    pathlib.Path-like interface
+    """
+    Directory = 'directory'
+    Pattern = 'pattern'
+    File = 'file'
+    DottedPath = 'dotted-path'
+
+    def __init__(self, value):
+        self.value = value
+        self.type = find_entry_point_type(value)
+
+    def exists(self):
+        if self.type == self.Pattern:
+            return True
+        elif self.type in {self.Directory, self.File}:
+            return Path(self.value).exists()
+        elif self.type == self.DottedPath:
+            return load_dotted_path(self.value, raise_=False) is not None
+
+    def is_dir(self):
+        return self.type == self.Directory
+
+    @property
+    def suffix(self):
+        return None if self.type != self.File else Path(self.value).suffix
+
+    def __repr__(self):
+        return repr(self.value)
+
+    def __str__(self):
+        return str(self.value)
+
+
+# TODO: the next two functions are only used to override default behavior
+# when using the jupyter extension, but they have to be integrated with the CLI
+# to provide consistent behavior. The problem is that logic implemented
+# in _process_file_dir_or_glob and _process_factory_dotted_path
+# also contains some CLI specific parts that we don't require here
+def find_entry_point_type(entry_point):
+    """
+
+    Step 1: If not ENTRY_POINT is defined nor a value is passed, a default
+    value is used (pipeline.yaml for CLI, recursive lookup for Jupyter client).
+    If ENTRY_POINT is defined, this simply overrides the default value, but
+    passing a value overrides the default value. Once the value is determined.
+
+    Step 2: If value is a valid directory, DAG is loaded from such directory,
+    if it's a file, it's loaded from that file (spec), finally, it's
+    interpreted as a dotted path
+    """
+    if '*' in entry_point:
+        return EntryPoint.Pattern
+    elif Path(entry_point).exists():
+        if Path(entry_point).is_dir():
+            return EntryPoint.Directory
+        else:
+            return EntryPoint.File
+    elif '.' in entry_point:
+        return EntryPoint.DottedPath
+    else:
+        raise ValueError(
+            'Could not determine the entry point type from value: '
+            f'{entry_point!r}. Expected '
+            'an existing file, directory glob-like pattern (i.e. *.py) or '
+            'dotted path (dot-separated string). Verify your input.')
+
+
+def load_entry_point(entry_point):
+    type_ = find_entry_point_type(entry_point)
+
+    if type_ == EntryPoint.Directory:
+        spec = DAGSpec.from_directory(entry_point)
+        path = Path(entry_point)
+
+    elif type_ == EntryPoint.File:
+        spec = DAGSpec(entry_point)
+        path = Path(entry_point).parent
+    else:
+        raise NotImplementedError(
+            f'loading entry point type {type_!r} is unsupported')
+
+    return spec, spec.to_dag(), path
 
 
 def _first_non_empty_line(doc):
@@ -300,8 +387,10 @@ def _process_file_dir_or_glob(parser):
         if args.log is not None:
             logging.basicConfig(level=args.log.upper())
 
-    # dir or glob
-    if Path(args.entry_point).is_dir() or '*' in args.entry_point:
+    # dir or glob pattern
+    if EntryPoint(args.entry_point).type in {
+            EntryPoint.Directory, EntryPoint.Pattern
+    }:
         dag = DAGSpec.from_directory(args.entry_point).to_dag()
     # file
     else:
@@ -335,78 +424,29 @@ def _process_entry_point(parser, entry_point, static_args):
     """
     help_cmd = '--help' in sys.argv or '-h' in sys.argv
 
-    path = Path(entry_point)
-    entry_file_exists = path.exists()
-    entry_obj = load_dotted_path(entry_point, raise_=False)
+    entry_point = EntryPoint(entry_point)
 
     # if the file does not exist but the value has sufix yaml/yml, show a
     # warning because the last thing to try is to interpret it as a dotted
     # path and that's probably not what the user wants
-    if not entry_file_exists and path.suffix in {'.yaml', '.yml'}:
+    if not entry_point.exists() and entry_point.suffix in {'.yaml', '.yml'}:
         warnings.warn('Entry point value "{}" has extension "{}", which '
                       'suggests a spec file, but the file doesn\'t '
-                      'exist'.format(entry_point, path.suffix))
+                      'exist'.format(entry_point, entry_point.suffix))
 
     # even if the entry file is not a file nor a valid module, show the help
     # menu, but show a warning
-    if (help_cmd and not entry_file_exists and not entry_obj):
+    if (help_cmd and not entry_point.exists()):
         warnings.warn('Failed to load entry point "{}". It is not a file '
                       'nor a valid dotted path'.format(entry_point))
 
         args = parser.parse_args()
-
-    # first check if the entry point is an existing file/directory or a
-    # glob-like pattern
-    elif path.exists() or '*' in str(path):
-        dag, args = _process_file_dir_or_glob(parser)
-    # assume it's a dotted path to a factory
-    else:
+    elif entry_point.type == EntryPoint.DottedPath:
         dag, args = parser.process_factory_dotted_path(entry_point)
+    else:
+        dag, args = _process_file_dir_or_glob(parser)
 
     return dag, args
-
-
-# TODO: the next two functions are only used to override default behavior
-# when using the jupyter extension, but they have to be integrated with the CLI
-# to provide consistent behavior. The problem is that logic implemented
-# in _process_file_dir_or_glob and _process_factory_dotted_path
-# also contains some CLI specific parts that we don't require here
-def find_entry_point_type(entry_point):
-    """
-
-    Step 1: If not ENTRY_POINT is defined nor a value is passed, a default
-    value is used (pipeline.yaml for CLI, recursive lookup for Jupyter client).
-    If ENTRY_POINT is defined, this simply overrides the default value, but
-    passing a value overrides the default value. Once the value is determined.
-
-    Step 2: If value is a valid directory, DAG is loaded from such directory,
-    if it's a file, it's loaded from that file (spec), finally, it's
-    interpreted as a dotted path
-    """
-    if Path(entry_point).exists():
-        if Path(entry_point).is_dir():
-            return 'directory'
-        else:
-            return 'file'
-    else:
-        return 'dotted-path'
-
-
-def load_entry_point(entry_point):
-    type_ = find_entry_point_type(entry_point)
-
-    if type_ == 'directory':
-        spec = DAGSpec.from_directory(entry_point)
-        path = Path(entry_point)
-    elif type_ == 'file':
-        spec = DAGSpec(entry_point)
-        path = Path(entry_point).parent
-    elif type_ == 'dotted-path':
-        raise ValueError('dotted paths are currently unsupported')
-    else:
-        raise ValueError('Unknown entry point type {}'.format(type_))
-
-    return spec, spec.to_dag(), path
 
 
 def _custom_command(parser):

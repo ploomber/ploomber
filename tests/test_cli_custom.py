@@ -202,14 +202,14 @@ def test_invalid_doc(monkeypatch, tmp_sample_dir):
     build.main()
 
 
-def test_invalid_module_arg(monkeypatch):
+def test_invalid_entry_point_value(monkeypatch):
     monkeypatch.setattr(sys, 'argv',
-                        ['python', '--entry-point', 'invalid_module'])
+                        ['python', '--entry-point', 'invalid_entry_point'])
 
     with pytest.raises(ValueError) as excinfo:
         build.main()
 
-    assert 'Invalid module name' in str(excinfo.value)
+    assert 'Could not determine the entry point type' in str(excinfo.value)
 
 
 def test_nonexisting_module(monkeypatch):
