@@ -34,7 +34,8 @@ def setup(c, doc=False, version=None):
           '&& conda install pygraphviz r-base r-irkernel --yes '
           '--channel conda-forge'
           '&& pip install --editable .[test] '
-          '&& bash install_test_pkg.sh')
+          '&& bash install_test_pkg.sh '
+          '&& pip install invoke')
 
     if doc:
         with c.cd('doc'):
