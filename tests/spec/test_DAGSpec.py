@@ -231,32 +231,46 @@ def test_file_spec_resolves_sources_location(tmp_nbs):
         # and one level up
         ['..', 'content'],
     ])
-def test_spec_from_directory(tmp_nbs_no_yaml, chdir, dir_):
+def test_spec_from_directory(chdir, dir_, tmp_nbs_no_yaml):
     os.chdir(chdir)
 
     Path('output').mkdir()
 
     dag = DAGSpec.from_directory(dir_).to_dag()
-    dag.build()
-
     assert list(dag) == ['load', 'clean', 'plot']
 
 
-def test_spec_with_glob_pattern(tmp_nbs_no_yaml):
+@pytest.mark.parametrize('touch', [False, True])
+def test_spec_from_non_existing_directory(touch, tmp_directory):
+    if touch:
+        Path('not_a_directory').touch()
+
+    with pytest.raises(NotADirectoryError):
+        DAGSpec.from_directory('not_a_directory')
+
+
+def test_spec_from_files(tmp_nbs_no_yaml):
+    dag = DAGSpec.from_files(['load.py', 'clean.py', 'plot.py']).to_dag()
+    assert list(dag) == ['load', 'clean', 'plot']
+
+
+def test_spec_glob_pattern(tmp_nbs_no_yaml):
     # directory should be ignored
     Path('output').mkdir()
-    dag = DAGSpec.from_directory('load.py').to_dag()
+    # if passed a string, it's interpreted as a glob-like pattern
+    dag = DAGSpec.from_files('load.py').to_dag()
 
     assert list(dag) == ['load']
 
 
-def test_spec_with_invalid_glob_pattern(tmp_nbs_no_yaml):
+def test_spec_invalid_glob_pattern(tmp_nbs_no_yaml):
     Path('some_invalid_script.sh').touch()
 
     with pytest.raises(ValueError) as excinfo:
-        DAGSpec.from_directory('*')
+        DAGSpec.from_files('*')
 
-    assert 'glob pattern' in str(excinfo.value)
+    assert ('Cannot instantiate DAGSpec from files with invalid extensions'
+            in str(excinfo.value))
 
 
 def _random_date_from(date, max_days, n):

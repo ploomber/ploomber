@@ -430,12 +430,12 @@ def _process_file_dir_or_glob(parser):
         if args.log is not None:
             logging.basicConfig(level=args.log.upper())
 
-    # dir or glob pattern
-    if EntryPoint(args.entry_point).type in {
-            EntryPoint.Directory, EntryPoint.Pattern
-    }:
+    entry_point = EntryPoint(args.entry_point)
+
+    if entry_point.type == EntryPoint.Directory:
         dag = DAGSpec.from_directory(args.entry_point).to_dag()
-    # file
+    elif entry_point.type == EntryPoint.Pattern:
+        dag = DAGSpec.from_files(args.entry_point).to_dag()
     else:
         with open(args.entry_point) as f:
             dag_dict = yaml.load(f, Loader=yaml.SafeLoader)

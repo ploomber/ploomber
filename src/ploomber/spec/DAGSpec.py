@@ -310,31 +310,51 @@ class DAGSpec(MutableMapping):
             (``.py``, ``.R`` or ``.ipynb``) in the directory and interprets
             them as task sources, file names are assigned as task names
             (without extension). The spec is generated with the default values
-            in the "meta" section. You can also pass a glob pattern (e.g. *.py)
-            but must only contain files with the allowed extensions
+            in the "meta" section. Ignores files with invalid extensions.
 
         Notes
         -----
         ``env`` is not supported because the spec is generated from files
         in ``path_to_dir``, hence, there is no way to embed tags
         """
-        extensions = [
+        valid_extensions = [
             name for name, class_ in suffix2taskclass.items()
             if class_ is NotebookRunner
         ]
 
         if Path(path_to_dir).is_dir():
             pattern = str(Path(path_to_dir, '*'))
-            files = chain.from_iterable(
-                iglob(pattern + ext) for ext in extensions)
+            files = list(
+                chain.from_iterable(
+                    iglob(pattern + ext) for ext in valid_extensions))
+            return cls.from_files(files)
         else:
-            files = [f for f in iglob(path_to_dir) if Path(f).is_file()]
-            invalid = [f for f in files if Path(f).suffix not in extensions]
+            raise NotADirectoryError(f'{path_to_dir!r} is not a directory')
 
-            if invalid:
-                raise ValueError('glob pattern includes files with '
-                                 f'invalid extensions: {invalid}. '
-                                 f'Allowed extensions are: {extensions}')
+    @classmethod
+    def from_files(cls, files):
+        """Construct DAGSpec from list of files or glob-like pattern
+
+        Parameters
+        ----------
+        files : list or str
+            List of files to use or glob-like string pattern. If glob-like
+            pattern, ignores directories that match the criteria.
+        """
+        valid_extensions = [
+            name for name, class_ in suffix2taskclass.items()
+            if class_ is NotebookRunner
+        ]
+
+        if isinstance(files, str):
+            files = [f for f in iglob(files) if Path(f).is_file()]
+
+        invalid = [f for f in files if Path(f).suffix not in valid_extensions]
+
+        if invalid:
+            raise ValueError(f'Cannot instantiate DAGSpec from files with '
+                             f'invalid extensions: {invalid}. '
+                             f'Allowed extensions are: {valid_extensions}')
 
         tasks = [{
             'source': file_,
