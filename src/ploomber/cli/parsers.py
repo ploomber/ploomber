@@ -198,6 +198,10 @@ def find_entry_point_type(entry_point):
         else:
             return EntryPoint.File
     elif '.' in entry_point:
+        if entry_point in {'pipeline.yaml', 'pipeline.yml'}:
+            raise ValueError('Error loading entry point. When passing '
+                             f'{entry_point!r}, a YAML file is expected, but '
+                             'such file does not exist')
         return EntryPoint.DottedPath
     else:
         raise ValueError(

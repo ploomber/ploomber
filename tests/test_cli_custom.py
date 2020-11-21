@@ -212,6 +212,20 @@ def test_invalid_entry_point_value(monkeypatch):
     assert 'Could not determine the entry point type' in str(excinfo.value)
 
 
+@pytest.mark.parametrize('args', [
+    ['--entry-point', 'pipeline.yaml'],
+    ['--entry-point', 'pipeline.yml'],
+    [],
+])
+def test_invalid_spec_entry_point(args, monkeypatch):
+    monkeypatch.setattr(sys, 'argv', ['python'] + args)
+
+    with pytest.raises(ValueError) as excinfo:
+        build.main()
+
+    assert 'YAML file is expected' in str(excinfo.value)
+
+
 def test_nonexisting_module(monkeypatch):
     monkeypatch.setattr(
         sys, 'argv', ['python', '--entry-point', 'some_module.some_function'])
