@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+0.8.4dev
+--------
+* Adds support for passing glob-like patterns in ``ploomber build`` (via ``DAGSpec.from_directory``)
+
 0.8.3 (2020-11-15)
 ------------------
 * Full Windows compatibility
