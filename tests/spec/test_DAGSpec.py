@@ -242,6 +242,23 @@ def test_spec_from_directory(tmp_nbs_no_yaml, chdir, dir_):
     assert list(dag) == ['load', 'clean', 'plot']
 
 
+def test_spec_with_glob_pattern(tmp_nbs_no_yaml):
+    # directory should be ignored
+    Path('output').mkdir()
+    dag = DAGSpec.from_directory('load.py').to_dag()
+
+    assert list(dag) == ['load']
+
+
+def test_spec_with_invalid_glob_pattern(tmp_nbs_no_yaml):
+    Path('some_invalid_script.sh').touch()
+
+    with pytest.raises(ValueError) as excinfo:
+        DAGSpec.from_directory('*')
+
+    assert 'glob pattern' in str(excinfo.value)
+
+
 def _random_date_from(date, max_days, n):
     return [
         date + timedelta(days=int(days))

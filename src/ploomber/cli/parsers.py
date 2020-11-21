@@ -280,7 +280,7 @@ def _add_args_from_callable(parser, callable_):
     return required, defaults
 
 
-def _process_file_or_entry_point(parser):
+def _process_file_dir_or_glob(parser):
     """
     Process a file entry point file or directory), returns the initialized dag
     and parsed args
@@ -300,8 +300,10 @@ def _process_file_or_entry_point(parser):
         if args.log is not None:
             logging.basicConfig(level=args.log.upper())
 
-    if Path(args.entry_point).is_dir():
+    # dir or glob
+    if Path(args.entry_point).is_dir() or '*' in args.entry_point:
         dag = DAGSpec.from_directory(args.entry_point).to_dag()
+    # file
     else:
         with open(args.entry_point) as f:
             dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
@@ -353,9 +355,10 @@ def _process_entry_point(parser, entry_point, static_args):
 
         args = parser.parse_args()
 
-    # first check if the entry point is an existing file
-    elif path.exists():
-        dag, args = _process_file_or_entry_point(parser)
+    # first check if the entry point is an existing file/directory or a
+    # glob-like pattern
+    elif path.exists() or '*' in str(path):
+        dag, args = _process_file_dir_or_glob(parser)
     # assume it's a dotted path to a factory
     else:
         dag, args = parser.process_factory_dotted_path(entry_point)
@@ -366,7 +369,7 @@ def _process_entry_point(parser, entry_point, static_args):
 # TODO: the next two functions are only used to override default behavior
 # when using the jupyter extension, but they have to be integrated with the CLI
 # to provide consistent behavior. The problem is that logic implemented
-# in _process_file_or_entry_point and _process_factory_dotted_path
+# in _process_file_dir_or_glob and _process_factory_dotted_path
 # also contains some CLI specific parts that we don't require here
 def find_entry_point_type(entry_point):
     """
@@ -400,8 +403,6 @@ def load_entry_point(entry_point):
         path = Path(entry_point).parent
     elif type_ == 'dotted-path':
         raise ValueError('dotted paths are currently unsupported')
-        # fn = load_dotted_path(entry_point, raise_=True)
-        # dag = fn()
     else:
         raise ValueError('Unknown entry point type {}'.format(type_))
 

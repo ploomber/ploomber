@@ -303,10 +303,15 @@ class DAGSpec(MutableMapping):
     def from_directory(cls, path_to_dir):
         """Construct a DAGSpec from a directory
 
-        Looks for scripts (``.py``, ``.R`` or ``.ipynb``) in the directory and
-        interpret them as task sources, file names are assigned as task names
-        (without extension). The spec is generated with the default values in
-        the "meta" section.
+        Parameters
+        ----------
+        path_to_dir : str
+            The directory to use.  Looks for scripts
+            (``.py``, ``.R`` or ``.ipynb``) in the directory and interprets
+            them as task sources, file names are assigned as task names
+            (without extension). The spec is generated with the default values
+            in the "meta" section. You can also pass a glob pattern (e.g. *.py)
+            but must only contain files with the allowed extensions
 
         Notes
         -----
@@ -318,8 +323,18 @@ class DAGSpec(MutableMapping):
             if class_ is NotebookRunner
         ]
 
-        pattern = str(Path(path_to_dir, '*'))
-        files = chain.from_iterable(iglob(pattern + ext) for ext in extensions)
+        if Path(path_to_dir).is_dir():
+            pattern = str(Path(path_to_dir, '*'))
+            files = chain.from_iterable(
+                iglob(pattern + ext) for ext in extensions)
+        else:
+            files = [f for f in iglob(path_to_dir) if Path(f).is_file()]
+            invalid = [f for f in files if Path(f).suffix not in extensions]
+
+            if invalid:
+                raise ValueError('glob pattern includes files with '
+                                 f'invalid extensions: {invalid}. '
+                                 f'Allowed extensions are: {extensions}')
 
         tasks = [{
             'source': file_,

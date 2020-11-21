@@ -75,9 +75,10 @@ def test_build_help_shows_docstring(capsys, monkeypatch):
     assert 'This is some description' in out
 
 
-def test_build_from_directory(monkeypatch, tmp_nbs_no_yaml):
+@pytest.mark.parametrize('arg', ['.', '*.py'])
+def test_build_from_directory(arg, monkeypatch, tmp_nbs_no_yaml):
     Path('output').mkdir()
-    monkeypatch.setattr(sys, 'argv', ['python', '--entry-point', '.'])
+    monkeypatch.setattr(sys, 'argv', ['python', '--entry-point', arg])
     build.main()
 
 
