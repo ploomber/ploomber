@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.8.3dev
---------
+0.8.3 (2020-11-15)
+------------------
 * Full Windows compatibility
 * Adds documentation to show how to customize notebook output using ``nbconvert``
 * Improvements to introductory tutorials
