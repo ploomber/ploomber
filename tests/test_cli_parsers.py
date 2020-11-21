@@ -7,7 +7,7 @@ import yaml
 import pytest
 
 from ploomber.cli.parsers import (_add_args_from_callable,
-                                  _process_file_or_entry_point, CustomParser)
+                                  _process_file_dir_or_glob, CustomParser)
 
 
 def fn(a: int, b: float, c: str, d: bool, e):
@@ -63,7 +63,7 @@ def test_process_file_or_entry_point_param_replace(argv, expected, monkeypatch,
     with parser:
         pass
 
-    dag, args = _process_file_or_entry_point(parser)
+    dag, args = _process_file_dir_or_glob(parser)
 
     assert dag['plot'].params['some_param'] == expected
 
