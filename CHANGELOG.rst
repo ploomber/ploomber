@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.8.4dev
---------
+0.8.4 (2020-11-21)
+-------------------
 * Adds support for passing glob-like patterns in ``ploomber build`` (via ``DAGSpec.from_directory``)
 
 0.8.3 (2020-11-15)
