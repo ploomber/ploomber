@@ -18,12 +18,13 @@ from ploomber import DAG
 from ploomber.tasks import PythonCallable, SQLUpload, SQLScript
 from ploomber.products import File, SQLiteRelation
 from ploomber.clients import SQLAlchemyClient
+from ploomber.executors import Serial
 
 tmp_dir = Path(tempfile.mkdtemp())
 path_to_db = 'sqlite:///' + str(tmp_dir / 'my_db.db')
 print('temporary dir: ', tmp_dir)
 
-dag = DAG(executor='serial')
+dag = DAG(executor=Serial(build_in_subprocess=False))
 
 client = SQLAlchemyClient(path_to_db)
 dag.clients[SQLUpload] = client

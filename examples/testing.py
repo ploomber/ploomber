@@ -20,6 +20,7 @@ from ploomber import DAG
 from ploomber.products import File
 from ploomber.tasks import PythonCallable, SQLDump
 from ploomber.clients import SQLAlchemyClient
+from ploomber.executors import Serial
 
 ###############################################################################
 # Setup
@@ -33,7 +34,7 @@ df.to_sql('example', engine)
 # Pipeline declaration
 # ---------------------
 
-dag = DAG()
+dag = DAG(executor=Serial(build_in_subprocess=False))
 
 # the first task dumps data from the db to the local filesystem
 task_dump = SQLDump('SELECT * FROM example',

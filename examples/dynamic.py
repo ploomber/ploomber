@@ -43,6 +43,7 @@ from ploomber import DAG
 from ploomber.tasks import SQLDump
 from ploomber.products import File
 from ploomber.clients import SQLAlchemyClient
+from ploomber.executors import Serial
 
 tmp_dir = Path(tempfile.mkdtemp())
 path_to_db = tmp_dir / 'my_db.db'
@@ -59,7 +60,7 @@ conn.close()
 ###############################################################################
 # We now build the DAG
 
-dag = DAG()
+dag = DAG(executor=Serial(build_in_subprocess=False))
 
 dag.clients[SQLDump] = SQLAlchemyClient('sqlite:///' + str(path_to_db))
 

@@ -17,9 +17,7 @@ from ploomber import DAG, Env, load_env
 from ploomber.clients import SQLAlchemyClient
 from ploomber.tasks import SQLUpload, PythonCallable
 from ploomber.products import SQLiteRelation, File
-
-# NOTE: we need this to make sphinx-gallery happy
-Env.end()
+from ploomber.executors import Serial
 
 ###############################################################################
 # A common scenario for Data Science teams is to share computational
@@ -160,7 +158,7 @@ sns.distplot(df.price)
 
 @load_env
 def make_dag(env, params):
-    dag = DAG()
+    dag = DAG(executor=Serial(build_in_subprocess=False))
     dag.clients[SQLUpload] = SQLAlchemyClient(env.db_uri)
     dag.clients[SQLiteRelation] = SQLAlchemyClient(env.db_uri)
     dump = make_task_dump(dag)

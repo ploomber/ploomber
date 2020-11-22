@@ -20,6 +20,7 @@ import pandas as pd
 from ploomber.clients import SQLAlchemyClient
 from ploomber.tasks import SQLTransfer, SQLScript
 from ploomber.products import SQLiteRelation
+from ploomber.executors import Serial
 from ploomber import DAG, SourceLoader
 
 ###############################################################################
@@ -59,7 +60,7 @@ SELECT * FROM
 ###############################################################################
 # DAG declaration
 
-dag = DAG()
+dag = DAG(executor=Serial(build_in_subprocess=False))
 dag.clients[SQLTransfer] = client
 dag.clients[SQLiteRelation] = client
 dag.clients[SQLScript] = client
