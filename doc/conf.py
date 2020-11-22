@@ -13,8 +13,8 @@
 import os
 import sys
 from ploomber import __version__
-import hooks
 sys.path.insert(0, os.path.abspath('.'))
+import hooks  # noqa
 
 # -- Project information -----------------------------------------------------
 
