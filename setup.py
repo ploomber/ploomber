@@ -84,6 +84,7 @@ TESTING = [
     # needed to run some test pipelines
     'matplotlib',
     'seaborn',
+    'psycopg2'
 ]
 
 # packages needed for development
