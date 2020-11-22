@@ -50,10 +50,8 @@ jobs:
         python -c 'import ploomber.products'
         python -c 'import ploomber.clients'
 
-        # install requirements
-        pip install -r examples/pipeline/intermediate/requirements.txt
-        pip install -r requirements.txt
-        pip install .[test]
+        # install dev requirements
+        pip install .[dev]
 
         # https://github.com/ipython/ipython/issues/12049
         pip install prompt-toolkit==2.0.10

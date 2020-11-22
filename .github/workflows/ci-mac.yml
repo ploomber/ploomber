@@ -36,10 +36,8 @@ jobs:
         python -c 'import ploomber.products'
         python -c 'import ploomber.clients'
 
-        # install requirements
-        pip install -r examples/pipeline/intermediate/requirements.txt
-        pip install -r requirements.txt
-        pip install .[test]
+        # install dev requirements
+        pip install .[dev]
 
         # install R and IR kernel
         conda install -y r-base r-irkernel -c conda-forge

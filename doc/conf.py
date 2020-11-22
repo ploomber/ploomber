@@ -12,9 +12,9 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('.'))
 from ploomber import __version__
 import hooks
+sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
 
@@ -30,15 +30,8 @@ release = version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.autosummary',
-    # remove these two
-    'IPython.sphinxext.ipython_console_highlighting',
-    'IPython.sphinxext.ipython_directive',
-    'sphinx_gallery.gen_gallery',
-    'sphinx.ext.autosectionlabel',
-    'nbsphinx'
+    'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.autosummary',
+    'sphinx.ext.autosectionlabel', 'nbsphinx'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -82,11 +75,6 @@ master_doc = 'contents'
 html_additional_pages = {'index': 'index.html'}
 
 # sphinx-gallery
-
-sphinx_gallery_conf = {
-    'filename_pattern': '/',
-    'ignore_pattern': r'__init__\.py',
-}
 
 # This is inserted only in pages that load generate from notebooks
 nbsphinx_prolog = """
