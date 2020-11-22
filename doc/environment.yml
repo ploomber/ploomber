@@ -31,5 +31,8 @@ dependencies:
     - papermill
     - jupytext
 
+    # there is some package incompatibility with jedi
+    - parso==0.7.1
+
     # some notebooks use functions defined here
     - git+https://github.com/ploomber/projects.git#subdirectory=pkg
