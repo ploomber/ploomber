@@ -54,4 +54,4 @@ jobs:
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env
-        pytest --ignore=tests/test_guide.py --ignore=tests/test_recipes.py
+        pytest

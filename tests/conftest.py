@@ -147,27 +147,6 @@ def cleanup_env():
     Env.end()
 
 
-@fixture_tmp_dir(_path_to_tests() / '..' / 'examples' / 'pipeline' /
-                 'intermediate')
-def tmp_intermediate_example_directory():
-    pass
-
-
-@fixture_tmp_dir(_path_to_tests() / '..' / 'examples' / 'pipeline')
-def tmp_example_pipeline_directory():
-    pass
-
-
-@fixture_tmp_dir(_path_to_tests() / '..' / 'recipes')
-def tmp_recipes_directory():
-    pass
-
-
-@fixture_tmp_dir(_path_to_tests() / '..' / 'examples')
-def tmp_examples_directory():
-    pass
-
-
 @fixture_tmp_dir(_path_to_tests() / 'assets' / 'sample_dir')
 def tmp_sample_dir():
     pass
