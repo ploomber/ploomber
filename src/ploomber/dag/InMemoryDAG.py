@@ -18,6 +18,10 @@ class InMemoryDAG:
     ----------
     dag : ploomber.DAG
         The DAG to use
+
+    Examples
+    --------
+    .. literalinclude:: ../../../doc/examples/InMemoryDAG.py
     """
     def __init__(self, dag, return_postprocessor=None):
         types = {type(dag[t]) for t in dag._iter()}
@@ -84,10 +88,11 @@ class InMemoryDAG:
             params = task.params.to_dict()
 
             # if root node, replace input params (but do not replace upstream
-            # not product)
+            # nor product) - should we iterate over all tasks?
             if task_name in self.root_nodes:
-                passed_params = root_params[task_name] or {}
-                params = {**params, **passed_params}
+                # root nodes should only have {'input_data': None} we can
+                # remove the dict composition
+                params = {**params, 'input_data': root_params[task_name]}
 
             # replace params with output
             if 'upstream' in params:

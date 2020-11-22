@@ -174,6 +174,8 @@ class Product(abc.ABC):
         return str(self._identifier)
 
     def __repr__(self):
+        # NOTE: this assumes ._identifier has a best_str property,
+        # should we refactor it?
         return '{}({})'.format(
             type(self).__name__, self._identifier.best_str(shorten=True))
 
