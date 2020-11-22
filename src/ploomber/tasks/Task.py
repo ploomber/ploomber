@@ -310,14 +310,14 @@ class Task(abc.ABC):
                     'the task ran successfully but product '
                     '"{}" does not exist yet '
                     '(task.product.exists() returned False). '.format(
-                        self, self.product))
+                        self.name, self.product))
             else:
                 raise TaskBuildError(
                     'Error building task "{}": '
                     'the task ran successfully but at least one of the '
                     'products in "{}" does not exist yet '
                     '(task.product.exists() returned False). '.format(
-                        self, self.product))
+                        self.name, self.product))
 
     @property
     def on_failure(self):
