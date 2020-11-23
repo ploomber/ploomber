@@ -17,7 +17,7 @@ def add_links(nb, name):
     nb.cells.insert(0, cell)
 
 
-def process_tutorial(name):
+def process_tutorial(name, section):
     nb = jupytext.read(f'projects-master/{name}/README.md')
 
     add_links(nb, name)
@@ -39,7 +39,7 @@ def process_tutorial(name):
                                cwd=f'projects-master/{name}')
 
     shutil.copy(f'projects-master/{name}/README.ipynb',
-                f'../user-guide/{name}.ipynb')
+                f'../{section}/{name}.ipynb')
 
 
 def config_init(app, config):
@@ -64,7 +64,9 @@ def config_init(app, config):
     directories = ['parametrized', 'sql-templating', 'testing', 'debugging']
 
     for dir_ in directories:
-        process_tutorial(dir_)
+        process_tutorial(dir_, section='user-guide')
+
+    process_tutorial('spec-api-python', section='get-started')
 
     os.chdir('..')
 

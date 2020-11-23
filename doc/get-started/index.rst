@@ -9,6 +9,6 @@ Get Started
     :maxdepth: 2
 
     install
-    first-pipeline
+    spec-api-python
     basic-concepts
     sql-pipeline
