@@ -149,15 +149,14 @@ that command again, only tasks whose source code has changed will be executed.
 For a full reference on ``pipeline.yaml`` files see: :doc:`../api/spec`
 
 **Note:** Writing a ``pipeline.yaml`` file is optional, you can also create
-pipelines by pointing to a directory with scripts. For more information, see the
-:doc:`../user-guide/cli` guide.
+pipelines by pointing to a directory with scripts. `Click here <https://github.com/ploomber/projects/tree/master/spec-api-directory>`_ to see an example.
 
 **Note:** You can also define functions, instead of scripts, to be tasks in
 your pipeline. Just add a dotted path in the ``source`` key, and make sure the
 function can be imported. For example if you have a function that you can import
 using ``from my_project.tasks import my_task``, add
 ``source: my_project.tasks.my_task`` to your ``pipeline.yaml`` file. See this
-`example pipeline <https://github.com/ploomber/projects/tree/master/ml-basic/spec>`_
+`example pipeline <https://github.com/ploomber/projects/tree/master/ml-basic>`_
 
 Summary
 -------

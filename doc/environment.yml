@@ -31,5 +31,5 @@ dependencies:
     - papermill
     - jupytext
 
-    # some notebooks use functions defined here
+    # has a function to orchestrate execution of notebook examples
     - git+https://github.com/ploomber/projects.git#subdirectory=pkg
