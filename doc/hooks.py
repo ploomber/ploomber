@@ -6,6 +6,9 @@ import zipfile
 
 
 def config_init(app, config):
+
+    # copy outside the doc folder, otherwise sphinx thinks all those files
+    # should be part of the documentation
     projects = Path('../../projects-ploomber/')
 
     if Path(projects).exists():
@@ -13,7 +16,8 @@ def config_init(app, config):
 
     else:
         print('Cloning from git...')
-        projects = Path('projects-master')
+        git_clone()
+        projects = Path('../../projects-master')
 
     directories = {
         'parametrized': 'user-guide',
@@ -34,10 +38,10 @@ def config_init(app, config):
 
 def git_clone():
     url = 'https://github.com/ploomber/projects/archive/master.zip'
-    request.urlretrieve(url, 'master.zip')
+    request.urlretrieve(url, '../../master.zip')
 
-    with zipfile.ZipFile('master.zip', 'r') as f:
-        f.extractall('.')
+    with zipfile.ZipFile('../../master.zip', 'r') as f:
+        f.extractall('../../')
 
 
 if __name__ == '__main__':
