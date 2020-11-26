@@ -40,12 +40,23 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
     opacity: 0;
 }
 
+/* CSS for terminal-like code snippeds */
+
 [class*="highlight-"] {
     width: 80%;
     position: relative;
     margin: auto;
     margin-top: 2rem;
     margin-bottom: 2rem;
+}
+
+/* CSS for notebook output cells */
+
+div.output_area [class*="highlight-"] {
+    width: 80%;
+    position: relative;
+    margin: 0;
+    padding: 5px;
 }
 
 /* Terminal window buttons shapes */

@@ -1,6 +1,7 @@
 $(document).ready(function () {
-    bash = document.getElementsByClassName('highlight-console')
-    addTerminalStyle(bash, "Terminal (shell)")
+    addTerminalStyle($('[class="highlight-bash notranslate"]'), "Terminal (shell)")
+    addTerminalStyle($('[class="highlight-sh notranslate"]'), "Terminal (shell)")
+    addTerminalStyle($('[class="highlight-console notranslate"]'), "Terminal (shell)")
 
     ipython = document.getElementsByClassName('ipython')
     addTerminalStyle(ipython, "Terminal (ipython)")
