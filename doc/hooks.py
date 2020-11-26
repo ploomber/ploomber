@@ -23,12 +23,12 @@ def config_init(app, config):
         'spec-api-python': 'get-started'
     }
 
-    process_readme_md(list(directories))
+    process_readme_md(list(directories), parent_dir=projects)
 
     for name, target_dir in directories.items():
         src = Path(projects, name, 'README.ipynb')
         dst = Path(target_dir, f'{name}.ipynb')
-        print(f'Copying {src!r} to {dst!r}')
+        print(f'Copying {src} to {dst}')
         shutil.copy(src, dst)
 
 
