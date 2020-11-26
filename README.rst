@@ -102,14 +102,12 @@ Try it out!
 You can choose from one of the hosted options (no installation required):
 
 .. image:: https://mybinder.org/badge_logo.svg
-    :target: https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fspec-api-python%252FREADME.ipynb%26branch%3Dmaster
+    :target: https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fspec-api-python%252FREADME.ipynb%26branch%3Dmaster
 
 .. image:: https://deepnote.com/buttons/launch-in-deepnote-small.svg
     :target: https://deepnote.com/launch?template=deepnote&url=https://github.com/ploomber/projects/blob/master/spec-api-python/README.ipynb
 
 Or run an example locally:
-
-More examples available `here <https://github.com/ploomber/projects>`_
 
 .. code-block:: shell
 
@@ -136,6 +134,8 @@ More examples available `here <https://github.com/ploomber/projects>`_
 
 
 When execution finishes, you'll see the output in the ``output/`` folder.
+
+More examples available `here <https://github.com/ploomber/projects>`_).
 
 
 Installation
