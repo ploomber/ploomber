@@ -135,7 +135,7 @@ Or run an example locally:
 
 When execution finishes, you'll see the output in the ``output/`` folder.
 
-More examples available `here <https://github.com/ploomber/projects>`_).
+More examples available `here <https://github.com/ploomber/projects>`_.
 
 
 Installation
