@@ -18,7 +18,10 @@ Ploomber
     :alt: Documentation Status
 
 .. image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/ploomber/projects/master
+    :target: https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fspec-api-python%252FREADME.ipynb%26branch%3Dmaster
+
+.. image:: https://deepnote.com/buttons/launch-in-deepnote-small.svg
+    :target: https://deepnote.com/launch?template=deepnote&url=https://github.com/ploomber/projects/blob/master/spec-api-python/README.ipynb
 
 .. image:: https://badge.fury.io/py/ploomber.svg
   :target: https://badge.fury.io/py/ploomber
@@ -93,8 +96,20 @@ Main features
 
 6. **[Beta] Deployment to Kubernetes and Airflow**. You can develop and execute locally. But if you want to scale things up, deploy to `Kubernetes or Airflow <https://github.com/ploomber/soopervisor>`_
 
-Try it out
-----------
+Try it out!
+-----------
+
+You can choose from one of the hosted options (no installation required):
+
+.. image:: https://mybinder.org/badge_logo.svg
+    :target: https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fspec-api-python%252FREADME.ipynb%26branch%3Dmaster
+
+.. image:: https://deepnote.com/buttons/launch-in-deepnote-small.svg
+    :target: https://deepnote.com/launch?template=deepnote&url=https://github.com/ploomber/projects/blob/master/spec-api-python/README.ipynb
+
+Or run an example locally:
+
+More examples available `here <https://github.com/ploomber/projects>`_
 
 .. code-block:: shell
 
@@ -102,14 +117,16 @@ Try it out
     git clone https://github.com/ploomber/projects
 
     # move to the machine learning pipeline example
-    cd projects/ml-basic
+    cd projects/spec-api-python
 
     # install dependencies
     # 1) if you have conda installed
     conda env create -f environment.yml
-    conda activate ml-basic
+    conda activate spec-api-python
     # 2) if you don't have conda
     pip install ploomber pandas scikit-learn pyarrow sklearn-evaluation
+
+    # open README.ipynb or execute the following commands in the terminal...
 
     # create output folder
     mkdir output
