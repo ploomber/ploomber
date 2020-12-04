@@ -52,7 +52,7 @@ TODO: describe BrokenProcesssPool status
 import abc
 import logging
 from datetime import datetime
-from ploomber.products import Product, MetaProduct
+from ploomber.products import Product, MetaProduct, EmptyProduct
 from ploomber.dag.DAG import DAG
 from ploomber.exceptions import TaskBuildError, DAGBuildEarlyStop
 from ploomber.tasks.TaskGroup import TaskGroup
@@ -596,7 +596,10 @@ class Task(abc.ABC):
                           'Task params: {}'.format(repr(self),
                                                    self.params)) from e
 
-        self.params._setitem('product', self.product)
+        # product does not becomes part of the task parameters when passing
+        # an EmptyProduct - this special kind of task is used by InMemoryDAG
+        if not isinstance(self.product, EmptyProduct):
+            self.params._setitem('product', self.product)
 
         try:
             self.source.render(self.params)

@@ -6,7 +6,7 @@ from ploomber import DAG, InMemoryDAG
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
 from ploomber.executors import Serial
-from ploomber.tasks.param_forward import input_data_passer, in_memory_processor
+from ploomber.tasks.param_forward import input_data_passer, in_memory_callable
 
 
 def get(product):
@@ -94,16 +94,16 @@ def make_predict():
     # we re-use the same graph that we used for training!
     add_features(dag_pred)
 
-    def _predict(product, model, upstream):
+    def _predict(upstream, model):
         return model.predict(upstream['join'])
 
     with open('model.pickle', 'rb') as f:
         clf = pickle.load(f)
 
-    predict = in_memory_processor(dag=dag_pred,
-                                  name='predict',
-                                  processor=_predict,
-                                  model=clf)
+    predict = in_memory_callable(_predict,
+                                 dag=dag_pred,
+                                 name='predict',
+                                 model=clf)
     dag_pred['join'] >> predict
 
     # NOTE: do not call build on dag_pred directly!
