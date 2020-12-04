@@ -876,7 +876,7 @@ class DAG(collections.abc.Mapping):
 
 
 def _single_product_short_repr(product):
-    s = str(product._identifier)
+    s = repr(product)
 
     if len(s) > 20:
         s_short = ''
