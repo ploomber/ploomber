@@ -1,4 +1,7 @@
+import sys
 from pathlib import Path
+
+import pytest
 
 from ploomber.products import File
 
@@ -51,14 +54,16 @@ def test_delete_metadata(tmp_directory):
     assert not Path('some_file.source').exists()
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason="Windows has a different path representation")
 def test_repr_relative():
-    arg = Path('a/b/c')
-    assert repr(File(arg)) == f"File('{arg!s}')"
+    assert repr(File('a/b/c')) == "File('a/b/c')"
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason="Windows has a different path representation")
 def test_repr_absolute():
-    arg = Path('/a/b/c')
-    assert repr(File(arg)) == f"File('{arg!s}')"
+    assert repr(File('/a/b/c')) == "File('/a/b/c')"
 
 
 def test_repr_absolute_shows_as_relative_if_possible():
