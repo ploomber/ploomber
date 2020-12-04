@@ -18,6 +18,10 @@ class InMemoryDAG:
     ----------
     dag : ploomber.DAG
         The DAG to use
+
+    Examples
+    --------
+    .. literalinclude:: ../../../doc/examples/InMemoryDAG.py
     """
     def __init__(self, dag, return_postprocessor=None):
         types = {type(dag[t]) for t in dag._iter()}
@@ -36,12 +40,15 @@ class InMemoryDAG:
         ]
         self.return_postprocessor = return_postprocessor or _do_nothing
 
-    def build(self, root_params, copy=False):
+        # TODO: validate that root nodes have single parameter in the signature
+        # input_data. and were initialized with {'input_data': None}
+
+    def build(self, input_data, copy=False):
         """Run the DAG
 
         Parameters
         ----------
-        root_params : dict
+        input_data : dict
             A dictionary mapping root tasks (names) to dict params. Root tasks
             are tasks in the DAG that do not have upstream dependencies,
             the corresponding dictionary is passed to the respective task
@@ -66,11 +73,11 @@ class InMemoryDAG:
         """
         outs = {}
 
-        root_params_names = set(self.root_nodes)
-        validate.keys(valid=root_params_names,
-                      passed=set(root_params),
-                      required=root_params_names,
-                      name='root_params')
+        input_data_names = set(self.root_nodes)
+        validate.keys(valid=input_data_names,
+                      passed=set(input_data),
+                      required=input_data_names,
+                      name='input_data')
 
         if copy is True:
             copying_function = copy_module.copy
@@ -83,13 +90,10 @@ class InMemoryDAG:
             task = self.dag[task_name]
             params = task.params.to_dict()
 
-            # if root node, replace input params (but do not replace upstream
-            # not product)
             if task_name in self.root_nodes:
-                passed_params = root_params[task_name] or {}
-                params = {**params, **passed_params}
+                params = {**params, 'input_data': input_data[task_name]}
 
-            # replace params with output
+            # replace params with the returned value from upstream tasks
             if 'upstream' in params:
                 params['upstream'] = {
                     k: copying_function(outs[k])

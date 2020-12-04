@@ -145,6 +145,7 @@ def signature_check(fn, params, task_name):
     """
     params = set(params)
     parameters = inspect.signature(fn).parameters
+
     required = {
         name
         for name, param in parameters.items()
