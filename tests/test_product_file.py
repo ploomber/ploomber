@@ -52,11 +52,13 @@ def test_delete_metadata(tmp_directory):
 
 
 def test_repr_relative():
-    assert repr(File('a/b/c')) == "File('a/b/c')"
+    arg = Path('a/b/c')
+    assert repr(File(arg)) == f"File('{arg!s}')"
 
 
 def test_repr_absolute():
-    assert repr(File('/a/b/c')) == "File('/a/b/c')"
+    arg = Path('/a/b/c')
+    assert repr(File(arg)) == f"File('{arg!s}')"
 
 
 def test_repr_absolute_shows_as_relative_if_possible():
