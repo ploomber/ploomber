@@ -103,6 +103,10 @@ class PythonCallable(Task):
 
         Notes
         -----
+        Cells whose first line is an empty commenf ("#"), will be removed when
+        exporting back to the function, you can use this for temporary,
+        exploratory work
+
         Be careful when developing tasks interacively. If the task has run
         successfully, you overwrite products but don't save the
         updated source code, your DAG will enter an inconsistent state where

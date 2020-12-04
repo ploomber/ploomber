@@ -690,17 +690,8 @@ class DAG(collections.abc.Mapping):
         # FIXME: add tests for this
         self.render()
 
-        G = self._to_graph()
-
-        for task, data in G.nodes(data=True):
-            data['color'] = 'red' if task.product._is_outdated() else 'green'
-            data['label'] = _task_short_repr(task)
-
-        # https://networkx.github.io/documentation/networkx-1.10/reference/drawing.html
-        # # http://graphviz.org/doc/info/attrs.html
-        # NOTE: requires pygraphviz and pygraphviz
-        G_ = nx.nx_agraph.to_agraph(G)
-        G_.draw(path, prog='dot', args='-Grankdir=LR')
+        G = self._to_graph(return_graphviz=True)
+        G.draw(path, prog='dot', args='-Grankdir=LR')
 
         image = Image(filename=path)
 
@@ -722,26 +713,53 @@ class DAG(collections.abc.Mapping):
         else:
             raise ValueError('Tasks must have a name, got None')
 
-    def _to_graph(self, only_current_dag=False):
+    def _to_graph(self, only_current_dag=False, return_graphviz=False):
         """
         Converts the DAG to a Networkx DiGraph object. Since upstream
         dependencies are not required to come from the same DAG,
         this object might include tasks that are not included in the current
         object
         """
+        # https://networkx.github.io/documentation/networkx-1.10/reference/drawing.html
+        # http://graphviz.org/doc/info/attrs.html
+
         # NOTE: delete this, use existing DiGraph object
         G = nx.DiGraph()
 
         for task in self.values():
-            G.add_node(task)
+            if return_graphviz:
+                # add parameters for graphviz plotting
+                attr = {
+                    'color': 'red' if task.product._is_outdated() else 'green',
+                    'id': task.name,
+                    'label': _task_short_repr(task)
+                }
+                # graphviz uses the str representation of the node object to
+                # distinguish them - by default str(task) returns
+                # str(task.product), we have to make sure that when
+                # return_graphviz=True, we pass the task id as node, instead
+                # of the full task object, otherwise if two products have the
+                # same str representation, nodes will clash
+                G.add_node(task.name, **attr)
+            else:
+                # otherwise add the actual task object as node
+                G.add_node(task)
 
+            # function to determine what to use as node depending on the
+            # return_graphviz
+            def get(task):
+                return task if not return_graphviz else task.name
+
+            # add edges
             if only_current_dag:
-                G.add_edges_from([(up, task) for up in task.upstream.values()
+                G.add_edges_from([(get(up), get(task))
+                                  for up in task.upstream.values()
                                   if up.dag is self])
             else:
-                G.add_edges_from([(up, task) for up in task.upstream.values()])
+                G.add_edges_from([(get(up), get(task))
+                                  for up in task.upstream.values()])
 
-        return G
+        return G if not return_graphviz else nx.nx_agraph.to_agraph(G)
 
     def _add_edge(self, task_from, task_to):
         """Add an edge between two tasks

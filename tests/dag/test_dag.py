@@ -165,6 +165,41 @@ def test_to_markup(fmt, sections, dag, monkeypatch_plot):
     dag.to_markup(fmt=fmt, sections=sections)
 
 
+def test_to_graph_prepare_for_graphviz(dag):
+    graph = dag._to_graph(return_graphviz=True)
+
+    assert set(n.attr['id'] for n in graph) == {'first', 'second'}
+    assert set(n.attr['label'] for n in graph) == {
+        "first -> \nFile('file1.txt')", "second -> \nFile('file2.txt')"
+    }
+    assert len(graph) == 2
+
+
+def test_graphviz_graph_with_clashing_task_str(dag):
+    def fn1(product):
+        pass
+
+    def fn2(upstream, product):
+        pass
+
+    dag = DAG()
+    # both products have the same str representation - this should not happen
+    # with files but might happen with sql tables (e.g. when a pipeline
+    # connects to two different dbs and generates tables with the same names)
+    t1 = PythonCallable(fn1, File('file1.txt'), dag, name='first')
+    t2 = PythonCallable(fn2, File('file1.txt'), dag, name='second')
+    t1 >> t2
+
+    graph = dag._to_graph(return_graphviz=True)
+
+    # check the representation of the graph still looks fine
+    assert set(n.attr['id'] for n in graph) == {'first', 'second'}
+    assert set(n.attr['label'] for n in graph) == {
+        "first -> \nFile('file1.txt')", "second -> \nFile('file1.txt')"
+    }
+    assert len(graph) == 2
+
+
 def test_count_in_progress_bar(monkeypatch, tmp_directory):
     dag = DAG()
     dag.executor = Serial()
