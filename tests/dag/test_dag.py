@@ -640,8 +640,8 @@ def test_tracebacks_are_shown_for_all_on_render_failing_tasks():
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
 
-    assert "SQLDump: t2 -> File(another_table)" in str(excinfo.value)
-    assert "SQLDump: t1 -> File(one_table)" in str(excinfo.value)
+    assert "SQLDump: t2 -> File('another_table')" in str(excinfo.value)
+    assert "SQLDump: t1 -> File('one_table')" in str(excinfo.value)
 
 
 @pytest.mark.parametrize('executor', _executors)
@@ -655,8 +655,8 @@ def test_tracebacks_are_shown_for_all_on_build_failing_tasks(executor):
 
     # need this to get chained exceptions:
     # https://docs.pytest.org/en/latest/reference.html#_pytest._code.ExceptionInfo.getrepr
-    assert "PythonCallable: t1 -> File(a_file.txt)" in str(excinfo.getrepr())
-    assert ("PythonCallable: t2 -> File(another_file.txt)"
+    assert "PythonCallable: t1 -> File('a_file.txt')" in str(excinfo.getrepr())
+    assert ("PythonCallable: t2 -> File('another_file.txt')"
             in str(excinfo.getrepr()))
 
 
