@@ -715,7 +715,7 @@ class Task(abc.ABC):
             data['Product type'] = type(self.product).__name__
 
         if 'product' in sections:
-            data['Product'] = str(self.product)
+            data['Product'] = repr(self.product)
 
         if 'product_client' in sections:
             # FIXME: all products should have a client property

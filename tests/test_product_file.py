@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from ploomber.products import File
 
 
@@ -48,3 +49,16 @@ def test_delete_metadata(tmp_directory):
     Path('some_file.source').touch()
     File('some_file')._delete_metadata()
     assert not Path('some_file.source').exists()
+
+
+def test_repr_relative():
+    assert repr(File('a/b/c')) == "File('a/b/c')"
+
+
+def test_repr_absolute():
+    assert repr(File('/a/b/c')) == "File('/a/b/c')"
+
+
+def test_repr_absolute_shows_as_relative_if_possible():
+    path = Path('.').resolve() / 'a'
+    assert repr(File(path)) == "File('a')"

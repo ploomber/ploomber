@@ -84,3 +84,17 @@ class File(Product):
         else:
             self.logger.debug('%s does not exist ignoring...',
                               self.__path_to_file)
+
+    def __repr__(self):
+        path = Path(self._identifier.best_str(shorten=True))
+
+        # if absolute, try to show a shorter version, if possible
+        if path.is_absolute():
+            try:
+                path = path.relative_to(Path('.').resolve())
+            except ValueError:
+                # happens if the path is not a file/folder within the current
+                # working directory
+                pass
+
+        return '{}({})'.format(type(self).__name__, repr(str(path)))
