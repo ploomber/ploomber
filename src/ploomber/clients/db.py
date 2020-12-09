@@ -107,7 +107,7 @@ class SQLAlchemyClient(Client):
         Some database drivers do not support multiple commands in a single
         execute statement. Use this optiion to split commands by a given
         character (e.g. ';') and send them one at a time. Defaults to
-        'default', which splits by ';' if the dealing with a SQLite database,
+        'default', which splits by ';' if using SQLite database,
         but does not perform any splitting with other databases. If None,
         it will never split, a string value is interpreted as the token
         to use for splitting statements regardless of the database type
