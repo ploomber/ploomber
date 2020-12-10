@@ -4,7 +4,7 @@ from ploomber.placeholders.Placeholder import Placeholder
 
 class EmptyProduct(Product):
     def __init__(self):
-        super().__init__(identifier='EmptyProduct')
+        super().__init__(identifier='')
 
     def _init_identifier(self, identifier):
         return Placeholder(identifier)

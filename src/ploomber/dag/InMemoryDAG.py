@@ -12,7 +12,8 @@ class InMemoryDAG:
     """
     Converts a DAG to a DAG-like object that performs all operations in memory
     (products are not serialized). For this to work all tasks must be
-    PythonCallable initialized with callables that return a value
+    ``PythonCallable`` objects initialized with callables that return a value
+    with valid ``serializer`` and ``unserializer`` parameters.
 
     Parameters
     ----------
