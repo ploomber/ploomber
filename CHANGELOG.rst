@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+0.8.5dev
+--------
+* Documentation tutorials re-organization and CSS fixes
+* Improvements to the ``InMemoryDAG`` API
+* Minor bug fixes
+* ``File.__repr__`` shows a relative path whenever possible
+
+
 0.8.4 (2020-11-21)
 -------------------
 * Adds support for passing glob-like patterns in ``ploomber build`` (via ``DAGSpec.from_directory``)
