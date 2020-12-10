@@ -58,7 +58,8 @@ class PythonCallable(Task):
                  params=None,
                  unserializer=None,
                  serializer=None):
-        kwargs = dict(hot_reload=dag._params.hot_reload)
+        kwargs = dict(hot_reload=dag._params.hot_reload,
+                      needs_product=serializer is None)
         self._source = type(self)._init_source(source, kwargs)
         self._serializer = serializer or dag.serializer
         self._unserializer = unserializer or dag.unserializer
@@ -78,8 +79,17 @@ class PythonCallable(Task):
                 for k, v in params['upstream'].items()
             }
 
+        params = Params._from_dict(params, copy=False)
+
+        # do not pass product if serializer is set, we'll use the returned
+        # value in such case
+        if self._serializer:
+            product = params.pop('product')
+        else:
+            product = params['product']
+
         # call function
-        out = self.source.primitive(**Params._from_dict(params, copy=False))
+        out = self.source.primitive(**params)
 
         # serialize output if needed
         if self._serializer:
@@ -88,7 +98,7 @@ class PythonCallable(Task):
                                  'is initialized with a serializer'.format(
                                      self.source.primitive))
             else:
-                self._serializer(out, params['product'])
+                self._serializer(out, product)
 
     def develop(self, app='notebook', args=None):
         """Edit function interactively using Jupyter

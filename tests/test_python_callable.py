@@ -42,11 +42,11 @@ def fn_w_exception(product):
     raise MyException
 
 
-def fn_data_frame(product):
+def fn_data_frame():
     return pd.DataFrame({'x': [1, 2, 3]})
 
 
-def fn_adds_one(upstream, product):
+def fn_adds_one(upstream):
     return upstream['root'] + 1
 
 

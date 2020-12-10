@@ -21,7 +21,7 @@ def input_data_passer(dag, name):
                           params={'input_data': None})
 
 
-def in_memory_callable(callable_, dag, name, **params):
+def in_memory_callable(callable_, dag, name, params):
     """
     Returns a special in-memory task that runs a callable with the given
     params. When calling InMemoryDAG.build(params), this task should bot appear

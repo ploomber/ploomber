@@ -597,7 +597,7 @@ class Task(abc.ABC):
                                                    self.params)) from e
 
         # product does not becomes part of the task parameters when passing
-        # an EmptyProduct - this special kind of task is used by InMemoryDAG
+        # an EmptyProduct - this special kind of task is used by InMemoryDAG.
         if not isinstance(self.product, EmptyProduct):
             self.params._setitem('product', self.product)
 

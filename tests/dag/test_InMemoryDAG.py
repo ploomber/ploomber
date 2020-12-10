@@ -4,20 +4,19 @@ import pandas as pd
 from ploomber import DAG, InMemoryDAG
 from ploomber.tasks import PythonCallable, ShellScript
 from ploomber.products import File
-from ploomber.tasks.param_forward import input_data_passer, in_memory_callable
+from ploomber.tasks import input_data_passer, in_memory_callable
 
 
-# TODO: product should be optional when serializer is passed
-def _root(product, input_data):
+def _root(input_data):
     df = pd.DataFrame(input_data)
     return df
 
 
-def _add_one(upstream, product):
+def _add_one(upstream):
     return upstream['root'] + 1
 
 
-def _return_none(product, input_data):
+def _return_none(input_data):
     return None
 
 
@@ -83,7 +82,8 @@ def test_error_if_a_task_returns_none():
                    File('root.parquet'),
                    dag,
                    name='root',
-                   params={'input_data': None})
+                   params={'input_data': None},
+                   serializer=serializer)
 
     dag_ = InMemoryDAG(dag)
 
@@ -97,7 +97,7 @@ def test_error_if_a_task_returns_none():
 
 @pytest.mark.parametrize('copy', [True, False])
 def test_copy(copy):
-    def _assign_upstream(upstream, product):
+    def _assign_upstream(upstream):
         _assign_upstream.obj = upstream
         return 42
 
@@ -156,7 +156,10 @@ def test_in_memory_callable():
         return upstream['root'] + to_add
 
     root = input_data_passer(dag, name='root')
-    task = in_memory_callable(add_some, dag, name='task', to_add=2)
+    task = in_memory_callable(add_some,
+                              dag,
+                              name='task',
+                              params=dict(to_add=2))
 
     root >> task
 

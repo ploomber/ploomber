@@ -6,27 +6,27 @@ from ploomber import DAG, InMemoryDAG
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
 from ploomber.executors import Serial
-from ploomber.tasks.param_forward import input_data_passer, in_memory_callable
+from ploomber.tasks import input_data_passer, in_memory_callable
 
 
-def get(product):
+def get():
     d = datasets.load_iris(as_frame=True)
     df = d['data']
     df['target'] = d['target']
     return df
 
 
-def a_feature(upstream, product):
+def a_feature(upstream):
     df = upstream['get']
     return pd.DataFrame({'a_feature': df['sepal length (cm)']**2})
 
 
-def another(upstream, product):
+def another(upstream):
     df = upstream['get']
     return pd.DataFrame({'another': df['sepal width (cm)']**2})
 
 
-def join(product, upstream):
+def join(upstream):
     return upstream['get'].join(upstream['a_feature']).join(
         upstream['another'])
 
@@ -103,7 +103,7 @@ def make_predict():
     predict = in_memory_callable(_predict,
                                  dag=dag_pred,
                                  name='predict',
-                                 model=clf)
+                                 params=dict(model=clf))
     dag_pred['join'] >> predict
 
     # NOTE: do not call build on dag_pred directly!

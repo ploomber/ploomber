@@ -100,6 +100,8 @@ class InMemoryDAG:
                     for k, v in params['upstream'].items()
                 }
 
+            params.pop('product', None)
+
             output = self.return_postprocessor(task.source.primitive(**params))
 
             if output is None:

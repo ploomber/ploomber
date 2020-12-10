@@ -4,6 +4,7 @@ from pathlib import Path
 
 import parso
 
+from ploomber.exceptions import TaskRenderError
 from ploomber.sources.sources import Source
 from ploomber.util.util import signature_check, load_dotted_path
 from ploomber.static_analysis.python import PythonCallableExtractor
@@ -98,7 +99,7 @@ class PythonCallableSource(Source):
     """
     A source object to encapsulate a Python callable (i.e. functions).
     """
-    def __init__(self, primitive, hot_reload=False):
+    def __init__(self, primitive, hot_reload=False, needs_product=True):
         if not (callable(primitive) or isinstance(primitive, str)):
             raise TypeError('{} must be initialized'
                             'with a Python callable or str, got '
@@ -109,6 +110,7 @@ class PythonCallableSource(Source):
         self._source_as_str = None
         self._loc = None
         self._hot_reload = hot_reload
+        self._needs_product = needs_product
         self.__source_lineno = None
 
     @property
@@ -159,7 +161,16 @@ class PythonCallableSource(Source):
         Validation function executed after rendering
         """
         if not self._callable_loader.from_dotted_path:
-            signature_check(self.primitive, params, self.name)
+            to_validate = set(params)
+
+            if not self._needs_product:
+                to_validate.remove('product')
+
+            # TODO: provide a better error message when task does not need
+            # product but the function has it, the current error is confusing
+            # because we remove "product" from the params and then pass
+            # validate
+            signature_check(self.primitive, to_validate, self.name)
 
     def _post_init_validation(self, value):
         # TODO: verify the callable has a product parameter

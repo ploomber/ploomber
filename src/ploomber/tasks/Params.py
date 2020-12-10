@@ -2,7 +2,7 @@ import copy as copy_module
 from collections import abc
 
 
-class Params(abc.Mapping):
+class Params(abc.MutableMapping):
     """
     Read-only mapping to represent params passed in Task constructor. It
     initializes with a copy of the passed dictionary. It verifies that the
