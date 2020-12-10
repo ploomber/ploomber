@@ -5,11 +5,14 @@ from ploomber.products import EmptyProduct
 # when calling dag.build() on dags that should be built using InMemoryDAG
 
 
-def _input_data_passer(input_data):
-    return input_data
+def _input_data_passer(input_data, preprocessor):
+    if preprocessor is None:
+        return input_data
+    else:
+        return preprocessor(input_data)
 
 
-def input_data_passer(dag, name):
+def input_data_passer(dag, name, preprocessor=None):
     """
     Returns a special in-memory task that forwards input data as product to
     downstream tasks.
@@ -18,7 +21,10 @@ def input_data_passer(dag, name):
                           EmptyProduct(),
                           dag=dag,
                           name=name,
-                          params={'input_data': None})
+                          params={
+                              'input_data': None,
+                              'preprocessor': preprocessor
+                          })
 
 
 def in_memory_callable(callable_, dag, name, params):
