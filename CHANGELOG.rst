@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.8.5dev
---------
+0.8.5 (2020-12-14)
+-------------------
 * Documentation tutorials re-organization and CSS fixes
 * Improvements to the ``InMemoryDAG`` API
 * Minor bug fixes
