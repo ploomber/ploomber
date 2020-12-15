@@ -7,6 +7,7 @@ such as a bash or a SQL script
 import shlex
 import subprocess
 import pdb
+import functools
 
 from IPython.terminal.debugger import TerminalPdb, Pdb
 
@@ -191,6 +192,20 @@ class PythonCallable(Task):
             ipdb.runcall(self.source.primitive, **self.params)
         elif kind == 'pdb':
             pdb.runcall(self.source.primitive, **self.params)
+
+
+def task_factory(_func=None, **factory_kwargs):
+    """Syntactic sugar for building PythonCallable tasks
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(**wrapper_kwargs):
+            kwargs = {**factory_kwargs, **wrapper_kwargs}
+            return PythonCallable(func, **kwargs)
+
+        return wrapper
+
+    return decorator if _func is None else decorator(_func)
 
 
 class ShellScript(Task):

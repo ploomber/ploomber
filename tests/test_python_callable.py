@@ -6,7 +6,7 @@ import pandas as pd
 
 from test_pkg import functions
 from ploomber import DAG, DAGConfigurator, tasks
-from ploomber.tasks import PythonCallable
+from ploomber.tasks import PythonCallable, task_factory
 from ploomber.products import File
 from ploomber.exceptions import (DAGBuildError, TaskRenderError,
                                  DAGRenderError, TaskBuildError)
@@ -290,3 +290,29 @@ def test_calling_unrendered_task(method):
         getattr(t, method)()
 
     assert msg in str(excinfo.value)
+
+
+def test_task_factory():
+    dag = DAG()
+
+    @task_factory(product=File('file.txt'))
+    def touch(product):
+        Path(str(product)).touch()
+
+    touch(dag=dag)
+
+    assert list(dag) == ['touch']
+    assert str(dag['touch'].product) == 'file.txt'
+
+
+def test_task_factory_override_params():
+    dag = DAG()
+
+    @task_factory(product=File('file.txt'))
+    def touch(product):
+        Path(str(product)).touch()
+
+    touch(dag=dag, product=File('another.txt'))
+
+    assert list(dag) == ['touch']
+    assert str(dag['touch'].product) == 'another.txt'
