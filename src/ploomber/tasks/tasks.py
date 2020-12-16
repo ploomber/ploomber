@@ -193,6 +193,17 @@ class PythonCallable(Task):
         elif kind == 'pdb':
             pdb.runcall(self.source.primitive, **self.params)
 
+    def load(self):
+        """
+        Loads the product, only works if the task is initialized with an
+        unzerializer
+        """
+        if self._unserializer is None:
+            raise ValueError('Cannot load product, task was not initialized '
+                             'with an unserializer function')
+
+        return self._unserializer(str(self.product))
+
 
 def task_factory(_func=None, **factory_kwargs):
     """Syntactic sugar for building PythonCallable tasks

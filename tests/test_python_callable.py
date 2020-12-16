@@ -30,6 +30,26 @@ def dag():
     return dag
 
 
+@pytest.fixture
+def dag_with_unserializer():
+    dag = DAG()
+
+    t1 = PythonCallable(fn_data_frame,
+                        File('t1.parquet'),
+                        dag,
+                        name='t1',
+                        serializer=df_serializer)
+    t2 = PythonCallable(fn_adds_one,
+                        File('t2.parquet'),
+                        dag,
+                        unserializer=df_unserializer,
+                        serializer=df_serializer,
+                        name='t2')
+    t1 >> t2
+
+    return dag
+
+
 class MyException(Exception):
     pass
 
@@ -47,7 +67,7 @@ def fn_data_frame():
 
 
 def fn_adds_one(upstream):
-    return upstream['root'] + 1
+    return upstream['t1'] + 1
 
 
 def df_serializer(output, product):
@@ -137,25 +157,22 @@ def touch_upstream(product, upstream):
     assert Path('file2.txt').read_text() == 'hello'
 
 
-def test_serialize_unserialize(tmp_directory):
-    dag = DAG()
-
-    t1 = PythonCallable(fn_data_frame,
-                        File('t1.parquet'),
-                        dag,
-                        name='root',
-                        serializer=df_serializer)
-    t2 = PythonCallable(fn_adds_one,
-                        File('t2.parquet'),
-                        dag,
-                        unserializer=df_unserializer,
-                        serializer=df_serializer)
-    t1 >> t2
-
-    dag.build()
-
+def test_serialize_unserialize(tmp_directory, dag_with_unserializer):
+    dag_with_unserializer.build()
     assert pd.read_parquet('t1.parquet')['x'].tolist() == [1, 2, 3]
     assert pd.read_parquet('t2.parquet')['x'].tolist() == [2, 3, 4]
+
+
+def test_load(tmp_directory, dag_with_unserializer):
+    dag_with_unserializer.build()
+
+    with pytest.raises(ValueError) as excinfo:
+        dag_with_unserializer['t1'].load()
+
+    assert str(excinfo.value) == (
+        'Cannot load product, task was not initialized with '
+        'an unserializer function')
+    assert dag_with_unserializer['t2'].load()['x'].tolist() == [2, 3, 4]
 
 
 def test_uses_default_serializer_and_deserializer():
