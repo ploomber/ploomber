@@ -154,25 +154,24 @@ class NotebookSource(Source):
         self._render()
 
     def _render(self):
-        import papermill as pm
-
-        tmp_in = tempfile.mktemp('.ipynb')
-        tmp_out = tempfile.mktemp('.ipynb')
         # _read_nb_str_unrendered uses hot_reload, this ensures we always get
         # the latest version
-        Path(tmp_in).write_text(self._read_nb_str_unrendered())
-        pm.execute_notebook(tmp_in,
-                            tmp_out,
-                            prepare_only=True,
-                            parameters=self._params)
+        _, nb = self._read_nb_str_unrendered()
 
-        tmp_out = Path(tmp_out)
+        # this is needed for parameterize_notebook to work
+        for cell in nb.cells:
+            if not hasattr(cell.metadata, 'tags'):
+                cell.metadata['tags'] = []
+        nb.metadata['papermill'] = dict()
 
-        self._nb_str_rendered = tmp_out.read_text()
+        # NOTE: we use parameterize_notebook instead of execute_notebook
+        # with the prepare_only option because the latter adds a "papermill"
+        # section on each cell's metadata, which makes it too verbose when
+        # using NotebookRunner.develop() when the source is script (each cell
+        # will have an empty "papermill" metadata dictionary)
+        nb = parameterize_notebook(nb, self._params)
 
-        Path(tmp_in).unlink()
-        tmp_out.unlink()
-
+        self._nb_str_rendered = nbformat.writes(nb)
         self._post_render_validation(self._params, self._nb_str_rendered)
 
     def _read_nb_str_unrendered(self):
@@ -203,7 +202,7 @@ class NotebookSource(Source):
             self._nb_str_unrendered = nbformat.writes(
                 self._nb_obj_unrendered, version=nbformat.NO_CONVERT)
 
-        return self._nb_str_unrendered
+        return self._nb_str_unrendered, self._nb_obj_unrendered
 
     def _post_init_validation(self, value):
         """

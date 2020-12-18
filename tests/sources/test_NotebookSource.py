@@ -156,6 +156,18 @@ def test_kernelspec_overrides_nb_kernel_info():
     assert source._nb_obj_unrendered.metadata.kernelspec.language == 'R'
 
 
+def test_removes_papermill_metadata():
+    source = NotebookSource(new_nb(fmt='ipynb'),
+                            ext_in='ipynb',
+                            kernelspec_name='python3')
+
+    params = Params._from_dict({'product': File('file.ipynb')})
+    source.render(params)
+    nb = source.nb_obj_rendered
+
+    assert all('papermill' not in cell['metadata'] for cell in nb.cells)
+
+
 def test_error_if_kernelspec_name_is_invalid():
     with pytest.raises(NoSuchKernel):
         NotebookSource(new_nb(fmt='ipynb'),
