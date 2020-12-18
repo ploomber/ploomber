@@ -287,6 +287,28 @@ def test_debug(kind, module, dag, task_name, monkeypatch):
     assert mock.call_args[1] == dag[task_name].params.to_dict()
 
 
+@pytest.mark.parametrize(
+    'kind, module',
+    [
+        ['pdb', tasks.tasks.pdb],
+        ['ipdb', tasks.tasks.Pdb],
+    ],
+)
+def test_debug_with_userializer(tmp_directory, dag_with_unserializer,
+                                monkeypatch, kind, module):
+    mock = Mock()
+    monkeypatch.setattr(module, 'runcall', mock)
+
+    dag_with_unserializer.build()
+    dag_with_unserializer['t2'].debug(kind=kind)
+
+    assert (mock.call_args.args[0] is
+            dag_with_unserializer['t2'].source.primitive)
+    assert mock.call_args.kwargs['upstream']['t1'].to_dict(orient='list') == {
+        'x': [1, 2, 3]
+    }
+
+
 def test_debug_unknown_kind(dag):
     dag.render()
 

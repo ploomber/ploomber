@@ -8,6 +8,7 @@ import shlex
 import subprocess
 import pdb
 import functools
+import copy
 
 from IPython.terminal.debugger import TerminalPdb, Pdb
 
@@ -19,6 +20,19 @@ from ploomber.exceptions import TaskBuildError
 from ploomber.constants import TaskStatus
 from ploomber.sources.interact import CallableInteractiveDeveloper
 from ploomber.tasks.Params import Params
+
+
+def _unserialize_params(params_original, unserializer):
+    params = params_original.to_dict()
+
+    params['upstream'] = {
+        k: unserializer(v)
+        for k, v in params['upstream'].items()
+    }
+
+    params = Params._from_dict(params, copy=False)
+
+    return params
 
 
 class PythonCallable(Task):
@@ -71,16 +85,10 @@ class PythonCallable(Task):
         return PythonCallableSource(source, **kwargs)
 
     def run(self):
-        params = self.params.to_dict()
-
-        # unserialize upstream dependencies if needed
-        if 'upstream' in params and self._unserializer:
-            params['upstream'] = {
-                k: self._unserializer(v)
-                for k, v in params['upstream'].items()
-            }
-
-        params = Params._from_dict(params, copy=False)
+        if 'upstream' in self.params and self._unserializer:
+            params = _unserialize_params(self.params, self._unserializer)
+        else:
+            params = self.params.to_dict()
 
         # do not pass product if serializer is set, we'll use the returned
         # value in such case
@@ -181,6 +189,15 @@ class PythonCallable(Task):
                                  'not been '
                                  'rendered, call DAG.render() first'.format(
                                      self.name))
+
+        if 'upstream' in self.params and self._unserializer:
+            params = _unserialize_params(self.params, self._unserializer)
+        else:
+            params = self.params.to_dict()
+
+        if self._serializer:
+            params.pop('product')
+
         if kind == 'ipdb':
             try:
                 # this seems to only work in a Terminal
@@ -189,9 +206,9 @@ class PythonCallable(Task):
                 # this works in a Jupyter notebook
                 ipdb = Pdb()
 
-            ipdb.runcall(self.source.primitive, **self.params)
+            ipdb.runcall(self.source.primitive, **params)
         elif kind == 'pdb':
-            pdb.runcall(self.source.primitive, **self.params)
+            pdb.runcall(self.source.primitive, **params)
 
     def load(self):
         """
