@@ -302,9 +302,9 @@ def test_debug_with_userializer(tmp_directory, dag_with_unserializer,
     dag_with_unserializer.build()
     dag_with_unserializer['t2'].debug(kind=kind)
 
-    assert (mock.call_args.args[0] is
+    assert (mock.call_args[0][0] is
             dag_with_unserializer['t2'].source.primitive)
-    assert mock.call_args.kwargs['upstream']['t1'].to_dict(orient='list') == {
+    assert mock.call_args[1]['upstream']['t1'].to_dict(orient='list') == {
         'x': [1, 2, 3]
     }
 

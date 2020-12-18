@@ -33,7 +33,7 @@ def setup(c, doc=False, version=None):
           f'&& conda activate {env_name} '
           '&& conda install pygraphviz r-base r-irkernel --yes '
           '--channel conda-forge'
-          '&& pip install --editable .[test] '
+          '&& pip install --editable .[dev] '
           '&& bash install_test_pkg.sh '
           '&& pip install invoke')
 

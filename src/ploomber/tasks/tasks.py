@@ -8,7 +8,6 @@ import shlex
 import subprocess
 import pdb
 import functools
-import copy
 
 from IPython.terminal.debugger import TerminalPdb, Pdb
 
