@@ -30,11 +30,13 @@ Ploomber
   :target: https://coveralls.io/github/ploomber/ploomber?branch=master
 
 
-Coding an entire analysis pipeline in a single notebook (or script) creates an
+Coding an entire analysis pipeline in a single notebook creates an
 unmaintainable monolith that easily breaks. Ploomber allows you to modularize
 your analysis, making your project more maintainable and easier
 to test. Since it integrates with Jupyter, you don't have to compromise
-interactivity, you can still use notebooks and build a production-ready pipeline.
+interactivity, you can still use notebooks and build a production-ready
+pipeline. *Tasks are not limited to notebooks, they can also be scripts or even
+Python functions.*
 
 .. image:: https://ploomber.io/main-diagram.png
 
@@ -77,7 +79,8 @@ output:
 
 
 That's it! Execute ``ploomber build`` and your pipeline tasks will execute in
-the right order.
+the right order. For full flexibility, you can directly use the
+Python API. `Click here to see an example <https://github.com/ploomber/projects/blob/master/ml-advanced/src/ml_advanced/pipeline.py>`_.
 
 `Watch JupyterCon 2020 talk <https://www.youtube.com/watch?v=M6mtgPfsA3M>`_
 
