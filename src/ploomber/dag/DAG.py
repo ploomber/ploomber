@@ -48,7 +48,6 @@ except ImportError:
 import networkx as nx
 from tqdm.auto import tqdm
 from jinja2 import Template
-import mistune
 from IPython.display import Image
 
 from ploomber.Table import Table, TaskReport, BuildReport
@@ -658,6 +657,7 @@ class DAG(collections.abc.Mapping):
             # importing this requires mistune. we import here since it's
             # an optional dependency
             from ploomber.util import markup
+            import mistune
 
             renderer = markup.HighlightRenderer()
             out = mistune.markdown(out, escape=False, renderer=renderer)
