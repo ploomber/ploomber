@@ -48,12 +48,11 @@ except ImportError:
 import networkx as nx
 from tqdm.auto import tqdm
 from jinja2 import Template
-import mistune
 from IPython.display import Image
 
 from ploomber.Table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
-from ploomber.util import (image_bytes2html, isiterable, requires, markup)
+from ploomber.util import (image_bytes2html, isiterable, requires)
 from ploomber.util.debug import debug_if_exception
 from ploomber import resources
 from ploomber import executors
@@ -655,6 +654,11 @@ class DAG(collections.abc.Mapping):
                                            dag=self)
 
         if fmt == 'html':
+            # importing this requires mistune. we import here since it's
+            # an optional dependency
+            from ploomber.util import markup
+            import mistune
+
             renderer = markup.HighlightRenderer()
             out = mistune.markdown(out, escape=False, renderer=renderer)
 

@@ -6,7 +6,7 @@ import pandas as pd
 
 from test_pkg import functions
 from ploomber import DAG, DAGConfigurator, tasks
-from ploomber.tasks import PythonCallable
+from ploomber.tasks import PythonCallable, task_factory
 from ploomber.products import File
 from ploomber.exceptions import (DAGBuildError, TaskRenderError,
                                  DAGRenderError, TaskBuildError)
@@ -30,6 +30,26 @@ def dag():
     return dag
 
 
+@pytest.fixture
+def dag_with_unserializer():
+    dag = DAG()
+
+    t1 = PythonCallable(fn_data_frame,
+                        File('t1.parquet'),
+                        dag,
+                        name='t1',
+                        serializer=df_serializer)
+    t2 = PythonCallable(fn_adds_one,
+                        File('t2.parquet'),
+                        dag,
+                        unserializer=df_unserializer,
+                        serializer=df_serializer,
+                        name='t2')
+    t1 >> t2
+
+    return dag
+
+
 class MyException(Exception):
     pass
 
@@ -47,7 +67,7 @@ def fn_data_frame():
 
 
 def fn_adds_one(upstream):
-    return upstream['root'] + 1
+    return upstream['t1'] + 1
 
 
 def df_serializer(output, product):
@@ -137,25 +157,22 @@ def touch_upstream(product, upstream):
     assert Path('file2.txt').read_text() == 'hello'
 
 
-def test_serialize_unserialize(tmp_directory):
-    dag = DAG()
-
-    t1 = PythonCallable(fn_data_frame,
-                        File('t1.parquet'),
-                        dag,
-                        name='root',
-                        serializer=df_serializer)
-    t2 = PythonCallable(fn_adds_one,
-                        File('t2.parquet'),
-                        dag,
-                        unserializer=df_unserializer,
-                        serializer=df_serializer)
-    t1 >> t2
-
-    dag.build()
-
+def test_serialize_unserialize(tmp_directory, dag_with_unserializer):
+    dag_with_unserializer.build()
     assert pd.read_parquet('t1.parquet')['x'].tolist() == [1, 2, 3]
     assert pd.read_parquet('t2.parquet')['x'].tolist() == [2, 3, 4]
+
+
+def test_load(tmp_directory, dag_with_unserializer):
+    dag_with_unserializer.build()
+
+    with pytest.raises(ValueError) as excinfo:
+        dag_with_unserializer['t1'].load()
+
+    assert str(excinfo.value) == (
+        'Cannot load product, task was not initialized with '
+        'an unserializer function')
+    assert dag_with_unserializer['t2'].load()['x'].tolist() == [2, 3, 4]
 
 
 def test_uses_default_serializer_and_deserializer():
@@ -270,6 +287,28 @@ def test_debug(kind, module, dag, task_name, monkeypatch):
     assert mock.call_args[1] == dag[task_name].params.to_dict()
 
 
+@pytest.mark.parametrize(
+    'kind, module',
+    [
+        ['pdb', tasks.tasks.pdb],
+        ['ipdb', tasks.tasks.Pdb],
+    ],
+)
+def test_debug_with_userializer(tmp_directory, dag_with_unserializer,
+                                monkeypatch, kind, module):
+    mock = Mock()
+    monkeypatch.setattr(module, 'runcall', mock)
+
+    dag_with_unserializer.build()
+    dag_with_unserializer['t2'].debug(kind=kind)
+
+    assert (mock.call_args[0][0] is
+            dag_with_unserializer['t2'].source.primitive)
+    assert mock.call_args[1]['upstream']['t1'].to_dict(orient='list') == {
+        'x': [1, 2, 3]
+    }
+
+
 def test_debug_unknown_kind(dag):
     dag.render()
 
@@ -290,3 +329,29 @@ def test_calling_unrendered_task(method):
         getattr(t, method)()
 
     assert msg in str(excinfo.value)
+
+
+def test_task_factory():
+    dag = DAG()
+
+    @task_factory(product=File('file.txt'))
+    def touch(product):
+        Path(str(product)).touch()
+
+    touch(dag=dag)
+
+    assert list(dag) == ['touch']
+    assert str(dag['touch'].product) == 'file.txt'
+
+
+def test_task_factory_override_params():
+    dag = DAG()
+
+    @task_factory(product=File('file.txt'))
+    def touch(product):
+        Path(str(product)).touch()
+
+    touch(dag=dag, product=File('another.txt'))
+
+    assert list(dag) == ['touch']
+    assert str(dag['touch'].product) == 'another.txt'

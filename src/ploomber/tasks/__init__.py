@@ -1,5 +1,5 @@
 from ploomber.tasks.tasks import (PythonCallable, ShellScript, DownloadFromURL,
-                                  Link, Input)
+                                  Link, Input, task_factory)
 from ploomber.tasks.Task import Task
 from ploomber.tasks.TaskFactory import TaskFactory
 from ploomber.tasks.sql import (SQLScript, SQLDump, SQLTransfer, SQLUpload,
