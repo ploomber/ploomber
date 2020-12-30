@@ -58,8 +58,7 @@ jobs:
         pip install .[dev]
 
         # install R and IR kernel
-        conda install readline -c conda-forge -y
-        conda install -y r-base r-irkernel -c conda-forge
+        conda install -y r-base=4.0.3 r-irkernel -c conda-forge
         echo "IRkernel::installspec()" | Rscript -
 
         # install sample package for tests
