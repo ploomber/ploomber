@@ -148,13 +148,7 @@ setup(
         # dependencies in jupyter notebooks
         'sqlparse',
         'autopep8',
-        # we actually don't have a restriction on parso's version but if jedi
-        # (which also has parso as dependency) is installed first (ipython uses
-        # it) and then "pip install ploomber" is executed, it might lead to a
-        # broken environment. the new pip solver solves this but it's not the
-        # default yet. we can remove this once either jedi is updated or
-        # the new pipe solver becomes the default
-        'parso<0.8.0,>=0.7.0',
+        'parso',
         # for generating dag.to_markup(fmt='html')
         'mistune',
         # for syntax highlighting when generating dag HTML reports
