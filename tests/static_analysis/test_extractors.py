@@ -213,6 +213,9 @@ def fn2(upstream):
     name = 'some_name'
     upstream[name]
 
+    a.loc[:, 'column']
+    a['column']
+
 
 @pytest.mark.parametrize('fn, expected', [[fn1, None], [fn2, {'a', 'b'}]])
 def test_extract_from_python_callable(fn, expected):

@@ -26,6 +26,13 @@ class PythonNotebookExtractor(NotebookExtractor):
             return product
 
 
+def get_key_value(node):
+    value = node.value
+    # get the subscript name (e.g. d['key'] returns 'key'). Things like
+    # df.loc[:, 'a'] do not return an id, hence we return None
+    return value.id if hasattr(value, 'id') else None
+
+
 class PythonCallableExtractor(Extractor):
     def extract_upstream(self):
         """
@@ -35,8 +42,8 @@ class PythonCallableExtractor(Extractor):
         return {
             node.slice.value.s
             for node in ast.walk(module)
-            if isinstance(node, ast.Subscript) and node.value.id == 'upstream'
-            and isinstance(node.slice.value, ast.Str)
+            if isinstance(node, ast.Subscript) and get_key_value(node) ==
+            'upstream' and isinstance(node.slice.value, ast.Str)
         } or None
 
     def extract_product(self):
