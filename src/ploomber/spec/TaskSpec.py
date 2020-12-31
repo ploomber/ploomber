@@ -209,6 +209,9 @@ class TaskSpec(MutableMapping):
     def __len__(self):
         return len(self.data)
 
+    def __repr__(self):
+        return '{}({!r})'.format(type(self).__name__, self.data)
+
 
 # FIXME: how do we make a default product client? use the task's client?
 def init_product(task_dict, meta, task_class, root_path):
