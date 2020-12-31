@@ -66,6 +66,13 @@ def _add():
     spec, path = DAGSpec.auto_load(to_dag=False)
     env = FileLoader('ploomber_add')
 
+    # TODO: when the dag has a source loader, the argument passed to
+    # ploomber_add should take that into account to place the new file
+    # in the appropriate location (instead of doing it relative to
+    # pipeline.yaml)
+
+    # TODO: raise an error if the location is inside the site-packages folder
+
     if path:
         click.echo('Found spec at {}'.format(path))
 

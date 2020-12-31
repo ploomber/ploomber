@@ -3,7 +3,7 @@ import pydoc
 from pathlib import Path
 from ploomber.placeholders.Placeholder import Placeholder
 
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from jinja2 import Environment, FileSystemLoader, StrictUndefined, exceptions
 
 
 def _is_iterable(o):
@@ -95,6 +95,14 @@ class SourceLoader:
 
     def __getitem__(self, key):
         return self.get_template(key)
+
+    def get(self, key):
+        """Load template, returns None if it doesn' exist
+        """
+        try:
+            return self[key]
+        except exceptions.TemplateNotFound:
+            return None
 
     def get_template(self, name):
         """Load a template by name

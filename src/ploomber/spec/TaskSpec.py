@@ -74,7 +74,8 @@ def task_class_from_spec(task_spec, lazy_import):
     return class_
 
 
-def source_for_task_class(source_str, task_class, project_root, lazy_import):
+def source_for_task_class(source_str, task_class, project_root, lazy_import,
+                          make_absolute):
     if task_class is tasks.PythonCallable:
         if lazy_import:
             return source_str
@@ -83,7 +84,7 @@ def source_for_task_class(source_str, task_class, project_root, lazy_import):
     else:
         path = Path(source_str)
 
-        if project_root and not path.is_absolute():
+        if project_root and not path.is_absolute() and make_absolute:
             return Path(project_root, source_str)
         else:
             return path
@@ -111,16 +112,20 @@ class TaskSpec(MutableMapping):
 
         self.validate()
 
+        source_loader = meta['source_loader']
+
         # initialize required elements
         self.data['class'] = task_class_from_spec(self.data, lazy_import)
         # preprocess source obj, at this point it will either be a Path if the
         # task requires a file or a callable if it's a PythonCallable task
-        self.data['source'] = source_for_task_class(self.data['source'],
-                                                    self.data['class'],
-                                                    self.project_root,
-                                                    lazy_import)
-
-        source_loader = meta['source_loader']
+        self.data['source'] = source_for_task_class(
+            self.data['source'],
+            self.data['class'],
+            self.project_root,
+            lazy_import,
+            # only make sources absolute paths when not using a source loader
+            # otherwise keep them relative
+            make_absolute=source_loader is None)
 
         is_a_file = isinstance(self.data['source'], Path)
 

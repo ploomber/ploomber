@@ -23,6 +23,8 @@ def test_load_template(processor):
     t = source_loader[processor('template.sql')]
     assert t.render({'file': 'some file'})
 
+    assert source_loader.get('non_existing_template.sql') is None
+
 
 def test_multiple_paths():
     tmp_directory1 = tempfile.mkdtemp()
