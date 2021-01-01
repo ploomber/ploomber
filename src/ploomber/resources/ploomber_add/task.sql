@@ -1,29 +1,24 @@
-/* Add description for your SQL task here
-
+/* Add description here
 */
 
 [% if extract_upstream -%]
-/* NOTE: extract_upstream is set to True in your pipeline.yaml file,
-declare "upstream" dependencies by using the "upstream" dictionary
-*/
+/* extract_upstream=True in your pipeline.yaml file, if this task has
+upstream dependencies, declare them here */
 [% else %]
-/* NOTE: extract_upstream is set to False in your pipeline.yaml file,
-declare "upstream" dependencies directly in the YAML spec. References
-in this file must match
-*/
+/* extract_upstream=False in your pipeline.yaml file, if this task has
+upstream dependencies, declare them the YAML spec and reference them here */
 [% endif %]
 
 [% if extract_product -%]
-/* NOTE: extract_product is set to True in your pipeline.yaml file,
-declare "product" here as a variable and reference it as {{product}}
-*/
+/* extract_product=True in your pipeline.yaml file, declare a "product"
+variable in this file */
 [% else %]
-/* NOTE: extract_product is set to False in your pipeline.yaml file,
-declare "product" in the YAML spec and reference it here as {{product}}
-*/
+/* extract_product=False in your pipeline.yaml file, declare "product" in
+the YAML spec */
 [% endif %]
 
--- NOTE: not all databases support DROP TABLE IF EXISTS
+/* NOTE: not all databases support DROP TABLE IF EXISTS, you might need to
+change this */
 DROP TABLE IF EXISTS {{product}};
 
 CREATE TABLE AS {{product}}

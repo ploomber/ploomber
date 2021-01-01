@@ -6,34 +6,31 @@
 #     name: python3
 # ---
 
-# Add description for your Python task here
+# Add description here
 
 # + tags=["parameters"]
 [% if extract_upstream -%]
-# extract_upstream is set to True in your pipeline.yaml. If this task has
-# upstream dependencies, list their names here (e.g. {'some_task',
-# 'another_task'}. If there are no dependencies, leave it as None
+# extract_upstream=True in your pipeline.yaml file, if this task has
+# dependencies, list them them here (e.g. upstream = ['some_task']) otherwise
+# leave as None
 upstream = None
 [% else -%]
-# extract_upstream is set to False in your pipeline.yaml, keep it equal to
-# None here and declare "upstream" dependencies directly in the YAML spec
+# extract_upstream=False in your pipeline.yaml file, if this task has
+# dependencies, declare them in the YAML spec and leave this as None. Values
+# declared in the YAML spec will be added here during task execution
 upstream = None
 [% endif %]
 [% if extract_product -%]
-# extract_product is set to True in your pipeline.yaml. Product must be the
-# path to save the executed version of this script (a notebook), if this task
-# generates other files, declare a dictionary with a key "nb" to point to the
-# executed notebook and add other keys for the rest of the files
-product = {'nb': 'path/to/notebook.ipynb', 'data': 'path/to/output.csv'}
+# extract_product=True in your pipeline.yaml file, product['nb'] must be the
+# path to save the executed version of this task, other keys can be used
+# to reference other output files
+product = {'nb': 'products/notebook.ipynb', 'data': 'products/output.csv'}
 [% else -%]
-# extract_product is set to False in your pipeline.yaml, keep it equal to
-# None here and declare a "product" directly in the YAML spec
+# extract_product=False in your pipeline.yaml file, declare "product" in
+# the YAML spec and leave this as None, values declared in the YAML spec 
+# will be added here during task execution
 product = None
 [% endif %]
-# NOTE: During execution, a cell will be injected below to resolve "upstream"
-# and "product" based on preferences in your pipeline.yaml spec. If you
-# activated the jupyter notebook extension, you'll see the injected cell
-# as well when you open this file from the jupyter notebook app
 
 # +
 # your code here...
