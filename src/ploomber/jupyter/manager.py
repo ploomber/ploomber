@@ -135,12 +135,16 @@ class PloomberContentsManager(TextFileContentsManager):
 
         return super(PloomberContentsManager, self).__init__(*args, **kwargs)
 
-    def get(self, *args, **kwargs):
+    def get(self, path, content=True, type=None, format=None):
         """
         This is called when a file/directory is requested (even in the list
         view)
         """
-        model = super(PloomberContentsManager, self).get(*args, **kwargs)
+        model = super(PloomberContentsManager, self).get(path=path,
+                                                         content=content,
+                                                         type=type,
+                                                         format=format)
+
         check_metadata_filter(self.log, model)
 
         # if opening a file (ignore file listing), load dag again
