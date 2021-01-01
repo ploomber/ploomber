@@ -80,15 +80,15 @@ class SourceLoader:
                              'module object')
 
         if _is_iterable(path):
-            path_full = [str(Path(module_path, e)) for e in path]
+            self.path_full = [str(Path(module_path, e)) for e in path]
         else:
             # if path is None, do not append anything
-            path_full = str(Path(module_path, path or ''))
+            self.path_full = str(Path(module_path, path or ''))
 
         # NOTE: we do not use jinja2.PackageLoader since it does not provide
         # the abilty to pass a list of paths
         self.env = Environment(
-            loader=FileSystemLoader(path_full),
+            loader=FileSystemLoader(self.path_full),
             # this will cause jinja2 to raise an exception if a variable
             # declared in the template is not passed in the render parameters
             undefined=StrictUndefined)
@@ -103,6 +103,14 @@ class SourceLoader:
             return self[key]
         except exceptions.TemplateNotFound:
             return None
+
+    def path_to(self, key):
+        """Return the path to a template, even if it doesn't exist
+        """
+        try:
+            return self[key].path
+        except exceptions.TemplateNotFound:
+            return Path(self.path_full, key)
 
     def get_template(self, name):
         """Load a template by name

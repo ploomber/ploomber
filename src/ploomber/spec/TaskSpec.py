@@ -103,6 +103,10 @@ class TaskSpec(MutableMapping):
         The "meta" section information from the calling DAGSpec
     project_root : str or pathlib.Path
         The project root folder (pipeline.yaml parent)
+    lazy_import : bool, default=False
+            If False, sources are loaded when initializing the spec (e.g.
+            a dotted path is imported, a source loaded using a SourceLoader
+            is converted to a Placeholder object)
     """
     def __init__(self, data, meta, project_root, lazy_import=False):
         # FIXME: make sure data and meta are immutable structures
@@ -131,7 +135,11 @@ class TaskSpec(MutableMapping):
 
         if source_loader and is_a_file:
             # if there is a source loader, use it...
-            self.data['source'] = source_loader[self.data['source']]
+            if lazy_import:
+                self.data['source'] = source_loader.path_to(
+                    self.data['source'])
+            else:
+                self.data['source'] = source_loader[self.data['source']]
 
     def validate(self):
         """

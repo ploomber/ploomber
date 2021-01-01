@@ -26,6 +26,17 @@ def test_load_template(processor):
     assert source_loader.get('non_existing_template.sql') is None
 
 
+def test_path_to():
+    tmp_directory = tempfile.mkdtemp()
+    Path(tmp_directory, 'template.sql').write_text('{{file}}')
+    source_loader = SourceLoader(str(tmp_directory))
+
+    assert source_loader.path_to('template.sql') == Path(
+        tmp_directory, 'template.sql')
+    assert source_loader.path_to('non_template.sql') == Path(
+        tmp_directory, 'non_template.sql')
+
+
 def test_multiple_paths():
     tmp_directory1 = tempfile.mkdtemp()
     tmp_directory2 = tempfile.mkdtemp()

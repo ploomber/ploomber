@@ -115,7 +115,9 @@ class DAGSpec(MutableMapping):
         actual function. If False, PythonCallables are initialized directly
         with the dotted path, which means some verifications such as import
         statements in that function's module are delayed until the pipeline
-        is executed
+        is executed. This also applies to placeholders loaded using a
+        SourceLoader, if a placeholder does not exist, it will return
+        None instead of raising an error
     """
     def __init__(self, data, env=None, lazy_import=False):
         if isinstance(data, (str, Path)):
@@ -165,7 +167,8 @@ class DAGSpec(MutableMapping):
             self.data['tasks'] = [
                 normalize_task(task) for task in self.data['tasks']
             ]
-            self._validate_meta()
+
+            Meta.initialize_inplace(self.data)
 
             # make sure the folder where the pipeline is located is in sys.path
             # otherwise dynamic imports needed by TaskSpec will fail
@@ -178,7 +181,7 @@ class DAGSpec(MutableMapping):
                     for t in self.data['tasks']
                 ]
         else:
-            self.data['meta'] = Meta.default_meta_location()
+            self.data['meta'] = Meta.empty()
 
     def _validate_top_keys(self, spec, path):
         """Validate keys at the top of the spec
@@ -195,14 +198,6 @@ class DAGSpec(MutableMapping):
         else:
             valid = {'meta', 'config', 'clients', 'tasks'}
             validate.keys(valid, spec.keys(), name='dag spec')
-
-    def _validate_meta(self):
-        """Validate and instantiate the "meta" section
-        """
-        if 'meta' not in self.data:
-            self.data['meta'] = {}
-
-        self.data['meta'] = Meta.default_meta(self.data['meta'])
 
     def __getitem__(self, key):
         return self.data[key]
@@ -262,7 +257,11 @@ class DAGSpec(MutableMapping):
         return dag
 
     @classmethod
-    def auto_load(cls, to_dag=True, starting_dir=None, env=None):
+    def auto_load(cls,
+                  to_dag=True,
+                  starting_dir=None,
+                  env=None,
+                  lazy_import=False):
         """
         Looks for a pipeline.yaml, generates a DAGSpec and returns a DAG.
         Currently, this is only used by the PloomberContentsManager, this is
@@ -287,7 +286,7 @@ class DAGSpec(MutableMapping):
                 return None, None
 
         try:
-            spec = cls(path, env=env)
+            spec = cls(path, env=env, lazy_import=lazy_import)
 
             if to_dag:
                 return spec, spec.to_dag(), Path(path).parent
@@ -373,6 +372,15 @@ class Meta:
     }
 
     @classmethod
+    def initialize_inplace(cls, data):
+        """Validate and instantiate the "meta" section
+        """
+        if 'meta' not in data:
+            data['meta'] = {}
+
+        data['meta'] = Meta.default_meta(data['meta'])
+
+    @classmethod
     def default_meta(cls, meta=None):
         """Fill missing values in a meta dictionary
         """
@@ -416,7 +424,7 @@ class Meta:
         return meta
 
     @classmethod
-    def default_meta_location(cls):
+    def empty(cls):
         """Default meta values when a spec is initialized with "location"
         """
         return {v: None for v in cls.VALID}
