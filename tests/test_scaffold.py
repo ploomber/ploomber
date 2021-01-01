@@ -10,7 +10,7 @@ from ploomber import scaffold
 @pytest.mark.parametrize('name', ['task.py', 'task.ipynb'])
 @pytest.mark.parametrize('extract_upstream', [False, True])
 @pytest.mark.parametrize('extract_product', [False, True])
-def test_load_scaffold_script(name, extract_product, extract_upstream):
+def test_render_script(name, extract_product, extract_upstream):
     loader = scaffold.ScaffoldLoader('ploomber_add')
     out = loader.render(name,
                         params=dict(extract_product=extract_product,
@@ -21,19 +21,25 @@ def test_load_scaffold_script(name, extract_product, extract_upstream):
         ast.parse(out)
 
 
-def test_load_scaffold_function():
+@pytest.mark.parametrize('extract_upstream', [False, True])
+@pytest.mark.parametrize('extract_product', [False, True])
+def test_render_function(extract_product, extract_upstream):
     loader = scaffold.ScaffoldLoader('ploomber_add')
     out = loader.render('function.py',
-                        params=dict(function_name='some_function'))
+                        params=dict(function_name='some_function',
+                                    extract_product=extract_product,
+                                    extract_upstream=extract_upstream))
     module = ast.parse(out)
 
     assert module.body[0].name == 'some_function'
 
 
-def test_create(backup_test_pkg, tmp_directory):
+def test_create_function(backup_test_pkg, tmp_directory):
     loader = scaffold.ScaffoldLoader('ploomber_add')
 
-    loader.create('test_pkg.functions.new_function', {}, tasks.PythonCallable)
+    loader.create('test_pkg.functions.new_function',
+                  dict(extract_product=False, extract_upstream=True),
+                  tasks.PythonCallable)
 
     code = Path(backup_test_pkg, 'functions.py').read_text()
     module = ast.parse(code)
