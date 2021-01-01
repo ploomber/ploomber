@@ -6,8 +6,7 @@ from pathlib import Path
 import click
 from ploomber import __version__
 from ploomber import cli as cli_module
-from ploomber.spec.DAGSpec import DAGSpec
-from ploomber.scaffold.ScaffoldLoader import ScaffoldLoader
+from ploomber import scaffold
 
 
 def _is_valid_name(package_name):
@@ -34,49 +33,7 @@ def new():
 def add():
     """Create source files tasks registered in pipeline.yaml
     """
-    _add()
-
-
-def _add():
-    spec, path = DAGSpec.auto_load(to_dag=False, lazy_import=True)
-    env = ScaffoldLoader('ploomber_add')
-
-    # TODO: when the dag has a source loader, the argument passed to
-    # ploomber_add should take that into account to place the new file
-    # in the appropriate location (instead of doing it relative to
-    # pipeline.yaml)
-
-    # TODO: raise an error if the location is inside the site-packages folder
-
-    # NOTE: lazy loading freom source loader will giev errors because
-    # initializing a source with a path only, loses the information from the
-    # jinja environment to make macros workj. I have to test this. the best
-    # solution is to add a lazy_load param to Placeholder, so it can be
-    # initialized with a path for a file that does not exist
-
-    if path:
-        click.echo('Found spec at {}'.format(path))
-
-        for task in spec['tasks']:
-            source = Path(task['source'])
-
-            if not source.exists():
-                if source.suffix in {'.py', '.sql', '.ipynb'}:
-                    click.echo('Adding {}...'.format(source))
-                    # create parent folders if needed
-                    source.parent.mkdir(parents=True, exist_ok=True)
-                    content = env.render('task' + source.suffix,
-                                         params=spec['meta'])
-                    source.write_text(content)
-
-                else:
-                    click.echo('Error: This command does not support adding '
-                               'tasks with extension "{}", valid ones are '
-                               '.py and .sql. Skipping {}'.format(
-                                   source.suffix, source))
-
-    else:
-        click.echo('Error: No pipeline.yaml spec found...')
+    scaffold.add()
 
 
 def _new():
@@ -96,7 +53,7 @@ def _new():
             click.echo('"%s" is not a valid project name, choose another.' %
                        name)
 
-    env = ScaffoldLoader('ploomber_new', project_name=name)
+    env = scaffold.ScaffoldLoader('ploomber_new', project_name=name)
 
     click.echo('Creating %s/' % name)
     Path(name).mkdir()

@@ -245,6 +245,10 @@ def load_dotted_path(dotted_path, raise_=True):
 
 
 def locate_dotted_path(dotted_path):
+    """
+    Locates a dotted path, returns the spec for the module where the attribute
+    is defined
+    """
     tokens = dotted_path.split('.')
     module = '.'.join(tokens[:-1])
     spec = importlib.util.find_spec(module)

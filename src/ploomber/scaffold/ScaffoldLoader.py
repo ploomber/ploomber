@@ -1,12 +1,16 @@
+import ast
 from pathlib import Path
 
 import jupytext
-from jinja2 import Environment, PackageLoader
+from jinja2 import Environment, PackageLoader, StrictUndefined
 
 try:
     import importlib.resources as resources
 except ImportError:
     import importlib_resources as resources
+
+from ploomber import tasks
+from ploomber.util.util import locate_dotted_path
 
 
 class ScaffoldLoader:
@@ -16,7 +20,8 @@ class ScaffoldLoader:
                                variable_start_string='[[',
                                variable_end_string=']]',
                                block_start_string='[%',
-                               block_end_string='%]')
+                               block_end_string='%]',
+                               undefined=StrictUndefined)
         self.directory = directory
         self.project_name = project_name
 
@@ -44,3 +49,43 @@ class ScaffoldLoader:
         module = '.'.join(['ploomber', 'resources', self.directory])
         content = resources.read_text(module, name)
         Path(self.project_name, name).write_text(content)
+
+    def create(self, source, params, class_):
+        if class_ is tasks.PythonCallable:
+            fn_name = source.split('.')[-1]
+            params['function_name'] = fn_name
+            source = Path(locate_dotted_path(source).origin)
+            source.parent.mkdir(parents=True, exist_ok=True)
+            original = source.read_text()
+
+            module = ast.parse(original)
+
+            names = {
+                element.name
+                for element in module.body if hasattr(element, 'name')
+            }
+
+            if fn_name in names:
+                print(f'An element named {fn_name!r} already exists '
+                      f'in module {source!s}, skipping...')
+            else:
+                fn_str = self.render('function.py', params=params)
+                source.write_text(original + fn_str)
+        else:
+            path = Path(source)
+
+            if path.exists():
+                print(f'File {path!s} already exists, skipping...')
+            else:
+                if path.suffix in {'.py', '.sql', '.ipynb'}:
+                    # create parent folders if needed
+                    source.parent.mkdir(parents=True, exist_ok=True)
+                    content = self.render('task' + source.suffix,
+                                          params=params)
+                    print('Adding {}...'.format(source))
+                    source.write_text(content)
+                else:
+                    print('Error: This command does not support adding '
+                          'tasks with extension "{}", valid ones are '
+                          '.py and .sql. Skipping {}'.format(
+                              path.suffix, path))
