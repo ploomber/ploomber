@@ -12,9 +12,6 @@ upstream dependencies, declare them the YAML spec and reference them here */
 [% if extract_product -%]
 /* extract_product=True in your pipeline.yaml file, declare a "product"
 variable in this file */
-[% else %]
-/* extract_product=False in your pipeline.yaml file, declare "product" in
-the YAML spec */
 [% endif %]
 
 /* NOTE: not all databases support DROP TABLE IF EXISTS, you might need to

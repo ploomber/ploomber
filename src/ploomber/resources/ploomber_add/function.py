@@ -15,8 +15,5 @@ def [[function_name]](product):
     [% if extract_product -%]
     # extract_product=True in your pipeline.yaml file, declare a "product"
     # variable inside this function
-    [% else %]
-    # extract_product=False in your pipeline.yaml file, declare "product" in
-    # the YAML spec
     [% endif %]
     pass

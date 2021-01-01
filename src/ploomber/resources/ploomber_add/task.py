@@ -11,7 +11,7 @@
 # + tags=["parameters"]
 [% if extract_upstream -%]
 # extract_upstream=True in your pipeline.yaml file, if this task has
-# dependencies, list them them here (e.g. upstream = ['some_task']) otherwise
+# dependencies, list them them here (e.g. upstream = ['some_task']), otherwise
 # leave as None
 upstream = None
 [% else -%]
@@ -26,9 +26,8 @@ upstream = None
 # to reference other output files
 product = {'nb': 'products/notebook.ipynb', 'data': 'products/output.csv'}
 [% else -%]
-# extract_product=False in your pipeline.yaml file, declare "product" in
-# the YAML spec and leave this as None, values declared in the YAML spec 
-# will be added here during task execution
+# extract_product=False in your pipeline.yaml file, leave this as None, the
+# value in the YAML spec  will be added here during task execution
 product = None
 [% endif %]
 
