@@ -70,22 +70,27 @@ class CallableInteractiveDeveloper:
         self.body_start = None
         self._source_code = None
 
-    def _to_nb(self):
+    def to_nb(self, path=None):
         """
+        Converts the function to is notebook representation, Returns a
+        notebook object, if path is passed, it saves the notebook as well
         Returns the function's body in a notebook (tmp location), inserts
         params as variables at the top
         """
         body_elements, self.body_start, imports_cell = parse_function(self.fn)
-        function_to_nb(body_elements, self.tmp_path, imports_cell, self.params,
-                       self.fn)
-        return self.tmp_path
+        return function_to_nb(body_elements, imports_cell, self.params,
+                              self.fn, path)
 
-    def _overwrite_from_nb(self, path):
+    def overwrite(self, obj):
         """
         Overwrite the function's body with the notebook contents, excluding
-        injected parameters and cells whose first line is "#"
+        injected parameters and cells whose first line is "#". obj can be
+        either a notebook object or a path
         """
-        nb = nbformat.read(path, as_version=nbformat.NO_CONVERT)
+        if isinstance(obj, (str, Path)):
+            nb = nbformat.read(obj, as_version=nbformat.NO_CONVERT)
+        else:
+            nb = obj
 
         # remove cells that are only needed for the nb but not for the function
         code_cells = [c['source'] for c in nb.cells if keep_cell(c)]
@@ -129,7 +134,7 @@ class CallableInteractiveDeveloper:
 
     def __enter__(self):
         self._source_code = self.path_to_source.read_text()
-        self.tmp_path = self._to_nb()
+        self.to_nb(path=self.tmp_path)
         return str(self.tmp_path)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -144,7 +149,7 @@ class CallableInteractiveDeveloper:
                              'not saved back to the module. Notebook '
                              f'available at "{self.tmp_path}')
 
-        self._overwrite_from_nb(self.tmp_path)
+        self.overwrite(self.tmp_path)
         Path(self.tmp_path).unlink()
 
     def __del__(self):
@@ -176,6 +181,22 @@ def indent_cell(code):
     return '\n'.join([indent_line(line) for line in code.splitlines()])
 
 
+def body_elements_from_source(source):
+    # getsource adds a new line at the end of the the function, we don't need
+    # this
+
+    body = parso.parse(source).children[0].children[-1]
+
+    # parso is adding a new line as first element, not sure if this
+    # happens always though
+    if isinstance(body.children[0], parso.python.tree.Newline):
+        body_elements = body.children[1:]
+    else:
+        body_elements = body.children
+
+    return body_elements, body.start_pos[0] - 1
+
+
 def parse_function(fn):
     """
     Extract function's source code, parse it and return function body
@@ -184,18 +205,8 @@ def parse_function(fn):
     """
     # TODO: exclude return at the end, what if we find more than one?
     # maybe do not support functions with return statements for now
-
-    # getsource adds a new line at the end of the the function, we don't need
-    # this
-    s = inspect.getsource(fn).rstrip()
-    body = parso.parse(s).children[0].children[-1]
-
-    # parso is adding a new line as first element, not sure if this
-    # happens always though
-    if isinstance(body.children[0], parso.python.tree.Newline):
-        body_elements = body.children[1:]
-    else:
-        body_elements = body.children
+    source = inspect.getsource(fn).rstrip()
+    body_elements, start_pos = body_elements_from_source(source)
 
     # get imports in the corresponding module
     module = parso.parse(Path(inspect.getfile(fn)).read_text())
@@ -210,7 +221,7 @@ def parse_function(fn):
     if imports_local:
         imports_cell = imports_cell + '\n' + imports_local
 
-    return body_elements, body.start_pos[0] - 1, imports_cell
+    return body_elements, start_pos, imports_cell
 
 
 def get_func_and_class_names(module):
@@ -253,7 +264,7 @@ def make_import_from_definitions(module, fn):
         return f'from {module_name} import {names_all}'
 
 
-def function_to_nb(body_elements, path, imports_cell, params, fn):
+def function_to_nb(body_elements, imports_cell, params, fn, path):
     """
     Save function body elements to a notebook
     """
@@ -300,12 +311,12 @@ __package__ = "{}"
                                 metadata=dict(tags=['imports-new'])))
 
     for statement in body_elements:
-        lines = [
-            # remove indentation
-            line.lstrip() for line
-            # parso includes new line tokens, remove any trailing whitespace
-            in statement.get_code().rstrip().split('\n')
-        ]
+        lines = [line for line in clean_statement(statement)]
+
+        # remove indentation from function body lines
+        idx = indentation_idx(lines[0])
+        lines = [line[idx:] for line in lines]
+
         cell = nb_format.new_code_cell(source='\n'.join(lines))
         nb.cells.append(cell)
 
@@ -317,4 +328,22 @@ __package__ = "{}"
         "name": 'python3'
     }
 
-    nbformat.write(nb, path)
+    if path:
+        nbformat.write(nb, path)
+
+    return nb
+
+
+def clean_statement(statement):
+    code = statement.get_code()
+
+    if code[0] == '\n':
+        code = code[1:]
+
+    # parso includes new line tokens, remove any trailing whitespace
+    return code.rstrip().split('\n')
+
+
+def indentation_idx(line):
+    idx = len(line) - len(line.lstrip())
+    return idx

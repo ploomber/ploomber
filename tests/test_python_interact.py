@@ -12,7 +12,9 @@ from test_pkg import functions
 import nbformat
 import papermill as pm
 
-from ploomber.sources.interact import CallableInteractiveDeveloper
+from ploomber.sources.interact import (CallableInteractiveDeveloper,
+                                       function_to_nb,
+                                       body_elements_from_source)
 from ploomber.sources import interact
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.util import chdir_code
@@ -37,11 +39,58 @@ def replace_first_cell(nb, source, replacement):
 
 
 def find_cell_tagged(nb, tag):
-    for cell in nb.cells:
+    for i, cell in enumerate(nb.cells):
         if tag in cell['metadata'].get('tags', {}):
-            return cell
+            return cell, i
 
     raise Exception('Cell with rag "{}" not found'.format(tag))
+
+
+def test_to_nb():
+    dev = CallableInteractiveDeveloper(functions.large_function, params={})
+    nb = dev.to_nb()
+
+    # anything above this is extra code needed to make the nb work
+    _, index = find_cell_tagged(nb, 'imports-new')
+
+    source_fn = inspect.getsource(functions.large_function)
+    # remove indentation from the function body
+    source_fn_lines = [line[4:] for line in source_fn.splitlines()]
+    # ignore first line from function signature
+    soource_expected = '\n'.join(source_fn_lines[1:])
+
+    source_from_nb = '\n\n'.join(c['source'] for c in nb.cells[index + 1:])
+
+    assert soource_expected == source_from_nb
+
+
+def test_unindent_function_with_mixed_identation(monkeypatch):
+    source = """
+def mixed_indentation():
+    if True:
+      pass
+
+    if True:
+          pass
+"""
+
+    body_elements, _ = body_elements_from_source(source)
+
+    mock = Mock()
+    mock.__name__ = 'pkg.module'
+    monkeypatch.setattr(interact.inspect, 'getmodule', lambda _: mock)
+
+    nb = function_to_nb(body_elements,
+                        imports_cell='',
+                        params=dict(),
+                        fn=None,
+                        path=None)
+
+    first_cell = nb.cells[-2]['source']
+    second_cell = nb.cells[-1]['source']
+
+    assert first_cell == 'if True:\n  pass'
+    assert second_cell == 'if True:\n      pass'
 
 
 @pytest.mark.parametrize(
@@ -131,7 +180,7 @@ def test_added_imports(backup_test_pkg):
 
     with CallableInteractiveDeveloper(functions.simple, params) as tmp_nb:
         nb = nbformat.read(tmp_nb, as_version=nbformat.NO_CONVERT)
-        cell = find_cell_tagged(nb, 'imports-new')
+        cell, _ = find_cell_tagged(nb, 'imports-new')
         cell.source += f'\n{added_imports}'
         nbformat.write(nb, tmp_nb)
 
@@ -145,7 +194,7 @@ def test_changes_cwd(backup_test_pkg):
 
     with CallableInteractiveDeveloper(functions.simple, params) as tmp_nb:
         nb = nbformat.read(tmp_nb, as_version=nbformat.NO_CONVERT)
-        cell = find_cell_tagged(nb, 'debugging-settings')
+        cell, _ = find_cell_tagged(nb, 'debugging-settings')
         source = cell.source
 
     assert chdir_code(Path('.').resolve()) in source
