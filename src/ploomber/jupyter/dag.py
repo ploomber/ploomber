@@ -29,10 +29,14 @@ class JupyterDAGManager:
 
     def models_in_directory(self, path_to_dir, content):
         return [
-            self._model(name=res.task.name,
-                        nb=None if not content else res.interactive.to_nb(),
-                        path=self._jupyter_path(path_to_dir, res.task.name),
-                        content=content) for res in self.resources[path_to_dir]
+            self._model(
+                name=res.task.name,
+                nb=None if not content else res.interactive.to_nb(),
+                path=self._jupyter_path(path_to_dir, res.task.name),
+                content=content,
+                last_modified=datetime.datetime.fromtimestamp(
+                    Path(res.task.source.loc.split(':')[0]).stat().st_mtime))
+            for res in self.resources[path_to_dir]
         ]
 
     def model_in_path(self, path, content=True):
@@ -47,7 +51,7 @@ class JupyterDAGManager:
             if models_w_name:
                 return models_w_name[0]
 
-    def _model(self, name, nb, path, content):
+    def _model(self, name, nb, path, content, last_modified):
         return {
             'name': name,
             'type': 'notebook',
@@ -55,7 +59,7 @@ class JupyterDAGManager:
             'path': path,
             'writable': True,
             'created': datetime.datetime.now(),
-            'last_modified': datetime.datetime.now(),
+            'last_modified': last_modified,
             'mimetype': None,
             'format': 'json' if content else None,
         }

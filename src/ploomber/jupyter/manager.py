@@ -161,21 +161,22 @@ class PloomberContentsManager(TextFileContentsManager):
                                                        content=content)
                     model['content'].extend(to_add)
 
-        check_metadata_filter(self.log, model)
+            check_metadata_filter(self.log, model)
 
-        # if opening a file (ignore file listing), load dag again
-        if (model['content'] and model['type'] == 'notebook'):
+            # if opening a file (ignore file listing), load dag again
+            if (model['content'] and model['type'] == 'notebook'):
 
-            # Look for the pipeline.yaml file from the file we are rendering
-            # and search recursively. This is required to cover the case when
-            # pipeline.yaml is in a subdirectory from the folder where the
-            # user executed "jupyter notebook"
-            self.load_dag(starting_dir=Path(os.getcwd(), model['path']).parent)
+                # Look for the pipeline.yaml file from the file we are rendering
+                # and search recursively. This is required to cover the case when
+                # pipeline.yaml is in a subdirectory from the folder where the
+                # user executed "jupyter notebook"
+                self.load_dag(
+                    starting_dir=Path(os.getcwd(), model['path']).parent)
 
-        if self._model_in_dag(model):
-            self.log.info('[Ploomber] Injecting cell...')
-            inject_cell(model=model,
-                        params=self.dag_mapping[model['path']]._params)
+            if self._model_in_dag(model):
+                self.log.info('[Ploomber] Injecting cell...')
+                inject_cell(model=model,
+                            params=self.dag_mapping[model['path']]._params)
 
         return model
 
@@ -184,24 +185,24 @@ class PloomberContentsManager(TextFileContentsManager):
         This is called when a file is saved
         """
         if self._model_in_path(path, content=False):
-            return self._overwrite(model, path)
+            out = self._overwrite(model, path)
+            return out
+        else:
+            check_metadata_filter(self.log, model)
+            # not sure what's the difference between model['path'] and path
+            # but path has leading "/", _model_in_dag strips it
+            key = self._model_in_dag(model, path)
 
-        check_metadata_filter(self.log, model)
-        # not sure what's the difference between model['path'] and path
-        # but path has leading "/", _model_in_dag strips it
-        key = self._model_in_dag(model, path)
+            if key:
+                self.log.info(
+                    '[Ploomber] Cleaning up injected cell in {}...'.format(
+                        model.get('name') or ''))
+                model['content'] = _cleanup_rendered_nb(model['content'])
 
-        if key:
-            self.log.info(
-                '[Ploomber] Cleaning up injected cell in {}...'.format(
-                    model.get('name') or ''))
-            model['content'] = _cleanup_rendered_nb(model['content'])
+                self.log.info("[Ploomber] Deleting product's metadata...")
+                self.dag_mapping[key].product.metadata.delete()
 
-            self.log.info("[Ploomber] Deleting product's metadata...")
-            self.dag_mapping[key].product.metadata.delete()
-
-        returned = super(PloomberContentsManager, self).save(model, path)
-        return returned
+            return super(PloomberContentsManager, self).save(model, path)
 
     def create_checkpoint(self, path):
         # NOTE: we cannot save checkpoints for functions
@@ -249,7 +250,7 @@ class PloomberContentsManager(TextFileContentsManager):
 
     def _overwrite(self, model, path):
         if self.manager:
-            self.manager.overwrite(model, path)
+            return self.manager.overwrite(model, path)
 
 
 def _load_jupyter_server_extension(app):
