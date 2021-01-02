@@ -192,11 +192,6 @@ def tmp_nbs_no_yaml():
     pass
 
 
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'spec-with-functions')
-def tmp_spec_with_function():
-    pass
-
-
 @pytest.fixture(scope='session')
 def path_to_source_code_file():
     return (_path_to_tests() / 'assets' / 'sample' / 'src' / 'pkg' / 'module' /

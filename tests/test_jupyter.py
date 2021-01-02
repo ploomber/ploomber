@@ -254,12 +254,13 @@ def get_client():
     assert 'Traceback' not in err
 
 
-def test_dag_manager(tmp_spec_with_function):
+def test_dag_manager(backup_spec_with_functions):
     dag = DAGSpec('pipeline.yaml').to_dag().render()
     manager = JupyterDAGManager(dag)
 
-    path_to_raw = str(tmp_spec_with_function.resolve() / 'my_tasks' / 'raw')
-    path_to_clean = str(tmp_spec_with_function.resolve() / 'my_tasks' /
+    path_to_raw = str(backup_spec_with_functions.resolve() / 'my_tasks' /
+                      'raw')
+    path_to_clean = str(backup_spec_with_functions.resolve() / 'my_tasks' /
                         'clean')
 
     assert manager.has_tasks_in_path(path_to_raw)
@@ -272,7 +273,7 @@ def test_dag_manager(tmp_spec_with_function):
     assert manager.model_in_path('my_tasks/clean/clean')
 
 
-def test_jupyter_workflow_with_functions(tmp_spec_with_function):
+def test_jupyter_workflow_with_functions(backup_spec_with_functions):
     """
     Tests a typical workflow with a pieline where some tasks are functions
     """
@@ -311,9 +312,9 @@ def test_jupyter_workflow_with_functions(tmp_spec_with_function):
     cm.save(clean, path='my_tasks/clean/clean')
 
     # make sure source code was updated
-    raw_source = (tmp_spec_with_function / 'my_tasks' / 'raw' /
+    raw_source = (backup_spec_with_functions / 'my_tasks' / 'raw' /
                   'functions.py').read_text()
-    clean_source = (tmp_spec_with_function / 'my_tasks' / 'clean' /
+    clean_source = (backup_spec_with_functions / 'my_tasks' / 'clean' /
                     'functions.py').read_text()
 
     assert '1 + 1' in raw_source
