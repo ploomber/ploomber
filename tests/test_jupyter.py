@@ -282,8 +282,8 @@ def test_jupyter_workflow_with_functions(backup_spec_with_functions):
     def get_names(out):
         return {model['name'] for model in out['content']}
 
-    assert get_names(cm.get('')) == ['my_tasks', 'pipeline.yaml']
-    assert get_names(cm.get('my_tasks')) == ['__init__.py', 'clean', 'raw']
+    assert get_names(cm.get('')) == {'my_tasks', 'pipeline.yaml'}
+    assert get_names(cm.get('my_tasks')) == {'__init__.py', 'clean', 'raw'}
 
     # check new notebooks appear, which are generated from the function tasks
     assert get_names(cm.get('my_tasks/raw')) == {
