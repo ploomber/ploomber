@@ -143,6 +143,17 @@ class PythonCallable(Task):
                 'not been '
                 'rendered, call DAG.render() first'.format(self.name))
 
+        with self._interactive_developer() as tmp:
+            try:
+                subprocess.run(['jupyter', app, tmp] + shlex.split(args or ''),
+                               check=True)
+            except KeyboardInterrupt:
+                print(f'Jupyter {app} application closed...')
+
+    def _interactive_developer(self):
+        """
+        Creates a CallableInteractiveDeveloper instance
+        """
         # TODO: Params should implement an option to call to_json_serializable
         # on product to avoid repetition I'm using this same code in notebook
         # runner. Also raise error if any of the params is not
@@ -150,14 +161,7 @@ class PythonCallable(Task):
         # TODO: resolve to absolute to make relative paths work
         params = self.params.to_json_serializable()
         params['product'] = params['product'].to_json_serializable()
-
-        with CallableInteractiveDeveloper(self.source.primitive,
-                                          params) as tmp:
-            try:
-                subprocess.run(['jupyter', app, tmp] + shlex.split(args or ''),
-                               check=True)
-            except KeyboardInterrupt:
-                print(f'Jupyter {app} application closed...')
+        return CallableInteractiveDeveloper(self.source.primitive, params)
 
     def debug(self, kind='ipdb'):
         """

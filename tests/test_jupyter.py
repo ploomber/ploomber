@@ -11,8 +11,11 @@ from notebook.services.contents.tests.test_manager import TestContentsManager
 from notebook.notebookapp import NotebookApp
 import jupytext
 import parso
+import nbformat
 
-from ploomber.jupyter import PloomberContentsManager
+from ploomber.jupyter.manager import PloomberContentsManager
+from ploomber.jupyter.dag import JupyterDAGManager
+from ploomber.spec import DAGSpec
 
 
 class PloomberContentsManagerTestCase(TestContentsManager):
@@ -249,3 +252,69 @@ def get_client():
     out, err = capsys.readouterr()
 
     assert 'Traceback' not in err
+
+
+def test_dag_manager(tmp_spec_with_function):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    manager = JupyterDAGManager(dag)
+
+    path_to_raw = str(tmp_spec_with_function.resolve() / 'my_tasks' / 'raw')
+    path_to_clean = str(tmp_spec_with_function.resolve() / 'my_tasks' /
+                        'clean')
+
+    assert manager.has_tasks_in_path(path_to_raw)
+    assert manager.has_tasks_in_path(path_to_clean)
+
+    assert len(manager.models_in_directory(path_to_raw, content=False)) == 1
+    assert len(manager.models_in_directory(path_to_clean, content=False)) == 1
+
+    assert manager.model_in_path('my_tasks/raw/raw')
+    assert manager.model_in_path('my_tasks/clean/clean')
+
+
+def test_jupyter_workflow_with_functions(tmp_spec_with_function):
+    """
+    Tests a typical workflow with a pieline where some tasks are functions
+    """
+    cm = PloomberContentsManager()
+
+    def get_names(out):
+        return [model['name'] for model in out['content']]
+
+    assert get_names(cm.get('')) == ['my_tasks', 'pipeline.yaml']
+    assert get_names(cm.get('my_tasks')) == ['__init__.py', 'clean', 'raw']
+
+    # check new notebooks appear, which are generated from the function tasks
+    assert get_names(cm.get('my_tasks/raw')) == [
+        'functions.py',
+        '__init__.py',
+        'raw',
+    ]
+    assert get_names(cm.get('my_tasks/clean')) == [
+        'functions.py',
+        'util.py',
+        '__init__.py',
+        'clean',
+    ]
+
+    # get notebooks generated from task functions
+    raw = cm.get('my_tasks/raw/raw')
+    clean = cm.get('my_tasks/clean/clean')
+
+    # add some new code
+    cell = nbformat.versions[nbformat.current_nbformat].new_code_cell('1 + 1')
+    raw['content']['cells'].append(cell)
+    clean['content']['cells'].append(cell)
+
+    # overwrite the original function
+    cm.save(raw, path='my_tasks/raw/raw')
+    cm.save(clean, path='my_tasks/clean/clean')
+
+    # make sure source code was updated
+    raw_source = (tmp_spec_with_function / 'my_tasks' / 'raw' /
+                  'functions.py').read_text()
+    clean_source = (tmp_spec_with_function / 'my_tasks' / 'clean' /
+                    'functions.py').read_text()
+
+    assert '1 + 1' in raw_source
+    assert '1 + 1' in clean_source

@@ -1,6 +1,7 @@
 """
 Module for the jupyter extension
 """
+import datetime
 import os
 import contextlib
 from pprint import pprint
@@ -12,6 +13,7 @@ from ploomber.sources.NotebookSource import (_cleanup_rendered_nb, inject_cell)
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.cli import parsers
+from ploomber.jupyter.dag import JupyterDAGManager
 
 
 @contextlib.contextmanager
@@ -97,6 +99,8 @@ class PloomberContentsManager(TextFileContentsManager):
                         # rendering up
                         self.dag.render(force=True)
 
+                    self.manager = JupyterDAGManager(self.dag)
+
                     tuples = [(resolve_path(base_path, t.source.loc), t)
                               for t in self.dag.values()
                               if t.source.loc is not None]
@@ -121,6 +125,7 @@ class PloomberContentsManager(TextFileContentsManager):
         self.dag = None
         self.path = None
         self.dag_mapping = None
+        self.manager = None
 
     def __init__(self, *args, **kwargs):
         """
@@ -140,10 +145,21 @@ class PloomberContentsManager(TextFileContentsManager):
         This is called when a file/directory is requested (even in the list
         view)
         """
-        model = super(PloomberContentsManager, self).get(path=path,
-                                                         content=content,
-                                                         type=type,
-                                                         format=format)
+        model = self.manager.model_in_path(path, content)
+
+        if model is None:
+            model = super(PloomberContentsManager, self).get(path=path,
+                                                             content=content,
+                                                             type=type,
+                                                             format=format)
+
+            # check if there are task functions defined here
+            if model['type'] == 'directory':
+                if model['content']:
+                    to_check = str(Path(path.strip('/')).resolve())
+                    to_add = self.manager.models_in_directory(to_check,
+                                                              content=content)
+                    model['content'].extend(to_add)
 
         check_metadata_filter(self.log, model)
 
@@ -167,6 +183,9 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         This is called when a file is saved
         """
+        if self.manager.model_in_path(path, content=False):
+            return self.manager.overwrite(model, path)
+
         check_metadata_filter(self.log, model)
         # not sure what's the difference between model['path'] and path
         # but path has leading "/", _model_in_dag strips it
@@ -181,7 +200,18 @@ class PloomberContentsManager(TextFileContentsManager):
             self.log.info("[Ploomber] Deleting product's metadata...")
             self.dag_mapping[key].product.metadata.delete()
 
-        return super(PloomberContentsManager, self).save(model, path)
+        returned = super(PloomberContentsManager, self).save(model, path)
+        return returned
+
+    def create_checkpoint(self, path):
+        # NOTE: we cannot save checkpoints for functions
+        try:
+            return self.checkpoints.create_checkpoint(self, path)
+        except Exception:
+            return {
+                'id': 'checkpoint',
+                'last_modified': datetime.datetime.now()
+            }
 
     def _model_in_dag(self, model, path=None):
         """Determine if the model is part of the  pipeline
