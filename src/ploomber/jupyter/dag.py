@@ -35,7 +35,7 @@ class JupyterDAGManager:
                         content=content) for res in self.resources[path_to_dir]
         ]
 
-    def model_in_path(self, path, content):
+    def model_in_path(self, path, content=True):
         path_to_function = Path('.').resolve() / path.strip('/')
         function_name = path_to_function.name
         path_to_dir = str(path_to_function.parent)

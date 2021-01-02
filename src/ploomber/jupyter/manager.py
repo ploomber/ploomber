@@ -145,7 +145,7 @@ class PloomberContentsManager(TextFileContentsManager):
         This is called when a file/directory is requested (even in the list
         view)
         """
-        model = self.manager.model_in_path(path, content)
+        model = self._model_in_path(path, content)
 
         if model is None:
             model = super(PloomberContentsManager, self).get(path=path,
@@ -157,8 +157,8 @@ class PloomberContentsManager(TextFileContentsManager):
             if model['type'] == 'directory':
                 if model['content']:
                     to_check = str(Path(path.strip('/')).resolve())
-                    to_add = self.manager.models_in_directory(to_check,
-                                                              content=content)
+                    to_add = self._models_in_directory(to_check,
+                                                       content=content)
                     model['content'].extend(to_add)
 
         check_metadata_filter(self.log, model)
@@ -183,8 +183,8 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         This is called when a file is saved
         """
-        if self.manager.model_in_path(path, content=False):
-            return self.manager.overwrite(model, path)
+        if self._model_in_path(path, content=False):
+            return self._overwrite(model, path)
 
         check_metadata_filter(self.log, model)
         # not sure what's the difference between model['path'] and path
@@ -238,6 +238,18 @@ class PloomberContentsManager(TextFileContentsManager):
                                       model.get('name') or ''))
 
         return path if model_in_dag else False
+
+    def _model_in_path(self, path, content):
+        return None if not self.manager else self.manager.model_in_path(
+            path, content)
+
+    def _models_in_directory(self, to_check, content):
+        return [] if not self.manager else self.manager.models_in_directory(
+            to_check, content=content)
+
+    def _overwrite(self, model, path):
+        if self.manager:
+            self.manager.overwrite(model, path)
 
 
 def _load_jupyter_server_extension(app):
