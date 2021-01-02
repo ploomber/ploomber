@@ -154,14 +154,8 @@ class PythonCallable(Task):
         """
         Creates a CallableInteractiveDeveloper instance
         """
-        # TODO: Params should implement an option to call to_json_serializable
-        # on product to avoid repetition I'm using this same code in notebook
-        # runner. Also raise error if any of the params is not
-        # json serializable
         # TODO: resolve to absolute to make relative paths work
-        params = self.params.to_json_serializable()
-        params['product'] = params['product'].to_json_serializable()
-        return CallableInteractiveDeveloper(self.source.primitive, params)
+        return CallableInteractiveDeveloper(self.source.primitive, self.params)
 
     def debug(self, kind='ipdb'):
         """

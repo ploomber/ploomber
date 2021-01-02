@@ -145,6 +145,11 @@ class PloomberContentsManager(TextFileContentsManager):
         This is called when a file/directory is requested (even in the list
         view)
         """
+        # if requesting content, it means we are opening a file (as opposed
+        # to listing them, call load_dag, to make hot_reload work)
+        if content:
+            self.load_dag()
+
         model = self._model_in_path(path, content)
 
         if model is None:

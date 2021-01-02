@@ -64,6 +64,26 @@ def test_to_nb():
     assert soource_expected == source_from_nb
 
 
+def test_hot_reload(backup_test_pkg):
+    params = dict(a=1)
+    dev = CallableInteractiveDeveloper(functions.some_function, params=params)
+
+    # edit params, export to notebook and edit
+    params['a'] = 2
+    nb = dev.to_nb()
+    _, index = find_cell_tagged(nb, 'imports-new')
+    nb.cells[-1]['source'] = '1 + 1'
+    dev.overwrite(nb)
+
+    nb_new = dev.to_nb()
+
+    cell, _ = find_cell_tagged(nb_new, 'injected-parameters')
+    assert 'a = 2' in cell['source']
+
+    # should have the new content
+    assert nb_new.cells[-1]['source'] == '1 + 1'
+
+
 def test_unindent_function_with_mixed_identation(monkeypatch):
     source = """
 def mixed_indentation():

@@ -268,6 +268,16 @@ def function_to_nb(body_elements, imports_cell, params, fn, path):
     """
     Save function body elements to a notebook
     """
+    # TODO: Params should implement an option to call to_json_serializable
+    # on product to avoid repetition I'm using this same code in notebook
+    # runner. Also raise error if any of the params is not
+    # json serializable
+    try:
+        params = params.to_json_serializable()
+        params['product'] = params['product'].to_json_serializable()
+    except AttributeError:
+        pass
+
     nb_format = nbformat.versions[nbformat.current_nbformat]
     nb = nb_format.new_notebook()
 

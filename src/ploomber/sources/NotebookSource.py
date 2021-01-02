@@ -26,7 +26,6 @@ script/notebook.
 """
 import ast
 from inspect import getargspec
-import tempfile
 from pathlib import Path
 from io import StringIO
 import warnings
