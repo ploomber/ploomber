@@ -23,6 +23,15 @@ def as_jupyter_path(path):
     return relative_path.as_posix().strip()
 
 
+def filename_only(path):
+    """
+    Takes a path/to/file:line path and returns path/to/file path object
+    """
+    parts = list(Path(path).parts)
+    parts[-1] = parts[-1].split(':')[0]
+    return Path(*parts)
+
+
 class JupyterDAGManager:
     """
     Exposes PythonCallable tasks in a dag as Jupyter notebooks
@@ -43,13 +52,13 @@ class JupyterDAGManager:
 
     def models_in_directory(self, path_to_dir, content):
         return [
-            self._model(
-                name=res.task.name,
-                nb=None if not content else res.interactive.to_nb(),
-                path='/'.join([path_to_dir, res.task.name]),
-                content=content,
-                last_modified=datetime.datetime.fromtimestamp(
-                    Path(res.task.source.loc.split(':')[0]).stat().st_mtime))
+            self._model(name=res.task.name,
+                        nb=None if not content else res.interactive.to_nb(),
+                        path='/'.join([path_to_dir, res.task.name]),
+                        content=content,
+                        last_modified=datetime.datetime.fromtimestamp(
+                            filename_only(
+                                res.task.source.loc).stat().st_mtime))
             for res in self.resources[path_to_dir]
         ]
 
