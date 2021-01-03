@@ -105,7 +105,6 @@ class PloomberContentsManager(TextFileContentsManager):
                     tuples = [(resolve_path(base_path, t.source.loc), t)
                               for t in self.dag.values()
                               if t.source.loc is not None]
-
                     self.dag_mapping = {
                         t[0]: t[1]
                         for t in tuples if t[0] is not None

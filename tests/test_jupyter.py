@@ -257,6 +257,9 @@ def test_dag_manager(backup_spec_with_functions):
     dag = DAGSpec('pipeline.yaml').to_dag().render()
     manager = JupyterDAGManager(dag)
 
+    # from IPython import embed
+    # embed()
+
     path_to_raw = 'my_tasks/raw'
     path_to_clean = 'my_tasks/clean'
 
