@@ -33,7 +33,8 @@ def resolve_path(parent, path):
     of pipeline.yaml
     """
     try:
-        return str(Path(parent, path).relative_to(Path('.').resolve()))
+        return Path(parent,
+                    path).relative_to(Path('.').resolve()).as_posix().strip()
     except ValueError:
         return None
 
@@ -104,6 +105,7 @@ class PloomberContentsManager(TextFileContentsManager):
                     tuples = [(resolve_path(base_path, t.source.loc), t)
                               for t in self.dag.values()
                               if t.source.loc is not None]
+
                     self.dag_mapping = {
                         t[0]: t[1]
                         for t in tuples if t[0] is not None
@@ -231,7 +233,7 @@ class PloomberContentsManager(TextFileContentsManager):
             if (model['content'] and model['type'] == 'notebook'):
                 if path in self.dag_mapping:
                     # NOTE: not sure why sometimes the model comes with a
-                    # names and sometimes it doesn't
+                    # name and sometimes it doesn't
                     self.log.info(
                         '[Ploomber] {} is part of the pipeline... '.format(
                             model.get('name') or ''))
