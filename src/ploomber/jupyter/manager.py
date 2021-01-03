@@ -161,9 +161,7 @@ class PloomberContentsManager(TextFileContentsManager):
             # check if there are task functions defined here
             if model['type'] == 'directory':
                 if model['content']:
-                    to_check = str(Path(path.strip('/')).resolve())
-                    to_add = self._models_in_directory(to_check,
-                                                       content=content)
+                    to_add = self._models_in_directory(path, content=content)
                     model['content'].extend(to_add)
 
             check_metadata_filter(self.log, model)

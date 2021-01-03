@@ -1,5 +1,5 @@
 from collections import defaultdict, namedtuple
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import datetime
 
 import nbformat
@@ -7,6 +7,20 @@ import nbformat
 from ploomber.tasks import PythonCallable
 
 JupyterResource = namedtuple('JupyterResource', ['task', 'interactive'])
+
+
+def as_jupyter_path(path):
+    """
+    Paths in Jupyter are delimited by / (even on Windows) and don't have
+    trailing leading slashes. This function takes a platform-dependent
+    path and converts it to a valid jupyter path
+
+    Notes
+    -----
+    https://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html#api-paths
+    """
+    relative_path = Path(path).relative_to(Path('.').resolve())
+    return relative_path.as_posix().strip()
 
 
 class JupyterDAGManager:
@@ -19,7 +33,7 @@ class JupyterDAGManager:
 
         for t in dag.values():
             if isinstance(t, PythonCallable):
-                loc = str(Path(t.source.loc).parent)
+                loc = as_jupyter_path(Path(t.source.loc).parent)
                 self.resources[loc].append(
                     JupyterResource(task=t,
                                     interactive=t._interactive_developer()))
@@ -32,7 +46,7 @@ class JupyterDAGManager:
             self._model(
                 name=res.task.name,
                 nb=None if not content else res.interactive.to_nb(),
-                path=self._jupyter_path(path_to_dir, res.task.name),
+                path='/'.join([path_to_dir, res.task.name]),
                 content=content,
                 last_modified=datetime.datetime.fromtimestamp(
                     Path(res.task.source.loc.split(':')[0]).stat().st_mtime))
@@ -40,9 +54,8 @@ class JupyterDAGManager:
         ]
 
     def model_in_path(self, path, content=True):
-        path_to_function = Path('.').resolve() / path.strip('/')
-        function_name = path_to_function.name
-        path_to_dir = str(path_to_function.parent)
+        function_name = path.split('/')[-1]
+        path_to_dir = str(PurePosixPath(path).parent)
         models = self.models_in_directory(path_to_dir, content=content)
 
         if models:
@@ -64,13 +77,9 @@ class JupyterDAGManager:
             'format': 'json' if content else None,
         }
 
-    def _jupyter_path(self, path, name):
-        return str(Path(path).relative_to(Path('.').resolve()) / name)
-
     def overwrite(self, model, path):
-        path_to_function = Path('.').resolve() / path.strip('/')
-        function_name = path_to_function.name
-        path_to_dir = str(path_to_function.parent)
+        function_name = path.split('/')[-1]
+        path_to_dir = str(PurePosixPath(path).parent)
         resources = self.resources.get(path_to_dir)
 
         if resources:

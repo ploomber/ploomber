@@ -82,8 +82,7 @@ def test_injects_cell_if_file_in_dag(tmp_nbs):
 def test_injects_cell_even_if_pipeline_yaml_in_subdirectory(tmp_nbs):
     os.chdir('..')
     cm = PloomberContentsManager()
-    # use Path to handle windows and linux style paths
-    model = cm.get(str(Path('content/plot.py')))
+    model = cm.get(str('content/plot.py'))
     injected = get_injected_cell(model['content'])
     assert injected
 
@@ -258,10 +257,8 @@ def test_dag_manager(backup_spec_with_functions):
     dag = DAGSpec('pipeline.yaml').to_dag().render()
     manager = JupyterDAGManager(dag)
 
-    path_to_raw = str(backup_spec_with_functions.resolve() / 'my_tasks' /
-                      'raw')
-    path_to_clean = str(backup_spec_with_functions.resolve() / 'my_tasks' /
-                        'clean')
+    path_to_raw = 'my_tasks/raw'
+    path_to_clean = 'my_tasks/clean'
 
     assert manager.has_tasks_in_path(path_to_raw)
     assert manager.has_tasks_in_path(path_to_clean)
