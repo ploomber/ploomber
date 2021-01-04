@@ -100,6 +100,24 @@ def backup_spec_with_functions():
     shutil.rmtree(backup)
 
 
+@pytest.fixture
+def backup_spec_with_functions_flat():
+    old = os.getcwd()
+    backup = tempfile.mkdtemp()
+    root = _path_to_tests() / 'assets' / 'spec-with-functions-flat'
+    shutil.copytree(str(root), str(Path(backup, 'spec-with-functions-flat')))
+
+    os.chdir(root)
+
+    yield root
+
+    os.chdir(old)
+
+    shutil.rmtree(str(root))
+    shutil.copytree(str(Path(backup, 'spec-with-functions-flat')), str(root))
+    shutil.rmtree(backup)
+
+
 @pytest.fixture()
 def tmp_directory():
     old = os.getcwd()
