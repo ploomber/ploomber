@@ -149,8 +149,7 @@ class PloomberContentsManager(TextFileContentsManager):
         This is called when a file/directory is requested (even in the list
         view)
         """
-        # TODO: in operator not working here
-        if self.manager and self.manager.get(path, content):
+        if self.manager and path in self.manager:
             return self.manager.get(path, content)
 
         model = super(PloomberContentsManager, self).get(path=path,
@@ -158,30 +157,22 @@ class PloomberContentsManager(TextFileContentsManager):
                                                          type=type,
                                                          format=format)
 
-        # I think i can remove this if...
-        if model is not None:
-
-            # check if there are task functions defined here
-            if model['type'] == 'directory' and self.manager:
-                if model['content']:
-                    model['content'].extend(self.manager.get_by_parent(path))
-
-            check_metadata_filter(self.log, model)
-
-            # if opening a file (ignore file listing), load dag again
-            if (model['content'] and model['type'] == 'notebook'):
-
-                # Look for the pipeline.yaml file from the file we are rendering
-                # and search recursively. This is required to cover the case when
-                # pipeline.yaml is in a subdirectory from the folder where the
-                # user executed "jupyter notebook"
-                self.load_dag(
-                    starting_dir=Path(os.getcwd(), model['path']).parent)
-
-                if self._model_in_dag(model):
-                    self.log.info('[Ploomber] Injecting cell...')
-                    inject_cell(model=model,
-                                params=self.dag_mapping[model['path']]._params)
+        # check if there are task functions defined here
+        if model['type'] == 'directory' and self.manager:
+            if model['content']:
+                model['content'].extend(self.manager.get_by_parent(path))
+        check_metadata_filter(self.log, model)
+        # if opening a file (ignore file listing), load dag again
+        if (model['content'] and model['type'] == 'notebook'):
+            # Look for the pipeline.yaml file from the file we are rendering
+            # and search recursively. This is required to cover the case when
+            # pipeline.yaml is in a subdirectory from the folder where the
+            # user executed "jupyter notebook"
+            self.load_dag(starting_dir=Path(os.getcwd(), model['path']).parent)
+            if self._model_in_dag(model):
+                self.log.info('[Ploomber] Injecting cell...')
+                inject_cell(model=model,
+                            params=self.dag_mapping[model['path']]._params)
 
         return model
 
@@ -189,8 +180,7 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         This is called when a file is saved
         """
-        # TODO: change using in operator
-        if self.manager and self.manager.get(path, content=False):
+        if self.manager and path in self.manager:
             out = self.manager.overwrite(model, path)
             return out
         else:
@@ -236,34 +226,18 @@ class PloomberContentsManager(TextFileContentsManager):
 
         return path if model_in_dag else False
 
-    def _get_resource(self, path):
-        model = None if not self.manager else self.manager.get(path)
-        return model
-
-    def _overwrite(self, model, path):
-        if self.manager:
-            return self.manager.overwrite(model, path)
-
     def list_checkpoints(self, path):
-        if not self.manager or not self.manager.get(path, False):
+        if not self.manager or path not in self.manager:
             return self.checkpoints.list_checkpoints(path)
 
     def create_checkpoint(self, path):
-        if not self.manager or not self.manager.get(path, False):
+        if not self.manager or path not in self.manager:
             return self.checkpoints.create_checkpoint(self, path)
         else:
             return {
                 'id': 'checkpoint',
                 'last_modified': datetime.datetime.now()
             }
-
-    # def _save_directory(self, os_path, model, path=''):
-    #     return
-    #     if self.manager and self.manager.get(path):
-    #         return
-
-    #     super(PloomberContentsManager,
-    #           self)._save_directory(os_path, model, path)
 
 
 def _load_jupyter_server_extension(app):

@@ -279,6 +279,10 @@ def test_dag_manager_flat_structure(backup_spec_with_functions_flat):
         'my_tasks_flat/clean.py (functions)/clean',
     }
 
+    assert 'my_tasks_flat/raw.py (functions)/' in m
+    assert '/my_tasks_flat/raw.py (functions)/' in m
+    assert '/my_tasks_flat/raw.py (functions)/' in m
+
     # TODO: test other methods
     # TODO: test folders are not created
 

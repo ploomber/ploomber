@@ -104,7 +104,6 @@ class JupyterDAGManager:
     """
     def __init__(self, dag):
         self.resources = dict()
-        # self.resources_keys = []
 
         for t in dag.values():
             if isinstance(t, PythonCallable):
@@ -134,6 +133,9 @@ class JupyterDAGManager:
                 self.resources_by_root[parent] = []
 
             self.resources_by_root[parent].append(resource)
+
+    def __contains__(self, key):
+        return key.strip('/') in self.resources
 
     def __getitem__(self, key):
         return self.resources[key]
