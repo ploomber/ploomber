@@ -1,6 +1,8 @@
 from jinja2 import Environment, meta
 from jinja2.nodes import Assign
 
+from ploomber.placeholders import extensions
+
 
 def get_tags_in_str(s):
     """
@@ -9,7 +11,7 @@ def get_tags_in_str(s):
     """
     # NOTE: this will not work if the environment used to load
     # the template changes the tags ({{ and }} by default)
-    env = Environment()
+    env = Environment(extensions=(extensions.RaiseExtension, ))
 
     # this accepts None and does not break!
     ast = env.parse(s)
@@ -19,5 +21,4 @@ def get_tags_in_str(s):
 def get_defined_variables(s):
     env = Environment()
     ast = env.parse(s)
-    return {n.target.name: n.node.as_const()
-            for n in ast.find_all(Assign)}
+    return {n.target.name: n.node.as_const() for n in ast.find_all(Assign)}

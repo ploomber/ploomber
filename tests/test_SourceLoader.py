@@ -2,6 +2,8 @@ import pytest
 import tempfile
 from pathlib import Path
 
+from jinja2.exceptions import TemplateRuntimeError
+
 from ploomber import SourceLoader
 from ploomber.tasks import SQLTransfer
 from ploomber.products import SQLiteRelation
@@ -82,3 +84,14 @@ def test_source_loader_and_task(sqlite_client_and_tmp_dir):
                 name='transfer')
 
     dag.build()
+
+
+def test_raise(tmp_directory):
+    Path('template.sql').write_text("{% raise 'some error message' %}")
+
+    loader = SourceLoader(path='.')
+
+    with pytest.raises(TemplateRuntimeError) as excinfo:
+        loader['template.sql'].render({})
+
+    assert str(excinfo.value) == 'some error message'

@@ -13,6 +13,7 @@ from ploomber.tasks.Upstream import Upstream
 from ploomber import SourceLoader
 from jinja2 import (Template, Environment, PackageLoader, FileSystemLoader,
                     StrictUndefined)
+from jinja2.exceptions import TemplateRuntimeError
 from ploomber.exceptions import UpstreamKeyError
 
 
@@ -269,3 +270,12 @@ def test_error_if_no_upstream():
     msg = ('Cannot obtain upstream dependency "name". '
            'Task "task" has no upstream dependencies')
     assert msg == str(excinfo.value)
+
+
+def test_raise(tmp_directory):
+    p = Placeholder("{% raise 'some error message' %}")
+
+    with pytest.raises(TemplateRuntimeError) as excinfo:
+        p.render({})
+
+    assert str(excinfo.value) == 'some error message'

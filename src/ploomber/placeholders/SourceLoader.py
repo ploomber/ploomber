@@ -2,6 +2,7 @@ from collections.abc import Iterable
 import pydoc
 from pathlib import Path
 from ploomber.placeholders.Placeholder import Placeholder
+from ploomber.placeholders import extensions
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, exceptions
 
@@ -91,7 +92,8 @@ class SourceLoader:
             loader=FileSystemLoader(self.path_full),
             # this will cause jinja2 to raise an exception if a variable
             # declared in the template is not passed in the render parameters
-            undefined=StrictUndefined)
+            undefined=StrictUndefined,
+            extensions=(extensions.RaiseExtension, ))
 
     def __getitem__(self, key):
         return self.get_template(key)
