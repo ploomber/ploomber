@@ -577,7 +577,7 @@ def inject_cell(model, params):
     """
     nb = nbformat.from_dict(model['content'])
 
-    # we must ensure nb has kernelspec info, otherwise papermill willf fail to
+    # we must ensure nb has kernelspec info, otherwise papermill will fail to
     # parametrize
     ext = model['name'].split('.')[-1]
     ensure_kernelspec(nb, kernelspec_name=None, ext=ext, language=None)
@@ -603,18 +603,10 @@ def inject_cell(model, params):
                'preferences. It is temporary and will be removed when you '
                'save this notebook')
 
-    # a PR was merged to include this, but it hasn't been released yet,
-    # so we check here
-    # https://github.com/nteract/papermill/pull/521
-    if 'comment' in getargspec(parameterize_notebook).args:
-        kwargs = {'comment': comment}
-    else:
-        kwargs = {}
-
     model['content'] = parameterize_notebook(nb,
                                              params,
                                              report_mode=False,
-                                             **kwargs)
+                                             comment=comment)
 
 
 # FIXME: this is used in the task itself in the .develop() feature, maybe

@@ -178,10 +178,10 @@ class PloomberContentsManager(TextFileContentsManager):
                 self.load_dag(
                     starting_dir=Path(os.getcwd(), model['path']).parent)
 
-            if self._model_in_dag(model):
-                self.log.info('[Ploomber] Injecting cell...')
-                inject_cell(model=model,
-                            params=self.dag_mapping[model['path']]._params)
+                if self._model_in_dag(model):
+                    self.log.info('[Ploomber] Injecting cell...')
+                    inject_cell(model=model,
+                                params=self.dag_mapping[model['path']]._params)
 
         return model
 
@@ -210,17 +210,6 @@ class PloomberContentsManager(TextFileContentsManager):
 
             return super(PloomberContentsManager, self).save(model, path)
 
-    def create_checkpoint(self, path):
-        return {'id': 'checkpoint', 'last_modified': datetime.datetime.now()}
-        # NOTE: we cannot save checkpoints for functions
-        try:
-            return self.checkpoints.create_checkpoint(self, path)
-        except Exception:
-            return {
-                'id': 'checkpoint',
-                'last_modified': datetime.datetime.now()
-            }
-
     def _model_in_dag(self, model, path=None):
         """Determine if the model is part of the  pipeline
         """
@@ -231,19 +220,19 @@ class PloomberContentsManager(TextFileContentsManager):
         else:
             path = path.strip('/')
 
-        # if self.dag:
-        #     if ('content' in model and model['type'] == 'notebook'):
-        #         if path in self.dag_mapping:
-        #             # NOTE: not sure why sometimes the model comes with a
-        #             # name and sometimes it doesn't
-        #             self.log.info(
-        #                 '[Ploomber] {} is part of the pipeline... '.format(
-        #                     model.get('name') or ''))
-        #             model_in_dag = True
-        #         else:
-        #             self.log.info('[Ploomber] {} is not part of the pipeline, '
-        #                           'skipping...'.format(
-        #                               model.get('name') or ''))
+        if self.dag:
+            if ('content' in model and model['type'] == 'notebook'):
+                if path in self.dag_mapping:
+                    # NOTE: not sure why sometimes the model comes with a
+                    # name and sometimes it doesn't
+                    self.log.info(
+                        '[Ploomber] {} is part of the pipeline... '.format(
+                            model.get('name') or ''))
+                    model_in_dag = True
+                else:
+                    self.log.info('[Ploomber] {} is not part of the pipeline, '
+                                  'skipping...'.format(
+                                      model.get('name') or ''))
 
         return path if model_in_dag else False
 
@@ -256,16 +245,25 @@ class PloomberContentsManager(TextFileContentsManager):
             return self.manager.overwrite(model, path)
 
     def list_checkpoints(self, path):
-        pass
-        # return self.checkpoints.list_checkpoints(path)
+        if not self.manager or not self.manager.get(path, False):
+            return self.checkpoints.list_checkpoints(path)
 
-    def _save_directory(self, os_path, model, path=''):
-        return
-        if self.manager and self.manager.get(path):
-            return
+    def create_checkpoint(self, path):
+        if not self.manager or not self.manager.get(path, False):
+            return self.checkpoints.create_checkpoint(self, path)
+        else:
+            return {
+                'id': 'checkpoint',
+                'last_modified': datetime.datetime.now()
+            }
 
-        super(PloomberContentsManager,
-              self)._save_directory(os_path, model, path)
+    # def _save_directory(self, os_path, model, path=''):
+    #     return
+    #     if self.manager and self.manager.get(path):
+    #         return
+
+    #     super(PloomberContentsManager,
+    #           self)._save_directory(os_path, model, path)
 
 
 def _load_jupyter_server_extension(app):

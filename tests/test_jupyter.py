@@ -272,14 +272,15 @@ def test_dag_manager_flat_structure(backup_spec_with_functions_flat):
     m = JupyterDAGManager(dag)
 
     assert set(m) == {
-        'my_tasks/raw.py (functions)',
-        'my_tasks/raw.py (functions)/raw',
-        'my_tasks/raw.py (functions)/raw2',
-        'my_tasks/clean.py (functions)',
-        'my_tasks/clean.py (functions)/clean',
+        'my_tasks_flat/raw.py (functions)',
+        'my_tasks_flat/raw.py (functions)/raw',
+        'my_tasks_flat/raw.py (functions)/raw2',
+        'my_tasks_flat/clean.py (functions)',
+        'my_tasks_flat/clean.py (functions)/clean',
     }
 
     # TODO: test other methods
+    # TODO: test folders are not created
 
 
 def test_jupyter_workflow_with_functions(backup_spec_with_functions):
