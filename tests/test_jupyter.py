@@ -255,22 +255,31 @@ def get_client():
 
 def test_dag_manager(backup_spec_with_functions):
     dag = DAGSpec('pipeline.yaml').to_dag().render()
-    manager = JupyterDAGManager(dag)
+    m = JupyterDAGManager(dag)
 
-    # from IPython import embed
-    # embed()
+    assert set(m) == {
+        'my_tasks/raw/functions.py (functions)',
+        'my_tasks/raw/functions.py (functions)/raw',
+        'my_tasks/clean/functions.py (functions)',
+        'my_tasks/clean/functions.py (functions)/clean'
+    }
 
-    path_to_raw = 'my_tasks/raw'
-    path_to_clean = 'my_tasks/clean'
+    # TODO: test other methods
 
-    assert manager.has_tasks_in_path(path_to_raw)
-    assert manager.has_tasks_in_path(path_to_clean)
 
-    assert len(manager.models_in_directory(path_to_raw, content=False)) == 1
-    assert len(manager.models_in_directory(path_to_clean, content=False)) == 1
+def test_dag_manager_flat_structure(backup_spec_with_functions_flat):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    m = JupyterDAGManager(dag)
 
-    assert manager.model_in_path('my_tasks/raw/raw')
-    assert manager.model_in_path('my_tasks/clean/clean')
+    assert set(m) == {
+        'my_tasks/raw.py (functions)',
+        'my_tasks/raw.py (functions)/raw',
+        'my_tasks/raw.py (functions)/raw2',
+        'my_tasks/clean.py (functions)',
+        'my_tasks/clean.py (functions)/clean',
+    }
+
+    # TODO: test other methods
 
 
 def test_jupyter_workflow_with_functions(backup_spec_with_functions):
@@ -287,20 +296,20 @@ def test_jupyter_workflow_with_functions(backup_spec_with_functions):
 
     # check new notebooks appear, which are generated from the function tasks
     assert get_names(cm.get('my_tasks/raw')) == {
-        'functions.py',
         '__init__.py',
-        'raw',
+        'functions.py',
+        'functions.py (functions)',
     }
     assert get_names(cm.get('my_tasks/clean')) == {
-        'functions.py',
-        'util.py',
         '__init__.py',
-        'clean',
+        'functions.py',
+        'functions.py (functions)',
+        'util.py',
     }
 
     # get notebooks generated from task functions
-    raw = cm.get('my_tasks/raw/raw')
-    clean = cm.get('my_tasks/clean/clean')
+    raw = cm.get('my_tasks/raw/functions.py (functions)/raw')
+    clean = cm.get('my_tasks/clean/functions.py (functions)/clean')
 
     # add some new code
     cell = nbformat.versions[nbformat.current_nbformat].new_code_cell('1 + 1')
@@ -308,8 +317,8 @@ def test_jupyter_workflow_with_functions(backup_spec_with_functions):
     clean['content']['cells'].append(cell)
 
     # overwrite the original function
-    cm.save(raw, path='my_tasks/raw/raw')
-    cm.save(clean, path='my_tasks/clean/clean')
+    cm.save(raw, path='my_tasks/raw/functions.py (functions)/raw')
+    cm.save(clean, path='my_tasks/clean/functions.py (functions)/clean')
 
     # make sure source code was updated
     raw_source = (backup_spec_with_functions / 'my_tasks' / 'raw' /

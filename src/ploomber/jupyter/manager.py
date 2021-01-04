@@ -33,6 +33,7 @@ def resolve_path(parent, path):
     of pipeline.yaml
     """
     try:
+        # FIXME: remove :linenumber
         return Path(parent,
                     path).relative_to(Path('.').resolve()).as_posix().strip()
     except ValueError:
@@ -68,6 +69,8 @@ class PloomberContentsManager(TextFileContentsManager):
     restart_msg = (' Fix the issue and and restart "jupyter notebook"')
 
     def load_dag(self, starting_dir=None):
+        # self.log.info(f'[Ploomber] Loading dag: {starting_dir!s}')
+
         if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
             self.log.info('[Ploomber] Loading dag...')
 
@@ -146,24 +149,22 @@ class PloomberContentsManager(TextFileContentsManager):
         This is called when a file/directory is requested (even in the list
         view)
         """
-        # if requesting content, it means we are opening a file (as opposed
-        # to listing them, call load_dag, to make hot_reload work)
-        if content:
-            self.load_dag()
+        # TODO: in operator not working here
+        if self.manager and self.manager.get(path, content):
+            return self.manager.get(path, content)
 
-        model = self._model_in_path(path, content)
+        model = super(PloomberContentsManager, self).get(path=path,
+                                                         content=content,
+                                                         type=type,
+                                                         format=format)
 
-        if model is None:
-            model = super(PloomberContentsManager, self).get(path=path,
-                                                             content=content,
-                                                             type=type,
-                                                             format=format)
+        # I think i can remove this if...
+        if model is not None:
 
             # check if there are task functions defined here
-            if model['type'] == 'directory':
+            if model['type'] == 'directory' and self.manager:
                 if model['content']:
-                    to_add = self._models_in_directory(path, content=content)
-                    model['content'].extend(to_add)
+                    model['content'].extend(self.manager.get_by_parent(path))
 
             check_metadata_filter(self.log, model)
 
@@ -188,8 +189,9 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         This is called when a file is saved
         """
-        if self._model_in_path(path, content=False):
-            out = self._overwrite(model, path)
+        # TODO: change using in operator
+        if self.manager and self.manager.get(path, content=False):
+            out = self.manager.overwrite(model, path)
             return out
         else:
             check_metadata_filter(self.log, model)
@@ -209,6 +211,7 @@ class PloomberContentsManager(TextFileContentsManager):
             return super(PloomberContentsManager, self).save(model, path)
 
     def create_checkpoint(self, path):
+        return {'id': 'checkpoint', 'last_modified': datetime.datetime.now()}
         # NOTE: we cannot save checkpoints for functions
         try:
             return self.checkpoints.create_checkpoint(self, path)
@@ -228,33 +231,41 @@ class PloomberContentsManager(TextFileContentsManager):
         else:
             path = path.strip('/')
 
-        if self.dag:
-            if (model['content'] and model['type'] == 'notebook'):
-                if path in self.dag_mapping:
-                    # NOTE: not sure why sometimes the model comes with a
-                    # name and sometimes it doesn't
-                    self.log.info(
-                        '[Ploomber] {} is part of the pipeline... '.format(
-                            model.get('name') or ''))
-                    model_in_dag = True
-                else:
-                    self.log.info('[Ploomber] {} is not part of the pipeline, '
-                                  'skipping...'.format(
-                                      model.get('name') or ''))
+        # if self.dag:
+        #     if ('content' in model and model['type'] == 'notebook'):
+        #         if path in self.dag_mapping:
+        #             # NOTE: not sure why sometimes the model comes with a
+        #             # name and sometimes it doesn't
+        #             self.log.info(
+        #                 '[Ploomber] {} is part of the pipeline... '.format(
+        #                     model.get('name') or ''))
+        #             model_in_dag = True
+        #         else:
+        #             self.log.info('[Ploomber] {} is not part of the pipeline, '
+        #                           'skipping...'.format(
+        #                               model.get('name') or ''))
 
         return path if model_in_dag else False
 
-    def _model_in_path(self, path, content):
-        return None if not self.manager else self.manager.model_in_path(
-            path, content)
-
-    def _models_in_directory(self, to_check, content):
-        return [] if not self.manager else self.manager.models_in_directory(
-            to_check, content=content)
+    def _get_resource(self, path):
+        model = None if not self.manager else self.manager.get(path)
+        return model
 
     def _overwrite(self, model, path):
         if self.manager:
             return self.manager.overwrite(model, path)
+
+    def list_checkpoints(self, path):
+        pass
+        # return self.checkpoints.list_checkpoints(path)
+
+    def _save_directory(self, os_path, model, path=''):
+        return
+        if self.manager and self.manager.get(path):
+            return
+
+        super(PloomberContentsManager,
+              self)._save_directory(os_path, model, path)
 
 
 def _load_jupyter_server_extension(app):
