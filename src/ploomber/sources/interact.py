@@ -49,10 +49,6 @@ from ploomber.util import chdir_code
 # same position, when the notebook is reloaded, it loads the source code
 # from that function
 
-# TODO: whitespace in the original function is not preserved once the notebook
-# is loaded. what's best? keep the newlines as such in the notebook or add empty
-# cells?, the former sounds cleaner
-
 
 class CallableInteractiveDeveloper:
     """Convert callables to notebooks, edit and save back
@@ -326,7 +322,7 @@ def function_to_nb(body_elements, imports_cell, params, fn, path):
     nb_format = nbformat.versions[nbformat.current_nbformat]
     nb = nb_format.new_notebook()
 
-    #
+    # get the module where the function is declared
     tokens = inspect.getmodule(fn).__name__.split('.')
     module_name = '.'.join(tokens[:-1])
 
@@ -366,12 +362,19 @@ __package__ = "{}"
                                 metadata=dict(tags=['imports-new'])))
 
     for statement in body_elements:
-        lines = [line for line in clean_statement(statement)]
+        lines, newlines = split_statement(statement)
 
-        # remove indentation from function body lines
+        # find indentation # of characters using the first line
         idx = indentation_idx(lines[0])
+
+        # remove indentation from all function body lines
         lines = [line[idx:] for line in lines]
 
+        # add one empty cell per leading new line
+        nb.cells.extend(
+            [nb_format.new_code_cell(source='') for _ in range(newlines)])
+
+        # add actual code as a single string
         cell = nb_format.new_code_cell(source='\n'.join(lines))
         nb.cells.append(cell)
 
@@ -389,14 +392,19 @@ __package__ = "{}"
     return nb
 
 
-def clean_statement(statement):
+def split_statement(statement):
     code = statement.get_code()
 
-    if code[0] == '\n':
-        code = code[1:]
+    newlines = 0
 
-    # parso includes new line tokens, remove any trailing whitespace
-    return code.rstrip().split('\n')
+    for char in code:
+        if char != '\n':
+            break
+
+        newlines += 1
+
+    lines = code.strip('\n').split('\n')
+    return lines, newlines
 
 
 def indentation_idx(line):

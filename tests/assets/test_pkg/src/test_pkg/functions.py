@@ -47,8 +47,9 @@ def this_is_a_function_with_a_very_long_name_with_forces_us_to_split_params(
 
 def large_function():
     x = False
+    y = True
 
-    if x:
+    if x or y:
         pass
 
     for i in range(10):
