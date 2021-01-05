@@ -146,8 +146,13 @@ def test_sql_parser_add_clause(trailing):
 def test_sql_parser_insert():
     sql = sql_t.render(trailing=False)
     m = testing.sql.SQLParser(sql)
-    m.insert('zero', 'select * from zero')
 
+    m2 = m.insert('zero', 'select * from zero', inplace=False)
+    assert list(m2) == ['zero', 'a', 'b', '_select']
+    assert list(m) == ['a', 'b', '_select']
+
+    m.insert('zero', 'select * from zero', inplace=True)
+    assert list(m) == ['zero', 'a', 'b', '_select']
     assert m.until('a') == (
         '\nWITH zero as (\n    select * from zero\n),'
         ' a as (\n    select * from aa\n)\nSELECT * FROM a')

@@ -44,38 +44,58 @@ def find_with_type(tokens, type_):
 
 
 class SQLParser:
+    """Parse a SQL script with format:
+
+    CREATE [TABLE|VIEW] something  AS (
+        WITH step_a AS (
+            SELECT * FROM a
+        ), step_b AS (
+            SELECT * FROM B
+        ), ...
+
+        SELECT * FROM ...
+    )
+
+    If there is more than one statement, the first CREATE [TABLE|VIEW] is used.
+    Get individual SELECT statements using parser['step_a']
+
+    """
     def __init__(self, sql):
-        _, t = find_with_type(sqlparse.parse(sql), type_='CREATE')
+        if sql is not None:
+            _, t = find_with_type(sqlparse.parse(sql), type_='CREATE')
 
-        identifiers = strip(t)[-1]
-        parenthesis = identifiers.tokens[-1]
+            identifiers = strip(t)[-1]
+            parenthesis = identifiers.tokens[-1]
 
-        # with statement
-        with_ = parenthesis.tokens[1:-1]
+            # with statement
+            with_ = parenthesis.tokens[1:-1]
 
-        tokens = strip(with_)
-        # this must be the with statement
-        # tokens[0]
+            tokens = strip(with_)
+            # this must be the with statement
+            # tokens[0]
 
-        # this must be the list of expressions
-        ids = strip(tokens[1].tokens)
+            # this must be the list of expressions
+            ids = strip(tokens[1].tokens)
 
-        # this should be function, punctuation, function, puntuaction...
-        functions = [id_ for idx, id_ in enumerate(ids) if not idx % 2]
+            # this should be function, punctuation, function, puntuaction...
+            functions = [id_ for idx, id_ in enumerate(ids) if not idx % 2]
 
-        functions_t = [to_tuple(f) for f in functions]
+            functions_t = [to_tuple(f) for f in functions]
 
-        m = {t[0]: t[1] for t in functions_t}
+            m = {t[0]: t[1] for t in functions_t}
 
-        # the rest is part of the final select statement, we don't use it bc it has
-        # whitespace removed
-        # tokens[2:]
+            # the rest is part of the final select statement, we don't use it
+            # bc it has
+            # whitespace removed
+            # tokens[2:]
 
-        idx = find_select(with_)
+            idx = find_select(with_)
 
-        m['_select'] = code_from_token_list(with_[idx:])
+            m['_select'] = code_from_token_list(with_[idx:])
 
-        self.mapping = m
+            self.mapping = m
+        else:
+            self.mapping = dict()
 
     def __getitem__(self, key):
         return self.mapping[key]
@@ -122,6 +142,19 @@ WITH {%- for id, code in pairs -%}{{',' if not loop.first else '' }} {{id}} as (
 
         return sql
 
-    def insert(self, key, code):
-        self.mapping = {**{key: code}, **self.mapping}
-        return self
+    @classmethod
+    def _with_mapping(cls, mapping):
+        obj = cls(sql=None)
+        obj.mapping = mapping
+        return obj
+
+    def insert(self, key, code, inplace=True):
+        """Insert a new (identifier, code) pair at the beginning
+        """
+        mapping = {**{key: code}, **self.mapping}
+
+        if inplace:
+            self.mapping = mapping
+            return self
+        else:
+            return type(self)._with_mapping(mapping)
