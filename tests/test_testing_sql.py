@@ -1,7 +1,10 @@
 from pathlib import Path
 
+import pytest
 import numpy as np
 import pandas as pd
+from jinja2 import Template
+
 from ploomber.clients import SQLAlchemyClient
 from ploomber import testing
 
@@ -67,8 +70,7 @@ def test_exists_row_where(tmp_directory):
     assert not testing.sql.exists_row_where(client, 'x > 4', 'my_table')
 
 
-def test_sql_parser():
-    sql = """
+sql_t = Template("""
 /* some comment */
 -- some comment
 
@@ -89,8 +91,14 @@ with a as (
 )
 
 select * from a join b on col
-)
-"""
+){{';' if trailing else ''}}
+""")
+
+
+@pytest.mark.parametrize('trailing', [False, True])
+def test_sql_parser(trailing):
+
+    sql = sql_t.render(trailing=trailing)
 
     m = testing.sql.SQLParser(sql)
 

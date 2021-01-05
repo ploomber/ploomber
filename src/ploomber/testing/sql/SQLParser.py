@@ -3,9 +3,12 @@ import sqlparse
 
 
 def strip(tokens):
+    """
+    Remove whitespace, comments and punctuation (;)
+    """
     return [
-        t for t in tokens
-        if not t.is_whitespace and not isinstance(t, sqlparse.sql.Comment)
+        t for t in tokens if not t.is_whitespace
+        and not isinstance(t, sqlparse.sql.Comment) and t.value != ';'
     ]
 
 
