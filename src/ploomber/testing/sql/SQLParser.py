@@ -121,3 +121,7 @@ WITH {%- for id, code in pairs -%}{{',' if not loop.first else '' }} {{id}} as (
 {{select}}""").render(pairs=pairs, select=select)
 
         return sql
+
+    def insert(self, key, code):
+        self.mapping = {**{key: code}, **self.mapping}
+        return self

@@ -141,3 +141,13 @@ def test_sql_parser_add_clause(trailing):
     assert m.until('c') == ('\nWITH a as (\n    select * from aa\n), b as '
                             '(\n    select * from bb\n), c as (\n    '
                             'select * from cc\n)\nSELECT * FROM c')
+
+
+def test_sql_parser_insert():
+    sql = sql_t.render(trailing=False)
+    m = testing.sql.SQLParser(sql)
+    m.insert('zero', 'select * from zero')
+
+    assert m.until('a') == (
+        '\nWITH zero as (\n    select * from zero\n),'
+        ' a as (\n    select * from aa\n)\nSELECT * FROM a')
