@@ -72,7 +72,9 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
 
 
 class GenericSQLRelation(GenericProduct):
-    """A GenericProduct whose identifier is a SQL relation
+    """
+    A GenericProduct whose identifier is a SQL relation, uses SQLite as
+    metadata backend
 
     Parameters
     ----------
