@@ -65,3 +65,43 @@ def test_exists_row_where(tmp_directory):
 
     assert testing.sql.exists_row_where(client, 'x > 1', 'my_table')
     assert not testing.sql.exists_row_where(client, 'x > 4', 'my_table')
+
+
+def test_sql_parser():
+    sql = """
+/* some comment */
+-- some comment
+
+drop table if exists some_table;
+
+create table some_table as (
+
+/* another comment */
+
+with a as (
+    select * from aa
+    /* 
+    multi line
+    comment */
+), b as (
+    -- yet another comment
+    select * from bb
+)
+
+select * from a join b on col
+)
+"""
+
+    m = testing.sql.SQLParser(sql)
+
+    assert list(m) == ['a', 'b', '_select']
+    assert m['a'] == 'select * from aa'
+    assert m['b'] == 'select * from bb'
+    assert m['_select'] == 'select * from a join b on col\n'
+
+    code_a = m.until('a')
+    code_b = m.until('b')
+
+    assert code_a == '\nWITH a as (\n    select * from aa\n)\nSELECT * FROM a'
+    assert code_b == ('\nWITH a as (\n    select * from aa\n), b '
+                      'as (\n    select * from bb\n)\nSELECT * FROM b')
