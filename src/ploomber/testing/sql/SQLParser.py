@@ -1,3 +1,5 @@
+from copy import copy
+
 from jinja2 import Template
 import sqlparse
 
@@ -78,6 +80,9 @@ class SQLParser:
     def __getitem__(self, key):
         return self.mapping[key]
 
+    def __setitem__(self, key, value):
+        self.mapping[key] = value
+
     def __iter__(self):
         for e in self.mapping:
             yield e
@@ -88,19 +93,31 @@ class SQLParser:
     def __repr__(self):
         return f'{type(self).__name__} with keys: {list(self.mapping)!r}'
 
-    def until(self, key):
+    def until(self, key, select=None):
+        """
+        Generate with statements until the one with the given identifier.
+        Adding a final "SELECT * {{key}}" which can be customized with the
+        select parameter
+        """
         pairs = []
 
-        for a_key in self.mapping:
-            pairs.append((a_key, self.mapping[a_key]))
+        # _select should never be included
+        mapping = copy(self.mapping)
+        del mapping['_select']
+
+        for a_key in mapping:
+            pairs.append((a_key, mapping[a_key]))
 
             if a_key == key:
                 break
+
+        select = (select
+                  if select is not None else f'SELECT * FROM {pairs[-1][0]}')
 
         sql = Template("""
 WITH {%- for id, code in pairs -%}{{',' if not loop.first else '' }} {{id}} as (
     {{code}}
 ){% endfor %}
-SELECT * FROM {{pairs[-1][0]}}""").render(pairs=pairs)
+{{select}}""").render(pairs=pairs, select=select)
 
         return sql

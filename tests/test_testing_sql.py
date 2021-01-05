@@ -113,3 +113,31 @@ def test_sql_parser(trailing):
     assert code_a == '\nWITH a as (\n    select * from aa\n)\nSELECT * FROM a'
     assert code_b == ('\nWITH a as (\n    select * from aa\n), b '
                       'as (\n    select * from bb\n)\nSELECT * FROM b')
+
+
+@pytest.mark.parametrize('trailing', [False, True])
+def test_sql_parser_custom_select(trailing):
+
+    sql = sql_t.render(trailing=trailing)
+
+    m = testing.sql.SQLParser(sql)
+
+    code_a = m.until('a', select='SELECT * FROM a WHERE x < 10')
+    code_b = m.until('b', select='SELECT * FROM b WHERE x < 10')
+
+    assert code_a == ('\nWITH a as (\n    select * from aa\n)\nSELECT * '
+                      'FROM a WHERE x < 10')
+    assert code_b == (
+        '\nWITH a as (\n    select * from aa\n), b '
+        'as (\n    select * from bb\n)\nSELECT * FROM b WHERE x < 10')
+
+
+@pytest.mark.parametrize('trailing', [False, True])
+def test_sql_parser_add_clause(trailing):
+    sql = sql_t.render(trailing=trailing)
+    m = testing.sql.SQLParser(sql)
+    m['c'] = 'select * from cc'
+
+    assert m.until('c') == ('\nWITH a as (\n    select * from aa\n), b as '
+                            '(\n    select * from bb\n), c as (\n    '
+                            'select * from cc\n)\nSELECT * FROM c')
