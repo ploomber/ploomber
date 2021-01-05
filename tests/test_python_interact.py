@@ -235,6 +235,23 @@ def test_signature_line_break(backup_test_pkg):
                          'x = 2\n    Path(path).write_text(str(x))\n')
 
 
+def test_empty_cells_at_the_end(backup_test_pkg):
+    dev = CallableInteractiveDeveloper(functions.simple, params={})
+    nb = dev.to_nb()
+
+    fmt = nbformat.versions[nbformat.current_nbformat]
+    nb.cells.append(fmt.new_code_cell())
+
+    path = Path(backup_test_pkg, 'functions.py')
+    source_old = path.read_text()
+
+    dev.overwrite(nb)
+
+    source_new = path.read_text()
+
+    assert source_old == source_new
+
+
 def test_added_imports(backup_test_pkg):
     params = {'upstream': None, 'product': None}
     added_imports = 'import os\nimport sys\n'

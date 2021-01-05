@@ -53,8 +53,6 @@ from ploomber.util import chdir_code
 # is loaded. what's best? keep the newlines as such in the notebook or add empty
 # cells?, the former sounds cleaner
 
-# TODO: ignore empty cell at the end of the notebook
-
 
 class CallableInteractiveDeveloper:
     """Convert callables to notebooks, edit and save back
@@ -110,6 +108,8 @@ class CallableInteractiveDeveloper:
             nb = nbformat.read(obj, as_version=nbformat.NO_CONVERT)
         else:
             nb = obj
+
+        nb.cells = nb.cells[:last_non_empty_cell(nb.cells)]
 
         # remove cells that are only needed for the nb but not for the function
         code_cells = [c['source'] for c in nb.cells if keep_cell(c)]
@@ -178,6 +178,20 @@ class CallableInteractiveDeveloper:
         tmp = Path(self.tmp_path)
         if tmp.exists():
             tmp.unlink()
+
+
+def last_non_empty_cell(cells):
+    """Returns the index + 1 for the last non-empty cell
+    """
+    idx = len(cells)
+
+    for cell in cells[::-1]:
+        if cell.source:
+            return idx
+
+        idx -= 1
+
+    return idx
 
 
 def keep_cell(cell):
