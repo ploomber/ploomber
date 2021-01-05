@@ -149,6 +149,8 @@ class JupyterDAGManager:
         return self.resources.get(path)
 
     def get(self, path, content):
+        """Get model located at path
+        """
         resource = self._get(path)
         if resource:
             return resource.to_model(content)
@@ -161,6 +163,8 @@ class JupyterDAGManager:
             return []
 
     def overwrite(self, model, path):
+        """Overwrite a model back to the original function
+        """
         resource = self._get(path)
 
         resource.interactive.overwrite(nbformat.from_dict(model['content']))

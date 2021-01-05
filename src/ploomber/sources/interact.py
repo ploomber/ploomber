@@ -31,6 +31,7 @@ Task.develop() was called.
 TODO: move the logic that implements NotebookRunner.{develop, debug} to this
 module
 """
+import importlib
 from itertools import chain
 from pathlib import Path
 import inspect
@@ -41,6 +42,18 @@ import parso
 import nbformat
 
 from ploomber.util import chdir_code
+
+# TODO: if imports are added and the file is saved multiple times, imports
+# are duplicated
+# TODO: if original file is modified, add a new function is replaced in the
+# same position, when the notebook is reloaded, it loads the source code
+# from that function
+
+# TODO: whitespace in the original function is not preserved once the notebook
+# is loaded. what's best? keep the newlines as such in the notebook or add empty
+# cells?, the former sounds cleaner
+
+# TODO: ignore empty cell at the end of the notebook
 
 
 class CallableInteractiveDeveloper:
@@ -62,12 +75,9 @@ class CallableInteractiveDeveloper:
     def __init__(self, fn, params):
         self.fn = fn
         self.path_to_source = Path(inspect.getsourcefile(fn))
-        lines, start = inspect.getsourcelines(fn)
-        self.lines_num_limits = (start, start + len(lines))
         self.params = params
         self.tmp_path = self.path_to_source.with_name(
             self.path_to_source.with_suffix('').name + '-tmp.ipynb')
-        self.body_start = None
         self._source_code = None
 
     def to_nb(self, path=None):
@@ -77,7 +87,8 @@ class CallableInteractiveDeveloper:
         Returns the function's body in a notebook (tmp location), inserts
         params as variables at the top
         """
-        body_elements, self.body_start, imports_cell = parse_function(self.fn)
+        body_elements, _ = parse_function(self.fn)
+        imports_cell = extract_imports(self.fn)
         return function_to_nb(body_elements, imports_cell, self.params,
                               self.fn, path)
 
@@ -87,6 +98,14 @@ class CallableInteractiveDeveloper:
         injected parameters and cells whose first line is "#". obj can be
         either a notebook object or a path
         """
+        # force to reload module to get the right information in case the
+        # original source code was modified and the function is no longer in
+        # the same position. NOTE: are there any  problems with this approach?
+        # we could also read the dile directly and use ast/parso to get the
+        # function's information we need
+        mod = importlib.reload(inspect.getmodule(self.fn))
+        self.fn = getattr(mod, self.fn.__name__)
+
         if isinstance(obj, (str, Path)):
             nb = nbformat.read(obj, as_version=nbformat.NO_CONVERT)
         else:
@@ -102,11 +121,13 @@ class CallableInteractiveDeveloper:
         content = self.path_to_source.read_text()
         content_lines = content.splitlines()
         trailing_newline = content[-1] == '\n'
-        fn_starts, fn_ends = self.lines_num_limits
+
+        fn_starts, fn_ends = function_lines(self.fn)
 
         # keep the file the same until you reach the function definition plus
         # an offset to account for the signature (which might span >1 line)
-        keep_until = fn_starts + self.body_start
+        _, body_start = parse_function(self.fn)
+        keep_until = fn_starts + body_start
         header = content_lines[:keep_until]
 
         # the footer is everything below the end of the original definition
@@ -120,13 +141,14 @@ class CallableInteractiveDeveloper:
 
         new_content = '\n'.join(header + code_cells + footer)
 
-        # if the original hile had a trailing newline, keep it
+        # if the original file had a trailing newline, keep it
         if trailing_newline:
             new_content += '\n'
 
         # finally add new imports, if any
         imports_new = get_imports_new_source(nb)
 
+        # if the cell for new imports has any content, add it at the top
         if imports_new:
             new_content = imports_new + new_content
 
@@ -207,7 +229,10 @@ def parse_function(fn):
     # maybe do not support functions with return statements for now
     source = inspect.getsource(fn).rstrip()
     body_elements, start_pos = body_elements_from_source(source)
+    return body_elements, start_pos
 
+
+def extract_imports(fn):
     # get imports in the corresponding module
     module = parso.parse(Path(inspect.getfile(fn)).read_text())
     imports_statements = '\n'.join(
@@ -221,7 +246,13 @@ def parse_function(fn):
     if imports_local:
         imports_cell = imports_cell + '\n' + imports_local
 
-    return body_elements, start_pos, imports_cell
+    return imports_cell
+
+
+def function_lines(fn):
+    lines, start = inspect.getsourcelines(fn)
+    end = start + len(lines)
+    return start, end
 
 
 def get_func_and_class_names(module):

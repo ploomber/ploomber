@@ -194,6 +194,47 @@ def test_unmodified_function(fn_name, remove_trailing_newline,
     assert not Path(tmp_nb).exists()
 
 
+def test_move_function_down(backup_test_pkg):
+    dev = CallableInteractiveDeveloper(functions.simple, params={})
+    nb = dev.to_nb()
+    nb.cells[-2]['source'] = 'x = 2'
+
+    # move source code down
+    path = Path(backup_test_pkg, 'functions.py')
+    source = path.read_text()
+    path.write_text('\n' + source)
+
+    dev.overwrite(nb)
+
+    importlib.reload(functions)
+
+    source_fn = inspect.getsource(functions.simple)
+
+    assert source_fn == ('def simple(upstream, product, path):\n    '
+                         'x = 2\n    Path(path).write_text(str(x))\n')
+
+
+def test_signature_line_break(backup_test_pkg):
+    dev = CallableInteractiveDeveloper(functions.simple, params={})
+    nb = dev.to_nb()
+    nb.cells[-2]['source'] = 'x = 2'
+
+    path = Path(backup_test_pkg, 'functions.py')
+    source = path.read_text()
+    lines = source.splitlines()
+    lines[15] = 'def simple(upstream, product,\npath):'
+    path.write_text('\n'.join(lines))
+
+    dev.overwrite(nb)
+
+    importlib.reload(functions)
+
+    source_fn = inspect.getsource(functions.simple)
+
+    assert source_fn == ('def simple(upstream, product,\npath):\n    '
+                         'x = 2\n    Path(path).write_text(str(x))\n')
+
+
 def test_added_imports(backup_test_pkg):
     params = {'upstream': None, 'product': None}
     added_imports = 'import os\nimport sys\n'
