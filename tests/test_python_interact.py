@@ -222,6 +222,22 @@ def test_move_function_down(backup_test_pkg):
                          'x = 2\n    Path(path).write_text(str(x))\n')
 
 
+def test_function_replace(backup_test_pkg):
+    path = Path(backup_test_pkg, 'functions.py')
+    lines = path.read_text().splitlines()
+    lines.insert(15, 'def impostor():\n    pass\n')
+
+    path.write_text('\n'.join(lines))
+
+    dev = CallableInteractiveDeveloper(functions.simple, params={})
+    nb = dev.to_nb()
+
+    _, idx = find_cell_tagged(nb, 'imports-new')
+    fn_body = '\n'.join([c.source for c in nb.cells[idx + 1:]])
+
+    assert fn_body == 'x = 1\nPath(path).write_text(str(x))'
+
+
 def test_signature_line_break(backup_test_pkg):
     dev = CallableInteractiveDeveloper(functions.simple, params={})
     nb = dev.to_nb()

@@ -45,9 +45,7 @@ from ploomber.util import chdir_code
 
 # TODO: if imports are added and the file is saved multiple times, imports
 # are duplicated
-# TODO: if original file is modified, add a new function is replaced in the
-# same position, when the notebook is reloaded, it loads the source code
-# from that function
+# TODO: test for locally defined objects
 
 
 class CallableInteractiveDeveloper:
@@ -74,6 +72,16 @@ class CallableInteractiveDeveloper:
             self.path_to_source.with_suffix('').name + '-tmp.ipynb')
         self._source_code = None
 
+    def _reload_fn(self):
+        # force to reload module to get the right information in case the
+        # original source code was modified and the function is no longer in
+        # the same position
+        # NOTE: are there any  problems with this approach?
+        # we could also read the dile directly and use ast/parso to get the
+        # function's information we need
+        mod = importlib.reload(inspect.getmodule(self.fn))
+        self.fn = getattr(mod, self.fn.__name__)
+
     def to_nb(self, path=None):
         """
         Converts the function to is notebook representation, Returns a
@@ -81,6 +89,8 @@ class CallableInteractiveDeveloper:
         Returns the function's body in a notebook (tmp location), inserts
         params as variables at the top
         """
+        self._reload_fn()
+
         body_elements, _ = parse_function(self.fn)
         imports_cell = extract_imports(self.fn)
         return function_to_nb(body_elements, imports_cell, self.params,
@@ -92,13 +102,7 @@ class CallableInteractiveDeveloper:
         injected parameters and cells whose first line is "#". obj can be
         either a notebook object or a path
         """
-        # force to reload module to get the right information in case the
-        # original source code was modified and the function is no longer in
-        # the same position. NOTE: are there any  problems with this approach?
-        # we could also read the dile directly and use ast/parso to get the
-        # function's information we need
-        mod = importlib.reload(inspect.getmodule(self.fn))
-        self.fn = getattr(mod, self.fn.__name__)
+        self._reload_fn()
 
         if isinstance(obj, (str, Path)):
             nb = nbformat.read(obj, as_version=nbformat.NO_CONVERT)
