@@ -69,8 +69,6 @@ class PloomberContentsManager(TextFileContentsManager):
     restart_msg = (' Fix the issue and and restart "jupyter notebook"')
 
     def load_dag(self, starting_dir=None):
-        # self.log.info(f'[Ploomber] Loading dag: {starting_dir!s}')
-
         if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
             self.log.info('[Ploomber] Loading dag...')
 
@@ -149,6 +147,20 @@ class PloomberContentsManager(TextFileContentsManager):
         This is called when a file/directory is requested (even in the list
         view)
         """
+        # FIXME: running ploomber add, while having jupyter notebook open
+        # crashes because the dagspec cannot import the newly added function
+        # we have to force a module reload. The problem is in TaskSpec:50
+        # task_class_from_source_str. I think the best is to change the
+        # lazy_import option for import_mode = {'reload', 'normal', 'lazy'}
+        # although this is going to cause an incompatibility with soopervisor
+        # FIXME: test edit notebook to add a new upstream dependency, save, get
+        # model again and verify that the model has the output for the new
+        # dependency
+        # FIXME: test add a new task, reload listing and see the new function
+        # FIXME: reloading inside a (functions) folder causes 404
+        if content:
+            self.load_dag()
+
         if self.manager and path in self.manager:
             return self.manager.get(path, content)
 
@@ -161,13 +173,17 @@ class PloomberContentsManager(TextFileContentsManager):
         if model['type'] == 'directory' and self.manager:
             if model['content']:
                 model['content'].extend(self.manager.get_by_parent(path))
+
         check_metadata_filter(self.log, model)
+
         # if opening a file (ignore file listing), load dag again
         if (model['content'] and model['type'] == 'notebook'):
             # Look for the pipeline.yaml file from the file we are rendering
             # and search recursively. This is required to cover the case when
             # pipeline.yaml is in a subdirectory from the folder where the
             # user executed "jupyter notebook"
+            # FIXME: we actually don't need to reload the dag again, we just
+            # have to rebuild the mapping to make _model_in_dag work
             self.load_dag(starting_dir=Path(os.getcwd(), model['path']).parent)
             if self._model_in_dag(model):
                 self.log.info('[Ploomber] Injecting cell...')
