@@ -76,7 +76,7 @@ sql_t = Template("""
 
 drop table if exists some_table;
 
-create table some_table as (
+create table some_table as {{'(' if parenthesis else ''}}
 
 /* another comment */
 
@@ -91,14 +91,15 @@ with a as (
 )
 
 select * from a join b on col
-){{';' if trailing else ''}}
+{{')' if parenthesis else ''}}{{';' if trailing else ''}}
 """)
 
 
 @pytest.mark.parametrize('trailing', [False, True])
-def test_sql_parser(trailing):
+@pytest.mark.parametrize('parenthesis', [False, True])
+def test_sql_parser(trailing, parenthesis):
 
-    sql = sql_t.render(trailing=trailing)
+    sql = sql_t.render(trailing=trailing, parenthesis=parenthesis)
 
     m = testing.sql.SQLParser(sql)
 

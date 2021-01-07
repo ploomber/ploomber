@@ -14,6 +14,10 @@ def strip(tokens):
     ]
 
 
+def strip_punctuation(tokens):
+    return [t for t in tokens if t.value != ';']
+
+
 def strip_comments(tokens):
     return [t for t in tokens if not isinstance(t, sqlparse.sql.Comment)]
 
@@ -27,6 +31,7 @@ def to_tuple(f):
     name = t_name.value
     # ignore parenthesis
     code = code_from_token_list(t_code.tokens[1:-1])
+    # NOTE: probably better to strip during SQLParser init?
     return name, sqlparse.format(code, strip_comments=True).strip()
 
 
@@ -41,6 +46,37 @@ def find_with_type(tokens, type_):
     for idx, t in enumerate(tokens):
         if t.get_type() == type_:
             return idx, t
+
+
+def find_with_class(tokens, class_):
+    for idx, t in enumerate(tokens):
+        if isinstance(t, class_):
+            return idx, t
+
+
+def find_identifiers_list(create):
+    # when CREATE TABLE name has no parenthesis...
+    res = find_with_class(create, class_=sqlparse.sql.IdentifierList)
+
+    if res:
+        idx = find_select(create)
+        select = code_from_token_list(strip_punctuation(create.tokens[idx:]))
+        return strip(res[1]), select
+
+    # when there are parenthesis
+    _, identifier = find_with_class(create, class_=sqlparse.sql.Identifier)
+    # last one is the parenthesis object that encloses the identifier list
+    parenthesis = identifier.tokens[-1]
+    # ignore parenthesis tokens at the beginning and end
+    _, id_list = find_with_class(parenthesis,
+                                 class_=sqlparse.sql.IdentifierList)
+
+    idx = find_select(parenthesis)
+    # ignore last token, it's the closing parenthesis
+    select = code_from_token_list(strip_punctuation(
+        parenthesis.tokens[idx:-1]))
+
+    return strip(id_list), select
 
 
 class SQLParser:
@@ -62,20 +98,14 @@ class SQLParser:
     """
     def __init__(self, sql):
         if sql is not None:
-            _, t = find_with_type(sqlparse.parse(sql), type_='CREATE')
+            # from IPython import embed
+            # embed()
 
-            identifiers = strip(t)[-1]
-            parenthesis = identifiers.tokens[-1]
+            # get the first create table statement
+            _, create = find_with_type(sqlparse.parse(sql), type_='CREATE')
 
-            # with statement
-            with_ = parenthesis.tokens[1:-1]
-
-            tokens = strip(with_)
-            # this must be the with statement
-            # tokens[0]
-
-            # this must be the list of expressions
-            ids = strip(tokens[1].tokens)
+            # find the list of identifiers and last select statement
+            ids, select = find_identifiers_list(create)
 
             # this should be function, punctuation, function, puntuaction...
             functions = [id_ for idx, id_ in enumerate(ids) if not idx % 2]
@@ -84,14 +114,7 @@ class SQLParser:
 
             m = {t[0]: t[1] for t in functions_t}
 
-            # the rest is part of the final select statement, we don't use it
-            # bc it has
-            # whitespace removed
-            # tokens[2:]
-
-            idx = find_select(with_)
-
-            m['_select'] = code_from_token_list(with_[idx:])
+            m['_select'] = select
 
             self.mapping = m
         else:
