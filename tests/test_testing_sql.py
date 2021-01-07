@@ -111,9 +111,11 @@ def test_sql_parser(trailing, parenthesis):
     code_a = m.until('a')
     code_b = m.until('b')
 
-    assert code_a == '\nWITH a as (\n    select * from aa\n)\nSELECT * FROM a'
-    assert code_b == ('\nWITH a as (\n    select * from aa\n), b '
-                      'as (\n    select * from bb\n)\nSELECT * FROM b')
+    assert code_a == ('\nWITH a as (\n    select * from aa\n)\n'
+                      'SELECT * FROM a LIMIT 20')
+    assert code_b == (
+        '\nWITH a as (\n    select * from aa\n), b '
+        'as (\n    select * from bb\n)\nSELECT * FROM b LIMIT 20')
 
 
 @pytest.mark.parametrize('trailing', [False, True])
@@ -139,9 +141,10 @@ def test_sql_parser_add_clause(trailing):
     m = testing.sql.SQLParser(sql)
     m['c'] = 'select * from cc'
 
-    assert m.until('c') == ('\nWITH a as (\n    select * from aa\n), b as '
-                            '(\n    select * from bb\n), c as (\n    '
-                            'select * from cc\n)\nSELECT * FROM c')
+    assert m.until(
+        'c', limit=None) == ('\nWITH a as (\n    select * from aa\n), b as '
+                             '(\n    select * from bb\n), c as (\n    '
+                             'select * from cc\n)\nSELECT * FROM c')
 
 
 def test_sql_parser_insert():
@@ -154,6 +157,7 @@ def test_sql_parser_insert():
 
     m.insert('zero', 'select * from zero', inplace=True)
     assert list(m) == ['zero', 'a', 'b', '_select']
-    assert m.until('a') == (
-        '\nWITH zero as (\n    select * from zero\n),'
-        ' a as (\n    select * from aa\n)\nSELECT * FROM a')
+    assert m.until(
+        'a',
+        limit=None) == ('\nWITH zero as (\n    select * from zero\n),'
+                        ' a as (\n    select * from aa\n)\nSELECT * FROM a')

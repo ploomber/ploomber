@@ -136,11 +136,12 @@ class SQLParser:
     def __repr__(self):
         return f'{type(self).__name__} with keys: {list(self.mapping)!r}'
 
-    def until(self, key, select=None):
+    def until(self, key, select=None, limit=20):
         """
         Generate with statements until the one with the given identifier.
         Adding a final "SELECT * {{key}}" which can be customized with the
-        select parameter
+        "select" parameter, if "select" is None, the last select statement
+        is used with a LIMIT statement
         """
         pairs = []
 
@@ -154,8 +155,11 @@ class SQLParser:
             if a_key == key:
                 break
 
-        select = (select
-                  if select is not None else f'SELECT * FROM {pairs[-1][0]}')
+        if select is None:
+            select = f'SELECT * FROM {pairs[-1][0]}'
+
+            if limit:
+                select += f' LIMIT {limit}'
 
         sql = Template("""
 WITH {%- for id, code in pairs -%}{{',' if not loop.first else '' }} {{id}} as (
