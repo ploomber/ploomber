@@ -42,10 +42,12 @@ import parso
 import nbformat
 
 from ploomber.util import chdir_code
+from ploomber.sources.nb_utils import find_cell_with_tag
 
-# TODO: if imports are added and the file is saved multiple times, imports
-# are duplicated
 # TODO: test for locally defined objects
+# TODO: reloading the fn causes trobule if it enters into an inconsistent
+# state, e.g. a module that does not exist is saved, next time is realoaded,
+# it will fail because it has to import such module
 
 
 class CallableInteractiveDeveloper:
@@ -92,8 +94,8 @@ class CallableInteractiveDeveloper:
         self._reload_fn()
 
         body_elements, _ = parse_function(self.fn)
-        imports_cell = extract_imports(self.fn)
-        return function_to_nb(body_elements, imports_cell, self.params,
+        top, local, bottom = extract_imports(self.fn)
+        return function_to_nb(body_elements, top, local, bottom, self.params,
                               self.fn, path)
 
     def overwrite(self, obj):
@@ -141,18 +143,23 @@ class CallableInteractiveDeveloper:
 
         new_content = '\n'.join(header + code_cells + footer)
 
+        # replace old top imports with new ones
+        new_content_lines = new_content.splitlines()
+        _, line = extract_imports_top(parso.parse(new_content),
+                                      new_content_lines)
+        imports_top_cell, _ = find_cell_with_tag(nb, 'imports-top')
+
+        # ignore trailing whitespace in top imports cell but keep original
+        # amount of whitespace separating the last import and the first name
+        # definition
+        content_to_write = (imports_top_cell['source'].rstrip() + '\n' +
+                            '\n'.join(new_content_lines[line - 1:]))
+
         # if the original file had a trailing newline, keep it
         if trailing_newline:
-            new_content += '\n'
+            content_to_write += '\n'
 
-        # finally add new imports, if any
-        imports_new = get_imports_new_source(nb)
-
-        # if the cell for new imports has any content, add it at the top
-        if imports_new:
-            new_content = imports_new + new_content
-
-        self.path_to_source.write_text(new_content)
+        self.path_to_source.write_text(content_to_write)
 
     def __enter__(self):
         self._source_code = self.path_to_source.read_text()
@@ -199,13 +206,20 @@ def keep_cell(cell):
     Rule to decide whether to keep a cell or not. This is executed before
     converting the notebook back to a function
     """
-    tags = set(cell['metadata'].get('tags', {}))
-    tmp_tags = {
-        'injected-parameters', 'imports', 'imports-new', 'debugging-settings'
-    }
-    has_tmp_tags = len(tags & tmp_tags)
+    cell_tags = set(cell['metadata'].get('tags', {}))
 
-    return (cell['cell_type'] == 'code' and not has_tmp_tags
+    # remove cell with this tag, they are not part of the function body
+    tags_to_remove = {
+        'injected-parameters',
+        'imports-top',
+        'imports-local',
+        'imports-bottom',
+        'debugging-settings',
+    }
+
+    has_tags_to_remove = len(cell_tags & tags_to_remove)
+
+    return (cell['cell_type'] == 'code' and not has_tags_to_remove
             and cell['source'][:2] != '#\n')
 
 
@@ -247,20 +261,68 @@ def parse_function(fn):
 
 
 def extract_imports(fn):
-    # get imports in the corresponding module
-    module = parso.parse(Path(inspect.getfile(fn)).read_text())
-    imports_statements = '\n'.join(
-        [imp.get_code() for imp in module.iter_imports()])
+    source = Path(inspect.getfile(fn)).read_text()
 
-    imports_cell = imports_statements
+    module = parso.parse(source)
+    lines = source.splitlines()
 
-    # add local definitions, if any
+    imports_top, line = extract_imports_top(module, lines)
+
+    # any imports below the top imports
+    lines_bottom = '\n'.join(lines[line - 1:])
+    imports_bottom = '\n'.join(
+        imp.get_code() for imp in parso.parse(lines_bottom).iter_imports())
+
+    # generate imports from local definitions
     imports_local = make_import_from_definitions(module, fn)
 
-    if imports_local:
-        imports_cell = imports_cell + '\n' + imports_local
+    return (
+        imports_top,
+        imports_local,
+        imports_bottom if imports_bottom else None,
+    )
 
-    return imports_cell
+
+def extract_imports_top(module, lines):
+    ch = module.children[0]
+
+    while True:
+        ch = ch.get_next_sibling()
+
+        if ch:
+            if not has_import(ch):
+                break
+        else:
+            break
+
+    line, _ = ch.start_pos
+
+    # line numbers start at 1...
+    imports_top = '\n'.join(lines[:line - 1])
+    new_lines = trailing_newlines(imports_top)
+
+    return imports_top[:-new_lines], line - new_lines
+
+
+def has_import(stmt):
+    """
+    Check if statement contains an import
+    """
+    for ch in stmt.children:
+        if ch.type == 'import_name':
+            return True
+    return False
+
+
+def trailing_newlines(s):
+    n = 0
+
+    for char in reversed(s):
+        if char != '\n':
+            break
+        n += 1
+
+    return n
 
 
 def function_lines(fn):
@@ -276,27 +338,6 @@ def get_func_and_class_names(module):
     ]
 
 
-def get_imports_new_source(nb):
-    """
-    Returns the source code of the first cell tagged 'imports-new', strips
-    out comments
-    """
-    source = None
-
-    for cell in nb.cells:
-        if 'imports-new' in cell['metadata'].get('tags', {}):
-            source = cell.source
-            break
-
-    if source:
-        lines = [
-            line for line in source.splitlines() if not line.startswith('#')
-        ]
-
-        if lines:
-            return '\n'.join(lines) + '\n'
-
-
 def make_import_from_definitions(module, fn):
     module_name = inspect.getmodule(fn).__name__
     names = [
@@ -309,7 +350,8 @@ def make_import_from_definitions(module, fn):
         return f'from {module_name} import {names_all}'
 
 
-def function_to_nb(body_elements, imports_cell, params, fn, path):
+def function_to_nb(body_elements, imports_top, imports_local, imports_bottom,
+                   params, fn, path):
     """
     Save function body elements to a notebook
     """
@@ -350,20 +392,14 @@ __package__ = "{}"
                                    metadata={'tags': ['injected-parameters']})
     nb.cells.append(cell)
 
-    # first cell: add imports cell
-    nb.cells.append(
-        nb_format.new_code_cell(source=imports_cell,
-                                metadata=dict(tags=['imports'])))
-
-    # second cell: added imports, in case the user wants to add any imports
-    # back to the original module
-    imports_new_comment = (
-        '# Use this cell to include any imports that you '
-        'want to save back\n# to the top of the module, comments will be '
-        'ignored')
-    nb.cells.append(
-        nb_format.new_code_cell(source=imports_new_comment,
-                                metadata=dict(tags=['imports-new'])))
+    # first three cells: imports
+    for code, tag in ((imports_top, 'imports-top'),
+                      (imports_local, 'imports-local'), (imports_bottom,
+                                                         'imports-bottom')):
+        if code:
+            nb.cells.append(
+                nb_format.new_code_cell(source=code,
+                                        metadata=dict(tags=[tag])))
 
     for statement in body_elements:
         lines, newlines = split_statement(statement)

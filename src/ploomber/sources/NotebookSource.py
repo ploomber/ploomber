@@ -25,7 +25,6 @@ have a few rules to automatically determine language and kernel given a
 script/notebook.
 """
 import ast
-from inspect import getargspec
 from pathlib import Path
 from io import StringIO
 import warnings
@@ -38,6 +37,7 @@ from ploomber.exceptions import RenderError, SourceInitializationError
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources import Source
+from ploomber.sources.nb_utils import find_cell_with_tag
 from ploomber.static_analysis.extractors import extractor_class_for_language
 from ploomber.sources import docstring
 
@@ -672,20 +672,6 @@ def is_python(nb):
         is_python_ = False
 
     return is_python_
-
-
-def find_cell_with_tag(nb, tag):
-    """
-    Find a cell with a given tag, returns a cell, index tuple. Otherwise
-    (None, None)
-    """
-    for i, c in enumerate(nb['cells']):
-        cell_tags = c['metadata'].get('tags')
-        if cell_tags:
-            if tag in cell_tags:
-                return c, i
-
-    return None, None
 
 
 def determine_language(extension):

@@ -140,6 +140,21 @@ def tmp_directory():
     shutil.rmtree(str(tmp))
 
 
+@pytest.fixture
+def tmp_directory_local(tmp_path):
+    """
+    Pretty much the same as tmp_directory, but it uses pytest tmp_path,
+    which creates the path in a pre-determined location depending on the test,
+    TODO: replace the logic in tmp_directory with this one
+    """
+    old = os.getcwd()
+    os.chdir(tmp_path)
+
+    yield tmp_path
+
+    os.chdir(old)
+
+
 @pytest.fixture()
 def sqlite_client_and_tmp_dir():
     """
