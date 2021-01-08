@@ -287,13 +287,13 @@ def extract_imports_top(module, lines):
     ch = module.children[0]
 
     while True:
-        ch = ch.get_next_sibling()
-
         if ch:
             if not has_import(ch):
                 break
         else:
             break
+
+        ch = ch.get_next_sibling()
 
     line, _ = ch.start_pos
 
@@ -309,7 +309,7 @@ def has_import(stmt):
     Check if statement contains an import
     """
     for ch in stmt.children:
-        if ch.type == 'import_name':
+        if ch.type in {'import_name', 'import_from'}:
             return True
     return False
 

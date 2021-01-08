@@ -15,7 +15,7 @@ import papermill as pm
 from ploomber.sources.interact import (CallableInteractiveDeveloper,
                                        function_to_nb,
                                        body_elements_from_source,
-                                       extract_imports)
+                                       extract_imports, extract_imports_top)
 from ploomber.sources import interact
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.util import chdir_code
@@ -424,3 +424,34 @@ def test_extract_imports(source, imports_top, imports_bottom, imports_local,
     assert imports_top_out == imports_top
     assert imports_bottom_out == imports_bottom
     assert imports_local_out == imports_local
+
+
+@pytest.mark.parametrize('source, imports_top_expected, line_expected', [
+    [
+        """
+from pathlib import Path
+
+x = 1
+    """, '\nfrom pathlib import Path', 3
+    ],
+    [
+        """
+from pathlib import Path
+import os
+
+x = 1
+    """, '\nfrom pathlib import Path\nimport os', 4
+    ],
+    ["""
+import os
+
+x = 1
+    """, '\nimport os', 3],
+])
+def test_extract_imports_top(source, imports_top_expected, line_expected):
+    module = parso.parse(source)
+    # print(module.children)
+    imports_top, line = extract_imports_top(module, source.splitlines())
+
+    assert imports_top == imports_top_expected
+    assert line == line_expected
