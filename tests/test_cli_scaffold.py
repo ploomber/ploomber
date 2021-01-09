@@ -1,30 +1,26 @@
-import os
 from pathlib import Path
-import subprocess
+from unittest.mock import Mock, _Call
 
 import pytest
 import yaml
-import click
 from click.testing import CliRunner
 
-from ploomber.cli.cli import _new, add, _is_valid_name
+from ploomber.cli.cli import scaffold
+from ploomber.cli import cli
 
 
-@pytest.mark.parametrize('name,valid',
-                         [('project', True), ('project123', True),
-                          ('pro_jec_t', True), ('pro-ject', True),
-                          ('1234', False), ('a project', False)])
-def test_project_name(name, valid):
-    assert _is_valid_name(name) is valid
+def test_ploomber_scaffold(tmp_directory, monkeypatch):
+    """
+    Testing scaffold for creating a new project
+    """
+    mock = Mock()
+    monkeypatch.setattr(cli.scaffold_project, 'cli', mock)
 
+    runner = CliRunner()
+    result = runner.invoke(scaffold)
 
-@pytest.mark.parametrize('answer', [False, True])
-def test_ploomber_new(answer, tmp_directory, monkeypatch):
-    monkeypatch.setattr(click, 'confirm', lambda x: answer)
-    monkeypatch.setattr(click, 'prompt', lambda x, type: 'my-project')
-    _new()
-    os.chdir('my-project')
-    assert not subprocess.call(['ploomber', 'build'])
+    assert not result.exit_code
+    assert mock.call_args == _Call(((), {'project_path': None}))
 
 
 @pytest.mark.parametrize(
@@ -37,7 +33,9 @@ def test_ploomber_new(answer, tmp_directory, monkeypatch):
         # test file with sub-directories
         ('sql/task.sql', True)
     ])
-def test_ploomber_add(file_, extract_flag, tmp_directory):
+def test_ploomber_scaffold_task_template(file_, extract_flag, tmp_directory):
+    """Test scaffold when project already exists (add task templates)
+    """
     sample_spec = {
         'meta': {
             'extract_upstream': extract_flag,
@@ -56,7 +54,7 @@ def test_ploomber_add(file_, extract_flag, tmp_directory):
         yaml.dump(sample_spec, f)
 
     runner = CliRunner()
-    result = runner.invoke(add)
+    result = runner.invoke(scaffold)
 
     content = Path(file_).read_text()
 
@@ -88,21 +86,13 @@ def test_ploomber_add_unknown_extension(tmp_directory):
         yaml.dump(sample_spec, f)
 
     runner = CliRunner()
-    result = runner.invoke(add)
+    result = runner.invoke(scaffold)
 
     out = ('Error: This command does not support adding tasks with '
            'extension ".txt"')
 
     assert result.exit_code == 0
     assert out in result.output
-
-
-def test_ploomber_add_missing_spec(tmp_directory):
-    runner = CliRunner()
-    result = runner.invoke(add)
-
-    assert result.exit_code == 0
-    assert 'Error: No pipeline.yaml spec found...' in result.output
 
 
 def test_ploomber_add_skip_if_file_exists(tmp_directory, capsys):
@@ -120,7 +110,7 @@ def test_ploomber_add_skip_if_file_exists(tmp_directory, capsys):
     Path('task.py').touch()
 
     runner = CliRunner()
-    result = runner.invoke(add)
+    result = runner.invoke(scaffold)
 
     assert result.exit_code == 0
     assert Path('task.py').read_text() == ''

@@ -1,5 +1,4 @@
 import os
-import re
 import sys
 from pathlib import Path
 
@@ -8,11 +7,6 @@ from ploomber import __version__
 from ploomber import cli as cli_module
 from ploomber import scaffold as _scaffold
 from ploomber_scaffold import scaffold as scaffold_project
-
-
-def _is_valid_name(package_name):
-    match = re.match(r'^[\w-]+$', package_name) or False
-    return match and not package_name[0].isnumeric()
 
 
 @click.group()
