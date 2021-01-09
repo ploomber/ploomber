@@ -477,21 +477,48 @@ def test_add_upstream_modifies_signature(backup_spec_with_functions):
     source = Path('my_tasks', 'raw', 'functions.py').read_text()
     top_lines = '\n'.join(source.splitlines()[:5])
 
-    assert ('from pathlib import Path\n\n\n'
-            'def function(product, upstream):\n    Path(str(product)).touch()'
-            == top_lines)
+    expected = (
+        'from pathlib import Path\n\n\n'
+        'def function(product, upstream):\n    Path(str(product)).touch()')
+    assert expected == top_lines
 
-    # TODO: save again, make sure this time, upstream is not added
+    # if we save again, nothing should change
+    dev.overwrite(nb)
+
+    source = Path('my_tasks', 'raw', 'functions.py').read_text()
+    top_lines = '\n'.join(source.splitlines()[:5])
+
+    assert expected == top_lines
 
 
-def test_remove_upstream_modifies_signature():
-    raise ValueError
+def test_remove_upstream_modifies_signature(backup_spec_with_functions):
+    dag = DAGSpec('pipeline.yaml').to_dag()
+    dag.render()
+
+    fn = dag['clean'].source.primitive
+    params = dag['clean'].params.to_json_serializable()
+
+    dev = CallableInteractiveDeveloper(fn, params)
+    nb = dev.to_nb()
+    # delete upstream reference
+    del nb.cells[-2]
+    dev.overwrite(nb)
+
+    source = Path('my_tasks', 'clean', 'functions.py').read_text()
+    top_lines = '\n'.join(source.splitlines()[:5])
+
+    expected = ('# adding this to make sure relative imports work '
+                'fine\nfrom .util import util_touch\n\n\n'
+                'def function(product):')
+
+    assert top_lines == expected
 
 
 @pytest.mark.parametrize('source, expected', [
     ['def x():\n    pass', False],
     ['def y(a, b):\n    pass', False],
     ['def z(a, b, upstream):\n    pass', True],
+    ['def z(upstream, a, b):\n    pass', True],
 ])
 def test_upstream_in_func_signature(source, expected):
     assert upstream_in_func_signature(source) == expected
