@@ -15,7 +15,9 @@ import papermill as pm
 from ploomber.sources.interact import (CallableInteractiveDeveloper,
                                        function_to_nb,
                                        body_elements_from_source,
-                                       extract_imports, extract_imports_top)
+                                       extract_imports, extract_imports_top,
+                                       upstream_in_func_signature,
+                                       add_upstream_to_func_signature)
 from ploomber.sources import interact
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.util import chdir_code
@@ -455,3 +457,49 @@ def test_extract_imports_top(source, imports_top_expected, line_expected):
 
     assert imports_top == imports_top_expected
     assert line == line_expected
+
+
+def test_add_upstream_modifies_signature(backup_spec_with_functions):
+    dag = DAGSpec('pipeline.yaml').to_dag()
+    dag.render()
+
+    fn = dag['raw'].source.primitive
+    params = dag['raw'].params.to_json_serializable()
+
+    dev = CallableInteractiveDeveloper(fn, params)
+
+    # add an upstream reference...
+    nb = dev.to_nb()
+    nb.cells[-1]['source'] += '\nupstream["some_task"]'
+    dev.overwrite(nb)
+
+    # source must be updated...
+    source = Path('my_tasks', 'raw', 'functions.py').read_text()
+    top_lines = '\n'.join(source.splitlines()[:5])
+
+    assert ('from pathlib import Path\n\n\n'
+            'def function(product, upstream):\n    Path(str(product)).touch()'
+            == top_lines)
+
+    # TODO: save again, make sure this time, upstream is not added
+
+
+def test_remove_upstream_modifies_signature():
+    raise ValueError
+
+
+@pytest.mark.parametrize('source, expected', [
+    ['def x():\n    pass', False],
+    ['def y(a, b):\n    pass', False],
+    ['def z(a, b, upstream):\n    pass', True],
+])
+def test_upstream_in_func_signature(source, expected):
+    assert upstream_in_func_signature(source) == expected
+
+
+@pytest.mark.parametrize('source, expected', [
+    ['def x():\n    z = 1', 'def x(upstream):\n    z = 1'],
+    ['def y(a, b):\n    pass', 'def y(a, b, upstream):\n    pass'],
+])
+def test_add_upstream_to_func_signature(source, expected):
+    assert add_upstream_to_func_signature(source) == expected
