@@ -62,6 +62,7 @@ OPTIONAL = [
 ]
 
 TESTING = [
+    'ploomber-scaffold',
     # plotting. strictly speaking pygrapviz is an optional dependency but we
     # don't add it as such because it's gonna break installation for most
     # setups, since we don't expect users to have graphviz installed
