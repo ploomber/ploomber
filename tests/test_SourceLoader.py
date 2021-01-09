@@ -2,6 +2,8 @@ import pytest
 import tempfile
 from pathlib import Path
 
+from jinja2.exceptions import TemplateRuntimeError
+
 from ploomber import SourceLoader
 from ploomber.tasks import SQLTransfer
 from ploomber.products import SQLiteRelation
@@ -22,6 +24,19 @@ def test_load_template(processor):
 
     t = source_loader[processor('template.sql')]
     assert t.render({'file': 'some file'})
+
+    assert source_loader.get('non_existing_template.sql') is None
+
+
+def test_path_to():
+    tmp_directory = tempfile.mkdtemp()
+    Path(tmp_directory, 'template.sql').write_text('{{file}}')
+    source_loader = SourceLoader(str(tmp_directory))
+
+    assert source_loader.path_to('template.sql') == Path(
+        tmp_directory, 'template.sql')
+    assert source_loader.path_to('non_template.sql') == Path(
+        tmp_directory, 'non_template.sql')
 
 
 def test_multiple_paths():
@@ -69,3 +84,14 @@ def test_source_loader_and_task(sqlite_client_and_tmp_dir):
                 name='transfer')
 
     dag.build()
+
+
+def test_raise(tmp_directory):
+    Path('template.sql').write_text("{% raise 'some error message' %}")
+
+    loader = SourceLoader(path='.')
+
+    with pytest.raises(TemplateRuntimeError) as excinfo:
+        loader['template.sql'].render({})
+
+    assert str(excinfo.value) == 'some error message'

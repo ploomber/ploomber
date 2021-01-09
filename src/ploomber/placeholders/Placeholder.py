@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 
 from ploomber.exceptions import RenderError, SourceInitializationError
-from ploomber.placeholders import util
+from ploomber.placeholders import util, extensions
 from jinja2 import (Environment, Template, UndefinedError, FileSystemLoader,
                     PackageLoader, StrictUndefined)
 
@@ -70,6 +70,10 @@ class Placeholder(AbstractPlaceholder):
         The location of the raw object. None if initialized with a str or with
         a jinja2.Template created from a str
 
+    Notes
+    -----
+    You can use "raise" in a placeholder to raise exceptions, useful for
+    validating input parameters: "{% raise 'some error message' %}"
     """
     def __init__(self, primitive, hot_reload=False, required=None):
         self._logger = logging.getLogger('{}.{}'.format(
@@ -301,7 +305,9 @@ def _init_template(raw, loader_init):
     object
     """
     if loader_init is None:
-        return Template(raw, undefined=StrictUndefined)
+        return Template(raw,
+                        undefined=StrictUndefined,
+                        extensions=(extensions.RaiseExtension, ))
     else:
         if loader_init['class'] == 'FileSystemLoader':
             loader = FileSystemLoader(**loader_init['kwargs'])
@@ -312,7 +318,9 @@ def _init_template(raw, loader_init):
                             'expected the loader to be FileSystemLoader '
                             'or PackageLoader')
 
-        env = Environment(loader=loader, undefined=StrictUndefined)
+        env = Environment(loader=loader,
+                          undefined=StrictUndefined,
+                          extensions=(extensions.RaiseExtension, ))
         return env.from_string(raw)
 
 
@@ -326,7 +334,6 @@ def _get_package_name(loader):
 
 
 def _make_loader_init(loader):
-
     if loader is None:
         return None
     if isinstance(loader, FileSystemLoader):

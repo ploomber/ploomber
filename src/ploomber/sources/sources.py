@@ -255,7 +255,6 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
         """
         if 'product' in params:
             infered_relations = infer.created_relations(rendered_value)
-            # print(infered_relations)
 
             if isinstance(params['product'], Product):
                 actual_rel = {params['product']._identifier}
@@ -264,11 +263,7 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
                 actual_rel = {p._identifier for p in params['product']}
 
             infered_len = len(infered_relations)
-            # print(infered_len)
             actual_len = len(actual_rel)
-
-            # print(set(infered_relations) != set(actual_rel),
-            #         set(infered_relations) ,set(actual_rel))
 
             if not infered_len:
                 warnings.warn(

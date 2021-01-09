@@ -5,7 +5,9 @@ import subprocess
 import pytest
 import yaml
 import click
-from ploomber.cli.cli import _new, _add, _is_valid_name
+from click.testing import CliRunner
+
+from ploomber.cli.cli import _new, add, _is_valid_name
 
 
 @pytest.mark.parametrize('name,valid',
@@ -26,16 +28,16 @@ def test_ploomber_new(answer, tmp_directory, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    'file, header, extract_flag',
+    'file_, extract_flag',
     [
-        ('task.py', 'Python task', False),
-        ('task.py', 'Python task', True),
-        ('task.sql', 'SQL task', False),
-        ('task.sql', 'SQL task', True),
+        ('task.py', False),
+        ('task.py', True),
+        ('task.sql', False),
+        ('task.sql', True),
         # test file with sub-directories
-        ('sql/task.sql', 'SQL task', True)
+        ('sql/task.sql', True)
     ])
-def test_ploomber_add(file, header, extract_flag, tmp_directory):
+def test_ploomber_add(file_, extract_flag, tmp_directory):
     sample_spec = {
         'meta': {
             'extract_upstream': extract_flag,
@@ -43,7 +45,7 @@ def test_ploomber_add(file, header, extract_flag, tmp_directory):
         }
     }
 
-    task = {'source': file}
+    task = {'source': file_}
 
     if not extract_flag:
         task['product'] = 'nb.ipynb'
@@ -53,18 +55,23 @@ def test_ploomber_add(file, header, extract_flag, tmp_directory):
     with open('pipeline.yaml', 'w') as f:
         yaml.dump(sample_spec, f)
 
-    _add()
+    runner = CliRunner()
+    result = runner.invoke(add)
 
-    content = Path(file).read_text()
+    content = Path(file_).read_text()
 
-    assert header in content
-    assert ('extract_upstream is set to {} '
+    assert result.exit_code == 0
+    assert 'Add description here' in content
+    assert ('extract_upstream={} '
             'in your pipeline.yaml'.format(extract_flag) in content)
-    assert ('extract_product is set to {} '
-            'in your pipeline.yaml'.format(extract_flag) in content)
+
+    # task.sql does not output this part
+    if not file_.endswith('.sql'):
+        assert ('extract_product={} '
+                'in your pipeline.yaml'.format(extract_flag) in content)
 
 
-def test_ploomber_add_unknown_extension(tmp_directory, capsys):
+def test_ploomber_add_unknown_extension(tmp_directory):
     sample_spec = {
         'meta': {
             'extract_upstream': False,
@@ -80,19 +87,22 @@ def test_ploomber_add_unknown_extension(tmp_directory, capsys):
     with open('pipeline.yaml', 'w') as f:
         yaml.dump(sample_spec, f)
 
-    _add()
+    runner = CliRunner()
+    result = runner.invoke(add)
 
-    captured = capsys.readouterr()
     out = ('Error: This command does not support adding tasks with '
            'extension ".txt"')
-    assert out in captured.out
+
+    assert result.exit_code == 0
+    assert out in result.output
 
 
-def test_ploomber_add_missing_spec(tmp_directory, capsys):
-    _add()
+def test_ploomber_add_missing_spec(tmp_directory):
+    runner = CliRunner()
+    result = runner.invoke(add)
 
-    captured = capsys.readouterr()
-    assert 'Error: No pipeline.yaml spec found...' in captured.out
+    assert result.exit_code == 0
+    assert 'Error: No pipeline.yaml spec found...' in result.output
 
 
 def test_ploomber_add_skip_if_file_exists(tmp_directory, capsys):
@@ -109,6 +119,8 @@ def test_ploomber_add_skip_if_file_exists(tmp_directory, capsys):
 
     Path('task.py').touch()
 
-    _add()
+    runner = CliRunner()
+    result = runner.invoke(add)
 
+    assert result.exit_code == 0
     assert Path('task.py').read_text() == ''

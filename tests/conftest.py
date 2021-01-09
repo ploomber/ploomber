@@ -100,6 +100,24 @@ def backup_spec_with_functions():
     shutil.rmtree(backup)
 
 
+@pytest.fixture
+def backup_spec_with_functions_flat():
+    old = os.getcwd()
+    backup = tempfile.mkdtemp()
+    root = _path_to_tests() / 'assets' / 'spec-with-functions-flat'
+    shutil.copytree(str(root), str(Path(backup, 'spec-with-functions-flat')))
+
+    os.chdir(root)
+
+    yield root
+
+    os.chdir(old)
+
+    shutil.rmtree(str(root))
+    shutil.copytree(str(Path(backup, 'spec-with-functions-flat')), str(root))
+    shutil.rmtree(backup)
+
+
 @pytest.fixture()
 def tmp_directory():
     old = os.getcwd()
@@ -120,6 +138,21 @@ def tmp_directory():
     os.chdir(old)
 
     shutil.rmtree(str(tmp))
+
+
+@pytest.fixture
+def tmp_directory_local(tmp_path):
+    """
+    Pretty much the same as tmp_directory, but it uses pytest tmp_path,
+    which creates the path in a pre-determined location depending on the test,
+    TODO: replace the logic in tmp_directory with this one
+    """
+    old = os.getcwd()
+    os.chdir(tmp_path)
+
+    yield tmp_path
+
+    os.chdir(old)
 
 
 @pytest.fixture()

@@ -1,6 +1,7 @@
 """
 Module for the jupyter extension
 """
+import datetime
 import os
 import contextlib
 from pprint import pprint
@@ -12,6 +13,7 @@ from ploomber.sources.NotebookSource import (_cleanup_rendered_nb, inject_cell)
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.cli import parsers
+from ploomber.jupyter.dag import JupyterDAGManager
 
 
 @contextlib.contextmanager
@@ -31,7 +33,9 @@ def resolve_path(parent, path):
     of pipeline.yaml
     """
     try:
-        return str(Path(parent, path).relative_to(Path('.').resolve()))
+        # FIXME: remove :linenumber
+        return Path(parent,
+                    path).relative_to(Path('.').resolve()).as_posix().strip()
     except ValueError:
         return None
 
@@ -97,6 +101,8 @@ class PloomberContentsManager(TextFileContentsManager):
                         # rendering up
                         self.dag.render(force=True)
 
+                    self.manager = JupyterDAGManager(self.dag)
+
                     tuples = [(resolve_path(base_path, t.source.loc), t)
                               for t in self.dag.values()
                               if t.source.loc is not None]
@@ -121,6 +127,7 @@ class PloomberContentsManager(TextFileContentsManager):
         self.dag = None
         self.path = None
         self.dag_mapping = None
+        self.manager = None
 
     def __init__(self, *args, **kwargs):
         """
@@ -135,27 +142,53 @@ class PloomberContentsManager(TextFileContentsManager):
 
         return super(PloomberContentsManager, self).__init__(*args, **kwargs)
 
-    def get(self, *args, **kwargs):
+    def get(self, path, content=True, type=None, format=None):
         """
         This is called when a file/directory is requested (even in the list
         view)
         """
-        model = super(PloomberContentsManager, self).get(*args, **kwargs)
+        # FIXME: running ploomber add, while having jupyter notebook open
+        # crashes because the dagspec cannot import the newly added function
+        # we have to force a module reload. The problem is in TaskSpec:50
+        # task_class_from_source_str. I think the best is to change the
+        # lazy_import option for import_mode = {'reload', 'normal', 'lazy'}
+        # although this is going to cause an incompatibility with soopervisor
+        # FIXME: test edit notebook to add a new upstream dependency, save, get
+        # model again and verify that the model has the output for the new
+        # dependency
+        # FIXME: test add a new task, reload listing and see the new function
+        # FIXME: reloading inside a (functions) folder causes 404
+        if content:
+            self.load_dag()
+
+        if self.manager and path in self.manager:
+            return self.manager.get(path, content)
+
+        model = super(PloomberContentsManager, self).get(path=path,
+                                                         content=content,
+                                                         type=type,
+                                                         format=format)
+
+        # check if there are task functions defined here
+        if model['type'] == 'directory' and self.manager:
+            if model['content']:
+                model['content'].extend(self.manager.get_by_parent(path))
+
         check_metadata_filter(self.log, model)
 
         # if opening a file (ignore file listing), load dag again
         if (model['content'] and model['type'] == 'notebook'):
-
             # Look for the pipeline.yaml file from the file we are rendering
             # and search recursively. This is required to cover the case when
             # pipeline.yaml is in a subdirectory from the folder where the
             # user executed "jupyter notebook"
+            # FIXME: we actually don't need to reload the dag again, we just
+            # have to rebuild the mapping to make _model_in_dag work
             self.load_dag(starting_dir=Path(os.getcwd(), model['path']).parent)
-
-        if self._model_in_dag(model):
-            self.log.info('[Ploomber] Injecting cell...')
-            inject_cell(model=model,
-                        params=self.dag_mapping[model['path']]._params)
+            if self._model_in_dag(model):
+                self.log.info('[Ploomber] Injecting cell...')
+                inject_cell(model=model,
+                            params=self.dag_mapping[model['path']]._params)
 
         return model
 
@@ -163,21 +196,25 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         This is called when a file is saved
         """
-        check_metadata_filter(self.log, model)
-        # not sure what's the difference between model['path'] and path
-        # but path has leading "/", _model_in_dag strips it
-        key = self._model_in_dag(model, path)
+        if self.manager and path in self.manager:
+            out = self.manager.overwrite(model, path)
+            return out
+        else:
+            check_metadata_filter(self.log, model)
+            # not sure what's the difference between model['path'] and path
+            # but path has leading "/", _model_in_dag strips it
+            key = self._model_in_dag(model, path)
 
-        if key:
-            self.log.info(
-                '[Ploomber] Cleaning up injected cell in {}...'.format(
-                    model.get('name') or ''))
-            model['content'] = _cleanup_rendered_nb(model['content'])
+            if key:
+                self.log.info(
+                    '[Ploomber] Cleaning up injected cell in {}...'.format(
+                        model.get('name') or ''))
+                model['content'] = _cleanup_rendered_nb(model['content'])
 
-            self.log.info("[Ploomber] Deleting product's metadata...")
-            self.dag_mapping[key].product.metadata.delete()
+                self.log.info("[Ploomber] Deleting product's metadata...")
+                self.dag_mapping[key].product.metadata.delete()
 
-        return super(PloomberContentsManager, self).save(model, path)
+            return super(PloomberContentsManager, self).save(model, path)
 
     def _model_in_dag(self, model, path=None):
         """Determine if the model is part of the  pipeline
@@ -190,10 +227,10 @@ class PloomberContentsManager(TextFileContentsManager):
             path = path.strip('/')
 
         if self.dag:
-            if (model['content'] and model['type'] == 'notebook'):
+            if ('content' in model and model['type'] == 'notebook'):
                 if path in self.dag_mapping:
                     # NOTE: not sure why sometimes the model comes with a
-                    # names and sometimes it doesn't
+                    # name and sometimes it doesn't
                     self.log.info(
                         '[Ploomber] {} is part of the pipeline... '.format(
                             model.get('name') or ''))
@@ -204,6 +241,19 @@ class PloomberContentsManager(TextFileContentsManager):
                                       model.get('name') or ''))
 
         return path if model_in_dag else False
+
+    def list_checkpoints(self, path):
+        if not self.manager or path not in self.manager:
+            return self.checkpoints.list_checkpoints(path)
+
+    def create_checkpoint(self, path):
+        if not self.manager or path not in self.manager:
+            return self.checkpoints.create_checkpoint(self, path)
+        else:
+            return {
+                'id': 'checkpoint',
+                'last_modified': datetime.datetime.now()
+            }
 
 
 def _load_jupyter_server_extension(app):

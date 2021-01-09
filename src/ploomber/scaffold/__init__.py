@@ -1,0 +1,34 @@
+from ploomber.spec.DAGSpec import DAGSpec
+from ploomber.scaffold.ScaffoldLoader import ScaffoldLoader
+
+
+def add():
+    """Add scaffold templates for tasks whose source does not exist
+    """
+    # setting lazy_import to true causes sources to be returned as paths,
+    # instead of placeholders
+    spec, path_to_spec = DAGSpec.auto_load(to_dag=False, lazy_import=True)
+    loader = ScaffoldLoader('ploomber_add')
+
+    # TODO: when the dag has a source loader, the argument passed to
+    # ploomber_add should take that into account to place the new file
+    # in the appropriate location (instead of doing it relative to
+    # pipeline.yaml)
+
+    # TODO: raise an error if the location is inside the site-packages folder
+
+    # NOTE: lazy loading freom source loader will giev errors because
+    # initializing a source with a path only, loses the information from the
+    # jinja environment to make macros workj. I have to test this. the best
+    # solution is to add a lazy_load param to Placeholder, so it can be
+    # initialized with a path for a file that does not exist
+
+    if path_to_spec:
+        print('Found spec at {}'.format(path_to_spec))
+
+        for task in spec['tasks']:
+            loader.create(source=task['source'],
+                          params=spec['meta'],
+                          class_=task['class'])
+    else:
+        print('Error: No pipeline.yaml spec found...')

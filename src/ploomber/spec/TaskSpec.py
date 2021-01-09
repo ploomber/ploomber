@@ -74,7 +74,8 @@ def task_class_from_spec(task_spec, lazy_import):
     return class_
 
 
-def source_for_task_class(source_str, task_class, project_root, lazy_import):
+def source_for_task_class(source_str, task_class, project_root, lazy_import,
+                          make_absolute):
     if task_class is tasks.PythonCallable:
         if lazy_import:
             return source_str
@@ -83,7 +84,7 @@ def source_for_task_class(source_str, task_class, project_root, lazy_import):
     else:
         path = Path(source_str)
 
-        if project_root and not path.is_absolute():
+        if project_root and not path.is_absolute() and make_absolute:
             return Path(project_root, source_str)
         else:
             return path
@@ -102,6 +103,10 @@ class TaskSpec(MutableMapping):
         The "meta" section information from the calling DAGSpec
     project_root : str or pathlib.Path
         The project root folder (pipeline.yaml parent)
+    lazy_import : bool, default=False
+            If False, sources are loaded when initializing the spec (e.g.
+            a dotted path is imported, a source loaded using a SourceLoader
+            is converted to a Placeholder object)
     """
     def __init__(self, data, meta, project_root, lazy_import=False):
         # FIXME: make sure data and meta are immutable structures
@@ -111,22 +116,30 @@ class TaskSpec(MutableMapping):
 
         self.validate()
 
+        source_loader = meta['source_loader']
+
         # initialize required elements
         self.data['class'] = task_class_from_spec(self.data, lazy_import)
         # preprocess source obj, at this point it will either be a Path if the
         # task requires a file or a callable if it's a PythonCallable task
-        self.data['source'] = source_for_task_class(self.data['source'],
-                                                    self.data['class'],
-                                                    self.project_root,
-                                                    lazy_import)
-
-        source_loader = meta['source_loader']
+        self.data['source'] = source_for_task_class(
+            self.data['source'],
+            self.data['class'],
+            self.project_root,
+            lazy_import,
+            # only make sources absolute paths when not using a source loader
+            # otherwise keep them relative
+            make_absolute=source_loader is None)
 
         is_a_file = isinstance(self.data['source'], Path)
 
         if source_loader and is_a_file:
             # if there is a source loader, use it...
-            self.data['source'] = source_loader[self.data['source']]
+            if lazy_import:
+                self.data['source'] = source_loader.path_to(
+                    self.data['source'])
+            else:
+                self.data['source'] = source_loader[self.data['source']]
 
     def validate(self):
         """
@@ -208,6 +221,9 @@ class TaskSpec(MutableMapping):
 
     def __len__(self):
         return len(self.data)
+
+    def __repr__(self):
+        return '{}({!r})'.format(type(self).__name__, self.data)
 
 
 # FIXME: how do we make a default product client? use the task's client?

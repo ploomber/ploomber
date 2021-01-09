@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+0.8.6dev
+--------
+* "ploomber add" generates template tasks and functions if they don't exist
+* Jupyter plugin now shows PythonCallable tasks as notebooks
+
+
 0.8.5 (2020-12-14)
 -------------------
 * Documentation tutorials re-organization and CSS fixes

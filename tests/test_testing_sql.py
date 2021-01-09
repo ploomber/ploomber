@@ -1,7 +1,10 @@
 from pathlib import Path
 
+import pytest
 import numpy as np
 import pandas as pd
+from jinja2 import Template
+
 from ploomber.clients import SQLAlchemyClient
 from ploomber import testing
 
@@ -65,3 +68,96 @@ def test_exists_row_where(tmp_directory):
 
     assert testing.sql.exists_row_where(client, 'x > 1', 'my_table')
     assert not testing.sql.exists_row_where(client, 'x > 4', 'my_table')
+
+
+sql_t = Template("""
+/* some comment */
+-- some comment
+
+drop table if exists some_table;
+
+create table some_table as {{'(' if parenthesis else ''}}
+
+/* another comment */
+
+with a as (
+    select * from aa
+    /* 
+    multi line
+    comment */
+), b as (
+    -- yet another comment
+    select * from bb
+)
+
+select * from a join b on col
+{{')' if parenthesis else ''}}{{';' if trailing else ''}}
+""")
+
+
+@pytest.mark.parametrize('trailing', [False, True])
+@pytest.mark.parametrize('parenthesis', [False, True])
+def test_sql_parser(trailing, parenthesis):
+
+    sql = sql_t.render(trailing=trailing, parenthesis=parenthesis)
+
+    m = testing.sql.SQLParser(sql)
+
+    assert list(m) == ['a', 'b', '_select']
+    assert m['a'] == 'select * from aa'
+    assert m['b'] == 'select * from bb'
+    assert m['_select'] == 'select * from a join b on col\n'
+
+    code_a = m.until('a')
+    code_b = m.until('b')
+
+    assert code_a == ('\nWITH a as (\n    select * from aa\n)\n'
+                      'SELECT * FROM a LIMIT 20')
+    assert code_b == (
+        '\nWITH a as (\n    select * from aa\n), b '
+        'as (\n    select * from bb\n)\nSELECT * FROM b LIMIT 20')
+
+
+@pytest.mark.parametrize('trailing', [False, True])
+def test_sql_parser_custom_select(trailing):
+
+    sql = sql_t.render(trailing=trailing)
+
+    m = testing.sql.SQLParser(sql)
+
+    code_a = m.until('a', select='SELECT * FROM a WHERE x < 10')
+    code_b = m.until('b', select='SELECT * FROM b WHERE x < 10')
+
+    assert code_a == ('\nWITH a as (\n    select * from aa\n)\nSELECT * '
+                      'FROM a WHERE x < 10')
+    assert code_b == (
+        '\nWITH a as (\n    select * from aa\n), b '
+        'as (\n    select * from bb\n)\nSELECT * FROM b WHERE x < 10')
+
+
+@pytest.mark.parametrize('trailing', [False, True])
+def test_sql_parser_add_clause(trailing):
+    sql = sql_t.render(trailing=trailing)
+    m = testing.sql.SQLParser(sql)
+    m['c'] = 'select * from cc'
+
+    assert m.until(
+        'c', limit=None) == ('\nWITH a as (\n    select * from aa\n), b as '
+                             '(\n    select * from bb\n), c as (\n    '
+                             'select * from cc\n)\nSELECT * FROM c')
+
+
+def test_sql_parser_insert():
+    sql = sql_t.render(trailing=False)
+    m = testing.sql.SQLParser(sql)
+
+    m2 = m.insert('zero', 'select * from zero', inplace=False)
+    assert list(m2) == ['zero', 'a', 'b', '_select']
+    assert list(m) == ['a', 'b', '_select']
+
+    m.insert('zero', 'select * from zero', inplace=True)
+    assert list(m) == ['zero', 'a', 'b', '_select']
+    assert m.until(
+        'a',
+        limit=None) == ('\nWITH zero as (\n    select * from zero\n),'
+                        ' a as (\n    select * from aa\n)\nSELECT * FROM a')

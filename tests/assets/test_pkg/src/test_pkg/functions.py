@@ -43,3 +43,17 @@ def this_is_a_function_with_a_very_long_name_with_forces_us_to_split_params(
         upstream, product, path):
     x = 1
     Path(path).write_text(str(x))
+
+
+def large_function():
+    x = False
+    y = True
+
+    if x or y:
+        pass
+
+    for i in range(10):
+        print('Looping...')
+
+    def another_function():
+        pass

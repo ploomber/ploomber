@@ -11,8 +11,11 @@ from notebook.services.contents.tests.test_manager import TestContentsManager
 from notebook.notebookapp import NotebookApp
 import jupytext
 import parso
+import nbformat
 
-from ploomber.jupyter import PloomberContentsManager
+from ploomber.jupyter.manager import PloomberContentsManager
+from ploomber.jupyter.dag import JupyterDAGManager
+from ploomber.spec import DAGSpec
 
 
 class PloomberContentsManagerTestCase(TestContentsManager):
@@ -79,8 +82,7 @@ def test_injects_cell_if_file_in_dag(tmp_nbs):
 def test_injects_cell_even_if_pipeline_yaml_in_subdirectory(tmp_nbs):
     os.chdir('..')
     cm = PloomberContentsManager()
-    # use Path to handle windows and linux style paths
-    model = cm.get(str(Path('content/plot.py')))
+    model = cm.get(str('content/plot.py'))
     injected = get_injected_cell(model['content'])
     assert injected
 
@@ -249,3 +251,85 @@ def get_client():
     out, err = capsys.readouterr()
 
     assert 'Traceback' not in err
+
+
+def test_dag_manager(backup_spec_with_functions):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    m = JupyterDAGManager(dag)
+
+    assert set(m) == {
+        'my_tasks/raw/functions.py (functions)',
+        'my_tasks/raw/functions.py (functions)/raw',
+        'my_tasks/clean/functions.py (functions)',
+        'my_tasks/clean/functions.py (functions)/clean'
+    }
+
+    # TODO: test other methods
+
+
+def test_dag_manager_flat_structure(backup_spec_with_functions_flat):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    m = JupyterDAGManager(dag)
+
+    assert set(m) == {
+        'my_tasks_flat/raw.py (functions)',
+        'my_tasks_flat/raw.py (functions)/raw',
+        'my_tasks_flat/raw.py (functions)/raw2',
+        'my_tasks_flat/clean.py (functions)',
+        'my_tasks_flat/clean.py (functions)/clean',
+    }
+
+    assert 'my_tasks_flat/raw.py (functions)/' in m
+    assert '/my_tasks_flat/raw.py (functions)/' in m
+    assert '/my_tasks_flat/raw.py (functions)/' in m
+
+    # TODO: test other methods
+    # TODO: test folders are not created
+
+
+def test_jupyter_workflow_with_functions(backup_spec_with_functions):
+    """
+    Tests a typical workflow with a pieline where some tasks are functions
+    """
+    cm = PloomberContentsManager()
+
+    def get_names(out):
+        return {model['name'] for model in out['content']}
+
+    assert get_names(cm.get('')) == {'my_tasks', 'pipeline.yaml'}
+    assert get_names(cm.get('my_tasks')) == {'__init__.py', 'clean', 'raw'}
+
+    # check new notebooks appear, which are generated from the function tasks
+    assert get_names(cm.get('my_tasks/raw')) == {
+        '__init__.py',
+        'functions.py',
+        'functions.py (functions)',
+    }
+    assert get_names(cm.get('my_tasks/clean')) == {
+        '__init__.py',
+        'functions.py',
+        'functions.py (functions)',
+        'util.py',
+    }
+
+    # get notebooks generated from task functions
+    raw = cm.get('my_tasks/raw/functions.py (functions)/raw')
+    clean = cm.get('my_tasks/clean/functions.py (functions)/clean')
+
+    # add some new code
+    cell = nbformat.versions[nbformat.current_nbformat].new_code_cell('1 + 1')
+    raw['content']['cells'].append(cell)
+    clean['content']['cells'].append(cell)
+
+    # overwrite the original function
+    cm.save(raw, path='my_tasks/raw/functions.py (functions)/raw')
+    cm.save(clean, path='my_tasks/clean/functions.py (functions)/clean')
+
+    # make sure source code was updated
+    raw_source = (backup_spec_with_functions / 'my_tasks' / 'raw' /
+                  'functions.py').read_text()
+    clean_source = (backup_spec_with_functions / 'my_tasks' / 'clean' /
+                    'functions.py').read_text()
+
+    assert '1 + 1' in raw_source
+    assert '1 + 1' in clean_source

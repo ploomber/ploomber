@@ -25,8 +25,6 @@ have a few rules to automatically determine language and kernel given a
 script/notebook.
 """
 import ast
-from inspect import getargspec
-import tempfile
 from pathlib import Path
 from io import StringIO
 import warnings
@@ -39,6 +37,7 @@ from ploomber.exceptions import RenderError, SourceInitializationError
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources import Source
+from ploomber.sources.nb_utils import find_cell_with_tag
 from ploomber.static_analysis.extractors import extractor_class_for_language
 from ploomber.sources import docstring
 
@@ -578,7 +577,7 @@ def inject_cell(model, params):
     """
     nb = nbformat.from_dict(model['content'])
 
-    # we must ensure nb has kernelspec info, otherwise papermill willf fail to
+    # we must ensure nb has kernelspec info, otherwise papermill will fail to
     # parametrize
     ext = model['name'].split('.')[-1]
     ensure_kernelspec(nb, kernelspec_name=None, ext=ext, language=None)
@@ -604,18 +603,10 @@ def inject_cell(model, params):
                'preferences. It is temporary and will be removed when you '
                'save this notebook')
 
-    # a PR was merged to include this, but it hasn't been released yet,
-    # so we check here
-    # https://github.com/nteract/papermill/pull/521
-    if 'comment' in getargspec(parameterize_notebook).args:
-        kwargs = {'comment': comment}
-    else:
-        kwargs = {}
-
     model['content'] = parameterize_notebook(nb,
                                              params,
                                              report_mode=False,
-                                             **kwargs)
+                                             comment=comment)
 
 
 # FIXME: this is used in the task itself in the .develop() feature, maybe
@@ -681,20 +672,6 @@ def is_python(nb):
         is_python_ = False
 
     return is_python_
-
-
-def find_cell_with_tag(nb, tag):
-    """
-    Find a cell with a given tag, returns a cell, index tuple. Otherwise
-    (None, None)
-    """
-    for i, c in enumerate(nb['cells']):
-        cell_tags = c['metadata'].get('tags')
-        if cell_tags:
-            if tag in cell_tags:
-                return c, i
-
-    return None, None
 
 
 def determine_language(extension):

@@ -3,16 +3,10 @@ import re
 import sys
 from pathlib import Path
 
-from jinja2 import Environment, PackageLoader
 import click
 from ploomber import __version__
 from ploomber import cli as cli_module
-from ploomber.spec.DAGSpec import DAGSpec
-
-try:
-    import importlib.resources as resources
-except ImportError:
-    import importlib_resources as resources
+from ploomber import scaffold
 
 
 def _is_valid_name(package_name):
@@ -39,57 +33,7 @@ def new():
 def add():
     """Create source files tasks registered in pipeline.yaml
     """
-    _add()
-
-
-class FileLoader:
-    def __init__(self, directory, project_name=None):
-        self.env = Environment(loader=PackageLoader(
-            'ploomber', str(Path('resources', directory))),
-                               variable_start_string='[[',
-                               variable_end_string=']]',
-                               block_start_string='[%',
-                               block_end_string='%]')
-        self.directory = directory
-        self.project_name = project_name
-
-    def get_template(self, name):
-        return self.env.get_template(name)
-
-    def copy(self, name):
-        module = '.'.join(['ploomber', 'resources', self.directory])
-        content = resources.read_text(module, name)
-        Path(self.project_name, name).write_text(content)
-
-
-def _add():
-    spec, path = DAGSpec.auto_load(to_dag=False)
-    env = FileLoader('ploomber_add')
-
-    if path:
-        click.echo('Found spec at {}'.format(path))
-
-        for task in spec['tasks']:
-            source = Path(task['source'])
-
-            if not source.exists():
-                # create parent folders if needed
-                source.parent.mkdir(parents=True, exist_ok=True)
-
-                if source.suffix in {'.py', '.sql'}:
-                    click.echo('Adding {}...'.format(source))
-                    template = env.get_template('task' + source.suffix)
-                    content = template.render(**spec['meta'])
-                    source.write_text(content)
-
-                else:
-                    click.echo('Error: This command does not support adding '
-                               'tasks with extension "{}", valid ones are '
-                               '.py and .sql. Skipping {}'.format(
-                                   source.suffix, source))
-
-    else:
-        click.echo('Error: No pipeline.yaml spec found...')
+    scaffold.add()
 
 
 def _new():
@@ -109,7 +53,7 @@ def _new():
             click.echo('"%s" is not a valid project name, choose another.' %
                        name)
 
-    env = FileLoader('ploomber_new', project_name=name)
+    env = scaffold.ScaffoldLoader('ploomber_new', project_name=name)
 
     click.echo('Creating %s/' % name)
     Path(name).mkdir()
