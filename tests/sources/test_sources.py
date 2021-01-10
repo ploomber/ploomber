@@ -261,7 +261,7 @@ def test_python_callable_properties(path_to_test_pkg):
     assert source.doc == functions.simple_w_docstring.__doc__
     assert source.name == 'simple_w_docstring'
     assert file_ == functions.__file__
-    assert line == '21'
+    assert line == '23'
     assert PythonCallableSource.__name__ in repr(source)
     assert functions.simple_w_docstring.__name__ in repr(source)
     assert source.loc in repr(source)

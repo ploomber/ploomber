@@ -160,7 +160,7 @@ def test_editing_function(fn_name, switch_indent, tmp_file, backup_test_pkg):
         nbformat.write(nb, tmp_nb)
 
     reloaded = importlib.reload(functions)
-    getattr(reloaded, fn_name)(None, None, tmp_file)
+    getattr(reloaded, fn_name)({'some_task': None}, None, tmp_file)
     assert Path(tmp_file).read_text() == '2'
     assert not Path(tmp_nb).exists()
 
@@ -229,6 +229,7 @@ def test_move_function_down(backup_test_pkg):
     source_fn = inspect.getsource(functions.simple)
 
     assert source_fn == ('def simple(upstream, product, path):\n    '
+                         'up = upstream["some_task"]\n    '
                          'x = 2\n    Path(path).write_text(str(x))\n')
 
 
@@ -246,7 +247,8 @@ def test_function_replace(backup_test_pkg):
     _, idx = find_cell_tagged(nb, 'imports-local')
     fn_body = '\n'.join([c.source for c in nb.cells[idx + 1:]])
 
-    assert fn_body == 'x = 1\nPath(path).write_text(str(x))'
+    assert fn_body == ('up = upstream["some_task"]\n'
+                       'x = 1\nPath(path).write_text(str(x))')
 
 
 def test_signature_line_break(backup_test_pkg):
@@ -257,7 +259,7 @@ def test_signature_line_break(backup_test_pkg):
     path = Path(backup_test_pkg, 'functions.py')
     source = path.read_text()
     lines = source.splitlines()
-    lines[15] = 'def simple(upstream, product,\npath):'
+    lines[16] = 'def simple(upstream, product,\npath):'
     path.write_text('\n'.join(lines))
 
     dev.overwrite(nb)
@@ -267,7 +269,8 @@ def test_signature_line_break(backup_test_pkg):
     source_fn = inspect.getsource(functions.simple)
 
     assert source_fn == ('def simple(upstream, product,\npath):\n    '
-                         'x = 2\n    Path(path).write_text(str(x))\n')
+                         'up = upstream["some_task"]\n'
+                         '    x = 2\n    Path(path).write_text(str(x))\n')
 
 
 def test_empty_cells_at_the_end(backup_test_pkg):
@@ -499,6 +502,7 @@ def test_remove_upstream_modifies_signature(backup_spec_with_functions):
     params = dag['clean'].params.to_json_serializable()
 
     dev = CallableInteractiveDeveloper(fn, params)
+
     nb = dev.to_nb()
     # delete upstream reference
     del nb.cells[-2]
