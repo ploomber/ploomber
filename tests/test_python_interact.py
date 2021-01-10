@@ -495,6 +495,12 @@ def test_add_upstream_modifies_signature(backup_spec_with_functions):
 
 
 def test_remove_upstream_modifies_signature(backup_spec_with_functions):
+    # by the time we reach this test, my_tasks.raw.functions has alread been
+    # loaded (previous test), so we force reload to avoid wrongfully reading
+    # the modified source code in the raw task
+    from my_tasks.raw import functions
+    importlib.reload(functions)
+
     dag = DAGSpec('pipeline.yaml').to_dag()
     dag.render()
 
