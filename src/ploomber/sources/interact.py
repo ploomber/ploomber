@@ -49,6 +49,12 @@ from ploomber.static_analysis.python import PythonCallableExtractor
 # TODO: reloading the fn causes trobule if it enters into an inconsistent
 # state, e.g. a module that does not exist is saved, next time is realoaded,
 # it will fail because it has to import such module
+# TODO: if we remove upstream refernces from the functions body from jupyter
+# the parameter is deleted from the signature but on reload (dag.render())
+# signature validation fails bc it still loads the old signature, two options:
+# either force reload all modules from all pythoncallables, or re-implement
+# the signature check to get the signature using static analysis, not sure
+# which is best
 
 
 class CallableInteractiveDeveloper:
