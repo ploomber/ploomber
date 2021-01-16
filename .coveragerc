@@ -1,0 +1,3 @@
+[run]
+omit =
+    src/ploomber/resources/ploomber_add/*
