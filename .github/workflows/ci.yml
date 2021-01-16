@@ -70,6 +70,7 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
         pytest  --cov=ploomber
+        coveralls --output=coverage/lcov.info
 
     - name: Coveralls
       uses: coverallsapp/github-action@master
