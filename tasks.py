@@ -8,7 +8,7 @@ from invoke import task
 
 @task
 def db_credentials(c):
-    """
+    """Encode db credentials (for github actions)
     """
     path = str(Path('~', '.auth', 'postgres-ploomber.json').expanduser())
     creds = Path(path).read_text()
