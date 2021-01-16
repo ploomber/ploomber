@@ -69,7 +69,7 @@ def test_ploomber_scaffold_task_template(file_, extract_flag, tmp_directory):
                 'in your pipeline.yaml'.format(extract_flag) in content)
 
 
-def test_ploomber_add_unknown_extension(tmp_directory):
+def test_ploomber_scaffold_unknown_extension(tmp_directory):
     sample_spec = {
         'meta': {
             'extract_upstream': False,
@@ -95,7 +95,7 @@ def test_ploomber_add_unknown_extension(tmp_directory):
     assert out in result.output
 
 
-def test_ploomber_add_skip_if_file_exists(tmp_directory, capsys):
+def test_ploomber_scaffold_skip_if_file_exists(tmp_directory, capsys):
     sample_spec = {
         'meta': {
             'extract_upstream': False,
