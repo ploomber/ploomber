@@ -1,3 +1,9 @@
 [run]
+# note that we omit using a path to src/ploomber/ because the pkg gets installed
+# and then tests are executed (which causes ploomber to be inside the
+# site-packages folder), alternatively, we could install inplace using
+# pip install --editable but that's gonna make the testing process unable
+# to detect erros in the configuration package data configuration
 omit =
-    src/ploomber/resources/ploomber_add/*
+    # .py files here are task template, not actual source files
+    */resources/ploomber_add/*
