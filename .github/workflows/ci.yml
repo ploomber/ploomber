@@ -70,4 +70,8 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
         pytest  --cov=ploomber
-        coveralls
+
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
