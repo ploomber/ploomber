@@ -1,16 +1,13 @@
 import subprocess
-import os
 import importlib
 import sys
 from pathlib import Path
 from unittest.mock import Mock
 
-import click
 import jupytext
 import nbformat
 import pytest
-from ploomber.cli import (plot, build, parsers, task, report, cli, status,
-                          interact)
+from ploomber.cli import plot, build, parsers, task, report, status, interact
 from ploomber.tasks import notebook
 from ploomber import DAG
 import ploomber.dag.DAG as dag_module
