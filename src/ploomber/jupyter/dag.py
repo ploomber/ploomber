@@ -146,6 +146,7 @@ class JupyterDAGManager:
 
     def _get(self, path):
         path = path.strip('/')
+
         return self.resources.get(path)
 
     def get(self, path, content):
@@ -157,6 +158,11 @@ class JupyterDAGManager:
 
     def get_by_parent(self, parent):
         parent = parent.strip('/')
+
+        # jupyter represents the current folder with an empty string
+        if parent == '':
+            parent = '.'
+
         if parent in self.resources_by_root:
             return [m.to_model() for m in self.resources_by_root[parent]]
         else:

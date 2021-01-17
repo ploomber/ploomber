@@ -55,6 +55,33 @@ def fixture_tmp_dir(source):
     return decorator
 
 
+def fixture_backup(source):
+    """
+    Similar to fixture_tmp_dir but backups the content instead
+    """
+    def decorator(function):
+        @wraps(function)
+        def wrapper():
+            old = os.getcwd()
+            backup = tempfile.mkdtemp()
+            root = _path_to_tests() / 'assets' / source
+            shutil.copytree(str(root), str(Path(backup, source)))
+
+            os.chdir(root)
+
+            yield root
+
+            os.chdir(old)
+
+            shutil.rmtree(str(root))
+            shutil.copytree(str(Path(backup, source)), str(root))
+            shutil.rmtree(backup)
+
+        return pytest.fixture(wrapper)
+
+    return decorator
+
+
 @pytest.fixture(scope='session')
 def path_to_tests():
     return _path_to_tests()
@@ -82,40 +109,19 @@ def backup_test_pkg():
     shutil.rmtree(backup)
 
 
-@pytest.fixture
+@fixture_backup('spec-with-functions')
 def backup_spec_with_functions():
-    old = os.getcwd()
-    backup = tempfile.mkdtemp()
-    root = _path_to_tests() / 'assets' / 'spec-with-functions'
-    shutil.copytree(str(root), str(Path(backup, 'spec-with-functions')))
-
-    os.chdir(root)
-
-    yield root
-
-    os.chdir(old)
-
-    shutil.rmtree(str(root))
-    shutil.copytree(str(Path(backup, 'spec-with-functions')), str(root))
-    shutil.rmtree(backup)
+    pass
 
 
-@pytest.fixture
+@fixture_backup('spec-with-functions-flat')
 def backup_spec_with_functions_flat():
-    old = os.getcwd()
-    backup = tempfile.mkdtemp()
-    root = _path_to_tests() / 'assets' / 'spec-with-functions-flat'
-    shutil.copytree(str(root), str(Path(backup, 'spec-with-functions-flat')))
+    pass
 
-    os.chdir(root)
 
-    yield root
-
-    os.chdir(old)
-
-    shutil.rmtree(str(root))
-    shutil.copytree(str(Path(backup, 'spec-with-functions-flat')), str(root))
-    shutil.rmtree(backup)
+@fixture_backup('simple')
+def backup_simple():
+    pass
 
 
 @pytest.fixture()
