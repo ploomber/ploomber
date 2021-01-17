@@ -1,5 +1,6 @@
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.scaffold.ScaffoldLoader import ScaffoldLoader
+from ploomber.util.util import add_to_sys_path
 
 
 def add():
@@ -26,9 +27,13 @@ def add():
     if path_to_spec:
         print('Found spec at {}'.format(path_to_spec))
 
-        for task in spec['tasks']:
-            loader.create(source=task['source'],
-                          params=spec['meta'],
-                          class_=task['class'])
+        # make sure current working dir is in the path, otherwise we might not
+        # be able to import the PythonCallable functions, which we need to do
+        # to locate the modules
+        with add_to_sys_path(path_to_spec, chdir=False):
+            for task in spec['tasks']:
+                loader.create(source=task['source'],
+                              params=spec['meta'],
+                              class_=task['class'])
     else:
         print('Error: No pipeline.yaml spec found...')
