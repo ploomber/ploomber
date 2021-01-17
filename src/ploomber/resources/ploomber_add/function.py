@@ -11,9 +11,9 @@ def [[function_name]](product):
     # extract_upstream=False in your pipeline.yaml file, if this task has
     # dependencies, add an "upstream" parameter to the function and declare
     # them in the YAML spec and refence them here
-    [% endif %]
+    [% endif -%]
     [% if extract_product -%]
     # extract_product=True in your pipeline.yaml file, declare a "product"
     # variable inside this function
-    [% endif %]
+    [% endif -%]
     pass
