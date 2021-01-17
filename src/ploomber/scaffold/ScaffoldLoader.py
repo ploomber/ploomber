@@ -65,18 +65,14 @@ class ScaffoldLoader:
                 for element in module.body if hasattr(element, 'name')
             }
 
-            if fn_name in names:
-                print(f'An element named {fn_name!r} already exists '
-                      f'in module {source!s}, skipping...')
-            else:
+            if fn_name not in names:
+                print(f'Adding {fn_name!r} to module {source!s}...')
                 fn_str = self.render('function.py', params=params)
                 source.write_text(original + fn_str)
         else:
             path = Path(source)
 
-            if path.exists():
-                print(f'File {path!s} already exists, skipping...')
-            else:
+            if not path.exists():
                 if path.suffix in {'.py', '.sql', '.ipynb'}:
                     # create parent folders if needed
                     source.parent.mkdir(parents=True, exist_ok=True)
