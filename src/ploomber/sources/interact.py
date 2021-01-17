@@ -86,7 +86,7 @@ class CallableInteractiveDeveloper:
         # original source code was modified and the function is no longer in
         # the same position
         # NOTE: are there any  problems with this approach?
-        # we could also read the dile directly and use ast/parso to get the
+        # we could also read the file directly and use ast/parso to get the
         # function's information we need
         mod = importlib.reload(inspect.getmodule(self.fn))
         self.fn = getattr(mod, self.fn.__name__)
