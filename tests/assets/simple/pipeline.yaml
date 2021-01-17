@@ -1,0 +1,25 @@
+meta:
+  extract_upstream: True
+  extract_product: False
+  jupyter_hot_reload: True
+
+tasks:
+    # tasks.get, features and join are python functions
+  - source: tasks.get
+    product: output/get.parquet
+
+  - source: tasks.features
+    product: output/features.parquet
+  
+  - source: tasks.more_features
+    product: output/more_features.parquet
+
+  - source: tasks.join
+    product: output/join.parquet
+
+  # fit.py is a script executed as a notebook
+  - source: fit.py
+    name: fit
+    product:
+        nb: output/nb.html
+        model: output/model.pickle
