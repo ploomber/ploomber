@@ -12,9 +12,3 @@ tasks:
 
   - source: tasks_simple.join
     product: output/join.parquet
-
-  - source: fit.py
-    name: fit
-    product:
-        nb: output/nb.html
-        model: output/model.pickle

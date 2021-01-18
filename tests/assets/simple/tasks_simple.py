@@ -1,19 +1,15 @@
 from pathlib import Path
 import pandas as pd
-from sklearn import datasets
+import numpy as np
 
 
 def get(product):
     """Get data
     """
-    d = datasets.load_iris()
-
-    df = pd.DataFrame(d['data'])
-    df.columns = d['feature_names']
-    df['target'] = d['target']
+    df = pd.DataFrame(np.random.rand(100, 10))
+    df.columns = [str(i) for i in range(10)]
 
     Path(str(product)).parent.mkdir(exist_ok=True, parents=True)
-
     df.to_parquet(str(product))
 
 
@@ -21,8 +17,8 @@ def features(upstream, product):
     """Generate new features from existing columns
     """
     data = pd.read_parquet(str(upstream['get']))
-    ft = data['sepal length (cm)'] * data['sepal width (cm)']
-    df = pd.DataFrame({'sepal area (cm2)': ft, 'another': ft**2})
+    ft = data['1'] * data['2']
+    df = pd.DataFrame({'feature': ft, 'another': ft**2})
     df.to_parquet(str(product))
 
 
