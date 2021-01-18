@@ -367,8 +367,13 @@ class Meta:
     """Schema for meta section in pipeline.yaml
     """
     VALID = {
-        'extract_upstream', 'extract_product', 'product_default_class',
-        'product_relative_to_source', 'jupyter_hot_reload', 'source_loader'
+        'extract_upstream',
+        'extract_product',
+        'product_default_class',
+        'product_relative_to_source',
+        'jupyter_hot_reload',
+        'source_loader',
+        'jupyter_functions_as_notebooks',
     }
 
     @classmethod
@@ -400,6 +405,9 @@ class Meta:
 
         if 'jupyter_hot_reload' not in meta:
             meta['jupyter_hot_reload'] = False
+
+        if 'jupyter_functions_as_notebooks' not in meta:
+            meta['jupyter_functions_as_notebooks'] = False
 
         if 'source_loader' not in meta:
             meta['source_loader'] = None

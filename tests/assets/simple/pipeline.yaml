@@ -1,0 +1,14 @@
+meta:
+  extract_upstream: True
+  extract_product: False
+  jupyter_hot_reload: True
+
+tasks:
+  - source: tasks_simple.get
+    product: output/get.parquet
+
+  - source: tasks_simple.features
+    product: output/features.parquet
+
+  - source: tasks_simple.join
+    product: output/join.parquet

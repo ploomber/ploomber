@@ -15,7 +15,9 @@ import papermill as pm
 from ploomber.sources.interact import (CallableInteractiveDeveloper,
                                        function_to_nb,
                                        body_elements_from_source,
-                                       extract_imports, extract_imports_top)
+                                       extract_imports, extract_imports_top,
+                                       upstream_in_func_signature,
+                                       add_upstream_to_func_signature)
 from ploomber.sources import interact
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.util import chdir_code
@@ -158,7 +160,7 @@ def test_editing_function(fn_name, switch_indent, tmp_file, backup_test_pkg):
         nbformat.write(nb, tmp_nb)
 
     reloaded = importlib.reload(functions)
-    getattr(reloaded, fn_name)(None, None, tmp_file)
+    getattr(reloaded, fn_name)({'some_task': None}, None, tmp_file)
     assert Path(tmp_file).read_text() == '2'
     assert not Path(tmp_nb).exists()
 
@@ -227,6 +229,7 @@ def test_move_function_down(backup_test_pkg):
     source_fn = inspect.getsource(functions.simple)
 
     assert source_fn == ('def simple(upstream, product, path):\n    '
+                         'up = upstream["some_task"]\n    '
                          'x = 2\n    Path(path).write_text(str(x))\n')
 
 
@@ -244,7 +247,8 @@ def test_function_replace(backup_test_pkg):
     _, idx = find_cell_tagged(nb, 'imports-local')
     fn_body = '\n'.join([c.source for c in nb.cells[idx + 1:]])
 
-    assert fn_body == 'x = 1\nPath(path).write_text(str(x))'
+    assert fn_body == ('up = upstream["some_task"]\n'
+                       'x = 1\nPath(path).write_text(str(x))')
 
 
 def test_signature_line_break(backup_test_pkg):
@@ -255,7 +259,7 @@ def test_signature_line_break(backup_test_pkg):
     path = Path(backup_test_pkg, 'functions.py')
     source = path.read_text()
     lines = source.splitlines()
-    lines[15] = 'def simple(upstream, product,\npath):'
+    lines[16] = 'def simple(upstream, product,\npath):'
     path.write_text('\n'.join(lines))
 
     dev.overwrite(nb)
@@ -265,7 +269,8 @@ def test_signature_line_break(backup_test_pkg):
     source_fn = inspect.getsource(functions.simple)
 
     assert source_fn == ('def simple(upstream, product,\npath):\n    '
-                         'x = 2\n    Path(path).write_text(str(x))\n')
+                         'up = upstream["some_task"]\n'
+                         '    x = 2\n    Path(path).write_text(str(x))\n')
 
 
 def test_empty_cells_at_the_end(backup_test_pkg):
@@ -455,3 +460,83 @@ def test_extract_imports_top(source, imports_top_expected, line_expected):
 
     assert imports_top == imports_top_expected
     assert line == line_expected
+
+
+def test_add_upstream_modifies_signature(backup_spec_with_functions):
+    dag = DAGSpec('pipeline.yaml').to_dag()
+    dag.render()
+
+    fn = dag['raw'].source.primitive
+    params = dag['raw'].params.to_json_serializable()
+
+    dev = CallableInteractiveDeveloper(fn, params)
+
+    # add an upstream reference...
+    nb = dev.to_nb()
+    nb.cells[-1]['source'] += '\nupstream["some_task"]'
+    dev.overwrite(nb)
+
+    # source must be updated...
+    source = Path('my_tasks', 'raw', 'functions.py').read_text()
+    top_lines = '\n'.join(source.splitlines()[:5])
+
+    expected = (
+        'from pathlib import Path\n\n\n'
+        'def function(product, upstream):\n    Path(str(product)).touch()')
+    assert expected == top_lines
+
+    # if we save again, nothing should change
+    dev.overwrite(nb)
+
+    source = Path('my_tasks', 'raw', 'functions.py').read_text()
+    top_lines = '\n'.join(source.splitlines()[:5])
+
+    assert expected == top_lines
+
+
+def test_remove_upstream_modifies_signature(backup_spec_with_functions):
+    # by the time we reach this test, my_tasks.raw.functions has alread been
+    # loaded (previous test), so we force reload to avoid wrongfully reading
+    # the modified source code in the raw task
+    from my_tasks.raw import functions
+    importlib.reload(functions)
+
+    dag = DAGSpec('pipeline.yaml').to_dag()
+    dag.render()
+
+    fn = dag['clean'].source.primitive
+    params = dag['clean'].params.to_json_serializable()
+
+    dev = CallableInteractiveDeveloper(fn, params)
+
+    nb = dev.to_nb()
+    # delete upstream reference
+    del nb.cells[-2]
+    dev.overwrite(nb)
+
+    source = Path('my_tasks', 'clean', 'functions.py').read_text()
+    top_lines = '\n'.join(source.splitlines()[:5])
+
+    expected = ('# adding this to make sure relative imports work '
+                'fine\nfrom .util import util_touch\n\n\n'
+                'def function(product):')
+
+    assert top_lines == expected
+
+
+@pytest.mark.parametrize('source, expected', [
+    ['def x():\n    pass', False],
+    ['def y(a, b):\n    pass', False],
+    ['def z(a, b, upstream):\n    pass', True],
+    ['def z(upstream, a, b):\n    pass', True],
+])
+def test_upstream_in_func_signature(source, expected):
+    assert upstream_in_func_signature(source) == expected
+
+
+@pytest.mark.parametrize('source, expected', [
+    ['def x():\n    z = 1', 'def x(upstream):\n    z = 1'],
+    ['def y(a, b):\n    pass', 'def y(a, b, upstream):\n    pass'],
+])
+def test_add_upstream_to_func_signature(source, expected):
+    assert add_upstream_to_func_signature(source) == expected

@@ -42,6 +42,9 @@ contains several ``pipeline.yaml`` examples.
         # large pipelines
         jupyter_hot_reload: False
 
+        # Show tasks, whose source is a function, as notebooks in jupyter
+        jupyter_functions_as_notebooks: False
+
 
     # DAG configuration
     config:

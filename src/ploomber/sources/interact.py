@@ -43,11 +43,18 @@ import nbformat
 
 from ploomber.util import chdir_code
 from ploomber.sources.nb_utils import find_cell_with_tag
+from ploomber.static_analysis.python import PythonCallableExtractor
 
 # TODO: test for locally defined objects
 # TODO: reloading the fn causes trobule if it enters into an inconsistent
 # state, e.g. a module that does not exist is saved, next time is realoaded,
 # it will fail because it has to import such module
+# TODO: if we remove upstream refernces from the functions body from jupyter
+# the parameter is deleted from the signature but on reload (dag.render())
+# signature validation fails bc it still loads the old signature, two options:
+# either force reload all modules from all pythoncallables, or re-implement
+# the signature check to get the signature using static analysis, not sure
+# which is best
 
 
 class CallableInteractiveDeveloper:
@@ -79,7 +86,7 @@ class CallableInteractiveDeveloper:
         # original source code was modified and the function is no longer in
         # the same position
         # NOTE: are there any  problems with this approach?
-        # we could also read the dile directly and use ast/parso to get the
+        # we could also read the file directly and use ast/parso to get the
         # function's information we need
         mod = importlib.reload(inspect.getmodule(self.fn))
         self.fn = getattr(mod, self.fn.__name__)
@@ -124,6 +131,7 @@ class CallableInteractiveDeveloper:
         content_lines = content.splitlines()
         trailing_newline = content[-1] == '\n'
 
+        # an upstream parameter
         fn_starts, fn_ends = function_lines(self.fn)
 
         # keep the file the same until you reach the function definition plus
@@ -158,6 +166,26 @@ class CallableInteractiveDeveloper:
         # if the original file had a trailing newline, keep it
         if trailing_newline:
             content_to_write += '\n'
+
+        # NOTE: this last part parses the code several times, we can improve
+        # performance by only parsing once
+        m = parso.parse(content_to_write)
+        fn_def = find_function_with_name(m, self.fn.__name__)
+        fn_code = fn_def.get_code()
+
+        has_upstream_dependencies = PythonCallableExtractor(
+            fn_code).extract_upstream()
+        upstream_in_func_sig = upstream_in_func_signature(fn_code)
+
+        if not upstream_in_func_sig and has_upstream_dependencies:
+            fn_code_new = add_upstream_to_func_signature(fn_code)
+            content_to_write = _replace_fn_source(content_to_write, fn_def,
+                                                  fn_code_new)
+
+        elif upstream_in_func_sig and not has_upstream_dependencies:
+            fn_code_new = remove_upstream_to_func_signature(fn_code)
+            content_to_write = _replace_fn_source(content_to_write, fn_def,
+                                                  fn_code_new)
 
         self.path_to_source.write_text(content_to_write)
 
@@ -450,3 +478,66 @@ def split_statement(statement):
 def indentation_idx(line):
     idx = len(line) - len(line.lstrip())
     return idx
+
+
+def upstream_in_func_signature(source):
+    _, params = _get_func_def_and_params(source)
+    return 'upstream' in set(p.name.get_code().strip() for p in params
+                             if p.type == 'param')
+
+
+def add_upstream_to_func_signature(source):
+    fn, params = _get_func_def_and_params(source)
+    # add a "," if there is at least one param
+    params.insert(-1, ', upstream' if len(params) > 2 else 'upstream')
+    signature = try_get_code(params)
+    fn.children[2] = signature
+    # delete leading newline code, to avoid duplicating it
+    return try_get_code(fn.children).lstrip('\n')
+
+
+def remove_upstream_to_func_signature(source):
+    fn, params = _get_func_def_and_params(source)
+    params_names = (p.get_code().strip(', ') for p in params[1:-1])
+    params_list = ', '.join(p for p in params_names if p != 'upstream')
+    signature = f'({params_list})'
+    fn.children[2] = signature
+    # delete leading newline code, to avoid duplicating it
+    return try_get_code(fn.children).lstrip('\n')
+
+
+def _get_func_def_and_params(source):
+    fn = parso.parse(source).children[0]
+
+    if fn.type != 'funcdef':
+        raise ValueError('Expected first element from parse source'
+                         f' code to be "funcdef", got {fn.type!r}')
+
+    return fn, fn.children[2].children
+
+
+def _replace_fn_source(content_to_write, fn_def, fn_code_new):
+    line_from, line_to = fn_def.start_pos[0], fn_def.end_pos[0]
+    lines = content_to_write.splitlines()
+    lines_new = (lines[:line_from - 1] + [fn_code_new] + lines[line_to - 1:])
+    return '\n'.join(lines_new)
+
+
+def try_get_code(elements):
+    code = []
+
+    for p in elements:
+        try:
+            s = p.get_code()
+        except AttributeError:
+            s = p
+
+        code.append(s)
+
+    return ''.join(code)
+
+
+def find_function_with_name(module, fn_name):
+    for fn_def in module.iter_funcdefs():
+        if fn_def.name.get_code().strip() == fn_name:
+            return fn_def

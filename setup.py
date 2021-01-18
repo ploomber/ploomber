@@ -75,7 +75,8 @@ TESTING = [
     'pytest',
     'pytest-cov',
     # TODO: add pytest-flake8
-    'coveralls',
+    # TODO: update config so coveralls 3 works
+    'coveralls<3',
     # we need this because we are re-using the original jupyter test suite for
     # testing our contents manager (which imports nose), see test_jupyter.py
     'nose',
@@ -137,6 +138,7 @@ setup(
         # eg: 'keyword1', 'keyword2', 'keyword3',
     ],
     install_requires=[
+        'ploomber-scaffold',
         'pyyaml',
         'networkx',
         'jinja2',

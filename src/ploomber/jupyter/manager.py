@@ -1,6 +1,7 @@
 """
 Module for the jupyter extension
 """
+import sys
 import datetime
 import os
 import contextlib
@@ -70,6 +71,7 @@ class PloomberContentsManager(TextFileContentsManager):
 
     def load_dag(self, starting_dir=None):
         if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
+
             self.log.info('[Ploomber] Loading dag...')
 
             msg = ('[Ploomber] An error occured when trying to initialize '
@@ -93,6 +95,19 @@ class PloomberContentsManager(TextFileContentsManager):
                 self.log.exception(msg)
             else:
                 if self.dag is not None:
+                    current = os.getcwd()
+
+                    if self.spec['meta'][
+                            'jupyter_hot_reload'] and current not in sys.path:
+                        # jupyter does not add the current working dir by
+                        # default, if using hot reload and the dag loads
+                        # functions from local files, importlib.reload will
+                        # fail
+                        # NOTE: might be better to only add this when the dag
+                        # is actually loading from local files but that means
+                        # we have to run some logic and increases load_dag
+                        # running time, which we need to be fast
+                        sys.path.append(current)
 
                     base_path = Path(self.path).resolve()
 
@@ -101,7 +116,10 @@ class PloomberContentsManager(TextFileContentsManager):
                         # rendering up
                         self.dag.render(force=True)
 
-                    self.manager = JupyterDAGManager(self.dag)
+                    if self.spec['meta']['jupyter_functions_as_notebooks']:
+                        self.manager = JupyterDAGManager(self.dag)
+                    else:
+                        self.manager = None
 
                     tuples = [(resolve_path(base_path, t.source.loc), t)
                               for t in self.dag.values()
@@ -169,7 +187,8 @@ class PloomberContentsManager(TextFileContentsManager):
                                                          type=type,
                                                          format=format)
 
-        # check if there are task functions defined here
+        # user requested directory listing, check if there are task functions
+        # defined here
         if model['type'] == 'directory' and self.manager:
             if model['content']:
                 model['content'].extend(self.manager.get_by_parent(path))

@@ -1,24 +1,21 @@
 import subprocess
-import os
 import importlib
 import sys
 from pathlib import Path
 from unittest.mock import Mock
 
-import click
 import jupytext
 import nbformat
 import pytest
-from ploomber.cli import (plot, build, parsers, task, report, cli, status,
-                          interact)
+from ploomber.cli import plot, build, parsers, task, report, status, interact
 from ploomber.tasks import notebook
 from ploomber import DAG
 import ploomber.dag.DAG as dag_module
 
 
 @pytest.mark.parametrize('cmd', [
-    None, 'add', 'build', 'interact', 'new', 'plot', 'report', 'status',
-    'task', 'interact'
+    None, 'scaffold', 'build', 'interact', 'plot', 'report', 'status', 'task',
+    'interact'
 ])
 def test_help_commands(cmd):
 
@@ -316,38 +313,23 @@ def test_parse_doc_if_missing_numpydoc(docstring, expected_summary,
     })
 
 
-@pytest.mark.parametrize('custom', [[], ['--partially', 'plot']])
-def test_run_spec(custom, monkeypatch, tmp_directory):
-    monkeypatch.setattr(click, 'confirm', lambda text: False)
-    monkeypatch.setattr(click, 'prompt', lambda text, type: 'my-project')
-    cli._new()
-    os.chdir('my-project')
-    args = ['python', '--entry-point', 'pipeline.yaml'] + custom
+@pytest.mark.parametrize('args', [[], ['--partially', 'plot']])
+def test_build_command(args, tmp_nbs, monkeypatch):
+    args = ['python', '--entry-point', 'pipeline.yaml'] + args
     monkeypatch.setattr(sys, 'argv', args)
     build.main()
 
 
 @pytest.mark.parametrize(
-    'custom', [[], ['--source'], ['--source', '--build'], ['--force'],
-               ['--force', '--build'], ['--status'], ['--status', '--build']])
-def test_task(custom, monkeypatch, tmp_directory):
-    monkeypatch.setattr(click, 'confirm', lambda text: False)
-    monkeypatch.setattr(click, 'prompt', lambda text, type: 'my-project')
-    cli._new()
-    os.chdir('my-project')
-
-    args = ['task', '--entry-point', 'pipeline.yaml', 'raw'] + custom
+    'args', [[], ['--source'], ['--source', '--build'], ['--force'],
+             ['--force', '--build'], ['--status'], ['--status', '--build']])
+def test_task_command(args, tmp_nbs, monkeypatch):
+    args = ['task', '--entry-point', 'pipeline.yaml', 'load'] + args
     monkeypatch.setattr(sys, 'argv', args)
     task.main()
 
 
-def test_run_spec_replace_value(monkeypatch, tmp_directory):
-    monkeypatch.setattr(click, 'confirm', lambda text: False)
-    monkeypatch.setattr(click, 'prompt', lambda text, type: 'my-project')
-    cli._new()
-    os.chdir('my-project')
-    Path('env.yaml').write_text('sample: false')
-
+def test_build_with_replaced_env_value(tmp_nbs, monkeypatch):
     monkeypatch.setattr(
         sys, 'argv',
         ['python', '--entry-point', 'pipeline.yaml', '--env--sample', 'True'])

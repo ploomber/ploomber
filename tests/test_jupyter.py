@@ -287,6 +287,18 @@ def test_dag_manager_flat_structure(backup_spec_with_functions_flat):
     # TODO: test folders are not created
 
 
+def test_dag_manager_root_folder(backup_simple):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    m = JupyterDAGManager(dag)
+    # jupyter represents the root folder with the empty string '', make sure
+    # that correctly retuns the appropriate models
+    content = m.get_by_parent('')
+
+    assert len(content) == 1
+    assert content[0]['name'] == 'tasks_simple.py (functions)'
+    assert content[0]['type'] == 'directory'
+
+
 def test_jupyter_workflow_with_functions(backup_spec_with_functions):
     """
     Tests a typical workflow with a pieline where some tasks are functions
@@ -333,3 +345,33 @@ def test_jupyter_workflow_with_functions(backup_spec_with_functions):
 
     assert '1 + 1' in raw_source
     assert '1 + 1' in clean_source
+
+
+def test_disable_functions_as_notebooks(backup_spec_with_functions):
+    """
+    Tests a typical workflow with a pieline where some tasks are functions
+    """
+    with open('pipeline.yaml') as f:
+        spec = yaml.safe_load(f)
+
+    spec['meta']['jupyter_functions_as_notebooks'] = False
+    Path('pipeline.yaml').write_text(yaml.dump(spec))
+
+    cm = PloomberContentsManager()
+
+    def get_names(out):
+        return {model['name'] for model in out['content']}
+
+    assert get_names(cm.get('')) == {'my_tasks', 'pipeline.yaml'}
+    assert get_names(cm.get('my_tasks')) == {'__init__.py', 'clean', 'raw'}
+
+    # check new notebooks appear, which are generated from the function tasks
+    assert get_names(cm.get('my_tasks/raw')) == {
+        '__init__.py',
+        'functions.py',
+    }
+    assert get_names(cm.get('my_tasks/clean')) == {
+        '__init__.py',
+        'functions.py',
+        'util.py',
+    }

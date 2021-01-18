@@ -83,6 +83,7 @@ def touch(product):
 
 
 def touch_with_upstream(upstream, product, param):
+    _ = upstream['without_dependencies']
     Path(str(product)).touch()
 
 
