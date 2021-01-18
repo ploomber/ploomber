@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.8.7dev
---------
+0.9 (2021-01-18)
+----------------
 * Deprecates ``ploomber new`` and ``ploomber add``
 * Adds ``ploomber scaffold``
 * Jupyter plugin now exports functions as notebooks using ``jupyter_functions_as_notebooks`` in ``pipeline.yaml``
