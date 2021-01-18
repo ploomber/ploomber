@@ -116,7 +116,10 @@ class PloomberContentsManager(TextFileContentsManager):
                         # rendering up
                         self.dag.render(force=True)
 
-                    self.manager = JupyterDAGManager(self.dag)
+                    if self.spec['meta']['jupyter_functions_as_notebooks']:
+                        self.manager = JupyterDAGManager(self.dag)
+                    else:
+                        self.manager = None
 
                     tuples = [(resolve_path(base_path, t.source.loc), t)
                               for t in self.dag.values()

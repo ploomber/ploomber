@@ -367,8 +367,13 @@ class Meta:
     """Schema for meta section in pipeline.yaml
     """
     VALID = {
-        'extract_upstream', 'extract_product', 'product_default_class',
-        'product_relative_to_source', 'jupyter_hot_reload', 'source_loader'
+        'extract_upstream',
+        'extract_product',
+        'product_default_class',
+        'product_relative_to_source',
+        'jupyter_hot_reload',
+        'source_loader',
+        'jupyter_functions_as_notebooks',
     }
 
     @classmethod
