@@ -401,6 +401,9 @@ class Meta:
         if 'jupyter_hot_reload' not in meta:
             meta['jupyter_hot_reload'] = False
 
+        if 'jupyter_functions_as_notebooks' not in meta:
+            meta['jupyter_functions_as_notebooks'] = False
+
         if 'source_loader' not in meta:
             meta['source_loader'] = None
         else:
