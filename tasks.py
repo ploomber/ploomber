@@ -4,6 +4,7 @@ Setup tasks (requires invoke: pip install invoke)
 from pathlib import Path
 import base64
 from invoke import task
+import versioneer
 
 
 @task
@@ -46,3 +47,10 @@ def setup(c, doc=False, version=None):
             )
 
     print(f'Done! Activate your environment with:\nconda activate {env_name}')
+
+
+@task
+def new(c):
+    """Release a new version
+    """
+    versioneer.release(project_root='.', tag=True)
