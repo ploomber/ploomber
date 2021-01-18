@@ -196,7 +196,7 @@ def make_header(content, path, add_date=False):
     if path.suffix == '.md':
         return f'## {content}'
     elif path.suffix == '.rst':
-        return f'{content}' + '-' * len(content)
+        return f'{content}\n' + '-' * len(content)
     else:
         raise ValueError('Unsupported format, must be .rst or .md')
 
