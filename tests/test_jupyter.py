@@ -295,7 +295,7 @@ def test_dag_manager_root_folder(backup_simple):
     content = m.get_by_parent('')
 
     assert len(content) == 1
-    assert content[0]['name'] == 'tasks.py (functions)'
+    assert content[0]['name'] == 'tasks_simple.py (functions)'
     assert content[0]['type'] == 'directory'
 
 

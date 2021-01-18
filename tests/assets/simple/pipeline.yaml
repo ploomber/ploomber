@@ -4,20 +4,15 @@ meta:
   jupyter_hot_reload: True
 
 tasks:
-    # tasks.get, features and join are python functions
-  - source: tasks.get
+  - source: tasks_simple.get
     product: output/get.parquet
 
-  - source: tasks.features
+  - source: tasks_simple.features
     product: output/features.parquet
-  
-  - source: tasks.more_features
-    product: output/more_features.parquet
 
-  - source: tasks.join
+  - source: tasks_simple.join
     product: output/join.parquet
 
-  # fit.py is a script executed as a notebook
   - source: fit.py
     name: fit
     product:

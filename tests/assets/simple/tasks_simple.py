@@ -31,15 +31,5 @@ def join(upstream, product):
     """
     a = pd.read_parquet(str(upstream['get']))
     b = pd.read_parquet(str(upstream['features']))
-    c = pd.read_parquet(str(upstream['more_features']))
-    df = a.join(b).join(c)
+    df = a.join(b)
     df.to_parquet(str(product))
-
-
-def more_features(product, upstream):
-    """Add description here
-    """
-    data = pd.read_parquet(str(upstream['get']))
-    sepal_l_plus_w = data['sepal length (cm)'] + data['sepal width (cm)']
-    out = pd.DataFrame({'sepal length + width': sepal_l_plus_w})
-    out.to_parquet(str(product))
