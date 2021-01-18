@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.9.1dev
+--------
+
 0.9 (2021-01-18)
 ----------------
 * Deprecates ``ploomber new`` and ``ploomber add``
