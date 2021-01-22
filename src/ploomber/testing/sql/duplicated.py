@@ -106,9 +106,9 @@ def assert_no_duplicates_in_column(client,
             n_rows, n_unique, n_duplicates = duplicates_stats(
                 client, col, product)
 
-            msg += (
-                f'\n\n# rows: {n_rows}\n'
-                f'# unique values: {n_unique}\n# duplicates: {n_duplicates}')
+            msg += (f'\n\nNumber of rows: {n_rows:,}\n'
+                    f'Number of unique values: {n_unique:,}\n'
+                    f'Number of duplicates: {n_duplicates:,}')
 
         raise AssertionError(msg)
 
