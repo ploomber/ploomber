@@ -89,6 +89,7 @@ def assert_no_duplicates_in_column(client,
         FROM {{product}} AS t
         JOIN duplicated
         USING ({{cols}})
+        ORDER BY {{cols}}
         """).render(sql=sql, product=product, cols=cols)
 
         cur = client.connection.cursor()
