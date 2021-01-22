@@ -51,6 +51,34 @@ def test_can_check_duplicates(tmp_directory):
                                                 'another_table')
 
 
+@pytest.mark.parametrize('stats', [False, True])
+def test_assert_no_duplicates_in_column(tmp_directory, stats):
+    client = SQLAlchemyClient('sqlite:///' + str(Path(tmp_directory, 'db.db')))
+
+    df = pd.DataFrame({'a': [1, 1], 'b': [1, 2]})
+    df.to_sql('my_table', client.engine)
+
+    with pytest.raises(AssertionError):
+        testing.sql.assert_no_duplicates_in_column(client,
+                                                   'a',
+                                                   'my_table',
+                                                   stats=stats)
+
+
+def test_duplicates_stats(tmp_directory):
+    client = SQLAlchemyClient('sqlite:///' + str(Path(tmp_directory, 'db.db')))
+
+    df = pd.DataFrame({'a': [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1]})
+    df.to_sql('my_table', client.engine)
+
+    n_rows, n_unique, n_duplicates = (testing.sql.duplicates_stats(
+        client, 'a', 'my_table'))
+
+    assert n_rows == 11
+    assert n_unique == 5
+    assert n_duplicates == 6
+
+
 def test_can_check_range(tmp_directory):
     client = SQLAlchemyClient('sqlite:///' + str(Path(tmp_directory, 'db.db')))
 
