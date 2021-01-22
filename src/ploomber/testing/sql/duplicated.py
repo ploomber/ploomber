@@ -12,7 +12,7 @@ def _duplicates_query(col, product):
     cols = ','.join(_make_iterable(col))
 
     return Template("""
-    SELECT {{cols}}, COUNT(*) - 1 'number of duplicates'
+    SELECT {{cols}}, COUNT(*) - 1 AS n_duplicates
     FROM {{product}}
     GROUP BY {{cols}}
     HAVING COUNT(*) > 1
@@ -142,7 +142,7 @@ def duplicates_stats(client, col: Union[str, List[str]], product):
         WITH duplicated AS (
             {{sql}}
         )
-        SELECT SUM("number of duplicates") FROM duplicated
+        SELECT SUM(n_duplicates) FROM duplicated
         """).render(sql=_duplicates_query(col, product),
                     product=product,
                     cols=cols)
