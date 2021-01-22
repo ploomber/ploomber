@@ -12,7 +12,7 @@ def _duplicates_query(col, product):
     cols = ','.join(_make_iterable(col))
 
     return Template("""
-    SELECT {{cols}}, COUNT(*) - 1 AS 'number of duplicates'
+    SELECT {{cols}}, COUNT(*) - 1 'number of duplicates'
     FROM {{product}}
     GROUP BY {{cols}}
     HAVING COUNT(*) > 1
