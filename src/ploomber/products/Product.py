@@ -242,3 +242,12 @@ class Product(abc.ABC):
         raise NotImplementedError(
             '_delete_metadata not implemented in {}'.format(
                 type(self).__name__))
+
+    # download and upload are only relevant for File but we add them to keep
+    # the API consistent
+
+    def download(self):
+        pass
+
+    def upload(self):
+        pass
