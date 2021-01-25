@@ -181,8 +181,9 @@ def test_upload_after_task_build(tmp_directory):
 
 # TODO: test with dag.build, make sure upload is called with all executors as they are responsible for saving metadata, and right after, to call upload
 
-# TODO: test download when remote does not exist (should not attempt to download)
+# TODO: test download when remote copy does not exist (should not attempt to download)
 
 # TODO: when upload fails, task should fail as well
 # TODO: when download fails, task should fail as well
 # TODO: test ith dag.build. should not call upload when task is skipped
+# TODO: test MetaProduct implementation upload,download

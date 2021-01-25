@@ -1,3 +1,4 @@
+from unittest.mock import Mock
 from pathlib import Path
 
 from ploomber import DAG
@@ -71,3 +72,23 @@ def test_can_create_task_with_more_than_one_product(tmp_directory):
     assert fb.exists()
     assert fc.exists()
     assert fd.exists()
+
+
+def test_download():
+    p1, p2 = Mock(), Mock()
+    m = MetaProduct({'a': p1, 'b': p2})
+
+    m.download()
+
+    p1.download.assert_called_once_with()
+    p2.download.assert_called_once_with()
+
+
+def test_upload():
+    p1, p2 = Mock(), Mock()
+    m = MetaProduct({'a': p1, 'b': p2})
+
+    m.upload()
+
+    p1.upload.assert_called_once_with()
+    p2.upload.assert_called_once_with()
