@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from ploomber.exceptions import CallbackSignatureError, TaskRenderError
 
 
-def requires(pkgs, name=None, extra_msg=None):
+def requires(pkgs, name=None, extra_msg=None, pip_names=None):
     """
     Check if packages were imported, raise ImportError with an appropriate
     message for missing ones
@@ -31,22 +31,35 @@ def requires(pkgs, name=None, extra_msg=None):
 
     extra_msg
         Append this extra message to the end
+
+    pip_names
+        Pip package names to show in the suggested "pip install {name}"
+        command, use it if different to the package name itself
+
     """
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            missing = [
-                pkg for pkg in pkgs if importlib.util.find_spec(pkg) is None
+            is_pkg_missing = [
+                importlib.util.find_spec(pkg) is None for pkg in pkgs
             ]
 
-            if missing:
-                msg = reduce(lambda x, y: x + ' ' + y, missing)
+            if any(is_pkg_missing):
+                missing_pkgs = [
+                    name for name, is_missing in zip(
+                        pip_names or pkgs, is_pkg_missing) if is_missing
+                ]
+                names_str = reduce(lambda x, y: x + ' ' + y, missing_pkgs)
+
                 fn_name = name or f.__name__
                 error_msg = ('{} {} required to use {}. Install {} by '
                              'running "pip install {}"'.format(
-                                 msg, 'is' if len(missing) == 1 else 'are',
+                                 names_str,
+                                 'is' if len(missing_pkgs) == 1 else 'are',
                                  fn_name,
-                                 'it' if len(missing) == 1 else 'them', msg))
+                                 'it' if len(missing_pkgs) == 1 else 'them',
+                                 names_str,
+                             ))
 
                 if extra_msg:
                     error_msg += ('. ' + extra_msg)
