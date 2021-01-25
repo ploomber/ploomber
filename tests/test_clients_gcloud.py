@@ -1,3 +1,4 @@
+import pickle
 from unittest.mock import Mock
 from pathlib import Path, PurePosixPath
 
@@ -60,3 +61,11 @@ def test_download(monkeypatch, parent):
 
     mock.assert_called_once_with('file.txt',
                                  str(PurePosixPath(parent, 'file.txt')))
+
+
+def test_pickle():
+    pickle.dumps(GCloudStorageClient('my-bucket-name', parent=''))
+
+
+def test_close():
+    GCloudStorageClient('my-bucket-name', parent='').close()
