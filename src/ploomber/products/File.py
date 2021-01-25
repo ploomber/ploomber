@@ -118,11 +118,21 @@ class File(Product):
         return self._client
 
     def download(self):
-        if self.client is not None:
-            self.client.download(str(self.__path_to_metadata))
-            self.client.download(str(self.__path_to_file))
+        if (self.client is not None and not self.__path_to_metadata.exists()
+                and not self.__path_to_file.exists()):
+            self.logger.info('Downloading %s...', self.__path_to_file)
+            metadata = str(self.__path_to_metadata)
+            file_ = str(str(self.__path_to_file))
+
+            if self.client._remote_exists(
+                    metadata) and self.client._remote_exists(file_):
+                self.client.download(metadata)
+                self.client.download(file_)
 
     def upload(self):
-        if self.client is not None:
+        # only upload when we have complete info (product + metadata)
+        if (self.client is not None and self.__path_to_metadata.exists()
+                and self.__path_to_file.exists()):
+            self.logger.info('Uploading %s...', self.__path_to_file)
             self.client.upload(str(self.__path_to_metadata))
             self.client.upload(str(self.__path_to_file))
