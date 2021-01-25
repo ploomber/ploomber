@@ -72,6 +72,8 @@ TESTING = [
     'boto3',
     # testing uplaod to S3 task
     'moto',
+    # Upload to google cloud storage
+    'google-cloud-storage',
     'pytest',
     'pytest-cov',
     # TODO: add pytest-flake8
