@@ -1,5 +1,5 @@
 from unittest.mock import Mock
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 
@@ -14,11 +14,11 @@ def mock_client(monkeypatch):
     return mock_client
 
 
-def test_upload(tmp_directory, mock_client):
+def test_underscore_upload(tmp_directory, mock_client):
     Path('source.txt').touch()
-    client = GCloudStorageClient('my-bucket-name')
+    client = GCloudStorageClient('my-bucket-name', parent='')
 
-    client.upload('source.txt', 'destiny.txt')
+    client._upload('source.txt', 'destiny.txt')
 
     mock_client.bucket.assert_called_once_with('my-bucket-name')
     mock_client.bucket().blob.assert_called_once_with('destiny.txt')
@@ -26,13 +26,37 @@ def test_upload(tmp_directory, mock_client):
         'source.txt')
 
 
-def test_download(tmp_directory, mock_client):
+def test_underscore_download(tmp_directory, mock_client):
     Path('source.txt').touch()
-    client = GCloudStorageClient('my-bucket-name')
+    client = GCloudStorageClient('my-bucket-name', parent='')
 
-    client.download('source.txt', 'destiny.txt')
+    client._download('source.txt', 'destiny.txt')
 
     mock_client.bucket.assert_called_once_with('my-bucket-name')
-    mock_client.bucket().blob.assert_called_once_with('source.txt')
+    mock_client.bucket().blob.assert_called_once_with('destiny.txt')
     mock_client.bucket().blob().download_to_filename.assert_called_once_with(
-        'destiny.txt')
+        'source.txt')
+
+
+@pytest.mark.parametrize('parent', ['', 'some/parent/', 'some/parent'])
+def test_upload(monkeypatch, parent):
+    mock = Mock()
+    client = GCloudStorageClient('my-bucket-name', parent=parent)
+    monkeypatch.setattr(client, '_upload', mock)
+
+    client.upload('file.txt')
+
+    mock.assert_called_once_with('file.txt',
+                                 str(PurePosixPath(parent, 'file.txt')))
+
+
+@pytest.mark.parametrize('parent', ['', 'some/parent/', 'some/parent'])
+def test_download(monkeypatch, parent):
+    mock = Mock()
+    client = GCloudStorageClient('my-bucket-name', parent=parent)
+    monkeypatch.setattr(client, '_download', mock)
+
+    client.download('file.txt')
+
+    mock.assert_called_once_with('file.txt',
+                                 str(PurePosixPath(parent, 'file.txt')))

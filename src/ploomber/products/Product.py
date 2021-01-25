@@ -28,6 +28,10 @@ class Product(abc.ABC):
         any of the existing keys but additional key-value pairs might be
         included
     """
+
+    # TODO: previously, File didn't have a client parameter but it does now,
+    # it's best to include it here to simplify the constructors in the concrete
+    # classes
     def __init__(self, identifier):
         self._identifier = self._init_identifier(identifier)
 

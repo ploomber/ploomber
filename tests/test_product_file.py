@@ -1,9 +1,16 @@
 import sys
 from pathlib import Path
+from unittest.mock import Mock, _Call
 
 import pytest
 
 from ploomber.products import File
+from ploomber.tasks import PythonCallable
+from ploomber import DAG
+
+
+def _touch(product):
+    Path(str(product)).touch()
 
 
 def test_file_initialized_with_str():
@@ -69,3 +76,58 @@ def test_repr_absolute():
 def test_repr_absolute_shows_as_relative_if_possible():
     path = Path('.').resolve() / 'a'
     assert repr(File(path)) == "File('a')"
+
+
+def test_client_is_none_by_default():
+    dag = DAG()
+    product = File('file.txt')
+    PythonCallable(_touch, product, dag=dag)
+    assert product.client is None
+
+
+def test_task_level_client():
+    dag = DAG()
+    dag.clients[File] = Mock()
+    client = Mock()
+    product = File('file.txt', client=client)
+    PythonCallable(_touch, product, dag=dag)
+    assert product.client is client
+
+
+def test_dag_level_client():
+    dag = DAG()
+    client = Mock()
+    dag.clients[File] = client
+    product = File('file.txt')
+    PythonCallable(_touch, product, dag=dag)
+    assert product.client is client
+
+
+def test_download():
+    client = Mock()
+    product = File('file.txt', client=client)
+
+    product.download()
+
+    assert client.download.call_args_list == [(('file.txt.source', ), ),
+                                              (('file.txt', ), )]
+
+
+def test_upload():
+    client = Mock()
+    product = File('file.txt', client=client)
+
+    product.upload()
+
+    assert client.upload.call_args_list == [(('file.txt.source', ), ),
+                                            (('file.txt', ), )]
+
+
+def test_download_upload_without_client():
+    dag = DAG()
+    product = File('file.txt')
+    PythonCallable(_touch, product, dag=dag)
+
+    # this shouldn't crash
+    product.download()
+    product.upload()

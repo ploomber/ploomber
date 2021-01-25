@@ -20,6 +20,10 @@ class File(Product):
         The path to the file (or directory), can contain placeholders
         (e.g. {{placeholder}})
     """
+    def __init__(self, identifier, client=None):
+        super().__init__(identifier)
+        self._client = client
+
     def _init_identifier(self, identifier):
         if not isinstance(identifier, (str, Path)):
             raise TypeError('File must be initialized with a str or a '
@@ -98,3 +102,27 @@ class File(Product):
                 pass
 
         return '{}({})'.format(type(self).__name__, repr(str(path)))
+
+    @property
+    def client(self):
+        if self._client is None:
+            if self._task is None:
+                raise ValueError('Cannot obtain client for this product, '
+                                 'the constructor did not receive a client '
+                                 'and this product has not been assigned '
+                                 'to a DAG yet (cannot look up for clients in'
+                                 'dag.clients)')
+
+            self._client = self.task.dag.clients.get(type(self))
+
+        return self._client
+
+    def download(self):
+        if self.client is not None:
+            self.client.download(str(self.__path_to_metadata))
+            self.client.download(str(self.__path_to_file))
+
+    def upload(self):
+        if self.client is not None:
+            self.client.upload(str(self.__path_to_metadata))
+            self.client.upload(str(self.__path_to_file))
