@@ -537,6 +537,8 @@ class Task(abc.ABC):
                                  'set force=True if you want to force '
                                  'execution'.format(self.name))
 
+        self.product.download()
+
         # NOTE: should i fetch metadata here? I need to make sure I have
         # the latest before building
         self._logger.info('Starting execution: %s', repr(self))

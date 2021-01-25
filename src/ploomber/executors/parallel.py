@@ -104,6 +104,7 @@ class Parallel(Executor):
                     # ignore report here, we just need to update metadata
                     _, meta = result
                     task.product.metadata.update_locally(meta)
+                    task.product.upload()
                     task.exec_status = TaskStatus.Executed
 
             done.append(task)
