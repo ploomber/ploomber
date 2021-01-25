@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from unittest.mock import Mock, _Call
+from unittest.mock import Mock
 
 import pytest
 
@@ -103,7 +103,7 @@ def test_dag_level_client():
     assert product.client is client
 
 
-def test_download():
+def test_download(tmp_directory):
     client = Mock()
     product = File('file.txt', client=client)
 
@@ -113,7 +113,9 @@ def test_download():
                                               (('file.txt', ), )]
 
 
-def test_upload():
+def test_upload(tmp_directory):
+    Path('file.txt').touch()
+    Path('file.txt.source').touch()
     client = Mock()
     product = File('file.txt', client=client)
 
@@ -121,6 +123,40 @@ def test_upload():
 
     assert client.upload.call_args_list == [(('file.txt.source', ), ),
                                             (('file.txt', ), )]
+
+
+@pytest.mark.parametrize('to_touch', [
+    ['file.txt'],
+    ['file.txt.source'],
+    [],
+])
+def test_do_not_upload_if_none_or_one(to_touch, tmp_directory):
+    for f in to_touch:
+        Path(f).touch()
+
+    client = Mock()
+    product = File('file.txt', client=client)
+
+    product.upload()
+
+    client.upload.assert_not_called()
+
+
+@pytest.mark.parametrize('to_touch', [
+    ['file.txt'],
+    ['file.txt.source'],
+    ['file.txt', 'file.txt.source'],
+])
+def test_do_not_download_if_any(to_touch, tmp_directory):
+    for f in to_touch:
+        Path(f).touch()
+
+    client = Mock()
+    product = File('file.txt', client=client)
+
+    product.download()
+
+    client.download.assert_not_called()
 
 
 def test_download_upload_without_client():
@@ -131,3 +167,21 @@ def test_download_upload_without_client():
     # this shouldn't crash
     product.download()
     product.upload()
+
+
+def test_upload_after_task_build(tmp_directory):
+    dag = DAG()
+    product = File('file.txt')
+    product.upload = Mock(wraps=product.upload)
+    task = PythonCallable(_touch, product, dag=dag)
+    task.build()
+
+    product.upload.assert_called_once()
+
+
+# TODO: test with dag.build, make sure upload is called with all executors as they are responsible for saving metadata, and right after, to call upload
+
+# TODO: test download when remote does not exist (should not attempt to download)
+
+# TODO: when upload fails, task should fail as well
+# TODO: when download fails, task should fail as well
