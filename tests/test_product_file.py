@@ -185,3 +185,4 @@ def test_upload_after_task_build(tmp_directory):
 
 # TODO: when upload fails, task should fail as well
 # TODO: when download fails, task should fail as well
+# TODO: test ith dag.build. should not call upload when task is skipped

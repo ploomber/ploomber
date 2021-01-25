@@ -40,7 +40,7 @@ def test_underscore_download(tmp_directory, mock_client):
 
 
 @pytest.mark.parametrize('parent', ['', 'some/parent/', 'some/parent'])
-def test_upload(monkeypatch, parent):
+def test_upload(monkeypatch, parent, mock_client):
     mock = Mock()
     client = GCloudStorageClient('my-bucket-name', parent=parent)
     monkeypatch.setattr(client, '_upload', mock)
@@ -52,7 +52,7 @@ def test_upload(monkeypatch, parent):
 
 
 @pytest.mark.parametrize('parent', ['', 'some/parent/', 'some/parent'])
-def test_download(monkeypatch, parent):
+def test_download(monkeypatch, parent, mock_client):
     mock = Mock()
     client = GCloudStorageClient('my-bucket-name', parent=parent)
     monkeypatch.setattr(client, '_download', mock)
@@ -63,9 +63,9 @@ def test_download(monkeypatch, parent):
                                  str(PurePosixPath(parent, 'file.txt')))
 
 
-def test_pickle():
+def test_pickle(mock_client):
     pickle.dumps(GCloudStorageClient('my-bucket-name', parent=''))
 
 
-def test_close():
+def test_close(mock_client):
     GCloudStorageClient('my-bucket-name', parent='').close()
