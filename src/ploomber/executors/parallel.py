@@ -35,7 +35,9 @@ class TaskBuildWrapper:
 
     def __call__(self, *args, **kwargs):
         try:
-            return self.task._build(**kwargs)
+            output = self.task._build(**kwargs)
+            self.task.product.upload()
+            return output
         except Exception as e:
             return Message(task_str=repr(self.task),
                            message=traceback.format_exc(),
@@ -101,16 +103,10 @@ class Parallel(Executor):
                     task.exec_status = TaskStatus.Errored
                 # sucessfully run task._build
                 else:
-                    # ignore report here, we just need to update metadata
+                    # ignore report here, we just the metadata to update it
                     _, meta = result
                     task.product.metadata.update_locally(meta)
-
-                    try:
-                        task.product.upload()
-                    except Exception:
-                        task.exec_status = TaskStatus.Errored
-                    else:
-                        task.exec_status = TaskStatus.Executed
+                    task.exec_status = TaskStatus.Executed
 
             done.append(task)
 
@@ -176,7 +172,6 @@ class Parallel(Executor):
             for f in future_mapping.keys()
         ]
 
-        # FIXME: crashing duruing upload won't be detected here
         exps = [r for r in results if isinstance(r, Message)]
 
         if exps:

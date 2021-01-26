@@ -537,7 +537,11 @@ class Task(abc.ABC):
                                  'set force=True if you want to force '
                                  'execution'.format(self.name))
 
-        self.product.download()
+        try:
+            self.product.download()
+        except Exception:
+            self.exec_status = TaskStatus.Errored
+            raise
 
         # NOTE: should i fetch metadata here? I need to make sure I have
         # the latest before building

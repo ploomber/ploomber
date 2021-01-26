@@ -172,6 +172,10 @@ def catch_warnings(fn, warnings_all):
 
 def catch_exceptions(fn, exceptions_all):
     logger = logging.getLogger(__name__)
+    # NOTE: we are individually catching exceptions
+    # (see build_in_current_process and build_in_subprocess), would it be
+    # better to catch everything here and set
+    # task.exec_status = TaskStatus.Errored accordingly?
 
     # TODO: setting exec_status can also raise exceptions if the hook fails
     # add tests for that, and check the final task status,
@@ -195,7 +199,13 @@ def pass_exceptions(fn):
 
 def build_in_current_process(task, build_kwargs, reports_all):
     report, meta = task._build(**build_kwargs)
-    task.product.upload()
+
+    try:
+        task.product.upload()
+    except Exception:
+        task.exec_status = TaskStatus.Errored
+        raise
+
     reports_all.append(report)
 
 

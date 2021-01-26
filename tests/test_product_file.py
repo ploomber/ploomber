@@ -209,14 +209,47 @@ def test_download_upload_without_client():
     product.upload()
 
 
-def test_upload_after_task_build(tmp_directory):
+def test_do_not_upload_after_task_build(tmp_directory):
+    """
+    Currently, uploading logic happens in the executor, that's why task.build()
+    doesn't trigger it
+    """
     dag = DAG()
     product = File('file.txt')
     product.upload = Mock(wraps=product.upload)
     task = PythonCallable(_touch, product, dag=dag)
     task.build()
 
-    product.upload.assert_called_once()
+    product.upload.assert_not_called()
+
+
+# NOTE: the following tests check File behavior when a DAG is executed,
+# depending on dag.executor configuration, tasks might run in a child process
+# which causes the monkeypatch + Mock combination not to work correctly, to
+# support testing, we implement a subclasses instead
+
+
+class FileWithUploadCounter(File):
+    def upload(self):
+        path = Path('upload_count')
+
+        if not path.exists():
+            path.write_text('1')
+        else:
+            path.write_text(str(int(path.read_text()) + 1))
+
+    def _get_call_count(self):
+        return int(Path('upload_count').read_text())
+
+
+class FileWithUploadError(File):
+    def upload(self):
+        raise ValueError('upload failed!')
+
+
+class FileWithDownloadError(File):
+    def download(self):
+        raise ValueError('download failed!')
 
 
 @pytest.mark.parametrize('executor', [
@@ -226,18 +259,16 @@ def test_upload_after_task_build(tmp_directory):
 ])
 def test_upload_after_dag_build(tmp_directory, monkeypatch, executor):
     dag = DAG(executor=executor)
-    product = File('file.txt')
+    product = FileWithUploadCounter('file.txt')
     PythonCallable(_touch, product, dag=dag)
-
-    monkeypatch.setattr(File, 'upload', Mock(wraps=product.upload))
 
     # when building for the first time, upload should be called
     dag.build()
-    product.upload.assert_called_once()
+    assert product._get_call_count() == 1
 
     # the second time, tasks are skipped so product still has call count at 1
     dag.build()
-    product.upload.assert_called_once()
+    assert product._get_call_count() == 1
 
 
 @pytest.mark.parametrize('executor', [
@@ -248,14 +279,13 @@ def test_upload_after_dag_build(tmp_directory, monkeypatch, executor):
 def test_upload_error(executor, tmp_directory, monkeypatch):
     dag = DAG(executor=executor)
 
-    product = File('file.txt')
-    monkeypatch.setattr(File, 'upload',
-                        Mock(side_effect=ValueError('upload failed!')))
+    product = FileWithUploadError('file.txt')
     PythonCallable(_touch, product, dag=dag)
 
-    with pytest.raises(DAGBuildError):
+    with pytest.raises(DAGBuildError) as excinfo:
         dag.build()
 
+    assert 'upload failed!' in str(excinfo.getrepr())
     assert dag['_touch'].exec_status == TaskStatus.Errored
 
 
@@ -264,17 +294,16 @@ def test_upload_error(executor, tmp_directory, monkeypatch):
     Serial(build_in_subprocess=True),
     Parallel(),
 ])
-def test_download_error(executor, monkeypatch):
+def test_download_error(executor, monkeypatch, tmp_directory):
     dag = DAG(executor=executor)
 
-    product = File('file.txt')
-    monkeypatch.setattr(product, 'download',
-                        Mock(side_effect=ValueError('download failed!')))
+    product = FileWithDownloadError('file.txt')
     PythonCallable(_touch, product, dag=dag)
 
-    with pytest.raises(DAGBuildError):
+    with pytest.raises(DAGBuildError) as excinfo:
         dag.build()
 
+    assert 'download failed!' in str(excinfo.getrepr())
     assert dag['_touch'].exec_status == TaskStatus.Errored
 
 
