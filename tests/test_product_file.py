@@ -1,12 +1,17 @@
 import sys
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, _Call
 
 import pytest
 
+from ploomber.executors import Serial, Parallel
 from ploomber.products import File
 from ploomber.tasks import PythonCallable
+from ploomber.constants import TaskStatus
+from ploomber.exceptions import DAGBuildError
 from ploomber import DAG
+
+# TODO: test download/upload folder
 
 
 def _touch(product):
@@ -147,7 +152,7 @@ def test_do_not_upload_if_none_or_one(to_touch, tmp_directory):
     ['file.txt.source'],
     ['file.txt', 'file.txt.source'],
 ])
-def test_do_not_download_if_any(to_touch, tmp_directory):
+def test_do_not_download_if_file_or_metadata_exists(to_touch, tmp_directory):
     for f in to_touch:
         Path(f).touch()
 
@@ -156,6 +161,41 @@ def test_do_not_download_if_any(to_touch, tmp_directory):
 
     product.download()
 
+    client.download.assert_not_called()
+
+
+@pytest.mark.parametrize('remote_exists', [
+    [False, True],
+    [False, False],
+])
+def test_do_not_download_if_metadata_does_not_exist_in_remote(
+        remote_exists, tmp_directory):
+    client = Mock()
+    client._remote_exists.side_effect = remote_exists
+    product = File('file.txt', client=client)
+
+    product.download()
+
+    # should call this to verify if the remote copy exists
+    client._remote_exists.assert_called_with('file.txt.source')
+    client._remote_exists.assert_called_once()
+    # should not attempt to download
+    client.download.assert_not_called()
+
+
+def test_do_not_download_if_file_does_not_exist_in_remote(tmp_directory):
+    client = Mock()
+    client._remote_exists.side_effect = [True, False]
+    product = File('file.txt', client=client)
+
+    product.download()
+
+    # should call twice, since metadata exists, it has to also check the file
+    client._remote_exists.assert_has_calls([
+        _Call((('file.txt.source', ), {})),
+        _Call((('file.txt', ), {})),
+    ])
+    # should not attempt to download
     client.download.assert_not_called()
 
 
@@ -179,11 +219,79 @@ def test_upload_after_task_build(tmp_directory):
     product.upload.assert_called_once()
 
 
-# TODO: test with dag.build, make sure upload is called with all executors as they are responsible for saving metadata, and right after, to call upload
+@pytest.mark.parametrize('executor', [
+    Serial(build_in_subprocess=False),
+    Serial(build_in_subprocess=True),
+    Parallel(),
+])
+def test_upload_after_dag_build(tmp_directory, monkeypatch, executor):
+    dag = DAG(executor=executor)
+    product = File('file.txt')
+    PythonCallable(_touch, product, dag=dag)
 
-# TODO: test download when remote copy does not exist (should not attempt to download)
+    monkeypatch.setattr(File, 'upload', Mock(wraps=product.upload))
 
-# TODO: when upload fails, task should fail as well
-# TODO: when download fails, task should fail as well
-# TODO: test ith dag.build. should not call upload when task is skipped
-# TODO: test MetaProduct implementation upload,download
+    # when building for the first time, upload should be called
+    dag.build()
+    product.upload.assert_called_once()
+
+    # the second time, tasks are skipped so product still has call count at 1
+    dag.build()
+    product.upload.assert_called_once()
+
+
+@pytest.mark.parametrize('executor', [
+    Serial(build_in_subprocess=False),
+    Serial(build_in_subprocess=True),
+    Parallel(),
+])
+def test_upload_error(executor, tmp_directory, monkeypatch):
+    dag = DAG(executor=executor)
+
+    product = File('file.txt')
+    monkeypatch.setattr(File, 'upload',
+                        Mock(side_effect=ValueError('upload failed!')))
+    PythonCallable(_touch, product, dag=dag)
+
+    with pytest.raises(DAGBuildError):
+        dag.build()
+
+    assert dag['_touch'].exec_status == TaskStatus.Errored
+
+
+@pytest.mark.parametrize('executor', [
+    Serial(build_in_subprocess=False),
+    Serial(build_in_subprocess=True),
+    Parallel(),
+])
+def test_download_error(executor, monkeypatch):
+    dag = DAG(executor=executor)
+
+    product = File('file.txt')
+    monkeypatch.setattr(product, 'download',
+                        Mock(side_effect=ValueError('download failed!')))
+    PythonCallable(_touch, product, dag=dag)
+
+    with pytest.raises(DAGBuildError):
+        dag.build()
+
+    assert dag['_touch'].exec_status == TaskStatus.Errored
+
+
+def test_do_not_download_if_dag_up_to_date(tmp_directory, monkeypatch):
+    # run in the same process, otherwise we won't know if the mock object
+    # is called
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+    product = File('file.txt')
+    PythonCallable(_touch, product, dag=dag)
+
+    monkeypatch.setattr(File, 'download', Mock(wraps=product.download))
+
+    # first time we build, product should attempt to download
+    dag.build()
+    product.download.assert_called_once()
+
+    # second time, it should skip all tasks...
+    dag.build()
+    # ...causing product.download to also be skipped, keeping call count at 1
+    product.download.assert_called_once()

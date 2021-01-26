@@ -195,6 +195,7 @@ def pass_exceptions(fn):
 
 def build_in_current_process(task, build_kwargs, reports_all):
     report, meta = task._build(**build_kwargs)
+    task.product.upload()
     reports_all.append(report)
 
 
@@ -217,9 +218,19 @@ def build_in_subprocess(task, build_kwargs, reports_all):
             raise
         else:
             task.product.metadata.update_locally(meta)
-            task.product.upload()
-            task.exec_status = TaskStatus.Executed
-            reports_all.append(report)
+
+            try:
+                task.product.upload()
+            except Exception:
+                task.exec_status = TaskStatus.Errored
+                raise
+            else:
+                task.exec_status = TaskStatus.Executed
+                reports_all.append(report)
+            finally:
+                p.close()
+                p.join()
+
         finally:
             p.close()
             p.join()

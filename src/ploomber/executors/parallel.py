@@ -104,8 +104,13 @@ class Parallel(Executor):
                     # ignore report here, we just need to update metadata
                     _, meta = result
                     task.product.metadata.update_locally(meta)
-                    task.product.upload()
-                    task.exec_status = TaskStatus.Executed
+
+                    try:
+                        task.product.upload()
+                    except Exception:
+                        task.exec_status = TaskStatus.Errored
+                    else:
+                        task.exec_status = TaskStatus.Executed
 
             done.append(task)
 
@@ -163,7 +168,6 @@ class Parallel(Executor):
                         started.append(task)
                         future_mapping[future] = task
                         logging.info('Added %s to the pool...', task.name)
-                        # time.sleep(3)
 
         results = [
             # results are the output of Task._build: (report, metadata)
@@ -172,6 +176,7 @@ class Parallel(Executor):
             for f in future_mapping.keys()
         ]
 
+        # FIXME: crashing duruing upload won't be detected here
         exps = [r for r in results if isinstance(r, Message)]
 
         if exps:
