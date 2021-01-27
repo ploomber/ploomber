@@ -54,7 +54,8 @@ import logging
 from datetime import datetime
 from ploomber.products import Product, MetaProduct, EmptyProduct
 from ploomber.dag.DAG import DAG
-from ploomber.exceptions import TaskBuildError, DAGBuildEarlyStop
+from ploomber.exceptions import (TaskBuildError, DAGBuildEarlyStop,
+                                 TaskRenderError)
 from ploomber.tasks.TaskGroup import TaskGroup
 from ploomber.constants import TaskStatus
 from ploomber.tasks.Upstream import Upstream
@@ -537,12 +538,6 @@ class Task(abc.ABC):
                                  'set force=True if you want to force '
                                  'execution'.format(self.name))
 
-        try:
-            self.product.download()
-        except Exception:
-            self.exec_status = TaskStatus.Errored
-            raise
-
         # NOTE: should i fetch metadata here? I need to make sure I have
         # the latest before building
         self._logger.info('Starting execution: %s', repr(self))
@@ -785,7 +780,15 @@ class Task(abc.ABC):
         except Exception as e:
             raise type(e)('Error rendering Product from Task "{}", '
                           ' check the full traceback above for details'.format(
-                              repr(self), self.params)) from e
+                              repr(self))) from e
+
+        try:
+            self.product.download()
+        except Exception as e:
+            raise TaskRenderError(
+                f'Error downloading Product {self.product!r} '
+                f'from task {self!r}. Check the full traceback above for '
+                'details') from e
 
     def _get_downstream(self):
         # make the _get_downstream more efficient by

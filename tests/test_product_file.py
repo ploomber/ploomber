@@ -8,7 +8,7 @@ from ploomber.executors import Serial, Parallel
 from ploomber.products import File
 from ploomber.tasks import PythonCallable
 from ploomber.constants import TaskStatus
-from ploomber.exceptions import DAGBuildError
+from ploomber.exceptions import DAGBuildError, DAGRenderError
 from ploomber import DAG
 
 # TODO: test download/upload folder
@@ -300,14 +300,14 @@ def test_download_error(executor, monkeypatch, tmp_directory):
     product = FileWithDownloadError('file.txt')
     PythonCallable(_touch, product, dag=dag)
 
-    with pytest.raises(DAGBuildError) as excinfo:
+    with pytest.raises(DAGRenderError) as excinfo:
         dag.build()
 
     assert 'download failed!' in str(excinfo.getrepr())
-    assert dag['_touch'].exec_status == TaskStatus.Errored
+    assert dag['_touch'].exec_status == TaskStatus.ErroredRender
 
 
-def test_do_not_download_if_dag_up_to_date(tmp_directory, monkeypatch):
+def test_attempts_to_download_on_each_build(tmp_directory, monkeypatch):
     # run in the same process, otherwise we won't know if the mock object
     # is called
     dag = DAG(executor=Serial(build_in_subprocess=False))
@@ -316,11 +316,11 @@ def test_do_not_download_if_dag_up_to_date(tmp_directory, monkeypatch):
 
     monkeypatch.setattr(File, 'download', Mock(wraps=product.download))
 
-    # first time we build, product should attempt to download
+    # download is called on each call to dag.render(), dag.build() calls it...
     dag.build()
-    product.download.assert_called_once()
+    assert product.download.call_count == 1
 
-    # second time, it should skip all tasks...
+    # second time, it should attempt to download again as the remote files
+    # could've been modified
     dag.build()
-    # ...causing product.download to also be skipped, keeping call count at 1
-    product.download.assert_called_once()
+    assert product.download.call_count == 2
