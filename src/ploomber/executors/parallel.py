@@ -135,7 +135,7 @@ class Parallel(Executor):
 
             set_done = set([t.name for t in done])
 
-            if not self._i % 1000:
+            if not self._i % 50000:
                 self._logger.debug('Finished tasks so far: %s', set_done)
                 self._logger.debug('Remaining tasks: %s', set_all - set_done)
                 self._logger.info('Finished %i out of %i tasks', len(set_done),
