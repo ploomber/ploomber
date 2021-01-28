@@ -71,7 +71,6 @@ class PloomberContentsManager(TextFileContentsManager):
 
     def load_dag(self, starting_dir=None):
         if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
-
             self.log.info('[Ploomber] Loading dag...')
 
             msg = ('[Ploomber] An error occured when trying to initialize '
@@ -88,8 +87,12 @@ class PloomberContentsManager(TextFileContentsManager):
                     (self.spec, self.dag,
                      self.path) = parsers.load_entry_point(env_var)
                 else:
+                    hot_reload = (self.spec
+                                  and self.spec['meta']['jupyter_hot_reload'])
+
                     (self.spec, self.dag,
-                     self.path) = DAGSpec.auto_load(starting_dir=starting_dir)
+                     self.path) = DAGSpec.auto_load(starting_dir=starting_dir,
+                                                    reload=hot_reload)
             except DAGSpecInitializationError:
                 self.reset_dag()
                 self.log.exception(msg)
@@ -165,12 +168,6 @@ class PloomberContentsManager(TextFileContentsManager):
         This is called when a file/directory is requested (even in the list
         view)
         """
-        # FIXME: running ploomber add, while having jupyter notebook open
-        # crashes because the dagspec cannot import the newly added function
-        # we have to force a module reload. The problem is in TaskSpec:50
-        # task_class_from_source_str. I think the best is to change the
-        # lazy_import option for import_mode = {'reload', 'normal', 'lazy'}
-        # although this is going to cause an incompatibility with soopervisor
         # FIXME: reloading inside a (functions) folder causes 404
         if content:
             self.load_dag()

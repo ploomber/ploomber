@@ -385,6 +385,39 @@ def new_task(product):
     ]
 
 
+def test_hot_reload_when_adding_function_task_in_existing_module(
+        backup_spec_with_functions_flat):
+    # setup: configure jupyter settings and save spec
+    with open('pipeline.yaml') as f:
+        spec = yaml.load(f)
+
+    spec['meta']['jupyter_functions_as_notebooks'] = True
+    spec['meta']['jupyter_hot_reload'] = True
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec))
+
+    # initialize contents manager (simulates user starting "jupyter notebook")
+    cm = PloomberContentsManager()
+
+    # user adds a new task in existing module...
+    path = Path('my_tasks_flat', 'raw.py')
+    source = path.read_text()
+    new = 'def function_new(product):\n    pass\n'
+    path.write_text(source + new)
+
+    spec['tasks'].append({
+        'source': 'my_tasks_flat.raw.function_new',
+        'product': 'file.csv'
+    })
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec))
+
+    # content manager should now display the function
+    assert 'raw.py (functions)' in [
+        c['name'] for c in cm.get('my_tasks_flat')['content']
+    ]
+
+
 def test_disable_functions_as_notebooks(backup_spec_with_functions):
     """
     Tests a typical workflow with a pieline where some tasks are functions

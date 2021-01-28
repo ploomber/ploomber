@@ -118,8 +118,12 @@ class DAGSpec(MutableMapping):
         is executed. This also applies to placeholders loaded using a
         SourceLoader, if a placeholder does not exist, it will return
         None instead of raising an error
+
+    reload : bool, optional
+        Reloads modules before getting dotted paths. Has no effect if
+        lazy_import=True
     """
-    def __init__(self, data, env=None, lazy_import=False):
+    def __init__(self, data, env=None, lazy_import=False, reload=False):
         if isinstance(data, (str, Path)):
             path = data
             # resolve the parent path to make sources and products unambiguous
@@ -177,8 +181,8 @@ class DAGSpec(MutableMapping):
                     TaskSpec(t,
                              self.data['meta'],
                              project_root=self._parent_path,
-                             lazy_import=lazy_import)
-                    for t in self.data['tasks']
+                             lazy_import=lazy_import,
+                             reload=reload) for t in self.data['tasks']
                 ]
         else:
             self.data['meta'] = Meta.empty()
@@ -261,7 +265,8 @@ class DAGSpec(MutableMapping):
                   to_dag=True,
                   starting_dir=None,
                   env=None,
-                  lazy_import=False):
+                  lazy_import=False,
+                  reload=False):
         """
         Looks for a pipeline.yaml, generates a DAGSpec and returns a DAG.
         Currently, this is only used by the PloomberContentsManager, this is
@@ -286,7 +291,7 @@ class DAGSpec(MutableMapping):
                 return None, None
 
         try:
-            spec = cls(path, env=env, lazy_import=lazy_import)
+            spec = cls(path, env=env, lazy_import=lazy_import, reload=reload)
 
             if to_dag:
                 return spec, spec.to_dag(), Path(path).parent

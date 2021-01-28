@@ -204,16 +204,18 @@ def _parse_module(dotted_path, raise_=True):
     return '.'.join(parts[:-1]), parts[-1]
 
 
-def load_dotted_path(dotted_path, raise_=True):
+def load_dotted_path(dotted_path, raise_=True, reload=False):
     """Load an object/function/module by passing a dotted path
 
     Parameters
     ----------
     dotted_path : str
         Dotted path to a module, e.g. ploomber.tasks.NotebookRunner
-    raise_ : bool, optional
+    raise_ : bool, default=True
         If True, an exception is raised if the module can't be imported,
         otherwise return None if that happens
+    reload : bool, default=False
+        Reloads the module after importing it
     """
     obj, module = None, None
 
@@ -237,6 +239,9 @@ def load_dotted_path(dotted_path, raise_=True):
                 raise
 
         if module:
+            if reload:
+                module = importlib.reload(module)
+
             try:
                 obj = getattr(module, name)
             except AttributeError as e:

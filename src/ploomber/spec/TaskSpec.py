@@ -22,7 +22,7 @@ suffix2taskclass = {
 }
 
 
-def task_class_from_source_str(source_str, lazy_import):
+def task_class_from_source_str(source_str, lazy_import, reload):
     """
     The source field in a DAG spec is a string. The actual value needed to
     instantiate the task depends on the task class, but to make task class
@@ -34,7 +34,7 @@ def task_class_from_source_str(source_str, lazy_import):
 
     # if lazy load, just locate the module without importing it
     fn_checker = locate_dotted_path if lazy_import else partial(
-        load_dotted_path, raise_=True)
+        load_dotted_path, raise_=True, reload=reload)
 
     if extension and extension in suffix2taskclass:
         return suffix2taskclass[extension]
@@ -58,7 +58,7 @@ def task_class_from_source_str(source_str, lazy_import):
             return tasks.PythonCallable
 
 
-def task_class_from_spec(task_spec, lazy_import):
+def task_class_from_spec(task_spec, lazy_import, reload):
     """
     Returns the class for the TaskSpec, if the spec already has the class
     name (str), it just returns the actual class object with such name,
@@ -69,7 +69,8 @@ def task_class_from_spec(task_spec, lazy_import):
     if class_name:
         class_ = getattr(tasks, class_name)
     else:
-        class_ = task_class_from_source_str(task_spec['source'], lazy_import)
+        class_ = task_class_from_source_str(task_spec['source'], lazy_import,
+                                            reload)
 
     return class_
 
@@ -104,11 +105,19 @@ class TaskSpec(MutableMapping):
     project_root : str or pathlib.Path
         The project root folder (pipeline.yaml parent)
     lazy_import : bool, default=False
-            If False, sources are loaded when initializing the spec (e.g.
-            a dotted path is imported, a source loaded using a SourceLoader
-            is converted to a Placeholder object)
+        If False, sources are loaded when initializing the spec (e.g.
+        a dotted path is imported, a source loaded using a SourceLoader
+        is converted to a Placeholder object)
+    reload : bool, default=False
+        Reloads modules before getting dotted paths. Has no effect if
+        lazy_import=True
     """
-    def __init__(self, data, meta, project_root, lazy_import=False):
+    def __init__(self,
+                 data,
+                 meta,
+                 project_root,
+                 lazy_import=False,
+                 reload=False):
         # FIXME: make sure data and meta are immutable structures
         self.data = data
         self.meta = meta
@@ -119,7 +128,8 @@ class TaskSpec(MutableMapping):
         source_loader = meta['source_loader']
 
         # initialize required elements
-        self.data['class'] = task_class_from_spec(self.data, lazy_import)
+        self.data['class'] = task_class_from_spec(self.data, lazy_import,
+                                                  reload)
         # preprocess source obj, at this point it will either be a Path if the
         # task requires a file or a callable if it's a PythonCallable task
         self.data['source'] = source_for_task_class(
