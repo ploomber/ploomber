@@ -126,6 +126,20 @@ def test_interactive_session(tmp_sample_dir):
     assert 'Out[1]: ploomber.dag.DAG.DAG' in res.stdout.decode()
 
 
+def test_interact_command_starts_full_ipython_session(monkeypatch, tmp_nbs):
+    mock_dag = Mock()
+    mock_start_ipython = Mock()
+    monkeypatch.setattr(sys, 'argv', ['interact'])
+    monkeypatch.setattr(interact, 'start_ipython', mock_start_ipython)
+    monkeypatch.setattr(interact, '_custom_command', lambda _:
+                        (mock_dag, None))
+
+    interact.main()
+
+    mock_start_ipython.assert_called_once_with(argv=[],
+                                               user_ns={'dag': mock_dag})
+
+
 def test_interactive_session_develop(monkeypatch, tmp_nbs):
     monkeypatch.setattr(sys, 'argv', ['python'])
 

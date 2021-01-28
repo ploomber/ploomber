@@ -1,4 +1,4 @@
-from IPython import embed
+from IPython import start_ipython
 from ploomber.cli.parsers import CustomParser, _custom_command
 
 
@@ -9,7 +9,7 @@ def main():
         # this command has no static args
         pass
 
-    dag, args = _custom_command(parser)
+    dag, _ = _custom_command(parser)
 
     try:
         dag.render()
@@ -17,7 +17,6 @@ def main():
         print('Your dag failed to render, but you can still inspect the '
               'object to debug it.\n')
 
-    del parser
-    del args
-
-    embed(colors='neutral')
+    # NOTE: do not use embed here, we must use start_ipytho, see here:
+    # https://github.com/ipython/ipython/issues/8918
+    start_ipython(argv=[], user_ns={'dag': dag})
