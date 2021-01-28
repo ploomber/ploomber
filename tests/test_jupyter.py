@@ -176,22 +176,24 @@ def test_hot_reload(tmp_nbs):
     with open('pipeline.yaml', 'w') as f:
         yaml.dump(spec, f)
 
+    # init content manager to simulate running "jupyter notebook"
     cm = PloomberContentsManager()
 
+    # this must have an injected cell
     model = cm.get('plot.py')
     assert get_injected_cell(model['content'])
 
-    # replace upstream with a task that does not exist
+    # replace upstream dependency with a task that does not exist
     path = Path('plot.py')
     original_code = path.read_text()
     new_code = original_code.replace("{'clean': None}", "{'no_task': None}")
     path.write_text(new_code)
 
-    # not cell should be injected now
+    # no cell should be injected this time
     model = cm.get('plot.py')
     assert not get_injected_cell(model['content'])
 
-    # fix it
+    # fix it, must inject cell again
     path.write_text(original_code)
     model = cm.get('plot.py')
     assert get_injected_cell(model['content'])
@@ -345,6 +347,42 @@ def test_jupyter_workflow_with_functions(backup_spec_with_functions):
 
     assert '1 + 1' in raw_source
     assert '1 + 1' in clean_source
+
+
+def test_hot_reload_when_adding_function_task(backup_spec_with_functions_flat):
+    # setup: configure jupyter settings and save spec
+    with open('pipeline.yaml') as f:
+        spec = yaml.load(f)
+
+    spec['meta']['jupyter_functions_as_notebooks'] = True
+    spec['meta']['jupyter_hot_reload'] = True
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec))
+
+    # initialize contents manager (simulates user starting "jupyter notebook")
+    cm = PloomberContentsManager()
+
+    # user adds a new task...
+    Path('new_task.py').write_text("""
+def new_task(product):
+    pass
+""")
+
+    spec['tasks'].append({
+        'source': 'new_task.new_task',
+        'product': 'file.csv'
+    })
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec))
+
+    # content manager should now display the function
+    assert 'new_task.py (functions)' in [
+        c['name'] for c in cm.get('')['content']
+    ]
+
+    assert ['new_task'] == [
+        c['name'] for c in cm.get('new_task.py (functions)')['content']
+    ]
 
 
 def test_disable_functions_as_notebooks(backup_spec_with_functions):

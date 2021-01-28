@@ -171,10 +171,6 @@ class PloomberContentsManager(TextFileContentsManager):
         # task_class_from_source_str. I think the best is to change the
         # lazy_import option for import_mode = {'reload', 'normal', 'lazy'}
         # although this is going to cause an incompatibility with soopervisor
-        # FIXME: test edit notebook to add a new upstream dependency, save, get
-        # model again and verify that the model has the output for the new
-        # dependency
-        # FIXME: test add a new task, reload listing and see the new function
         # FIXME: reloading inside a (functions) folder causes 404
         if content:
             self.load_dag()
