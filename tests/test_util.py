@@ -4,7 +4,8 @@ import copy
 import sys
 
 import pytest
-from ploomber.util.util import add_to_sys_path, load_dotted_path, chdir_code
+from ploomber.util.util import (add_to_sys_path, load_dotted_path, chdir_code,
+                                requires)
 
 
 def test_add_to_sys_path():
@@ -84,3 +85,46 @@ def y():
 def test_chdir_code(tmp_directory):
     # test generated code is valid
     eval(chdir_code(tmp_directory))
+
+
+@pytest.mark.parametrize(
+    'params, expected',
+    [
+        [
+            dict(pkgs=['p1']),
+            'p1 is required to use fn. Install it by running "pip install p1"'
+        ],
+        [
+            dict(pkgs=['p1'], name='name'),
+            ('p1 is required to use name. Install it by running '
+             '"pip install p1"')
+        ],
+        [
+            dict(pkgs=['p1'], extra_msg='extra'),
+            ('p1 is required to use fn. Install it by running '
+             '"pip install p1". extra')
+        ],
+        [
+            dict(pkgs=['p1', 'p2']),
+            ('p1 p2 are required to use fn. Install them by running '
+             '"pip install p1 p2"')
+        ],
+        [
+            dict(pkgs=['p1'], pip_names=['n1']),
+            'n1 is required to use fn. Install it by running "pip install n1"'
+        ],
+        [
+            # the first package is installed, it shouldn't appear in the error
+            dict(pkgs=['ploomber', 'p1']),
+            'p1 is required to use fn. Install it by running "pip install p1"'
+        ],
+    ])
+def test_requires(params, expected):
+    @requires(**params)
+    def fn():
+        pass
+
+    with pytest.raises(ImportError) as excinfo:
+        fn()
+
+    assert str(excinfo.value) == expected
