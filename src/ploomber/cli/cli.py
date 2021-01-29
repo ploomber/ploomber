@@ -14,7 +14,7 @@ from ploomber_scaffold import scaffold as scaffold_project
 def cli():
     """Ploomber command line interface.
     """
-    pass
+    pass  # pragma: no cover
 
 
 @cli.command()
@@ -58,39 +58,39 @@ def cmd_router():
 def build():
     """Build pipeline
     """
-    pass
+    pass  # pragma: no cover
 
 
 @cli.command()
 def status():
     """Show pipeline status
     """
-    pass
+    pass  # pragma: no cover
 
 
 @cli.command()
 def plot():
     """Plot pipeline
     """
-    pass
+    pass  # pragma: no cover
 
 
 @cli.command()
 def task():
     """Interact with specific tasks
     """
-    pass
+    pass  # pragma: no cover
 
 
 @cli.command()
 def report():
     """Make a pipeline report
     """
-    pass
+    pass  # pragma: no cover
 
 
 @cli.command()
 def interact():
     """Start an interactive session (use the "dag" variable)
     """
-    pass
+    pass  # pragma: no cover

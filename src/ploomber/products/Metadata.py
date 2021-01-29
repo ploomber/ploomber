@@ -26,39 +26,39 @@ class AbstractMetadata(abc.ABC):
         """
         Private API, returns the dictionary representation of the metadata
         """
-        pass
+        pass  # pragma: no cover
 
     @property
     @abc.abstractmethod
     def timestamp(self):
         """When the product was originally created
         """
-        pass
+        pass  # pragma: no cover
 
     @property
     @abc.abstractmethod
     def stored_source_code(self):
         """Source code that generated the product
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def update(self, source_code):
         """
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def delete(self):
         """Delete metadata
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def _get(self):
         """Load metadata
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def clear(self):
@@ -66,7 +66,7 @@ class AbstractMetadata(abc.ABC):
         Clear tne in-memory copy, if the metadata is accessed again, it should
         trigger another call to load()
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def update_locally(self, data):
@@ -75,7 +75,7 @@ class AbstractMetadata(abc.ABC):
         executed in a subproces, to make the local copy synced again (because
         the call to .update() happens in the subprocess as well)
         """
-        pass
+        pass  # pragma: no cover
 
     def to_dict(self):
         """Returns a dict copy of ._data
@@ -321,20 +321,20 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
         return None
 
     def _get(self):
-        pass
+        pass  # pragma: no cover
 
     def update(self, source_code):
-        pass
+        pass  # pragma: no cover
 
     def update_locally(self, data):
-        pass
+        pass  # pragma: no cover
 
     @property
     def _data(self):
         return {'timestamp': 0, 'stored_source_code': None}
 
     def delete(self):
-        pass
+        pass  # pragma: no cover
 
     def clear(self):
-        pass
+        pass  # pragma: no cover

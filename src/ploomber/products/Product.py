@@ -211,15 +211,15 @@ class Product(abc.ABC):
 
     @abc.abstractmethod
     def _init_identifier(self, identifier):
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def fetch_metadata(self):
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def save_metadata(self, metadata):
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def exists(self):
@@ -227,13 +227,13 @@ class Product(abc.ABC):
         This method returns True if the product exists, it is not part
         of the metadata, so there is no cached status
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def delete(self, force=False):
         """Deletes the product
         """
-        pass
+        pass  # pragma: no cover
 
     # NOTE: currently optional but there is a conflict with this. metadata
     # defines a delete public method which calls product._delete_metadata
@@ -247,7 +247,7 @@ class Product(abc.ABC):
     # the API consistent
 
     def download(self):
-        pass
+        pass  # pragma: no cover
 
     def upload(self):
-        pass
+        pass  # pragma: no cover
