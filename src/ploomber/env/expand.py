@@ -67,8 +67,19 @@ def cast_if_possible(value):
 
 class EnvironmentExpander:
     """
-    Conver values in the raw dictionary by expanding tags such as {{git}},
+    Convert values in the raw dictionary by expanding tags such as {{git}},
     {{version}} or {{here}}. See `expand_raw_value` for more details
+
+    Parameters
+    ----------
+    preprocessed : dict
+        Preprocessed env directory
+
+    path_to_env : str
+        Path to env.yaml, used to expand {{here}}
+
+    version_requires_import : bool, default=False
+        Whether determining package version requires import or not
     """
     def __init__(self,
                  preprocessed,

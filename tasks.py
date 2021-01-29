@@ -61,3 +61,11 @@ def upload(c, tag, production=True):
     """Upload to PyPI
     """
     versioneer.upload(tag, production=production)
+
+
+@task
+def test(c, report=False):
+    """Run tests
+    """
+    c.run('pytest --cov ploomber ' + ('--cov-report html' if report else ''),
+          pty=True)

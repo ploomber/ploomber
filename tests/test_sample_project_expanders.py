@@ -1,8 +1,11 @@
 from pathlib import Path
 import subprocess
 from ploomber import Env
+from ploomber.env.expand import EnvironmentExpander
 
-# TODO: just use tmp directory and add file here
+import pytest
+
+# TODO: just use tmp directory and add file in a fixture
 
 
 def test_get_version(tmp_directory, cleanup_env):
@@ -24,3 +27,22 @@ def test_get_git(tmp_directory, cleanup_env):
 
     env = Env()
     assert env.git == 'master'
+
+
+def test_error_on_unknown_placeholder():
+    expander = EnvironmentExpander({})
+
+    with pytest.raises(RuntimeError) as excinfo:
+        expander.expand_raw_value('{{unknown}}', parents=[])
+
+    assert 'Unknown placeholder "unknown"' == str(excinfo.value)
+
+
+def test_error_on_git_placeholder_if_missing_underscore_module():
+    expander = EnvironmentExpander({})
+
+    with pytest.raises(KeyError) as excinfo:
+        expander.expand_raw_value('{{git}}', parents=[])
+
+    assert ("'_module key is required to use git placeholder'" == str(
+        excinfo.value))
