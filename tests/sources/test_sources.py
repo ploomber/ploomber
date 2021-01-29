@@ -300,6 +300,17 @@ def test_dotted_path_and_callable_give_same_source():
     assert str(a) == str(b)
 
 
+def test_error_if_python_callable_does_not_need_product_but_has_it():
+    def fn(product):
+        pass
+
+    with pytest.raises(TypeError) as excinfo:
+        PythonCallableSource(fn, needs_product=False).render({})
+
+    assert ("Function 'fn' should not have a 'product' "
+            "parameter, but return its result instead") == str(excinfo.value)
+
+
 @pytest.mark.parametrize(
     'class_', [SQLScriptSource, SQLQuerySource, GenericSource, FileSource])
 def test_file_location_included_if_initialized_from_file(

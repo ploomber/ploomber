@@ -4,7 +4,6 @@ from pathlib import Path
 
 import parso
 
-from ploomber.exceptions import TaskRenderError
 from ploomber.sources.sources import Source
 from ploomber.util.util import signature_check, load_dotted_path
 from ploomber.static_analysis.python import PythonCallableExtractor
@@ -98,6 +97,21 @@ class CallableLoader:
 class PythonCallableSource(Source):
     """
     A source object to encapsulate a Python callable (i.e. functions).
+
+    Parameters
+    ----------
+    primitive : callable or str
+        The function to use, an be a callable object or a dotted path string
+
+    hot_reload : bool
+        If True, continuously reloads the function to have the latest version
+
+    needs_product : bool
+        Pass True if the function needs a "product" parameter to be executed.
+        This is used to provide appropriate error messages when the function's
+        signature does not match this argument. The primary use for this
+        parameter is InMemoryDAG, since functions used as task are
+        not expected to have a "product" parameter
     """
     def __init__(self, primitive, hot_reload=False, needs_product=True):
         if not (callable(primitive) or isinstance(primitive, str)):
@@ -160,20 +174,24 @@ class PythonCallableSource(Source):
         """
         Validation function executed after rendering
         """
+        # TODO: we should be able to perform this validation from dotted
+        # paths as well
         if not self._callable_loader.from_dotted_path:
             to_validate = set(params)
+            fn_params = inspect.signature(self.primitive).parameters
+
+            if not self._needs_product and 'product' in fn_params:
+                raise TypeError(
+                    f'Function {self.name!r} should not have '
+                    'a \'product\' parameter, but return its result instead')
 
             if not self._needs_product:
                 to_validate.remove('product')
 
-            # TODO: provide a better error message when task does not need
-            # product but the function has it, the current error is confusing
-            # because we remove "product" from the params and then pass
-            # validate
             signature_check(self.primitive, to_validate, self.name)
 
     def _post_init_validation(self, value):
-        # TODO: verify the callable has a product parameter
+        # TODO: verify the callable has a product parameter, if it's required
         pass
 
     @property

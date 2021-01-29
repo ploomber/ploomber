@@ -62,7 +62,9 @@ class PythonCallable(Task):
         A callable to serialize this task's product, must take two arguments,
         the first argument passed is the value returned by the task's
         source, the second argument is the product oject. If None, the
-        task's source is responsible for serializing its own product
+        task's source is responsible for serializing its own product. If
+        used, the source function must not have a "product" parameter but
+        return its result instead
     """
     def __init__(self,
                  source,
