@@ -21,6 +21,49 @@ def test_Assert():
     assert str(excinfo.value) == '1 error found:\nError message'
 
 
+@pytest.fixture
+def assert_():
+    assert_ = Assert()
+    assert_(False, '1')
+    assert_(False, '2')
+    assert_(False, '3')
+    return assert_
+
+
+def test_Assert_iter(assert_):
+    assert list(assert_) == ['1', '2', '3']
+
+
+def test_Assert_str_without_errors():
+    assert str(Assert()) == 'No errors found'
+
+
+def test_Assert_str_with_errors(assert_):
+    assert '3 errors found' in str(assert_)
+    assert all(msg in str(assert_) for msg in ('1', '2', '3'))
+
+
+def test_Assert_with_warning(assert_):
+    assert_.warn(False, '4')
+
+    assert '3 errors found' in str(assert_)
+    assert all(msg in str(assert_) for msg in ('1', '2', '3'))
+
+    assert '1 warning' in str(assert_)
+    assert '4' in str(assert_)
+
+
+def test_Assert_with_warnings(assert_):
+    assert_.warn(False, '4')
+    assert_.warn(False, '5')
+
+    assert '3 errors found' in str(assert_)
+    assert all(msg in str(assert_) for msg in ('1', '2', '3'))
+
+    assert '2 warnings' in str(assert_)
+    assert all(msg in str(assert_) for msg in ('4', '5'))
+
+
 def test_allows_optional_columns():
     df = pd.DataFrame({'a': [0], 'b': [0]})
 
