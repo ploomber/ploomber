@@ -42,7 +42,7 @@ class InMemoryDAG:
         self.return_postprocessor = return_postprocessor or _do_nothing
 
         # TODO: validate that root nodes have single parameter in the signature
-        # input_data. and were initialized with {'input_data': None}
+        # input_data. and was initialized with {'input_data': None}
 
     def build(self, input_data, copy=False):
         """Run the DAG

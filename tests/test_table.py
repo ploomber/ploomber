@@ -1,3 +1,4 @@
+from pathlib import Path
 import string
 import shutil
 from textwrap import TextWrapper
@@ -60,19 +61,47 @@ def test_rows2columns():
     assert rows2columns([r1, r2]) == {'a': [1, 2]}
 
 
-def test_row():
+def test_row_str_and_repr():
     r = Row({'a': 1, 'b': 2})
-    assert (str(r) == '  a    b\n---  ---\n  1    2'
-            # python 3.5 does not guarantee order
-            or str(r) == '  b    a\n---  ---\n  2    1')
+    # we need both because python 3.5 does not guarantee order
+    expected = {
+        '  a    b\n---  ---\n  1    2',
+        '  b    a\n---  ---\n  2    1',
+    }
+
+    assert str(r) in expected
+    assert repr(r) in expected
+    # parse html representation with pandas
+    html = pd.read_html(r._repr_html_())[0]
+    assert html.to_dict() == {'a': {0: 1}, 'b': {0: 2}}
 
 
-def test_table():
+def test_row_str_setitem():
+    r = Row({'a': 1, 'b': 2})
+    r['a'] = 10
+    assert r['a'] == 10
+
+
+def test_table_str_and_repr():
     r = Row({'a': 1, 'b': 2})
     t = Table([r, r])
-    assert (str(t) == '  a    b\n---  ---\n  1    2\n  1    2'
-            # python 3.5 does not guarantee order
-            or str(t) == '  b    a\n---  ---\n  2    1\n  2    1')
+    # we need both because python 3.5 does not guarantee order
+    expected = {
+        '  a    b\n---  ---\n  1    2\n  1    2',
+        '  b    a\n---  ---\n  2    1\n  2    1',
+    }
+
+    assert str(t) in expected
+    assert repr(t) in expected
+    # parse html representation with pandas
+    html = pd.read_html(t._repr_html_())[0]
+    assert html.to_dict(orient='list') == {'a': [1, 1], 'b': [2, 2]}
+
+
+def test_table_iter():
+    r = Row({'a': 1, 'b': 2})
+    t = Table([r, r])
+    assert set(iter(t)) == {'a', 'b'}
 
 
 def test_table_wrap():
@@ -99,6 +128,11 @@ def test_table_auto_size(monkeypatch):
 def test_select_multiple_cols_in_row():
     r = Row({'a': 1, 'b': 2})
     assert r[['a', 'b']] == {'a': 1, 'b': 2}
+
+
+def test_error_if_row_initialized_with_non_mapping():
+    with pytest.raises(TypeError):
+        Row([])
 
 
 def test_empty_table():

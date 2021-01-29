@@ -137,14 +137,6 @@ class Table:
     def data_preprocessing(self, values):
         return values
 
-    def save(self, path=None):
-        if path is None:
-            path = Path(tempfile.mktemp(suffix='.html'))
-
-        path.write_text(self._html)
-
-        return path
-
     def to_format(self, fmt):
         return tabulate(self.values, headers='keys', tablefmt=fmt)
 
