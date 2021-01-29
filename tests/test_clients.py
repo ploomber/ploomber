@@ -223,3 +223,48 @@ def test_remote_shell_error(monkeypatch):
 
     with pytest.raises(CalledProcessError):
         client.execute('some code')
+
+
+def test_remote_shell_read_file(monkeypatch, tmp_directory):
+    mock_ssh_client = Mock(spec=paramiko.SSHClient)
+    monkeypatch.setattr(shell, 'ssh_client_and_policy', lambda:
+                        (mock_ssh_client, Mock()))
+    monkeypatch.setattr(shell.tempfile, 'mkstemp', lambda:
+                        (None, 'my_tmp_file'))
+    monkeypatch.setattr(shell.os, 'close', lambda _: None)
+    mock_ssh_client.open_sftp().get.side_effect = lambda x, y: Path(
+        'my_tmp_file').write_text('some content')
+    # reset to prevent counting the "call" from the previous line
+    mock_ssh_client.open_sftp.reset_mock()
+
+    client = RemoteShellClient(connect_kwargs={}, path_to_directory='/tmp')
+
+    returned_content = client.read_file('/path/to/remote/file')
+
+    assert returned_content == 'some content'
+    mock_ssh_client.open_sftp.assert_called_once()
+    ftp = client.connection.open_sftp()
+    assert ftp.get.call_args.assert_called_with('/path/to/remote/file',
+                                                'my_tmp_file')
+    ftp.close.assert_called_once()
+
+
+def test_remote_shell_write_to_file(monkeypatch, tmp_directory):
+    mock_ssh_client = Mock(spec=paramiko.SSHClient)
+    monkeypatch.setattr(shell, 'ssh_client_and_policy', lambda:
+                        (mock_ssh_client, Mock()))
+    monkeypatch.setattr(shell.tempfile, 'mkstemp', lambda:
+                        (None, 'my_tmp_file'))
+    monkeypatch.setattr(shell.os, 'close', lambda _: None)
+    monkeypatch.setattr(shell.Path, 'unlink', lambda _: None)
+
+    client = RemoteShellClient(connect_kwargs={}, path_to_directory='/tmp')
+
+    client.write_to_file('content', '/path/to/remote/file')
+
+    mock_ssh_client.open_sftp.assert_called_once()
+    ftp = client.connection.open_sftp()
+    assert Path('my_tmp_file').read_text() == 'content'
+    assert ftp.put.call_args.assert_called_with('my_tmp_file',
+                                                '/path/to/remote/file')
+    ftp.close.assert_called_once()

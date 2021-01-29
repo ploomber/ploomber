@@ -109,15 +109,10 @@ class RemoteShellClient(Client):
 
     @property
     def connection(self):
-        # lazily loading paramiko, importing it takes a bit and we don't want
-        # to slow down importing ploomber.clients
-        import paramiko
-
         # client has not been created
         if self._raw_client is None:
-            self._raw_client = paramiko.SSHClient()
-            self._raw_client.set_missing_host_key_policy(
-                paramiko.AutoAddPolicy())
+            self._raw_client, policy = ssh_client_and_policy()
+            self._raw_client.set_missing_host_key_policy(policy)
             self._raw_client.connect(**self.connect_kwargs)
 
         # client has been created but still have to check if it's active:
@@ -140,14 +135,16 @@ class RemoteShellClient(Client):
         return filename
 
     def read_file(self, path):
+        """Read file in remote path
+        """
         ftp = self.connection.open_sftp()
 
+        # tmp location for file
         fd, path_to_tmp = tempfile.mkstemp()
         os.close(fd)
         ftp.get(path, path_to_tmp)
 
         path_to_tmp = Path(path_to_tmp)
-
         content = path_to_tmp.read_text()
         path_to_tmp.unlink()
 
@@ -156,6 +153,8 @@ class RemoteShellClient(Client):
         return content
 
     def write_to_file(self, content, path):
+        """Write file to remote path
+        """
         ftp = self.connection.open_sftp()
 
         fd, path_to_tmp = tempfile.mkstemp()
@@ -215,3 +214,12 @@ class RemoteShellClient(Client):
             self._logger.info('Closing client %s', self._raw_client)
             self._raw_client.close()
             self._raw_client = None
+
+
+def ssh_client_and_policy():
+    # lazily loading paramiko, importing it takes a bit and we don't want
+    # to slow down importing ploomber.clients. Instead of having this code
+    # in the client's constructor, we add this function to helps us mock the
+    # for testing
+    import paramiko
+    return paramiko.SSHClient(), paramiko.AutoAddPolicy()
