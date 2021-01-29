@@ -37,7 +37,7 @@ class Source(abc.ABC):
     """
     @abc.abstractmethod
     def __init__(self, primitive, hot_reload=False):
-        pass
+        pass  # pragma: no cover
 
     @property
     @abc.abstractmethod
@@ -56,7 +56,7 @@ class Source(abc.ABC):
         # FIXME: there are some API inconsistencies. Most soruces just
         # return the raw argument that initialized them but NotebookSource
         # loads the file if it's a path
-        pass
+        pass  # pragma: no cover
 
     # TODO: rename to params
     # NOTE: maybe allow dictionaries for cases where default values are
@@ -64,7 +64,7 @@ class Source(abc.ABC):
     @property
     @abc.abstractmethod
     def variables(self):
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def render(self, params):
@@ -73,7 +73,7 @@ class Source(abc.ABC):
         If hot_reload is True, this should indirectly reload primitive
         from disk by using self.primitive
         """
-        pass
+        pass  # pragma: no cover
 
     # NOTE: maybe rename to path? the only case where it is not exactly a path
     # is when it is a callable (line number is added :line), but this is
@@ -86,7 +86,7 @@ class Source(abc.ABC):
         contains the source code. Used only for informative purpose (e.g.
         when doing dag.status())
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def __str__(self):
@@ -104,7 +104,7 @@ class Source(abc.ABC):
         for all cases except notebooks (where the JSON string is passed to
         the task to execute).
         """
-        pass
+        pass  # pragma: no cover
 
     @property
     @abc.abstractmethod
@@ -112,7 +112,7 @@ class Source(abc.ABC):
         """
         Returns code docstring
         """
-        pass
+        pass  # pragma: no cover
 
     # TODO: rename to suffix to be consistent with pathlib.Path
     @property
@@ -123,23 +123,23 @@ class Source(abc.ABC):
         code normalization (applied before determining wheter two pieces
         or code are different). If None, no normalization is done.
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def _post_render_validation(self, rendered_value, params):
         """
         Validation function executed after rendering
         """
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def _post_init_validation(self, value):
-        pass
+        pass  # pragma: no cover
 
     @property
     @abc.abstractmethod
     def name(self):
-        pass
+        pass  # pragma: no cover
 
     # optional
 
@@ -425,32 +425,32 @@ class EmptySource(Source):
 
     @property
     def variables(self):
-        pass
+        pass  # pragma: no cover
 
     def render(self, params):
         pass
 
     @property
     def loc(self):
-        pass
+        pass  # pragma: no cover
 
     def __str__(self):
         return 'EmptySource'
 
     @property
     def doc(self):
-        pass
+        pass  # pragma: no cover
 
     @property
     def extension(self):
-        pass
+        pass  # pragma: no cover
 
     def _post_render_validation(self, rendered_value, params):
-        pass
+        pass  # pragma: no cover
 
     def _post_init_validation(self, value):
-        pass
+        pass  # pragma: no cover
 
     @property
     def name(self):
-        pass
+        pass  # pragma: no cover
