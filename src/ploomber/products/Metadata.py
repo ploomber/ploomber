@@ -13,7 +13,7 @@ class AbstractMetadata(abc.ABC):
     product.fetch_metadata, and accept it after doing some validations
     """
     def __init__(self, product):
-        self._data = None
+        self.__data = None
         self._product = product
 
         self._logger = logging.getLogger('{}.{}'.format(
@@ -221,7 +221,6 @@ class Metadata(AbstractMetadata):
         # in a metadproduct have the same obj in metadata?
         self._data = data
 
-    # NOTE: I don't think I'm using this anywhere
     def delete(self):
         self._product._delete_metadata()
         self._data = dict(timestamp=None, stored_source_code=None)
@@ -251,23 +250,40 @@ class MetadataCollection(AbstractMetadata):
 
     @property
     def timestamp(self):
-        # TODO: refactor, all products should have the same metadata
         timestamps = [
             p.metadata.timestamp for p in self._products
             if p.metadata.timestamp is not None
         ]
-        if timestamps:
-            return max(timestamps)
-        else:
+
+        any_none = any(p.metadata.timestamp is None for p in self._products)
+
+        # edge cases: 1) any of the timestamps is none, this is mostly
+        # due to metadata corruption, we can no longer compute the timestamp
+        # reliable. 2) no timestamps at all happens when the task hasn't been
+        # executed
+        if any_none or not timestamps:
+            # warn on corrupted data
+            if any_none and timestamps:
+                warnings.warn(f'Corrupted product metadata ({self!r}): '
+                              'at least one product had a null timestamp, '
+                              'but others had non-null timestamp')
+
             return None
+        else:
+            # timestamps should usually be very close, but there can be
+            # differences for some products whose metadata takes some time
+            # to save (e.g. remote db) in such case, we use the
+            # minimum to cover the edge case where another process runs an
+            # upstream dependency in between saving metadata
+            return min(timestamps)
 
     @property
     def stored_source_code(self):
-        stored_source_code = set([
+        stored_source_code = [
             p.metadata.stored_source_code for p in self._products
-            if p.metadata.stored_source_code is not None
-        ])
-        if len(stored_source_code):
+        ]
+        # if source code differs (i.e. more than one element)
+        if len(set(stored_source_code)) > 1:
             warnings.warn(
                 'Stored source codes for products {} '
                 'are different, but they are part of the same '
@@ -275,7 +291,7 @@ class MetadataCollection(AbstractMetadata):
                     self._products))
             return None
         else:
-            return list(stored_source_code)[0]
+            return stored_source_code[0]
 
     def update(self, source_code):
         for p in self._products:
@@ -287,7 +303,7 @@ class MetadataCollection(AbstractMetadata):
 
     def delete(self):
         for p in self._products:
-            p._delete_metadata()
+            p.metadata.delete()
 
     def _get(self):
         for p in self._products:
@@ -298,11 +314,53 @@ class MetadataCollection(AbstractMetadata):
             p.metadata.clear()
 
     def to_dict(self):
-        return list(self._products)[0].metadata.to_dict()
+        products = list(self._products)
+        source = set(p.metadata.stored_source_code for p in products)
+        large_diff = large_timestamp_difference(p.metadata.timestamp
+                                                for p in products)
+
+        # warn if metadata does not match, give a little tolerance (5 seconds)
+        # for timestamps since they are expected to have slight differences
+        if len(source) > 1 or large_diff:
+            warnings.warn(f'Metadata acros products ({self!r}) differs, '
+                          'this could be due to metadata corruption or '
+                          'slow metadata storage backend, returning the '
+                          'metadata from the first product')
+
+        return products[0].metadata.to_dict()
 
     @property
     def _data(self):
-        return list(self._products)[0].metadata._data
+        products = list(self._products)
+        source = set(p.metadata.stored_source_code for p in products)
+        large_diff = large_timestamp_difference(p.metadata.timestamp
+                                                for p in products)
+
+        # warn if metadata does not match, give a little tolerance (5 seconds)
+        # for timestamps since they are expected to have slight differences
+        if len(source) > 1 or large_diff:
+            warnings.warn(f'Metadata acros products ({self!r}) differs, '
+                          'this could be due to metadata corruption or '
+                          'slow metadata storage backend, returning the '
+                          'metadata from the first product')
+
+        return products[0].metadata._data
+
+
+def large_timestamp_difference(timestamps):
+    """Returns True if there is at least one timestamp difference > 5 seconds
+    """
+    dts = [datetime.fromtimestamp(ts) for ts in timestamps]
+
+    for i in range(len(dts)):
+        for j in range(len(dts)):
+            if i != j:
+                diff = (dts[i] - dts[j]).total_seconds()
+
+                if abs(diff) > 5:
+                    return True
+
+    return False
 
 
 class MetadataAlwaysUpToDate(AbstractMetadata):
