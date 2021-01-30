@@ -1,3 +1,4 @@
+import sys
 from collections.abc import Mapping
 import abc
 import logging
@@ -100,6 +101,8 @@ class Placeholder(AbstractPlaceholder):
             self._loader_init = None
 
         elif isinstance(primitive, Template):
+            # NOTE: primitive.filename will be '<template>' if Template was
+            # loaded from a string
             path = Path(primitive.filename)
 
             if primitive.environment.undefined != StrictUndefined:
@@ -111,7 +114,9 @@ class Placeholder(AbstractPlaceholder):
                                  'constructors')
 
             # we cannot get the raw template on this case, raise error
-            if not path.exists():
+            # check '<template>' first, because Path('<template>').exists()
+            # breaks on windows
+            if primitive.filename == '<template>' or not path.exists():
                 raise ValueError(
                     'Could not load raw source from '
                     'jinja2.Template. This usually happens '
