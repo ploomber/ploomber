@@ -139,7 +139,7 @@ class Task(abc.ABC):
                                      'This only works when the task receives a'
                                      'pathlib.Path, when using SourceLoader '
                                      'or in PythonCallable. Pass a value '
-                                     'explicitely.')
+                                     'explicitly')
         else:
             self._name = name
 

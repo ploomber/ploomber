@@ -41,7 +41,7 @@ from functools import partial
 
 try:
     import importlib.resources as importlib_resources
-except ImportError:
+except ImportError:  # pragma: no cover
     # backported
     import importlib_resources
 
@@ -604,22 +604,6 @@ class DAG(collections.abc.Mapping):
 
         return Table([self[name].status(**kwargs) for name in self])
 
-    def to_dict(self, include_plot=False):
-        """Returns a dict representation of the dag's Tasks,
-        only includes a few attributes.
-
-        Parameters
-        ----------
-        include_plot: bool, optional
-            If True, the path to a PNG file with the plot in "_plot"
-        """
-        d = {name: self._G.nodes[name]['task'].to_dict() for name in self._G}
-
-        if include_plot:
-            d['_plot'] = self.plot(open_image=False)
-
-        return d
-
     def to_markup(self, path=None, fmt='html', sections=None):
         """Returns a str (md or html) with the pipeline's description
 
@@ -709,8 +693,8 @@ class DAG(collections.abc.Mapping):
         """
         if task.name in self._G:
             raise ValueError('DAGs cannot have Tasks with repeated names, '
-                             'there is a Task with name "{}" '
-                             'already'.format(task.name))
+                             'there is a Task with name {} '
+                             'already'.format(repr(task.name)))
 
         if task.name is not None:
             self._G.add_node(task.name, task=task)
@@ -871,9 +855,6 @@ class DAG(collections.abc.Mapping):
 
     def __repr__(self):
         return '{}("{}")'.format(type(self).__name__, self.name)
-
-    def _short_repr(self):
-        return repr(self)
 
     # IPython integration
     # https://ipython.readthedocs.io/en/stable/config/integrating.html

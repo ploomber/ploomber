@@ -132,6 +132,11 @@ def monkeypatch_plot(monkeypatch):
     yield mock_Image, mock_to_agraph, image_out
 
 
+def test_errror_on_invalid_executor():
+    with pytest.raises(TypeError):
+        DAG(executor=None)
+
+
 def test_plot_embed(dag, monkeypatch_plot):
     mock_Image, mock_to_agraph, image_out = monkeypatch_plot
 
@@ -163,6 +168,24 @@ def test_plot_path(dag, tmp_directory, monkeypatch_plot):
 @pytest.mark.parametrize('sections', [None, 'plot', 'status', 'source'])
 def test_to_markup(fmt, sections, dag, monkeypatch_plot):
     dag.to_markup(fmt=fmt, sections=sections)
+
+
+def test_error_on_invalid_markup_format(dag):
+    with pytest.raises(ValueError):
+        dag.to_markup(fmt='invalid format')
+
+
+def test_ipython_key_completions(dag):
+    assert dag._ipython_key_completions_() == ['first', 'second']
+
+
+def test_error_when_adding_task_with_existing_name(dag):
+    with pytest.raises(ValueError) as excinfo:
+        PythonCallable(touch_root, File('another.txt'), dag, name='first')
+
+    msg = ("DAGs cannot have Tasks with repeated names, "
+           "there is a Task with name 'first' already")
+    assert str(excinfo.value) == msg
 
 
 def test_to_graph_prepare_for_graphviz(dag):
