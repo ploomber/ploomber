@@ -61,7 +61,6 @@ from ploomber.constants import TaskStatus
 from ploomber.tasks.Upstream import Upstream
 from ploomber.tasks.Params import Params
 from ploomber.Table import TaskReport, Row
-from ploomber.sources.sources import Source
 from ploomber.util import isiterable
 from ploomber.util.util import callback_check
 
@@ -120,11 +119,11 @@ class Task(abc.ABC):
     def run(self):
         """This is the only required method Task subclasses must implement
         """
-        pass
+        pass  # pragma: no cover
 
-    # @abc.abstractmethod
+    @abc.abstractmethod
     def _init_source(self, source, kwargs):
-        pass
+        pass  # pragma: no cover
 
     def __init__(self, product, dag, name=None, params=None):
         self._params = Params(params)
@@ -143,8 +142,9 @@ class Task(abc.ABC):
         else:
             self._name = name
 
-        if dag is None:
-            raise TypeError('DAG cannot be None')
+        if not isinstance(dag, DAG):
+            raise TypeError(
+                f"'dag' must be an instance of DAG, got {type(dag)!r}")
 
         # NOTE: we should get rid of this, maybe just add hooks that are
         # called back on the dag object to avoid having a reference here
@@ -156,8 +156,9 @@ class Task(abc.ABC):
                 'self._source must be initialized before calling '
                 '__init__ in Task')
 
-        if not isinstance(self._source, Source):
-            raise TypeError('_init_source must return a subclass of Source')
+        if self._source is None:
+            raise TypeError(
+                '_init_source must return a source object, got None')
 
         if isinstance(product, Product):
             self._product = product
@@ -734,27 +735,18 @@ class Task(abc.ABC):
 
         return Row(data)
 
-    def to_dict(self):
-        """
-        Returns a dict representation of the Task, only includes a few
-        attributes
-        """
-        return dict(name=self.name,
-                    product=str(self.product),
-                    source_code=str(self.source))
-
     def debug(self):
         """Debug task, only implemented in certain tasks
         """
         raise NotImplementedError(
-            'debug is not implemented in "{}" tasks'.format(
+            '"debug" is not implemented in "{}" tasks'.format(
                 type(self).__name__))
 
     def develop(self):
         """Develop task, only implemented in certain tasks
         """
         raise NotImplementedError(
-            'debug is not implemented in "{}" tasks'.format(
+            '"develop" is not implemented in "{}" tasks'.format(
                 type(self).__name__))
 
     def _render_product(self):

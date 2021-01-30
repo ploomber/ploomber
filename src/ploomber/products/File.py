@@ -2,7 +2,6 @@
 Products are persistent changes triggered by Tasks such as a new file
 in the local filesystem or a table in a database
 """
-import warnings
 import json
 import shutil
 import os

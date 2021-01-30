@@ -8,6 +8,8 @@ from ploomber.products import (File, PostgresRelation, GenericProduct,
 from ploomber.tasks import (PythonCallable, SQLScript, ShellScript, SQLDump,
                             SQLTransfer, SQLUpload, PostgresCopyFrom,
                             NotebookRunner)
+from ploomber.tasks.Task import Task
+from ploomber.tasks import Task as task_module
 from ploomber.constants import TaskStatus
 from ploomber.placeholders.Placeholder import Placeholder
 
@@ -29,6 +31,56 @@ def touch(product):
 
 def touch_w_upstream(product, upstream):
     Path(str(product)).touch()
+
+
+class ConcreteTask(Task):
+    def __init__(self, product, dag, name=None, params=None):
+        # FIXME: concrete classes are required to assign ._source before
+        # calling init in the super class, this isn't clean, refactor
+        mock = Mock()
+        mock.doc = 'some docstring'
+        self._source = mock
+        super().__init__(product, dag, name, params)
+
+    def run(self):
+        pass
+
+    def _init_source(self, source):
+        pass
+
+
+def test_task_status(monkeypatch):
+    task = ConcreteTask(product=File('some_file'), dag=DAG())
+
+    # mock Row so we can test using the dictionary directly
+    monkeypatch.setattr(task_module, 'Row', lambda x: x)
+
+    out = task.status(sections=[
+        'type', 'status', 'client', 'last_run', 'outdated_dependencies',
+        'outdated_code', 'product_type', 'product_client'
+    ])
+
+    assert out == {
+        'type': 'ConcreteTask',
+        'status': 'WaitingRender',
+        'client': 'None',
+        'Last run': 'Has not been run',
+        'Outdated dependencies': False,
+        'Outdated code': True,
+        'Product type': 'File',
+        'Product client': 'None'
+    }
+
+
+@pytest.mark.parametrize('method', ['debug', 'develop'])
+def test_debug_and_develop_in_abstract_class(method):
+    task = ConcreteTask(product=File('some_file'), dag=DAG())
+
+    with pytest.raises(NotImplementedError) as excinfo:
+        getattr(task, method)()
+
+    assert f'"{method}" is not implemented in "ConcreteTask" tasks' == str(
+        excinfo.value)
 
 
 @pytest.mark.parametrize('class_,kwargs', [

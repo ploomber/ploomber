@@ -1,6 +1,6 @@
 import pytest
 
-from ploomber.tasks import Task
+from ploomber.tasks.Task import Task
 from ploomber._testing_utils import assert_no_extra_attributes_in_class
 
 
