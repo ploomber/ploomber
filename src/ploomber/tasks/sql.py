@@ -46,15 +46,16 @@ class SQLScript(Task):
                  params=None):
         params = params or {}
 
-        kwargs = dict(hot_reload=dag._params.hot_reload)
-        self._source = type(self)._init_source(source, kwargs)
-        super().__init__(product, dag, name, params)
-
         self.client = client or self.dag.clients.get(type(self))
 
         if self.client is None:
             raise ValueError('{} must be initialized with a client'.format(
                 type(self).__name__))
+
+        kwargs = dict(hot_reload=dag._params.hot_reload,
+                      split_source=self.client.split_source)
+        self._source = type(self)._init_source(source, kwargs)
+        super().__init__(product, dag, name, params)
 
     def run(self):
         return self.client.execute(str(self.source))

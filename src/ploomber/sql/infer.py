@@ -41,7 +41,6 @@ class ParsedSQLRelation:
     such as comparisons. Not using SQLRelationPlaceholder directly to
     avoid complex imports
     """
-
     def __init__(self, schema, name, kind):
         self.schema = schema
         self.name = name
@@ -65,44 +64,84 @@ class ParsedSQLRelation:
         return hash((self.schema, self.name, self.kind))
 
 
-def parse_statement(statement):
+def name_from_create_statement(statement):
     # NOTE: is there a better way to look for errors?
-    errors = [t.ttype for t in statement.tokens
-              if 'Token.Error' in str(t.ttype)]
+    errors = [
+        t.ttype for t in statement.tokens if 'Token.Error' in str(t.ttype)
+    ]
 
     if any(errors):
         warnings.warn('Failed to parse statement: {}'.format(str(statement)))
     else:
-        # after removing whitespace this should be [CREATE, 'TABLE|VIEW', 'ID']
+        # after removing whitespace this should be
+        # [CREATE, 'TABLE|VIEW', 'IF EXISTS'?, 'IDENTIFIER']
         elements = [t for t in statement.tokens if not t.is_whitespace]
 
-        identifier = str(elements[2])
-        tokens = identifier.split('.')
-
-        if not tokens or len(tokens) > 2:
-            # warnings.warn('Failed to parse statement: {}'
-                            # .format(str(statement)))
-            return None
+        # get the first identifier and extract tokens
+        tokens = [
+            e for e in elements if isinstance(e, sqlparse.sql.Identifier)
+        ][0].tokens
 
         if len(tokens) == 1:
-            schema = None
-            name = tokens[0]
+            return ParsedSQLRelation(schema=None,
+                                     name=tokens[0].value,
+                                     kind=str(elements[1]))
+
         else:
-            schema, name = tokens
+            return ParsedSQLRelation(schema=tokens[0].value,
+                                     name=tokens[2].value,
+                                     kind=str(elements[1]))
 
-        return ParsedSQLRelation(schema=schema, name=name,
-                                 kind=str(elements[1]))
 
+def created_relations(sql, split_source=None):
+    """
+    Determine the name of the relations that will be created if we run a given
+    sql script
 
-def created_relations(sql):
-    sql = sqlparse.format(sql, keyword_case='lower',
+    Parameters
+    ----------
+    sql : str
+        SQL code
+
+    split_source : str
+        The character used to delimit multiple commands. If not None, each
+        command is analyzed separately and assumed to be executed in order
+    """
+    # the split_source argument makes the database client able to execute
+    # multiple statements at once even if the driver does not allow it, by
+    # splitting by a character (usually ';') and executing one task at a time.
+    # there is one special case where one might want to use a different
+    # character, this will cause sqlparse.parse to fail so we have to split
+    # and re-join using ';' which is an acceptable delimiter in SQL
+    if split_source:
+        sql = ';'.join(sql.split(split_source))
+
+    sql = sqlparse.format(sql,
+                          keyword_case='lower',
                           identifier_case='lower',
                           strip_comments=True)
     statements = sqlparse.parse(sql)
 
-    drop = [parse_statement(s) for s in statements
-            if s.get_type() == 'DROP']
-    create = [parse_statement(s) for s in statements
-              if s.get_type() == 'CREATE']
+    # get DROP and CREATE statements along with their indexes, which give
+    # the position
+    drop_idx = {
+        name_from_create_statement(s): idx
+        for idx, s in enumerate(statements) if s.get_type() == 'DROP'
+    }
+    create_idx = {
+        name_from_create_statement(s): idx
+        for idx, s in enumerate(statements) if s.get_type() == 'CREATE'
+    }
 
-    return list(set(create) - set(drop))
+    relations = []
+
+    # add a relation to the final list if...
+    for relation, idx in create_idx.items():
+        # there isn't a DROP statement with the same name
+        # OR
+        # there is a DROP statement but comes before the CREATE
+        # e.g. DROP TABLE x; CREATE TABLE x AS ...
+        if relation not in drop_idx or drop_idx[relation] < idx:
+            relations.append(relation)
+
+    return relations

@@ -48,7 +48,7 @@ class DBAPIClient(Client):
         Some database drivers do not support multiple commands in a single
         execute statement. Use this optiion to split commands by a given
         character (e.g. ';') and send them one at a time. Defaults to
-        None (no spltting)
+        None (no splitting)
     """
     def __init__(self, connect_fn, connect_kwargs, split_source=None):
         super().__init__()

@@ -18,10 +18,11 @@ from test_pkg import functions
 @pytest.mark.parametrize('concrete_class', Source.__subclasses__())
 def test_interface(concrete_class):
     """
-    Look for unnecessary implemeneted methods/attributes in MetaProduct,
-    this helps us keep the API up-to-date if the Product interface changes
+    Check that Source concrete classes do not have any extra methods
+    that are not declared in the Source abstract class
     """
     if concrete_class in {PythonCallableSource, NotebookSource}:
+        # FIXME: these two have a lot of extra methods
         pytest.xfail()
 
     allowed_mapping = {}
@@ -132,71 +133,121 @@ def test_cannot_initialize_sql_script_with_literals():
         SQLScriptSource('SELECT * FROM my_table')
 
 
-def test_warns_if_sql_scipt_does_not_create_relation(
+def test_warns_if_sql_script_does_not_create_relation(
         sqlite_client_and_tmp_dir):
     client, _ = sqlite_client_and_tmp_dir
     dag = DAG()
     dag.clients[SQLiteRelation] = client
+
+    mock_client = Mock()
+    mock_client.split_source = ';'
 
     t = SQLScript('SELECT * FROM {{product}}',
                   SQLiteRelation((None, 'my_table', 'table')),
                   dag=dag,
-                  client=Mock(),
+                  client=mock_client,
                   name='sql')
 
-    match = 'will not create any tables or views but the task has product'
-
-    with pytest.warns(UserWarning, match=match):
+    with pytest.warns(UserWarning) as record:
         t.render()
 
+    assert len(record) == 1
+    msg = ('It appears that your script will not create any tables/views but '
+           'the product parameter is SQLiteRelation(my_table)')
+    assert record[0].message.args[0] == msg
 
-def test_warns_if_number_of_relations_does_not_match_products(
-        sqlite_client_and_tmp_dir):
-    client, _ = sqlite_client_and_tmp_dir
-    dag = DAG()
-    dag.clients[SQLiteRelation] = client
 
-    sql = """
-    -- wrong sql, products must be used in CREATE statements
-    CREATE TABLE {{product[0]}} AS
-    SELECT * FROM my_table
-    """
-
-    t = SQLScript(sql, [
+def test_warns_if_number_of_relations_does_not_match_number_of_products():
+    product = [
         SQLiteRelation((None, 'my_table', 'table')),
         SQLiteRelation((None, 'another_table', 'table'))
+    ]
+
+    source = SQLScriptSource("""
+    CREATE TABLE {{product[0]}} AS
+    SELECT * FROM my_table
+    GROUP BY some_column
+    """)
+
+    with pytest.warns(UserWarning) as record:
+        source.render({'product': product})
+
+    assert len(record) == 1
+    msg = ('It appears that your script will create 1 relation(s) '
+           'but you declared 2 product(s): '
+           '[SQLiteRelation(my_table), SQLiteRelation(another_table)]')
+    assert record[0].message.args[0] == msg
+
+
+def test_warns_if_no_create_statement_found():
+    product = SQLiteRelation((None, 'my_table', 'table'))
+
+    source = SQLScriptSource("""
+    -- {{product}} without CREATE statement
+    SELECT * FROM my_table
+    GROUP BY some_column
+    """)
+
+    with pytest.warns(UserWarning) as record:
+        source.render({'product': product})
+
+    assert len(record) == 1
+    msg = ('It appears that your script will not create any tables/views '
+           'but the product parameter is SQLiteRelation(my_table)')
+    assert record[0].message.args[0] == msg
+
+
+@pytest.mark.parametrize(
+    'sql, split_source',
+    [
+        [
+            """DROP TABLE IF EXISTS {{product}};
+        CREATE TABLE {{product}} AS SELECT * FROM another""", None
+        ],
+        [
+            """
+    BEGIN
+        EXECUTE IMMEDIATE 'DROP TABLE {{product}}';
+    EXCEPTION
+        WHEN OTHERS THEN NULL;
+    END;
+
+    ##
+
+    CREATE TABLE {{product}} AS
+    SELECT * FROM my_table
+    GROUP BY some_column
+    """, '##'
+        ],
     ],
-                  dag=dag,
-                  client=Mock(),
-                  name='sql')
+)
+def test_doesnt_warn_if_relations_match(sql, split_source):
+    product = SQLiteRelation((None, 'my_table', 'table'))
 
-    match = r'.*will create 1 relation\(s\) but you declared 2 product\(s\).*'
+    source = SQLScriptSource(sql, split_source=split_source)
 
-    with pytest.warns(UserWarning, match=match):
-        t.render()
+    with pytest.warns(None) as record:
+        source.render({'product': product})
+
+    assert not record
 
 
-# def test_warns_if_name_does_not_match(dag):
-#     dag = DAG()
-#     p = PostgresRelation(('schema', 'name', 'table'))
-#     t = SQLScript("""CREATE TABLE schema.name2 AS (SELECT * FROM a);
-#                           -- {{product}}
-#                           """, p,
-#                   dag, 't', client=Mock())
-#     t.render()
+def test_warns_if_inferred_relations_do_not_match_product():
+    product = SQLiteRelation((None, 'my_table', 'table'))
 
-# templates
+    source = SQLScriptSource("""
+    -- using {{product}} in the wrong place
+    CREATE TABLE some_table AS SELECT * FROM another_table
+    """)
 
-# def test_warns_if_no_product_found_using_template(fake_conn):
-#     dag = DAG()
+    with pytest.warns(UserWarning) as record:
+        source.render({'product': product})
 
-#     p = PostgresRelation(('schema', 'sales', 'table'))
-
-#     with pytest.warns(UserWarning):
-#         SQLScript(Template("SELECT * FROM {{name}}"), p, dag, 't',
-#                           params=dict(name='customers'))
-
-# comparing metaproduct
+    assert len(record) == 1
+    msg = ('It appears that your script will create relations '
+           '[ParsedSQLRelation(some_table)], which doesn\'t match '
+           'products: {SQLRelationPlaceholder(my_table)}')
+    assert record[0].message.args[0] == msg
 
 
 # TODO: check all other relevant properties are updated as well

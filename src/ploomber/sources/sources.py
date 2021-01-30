@@ -238,6 +238,10 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
     version in the same object and raises an Exception if attempted. It also
     passes some of its attributes
     """
+    def __init__(self, value, hot_reload=False, split_source=None):
+        self._split_source = split_source
+        super().__init__(value, hot_reload)
+
     def _post_init_validation(self, value):
         if not value.needs_render:
             raise SourceInitializationError(
@@ -254,7 +258,8 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
         """Analyze code and warn if issues are found
         """
         if 'product' in params:
-            infered_relations = infer.created_relations(rendered_value)
+            infered_relations = infer.created_relations(
+                rendered_value, split_source=self._split_source)
 
             if isinstance(params['product'], Product):
                 actual_rel = {params['product']._identifier}
@@ -265,26 +270,24 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
             infered_len = len(infered_relations)
             actual_len = len(actual_rel)
 
+            # warn is sql code will not create any tables/views
             if not infered_len:
-                warnings.warn(
-                    'It seems like your task "{task}" will not create '
-                    'any tables or views but the task has product '
-                    '"{product}"'.format(task='some task',
-                                         product=params['product']))
+                warnings.warn('It appears that your script will not create '
+                              'any tables/views but the product parameter is '
+                              f'{params["product"]!r}')
 
+            # warn if the number of CREATE statements does not match the
+            # number of products
             elif infered_len != actual_len:
-                warnings.warn('It seems like your task "{task}" will create '
-                              '{infered_len} relation(s) but you declared '
-                              '{actual_len} product(s): "{product}"'.format(
-                                  task='some task',
-                                  infered_len=infered_len,
-                                  actual_len=actual_len,
-                                  product=params['product']))
-            # parsing infered_relations is still WIP
-            # elif set(infered_relations) != set(infered_relations):
-            #         warnings.warn('Infered relations ({}) did not match products'
-            #                       ' {}'
-            #                       .format(infered_relations, actual_len))
+                warnings.warn(
+                    'It appears that your script will create '
+                    f'{infered_len} relation(s) but you declared '
+                    f'{actual_len} product(s): {params["product"]!r}')
+            elif set(infered_relations) != set(actual_rel):
+                warnings.warn('It appears that your script will create '
+                              f'relations {infered_relations!r}, '
+                              'which doesn\'t match products: '
+                              f'{actual_rel!r}')
 
     def render(self, params):
         # FIXME: inefficient, initialize once and only update if needed
