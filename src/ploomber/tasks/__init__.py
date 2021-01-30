@@ -1,5 +1,5 @@
 from ploomber.tasks.tasks import (PythonCallable, ShellScript, DownloadFromURL,
-                                  Link, Input)
+                                  Link, Input, task_factory)
 from ploomber.tasks.TaskFactory import TaskFactory
 from ploomber.tasks.sql import (SQLScript, SQLDump, SQLTransfer, SQLUpload,
                                 PostgresCopyFrom)
@@ -23,4 +23,5 @@ __all__ = [
     'UploadToS3',
     'input_data_passer',
     'in_memory_callable',
+    'task_factory',
 ]

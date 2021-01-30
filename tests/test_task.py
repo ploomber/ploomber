@@ -17,8 +17,6 @@ import pytest
 
 # TODO: if there is only one product class supported, infer from a tuple?
 # TODO: make PostgresRelation accept three parameters instead of a tuple
-# TODO: provide a way to manage locations in products, so a relation
-# is fulle specified
 
 
 class Dummy:

@@ -221,6 +221,7 @@ class PythonCallable(Task):
         return self._unserializer(str(self.product))
 
 
+# FIXME: there is already a TaskFactory, this is confusing
 def task_factory(_func=None, **factory_kwargs):
     """Syntactic sugar for building PythonCallable tasks
     """
