@@ -3,6 +3,15 @@ CHANGELOG
 
 0.9.1dev
 --------
+* ``File`` now supports a ``client`` argument to upload products to cloud storage
+* Adds ``GCloudStorageClient``
+* Fixes error that caused jupyter to fail to initialize the dag when adding a function to a module already included in the YAML spec
+* Fixes IPython namespace errors when using ``ploomber interact``
+* Adds ``ploomber.testing.sql.assert_no_duplicates_in_column`` to check for record duplicates and optionally show duplicates statistics
+* Deprecates a few internal methods: ``Table.save``, ``DAG.to_dict()``, ``Task.to_dict()``
+* Improvements to SQL static analyzer to warn when relations created by a SQL script do not match ``Product``
+* A few changes to ``Metadata`` (internal API) to cover some edge cases
+* Warning when ``Product`` metadata is corrupted
 
 0.9 (2021-01-18)
 ----------------
