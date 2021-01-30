@@ -258,36 +258,37 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
         """Analyze code and warn if issues are found
         """
         if 'product' in params:
-            infered_relations = infer.created_relations(
-                rendered_value, split_source=self._split_source)
+            inferred_relations = set(
+                infer.created_relations(rendered_value,
+                                        split_source=self._split_source))
 
             if isinstance(params['product'], Product):
-                actual_rel = {params['product']._identifier}
+                product_relations = {params['product']}
             else:
                 # metaproduct
-                actual_rel = {p._identifier for p in params['product']}
+                product_relations = {p for p in params['product']}
 
-            infered_len = len(infered_relations)
-            actual_len = len(actual_rel)
+            inferred_n = len(inferred_relations)
+            actual_n = len(product_relations)
 
             # warn is sql code will not create any tables/views
-            if not infered_len:
+            if not inferred_n:
                 warnings.warn('It appears that your script will not create '
                               'any tables/views but the product parameter is '
                               f'{params["product"]!r}')
 
             # warn if the number of CREATE statements does not match the
             # number of products
-            elif infered_len != actual_len:
-                warnings.warn(
-                    'It appears that your script will create '
-                    f'{infered_len} relation(s) but you declared '
-                    f'{actual_len} product(s): {params["product"]!r}')
-            elif set(infered_relations) != set(actual_rel):
+            elif inferred_n != actual_n:
                 warnings.warn('It appears that your script will create '
-                              f'relations {infered_relations!r}, '
+                              f'{inferred_n} relation(s) but you declared '
+                              f'{actual_n} product(s): {params["product"]!r}')
+            elif inferred_relations != product_relations:
+                warnings.warn('It appears that your script will create '
+                              f'relations {inferred_relations!r}, '
                               'which doesn\'t match products: '
-                              f'{actual_rel!r}')
+                              f'{product_relations!r}. Make sure schema, '
+                              'name and kind (table or view) match')
 
     def render(self, params):
         # FIXME: inefficient, initialize once and only update if needed

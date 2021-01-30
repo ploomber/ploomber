@@ -245,8 +245,9 @@ def test_warns_if_inferred_relations_do_not_match_product():
 
     assert len(record) == 1
     msg = ('It appears that your script will create relations '
-           '[ParsedSQLRelation(some_table)], which doesn\'t match '
-           'products: {SQLRelationPlaceholder(my_table)}')
+           '{ParsedSQLRelation(some_table)}, which doesn\'t match '
+           'products: {SQLiteRelation(my_table)}. Make sure schema, '
+           'name and kind (table or view) match')
     assert record[0].message.args[0] == msg
 
 

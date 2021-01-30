@@ -209,6 +209,12 @@ class SQLiteRelation(SQLiteBackedProductMixin, Product):
     def kind(self):
         return self._identifier.kind
 
+    def __eq__(self, other):
+        return self._identifier == other
+
+    def __hash__(self):
+        return hash((self.schema, self.name, self.kind))
+
 
 # FIXME: self._identifier should not be accessed direclty since it might
 # be a placeholder
@@ -342,3 +348,9 @@ class PostgresRelation(ProductWithClientMixin, Product):
     @property
     def kind(self):
         return self._identifier.kind
+
+    def __eq__(self, other):
+        return self._identifier == other
+
+    def __hash__(self):
+        return hash((self.schema, self.name, self.kind))
