@@ -50,16 +50,10 @@ class File(Product):
 
             try:
                 parsed = json.loads(content)
-            except json.JSONDecodeError:
-                # for compatibility with the previous version
-                stored_source_code = content
-                timestamp = self.__path_to_metadata.stat().st_mtime
-
-                warnings.warn('Migrating metadata to new format...')
-                loaded = dict(timestamp=timestamp,
-                              stored_source_code=stored_source_code)
-                self.save_metadata(loaded)
-                return loaded
+            except json.JSONDecodeError as e:
+                raise ValueError('Error loading JSON metadata '
+                                 f'for {self!r} stored at '
+                                 f'{str(self.__path_to_metadata)!r}') from e
             else:
                 # TODO: validate 'stored_source_code', 'timestamp' exist
                 return parsed

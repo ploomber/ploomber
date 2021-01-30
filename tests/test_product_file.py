@@ -1,3 +1,4 @@
+import json
 import sys
 from pathlib import Path
 from unittest.mock import Mock, _Call
@@ -64,6 +65,26 @@ def test_delete_metadata(tmp_directory):
     Path('some_file.source').touch()
     File('some_file')._delete_metadata()
     assert not Path('some_file.source').exists()
+
+
+def test_error_on_corrupted_metadata(tmp_directory):
+    Path('corrupted').touch()
+    Path('corrupted.source').write_text('this is not json')
+
+    with pytest.raises(ValueError) as excinfo:
+        File('corrupted').fetch_metadata()
+
+    msg = ("Error loading JSON metadata for File('corrupted') "
+           "stored at 'corrupted.source'")
+    assert msg == str(excinfo.value)
+
+
+def test_error_when_initializing_with_obj_other_than_str_or_path():
+    with pytest.raises(TypeError) as excinfo:
+        File(dict())
+
+    msg = 'File must be initialized with a str or a pathlib.Path'
+    assert str(excinfo.value) == msg
 
 
 @pytest.mark.skipif(sys.platform == "win32",
