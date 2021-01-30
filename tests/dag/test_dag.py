@@ -908,7 +908,12 @@ def test_clients_are_closed_after_build(tmp_directory):
     # create the task and run it
     dag = DAG()
 
-    clients = [Mock(wraps=SQLAlchemyClient(uri)) for _ in range(4)]
+    def mock_client():
+        m = Mock(wraps=SQLAlchemyClient(uri))
+        m.split_source = ';'
+        return m
+
+    clients = [mock_client() for _ in range(4)]
 
     dag.clients[SQLScript] = clients[0]
     dag.clients[SQLiteRelation] = clients[1]

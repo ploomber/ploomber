@@ -1,3 +1,4 @@
+from unittest.mock import Mock
 from pathlib import Path
 
 from ploomber.exceptions import RenderError, TaskBuildError
@@ -64,8 +65,8 @@ def test_task_init_source_with_placeholder_obj(Task, prod, source):
     Testing we can initialize a task with a Placeholder as the source argument
     """
     dag = DAG()
-    dag.clients[Task] = object()
-    dag.clients[type(prod)] = object()
+    dag.clients[Task] = Mock()
+    dag.clients[type(prod)] = Mock()
 
     Task(Placeholder(source), prod, dag, name='task')
 
@@ -263,8 +264,8 @@ def test_params_are_copied_upon_initialization():
 
 def test_placeholder_is_copied_upon_initialization():
     dag = DAG()
-    dag.clients[SQLScript] = object()
-    dag.clients[PostgresRelation] = object()
+    dag.clients[SQLScript] = Mock()
+    dag.clients[PostgresRelation] = Mock()
 
     p = Placeholder('CREATE TABLE {{product}} AS SELECT * FROM TABLE')
 

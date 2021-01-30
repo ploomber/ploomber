@@ -1,3 +1,4 @@
+from unittest.mock import Mock
 from pathlib import Path
 
 import pytest
@@ -5,7 +6,6 @@ import pytest
 from ploomber import DAG
 from ploomber.tasks import PythonCallable, SQLScript, SQLTransfer, SQLUpload
 from ploomber.products import GenericProduct, GenericSQLRelation
-
 
 params = [(GenericProduct, 'some_identifier.txt'),
           (GenericSQLRelation, ('a_table', 'table'))]
@@ -58,18 +58,17 @@ def test_sample_dag(sqlite_client_and_tmp_dir, class_, identifier):
     assert product.fetch_metadata() is not None
 
 
-@pytest.mark.parametrize("class_,source",
-                         [(SQLScript,
-                           'CREATE TABLE {{product}} as SELECT * FROM table'),
-                          (SQLTransfer, '/some/file'),
-                          (SQLUpload, '/some/file')])
+@pytest.mark.parametrize("class_,source", [
+    (SQLScript, 'CREATE TABLE {{product}} as SELECT * FROM table'),
+    (SQLTransfer, '/some/file'),
+    (SQLUpload, '/some/file'),
+])
 def test_sql_with_sql_tasks(class_, source):
     dag = DAG()
-    client_metadata = object()
-    client = object()
+    client_metadata = Mock()
+    client = Mock()
     product = GenericSQLRelation(('name', 'table'), client=client_metadata)
-    class_(source,
-           product, dag, client=client, name='task')
+    class_(source, product, dag, client=client, name='task')
 
 
 def test_sql_stores_metadata_by_schema_and_name(sqlite_client_and_tmp_dir):
