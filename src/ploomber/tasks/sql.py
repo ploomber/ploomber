@@ -46,7 +46,7 @@ class SQLScript(Task):
                  params=None):
         params = params or {}
 
-        client = client or self.dag.clients.get(type(self))
+        client = client or dag.clients.get(type(self))
 
         if client is None:
             raise ValueError('{} must be initialized with a client'.format(
@@ -57,6 +57,7 @@ class SQLScript(Task):
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
         self.client = client
+        self.dag = dag
 
     def run(self):
         return self.client.execute(str(self.source))
