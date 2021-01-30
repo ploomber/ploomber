@@ -61,6 +61,34 @@ def test_raises_error_if_extra_parameter():
         (Placeholder('SELECT * FROM {{table}}').render(table=1, not_a_param=1))
 
 
+def test_error_if_raw_source_cant_be_retrieved():
+    with pytest.raises(ValueError) as excinfo:
+        Placeholder(Template('some template', undefined=StrictUndefined))
+
+    assert 'Could not load raw source from jinja2.Template' in str(
+        excinfo.value)
+
+
+def test_error_if_initialized_with_unsupported_type():
+    with pytest.raises(TypeError) as excinfo:
+        Placeholder(None)
+
+    assert ('Placeholder must be initialized with a Template, '
+            'Placeholder, pathlib.Path or str, got NoneType instead') == str(
+                excinfo.value)
+
+
+def test_error_on_read_before_render():
+    placeholder = Placeholder('some template {{variable}}')
+
+    with pytest.raises(RuntimeError) as excinfo:
+        str(placeholder)
+
+    assert ('Tried to read Placeholder '
+            'Placeholder("some template {{variable}}") without rendering first'
+            ) == str(excinfo.value)
+
+
 def test_strict_templates_initialized_from_jinja_template(path_to_assets):
     path = str(path_to_assets / 'templates')
     env = Environment(loader=FileSystemLoader(path), undefined=StrictUndefined)

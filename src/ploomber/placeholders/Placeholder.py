@@ -25,15 +25,15 @@ class AbstractPlaceholder(abc.ABC):
     """
     @abc.abstractmethod
     def __str__(self):
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def __repr__(self):
-        pass
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def render(self, params):
-        pass
+        pass  # pragma: no cover
 
 
 class Placeholder(AbstractPlaceholder):
@@ -112,16 +112,18 @@ class Placeholder(AbstractPlaceholder):
 
             # we cannot get the raw template on this case, raise error
             if not path.exists():
-                raise ValueError('Could not load raw source from '
-                                 'jinja2.Template, this usually happens '
-                                 'when Templates are initialized directly '
-                                 'from a str, only Templates loaded from '
-                                 'the filesystem are supported, using a '
-                                 'FileSystemLoader or '
-                                 'PackageLoader will fix this issue, '
-                                 'if you want to create a template from '
-                                 'a string pass it directly '
-                                 'Placeholder("some {{placeholder}}")')
+                raise ValueError(
+                    'Could not load raw source from '
+                    'jinja2.Template. This usually happens '
+                    'when the placeholder is initialised with a '
+                    'jinja.Template which was initialized with '
+                    'a string. Only jinja2.Templates loaded from '
+                    'the filesystem are supported. Use '
+                    'ploomber.SourceLoader or jinja\'s '
+                    'FileSystemLoader/PackageLoader to fix '
+                    'this issue, if you want to create a template from '
+                    'a string pass it directly '
+                    'Placeholder("some {{placeholder}}")')
 
             self._path = path
             self.__raw = path.read_text()
