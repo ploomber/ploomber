@@ -513,10 +513,21 @@ def test_extract_variables_from_notebooks(tmp_nbs):
 
     dag = DAGSpec(d).to_dag()
     deps = {name: set(task.upstream) for name, task in dag.items()}
+    # FIXME: why is this returning relative paths on windows but absolute
+    # on linux. tmp fix: call .resolve()
     prods = {
         name: task.product.to_json_serializable()
         for name, task in dag.items()
     }
+
+    # tmp fix: call resolve
+    def _resolve(d):
+        if isinstance(d, dict):
+            return {k: _resolve(v) for k, v in d.items()}
+        else:
+            return str(Path(d).resolve())
+
+    prods = _resolve(prods)
 
     expected_deps = {'clean': {'load'}, 'plot': {'clean'}, 'load': set()}
 
