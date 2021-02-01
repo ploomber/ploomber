@@ -25,6 +25,13 @@ def expand_raw_dictionary(raw, mapping):
     return data
 
 
+def expand_raw_dictionaries(raw, mapping):
+    """
+    Expands a list of dictionaries
+    """
+    return [expand_raw_dictionary(element, mapping) for element in raw]
+
+
 def expand_if_needed(raw_value, mapping):
     placeholders = util.get_tags_in_str(raw_value)
 

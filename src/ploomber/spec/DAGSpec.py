@@ -76,7 +76,7 @@ from ploomber.util import validate
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.env.EnvDict import EnvDict
-from ploomber.env.expand import expand_raw_dictionary
+from ploomber.env.expand import expand_raw_dictionary, expand_raw_dictionaries
 from ploomber.tasks import NotebookRunner
 
 logger = logging.getLogger(__name__)
@@ -144,7 +144,7 @@ class DAGSpec(MutableMapping):
         self.data = data
 
         if isinstance(self.data, list):
-            self.data = data = {'tasks': self.data}
+            self.data = {'tasks': self.data}
 
         # validate keys defined at the top (nested keys are not validated here)
         self._validate_top_keys(self.data, path)
@@ -168,11 +168,21 @@ class DAGSpec(MutableMapping):
         # if there is a "location" top key, we don't have to do anything else
         # as we will just load the dotted path when .to_dag() is called
         if 'location' not in self.data:
+
+            Meta.initialize_inplace(self.data)
+            import_tasks_from = self.data['meta']['import_tasks_from']
+
+            if import_tasks_from is not None:
+                imported = yaml.safe_load(Path(import_tasks_from).read_text())
+
+                if self.env is not None:
+                    imported = expand_raw_dictionaries(imported, self.env)
+
+                self.data['tasks'].extend(imported)
+
             self.data['tasks'] = [
                 normalize_task(task) for task in self.data['tasks']
             ]
-
-            Meta.initialize_inplace(self.data)
 
             # make sure the folder where the pipeline is located is in sys.path
             # otherwise dynamic imports needed by TaskSpec will fail
@@ -244,8 +254,6 @@ class DAGSpec(MutableMapping):
             factory = load_dotted_path(self['location'])
             return factory()
 
-        tasks = self.pop('tasks')
-
         dag = DAG()
 
         if 'config' in self:
@@ -256,7 +264,7 @@ class DAGSpec(MutableMapping):
         if clients:
             init_clients(dag, clients)
 
-        process_tasks(dag, tasks, self, root_path=self._parent_path)
+        process_tasks(dag, self, root_path=self._parent_path)
 
         return dag
 
@@ -379,6 +387,7 @@ class Meta:
         'jupyter_hot_reload',
         'source_loader',
         'jupyter_functions_as_notebooks',
+        'import_tasks_from',
     }
 
     @classmethod
@@ -414,6 +423,9 @@ class Meta:
         if 'jupyter_functions_as_notebooks' not in meta:
             meta['jupyter_functions_as_notebooks'] = False
 
+        if 'import_tasks_from' not in meta:
+            meta['import_tasks_from'] = None
+
         if 'source_loader' not in meta:
             meta['source_loader'] = None
         else:
@@ -443,7 +455,7 @@ class Meta:
         return {v: None for v in cls.VALID}
 
 
-def process_tasks(dag, tasks, dag_spec, root_path=None):
+def process_tasks(dag, dag_spec, root_path=None):
     """
     Initialize Task objects from TaskSpec, extract product and dependencies
     if needed and set the dag dependencies structure
@@ -456,7 +468,7 @@ def process_tasks(dag, tasks, dag_spec, root_path=None):
     extract_prod = dag_spec['meta']['extract_product']
 
     # first pass: init tasks and them to dag
-    for task_dict in tasks:
+    for task_dict in dag_spec['tasks']:
         fn = task_dict['class']._init_source
         kwargs = {'kwargs': {}, **task_dict}
         source = call_with_dictionary(fn, kwargs=kwargs)

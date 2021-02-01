@@ -45,6 +45,12 @@ contains several ``pipeline.yaml`` examples.
         # Show tasks, whose source is a function, as notebooks in jupyter
         jupyter_functions_as_notebooks: False
 
+        # Include tasks defined in a different file (must be a list defined
+        # in YAML format. Useful for composing pipelines. For example, define
+        # a pipeline-features.yaml with all your feature engineering code and
+        # import it in your training and serving pipelines
+        import_tasks_from: /path/to/tasks.yaml
+
 
     # DAG configuration
     config:
