@@ -12,6 +12,7 @@ CHANGELOG
 * Improvements to SQL static analyzer to warn when relations created by a SQL script do not match ``Product``
 * A few changes to ``Metadata`` (internal API) to cover some edge cases
 * Warning when ``Product`` metadata is corrupted
+* Adds new ``meta.import_tasks_from`` option in YAML specs to import tasks from another file
 
 0.9 (2021-01-18)
 ----------------

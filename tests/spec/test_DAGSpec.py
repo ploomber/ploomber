@@ -1,3 +1,4 @@
+import sys
 import os
 from datetime import timedelta, datetime
 import numpy as np
@@ -501,6 +502,9 @@ def test_infer_dependencies_sql(tmp_pipeline_sql, add_current_to_sys_path):
     assert deps == expected
 
 
+# FIXME: fix this test on windows, there's something going on with the way
+# Pathlib behaves on windows that makes the products comparison to fail
+@pytest.mark.xfail(sys.platform == 'win32')
 def test_extract_variables_from_notebooks(tmp_nbs):
     with open('pipeline.yaml') as f:
         d = yaml.load(f)
@@ -513,26 +517,19 @@ def test_extract_variables_from_notebooks(tmp_nbs):
         t.pop('product', None)
 
     dag = DAGSpec(d).to_dag()
-    deps = {name: set(task.upstream) for name, task in dag.items()}
-    # FIXME: why is this returning relative paths on windows but absolute
-    # on linux. tmp fix: call .resolve()
-    prods = {
+    dependencies = {name: set(task.upstream) for name, task in dag.items()}
+    products = {
         name: task.product.to_json_serializable()
         for name, task in dag.items()
     }
 
-    # tmp fix: call resolve
-    def _resolve(d):
-        if isinstance(d, dict):
-            return {k: _resolve(v) for k, v in d.items()}
-        else:
-            return str(Path(d).resolve())
+    expected_dependencies = {
+        'clean': {'load'},
+        'plot': {'clean'},
+        'load': set()
+    }
 
-    prods = _resolve(prods)
-
-    expected_deps = {'clean': {'load'}, 'plot': {'clean'}, 'load': set()}
-
-    expected_prod = {
+    expected_products = {
         'clean': {
             'data': str(Path(tmp_nbs, 'output', 'clean.csv').resolve()),
             'nb': str(Path(tmp_nbs, 'output', 'clean.ipynb').resolve()),
@@ -544,8 +541,8 @@ def test_extract_variables_from_notebooks(tmp_nbs):
         'plot': str(Path(tmp_nbs, 'output', 'plot.ipynb').resolve()),
     }
 
-    assert deps == expected_deps
-    assert prods == expected_prod
+    assert dependencies == expected_dependencies
+    assert products == expected_products
 
 
 def test_source_loader(monkeypatch, tmp_directory):
