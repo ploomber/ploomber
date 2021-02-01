@@ -1,6 +1,7 @@
 """
 Analyzes SQL scripts to infer performed actions
 """
+# TODO: move this to static_analysis
 import warnings
 import sqlparse
 
