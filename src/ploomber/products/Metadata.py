@@ -1,3 +1,7 @@
+"""
+Metadata represents the information we need to save in order to support
+incremental builds: source code and build timestmp
+"""
 import logging
 import warnings
 import abc
@@ -214,12 +218,10 @@ class Metadata(AbstractMetadata):
         self._product.save_metadata(data)
 
         # if saving went good, we can update the local copy
-        self._data = new_data
+        self.update_locally(new_data)
 
     def update_locally(self, data):
-        # NOTE: do we have to copy here? is it a problem if all products
-        # in a metadproduct have the same obj in metadata?
-        self._data = data
+        self._data = deepcopy(data)
 
     def delete(self):
         self._product._delete_metadata()

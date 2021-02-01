@@ -1,3 +1,6 @@
+"""
+Products representing SQL relations
+"""
 import abc
 import sqlite3
 import json

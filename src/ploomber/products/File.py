@@ -1,6 +1,6 @@
 """
-Products are persistent changes triggered by Tasks such as a new file
-in the local filesystem or a table in a database
+A product representing a File in the local filesystem with an optional client,
+which allows the file to be retrieved or backed up in remote storage
 """
 import json
 import shutil

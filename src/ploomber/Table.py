@@ -4,8 +4,6 @@ A mapping object with text and HTML representations
 from textwrap import TextWrapper
 from copy import deepcopy
 import shutil
-from pathlib import Path
-import tempfile
 from collections.abc import Mapping, Iterable
 from tabulate import tabulate
 

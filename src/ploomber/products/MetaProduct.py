@@ -1,3 +1,6 @@
+"""
+Handling tasks that generate multiple products
+"""
 from collections.abc import Mapping
 
 from ploomber.products.Metadata import MetadataCollection
