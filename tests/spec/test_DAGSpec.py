@@ -10,6 +10,7 @@ import jupytext
 import nbformat
 import jupyter_client
 import getpass
+from copy import deepcopy
 
 from ploomber.spec.DAGSpec import DAGSpec, Meta
 from ploomber.util.util import load_dotted_path
@@ -614,3 +615,52 @@ def test_spec_with_location_error_if_meta(tmp_directory):
 
     assert ('If specifying dag through a "location" key it must be '
             'the unique key in the spec') in str(excinfo.value)
+
+
+def test_to_dag_does_not_mutate_spec(tmp_nbs):
+    spec = DAGSpec('pipeline.yaml')
+    old_data = deepcopy(spec.data)
+    spec.to_dag()
+    assert spec.data == old_data
+
+
+def test_import_tasks_from(tmp_nbs):
+    some_tasks = [{'source': 'extra_task.py', 'product': 'extra.ipynb'}]
+    Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
+    Path('extra_task.py').write_text("""
+# + tags=["parameters"]
+# -
+""")
+
+    spec_d = yaml.load(Path('pipeline.yaml').read_text())
+    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+    spec = DAGSpec(spec_d)
+
+    spec.to_dag().render()
+    assert 'extra_task.py' in [str(t['source']) for t in spec['tasks']]
+
+
+def test_import_tasks_from_with_non_empty_env(tmp_nbs):
+    some_tasks = [{
+        'source': 'extra_task.py',
+        'name': 'extra_task',
+        'product': 'extra.ipynb',
+        'params': {
+            'some_param': '{{some_param}}'
+        }
+    }]
+    Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
+    Path('extra_task.py').write_text("""
+# + tags=["parameters"]
+# -
+""")
+    spec_d = yaml.load(Path('pipeline.yaml').read_text())
+    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+    spec = DAGSpec(spec_d, env={'some_param': 'some_value'})
+
+    dag = spec.to_dag()
+    dag.render()
+    assert dag['extra_task'].params['some_param'] == 'some_value'
+    assert 'extra_task.py' in [str(t['source']) for t in spec['tasks']]

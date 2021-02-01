@@ -1,12 +1,13 @@
 from pathlib import Path
 
-
 from ploomber import DAG
 from ploomber.products import File
 from ploomber.tasks import PythonCallable
 
-# executors are responsible for reporting Executed and Errored status
-# should check that they do it
+# FIXME: test_dag also uses the parallel executor to test interaction of the
+# executor with other features, here, we should add executor-specific features
+# to test (i.e. things defined in the executor itself). The current test
+# just verifies dag execution finishes
 
 
 def touch_root(product):

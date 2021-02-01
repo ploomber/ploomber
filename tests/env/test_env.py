@@ -13,7 +13,8 @@ from ploomber.env.decorators import with_env, load_env
 from ploomber.env import validate
 from ploomber.env.EnvDict import EnvDict
 from ploomber.env.expand import (EnvironmentExpander, expand_raw_dictionary,
-                                 cast_if_possible, iterate_nested_dict)
+                                 cast_if_possible, iterate_nested_dict,
+                                 expand_raw_dictionaries)
 from ploomber import repo
 
 
@@ -454,10 +455,23 @@ def test_env_dict_initialized_with_replaced_env_dict():
     assert b['a']['b'] == 2
 
 
-def test_expand_raw_dict():
+def test_expand_raw_dictionary():
     mapping = {'key': 'value'}
     d = {'some_setting': '{{key}}'}
     assert expand_raw_dictionary(d, mapping) == {'some_setting': 'value'}
+
+
+def test_expand_raw_dictionaries():
+    mapping = {'key': 'value'}
+    d = [{'some_setting': '{{key}}'}, {'another_setting': '{{key}}'}]
+    assert expand_raw_dictionaries(d, mapping) == [
+        {
+            'some_setting': 'value',
+        },
+        {
+            'another_setting': 'value'
+        },
+    ]
 
 
 def test_expand_raw_dict_nested():
