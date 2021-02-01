@@ -33,6 +33,7 @@ env/
 
 # add env/ module
 !src/ploomber/env/
+!tests/env/
 
 build/
 develop-eggs/
