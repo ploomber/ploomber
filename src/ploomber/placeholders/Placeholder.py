@@ -1,4 +1,3 @@
-import sys
 from collections.abc import Mapping
 import abc
 import logging

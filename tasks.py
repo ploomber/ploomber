@@ -69,3 +69,4 @@ def test(c, report=False):
     """
     c.run('pytest --cov ploomber ' + ('--cov-report html' if report else ''),
           pty=True)
+    c.run('flake8')

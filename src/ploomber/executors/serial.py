@@ -185,7 +185,8 @@ def catch_exceptions(fn, exceptions_all):
     except Exception as e:
         # if running in a different process, logger.exception inside Task.build
         # won't show up. So we do it here.
-        # FIXME: this is going to cause duplicates if not running in a subprocess
+        # FIXME: this is going to cause duplicates if not running in a
+        # subprocess
         logger.exception(str(e))
         tr = traceback.format_exc()
         exceptions_all.append(message=tr, task_str=repr(fn.task), obj=e)

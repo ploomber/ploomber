@@ -13,7 +13,8 @@ from ploomber.executors import Serial
 from ploomber.constants import TaskStatus
 
 # TODO: and wih the subprocess options on/off
-# TODO: update other test aswell that parametrize on execuors to use all serial with subprocess on/off
+# TODO: update other test aswell that parametrize on execuors to use all
+# serial with subprocess on/off
 # add to test dag : test counts in sucessful run, build again and counts
 # are the same
 # TODO: tests when on_render/on_finish fail an then on_failure fails

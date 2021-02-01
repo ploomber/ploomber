@@ -54,7 +54,7 @@ def test_passing_upstream_and_product_in_postgres(pg_client_and_schema,
               select * from generate_series(0, 15) as n;
               commit;"""
     ta_rel = PostgresRelation((None, 'series', 'table'))
-    ta = SQLScript(ta_t, ta_rel, dag, 'ta')
+    SQLScript(ta_t, ta_rel, dag, 'ta')
 
     dag.build()
 

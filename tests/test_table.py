@@ -1,4 +1,3 @@
-from pathlib import Path
 import string
 import shutil
 from textwrap import TextWrapper

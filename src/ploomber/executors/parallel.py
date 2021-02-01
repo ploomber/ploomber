@@ -65,8 +65,8 @@ class Parallel(Executor):
     def __call__(self, dag, show_progress):
         super().__call__(dag)
 
-        # TODO: Have to test this with other Tasks, especially the ones that use
-        # clients - have to make sure they are serialized correctly
+        # TODO: Have to test this with other Tasks, especially the ones that
+        # use clients - have to make sure they are serialized correctly
         done = []
         started = []
         set_all = set(dag)
@@ -112,10 +112,10 @@ class Parallel(Executor):
 
         def next_task():
             """
-            Return the next Task to execute, returns None if no Tasks are available
-            for execution (cause their dependencies are not done yet) and raises
-            a StopIteration exception if there are no more tasks to run, which means
-            the DAG is done
+            Return the next Task to execute, returns None if no Tasks are
+            available for execution (cause their dependencies are not done yet)
+            and raises a StopIteration exception if there are no more tasks to
+            run, which means the DAG is done
             """
             for task in dag.values():
                 if task.exec_status in {TaskStatus.Aborted}:
@@ -125,8 +125,8 @@ class Parallel(Executor):
 
             # iterate over tasks to find which is ready for execution
             for task in dag.values():
-                # ignore tasks that are already started, I should probably add an
-                # executing status but that cannot exist in the task itself,
+                # ignore tasks that are already started, I should probably add
+                # an executing status but that cannot exist in the task itself,
                 # maybe in the manaer?
                 if (task.exec_status == TaskStatus.WaitingExecution
                         and task not in started):

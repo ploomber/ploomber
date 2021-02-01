@@ -289,7 +289,8 @@ def _load_jupyter_server_extension(app):
     app.contents_manager_class = PloomberContentsManager
 
     try:
-        # And rerun selected init steps from https://github.com/jupyter/notebook/blob/
+        # And re-run selected init steps from:
+        # https://github.com/jupyter/notebook/blob/
         # 132f27306522b32fa667a6b208034cb7a04025c9/notebook/notebookapp.py#L1634-L1638
         app.contents_manager = app.contents_manager_class(parent=app,
                                                           log=app.log)
@@ -301,6 +302,6 @@ deactivate the server extension with "jupyter serverextension disable ploomber"
 and configure the contents manager manually by adding
 c.NotebookApp.contents_manager_class = "ploomber.jupyter.PloomberContentsManager"
 to your .jupyter/jupyter_notebook_config.py file.
-"""
+""" # noqa
         app.log.error(error)
         raise

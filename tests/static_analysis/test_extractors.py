@@ -129,24 +129,23 @@ def test_infer_from_code_cell(code, expected):
     assert sorted(inferred) == sorted(expected)
 
 
-@pytest.mark.parametrize('code, class_, schema, name, kind', [
-    [
+@pytest.mark.parametrize(
+    'code, class_, schema, name, kind',
+    [[
         '{% set product =  PostgresRelation(["s", "n", "table"]) %} some code',
         PostgresRelation, 's', 'n', 'table'
     ],
-    [
-        'simulating some code here {% set product =  SQLiteRelation(["s", "n", "view"]) %}',
-        SQLiteRelation, 's', 'n', 'view'
-    ],
-    [
-        '{% set product =  GenericSQLRelation(["s", "n", "table"]) %}',
-        GenericSQLRelation, 's', 'n', 'table'
-    ],
-    [
-        '{% set product =  SQLRelation(["s", "n", "view"]) %}', SQLRelation,
-        's', 'n', 'view'
-    ]
-])
+     [('simulating some code here '
+       '{% set product =  SQLiteRelation(["s", "n", "view"]) %}'),
+      SQLiteRelation, 's', 'n', 'view'],
+     [
+         '{% set product =  GenericSQLRelation(["s", "n", "table"]) %}',
+         GenericSQLRelation, 's', 'n', 'table'
+     ],
+     [
+         '{% set product =  SQLRelation(["s", "n", "view"]) %}', SQLRelation,
+         's', 'n', 'view'
+     ]])
 def test_extract_product_from_sql(code, class_, schema, name, kind):
     extracted = SQLExtractor(code).extract_product()
     assert isinstance(extracted, class_)

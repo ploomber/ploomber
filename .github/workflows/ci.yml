@@ -71,3 +71,4 @@ jobs:
         conda activate conda-env
         pytest  --cov=ploomber
         coveralls
+        flake8

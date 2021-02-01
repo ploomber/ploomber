@@ -328,8 +328,8 @@ def test_double_underscore_raises_error():
 
 
 def test_leading_underscore_in_top_key_raises_error(cleanup_env):
-    msg = """Error validating env.
-Top-level keys cannot start with an underscore, except for {'_module'}. Got: ['_a']"""
+    msg = ("Error validating env.\nTop-level keys cannot start with "
+           "an underscore, except for {'_module'}. Got: ['_a']")
     with pytest.raises(ValueError) as exc_info:
         Env({'_a': 1})
 
@@ -555,4 +555,4 @@ def test_error_when_loaded_obj_is_not_dict(content, type_, tmp_directory):
     assert str(excinfo.value) == expected
 
 
-# TODO: {{here}} allowed in _module
+# TODO: test {{here}} allowed in _module

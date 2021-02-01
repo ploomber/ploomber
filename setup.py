@@ -76,7 +76,6 @@ TESTING = [
     'google-cloud-storage',
     'pytest',
     'pytest-cov',
-    # TODO: add pytest-flake8
     # TODO: update config so coveralls 3 works
     'coveralls<3',
     # we need this because we are re-using the original jupyter test suite for

@@ -19,7 +19,6 @@ from ploomber.util import safe_remove, requires
 class FileIO(abc.ABC):
     """Abstract class for file I/O
     """
-
     def __init__(self, path, chunked):
         self.path = Path(path)
         self.chunked = chunked
@@ -77,7 +76,6 @@ class ParquetIO(FileIO):
 
     This function uses the pyarrow package directly to save to parquet
     """
-
     @requires(['pyarrow'], 'ParquetIO')
     def __init__(self, path, chunked):
         if chunked:
@@ -102,15 +100,15 @@ class ParquetIO(FileIO):
             if self.i == 0:
                 self.schema = schema
 
-                self._logger.info('Got first chunk, to avoid schemas '
-                                  'incompatibility, the schema from this chunk '
-                                  'will be applied to the other chunks, verify '
-                                  'that this is correct: %s. Columns might be '
-                                  'incorrectly detected as "null" if all values'
-                                  ' from the first chunk are empty, in such '
-                                  'case the only safe way to dump is in one '
-                                  'chunk (by setting chunksize to None)',
-                                  schema)
+                self._logger.info(
+                    'Got first chunk, to avoid schemas '
+                    'incompatibility, the schema from this chunk '
+                    'will be applied to the other chunks, verify '
+                    'that this is correct: %s. Columns might be '
+                    'incorrectly detected as "null" if all values'
+                    ' from the first chunk are empty, in such '
+                    'case the only safe way to dump is in one '
+                    'chunk (by setting chunksize to None)', schema)
         else:
             self.write_in_path(str(self.path), data, headers, schema=None)
 
@@ -129,7 +127,6 @@ class ParquetIO(FileIO):
 class CSVIO(FileIO):
     """csv file handler
     """
-
     @classmethod
     def write_in_path(cls, path, data, headers):
         with open(path, 'w', newline='') as csvfile:

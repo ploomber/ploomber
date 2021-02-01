@@ -162,7 +162,7 @@ class SQLParser:
                 select += f' LIMIT {limit}'
 
         sql = Template("""
-WITH {%- for id, code in pairs -%}{{',' if not loop.first else '' }} {{id}} as (
+WITH {%- for id,code in pairs -%}{{',' if not loop.first else '' }} {{id}} AS (
     {{code}}
 ){% endfor %}
 {{select}}""").render(pairs=pairs, select=select)

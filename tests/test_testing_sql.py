@@ -110,7 +110,7 @@ create table some_table as {{'(' if parenthesis else ''}}
 
 with a as (
     select * from aa
-    /* 
+    /*
     multi line
     comment */
 ), b as (

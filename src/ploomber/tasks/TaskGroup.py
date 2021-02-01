@@ -4,7 +4,7 @@ from ploomber.util import isiterable
 # node, otherwise handling the upstream logic becomes messy:
 # the dag.plot function should see a single edge but in reality there should
 # be many going from the upstream dependencies to each one of the tasks
-# in the group, currently plotting and execution have the same source of truth:
+# in the group, currently plotting and execution have the same source of truth
 # the nx.DiGraph object so we will have to make some changes - probably
 # just at the plot level: the DAG should still see edges to all the subtasks
 # for execution to run successfully but the plot function should only
@@ -36,9 +36,10 @@ class TaskGroup:
         self.tasks = tasks
         # self.treat_as_single_task = treat_as_single_task
 
-        # # name is only required when treat_as_single_task is True
+        # name is only required when treat_as_single_task is True
         # if treat_as_single_task and name is None:
-        #     raise ValueError('name cannot be None if treat_as_single_task is True')
+        #     raise ValueError('name cannot be None if '
+        #                      'treat_as_single_task is True')
 
         # # should only exist when treat_as_single_task is True
         # dags = []

@@ -513,24 +513,27 @@ def test_extract_variables_from_notebooks(tmp_nbs):
 
     dag = DAGSpec(d).to_dag()
     deps = {name: set(task.upstream) for name, task in dag.items()}
-    prods = {name: task.product for name, task in dag.items()}
+    prods = {
+        name: task.product.to_json_serializable()
+        for name, task in dag.items()
+    }
 
     expected_deps = {'clean': {'load'}, 'plot': {'clean'}, 'load': set()}
 
-    # expected_prod = {
-    #     'clean.py': {
-    #         'data': 'output/clean.csv',
-    #         'nb': 'output/clean.ipynb'
-    #     },
-    #     'load.py': {
-    #         'data': 'output/data.csv',
-    #         'nb': 'output/load.ipynb'
-    #     },
-    #     'plot.py': 'output/plot.ipynb'
-    # }
+    expected_prod = {
+        'clean': {
+            'data': str(Path(tmp_nbs, 'output', 'clean.csv').resolve()),
+            'nb': str(Path(tmp_nbs, 'output', 'clean.ipynb').resolve()),
+        },
+        'load': {
+            'data': str(Path(tmp_nbs, 'output', 'data.csv').resolve()),
+            'nb': str(Path(tmp_nbs, 'output', 'load.ipynb').resolve()),
+        },
+        'plot': str(Path(tmp_nbs, 'output', 'plot.ipynb').resolve()),
+    }
 
     assert deps == expected_deps
-    # assert prods == expected_prod
+    assert prods == expected_prod
 
 
 def test_source_loader(monkeypatch, tmp_directory):
