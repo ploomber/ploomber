@@ -504,7 +504,8 @@ def test_infer_dependencies_sql(tmp_pipeline_sql, add_current_to_sys_path):
 
 # FIXME: fix this test on windows, there's something going on with the way
 # Pathlib behaves on windows that makes the products comparison to fail
-@pytest.mark.xfail(sys.platform == 'win32')
+@pytest.mark.xfail(sys.platform == 'win32',
+                   reason='Pathlib behaves differently on Windows')
 def test_extract_variables_from_notebooks(tmp_nbs):
     with open('pipeline.yaml') as f:
         d = yaml.load(f)
