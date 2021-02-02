@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+0.9.2dev
+--------
+
 0.9.1 (2021-02-01)
 ------------------
 * ``File`` now supports a ``client`` argument to upload products to cloud storage
