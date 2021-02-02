@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-0.9.1dev
---------
+0.9.1 (2021-02-01)
+------------------
 * ``File`` now supports a ``client`` argument to upload products to cloud storage
 * Adds ``GCloudStorageClient``
 * Fixes error that caused jupyter to fail to initialize the dag when adding a function to a module already included in the YAML spec
