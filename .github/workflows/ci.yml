@@ -48,7 +48,7 @@ jobs:
         # for some reason, conda does not resolve the env correctly and
         # installs and old version of pygraphviz (1.3) which breaks in
         # Python 3.7
-        conda install -y pygraphviz>=1.7 -c conda-forge
+        conda install -y "pygraphviz>=1.7" -c conda-forge
 
         # Test vanilla installation, make sure core modules are importable
         pip install .
