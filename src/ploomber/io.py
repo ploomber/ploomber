@@ -67,7 +67,6 @@ class ParquetIO(FileIO):
 
     Notes
     -----
-
     going from pandas.DataFrame to parquet has an intermediate
     apache arrow conversion (since arrow has the actual implementation
     for writing parquet). pandas provides the pandas.DataFrame.to_parquet
@@ -79,13 +78,14 @@ class ParquetIO(FileIO):
     @requires(['pyarrow'], 'ParquetIO')
     def __init__(self, path, chunked):
         if chunked:
-            warnings.warn('{} was initilized with the chunked option on, '
+            warnings.warn('ploomber.io.ParquetIO was initilized with '
+                          'chunked=True, '
                           'since each chunk will create a parquet file '
-                          'and the schema will be inferred from there '
-                          'there might be inconsistencies among chunks. '
+                          'and schema will be inferred chunkwise '
+                          'there could be inconsistencies. '
                           'To avoid this, the schema from the first chunk '
-                          'will be applied to all chunks, if this does not '
-                          'work either turn the chunked option off or '
+                          'will be applied to all chunks, if this causes '
+                          'problems, either chunked option off or '
                           'use the ploomber.io.CSVIO')
 
         super().__init__(path, chunked)
