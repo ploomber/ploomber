@@ -160,9 +160,9 @@ class Parallel(Executor):
                     if task is not None:
                         future = pool.submit(TaskBuildWrapper(task),
                                              **task_kwargs)
+                        future_mapping[future] = task
                         future.add_done_callback(callback)
                         started.append(task)
-                        future_mapping[future] = task
                         logging.info('Added %s to the pool...', task.name)
 
         results = [
