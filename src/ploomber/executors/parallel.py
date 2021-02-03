@@ -160,6 +160,9 @@ class Parallel(Executor):
                     if task is not None:
                         future = pool.submit(TaskBuildWrapper(task),
                                              **task_kwargs)
+                        # the callback function uses the future mapping
+                        # so add it before registering the callback, otherwise
+                        # it might break and hang the whole process
                         future_mapping[future] = task
                         future.add_done_callback(callback)
                         started.append(task)
