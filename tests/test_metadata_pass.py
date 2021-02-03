@@ -6,7 +6,6 @@ from pathlib import Path
 from ploomber import DAG
 from ploomber.tasks import ShellScript, SQLScript
 from ploomber.products import File, PostgresRelation
-from ploomber.clients import SQLAlchemyClient
 
 
 def test_passing_upstream_and_product_in_shellscript(tmp_directory):
@@ -31,22 +30,13 @@ def test_passing_upstream_and_product_in_shellscript(tmp_directory):
     assert str(tc.source) == 'cat b.txt > c.txt && echo c >> c.txt'
 
 
-def test_passing_upstream_and_product_in_postgres(pg_client_and_schema,
-                                                  db_credentials):
-    pg_client, _ = pg_client_and_schema
-
+def test_passing_upstream_and_product_in_postgres(pg_client_and_schema):
+    client, _ = pg_client_and_schema
     dag = DAG()
-
-    client = SQLAlchemyClient(db_credentials['uri'])
-
     dag.clients[SQLScript] = client
     dag.clients[PostgresRelation] = client
 
-    conn = pg_client.connection
-    cur = conn.cursor()
-    cur.execute('drop table if exists series;')
-    conn.commit()
-    conn.close()
+    client.execute('drop table if exists series;')
 
     ta_t = """begin;
               drop table if exists {{product}};

@@ -13,9 +13,25 @@ import jupyter_client
 import getpass
 from copy import deepcopy
 
+from sqlalchemy import create_engine
+
 from ploomber.spec.DAGSpec import DAGSpec, Meta
 from ploomber.util.util import load_dotted_path
 from ploomber.tasks import PythonCallable
+from ploomber.clients import db
+
+
+def create_engine_with_schema(schema):
+    def fake_create_engine(*args, **kwargs):
+        if 'sqlite' in args[0]:
+            return create_engine(*args, **kwargs)
+        else:
+            return create_engine(
+                *args,
+                **kwargs,
+                connect_args=dict(options=f'-c search_path={schema}'))
+
+    return fake_create_engine
 
 
 @fixture_tmp_dir(_path_to_tests() / 'assets' / 'pipeline-sql')
@@ -283,9 +299,16 @@ def _random_date_from(date, max_days, n):
 
 
 def test_postgres_sql_spec(tmp_pipeline_sql, pg_client_and_schema,
-                           add_current_to_sys_path):
+                           add_current_to_sys_path, monkeypatch):
+    _, schema = pg_client_and_schema
+
     with open('pipeline-postgres.yaml') as f:
         dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
+
+    # clients for this pipeline are initialized without custom create_engine
+    # args but we need to set the default schema, mock the call so it
+    # includes that info
+    monkeypatch.setattr(db, 'create_engine', create_engine_with_schema(schema))
 
     dates = _random_date_from(datetime(2016, 1, 1), 365, 100)
     df = pd.DataFrame({
@@ -356,9 +379,16 @@ def test_sqlite_sql_spec(spec, tmp_pipeline_sql, add_current_to_sys_path):
 
 
 def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
-                           pg_client_and_schema):
+                           pg_client_and_schema, monkeypatch):
+    _, schema = pg_client_and_schema
+
     with open('pipeline-multiple-dbs.yaml') as f:
         dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
+
+    # clients for this pipeline are initialized without custom create_engine
+    # args but we need to set the default schema, mock the call so it
+    # includes that info
+    monkeypatch.setattr(db, 'create_engine', create_engine_with_schema(schema))
 
     dates = _random_date_from(datetime(2016, 1, 1), 365, 100)
     df = pd.DataFrame({
