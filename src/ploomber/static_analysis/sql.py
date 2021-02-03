@@ -35,8 +35,9 @@ class SQLExtractor(Extractor):
 
         if product is None:
             if raise_if_none:
-                raise ValueError("Couldn't extract 'product' from code:\n" +
-                                 self._jinja_extractor.get_code_as_str())
+                code = self._jinja_extractor.get_code_as_str()
+                raise ValueError(
+                    f"Couldn't extract 'product' from code: {code!r}")
         else:
             # validate product
             try:

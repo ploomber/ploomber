@@ -1,10 +1,5 @@
 name: CI macOS
-
-on:
-  push:
-    branches: [master, dev]
-  pull_request:
-    branches: [master]
+on: [push, pull_request]
 
 jobs:
   build:

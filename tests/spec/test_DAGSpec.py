@@ -489,7 +489,7 @@ def test_infer_dependencies_sql(tmp_pipeline_sql, add_current_to_sys_path):
     }
 
     with open('pipeline-postgres.yaml') as f:
-        d = yaml.load(f)
+        d = yaml.safe_load(f)
 
     d['meta']['extract_upstream'] = True
 
@@ -508,7 +508,7 @@ def test_infer_dependencies_sql(tmp_pipeline_sql, add_current_to_sys_path):
                    reason='Pathlib behaves differently on Windows')
 def test_extract_variables_from_notebooks(tmp_nbs):
     with open('pipeline.yaml') as f:
-        d = yaml.load(f)
+        d = yaml.safe_load(f)
 
     d['meta']['extract_upstream'] = True
     d['meta']['extract_product'] = True
@@ -630,7 +630,7 @@ def test_import_tasks_from(tmp_nbs):
 # -
 """)
 
-    spec_d = yaml.load(Path('pipeline.yaml').read_text())
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
     spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
 
     spec = DAGSpec(spec_d)
@@ -653,7 +653,7 @@ def test_import_tasks_from_with_non_empty_env(tmp_nbs):
 # + tags=["parameters"]
 # -
 """)
-    spec_d = yaml.load(Path('pipeline.yaml').read_text())
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
     spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
 
     spec = DAGSpec(spec_d, env={'some_param': 'some_value'})

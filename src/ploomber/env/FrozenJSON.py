@@ -14,9 +14,9 @@ class FrozenJSON(object):
     def from_yaml(cls, path_to_file, *args, **kwargs):
         # load config file
         with open(path_to_file) as f:
-            mapping = yaml.load(f)
-            # yaml.load returns none if file is empty, but an empty env.yaml
-            # is still useful for env.path
+            mapping = yaml.safe_load(f)
+            # yaml.safe_load returns none if file is empty, but an empty
+            # env.yaml is still useful for env.path
             mapping = mapping if mapping is not None else {}
 
         obj = cls(mapping, *args, **kwargs)
@@ -65,8 +65,8 @@ class FrozenJSON(object):
 
         if value is None:
             key_ = key if not isinstance(key, str) else "'%s'" % key
-            msg = ('Key error: {}, available keys are: {}'
-                   .format(key_, self._data.keys()))
+            msg = ('Key error: {}, available keys are: {}'.format(
+                key_, self._data.keys()))
             if self._path_to_file is not None:
                 msg += '. File loaded from {}'.format(self._path_to_file)
             raise KeyError(msg)

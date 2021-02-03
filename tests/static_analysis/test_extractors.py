@@ -66,8 +66,8 @@ def test_error_message_when_missing_product(code, class_):
     with pytest.raises(ValueError) as excinfo:
         extractor.extract_product()
 
-    assert str(excinfo.value) == ("Couldn't extract 'product' from code:\n" +
-                                  code)
+    assert str(
+        excinfo.value) == (f"Couldn't extract 'product' from code: {code!r}")
 
 
 @pytest.mark.parametrize('code, class_', [

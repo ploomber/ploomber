@@ -21,7 +21,7 @@ class PythonNotebookExtractor(NotebookExtractor):
 
         if not product_found or product is None:
             raise ValueError("Couldn't extract 'product' "
-                             "from code:\n%s" % self.parameters_cell)
+                             f"from code: {self.parameters_cell!r}")
         else:
             return product
 
