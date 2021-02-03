@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-import io
 import re
 import ast
 from glob import glob
 from os.path import basename
-from os.path import dirname
-from os.path import join
 from os.path import splitext
+from pathlib import Path
 
 from setuptools import find_packages
 from setuptools import setup
@@ -19,10 +17,11 @@ with open('src/ploomber/__init__.py', 'rb') as f:
         ast.literal_eval(
             _version_re.search(f.read().decode('utf-8')).group(1)))
 
+here = Path(__file__).parent.resolve()
 
-def read(*names, **kwargs):
-    return io.open(join(dirname(__file__), *names),
-                   encoding=kwargs.get('encoding', 'utf8')).read()
+
+def read(name):
+    return Path(here, name).read_text()
 
 
 # NOTE: most users just do "pip install jupyter" but
@@ -95,21 +94,17 @@ TESTING = [
 DEV = ['twine']
 
 DESCRIPTION = (
-    'Write better data pipelines without having to learn a specialized '
-    'framework. By adopting a convention over configuration philosophy, '
-    'Ploomber streamlines pipeline execution, allowing teams to confidently '
-    'develop data products.')
+    'A convention over configuration workflow orchestrator. Develop locally '
+    '(Jupyter or your favorite editor), deploy to Airflow or Kubernetes. ')
 
 setup(
     name='ploomber',
     version=VERSION,
     description=DESCRIPTION,
-    long_description='%s\n%s' %
-    (re.compile('^.. start-badges.*^.. end-badges', re.M | re.S).sub(
-        '', read('README.rst')),
-     re.sub(':[a-z]+:`~?(.*?)`', r'``\1``', read('CHANGELOG.rst'))),
-    author='',
-    author_email='',
+    long_description=read('README.md') + '\n' + read('CHANGELOG.md'),
+    long_description_content_type='text/markdown',
+    author='Eduardo Blancas',
+    author_email='hello@ploomber.io',
     url='https://github.com/ploomber/ploomber',
     packages=find_packages('src'),
     package_dir={'': 'src'},
