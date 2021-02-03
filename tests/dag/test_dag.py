@@ -53,7 +53,7 @@ def hook():
 def hook_crashing():
     if hasattr(hook_crashing, 'count'):
         hook_crashing.count += 1
-    raise Exception
+    raise Exception('crash!')
 
 
 def touch_root(product):
@@ -82,7 +82,7 @@ def early_stop_root(product):
     raise DAGBuildEarlyStop('Ending gracefully')
 
 
-def early_stop_on_finish():
+def early_stop():
     raise DAGBuildEarlyStop('Ending gracefully')
 
 
@@ -818,10 +818,10 @@ def test_early_stop(executor, tmp_directory):
 
 
 @pytest.mark.parametrize('executor', _serial)
-def test_early_stop_from_on_finish(executor, tmp_directory):
+def test_early_stop_from_task_level_on_finish(executor, tmp_directory):
     dag = DAG(executor=executor)
     t = PythonCallable(touch_root, File('file.txt'), dag)
-    t.on_finish = early_stop_on_finish
+    t.on_finish = early_stop
     assert dag.build() is None
 
 
@@ -861,6 +861,29 @@ def test_on_finish_hook_is_executed(tmp_directory):
     assert hook.count == 1
 
 
+def test_on_finish_crashes(tmp_directory):
+    dag = DAG()
+    PythonCallable(touch_root, File('file.txt'), dag, name='t')
+    dag.on_finish = hook_crashing
+
+    with pytest.raises(DAGBuildError) as excinfo:
+        dag.build()
+
+    msg = 'Exception when running on_finish for DAG "No name"'
+    assert str(excinfo.value) == msg
+    assert 'crash!' in str(excinfo.getrepr())
+    assert dag._exec_status == DAGStatus.Errored
+
+
+def test_on_finish_crashes_gracefully(tmp_directory):
+    dag = DAG()
+    PythonCallable(touch_root, File('file.txt'), dag, name='t')
+    dag.on_finish = early_stop
+
+    assert dag.build() is None
+    assert dag._exec_status == DAGStatus.Errored
+
+
 def test_on_failure(caplog):
     hook.count = 0
 
@@ -876,7 +899,7 @@ def test_on_failure(caplog):
     assert 'Failure when building DAG "dag"' in caplog.text
 
 
-def test_on_failure_exception(caplog):
+def test_on_failure_crashes(caplog):
     hook_crashing.count = 0
 
     dag = DAG(name='dag')
@@ -888,6 +911,18 @@ def test_on_failure_exception(caplog):
             dag.build()
 
     assert hook_crashing.count == 1
+    assert 'Exception when running on_failure for DAG "dag"' in caplog.text
+
+
+def test_on_failure_crashes_gracefully(caplog):
+    dag = DAG(name='dag')
+    PythonCallable(failing_root, File('file.txt'), dag, name='t')
+    dag.on_failure = early_stop
+
+    with caplog.at_level(logging.ERROR):
+        out = dag.build()
+
+    assert out is None is None
     assert 'Exception when running on_failure for DAG "dag"' in caplog.text
 
 
