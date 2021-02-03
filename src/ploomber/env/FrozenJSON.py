@@ -15,8 +15,8 @@ class FrozenJSON(object):
         # load config file
         with open(path_to_file) as f:
             mapping = yaml.safe_load(f)
-            # yaml.safe_load returns none if file is empty, but an empty env.yaml
-            # is still useful for env.path
+            # yaml.safe_load returns none if file is empty, but an empty
+            # env.yaml is still useful for env.path
             mapping = mapping if mapping is not None else {}
 
         obj = cls(mapping, *args, **kwargs)
