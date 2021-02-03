@@ -353,7 +353,7 @@ def test_jupyter_workflow_with_functions(backup_spec_with_functions):
 def test_hot_reload_when_adding_function_task(backup_spec_with_functions_flat):
     # setup: configure jupyter settings and save spec
     with open('pipeline.yaml') as f:
-        spec = yaml.load(f)
+        spec = yaml.safe_load(f)
 
     spec['meta']['jupyter_functions_as_notebooks'] = True
     spec['meta']['jupyter_hot_reload'] = True
@@ -390,7 +390,7 @@ def test_hot_reload_when_adding_function_task_in_existing_module(
         backup_spec_with_functions_flat):
     # setup: configure jupyter settings and save spec
     with open('pipeline.yaml') as f:
-        spec = yaml.load(f)
+        spec = yaml.safe_load(f)
 
     spec['meta']['jupyter_functions_as_notebooks'] = True
     spec['meta']['jupyter_hot_reload'] = True
