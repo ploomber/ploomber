@@ -61,6 +61,19 @@ def test_pickle_sqlalchemyclient(tmp_directory):
     assert pickle.dumps(client)
 
 
+def test_custom_create_engine_kwargs(monkeypatch):
+
+    mock = Mock()
+    monkeypatch.setattr(db, 'create_engine', mock)
+    client = SQLAlchemyClient('sqlite:///my_db.db',
+                              create_engine_kwargs=dict(key='value'))
+
+    # trigger call to create_engine
+    client.engine
+
+    mock.assert_called_once_with('sqlite:///my_db.db', key='value')
+
+
 @pytest.mark.parametrize(
     'code,split_source',
     [['CREATE TABLE my_table (num INT); SELECT * FROM my_table', 'default'],
