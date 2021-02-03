@@ -477,7 +477,7 @@ class DAG(collections.abc.Mapping):
                     tb['on_finish'] = traceback.format_exc()
                     # on_finish error, log exception and set status
                     msg = ('Exception when running on_finish '
-                           'for DAG "{}": {}'.format(self.name, e))
+                           'for DAG "{}"'.format(self.name))
                     self._logger.exception(msg)
                     self._exec_status = DAGStatus.Errored
 
