@@ -43,3 +43,9 @@ def test_set_item():
     params = Params._from_dict({'a': 1})
     params._setitem('a', 2)
     assert params['a'] == 2
+
+
+@pytest.mark.parametrize('value', [[], set(), 'str'])
+def test_error_if_initialized_with_non_mapping(value):
+    with pytest.raises(TypeError):
+        Params(value)
