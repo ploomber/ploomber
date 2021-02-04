@@ -1,8 +1,6 @@
-CHANGELOG
-=========
+# CHANGELOG
 
-0.9.1dev
---------
+## 0.9.1dev
 
 -   `File` now supports a `client` argument to upload products to cloud
     storage
@@ -21,37 +19,32 @@ CHANGELOG
 -   Adds new `meta.import_tasks_from` option in YAML specs to import
     tasks from another file
 
-0.9 (2021-01-18)
-----------------
+## 0.9 (2021-01-18)
 
 -   Deprecates `ploomber new` and `ploomber add`
 -   Adds `ploomber scaffold`
 -   Jupyter plugin now exports functions as notebooks using
     `jupyter_functions_as_notebooks` in `pipeline.yaml`
 
-0.8.6 (2021-01-08)
-------------------
+## 0.8.6 (2021-01-08)
 
 -   \"ploomber add\" generates template tasks and functions if they
     don\'t exist
 -   Jupyter plugin now shows PythonCallable tasks as notebooks
 
-0.8.5 (2020-12-14)
-------------------
+## 0.8.5 (2020-12-14)
 
 -   Documentation tutorials re-organization and CSS fixes
 -   Improvements to the `InMemoryDAG` API
 -   Minor bug fixes
 -   `File.__repr__` shows a relative path whenever possible
 
-0.8.4 (2020-11-21)
-------------------
+## 0.8.4 (2020-11-21)
 
 -   Adds support for passing glob-like patterns in `ploomber build` (via
     `DAGSpec.from_directory`)
 
-0.8.3 (2020-11-15)
-------------------
+## 0.8.3 (2020-11-15)
 
 -   Full Windows compatibility
 -   Adds documentation to show how to customize notebook output using
@@ -63,8 +56,7 @@ CHANGELOG
     closed after `dag.build()` is done
 -   Minor bug fixes
 
-0.8.2 (2020-10-31)
-------------------
+## 0.8.2 (2020-10-31)
 
 -   Removes `matplotlib` from dependencies, now using `IPython.display`
     for inline plotting
@@ -82,8 +74,7 @@ CHANGELOG
 -   Adds `lazy_import` to `DAGspec`, to avoid importing `PythonCallable`
     sources (passes the dotted paths as strings instead)
 
-0.8.1 (2020-10-18)
-------------------
+## 0.8.1 (2020-10-18)
 
 -   `ploomber interact` allows to switch DAG parameters, just like
     `ploomber build`
@@ -92,8 +83,7 @@ CHANGELOG
 -   `NotebookRunner.develop()` to develop now also works with Jupyter
     lab
 
-0.8 (2020-10-15)
-----------------
+## 0.8 (2020-10-15)
 
 -   Dropping support for Python 3.5
 -   Removes `DAGSpec.from_file`, loading from a file is now handled
@@ -108,8 +98,7 @@ CHANGELOG
     don\'t exist
 -   Bug fixes
 
-0.7.5 (2020-10-02)
-------------------
+## 0.7.5 (2020-10-02)
 
 -   NotebookRunner.develop accepts passing arguments to jupyter notebook
 -   Spec API now supports PythonCallable (by passing a dotted path)
@@ -123,8 +112,7 @@ CHANGELOG
     validate optional columns dtypes
 -   Bug fixes
 
-0.7.4 (2020-09-14)
-------------------
+## 0.7.4 (2020-09-14)
 
 -   Improved `__repr__` methods in PythonCallableSource and
     NotebookSource
@@ -137,14 +125,12 @@ CHANGELOG
 -   Adds Jupyter integration guide to documentation
 -   Several bug fixes
 
-0.7.3 (2020-08-19)
-------------------
+## 0.7.3 (2020-08-19)
 
 -   Improved support for R notebooks (`.Rmd`)
 -   New section for `testing.sql` module in the documentation
 
-0.7.2 (2020-08-17)
-------------------
+## 0.7.2 (2020-08-17)
 
 -   New guides: parametrized pipelines, SQL templating, pipeline testing
     and debugging
@@ -157,8 +143,7 @@ CHANGELOG
 -   Docstring (from dotted path entry point) is shown in the CLI summary
 -   Customized sphinx build to execute guides from notebooks
 
-0.7.1 (2020-08-06)
-------------------
+## 0.7.1 (2020-08-06)
 
 -   Support for R
 -   Adding section on R pipeline to the documentation
@@ -171,8 +156,7 @@ CHANGELOG
     types are inferred using type hints, displayed when calling `--help`
 -   CLI accepts env variables (if any), displayed when calling `--help`
 
-0.7 (2020-07-30)
-----------------
+## 0.7 (2020-07-30)
 
 -   Simplified CLI (breaking changes)
 -   Refactors internal API for notebook conversion, adds tests for
@@ -181,8 +165,7 @@ CHANGELOG
     app to make sure the task runs in the next pipeline build
 -   SQLAlchemyClient now supports custom tokens to split source
 
-0.6.3 (2020-07-24)
-------------------
+## 0.6.3 (2020-07-24)
 
 -   Adding [\--log]{.title-ref} option to CLI commands
 -   Fixes a bug that caused the [dag]{.title-ref} variable not to be
@@ -191,15 +174,13 @@ CHANGELOG
 -   Adds SQL pipeline tutorial to get started docs
 -   Minor CSS changes to docs
 
-0.6.2 (2020-07-22)
-------------------
+## 0.6.2 (2020-07-22)
 
 -   Support for [env.yaml]{.title-ref} in [pipeline.yaml]{.title-ref}
 -   Improved CLI. Adds [plot]{.title-ref}, [report]{.title-ref} and
     [task]{.title-ref} commands
 
-0.6.1 (2020-07-20)
-------------------
+## 0.6.1 (2020-07-20)
 
 -   Changes pipeline.yaml default (extract_product: True)
 -   Documentation re-design
@@ -208,8 +189,7 @@ CHANGELOG
 -   Products are resolved to absolute paths to avoid ambiguity
 -   Bug fixes
 
-0.6 (2020-07-08)
-----------------
+## 0.6 (2020-07-08)
 
 -   Adds Jupyter notebook extension to inject parameters when opening a
     task
@@ -221,14 +201,12 @@ CHANGELOG
 -   Improved validation for DAG specs
 -   Several bug fixes
 
-0.5.1 (2020-06-30)
-------------------
+## 0.5.1 (2020-06-30)
 
 -   Reduces the number of required dependencies
 -   A new option in DBAPIClient to split source with a custom separator
 
-0.5 (2020-06-27)
-----------------
+## 0.5 (2020-06-27)
 
 -   Adds CLI
 -   New spec API to instantiate DAGs using YAML files
@@ -236,13 +214,11 @@ CHANGELOG
     development
 -   Bug fixes
 
-0.4.1 (2020-05-19)
-------------------
+## 0.4.1 (2020-05-19)
 
 -   PythonCallable.debug() now works in Jupyter notebooks
 
-0.4.0 (2020-05-18)
-------------------
+## 0.4.0 (2020-05-18)
 
 -   PythonCallable.debug() now uses IPython debugger by default
 -   Improvements to Task.build() public API
@@ -262,8 +238,7 @@ CHANGELOG
 -   Adds documentation for DAG-level hooks
 -   Bug fixes
 
-0.3.5 (2020-05-03)
-------------------
+## 0.3.5 (2020-05-03)
 
 -   Bug fixes \#88, \#89, \#90, \#84, \#91
 -   Modifies Env API: Env() is now Env.load(), Env.start() is now Env()
@@ -273,8 +248,7 @@ CHANGELOG
 -   Deletes logger configuration in executors constructors, logging is
     available via DAGConfigurator
 
-0.3.4 (2020-04-25)
-------------------
+## 0.3.4 (2020-04-25)
 
 -   Dependencies cleanup
 -   Removed (numpydoc) as dependency, now optional
@@ -282,8 +256,7 @@ CHANGELOG
 -   All warnings are captured and shown at the end (Serial executor)
 -   Moves differ parameter from DAG constructor to DAGConfigurator
 
-0.3.3 (2020-04-23)
-------------------
+## 0.3.3 (2020-04-23)
 
 -   Cleaned up some modules, deprecated some rarely used functionality
 -   Improves documentation aimed to developers looking to extend
@@ -302,8 +275,7 @@ CHANGELOG
 -   PythonCallable now validates signature against params at render time
 -   Bug fixes
 
-0.3.2 (2020-04-07)
-------------------
+## 0.3.2 (2020-04-07)
 
 -   Faster Product status checking, now performed at rendering time
 -   New products: GenericProduct and GenericSQLRelation for Products
@@ -314,16 +286,14 @@ CHANGELOG
 -   Parallel executor now returns build reports, just like the Serial
     executor
 
-0.3.1 (2020-04-01)
-------------------
+## 0.3.1 (2020-04-01)
 
 -   DAG parallel executor
 -   Interact with pipelines from the command line (entry module)
 -   Bug fixes
 -   Refactored access to Product.metadata
 
-0.3 (2020-03-20)
-----------------
+## 0.3 (2020-03-20)
 
 -   New Quickstart and User Guide section in documentation
 -   DAG rendering and build now continue until no more tasks can
@@ -339,15 +309,13 @@ CHANGELOG
 -   A lot of new tests
 -   Now compatible with Python 3.5 and higher
 
-0.2.1 (2020-02-20)
-------------------
+## 0.2.1 (2020-02-20)
 
 -   Adds integration with pdb via PythonCallable.debug
 -   Env.start now accepts a filename to look for
 -   Improvements to data_frame_validator
 
-0.2 (2020-02-13)
-----------------
+## 0.2 (2020-02-13)
 
 -   Simplifies installation
 -   Deletes BashCommand, use ShellScript
@@ -360,7 +328,6 @@ CHANGELOG
 -   SQLUpload and PostgresCopy have now the same API
 -   A few fixes to PostgresCopy (\#1, \#2)
 
-0.1
----
+## 0.1
 
 -   First release
