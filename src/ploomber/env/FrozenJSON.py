@@ -1,4 +1,4 @@
-from collections import Mapping, MutableSequence
+from collections.abc import Mapping, MutableSequence
 import keyword
 import logging
 

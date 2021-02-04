@@ -287,10 +287,6 @@ def pg_client_and_schema():
     """
     db = _load_db_credentials()
 
-    # this client is only used to setup the schema and default schema
-    # see this: https://www.postgresonline.com/article_pfriendly/279.html
-    client_tmp = SQLAlchemyClient(db['uri'])
-
     # set a new schema for this session, otherwise if two test sessions
     # are run at the same time, tests might conflict with each other
     # NOTE: avoid upper case characters, pandas.DataFrame.to_sql does not like
@@ -298,12 +294,14 @@ def pg_client_and_schema():
     schema = (''.join(random.choice(string.ascii_letters)
                       for i in range(12))).lower()
 
-    client_tmp.execute('CREATE SCHEMA {};'.format(schema))
-    client_tmp.execute('ALTER USER "{}" SET search_path TO {};'.format(
-        db['user'], schema))
-    client_tmp.close()
+    # initialize client, set default schema
+    # info: https://www.postgresonline.com/article_pfriendly/279.html
+    client = SQLAlchemyClient(db['uri'],
+                              create_engine_kwargs=dict(connect_args=dict(
+                                  options=f'-c search_path={schema}')))
 
-    client = SQLAlchemyClient(db['uri'])
+    # create schema
+    client.execute('CREATE SCHEMA {};'.format(schema))
 
     df = pd.DataFrame({'x': range(10)})
     df.to_sql('data', client.engine)
@@ -311,8 +309,7 @@ def pg_client_and_schema():
     yield client, schema
 
     # clean up schema
-    client.execute('drop schema {} cascade;'.format(schema))
-
+    client.execute('DROP SCHEMA {} CASCADE;'.format(schema))
     client.close()
 
 

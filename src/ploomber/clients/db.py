@@ -112,6 +112,9 @@ class SQLAlchemyClient(Client):
         it will never split, a string value is interpreted as the token
         to use for splitting statements regardless of the database type
 
+    create_engine_kwargs : dict, optional
+        Keyword arguments to pass to ``sqlalchemy.create_engine``
+
     Notes
     -----
     SQLite client does not support sending more than one command at a time,
@@ -121,11 +124,12 @@ class SQLAlchemyClient(Client):
     split_source_mapping = {'sqlite': ';'}
 
     @requires(['sqlalchemy'], 'SQLAlchemyClient')
-    def __init__(self, uri, split_source='default'):
+    def __init__(self, uri, split_source='default', create_engine_kwargs=None):
         super().__init__()
         self._uri = uri
         self._uri_parsed = urlparse(uri)
         self._uri_safe = safe_uri(self._uri_parsed)
+        self._create_engine_kwargs = create_engine_kwargs or dict()
         self.flavor = self._uri_parsed.scheme
         self._engine = None
         self.split_source = split_source
@@ -186,7 +190,8 @@ class SQLAlchemyClient(Client):
         """Returns a SQLAlchemy engine
         """
         if self._engine is None:
-            self._engine = create_engine(self._uri)
+            self._engine = create_engine(self._uri,
+                                         **self._create_engine_kwargs)
 
         return self._engine
 

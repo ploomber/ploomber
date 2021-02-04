@@ -13,6 +13,11 @@ class Params(abc.MutableMapping):
         if params is None:
             self._dict = {}
         else:
+            if not isinstance(params, abc.Mapping):
+                raise TypeError('Params must be initialized '
+                                f'with a mapping, got: {params!r} '
+                                f'({type(params).__name__!r})')
+
             if 'upstream' in params:
                 raise ValueError('Task params cannot be initialized with an '
                                  '"upstream" key as it automatically added '
