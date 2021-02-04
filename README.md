@@ -30,9 +30,9 @@ Here's how a pipeline task looks like:
 
 <tr>
 <th>Function</th>
-<th>Notebook/script</th>
-<th>SQL</th>
-<th>Pipeline</th>
+<th>Jupyter notebook or Python script</th>
+<th>SQL script</th>
+<th>Pipeline declaration</th>
 </tr>
 
 <tr>
@@ -80,9 +80,8 @@ Path(product).write_bytes(pickle.dumps(model))
 -- {{product}} is replaced by the table name
 CREATE TABLE AS {{product}}
 /*
-runs 'raw_data' before this task
-{{upstream['raw_data']}} is replaced by
-the tabe name
+runs 'raw_data' before this task and replace
+{{upstream['raw_data']}} with table name
 */
 SELECT * FROM {{upstream['raw_data']}}
 ```
