@@ -113,14 +113,13 @@ tasks:
 
 </table>
 
-To run your pipeline, just call `ploomber build`. For full flexibility, you can directly use the Python API. [Click here to see an
+To run your pipeline, call `ploomber build`. For full flexibility, you can directly use the Python API. [Click here to see an
 example](https://github.com/ploomber/projects/blob/master/ml-advanced/src/ml_advanced/pipeline.py).
 
 [Watch JupyterCon 2020
 talk](https://www.youtube.com/watch?v=M6mtgPfsA3M)
 
-Main features
--------------
+## Main features
 
 1.  **Jupyter integration**. When you open your notebooks, Ploomber will
     automatically inject a new cell with the location of your input
@@ -139,8 +138,7 @@ Main features
     and execute locally. But if you want to scale things up, deploy to
     [Kubernetes or Airflow](https://github.com/ploomber/soopervisor)
 
-Try it out!
------------
+## Try it out!
 
 You can choose from one of the hosted options (no installation
 required):
@@ -173,12 +171,11 @@ mkdir output
 ploomber build    
 ```
 
-When execution finishes, you\'ll see the output in the `output/` folder.
+When execution finishes, you'll see the output in the `output/` folder.
 
 More examples available [here](https://github.com/ploomber/projects).
 
-Installation
-------------
+## Installation
 
 ```sh
 pip install ploomber
@@ -186,12 +183,11 @@ pip install ploomber
 
 Compatible with Python 3.6 and higher.
 
-How does Ploomber compare to X?
--------------------------------
+## How does Ploomber compare to X?
 
 Ploomber has two goals:
 
-1. Provide a great development experience for
+1. Provide an excellent development experience for
 Data Science/Machine learning projects, which require a lot of
 experimentation/iteration: incremental builds and Jupyter integration are
 a fundamental part of this.
@@ -200,9 +196,8 @@ a fundamental part of this.
 For a complete comparison, read our
 [survey on workflow management tools](https://ploomber.io/posts/survey/).
 
-Resources
----------
+## Resources
 
--   [Sample projects (Machine Learning pipeline, ETL, among
+- [Sample projects (Machine Learning pipeline, ETL, among
     others)](https://github.com/ploomber/projects)
--   [Documentation](https://ploomber.readthedocs.io/)
+- [Documentation](https://ploomber.readthedocs.io/)
