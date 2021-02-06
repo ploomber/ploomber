@@ -1,4 +1,6 @@
 from collections import namedtuple
+from _pytest._io.terminalwriter import TerminalWriter
+from io import StringIO
 
 _sep = '\n\n' + '-' * 80 + '\n' + '-' * 80 + '\n\n'
 
@@ -21,10 +23,30 @@ class MessageCollector:
             Message(task_str=task_str, message=message, obj=obj))
 
     def __str__(self):
-        return _sep.join([
-            '* {}\n{}'.format(exp.task_str, exp.message)
-            for exp in self.messages
-        ])
+        import os
+        os.environ['FORCE_COLOR'] = 'True'
+        sio = StringIO()
+        self.tw = TerminalWriter(file=sio)
+
+        for exp in self.messages:
+            self.tw.sep('-', title=exp.task_str, red=True)
+            self.tw._write_source(exp.message.splitlines())
+            self.tw.sep('-', red=True)
+
+        self.tw.sep('=',
+                    title=f'Failed tasks ({len(self.messages)})',
+                    red=True)
+
+        for exp in self.messages:
+            # TODO: include error message
+            self.tw.write(exp.task_str + '\n')
+
+        self.tw.sep('=', red=True)
+
+        sio.seek(0)
+        out = sio.read()
+        sio.close()
+        return out
 
     def __bool__(self):
         return bool(self.messages)
