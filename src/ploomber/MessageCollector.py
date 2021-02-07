@@ -1,5 +1,5 @@
 from collections import namedtuple
-from _pytest._io.terminalwriter import TerminalWriter
+from ploomber.io import TerminalWriter
 from io import StringIO
 
 _sep = '\n\n' + '-' * 80 + '\n' + '-' * 80 + '\n\n'
@@ -23,29 +23,44 @@ class MessageCollector:
             Message(task_str=task_str, message=message, obj=obj))
 
     def __str__(self):
+        return self.to_str()
+
+    def to_str(self, title=None, file=None):
+        # NOTE: modify terminal writer to determine markup usage
+        # depending on sys.stdout, rather than the file arg
         import os
         os.environ['FORCE_COLOR'] = 'True'
-        sio = StringIO()
+
+        if file is None:
+            sio = StringIO()
+        else:
+            sio = file
+
         self.tw = TerminalWriter(file=sio)
+
+        if title:
+            self.tw.sep('=', title=title, red=True)
 
         for exp in self.messages:
             self.tw.sep('-', title=exp.task_str, red=True)
             self.tw._write_source(exp.message.splitlines())
-            self.tw.sep('-', red=True)
 
         self.tw.sep('=',
-                    title=f'Failed tasks ({len(self.messages)})',
+                    title=f'Failed tasks summary ({len(self.messages)})',
                     red=True)
 
         for exp in self.messages:
-            # TODO: include error message
-            self.tw.write(exp.task_str + '\n')
+            # TODO: include original exception type and error message
+            self.tw.write(f'{exp.task_str}\n')
 
         self.tw.sep('=', red=True)
 
         sio.seek(0)
         out = sio.read()
-        sio.close()
+
+        if file is None:
+            sio.close()
+
         return out
 
     def __bool__(self):
