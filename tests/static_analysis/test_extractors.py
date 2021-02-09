@@ -216,7 +216,21 @@ def fn2(upstream):
     a['column']
 
 
+@pytest.mark.parametrize(
+    'source, expected',
+    [
+        ['upstream["a"]', {'a'}],
+        ["upstream['a']", {'a'}],
+        ["upstream[name]", None],
+        ["upstream[1]", None],
+    ],
+)
+def test_extract_upstream_basic_cases(source, expected):
+    extractor = PythonCallableExtractor(source)
+    assert extractor.extract_upstream() == expected
+
+
 @pytest.mark.parametrize('fn, expected', [[fn1, None], [fn2, {'a', 'b'}]])
-def test_extract_from_python_callable(fn, expected):
+def test_extract_upstream_from_python_callable(fn, expected):
     extractor = PythonCallableExtractor(inspect.getsource(fn))
     assert extractor.extract_upstream() == expected

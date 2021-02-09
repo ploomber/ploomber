@@ -33,7 +33,13 @@ def read(name):
 # https://discourse.jupyter.org/t/nbconvert-5-6-0-release/1867
 # https://github.com/nteract/papermill/issues/239
 NB = [
-    'papermill',
+    # nbformat's cell ids are not yet supported by jupytext. jupytext 1.10.0
+    # pins an older nbformat version to avoid issues, but this causes a
+    # problem with recent versions of papermill which do the contrary and
+    # pin new versions. Pinning jupytext is also possible but it would lead
+    # to inconsistent roundtrip conversions, pinning papermill is better.
+    # we can remove this once jupytext supports cell ids
+    'papermill<2.3.0',
     'jupytext',
     'ipykernel>=1.5.2',
     'jupyter_client>=5.3.1',
