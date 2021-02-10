@@ -546,5 +546,8 @@ def normalize_task(task):
 
 def add_base_path_to_source_if_relative(task, base_path):
     relative_source = not Path(task['source']).is_absolute()
-    if base_path is not None and relative_source:
+    # dotted paths are anything that has at least one non-leading doth
+    # (that could also be a relative path)
+    is_dotted_path = '.' in task['source'] and task['source'][0] != '.'
+    if base_path is not None and relative_source and not is_dotted_path:
         task['source'] = str(Path(base_path, task['source']).resolve())

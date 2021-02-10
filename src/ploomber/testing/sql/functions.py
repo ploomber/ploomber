@@ -23,6 +23,9 @@ def nulls_in_columns(client, cols: Union[str, List[str]], product):
     bool
         True if there is at least one NULL in any of the columns
     """
+    # NOTE: SELECT EXISTS does not work on oracle
+    # it can be SELECT 1 FROM EXISTS(...) dual (dual is a system table
+    # it always exists). Should we support it?
     sql = Template("""
     SELECT EXISTS(
         SELECT * FROM {{product}}

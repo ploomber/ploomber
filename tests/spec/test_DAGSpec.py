@@ -671,6 +671,23 @@ def test_import_tasks_from(tmp_nbs):
     ]
 
 
+def test_import_tasks_from_does_not_change_dotted_paths(tmp_nbs):
+    some_tasks = [{
+        'source': 'extra_task.py',
+        'product': 'extra.ipynb'
+    }, {
+        'source': 'test_pkg.touch_root',
+        'product': 'some_file.csv'
+    }]
+    Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+    spec = DAGSpec(spec_d, lazy_import=True)
+    assert 'test_pkg.touch_root' in [t['source'] for t in spec['tasks']]
+
+
 def test_import_tasks_from_with_non_empty_env(tmp_nbs):
     some_tasks = [{
         'source': 'extra_task.py',
