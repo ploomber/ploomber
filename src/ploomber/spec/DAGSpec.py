@@ -139,6 +139,10 @@ class DAGSpec(MutableMapping):
                 env = str(env_path)
         else:
             path = None
+            # FIXME: add test cases, some of those features wont work if
+            # _parent_path is None. We should make sure that we either raise
+            # an error if _parent_path is needed or use the current working
+            # directory if it's appropriate
             self._parent_path = None
 
         self.data = data
@@ -170,13 +174,34 @@ class DAGSpec(MutableMapping):
         if 'location' not in self.data:
 
             Meta.initialize_inplace(self.data)
+
             import_tasks_from = self.data['meta']['import_tasks_from']
 
             if import_tasks_from is not None:
-                imported = yaml.safe_load(Path(import_tasks_from).read_text())
+                # when using a relative path in "import_tasks_from", we must
+                # make it absolute...
+                if not Path(import_tasks_from).is_absolute():
+                    # use _parent_path if there is one
+                    if self._parent_path:
+                        self.data['meta']['import_tasks_from'] = str(
+                            Path(self._parent_path, import_tasks_from))
+                    # otherwise just make it absolute
+                    else:
+                        self.data['meta']['import_tasks_from'] = str(
+                            Path(import_tasks_from).resolve())
+
+                imported = yaml.safe_load(
+                    Path(self.data['meta']['import_tasks_from']).read_text())
 
                 if self.env is not None:
                     imported = expand_raw_dictionaries(imported, self.env)
+
+                # relative paths here are relative to the file where they
+                # are declared
+                base_path = Path(self.data['meta']['import_tasks_from']).parent
+                for task in imported:
+                    add_base_path_to_source_if_relative(task,
+                                                        base_path=base_path)
 
                 self.data['tasks'].extend(imported)
 
@@ -517,3 +542,9 @@ def normalize_task(task):
         return {'source': task}
     else:
         return task
+
+
+def add_base_path_to_source_if_relative(task, base_path):
+    relative_source = not Path(task['source']).is_absolute()
+    if base_path is not None and relative_source:
+        task['source'] = str(Path(base_path, task['source']).resolve())

@@ -85,6 +85,10 @@ def source_for_task_class(source_str, task_class, project_root, lazy_import,
     else:
         path = Path(source_str)
 
+        # NOTE: there is some inconsistent behavior here. project_root
+        # will be none if DAGSpec was initialized with a dictionary, hence
+        # this won't resolve to absolute paths - this is a bit confusing.
+        # maybe always convert to absolute?
         if project_root and not path.is_absolute() and make_absolute:
             return Path(project_root, source_str)
         else:

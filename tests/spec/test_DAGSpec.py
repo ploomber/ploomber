@@ -666,7 +666,9 @@ def test_import_tasks_from(tmp_nbs):
     spec = DAGSpec(spec_d)
 
     spec.to_dag().render()
-    assert 'extra_task.py' in [str(t['source']) for t in spec['tasks']]
+    assert str(Path('extra_task.py').resolve()) in [
+        str(t['source']) for t in spec['tasks']
+    ]
 
 
 def test_import_tasks_from_with_non_empty_env(tmp_nbs):
@@ -691,4 +693,91 @@ def test_import_tasks_from_with_non_empty_env(tmp_nbs):
     dag = spec.to_dag()
     dag.render()
     assert dag['extra_task'].params['some_param'] == 'some_value'
-    assert 'extra_task.py' in [str(t['source']) for t in spec['tasks']]
+    assert str(Path('extra_task.py').resolve()) in [
+        str(t['source']) for t in spec['tasks']
+    ]
+
+
+def test_import_tasks_from_loads_relative_to_pipeline_spec(tmp_nbs):
+    some_tasks = [{'source': 'extra_task.py', 'product': 'extra.ipynb'}]
+    Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
+    Path('extra_task.py').write_text("""
+# + tags=["parameters"]
+# -
+""")
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec_d))
+
+    # move to another dir to make sure we can still load the spec
+    Path('subdir').mkdir()
+    os.chdir('subdir')
+
+    spec = DAGSpec('../pipeline.yaml')
+    dag = spec.to_dag()
+    dag.render()
+
+    assert spec['meta']['import_tasks_from'] == str(
+        Path('..', 'some_tasks.yaml').resolve())
+    assert str(Path('..', 'extra_task.py').resolve()) in [
+        str(t['source']) for t in spec['tasks']
+    ]
+
+
+def test_import_tasks_from_keeps_value_if_already_absolute(tmp_nbs, tmp_path):
+    tasks_yaml = tmp_path / 'some_tasks.yaml'
+
+    some_tasks = [{
+        'source': str(Path('extra_task.py').resolve()),
+        'product': 'extra.ipynb'
+    }]
+    tasks_yaml.write_text(yaml.dump(some_tasks))
+    Path('extra_task.py').write_text("""
+# + tags=["parameters"]
+# -
+""")
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+    # set an absolute path
+    spec_d['meta']['import_tasks_from'] = str(tasks_yaml.resolve())
+    Path('pipeline.yaml').write_text(yaml.dump(spec_d))
+
+    spec = DAGSpec('pipeline.yaml')
+    dag = spec.to_dag()
+    dag.render()
+
+    # value should be the same
+    assert spec['meta']['import_tasks_from'] == str(tmp_path /
+                                                    'some_tasks.yaml')
+    assert str(Path('extra_task.py').resolve()) in [
+        str(t['source']) for t in spec['tasks']
+    ]
+
+
+def test_import_tasks_from_paths_are_relative_to_the_yaml_spec(
+        tmp_nbs, tmp_path):
+    tasks_yaml = tmp_path / 'some_tasks.yaml'
+
+    some_tasks = [{'source': 'extra_task.py', 'product': 'extra.ipynb'}]
+    tasks_yaml.write_text(yaml.dump(some_tasks))
+    #  write the source code in the same folder as some_tasks.yaml
+    Path(tmp_path, 'extra_task.py').write_text("""
+# + tags=["parameters"]
+# -
+""")
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+
+    # set an absolute path
+    spec_d['meta']['import_tasks_from'] = str(tasks_yaml.resolve())
+    Path('pipeline.yaml').write_text(yaml.dump(spec_d))
+
+    spec = DAGSpec('pipeline.yaml')
+    dag = spec.to_dag()
+    dag.render()
+
+    assert str(Path(tmp_path, 'extra_task.py').resolve()) in [
+        str(t['source']) for t in spec['tasks']
+    ]
