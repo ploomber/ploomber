@@ -1,6 +1,8 @@
 from ploomber.cli.parsers import _custom_command, CustomParser
 
 
+# TODO: we are just smoke testing this, we need to improve the tests
+# (check the appropriate functions are called)
 def main():
     parser = CustomParser(description='Get task information')
     with parser:
@@ -42,6 +44,6 @@ def main():
 
     # task if build by default, but when --source or --status are passed,
     # the --build flag is required
-    no_flags = not any((args.build, args.status, args.source))
+    no_flags = not any((args.build, args.status, args.source, args.on_finish))
     if no_flags or args.build:
         task.build(force=args.force)
