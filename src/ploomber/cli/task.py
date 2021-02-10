@@ -22,6 +22,10 @@ def main():
                             '-st',
                             help='Get task status',
                             action='store_true')
+        parser.add_argument('--on-finish',
+                            '-of',
+                            help='Only execute on_finish hook',
+                            action='store_true')
     dag, args = _custom_command(parser)
 
     dag.render(force=args.force)
@@ -33,7 +37,10 @@ def main():
     if args.status:
         print(task.status())
 
-    # task if built by default, but when --source or --status are passed,
+    if args.on_finish:
+        task._run_on_finish()
+
+    # task if build by default, but when --source or --status are passed,
     # the --build flag is required
     no_flags = not any((args.build, args.status, args.source))
     if no_flags or args.build:
