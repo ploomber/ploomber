@@ -175,6 +175,13 @@ def test_error_if_kernelspec_name_is_invalid():
                        kernelspec_name='invalid_kernelspec')
 
 
+def test_skip_kernelspec_install_check():
+    NotebookSource(new_nb(fmt='ipynb'),
+                   ext_in='ipynb',
+                   kernelspec_name='unknown_kernelspec',
+                   check_if_kernel_installed=False)
+
+
 def test_error_if_parameters_cell_doesnt_exist():
     with pytest.raises(SourceInitializationError) as excinfo:
         NotebookSource(new_nb(fmt='ipynb', add_tag=False), ext_in='ipynb')
@@ -243,9 +250,9 @@ def test_warn_if_using_default_value():
     with pytest.warns(UserWarning) as record:
         source.render(params)
 
-    assert len(record) == 1
-    assert (str(record[0].message) ==
-            "Missing parameters: {'b'}, will use default value")
+    assert "Missing parameters: {'b'}, will use default value" in [
+        str(warning.message) for warning in record
+    ]
 
 
 def test_error_if_passing_undeclared_parameter():

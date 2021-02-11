@@ -116,13 +116,25 @@ class DAGSpec(MutableMapping):
         with the dotted path, which means some verifications such as import
         statements in that function's module are delayed until the pipeline
         is executed. This also applies to placeholders loaded using a
-        SourceLoader, if a placeholder does not exist, it will return
-        None instead of raising an error
+        SourceLoader, if a placeholder exists, it will return the path
+        to it, instead of an initialized Placeholder object, if it doesn't,
+        it will return None instead of raising an error.
 
     reload : bool, optional
         Reloads modules before getting dotted paths. Has no effect if
         lazy_import=True
     """
+
+    # NOTE: lazy_import is used where we need to initialized a a spec but don't
+    # plan on running it. One use case is when exporting to Argo or Airflow:
+    # we don't want to raise errors if some dependency is missing because
+    # it can happen that the environment exporting the dag does not have
+    # all the dependencies required to run it. The second use case is when
+    # running "ploomber scaffold", we want to use DAGSpec machinery to parse
+    # the yaml spec and the use such information to add the task in the
+    # appropriate place, this by construction, means that the spec as it is
+    # cannot be converted to a dag yet, since it has at least one task
+    # whose source does not exist
     def __init__(self, data, env=None, lazy_import=False, reload=False):
         if isinstance(data, (str, Path)):
             path = data
@@ -139,6 +151,10 @@ class DAGSpec(MutableMapping):
                 env = str(env_path)
         else:
             path = None
+            # FIXME: add test cases, some of those features wont work if
+            # _parent_path is None. We should make sure that we either raise
+            # an error if _parent_path is needed or use the current working
+            # directory if it's appropriate
             self._parent_path = None
 
         self.data = data
@@ -170,13 +186,35 @@ class DAGSpec(MutableMapping):
         if 'location' not in self.data:
 
             Meta.initialize_inplace(self.data)
+
             import_tasks_from = self.data['meta']['import_tasks_from']
 
             if import_tasks_from is not None:
-                imported = yaml.safe_load(Path(import_tasks_from).read_text())
+                # when using a relative path in "import_tasks_from", we must
+                # make it absolute...
+                if not Path(import_tasks_from).is_absolute():
+                    # use _parent_path if there is one
+                    if self._parent_path:
+                        self.data['meta']['import_tasks_from'] = str(
+                            Path(self._parent_path, import_tasks_from))
+                    # otherwise just make it absolute
+                    else:
+                        self.data['meta']['import_tasks_from'] = str(
+                            Path(import_tasks_from).resolve())
+
+                imported = yaml.safe_load(
+                    Path(self.data['meta']['import_tasks_from']).read_text())
 
                 if self.env is not None:
                     imported = expand_raw_dictionaries(imported, self.env)
+
+                # relative paths here are relative to the file where they
+                # are declared
+                base_path = Path(self.data['meta']['import_tasks_from']).parent
+
+                for task in imported:
+                    add_base_path_to_source_if_relative(task,
+                                                        base_path=base_path)
 
                 self.data['tasks'].extend(imported)
 
@@ -517,3 +555,13 @@ def normalize_task(task):
         return {'source': task}
     else:
         return task
+
+
+def add_base_path_to_source_if_relative(task, base_path):
+    path = Path(task['source'])
+    relative_source = not path.is_absolute()
+
+    # must be a relative source with a valid extension, otherwise, it can
+    # be a dotted path
+    if relative_source and path.suffix in set(suffix2taskclass):
+        task['source'] = str(Path(base_path, task['source']).resolve())

@@ -143,7 +143,18 @@ def test_init_with_nonexistent_package(cleanup_env):
         Env({'_module': 'i_do_not_exist'})
 
     expected = ('Could not resolve _module "i_do_not_exist", '
-                'failed to import as a module and is not a directory')
+                'it is not a valid module nor a directory')
+    assert exc_info.value.args[0] == expected
+
+
+def test_init_with_file(tmp_directory, cleanup_env):
+    Path('not_a_package').touch()
+
+    with pytest.raises(ValueError) as exc_info:
+        Env({'_module': 'not_a_package'})
+
+    expected = ('Could not resolve _module "not_a_package", '
+                'expected a module or a directory but got a file')
     assert exc_info.value.args[0] == expected
 
 

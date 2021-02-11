@@ -27,10 +27,23 @@ class PythonNotebookExtractor(NotebookExtractor):
 
 
 def get_key_value(node):
-    value = node.value
-    # get the subscript name (e.g. d['key'] returns 'key'). Things like
-    # df.loc[:, 'a'] do not return an id, hence we return None
-    return value.id if hasattr(value, 'id') else None
+    return node.value.id if hasattr(node.value, 'id') else None
+
+
+def get_constant(node):
+    # python 3.9 node.slice.value for earlier versions
+    if isinstance(node.slice, ast.Constant):
+        return node.slice
+    # for earlier versions (if the attribute doesn't exist we are dealing with
+    # the upstream[some_name]) case
+    elif hasattr(node.slice, 'value'):
+        return node.slice.value
+
+
+def get_value(node):
+    constant = get_constant(node)
+    # .s for python 3.7 and 3.7, .value for 3.8 and newer
+    return constant.s if hasattr(constant, 's') else constant.value
 
 
 class PythonCallableExtractor(Extractor):
@@ -40,10 +53,10 @@ class PythonCallableExtractor(Extractor):
         """
         module = ast.parse(self.code)
         return {
-            node.slice.value.s
+            get_value(node)
             for node in ast.walk(module)
             if isinstance(node, ast.Subscript) and get_key_value(node) ==
-            'upstream' and isinstance(node.slice.value, ast.Str)
+            'upstream' and isinstance(get_constant(node), ast.Str)
         } or None
 
     def extract_product(self):

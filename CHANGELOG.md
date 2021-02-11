@@ -1,6 +1,14 @@
 # CHANGELOG
 
-## 0.9.1dev
+## 0.9.2dev
+
+- Support for Python 3.9
+- `SQLAlchemyClient` now accepts an argument to pass custom parameters to `sqlalchemy.create_engine`
+- Temporarily pins papermill version due to an incompatibility with jupytext and nbformat (jupytext does not support cell ids yet)
+- Adds `--on-finish/-of` to `ploomber task` to execute the `on_finish` hook
+- DAGs with R notebooks can render even if the ir kernel is not installed
+
+## 0.9.1 (2021-02-01)
 
 - `File` now supports a `client` argument to upload products to cloud
     storage
@@ -18,7 +26,7 @@
 - Warning when `Product` metadata is corrupted
 - Adds new `meta.import_tasks_from` option in YAML specs to import
     tasks from another file
-- `SQLAlchemyClient` now accepts an argument to pass custom parameters to `sqlalchemy.create_engine`
+
 
 ## 0.9 (2021-01-18)
 
