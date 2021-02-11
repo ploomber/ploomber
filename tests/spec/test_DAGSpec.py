@@ -760,39 +760,35 @@ def test_import_tasks_from_loads_relative_to_pipeline_spec(tmp_nbs):
 
 
 def test_import_tasks_from_keeps_value_if_already_absolute(tmp_nbs, tmp_path):
-    tasks_yaml = tmp_path / 'some_tasks.yaml'
+    tasks_yaml = (tmp_path / 'some_tasks.yaml').resolve()
+    path_to_script = (tmp_path / 'extra_task.py').resolve()
 
-    some_tasks = [{
-        'source': str(Path('extra_task.py').resolve()),
-        'product': 'extra.ipynb'
-    }]
+    some_tasks = [{'source': str(path_to_script), 'product': 'extra.ipynb'}]
     tasks_yaml.write_text(yaml.dump(some_tasks))
-    Path('extra_task.py').write_text("""
+    path_to_script.write_text("""
 # + tags=["parameters"]
 # -
 """)
 
     spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
     # set an absolute path
-    spec_d['meta']['import_tasks_from'] = str(tasks_yaml.resolve())
+    spec_d['meta']['import_tasks_from'] = str(tasks_yaml)
     Path('pipeline.yaml').write_text(yaml.dump(spec_d))
 
     spec = DAGSpec('pipeline.yaml')
     dag = spec.to_dag()
     dag.render()
 
-    # value should be the same
-    assert spec['meta']['import_tasks_from'] == str(tmp_path /
-                                                    'some_tasks.yaml')
-    assert str(Path('extra_task.py').resolve()) in [
-        str(t['source']) for t in spec['tasks']
-    ]
+    # value should be the same because it was absolute
+    assert spec['meta']['import_tasks_from'] == str(tasks_yaml)
+    assert str(path_to_script) in [str(t['source']) for t in spec['tasks']]
 
 
 def test_import_tasks_from_paths_are_relative_to_the_yaml_spec(
         tmp_nbs, tmp_path):
     tasks_yaml = tmp_path / 'some_tasks.yaml'
 
+    # source is a relative path
     some_tasks = [{'source': 'extra_task.py', 'product': 'extra.ipynb'}]
     tasks_yaml.write_text(yaml.dump(some_tasks))
     #  write the source code in the same folder as some_tasks.yaml
@@ -811,6 +807,8 @@ def test_import_tasks_from_paths_are_relative_to_the_yaml_spec(
     dag = spec.to_dag()
     dag.render()
 
+    # paths must be interpreted as relative to tasks.yaml, not to the
+    # current working directory
     assert str(Path(tmp_path, 'extra_task.py').resolve()) in [
         str(t['source']) for t in spec['tasks']
     ]
