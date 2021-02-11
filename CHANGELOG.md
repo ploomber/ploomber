@@ -2,8 +2,11 @@
 
 ## 0.9.2dev
 
+- Support for Python 3.9
 - `SQLAlchemyClient` now accepts an argument to pass custom parameters to `sqlalchemy.create_engine`
-
+- Temporarily pins papermill version due to an incompatibility with jupytext and nbformat (jupytext does not support cell ids yet)
+- Adds `--on-finish/-of` to `ploomber task` to execute the `on_finish` hook
+- DAGs with R notebooks can render even if the ir kernel is not installed
 
 ## 0.9.1 (2021-02-01)
 
