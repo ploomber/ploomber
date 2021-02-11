@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.9.2dev
+## 0.9.2 (2021-02-11)
 
 - Support for Python 3.9
 - `SQLAlchemyClient` now accepts an argument to pass custom parameters to `sqlalchemy.create_engine`
