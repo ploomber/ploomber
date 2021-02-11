@@ -60,6 +60,9 @@ class Placeholder(AbstractPlaceholder):
         Makes the placeholder always read the template from the file before
         rendering
 
+    required
+        Set of keys required for rendering
+
     Attributes
     ----------
     variables : set

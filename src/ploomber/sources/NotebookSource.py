@@ -58,6 +58,9 @@ class NotebookSource(Source):
         not have kernelspec info, this parameter is required. Defaults to None.
         To see which kernelspecs are available run "jupyter kernelspec list"
 
+    check_if_kernel_installed : bool, optional
+        Check if the kernel is installed during initization
+
     Notes
     -----
     The render method prepares the notebook for execution: it adds the
@@ -72,13 +75,15 @@ class NotebookSource(Source):
                  hot_reload=False,
                  ext_in=None,
                  kernelspec_name=None,
-                 static_analysis=False):
+                 static_analysis=False,
+                 check_if_kernel_installed=True):
         # any non-py file must first be converted using jupytext, we need
         # that representation for validation, if input is already a .py file
         # do not convert. If passed a string, try to guess format using
         # jupytext. We also need ipynb representation for .develop(),
         # but do lazy loading in case we don't need both
         self._primitive = primitive
+        self._check_if_kernel_installed = check_if_kernel_installed
 
         # this happens if using SourceLoader
         if isinstance(primitive, Placeholder):
@@ -193,7 +198,8 @@ class NotebookSource(Source):
                 # because that's the only one available
                 # when this is initialized
                 language=self._language,
-                kernelspec_name=self._kernelspec_name)
+                kernelspec_name=self._kernelspec_name,
+                check_if_kernel_installed=self._check_if_kernel_installed)
 
             # get the str representation. always write from nb_obj, even if
             # this was initialized with a ipynb file, nb_obj contains
@@ -462,7 +468,11 @@ def check_source(nb, filename):
     }
 
 
-def _to_nb_obj(source, language, ext=None, kernelspec_name=None):
+def _to_nb_obj(source,
+               language,
+               ext=None,
+               kernelspec_name=None,
+               check_if_kernel_installed=True):
     """
     Convert to jupyter notebook via jupytext, if the notebook does not contain
     kernel information and the user did not pass a kernelspec_name explicitly,
@@ -501,13 +511,28 @@ def _to_nb_obj(source, language, ext=None, kernelspec_name=None):
     # let jupytext figure out the format
     nb = jupytext.reads(source, fmt=ext)
 
-    ensure_kernelspec(nb, kernelspec_name, ext, language)
+    check_nb_kernelspec_info(nb,
+                             kernelspec_name,
+                             ext,
+                             language,
+                             check_if_installed=check_if_kernel_installed)
 
     return nb
 
 
-def ensure_kernelspec(nb, kernelspec_name, ext, language):
+def check_nb_kernelspec_info(nb,
+                             kernelspec_name,
+                             ext,
+                             language,
+                             check_if_installed=True):
     """Make sure the passed notebook has kernel info
+
+    Parameters
+    ----------
+    check_if_installed : bool
+        Also check if the kernelspec is installed, nb.metadata.kernelspec
+        to be replaced by whatever information jupyter returns when requesting
+        the kernelspec
     """
     import jupyter_client
 
@@ -524,13 +549,27 @@ def ensure_kernelspec(nb, kernelspec_name, ext, language):
             'indicates the name). Python is usually named "python3", '
             'R usually "ir"')
 
-    kernelspec = jupyter_client.kernelspec.get_kernel_spec(kernel_name)
+    if check_if_installed:
+        kernelspec = jupyter_client.kernelspec.get_kernel_spec(kernel_name)
 
-    nb.metadata.kernelspec = {
-        "display_name": kernelspec.display_name,
-        "language": kernelspec.language,
-        "name": kernel_name
-    }
+        nb.metadata.kernelspec = {
+            "display_name": kernelspec.display_name,
+            "language": kernelspec.language,
+            "name": kernel_name
+        }
+    else:
+        if 'metadata' not in nb:
+            nb['metadata'] = dict()
+
+        if 'kernelspec' not in nb['metadata']:
+            nb['metadata']['kernelspec'] = dict()
+
+        # we cannot ask jupyter, so we fill this in ourselves
+        nb.metadata.kernelspec = {
+            "display_name": 'R' if kernel_name == 'ir' else 'Python 3',
+            "language": 'R' if kernel_name == 'ir' else 'python',
+            "name": kernel_name
+        }
 
 
 def determine_kernel_name(nb, kernelspec_name, ext, language):
@@ -580,7 +619,7 @@ def inject_cell(model, params):
     # we must ensure nb has kernelspec info, otherwise papermill will fail to
     # parametrize
     ext = model['name'].split('.')[-1]
-    ensure_kernelspec(nb, kernelspec_name=None, ext=ext, language=None)
+    check_nb_kernelspec_info(nb, kernelspec_name=None, ext=ext, language=None)
 
     # papermill adds a bunch of things before calling parameterize_notebook
     # if we don't add those things, parameterize_notebook breaks

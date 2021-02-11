@@ -116,13 +116,25 @@ class DAGSpec(MutableMapping):
         with the dotted path, which means some verifications such as import
         statements in that function's module are delayed until the pipeline
         is executed. This also applies to placeholders loaded using a
-        SourceLoader, if a placeholder does not exist, it will return
-        None instead of raising an error
+        SourceLoader, if a placeholder exists, it will return the path
+        to it, instead of an initialized Placeholder object, if it doesn't,
+        it will return None instead of raising an error.
 
     reload : bool, optional
         Reloads modules before getting dotted paths. Has no effect if
         lazy_import=True
     """
+
+    # NOTE: lazy_import is used where we need to initialized a a spec but don't
+    # plan on running it. One use case is when exporting to Argo or Airflow:
+    # we don't want to raise errors if some dependency is missing because
+    # it can happen that the environment exporting the dag does not have
+    # all the dependencies required to run it. The second use case is when
+    # running "ploomber scaffold", we want to use DAGSpec machinery to parse
+    # the yaml spec and the use such information to add the task in the
+    # appropriate place, this by construction, means that the spec as it is
+    # cannot be converted to a dag yet, since it has at least one task
+    # whose source does not exist
     def __init__(self, data, env=None, lazy_import=False, reload=False):
         if isinstance(data, (str, Path)):
             path = data

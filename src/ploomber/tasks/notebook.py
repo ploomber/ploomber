@@ -248,7 +248,8 @@ class NotebookRunner(Task):
                  nb_product_key='nb',
                  static_analysis=False,
                  nbconvert_export_kwargs=None,
-                 local_execution=False):
+                 local_execution=False,
+                 check_if_kernel_installed=True):
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name
@@ -257,6 +258,7 @@ class NotebookRunner(Task):
         self.nb_product_key = nb_product_key
         self.static_analysis = static_analysis
         self.local_execution = local_execution
+        self.check_if_kernel_installed = check_if_kernel_installed
 
         if 'cwd' in self.papermill_params and self.local_execution:
             raise KeyError('If local_execution is set to True, "cwd" should '
@@ -266,7 +268,8 @@ class NotebookRunner(Task):
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = NotebookRunner._init_source(source, kwargs, ext_in,
                                                    kernelspec_name,
-                                                   static_analysis)
+                                                   static_analysis,
+                                                   check_if_kernel_installed)
         super().__init__(product, dag, name, params)
 
         if isinstance(self.product, MetaProduct):
@@ -294,12 +297,15 @@ class NotebookRunner(Task):
                      kwargs,
                      ext_in=None,
                      kernelspec_name=None,
-                     static_analysis=False):
-        return NotebookSource(source,
-                              ext_in=ext_in,
-                              kernelspec_name=kernelspec_name,
-                              static_analysis=static_analysis,
-                              **kwargs)
+                     static_analysis=False,
+                     check_if_kernel_installed=False):
+        return NotebookSource(
+            source,
+            ext_in=ext_in,
+            kernelspec_name=kernelspec_name,
+            static_analysis=static_analysis,
+            check_if_kernel_installed=check_if_kernel_installed,
+            **kwargs)
 
     def develop(self, app='notebook', args=None):
         """

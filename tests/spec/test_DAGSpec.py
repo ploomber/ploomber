@@ -424,6 +424,22 @@ def test_pipeline_r(tmp_pipeline_r):
     dag.build()
 
 
+def test_initialize_with_lazy_import_with_missing_kernel(
+        tmp_pipeline_r, monkeypatch):
+    Path('output').mkdir()
+
+    with open('pipeline.yaml') as f:
+        dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
+
+    def no_kernel(name):
+        raise ValueError
+
+    monkeypatch.setattr(jupyter_client.kernelspec, 'get_kernel_spec',
+                        no_kernel)
+
+    assert DAGSpec(dag_spec, lazy_import=True).to_dag()
+
+
 @pytest.mark.parametrize('raw', [[{
     'source': 'load.py'
 }], {

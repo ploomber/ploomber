@@ -126,6 +126,7 @@ class TaskSpec(MutableMapping):
         self.data = data
         self.meta = meta
         self.project_root = project_root
+        self.lazy_import = lazy_import
 
         self.validate()
 
@@ -202,6 +203,15 @@ class TaskSpec(MutableMapping):
         on_finish = task_dict.pop('on_finish', None)
         on_render = task_dict.pop('on_render', None)
         on_failure = task_dict.pop('on_failure', None)
+
+        # edge case: if using lazy_import, we should not check if the kernel
+        # is installed. this is used when exporting to Argo/Airflow using
+        # soopervisor, since the exporting process should not require to have
+        # the ir kernel installed. The same applies when Airflow has to convert
+        # the DAG, the Airflow environment shouldn't require the ir kernel
+        if (class_ == tasks.NotebookRunner and self.lazy_import
+                and 'check_if_kernel_installed' not in task_dict):
+            task_dict['check_if_kernel_installed'] = False
 
         task = class_(source=source,
                       product=product,
