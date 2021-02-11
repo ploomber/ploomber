@@ -250,9 +250,9 @@ def test_warn_if_using_default_value():
     with pytest.warns(UserWarning) as record:
         source.render(params)
 
-    assert len(record) == 1
-    assert (str(record[0].message) ==
-            "Missing parameters: {'b'}, will use default value")
+    assert "Missing parameters: {'b'}, will use default value" in [
+        str(warning.message) for warning in record
+    ]
 
 
 def test_error_if_passing_undeclared_parameter():
