@@ -211,6 +211,7 @@ class DAGSpec(MutableMapping):
                 # relative paths here are relative to the file where they
                 # are declared
                 base_path = Path(self.data['meta']['import_tasks_from']).parent
+
                 for task in imported:
                     add_base_path_to_source_if_relative(task,
                                                         base_path=base_path)
@@ -557,9 +558,10 @@ def normalize_task(task):
 
 
 def add_base_path_to_source_if_relative(task, base_path):
-    relative_source = not Path(task['source']).is_absolute()
-    # dotted paths are anything that has at least one non-leading doth
-    # (that could also be a relative path)
-    is_dotted_path = '.' in task['source'] and task['source'][0] != '.'
-    if base_path is not None and relative_source and not is_dotted_path:
+    path = Path(task['source'])
+    relative_source = not path.is_absolute()
+
+    # must be a relative source with a valid extension, otherwise, it can
+    # be a dotted path
+    if relative_source and path.suffix in set(suffix2taskclass):
         task['source'] = str(Path(base_path, task['source']).resolve())
