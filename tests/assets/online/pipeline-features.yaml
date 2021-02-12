@@ -1,0 +1,9 @@
+- source: online_tasks.square
+  product: output/square.parquet
+  serializer: online_io.serialize
+  unserializer: online_io.unserialize
+
+- source: online_tasks.cube
+  product: output/cube.parquet
+  serializer: online_io.serialize
+  unserializer: online_io.unserialize
