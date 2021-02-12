@@ -204,6 +204,13 @@ class TaskSpec(MutableMapping):
         on_render = task_dict.pop('on_render', None)
         on_failure = task_dict.pop('on_failure', None)
 
+        if 'serializer' in task_dict:
+            task_dict['serializer'] = load_dotted_path(task_dict['serializer'])
+
+        if 'unserializer' in task_dict:
+            task_dict['unserializer'] = load_dotted_path(
+                task_dict['unserializer'])
+
         # edge case: if using lazy_import, we should not check if the kernel
         # is installed. this is used when exporting to Argo/Airflow using
         # soopervisor, since the exporting process should not require to have

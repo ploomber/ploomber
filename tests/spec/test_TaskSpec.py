@@ -132,3 +132,27 @@ def some_hook():
     assert t.on_finish
     assert t.on_render
     assert t.on_failure
+
+
+def test_loads_serializer_and_unserializer(backup_online,
+                                           add_current_to_sys_path):
+    meta = Meta.default_meta()
+    meta['extract_product'] = False
+
+    spec = TaskSpec(
+        {
+            'source': 'online_tasks.square',
+            'product': 'output/square.parquet',
+            'serializer': 'online_io.serialize',
+            'unserializer': 'online_io.unserialize',
+        },
+        meta=meta,
+        project_root='.')
+
+    dag = DAG()
+    task, _ = spec.to_task(dag=dag)
+
+    from online_io import serialize, unserialize
+
+    assert task._serializer is serialize
+    assert task._unserializer is unserialize
