@@ -60,7 +60,8 @@ class PythonCallableExtractor(Extractor):
         } or None
 
     def extract_product(self):
-        raise NotImplementedError
+        raise NotImplementedError('Extract product is not implemented '
+                                  'for python callables')
 
 
 def extract_variable(code_str, name):
