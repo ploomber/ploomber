@@ -362,7 +362,7 @@ class DAG(collections.abc.Mapping):
 
         debug : bool, default=False
             Drop a debugging session if building raises an exception. Note that
-            this modifies the executor and temporarily sets it to Serial
+            this modifies the executor, temporarily setting it to Serial
             with subprocess off and catching exceptions/warnings off. Restores
             the original executor at the end.
 
