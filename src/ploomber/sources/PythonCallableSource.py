@@ -36,7 +36,7 @@ def find_code_for_fn_dotted_path(dotted_path):
 
     raise ValueError(f'Error processing dotted path {dotted_path!r}, '
                      f'there is no function named {name!r} in module '
-                     f'{module!r}')
+                     f'{module!r} (module loaded from: {module_location!r})')
 
 
 class CallableLoader:
