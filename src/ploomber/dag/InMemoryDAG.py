@@ -75,6 +75,10 @@ class InMemoryDAG:
         outs = {}
 
         input_data_names = set(self.root_nodes)
+        # FIXME: for this particula case, the error here should be TypeError,
+        # not KeyError (the former is the one used when calling functions with
+        # invalid arguments) - maybe an argument validate.keys to choose
+        # which error to raise?
         validate.keys(valid=input_data_names,
                       passed=set(input_data),
                       required=input_data_names,

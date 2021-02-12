@@ -124,6 +124,11 @@ def backup_simple():
     pass
 
 
+@fixture_backup('online')
+def backup_online():
+    pass
+
+
 @pytest.fixture()
 def tmp_directory():
     old = os.getcwd()
