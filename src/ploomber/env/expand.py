@@ -210,6 +210,9 @@ class EnvironmentExpander:
     def get_user(self):
         return getpass.getuser()
 
+    def get_cwd(self):
+        return str(Path('.').resolve())
+
     def get_here(self):
         if self._path_to_here:
             return self._path_to_here
