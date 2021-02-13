@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import yaml
 import pandas as pd
 import pytest
@@ -45,6 +47,23 @@ def test_online_dag_from_partial_spec(class_, backup_online,
                                       add_current_to_sys_path):
     get = pd.DataFrame({'x': [1, 2, 3]})
     out = class_().predict(get=get)
+
+    assert set(out) == {'cube', 'get', 'square', 'terminal'}
+    assert out['terminal'] == 56
+
+
+def test_online_dag_from_partial_spec_with_source_and_product_only(
+        backup_online, add_current_to_sys_path):
+    spec = yaml.safe_load(Path('pipeline-features.yaml').read_text())
+
+    for task in spec:
+        task.pop('serializer')
+        task.pop('unserializer')
+
+    Path('pipeline-features.yaml').write_text(yaml.dump(spec))
+
+    get = pd.DataFrame({'x': [1, 2, 3]})
+    out = ModelFromSpec().predict(get=get)
 
     assert set(out) == {'cube', 'get', 'square', 'terminal'}
     assert out['terminal'] == 56

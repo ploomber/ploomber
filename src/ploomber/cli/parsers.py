@@ -33,6 +33,7 @@ def package_location():
         if not str(Path(f).parent).endswith('.egg-info')
     ])
 
+    # FIXME: warn user if more than one
     return candidates[0] if candidates else None
 
 

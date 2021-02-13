@@ -57,6 +57,31 @@ interface, we don't call it config because there is a DAGConfig object in
 the Python API and this might cause confusion
 
 All other sections should represent valid DAG properties.
+
+
+Partials [Provisional name]
+---------------------------
+Partials were introduced to support a common ML use case: train and serving
+pipelines. If we describe a training pipeline as a DAG, the only difference
+with its serving counterpart are the tasks (can be more than one) at the
+beginning (train: get historical data, serve: get single data point) and the
+end (train: fit a model, serve: load a model and predict). Everything that
+happens in the middle should be the same to avoid training-serving skew. There
+are two specific use cases: batch and online.
+
+To define a batch serving pipeline we define three files: pipeline.yaml
+(train DAG), pipeline-serve (serve DAG), and pipeline-features.yaml (partial).
+The first two follow the DAGSpec schema and use
+``import_tasks_from: pipeline-features.yaml``. Training is done via
+``ploomber build --entry-point pipeline.yaml`` and serving via
+``ploomber build --entry-point pipeline-serve.yaml``.
+
+An online API has a different mechanism because the inference pipeline needs
+a Python API to interface with a web framework, rpc, or similar. This logic
+is implemented by OnlineDAG, which takes a partial definition
+(e.g. ``pipeline-features.yaml``) and builds an in-memory DAG that can make
+predictions using ``OnlineDAG().predict()``. See ``OnlineDAG`` documentation
+for details.
 """
 import os
 import yaml

@@ -185,7 +185,13 @@ class PythonCallableSource(Source):
                     f'Function {self.name!r} should not have '
                     'a \'product\' parameter, but return its result instead')
 
-            if not self._needs_product:
+            # if source does not need product to be called and we got
+            # a product parameter, remove it. NOTE: Task.render removes
+            # product from params if dealing with an EmptyProduct - it's
+            # better to always pass it and just remove it here to avoid
+            # the second condition. i don't think there is any other
+            # condition were we don't receive product here
+            if not self._needs_product and 'product' in to_validate:
                 to_validate.remove('product')
 
             signature_check(self.primitive, to_validate, self.name)
