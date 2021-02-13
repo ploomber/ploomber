@@ -25,7 +25,7 @@ def _unserialize_params(params_original, unserializer):
     params = params_original.to_dict()
 
     params['upstream'] = {
-        k: unserializer(v)
+        k: unserializer(product=v)
         for k, v in params['upstream'].items()
     }
 

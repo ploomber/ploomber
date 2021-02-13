@@ -6,6 +6,7 @@ import inspect
 from pathlib import Path
 import argparse
 from collections.abc import Mapping
+from glob import glob
 import warnings
 
 import yaml
@@ -28,6 +29,33 @@ def process_arg(s):
     return clean.replace('-', '_')
 
 
+def package_location():
+    candidates = sorted([
+        f for f in glob('src/*/pipeline.yaml')
+        if not str(Path(f).parent).endswith('.egg-info')
+    ])
+
+    return candidates[0] if candidates else None
+
+
+def determine_default_entry_point():
+    """
+    Determines default entry point, using the following order:
+    1. ENTRY_POINT environment
+    2. Package layout default location src/*/pipeline.yaml
+    3. pipeline.yaml
+    """
+    env_var = os.environ.get('ENTRY_POINT')
+    pkg_location = package_location()
+
+    if env_var:
+        return env_var
+    elif pkg_location:
+        return pkg_location
+    else:
+        return 'pipeline.yaml'
+
+
 class CustomParser(argparse.ArgumentParser):
     """
     Most of our CLI commands operate on entry points, the CLI signature is
@@ -41,8 +69,7 @@ class CustomParser(argparse.ArgumentParser):
     parser.add_argument.
     """
     def __init__(self, *args, **kwargs):
-        self.DEFAULT_ENTRY_POINT = os.environ.get(
-            'ENTRY_POINT') or 'pipeline.yaml'
+        self.DEFAULT_ENTRY_POINT = determine_default_entry_point()
 
         self.static_args = []
         self.finished_static_api = False
@@ -56,12 +83,11 @@ class CustomParser(argparse.ArgumentParser):
                           'specified level',
                           default=None)
 
-        self.add_argument('--entry-point',
-                          '-e',
-                          help='Entry point(DAG), defaults to pipeline.yaml. '
-                          'Replaced if there is an ENTRY_POINT env '
-                          'variable defined',
-                          default=self.DEFAULT_ENTRY_POINT)
+        self.add_argument(
+            '--entry-point',
+            '-e',
+            help=f'Entry point, defaults to {self.DEFAULT_ENTRY_POINT}',
+            default=self.DEFAULT_ENTRY_POINT)
 
         self.finished_init = True
 
@@ -200,6 +226,12 @@ class EntryPoint:
                           'nor a valid dotted path'.format(self))
 
             args = parser.parse_args()
+
+        # at this point there are two remaining cases:
+        # no help command (entry point may or may not exist),:
+        #   we attempt to run the command
+        # help command and exists:
+        #   we just parse parameters to display them in the help menu
         elif self.type == EntryPoint.DottedPath:
             # if pipeline.yaml, .type will return dotted path, because that's
             # a valid dotted-path value but this can trip users over so we
@@ -211,6 +243,7 @@ class EntryPoint:
 
             dag, args = parser.process_factory_dotted_path(self)
         else:
+            # process file, directory or glob pattern
             dag, args = _process_file_dir_or_glob(parser)
 
         return dag, args
