@@ -14,6 +14,8 @@ class OnlineDAG(abc.ABC):
     Execute partial DAGs in-memory. This is an abstract class, to use it.
     Create a subclass and provide the required static methods.
     """
+
+    # FIXME: add a way to customize
     def __init__(self):
         dag = self.init_dag_from_partial(self.get_partial())
 

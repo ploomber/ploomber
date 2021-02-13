@@ -9,8 +9,6 @@ from collections.abc import Mapping
 from glob import glob
 import warnings
 
-import yaml
-
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.env.EnvDict import EnvDict
 from ploomber.util.util import load_dotted_path

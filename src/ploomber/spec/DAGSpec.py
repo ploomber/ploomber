@@ -250,7 +250,10 @@ class DAGSpec(MutableMapping):
                 raise KeyError('If specifying dag through a "location" key '
                                'it must be the unique key in the spec')
         else:
-            valid = {'meta', 'config', 'clients', 'tasks'}
+            valid = {
+                'meta', 'config', 'clients', 'tasks', 'serializer',
+                'unserializer'
+            }
             validate.keys(valid, spec.keys(), name='dag spec')
 
     def __getitem__(self, key):
@@ -303,6 +306,12 @@ class DAGSpec(MutableMapping):
 
         if clients:
             init_clients(dag, clients)
+
+        # FIXME: this violates lazy_import, we must change DAG's implementation
+        # to accept strings as attribute and load them until they are called
+        for attr in ['serializer', 'unserializer']:
+            if attr in self:
+                setattr(dag, attr, load_dotted_path(self[attr]))
 
         process_tasks(dag, self, root_path=self._parent_path)
 

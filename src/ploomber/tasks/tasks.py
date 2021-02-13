@@ -74,10 +74,10 @@ class PythonCallable(Task):
                  params=None,
                  unserializer=None,
                  serializer=None):
-        kwargs = dict(hot_reload=dag._params.hot_reload,
-                      needs_product=serializer is None)
-        self._source = type(self)._init_source(source, kwargs)
         self._serializer = serializer or dag.serializer
+        kwargs = dict(hot_reload=dag._params.hot_reload,
+                      needs_product=self._serializer is None)
+        self._source = type(self)._init_source(source, kwargs)
         self._unserializer = unserializer or dag.unserializer
         super().__init__(product, dag, name, params)
 

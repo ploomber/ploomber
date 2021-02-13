@@ -812,3 +812,33 @@ def test_import_tasks_from_paths_are_relative_to_the_yaml_spec(
     assert str(Path(tmp_path, 'extra_task.py').resolve()) in [
         str(t['source']) for t in spec['tasks']
     ]
+
+
+def test_loads_serializer_and_unserializer(backup_online,
+                                           add_current_to_sys_path):
+
+    spec = DAGSpec({
+        'tasks': [{
+            'source': 'online_tasks.get',
+            'product': 'output/get.parquet',
+        }, {
+            'source': 'online_tasks.square',
+            'product': 'output/square.parquet',
+        }],
+        'meta': {
+            'extract_product': False
+        },
+        'serializer':
+        'online_io.serialize',
+        'unserializer':
+        'online_io.unserialize',
+    })
+
+    dag = spec.to_dag()
+
+    from online_io import serialize, unserialize
+
+    assert dag['get']._serializer is serialize
+    assert dag['get']._unserializer is unserialize
+    assert dag['square']._serializer is serialize
+    assert dag['square']._unserializer is unserialize
