@@ -92,12 +92,14 @@ from glob import iglob
 from itertools import chain
 import pprint
 
-from ploomber import products
-from ploomber import DAG, tasks, SourceLoader
+from ploomber import products, tasks
+from ploomber.dag.DAG import DAG
+from ploomber.placeholders.SourceLoader import SourceLoader
 from ploomber.util.util import (load_dotted_path, find_file_recursively,
                                 call_with_dictionary, add_to_sys_path)
 from ploomber.spec.TaskSpec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
+from ploomber.util import default
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.env.EnvDict import EnvDict
@@ -160,29 +162,40 @@ class DAGSpec(MutableMapping):
     # appropriate place, this by construction, means that the spec as it is
     # cannot be converted to a dag yet, since it has at least one task
     # whose source does not exist
-    def __init__(self, data, env=None, lazy_import=False, reload=False):
+    def __init__(self,
+                 data,
+                 env=None,
+                 lazy_import=False,
+                 reload=False,
+                 parent_path=None):
         if isinstance(data, (str, Path)):
-            path = data
+            if parent_path is not None:
+                raise ValueError('parent_path must be None when '
+                                 f'initializing {type(self).__name__} with '
+                                 'a path to a YAML spec')
+            # this is only used to display an error message with the path
+            # to the loaded file
+            path_for_errors = data
             # resolve the parent path to make sources and products unambiguous
             # even if the current working directory changes
-            self._parent_path = str(Path(data).parent.resolve())
+            path_to_entry_point = Path(data).resolve()
+            self._parent_path = str(path_to_entry_point.parent)
 
             with open(str(data)) as f:
                 data = yaml.load(f, Loader=yaml.SafeLoader)
 
-            env_path = Path(self._parent_path, 'env.yaml')
-
-            if env is None and env_path.exists():
-                env = str(env_path)
+            env = env or default.path_to_env(self._parent_path)
         else:
-            path = None
+            path_for_errors = None
             # FIXME: add test cases, some of those features wont work if
             # _parent_path is None. We should make sure that we either raise
             # an error if _parent_path is needed or use the current working
             # directory if it's appropriate - this is mostly to make relative
             # paths consistent: they should be relative to the file that
             # contains them
-            self._parent_path = None
+            self._parent_path = str(Path(parent_path).resolve())
+
+            env = env or default.path_to_env(self._parent_path)
 
         self.data = data
 
@@ -190,7 +203,7 @@ class DAGSpec(MutableMapping):
             self.data = {'tasks': self.data}
 
         # validate keys defined at the top (nested keys are not validated here)
-        self._validate_top_keys(self.data, path)
+        self._validate_top_keys(self.data, path_for_errors)
 
         logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env))
 

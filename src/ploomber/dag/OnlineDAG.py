@@ -71,7 +71,13 @@ class OnlineDAG(abc.ABC):
 
             # cannot extract upstream because this is an incomplete DAG
             meta = {'extract_product': False, 'extract_upstream': False}
-            spec = DAGSpec({'tasks': tasks, 'meta': meta})
+            spec = DAGSpec(
+                {
+                    'tasks': tasks,
+                    'meta': meta
+                },
+                parent_path=Path(partial).parent,
+            )
 
             return spec.to_dag()
         elif isinstance(partial, DAG):

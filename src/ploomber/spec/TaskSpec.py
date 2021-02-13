@@ -313,12 +313,12 @@ def resolve_product(product_raw, relative_to, class_):
     if class_ != products.File:
         return product_raw
     elif relative_to:
-        # When a DAG is initialized, paths are usually relative to the folder
-        # that has the pipeline.yaml, the only case when this isn't true is
-        # when using DAGSpec.auto_load(), in such case, relative paths won't
-        # work if the current working directory is different  to the
-        # pipeline.yaml folder (this happens sometimes in the Jupyter UI).
-        # We resolve paths to avoid ambiguity on this
+        # To keep things consistent, product relative paths are so to the
+        # pipeline.yaml file (not to the current working directory). This is
+        # important because there is no guarantee that the process calling
+        # this will be at the pipeline.yaml location. One example is
+        # when using the integration with Jupyter notebooks, each notebook
+        # will set its working directory to the current parent.
         return str(Path(relative_to, product_raw).resolve())
     else:
         return Path(product_raw).resolve()
