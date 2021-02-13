@@ -154,7 +154,9 @@ class DAGSpec(MutableMapping):
             # FIXME: add test cases, some of those features wont work if
             # _parent_path is None. We should make sure that we either raise
             # an error if _parent_path is needed or use the current working
-            # directory if it's appropriate
+            # directory if it's appropriate - this is mostly to make relative
+            # paths consistent: they should be relative to the file that
+            # contains them
             self._parent_path = None
 
         self.data = data

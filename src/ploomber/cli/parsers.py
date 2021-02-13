@@ -470,22 +470,21 @@ def _process_file_dir_or_glob(parser):
     elif entry_point.type == EntryPoint.Pattern:
         dag = DAGSpec.from_files(args.entry_point).to_dag()
     else:
-        with open(args.entry_point) as f:
-            dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
-
         # load env.yaml if there is one
         if Path('env.yaml').exists():
             env = EnvDict('env.yaml')
             # and replace keys depending on passed cli args
             replaced = _args_to_replace_in_env(args, parser.static_args)
             env = env._replace_flatten_keys(replaced)
-            dag = DAGSpec(dag_dict, env=env).to_dag()
+            dag = DAGSpec(args.entry_point, env=env).to_dag()
         else:
-            dag = DAGSpec(dag_dict).to_dag()
+            dag = DAGSpec(args.entry_point).to_dag()
 
     return dag, args
 
 
+# FIXME: I think this is always used with CustomParser, we should make it
+# and instance method instead
 def _custom_command(parser):
     """
     Parses an entry point, adding arguments by extracting them from the env.

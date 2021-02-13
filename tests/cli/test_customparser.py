@@ -1,6 +1,10 @@
 import sys
+from unittest.mock import Mock
+
 import pytest
-from ploomber.cli.parsers import CustomParser
+
+from ploomber.cli.parsers import CustomParser, _custom_command
+from ploomber.cli import parsers
 
 
 def test_custom_parser_static_args():
@@ -50,3 +54,45 @@ def test_default_loaded_from_env_var(monkeypatch):
 
     args = parser.parse_args()
     assert args.entry_point == 'dag.yaml'
+
+
+def test_dagspec_initialization_from_yaml(tmp_nbs_nested, monkeypatch):
+    """
+    DAGSpec can be initialized with a path to a spec or a dictionary, but
+    they have a slightly different behavior. This checks that we initialize
+    with the path
+    """
+    mock = Mock(wraps=parsers.DAGSpec)
+
+    monkeypatch.setattr(sys, 'argv', ['python'])
+    monkeypatch.setattr(parsers, 'DAGSpec', mock)
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    dag, args = _custom_command(parser)
+
+    mock.assert_called_once_with('pipeline.yaml')
+
+
+def test_dagspec_initialization_from_yaml_and_env(tmp_nbs, monkeypatch):
+    """
+    DAGSpec can be initialized with a path to a spec or a dictionary, but
+    they have a slightly different behavior. This checks that we initialize
+    with the path
+    """
+    mock = Mock(wraps=parsers.DAGSpec)
+
+    monkeypatch.setattr(sys, 'argv', ['python'])
+    monkeypatch.setattr(parsers, 'DAGSpec', mock)
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    dag, args = _custom_command(parser)
+
+    mock.assert_called_once_with('pipeline.yaml', env={'sample': False})
