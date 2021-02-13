@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 from unittest.mock import Mock
 
@@ -83,10 +84,15 @@ def test_dagspec_initialization_from_yaml_and_env(tmp_nbs, monkeypatch):
     they have a slightly different behavior. This checks that we initialize
     with the path
     """
-    mock = Mock(wraps=parsers.DAGSpec)
+    mock_dagspec = Mock(wraps=parsers.DAGSpec)
+    mock_default_path_to_env = Mock(wraps=parsers.default.path_to_env)
+    mock_envdict = Mock(wraps=parsers.EnvDict)
 
     monkeypatch.setattr(sys, 'argv', ['python'])
-    monkeypatch.setattr(parsers, 'DAGSpec', mock)
+    monkeypatch.setattr(parsers, 'DAGSpec', mock_dagspec)
+    monkeypatch.setattr(parsers.default, 'path_to_env',
+                        mock_default_path_to_env)
+    monkeypatch.setattr(parsers, 'EnvDict', mock_envdict)
 
     parser = CustomParser()
 
@@ -95,4 +101,7 @@ def test_dagspec_initialization_from_yaml_and_env(tmp_nbs, monkeypatch):
 
     dag, args = _custom_command(parser)
 
-    mock.assert_called_once_with('pipeline.yaml', env={'sample': False})
+    mock_dagspec.assert_called_once_with('pipeline.yaml',
+                                         env={'sample': False})
+    mock_default_path_to_env.assert_called_once_with(Path('.'))
+    mock_envdict.assert_called_once_with(str(Path('env.yaml').resolve()))

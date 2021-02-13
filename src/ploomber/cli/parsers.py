@@ -1,4 +1,3 @@
-import os
 import logging
 import sys
 import importlib
@@ -6,12 +5,13 @@ import inspect
 from pathlib import Path
 import argparse
 from collections.abc import Mapping
-from glob import glob
+
 import warnings
 
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.env.EnvDict import EnvDict
 from ploomber.util.util import load_dotted_path
+from ploomber.util import default
 
 
 def process_arg(s):
@@ -27,34 +27,6 @@ def process_arg(s):
     return clean.replace('-', '_')
 
 
-def package_location():
-    candidates = sorted([
-        f for f in glob('src/*/pipeline.yaml')
-        if not str(Path(f).parent).endswith('.egg-info')
-    ])
-
-    # FIXME: warn user if more than one
-    return candidates[0] if candidates else None
-
-
-def determine_default_entry_point():
-    """
-    Determines default entry point, using the following order:
-    1. ENTRY_POINT environment
-    2. pipeline.yaml
-    3. Package layout default location src/*/pipeline.yaml
-    """
-    env_var = os.environ.get('ENTRY_POINT')
-    pkg_location = package_location()
-
-    if env_var:
-        return env_var
-    elif not Path('pipeline.yaml').exists() and pkg_location:
-        return pkg_location
-    else:
-        return 'pipeline.yaml'
-
-
 class CustomParser(argparse.ArgumentParser):
     """
     Most of our CLI commands operate on entry points, the CLI signature is
@@ -68,7 +40,7 @@ class CustomParser(argparse.ArgumentParser):
     parser.add_argument.
     """
     def __init__(self, *args, **kwargs):
-        self.DEFAULT_ENTRY_POINT = determine_default_entry_point()
+        self.DEFAULT_ENTRY_POINT = default.entry_point()
 
         self.static_args = []
         self.finished_static_api = False
@@ -425,7 +397,7 @@ def _add_args_from_callable(parser, callable_):
     doc = _parse_doc(callable_)
     required, defaults, params = _parse_signature_from_callable(callable_)
 
-    for arg, default in defaults.items():
+    for arg in defaults.keys():
         parser.add_argument('--' + arg,
                             help=get_desc(doc, arg),
                             **add_argument_kwargs(params, arg))
@@ -452,8 +424,12 @@ def _process_file_dir_or_glob(parser):
     parser : CustomParser
         CLI arg parser
     """
-    if Path('env.yaml').exists():
-        env_dict = EnvDict('env.yaml')
+    # look for env.yaml by searching in default locations
+    path_to_env = default.path_to_env(
+        Path(parser.parse_entry_point_value()).parent)
+
+    if path_to_env:
+        env_dict = EnvDict(path_to_env)
         _add_args_from_env_dict(parser, env_dict)
 
     args = parser.parse_args()
@@ -469,12 +445,10 @@ def _process_file_dir_or_glob(parser):
     elif entry_point.type == EntryPoint.Pattern:
         dag = DAGSpec.from_files(args.entry_point).to_dag()
     else:
-        # load env.yaml if there is one
-        if Path('env.yaml').exists():
-            env = EnvDict('env.yaml')
+        if path_to_env:
             # and replace keys depending on passed cli args
             replaced = _args_to_replace_in_env(args, parser.static_args)
-            env = env._replace_flatten_keys(replaced)
+            env = env_dict._replace_flatten_keys(replaced)
             dag = DAGSpec(args.entry_point, env=env).to_dag()
         else:
             dag = DAGSpec(args.entry_point).to_dag()
