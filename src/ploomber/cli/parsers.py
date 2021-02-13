@@ -42,15 +42,15 @@ def determine_default_entry_point():
     """
     Determines default entry point, using the following order:
     1. ENTRY_POINT environment
-    2. Package layout default location src/*/pipeline.yaml
-    3. pipeline.yaml
+    2. pipeline.yaml
+    3. Package layout default location src/*/pipeline.yaml
     """
     env_var = os.environ.get('ENTRY_POINT')
     pkg_location = package_location()
 
     if env_var:
         return env_var
-    elif pkg_location:
+    elif not Path('pipeline.yaml').exists() and pkg_location:
         return pkg_location
     else:
         return 'pipeline.yaml'
