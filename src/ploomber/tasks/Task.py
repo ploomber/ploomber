@@ -476,6 +476,12 @@ class Task(abc.ABC):
                             'Stopping task {} gracefully'.format(
                                 self.name)) from e
                     else:
+                        # FIXME: this makes the traceback longer, consider
+                        # removing it. The only information this nested
+                        # exception provides is the name of the task but we
+                        # are still able to provide that if theh executor
+                        # has the option to capture exceptions turned on.
+                        # An option to consider is to
                         raise TaskBuildError(msg) from e
 
                 build_success = False

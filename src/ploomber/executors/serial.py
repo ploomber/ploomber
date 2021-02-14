@@ -92,7 +92,7 @@ class Serial(Executor):
                         'reports_all': task_reports
                     }, t)
 
-            if self._catch_exceptions:
+            if self._catch_warnings:
                 fn = LazyFunction(fn=catch_warnings,
                                   kwargs={
                                       'fn': fn,
@@ -100,6 +100,7 @@ class Serial(Executor):
                                   },
                                   task=t)
             else:
+                # NOTE: this isn't doing anything
                 fn = LazyFunction(fn=pass_exceptions,
                                   kwargs={'fn': fn},
                                   task=t)
@@ -117,7 +118,7 @@ class Serial(Executor):
         # end of for loop
 
         if warnings_all and self._catch_warnings:
-            # FIXME: maybe raise one by one to keep the warning type
+            # NOTE: maybe raise one by one to keep the warning type
             warnings.warn('Some tasks had warnings when executing DAG '
                           '"{}":\n{}'.format(dag.name, str(warnings_all)))
 
@@ -131,11 +132,11 @@ class Serial(Executor):
                                         'exception:\n{}'.format(
                                             str(exceptions_all)))
             else:
-                raise DAGBuildError('DAG build failed, the following '
-                                    'tasks crashed '
-                                    '(corresponding downstream tasks aborted '
-                                    'execution):\n{}'.format(
-                                        str(exceptions_all)))
+                msg = 'DAG build failed'
+                header = ('The following tasks crashed '
+                          '(downstream tasks aborted execution)')
+                error = exceptions_all.to_str(header=header, footer=msg)
+                raise DAGBuildError(f'{msg}\n{error}')
 
         return task_reports
 
@@ -160,7 +161,9 @@ class LazyFunction:
 
 
 def catch_warnings(fn, warnings_all):
+    # TODO: we need a try catch in case fn() raises an exception
     with warnings.catch_warnings(record=True) as warnings_current:
+        # do we need: warnings.simplefilter("always")?
         result = fn()
 
     if warnings_current:

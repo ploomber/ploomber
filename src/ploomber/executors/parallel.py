@@ -178,11 +178,11 @@ class Parallel(Executor):
         exps = [r for r in results if isinstance(r, Message)]
 
         if exps:
-            raise DAGBuildError('DAG build failed, the following '
-                                'tasks crashed '
-                                '(corresponding downstream tasks aborted '
-                                'execution):\n{}'.format(
-                                    str(MessageCollector(exps))))
+            msg = 'DAG build failed'
+            header = ('The following tasks crashed '
+                      '(downstream tasks aborted execution)')
+            error = MessageCollector(exps).to_str(header=header, footer=msg)
+            raise DAGBuildError(f'{msg}\n{error}')
 
         # if we reach this, it means no tasks failed. only return reports
         return [r[0] for r in results]

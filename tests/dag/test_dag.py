@@ -892,11 +892,9 @@ def test_on_failure(caplog):
     dag.on_failure = hook
 
     with pytest.raises(DAGBuildError):
-        with caplog.at_level(logging.ERROR):
-            dag.build()
+        dag.build()
 
     assert hook.count == 1
-    assert 'Failure when building DAG "dag"' in caplog.text
 
 
 def test_on_failure_crashes(caplog):
