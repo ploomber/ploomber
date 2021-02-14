@@ -458,9 +458,6 @@ class DAG(collections.abc.Mapping):
             # a debugging session at the line of failure)
             except DAGBuildError as e:
                 tb['build'] = traceback.format_exc()
-                # error build dag, log exception and set status
-                self._logger.exception('Failure when building DAG "{}"'.format(
-                    self.name))
                 self._exec_status = DAGStatus.Errored
                 build_exception = e
             except DAGBuildEarlyStop:
@@ -519,8 +516,7 @@ class DAG(collections.abc.Mapping):
                         raise DAGBuildError(msg) from e
 
                 # on_failure hook executed, raise original exception
-                raise DAGBuildError(
-                    'Failed to build DAG {}'.format(self)) from build_exception
+                raise build_exception
 
     def _close_clients(self):
         """Close all clients (dag-level, task-level and product-level)

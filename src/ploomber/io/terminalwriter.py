@@ -35,6 +35,15 @@ def should_do_markup(file: TextIO) -> bool:
 
 
 class TerminalWriter:
+    """
+
+    Parameters
+    ----------
+    will_be_displayed
+        If True, uses sys.stdout to determine if colors are available, igoring
+        capabilities of the file argument. If False if determines coloring
+        using properties in the file argument.
+    """
     _esctable = dict(
         black=30,
         red=31,
@@ -58,7 +67,9 @@ class TerminalWriter:
         invert=7,
     )
 
-    def __init__(self, file: Optional[TextIO] = None) -> None:
+    def __init__(self,
+                 file: Optional[TextIO] = None,
+                 will_be_displayed: bool = True) -> None:
         if file is None:
             file = sys.stdout
         if hasattr(file,
@@ -71,7 +82,8 @@ class TerminalWriter:
                 file = colorama.AnsiToWin32(file).stream
                 assert file is not None
         self._file = file
-        self.hasmarkup = should_do_markup(file)
+        self.hasmarkup = should_do_markup(
+            sys.stdout if will_be_displayed else file)
         self._current_line = ""
         self._terminal_width = None  # type: Optional[int]
         self.code_highlight = True
@@ -169,8 +181,10 @@ class TerminalWriter:
     def flush(self) -> None:
         self._file.flush()
 
-    def _write_source(
-        self, lines: Sequence[str], indents: Sequence[str] = ()) -> None:
+    def _write_source(self,
+                      lines: Sequence[str],
+                      indents: Sequence[str] = (),
+                      lexer: str = 'python') -> None:
         """Write lines of source code possibly highlighted.
 
         Keeping this private for now because the API is clunky.
@@ -187,21 +201,26 @@ class TerminalWriter:
         if not indents:
             indents = [""] * len(lines)
         source = "\n".join(lines)
-        new_lines = self._highlight(source).splitlines()
+        new_lines = self._highlight(source, lexer=lexer).splitlines()
         for indent, new_line in zip(indents, new_lines):
             self.line(indent + new_line)
 
-    def _highlight(self, source: str) -> str:
+    def _highlight(self, source: str, lexer: str) -> str:
         """Highlight the given source code if we have markup support."""
+        if lexer not in {'py', 'pytb'}:
+            raise ValueError(f'lexer must be "py" or "pytb", got: {lexer!r}')
+
         if not self.hasmarkup or not self.code_highlight:
             return source
         try:
             from pygments.formatters.terminal import TerminalFormatter
-            from pygments.lexers.python import PythonLexer
+            from pygments.lexers.python import (PythonLexer,
+                                                PythonTracebackLexer)
             from pygments import highlight
         except ImportError:
             return source
         else:
-            highlighted = highlight(source, PythonLexer(),
+            Lexer = PythonLexer if lexer == 'python' else PythonTracebackLexer
+            highlighted = highlight(source, Lexer(),
                                     TerminalFormatter(bg="dark"))  # type: str
             return highlighted

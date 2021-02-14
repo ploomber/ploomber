@@ -26,11 +26,16 @@ class MessageCollector:
         return self.to_str()
 
     def to_str(self, title=None, file=None):
-        # NOTE: modify terminal writer to determine markup usage
-        # depending on sys.stdout, rather than the file arg
-        import os
-        os.environ['FORCE_COLOR'] = 'True'
+        """
+        Return the string representation of the collected messages
 
+        Parameters
+        ----------
+        title
+            Title to show at the beginning
+        file
+            Text stream to use. If None, uses a temporary StringIO object
+        """
         if file is None:
             sio = StringIO()
         else:
@@ -43,7 +48,7 @@ class MessageCollector:
 
         for exp in self.messages:
             self.tw.sep('-', title=exp.task_str, red=True)
-            self.tw._write_source(exp.message.splitlines())
+            self.tw._write_source(exp.message.splitlines(), lexer='pytb')
 
         self.tw.sep('=',
                     title=f'Failed tasks summary ({len(self.messages)})',
@@ -62,6 +67,9 @@ class MessageCollector:
             sio.close()
 
         return out
+
+    def __len__(self):
+        return len(self.messages)
 
     def __bool__(self):
         return bool(self.messages)
