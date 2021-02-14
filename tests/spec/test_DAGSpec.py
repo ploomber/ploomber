@@ -205,7 +205,7 @@ def test_loads_env_if_exists(tmp_nbs):
     assert spec.env == {'a': 1}
 
 
-def test_loads_env_relative_to_spec(tmp_nbs):
+def test_prioritizes_local_env_over_sibling_env(tmp_nbs):
     files = os.listdir()
     sub_dir = Path('subdir')
     sub_dir.mkdir()
@@ -216,7 +216,7 @@ def test_loads_env_relative_to_spec(tmp_nbs):
     Path('env.yaml').write_text("{'a': 100}")
     Path('subdir', 'env.yaml').write_text("{'a': 1}")
     spec = DAGSpec('subdir/pipeline.yaml')
-    assert spec.env == {'a': 1}
+    assert spec.env == {'a': 100}
 
 
 def test_does_not_load_env_if_loading_from_dict(tmp_nbs):

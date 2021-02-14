@@ -184,7 +184,6 @@ class DAGSpec(MutableMapping):
             with open(str(data)) as f:
                 data = yaml.load(f, Loader=yaml.SafeLoader)
 
-            env = env or default.path_to_env(self._parent_path)
         else:
             path_for_errors = None
             # FIXME: add test cases, some of those features wont work if
@@ -193,9 +192,11 @@ class DAGSpec(MutableMapping):
             # directory if it's appropriate - this is mostly to make relative
             # paths consistent: they should be relative to the file that
             # contains them
-            self._parent_path = str(Path(parent_path).resolve())
+            self._parent_path = (None if not parent_path else str(
+                Path(parent_path).resolve()))
 
-            env = env or default.path_to_env(self._parent_path)
+        if env is None and self._parent_path is not None:
+            env = default.path_to_env(self._parent_path)
 
         self.data = data
 
