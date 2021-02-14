@@ -133,9 +133,9 @@ class Serial(Executor):
                                             str(exceptions_all)))
             else:
                 msg = 'DAG build failed'
-                title = ('The following tasks crashed '
-                         '(downstream tasks aborted execution)')
-                error = exceptions_all.to_str(title=title)
+                header = ('The following tasks crashed '
+                          '(downstream tasks aborted execution)')
+                error = exceptions_all.to_str(header=header, footer=msg)
                 raise DAGBuildError(f'{msg}\n{error}')
 
         return task_reports

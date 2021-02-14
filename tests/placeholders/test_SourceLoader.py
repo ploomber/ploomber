@@ -62,10 +62,8 @@ def test_multiple_paths_mixed_types():
 
 
 def test_load_from_module():
-    source_loader = SourceLoader(module='ploomber')
-
-    # FIXME: this a confusing test, use sample package instead
-    assert source_loader['io.py']
+    source_loader = SourceLoader(module='test_pkg', path='templates')
+    assert source_loader['query.sql']
 
 
 def test_source_loader_and_task(sqlite_client_and_tmp_dir):

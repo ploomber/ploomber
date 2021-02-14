@@ -25,14 +25,16 @@ class MessageCollector:
     def __str__(self):
         return self.to_str()
 
-    def to_str(self, title=None, file=None):
+    def to_str(self, header=None, footer=None, file=None):
         """
         Return the string representation of the collected messages
 
         Parameters
         ----------
-        title
+        header
             Title to show at the beginning
+        footer
+            Title to show at the end
         file
             Text stream to use. If None, uses a temporary StringIO object
         """
@@ -43,8 +45,10 @@ class MessageCollector:
 
         self.tw = TerminalWriter(file=sio)
 
-        if title:
-            self.tw.sep('=', title=title, red=True)
+        if header:
+            self.tw.sep('=', title=header, red=True)
+        else:
+            self.tw.sep('=', red=True)
 
         for exp in self.messages:
             self.tw.sep('-', title=exp.task_str, red=True)
@@ -58,7 +62,10 @@ class MessageCollector:
             # TODO: include original exception type and error message
             self.tw.write(f'{exp.task_str}\n')
 
-        self.tw.sep('=', red=True)
+        if footer:
+            self.tw.sep('=', title=footer, red=True)
+        else:
+            self.tw.sep('=', red=True)
 
         sio.seek(0)
         out = sio.read()

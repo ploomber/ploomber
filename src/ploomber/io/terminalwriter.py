@@ -1,4 +1,8 @@
-"""Helper functions for writing to terminals and files."""
+"""
+Based on pytest terminal writer
+
+Helper functions for writing to terminals and files.
+"""
 import os
 import shutil
 import sys
@@ -184,7 +188,7 @@ class TerminalWriter:
     def _write_source(self,
                       lines: Sequence[str],
                       indents: Sequence[str] = (),
-                      lexer: str = 'python') -> None:
+                      lexer: str = 'pytb') -> None:
         """Write lines of source code possibly highlighted.
 
         Keeping this private for now because the API is clunky.
@@ -220,7 +224,7 @@ class TerminalWriter:
         except ImportError:
             return source
         else:
-            Lexer = PythonLexer if lexer == 'python' else PythonTracebackLexer
+            Lexer = PythonLexer if lexer == 'py' else PythonTracebackLexer
             highlighted = highlight(source, Lexer(),
                                     TerminalFormatter(bg="dark"))  # type: str
             return highlighted
