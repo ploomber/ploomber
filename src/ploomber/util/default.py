@@ -6,9 +6,10 @@ from glob import glob
 from pathlib import Path
 
 
-def _package_location():
+def _package_location(root_path):
+    pattern = str(Path(root_path, 'src', '*', 'pipeline.yaml'))
     candidates = sorted([
-        f for f in glob('src/*/pipeline.yaml')
+        f for f in glob(pattern)
         if not str(Path(f).parent).endswith('.egg-info')
     ])
 
@@ -16,19 +17,32 @@ def _package_location():
     return candidates[0] if candidates else None
 
 
-def entry_point():
+def entry_point(root_path=None):
     """
     Determines default entry point, using the following order:
+
     1. ENTRY_POINT environment
     2. pipeline.yaml
     3. Package layout default location src/*/pipeline.yaml
+
+    Parameters
+    ----------
+    root_path, optional
+        Root path to look for the entry point. Defaults to the current working
+        directory
+
+    Returns
+    -------
+    str
+        The path to use as default entry point (relative to root_path)
     """
+    root_path = root_path or '.'
     env_var = os.environ.get('ENTRY_POINT')
-    pkg_location = _package_location()
+    pkg_location = _package_location(root_path)
 
     if env_var:
         return env_var
-    elif not Path('pipeline.yaml').exists() and pkg_location:
+    elif not Path(root_path, 'pipeline.yaml').exists() and pkg_location:
         return pkg_location
     else:
         return 'pipeline.yaml'
