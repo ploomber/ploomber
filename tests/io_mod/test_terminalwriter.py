@@ -19,7 +19,8 @@ from _pytest.monkeypatch import MonkeyPatch
 
 @pytest.fixture(scope="session")
 def color_mapping():
-    """Returns a utility class which can replace keys in strings in the form "{NAME}"
+    """Returns a utility class which can replace keys in strings in the form
+    "{NAME}"
     by their equivalent ASCII codes in the terminal.
     Used by tests which check the actual colors output by pytest.
     """
@@ -41,7 +42,8 @@ def color_mapping():
 
         @classmethod
         def format(cls, lines: List[str]) -> List[str]:
-            """Straightforward replacement of color names to their ASCII codes."""
+            """Straightforward replacement of color names to their ASCII
+            codes."""
             return [line.format(**cls.COLORS) for line in lines]
 
         @classmethod
@@ -96,7 +98,8 @@ def test_terminalwriter_dumb_term_no_markup(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_terminalwriter_not_unicode() -> None:
-    """If the file doesn't support Unicode, the string is unicode-escaped (#7475)."""
+    """If the file doesn't support Unicode, the string is unicode-escaped
+    (#7475)."""
     buffer = io.BytesIO()
     file = io.TextIOWrapper(buffer, encoding="cp1252")
     tw = terminalwriter.TerminalWriter(file)
@@ -253,7 +256,7 @@ def test_should_do_markup_FORCE_COLOR(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_should_not_do_markup_NO_COLOR_and_FORCE_COLOR(
-    monkeypatch: MonkeyPatch, ) -> None:
+    monkeypatch: MonkeyPatch, ) -> None:  # noqa
     monkeypatch.setitem(os.environ, "NO_COLOR", "1")
     monkeypatch.setitem(os.environ, "FORCE_COLOR", "1")
     assert_color_not_set()
