@@ -10,7 +10,7 @@ from ploomber.products.Product import Product
 from ploomber.placeholders.Placeholder import Placeholder
 
 
-class File(Product):
+class File(Product, os.PathLike):
     """A file (or directory) in the local filesystem
 
     Parameters
@@ -129,3 +129,10 @@ class File(Product):
             self.logger.info('Uploading %s...', self.__path_to_file)
             self.client.upload(str(self.__path_to_metadata))
             self.client.upload(str(self.__path_to_file))
+
+    def __fspath__(self):
+        """
+        Abstract method defined in the os.PathLike interface, enables this
+        to work: ``import pandas as pd; pd.read_csv(File('file.csv'))``
+        """
+        return str(self)

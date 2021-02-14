@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 from unittest.mock import Mock, _Call
@@ -16,6 +17,10 @@ from ploomber import DAG
 
 def _touch(product):
     Path(str(product)).touch()
+
+
+def test_is_a_file_like_object():
+    assert isinstance(File('/path/to/file'), os.PathLike)
 
 
 def test_file_initialized_with_str():
