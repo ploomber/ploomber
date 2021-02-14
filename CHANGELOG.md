@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.9.3dev
+## 0.9.3 (2021-02-13)
 - Adds `OnlineDAG` to convert `DAG` objects for in-memory inference
 - Spec API (`pipeline.yaml`) supports DAG-level and Task-level `serializer` and `serializer`
 - CLI looks for `src/{pkg}/pipeline.yaml` if `pipeline.yaml` doesn't exist
