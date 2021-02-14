@@ -7,8 +7,7 @@ import yaml
 import pytest
 
 from ploomber.cli.parsers import (_add_args_from_callable,
-                                  _process_file_dir_or_glob, CustomParser,
-                                  determine_default_entry_point)
+                                  _process_file_dir_or_glob, CustomParser)
 
 
 def fn(a: int, b: float, c: str, d: bool, e):
@@ -133,53 +132,3 @@ def test_cli_from_param_with_annotation(monkeypatch):
     assert actions['param'].default == 42
     assert args.param == 41
     assert returned == 41
-
-
-@pytest.fixture
-def pkg_location():
-    parent = Path('src', 'package_a')
-    parent.mkdir(parents=True)
-    pkg_location = (parent / 'pipeline.yaml')
-    pkg_location.touch()
-    return str(pkg_location)
-
-
-def test_default_entry_point_env_var(monkeypatch, tmp_directory, pkg_location):
-    monkeypatch.setenv('ENTRY_POINT', 'some.entry.point')
-    assert determine_default_entry_point() == 'some.entry.point'
-
-
-def test_default_entry_point_pkg_location(tmp_directory, pkg_location):
-    assert determine_default_entry_point() == str(pkg_location)
-
-
-def test_default_entry_point_pkg_location_and_yaml(tmp_directory,
-                                                   pkg_location):
-    Path('pipeline.yaml').touch()
-    assert determine_default_entry_point() == 'pipeline.yaml'
-
-
-def test_default_entry_point_pkg_location_ignore_egg_info(tmp_directory):
-    for pkg in ['package_a.egg-info', 'package_b']:
-        parent = Path('src', pkg)
-        parent.mkdir(parents=True)
-        pkg_location = (parent / 'pipeline.yaml')
-        pkg_location.touch()
-
-    assert determine_default_entry_point() == str(
-        Path('src', 'package_b', 'pipeline.yaml'))
-
-
-def test_default_entry_point_pkg_location_multiple_pkgs(tmp_directory):
-    for pkg in ['package_a', 'package_b']:
-        parent = Path('src', pkg)
-        parent.mkdir(parents=True)
-        pkg_location = (parent / 'pipeline.yaml')
-        pkg_location.touch()
-
-    assert determine_default_entry_point() == str(
-        Path('src', 'package_a', 'pipeline.yaml'))
-
-
-def test_default_entry_point():
-    assert determine_default_entry_point() == 'pipeline.yaml'

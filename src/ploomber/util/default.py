@@ -44,7 +44,7 @@ def path_to_env(path_to_parent):
         Entry point parent folder
     """
     local_env = Path('.', 'env.yaml').resolve()
-    sibling_env = Path(path_to_parent) / 'env.yaml'
+    sibling_env = Path(path_to_parent, 'env.yaml').resolve()
 
     if local_env.exists():
         return str(local_env)
