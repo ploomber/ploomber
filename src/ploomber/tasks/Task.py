@@ -284,20 +284,28 @@ class Task(abc.ABC):
         self._on_finish = value
 
     def _run_on_finish(self):
-        # run on finish first, if this fails, we don't want to save metadata
+        """Call on_finish hook
+        """
         if self.on_finish:
             kwargs = callback_check(self.on_finish,
                                     self._available_callback_kwargs)
-            try:
-                self.on_finish(**kwargs)
-            except Exception as e:
-                # FIXME: There's duplicated logic here, _build also catches
-                # this errors
-                msg = ('Exception when running on_finish '
-                       'for task "{}": {}'.format(self.name, e))
-                self._logger.exception(msg)
-                self.exec_status = TaskStatus.Errored
-                raise type(e)(msg) from e
+            self.on_finish(**kwargs)
+
+    def _finish_task_execution(self):
+        """
+        Call on_finish hook, verify products exist and save metadata
+        """
+        # run on finish first, if this fails, we don't want to save metadata
+        try:
+            self._run_on_finish()
+        except Exception as e:
+            # FIXME: There's duplicated logic here, _build also catches
+            # this errors
+            msg = ('Exception when running on_finish '
+                   'for task "{}": {}'.format(self.name, e))
+            self._logger.exception(msg)
+            self.exec_status = TaskStatus.Errored
+            raise type(e)(msg) from e
 
         self.product.metadata.update(str(self.source))
 
@@ -451,7 +459,7 @@ class Task(abc.ABC):
 
         if not catch_exceptions:
             res = self._run()
-            self._run_on_finish()
+            self._finish_task_execution()
             return res, self.product.metadata.to_dict()
         else:
             try:
@@ -482,7 +490,7 @@ class Task(abc.ABC):
                     # the error message is misleading
                     # this not only runs the hook, but also
                     # calls save metadata and checks that the product exists
-                    self._run_on_finish()
+                    self._finish_task_execution()
                 except Exception as e:
                     self.exec_status = TaskStatus.Errored
                     msg = ('Exception when running on_finish '

@@ -205,7 +205,7 @@ def test_loads_env_if_exists(tmp_nbs):
     assert spec.env == {'a': 1}
 
 
-def test_loads_env_relative_to_spec(tmp_nbs):
+def test_prioritizes_local_env_over_sibling_env(tmp_nbs):
     files = os.listdir()
     sub_dir = Path('subdir')
     sub_dir.mkdir()
@@ -216,7 +216,7 @@ def test_loads_env_relative_to_spec(tmp_nbs):
     Path('env.yaml').write_text("{'a': 100}")
     Path('subdir', 'env.yaml').write_text("{'a': 1}")
     spec = DAGSpec('subdir/pipeline.yaml')
-    assert spec.env == {'a': 1}
+    assert spec.env == {'a': 100}
 
 
 def test_does_not_load_env_if_loading_from_dict(tmp_nbs):
@@ -422,6 +422,22 @@ def test_pipeline_r(tmp_pipeline_r):
 
     dag = DAGSpec(dag_spec).to_dag()
     dag.build()
+
+
+def test_initialize_with_lazy_import_with_missing_kernel(
+        tmp_pipeline_r, monkeypatch):
+    Path('output').mkdir()
+
+    with open('pipeline.yaml') as f:
+        dag_spec = yaml.load(f, Loader=yaml.SafeLoader)
+
+    def no_kernel(name):
+        raise ValueError
+
+    monkeypatch.setattr(jupyter_client.kernelspec, 'get_kernel_spec',
+                        no_kernel)
+
+    assert DAGSpec(dag_spec, lazy_import=True).to_dag()
 
 
 @pytest.mark.parametrize('raw', [[{
@@ -666,7 +682,26 @@ def test_import_tasks_from(tmp_nbs):
     spec = DAGSpec(spec_d)
 
     spec.to_dag().render()
-    assert 'extra_task.py' in [str(t['source']) for t in spec['tasks']]
+    assert str(Path('extra_task.py').resolve()) in [
+        str(t['source']) for t in spec['tasks']
+    ]
+
+
+def test_import_tasks_from_does_not_change_dotted_paths(tmp_nbs):
+    some_tasks = [{
+        'source': 'extra_task.py',
+        'product': 'extra.ipynb'
+    }, {
+        'source': 'test_pkg.touch_root',
+        'product': 'some_file.csv'
+    }]
+    Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+    spec = DAGSpec(spec_d, lazy_import=True)
+    assert 'test_pkg.touch_root' in [t['source'] for t in spec['tasks']]
 
 
 def test_import_tasks_from_with_non_empty_env(tmp_nbs):
@@ -691,4 +726,119 @@ def test_import_tasks_from_with_non_empty_env(tmp_nbs):
     dag = spec.to_dag()
     dag.render()
     assert dag['extra_task'].params['some_param'] == 'some_value'
-    assert 'extra_task.py' in [str(t['source']) for t in spec['tasks']]
+    assert str(Path('extra_task.py').resolve()) in [
+        str(t['source']) for t in spec['tasks']
+    ]
+
+
+def test_import_tasks_from_loads_relative_to_pipeline_spec(tmp_nbs):
+    some_tasks = [{'source': 'extra_task.py', 'product': 'extra.ipynb'}]
+    Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
+    Path('extra_task.py').write_text("""
+# + tags=["parameters"]
+# -
+""")
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec_d))
+
+    # move to another dir to make sure we can still load the spec
+    Path('subdir').mkdir()
+    os.chdir('subdir')
+
+    spec = DAGSpec('../pipeline.yaml')
+    dag = spec.to_dag()
+    dag.render()
+
+    assert spec['meta']['import_tasks_from'] == str(
+        Path('..', 'some_tasks.yaml').resolve())
+    assert str(Path('..', 'extra_task.py').resolve()) in [
+        str(t['source']) for t in spec['tasks']
+    ]
+
+
+def test_import_tasks_from_keeps_value_if_already_absolute(tmp_nbs, tmp_path):
+    tasks_yaml = (tmp_path / 'some_tasks.yaml').resolve()
+    path_to_script = (tmp_path / 'extra_task.py').resolve()
+
+    some_tasks = [{'source': str(path_to_script), 'product': 'extra.ipynb'}]
+    tasks_yaml.write_text(yaml.dump(some_tasks))
+    path_to_script.write_text("""
+# + tags=["parameters"]
+# -
+""")
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+    # set an absolute path
+    spec_d['meta']['import_tasks_from'] = str(tasks_yaml)
+    Path('pipeline.yaml').write_text(yaml.dump(spec_d))
+
+    spec = DAGSpec('pipeline.yaml')
+    dag = spec.to_dag()
+    dag.render()
+
+    # value should be the same because it was absolute
+    assert spec['meta']['import_tasks_from'] == str(tasks_yaml)
+    assert str(path_to_script) in [str(t['source']) for t in spec['tasks']]
+
+
+def test_import_tasks_from_paths_are_relative_to_the_yaml_spec(
+        tmp_nbs, tmp_path):
+    tasks_yaml = tmp_path / 'some_tasks.yaml'
+
+    # source is a relative path
+    some_tasks = [{'source': 'extra_task.py', 'product': 'extra.ipynb'}]
+    tasks_yaml.write_text(yaml.dump(some_tasks))
+    #  write the source code in the same folder as some_tasks.yaml
+    Path(tmp_path, 'extra_task.py').write_text("""
+# + tags=["parameters"]
+# -
+""")
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+
+    # set an absolute path
+    spec_d['meta']['import_tasks_from'] = str(tasks_yaml.resolve())
+    Path('pipeline.yaml').write_text(yaml.dump(spec_d))
+
+    spec = DAGSpec('pipeline.yaml')
+    dag = spec.to_dag()
+    dag.render()
+
+    # paths must be interpreted as relative to tasks.yaml, not to the
+    # current working directory
+    assert str(Path(tmp_path, 'extra_task.py').resolve()) in [
+        str(t['source']) for t in spec['tasks']
+    ]
+
+
+def test_loads_serializer_and_unserializer(backup_online,
+                                           add_current_to_sys_path):
+
+    spec = DAGSpec({
+        'tasks': [{
+            'source': 'online_tasks.get',
+            'product': 'output/get.parquet',
+        }, {
+            'source': 'online_tasks.square',
+            'product': 'output/square.parquet',
+        }],
+        'meta': {
+            'extract_product': False
+        },
+        'serializer':
+        'online_io.serialize',
+        'unserializer':
+        'online_io.unserialize',
+    })
+
+    dag = spec.to_dag()
+
+    from online_io import serialize, unserialize
+
+    assert dag['get']._serializer is serialize
+    assert dag['get']._unserializer is unserialize
+    assert dag['square']._serializer is serialize
+    assert dag['square']._unserializer is unserialize

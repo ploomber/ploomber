@@ -85,6 +85,10 @@ def source_for_task_class(source_str, task_class, project_root, lazy_import,
     else:
         path = Path(source_str)
 
+        # NOTE: there is some inconsistent behavior here. project_root
+        # will be none if DAGSpec was initialized with a dictionary, hence
+        # this won't resolve to absolute paths - this is a bit confusing.
+        # maybe always convert to absolute?
         if project_root and not path.is_absolute() and make_absolute:
             return Path(project_root, source_str)
         else:
@@ -122,6 +126,7 @@ class TaskSpec(MutableMapping):
         self.data = data
         self.meta = meta
         self.project_root = project_root
+        self.lazy_import = lazy_import
 
         self.validate()
 
@@ -198,6 +203,22 @@ class TaskSpec(MutableMapping):
         on_finish = task_dict.pop('on_finish', None)
         on_render = task_dict.pop('on_render', None)
         on_failure = task_dict.pop('on_failure', None)
+
+        if 'serializer' in task_dict:
+            task_dict['serializer'] = load_dotted_path(task_dict['serializer'])
+
+        if 'unserializer' in task_dict:
+            task_dict['unserializer'] = load_dotted_path(
+                task_dict['unserializer'])
+
+        # edge case: if using lazy_import, we should not check if the kernel
+        # is installed. this is used when exporting to Argo/Airflow using
+        # soopervisor, since the exporting process should not require to have
+        # the ir kernel installed. The same applies when Airflow has to convert
+        # the DAG, the Airflow environment shouldn't require the ir kernel
+        if (class_ == tasks.NotebookRunner and self.lazy_import
+                and 'check_if_kernel_installed' not in task_dict):
+            task_dict['check_if_kernel_installed'] = False
 
         task = class_(source=source,
                       product=product,
@@ -292,12 +313,12 @@ def resolve_product(product_raw, relative_to, class_):
     if class_ != products.File:
         return product_raw
     elif relative_to:
-        # When a DAG is initialized, paths are usually relative to the folder
-        # that has the pipeline.yaml, the only case when this isn't true is
-        # when using DAGSpec.auto_load(), in such case, relative paths won't
-        # work if the current working directory is different  to the
-        # pipeline.yaml folder (this happens sometimes in the Jupyter UI).
-        # We resolve paths to avoid ambiguity on this
+        # To keep things consistent, product relative paths are so to the
+        # pipeline.yaml file (not to the current working directory). This is
+        # important because there is no guarantee that the process calling
+        # this will be at the pipeline.yaml location. One example is
+        # when using the integration with Jupyter notebooks, each notebook
+        # will set its working directory to the current parent.
         return str(Path(relative_to, product_raw).resolve())
     else:
         return Path(product_raw).resolve()

@@ -1,4 +1,3 @@
-import os
 import logging
 import sys
 import importlib
@@ -6,13 +5,13 @@ import inspect
 from pathlib import Path
 import argparse
 from collections.abc import Mapping
-import warnings
 
-import yaml
+import warnings
 
 from ploomber.spec.DAGSpec import DAGSpec
 from ploomber.env.EnvDict import EnvDict
 from ploomber.util.util import load_dotted_path
+from ploomber.util import default
 
 
 def process_arg(s):
@@ -41,8 +40,7 @@ class CustomParser(argparse.ArgumentParser):
     parser.add_argument.
     """
     def __init__(self, *args, **kwargs):
-        self.DEFAULT_ENTRY_POINT = os.environ.get(
-            'ENTRY_POINT') or 'pipeline.yaml'
+        self.DEFAULT_ENTRY_POINT = default.entry_point()
 
         self.static_args = []
         self.finished_static_api = False
@@ -56,12 +54,11 @@ class CustomParser(argparse.ArgumentParser):
                           'specified level',
                           default=None)
 
-        self.add_argument('--entry-point',
-                          '-e',
-                          help='Entry point(DAG), defaults to pipeline.yaml. '
-                          'Replaced if there is an ENTRY_POINT env '
-                          'variable defined',
-                          default=self.DEFAULT_ENTRY_POINT)
+        self.add_argument(
+            '--entry-point',
+            '-e',
+            help=f'Entry point, defaults to {self.DEFAULT_ENTRY_POINT}',
+            default=self.DEFAULT_ENTRY_POINT)
 
         self.finished_init = True
 
@@ -200,6 +197,12 @@ class EntryPoint:
                           'nor a valid dotted path'.format(self))
 
             args = parser.parse_args()
+
+        # at this point there are two remaining cases:
+        # no help command (entry point may or may not exist),:
+        #   we attempt to run the command
+        # help command and exists:
+        #   we just parse parameters to display them in the help menu
         elif self.type == EntryPoint.DottedPath:
             # if pipeline.yaml, .type will return dotted path, because that's
             # a valid dotted-path value but this can trip users over so we
@@ -211,6 +214,7 @@ class EntryPoint:
 
             dag, args = parser.process_factory_dotted_path(self)
         else:
+            # process file, directory or glob pattern
             dag, args = _process_file_dir_or_glob(parser)
 
         return dag, args
@@ -393,7 +397,7 @@ def _add_args_from_callable(parser, callable_):
     doc = _parse_doc(callable_)
     required, defaults, params = _parse_signature_from_callable(callable_)
 
-    for arg, default in defaults.items():
+    for arg in defaults.keys():
         parser.add_argument('--' + arg,
                             help=get_desc(doc, arg),
                             **add_argument_kwargs(params, arg))
@@ -420,8 +424,12 @@ def _process_file_dir_or_glob(parser):
     parser : CustomParser
         CLI arg parser
     """
-    if Path('env.yaml').exists():
-        env_dict = EnvDict('env.yaml')
+    # look for env.yaml by searching in default locations
+    path_to_env = default.path_to_env(
+        Path(parser.parse_entry_point_value()).parent)
+
+    if path_to_env:
+        env_dict = EnvDict(path_to_env)
         _add_args_from_env_dict(parser, env_dict)
 
     args = parser.parse_args()
@@ -437,22 +445,19 @@ def _process_file_dir_or_glob(parser):
     elif entry_point.type == EntryPoint.Pattern:
         dag = DAGSpec.from_files(args.entry_point).to_dag()
     else:
-        with open(args.entry_point) as f:
-            dag_dict = yaml.load(f, Loader=yaml.SafeLoader)
-
-        # load env.yaml if there is one
-        if Path('env.yaml').exists():
-            env = EnvDict('env.yaml')
+        if path_to_env:
             # and replace keys depending on passed cli args
             replaced = _args_to_replace_in_env(args, parser.static_args)
-            env = env._replace_flatten_keys(replaced)
-            dag = DAGSpec(dag_dict, env=env).to_dag()
+            env = env_dict._replace_flatten_keys(replaced)
+            dag = DAGSpec(args.entry_point, env=env).to_dag()
         else:
-            dag = DAGSpec(dag_dict).to_dag()
+            dag = DAGSpec(args.entry_point).to_dag()
 
     return dag, args
 
 
+# FIXME: I think this is always used with CustomParser, we should make it
+# and instance method instead
 def _custom_command(parser):
     """
     Parses an entry point, adding arguments by extracting them from the env.

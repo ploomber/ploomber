@@ -134,9 +134,9 @@ talk](https://www.youtube.com/watch?v=M6mtgPfsA3M)
 5.  **Pipeline inspection**. Start an interactive session with
     `ploomber interact` to debug your pipeline. Call
     `dag['task_name'].debug()` to start a debugging session.
-6.  **[Beta] Deployment to Kubernetes and Airflow**. You can develop
-    and execute locally. But if you want to scale things up, deploy to
-    [Kubernetes or Airflow](https://github.com/ploomber/soopervisor)
+6.  **Deployment to Kubernetes and Airflow**. You can develop
+    and execute locally. Once you are ready to deploy, export to
+    [Kubernetes](https://soopervisor.readthedocs.io/en/stable/kubernetes.html) or [Airflow](https://soopervisor.readthedocs.io/en/stable/airflow.html).
 
 ## Try it out!
 

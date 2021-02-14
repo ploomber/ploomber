@@ -232,6 +232,24 @@ def test_error_if_cant_find_exporter_name(tmp_sample_tasks):
     assert 'Could not find nbconvert exporter' in str(excinfo.value)
 
 
+def test_skip_kernel_install_check(tmp_directory):
+    dag = DAG()
+
+    code = """
+# + tags=["parameters"]
+1 + 1
+    """
+
+    NotebookRunner(code,
+                   product=File(Path(tmp_directory, 'out.ipynb')),
+                   dag=dag,
+                   kernelspec_name='unknown_kernel',
+                   ext_in='py',
+                   name='nb',
+                   check_if_kernel_installed=False)
+    dag.render()
+
+
 # TODO: we are not testing output, we have to make sure params are inserted
 # correctly
 @pytest.fixture

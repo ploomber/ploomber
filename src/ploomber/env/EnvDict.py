@@ -276,22 +276,29 @@ def raw_preprocess(raw, path_to_raw):
                 raise ValueError('_module cannot be {{here}} if '
                                  'not loaded from a file')
         else:
-            try:
-                module_spec = importlib.util.find_spec(module)
-            except ValueError:
-                # raises ValueError if passed "."
-                module_spec = None
+            # check if it's a filesystem path
+            as_path = Path(module)
 
-            if not module_spec:
-                path_to_module = Path(module)
+            if as_path.exists():
+                if as_path.is_file():
+                    raise ValueError(
+                        'Could not resolve _module "{}", '
+                        'expected a module or a directory but got a '
+                        'file'.format(module))
+                else:
+                    path_to_module = as_path
 
-                if not (path_to_module.exists() and path_to_module.is_dir()):
-                    raise ValueError('Could not resolve _module "{}", '
-                                     'failed to import as a module '
-                                     'and is not a directory'.format(module))
-
+            # must be a dotted path
             else:
-                path_to_module = Path(module_spec.origin).parent
+                module_spec = importlib.util.find_spec(module)
+
+                # package does not exist
+                if module_spec is None:
+                    raise ValueError('Could not resolve _module "{}", '
+                                     'it is not a valid module '
+                                     'nor a directory'.format(module))
+                else:
+                    path_to_module = Path(module_spec.origin).parent
 
             preprocessed['_module'] = path_to_module
 

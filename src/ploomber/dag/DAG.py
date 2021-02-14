@@ -106,6 +106,16 @@ class DAG(collections.abc.Mapping):
         "traceback" which will contain a dictionary, possible keys are "build"
         which contains the build error traceback and "on_finish" which contains
         the on_finish hook traceback, if any.
+
+    serializer : callable
+        Function to serialize products from PythonCallable tasks. Used if the
+        task has no serializer. See ``ploombe.tasks.PythonCallable``
+        documentation for details.
+
+    unserializer : callable
+        Function to unserialize products from PythonCallable tasks. Used if the
+        task has no serializer. See ``ploombe.tasks.PythonCallable``
+        documentation for details.
     """
     def __init__(self, name=None, clients=None, executor='serial'):
         self._G = nx.DiGraph()
@@ -362,7 +372,7 @@ class DAG(collections.abc.Mapping):
 
         debug : bool, default=False
             Drop a debugging session if building raises an exception. Note that
-            this modifies the executor and temporarily sets it to Serial
+            this modifies the executor, temporarily setting it to Serial
             with subprocess off and catching exceptions/warnings off. Restores
             the original executor at the end.
 

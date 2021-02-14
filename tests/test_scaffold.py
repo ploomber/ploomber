@@ -77,3 +77,26 @@ def test_add_task_from_scaffold(backup_test_pkg, tmp_directory):
     assert 'my_new_function' in function_names
     assert Path(backup_test_pkg, 'notebook.ipynb').exists()
     assert Path(backup_test_pkg, 'notebook.py').exists()
+
+
+def test_add_task_when_using_import_tasks_from(tmp_directory):
+    spec = """
+    meta:
+        import_tasks_from: subdir/tasks.yaml
+
+    tasks: []
+    """
+
+    tasks = """
+    - source: notebook.py
+    """
+
+    Path('pipeline.yaml').write_text(spec)
+    subdir = Path('subdir')
+    subdir.mkdir()
+
+    (subdir / 'tasks.yaml').write_text(tasks)
+
+    scaffold.add()
+
+    assert (subdir / 'notebook.py').exists()

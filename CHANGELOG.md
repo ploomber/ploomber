@@ -1,9 +1,21 @@
 # CHANGELOG
 
-## 0.9.2dev
+## 0.9.4dev
 
+## 0.9.3 (2021-02-13)
+- Adds `OnlineDAG` to convert `DAG` objects for in-memory inference
+- Spec API (`pipeline.yaml`) supports DAG-level and Task-level `serializer` and `serializer`
+- CLI looks for `src/{pkg}/pipeline.yaml` if `pipeline.yaml` doesn't exist
+- Adds `{{cwd}}` placeholder for `env.yaml` that expands to current working directory
+
+
+## 0.9.2 (2021-02-11)
+
+- Support for Python 3.9
 - `SQLAlchemyClient` now accepts an argument to pass custom parameters to `sqlalchemy.create_engine`
-
+- Temporarily pins papermill version due to an incompatibility with jupytext and nbformat (jupytext does not support cell ids yet)
+- Adds `--on-finish/-of` to `ploomber task` to execute the `on_finish` hook
+- DAGs with R notebooks can render even if the ir kernel is not installed
 
 ## 0.9.1 (2021-02-01)
 

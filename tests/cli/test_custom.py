@@ -334,9 +334,16 @@ def test_build_command(args, tmp_nbs, monkeypatch):
     build.main()
 
 
-@pytest.mark.parametrize(
-    'args', [[], ['--source'], ['--source', '--build'], ['--force'],
-             ['--force', '--build'], ['--status'], ['--status', '--build']])
+@pytest.mark.parametrize('args', [
+    [],
+    ['--source'],
+    ['--source', '--build'],
+    ['--force'],
+    ['--force', '--build'],
+    ['--status'],
+    ['--status', '--build'],
+    ['--on-finish'],
+])
 def test_task_command(args, tmp_nbs, monkeypatch):
     args = ['task', '--entry-point', 'pipeline.yaml', 'load'] + args
     monkeypatch.setattr(sys, 'argv', args)

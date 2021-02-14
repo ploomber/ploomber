@@ -33,6 +33,14 @@ class InMemoryDAG:
             raise TypeError('All tasks in the DAG must be PythonCallable, '
                             'got unallowed types: {}'.format(extra))
 
+        # if the tasks are not initialized with a serializer in the partial
+        # (this happens when the partial is imported in a pipeline.yaml file
+        # and the latter defines DAG-level serializers), the source will
+        # be initialized with .source._needs_product=True. We won't pass
+        # product here so we force it to False. Othersie dag.render() will fail
+        for name in dag._iter():
+            dag[name].source._needs_product = False
+
         dag.render()
 
         self.dag = dag
@@ -43,6 +51,9 @@ class InMemoryDAG:
 
         # TODO: validate that root nodes have single parameter in the signature
         # input_data. and was initialized with {'input_data': None}
+
+        # TODO: maybe raise a warning if the DAG has attributes that won't be
+        # used (like serializer, unserializer). Or just document it?
 
     def build(self, input_data, copy=False):
         """Run the DAG
@@ -75,6 +86,10 @@ class InMemoryDAG:
         outs = {}
 
         input_data_names = set(self.root_nodes)
+        # FIXME: for this particula case, the error here should be TypeError,
+        # not KeyError (the former is the one used when calling functions with
+        # invalid arguments) - maybe an argument validate.keys to choose
+        # which error to raise?
         validate.keys(valid=input_data_names,
                       passed=set(input_data),
                       required=input_data_names,
