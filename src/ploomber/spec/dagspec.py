@@ -182,8 +182,27 @@ class DAGSpec(MutableMapping):
             path_to_entry_point = Path(data).resolve()
             self._parent_path = str(path_to_entry_point.parent)
 
-            with open(str(data)) as f:
-                data = yaml.load(f, Loader=yaml.SafeLoader)
+            content = Path(data).read_text()
+
+            try:
+                data = yaml.safe_load(content)
+            except (yaml.parser.ParserError,
+                    yaml.constructor.ConstructorError) as e:
+                error = e
+            else:
+                error = None
+
+            if error:
+                if '{{' in content or '}}' in content:
+                    raise DAGSpecInitializationError(
+                        'Failed to initialize spec. It looks like '
+                        'you\'re using placeholders (i.e. {{placeholder}}). '
+                        'Make sure values are enclosed in parentheses '
+                        '(e.g. key: "{{placeholder}}"). Original '
+                        'parser error:\n\n'
+                        f'{error}')
+                else:
+                    raise error
 
         else:
             path_for_errors = None

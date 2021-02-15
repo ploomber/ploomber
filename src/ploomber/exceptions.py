@@ -60,6 +60,6 @@ class UpstreamKeyError(Exception):
 
 class DAGSpecInitializationError(Exception):
     """
-    Raised when failing to initialize a DAGSpec object from a dictionary
+    Raised when failing to initialize a DAGSpec object
     """
     pass

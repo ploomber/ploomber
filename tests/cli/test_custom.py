@@ -7,10 +7,26 @@ from unittest.mock import Mock
 import jupytext
 import nbformat
 import pytest
+
 from ploomber.cli import plot, build, parsers, task, report, status, interact
+from ploomber.cli.cli import cmd_router
 from ploomber.tasks import notebook
 from ploomber import DAG
 import ploomber.dag.DAG as dag_module
+
+# TODO: refactor all tests that are using subprocess to use CLIRunner
+# this is faster and more flexible
+# https://click.palletsprojects.com/en/7.x/testing/
+
+
+def test_no_options(monkeypatch):
+    # when running "ploomber"
+    monkeypatch.setattr(sys, 'argv', ['ploomber'])
+
+    with pytest.raises(SystemExit) as excinfo:
+        cmd_router()
+
+    assert excinfo.value.code == 0
 
 
 @pytest.mark.parametrize('cmd', [

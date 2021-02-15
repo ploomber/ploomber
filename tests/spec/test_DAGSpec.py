@@ -21,6 +21,7 @@ from ploomber.spec.dagspec import DAGSpec, Meta
 from ploomber.util.util import load_dotted_path
 from ploomber.tasks import PythonCallable
 from ploomber.clients import db
+from ploomber import exceptions
 
 
 def create_engine_with_schema(schema):
@@ -871,3 +872,26 @@ def test_find(tmp_nbs, monkeypatch):
                                  env={'a': 1},
                                  lazy_import=False,
                                  reload=False)
+
+
+def test_error_invalid_yaml_displays_error_line(tmp_directory):
+    Path('pipeline.yaml').write_text('key: [')
+
+    with pytest.raises(yaml.parser.ParserError) as excinfo:
+        DAGSpec('pipeline.yaml')
+
+    assert 'key: [' in str(excinfo.value)
+
+
+@pytest.mark.parametrize('content', [
+    'key: {{placeholder}}/hello',
+    'key: {{placeholder}}',
+])
+def test_error_invalid_yaml_with_placeholders_without_parentheses(
+        tmp_directory, content):
+    Path('pipeline.yaml').write_text(content)
+
+    with pytest.raises(exceptions.DAGSpecInitializationError) as excinfo:
+        DAGSpec('pipeline.yaml')
+
+    assert content in str(excinfo.value)

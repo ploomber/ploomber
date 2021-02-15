@@ -28,7 +28,7 @@ def scaffold():
 
 
 def cmd_router():
-    cmd_name = sys.argv[1]
+    cmd_name = None if len(sys.argv) < 2 else sys.argv[1]
 
     custom = {
         'build': cli_module.build.main,
