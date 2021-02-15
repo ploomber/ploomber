@@ -104,9 +104,10 @@ def test_error_template_not_found(tmp_directory):
     with pytest.raises(TemplateNotFound) as excinfo:
         loader['unknown.py']
 
+    path = str(Path('templates', 'unknown.py'))
     assert str(excinfo.value) == ('\'unknown.py\' template does not exist. '
                                   'Based on your configuration, if should '
-                                  'be located at: \'templates/unknown.py\'')
+                                  f'be located at: {path!r}')
 
 
 def test_error_template_not_found_but_found_in_current_dir(tmp_directory):
