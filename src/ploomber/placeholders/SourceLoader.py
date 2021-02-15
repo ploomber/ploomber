@@ -117,7 +117,31 @@ class SourceLoader:
     def get_template(self, name):
         """Load a template by name
         """
-        template = self.env.get_template(str(name))
+        try:
+            template = self.env.get_template(str(name))
+        except exceptions.TemplateNotFound as e:
+            exception = e
+        else:
+            exception = None
+
+        if exception is not None:
+            expected_path = str(Path(self.path_full, name))
+
+            # user saved the template locally, but the source loader is
+            # configured to load from a different place
+            if Path(name).exists():
+                raise exceptions.TemplateNotFound(
+                    f'{str(name)!r} template does not exist. '
+                    'However such a file exists in the current working '
+                    'directory, if you want to load it as a template, move it '
+                    f'to {self.path_full!r}')
+            # no template and the file does not exist, raise a generic message
+            else:
+                raise exceptions.TemplateNotFound(
+                    f'{str(name)!r} template does not exist. '
+                    'Based on your configuration, if should be located '
+                    f'at: {expected_path!r}')
+
         return Placeholder(template)
 
     def _ipython_key_completions_(self):

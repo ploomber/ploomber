@@ -1,8 +1,9 @@
-import pytest
+from unittest.mock import Mock
 import tempfile
 from pathlib import Path
 
-from jinja2.exceptions import TemplateRuntimeError
+import pytest
+from jinja2.exceptions import TemplateRuntimeError, TemplateNotFound
 
 from ploomber import SourceLoader
 from ploomber.tasks import SQLTransfer
@@ -93,3 +94,44 @@ def test_raise(tmp_directory):
         loader['template.sql'].render({})
 
     assert str(excinfo.value) == 'some error message'
+
+
+def test_error_template_not_found(tmp_directory):
+    Path('templates').mkdir()
+
+    loader = SourceLoader(path='templates')
+
+    with pytest.raises(TemplateNotFound) as excinfo:
+        loader['unknown.py']
+
+    assert str(excinfo.value) == ('\'unknown.py\' template does not exist. '
+                                  'Based on your configuration, if should '
+                                  'be located at: \'templates/unknown.py\'')
+
+
+def test_error_template_not_found_but_found_in_current_dir(tmp_directory):
+    Path('templates').mkdir()
+    Path('unknown.py').touch()
+
+    loader = SourceLoader(path='templates')
+
+    with pytest.raises(TemplateNotFound) as excinfo:
+        loader['unknown.py']
+
+    assert str(excinfo.value) == (
+        "'unknown.py' template does not exist. "
+        "However such a file exists in the current working directory, "
+        "if you want to load it as a template, move it to 'templates'")
+
+
+def test_get_item_calls_get_template(monkeypatch):
+    # loader[key] is not short for loader.get_template(key), we keep both
+    # to keep a jinja-like API. get_template implements the actual logic
+    loader = SourceLoader(path='.')
+
+    mock = Mock()
+    monkeypatch.setattr(loader, 'get_template', mock)
+
+    loader['some_template.sql']
+
+    mock.assert_called_once_with('some_template.sql')
