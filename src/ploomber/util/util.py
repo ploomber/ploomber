@@ -285,27 +285,6 @@ def locate_dotted_path(dotted_path):
     return spec
 
 
-def find_file_recursively(name, max_levels_up=6, starting_dir=None):
-    """
-    Find environment by looking into the current folder and parent folders,
-    returns None if no file was found otherwise pathlib.Path to the file
-    """
-    current_dir = starting_dir or os.getcwd()
-    current_dir = Path(current_dir)
-    path_to_file = None
-
-    for _ in range(max_levels_up):
-        current_path = Path(current_dir, name)
-
-        if current_path.exists():
-            path_to_file = current_path.resolve()
-            break
-
-        current_dir = current_dir.parent
-
-    return path_to_file
-
-
 def call_with_dictionary(fn, kwargs):
     """
     Call a function by passing elements from a dictionary that appear in the

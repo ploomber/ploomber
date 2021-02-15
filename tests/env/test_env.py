@@ -377,17 +377,44 @@ def test_load_env_decorator(cleanup_env):
 #     list(expand.iterate_nested_dict(env))
 
 
-def test_expand_tags(monkeypatch):
+def test_expand_tags(monkeypatch, tmp_directory):
     def mockreturn():
         return 'username'
 
     monkeypatch.setattr(getpass, "getuser", mockreturn)
 
-    raw = {'a': '{{user}}', 'b': {'c': '{{user}} {{user}}'}}
+    # this is required for {{root}}
+    Path('setup.py').touch()
+
+    raw = {
+        'a': '{{user}}',
+        'b': {
+            'c': '{{user}} {{user}}'
+        },
+        'cwd': '{{cwd}}',
+        'root': '{{root}}',
+    }
     expander = EnvironmentExpander(preprocessed={})
     env_expanded = expander.expand_raw_dictionary(raw)
 
-    assert env_expanded == {'a': 'username', 'b': {'c': 'username username'}}
+    assert env_expanded == {
+        'a': 'username',
+        'b': {
+            'c': 'username username'
+        },
+        'cwd': str(Path(tmp_directory).resolve()),
+        'root': str(Path(tmp_directory).resolve()),
+    }
+
+
+def test_error_if_no_project_root(tmp_directory):
+    raw = {'root': '{{root}}'}
+    expander = EnvironmentExpander(preprocessed={})
+
+    with pytest.raises(ValueError) as excinfo:
+        expander.expand_raw_dictionary(raw)
+
+    assert 'Failed to expand {{root}}' in str(excinfo.value)
 
 
 def test_here_placeholder(tmp_directory, cleanup_env):

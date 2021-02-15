@@ -1,7 +1,7 @@
 from pathlib import Path
 import pytest
 from ploomber.spec.TaskSpec import TaskSpec, task_class_from_source_str
-from ploomber.spec.DAGSpec import Meta
+from ploomber.spec.dagspec import Meta
 from ploomber.tasks import (NotebookRunner, SQLScript, SQLDump, ShellScript,
                             PythonCallable)
 from ploomber import DAG

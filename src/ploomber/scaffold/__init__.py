@@ -1,4 +1,4 @@
-from ploomber.spec.DAGSpec import DAGSpec
+from ploomber.spec.dagspec import DAGSpec
 from ploomber.scaffold.ScaffoldLoader import ScaffoldLoader
 from ploomber.util.util import add_to_sys_path
 
@@ -8,7 +8,7 @@ def add():
     """
     # setting lazy_import to true causes sources to be returned as paths,
     # instead of placeholders
-    spec, path_to_spec = DAGSpec.auto_load(to_dag=False, lazy_import=True)
+    spec, path_to_spec = DAGSpec._auto_load(to_dag=False, lazy_import=True)
     loader = ScaffoldLoader('ploomber_add')
 
     # TODO: when the dag has a source loader, the argument passed to

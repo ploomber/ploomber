@@ -10,6 +10,7 @@ from jinja2 import Template, StrictUndefined, UndefinedError
 
 from ploomber.placeholders import util
 from ploomber import repo
+from ploomber.util import default
 
 
 def expand_raw_dictionary(raw, mapping):
@@ -212,6 +213,15 @@ class EnvironmentExpander:
 
     def get_cwd(self):
         return str(Path('.').resolve())
+
+    def get_root(self):
+        root = default.find_root_recursively()
+
+        if root is None:
+            raise ValueError('Failed to expand {{root}}, could not '
+                             'find a setup.py in a parent folder')
+
+        return root
 
     def get_here(self):
         if self._path_to_here:

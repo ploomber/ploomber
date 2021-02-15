@@ -9,7 +9,7 @@ import yaml
 from ploomber.env import validate
 from ploomber.env.expand import EnvironmentExpander
 from ploomber.env.FrozenJSON import FrozenJSON
-from ploomber.util.util import find_file_recursively
+from ploomber.util.default import find_file_recursively
 
 
 # TODO: custom expanders, this could be done trough another special directive

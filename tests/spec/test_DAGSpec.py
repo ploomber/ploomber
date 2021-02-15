@@ -1,3 +1,4 @@
+from unittest.mock import Mock
 import sys
 import os
 from datetime import timedelta, datetime
@@ -7,15 +8,16 @@ from pathlib import Path
 import pytest
 import yaml
 from conftest import _path_to_tests, fixture_tmp_dir
-import jupytext
-import nbformat
-import jupyter_client
 import getpass
 from copy import deepcopy
 
+import jupytext
+import nbformat
+import jupyter_client
 from sqlalchemy import create_engine
 
-from ploomber.spec.DAGSpec import DAGSpec, Meta
+from ploomber.spec import dagspec
+from ploomber.spec.dagspec import DAGSpec, Meta
 from ploomber.util.util import load_dotted_path
 from ploomber.tasks import PythonCallable
 from ploomber.clients import db
@@ -497,7 +499,7 @@ def test_expand_env(save, tmp_directory):
 
 @pytest.mark.parametrize('method, kwargs', [
     [None, dict(data='pipeline.yaml')],
-    ['auto_load', dict(to_dag=False)],
+    ['_auto_load', dict(to_dag=False)],
 ])
 def test_passing_env_in_class_methods(method, kwargs, tmp_directory):
 
@@ -842,3 +844,30 @@ def test_loads_serializer_and_unserializer(backup_online,
     assert dag['get']._unserializer is unserialize
     assert dag['square']._serializer is serialize
     assert dag['square']._unserializer is unserialize
+
+
+@pytest.mark.parametrize('root_path', ['.', 'subdir'])
+def test_searches_in_default_locations(monkeypatch, tmp_nbs, root_path):
+    root_path = Path(root_path).resolve()
+    Path('subdir').mkdir()
+
+    mock = Mock(wraps=dagspec.entry_point)
+    monkeypatch.setattr(dagspec, 'entry_point', mock)
+
+    DAGSpec._auto_load(starting_dir=root_path)
+
+    mock.assert_called_once_with(root_path=root_path)
+
+
+def test_find(tmp_nbs, monkeypatch):
+    mock = Mock(return_value=[None, None])
+    monkeypatch.setattr(dagspec.DAGSpec, '_auto_load', mock)
+
+    env = {'a': 1}
+    DAGSpec.find(env=env)
+
+    mock.assert_called_once_with(to_dag=False,
+                                 starting_dir=None,
+                                 env={'a': 1},
+                                 lazy_import=False,
+                                 reload=False)

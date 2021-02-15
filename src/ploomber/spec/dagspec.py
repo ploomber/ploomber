@@ -95,8 +95,9 @@ import pprint
 from ploomber import products, tasks
 from ploomber.dag.DAG import DAG
 from ploomber.placeholders.SourceLoader import SourceLoader
-from ploomber.util.util import (load_dotted_path, find_file_recursively,
-                                call_with_dictionary, add_to_sys_path)
+from ploomber.util.util import (load_dotted_path, call_with_dictionary,
+                                add_to_sys_path)
+from ploomber.util.default import entry_point
 from ploomber.spec.TaskSpec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
 from ploomber.util import default
@@ -357,13 +358,15 @@ class DAGSpec(MutableMapping):
         return dag
 
     @classmethod
-    def auto_load(cls,
-                  to_dag=True,
-                  starting_dir=None,
-                  env=None,
-                  lazy_import=False,
-                  reload=False):
+    def _auto_load(cls,
+                   to_dag=True,
+                   starting_dir=None,
+                   env=None,
+                   lazy_import=False,
+                   reload=False):
         """
+        NOTE: this is a private API. Use DAGSpec.find() instead
+
         Looks for a pipeline.yaml, generates a DAGSpec and returns a DAG.
         Currently, this is only used by the PloomberContentsManager, this is
         not intended to be a public API since initializing specs from paths
@@ -377,14 +380,16 @@ class DAGSpec(MutableMapping):
 
         Returns DAG and the directory where the pipeline.yaml file is located.
         """
-        path = find_file_recursively('pipeline.yaml',
-                                     starting_dir=starting_dir or os.getcwd())
+        root_path = starting_dir or os.getcwd()
+        rel_path = entry_point(root_path=root_path)
 
-        if path is None:
+        if rel_path is None:
             if to_dag:
                 return None, None, None
             else:
                 return None, None
+
+        path = Path(root_path, rel_path)
 
         try:
             spec = cls(path, env=env, lazy_import=lazy_import, reload=reload)
@@ -398,6 +403,24 @@ class DAGSpec(MutableMapping):
             exc = DAGSpecInitializationError('Error initializing DAG from '
                                              'pipeline.yaml')
             raise exc from e
+
+    @classmethod
+    def find(cls, env=None, reload=False):
+        """
+        Automatically find pipeline.yaml and return a DAGSpec object, which
+        can be converted to a DAG using .to_dag()
+
+        Parameters
+        ----------
+        env
+            The environment to pass to the spec
+        """
+        spec, _ = DAGSpec._auto_load(to_dag=False,
+                                     starting_dir=None,
+                                     env=env,
+                                     lazy_import=False,
+                                     reload=reload)
+        return spec
 
     @classmethod
     def from_directory(cls, path_to_dir):

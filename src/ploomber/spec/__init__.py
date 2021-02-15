@@ -1,3 +1,3 @@
-from ploomber.spec.DAGSpec import DAGSpec
+from ploomber.spec.dagspec import DAGSpec
 
 __all__ = ['DAGSpec']

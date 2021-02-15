@@ -1,5 +1,5 @@
 Spec
 ----
 
-.. autoclass:: ploomber.spec.DAGSpec
+.. autoclass:: ploomber.spec.dagspec
     :members:

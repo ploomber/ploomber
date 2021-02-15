@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -52,6 +53,24 @@ def test_entry_point_pkg_location_multiple_pkgs(tmp_directory):
 
 def test_entry_point():
     assert default.entry_point() == 'pipeline.yaml'
+
+
+def test_entry_point_in_parent_folder(tmp_directory):
+    Path('dir').mkdir()
+    Path('pipeline.yaml').touch()
+    os.chdir('dir')
+    assert default.entry_point() == str(Path('..', 'pipeline.yaml'))
+
+
+def test_entry_point_in_src_while_in_sibling_folder(tmp_directory):
+    Path('setup.py').touch()
+    pkg = Path('src', 'package')
+    pkg.mkdir(parents=True)
+    (pkg / 'pipeline.yaml').touch()
+    Path('tests').mkdir()
+    os.chdir('tests')
+    assert default.entry_point() == str(
+        Path('..', 'src', 'package', 'pipeline.yaml'))
 
 
 def test_path_to_env_local(tmp_directory):

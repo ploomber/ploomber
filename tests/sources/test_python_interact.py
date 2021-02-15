@@ -19,7 +19,7 @@ from ploomber.sources.interact import (CallableInteractiveDeveloper,
                                        upstream_in_func_signature,
                                        add_upstream_to_func_signature)
 from ploomber.sources import interact
-from ploomber.spec.DAGSpec import DAGSpec
+from ploomber.spec.dagspec import DAGSpec
 from ploomber.util import chdir_code
 
 
