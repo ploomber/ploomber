@@ -9,7 +9,7 @@ import yaml
 from ploomber.env import validate
 from ploomber.env.expand import EnvironmentExpander
 from ploomber.env.FrozenJSON import FrozenJSON
-from ploomber.util.default import find_file_recursively
+from ploomber.util.default import find_file_recursively, find_root_recursively
 
 
 # TODO: custom expanders, this could be done trough another special directive
@@ -25,8 +25,13 @@ class EnvDict(Mapping):
     source : dict or str
         If str, it will be interpreted as a path to a YAML file
 
+    path_to_here : str or pathlib.Path
+        Value used to expand the {{here}} placeholder. If None, it uses the
+        location of the YAML spec. If initialized with a dict and None,
+        the {{here}} placeholder is not available.
+
     """
-    def __init__(self, source):
+    def __init__(self, source, path_to_here=None):
         # if initialized from another EnvDict, copy the attributes to
         # initialize
         # this happens in the  CLI parser, which instanttiates the env
@@ -38,8 +43,8 @@ class EnvDict(Mapping):
                 original = getattr(source, attr)
                 setattr(self, attr, deepcopy(original))
         else:
-            # load data
             (
+                # load data
                 raw_data,
                 # this will be None if source is a dict
                 self._path_to_env) = load_from_source(source)
@@ -54,10 +59,35 @@ class EnvDict(Mapping):
             # we need to pass path_to_env since the {{here}} placeholder
             # resolves
             # to its parent
+            if path_to_here is None:
+                path_to_here = (None if self._path_to_env is None else Path(
+                    self._path_to_env).parent)
+
             self._expander = EnvironmentExpander(self._preprocessed,
-                                                 self._path_to_env)
+                                                 path_to_here=path_to_here)
             # now expand all values
             self._data = self._expander.expand_raw_dictionary(raw_data)
+
+    @classmethod
+    def default(cls, path_to_here=None):
+        """
+        Returns and EnvDict with built-in placeholders
+        Always available: {{user}}, {{cwd}}
+        {{root}} available if a parent path has a setup.py
+        {{here}} available is path_to_here is not None
+        """
+        placeholders = {
+            'user': '{{user}}',
+            'cwd': '{{cwd}}',
+        }
+
+        if find_root_recursively() is not None:
+            placeholders['root'] = '{{root}}'
+
+        if path_to_here is not None:
+            placeholders['here'] = '{{here}}'
+
+        return cls(placeholders, path_to_here=path_to_here)
 
     @property
     def path_to_env(self):

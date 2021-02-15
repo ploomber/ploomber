@@ -238,7 +238,8 @@ class DAGSpec(MutableMapping):
             self.env = EnvDict(env)
             self.data = expand_raw_dictionary(self.data, self.env)
         else:
-            self.env = None
+            self.env = EnvDict.default(path_to_here=self._parent_path)
+            self.data = expand_raw_dictionary(self.data, self.env)
 
         logger.debug('Expanded DAGSpec:\n%s', pp.pformat(data))
 

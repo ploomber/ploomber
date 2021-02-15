@@ -21,6 +21,7 @@ from ploomber.spec.dagspec import DAGSpec, Meta
 from ploomber.util.util import load_dotted_path
 from ploomber.tasks import PythonCallable
 from ploomber.clients import db
+from ploomber.env import expand
 from ploomber import exceptions
 
 
@@ -222,14 +223,14 @@ def test_prioritizes_local_env_over_sibling_env(tmp_nbs):
     assert spec.env == {'a': 100}
 
 
-def test_does_not_load_env_if_loading_from_dict(tmp_nbs):
+def test_loads_default_env_if_loading_from_dict(tmp_nbs):
     Path('env.yaml').write_text("{'a': 1}")
 
     with open('pipeline.yaml') as f:
         d = yaml.safe_load(f)
 
     spec = DAGSpec(d)
-    assert spec.env is None
+    assert set(spec.env) == {'user', 'cwd'}
 
 
 def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
@@ -496,6 +497,44 @@ def test_expand_env(save, tmp_directory):
 
     assert spec['tasks'][0]['params']['sample'] is True
     assert spec['tasks'][0]['params']['user'] == getpass.getuser()
+
+
+def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
+    tmp_directory = Path(tmp_directory).resolve()
+    Path('setup.py').touch()
+    Path('subdir').mkdir()
+
+    def mockreturn():
+        return 'username'
+
+    monkeypatch.setattr(expand.getpass, "getuser", mockreturn)
+
+    spec_dict = {
+        'meta': {
+            'extract_product': False
+        },
+        'tasks': [{
+            'source': '{{root}}/script.py',
+            'product': {
+                'nb': '{{cwd}}/{{user}}/nb.html',
+                'data': '{{here}}/data.csv',
+            },
+        }]
+    }
+
+    Path('subdir', 'pipeline.yaml').write_text(yaml.dump(spec_dict))
+
+    path = Path('subdir', 'anotherdir')
+    path.mkdir()
+    os.chdir(path)
+
+    spec = DAGSpec.find()
+
+    assert spec.data['tasks'][0]['source'] == Path(tmp_directory, 'script.py')
+    assert spec.data['tasks'][0]['product']['nb'] == str(
+        Path(tmp_directory, 'subdir', 'anotherdir', 'username', 'nb.html'))
+    assert spec.data['tasks'][0]['product']['data'] == str(
+        Path(tmp_directory, 'subdir', 'data.csv'))
 
 
 @pytest.mark.parametrize('method, kwargs', [

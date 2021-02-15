@@ -81,23 +81,25 @@ class EnvironmentExpander:
     Parameters
     ----------
     preprocessed : dict
-        Preprocessed env directory
+        Preprocessed env dictionary
 
-    path_to_env : str
+    path_to_here : str
         Path to env.yaml, used to expand {{here}}
 
     version_requires_import : bool, default=False
-        Whether determining package version requires import or not
+        Whether determining package version requires import or not. If False,
+        the root ``__init__.py`` file in the module must have
+        a ``__version__ = 'LITERAL'`` variable. Literal is extracted.
     """
     def __init__(self,
                  preprocessed,
-                 path_to_env=None,
+                 path_to_here=None,
                  version_requires_import=False):
         self._preprocessed = preprocessed
 
         # {{here}} resolves to this value
-        self._path_to_here = (None if path_to_env is None else str(
-            Path(path_to_env).parent))
+        self._path_to_here = (None if path_to_here is None else str(
+            Path(path_to_here).resolve()))
         # we compute every placeholder's value so we only do it once
         self._placeholders = {}
 
@@ -228,7 +230,8 @@ class EnvironmentExpander:
             return self._path_to_here
         else:
             raise RuntimeError('here placeholder is only available '
-                               'when env was initialized from a file')
+                               'when env was initialized from a file or '
+                               'when directly passing path to use')
 
     def get_git(self):
         module = self._preprocessed.get('_module')
