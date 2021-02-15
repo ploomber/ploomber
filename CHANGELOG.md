@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.9.4dev
+## 0.9.4 (2021-02-15)
 - Better display of errors when building or rendering a DAG (layout and colors)
 - `File` implements the `os.PathLike` interface (this works now: `pandas.read_parquet(File('file.parquet'))`)
 - Several error messages refactored for clarity
