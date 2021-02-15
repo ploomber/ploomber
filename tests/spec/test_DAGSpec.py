@@ -514,10 +514,10 @@ def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
             'extract_product': False
         },
         'tasks': [{
-            'source': '{{root}}/script.py',
+            'source': str(Path('{{root}}', 'script.py')),
             'product': {
-                'nb': '{{cwd}}/{{user}}/nb.html',
-                'data': '{{here}}/data.csv',
+                'nb': str(Path('{{cwd}}', '{{user}}', 'nb.html')),
+                'data': str(Path('{{here}}', 'data.csv')),
             },
         }]
     }
