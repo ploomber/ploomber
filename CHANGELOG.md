@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## 0.9.4dev
+- Better display of errors when building or rendering a DAG (structure and colors)
+- `File` implements the `os.PathLike` interface (this works now: `pandas.read_parquet(File('file.parquet'))`)
+- Several error messages refactored for clarity
 
 ## 0.9.3 (2021-02-13)
 - Adds `OnlineDAG` to convert `DAG` objects for in-memory inference
