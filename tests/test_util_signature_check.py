@@ -34,12 +34,11 @@ def test_signature_check_extra():
         signature_check(fn, {'b': 1}, 'task')
 
     error = ('Error rendering task "task" initialized with function "fn". '
-             'The following params are not part of the function '
-             'signature: {\'b\'}')
+             'Unexpected arguments: [\'b\']')
     assert error == str(excinfo.value)
 
 
-def test_signature_check_missing():
+def test_signature_check_params_missing():
     def fn(a, b):
         pass
 
@@ -47,7 +46,37 @@ def test_signature_check_missing():
         signature_check(fn, {'b': 1}, 'task')
 
     error = ('Error rendering task "task" initialized with function '
-             '"fn". The following params are missing: {\'a\'}')
+             '"fn". Missing arguments: [\'a\']. '
+             'Pass [\'a\'] in "params"')
+    assert error == str(excinfo.value)
+
+
+def test_signature_check_upstream_missing():
+    def fn(upstream):
+        pass
+
+    with pytest.raises(TaskRenderError) as excinfo:
+        signature_check(fn, dict(), 'task')
+
+    error = ('Error rendering task "task" initialized with function '
+             '"fn". Missing arguments: [\'upstream\']. '
+             'Verify this task declared upstream depedencies or remove the '
+             '"upstream" argument from the function')
+    assert error == str(excinfo.value)
+
+
+def test_signature_check_params_and_upstream_missing():
+    def fn(upstream, a):
+        pass
+
+    with pytest.raises(TaskRenderError) as excinfo:
+        signature_check(fn, dict(), 'task')
+
+    error = ('Error rendering task "task" initialized with function "fn". '
+             'Missing arguments: [\'a\', \'upstream\']. Verify this '
+             'task declared upstream depedencies or remove the "upstream" '
+             'argument from the function. '
+             'Pass [\'a\'] in "params"')
     assert error == str(excinfo.value)
 
 
@@ -59,8 +88,8 @@ def test_signature_check_both():
         signature_check(fn, {'b': 1}, 'task')
 
     error = ('Error rendering task "task" initialized with function '
-             '"fn". The following params are not part of the function '
-             'signature: {\'b\'}. The following params are missing: {\'a\'}')
+             '"fn". Unexpected arguments: [\'b\']. '
+             'Missing arguments: [\'a\']. Pass [\'a\'] in "params"')
 
     assert error == str(excinfo.value)
 

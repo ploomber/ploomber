@@ -102,8 +102,8 @@ def extract_upstream_assign(cell_code):
 
     if not upstream_found:
         raise ValueError("Could not parse a valid 'upstream' variable "
-                         "from code:\n'%s'. If the notebook "
-                         "does not have dependencies add "
+                         "in the 'parameters' cell with code:\n'%s'\n"
+                         "If the notebook does not have dependencies add "
                          "upstream = None" % cell_code)
     else:
         valid_types = (Mapping, list, tuple, set)

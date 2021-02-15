@@ -40,6 +40,7 @@ class TaskBuildWrapper:
             return output
         except Exception as e:
             return Message(task_str=repr(self.task),
+                           task_source=str(self.task.source.loc),
                            message=traceback.format_exc(),
                            obj=e)
 

@@ -621,10 +621,7 @@ class Task(abc.ABC):
             self.source.render(self.params)
         except Exception as e:
             self.exec_status = TaskStatus.ErroredRender
-            raise type(e)('Error rendering source from Task "{}", '
-                          ' check the full traceback above for details. '
-                          'Task params: {}'.format(repr(self),
-                                                   self.params)) from e
+            raise e
 
         is_outdated = ProductEvaluator(self.product, outdated_by_code)
 

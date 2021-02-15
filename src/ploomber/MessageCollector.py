@@ -4,7 +4,10 @@ from io import StringIO
 
 _sep = '\n\n' + '-' * 80 + '\n' + '-' * 80 + '\n\n'
 
-Message = namedtuple('Message', ['task_str', 'message', 'obj'])
+Message = namedtuple(
+    'Message',
+    ['task_str', 'message', 'obj', 'task_source'],
+)
 
 
 class MessageCollector:
@@ -18,9 +21,12 @@ class MessageCollector:
     def __init__(self, messages=None):
         self.messages = messages or []
 
-    def append(self, task_str, message, obj=None):
+    def append(self, task_str, task_source, message, obj=None):
         self.messages.append(
-            Message(task_str=task_str, message=message, obj=obj))
+            Message(task_str=task_str,
+                    task_source=task_source,
+                    message=message,
+                    obj=obj))
 
     def __str__(self):
         return self.to_str()
@@ -52,6 +58,7 @@ class MessageCollector:
 
         for exp in self.messages:
             self.tw.sep('-', title=exp.task_str, red=True)
+            self.tw.sep('-', title=f'Location: {exp.task_source}', red=True)
             self.tw._write_source(exp.message.splitlines(), lexer='pytb')
 
         self.tw.sep('=',

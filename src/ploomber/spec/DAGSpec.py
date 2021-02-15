@@ -517,7 +517,13 @@ class Meta:
         if 'source_loader' not in meta:
             meta['source_loader'] = None
         else:
-            meta['source_loader'] = SourceLoader(**meta['source_loader'])
+            try:
+                meta['source_loader'] = SourceLoader(**meta['source_loader'])
+            except Exception as e:
+                msg = ('Error initializing SourceLoader with '
+                       f'{meta["source_loader"]}. Error message: {e.args[0]}')
+                e.args = (msg, )
+                raise
 
         defaults = {
             'SQLDump': 'File',
@@ -574,17 +580,28 @@ def process_tasks(dag, dag_spec, root_path=None):
         source_obj[task] = source
 
     # second optional pass: extract upstream
+    tasks = list(dag.values())
+
     if extract_up:
-        for task in list(dag.values()):
+        for task in tasks:
             upstream[task] = task.source.extract_upstream()
             logger.debug('Extracted upstream dependencies for task %s: %s',
                          task.name, upstream[task])
 
     # Last pass: set upstream dependencies
-    for task in list(dag.values()):
+    for task in tasks:
         if upstream[task]:
             for task_name in upstream[task]:
-                task.set_upstream(dag[task_name])
+                try:
+                    up = dag[task_name]
+                except KeyError:
+                    names = [t.name for t in tasks]
+                    raise KeyError('Error processing spec. Extracted '
+                                   'a reference to a task with name '
+                                   f'{task_name!r}, but a task with such name '
+                                   f'doesn\'t exist. Loaded tasks: {names}')
+
+                task.set_upstream(up)
 
 
 def init_clients(dag, clients):

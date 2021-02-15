@@ -47,13 +47,12 @@ def task_class_from_source_str(source_str, lazy_import, reload):
             error = e
 
         if imported is None:
-            raise ValueError('Could not find an appropriate task class for '
-                             'source "{}", verify that the value is either '
-                             'a script with a valid extension or a valid '
-                             'dotted path (got error: "{}" when attempted to '
-                             ' import it). Alternatively, '
-                             'pass an explicit task class using the "class" '
-                             'key'.format(source_str, error))
+            raise ValueError(
+                'Could not determine task class for '
+                f'source {source_str!r}. This looks like a dotted path '
+                'but it failed to import. Original error '
+                f'message: {error!s}. You can also set the task class '
+                'using the "class" key')
         else:
             return tasks.PythonCallable
 
@@ -171,7 +170,7 @@ class TaskSpec(MutableMapping):
         validate.keys(valid=None,
                       passed=self.data,
                       required=required,
-                      name='task spec')
+                      name=repr(self))
 
         if self.meta['extract_upstream'] and self.data.get('upstream'):
             raise ValueError('Error validating task "{}", if '
@@ -220,11 +219,16 @@ class TaskSpec(MutableMapping):
                 and 'check_if_kernel_installed' not in task_dict):
             task_dict['check_if_kernel_installed'] = False
 
-        task = class_(source=source,
-                      product=product,
-                      name=name,
-                      dag=dag,
-                      **task_dict)
+        try:
+            task = class_(source=source,
+                          product=product,
+                          name=name,
+                          dag=dag,
+                          **task_dict)
+        except TypeError as e:
+            msg = f'Error initializing Task from {self!r}. Error: {e.args[0]}'
+            e.args = (msg, )
+            raise
 
         if on_finish:
             task.on_finish = load_dotted_path(on_finish)

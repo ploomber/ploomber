@@ -171,13 +171,21 @@ def signature_check(fn, params, task_name):
     errors = []
 
     if extra:
-        msg = ('The following params are not part of the function '
-               'signature: {}'.format(extra))
+        msg = f'Unexpected arguments: {sorted(extra)}'
         errors.append(msg)
 
     if missing:
-        msg = 'The following params are missing: {}'.format(missing)
+        msg = f'Missing arguments: {sorted(missing)}'
         errors.append(msg)
+
+    if 'upstream' in missing:
+        errors.append('Verify this task declared upstream depedencies or '
+                      'remove the "upstream" argument from the function')
+
+    missing_except_upstream = sorted(missing - {'upstream'})
+
+    if missing_except_upstream:
+        errors.append(f'Pass {missing_except_upstream} in "params"')
 
     if extra or missing:
         msg = '. '.join(errors)

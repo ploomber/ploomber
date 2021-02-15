@@ -333,14 +333,18 @@ class DAG(collections.abc.Mapping):
                             outdated_by_code=self._params.outdated_by_code)
                     except Exception:
                         tr = traceback.format_exc()
-                        exceptions.append(message=tr, task_str=repr(t))
+                        exceptions.append(message=tr,
+                                          task_str=repr(t),
+                                          task_source=str(t.source.loc))
 
                 if warnings_current:
                     w = [
                         str(a_warning.message)
                         for a_warning in warnings_current
                     ]
-                    warnings_.append(task_str=t.name, message='\n'.join(w))
+                    warnings_.append(task_str=t.name,
+                                     task_source=str(t.source.loc),
+                                     message='\n'.join(w))
 
             if warnings_:
                 # FIXME: maybe raise one by one to keep the warning type
@@ -349,10 +353,12 @@ class DAG(collections.abc.Mapping):
 
             if exceptions:
                 self._exec_status = DAGStatus.ErroredRender
-                raise DAGRenderError('DAG render failed, the following '
-                                     'tasks could not render '
-                                     '(corresponding tasks aborted '
-                                     'rendering):\n{}'.format(str(exceptions)))
+
+                msg = 'DAG render failed'
+                header = ('The following tasks failed to render '
+                          '(downstream tasks aborted rendering)')
+                error = exceptions.to_str(header=header, footer=msg)
+                raise DAGRenderError(f'{msg}\n{error}')
 
         self._exec_status = DAGStatus.WaitingExecution
 

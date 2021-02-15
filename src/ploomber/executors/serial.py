@@ -168,7 +168,9 @@ def catch_warnings(fn, warnings_all):
 
     if warnings_current:
         w = [str(a_warning.message) for a_warning in warnings_current]
-        warnings_all.append(task_str=fn.task.name, message='\n'.join(w))
+        warnings_all.append(task_str=fn.task.name,
+                            task_source=str(fn.task.source.loc),
+                            message='\n'.join(w))
 
     return result
 
@@ -192,7 +194,10 @@ def catch_exceptions(fn, exceptions_all):
         # subprocess
         logger.exception(str(e))
         tr = traceback.format_exc()
-        exceptions_all.append(message=tr, task_str=repr(fn.task), obj=e)
+        exceptions_all.append(message=tr,
+                              task_str=repr(fn.task),
+                              task_source=str(fn.task.source.loc),
+                              obj=e)
 
 
 def pass_exceptions(fn):

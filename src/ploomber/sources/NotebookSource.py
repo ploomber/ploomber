@@ -223,9 +223,24 @@ class NotebookSource(Source):
 
         if params_cell is None:
             loc = ' "{}"'.format(self.loc) if self.loc else ''
-            raise SourceInitializationError(
-                'Notebook{} does not have a cell tagged '
-                '"parameters"'.format(loc))
+            msg = ('Notebook{} does not have a cell tagged '
+                   '"parameters"'.format(loc))
+
+            if self.loc and Path(self.loc).suffix == '.py':
+                msg += """.
+Add a cell at the top like this:
+
+# + tags=["parameters"]
+# your code here...
+# -
+"""
+            if self.loc and Path(self.loc).suffix == '.ipynb':
+                url = ('https://papermill.readthedocs.io/'
+                       'en/stable/usage-parameterize.html')
+                msg += ('. Add a cell at the top and tag it as "parameters". '
+                        f'Click here for instructions: {url}')
+
+            raise SourceInitializationError(msg)
 
     def _post_render_validation(self, params, nb_str):
         """
