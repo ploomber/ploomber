@@ -26,7 +26,8 @@ def code_from_token_list(tokens):
     return ''.join([t.value for t in tokens])
 
 
-def to_tuple(f):
+def name_code_pair(f):
+    # split to: ({name}, AS, {code})
     t_name, _, t_code = strip(f)
     name = t_name.value
     # ignore parenthesis
@@ -54,10 +55,10 @@ def find_with_class(tokens, class_):
             return idx, t
 
 
-def find_identifiers_list(create):
-    # when CREATE TABLE name has no parenthesis...
+def get_identifiers_and_select_from_create(create):
     res = find_with_class(create, class_=sqlparse.sql.IdentifierList)
 
+    # when CREATE TABLE name has no parenthesis...
     if res:
         idx = find_select(create)
         select = code_from_token_list(strip_punctuation(create.tokens[idx:]))
@@ -79,6 +80,28 @@ def find_identifiers_list(create):
     return strip(id_list), select
 
 
+def find_identifiers_list(sql):
+    # find the first of those (identifier happens when there is a single def)
+    id_list = find_with_class(sql,
+                              class_=(sqlparse.sql.Identifier,
+                                      sqlparse.sql.IdentifierList))
+
+    # if one identifier, wrap it as a list of length 1
+    if isinstance(id_list[1], sqlparse.sql.Identifier):
+        return [id_list[1]]
+    else:
+        return id_list[1]
+
+
+def get_identifiers_and_select_from_with_select(with_select):
+    defs = find_identifiers_list(with_select)
+
+    idx = find_select(with_select)
+    select = code_from_token_list(strip_punctuation(with_select.tokens[idx:]))
+
+    return strip(defs), select
+
+
 class SQLParser:
     """Parse a SQL script with format:
 
@@ -92,25 +115,37 @@ class SQLParser:
         SELECT * FROM ...
     )
 
+    CREATE [TABLE|VIEW] is optional.
+
     If there is more than one statement, the first CREATE [TABLE|VIEW] is used.
     Get individual SELECT statements using parser['step_a']
 
     """
     def __init__(self, sql):
         if sql is not None:
-            # from IPython import embed
-            # embed()
-
             # get the first create table statement
-            _, create = find_with_type(sqlparse.parse(sql), type_='CREATE')
+            out = find_with_type(sqlparse.parse(sql), type_='CREATE')
 
-            # find the list of identifiers and last select statement
-            ids, select = find_identifiers_list(create)
+            if out is not None:
+                # there is a create statement
+                _, create = out
 
-            # this should be function, punctuation, function, puntuaction...
+                # find the list of identifiers and last select statement
+                ids, select = get_identifiers_and_select_from_create(create)
+            else:
+                # no create statement, look for the WITH ... SELECT statement
+                _, with_select = find_with_type(sqlparse.parse(sql),
+                                                type_='SELECT')
+                ids, select = get_identifiers_and_select_from_with_select(
+                    with_select)
+
+            # this should be
+            # {identifier} AS ( SELECT ... )
+            # then punctiation ","
+            # and repeat...
             functions = [id_ for idx, id_ in enumerate(ids) if not idx % 2]
 
-            functions_t = [to_tuple(f) for f in functions]
+            functions_t = [name_code_pair(f) for f in functions]
 
             m = {t[0]: t[1] for t in functions_t}
 
@@ -136,7 +171,7 @@ class SQLParser:
     def __repr__(self):
         return f'{type(self).__name__} with keys: {list(self.mapping)!r}'
 
-    def until(self, key, select=None, limit=20):
+    def until(self, key, select=None, limit=20, parse=False):
         """
         Generate with statements until the one with the given identifier.
         Adding a final "SELECT * {{key}}" which can be customized with the
@@ -167,7 +202,7 @@ WITH {%- for id,code in pairs -%}{{',' if not loop.first else '' }} {{id}} AS (
 ){% endfor %}
 {{select}}""").render(pairs=pairs, select=select)
 
-        return sql
+        return sql if not parse else type(self)(sql)
 
     @classmethod
     def _with_mapping(cls, mapping):
@@ -175,13 +210,32 @@ WITH {%- for id,code in pairs -%}{{',' if not loop.first else '' }} {{id}} AS (
         obj.mapping = mapping
         return obj
 
-    def insert(self, key, code, inplace=True):
-        """Insert a new (identifier, code) pair at the beginning
+    def insert(self, before_key, key, code, inplace=True):
+        """Insert a new (identifier, code) pair at a given index
         """
-        mapping = {**{key: code}, **self.mapping}
+        mapping = dict()
+
+        for i, (k, c) in enumerate(self.mapping.items()):
+            if before_key == i or before_key == k:
+                mapping[key] = code
+
+            mapping[k] = c
 
         if inplace:
             self.mapping = mapping
             return self
         else:
             return type(self)._with_mapping(mapping)
+
+    def __str__(self):
+        """Ssorthand for .until(key='_select')
+        """
+        return self.until(key='_select')
+
+    def to_str(self, select=None, limit=20, parse=False):
+        """Shorthand for .until(key='_select', *args, **kwargs)
+        """
+        return self.until(key='_select',
+                          select=select,
+                          limit=limit,
+                          parse=parse)

@@ -262,7 +262,7 @@ def upload(tag, production):
 
     # create distribution
     call(['rm', '-rf', 'dist/'])
-    call(['python', 'setup.py', 'bdist_wheel'])
+    call(['python', 'setup.py', 'sdist', 'bdist_wheel'])
 
     print('Publishing to PyPI...')
 

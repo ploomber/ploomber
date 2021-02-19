@@ -146,6 +146,95 @@ def test_sql_parser(trailing, parenthesis):
         'AS (\n    select * from bb\n)\nSELECT * FROM b LIMIT 20')
 
 
+sql_t_no_create_statement = """
+/* some comment */
+
+drop table if exists some_table;
+
+with a as (
+    select * from aa
+), b as (
+    select * from bb
+)
+select * from a join b on col
+"""
+
+
+def test_sql_parser_without_create_statement():
+    m = testing.sql.SQLParser(sql_t_no_create_statement)
+
+    assert list(m) == ['a', 'b', '_select']
+    assert m['a'] == 'select * from aa'
+    assert m['b'] == 'select * from bb'
+    assert m['_select'] == 'select * from a join b on col\n'
+
+
+sql_t_no_create_statement_one_subquery = """
+WITH a AS (
+    select * from aa
+)
+SELECT * FROM a LIMIT 20
+"""
+
+
+def test_sql_parser_without_create_statement_one_subquery():
+    m = testing.sql.SQLParser(sql_t_no_create_statement_one_subquery)
+
+    assert list(m) == ['a', '_select']
+    assert m['a'] == 'select * from aa'
+    assert m['_select'] == 'SELECT * FROM a LIMIT 20\n'
+
+
+sql_one_def_last_select_w_qualifiers = """
+WITH a AS (
+    select * from aa
+)
+select a.x, b.y from a join b using (col)
+"""
+
+sql_one_def_last_select_w_alias = """
+WITH a AS (
+    select * from aa
+)
+select a.x as alias, b.y from a join b using (col)
+"""
+
+sql_one_def_last_select_w_alias_space_only = """
+WITH a AS (
+    select * from aa
+)
+select a.x alias, b.y from a join b using (col)
+"""
+
+
+@pytest.mark.parametrize(
+    'sql, a, _select',
+    [
+        [
+            sql_one_def_last_select_w_qualifiers,
+            'select * from aa',
+            'select a.x, b.y from a join b using (col)\n',
+        ],
+        [
+            sql_one_def_last_select_w_alias,
+            'select * from aa',
+            'select a.x as alias, b.y from a join b using (col)\n',
+        ],
+        [
+            sql_one_def_last_select_w_alias_space_only,
+            'select * from aa',
+            'select a.x alias, b.y from a join b using (col)\n',
+        ],
+    ],
+)
+def test_sql_parser_complex_select(sql, a, _select):
+    m = testing.sql.SQLParser(sql)
+
+    assert list(m) == ['a', '_select']
+    assert m['a'] == a
+    assert m['_select'] == _select
+
+
 @pytest.mark.parametrize('trailing', [False, True])
 def test_sql_parser_custom_select(trailing):
 
@@ -175,17 +264,30 @@ def test_sql_parser_add_clause(trailing):
                              'select * from cc\n)\nSELECT * FROM c')
 
 
-def test_sql_parser_insert():
+@pytest.mark.parametrize('before_key', [0, 'a'])
+def test_sql_parser_insert_at_the_beginning(before_key):
     sql = sql_t.render(trailing=False)
     m = testing.sql.SQLParser(sql)
 
-    m2 = m.insert('zero', 'select * from zero', inplace=False)
+    m2 = m.insert(before_key, 'zero', 'select * from zero', inplace=False)
     assert list(m2) == ['zero', 'a', 'b', '_select']
     assert list(m) == ['a', 'b', '_select']
 
-    m.insert('zero', 'select * from zero', inplace=True)
+    m.insert(before_key, 'zero', 'select * from zero', inplace=True)
     assert list(m) == ['zero', 'a', 'b', '_select']
     assert m.until(
         'a',
         limit=None) == ('\nWITH zero AS (\n    select * from zero\n),'
                         ' a AS (\n    select * from aa\n)\nSELECT * FROM a')
+
+
+def test_derivate_new_query():
+    sql = sql_t.render(trailing=False)
+    m = testing.sql.SQLParser(sql)
+
+    sub = m.until('a', parse=True)
+    sub.insert('_select', 'sub', 'select * from aa where x = 1')
+
+    expected = ('\nWITH a AS (\n    select * from aa\n), sub AS (\n    '
+                'select * from aa where x = 1\n)\nSELECT * FROM sub LIMIT 20')
+    assert str(sub) == expected
