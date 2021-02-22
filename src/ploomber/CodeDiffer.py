@@ -12,7 +12,6 @@ try:
 except ImportError:
     sqlparse = None
 
-
 try:
     import autopep8
 except ImportError:
@@ -55,14 +54,19 @@ def normalize_python(code):
         raise ImportError('autopep8 and parso are required for normalizing '
                           'Python code: pip install autopep8 parso')
 
+    node = parso.parse(code).children[0]
+
+    if node.type == 'decorated':
+        node = node.children[-1]
+
     try:
-        doc_node = parso.parse(code).children[0].get_doc_node()
-    except Exception as e:
-        warnings.warn('Could not remove docstring from Python code: {}'
-                      .format(e))
-    else:
-        if doc_node is not None:
-            code = code.replace(doc_node.get_code(), '')
+        doc_node = node.get_doc_node()
+    except Exception:
+        # function without docstring...
+        doc_node = None
+
+    if doc_node is not None:
+        code = code.replace('\n' + doc_node.get_code(), '')
 
     code = autopep8.fix_code(code)
 
@@ -95,8 +99,11 @@ def diff_strings(a, b):
 
 
 class CodeDiffer:
-    NORMALIZERS = {None: normalize_null, 'py': normalize_python,
-                   'sql': normalize_sql}
+    NORMALIZERS = {
+        None: normalize_null,
+        'py': normalize_python,
+        'sql': normalize_sql
+    }
 
     def is_different(self, a, b, extension=None):
         normalizer = self._get_normalizer(extension)
