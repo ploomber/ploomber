@@ -20,7 +20,7 @@ from ploomber import DAG
 def test_task_class_from_script(tmp_directory, source_str, expected):
     Path(source_str).touch()
     assert task_class_from_source_str(
-        source_str, lazy_import=False, reload=False) is expected
+        source_str, lazy_import=False, reload=False, product=None) is expected
 
 
 def test_task_class_from_dotted_path(tmp_directory, add_current_to_sys_path):
@@ -30,14 +30,16 @@ def fn():
 """)
     dotted_path = 'test_task_class_from_dotted_path.fn'
     assert task_class_from_source_str(
-        dotted_path, lazy_import=False, reload=False) is PythonCallable
+        dotted_path, lazy_import=False, reload=False,
+        product=None) is PythonCallable
 
 
 def test_task_class_from_source_str_error():
     with pytest.raises(ValueError):
         task_class_from_source_str('not_a_module.not_a_function',
                                    lazy_import=False,
-                                   reload=False)
+                                   reload=False,
+                                   product=None)
 
 
 @pytest.mark.parametrize(
