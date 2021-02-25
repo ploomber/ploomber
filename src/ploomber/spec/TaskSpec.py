@@ -10,6 +10,7 @@ from ploomber import tasks, products
 from ploomber.util.util import (load_dotted_path, _make_iterable,
                                 locate_dotted_path)
 from ploomber.util import validate
+from ploomber.exceptions import DAGSpecInitializationError
 
 suffix2taskclass = {
     '.py': tasks.NotebookRunner,
@@ -321,15 +322,32 @@ def init_product(task_dict, meta, task_class, root_path):
 
     if isinstance(product_raw, Mapping):
         return {
-            key: CLASS(resolve_product(value, relative_to, CLASS), **kwargs)
+            key:
+            try_product_init(CLASS,
+                             resolve_product_source(value, relative_to, CLASS),
+                             kwargs)
             for key, value in product_raw.items()
         }
     else:
-        return CLASS(resolve_product(product_raw, relative_to, CLASS),
-                     **kwargs)
+        source = resolve_product_source(product_raw, relative_to, CLASS)
+        return try_product_init(CLASS, source, kwargs)
 
 
-def resolve_product(product_raw, relative_to, class_):
+def try_product_init(class_, source, kwargs):
+    """
+    Try to initialize product, raises a chained exception if not possible.
+    This provides more contextual information
+    """
+    try:
+        return class_(source, **kwargs)
+    except Exception as e:
+        kwargs_msg = f'and keyword arguments: {kwargs!r}' if kwargs else ''
+        raise DAGSpecInitializationError(
+            f'Error initializing {class_.__name__} with source: '
+            f'{source!r}' + kwargs_msg) from e
+
+
+def resolve_product_source(product_raw, relative_to, class_):
     if class_ != products.File:
         return product_raw
     elif relative_to:

@@ -4,6 +4,7 @@ from ploomber.spec.TaskSpec import TaskSpec, task_class_from_source_str
 from ploomber.spec.dagspec import Meta
 from ploomber.tasks import (NotebookRunner, SQLScript, SQLDump, ShellScript,
                             PythonCallable)
+from ploomber.exceptions import DAGSpecInitializationError
 from ploomber import DAG
 
 
@@ -186,3 +187,33 @@ def test_loads_serializer_and_unserializer(backup_online,
 
     assert task._serializer is serialize
     assert task._unserializer is unserialize
+
+
+@pytest.mark.parametrize('spec', [
+    {
+        'source': 'sample.sql',
+        'product': 'some_invalid_product',
+        'client': 'db.get_client'
+    },
+    {
+        'source': 'sample.sql',
+        'product': {
+            'one': ['name', 'table'],
+            'another': 'some_invalid_product'
+        },
+        'client': 'db.get_client'
+    },
+])
+def test_error_when_failing_to_init(spec, tmp_sample_tasks,
+                                    add_current_to_sys_path):
+    meta = Meta.default_meta({
+        'extract_product': False,
+        'extract_upstream': True
+    })
+
+    dag = DAG()
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        TaskSpec(spec, meta=meta, project_root='.').to_task(dag=dag)
+
+    assert 'Error initializing SQLRelation' in str(excinfo.value)
