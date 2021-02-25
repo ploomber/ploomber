@@ -36,7 +36,8 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
     instantiate the task depends on the task class, but to make task class
     optional, we try to guess the appropriate task here. If the source_str
     needs any pre-processing to pass it to the task constructor, it also
-    happens here
+    happens here. If product is not None, it's also used to determine if
+    a task is a SQLScript or SQLDump
     """
     extension = Path(source_str).suffix
 
@@ -85,7 +86,7 @@ def task_class_from_spec(task_spec, lazy_import, reload):
             task_spec['source'],
             lazy_import,
             reload,
-            task_spec['product'],
+            task_spec.get('product'),
         )
 
     return class_
