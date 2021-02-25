@@ -51,8 +51,8 @@ contains several ``pipeline.yaml`` examples.
         # import it in your training and serving pipelines
         import_tasks_from: /path/to/tasks.yaml
 
-        # load .tasks[*].source using a ploomber.SourceLoader object. For
-        # details see ploomber.SourceLoader documentation
+        # load relative paths in .tasks[*].source using a ploomber.SourceLoader
+        # object For details see ploomber.SourceLoader documentation
         source_loader:
             # load sources using this base path
             path: path/to/sources/

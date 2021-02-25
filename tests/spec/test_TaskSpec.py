@@ -219,3 +219,26 @@ def test_error_when_failing_to_init(spec, tmp_sample_tasks,
         TaskSpec(spec, meta=meta, project_root='.').to_task(dag=dag)
 
     assert 'Error initializing SQLRelation' in str(excinfo.value)
+
+
+def test_skips_source_loader_if_absolute_path(tmp_sample_tasks,
+                                              add_current_to_sys_path):
+    Path('templates').mkdir()
+
+    meta = Meta.default_meta({
+        'extract_product': False,
+        'extract_upstream': True,
+        'source_loader': {
+            'path': 'templates'
+        }
+    })
+
+    dag = DAG()
+
+    spec = {
+        'source': str(Path(tmp_sample_tasks, 'sample.sql')),
+        'product': ['name', 'table'],
+        'client': 'db.get_client'
+    }
+
+    assert TaskSpec(spec, meta=meta, project_root='.').to_task(dag=dag)
