@@ -5,6 +5,8 @@ Analyzes SQL scripts to infer performed actions
 import warnings
 import sqlparse
 
+from ploomber.util import _repr
+
 
 def _quoted_with(identifier, char):
     return identifier.startswith(char) and identifier.endswith(char)
@@ -14,7 +16,7 @@ def _normalize(identifier):
     """
     Normalize a SQL identifier. Given that different SQL implementations have
     different rules, we will implement logic based on PostgreSQL. Double
-    quotes make an identifier case sensitive, unquoted are folded to lower
+    quotes make an identifier case sensitive, unquoted are forced to lower
     case. MySQL on the other hand, depends on the file system, furthermore
     the quoting identifier character can also be a backtick.
 
@@ -59,7 +61,11 @@ class ParsedSQLRelation:
             return '{}.{}'.format(self.schema, self.name)
 
     def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__, str(self))
+        return _repr.from_obj_and_arg_mapping(self, {
+            'schema': self.schema,
+            'name': self.name,
+            'kind': self.kind
+        })
 
     def __hash__(self):
         return hash((self.schema, self.name, self.kind))

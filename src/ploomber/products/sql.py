@@ -218,6 +218,9 @@ class SQLiteRelation(SQLiteBackedProductMixin, Product):
     def __hash__(self):
         return hash((self.schema, self.name, self.kind))
 
+    def __repr__(self):
+        return f'{type(self).__name__}({self._identifier._raw_repr()})'
+
 
 # FIXME: self._identifier should not be accessed direclty since it might
 # be a placeholder
@@ -357,3 +360,6 @@ class PostgresRelation(ProductWithClientMixin, Product):
 
     def __hash__(self):
         return hash((self.schema, self.name, self.kind))
+
+    def __repr__(self):
+        return f'{type(self).__name__}({self._identifier._raw_repr()})'

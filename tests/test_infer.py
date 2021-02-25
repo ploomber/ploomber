@@ -2,6 +2,8 @@ import pytest
 
 from ploomber.sql import infer
 from ploomber.sql.infer import ParsedSQLRelation
+from ploomber.products import (GenericSQLRelation, SQLRelation, SQLiteRelation,
+                               PostgresRelation)
 
 
 def test_unquoted_relation_to_str():
@@ -123,3 +125,25 @@ def test_create_then_drop():
 def test_parses_create_view():
     rels = infer.created_relations('create view x; SELECT * FROM y')
     assert rels[0] == ParsedSQLRelation(schema=None, name='x', kind='view')
+
+
+def test_repr():
+    rel = ParsedSQLRelation(schema=None, name='name', kind='view')
+
+    assert repr(
+        rel) == "ParsedSQLRelation(schema=None, name='name', kind='view')"
+
+
+@pytest.mark.parametrize('class_', [
+    GenericSQLRelation,
+    SQLRelation,
+    SQLiteRelation,
+    PostgresRelation,
+])
+def test_equality_sql_products(class_):
+
+    r = ParsedSQLRelation(schema='schema', name='name', kind='table')
+    r1 = class_(['schema', 'name', 'table'])
+
+    assert r == r1
+    assert hash(r) == hash(r1)

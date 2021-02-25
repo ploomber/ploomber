@@ -173,7 +173,8 @@ def test_repr_shows_tags_if_unrendered():
 
 
 def test_sql_placeholder_repr_shows_tags_if_unrendered_sql():
-    expected = 'SQLRelationPlaceholder({{schema}}.{{name}})'
+    expected = ("SQLRelationPlaceholder"
+                "(schema='{{schema}}', name='{{name}}', kind='table')")
     assert (repr(SQLRelationPlaceholder(
         ('{{schema}}', '{{name}}', 'table'))) == expected)
 

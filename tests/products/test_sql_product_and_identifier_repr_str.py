@@ -1,25 +1,34 @@
 import pytest
 from ploomber.placeholders.Placeholder import SQLRelationPlaceholder
 from ploomber.products import (SQLiteRelation, PostgresRelation,
-                               GenericSQLRelation)
+                               GenericSQLRelation, SQLRelation)
 
-classes = [SQLRelationPlaceholder, SQLiteRelation, PostgresRelation,
-           GenericSQLRelation]
+classes = [
+    SQLRelationPlaceholder,
+    SQLiteRelation,
+    PostgresRelation,
+    GenericSQLRelation,
+    SQLRelation,
+]
 
 
 @pytest.mark.parametrize('class_', classes)
 def test_literal(class_):
     p = class_(('schema', 'name', 'table'))
-    assert repr(p) == '{}(schema.name)'.format(class_.__name__)
+    assert repr(
+        p) == class_.__name__ + "(schema='schema', name='name', kind='table')"
     assert str(p) == 'schema.name'
 
 
 @pytest.mark.parametrize('class_', classes)
-def test_repr_placeholder(class_):
+def test_with_placeholder(class_):
     p = class_(('schema', '{{placeholder}}', 'table'))
-    assert repr(p) == class_.__name__+'(schema.{{placeholder}})'
+    assert repr(p) == (
+        class_.__name__ +
+        "(schema='schema', name='{{placeholder}}', kind='table')")
     p.render({'placeholder': 'name'})
-    assert repr(p) == class_.__name__+'(schema.name)'
+    assert repr(
+        p) == class_.__name__ + "(schema='schema', name='name', kind='table')"
     assert str(p) == 'schema.name'
 
 
@@ -27,14 +36,16 @@ def test_repr_placeholder(class_):
 @pytest.mark.parametrize('schema', [None, ''])
 def test_empty_schema_is_not_rendered(class_, schema):
     p = class_((schema, 'name', 'table'))
-    assert repr(p) == class_.__name__+'(name)'
+    assert repr(
+        p) == class_.__name__ + "(schema=None, name='name', kind='table')"
     assert str(p) == 'name'
 
 
 @pytest.mark.parametrize('class_', classes)
-def test_two_tuple(class_):
+def test_two_elements(class_):
     p = class_(('name', 'table'))
-    assert repr(p) == class_.__name__+'(name)'
+    assert repr(
+        p) == class_.__name__ + "(schema=None, name='name', kind='table')"
     assert str(p) == 'name'
 
 

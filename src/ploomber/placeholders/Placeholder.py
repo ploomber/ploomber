@@ -467,9 +467,14 @@ class SQLRelationPlaceholder(AbstractPlaceholder):
     def __str__(self):
         return self._qualified_name(unrendered_ok=False, shorten=False)
 
+    def _raw_repr(self):
+        mapping = dict(schema=self.schema,
+                       name=self._name_template.best_str(shorten=False),
+                       kind=self.kind)
+        return ', '.join(f'{k}={v!r}' for k, v in mapping.items())
+
     def __repr__(self):
-        return ('SQLRelationPlaceholder({})'.format(
-            self._qualified_name(unrendered_ok=True, shorten=True)))
+        return f'{type(self).__name__}({self._raw_repr()})'
 
     def best_str(self, shorten):
         return self._qualified_name(unrendered_ok=True, shorten=shorten)

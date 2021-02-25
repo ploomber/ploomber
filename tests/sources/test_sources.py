@@ -153,7 +153,8 @@ def test_warns_if_sql_script_does_not_create_relation(
 
     assert len(record) == 1
     msg = ('It appears that your script will not create any tables/views but '
-           'the product parameter is SQLiteRelation(my_table)')
+           "the product parameter is "
+           "SQLiteRelation(schema=None, name='my_table', kind='table')")
     assert record[0].message.args[0] == msg
 
 
@@ -175,7 +176,8 @@ def test_warns_if_number_of_relations_does_not_match_number_of_products():
     assert len(record) == 1
     msg = ('It appears that your script will create 1 relation(s) '
            'but you declared 2 product(s): '
-           '[SQLiteRelation(my_table), SQLiteRelation(another_table)]')
+           "[SQLiteRelation(schema=None, name='my_table', kind='table'), "
+           "SQLiteRelation(schema=None, name='another_table', kind='table')]")
     assert record[0].message.args[0] == msg
 
 
@@ -193,7 +195,8 @@ def test_warns_if_no_create_statement_found():
 
     assert len(record) == 1
     msg = ('It appears that your script will not create any tables/views '
-           'but the product parameter is SQLiteRelation(my_table)')
+           'but the product parameter is '
+           "SQLiteRelation(schema=None, name='my_table', kind='table')")
     assert record[0].message.args[0] == msg
 
 
@@ -245,8 +248,10 @@ def test_warns_if_inferred_relations_do_not_match_product():
 
     assert len(record) == 1
     msg = ('It appears that your script will create relations '
-           '{ParsedSQLRelation(some_table)}, which doesn\'t match '
-           'products: {SQLiteRelation(my_table)}. Make sure schema, '
+           '{ParsedSQLRelation(schema=None, '
+           'name=\'some_table\', kind=\'table\')}, which doesn\'t match '
+           'products: {SQLiteRelation(schema=None, '
+           'name=\'my_table\', kind=\'table\')}. Make sure schema, '
            'name and kind (table or view) match')
     assert record[0].message.args[0] == msg
 

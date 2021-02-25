@@ -101,6 +101,12 @@ class GenericSQLRelation(GenericProduct):
     def kind(self):
         return self._identifier.kind
 
+    def __repr__(self):
+        return f'{type(self).__name__}({self._identifier._raw_repr()})'
+
+    def __hash__(self):
+        return hash((self.schema, self.name, self.kind))
+
 
 class SQLRelation(Product):
     """A product that represents a SQL relation but has no metadata
@@ -138,3 +144,9 @@ class SQLRelation(Product):
 
     def delete(self, force=False):
         pass
+
+    def __repr__(self):
+        return f'{type(self).__name__}({self._identifier._raw_repr()})'
+
+    def __hash__(self):
+        return hash((self.schema, self.name, self.kind))
