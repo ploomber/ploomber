@@ -399,9 +399,10 @@ class SQLRelationPlaceholder(AbstractPlaceholder):
         elif len(source) == 3:
             schema, name, kind = source
         else:
-            raise ValueError('{} must be initialized with 2 or 3 elements, '
-                             'got: {}'.format(
-                                 type(self).__name__, len(source)))
+            raise ValueError(
+                '{} must be initialized with 2 or 3 elements, '
+                'got: {}. Example: ["schema", "name", "table"]'.format(
+                    type(self).__name__, len(source)))
 
         # ignore empty string
         if schema == '':
