@@ -18,5 +18,5 @@ variable in this file */
 change this */
 DROP TABLE IF EXISTS {{product}};
 
-CREATE TABLE AS {{product}}
+CREATE TABLE {{product}} AS
 SELECT * FROM {{upstream['some_task']}};

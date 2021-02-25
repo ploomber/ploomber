@@ -323,14 +323,13 @@ def init_product(task_dict, meta, task_class, root_path):
 
     if isinstance(product_raw, Mapping):
         return {
-            key:
-            try_product_init(CLASS,
-                             resolve_product_source(value, relative_to, CLASS),
-                             kwargs)
+            key: try_product_init(CLASS,
+                                  resolve_if_file(value, relative_to, CLASS),
+                                  kwargs)
             for key, value in product_raw.items()
         }
     else:
-        source = resolve_product_source(product_raw, relative_to, CLASS)
+        source = resolve_if_file(product_raw, relative_to, CLASS)
         return try_product_init(CLASS, source, kwargs)
 
 
@@ -348,7 +347,7 @@ def try_product_init(class_, source, kwargs):
             f'{source!r}' + kwargs_msg) from e
 
 
-def resolve_product_source(product_raw, relative_to, class_):
+def resolve_if_file(product_raw, relative_to, class_):
     if class_ != products.File:
         return product_raw
     elif relative_to:

@@ -171,7 +171,7 @@ def signature_check(fn, params, task_name):
     errors = []
 
     if extra:
-        msg = f'Unexpected arguments: {sorted(extra)}'
+        msg = f'Got unexpected arguments: {sorted(extra)}'
         errors.append(msg)
 
     if missing:
