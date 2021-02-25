@@ -71,7 +71,7 @@ def test_help_shows_env_keys_w_entry_point(cmd, tmp_nbs,
 def test_build(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
                         ['python', '--entry-point', 'test_pkg.entry.with_doc'])
-    build.main()
+    build.main(catch_exception=False)
 
 
 def test_build_help_shows_docstring(capsys, monkeypatch):
@@ -80,7 +80,7 @@ def test_build_help_shows_docstring(capsys, monkeypatch):
         ['python', '--entry-point', 'test_pkg.entry.with_doc', '--help'])
 
     with pytest.raises(SystemExit) as excinfo:
-        build.main()
+        build.main(catch_exception=False)
 
     out, _ = capsys.readouterr()
 
@@ -92,13 +92,13 @@ def test_build_help_shows_docstring(capsys, monkeypatch):
 def test_build_from_directory(arg, monkeypatch, tmp_nbs_no_yaml):
     Path('output').mkdir()
     monkeypatch.setattr(sys, 'argv', ['python', '--entry-point', arg])
-    build.main()
+    build.main(catch_exception=False)
 
 
 def test_status(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
                         ['python', '--entry-point', 'test_pkg.entry.with_doc'])
-    status.main()
+    status.main(catch_exception=False)
 
 
 @pytest.mark.parametrize(
@@ -110,7 +110,7 @@ def test_plot(custom_args, monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', args_defaults + custom_args)
     mock = Mock()
     monkeypatch.setattr(dag_module.DAG, 'plot', mock)
-    plot.main()
+    plot.main(catch_exception=False)
 
     mock.assert_called_once()
 
@@ -121,7 +121,7 @@ def test_report_includes_plot(monkeypatch, tmp_sample_dir):
 
     mock_plot = Mock()
     monkeypatch.setattr(dag_module.DAG, 'plot', mock_plot)
-    report.main()
+    report.main(catch_exception=False)
 
     mock_plot.assert_called_once()
 
@@ -130,7 +130,7 @@ def test_log_enabled(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
         'python', '--entry-point', 'test_pkg.entry.with_doc', '--log', 'INFO'
     ])
-    build.main()
+    build.main(catch_exception=False)
 
 
 def test_interactive_session(tmp_sample_dir):
@@ -150,7 +150,7 @@ def test_interact_command_starts_full_ipython_session(monkeypatch, tmp_nbs):
     monkeypatch.setattr(interact, '_custom_command', lambda _:
                         (mock_dag, None))
 
-    interact.main()
+    interact.main(catch_exception=False)
 
     mock_start_ipython.assert_called_once_with(argv=[],
                                                user_ns={'dag': mock_dag})
@@ -175,7 +175,7 @@ def test_interactive_session_develop(monkeypatch, tmp_nbs):
 
         m.setattr(notebook.subprocess, 'run', mock_jupyter_notebook)
         m.setattr(notebook, '_save', lambda: True)
-        interact.main()
+        interact.main(catch_exception=False)
 
     assert Path('plot.py').read_text().strip() == '2 + 2'
 
@@ -191,7 +191,7 @@ def test_interactive_session_render_fails(monkeypatch, tmp_nbs):
     with monkeypatch.context() as m:
         m.setattr('builtins.input', mock)
         m.setattr(DAG, 'render', fail)
-        interact.main()
+        interact.main(catch_exception=False)
 
 
 def test_replace_env_value(monkeypatch, tmp_sample_dir):
@@ -199,7 +199,7 @@ def test_replace_env_value(monkeypatch, tmp_sample_dir):
         'python', '--entry-point', 'test_pkg.entry.with_doc',
         '--env--path--data', '/another/path'
     ])
-    build.main()
+    build.main(catch_exception=False)
 
 
 def test_w_param(monkeypatch, tmp_sample_dir):
@@ -207,26 +207,26 @@ def test_w_param(monkeypatch, tmp_sample_dir):
         'python', '--entry-point', 'test_pkg.entry.with_param',
         'some_value_for_param'
     ])
-    build.main()
+    build.main(catch_exception=False)
 
 
 def test_no_doc(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
                         ['python', '--entry-point', 'test_pkg.entry.no_doc'])
-    build.main()
+    build.main(catch_exception=False)
 
 
 def test_incomplete_doc(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(
         sys, 'argv',
         ['python', '--entry-point', 'test_pkg.entry.incomplete_doc'])
-    build.main()
+    build.main(catch_exception=False)
 
 
 def test_invalid_doc(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(
         sys, 'argv', ['python', '--entry-point', 'test_pkg.entry.invalid_doc'])
-    build.main()
+    build.main(catch_exception=False)
 
 
 def test_invalid_entry_point_value(monkeypatch):
@@ -234,7 +234,7 @@ def test_invalid_entry_point_value(monkeypatch):
                         ['python', '--entry-point', 'invalid_entry_point'])
 
     with pytest.raises(ValueError) as excinfo:
-        build.main()
+        build.main(catch_exception=False)
 
     assert 'Could not determine the entry point type' in str(excinfo.value)
 
@@ -248,7 +248,7 @@ def test_invalid_spec_entry_point(args, monkeypatch):
     monkeypatch.setattr(sys, 'argv', ['python'] + args)
 
     with pytest.raises(ValueError) as excinfo:
-        build.main()
+        build.main(catch_exception=False)
 
     assert 'YAML file is expected' in str(excinfo.value)
 
@@ -258,7 +258,7 @@ def test_nonexisting_module(monkeypatch):
         sys, 'argv', ['python', '--entry-point', 'some_module.some_function'])
 
     with pytest.raises(ImportError):
-        build.main()
+        build.main(catch_exception=False)
 
 
 def test_invalid_function(monkeypatch):
@@ -267,7 +267,7 @@ def test_invalid_function(monkeypatch):
         ['python', '--entry-point', 'test_pkg.entry.invalid_function'])
 
     with pytest.raises(AttributeError):
-        build.main()
+        build.main(catch_exception=False)
 
 
 def test_undecorated_function(monkeypatch, tmp_sample_dir):
@@ -275,7 +275,7 @@ def test_undecorated_function(monkeypatch, tmp_sample_dir):
         sys, 'argv',
         ['python', '--entry-point', 'test_pkg.entry.plain_function'])
 
-    build.main()
+    build.main(catch_exception=False)
 
 
 def test_undecorated_function_w_param(monkeypatch, tmp_sample_dir):
@@ -284,7 +284,7 @@ def test_undecorated_function_w_param(monkeypatch, tmp_sample_dir):
         'some_value_for_param'
     ])
 
-    build.main()
+    build.main(catch_exception=False)
 
 
 def test_parse_doc():
@@ -347,7 +347,7 @@ def test_parse_doc_if_missing_numpydoc(docstring, expected_summary,
 def test_build_command(args, tmp_nbs, monkeypatch):
     args = ['python', '--entry-point', 'pipeline.yaml'] + args
     monkeypatch.setattr(sys, 'argv', args)
-    build.main()
+    build.main(catch_exception=False)
 
 
 @pytest.mark.parametrize('args', [
@@ -363,11 +363,11 @@ def test_build_command(args, tmp_nbs, monkeypatch):
 def test_task_command(args, tmp_nbs, monkeypatch):
     args = ['task', '--entry-point', 'pipeline.yaml', 'load'] + args
     monkeypatch.setattr(sys, 'argv', args)
-    task.main()
+    task.main(catch_exception=False)
 
 
 def test_build_with_replaced_env_value(tmp_nbs, monkeypatch):
     monkeypatch.setattr(
         sys, 'argv',
         ['python', '--entry-point', 'pipeline.yaml', '--env--sample', 'True'])
-    build.main()
+    build.main(catch_exception=False)

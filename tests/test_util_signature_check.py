@@ -34,7 +34,7 @@ def test_signature_check_extra():
         signature_check(fn, {'b': 1}, 'task')
 
     error = ('Error rendering task "task" initialized with function "fn". '
-             'Unexpected arguments: [\'b\']')
+             'Got unexpected arguments: [\'b\']')
     assert error == str(excinfo.value)
 
 
@@ -88,7 +88,7 @@ def test_signature_check_both():
         signature_check(fn, {'b': 1}, 'task')
 
     error = ('Error rendering task "task" initialized with function '
-             '"fn". Unexpected arguments: [\'b\']. '
+             '"fn". Got unexpected arguments: [\'b\']. '
              'Missing arguments: [\'a\']. Pass [\'a\'] in "params"')
 
     assert error == str(excinfo.value)
