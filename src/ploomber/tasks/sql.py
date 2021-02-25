@@ -93,11 +93,11 @@ class SQLDump(Task):
         refer to jinja2 documentation for details
     chunksize: int, optional
         Number of rows per file, otherwise download the entire dataset in
-        a single one. If set, the product will be a folder
+        a single one. If not None, the product becomes a directory
     io_handler: ploomber.io.CSVIO or ploomber.io.ParquetIO, optional
         io handler to use (which controls the output format), currently
         only csv and parquet are supported. If None, it tries to infer the
-        handler from the product's extension if that doesn't work, if uses
+        handler from the product's extension if that doesn't work, it uses
         io.CSVIO
 
     Notes

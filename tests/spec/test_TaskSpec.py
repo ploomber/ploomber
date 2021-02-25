@@ -39,23 +39,53 @@ def test_task_class_from_source_str_error():
                                    reload=False)
 
 
-@pytest.mark.parametrize('spec, expected', [
-    [{
-        'source': 'sample.py',
-        'product': 'out.ipynb'
-    }, NotebookRunner],
-    [{
-        'source': 'sample.sql',
-        'product': ['schema', 'table'],
-        'client': 'db.get_client'
-    }, SQLScript],
-    [{
-        'source': 'sample-select.sql',
-        'product': 'file.csv',
-        'class': 'SQLDump',
-        'client': 'db.get_client'
-    }, SQLDump],
-])
+@pytest.mark.parametrize(
+    'spec, expected',
+    [
+        [
+            {
+                'source': 'sample.py',
+                'product': 'out.ipynb'
+            },
+            NotebookRunner,
+        ],
+        [
+            {
+                'source': 'sample.sql',
+                'product': ['schema', 'table'],
+                'client': 'db.get_client'
+            },
+            SQLScript,
+        ],
+        [
+            {
+                'source': 'sample-select.sql',
+                'product': 'file.csv',
+                'class': 'SQLDump',
+                'client': 'db.get_client'
+            },
+            SQLDump,
+        ],
+        # special case: class is not present but SQLDump should be inferred
+        # based on the product's extension
+        [
+            {
+                'source': 'sample-select.sql',
+                'product': 'file.csv',
+                'client': 'db.get_client'
+            },
+            SQLDump,
+        ],
+        # same but with parquet
+        [
+            {
+                'source': 'sample-select.sql',
+                'product': 'file.parquet',
+                'client': 'db.get_client'
+            },
+            SQLDump,
+        ],
+    ])
 def test_initialization(spec, expected, tmp_sample_tasks,
                         add_current_to_sys_path):
     meta = Meta.default_meta({

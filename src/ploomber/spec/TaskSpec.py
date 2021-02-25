@@ -22,7 +22,14 @@ suffix2taskclass = {
 }
 
 
-def task_class_from_source_str(source_str, lazy_import, reload):
+def _safe_suffix(product):
+    try:
+        return Path(product).suffix
+    except Exception:
+        return None
+
+
+def task_class_from_source_str(source_str, lazy_import, reload, product):
     """
     The source field in a DAG spec is a string. The actual value needed to
     instantiate the task depends on the task class, but to make task class
@@ -37,6 +44,11 @@ def task_class_from_source_str(source_str, lazy_import, reload):
         load_dotted_path, raise_=True, reload=reload)
 
     if extension and extension in suffix2taskclass:
+        if extension == '.sql' and _safe_suffix(product) in {
+                '.csv', '.parquet'
+        }:
+            return tasks.SQLDump
+
         return suffix2taskclass[extension]
     else:
         try:
@@ -68,8 +80,12 @@ def task_class_from_spec(task_spec, lazy_import, reload):
     if class_name:
         class_ = getattr(tasks, class_name)
     else:
-        class_ = task_class_from_source_str(task_spec['source'], lazy_import,
-                                            reload)
+        class_ = task_class_from_source_str(
+            task_spec['source'],
+            lazy_import,
+            reload,
+            task_spec['product'],
+        )
 
     return class_
 
