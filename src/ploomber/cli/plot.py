@@ -1,6 +1,8 @@
 from ploomber.cli.parsers import _custom_command, CustomParser
+from ploomber.cli.io import cli_endpoint
 
 
+@cli_endpoint
 def main():
     parser = CustomParser(description='Plot a pipeline')
     with parser:

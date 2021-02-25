@@ -1,7 +1,9 @@
 from IPython import start_ipython
 from ploomber.cli.parsers import CustomParser, _custom_command
+from ploomber.cli.io import cli_endpoint
 
 
+@cli_endpoint
 def main():
     parser = CustomParser(description='Call an entry point '
                           '(pipeline.yaml or dotted path to factory)')

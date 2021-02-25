@@ -1,8 +1,11 @@
 from ploomber.cli.parsers import _custom_command, CustomParser
-
+from ploomber.cli.io import cli_endpoint
 
 # TODO: we are just smoke testing this, we need to improve the tests
 # (check the appropriate functions are called)
+
+
+@cli_endpoint
 def main():
     parser = CustomParser(description='Get task information')
     with parser:

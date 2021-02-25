@@ -400,9 +400,10 @@ class SQLRelationPlaceholder(AbstractPlaceholder):
             schema, name, kind = source
         else:
             raise ValueError(
-                '{} must be initialized with 2 or 3 elements, '
-                'got: {}. Example: ["schema", "name", "table"]'.format(
-                    type(self).__name__, len(source)))
+                f'{type(self).__name__} must be initialized a collection '
+                f'of 2 or 3 elements, got: {source!r} '
+                f'({len(source)} elements). '
+                'Example: ["schema", "name", "table"]')
 
         # ignore empty string
         if schema == '':

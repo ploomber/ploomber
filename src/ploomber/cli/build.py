@@ -1,7 +1,9 @@
 from ploomber.cli.parsers import _custom_command, CustomParser
+from ploomber.cli.io import cli_endpoint
 
 
 # this parameter is only set to True when calling "ploomber interactive"
+@cli_endpoint
 def main(render_only=False):
     parser = CustomParser(description='Build pipeline')
 
