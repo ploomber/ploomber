@@ -60,7 +60,8 @@ from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop)
 from ploomber.executors import Serial
-from ploomber.MessageCollector import MessageCollector
+from ploomber.MessageCollector import (RenderExceptionsCollector,
+                                       RenderWarningsCollector)
 from ploomber.util.util import callback_check
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.dag.DAGLogger import DAGLogger
@@ -309,8 +310,8 @@ class DAG(collections.abc.Mapping):
             else:
                 tasks = self.values()
 
-            exceptions = MessageCollector()
-            warnings_ = MessageCollector()
+            exceptions = RenderExceptionsCollector()
+            warnings_ = RenderWarningsCollector()
 
             # reset all tasks status
             for task in tasks:
@@ -333,32 +334,22 @@ class DAG(collections.abc.Mapping):
                             outdated_by_code=self._params.outdated_by_code)
                     except Exception:
                         tr = traceback.format_exc()
-                        exceptions.append(message=tr,
-                                          task_str=repr(t),
-                                          task_source=str(t.source.loc))
+                        exceptions.append(task=t, message=tr)
 
                 if warnings_current:
                     w = [
                         str(a_warning.message)
                         for a_warning in warnings_current
                     ]
-                    warnings_.append(task_str=t.name,
-                                     task_source=str(t.source.loc),
-                                     message='\n'.join(w))
+                    warnings_.append(task=t, message='\n'.join(w))
 
             if warnings_:
                 # FIXME: maybe raise one by one to keep the warning type
-                warnings.warn('Some tasks had warnings when rendering DAG '
-                              '"{}":\n{}'.format(self.name, str(warnings_)))
+                warnings.warn(str(warnings_))
 
             if exceptions:
                 self._exec_status = DAGStatus.ErroredRender
-
-                msg = 'DAG render failed'
-                header = ('The following tasks failed to render '
-                          '(downstream tasks aborted rendering)')
-                error = exceptions.to_str(header=header, footer=msg)
-                raise DAGRenderError(f'{msg}\n{error}')
+                raise DAGRenderError(str(exceptions))
 
         self._exec_status = DAGStatus.WaitingExecution
 

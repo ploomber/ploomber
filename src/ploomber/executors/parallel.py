@@ -11,7 +11,7 @@ from concurrent.futures.process import BrokenProcessPool
 from ploomber.constants import TaskStatus
 from ploomber.executors.Executor import Executor
 from ploomber.exceptions import DAGBuildError
-from ploomber.MessageCollector import MessageCollector, Message
+from ploomber.MessageCollector import (BuildExceptionsCollector, Message)
 
 import traceback
 
@@ -39,8 +39,7 @@ class TaskBuildWrapper:
             self.task.product.upload()
             return output
         except Exception as e:
-            return Message(task_str=repr(self.task),
-                           task_source=str(self.task.source.loc),
+            return Message(task=self.task,
                            message=traceback.format_exc(),
                            obj=e)
 
@@ -179,11 +178,7 @@ class Parallel(Executor):
         exps = [r for r in results if isinstance(r, Message)]
 
         if exps:
-            msg = 'DAG build failed'
-            header = ('The following tasks crashed '
-                      '(downstream tasks aborted execution)')
-            error = MessageCollector(exps).to_str(header=header, footer=msg)
-            raise DAGBuildError(f'{msg}\n{error}')
+            raise DAGBuildError(str(BuildExceptionsCollector(exps)))
 
         # if we reach this, it means no tasks failed. only return reports
         return [r[0] for r in results]

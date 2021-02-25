@@ -3,7 +3,6 @@ Utils for comparing source code
 """
 import io
 import tokenize
-import warnings
 from difflib import Differ
 import parso
 

@@ -711,8 +711,7 @@ def test_tracebacks_are_shown_for_all_on_build_failing_tasks(executor):
     with pytest.raises(DAGBuildError) as excinfo:
         dag.build()
 
-    # need this to get chained exceptions:
-    # https://docs.pytest.org/en/latest/reference.html#_pytest._code.ExceptionInfo.getrepr
+    # excinfo.getrepr() returns full text of chained exceptions
     assert "PythonCallable: t1 -> File('a_file.txt')" in str(excinfo.getrepr())
     assert ("PythonCallable: t2 -> File('another_file.txt')"
             in str(excinfo.getrepr()))

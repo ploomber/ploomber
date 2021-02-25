@@ -298,14 +298,12 @@ class Task(abc.ABC):
         # run on finish first, if this fails, we don't want to save metadata
         try:
             self._run_on_finish()
-        except Exception as e:
-            # FIXME: There's duplicated logic here, _build also catches
-            # this errors
-            msg = ('Exception when running on_finish '
-                   'for task "{}": {}'.format(self.name, e))
-            self._logger.exception(msg)
+        except Exception:
+            # NOTE: we also set the status in Task._build, which runs during
+            # DAG.build() - but setting if here as well to prevent DAG
+            # inconsistent state when the user calls Tas.build() directly
             self.exec_status = TaskStatus.Errored
-            raise type(e)(msg) from e
+            raise
 
         self.product.metadata.update(str(self.source))
 
@@ -389,12 +387,6 @@ class Task(abc.ABC):
         self._logger.debug('Setting "%s" status to %s', self.name, value)
         self._exec_status = value
 
-        # some executors run this in a subprocess, the metadata in the main
-        # process becomes outdated, make sure you retrieve it again next time
-        # you need it
-        # if value == TaskStatus.Executed:
-        # self.product.metadata.clear()
-
         # process might crash, propagate now or changes might not be
         # reflected (e.g. if a Task is marked as Aborted, all downtream
         # tasks should be marked as aborted as well)
@@ -455,6 +447,14 @@ class Task(abc.ABC):
         Private API for building DAGs. This is what executors should call.
         Unlike the public method, this one does not call render, as it
         should happen via a dag.render() call
+
+        Parameters
+        ----------
+        catch_exceptions : bool
+            If True, catches exceptions during execution and shows a chained
+            exception at the end: [original exception] then
+            [exception with context info]. Set it to False when debugging
+            tasks to drop-in a debugging session at the failing line.
         """
 
         if not catch_exceptions:

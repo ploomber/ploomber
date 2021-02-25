@@ -6,7 +6,8 @@ import logging
 from tqdm.auto import tqdm
 from ploomber.executors.Executor import Executor
 from ploomber.exceptions import DAGBuildError, DAGBuildEarlyStop
-from ploomber.MessageCollector import MessageCollector
+from ploomber.MessageCollector import (BuildExceptionsCollector,
+                                       BuildWarningsCollector)
 from ploomber.constants import TaskStatus
 
 
@@ -57,8 +58,8 @@ class Serial(Executor):
     def __call__(self, dag, show_progress):
         super().__call__(dag)
 
-        exceptions_all = MessageCollector()
-        warnings_all = MessageCollector()
+        exceptions_all = BuildExceptionsCollector()
+        warnings_all = BuildWarningsCollector()
         task_reports = []
 
         task_kwargs = {'catch_exceptions': self._catch_exceptions}
@@ -119,8 +120,7 @@ class Serial(Executor):
 
         if warnings_all and self._catch_warnings:
             # NOTE: maybe raise one by one to keep the warning type
-            warnings.warn('Some tasks had warnings when executing DAG '
-                          '"{}":\n{}'.format(dag.name, str(warnings_all)))
+            warnings.warn(str(warnings_all))
 
         if exceptions_all and self._catch_exceptions:
             early_stop = any(
@@ -132,11 +132,7 @@ class Serial(Executor):
                                         'exception:\n{}'.format(
                                             str(exceptions_all)))
             else:
-                msg = 'DAG build failed'
-                header = ('The following tasks crashed '
-                          '(downstream tasks aborted execution)')
-                error = exceptions_all.to_str(header=header, footer=msg)
-                raise DAGBuildError(f'{msg}\n{error}')
+                raise DAGBuildError(str(exceptions_all))
 
         return task_reports
 
@@ -168,9 +164,7 @@ def catch_warnings(fn, warnings_all):
 
     if warnings_current:
         w = [str(a_warning.message) for a_warning in warnings_current]
-        warnings_all.append(task_str=fn.task.name,
-                            task_source=str(fn.task.source.loc),
-                            message='\n'.join(w))
+        warnings_all.append(task=fn.task, message='\n'.join(w))
 
     return result
 
@@ -194,10 +188,7 @@ def catch_exceptions(fn, exceptions_all):
         # subprocess
         logger.exception(str(e))
         tr = traceback.format_exc()
-        exceptions_all.append(message=tr,
-                              task_str=repr(fn.task),
-                              task_source=str(fn.task.source.loc),
-                              obj=e)
+        exceptions_all.append(task=fn.task, message=tr, obj=e)
 
 
 def pass_exceptions(fn):
