@@ -65,9 +65,11 @@ from ploomber.MessageCollector import (RenderExceptionsCollector,
 from ploomber.util.util import callback_check
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.dag.DAGLogger import DAGLogger
+from ploomber.dag.dagclients import DAGClients
+from ploomber.dag.abstractdag import AbstractDAG
 
 
-class DAG(collections.abc.Mapping):
+class DAG(AbstractDAG):
     """A collection of tasks with dependencies
 
     Parameters
@@ -124,7 +126,7 @@ class DAG(collections.abc.Mapping):
         self.name = name or 'No name'
         self._logger = logging.getLogger(__name__)
 
-        self._clients = clients or {}
+        self._clients = DAGClients(clients)
         self.__exec_status = DAGStatus.WaitingRender
 
         if executor == 'serial':

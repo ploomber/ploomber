@@ -364,7 +364,8 @@ class DAGSpec(MutableMapping):
         clients = self.get('clients')
 
         if clients:
-            init_clients(dag, clients)
+            for class_name, dotted_path in clients.items():
+                dag.clients[class_name] = call_dotted_path(dotted_path)
 
         # FIXME: this violates lazy_import, we must change DAG's implementation
         # to accept strings as attribute and load them until they are called
@@ -644,17 +645,6 @@ def process_tasks(dag, dag_spec, root_path=None):
                                    f'doesn\'t exist. Loaded tasks: {names}')
 
                 task.set_upstream(up)
-
-
-def init_clients(dag, clients):
-    for class_name, dotted_path in clients.items():
-
-        class_ = getattr(tasks, class_name, None)
-
-        if not class_:
-            class_ = getattr(products, class_name)
-
-        dag.clients[class_] = call_dotted_path(dotted_path)
 
 
 def normalize_task(task):

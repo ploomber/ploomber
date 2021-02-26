@@ -53,7 +53,6 @@ import abc
 import logging
 from datetime import datetime
 from ploomber.products import Product, MetaProduct, EmptyProduct
-from ploomber.dag.DAG import DAG
 from ploomber.exceptions import (TaskBuildError, DAGBuildEarlyStop,
                                  TaskRenderError)
 from ploomber.tasks.TaskGroup import TaskGroup
@@ -63,6 +62,7 @@ from ploomber.tasks.Params import Params
 from ploomber.Table import TaskReport, Row
 from ploomber.util import isiterable
 from ploomber.util.util import callback_check
+from ploomber.dag.abstractdag import AbstractDAG
 
 import humanize
 
@@ -142,7 +142,7 @@ class Task(abc.ABC):
         else:
             self._name = name
 
-        if not isinstance(dag, DAG):
+        if not isinstance(dag, AbstractDAG):
             raise TypeError(
                 f"'dag' must be an instance of DAG, got {type(dag)!r}")
 
@@ -841,7 +841,7 @@ class Task(abc.ABC):
     def __add__(self, other):
         """ a + b means TaskGroup([a, b])
         """
-        if isiterable(other) and not isinstance(other, DAG):
+        if isiterable(other) and not isinstance(other, AbstractDAG):
             return TaskGroup([self] + list(other))
         else:
             return TaskGroup((self, other))

@@ -20,6 +20,7 @@ from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop)
 from ploomber.executors import Serial, Parallel, serial
 from ploomber.clients import SQLAlchemyClient
+from ploomber.dag.dagclients import DAGClients
 
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
@@ -130,6 +131,11 @@ def monkeypatch_plot(monkeypatch):
                         Mock(side_effect=to_agraph))
 
     yield mock_Image, mock_to_agraph, image_out
+
+
+def test_init():
+    dag = DAG()
+    assert isinstance(dag.clients, DAGClients)
 
 
 def test_errror_on_invalid_executor():

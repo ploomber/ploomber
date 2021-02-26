@@ -22,6 +22,7 @@ from ploomber.util.util import load_dotted_path
 from ploomber.tasks import PythonCallable
 from ploomber.clients import db
 from ploomber.env import expand
+from ploomber.tasks import SQLScript
 from ploomber import exceptions
 
 
@@ -1035,3 +1036,33 @@ def get():
     assert ("Error calling dotted path "
             "'dag_level_client_dotted_path_returns_none.get'. "
             "Expected a value but got None") in str(excinfo.value)
+
+
+def test_sets_clients(tmp_sample_tasks, add_current_to_sys_path,
+                      no_sys_modules_cache):
+    Path('test_sets_clients.py').write_text("""
+from unittest.mock import Mock
+
+def get():
+    return Mock()
+""")
+
+    spec = DAGSpec({
+        'meta': {
+            'extract_product': False,
+            'extract_upstream': True,
+        },
+        'tasks': [
+            {
+                'source': 'sample.sql',
+                'product': ['name', 'table']
+            },
+        ],
+        'clients': {
+            'SQLScript': 'test_sets_clients.get'
+        }
+    })
+
+    dag = spec.to_dag()
+
+    assert isinstance(dag.clients[SQLScript], Mock)
