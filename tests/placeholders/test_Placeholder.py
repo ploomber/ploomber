@@ -84,9 +84,10 @@ def test_error_on_read_before_render():
     with pytest.raises(RuntimeError) as excinfo:
         str(placeholder)
 
-    assert ('Tried to read Placeholder '
-            'Placeholder("some template {{variable}}") without rendering first'
-            ) == str(excinfo.value)
+    assert (
+        'Tried to read Placeholder '
+        'Placeholder(\'some template {{variable}}\') without rendering first'
+    ) == str(excinfo.value)
 
 
 def test_strict_templates_initialized_from_jinja_template(path_to_assets):
@@ -169,7 +170,7 @@ def test_init_placeholder_with_placeholder():
 
 
 def test_repr_shows_tags_if_unrendered():
-    assert repr(Placeholder('{{tag}}')) == 'Placeholder("{{tag}}")'
+    assert repr(Placeholder('{{tag}}')) == "Placeholder('{{tag}}')"
 
 
 def test_sql_placeholder_repr_shows_tags_if_unrendered_sql():

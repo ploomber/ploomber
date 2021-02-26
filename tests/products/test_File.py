@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 from unittest.mock import Mock, _Call
+import string
 
 import pytest
 
@@ -106,6 +107,11 @@ def test_repr_absolute():
 def test_repr_absolute_shows_as_relative_if_possible():
     path = Path('.').resolve() / 'a'
     assert repr(File(path)) == "File('a')"
+
+
+def test_repr_short():
+    expected = "File('abcdefghijklmnopq...IJKLMNOPQRSTUVWXYZ')"
+    assert repr(File(string.ascii_letters)) == expected
 
 
 def test_client_is_none_by_default():

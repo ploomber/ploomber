@@ -195,6 +195,7 @@ def test_to_graph_prepare_for_graphviz(dag):
     assert set(n.attr['label'] for n in graph) == {
         "first -> \nFile('file1.txt')", "second -> \nFile('file2.txt')"
     }
+
     assert len(graph) == 2
 
 

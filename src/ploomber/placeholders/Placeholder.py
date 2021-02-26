@@ -284,7 +284,7 @@ class Placeholder(AbstractPlaceholder):
 
     def __repr__(self):
         content = self.best_str(shorten=True)
-        return f'{type(self).__name__}({content!r})'
+        return f'{type(self).__name__}({content})'
 
     def __getstate__(self):
         state = self.__dict__.copy()

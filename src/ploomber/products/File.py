@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from ploomber.products.Product import Product
 from ploomber.placeholders.Placeholder import Placeholder
+from reprlib import Repr
 
 
 class File(Product, os.PathLike):
@@ -22,6 +23,8 @@ class File(Product, os.PathLike):
     def __init__(self, identifier, client=None):
         super().__init__(identifier)
         self._client = client
+        self._repr = Repr()
+        self._repr.maxstring = 40
 
     def _init_identifier(self, identifier):
         if not isinstance(identifier, (str, Path)):
@@ -83,7 +86,8 @@ class File(Product, os.PathLike):
                               self.__path_to_file)
 
     def __repr__(self):
-        path = Path(self._identifier.best_str(shorten=True))
+        # do not shorten, we need to process the actual path
+        path = Path(self._identifier.best_str(shorten=False))
 
         # if absolute, try to show a shorter version, if possible
         if path.is_absolute():
@@ -94,7 +98,8 @@ class File(Product, os.PathLike):
                 # working directory
                 pass
 
-        return '{}({})'.format(type(self).__name__, repr(str(path)))
+        content = self._repr.repr(str(path))
+        return f'{type(self).__name__}({content})'
 
     @property
     def client(self):
