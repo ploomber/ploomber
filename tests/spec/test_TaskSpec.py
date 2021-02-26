@@ -191,6 +191,26 @@ def test_loads_serializer_and_unserializer(backup_online,
     assert task._unserializer is unserialize
 
 
+def test_error_on_invalid_value_for_file_product(backup_online,
+                                                 add_current_to_sys_path):
+    meta = Meta.default_meta()
+    meta['extract_product'] = False
+
+    spec = TaskSpec({
+        'source': 'online_tasks.square',
+        'product': 1,
+    },
+                    meta=meta,
+                    project_root='.')
+
+    with pytest.raises(TypeError) as excinfo:
+        spec.to_task(dag=DAG())
+
+    expected = ('Error initializing File with argument 1 '
+                '(expected str, bytes or os.PathLike object, not int)')
+    assert expected == str(excinfo.value)
+
+
 @pytest.mark.parametrize('spec', [
     {
         'source': 'sample.sql',

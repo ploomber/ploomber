@@ -351,6 +351,15 @@ def try_product_init(class_, source, kwargs):
 
 
 def resolve_if_file(product_raw, relative_to, class_):
+    try:
+        return _resolve_if_file(product_raw, relative_to, class_)
+    except Exception as e:
+        e.args = ('Error initializing File with argument '
+                  f'{product_raw!r} ({e})', )
+        raise
+
+
+def _resolve_if_file(product_raw, relative_to, class_):
     if class_ != products.File:
         return product_raw
     elif relative_to:
