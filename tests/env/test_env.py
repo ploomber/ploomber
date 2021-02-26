@@ -532,8 +532,12 @@ def test_expand_raw_dict_error_if_missing_key():
     mapping = {'another_key': 'value'}
     d = {'some_settting': '{{key}}'}
 
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError) as excinfo:
         expand_raw_dictionary(d, mapping)
+
+    expected = ('"Error replacing placeholder: \'key\' is undefined.'
+                ' Loaded env: {\'another_key\': \'value\'}"')
+    assert expected in str(excinfo.value)
 
 
 def test_iterate_nested_dict():

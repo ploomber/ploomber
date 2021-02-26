@@ -3,6 +3,7 @@ import importlib
 import platform
 from pathlib import Path
 from collections.abc import Mapping
+from reprlib import Repr
 
 import yaml
 
@@ -67,6 +68,8 @@ class EnvDict(Mapping):
                                                  path_to_here=path_to_here)
             # now expand all values
             self._data = self._expander.expand_raw_dictionary(raw_data)
+
+            self._repr = Repr()
 
     @classmethod
     def default(cls, path_to_here=None):
@@ -136,7 +139,8 @@ class EnvDict(Mapping):
         return str(self._data)
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, str(self))
+        content = self._repr.repr_dict(self._data, level=2)
+        return f'{type(self).__name__}({content})'
 
     def _replace_value(self, value, keys_all):
         """

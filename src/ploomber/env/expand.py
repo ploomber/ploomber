@@ -6,7 +6,7 @@ from copy import deepcopy, copy
 from collections.abc import Mapping
 from pathlib import Path
 
-from jinja2 import Template, StrictUndefined, UndefinedError
+from jinja2 import Template, StrictUndefined
 
 from ploomber.placeholders import util
 from ploomber import repo
@@ -42,9 +42,15 @@ def expand_if_needed(raw_value, mapping):
         try:
             value = Template(raw_value,
                              undefined=StrictUndefined).render(**mapping)
-        except UndefinedError as e:
-            raise KeyError('Failed to replace placeholders: %s' %
-                           str(e)) from e
+        except Exception as e:
+            exception = e
+        else:
+            exception = None
+
+        if exception:
+            raise KeyError(
+                f'Error replacing placeholder: {exception}. Loaded env: '
+                f'{mapping!r}')
 
     return cast_if_possible(value)
 
