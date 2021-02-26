@@ -46,8 +46,9 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
             default = self.task.dag.clients.get(type(self))
 
             if default is None:
-                raise ValueError('{} must be initialized with a client'.format(
-                    type(self).__name__))
+                raise ValueError(
+                    f'{type(self).__name__} must be initialized with a client.'
+                    ' Pass a client directly or a DAG-level one')
             else:
                 self._client = default
 

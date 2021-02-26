@@ -49,8 +49,9 @@ class SQLScript(Task):
         client = client or dag.clients.get(type(self))
 
         if client is None:
-            raise ValueError('{} must be initialized with a client'.format(
-                type(self).__name__))
+            raise ValueError(
+                f'{type(self).__name__} must be initialized with a client. '
+                'Pass a client directly or set a DAG-level one')
 
         kwargs = dict(hot_reload=dag._params.hot_reload,
                       split_source=client.split_source)
@@ -137,8 +138,9 @@ class SQLDump(Task):
             self.io_handler = io_handler
 
         if self.client is None:
-            raise ValueError('{} must be initialized with a client'.format(
-                type(self).__name__))
+            raise ValueError(
+                f'{type(self).__name__} must be initialized with a client. '
+                'Pass a client directly or set a DAG-level one')
 
     @staticmethod
     def _init_source(source, kwargs):
