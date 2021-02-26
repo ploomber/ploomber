@@ -1,6 +1,7 @@
 """
 Handling tasks that generate multiple products
 """
+from reprlib import Repr
 from collections.abc import Mapping
 
 from ploomber.products.Metadata import MetadataCollection
@@ -76,6 +77,8 @@ class MetaProduct(Mapping):
         self.metadata = MetadataCollection(container)
         self.clients = ClientContainer(container)
 
+        self._repr = Repr()
+
     @property
     def task(self):
         # TODO: validate same task
@@ -129,7 +132,8 @@ class MetaProduct(Mapping):
             p.render(params, **kwargs)
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, str(self.products))
+        content = self._repr.repr1(self.products.products, level=2)
+        return f'{type(self).__name__}({content})'
 
     def __str__(self):
         return str(self.products)

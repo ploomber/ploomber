@@ -1,6 +1,8 @@
 from unittest.mock import Mock
 from pathlib import Path
 
+import pytest
+
 from ploomber import DAG
 from ploomber.tasks import PythonCallable
 from ploomber.products import File, MetaProduct
@@ -92,3 +94,29 @@ def test_upload():
 
     p1.upload.assert_called_once_with()
     p2.upload.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    'arg, expected',
+    [
+        [
+            {
+                'a': 1,
+                'b': 2
+            },
+            "MetaProduct({'a': 1, 'b': 2})",
+        ],
+        [
+            {
+                'a': 1,
+                'b': 2,
+                'c': 3,
+                'd': 4,
+                'e': 5
+            },
+            "MetaProduct({'a': 1, 'b': 2, 'c': 3, 'd': 4, ...})",
+        ],
+    ],
+)
+def test_repr(arg, expected):
+    assert repr(MetaProduct(arg)) == expected
