@@ -354,8 +354,7 @@ class DAGSpec(MutableMapping):
         object
         """
         if 'location' in self:
-            factory = load_dotted_path(self['location'])
-            return factory()
+            return call_dotted_path(self['location'])
 
         dag = DAG()
 

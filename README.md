@@ -80,7 +80,7 @@ Path(product).write_bytes(pickle.dumps(model))
 -- {{product}} is replaced by the table name
 CREATE TABLE AS {{product}}
 /*
-runs 'raw_data' before this task and replace
+runs 'raw_data' before this task and replaces
 {{upstream['raw_data']}} with table name
 */
 SELECT * FROM {{upstream['raw_data']}}

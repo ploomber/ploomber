@@ -8,7 +8,8 @@ from collections.abc import MutableMapping, Mapping
 
 from ploomber import tasks, products
 from ploomber.util.util import (load_dotted_path, _make_iterable,
-                                locate_dotted_path, call_dotted_path)
+                                locate_dotted_path, call_dotted_path,
+                                load_callable_dotted_path)
 from ploomber.util import validate
 from ploomber.exceptions import DAGSpecInitializationError
 
@@ -225,10 +226,11 @@ class TaskSpec(MutableMapping):
         on_failure = task_dict.pop('on_failure', None)
 
         if 'serializer' in task_dict:
-            task_dict['serializer'] = load_dotted_path(task_dict['serializer'])
+            task_dict['serializer'] = load_callable_dotted_path(
+                task_dict['serializer'])
 
         if 'unserializer' in task_dict:
-            task_dict['unserializer'] = load_dotted_path(
+            task_dict['unserializer'] = load_callable_dotted_path(
                 task_dict['unserializer'])
 
         # edge case: if using lazy_import, we should not check if the kernel
@@ -252,13 +254,13 @@ class TaskSpec(MutableMapping):
             raise
 
         if on_finish:
-            task.on_finish = load_dotted_path(on_finish)
+            task.on_finish = load_callable_dotted_path(on_finish)
 
         if on_render:
-            task.on_render = load_dotted_path(on_render)
+            task.on_render = load_callable_dotted_path(on_render)
 
         if on_failure:
-            task.on_failure = load_dotted_path(on_failure)
+            task.on_failure = load_callable_dotted_path(on_failure)
 
         return task, upstream
 

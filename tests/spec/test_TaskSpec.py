@@ -1,5 +1,7 @@
 from pathlib import Path
+
 import pytest
+
 from ploomber.spec.TaskSpec import TaskSpec, task_class_from_source_str
 from ploomber.spec.dagspec import Meta
 from ploomber.tasks import (NotebookRunner, SQLScript, SQLDump, ShellScript,
@@ -267,7 +269,7 @@ def test_skips_source_loader_if_absolute_path(tmp_sample_tasks,
 @pytest.mark.parametrize('key', ['client', 'product_client'])
 def test_error_if_client_dotted_path_returns_none(tmp_sample_tasks,
                                                   add_current_to_sys_path,
-                                                  key):
+                                                  no_sys_modules_cache, key):
     Path('client_dotted_path_returns_none.py').write_text("""
 def get():
     return None
@@ -287,10 +289,48 @@ def get():
 
     spec[key] = 'client_dotted_path_returns_none.get'
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(TypeError) as excinfo:
         TaskSpec(spec, meta=meta, project_root='.').to_task(dag=dag)
 
     assert (
         "Error calling dotted path "
         "'client_dotted_path_returns_none.get'. Expected a value but got None"
     ) in str(excinfo.value)
+
+
+@pytest.mark.parametrize('key', [
+    'on_finish',
+    'on_failure',
+    'on_render',
+    'serializer',
+    'unserializer',
+    'client',
+    'product_client',
+])
+def test_error_if_dotted_path_does_not_return_a_callable(
+        backup_spec_with_functions_flat, add_current_to_sys_path,
+        no_sys_modules_cache, key):
+
+    Path('test_error_if_dotted_path_does_not_return_a_callable.py').write_text(
+        """
+some_non_function = 1
+""")
+
+    meta = Meta.default_meta({'extract_product': False})
+
+    spec = {
+        'source': 'my_tasks_flat.raw.function',
+        'product': 'some_file.txt',
+    }
+
+    spec[key] = ('test_error_if_dotted_path_does_not_return_a_callable'
+                 '.some_non_function')
+
+    with pytest.raises(TypeError) as excinfo:
+        TaskSpec(spec, meta=meta, project_root='.').to_task(dag=DAG())
+
+    expected = ("Error loading dotted path 'test_error_if_dotted_path"
+                "_does_not_return_a_callable.some_non_function'. Expected a "
+                "callable object (i.e., some kind of function). Got "
+                "1 (an object of type: int)")
+    assert str(excinfo.value) == expected

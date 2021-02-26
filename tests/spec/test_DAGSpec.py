@@ -239,6 +239,44 @@ def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
     dag.build()
 
 
+def test_error_if_location_is_not_a_callable(tmp_directory,
+                                             add_current_to_sys_path,
+                                             no_sys_modules_cache):
+    Path('test_error_if_location_is_not_a_callable.py').write_text("""
+make_dag = 1
+""")
+
+    spec = DAGSpec(
+        {'location': 'test_error_if_location_is_not_a_callable.make_dag'})
+
+    with pytest.raises(TypeError) as excinfo:
+        spec.to_dag()
+
+    expected = ("Error loading dotted path 'test_error_if_"
+                "location_is_not_a_callable.make_dag'. Expected a "
+                "callable object (i.e., some kind of function). Got 1 "
+                "(an object of type: int)")
+    assert str(excinfo.value) == expected
+
+
+def test_error_if_location_returns_none(tmp_directory, add_current_to_sys_path,
+                                        no_sys_modules_cache):
+    Path('test_error_if_location_is_not_a_callable.py').write_text("""
+def make_dag():
+    return None
+""")
+
+    spec = DAGSpec(
+        {'location': 'test_error_if_location_is_not_a_callable.make_dag'})
+
+    with pytest.raises(TypeError) as excinfo:
+        spec.to_dag()
+
+    expected = ("Error calling dotted path 'test_error_if_location_is_"
+                "not_a_callable.make_dag'. Expected a value but got None")
+    assert str(excinfo.value) == expected
+
+
 def test_file_spec_resolves_sources_location(tmp_nbs):
     spec = DAGSpec('pipeline.yaml')
     absolute = str(tmp_nbs.resolve())
@@ -936,8 +974,40 @@ def test_error_invalid_yaml_with_placeholders_without_parentheses(
     assert content in str(excinfo.value)
 
 
+def test_error_if_dag_level_client_dotted_path_is_not_a_callable(
+        tmp_sample_tasks, add_current_to_sys_path, no_sys_modules_cache):
+    Path('dag_level_client_dotted_path_returns_none.py').write_text("""
+get = 1
+""")
+
+    spec = DAGSpec({
+        'meta': {
+            'extract_product': False,
+            'extract_upstream': True,
+        },
+        'tasks': [
+            {
+                'source': 'sample.sql',
+                'product': ['name', 'table']
+            },
+        ],
+        'clients': {
+            'SQLScript': 'dag_level_client_dotted_path_returns_none.get'
+        }
+    })
+
+    with pytest.raises(TypeError) as excinfo:
+        spec.to_dag()
+
+    expected = (
+        "Error loading dotted path 'dag_level_client_dotted_path_returns_none"
+        ".get'. Expected a callable object (i.e., some kind of function). "
+        "Got 1 (an object of type: int)")
+    assert str(excinfo.value) == expected
+
+
 def test_error_if_dag_level_client_dotted_path_returns_none(
-        tmp_sample_tasks, add_current_to_sys_path):
+        tmp_sample_tasks, add_current_to_sys_path, no_sys_modules_cache):
     Path('dag_level_client_dotted_path_returns_none.py').write_text("""
 def get():
     return None
@@ -959,7 +1029,7 @@ def get():
         }
     })
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(TypeError) as excinfo:
         spec.to_dag()
 
     assert ("Error calling dotted path "

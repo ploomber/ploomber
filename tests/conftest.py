@@ -331,3 +331,20 @@ def add_current_to_sys_path():
     sys.path.insert(0, os.path.abspath('.'))
     yield sys.path
     sys.path = old
+
+
+@pytest.fixture
+def no_sys_modules_cache():
+    """
+    Removes modules from sys.modules that didn't exist before the test
+    """
+    mods = set(sys.modules)
+
+    yield
+
+    current = set(sys.modules)
+
+    to_remove = current - mods
+
+    for a_module in to_remove:
+        del sys.modules[a_module]

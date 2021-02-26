@@ -270,20 +270,37 @@ def load_dotted_path(dotted_path, raise_=True, reload=False):
                 '[module_name].[function_name]'.format(dotted_path))
 
 
+def load_callable_dotted_path(dotted_path, raise_=True, reload=False):
+    """
+    Like load_dotted_path but verifies the loaded object is a callable
+    """
+    loaded_object = load_dotted_path(dotted_path=dotted_path,
+                                     raise_=raise_,
+                                     reload=reload)
+
+    if not callable(loaded_object):
+        raise TypeError(f'Error loading dotted path {dotted_path!r}. '
+                        'Expected a callable object (i.e., some kind '
+                        f'of function). Got {loaded_object!r} '
+                        f'(an object of type: {type(loaded_object).__name__})')
+
+    return loaded_object
+
+
 def call_dotted_path(dotted_path, raise_=True, reload=False):
     """
-    Load dotted path (using load_dotted_path), and call it without arguments,
-    raises an exception if returns None
+    Load dotted path (using load_callable_dotted_path), and call it without
+    arguments, raises an exception if returns None
     """
-    callable_ = load_dotted_path(dotted_path=dotted_path,
-                                 raise_=raise_,
-                                 reload=reload)
+    callable_ = load_callable_dotted_path(dotted_path=dotted_path,
+                                          raise_=raise_,
+                                          reload=reload)
 
     out = callable_()
 
     if out is None:
-        raise ValueError(f'Error calling dotted path {dotted_path!r}. '
-                         'Expected a value but got None')
+        raise TypeError(f'Error calling dotted path {dotted_path!r}. '
+                        'Expected a value but got None')
 
     return out
 
