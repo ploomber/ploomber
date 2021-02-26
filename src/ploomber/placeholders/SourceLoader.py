@@ -134,7 +134,7 @@ class SourceLoader:
                     f'{str(name)!r} template does not exist. '
                     'However such a file exists in the current working '
                     'directory, if you want to load it as a template, move it '
-                    f'to {self.path_full!r}')
+                    f'to {self.path_full!r} or remove the source_loader')
             # no template and the file does not exist, raise a generic message
             else:
                 raise exceptions.TemplateNotFound(

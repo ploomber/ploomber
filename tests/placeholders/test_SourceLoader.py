@@ -122,7 +122,8 @@ def test_error_template_not_found_but_found_in_current_dir(tmp_directory):
     assert str(excinfo.value) == (
         "'unknown.py' template does not exist. "
         "However such a file exists in the current working directory, "
-        "if you want to load it as a template, move it to 'templates'")
+        "if you want to load it as a template, move it to 'templates' "
+        "or remove the source_loader")
 
 
 def test_get_item_calls_get_template(monkeypatch):
