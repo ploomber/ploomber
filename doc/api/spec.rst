@@ -73,6 +73,10 @@ contains several ``pipeline.yaml`` examples.
         # Example:
         SQLScript: db.get_client
         PostgresRelation: db.get_client
+    
+    # DAG-level serializer/unserializer for Python functions
+    serializer: dotted.path.to.serializer
+    unserializer: dotted.path.to.unserializer
 
     tasks:
         - {task dictionary, see below}
