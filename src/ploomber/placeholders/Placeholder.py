@@ -2,6 +2,7 @@ from collections.abc import Mapping
 import abc
 import logging
 from pathlib import Path
+from reprlib import Repr
 
 from ploomber.exceptions import RenderError, SourceInitializationError
 from ploomber.placeholders import util, extensions
@@ -159,6 +160,8 @@ class Placeholder(AbstractPlaceholder):
         self.needs_render = self._needs_render()
 
         self._str = None if self.needs_render else self._raw
+        self._repr = Repr()
+        self._repr.maxstring = 40
 
         if required:
             self._validate_required(required)
@@ -264,12 +267,7 @@ class Placeholder(AbstractPlaceholder):
         best = self._raw if self._str is None else self._str
 
         if shorten:
-            lines = best.split('\n')
-            first_line = lines[0]
-            best = first_line if len(first_line) < 80 else first_line[:77]
-
-            if len(lines) > 1 or len(first_line) >= 80:
-                best += '...'
+            best = self._repr.repr(best)
 
         return best
 
@@ -285,8 +283,8 @@ class Placeholder(AbstractPlaceholder):
         return self._variables
 
     def __repr__(self):
-        return '{}("{}")'.format(
-            type(self).__name__, self.best_str(shorten=True))
+        content = self.best_str(shorten=True)
+        return f'{type(self).__name__}({content!r})'
 
     def __getstate__(self):
         state = self.__dict__.copy()

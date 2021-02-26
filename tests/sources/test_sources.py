@@ -36,31 +36,22 @@ def test_interface(concrete_class):
 
 def test_generic_source_unrendered():
     s = GenericSource('some {{placeholder}}')
-    assert repr(s) == 'GenericSource(some {{placeholder}})'
+    assert repr(s) == "GenericSource('some {{placeholder}}')"
 
     s = GenericSource(('some {{placeholder}} and some other large text '
                        'with important details that we should not include'))
-    assert repr(s) == ('GenericSource(some {{placeholder}} and some other '
-                       'large text with important details that we...)')
-
-    s = GenericSource('some {{placeholder}}\nand some other large text ')
-    assert repr(s) == 'GenericSource(some {{placeholder}}...)'
+    assert repr(s) == "GenericSource('some {{placeholde...should not include')"
 
 
 def test_generic_source_rendered():
     s = GenericSource('some {{placeholder}}')
     s.render({'placeholder': 'placeholder'})
-    assert repr(s) == 'GenericSource(some placeholder)'
+    assert repr(s) == "GenericSource('some placeholder')"
 
     s = GenericSource(('some {{placeholder}} and some other large text '
                        'with important details that we should not include'))
     s.render({'placeholder': 'placeholder'})
-    assert repr(s) == ('GenericSource(some placeholder and some other '
-                       'large text with important details that we sho...)')
-
-    s = GenericSource('some {{placeholder}}\nand some other large text ')
-    s.render({'placeholder': 'placeholder'})
-    assert repr(s) == 'GenericSource(some placeholder...)'
+    assert repr(s) == "GenericSource('some placeholder ...should not include')"
 
 
 @pytest.mark.parametrize('class_', [SQLScriptSource, SQLQuerySource])
@@ -69,21 +60,13 @@ def test_sql_repr_unrendered(class_):
 
     # short case
     s = class_('SELECT * FROM {{product}}')
-    assert repr(s) == name + '(SELECT * FROM {{product}})'
+    assert repr(s) == name + "('SELECT * FROM {{product}}')"
 
     # long case, adds ...
     s = class_(("SELECT * FROM {{product}} WHERE "
                 "some_very_very_long_column "
                 "= 'some_very_large_value'"))
-    assert repr(s) == name + ("(SELECT * FROM {{product}} "
-                              "WHERE some_very_very_long_column "
-                              "= 'some_very_large...)")
-
-    # multi line case, adds ...
-    s = class_(("SELECT * FROM {{product}}\nWHERE "
-                "some_very_very_long_column"
-                " = 'some_very_large_value'"))
-    assert repr(s) == name + '(SELECT * FROM {{product}}...)'
+    assert repr(s) == name + "(\"SELECT * FROM {{p..._very_large_value'\")"
 
 
 @pytest.mark.parametrize('class_', [SQLScriptSource, SQLQuerySource])
@@ -93,21 +76,13 @@ def test_sql_repr_rendered(class_):
     s = class_('SELECT * FROM {{product}}')
     s.render(render_arg)
 
-    assert repr(s) == name + '(SELECT * FROM schema.name)'
+    assert repr(s) == name + "('SELECT * FROM schema.name')"
 
     s = class_(("SELECT * FROM {{product}} WHERE "
                 "some_very_very_long_column "
                 "= 'some_very_large_value'"))
     s.render(render_arg)
-    assert repr(s) == name + ("(SELECT * FROM schema.name "
-                              "WHERE some_very_very_long_column "
-                              "= 'some_very_large...)")
-
-    s = class_(("SELECT * FROM {{product}}\nWHERE "
-                "some_very_very_long_column"
-                " = 'some_very_large_value'"))
-    s.render(render_arg)
-    assert repr(s) == name + '(SELECT * FROM schema.name...)'
+    assert repr(s) == name + ("(\"SELECT * FROM sch..._very_large_value'\")")
 
 
 def test_can_parse_sql_docstring():
