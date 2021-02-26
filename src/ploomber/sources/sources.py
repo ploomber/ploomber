@@ -190,7 +190,7 @@ class PlaceholderSource(Source):
 
     def __repr__(self):
         repr_ = "{}({})".format(
-            type(self).__name__, self._placeholder.best_str(shorten=True))
+            type(self).__name__, self._placeholder.best_repr(shorten=True))
 
         if self._placeholder.path:
             repr_ += ' Loaded from: {}'.format(self._placeholder.path)
@@ -207,7 +207,7 @@ class SQLSourceMixin:
     @property
     def doc(self):
         return docstring.extract_from_sql(
-            self._placeholder.best_str(shorten=False))
+            self._placeholder.best_repr(shorten=False))
 
     @property
     def extension(self):

@@ -87,7 +87,7 @@ class File(Product, os.PathLike):
 
     def __repr__(self):
         # do not shorten, we need to process the actual path
-        path = Path(self._identifier.best_str(shorten=False))
+        path = Path(self._identifier.best_repr(shorten=False))
 
         # if absolute, try to show a shorter version, if possible
         if path.is_absolute():

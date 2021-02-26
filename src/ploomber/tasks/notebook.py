@@ -283,10 +283,10 @@ class NotebookRunner(Task):
 
         if isinstance(self.product, MetaProduct):
             product_nb = (
-                self.product[self.nb_product_key]._identifier.best_str(
+                self.product[self.nb_product_key]._identifier.best_repr(
                     shorten=False))
         else:
-            product_nb = self.product._identifier.best_str(shorten=False)
+            product_nb = self.product._identifier.best_repr(shorten=False)
 
         self._converter = NotebookConverter(product_nb,
                                             nbconvert_exporter_name,

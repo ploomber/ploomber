@@ -260,7 +260,7 @@ class Placeholder(AbstractPlaceholder):
 
         return str(self)
 
-    def best_str(self, shorten):
+    def best_repr(self, shorten):
         """
         Returns the rendered version (if available), otherwise the raw version
         """
@@ -283,7 +283,7 @@ class Placeholder(AbstractPlaceholder):
         return self._variables
 
     def __repr__(self):
-        content = self.best_str(shorten=True)
+        content = self.best_repr(shorten=True)
         return f'{type(self).__name__}({content})'
 
     def __getstate__(self):
@@ -458,7 +458,7 @@ class SQLRelationPlaceholder(AbstractPlaceholder):
             qualified += self.schema + '.'
 
         if unrendered_ok:
-            qualified += self._name_template.best_str(shorten=shorten)
+            qualified += self._name_template.best_repr(shorten=shorten)
         else:
             qualified += str(self._name_template)
 
@@ -469,14 +469,14 @@ class SQLRelationPlaceholder(AbstractPlaceholder):
 
     def _raw_repr(self):
         mapping = dict(schema=self.schema,
-                       name=self._name_template.best_str(shorten=False),
+                       name=self._name_template.best_repr(shorten=False),
                        kind=self.kind)
         return ', '.join(f'{k}={v!r}' for k, v in mapping.items())
 
     def __repr__(self):
         return f'{type(self).__name__}({self._raw_repr()})'
 
-    def best_str(self, shorten):
+    def best_repr(self, shorten):
         return self._qualified_name(unrendered_ok=True, shorten=shorten)
 
     def __hash__(self):

@@ -178,10 +178,10 @@ class Product(abc.ABC):
         return str(self._identifier)
 
     def __repr__(self):
-        # NOTE: this assumes ._identifier has a best_str property,
+        # NOTE: this assumes ._identifier has a best_repr property,
         # should we refactor it?
         return '{}({})'.format(
-            type(self).__name__, self._identifier.best_str(shorten=True))
+            type(self).__name__, self._identifier.best_repr(shorten=True))
 
     def __getstate__(self):
         state = self.__dict__.copy()
