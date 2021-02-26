@@ -246,7 +246,7 @@ class TaskSpec(MutableMapping):
                           name=name,
                           dag=dag,
                           **task_dict)
-        except TypeError as e:
+        except Exception as e:
             msg = f'Error initializing Task from {self!r}. Error: {e.args[0]}'
             e.args = (msg, )
             raise

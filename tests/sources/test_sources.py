@@ -104,8 +104,14 @@ def test_can_parse_sql_docstring_from_rendered_template():
 
 
 def test_cannot_initialize_sql_script_with_literals():
-    with pytest.raises(SourceInitializationError):
+    with pytest.raises(SourceInitializationError) as excinfo:
         SQLScriptSource('SELECT * FROM my_table')
+
+    expected = (
+        "Error initializing SQLScriptSource('SELECT * FROM my_table'): "
+        "The {{product}} placeholder is required. "
+        "Example: 'CREATE TABLE {{product}} AS (SELECT * FROM ...)'")
+    assert expected == str(excinfo.value)
 
 
 def test_warns_if_sql_script_does_not_create_relation(

@@ -244,12 +244,11 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
 
     def _post_init_validation(self, value):
         if not value.needs_render:
+            example = 'CREATE TABLE {{product}} AS (SELECT * FROM ...)'
             raise SourceInitializationError(
-                '{} cannot be initialized with literals as '
-                'they are meant to create a persistent '
-                'change in the database, they need to '
-                'include the {} placeholder'.format(self.__class__.__name__,
-                                                    '{{product}}'))
+                f'Error initializing {self!r}: '
+                'The {{product}} placeholder is required. '
+                f'Example: {example!r}')
 
         # FIXME: validate {{product}} exists, does this also catch
         # {{product['key']}} ?
