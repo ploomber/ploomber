@@ -934,3 +934,34 @@ def test_error_invalid_yaml_with_placeholders_without_parentheses(
         DAGSpec('pipeline.yaml')
 
     assert content in str(excinfo.value)
+
+
+def test_error_if_dag_level_client_dotted_path_returns_none(
+        tmp_sample_tasks, add_current_to_sys_path):
+    Path('dag_level_client_dotted_path_returns_none.py').write_text("""
+def get():
+    return None
+""")
+
+    spec = DAGSpec({
+        'meta': {
+            'extract_product': False,
+            'extract_upstream': True,
+        },
+        'tasks': [
+            {
+                'source': 'sample.sql',
+                'product': ['name', 'table']
+            },
+        ],
+        'clients': {
+            'SQLScript': 'dag_level_client_dotted_path_returns_none.get'
+        }
+    })
+
+    with pytest.raises(ValueError) as excinfo:
+        spec.to_dag()
+
+    assert ("Error calling dotted path "
+            "'dag_level_client_dotted_path_returns_none.get'. "
+            "Expected a value but got None") in str(excinfo.value)

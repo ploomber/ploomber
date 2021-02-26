@@ -270,6 +270,24 @@ def load_dotted_path(dotted_path, raise_=True, reload=False):
                 '[module_name].[function_name]'.format(dotted_path))
 
 
+def call_dotted_path(dotted_path, raise_=True, reload=False):
+    """
+    Load dotted path (using load_dotted_path), and call it without arguments,
+    raises an exception if returns None
+    """
+    callable_ = load_dotted_path(dotted_path=dotted_path,
+                                 raise_=raise_,
+                                 reload=reload)
+
+    out = callable_()
+
+    if out is None:
+        raise ValueError(f'Error calling dotted path {dotted_path!r}. '
+                         'Expected a value but got None')
+
+    return out
+
+
 def locate_dotted_path(dotted_path):
     """
     Locates a dotted path, returns the spec for the module where the attribute

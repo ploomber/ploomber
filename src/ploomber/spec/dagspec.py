@@ -96,7 +96,7 @@ from ploomber import products, tasks
 from ploomber.dag.DAG import DAG
 from ploomber.placeholders.SourceLoader import SourceLoader
 from ploomber.util.util import (load_dotted_path, call_with_dictionary,
-                                add_to_sys_path)
+                                add_to_sys_path, call_dotted_path)
 from ploomber.util.default import entry_point
 from ploomber.spec.TaskSpec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
@@ -655,7 +655,7 @@ def init_clients(dag, clients):
         if not class_:
             class_ = getattr(products, class_name)
 
-        dag.clients[class_] = load_dotted_path(dotted_path)()
+        dag.clients[class_] = call_dotted_path(dotted_path)
 
 
 def normalize_task(task):

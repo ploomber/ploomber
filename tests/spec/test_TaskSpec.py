@@ -242,3 +242,35 @@ def test_skips_source_loader_if_absolute_path(tmp_sample_tasks,
     }
 
     assert TaskSpec(spec, meta=meta, project_root='.').to_task(dag=dag)
+
+
+@pytest.mark.parametrize('key', ['client', 'product_client'])
+def test_error_if_client_dotted_path_returns_none(tmp_sample_tasks,
+                                                  add_current_to_sys_path,
+                                                  key):
+    Path('client_dotted_path_returns_none.py').write_text("""
+def get():
+    return None
+""")
+
+    meta = Meta.default_meta({
+        'extract_product': False,
+        'extract_upstream': True,
+    })
+
+    dag = DAG()
+
+    spec = {
+        'source': 'sample.sql',
+        'product': ['name', 'table'],
+    }
+
+    spec[key] = 'client_dotted_path_returns_none.get'
+
+    with pytest.raises(ValueError) as excinfo:
+        TaskSpec(spec, meta=meta, project_root='.').to_task(dag=dag)
+
+    assert (
+        "Error calling dotted path "
+        "'client_dotted_path_returns_none.get'. Expected a value but got None"
+    ) in str(excinfo.value)

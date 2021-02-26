@@ -8,7 +8,7 @@ from collections.abc import MutableMapping, Mapping
 
 from ploomber import tasks, products
 from ploomber.util.util import (load_dotted_path, _make_iterable,
-                                locate_dotted_path)
+                                locate_dotted_path, call_dotted_path)
 from ploomber.util import validate
 from ploomber.exceptions import DAGSpecInitializationError
 
@@ -317,7 +317,7 @@ def init_product(task_dict, meta, task_class, root_path):
 
     if 'product_client' in task_dict:
         dotted_path = task_dict.pop('product_client')
-        kwargs = {'client': load_dotted_path(dotted_path)()}
+        kwargs = {'client': call_dotted_path(dotted_path)}
     else:
         kwargs = {}
 
@@ -368,7 +368,7 @@ def resolve_if_file(product_raw, relative_to, class_):
 def _init_client(task_dict):
     if 'client' in task_dict:
         dotted_path = task_dict.pop('client')
-        task_dict['client'] = load_dotted_path(dotted_path)()
+        task_dict['client'] = call_dotted_path(dotted_path)
 
 
 def get_value_at(d, dotted_path):
