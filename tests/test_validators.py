@@ -4,7 +4,6 @@ import pytest
 from ploomber.validators import (Assert, data_frame_validator, validate_schema,
                                  validate_values)
 from ploomber.validators import string
-from ploomber.tasks import SQLDump, SQLScript
 
 
 def test_Assert():

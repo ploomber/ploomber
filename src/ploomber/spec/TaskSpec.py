@@ -11,8 +11,8 @@ from ploomber.util.util import (load_dotted_path, _make_iterable,
                                 locate_dotted_path, call_dotted_path,
                                 load_callable_dotted_path)
 from ploomber.util import validate
-from ploomber.validators.string import (validate_product_class_name,
-                                        validate_task_class_name)
+from ploomber import validators
+
 from ploomber.exceptions import DAGSpecInitializationError
 
 suffix2taskclass = {
@@ -83,7 +83,12 @@ def task_class_from_spec(task_spec, lazy_import, reload):
     class_name = task_spec.get('class', None)
 
     if class_name:
-        class_ = validate_task_class_name(class_name)
+        try:
+            class_ = validators.string.validate_task_class_name(class_name)
+        except Exception as e:
+            msg = f'Error validating Task spec (class field): {e.args[0]}'
+            e.args = (msg, )
+            raise
     else:
         class_ = task_class_from_source_str(
             task_spec['source'],
@@ -352,6 +357,17 @@ def try_product_init(class_, source, kwargs):
         raise DAGSpecInitializationError(
             f'Error initializing {class_.__name__} with source: '
             f'{source!r}' + kwargs_msg) from e
+
+
+def validate_product_class_name(product_class_name):
+    try:
+        return validators.string.validate_product_class_name(
+            product_class_name)
+    except Exception as e:
+        msg = ('Error validating Task spec (product_class field): '
+               f'{e.args[0]}')
+        e.args = (msg, )
+        raise
 
 
 def resolve_if_file(product_raw, relative_to, class_):

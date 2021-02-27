@@ -1081,7 +1081,8 @@ def test_validate_product_default_class_keys():
     with pytest.raises(ValueError) as excinfo:
         DAGSpec(spec)
 
-    expected = "'unknown_task' is not a valid Task class name"
+    expected = ("Error validating product_default_class: "
+                "'unknown_task' is not a valid Task class name")
     assert str(excinfo.value) == expected
 
 
@@ -1098,5 +1099,6 @@ def test_validate_product_default_class_values():
     with pytest.raises(ValueError) as excinfo:
         DAGSpec(spec)
 
-    expected = "'unknown_product' is not a valid Product class name"
+    expected = ("Error validating product_default_class: "
+                "'unknown_product' is not a valid Product class name")
     assert str(excinfo.value) == expected

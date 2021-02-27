@@ -349,7 +349,8 @@ def test_error_on_invalid_class(backup_spec_with_functions_flat,
     with pytest.raises(ValueError) as excinfo:
         TaskSpec(spec, meta=meta, project_root='.').to_task(dag=DAG())
 
-    expected = "'unknown_class' is not a valid Task class name"
+    expected = ("Error validating Task spec (class field): "
+                "'unknown_class' is not a valid Task class name")
     assert str(excinfo.value) == expected
 
 
@@ -366,5 +367,6 @@ def test_error_on_invalid_product_class(backup_spec_with_functions_flat,
     with pytest.raises(ValueError) as excinfo:
         TaskSpec(spec, meta=meta, project_root='.').to_task(dag=DAG())
 
-    expected = "'unknown_class' is not a valid Product class name"
+    expected = ("Error validating Task spec (product_class field): "
+                "'unknown_class' is not a valid Product class name")
     assert str(excinfo.value) == expected

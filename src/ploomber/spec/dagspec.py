@@ -586,8 +586,13 @@ class Meta:
 
         # validate keys and values in product_default_class
         for task_name, product_name in meta['product_default_class'].items():
-            validate_task_class_name(task_name)
-            validate_product_class_name(product_name)
+            try:
+                validate_task_class_name(task_name)
+                validate_product_class_name(product_name)
+            except Exception as e:
+                msg = f'Error validating product_default_class: {e.args[0]}'
+                e.args = (msg, )
+                raise
 
         return meta
 
