@@ -428,9 +428,11 @@ class DAG(AbstractDAG):
         return report
 
     def _build(self, force, show_progress):
-        # always render before building, the function might immediately
-        # return if the user turned render status caching on
-        self.render(force=force, show_progress=show_progress)
+        # always render before building (the function might immediately
+        # return if the user turned render status caching on)
+        # Do not show progress - should only be displayed when .render is
+        # called directly
+        self.render(force=force, show_progress=False)
 
         if self._exec_status == DAGStatus.ErroredRender:
             raise DAGBuildError('Cannot build dag that failed to render, '

@@ -1,11 +1,14 @@
 """
 A mapping object with text and HTML representations
 """
+from warnings import warn
 from textwrap import TextWrapper
 from copy import deepcopy
 import shutil
 from collections.abc import Mapping, Iterable
 from tabulate import tabulate
+
+_BETWEEN_COLUMN_WIDTH = 2
 
 
 def _is_iterable(obj):
@@ -95,9 +98,8 @@ class Table:
 
     def __str__(self):
         if self._str is None or self.column_width == 'auto':
-            values = wrap_table_values(self._values, self.column_width,
-                                       self.EXCLUDE_WRAP)
-
+            values = wrap_table_dict(self._values, self.column_width,
+                                     self.EXCLUDE_WRAP)
             self._str = tabulate(values, headers='keys', tablefmt='simple')
 
         return self._str
@@ -107,8 +109,8 @@ class Table:
 
     def _repr_html_(self):
         if self._html is None or self.column_width == 'auto':
-            values = wrap_table_values(self._values, self.column_width,
-                                       self.EXCLUDE_WRAP)
+            values = wrap_table_dict(self._values, self.column_width,
+                                     self.EXCLUDE_WRAP)
 
             self._html = tabulate(values, headers='keys', tablefmt='html')
 
@@ -203,87 +205,189 @@ def rows2columns(rows):
     return {col: [row[col] for row in rows] for col in columns}
 
 
-def wrap_table_values(values, column_width, exclude):
+def wrap_table_dict(table_dict, column_width, exclude):
+    """Wraps a columns to take at most column_width characters
+
+    Parameters
+    ----------
+    column_width : int, 'auto' or None
+        Width per column. Splits evenly if 'auto', does not wrap if None
+    exclude : list
+        Exclude columns from wrapping (show them in a single line)
+    """
     exclude = exclude or []
 
     if column_width is None:
-        return values
+        return table_dict
 
     if column_width == 'auto':
-        width_available = shutil.get_terminal_size().columns
-        (exclude,
-         column_width) = auto_determine_column_width(values, exclude,
-                                                     width_available)
+        column_width = calculate_wrapping(
+            table_dict,
+            do_not_wrap=exclude,
+            width_total=shutil.get_terminal_size().columns)
 
+    # NOTE: the output of this algorithm may return a table that does not use
+    # between 0 and {column - 1} characters. We could always take all the
+    # space available if we refactor and do not keep column_width fixed for
+    # all columns
     wrapper = TextWrapper(width=column_width,
                           break_long_words=True,
                           break_on_hyphens=True)
 
-    return wrap_mapping(values, wrapper, exclude=exclude)
+    return apply_wrapping(table_dict, wrapper, exclude=exclude)
 
 
-def auto_determine_column_width(values, exclude, width_available):
-    values_max_width = {
-        k: max([len(str(value)) for value in v] + [len(k)])
-        for k, v in values.items()
+def separator_width(header_length, max_value_length):
+    """
+    Calculates the width of the '---' line that separates header from content
+    """
+    n_value_extra = header_length - max_value_length
+
+    if n_value_extra >= -2:
+        return header_length + 2
+    else:
+        return max_value_length
+
+
+def width_required_for_column(header, values):
+    """
+    Spaced needed to display column in a single line, accounts for the two
+    extra characters that the tabulate package adds to the header when the
+    content is too short
+    """
+    values_max = -1 if not values else max(len(str(v)) for v in values)
+    return max(values_max, separator_width(len(header), values_max))
+
+
+def calculate_wrapping(table_dict, do_not_wrap, width_total):
+    """
+    Determines the column width by keeping some columns unwrapped (show all
+    rows, including the header in a single line) and distributing the
+    remaining space evenly. Accounts for the betwee-column spacing.
+    """
+    # space required to display a given column on a single column
+    width_required = {
+        header: width_required_for_column(header, values)
+        for header, values in table_dict.items()
     }
 
-    col_widths = {}
+    # TODO: pass set(table_dict) instead of table_dict
+    column_width = _calculate_wrapping(table_dict, do_not_wrap, width_total,
+                                       width_required)
 
-    # excluded columns should be left as is
-    for k in exclude:
-        # edge case: key might exist if the dag is empty and the excluded
-        # column is addded in the Tabble.data_preprocessing, this happens
-        # with the Ran? column in a build report
-        if k in values_max_width:
-            col_widths[k] = values_max_width.pop(k)
+    return column_width
 
-    def split_evenly(values, used):
-        n_cols = len(values)
 
-        if n_cols:
-            # space available: total space - offset (size 2) between columns
-            width = width_available - (n_cols - 1) * 2 - used
-            return int(width / n_cols)
-        else:
-            return 0
+def _calculate_wrapping(table_dict, do_not_wrap, width_total, width_required):
+    width_offset = 0
 
-    def space_required(values):
-        n_cols = len(values)
-        return sum(values.values()) + n_cols * 2
+    # how much space we are already taking by not wrapping columns in
+    # do_not_wrap
+    for col_name in do_not_wrap:
+        # edge case: key might not exist if the dag is empty col_name
+        # is added during Tabble.data_preprocessing (e.g.,) the "Ran?"" column
+        # in a build report
+        if col_name in width_required:
+            width_offset += width_required[col_name]
+
+    # how much we have left - takes into account the bweteen-column spacing
+    # of two characters
+    width_remaining = (width_total - width_offset -
+                       len(do_not_wrap) * _BETWEEN_COLUMN_WIDTH)
+
+    cols_to_wrap = set(table_dict) - set(do_not_wrap)
+
+    # there should be at least one column to wrap to continue
+    if not cols_to_wrap:
+        return width_total
 
     # split remaining space evenly in the rest of the cols
-    column_width = split_evenly(values_max_width, space_required(col_widths))
+    column_width = equal_column_width(n_cols=len(cols_to_wrap),
+                                      width_total=width_remaining)
 
-    # if any column requires less space than that, just give that max width
-    short = [k for k, v in values_max_width.items() if v <= column_width]
-    for k in short:
-        col_widths[k] = values_max_width.pop(k)
-
-    # NOTE: we could keep running the greedy algorithm to maximize space used
-    # split the rest of the space evenly - the problem is that this is going
-    # to increase runtime and highly favor short columns over large ones
-    if values_max_width:
-        column_width = split_evenly(values_max_width,
-                                    space_required(col_widths))
-    else:
-        column_width = 0
-
-    return list(col_widths), column_width
-
-
-def wrap_mapping(mapping, wrapper, exclude=None):
-    exclude = exclude or []
-
-    wrapped = {
-        k: v if k in exclude else wrap_value(v, wrapper)
-        for k, v in mapping.items()
+    # check if we have short columns. this means we can give more space
+    # to the others
+    short = {
+        col
+        for col in cols_to_wrap if width_required[col] <= column_width
     }
 
-    return wrapped
+    # if there is a (strict) subset columns that can display in a single line
+    # with less than column_width, call again. When short has all columns
+    # already, just return whatever number we have, there are no more columns
+    # to distribute space
+    if short and short < set(table_dict):
+        return _calculate_wrapping(table_dict,
+                                   do_not_wrap=do_not_wrap + list(short),
+                                   width_total=width_total,
+                                   width_required=width_required)
+    else:
+        return column_width
 
 
-def wrap_value(value, wrapper):
+def equal_column_width(n_cols, width_total):
+    """
+    Max column width if splitting width_total equally among n_cols. Note
+    that before computing column width, a quantity is substracted to account
+    for required for spacing between columns
+    """
+    if not n_cols:
+        raise ValueError('n_cols must be >0')
+
+    offset = (n_cols - 1) * _BETWEEN_COLUMN_WIDTH
+    width_remaining = width_total - offset
+    width_column = int(width_remaining / n_cols)
+
+    # degenerate case: not even a single space to display. Return width of
+    # 1 but show a warning, since the table will be illegible
+    if width_column < 1:
+        warn(f'Not enough space to display {n_cols} columns with '
+             f'a width of {width_total}. Using a column width of 1')
+        return 1
+
+    return width_column
+
+
+def apply_wrapping(table_dict, wrapper, exclude=None):
+    """
+    Wrap text using a wrapper, excluding columns in exclude
+    """
+    exclude = exclude or []
+
+    return dict(
+        apply_wrapping_to_column(header, values, exclude, wrapper)
+        for header, values in table_dict.items())
+
+
+def apply_wrapping_to_column(header, values, exclude, wrapper):
+    # TODO: test this
+    if header in exclude:
+        return header, values
+
+    # wrapping values is simple, apply the wrapper directly
+    values_wrapped = wrap_elementwise(values, wrapper)
+
+    # wrapping the header has a detail: if there isn't enough space
+    # for the 2 character offset that tabulate adds to the header, the
+    # column will end up taking more space than expected, we don't want that.
+    # wrap the header a bit more if necessary. Clip to 0 since this can be
+    # negative with large headers
+    offset = max(wrapper.width - len(header), 0)
+
+    if offset >= 2:
+        header_wrapped = wrap_elementwise(header, wrapper)
+    else:
+        _wrapper = TextWrapper(width=wrapper.width - (2 - offset),
+                               break_long_words=True,
+                               break_on_hyphens=True)
+        header_wrapped = wrap_elementwise(header, _wrapper)
+
+    return header_wrapped, values_wrapped
+
+
+def wrap_elementwise(value, wrapper):
+    """Apply wrap if str (elementwise if iterable of str)
+    """
     if isinstance(value, Iterable) and not isinstance(value, str):
         return [wrapper.fill(str(v)) for v in value]
     else:

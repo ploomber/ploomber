@@ -2,55 +2,101 @@ import string
 import shutil
 from textwrap import TextWrapper
 from collections import namedtuple
+from unittest.mock import Mock
 
 import pytest
 import pandas as pd
-from ploomber.Table import (Row, Table, BuildReport, rows2columns, wrap_value,
-                            wrap_mapping, auto_determine_column_width)
+from ploomber.Table import (Row, Table, BuildReport, rows2columns,
+                            wrap_elementwise, calculate_wrapping,
+                            width_required_for_column, apply_wrapping,
+                            equal_column_width, separator_width)
+
+from ploomber import Table as table
+
+
+@pytest.mark.parametrize('header_length, max_value_length, expected', [
+    [1, 1, 3],
+    [1, 2, 3],
+    [1, 3, 3],
+    [1, 4, 4],
+    [1, 5, 5],
+    [2, 1, 4],
+    [3, 1, 5],
+])
+def test_separator_width(header_length, max_value_length, expected):
+    assert separator_width(header_length, max_value_length) == expected
 
 
 @pytest.mark.parametrize(
-    'space, sizes, excluded, excluded_expected, width_expected', [
-        [100, [2, 3, 5], [], ['a', 'b', 'c'], 0],
-        [15, [2, 3, 10], ['a'], ['a', 'b'], 6],
+    'header, values, expected',
+    [['short', ['row', 'some large row'],
+      len('some large row')],
+     ['some long header', ['row', 'row'],
+      len('some long header') + 2], ['', [], 2],
+     ['some header', [], len('some header') + 2]],
+    ids=[
+        'uses-largest-row',
+        'accounts-for-header-spacing',
+        'no-header-no-rows',
+        'no-rows',
     ])
-def test_auto_determine_column_width(space, sizes, excluded, excluded_expected,
-                                     width_expected):
-    values = {k: [k * s] for k, s in zip(string.ascii_letters, sizes)}
+def test_width_required_for_column(header, values, expected):
+    assert width_required_for_column(header, values) == expected
 
-    excluded_out, width_out = auto_determine_column_width(
-        values, excluded, space)
 
-    assert sorted(excluded_out) == sorted(excluded_expected)
-    assert width_out == width_expected
+@pytest.mark.parametrize(
+    'space, sizes, excluded, width_expected',
+    [
+        # 100 = 32 * (3 columns) + 2 * 2 (between-column spacing)
+        [100, [2, 3, 5], [], 32],
+        # 15 = (2 + 3) (two short columns) + 5 + 2 * 2 (between-column spacing)
+        [15, [2, 3, 10], ['a', 'b'], 5],
+        # Same as above but let the algorithm figure out that it can exclude
+        # a and b to maximize space for the longer column
+        [15, [2, 3, 10], [], 5],
+        # when thre is nothing to wrap returns space available
+        [99, [2, 3, 10], ['a', 'b', 'c'], 99],
+    ])
+def test_calculate_wrapping(space, sizes, excluded, width_expected):
+    table_dict = {k: [k * s] for k, s in zip(string.ascii_letters, sizes)}
+    assert calculate_wrapping(table_dict, excluded, space) == width_expected
 
 
 @pytest.mark.parametrize('value, wrapped', [
     ['1234', '123\n4'],
     [['1234', '1234'], ['123\n4', '123\n4']],
 ])
-def test_wrap_value(value, wrapped):
+def test_wrap_elementwise(value, wrapped):
     wrapper = TextWrapper(width=3)
-    assert wrap_value(value, wrapper) == wrapped
+    assert wrap_elementwise(value, wrapper) == wrapped
 
 
-@pytest.mark.parametrize('mapping, wrapped, exclude', [
-    [{
-        'a': '1234'
-    }, {
-        'a': '123\n4'
-    }, None],
-    [{
-        'a': ['1234'],
-        'b': ['1234']
-    }, {
-        'a': ['123\n4'],
-        'b': ['1234']
-    }, ['b']],
-])
-def test_wrap_mapping(mapping, wrapped, exclude):
+@pytest.mark.parametrize(
+    'table_dict, wrapped, exclude',
+    [
+        [{
+            'a': '1234'
+        }, {
+            'a': '123\n4'
+        }, None],
+        [{
+            'a': ['1234'],
+            'b': ['1234']
+        }, {
+            'a': ['123\n4'],
+            'b': ['1234']
+        }, ['b']],
+        # check header wrapping accounts for the extra space needed
+        [{
+            'header': ['1234'],
+        }, {
+            'h\ne\na\nd\ne\nr': ['123\n4'],
+        }, None],
+    ],
+)
+def test_apply_wrapping(table_dict, wrapped, exclude):
     wrapper = TextWrapper(width=3)
-    assert wrap_mapping(mapping, wrapper, exclude) == wrapped
+    assert apply_wrapping(table_dict, wrapper, exclude) == wrapped
 
 
 def test_rows2columns():
@@ -62,11 +108,7 @@ def test_rows2columns():
 
 def test_row_str_and_repr():
     r = Row({'a': 1, 'b': 2})
-    # we need both because python 3.5 does not guarantee order
-    expected = {
-        '  a    b\n---  ---\n  1    2',
-        '  b    a\n---  ---\n  2    1',
-    }
+    expected = '  a    b\n---  ---\n  1    2'
 
     assert str(r) in expected
     assert repr(r) in expected
@@ -81,17 +123,17 @@ def test_row_str_setitem():
     assert r['a'] == 10
 
 
-def test_table_str_and_repr():
+def test_table_str_and_repr(monkeypatch):
+    mock = Mock()
+    mock.get_terminal_size().columns = 6
+    monkeypatch.setattr(table, 'shutil', mock)
+
     r = Row({'a': 1, 'b': 2})
     t = Table([r, r])
-    # we need both because python 3.5 does not guarantee order
-    expected = {
-        '  a    b\n---  ---\n  1    2\n  1    2',
-        '  b    a\n---  ---\n  2    1\n  2    1',
-    }
+    expected = '  a    b\n---  ---\n  1    2\n  1    2'
 
-    assert str(t) in expected
-    assert repr(t) in expected
+    assert str(t) == expected
+    assert repr(t) == expected
     # parse html representation with pandas
     html = pd.read_html(t._repr_html_())[0]
     assert html.to_dict(orient='list') == {'a': [1, 1], 'b': [2, 2]}
@@ -177,3 +219,27 @@ def test_convert_to_dict():
     r = Row(d)
     t = Table([r, r], column_width=None)
     assert t.to_dict() == {'a': [1, 1], 'b': [2, 2]}
+
+
+@pytest.mark.parametrize(
+    'n_cols, width_total, expected',
+    [
+        [1, 10, 10],
+        # 10 (total) = 2 (n_cols) * 4 (width) + 2 (between column spacing)
+        [2, 10, 4],
+        # degenerate case: there isn't enough space to display, return 1
+        [2, 1, 1],
+    ])
+def test_equal_column_width(n_cols, width_total, expected):
+    assert equal_column_width(n_cols, width_total) == expected
+
+
+@pytest.mark.parametrize('width_total', [1, 2, 3])
+def test_warns_if_not_enough_space(width_total):
+    with pytest.warns(UserWarning) as record:
+        equal_column_width(n_cols=2, width_total=width_total)
+
+    assert len(record) == 1
+    expected = ("Not enough space to display 2 columns with a width "
+                f"of {width_total}. Using a column width of 1")
+    assert record[0].message.args[0] == expected
