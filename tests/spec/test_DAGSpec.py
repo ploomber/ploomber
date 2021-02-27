@@ -1066,3 +1066,37 @@ def get():
     dag = spec.to_dag()
 
     assert isinstance(dag.clients[SQLScript], Mock)
+
+
+def test_validate_product_default_class_keys():
+    spec = {
+        'meta': {
+            'product_default_class': {
+                'unknown_task': 'File',
+            }
+        },
+        'tasks': [],
+    }
+
+    with pytest.raises(ValueError) as excinfo:
+        DAGSpec(spec)
+
+    expected = "'unknown_task' is not a valid Task class name"
+    assert str(excinfo.value) == expected
+
+
+def test_validate_product_default_class_values():
+    spec = {
+        'meta': {
+            'product_default_class': {
+                'SQLDump': 'unknown_product',
+            }
+        },
+        'tasks': [],
+    }
+
+    with pytest.raises(ValueError) as excinfo:
+        DAGSpec(spec)
+
+    expected = "'unknown_product' is not a valid Product class name"
+    assert str(excinfo.value) == expected

@@ -92,7 +92,6 @@ from glob import iglob
 from itertools import chain
 import pprint
 
-from ploomber import products, tasks
 from ploomber.dag.DAG import DAG
 from ploomber.placeholders.SourceLoader import SourceLoader
 from ploomber.util.util import (load_dotted_path, call_with_dictionary,
@@ -106,6 +105,8 @@ from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.env.EnvDict import EnvDict
 from ploomber.env.expand import expand_raw_dictionary, expand_raw_dictionaries
 from ploomber.tasks import NotebookRunner
+from ploomber.validators.string import (validate_product_class_name,
+                                        validate_task_class_name)
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4)
@@ -582,6 +583,11 @@ class Meta:
             for class_, prod in defaults.items():
                 if class_ not in meta['product_default_class']:
                     meta['product_default_class'][class_] = prod
+
+        # validate keys and values in product_default_class
+        for task_name, product_name in meta['product_default_class'].items():
+            validate_task_class_name(task_name)
+            validate_product_class_name(product_name)
 
         return meta
 

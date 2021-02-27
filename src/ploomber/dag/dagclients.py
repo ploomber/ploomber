@@ -3,30 +3,7 @@ from collections.abc import MutableMapping
 
 from ploomber import tasks
 from ploomber import products
-
-_NORMALIZED_TASKS = {name.upper(): name for name in tasks.__all__}
-_NORMALIZED_PRODUCTS = {name.upper(): name for name in products.__all__}
-_NORMALIZED = {**_NORMALIZED_TASKS, **_NORMALIZED_PRODUCTS}
-
-_KEY2CLASS_TASKS = {name: getattr(tasks, name) for name in tasks.__all__}
-_KEY2CLASS_PRODUCTS = {
-    name: getattr(products, name)
-    for name in products.__all__
-}
-_KEY2CLASS = {**_KEY2CLASS_TASKS, **_KEY2CLASS_PRODUCTS}
-
-
-def _normalize_input(name):
-    return name.upper().replace('-', '').replace('_', '').replace(' ', '')
-
-
-def _get_maybe(key_str):
-    key_str_normalized = _normalize_input(key_str)
-    return _NORMALIZED.get(key_str_normalized, None)
-
-
-def _key_str_to_class(key_str):
-    return _KEY2CLASS.get(key_str, None)
+from ploomber.validators.string import get_suggestion, str_to_class
 
 
 class DAGClients(MutableMapping):
@@ -43,9 +20,9 @@ class DAGClients(MutableMapping):
             return self._mapping[key]
         except KeyError as e:
             if isinstance(key, str):
-                maybe = _get_maybe(key)
+                maybe = get_suggestion(key)
 
-                if maybe and _key_str_to_class(maybe) in self:
+                if maybe and str_to_class(maybe) in self:
                     e.args = (str(e) + f'. Did you mean {maybe!r}?', )
 
             raise
@@ -53,10 +30,10 @@ class DAGClients(MutableMapping):
     def __setitem__(self, key, value):
         if isinstance(key, str):
             key_str = key
-            key = _key_str_to_class(key_str)
+            key = str_to_class(key_str)
 
             if key is None:
-                maybe = _get_maybe(key_str)
+                maybe = get_suggestion(key_str)
 
                 msg = (f'Could not set DAG-level client {value!r}. '
                        f'{key_str!r} is not a valid Task or '

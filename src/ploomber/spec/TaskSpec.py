@@ -11,6 +11,8 @@ from ploomber.util.util import (load_dotted_path, _make_iterable,
                                 locate_dotted_path, call_dotted_path,
                                 load_callable_dotted_path)
 from ploomber.util import validate
+from ploomber.validators.string import (validate_product_class_name,
+                                        validate_task_class_name)
 from ploomber.exceptions import DAGSpecInitializationError
 
 suffix2taskclass = {
@@ -81,7 +83,7 @@ def task_class_from_spec(task_spec, lazy_import, reload):
     class_name = task_spec.get('class', None)
 
     if class_name:
-        class_ = getattr(tasks, class_name)
+        class_ = validate_task_class_name(class_name)
     else:
         class_ = task_class_from_source_str(
             task_spec['source'],
@@ -307,9 +309,9 @@ def init_product(task_dict, meta, task_class, root_path):
     meta_product_default_class = get_value_at(meta, key)
 
     if 'product_class' in task_dict:
-        CLASS = getattr(products, task_dict.pop('product_class'))
+        CLASS = validate_product_class_name(task_dict.pop('product_class'))
     elif meta_product_default_class:
-        CLASS = getattr(products, meta_product_default_class)
+        CLASS = validate_product_class_name(meta_product_default_class)
     else:
         raise ValueError('Could not determine a product class for task: '
                          '"{}". Add an explicit value in the '

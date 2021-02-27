@@ -34,7 +34,6 @@ from copy import copy, deepcopy
 from pathlib import Path
 import warnings
 import logging
-import collections
 import tempfile
 from math import ceil
 from functools import partial

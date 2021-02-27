@@ -3,6 +3,8 @@ import pytest
 
 from ploomber.validators import (Assert, data_frame_validator, validate_schema,
                                  validate_values)
+from ploomber.validators import string
+from ploomber.tasks import SQLDump, SQLScript
 
 
 def test_Assert():
@@ -137,3 +139,51 @@ def test_validate_values_invalid():
         'Data frame validation failed. 1 error found:\n(validate_values) '
         'Expected range of "z" to be [0, 1], got [0, 2]')
     assert expected == str(excinfo.value)
+
+
+# Validating task and product strings
+
+
+def test_error_on_invalid_task_class_name():
+
+    with pytest.raises(ValueError) as excinfo:
+        string.validate_task_class_name('invalid_class')
+
+    assert str(
+        excinfo.value) == "'invalid_class' is not a valid Task class name"
+
+
+@pytest.mark.parametrize('name, expected', [
+    ['sqlscript', 'SQLScript'],
+    ['SQLSCRIPT', 'SQLScript'],
+    ['sql_script', 'SQLScript'],
+    ['sql-script', 'SQLScript'],
+    ['sql script', 'SQLScript'],
+    ['sqldump', 'SQLDump'],
+])
+def test_error_on_invalid_task_class_name_with_typo(name, expected):
+
+    with pytest.raises(ValueError) as excinfo:
+        string.validate_task_class_name(name)
+
+    expected = (f"{name!r} is not a valid Task class name. "
+                f"Did you mean {expected!r}?")
+    assert str(excinfo.value) == expected
+
+
+@pytest.mark.parametrize('name, expected', [
+    ['file', 'File'],
+    ['FILE', 'File'],
+    ['fi_le', 'File'],
+    ['fi-le', 'File'],
+    ['fi le', 'File'],
+    ['sqlrelation', 'SQLRelation'],
+])
+def test_error_on_invalid_product_class_name_with_typo(name, expected):
+
+    with pytest.raises(ValueError) as excinfo:
+        string.validate_product_class_name(name)
+
+    expected = (f"{name!r} is not a valid Product class name. "
+                f"Did you mean {expected!r}?")
+    assert str(excinfo.value) == expected

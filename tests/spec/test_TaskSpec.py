@@ -334,3 +334,37 @@ some_non_function = 1
                 "callable object (i.e., some kind of function). Got "
                 "1 (an object of type: int)")
     assert str(excinfo.value) == expected
+
+
+def test_error_on_invalid_class(backup_spec_with_functions_flat,
+                                add_current_to_sys_path):
+    meta = Meta.default_meta({'extract_product': False})
+
+    spec = {
+        'source': 'my_tasks_flat.raw.function',
+        'product': 'some_file.txt',
+        'class': 'unknown_class'
+    }
+
+    with pytest.raises(ValueError) as excinfo:
+        TaskSpec(spec, meta=meta, project_root='.').to_task(dag=DAG())
+
+    expected = "'unknown_class' is not a valid Task class name"
+    assert str(excinfo.value) == expected
+
+
+def test_error_on_invalid_product_class(backup_spec_with_functions_flat,
+                                        add_current_to_sys_path):
+    meta = Meta.default_meta({'extract_product': False})
+
+    spec = {
+        'source': 'my_tasks_flat.raw.function',
+        'product': 'some_file.txt',
+        'product_class': 'unknown_class'
+    }
+
+    with pytest.raises(ValueError) as excinfo:
+        TaskSpec(spec, meta=meta, project_root='.').to_task(dag=DAG())
+
+    expected = "'unknown_class' is not a valid Product class name"
+    assert str(excinfo.value) == expected
