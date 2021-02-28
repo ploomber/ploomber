@@ -673,7 +673,7 @@ def test_extract_variables_from_notebooks(tmp_nbs):
     assert products == expected_products
 
 
-def test_source_loader(monkeypatch, tmp_directory):
+def test_source_loader(monkeypatch, tmp_directory, no_sys_modules_cache):
     monkeypatch.syspath_prepend(tmp_directory)
 
     spec = DAGSpec({

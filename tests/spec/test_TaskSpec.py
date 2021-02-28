@@ -138,7 +138,7 @@ def test_task_class_from_source_str_error():
         ],
     ])
 def test_initialization(spec, expected, tmp_sample_tasks,
-                        add_current_to_sys_path):
+                        add_current_to_sys_path, no_sys_modules_cache):
     meta = Meta.default_meta({
         'extract_product': False,
         'extract_upstream': True
