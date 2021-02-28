@@ -136,15 +136,12 @@ Notes
     # as name
     name: {task name, optional}
 
-    # Dotted path to a function that has no parameters and returns the
-    # client to use. By default the class-level client at config.clients is
-    # used, this value overrides it. Only required for tasks that require
-    # clients
+    # Dotted path to a function that returns the task client to use.
+    # See section below for details.
     client: {dotted.path.to.function, optional}
 
-    # Similar to "client" but applies to the product, most of the time, this will
-    # be the same as "client". See the FAQ for more information (link at the
-    # bottom)
+    # Dotted path to a function that returns the product client to use.
+    # See section below for details.
     product_client: {dotted.path.to.function, optional}
 
     # Dependencies for this task. Only required if meta.extract_upstream is
@@ -163,4 +160,42 @@ Notes
     # NOTE: All remaining values are passed to the task constructor as keyword arguments
 
 
-Click here to go to :doc:`../user-guide/faq_index`.
+
+``tasks[*].client``
+*******************
+
+Task client to use. By default the class-level client at config.clients is
+used, this value overrides it. Required for some tasks (e.g., ``SQLScript``),
+optional for others (e.g., ``File``).
+
+Can be a string (call without arguments):
+
+.. code-block:: yaml
+    :class: text-editor
+    :name: task-client-string-yaml
+
+    client: clients.get_db_client
+
+Or a dictionary:
+
+
+.. code-block:: yaml
+    :class: text-editor
+    :name: task-client-dict-yaml
+
+    client:
+        dotted_path: clients.get_db_client
+        kwarg_1: value_1
+        ...
+        kwarg_k: value_k
+
+
+``tasks[*].product_client``
+***************************
+
+Product client to use (where to save product's metadata to support
+incremental builds).
+
+Can be a string or a dictionary (same as ``tasks[*].client``).
+
+More information on product clients: :doc:`../user-guide/faq_index`.

@@ -8,8 +8,7 @@ from collections.abc import MutableMapping, Mapping
 
 from ploomber import tasks, products
 from ploomber.util.util import (load_dotted_path, _make_iterable,
-                                locate_dotted_path, call_dotted_path,
-                                load_callable_dotted_path)
+                                locate_dotted_path, load_callable_dotted_path)
 from ploomber.util import validate, dotted_path
 from ploomber import validators
 
