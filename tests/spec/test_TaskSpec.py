@@ -90,6 +90,52 @@ def test_task_class_from_source_str_error():
             },
             SQLDump,
         ],
+        # using a spec
+        [
+            {
+                'source': 'sample-select.sql',
+                'product': 'file.parquet',
+                'client': {
+                    'dotted_path': 'db.get_client'
+                }
+            },
+            SQLDump,
+        ],
+        # using a spec with keyword args
+        [
+            {
+                'source': 'sample-select.sql',
+                'product': 'file.parquet',
+                'client': {
+                    'dotted_path': 'db.get_client',
+                    'a': 1
+                }
+            },
+            SQLDump,
+        ],
+        # product_client str
+        [
+            {
+                'source': 'sample-select.sql',
+                'product': 'file.parquet',
+                'client': 'db.get_client',
+                'product_client': 'db.get_client'
+            },
+            SQLDump,
+        ],
+        # product_client dict
+        [
+            {
+                'source': 'sample-select.sql',
+                'product': 'file.parquet',
+                'client': 'db.get_client',
+                'product_client': {
+                    'dotted_path': 'db.get_client',
+                    'a': 1
+                }
+            },
+            SQLDump,
+        ],
     ])
 def test_initialization(spec, expected, tmp_sample_tasks,
                         add_current_to_sys_path):

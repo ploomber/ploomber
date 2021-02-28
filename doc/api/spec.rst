@@ -72,7 +72,10 @@ contains several ``pipeline.yaml`` examples.
         {task or product class name}: {dotted.path.to.function}
         # Example:
         SQLScript: db.get_client
-        PostgresRelation: db.get_client
+        # If you want to pass parameters...
+        PostgresRelation:
+            dotted_path: db.get_client
+            some_keyword_arg: value
 
     # DAG-level serializer/unserializer for Python functions
     serializer: dotted.path.to.serializer

@@ -10,7 +10,7 @@ from ploomber import tasks, products
 from ploomber.util.util import (load_dotted_path, _make_iterable,
                                 locate_dotted_path, call_dotted_path,
                                 load_callable_dotted_path)
-from ploomber.util import validate
+from ploomber.util import validate, dotted_path
 from ploomber import validators
 
 from ploomber.exceptions import DAGSpecInitializationError
@@ -325,8 +325,9 @@ def init_product(task_dict, meta, task_class, root_path):
                          'key to the applicable task class'.format(task_dict))
 
     if 'product_client' in task_dict:
-        dotted_path = task_dict.pop('product_client')
-        kwargs = {'client': call_dotted_path(dotted_path)}
+        kwargs = {
+            'client': dotted_path.call_spec(task_dict.pop('product_client'))
+        }
     else:
         kwargs = {}
 
@@ -396,8 +397,7 @@ def _resolve_if_file(product_raw, relative_to, class_):
 
 def _init_client(task_dict):
     if 'client' in task_dict:
-        dotted_path = task_dict.pop('client')
-        task_dict['client'] = call_dotted_path(dotted_path)
+        task_dict['client'] = dotted_path.call_spec(task_dict.pop('client'))
 
 
 def get_value_at(d, dotted_path):

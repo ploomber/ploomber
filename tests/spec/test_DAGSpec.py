@@ -1038,12 +1038,26 @@ def get():
             "Expected a value but got None") in str(excinfo.value)
 
 
+@pytest.mark.parametrize(
+    'dotted_path_spec',
+    [
+        'test_sets_clients.get',
+        {
+            'dotted_path': 'test_sets_clients.get'
+        },
+        {
+            'dotted_path': 'test_sets_clients.get',
+            'a': 1
+        },
+    ],
+    ids=['str', 'dict', 'dict-with_kwargs'],
+)
 def test_sets_clients(tmp_sample_tasks, add_current_to_sys_path,
-                      no_sys_modules_cache):
+                      no_sys_modules_cache, dotted_path_spec):
     Path('test_sets_clients.py').write_text("""
 from unittest.mock import Mock
 
-def get():
+def get(a=None):
     return Mock()
 """)
 
@@ -1059,7 +1073,7 @@ def get():
             },
         ],
         'clients': {
-            'SQLScript': 'test_sets_clients.get'
+            'SQLScript': dotted_path_spec
         }
     })
 

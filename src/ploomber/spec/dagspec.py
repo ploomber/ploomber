@@ -96,6 +96,7 @@ from ploomber.dag.DAG import DAG
 from ploomber.placeholders.SourceLoader import SourceLoader
 from ploomber.util.util import (load_dotted_path, call_with_dictionary,
                                 add_to_sys_path, call_dotted_path)
+from ploomber.util import dotted_path
 from ploomber.util.default import entry_point
 from ploomber.spec.TaskSpec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
@@ -365,8 +366,9 @@ class DAGSpec(MutableMapping):
         clients = self.get('clients')
 
         if clients:
-            for class_name, dotted_path in clients.items():
-                dag.clients[class_name] = call_dotted_path(dotted_path)
+            for class_name, dotted_path_spec in clients.items():
+                dag.clients[class_name] = dotted_path.call_spec(
+                    dotted_path_spec)
 
         # FIXME: this violates lazy_import, we must change DAG's implementation
         # to accept strings as attribute and load them until they are called
