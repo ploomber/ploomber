@@ -297,7 +297,14 @@ def call_dotted_path(dotted_path, raise_=True, reload=False, kwargs=None):
                                           reload=reload)
 
     kwargs = kwargs or dict()
-    out = callable_(**kwargs)
+
+    try:
+        out = callable_(**kwargs)
+    except Exception as e:
+        origin = locate_dotted_path(dotted_path).origin
+        msg = str(e) + f' (Loaded from: {origin})'
+        e.args = (msg, )
+        raise
 
     if out is None:
         raise TypeError(f'Error calling dotted path {dotted_path!r}. '

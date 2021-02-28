@@ -63,3 +63,10 @@ class DAGSpecInitializationError(Exception):
     Raised when failing to initialize a DAGSpec object
     """
     pass
+
+
+class SpecValidationError(Exception):
+    """
+    Raised when failing to validate a spec
+    """
+    pass
