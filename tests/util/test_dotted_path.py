@@ -47,7 +47,7 @@ def test_call_spec_without_dotted_path_key():
     with pytest.raises(SpecValidationError) as excinfo:
         dotted_path.call_spec(spec)
 
-    assert excinfo.value.args[1] == [{
+    assert excinfo.value.errors == [{
         'loc': ('dotted_path', ),
         'msg': 'field required',
         'type': 'value_error.missing'
@@ -81,7 +81,6 @@ def function():
     with pytest.raises(TypeError) as excinfo:
         call_dotted_path('my_module.function', kwargs=dict(a=1))
 
-    path = str(Path(tmp_directory, 'my_module.py').resolve())
     expected = ("function() got an unexpected keyword argument 'a' "
-                f"(Loaded from: {path})")
-    assert str(excinfo.value) == expected
+                "(Loaded from:")
+    assert expected in str(excinfo.value)

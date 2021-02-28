@@ -29,23 +29,9 @@ class BaseModel(pydantic.BaseModel):
             ex = None
 
         if ex:
-            errors = ex.errors()
-            no_errors = len(errors)
-
-            msg = (
-                f'{no_errors} error{"" if no_errors == 1 else "s"} found '
-                f'when validating {ex.model.__name__} with values {kwargs}\n\n'
-                f'{display_errors(errors)}')
-
-            raise SpecValidationError(msg, errors)
-
-
-def display_errors(errors):
-    return '\n'.join(f'{_display_error_loc(e)} ({e["msg"]})' for e in errors)
-
-
-def _display_error_loc(error):
-    return ' -> '.join(str(e) for e in error['loc'])
+            raise SpecValidationError(errors=ex.errors(),
+                                      model=type(self),
+                                      kwargs=kwargs)
 
 
 class DottedPathSpec(BaseModel):
