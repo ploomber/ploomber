@@ -16,40 +16,47 @@ class DAGClients(MutableMapping):
         self._mapping = mapping or dict()
 
     def __getitem__(self, key):
-        try:
-            return self._mapping[key]
-        except KeyError as e:
-            if isinstance(key, str):
-                maybe = get_suggestion(key)
+        if isinstance(key, str):
+            key_obj = str_to_class(key)
+        else:
+            key_obj = key
 
-                if maybe and str_to_class(maybe) in self:
-                    e.args = (str(e) + f'. Did you mean {maybe!r}?', )
+        if key_obj is None:
+            error = repr(key)
 
-            raise
+            suggestion = get_suggestion(key)
+
+            if suggestion and str_to_class(suggestion) in self:
+                error += f'. Did you mean {suggestion!r}?'
+
+            raise KeyError(error)
+
+        return self._mapping[key_obj]
 
     def __setitem__(self, key, value):
         if isinstance(key, str):
-            key_str = key
-            key = str_to_class(key_str)
+            key_obj = str_to_class(key)
 
-            if key is None:
-                maybe = get_suggestion(key_str)
+            if key_obj is None:
+                maybe = get_suggestion(key)
 
                 msg = (f'Could not set DAG-level client {value!r}. '
-                       f'{key_str!r} is not a valid Task or '
+                       f'{key!r} is not a valid Task or '
                        'Product class name')
 
                 if maybe:
                     msg += f'. Did you mean {maybe!r}?'
 
                 raise ValueError(msg)
+        else:
+            key_obj = key
 
-        if not isclass(key) or not issubclass(
-                key, (tasks.Task.Task, products.Product)):
+        if not isclass(key_obj) or not issubclass(
+                key_obj, (tasks.Task.Task, products.Product)):
             raise ValueError('DAG client keys must be Tasks '
-                             f'or Products, value {key!r} is not')
+                             f'or Products, value {key_obj!r} is not')
 
-        self._mapping[key] = value
+        self._mapping[key_obj] = value
 
     def __delitem__(self, key):
         del self._mapping[key]

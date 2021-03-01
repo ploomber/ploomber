@@ -22,7 +22,7 @@ def test_iter():
     assert list(DAGClients()) == []
 
 
-def test_setitem_with_str():
+def test_setitem_and_getitem_with_str():
     clients = DAGClients()
 
     mock = Mock()
@@ -30,6 +30,7 @@ def test_setitem_with_str():
     clients['SQLScript'] = mock
 
     assert clients[SQLScript] is mock
+    assert clients['SQLScript'] is mock
 
 
 def test_error_setitem_invalid_str():
