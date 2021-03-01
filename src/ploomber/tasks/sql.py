@@ -63,6 +63,13 @@ class SQLScript(Task):
     def run(self):
         return self.client.execute(str(self.source))
 
+    def load(self, limit=10):
+        """Load this task's product in a pandas.DataFrame
+        """
+        import pandas as pd
+        return pd.read_sql(f'SELECT * FROM {self.product} LIMIT {int(limit)}',
+                           self.client.engine)
+
     @staticmethod
     def _init_source(source, kwargs):
         return SQLScriptSource(source, **kwargs)
