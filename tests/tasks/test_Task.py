@@ -13,7 +13,8 @@ def test_interface(concrete_class):
     allowed_mapping = {
         'Input': {'_true', '_null_update_metadata'},
         'Link': {'_false'},
-        'PythonCallable': {'load', '_interactive_developer'}
+        'PythonCallable': {'load', '_interactive_developer'},
+        'SQLScript': {'load'},
     }
 
     allowed = allowed_mapping.get(concrete_class.__name__, {})
