@@ -68,7 +68,7 @@ class SQLScript(Task):
         """
         import pandas as pd
         return pd.read_sql(f'SELECT * FROM {self.product} LIMIT {int(limit)}',
-                           self.client.engine)
+                           self.client)
 
     @staticmethod
     def _init_source(source, kwargs):

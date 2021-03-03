@@ -3,14 +3,51 @@ from pathlib import Path
 from unittest.mock import Mock
 
 from ploomber import DAG
-from ploomber.tasks import SQLDump, SQLTransfer
+from ploomber.tasks import SQLDump, SQLTransfer, SQLScript
 from ploomber.products import File, SQLiteRelation
-from ploomber.clients import SQLAlchemyClient
+from ploomber.clients import SQLAlchemyClient, DBAPIClient
 from ploomber import io
 
 import pytest
 import pandas as pd
 import numpy as np
+
+
+@pytest.fixture
+def sample_data():
+    conn = connect('database.db')
+    df = pd.DataFrame({'a': np.arange(0, 100), 'b': np.arange(100, 200)})
+    df.to_sql('numbers', conn, index=False)
+    yield 'database.db'
+    conn.close()
+
+
+@pytest.mark.parametrize('client', [
+    SQLAlchemyClient('sqlite:///database.db'),
+    DBAPIClient(connect, dict(database='database.db'))
+])
+def test_sqlscript_load(tmp_directory, sample_data, client):
+
+    dag = DAG()
+
+    dag.clients[SQLScript] = client
+    dag.clients[SQLiteRelation] = client
+
+    SQLScript('CREATE TABLE {{product}} AS SELECT * FROM numbers',
+              SQLiteRelation((None, 'another', 'table')),
+              dag=dag,
+              name='task')
+
+    dag.build(close_clients=False)
+
+    df = dag['task'].load()
+
+    dag.close_clients()
+
+    assert df.to_dict(orient='list') == {
+        'a': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        'b': [100, 101, 102, 103, 104, 105, 106, 107, 108, 109]
+    }
 
 
 def test_sqldump_does_not_required_product_tag(tmp_directory):
@@ -166,10 +203,6 @@ def test_dump_io_handler(product_arg, expected_io_handler):
 
 
 def test_can_transfer_sqlite(tmp_directory):
-    """
-    >>> import tempfile
-    >>> tmp_directory = tempfile.mkdtemp()
-    """
     tmp = Path(tmp_directory)
 
     # create clientections to 2 dbs
