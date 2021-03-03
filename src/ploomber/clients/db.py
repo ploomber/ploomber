@@ -49,6 +49,12 @@ class DBAPIClient(Client):
         execute statement. Use this optiion to split commands by a given
         character (e.g. ';') and send them one at a time. Defaults to
         None (no splitting)
+
+    Examples
+    --------
+    >>> from ploomber.clients import DBAPIClient
+    >>> import sqlite3
+    >>> client = DBAPIClient(sqlite3.connect, dict(database='my.db'))
     """
     def __init__(self, connect_fn, connect_kwargs, split_source=None):
         super().__init__()
@@ -68,6 +74,9 @@ class DBAPIClient(Client):
             self._connection = self.connect_fn(**self.connect_kwargs)
 
         return self._connection
+
+    def cursor(self):
+        return self.connection.cursor()
 
     def execute(self, code):
         """Execute code with the existing connection
@@ -153,6 +162,9 @@ class SQLAlchemyClient(Client):
             self._connection = self.engine.raw_connection()
 
         return self._connection
+
+    def cursor(self):
+        return self.connection.cursor()
 
     def execute(self, code):
         cur = self.connection.cursor()
