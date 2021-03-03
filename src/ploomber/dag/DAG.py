@@ -354,7 +354,11 @@ class DAG(AbstractDAG):
 
         self._exec_status = DAGStatus.WaitingExecution
 
-    def build(self, force=False, show_progress=True, debug=False):
+    def build(self,
+              force=False,
+              show_progress=True,
+              debug=False,
+              close_clients=True):
         """
         Runs the DAG in order so that all upstream dependencies are run for
         every task
@@ -372,7 +376,11 @@ class DAG(AbstractDAG):
             Drop a debugging session if building raises an exception. Note that
             this modifies the executor, temporarily setting it to Serial
             with subprocess off and catching exceptions/warnings off. Restores
-            the original executor at the end.
+            the original executor at the end
+
+        close_clients : bool, default=True
+            Close all clients (dag-level, task-level and product-level) upon
+            successful build
 
         Notes
         -----
@@ -420,7 +428,8 @@ class DAG(AbstractDAG):
                 else:
                     report = callable_()
             finally:
-                self._close_clients()
+                if close_clients:
+                    self.close_clients()
 
         if debug:
             self.executor = executor_original
@@ -518,7 +527,7 @@ class DAG(AbstractDAG):
                 # on_failure hook executed, raise original exception
                 raise build_exception
 
-    def _close_clients(self):
+    def close_clients(self):
         """Close all clients (dag-level, task-level and product-level)
         """
         for client in self.clients.values():
