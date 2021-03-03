@@ -61,10 +61,14 @@ def cast_if_possible(value):
     value to still have the appropriate type
     """
     if isinstance(value, str):
-        if value.lower() == 'false':
+        value_lower = value.lower()
+
+        if value_lower == 'false':
             return False
-        elif value.lower() == 'true':
+        elif value_lower == 'true':
             return True
+        elif value_lower in {'none', 'null'}:
+            return None
 
         try:
             return int(value)
