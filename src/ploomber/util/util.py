@@ -287,7 +287,7 @@ def load_callable_dotted_path(dotted_path, raise_=True, reload=False):
     return loaded_object
 
 
-def call_dotted_path(dotted_path, raise_=True, reload=False):
+def call_dotted_path(dotted_path, raise_=True, reload=False, kwargs=None):
     """
     Load dotted path (using load_callable_dotted_path), and call it without
     arguments, raises an exception if returns None
@@ -296,7 +296,15 @@ def call_dotted_path(dotted_path, raise_=True, reload=False):
                                           raise_=raise_,
                                           reload=reload)
 
-    out = callable_()
+    kwargs = kwargs or dict()
+
+    try:
+        out = callable_(**kwargs)
+    except Exception as e:
+        origin = locate_dotted_path(dotted_path).origin
+        msg = str(e) + f' (Loaded from: {origin})'
+        e.args = (msg, )
+        raise
 
     if out is None:
         raise TypeError(f'Error calling dotted path {dotted_path!r}. '

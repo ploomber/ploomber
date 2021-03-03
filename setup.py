@@ -165,6 +165,7 @@ setup(
         # for ploomber interact and {PythonCallable, NotebookRunner}.debug()
         'ipython',
         'ipdb',
+        'pydantic',
     ] + NB,
     extras_require={
         'all': OPTIONAL,

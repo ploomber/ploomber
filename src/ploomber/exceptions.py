@@ -63,3 +63,31 @@ class DAGSpecInitializationError(Exception):
     Raised when failing to initialize a DAGSpec object
     """
     pass
+
+
+class SpecValidationError(Exception):
+    """
+    Raised when failing to validate a spec
+    """
+    def __init__(self, errors, model, kwargs):
+        self.errors = errors
+        self.model = model
+        self.kwargs = kwargs
+
+    def __str__(self):
+        n_errors = len(self.errors)
+
+        msg = (f'{n_errors} error{"" if n_errors == 1 else "s"} found '
+               f'when validating {self.model.__name__} with values '
+               f'{self.kwargs}\n\n'
+               f'{display_errors(self.errors)}')
+
+        return msg
+
+
+def display_errors(errors):
+    return '\n'.join(f'{_display_error_loc(e)} ({e["msg"]})' for e in errors)
+
+
+def _display_error_loc(error):
+    return ' -> '.join(str(e) for e in error['loc'])

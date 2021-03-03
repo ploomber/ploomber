@@ -207,7 +207,8 @@ def test_server_extension_is_initialized():
 
 
 def test_ignores_tasks_whose_source_is_not_a_file(monkeypatch, capsys,
-                                                  tmp_directory):
+                                                  tmp_directory,
+                                                  no_sys_modules_cache):
     """
     Context: jupyter extension only applies to tasks whose source is a script,
     otherwise it will break, trying to get the source location. This test

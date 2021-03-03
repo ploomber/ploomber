@@ -6,13 +6,14 @@ task client handles the communication to a system where the source code will
 be executed. On the other hand, product's client only handles the product's
 metadata.
 
-To enable incremental runs. Ploomber has to store the source code that generate
-any given product. To make this process simpler, metadata is stored in the
-same system. But saving metadata requires a system specific implementation.
+To enable incremental runs. Ploomber has to store the source code that generated
+any given product. To make this simpler, metadata may be stored in the
+same system, but doing so requires a system-specific implementation.
 Currently, only SQLite and PostgreSQL are supported via
 :py:mod:`ploomber.products.SQLiteRelation` and
-:py:mod:`ploomber.products.PostgresRelation` respectively. For this two cases
-task client and product client communicate to the same system.
+:py:mod:`ploomber.products.PostgresRelation` respectively. For these two cases
+task client and product client communicate to the same system (the db), hence
+they can be initialized with the same client.
 
 For any other database, we provide two alternatives, in both cases, the
 task's client is different from the product's client. The first alternative
