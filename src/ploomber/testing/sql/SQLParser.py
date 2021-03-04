@@ -120,6 +120,10 @@ class SQLParser:
     If there is more than one statement, the first CREATE [TABLE|VIEW] is used.
     Get individual SELECT statements using parser['step_a']
 
+    Attributes
+    ----------
+    mapping : dict
+        Contains the extracted subqueries
     """
     def __init__(self, sql):
         if sql is not None:
@@ -156,7 +160,12 @@ class SQLParser:
             self.mapping = dict()
 
     def __getitem__(self, key):
-        return self.mapping[key]
+        """Same as .until(key)
+        """
+        return self.until(key)
+
+    def _ipython_key_completions_(self):
+        return list(self)
 
     def __setitem__(self, key, value):
         self.mapping[key] = value

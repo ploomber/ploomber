@@ -131,17 +131,17 @@ def test_sql_parser(trailing, parenthesis):
 
     m = testing.sql.SQLParser(sql)
 
+    assert m._ipython_key_completions_() == ['a', 'b', '_select']
     assert list(m) == ['a', 'b', '_select']
-    assert m['a'] == 'select * from aa'
-    assert m['b'] == 'select * from bb'
-    assert m['_select'] == 'select * from a join b on col\n'
+    assert m.mapping['a'] == 'select * from aa'
+    assert m.mapping['b'] == 'select * from bb'
+    assert m.mapping['_select'] == 'select * from a join b on col\n'
 
-    code_a = m.until('a')
-    code_b = m.until('b')
-
-    assert code_a == ('\nWITH a AS (\n    select * from aa\n)\n'
-                      'SELECT * FROM a LIMIT 20')
-    assert code_b == (
+    expected = ('\nWITH a AS (\n    select * from aa\n)\n'
+                'SELECT * FROM a LIMIT 20')
+    assert m.until('a') == expected
+    assert m['a'] == expected
+    assert m.until('b') == (
         '\nWITH a AS (\n    select * from aa\n), b '
         'AS (\n    select * from bb\n)\nSELECT * FROM b LIMIT 20')
 
@@ -164,9 +164,9 @@ def test_sql_parser_without_create_statement():
     m = testing.sql.SQLParser(sql_t_no_create_statement)
 
     assert list(m) == ['a', 'b', '_select']
-    assert m['a'] == 'select * from aa'
-    assert m['b'] == 'select * from bb'
-    assert m['_select'] == 'select * from a join b on col\n'
+    assert m.mapping['a'] == 'select * from aa'
+    assert m.mapping['b'] == 'select * from bb'
+    assert m.mapping['_select'] == 'select * from a join b on col\n'
 
 
 sql_t_no_create_statement_one_subquery = """
@@ -181,8 +181,8 @@ def test_sql_parser_without_create_statement_one_subquery():
     m = testing.sql.SQLParser(sql_t_no_create_statement_one_subquery)
 
     assert list(m) == ['a', '_select']
-    assert m['a'] == 'select * from aa'
-    assert m['_select'] == 'SELECT * FROM a LIMIT 20\n'
+    assert m.mapping['a'] == 'select * from aa'
+    assert m.mapping['_select'] == 'SELECT * FROM a LIMIT 20\n'
 
 
 sql_one_def_last_select_w_qualifiers = """
@@ -231,8 +231,8 @@ def test_sql_parser_complex_select(sql, a, _select):
     m = testing.sql.SQLParser(sql)
 
     assert list(m) == ['a', '_select']
-    assert m['a'] == a
-    assert m['_select'] == _select
+    assert m.mapping['a'] == a
+    assert m.mapping['_select'] == _select
 
 
 @pytest.mark.parametrize('trailing', [False, True])
@@ -256,7 +256,7 @@ def test_sql_parser_custom_select(trailing):
 def test_sql_parser_add_clause(trailing):
     sql = sql_t.render(trailing=trailing)
     m = testing.sql.SQLParser(sql)
-    m['c'] = 'select * from cc'
+    m.mapping['c'] = 'select * from cc'
 
     assert m.until(
         'c', limit=None) == ('\nWITH a AS (\n    select * from aa\n), b AS '
