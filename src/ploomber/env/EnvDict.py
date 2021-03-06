@@ -46,8 +46,13 @@ class EnvDict(Mapping):
         # because it needs to create one and then replace cli args, then
         # passes this modified object to DAGSpec
         if isinstance(source, EnvDict):
-            for attr in ('_path_to_env', '_preprocessed', '_expander',
-                         '_data'):
+            for attr in (
+                    '_path_to_env',
+                    '_preprocessed',
+                    '_expander',
+                    '_data',
+                    '_repr',
+            ):
                 original = getattr(source, attr)
                 setattr(self, attr, deepcopy(original))
         else:

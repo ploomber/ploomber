@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 
 from ploomber.cli.parsers import CustomParser, _custom_command
+from ploomber.env.EnvDict import EnvDict
 from ploomber.cli import parsers
 
 
@@ -81,8 +82,8 @@ def test_dagspec_initialization_from_yaml(tmp_nbs_nested, monkeypatch):
 def test_dagspec_initialization_from_yaml_and_env(tmp_nbs, monkeypatch):
     """
     DAGSpec can be initialized with a path to a spec or a dictionary, but
-    they have a slightly different behavior. This checks that we initialize
-    with the path
+    they have a slightly different behavior. This ensure the cli passes
+    the path, instead of a dictionary
     """
     mock_dagspec = Mock(wraps=parsers.DAGSpec)
     mock_default_path_to_env = Mock(wraps=parsers.default.path_to_env)
@@ -102,6 +103,6 @@ def test_dagspec_initialization_from_yaml_and_env(tmp_nbs, monkeypatch):
     dag, args = _custom_command(parser)
 
     mock_dagspec.assert_called_once_with('pipeline.yaml',
-                                         env={'sample': False})
+                                         env=EnvDict({'sample': False}))
     mock_default_path_to_env.assert_called_once_with(Path('.'))
     mock_envdict.assert_called_once_with(str(Path('env.yaml').resolve()))

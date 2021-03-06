@@ -486,8 +486,15 @@ def test_error_when_flatten_key_doesnt_exist():
 def test_env_dict_initialized_with_env_dict(data, keys):
     env = EnvDict(EnvDict(data))
 
+    # ensure we initialized the object correctly
+    assert repr(env)
+    assert str(env)
+
+    # check we can access nested keys
     for key in keys:
         env = env[key]
+
+    assert env == 1
 
 
 def test_env_dict_initialized_with_replaced_env_dict():

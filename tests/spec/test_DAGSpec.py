@@ -207,7 +207,7 @@ def test_notebook_spec_nested(tmp_nbs_nested):
 def test_loads_env_if_exists(tmp_nbs):
     Path('env.yaml').write_text("{'a': 1}")
     spec = DAGSpec('pipeline.yaml')
-    assert spec.env == {'a': 1}
+    assert spec.env.a == 1
 
 
 def test_prioritizes_local_env_over_sibling_env(tmp_nbs):
@@ -221,7 +221,7 @@ def test_prioritizes_local_env_over_sibling_env(tmp_nbs):
     Path('env.yaml').write_text("{'a': 100}")
     Path('subdir', 'env.yaml').write_text("{'a': 1}")
     spec = DAGSpec('subdir/pipeline.yaml')
-    assert spec.env == {'a': 100}
+    assert spec.env.a == 100
 
 
 def test_loads_default_env_if_loading_from_dict(tmp_nbs):
