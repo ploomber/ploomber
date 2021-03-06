@@ -12,11 +12,30 @@ class GCloudStorageClient:
     @requires(['google.cloud.storage'],
               name='GCloudStorageClient',
               pip_names=['google-cloud-storage'])
-    def __init__(self, bucket_name, parent):
-        storage_client = storage.Client()
+    def __init__(self,
+                 bucket_name,
+                 parent,
+                 json_credentials_path=None,
+                 **kwargs):
+        self._from_json = json_credentials_path is not None
+
+        if not self._from_json:
+            self._client_kwargs = kwargs
+        else:
+            self._client_kwargs = {
+                'json_credentials_path': json_credentials_path,
+                **kwargs
+            }
+
+        storage_client = self._init_client()
         self.parent = parent
         self.bucket_name = bucket_name
         self.bucket = storage_client.bucket(bucket_name)
+
+    def _init_client(self):
+        constructor = (storage.Client.from_service_account_json
+                       if self._from_json else storage.Client)
+        return constructor(**self._client_kwargs)
 
     def download(self, local):
         remote = self._remote_path(local)
@@ -52,5 +71,5 @@ class GCloudStorageClient:
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        storage_client = storage.Client()
+        storage_client = self._init_client()
         self.bucket = storage_client.bucket(self.bucket_name)
