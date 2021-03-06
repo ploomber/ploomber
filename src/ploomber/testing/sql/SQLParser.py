@@ -180,30 +180,33 @@ class SQLParser:
     def __repr__(self):
         return f'{type(self).__name__} with keys: {list(self.mapping)!r}'
 
-    def until(self, key, select=None, limit=20, parse=False):
+    def until(self, key, select=None, limit=20, parse=True):
         """
         Generate with statements until the one with the given identifier.
-        Adding a final "SELECT * {{key}}" which can be customized with the
+        Adding a final select statement which can be customized with the
         "select" parameter, if "select" is None, the last select statement
-        is used with a LIMIT statement
+        is used with a LIMIT statement. If you pass a custom select statement,
+        you can include the {{key}} placeholder which is replaced by the key
+        argument.
         """
         pairs = []
 
-        # _select should never be included
-        mapping = copy(self.mapping)
-        del mapping['_select']
-
-        for a_key in mapping:
-            pairs.append((a_key, mapping[a_key]))
+        for a_key in self.mapping:
+            pairs.append((a_key, self.mapping[a_key]))
 
             if a_key == key:
                 break
 
-        if select is None:
-            select = f'SELECT * FROM {pairs[-1][0]}'
+        if key == '_select':
+            _, select = pairs.pop(-1)
+        else:
+            if select is None:
+                select = f'SELECT * FROM {pairs[-1][0]}'
 
-            if limit:
-                select += f' LIMIT {limit}'
+                if limit:
+                    select += f' LIMIT {limit}'
+            else:
+                select = Template(select).render(key=key)
 
         sql = Template("""
 WITH {%- for id,code in pairs -%}{{',' if not loop.first else '' }} {{id}} AS (
@@ -219,16 +222,29 @@ WITH {%- for id,code in pairs -%}{{',' if not loop.first else '' }} {{id}} AS (
         obj.mapping = mapping
         return obj
 
-    def insert(self, before_key, key, code, inplace=True):
-        """Insert a new (identifier, code) pair at a given index
-        """
-        mapping = dict()
+    def insert_first(self, key, select, inplace=False):
+        mapping = {key: select, **self.mapping}
 
-        for i, (k, c) in enumerate(self.mapping.items()):
-            if before_key == i or before_key == k:
-                mapping[key] = code
+        if inplace:
+            self.mapping = mapping
+            return self
+        else:
+            return type(self)._with_mapping(mapping)
 
-            mapping[k] = c
+    def insert_last(self, select, inplace=False):
+        m = copy(self.mapping)
+        m['last'] = m.pop('_select')
+        mapping = {**m, '_select': select}
+
+        if inplace:
+            self.mapping = mapping
+            return self
+        else:
+            return type(self)._with_mapping(mapping)
+
+    def replace_last(self, select, inplace=False):
+        mapping = copy(self.mapping)
+        mapping['_select'] = select
 
         if inplace:
             self.mapping = mapping
@@ -237,14 +253,14 @@ WITH {%- for id,code in pairs -%}{{',' if not loop.first else '' }} {{id}} AS (
             return type(self)._with_mapping(mapping)
 
     def __str__(self):
-        """Ssorthand for .until(key='_select')
+        """Short for .until(key='_select')
         """
-        return self.until(key='_select')
+        return self.to_str(select=None, limit=None)
 
-    def to_str(self, select=None, limit=20, parse=False):
-        """Shorthand for .until(key='_select', *args, **kwargs)
+    def to_str(self, select=None, limit=20):
+        """Short for .until(key=None, *args, **kwargs)
         """
         return self.until(key='_select',
                           select=select,
                           limit=limit,
-                          parse=parse)
+                          parse=False)

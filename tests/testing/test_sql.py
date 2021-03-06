@@ -139,9 +139,9 @@ def test_sql_parser(trailing, parenthesis):
 
     expected = ('\nWITH a AS (\n    select * from aa\n)\n'
                 'SELECT * FROM a LIMIT 20')
-    assert m.until('a') == expected
-    assert m['a'] == expected
-    assert m.until('b') == (
+    assert m.until('a', parse=False) == expected
+    assert str(m['a']) == expected
+    assert m.until('b', parse=False) == (
         '\nWITH a AS (\n    select * from aa\n), b '
         'AS (\n    select * from bb\n)\nSELECT * FROM b LIMIT 20')
 
@@ -242,52 +242,59 @@ def test_sql_parser_custom_select(trailing):
 
     m = testing.sql.SQLParser(sql)
 
-    code_a = m.until('a', select='SELECT * FROM a WHERE x < 10')
-    code_b = m.until('b', select='SELECT * FROM b WHERE x < 10')
+    code_a = m.until('a', parse=False, select='SELECT * FROM a WHERE x < 10')
+    code_a_w_placeholder = m.until('a',
+                                   parse=False,
+                                   select='SELECT * FROM {{key}} WHERE x < 10')
+    code_b = m.until('b', parse=False, select='SELECT * FROM b WHERE x < 10')
 
-    assert code_a == ('\nWITH a AS (\n    select * from aa\n)\nSELECT * '
-                      'FROM a WHERE x < 10')
+    expected = ('\nWITH a AS (\n    select * from aa\n)\nSELECT * '
+                'FROM a WHERE x < 10')
+    assert code_a == expected
+    assert code_a_w_placeholder == expected
     assert code_b == (
         '\nWITH a AS (\n    select * from aa\n), b '
         'AS (\n    select * from bb\n)\nSELECT * FROM b WHERE x < 10')
 
 
-@pytest.mark.parametrize('trailing', [False, True])
-def test_sql_parser_add_clause(trailing):
-    sql = sql_t.render(trailing=trailing)
-    m = testing.sql.SQLParser(sql)
-    m.mapping['c'] = 'select * from cc'
-
-    assert m.until(
-        'c', limit=None) == ('\nWITH a AS (\n    select * from aa\n), b AS '
-                             '(\n    select * from bb\n), c AS (\n    '
-                             'select * from cc\n)\nSELECT * FROM c')
-
-
-@pytest.mark.parametrize('before_key', [0, 'a'])
-def test_sql_parser_insert_at_the_beginning(before_key):
+def test_sql_parser_insert_first():
     sql = sql_t.render(trailing=False)
     m = testing.sql.SQLParser(sql)
 
-    m2 = m.insert(before_key, 'zero', 'select * from zero', inplace=False)
-    assert list(m2) == ['zero', 'a', 'b', '_select']
+    m2 = m.insert_first('aa', 'select * from aa WHERE x > 10', inplace=False)
+
+    assert m2.mapping['aa'] == 'select * from aa WHERE x > 10'
+    assert list(m2) == ['aa', 'a', 'b', '_select']
     assert list(m) == ['a', 'b', '_select']
 
-    m.insert(before_key, 'zero', 'select * from zero', inplace=True)
-    assert list(m) == ['zero', 'a', 'b', '_select']
+    m.insert_first('aa', 'select * from aa WHERE x > 10', inplace=True)
+    assert list(m) == ['aa', 'a', 'b', '_select']
     assert m.until(
-        'a',
-        limit=None) == ('\nWITH zero AS (\n    select * from zero\n),'
+        'a', parse=False,
+        limit=None) == ('\nWITH aa AS (\n    select * from aa WHERE x > 10\n),'
                         ' a AS (\n    select * from aa\n)\nSELECT * FROM a')
 
 
-def test_derivate_new_query():
+def test_sql_parser_insert_last():
+    sql = sql_t.render(trailing=False)
+    m = testing.sql.SQLParser(sql)
+
+    m2 = m.insert_last('select * from last WHERE x > 10', inplace=False)
+    assert m2.mapping['_select'] == 'select * from last WHERE x > 10'
+    assert list(m2) == ['a', 'b', 'last', '_select']
+
+    m.insert_last('select * from last WHERE x > 10', inplace=True)
+    assert m.mapping['_select'] == 'select * from last WHERE x > 10'
+    assert list(m) == ['a', 'b', 'last', '_select']
+
+
+def test_sql_parser_replace_last():
     sql = sql_t.render(trailing=False)
     m = testing.sql.SQLParser(sql)
 
     sub = m.until('a', parse=True)
-    sub.insert('_select', 'sub', 'select * from aa where x = 1')
+    sub_ = sub.replace_last('select * from a where x = 1', inplace=False)
 
-    expected = ('\nWITH a AS (\n    select * from aa\n), sub AS (\n    '
-                'select * from aa where x = 1\n)\nSELECT * FROM sub LIMIT 20')
-    assert str(sub) == expected
+    expected = (
+        '\nWITH a AS (\n    select * from aa\n)\nselect * from a where x = 1')
+    assert str(sub_) == expected

@@ -115,11 +115,11 @@ class PythonCallableSource(Source):
     """
     def __init__(self, primitive, hot_reload=False, needs_product=True):
         if not (callable(primitive) or isinstance(primitive, str)):
-            raise TypeError('{} must be initialized '
-                            'with a Python callable or str, got '
-                            '"{}"'.format(
-                                type(self).__name__,
-                                type(primitive).__name__))
+            raise TypeError(
+                f'{type(self).__name__} must be initialized '
+                f'with a Python callable or str, got: {primitive!r} '
+                f'(type {type(primitive).__name__})')
+
         self._callable_loader = CallableLoader(primitive, hot_reload)
         self._source_as_str = None
         self._loc = None
