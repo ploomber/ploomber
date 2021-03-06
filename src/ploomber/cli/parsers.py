@@ -337,7 +337,10 @@ def _add_args_from_env_dict(parser, env_dict):
     flat_env_dict = _flatten_dict(env_dict._data)
 
     for arg, val in flat_env_dict.items():
-        parser.add_argument('--env--' + arg, help='Default: {}'.format(val))
+        # do not add default keys like {{cwd}}, {{here}}
+        if arg not in env_dict.default_keys:
+            parser.add_argument('--env--' + arg,
+                                help='Default: {}'.format(val))
 
 
 def _parse_signature_from_callable(callable_):

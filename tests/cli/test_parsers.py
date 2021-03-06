@@ -7,7 +7,9 @@ import yaml
 import pytest
 
 from ploomber.cli.parsers import (_add_args_from_callable,
-                                  _process_file_dir_or_glob, CustomParser)
+                                  _process_file_dir_or_glob, CustomParser,
+                                  _add_args_from_env_dict)
+from ploomber.env.EnvDict import EnvDict
 
 
 def fn(a: int, b: float, c: str, d: bool, e):
@@ -132,3 +134,11 @@ def test_cli_from_param_with_annotation(monkeypatch):
     assert actions['param'].default == 42
     assert args.param == 41
     assert returned == 41
+
+
+def test_add_args_from_env_dict():
+    parser = ArgumentParser()
+
+    _add_args_from_env_dict(parser, EnvDict({'a': 1}))
+
+    assert {action.dest for action in parser._actions} == {'env__a', 'help'}

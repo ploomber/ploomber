@@ -64,10 +64,9 @@ class EnvDict(Mapping):
 
             # add default placeholders but override them if they are defined
             # in the raw data
-            raw_data = {
-                **self._default_dict(include_here=path_to_here is not None),
-                **raw_data,
-            }
+            default = self._default_dict(include_here=path_to_here is not None)
+            self._default_keys = set(default) - set(raw_data)
+            raw_data = {**default, **raw_data}
 
             # check raw data is ok
             validate.raw_data_keys(raw_data)
@@ -77,8 +76,7 @@ class EnvDict(Mapping):
 
             # initialize expander, which converts placeholders to their values
             # we need to pass path_to_env since the {{here}} placeholder
-            # resolves
-            # to its parent
+            # resolves to its parent
             if path_to_here is None:
                 # if no pat_to_here, use path_to_end
                 path_to_here = (None if self._path_to_env is None else Path(
@@ -92,6 +90,12 @@ class EnvDict(Mapping):
             self._data = self._expander.expand_raw_dictionary(raw_data)
 
             self._repr = Repr()
+
+    @property
+    def default_keys(self):
+        """Returns keys whose default value is used
+        """
+        return self._default_keys
 
     @staticmethod
     def _default_dict(include_here):
@@ -108,6 +112,8 @@ class EnvDict(Mapping):
 
         return placeholders
 
+    # FIXME: now that the constructor also uses the default values, we can
+    # remove this and replace EnvDict.default with EnvDict(dict())
     @classmethod
     def default(cls, path_to_here=None):
         """

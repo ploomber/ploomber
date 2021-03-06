@@ -640,13 +640,13 @@ def test_default(monkeypatch):
 
     env = EnvDict.default()
 
-    assert env.cwd == '/some_path'
+    assert env.cwd == str(Path('/some_path').resolve())
     assert env.user == 'User'
 
 
 def test_default_with_here_relative(tmp_directory):
+    Path('dir').mkdir()
     env = EnvDict.default(path_to_here='dir')
-
     assert env.here == str(Path(tmp_directory, 'dir').resolve())
 
 
@@ -666,6 +666,18 @@ def test_default_with_root(monkeypatch):
     assert env.root == 'some_value'
 
 
+@pytest.mark.parametrize('kwargs, expected', [
+    [
+        dict(source={'cwd': 'some_value'}, path_to_here='value'),
+        {'here', 'user', 'root'}
+    ],
+    [dict(source={'cwd': 'some_value'}), {'user', 'root'}],
+    [dict(source={'user': 'some_value'}), {'cwd', 'root'}],
+])
+def test_default_keys(kwargs, expected):
+    assert EnvDict(**kwargs).default_keys == expected
+
+
 def test_adds_default_keys_if_they_dont_exist(monkeypatch):
     monkeypatch.setattr(getpass, 'getuser', Mock(return_value='User'))
     monkeypatch.setattr(os, 'getcwd', Mock(return_value='/some_path'))
@@ -675,10 +687,11 @@ def test_adds_default_keys_if_they_dont_exist(monkeypatch):
 
     env = EnvDict({'a': 1}, path_to_here='/dir')
 
-    assert env.cwd == '/some_path'
+    assert env.cwd == str(Path('/some_path').resolve())
     assert env.here == '/dir'
     assert env.user == 'User'
     assert env.root == 'some_value'
+    assert env.default_keys == {'cwd', 'here', 'user', 'root'}
 
 
 # TODO: test {{here}} allowed in _module
