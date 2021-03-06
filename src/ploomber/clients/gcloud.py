@@ -9,6 +9,24 @@ from ploomber.util.util import requires
 
 
 class GCloudStorageClient:
+    """Client for Google Cloud Storage
+
+    Parameters
+    ----------
+    bucket_name : str
+        Bucket to use
+
+    parent : str
+        Parent folder to save files
+
+    json_credentials_path : str, default=None
+        Use the given JSON file to authenticate the client
+        (uses  Client.from_service_account_json(**kwargs)), if None,
+        initializes the client using Client(**kwargs)
+
+    **kwargs
+        Keyword arguments for the client constructor
+    """
     @requires(['google.cloud.storage'],
               name='GCloudStorageClient',
               pip_names=['google-cloud-storage'])
