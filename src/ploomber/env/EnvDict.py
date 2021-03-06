@@ -10,7 +10,7 @@ import yaml
 from ploomber.env import validate
 from ploomber.env.expand import EnvironmentExpander
 from ploomber.env.FrozenJSON import FrozenJSON
-from ploomber.util.default import find_file_recursively, find_root_recursively
+from ploomber.util import default
 
 
 # TODO: custom expanders, this could be done trough another special directive
@@ -80,8 +80,11 @@ class EnvDict(Mapping):
             # resolves
             # to its parent
             if path_to_here is None:
+                # if no pat_to_here, use path_to_end
                 path_to_here = (None if self._path_to_env is None else Path(
                     self._path_to_env).parent)
+            else:
+                path_to_here = Path(path_to_here).resolve()
 
             self._expander = EnvironmentExpander(self._preprocessed,
                                                  path_to_here=path_to_here)
@@ -97,7 +100,7 @@ class EnvDict(Mapping):
             'cwd': '{{cwd}}',
         }
 
-        if find_root_recursively() is not None:
+        if default.find_root_recursively() is not None:
             placeholders['root'] = '{{root}}'
 
         if include_here:
@@ -268,7 +271,7 @@ def load_from_source(source):
     elif isinstance(source, (str, Path)):
         # if not pointing to a file, try to locate it...
         if not Path(source).exists():
-            source_found = find_file_recursively(source)
+            source_found = default.find_file_recursively(source)
 
             if source_found is None:
                 raise FileNotFoundError('Could not find file "{}" in the '
@@ -374,9 +377,9 @@ def find_env_w_name(name):
     path_to_env : pathlib.Path
         Path to environment file, None if no file could be found
     """
-    path = find_file_recursively(name='env.{}.yaml'.format(name))
+    path = default.find_file_recursively(name='env.{}.yaml'.format(name))
 
     if path is None:
-        return find_file_recursively(name='env.yaml')
+        return default.find_file_recursively(name='env.yaml')
     else:
         return path

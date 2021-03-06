@@ -14,6 +14,7 @@ from ploomber.env.env import Env
 from ploomber.env.decorators import with_env, load_env
 from ploomber.env import validate
 from ploomber.env.EnvDict import EnvDict
+from ploomber.env import expand
 from ploomber.env.expand import (EnvironmentExpander, expand_raw_dictionary,
                                  cast_if_possible, iterate_nested_dict,
                                  expand_raw_dictionaries)
@@ -635,11 +636,11 @@ def test_error_when_loaded_obj_is_not_dict(content, type_, tmp_directory):
 
 def test_default(monkeypatch):
     monkeypatch.setattr(getpass, 'getuser', Mock(return_value='User'))
-    monkeypatch.setattr(os, 'getcwd', Mock(return_value='some_path'))
+    monkeypatch.setattr(os, 'getcwd', Mock(return_value='/some_path'))
 
     env = EnvDict.default()
 
-    assert env.cwd == 'some_path'
+    assert env.cwd == '/some_path'
     assert env.user == 'User'
 
 
@@ -650,14 +651,13 @@ def test_default_with_here_relative(tmp_directory):
 
 
 def test_default_with_here_absolute(tmp_directory):
-    here = str(Path('/dir'))
+    here = str(Path(tmp_directory, 'dir').resolve())
     env = EnvDict.default(path_to_here=here)
 
     assert env.here == here
 
 
 def test_default_with_root(monkeypatch):
-
     mock = Mock(return_value='some_value')
     monkeypatch.setattr(default, 'find_root_recursively', mock)
 
@@ -668,13 +668,14 @@ def test_default_with_root(monkeypatch):
 
 def test_adds_default_keys_if_they_dont_exist(monkeypatch):
     monkeypatch.setattr(getpass, 'getuser', Mock(return_value='User'))
-    monkeypatch.setattr(os, 'getcwd', Mock(return_value='some_path'))
+    monkeypatch.setattr(os, 'getcwd', Mock(return_value='/some_path'))
     mock = Mock(return_value='some_value')
     monkeypatch.setattr(default, 'find_root_recursively', mock)
+    monkeypatch.setattr(expand.default, 'find_root_recursively', mock)
 
     env = EnvDict({'a': 1}, path_to_here='/dir')
 
-    assert env.cwd == 'some_path'
+    assert env.cwd == '/some_path'
     assert env.here == '/dir'
     assert env.user == 'User'
     assert env.root == 'some_value'

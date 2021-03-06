@@ -1,3 +1,4 @@
+import os
 import re
 import ast
 import pydoc
@@ -224,7 +225,7 @@ class EnvironmentExpander:
         return getpass.getuser()
 
     def get_cwd(self):
-        return str(Path('.').resolve())
+        return str(Path(os.getcwd()).resolve())
 
     def get_root(self):
         root = default.find_root_recursively()
