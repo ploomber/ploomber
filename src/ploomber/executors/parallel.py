@@ -36,7 +36,6 @@ class TaskBuildWrapper:
     def __call__(self, *args, **kwargs):
         try:
             output = self.task._build(**kwargs)
-            self.task.product.upload()
             return output
         except Exception as e:
             return Message(task=self.task,

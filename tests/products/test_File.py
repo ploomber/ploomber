@@ -240,18 +240,14 @@ def test_download_upload_without_client():
     product.upload()
 
 
-def test_do_not_upload_after_task_build(tmp_directory):
-    """
-    Currently, uploading logic happens in the executor, that's why task.build()
-    doesn't trigger it
-    """
+def test_upload_after_task_build(tmp_directory):
     dag = DAG()
     product = File('file.txt')
     product.upload = Mock(wraps=product.upload)
     task = PythonCallable(_touch, product, dag=dag)
     task.build()
 
-    product.upload.assert_not_called()
+    product.upload.assert_called_once()
 
 
 # NOTE: the following tests check File behavior when a DAG is executed,

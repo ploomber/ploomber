@@ -451,7 +451,8 @@ class Task(abc.ABC):
         """
         Private API for building DAGs. This is what executors should call.
         Unlike the public method, this one does not call render, as it
-        should happen via a dag.render() call
+        should happen via a dag.render() call. It takes care of running the
+        task and updating status accordingly
 
         Parameters
         ----------
@@ -569,6 +570,9 @@ class Task(abc.ABC):
         elapsed = (now - then).total_seconds()
         self._logger.info(
             'Done. Operation took {:.1f} seconds'.format(elapsed))
+
+        # Upload product, if needed
+        self.product.upload()
 
         # TODO: also check that the Products were updated:
         # if they did not exist, they must exist now, if they alredy

@@ -199,13 +199,6 @@ def pass_exceptions(fn):
 
 def build_in_current_process(task, build_kwargs, reports_all):
     report, meta = task._build(**build_kwargs)
-
-    try:
-        task.product.upload()
-    except Exception:
-        task.exec_status = TaskStatus.Errored
-        raise
-
     reports_all.append(report)
 
 
@@ -222,30 +215,20 @@ def build_in_subprocess(task, build_kwargs, reports_all):
         # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.AsyncResult.get
         try:
             report, meta = res.get()
-        # we have to updat status since this is running in a different process
         except Exception:
+            # we have to update status since this is ran in a subprocess
             task.exec_status = TaskStatus.Errored
             raise
         else:
             task.product.metadata.update_locally(meta)
-
-            try:
-                task.product.upload()
-            except Exception:
-                task.exec_status = TaskStatus.Errored
-                raise
-            else:
-                task.exec_status = TaskStatus.Executed
-                reports_all.append(report)
-            finally:
-                p.close()
-                p.join()
-
+            task.exec_status = TaskStatus.Executed
+            reports_all.append(report)
         finally:
             p.close()
             p.join()
 
     else:
+        # we run other tasks in the same process
         report, meta = task._build(**build_kwargs)
         task.product.metadata.update_locally(meta)
         task.product.upload()
