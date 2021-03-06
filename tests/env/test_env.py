@@ -688,7 +688,7 @@ def test_adds_default_keys_if_they_dont_exist(monkeypatch):
     env = EnvDict({'a': 1}, path_to_here='/dir')
 
     assert env.cwd == str(Path('/some_path').resolve())
-    assert env.here == '/dir'
+    assert env.here == str(Path('/dir').resolve())
     assert env.user == 'User'
     assert env.root == 'some_value'
     assert env.default_keys == {'cwd', 'here', 'user', 'root'}
