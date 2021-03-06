@@ -31,6 +31,13 @@ class EnvDict(Mapping):
         location of the YAML spec. If initialized with a dict and None,
         the {{here}} placeholder is not available.
 
+
+    Notes
+    -----
+    By default, it includes the following placeholders (unless the passed
+    dictionary already contains those keys): {{user}} (current user)
+    {{cwd}} (working directory), {{here}} (env.yaml location, if any), {{root}}
+    (project's root folder, if any)
     """
     def __init__(self, source, path_to_here=None):
         # if initialized from another EnvDict, copy the attributes to
@@ -49,6 +56,13 @@ class EnvDict(Mapping):
                 raw_data,
                 # this will be None if source is a dict
                 self._path_to_env) = load_from_source(source)
+
+            # add default placeholders but override them if they are defined
+            # in the raw data
+            raw_data = {
+                **self._default_dict(include_here=path_to_here is not None),
+                **raw_data,
+            }
 
             # check raw data is ok
             validate.raw_data_keys(raw_data)
@@ -71,14 +85,8 @@ class EnvDict(Mapping):
 
             self._repr = Repr()
 
-    @classmethod
-    def default(cls, path_to_here=None):
-        """
-        Returns and EnvDict with built-in placeholders
-        Always available: {{user}}, {{cwd}}
-        {{root}} available if a parent path has a setup.py
-        {{here}} available is path_to_here is not None
-        """
+    @staticmethod
+    def _default_dict(include_here):
         placeholders = {
             'user': '{{user}}',
             'cwd': '{{cwd}}',
@@ -87,9 +95,20 @@ class EnvDict(Mapping):
         if find_root_recursively() is not None:
             placeholders['root'] = '{{root}}'
 
-        if path_to_here is not None:
+        if include_here:
             placeholders['here'] = '{{here}}'
 
+        return placeholders
+
+    @classmethod
+    def default(cls, path_to_here=None):
+        """
+        Returns and EnvDict with built-in placeholders
+        Always available: {{user}}, {{cwd}}
+        {{root}} available if a parent path has a setup.py
+        {{here}} available is path_to_here is not None
+        """
+        placeholders = cls._default_dict(include_here=path_to_here is not None)
         return cls(placeholders, path_to_here=path_to_here)
 
     @property

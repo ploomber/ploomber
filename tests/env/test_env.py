@@ -1,9 +1,11 @@
+import os
 import importlib
 import platform
 from pathlib import Path
 import getpass
 import inspect
 import pickle
+from unittest.mock import Mock
 
 import pytest
 import yaml
@@ -15,22 +17,26 @@ from ploomber.env.EnvDict import EnvDict
 from ploomber.env.expand import (EnvironmentExpander, expand_raw_dictionary,
                                  cast_if_possible, iterate_nested_dict,
                                  expand_raw_dictionaries)
+from ploomber.util import default
 from ploomber import repo
 
 
 def test_env_repr_and_str(cleanup_env):
-    env = Env({'a': 1})
-    assert repr(env) == "Env({'a': 1})"
-    assert str(env) == "{'a': 1}"
+    env = Env({'user': 'user', 'cwd': 'cwd', 'root': 'root'})
+    assert repr(env) == "Env({'user': 'user', 'cwd': 'cwd', 'root': 'root'})"
+    assert str(env) == "{'user': 'user', 'cwd': 'cwd', 'root': 'root'}"
 
 
 def test_env_repr_and_str_when_loaded_from_file(tmp_directory, cleanup_env):
     path_env = Path('env.yaml')
-    path_env.write_text(yaml.dump({'a': 1}))
+    d = {'user': 'user', 'cwd': 'cwd', 'root': 'root'}
+    path_env.write_text(yaml.dump(d))
     env = Env()
-    assert repr(env) == "Env({'a': 1}) (from file: %s)" % str(
-        path_env.resolve())
-    assert str(env) == "{'a': 1}"
+    path = str(path_env.resolve())
+
+    expected = f"Env({d!r}) (from file: {path})"
+    assert repr(env) == expected
+    assert str(env) == "{'user': 'user', 'cwd': 'cwd', 'root': 'root'}"
 
 
 def test_includes_path_in_repr_if_init_from_file(cleanup_env, tmp_directory):
@@ -593,7 +599,7 @@ def test_replace_value_casts_if_possible():
 
 
 def test_attribute_error_message():
-    env = EnvDict({'a': 1})
+    env = EnvDict({'user': 'user', 'cwd': 'cwd', 'root': 'root'})
 
     with pytest.raises(AttributeError) as excinfo_attr:
         env.aa
@@ -601,10 +607,8 @@ def test_attribute_error_message():
     with pytest.raises(KeyError) as excinfo_key:
         env['aa']
 
-    assert str(excinfo_attr.value
-               ) == "EnvDict({'a': 1}) object has no atttribute 'aa'"
-    assert str(
-        excinfo_key.value) == '"EnvDict({\'a\': 1}) object has no key \'aa\'"'
+    assert str(excinfo_attr.value) == f"{env!r} object has no atttribute 'aa'"
+    assert str(excinfo_key.value) == f'"{env!r} object has no key \'aa\'"'
 
 
 @pytest.mark.parametrize('content, type_',
@@ -620,6 +624,53 @@ def test_error_when_loaded_obj_is_not_dict(content, type_, tmp_directory):
                 "a dict but got '{}' instead, "
                 "verify the content").format(type_)
     assert str(excinfo.value) == expected
+
+
+def test_default(monkeypatch):
+    monkeypatch.setattr(getpass, 'getuser', Mock(return_value='User'))
+    monkeypatch.setattr(os, 'getcwd', Mock(return_value='some_path'))
+
+    env = EnvDict.default()
+
+    assert env.cwd == 'some_path'
+    assert env.user == 'User'
+
+
+def test_default_with_here_relative(tmp_directory):
+    env = EnvDict.default(path_to_here='dir')
+
+    assert env.here == str(Path(tmp_directory, 'dir').resolve())
+
+
+def test_default_with_here_absolute(tmp_directory):
+    here = str(Path('/dir'))
+    env = EnvDict.default(path_to_here=here)
+
+    assert env.here == here
+
+
+def test_default_with_root(monkeypatch):
+
+    mock = Mock(return_value='some_value')
+    monkeypatch.setattr(default, 'find_root_recursively', mock)
+
+    env = EnvDict.default()
+
+    assert env.root == 'some_value'
+
+
+def test_adds_default_keys_if_they_dont_exist(monkeypatch):
+    monkeypatch.setattr(getpass, 'getuser', Mock(return_value='User'))
+    monkeypatch.setattr(os, 'getcwd', Mock(return_value='some_path'))
+    mock = Mock(return_value='some_value')
+    monkeypatch.setattr(default, 'find_root_recursively', mock)
+
+    env = EnvDict({'a': 1}, path_to_here='/dir')
+
+    assert env.cwd == 'some_path'
+    assert env.here == '/dir'
+    assert env.user == 'User'
+    assert env.root == 'some_value'
 
 
 # TODO: test {{here}} allowed in _module
