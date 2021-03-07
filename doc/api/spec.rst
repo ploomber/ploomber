@@ -237,10 +237,31 @@ the folder ``my_sources/`` within the package:
 .. code-block:: yaml
     :class: text-editor
 
-    source_loader:
-        module: my_package
-        path: my_sources
+    meta:
+        source_loader:
+            module: my_package
+            path: my_sources
 
+    tasks:
+        # this is loaded from my_package (my_sources directory)
+        - source: script.sql
+          # task definition continues...
+
+To find out the location used, you can execute the following in a Python
+session:
+
+.. code-block:: python
+    :class: ipython
+
+    import my_package; print(my_package) # print package location
+
+
+The above should print something like ``path/to/my_package/__init__.py``.
+Using the configuration above, it implies that source loader will load the file
+from ``path/to/my_package/my_sources/script.sql``.
+
+**Note:** this only applies to tasks whose ``source`` is a relative path. Dotted
+paths and absolute paths are not affected.
 
 For details, see :py:mod:`ploomber.SourceLoader`, which is the underlying Python
 implementation. `Here's an example that uses source_loader <https://github.com/ploomber/projects/blob/master/ml-online/src/ml_online/pipeline.yaml>`_.
