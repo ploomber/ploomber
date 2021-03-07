@@ -13,6 +13,9 @@ class OnlineDAG(abc.ABC):
     """
     Execute partial DAGs in-memory. This is an abstract class, to use it.
     Create a subclass and provide the required static methods.
+
+    See here for a complete example:
+    https://github.com/ploomber/projects/blob/master/ml-online/src/ml_online/infer.py
     """
 
     # FIXME: add a way to customize

@@ -5,6 +5,8 @@ FAQ and Glossary
 
 .. include:: faq/supported_dbs.rst
 
+.. include:: faq/incremental_builds.rst
+
 Glossary
 --------
 

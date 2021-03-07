@@ -247,8 +247,15 @@ div.document .section {
     padding-left: 15px;
 }
 
-code {
+/* code (no links) or code with links but in toctree */
+code, div.document div.toctree-wrapper a.reference code {
     color: #7d7d7d !important
+}
+
+
+/* links to Python API docs */
+div.document a.reference code {
+    color: #007bff !important
 }
 
 table.longtable {

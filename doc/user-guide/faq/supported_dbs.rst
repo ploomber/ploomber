@@ -9,7 +9,7 @@ implements Python's Database API Specification (`PEP 249 <https://www.python.org
 :py:mod:`ploomber.tasks.SQLDump` supports both types of clients, you should
 be able to dump data to local files from pretty much all databases.
 
-:py:mod:`ploomber.products.SQLScript` supports both types of clients but since
+:py:mod:`ploomber.tasks.SQLScript` supports both types of clients but since
 it is intended to create new tables/views in the database, the product also
 needs a client. See the answer above for details.
 

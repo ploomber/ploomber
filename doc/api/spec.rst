@@ -1,7 +1,7 @@
 Spec API (``pipeline.yaml``)
 ============================
 
-This section describes how to specify pipelines using a ``pipeline.yaml`` file.
+This section describes how to specify pipelines using a ``pipeline.yaml``.
 
 **Note:** The `projects repository <https://github.com/ploomber/projects>`_
 contains several ``pipeline.yaml`` examples.
@@ -27,19 +27,22 @@ A typical ``pipeline.yaml`` looks like this:
             nb: output/plots.html
             data: output/clean.csv
 
-For each task, ``source`` specifies the source code for the task and
-``product`` where to save the output (relative to the location of the
+For each task, ``source`` specifies the source code for the task, while
+``product`` says where to save the output (relative to the location of the
 ``pipeline.yaml`` file).
+
+When your pipeline executes, Ploomber loads your source code and passes the
+values in ``product``.
 
 
 Schema
 ------
 
-Under some situations, you might want to change the default configuration, a
-common scenario happens when using SQL scripts: you have to configure a client
+Under some situations, you might want to change the default configuration; a common scenario happens when using SQL scripts: you have to configure a client
 to connect to the database.
 
-The complete schema is shown below (with default values):
+The complete schema is shown below (with default values), most commonly used
+sections are shown first:
 
 .. code-block:: yaml
     :class: text-editor
@@ -70,7 +73,7 @@ The complete schema is shown below (with default values):
 
         # Default product class key for a given task class. Names should
         # match (case-sensitive) the names in the Python API. These are rarely
-        # changed, except for SQLScript, see section below for details
+        # changed, except for SQLScript, see the section below for details
         product_default_class:
             SQLScript: SQLRelation
             SQLDump: File
@@ -107,6 +110,7 @@ The complete schema is shown below (with default values):
             some_keyword_arg: value
 
     # DAG-level serializer/unserializer for Python functions (both optional)
+    # see section below for details
     serializer: {dotted.path.to.serializer}
     unserializer: {dotted.path.to.unserializer}
 
@@ -120,6 +124,105 @@ The complete schema is shown below (with default values):
           product:
             nb: output/clean_data.ipynb
             data: output/clean.csv
+
+``clients``
+***********
+
+These are the default Task or Product clients to use. It allows you to specify
+a single client for all Tasks/Products with a given class, instead of one per
+Task or Product. The most common use case is SQL database configuration.
+
+Keys must be valid :py:mod:`ploomber.tasks` or :py:mod:`ploomber.products`
+names, values must be dotted paths to functions that return a
+:py:mod:`ploomber.clients` instance.
+
+`Here's an example <https://github.com/ploomber/projects/tree/master/spec-api-sql>`_
+that uses ``clients`` to configure Task and Product clients.
+
+Another scenario are :py:mod:`ploomber.products.File` clients, which Ploomber can use
+to backup pipeline results (say, for example, you executed a job that trains
+several models and want to save output results for later analysis, you can use
+a client such as :py:mod:`ploomber.clients.GCloudStorageClient` for that.
+
+
+``serializer`` and ``unserializer``
+***********************************
+
+By default,  tasks whose source is a function
+(i.e., :py:mod:`ploomber.tasks.PythonCallable`). Receive input paths
+(in ``upstream``) and output paths (in ``product``) when the function executes. Saving interim results allows Ploomber to provide incremental
+builds (:ref:`incremental-builds`).
+
+However, in some cases, we might want to provide a pipeline that performs
+all operations in memory (e.g., to do online serving) using
+:py:mod:`ploomber.OnlineDAG`. Ploomber can convert a file-based pipeline
+into an in-memory one without code changes, allowing you to re-use your
+feature engineering code for training and serving. The only requisite is for
+tasks to configure a ``serializer`` and ``unserializer``.
+`Click here <https://github.com/ploomber/projects/tree/master/ml-online>`_ to
+see an example.
+
+Normally, a task whose source is a function looks like this:
+
+.. code-block:: py
+    :class: text-editor
+
+    import pandas as pd
+
+    def my_task(product, upstream):
+        df_upstream = pd.read_csv(upstream['name'])
+        # process data...
+        # save product
+        df_product.to_csv(product)
+
+You must use the product parameter to save any task output.
+
+However, if you add a ``serializer``, ``product`` isn't passed, and you must
+return the product object:
+
+.. code-block:: py
+    :class: text-editor
+
+    import pandas as pd
+
+    def my_task(upstream):
+        df_upstream = pd.read_csv(upstream['name'])
+        # process data...
+        return df_product
+
+The ``serializer`` function is called with the returned object as its
+first argument and product as the second argument:
+
+.. code-block:: py
+    :class: text-editor
+
+    serializer(df_product, product)
+
+
+A similar logic applies to ``unserializer``, when present, the function is
+called for each upstream dependency with the product as the argument:
+
+.. code-block:: py
+    :class: text-editor
+
+    unserializer(product)
+
+In your task function, you receive unserialized objects:
+
+.. code-block:: py
+    :class: text-editor
+
+    import pandas as pd
+
+    def my_task(upstream):
+        # no need to call pd.read_csv here
+        df_upstream = upstream['name']
+        return df_product
+
+If you want to provide a Task-level serializer/unserializer pass it directly to
+the task, if you set a DAG-level serializer/unserializer and want to exclude
+certain task pass ``serializer: null`` or ``unserializer: null`` in the
+selected task.
 
 
 ``source_loader``
@@ -140,15 +243,19 @@ the folder ``my_sources/`` within the package:
 
 
 For details, see :py:mod:`ploomber.SourceLoader`, which is the underlying Python
-implementation.
+implementation. `Here's an example that uses source_loader <https://github.com/ploomber/projects/blob/master/ml-online/src/ml_online/pipeline.yaml>`_.
 
 SQLScript product class
 ***********************
 
 By default, SQL scripts will use :py:mod:`ploomber.products.SQLRelation` as
 product class. Such product does not save product's metadata, required for
-incremental builds. If you want to use incremental builds, you need to change
-the default value and configure the product's client.
+incremental builds (:ref:`incremental-builds`). If you want to use them, you
+need to change the default value and configure the product's client.
+
+`Here's an example <https://github.com/ploomber/projects/tree/master/spec-api-sql>`_
+that uses ``product_default_class`` to configure a SQLite pipeline with
+incremental builds.
 
 For more information on product clients, see: :doc:`../user-guide/faq_index`.
 
@@ -156,10 +263,10 @@ For more information on product clients, see: :doc:`../user-guide/faq_index`.
 *********************
 
 When training a Machine Learning pipeline, we obtain raw data, generate
-features and train a model. When serving, we receive new observations, generate
-features and make predictions. Only the first and last steps change, everything
-that happens in the middle is the same. ``import_tasks_from`` allows you to
-compose pipelines for training and serving.
+features, and train a model. When serving, we receive new observations, generate
+features, and make predictions. Only the first and last parts change, but what
+happens in the middle remains the same (i.e., feature engineering).
+``import_tasks_from`` allows you to compose pipelines for training and serving.
 
 For example, you may define all your feature engineering code in a
 ``pipeline-features.yaml`` file. Then import those tasks (using
@@ -201,7 +308,7 @@ With such configuration, commands such as ``ploomber build`` will work.
     # Can be a dictionary if the task generates more than one product.
     product: {str or dict}
 
-    # Task name. If missing, it is inferred from the task's source
+    # Task name. If missing, inferred from the task's source
     name: {task name, optional}
 
     # Function to execute when the task renders successfully
@@ -246,7 +353,7 @@ With such configuration, commands such as ``ploomber build`` will work.
 ``tasks[*].params``
 *******************
 
-Use this section to pass arbitrary parameters to a task, the exact mechanism
+Use this section to pass arbitrary parameters to a task. The exact mechanism
 depends on the task type. Assume you have the following:
 
 .. code-block:: yaml
@@ -266,7 +373,7 @@ SQL tasks receive them as placeholders.
     -- {{my_param}} is replaced by 42
     SELECT * FROM my_table WHERE my_column > {{my_param}}
 
-Python/R scripts/notebnooks receive them in the "parameters" cell:
+Python/R scripts/notebnooks receive them in the "injected-parameters" cell:
 
 .. code-block:: py
     :class: text-editor
@@ -294,8 +401,8 @@ Python functions receive them as arguments:
 ``tasks[*].client``
 *******************
 
-Task client to use. By default the class-level client at config.clients is
-used, this value overrides it. Required for some tasks (e.g., ``SQLScript``),
+Task client to use. By default, the class-level client at config.clients is
+used. This value overrides it. Required for some tasks (e.g., ``SQLScript``),
 optional for others (e.g., ``File``).
 
 Can be a string (call without arguments):
@@ -323,18 +430,16 @@ Or a dictionary:
 ``tasks[*].product_client``
 ***************************
 
-Product client to use (where to save product's metadata to support
-incremental builds). Only required if you want to enable incremental builds with
-SQL products.
-
-Can be a string or a dictionary (same as ``tasks[*].client``).
+Product client to use (to save product's metadata). Only required if you want to enable incremental
+builds (:ref:`incremental-builds`) with SQL products. It can be a string or
+a dictionary (same as ``tasks[*].client``).
 
 More information on product clients: :doc:`../user-guide/faq_index`.
 
 Parametrizing with ``env.yaml``
 -------------------------------
 
-In some situations, it's useful to parametrize a pipeline, for example, you
+In some situations, it's useful to parametrize a pipeline. For example, you
 could run your pipeline with a sample of the data as a quick smoke test and make
 sure it runs before running it with the whole dataset, which could take several
 hours to finish.
@@ -388,12 +493,11 @@ For example:
 Default placeholders
 ********************
 
-There are default placeholders you can use in your ``pipeline.yaml``,
-even if you don't define them in a ``env.yaml`` (or you don't even have one).
-
+There are a few default placeholders you can use in your ``pipeline.yaml``,
+even if not defined in the ``env.yaml`` (or if you don't have a ``env.yaml`` altogether)
 
 * ``{{here}}``: Absolute path to the parent folder of ``pipeline.yaml``
-* ``{{cwd}}``: Absolute path to current working directory
+* ``{{cwd}}``: Absolute path to the current working directory
 * ``{{root}}``: Absolute path to project's root folder. Only available if there is a ``setup.py`` file in your project, the parent of such file is considered the project's root
 * ``{{user}}``: Current username
 
@@ -412,7 +516,7 @@ to override this behavior:
         - source: module.another_function
           product: '{{cwd}}/products/another_output.csv'
 
-This ensures that no matter where your ``pipeline.yaml`` is, products will
+Using ``{{cwd}}`` ensures that no matter where your ``pipeline.yaml`` is, products will
 be stored relative to the current working directory.
 
 Check out the guide: :doc:`../user-guide/parametrized`.

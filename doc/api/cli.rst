@@ -197,7 +197,7 @@ Create new project
 
 .. code-block:: console
 
-    ploomber new
+    ploomber scaffold
 
 
 Interactive sessions

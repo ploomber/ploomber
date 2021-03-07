@@ -10,6 +10,7 @@ DAG
     :toctree:
 
     DAG
+    OnlineDAG
     DAGConfigurator
     InMemoryDAG
 
