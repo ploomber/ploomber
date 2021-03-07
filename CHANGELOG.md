@@ -1,6 +1,8 @@
 # CHANGELOG
 
-## 0.9.5dev
+## 0.9.6dev
+
+## 0.9.5 (2021-03-07)
 - Changes a lot of error messages for clarity
 - Clearer `__repr__` for `Placeholder`, `File`, and `MetaProduct`
 - Default placeholders can be used in `pipeline.yaml` without defining `env.yaml`
