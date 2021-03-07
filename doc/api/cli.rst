@@ -249,3 +249,12 @@ Ploomber looks for a ``pipeline.yaml`` file using the following order:
 3. ``src/{package}/pipeline.yaml`` where ``{package}`` is any package name
 4. Parent folders of current working directory
 5. Look for a ``setup.py`` in parent folders, then ``src/{package}/pipeline.yaml``
+
+If you want to know which file will be used based on your project's layout:
+
+
+.. code-block:: console
+
+    ploomber status --help
+
+(See the ``--entry-point`` description)
