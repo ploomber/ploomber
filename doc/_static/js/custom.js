@@ -69,7 +69,7 @@ function updateCurrentSection() {
         if ($(this).attr('href') == current) {
             $(this).css('font-weight', 600)
         } else {
-            $(this).css('font-weight', 100)
+            $(this).css('font-weight', 300)
         }
     })
 }

@@ -6,6 +6,7 @@
 https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCodeExamplesInSphinx.html
 */
 
+
 .navbar {
     background-color: black;
 }
@@ -90,6 +91,12 @@ div.output_area [class*="highlight-"] {
   color: RGB(0, 200, 0);
 }
 
+.toctree-wrapper ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
 .toctree-l1 > a {
     font-size: larger;
     color: black;
@@ -150,13 +157,16 @@ div.document .toctree-l2 {
 }
 
 .global-toc {
-    position: fixed;
+    position: sticky;
+    top: 80px;
 }
+
+/* navigation bar (right) */
 
 div.sphinxsidebarwrapper {
     position: fixed;
     border-left: 2px solid #eee;
-    padding-left: 5px;
+    padding-left: 0px;
     padding-right: 8px;
 }
 
@@ -166,14 +176,23 @@ div.sphinxsidebarwrapper > ul > li > a {
     font-weight: 800;
 }
 
-div.sphinxsidebarwrapper > ul > li > ul > li > a {
+div.sphinxsidebarwrapper li li a {
     color: gray;
-    font-weight: 100;
-
+    font-weight: 300;
+    font-size: 100%;
 }
 
-div.sphinxsidebarwrapper > ul > li > ul > li {
-    padding-left: 20px;
+div.sphinxsidebarwrapper li li li a {
+    font-size: 90%;
+}
+
+
+div.sphinxsidebarwrapper li li {
+    padding-left: 10px;
+}
+
+div.sphinxsidebarwrapper li li li {
+    padding-left: 15px;
 }
 
 a.headerlink {
@@ -211,10 +230,25 @@ div.document h1 {
     margin-top: 2rem;
     margin-bottom: 2rem;
     font-weight: 700;
+    font-size: 3rem;
 }
 
 div.document h2 {
-    margin-top: 3rem;
+    padding-top: 20px;
+    font-size: 2rem;
+}
+
+div.document h3 {
+    padding-top: 10px;
+    font-size: 1.5rem;
+}
+
+div.document .section {
+    padding-left: 15px;
+}
+
+code {
+    color: #7d7d7d !important
 }
 
 table.longtable {
@@ -263,4 +297,27 @@ div.body img {
 
 .prompt {
     margin-top: 10px !important;
+}
+
+
+/* python documentation */
+
+dl.py {
+    margin-top: 3rem;
+}
+
+dl.py dl.py {
+    margin-top: 2rem;
+}
+
+dl.py dt {
+    font-size: 1.2rem;
+}
+
+dl.py dd dt {
+    font-size: 1rem;
+}
+
+dl.py dd {
+     padding-left: 1.2em;
 }
