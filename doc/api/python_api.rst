@@ -45,10 +45,11 @@ Products
 
     Product
     File
+    SQLRelation
     PostgresRelation
     SQLiteRelation
-    GenericProduct
     GenericSQLRelation
+    GenericProduct
 
 
 Clients
