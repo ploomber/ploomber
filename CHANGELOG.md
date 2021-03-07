@@ -3,12 +3,14 @@
 ## 0.9.5dev
 - Changes a lot of error messages for clarity
 - Clearer `__repr__` for `Placeholder`, `File`, and `MetaProduct`
-- Default placeholders can be used in `pipeline.yaml` without definint `env.yaml`
+- Default placeholders can be used in `pipeline.yaml` without defining `env.yaml`
 - Better formatting for displaying DAG build and render errors
 - Spec API initializes task spec as `SQLDump` if product has suffix `.csv` or `.parquet`
 - Coloring CLI error traceback
 - Spec API skips `SourceLoader` if passing an absolute path
 - `DAG.clients` validates keys (using `DAGClients`)
+- `params` available as hook argument
+- Rewritten Spec API documentation
 
 ## 0.9.4 (2021-02-15)
 - Better display of errors when building or rendering a DAG (layout and colors)
