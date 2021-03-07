@@ -18,6 +18,8 @@ def _package_location(root_path):
     return candidates[0] if candidates else None
 
 
+# NOTE: this is documented in doc/api/cli.rst, changes should also be reflected
+# there
 def entry_point(root_path=None):
     """
     Determines default entry point (relative to root_path),
@@ -35,6 +37,10 @@ def entry_point(root_path=None):
     root_path, optional
         Root path to look for the entry point. Defaults to the current working
         directory
+
+    Notes
+    -----
+    CLI calls this functions with root_path=None
     """
     root_path = root_path or '.'
     env_var = os.environ.get('ENTRY_POINT')

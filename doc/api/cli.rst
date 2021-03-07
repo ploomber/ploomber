@@ -4,10 +4,6 @@ Command line interface
 This document summarizes commonly used commands. To get full details, execute
 ``ploomber --help`` or ``ploomber {command_name} --help``.
 
-**Note:** All commands assume there is a ``pipeline.yaml`` file in the current
-working directory, if your pipeline file is in a different location use the
-``--entry-point/-e`` option.
-
 When applicable, we use this sample pipeline to demonstrate which tasks will
 be executed after issuing a given command:
 
@@ -243,3 +239,13 @@ To print the rendered source code from SQL scripts:
     print(dag['some_sql_task'].source)
 
 
+Default locations
+*****************
+
+Ploomber looks for a ``pipeline.yaml`` file using the following order: 
+
+1. Use path in the ``ENTRY_POINT`` environment variable
+2. ``pipeline.yaml``, relative to the current working directory
+3. ``src/{package}/pipeline.yaml`` where ``{package}`` is any package name
+4. Parent folders of current working directory
+5. Look for a ``setup.py`` in parent folders, then ``src/{package}/pipeline.yaml``
