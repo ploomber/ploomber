@@ -36,7 +36,7 @@ import nbformat
 from ploomber.exceptions import RenderError, SourceInitializationError
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.util import requires
-from ploomber.sources import Source
+from ploomber.sources.abc import Source
 from ploomber.sources.nb_utils import find_cell_with_tag
 from ploomber.static_analysis.extractors import extractor_class_for_language
 from ploomber.sources import docstring

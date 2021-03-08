@@ -5,8 +5,8 @@ import pytest
 
 from ploomber.exceptions import SourceInitializationError
 from ploomber.sources import (SQLQuerySource, SQLScriptSource, GenericSource,
-                              PythonCallableSource, FileSource, Source,
-                              NotebookSource)
+                              PythonCallableSource, FileSource, NotebookSource)
+from ploomber.sources.abc import Source
 from ploomber.tasks import SQLScript
 from ploomber.products import SQLiteRelation, GenericSQLRelation
 from ploomber import DAG

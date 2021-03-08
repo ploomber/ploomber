@@ -4,7 +4,7 @@ from pathlib import Path
 
 import parso
 
-from ploomber.sources.sources import Source
+from ploomber.sources.abc import Source
 from ploomber.util.util import signature_check, load_dotted_path
 from ploomber.static_analysis.python import PythonCallableExtractor
 
