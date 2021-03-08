@@ -80,10 +80,9 @@ def tasks_list(dag_spec):
     tasks = dag_spec['tasks']
 
     # we have to pop this, since a list of tasks gets meta default params
-    # which extracts both upstream and product from source code
+    # which extracts upstream
     for t in tasks:
         t.pop('upstream', None)
-        t.pop('product', None)
 
     return tasks
 
@@ -483,21 +482,31 @@ def test_initialize_with_lazy_import_with_missing_kernel(
     assert DAGSpec(dag_spec, lazy_import=True).to_dag()
 
 
-@pytest.mark.parametrize('raw', [[{
-    'source': 'load.py'
-}], {
-    'tasks': [{
-        'source': 'load.py'
-    }]
-}, {
-    'meta': {},
-    'tasks': []
-}])
+@pytest.mark.parametrize(
+    'raw', [
+        [
+            {
+                'source': 'load.py',
+                'product': 'data.csv'
+            },
+        ],
+        {
+            'tasks': [{
+                'source': 'load.py',
+                'product': 'data.csv'
+            }]
+        },
+        {
+            'meta': {},
+            'tasks': []
+        },
+    ],
+    ids=['list-of-tasks', 'dict-with-tasks', 'dict-with-meta'])
 def test_meta_defaults(raw):
     spec = DAGSpec(raw)
     meta = spec['meta']
     assert meta['extract_upstream']
-    assert meta['extract_product']
+    assert not meta['extract_product']
     assert not meta['product_relative_to_source']
     assert not meta['jupyter_hot_reload']
 
@@ -526,6 +535,7 @@ def test_expand_env(save, tmp_directory):
         {
             'tasks': [{
                 'source': 'plot.py',
+                'product': 'output.ipynb',
                 'params': {
                     'sample': '{{sample}}',
                     'user': '{{user}}'
@@ -585,6 +595,7 @@ def test_passing_env_in_class_methods(method, kwargs, tmp_directory):
     spec_dict = {
         'tasks': [{
             'source': 'plot.py',
+            'product': 'output.ipynb',
             'params': {
                 'some_param': '{{key}}',
             }

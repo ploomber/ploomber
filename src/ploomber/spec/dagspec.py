@@ -447,7 +447,9 @@ class DAGSpec(MutableMapping):
 
     @classmethod
     def from_directory(cls, path_to_dir):
-        """Construct a DAGSpec from a directory
+        """
+        Construct a DAGSpec from a directory. Product and upstream are
+        extracted from sources
 
         Parameters
         ----------
@@ -479,7 +481,9 @@ class DAGSpec(MutableMapping):
 
     @classmethod
     def from_files(cls, files):
-        """Construct DAGSpec from list of files or glob-like pattern
+        """
+        Construct DAGSpec from list of files or glob-like pattern. Product and
+        upstream are extracted from sources
 
         Parameters
         ----------
@@ -507,7 +511,10 @@ class DAGSpec(MutableMapping):
             'name': str(Path(file_).with_suffix('').name)
         } for file_ in files]
 
-        return cls({'tasks': tasks})
+        # when creating spec from files, product and upstream must be extracted
+        # from sources
+        meta = {'extract_product': True, 'extract_upstream': True}
+        return cls({'tasks': tasks, 'meta': meta})
 
 
 class Meta:
@@ -546,7 +553,7 @@ class Meta:
             meta['extract_upstream'] = True
 
         if 'extract_product' not in meta:
-            meta['extract_product'] = True
+            meta['extract_product'] = False
 
         if 'product_relative_to_source' not in meta:
             meta['product_relative_to_source'] = False

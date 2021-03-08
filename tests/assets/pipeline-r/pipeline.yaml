@@ -1,3 +1,6 @@
+meta:
+  extract_product: True
+
 tasks:
   - source: raw.R
     name: raw

@@ -85,12 +85,12 @@ sections are shown first:
             ShellScript: File
             PythonCallable: File
 
-        # Extract product from source code. If False, tasks must have a "product" key
-        extract_product: True
-
         # Extract upstream dependencies from source code. If False, tasks
         # must declare dependencies using the "upstream" key
         extract_upstream: True
+
+        # Extract product from source code. If False, tasks must have a "product" key
+        extract_product: False
 
         # Make paths in File products relative to their sources, otherwise
         # they are relative to the pipeline.yaml parent folder

@@ -57,6 +57,7 @@ def test_add_task_from_scaffold(backup_test_pkg, tmp_directory):
     meta:
         source_loader:
             module: test_pkg
+        extract_product: True
     tasks:
         - source: notebook.ipynb
         - source: notebook.py
@@ -83,6 +84,7 @@ def test_add_task_when_using_import_tasks_from(tmp_directory):
     spec = """
     meta:
         import_tasks_from: subdir/tasks.yaml
+        extract_product: True
 
     tasks: []
     """
