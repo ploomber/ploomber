@@ -96,19 +96,20 @@ SELECT * FROM {{upstream['raw_data']}}
 
 ```yaml
 tasks:
-  # script
-  - source: scripts/get_users.py
-    product: output/users-raw.csv
-
   # function
   - source: functions.clean_users
     product: output/users-clean.csv
 
-  # notebook
-  - source: notebooks/model-template.ipynb
+  # python script (or notebook)
+  - source: notebooks/model-template.py
     product:
       model: output/model.pickle
       nb: output/model-evaluation.html
+  
+  # sql script
+  - source: scripts/some_script.sql
+    product: [schema, name, table]
+    client: db.get_client
 ```
 
 </td>
