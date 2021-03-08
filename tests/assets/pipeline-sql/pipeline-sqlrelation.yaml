@@ -12,14 +12,14 @@ tasks:
 
   - source: filter.sql
     product: [filtered, table]
-    upstream: [load.sql]
+    upstream: [load]
 
   - source: transform.sql
     product: [transformed, table]
-    upstream: [filter.sql]
+    upstream: [filter]
 
   - class: NotebookRunner
     source: plot.py
     product: plot.ipynb
     product_class: File
-    upstream: transform.sql
+    upstream: transform

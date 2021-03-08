@@ -57,7 +57,8 @@ class PlaceholderSource(abc.Source):
     @property
     def name(self):
         if self._placeholder.path is not None:
-            return self._placeholder.path.name
+            # filename without extension(e.g., plot.py -> plot)
+            return self._placeholder.path.stem
 
 
 class SQLSourceMixin:

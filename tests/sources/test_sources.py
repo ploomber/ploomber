@@ -34,6 +34,28 @@ def test_interface(concrete_class):
                                         allowed=allowed)
 
 
+@pytest.mark.parametrize('class_, arg, expected', [
+    [PythonCallableSource, functions.simple, 'simple'],
+    [NotebookSource, Path('source.py'), 'source'],
+    [SQLQuerySource, Path('query.sql'), 'query'],
+    [SQLScriptSource, Path('script.sql'), 'script'],
+    [GenericSource, Path('script.sh'), 'script'],
+])
+def test_name(tmp_directory, class_, arg, expected):
+    Path('source.py').write_text("""
+# + tags=["parameters"]
+# -
+""")
+
+    Path('query.sql').touch()
+    Path('script.sql').write_text(
+        'CREATE TABLE {{product}} AS SELECT * FROM data')
+    Path('script.sh').touch()
+    Path('file.ext').touch()
+
+    assert class_(arg).name == expected
+
+
 def test_generic_source_unrendered():
     s = GenericSource('some {{placeholder}}')
     assert repr(s) == "GenericSource('some {{placeholder}}')"

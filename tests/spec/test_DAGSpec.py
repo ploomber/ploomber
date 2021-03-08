@@ -368,9 +368,9 @@ def test_postgres_sql_spec(tmp_pipeline_sql, pg_client_and_schema,
     # FIXME: this does no show the custom Upstream key missing error
     dag.build()
 
-    assert not dag['load.sql'].upstream
-    assert list(dag['filter.sql'].upstream.keys()) == ['load.sql']
-    assert list(dag['transform.sql'].upstream.keys()) == ['filter.sql']
+    assert not dag['load'].upstream
+    assert list(dag['filter'].upstream.keys()) == ['load']
+    assert list(dag['transform'].upstream.keys()) == ['filter']
 
 
 def test_sql_spec_w_products_in_source(tmp_pipeline_sql_products_in_source,
@@ -415,9 +415,9 @@ def test_sqlite_sql_spec(spec, tmp_pipeline_sql, add_current_to_sys_path):
     # FIXME: this does no show the custom Upstream key missing error
     dag.build()
 
-    assert not dag['load.sql'].upstream
-    assert list(dag['filter.sql'].upstream.keys()) == ['load.sql']
-    assert list(dag['transform.sql'].upstream.keys()) == ['filter.sql']
+    assert not dag['load'].upstream
+    assert list(dag['filter'].upstream.keys()) == ['load']
+    assert list(dag['transform'].upstream.keys()) == ['filter']
 
 
 def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
@@ -621,9 +621,9 @@ def test_passing_env_in_class_methods(method, kwargs, tmp_directory):
 
 def test_infer_dependencies_sql(tmp_pipeline_sql, add_current_to_sys_path):
     expected = {
-        'filter.sql': {'load.sql'},
-        'transform.sql': {'filter.sql'},
-        'load.sql': set()
+        'filter': {'load'},
+        'transform': {'filter'},
+        'load': set()
     }
 
     with open('pipeline-postgres.yaml') as f:
@@ -722,7 +722,7 @@ def get_client():
     dag = spec.to_dag()
     dag.render()
 
-    assert str(dag['create-table.sql'].source) == expected
+    assert str(dag['create-table'].source) == expected
 
 
 @pytest.mark.parametrize('lazy_import', [False, True])

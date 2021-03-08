@@ -17,11 +17,11 @@ tasks:
 
   - class: SQLScript
     source: filter-pg.sql
-    name: filter.sql
+    name: filter
     product: [filtered, table]
-    upstream: [load.sql]
+    upstream: [load]
 
   - class: SQLScript
     source: transform.sql
     product: [transformed, table]
-    upstream: [filter.sql]
+    upstream: [filter]

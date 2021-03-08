@@ -269,7 +269,9 @@ Add a cell at the top like this:
 
     @property
     def name(self):
-        return self._path.name
+        # filename without extension(e.g., plot.py -> plot)
+        if self._path:
+            return self._path.stem
 
     @property
     def nb_str_rendered(self):
