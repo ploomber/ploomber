@@ -17,14 +17,14 @@
 
 Ploomber is the simplest way to build reliable data pipelines for Data
 Science and Machine Learning. Provide your source code in a standard
-form and Ploomber will automatically construct the pipeline for you.
+form, and Ploomber automatically constructs the pipeline for you.
 Tasks can be anything from Python functions, Jupyter notebooks,
 Python/R/shell scripts, and SQL scripts.
 
-Once your pipeline is constructed, you'll be equipped with lots of development features to experiment faster. When you're ready, deploy to Airflow or
+Ploomber provides several features to experiment faster. When you're ready, deploy to Airflow or
 Kubernetes (using Argo) without code changes.
 
-Here's how a pipeline task looks like:
+Here's how pipeline tasks look like:
 
 <table>
 
@@ -41,8 +41,9 @@ Here's how a pipeline task looks like:
 
 ```python
 def clean_users(product, upstream):
-    # runs 'get_users' before this task and
-    # passes the output location
+    # run 'get_users' before this function.
+    # upstream['get_users'] returns the output
+    # of such task, used as input here
     df = pd.read_csv(upstream['get_users'])
 
     # your code here...
@@ -58,14 +59,16 @@ def clean_users(product, upstream):
 ```python
 # + tags=["parameters"]
 # run 'clean users' and 'clean_activity'
-# before this task
+# before this script/notebook
 upstream = ['clean_users', 'clean_activity']
 # -
 
-# a new code cell is injected here with
-# the output location of this task
-# (product) and dependencies: 'clean_users,
-# 'clean_activity'
+# a new cell is injected here with
+# the product variable
+# e.g., product = '/path/output.csv'
+# and a new upstream variable:
+# e.g., upstream = {'clean_users': '/path/...'
+#                   'clean_activity': '/another/...'}
 
 # your code here...
 
@@ -80,8 +83,9 @@ Path(product).write_bytes(pickle.dumps(model))
 -- {{product}} is replaced by the table name
 CREATE TABLE AS {{product}}
 /*
-runs 'raw_data' before this task and replaces
+run 'raw_data' before this task. Replace
 {{upstream['raw_data']}} with table name
+at runtime
 */
 SELECT * FROM {{upstream['raw_data']}}
 ```

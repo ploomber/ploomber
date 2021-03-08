@@ -46,7 +46,7 @@ Ploomber supports three types of tasks:
 2. Python/R scripts/notebooks
 3. SQL scripts
 
-You can develop pipelines where all tasks are only functions, scripts, noteboks,
+You can develop pipelines where all tasks are functions, scripts, noteboks,
 SQL scripts, or any combination of them. They all have the same interface but
 details vary. We describe the nuances in upcoming sections.
 
@@ -97,7 +97,7 @@ For a full reference on ``pipeline.yaml`` files see: :doc:`../api/spec`
 **Note:** Writing a ``pipeline.yaml`` file is optional, you can also create
 pipelines by pointing to a directory with scripts. `Click here <https://github.com/ploomber/projects/tree/master/spec-api-directory>`_
 to see an example. However, this is only recommended for simple projects
-(i.e., pipelines with just a couple tasks)
+(i.e., pipelines with just a couple tasks).
 
 
 Tasks: scripts/notebooks
@@ -107,7 +107,7 @@ The Jupyter notebook format (``.ipynb``) is prevalent for developing Data
 Science projects. One of its main features is storage of code and output in a
 standalone file. While this is great for exploratory analysis, it
 makes code version control harder (i.e., it isn't trivial to get the
-code diff between version A and B),
+code diff between version A and B).
 
 Our recommended approach is to use scripts; but to keep the benefits of the
 ``.ipynb`` format, Ploomber creates a copy of your scripts and converts it to
@@ -150,7 +150,7 @@ have dependencies, set ``upstream = None``.
 
 The previous code won't run as is: we only declared the names of the upstream tasks but
 we don't know where to load input from or where to save the current tasks's
-output. During execution, Ploomber adds a new cell, with ``product`` and
+output. During execution, Ploomber injects a new cell, with ``product`` and
 ``upstream`` variables.
 
 .. image:: https://ploomber.io/doc/injected-cell.png
@@ -164,7 +164,7 @@ product location of ``raw``, which we use as input. Furthermore, whatever
 value we have in the ``product`` key, is passed; we use that variable to save
 the current task's output.
 
-**Note:** When opening the task in Jupyter. The cell injection process happens
+**Note:** When opening the script in Jupyter, the cell injection process happens
 as well.
 
 Since scripts/noteboks always create an executed notebook, you should specify
