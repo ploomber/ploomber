@@ -130,8 +130,7 @@ def test_parses_create_view():
 def test_repr():
     rel = ParsedSQLRelation(schema=None, name='name', kind='view')
 
-    assert repr(
-        rel) == "ParsedSQLRelation(schema=None, name='name', kind='view')"
+    assert repr(rel) == "ParsedSQLRelation(('name', 'view'))"
 
 
 @pytest.mark.parametrize('class_', [

@@ -468,10 +468,13 @@ class SQLRelationPlaceholder(AbstractPlaceholder):
         return self._qualified_name(unrendered_ok=False, shorten=False)
 
     def _raw_repr(self):
-        mapping = dict(schema=self.schema,
-                       name=self._name_template.best_repr(shorten=False),
-                       kind=self.kind)
-        return ', '.join(f'{k}={v!r}' for k, v in mapping.items())
+        name = self._name_template.best_repr(shorten=False)
+
+        elements = (name,
+                    self.kind) if self.schema is None else (self.schema, name,
+                                                            self.kind)
+
+        return repr(elements)
 
     def __repr__(self):
         return f'{type(self).__name__}({self._raw_repr()})'

@@ -1,14 +1,10 @@
-from collections.abc import Iterable
 import pydoc
 from pathlib import Path
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.placeholders import extensions
+from ploomber.util.util import isiterable_not_str
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, exceptions
-
-
-def _is_iterable(o):
-    return isinstance(o, Iterable) and not isinstance(o, str)
 
 
 def _is_iterable_w_types(o, types):
@@ -51,7 +47,7 @@ class SourceLoader:
             raise TypeError('Path cannot be None if module is None')
 
         # validate path
-        if _is_iterable(path):
+        if isiterable_not_str(path):
             if _is_iterable_w_types(path, (str, Path)):
                 types_found = set(type(element) for element in path)
                 raise TypeError('If passing an iterable, path must consist '
@@ -80,7 +76,7 @@ class SourceLoader:
             raise ValueError('Could not find module path, pass a string or a '
                              'module object')
 
-        if _is_iterable(path):
+        if isiterable_not_str(path):
             self.path_full = [str(Path(module_path, e)) for e in path]
         else:
             # if path is None, do not append anything

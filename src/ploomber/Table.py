@@ -8,11 +8,9 @@ import shutil
 from collections.abc import Mapping, Iterable
 from tabulate import tabulate
 
+from ploomber.util.util import isiterable_not_str
+
 _BETWEEN_COLUMN_WIDTH = 2
-
-
-def _is_iterable(obj):
-    return isinstance(obj, Iterable) and not isinstance(obj, str)
 
 
 class Row:
@@ -45,7 +43,7 @@ class Row:
         return self._html
 
     def __getitem__(self, key):
-        if _is_iterable(key):
+        if isiterable_not_str(key):
             return Row({k: self._mapping[k] for k in key})
         else:
             return self._mapping[key]
@@ -117,7 +115,7 @@ class Table:
         return self._html
 
     def __getitem__(self, key):
-        if _is_iterable(key):
+        if isiterable_not_str(key):
             return Table({k: v
                           for k, v in self.values.items() if k in key},
                          column_width=self.column_width)

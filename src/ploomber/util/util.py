@@ -97,6 +97,10 @@ def isiterable(obj):
         return True
 
 
+def isiterable_not_str(obj):
+    return isinstance(obj, Iterable) and not isinstance(obj, str)
+
+
 # TODO: add more context to errors, which task and which hook?
 def callback_check(fn, available, allow_default=True):
     """

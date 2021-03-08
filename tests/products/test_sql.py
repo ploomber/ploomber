@@ -82,8 +82,10 @@ def test_save_metadata(client_and_prod):
     df.to_sql('numbers', client.engine, if_exists='replace', schema=schema)
 
     product.render({})
-    metadata_new = {'timestamp': datetime.now().timestamp(),
-                    'stored_source_code': 'some code'}
+    metadata_new = {
+        'timestamp': datetime.now().timestamp(),
+        'stored_source_code': 'some code'
+    }
 
     product.save_metadata(metadata_new)
 
@@ -133,11 +135,15 @@ def test_old_metadata_is_replaced(arg, sqlite_client_and_tmp_dir):
 
     product.render({})
 
-    product.save_metadata({'timestamp': datetime.now().timestamp(),
-                           'stored_source_code': 'some code'})
+    product.save_metadata({
+        'timestamp': datetime.now().timestamp(),
+        'stored_source_code': 'some code'
+    })
 
-    product.save_metadata({'timestamp': datetime.now().timestamp(),
-                           'stored_source_code': 'some code'})
+    product.save_metadata({
+        'timestamp': datetime.now().timestamp(),
+        'stored_source_code': 'some code'
+    })
 
     query = "SELECT COUNT(*) FROM _metadata WHERE name='{}'".format(name)
 

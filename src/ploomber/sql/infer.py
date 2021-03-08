@@ -5,8 +5,6 @@ Analyzes SQL scripts to infer performed actions
 import warnings
 import sqlparse
 
-from ploomber.util import _repr
-
 
 def _quoted_with(identifier, char):
     return identifier.startswith(char) and identifier.endswith(char)
@@ -61,11 +59,11 @@ class ParsedSQLRelation:
             return '{}.{}'.format(self.schema, self.name)
 
     def __repr__(self):
-        return _repr.from_obj_and_arg_mapping(self, {
-            'schema': self.schema,
-            'name': self.name,
-            'kind': self.kind
-        })
+        raw_repr = (self.name,
+                    self.kind) if self.schema is None else (self.schema,
+                                                            self.name,
+                                                            self.kind)
+        return f'{type(self).__name__}({raw_repr!r})'
 
     def __hash__(self):
         return hash((self.schema, self.name, self.kind))
