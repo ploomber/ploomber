@@ -322,30 +322,6 @@ class DownloadFromURL(Task):
         return GenericSource(str(source), **kwargs, optional=['product'])
 
 
-# TODO: move this and _Gather to helpers.py (actually create a module
-# for partitioned execution)
-class _Partition(Task):
-    def __init__(self, product, dag, name):
-        kwargs = dict(hot_reload=dag._params.hot_reload)
-        self._source = type(self)._init_source(kwargs)
-        super().__init__(product, dag, name, None)
-
-    def run(self):
-        """This Task does not run anything
-        """
-        # TODO: verify that this task has only one upstream dependencies
-        # is this the best place to check?
-        pass
-
-    def _init_source(self, kwargs):
-        return EmptySource(None, **kwargs)
-
-
-class _Gather(PythonCallable):
-    def run(self):
-        pass
-
-
 class Link(Task):
     """
     A dummy Task used to "plug" an external Product to a pipeline, this
