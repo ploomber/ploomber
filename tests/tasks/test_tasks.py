@@ -8,8 +8,8 @@ from ploomber.products import (File, PostgresRelation, GenericProduct,
 from ploomber.tasks import (PythonCallable, SQLScript, ShellScript, SQLDump,
                             SQLTransfer, SQLUpload, PostgresCopyFrom,
                             NotebookRunner)
-from ploomber.tasks.Task import Task
-from ploomber.tasks import Task as task_module
+from ploomber.tasks.abc import Task
+from ploomber.tasks import abc as task_abc
 from ploomber.constants import TaskStatus
 from ploomber.placeholders.Placeholder import Placeholder
 
@@ -51,7 +51,7 @@ def test_task_status(monkeypatch):
     task = ConcreteTask(product=File('some_file'), dag=DAG())
 
     # mock Row so we can test using the dictionary directly
-    monkeypatch.setattr(task_module, 'Row', lambda x: x)
+    monkeypatch.setattr(task_abc, 'Row', lambda x: x)
 
     out = task.status(sections=[
         'type', 'status', 'client', 'last_run', 'outdated_dependencies',

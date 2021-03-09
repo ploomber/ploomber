@@ -30,7 +30,7 @@ from ploomber.exceptions import TaskBuildError
 from ploomber.sources import NotebookSource
 from ploomber.sources.NotebookSource import _cleanup_rendered_nb
 from ploomber.products import File, MetaProduct
-from ploomber.tasks.Task import Task
+from ploomber.tasks.abc import Task
 from ploomber.util import requires, chdir_code
 
 

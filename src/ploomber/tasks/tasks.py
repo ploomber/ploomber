@@ -11,7 +11,7 @@ import functools
 
 from IPython.terminal.debugger import TerminalPdb, Pdb
 
-from ploomber.tasks.Task import Task
+from ploomber.tasks.abc import Task
 from ploomber.sources import (PythonCallableSource, GenericSource, EmptySource)
 from ploomber.clients import ShellClient
 from ploomber.products.Metadata import MetadataAlwaysUpToDate

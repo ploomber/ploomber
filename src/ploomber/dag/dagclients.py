@@ -1,8 +1,8 @@
 from inspect import isclass
 from collections.abc import MutableMapping
 
-from ploomber import tasks
-from ploomber import products
+from ploomber.tasks.abc import Task
+from ploomber.products.Product import Product
 from ploomber.validators.string import get_suggestion, str_to_class
 
 
@@ -51,8 +51,7 @@ class DAGClients(MutableMapping):
         else:
             key_obj = key
 
-        if not isclass(key_obj) or not issubclass(
-                key_obj, (tasks.Task.Task, products.Product)):
+        if not isclass(key_obj) or not issubclass(key_obj, (Task, Product)):
             raise ValueError('DAG client keys must be Tasks '
                              f'or Products, value {key_obj!r} is not')
 

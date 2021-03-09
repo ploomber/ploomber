@@ -1,6 +1,6 @@
 import logging
 
-from ploomber.tasks.Task import Task
+from ploomber.tasks.abc import Task
 from ploomber.sources import FileSource
 from ploomber.util import requires
 

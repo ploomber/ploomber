@@ -1,7 +1,7 @@
 from pathlib import Path
 from io import StringIO
 
-from ploomber.tasks.Task import Task
+from ploomber.tasks.abc import Task
 from ploomber.sources import (SQLScriptSource, SQLQuerySource, FileSource)
 from ploomber.products import (File, PostgresRelation, SQLiteRelation,
                                GenericSQLRelation, GenericProduct, SQLRelation)
