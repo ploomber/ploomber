@@ -506,13 +506,7 @@ class DAGSpec(MutableMapping):
                              f'invalid extensions: {invalid}. '
                              f'Allowed extensions are: {valid_extensions}')
 
-        tasks = [{
-            'source': file_,
-            'name': str(Path(file_).with_suffix('').name)
-        } for file_ in files]
-
-        # when creating spec from files, product and upstream must be extracted
-        # from sources
+        tasks = [{'source': file_} for file_ in files]
         meta = {'extract_product': True, 'extract_upstream': True}
         return cls({'tasks': tasks, 'meta': meta})
 
