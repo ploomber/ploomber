@@ -7,7 +7,7 @@
 #  notebook always sets the current working directory to the notebook's path)
 #  This also makes products with relative paths work. But since products
 #  in scripts include the executed notebook itself, we have to resolve
-#  relative paths otherwise saving the metadata file (.source) will
+#  relative paths otherwise saving the metadata file (.metadata) will
 #  because the product variable inside the script is written relative to
 #  but saving metadata happens relative to the current working directory.
 #  To solve this mismatch, all product paths are resolved to their canonical

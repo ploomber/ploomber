@@ -83,12 +83,12 @@ Product's metadata
 
 In the previous tutorial, we showed that Ploomber lets you speed up pipeline
 execution by skipping up-to-date tasks. It achieves so by saving metadata on
-each product. For regular files, it creates a ``.source`` in the file's
-location. For example if you generate a ``output/data.csv`` product, another
-filed called ``output/data.csv.source`` is generated.
+each product. For regular files, it creates a ``.metadata`` in the file's
+location. For example, if you generate an ``output/data.csv`` product, another
+file called ``.output/data.csv.metadata`` is generated.
 
-To support this for SQL relations (i.e. view or tables), Ploomber also has to
-store metadata. If you are using PostgreSQL, you can use
+To support incremental builds for SQL relations (i.e., view or tables),
+Ploomber also has to store metadata. If you are using PostgreSQL, you can use
 :py:mod:`ploomber.products.PostgresRelation` and won't have to setup anything
 else. If using SQLite, you can use :py:mod:`ploomber.products.SQLiteRelation`.
 

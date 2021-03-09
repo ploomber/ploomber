@@ -359,7 +359,7 @@ def test_build_partially_diff_sessions(tmp_directory):
     make().build()
 
     # force outdated "a" task by deleting metadata
-    Path('a.txt.source').unlink()
+    Path('.a.txt.metadata').unlink()
 
     # create another dag
     dag = make()

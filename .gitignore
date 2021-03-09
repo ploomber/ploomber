@@ -4,7 +4,7 @@ projects-tmp/
 *.sublime-project
 *.sublime-workspace
 *.txt
-*.source
+*.metadata
 *.parquet
 examples/pipeline/results/
 

@@ -27,16 +27,16 @@ def test_get():
 
 
 def test_delete_metadata(tmp_directory):
-    Path('a.txt.source').touch()
-    Path('b.txt.source').touch()
+    Path('.a.txt.metadata').touch()
+    Path('.b.txt.metadata').touch()
 
     a = File('a.txt')
     b = File('b.txt')
     m = MetaProduct({'a': a, 'b': b})
     m.metadata.delete()
 
-    assert not Path('a.txt.source').exists()
-    assert not Path('b.txt.source').exists()
+    assert not Path('.a.txt.metadata').exists()
+    assert not Path('.b.txt.metadata').exists()
 
 
 def test_can_iterate_over_products():

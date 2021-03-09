@@ -13,7 +13,8 @@ class PartitionedFile(File):
     @property
     def _path_to_stored_source_code(self):
         # point to the parent folder
-        return Path(str(self._path_to_file.parent) + '.source')
+        name = '.' + self._path_to_file.name.parent
+        return Path(str(name) + '.metadata')
 
     def save_metadata(self):
         # do not save metadata

@@ -34,28 +34,34 @@ class File(Product, os.PathLike):
         return Placeholder(str(identifier))
 
     @property
-    def __path_to_file(self):
+    def _path_to_file(self):
         return Path(str(self._identifier))
 
     @property
-    def __path_to_metadata(self):
-        return Path(str(self.__path_to_file) + '.source')
+    def _path_to_metadata(self):
+        name = f'.{self._path_to_file.name}.metadata'
+        return self._path_to_file.with_name(name)
 
     def fetch_metadata(self):
+        # to keep compatibility with ploomber<0.10
+        old_name = Path(str(self._path_to_file) + '.source')
+        if old_name.is_file():
+            shutil.move(old_name, self._path_to_metadata)
+
         empty = dict(timestamp=None, stored_source_code=None)
         # but we have no control over the stored code, it might be missing
         # so we check, we also require the file to exists: even if the
         # .source file exists, missing the actual data file means something
         # if wrong anf the task should run again
-        if (self.__path_to_metadata.exists() and self.__path_to_file.exists()):
-            content = self.__path_to_metadata.read_text()
+        if (self._path_to_metadata.exists() and self._path_to_file.exists()):
+            content = self._path_to_metadata.read_text()
 
             try:
                 parsed = json.loads(content)
             except json.JSONDecodeError as e:
                 raise ValueError('Error loading JSON metadata '
                                  f'for {self!r} stored at '
-                                 f'{str(self.__path_to_metadata)!r}') from e
+                                 f'{str(self._path_to_metadata)!r}') from e
             else:
                 # TODO: validate 'stored_source_code', 'timestamp' exist
                 return parsed
@@ -63,27 +69,27 @@ class File(Product, os.PathLike):
             return empty
 
     def save_metadata(self, metadata):
-        self.__path_to_metadata.write_text(json.dumps(metadata))
+        self._path_to_metadata.write_text(json.dumps(metadata))
 
     def _delete_metadata(self):
-        if self.__path_to_metadata.exists():
-            os.remove(str(self.__path_to_metadata))
+        if self._path_to_metadata.exists():
+            os.remove(str(self._path_to_metadata))
 
     def exists(self):
-        return self.__path_to_file.exists()
+        return self._path_to_file.exists()
 
     def delete(self, force=False):
         # force is not used for this product but it is left for API
         # compatibility
         if self.exists():
-            self.logger.debug('Deleting %s', self.__path_to_file)
-            if self.__path_to_file.is_dir():
-                shutil.rmtree(str(self.__path_to_file))
+            self.logger.debug('Deleting %s', self._path_to_file)
+            if self._path_to_file.is_dir():
+                shutil.rmtree(str(self._path_to_file))
             else:
-                os.remove(str(self.__path_to_file))
+                os.remove(str(self._path_to_file))
         else:
             self.logger.debug('%s does not exist ignoring...',
-                              self.__path_to_file)
+                              self._path_to_file)
 
     def __repr__(self):
         # do not shorten, we need to process the actual path
@@ -116,11 +122,11 @@ class File(Product, os.PathLike):
         return self._client
 
     def download(self):
-        if (self.client is not None and not self.__path_to_metadata.exists()
-                and not self.__path_to_file.exists()):
-            self.logger.info('Downloading %s...', self.__path_to_file)
-            metadata = str(self.__path_to_metadata)
-            file_ = str(str(self.__path_to_file))
+        if (self.client is not None and not self._path_to_metadata.exists()
+                and not self._path_to_file.exists()):
+            self.logger.info('Downloading %s...', self._path_to_file)
+            metadata = str(self._path_to_metadata)
+            file_ = str(str(self._path_to_file))
 
             if self.client._remote_exists(
                     metadata) and self.client._remote_exists(file_):
@@ -129,11 +135,11 @@ class File(Product, os.PathLike):
 
     def upload(self):
         # only upload when we have complete info (product + metadata)
-        if (self.client is not None and self.__path_to_metadata.exists()
-                and self.__path_to_file.exists()):
-            self.logger.info('Uploading %s...', self.__path_to_file)
-            self.client.upload(str(self.__path_to_metadata))
-            self.client.upload(str(self.__path_to_file))
+        if (self.client is not None and self._path_to_metadata.exists()
+                and self._path_to_file.exists()):
+            self.logger.info('Uploading %s...', self._path_to_file)
+            self.client.upload(str(self._path_to_metadata))
+            self.client.upload(str(self._path_to_file))
 
     def __fspath__(self):
         """

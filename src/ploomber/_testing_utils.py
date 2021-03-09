@@ -44,9 +44,10 @@ def assert_no_extra_attributes_in_class(abstract_class,
     """
     allowed = allowed or set()
 
+    # allow "private" methods
     preffixes = [
         '_{}__'.format(class_.__name__) for class_ in concrete_class.__bases__
-    ] + ['__', '_{}__'.format(concrete_class.__name__)]
+    ] + ['__', '_', '_{}__'.format(concrete_class.__name__)]
 
     extra_attrs = {
         attr

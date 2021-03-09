@@ -61,26 +61,47 @@ def test_file_delete_directory(tmp_directory):
     assert not d.exists()
 
 
+def test_path_to_metadata():
+    assert File('file.txt')._path_to_metadata == Path('.file.txt.metadata')
+
+
+def test_migrates_metadata(tmp_directory):
+    Path('sample.txt.source').write_text(
+        '{"timestamp": "t", "stored_source_code": "c"}')
+    Path('sample.txt').touch()
+    meta = File('sample.txt').fetch_metadata()
+
+    assert not Path('sample.txt.source').exists()
+    assert Path('.sample.txt.metadata').exists()
+    assert meta['stored_source_code'] == 'c'
+    assert meta['timestamp'] == 't'
+
+
 def test_delete_non_existing_metadata(tmp_directory):
     File('some_file')._delete_metadata()
-    assert not Path('some_file.source').exists()
+    assert not Path('.some_file.metadata').exists()
 
 
-def test_delete_metadata(tmp_directory):
-    Path('some_file.source').touch()
-    File('some_file')._delete_metadata()
-    assert not Path('some_file.source').exists()
+@pytest.mark.parametrize('file_, metadata', [
+    ['some_file', '.some_file.metadata'],
+    ['dir/some_file', 'dir/.some_file.metadata'],
+])
+def test_delete_metadata(tmp_directory, file_, metadata):
+    Path('dir').mkdir()
+    Path(metadata).touch()
+    File(file_)._delete_metadata()
+    assert not Path(metadata).exists()
 
 
 def test_error_on_corrupted_metadata(tmp_directory):
     Path('corrupted').touch()
-    Path('corrupted.source').write_text('this is not json')
+    Path('.corrupted.metadata').write_text('this is not json')
 
     with pytest.raises(ValueError) as excinfo:
         File('corrupted').fetch_metadata()
 
     msg = ("Error loading JSON metadata for File('corrupted') "
-           "stored at 'corrupted.source'")
+           "stored at '.corrupted.metadata'")
     assert msg == str(excinfo.value)
 
 
@@ -145,25 +166,25 @@ def test_download(tmp_directory):
 
     product.download()
 
-    assert client.download.call_args_list == [(('file.txt.source', ), ),
+    assert client.download.call_args_list == [(('.file.txt.metadata', ), ),
                                               (('file.txt', ), )]
 
 
 def test_upload(tmp_directory):
     Path('file.txt').touch()
-    Path('file.txt.source').touch()
+    Path('.file.txt.metadata').touch()
     client = Mock()
     product = File('file.txt', client=client)
 
     product.upload()
 
-    assert client.upload.call_args_list == [(('file.txt.source', ), ),
+    assert client.upload.call_args_list == [(('.file.txt.metadata', ), ),
                                             (('file.txt', ), )]
 
 
 @pytest.mark.parametrize('to_touch', [
     ['file.txt'],
-    ['file.txt.source'],
+    ['.file.txt.metadata'],
     [],
 ])
 def test_do_not_upload_if_none_or_one(to_touch, tmp_directory):
@@ -180,8 +201,8 @@ def test_do_not_upload_if_none_or_one(to_touch, tmp_directory):
 
 @pytest.mark.parametrize('to_touch', [
     ['file.txt'],
-    ['file.txt.source'],
-    ['file.txt', 'file.txt.source'],
+    ['.file.txt.metadata'],
+    ['file.txt', '.file.txt.metadata'],
 ])
 def test_do_not_download_if_file_or_metadata_exists(to_touch, tmp_directory):
     for f in to_touch:
@@ -208,7 +229,7 @@ def test_do_not_download_if_metadata_does_not_exist_in_remote(
     product.download()
 
     # should call this to verify if the remote copy exists
-    client._remote_exists.assert_called_with('file.txt.source')
+    client._remote_exists.assert_called_with('.file.txt.metadata')
     client._remote_exists.assert_called_once()
     # should not attempt to download
     client.download.assert_not_called()
@@ -223,7 +244,7 @@ def test_do_not_download_if_file_does_not_exist_in_remote(tmp_directory):
 
     # should call twice, since metadata exists, it has to also check the file
     client._remote_exists.assert_has_calls([
-        _Call((('file.txt.source', ), {})),
+        _Call((('.file.txt.metadata', ), {})),
         _Call((('file.txt', ), {})),
     ])
     # should not attempt to download

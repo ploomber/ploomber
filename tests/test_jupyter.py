@@ -123,7 +123,7 @@ def test_save(tmp_nbs):
 
 def test_deletes_metadata_on_save(tmp_nbs):
     Path('output').mkdir()
-    metadata = Path('output/plot.ipynb.source')
+    metadata = Path('output/.plot.ipynb.metadata')
     metadata.touch()
 
     cm = PloomberContentsManager()
