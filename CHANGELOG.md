@@ -7,7 +7,7 @@
 - `File` saves metadata in a `.{filename}.metadata` file instead of `{filename}.source`
 - Simpler repr for SQL products
 - Improved Spec API docs
-
+- Adds `ploomber.tasks.TaskGroup.from_params` to create multiple tasks at once
 
 ## 0.9.5 (2021-03-07)
 - Changes a lot of error messages for clarity

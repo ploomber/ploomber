@@ -150,4 +150,4 @@ class TaskGroup:
             t = task_class(**kwargs, dag=dag, name=task_name, params=params)
             tasks_all.append(t)
 
-        return cls(tasks_all, treat_as_single_task=False, name=name)
+        return cls(tasks_all)
