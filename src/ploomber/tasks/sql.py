@@ -53,8 +53,16 @@ class SQLScript(Task):
                 f'{type(self).__name__} must be initialized with a client. '
                 'Pass a client directly or set a DAG-level one')
 
+        if not hasattr(client, 'split_source'):
+            raise TypeError(
+                f'client with value {client!r} does not have a split_source '
+                'attribute. Make sure this is a valid client object '
+                '(e.g., ploomber.clients.SQLALChemy or '
+                'ploomber.clients.DBAPIClient)')
+
         kwargs = dict(hot_reload=dag._params.hot_reload,
                       split_source=client.split_source)
+
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
         self.client = client

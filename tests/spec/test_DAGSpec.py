@@ -620,11 +620,7 @@ def test_passing_env_in_class_methods(method, kwargs, tmp_directory):
 
 
 def test_infer_dependencies_sql(tmp_pipeline_sql, add_current_to_sys_path):
-    expected = {
-        'filter': {'load'},
-        'transform': {'filter'},
-        'load': set()
-    }
+    expected = {'filter': {'load'}, 'transform': {'filter'}, 'load': set()}
 
     with open('pipeline-postgres.yaml') as f:
         d = yaml.safe_load(f)
@@ -986,44 +982,35 @@ def test_error_invalid_yaml_with_placeholders_without_parentheses(
     assert content in str(excinfo.value)
 
 
-def test_error_if_dag_level_client_dotted_path_is_not_a_callable(
-        tmp_sample_tasks, add_current_to_sys_path, no_sys_modules_cache):
-    Path('dag_level_client_dotted_path_returns_none.py').write_text("""
-get = 1
-""")
-
-    spec = DAGSpec({
-        'meta': {
-            'extract_product': False,
-            'extract_upstream': True,
-        },
-        'tasks': [
-            {
-                'source': 'sample.sql',
-                'product': ['name', 'table']
-            },
-        ],
-        'clients': {
-            'SQLScript': 'dag_level_client_dotted_path_returns_none.get'
-        }
-    })
-
-    with pytest.raises(TypeError) as excinfo:
-        spec.to_dag()
-
-    expected = (
-        "Error loading dotted path 'dag_level_client_dotted_path_returns_none"
+@pytest.mark.parametrize(
+    'code, expected_error',
+    [[
+        'get = 1', "Error loading dotted path 'dag_level_client_dotted_path"
         ".get'. Expected a callable object (i.e., some kind of function). "
-        "Got 1 (an object of type: int)")
-    assert str(excinfo.value) == expected
-
-
-def test_error_if_dag_level_client_dotted_path_returns_none(
-        tmp_sample_tasks, add_current_to_sys_path, no_sys_modules_cache):
-    Path('dag_level_client_dotted_path_returns_none.py').write_text("""
+        "Got 1 (an object of type: int)"
+    ],
+     [
+         """
 def get():
     return None
-""")
+""", "Error calling dotted path "
+         "'dag_level_client_dotted_path.get'. "
+         "Expected a value but got None"
+     ],
+     [
+         """
+def get():
+    return 42
+""", 'client with value 42 does not have a split_source attribute. Make sure '
+         'this is a valid client object (e.g., ploomber.clients.SQLALChemy '
+         'or ploomber.clients.DBAPIClient)'
+     ]],
+    ids=['not-a-callable', 'returns-none', 'returns-not-a-client'])
+def test_error_invalid_dag_level_client_dotted_path(tmp_sample_tasks,
+                                                    add_current_to_sys_path,
+                                                    no_sys_modules_cache, code,
+                                                    expected_error):
+    Path('dag_level_client_dotted_path.py').write_text(code)
 
     spec = DAGSpec({
         'meta': {
@@ -1037,16 +1024,14 @@ def get():
             },
         ],
         'clients': {
-            'SQLScript': 'dag_level_client_dotted_path_returns_none.get'
+            'SQLScript': 'dag_level_client_dotted_path.get'
         }
     })
 
     with pytest.raises(TypeError) as excinfo:
         spec.to_dag()
 
-    assert ("Error calling dotted path "
-            "'dag_level_client_dotted_path_returns_none.get'. "
-            "Expected a value but got None") in str(excinfo.value)
+    assert expected_error in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
