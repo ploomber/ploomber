@@ -18,7 +18,7 @@ from ploomber.products.Metadata import MetadataAlwaysUpToDate
 from ploomber.exceptions import TaskBuildError
 from ploomber.constants import TaskStatus
 from ploomber.sources.interact import CallableInteractiveDeveloper
-from ploomber.tasks.Params import Params
+from ploomber.tasks._params import Params
 
 
 def _unserialize_params(params_original, unserializer):

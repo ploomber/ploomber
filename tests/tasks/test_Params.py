@@ -1,5 +1,5 @@
 import pytest
-from ploomber.tasks.Params import Params
+from ploomber.tasks._params import Params
 
 
 def test_cannot_init_with_upstream_key():

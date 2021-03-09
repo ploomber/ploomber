@@ -1,5 +1,5 @@
 import pytest
-from ploomber.tasks.Upstream import Upstream
+from ploomber.tasks._upstream import Upstream
 
 
 def test_can_get_first():

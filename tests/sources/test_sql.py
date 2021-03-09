@@ -1,5 +1,5 @@
 from ploomber.sources import SQLScriptSource
-from ploomber.tasks.Params import Params
+from ploomber.tasks._params import Params
 
 
 def test_script_source():

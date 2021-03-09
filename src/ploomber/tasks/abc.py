@@ -57,8 +57,8 @@ from ploomber.exceptions import (TaskBuildError, DAGBuildEarlyStop,
                                  TaskRenderError)
 from ploomber.tasks.taskgroup import TaskGroup
 from ploomber.constants import TaskStatus
-from ploomber.tasks.Upstream import Upstream
-from ploomber.tasks.Params import Params
+from ploomber.tasks._upstream import Upstream
+from ploomber.tasks._params import Params
 from ploomber.Table import TaskReport, Row
 from ploomber.util import isiterable
 from ploomber.util.util import callback_check

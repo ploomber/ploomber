@@ -9,7 +9,7 @@ import pytest
 from ploomber.placeholders.Placeholder import (Placeholder,
                                                SQLRelationPlaceholder)
 from ploomber.placeholders.util import get_tags_in_str, get_defined_variables
-from ploomber.tasks.Upstream import Upstream
+from ploomber.tasks._upstream import Upstream
 from ploomber import SourceLoader
 from jinja2 import (Template, Environment, PackageLoader, FileSystemLoader,
                     StrictUndefined)
