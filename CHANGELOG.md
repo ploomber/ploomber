@@ -1,6 +1,13 @@
 # CHANGELOG
 
-## 0.9.6dev
+## 0.10dev
+
+- Changes `extract_product` default in spec API to False
+- Tasks get a default name equal to the filename without extension (e.g., plot.py -> plot)
+- `File` saves metadata in a `.{filename}.metadata` file instead of `{filename}.source`
+- Simpler repr for SQL products
+- Improved Spec API docs
+
 
 ## 0.9.5 (2021-03-07)
 - Changes a lot of error messages for clarity
