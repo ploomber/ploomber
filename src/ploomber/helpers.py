@@ -1,4 +1,3 @@
-from copy import deepcopy
 from pathlib import Path
 
 from jinja2 import Template
@@ -6,7 +5,6 @@ from jinja2 import Template
 from ploomber.tasks import PythonCallable
 from ploomber.tasks.tasks import _Gather, _Partition
 from ploomber.products import File
-from ploomber.tasks.TaskGroup import TaskGroup
 
 
 class PartitionedFile(File):
@@ -83,78 +81,3 @@ def partitioned_execution(upstream_partitioned,
             upstream_other >> task
 
     return gather
-
-
-def make_task_group(task_class,
-                    task_kwargs,
-                    dag,
-                    name,
-                    params_array,
-                    namer=None):
-    """
-    Build a group of tasks of the same class that operate over an array of
-    parameters but have the same source. This is better than using a for
-    loop to create multiple tasks as it takes care of validation and proper
-    object creation.
-
-    Parameters
-    ----------
-    task_class : class
-        The task class for all generated tasks
-
-    task_kwargs : dict
-        Task keyword arguments passed to the constructor, must not contain:
-        dag, name, params, nor product, as this parameters are passed by this
-        function. Must include source
-
-    dag : ploomber.DAG
-        The DAG object to add these tasks to
-
-    name : str
-        The name for the task group
-
-    params_array : list
-        Each element is passed to the "params" argument on each task. This
-        determines the number of tasks to be created. "name" is added to each
-        element.
-
-    """
-    # validate task_kwargs
-    if 'dag' in task_kwargs:
-        raise KeyError('dag should not be part of task_kwargs')
-
-    if 'name' in task_kwargs:
-        raise KeyError('name should not be part of task_kwargs')
-
-    if 'params' in task_kwargs:
-        raise KeyError('params should not be part of task_kwargs')
-
-    if 'product' not in task_kwargs:
-        raise KeyError('product should be in task_kwargs')
-
-    # TODO: validate {{index}} appears in product - maybe all products
-    # should have a way to extract which placeholders exist?
-
-    tasks_all = []
-
-    for i, params in enumerate(params_array):
-
-        # each task should get a different deep copy, primarily cause they
-        # should have a different product
-        kwargs = deepcopy(task_kwargs)
-        # params should also be different copies, otherwise if the same
-        # grid is re-used in several tasks, modifying anything there will
-        # have side-effects
-        params = deepcopy(params)
-
-        if namer:
-            task_name = namer(params)
-            params['name'] = task_name
-        else:
-            task_name = name + str(i)
-            params['name'] = i
-
-        t = task_class(**kwargs, dag=dag, name=task_name, params=params)
-        tasks_all.append(t)
-
-    return TaskGroup(tasks_all, treat_as_single_task=False, name=name)

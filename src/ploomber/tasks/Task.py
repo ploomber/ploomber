@@ -55,7 +55,7 @@ from datetime import datetime
 from ploomber.products import Product, MetaProduct, EmptyProduct
 from ploomber.exceptions import (TaskBuildError, DAGBuildEarlyStop,
                                  TaskRenderError)
-from ploomber.tasks.TaskGroup import TaskGroup
+from ploomber.tasks.taskgroup import TaskGroup
 from ploomber.constants import TaskStatus
 from ploomber.tasks.Upstream import Upstream
 from ploomber.tasks.Params import Params

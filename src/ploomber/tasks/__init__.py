@@ -6,6 +6,7 @@ from ploomber.tasks.sql import (SQLScript, SQLDump, SQLTransfer, SQLUpload,
 from ploomber.tasks.notebook import NotebookRunner
 from ploomber.tasks.aws import UploadToS3
 from ploomber.tasks.param_forward import input_data_passer, in_memory_callable
+from ploomber.tasks.taskgroup import TaskGroup
 
 __all__ = [
     'PythonCallable',
@@ -21,6 +22,7 @@ __all__ = [
     'Link',
     'Input',
     'UploadToS3',
+    'TaskGroup',
     'input_data_passer',
     'in_memory_callable',
     'task_factory',
