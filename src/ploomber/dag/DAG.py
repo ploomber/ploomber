@@ -58,7 +58,6 @@ from ploomber import executors
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop)
-from ploomber.executors import Serial
 from ploomber.MessageCollector import (RenderExceptionsCollector,
                                        RenderWarningsCollector)
 from ploomber.util.util import callback_check
@@ -132,7 +131,7 @@ class DAG(AbstractDAG):
             self._executor = executors.Serial()
         elif executor == 'parallel':
             self._executor = executors.Parallel()
-        elif isinstance(executor, executors.Executor.Executor):
+        elif isinstance(executor, executors.abc.Executor):
             self._executor = executor
         else:
             raise TypeError(
