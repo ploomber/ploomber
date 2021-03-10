@@ -124,6 +124,7 @@ div.output_area [class*="highlight-"] {
 }
 
 .first-column li {
+    padding-top: 3px;
     padding-left: 5px;
 }
 

@@ -6,6 +6,9 @@ $(document).ready(function () {
     postgresql = $('.highlight-postgresql').not(".nboutput .highlight-postgresql")
     addTerminalStyle(postgresql, "Text editor (SQL)")
 
+    yaml = document.getElementsByClassName('highlight-yaml')
+    addTerminalStyle(yaml, "Text editor (YAML)")
+
     python_traceback = document.getElementsByClassName('highlight-pytb')
     addTerminalStyle(python_traceback, "Terminal (Python traceback)")
 

@@ -69,7 +69,7 @@ is and what the products are. This is done via a ``pipeline.yaml`` file:
         product: [schema, name, table]
         # task definition continues...
 
-      # function task (ploomber runs: from my_functions import clean)
+      # function task (equivalent to: from my_functions import clean)
       - source: my_functions.clean
         product: output/clean.csv
 
@@ -148,6 +148,10 @@ variable in the special ``parameters`` cell:
 Note we tagged the cell using ``tags=["parameters"]``. If the notebook doesn't
 have dependencies, set ``upstream = None``.
 
+**Note:** the ``# +`` and ``# -`` markers only apply to scripts.
+`Click here <https://papermill.readthedocs.io/en/stable/usage-parameterize.html>`_
+for information on adding tags to ``.ipynb`` files.
+
 The previous code won't run as is: we only declared the names of the upstream tasks but
 we don't know where to load input from or where to save the current tasks's
 output. During execution, Ploomber injects a new cell, with ``product`` and
@@ -164,10 +168,10 @@ product location of ``raw``, which we use as input. Furthermore, whatever
 value we have in the ``product`` key, is passed; we use that variable to save
 the current task's output.
 
-**Note:** When opening the script in Jupyter, the cell injection process happens
-as well.
+**Note:** The cell injection process happens automatically when running the
+pipeline, and when opening file in Jupyter notebook/lab.
 
-Since scripts/noteboks always create an executed notebook, you should specify
+Since scripts/noteboks always create an executed notebook, you must specify
 where to save such file, a typical task declaration looks like this:
 
 .. code-block:: yaml
@@ -175,12 +179,20 @@ where to save such file, a typical task declaration looks like this:
 
     tasks:
       - source: plot.py
+        # output notebook
+        product: output/plots.ipynb
+
+.. code-block:: yaml
+    :class: text-editor
+
+    tasks:
+      - source: plot.py
         product:
-          # scripts and notebooks always generate an output notebook, use the
-          # "nb" key to specify where to save it
+          # if the script generates other products, use "nb" for the notebok
           nb: output/plots.ipynb
-          # more products, if needed...
+          # ...and any other keys for other files
           data: output/data.csv
+
 
 Examples
 ********
