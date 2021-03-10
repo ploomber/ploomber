@@ -4,7 +4,7 @@ import traceback
 import logging
 
 from tqdm.auto import tqdm
-from ploomber.executors.Executor import Executor
+from ploomber.executors.abc import Executor
 from ploomber.exceptions import DAGBuildError, DAGBuildEarlyStop
 from ploomber.MessageCollector import (BuildExceptionsCollector,
                                        BuildWarningsCollector)

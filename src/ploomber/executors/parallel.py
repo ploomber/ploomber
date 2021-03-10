@@ -9,7 +9,7 @@ import logging
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from ploomber.constants import TaskStatus
-from ploomber.executors.Executor import Executor
+from ploomber.executors.abc import Executor
 from ploomber.exceptions import DAGBuildError
 from ploomber.MessageCollector import (BuildExceptionsCollector, Message)
 
