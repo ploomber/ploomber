@@ -1,4 +1,4 @@
-from ploomber.static_analysis.abstract import Extractor
+from ploomber.static_analysis.abc import Extractor
 from ploomber.static_analysis.jinja import JinjaExtractor
 
 

@@ -3,7 +3,6 @@ import warnings
 from ploomber.products import Product
 from ploomber.placeholders.Placeholder import Placeholder
 from ploomber.exceptions import SourceInitializationError
-from ploomber.sql import infer
 from ploomber import static_analysis
 from ploomber.static_analysis.string import StringExtractor
 from ploomber.sources import docstring, abc
@@ -116,8 +115,8 @@ class SQLScriptSource(SQLSourceMixin, PlaceholderSource):
         """
         if 'product' in params:
             inferred_relations = set(
-                infer.created_relations(rendered_value,
-                                        split_source=self._split_source))
+                static_analysis.sql.created_relations(
+                    rendered_value, split_source=self._split_source))
 
             if isinstance(params['product'], Product):
                 product_relations = {params['product']}

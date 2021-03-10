@@ -5,7 +5,7 @@ import ast
 import parso
 from collections.abc import Mapping
 
-from ploomber.static_analysis.abstract import NotebookExtractor, Extractor
+from ploomber.static_analysis.abc import NotebookExtractor, Extractor
 
 
 class PythonNotebookExtractor(NotebookExtractor):

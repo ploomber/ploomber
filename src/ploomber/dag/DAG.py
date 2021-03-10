@@ -412,9 +412,9 @@ class DAG(AbstractDAG):
         # the debugging session in the right place
         if debug:
             executor_original = self.executor
-            self.executor = Serial(build_in_subprocess=False,
-                                   catch_exceptions=False,
-                                   catch_warnings=False)
+            self.executor = executors.Serial(build_in_subprocess=False,
+                                             catch_exceptions=False,
+                                             catch_warnings=False)
 
         callable_ = partial(self._build,
                             force=force,

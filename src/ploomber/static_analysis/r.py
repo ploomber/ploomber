@@ -1,6 +1,6 @@
 from ploomber.static_analysis.parser.parser import Parser
 from ploomber.static_analysis.parser.RLexer import RLexer
-from ploomber.static_analysis.abstract import NotebookExtractor
+from ploomber.static_analysis.abc import NotebookExtractor
 
 
 def naive_parsing(code, var_name):
