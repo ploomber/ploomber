@@ -6,7 +6,6 @@ import pytest
 
 from ploomber.util import dotted_path
 from ploomber.exceptions import SpecValidationError
-from ploomber.util import dotted_path
 
 
 @pytest.mark.parametrize('spec', [

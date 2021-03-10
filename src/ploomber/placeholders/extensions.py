@@ -5,6 +5,9 @@ from jinja2.exceptions import TemplateRuntimeError
 
 
 class RaiseExtension(Extension):
+    """
+    jinja template extension to allow raising exceptions
+    """
     tags = set(['raise'])
 
     def parse(self, parser):

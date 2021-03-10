@@ -1,43 +1,15 @@
 from collections.abc import Mapping
-import abc
 import logging
 from pathlib import Path
 from reprlib import Repr
 
 from ploomber.exceptions import RenderError, SourceInitializationError
-from ploomber.placeholders import util, extensions
+from ploomber.placeholders import util, extensions, abc
 from jinja2 import (Environment, Template, UndefinedError, FileSystemLoader,
                     PackageLoader, StrictUndefined)
 
 
-class AbstractPlaceholder(abc.ABC):
-    """
-    Placeholder are objects that can eventually be converted to strings using
-    str(placeholder), if this operator is used before they are fully resolved
-    (e.g. they need to render first), they will raise an error.
-
-    repr(placeholder) is always safe to use and it will return the rendered
-    version if available, otherwise, it will show the raw string with
-    tags, the representation is shortened if needed.
-
-    Placeholders are mostly used inside Source objects, but are sometims
-    also used to give Products placeholding features (e.g.
-    by directly using Placeholder or SQLRelationPlaceholder)
-    """
-    @abc.abstractmethod
-    def __str__(self):
-        pass  # pragma: no cover
-
-    @abc.abstractmethod
-    def __repr__(self):
-        pass  # pragma: no cover
-
-    @abc.abstractmethod
-    def render(self, params):
-        pass  # pragma: no cover
-
-
-class Placeholder(AbstractPlaceholder):
+class Placeholder(abc.AbstractPlaceholder):
     """
     Placeholder powers all the objects that use placeholder variables (
     between curly brackets). It uses a jinja2.Template object under the hood
@@ -364,7 +336,7 @@ def _make_loader_init(loader):
                         'supported, got: {}'.format(type(loader).__name__))
 
 
-class SQLRelationPlaceholder(AbstractPlaceholder):
+class SQLRelationPlaceholder(abc.AbstractPlaceholder):
     """
     Sources are also used by some Products that support placeholders, such as
     SQLRelation or File.
