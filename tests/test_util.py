@@ -4,8 +4,8 @@ import copy
 import sys
 
 import pytest
-from ploomber.util.util import (add_to_sys_path, load_dotted_path, chdir_code,
-                                requires)
+from ploomber.util.util import add_to_sys_path, chdir_code, requires
+from ploomber.util import dotted_path
 
 
 def test_add_to_sys_path():
@@ -53,7 +53,7 @@ def test_add_to_sys_path_with_exception():
 
 def test_load_dotted_path_custom_error_message():
     with pytest.raises(AttributeError) as excinfo:
-        load_dotted_path('test_pkg.not_a_function')
+        dotted_path.load_dotted_path('test_pkg.not_a_function')
 
     assert ('Could not get "not_a_function" from module "test_pkg"'
             in str(excinfo.value))
@@ -67,7 +67,7 @@ def x():
 """)
 
     # load the module
-    load_dotted_path('dotted_path_with_reload.x')
+    dotted_path.load_dotted_path('dotted_path_with_reload.x')
 
     # add a new function
     Path('dotted_path_with_reload.py').write_text("""
@@ -79,7 +79,8 @@ def y():
 """)
 
     # the new function should be importable since we are using reload=True
-    assert load_dotted_path('dotted_path_with_reload.y', reload=True)
+    assert dotted_path.load_dotted_path('dotted_path_with_reload.y',
+                                        reload=True)
 
 
 def test_chdir_code(tmp_directory):

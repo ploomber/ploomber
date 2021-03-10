@@ -94,8 +94,7 @@ import pprint
 
 from ploomber.dag.DAG import DAG
 from ploomber.placeholders.SourceLoader import SourceLoader
-from ploomber.util.util import (load_dotted_path, call_with_dictionary,
-                                add_to_sys_path, call_dotted_path)
+from ploomber.util.util import call_with_dictionary, add_to_sys_path
 from ploomber.util import dotted_path
 from ploomber.util.default import entry_point
 from ploomber.spec.TaskSpec import TaskSpec, suffix2taskclass
@@ -356,7 +355,7 @@ class DAGSpec(MutableMapping):
         object
         """
         if 'location' in self:
-            return call_dotted_path(self['location'])
+            return dotted_path.call_dotted_path(self['location'])
 
         dag = DAG()
 
@@ -374,7 +373,7 @@ class DAGSpec(MutableMapping):
         # to accept strings as attribute and load them until they are called
         for attr in ['serializer', 'unserializer']:
             if attr in self:
-                setattr(dag, attr, load_dotted_path(self[attr]))
+                setattr(dag, attr, dotted_path.load_dotted_path(self[attr]))
 
         process_tasks(dag, self, root_path=self._parent_path)
 

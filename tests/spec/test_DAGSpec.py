@@ -18,7 +18,7 @@ from sqlalchemy import create_engine
 
 from ploomber.spec import dagspec
 from ploomber.spec.dagspec import DAGSpec, Meta
-from ploomber.util.util import load_dotted_path
+from ploomber.util.dotted_path import load_dotted_path
 from ploomber.tasks import PythonCallable
 from ploomber.clients import db
 from ploomber.env import expand

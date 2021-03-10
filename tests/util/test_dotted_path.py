@@ -6,9 +6,7 @@ import pytest
 
 from ploomber.util import dotted_path
 from ploomber.exceptions import SpecValidationError
-
-# TODO: move this to ploomber.util.dotted_path
-from ploomber.util.util import call_dotted_path
+from ploomber.util import dotted_path
 
 
 @pytest.mark.parametrize('spec', [
@@ -66,7 +64,8 @@ def function(a=42):
     return a
 """)
 
-    assert call_dotted_path('my_module.function', kwargs=kwargs) == expected
+    assert dotted_path.call_dotted_path('my_module.function',
+                                        kwargs=kwargs) == expected
 
 
 def test_call_dotted_path_unexpected_kwargs(tmp_directory,
@@ -79,7 +78,7 @@ def function():
 """)
 
     with pytest.raises(TypeError) as excinfo:
-        call_dotted_path('my_module.function', kwargs=dict(a=1))
+        dotted_path.call_dotted_path('my_module.function', kwargs=dict(a=1))
 
     expected = ("function() got an unexpected keyword argument 'a' "
                 "(Loaded from:")
