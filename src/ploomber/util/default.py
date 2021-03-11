@@ -83,12 +83,15 @@ def path_to_env(path_to_parent):
         Entry point parent folder
     """
     local_env = Path('.', 'env.yaml').resolve()
-    sibling_env = Path(path_to_parent, 'env.yaml').resolve()
 
     if local_env.exists():
         return str(local_env)
-    elif sibling_env.exists():
-        return str(sibling_env)
+
+    if path_to_parent:
+        sibling_env = Path(path_to_parent, 'env.yaml').resolve()
+
+        if sibling_env.exists():
+            return str(sibling_env)
 
 
 def find_file_recursively(name, max_levels_up=6, starting_dir=None):

@@ -89,7 +89,8 @@ def test_path_to_parent_sibling(tmp_directory):
     assert default.path_to_env('dir') == str(Path('dir', 'env.yaml').resolve())
 
 
-def test_path_to_env_none(tmp_directory):
+@pytest.mark.parametrize('arg', ['dir', None])
+def test_path_to_env_none(tmp_directory, arg):
     Path('dir').mkdir()
 
-    assert default.path_to_env('dir') is None
+    assert default.path_to_env(arg) is None

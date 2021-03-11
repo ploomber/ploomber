@@ -136,8 +136,9 @@ class DAGSpec(MutableMapping):
         by the corresponding values in "env". A regular :py:mod:`ploomber.Env`
         object is created, see documentation for details. If None and
         data is a dict, no env is loaded. If None and loaded from a YAML spec,
-        an env.yaml file is loaded from the YAML spec parent folder, if it
-        exists
+        an env.yaml file is loaded (in the current working diirectory), if
+        it doesn't exist, it is loaded from the YAML spec parent folder, if it
+        exists. If none of these exist, no env is loaded.
 
     lazy_import : bool, optional
         Whether to import dotted paths to initialize PythonCallables with the
@@ -216,8 +217,8 @@ class DAGSpec(MutableMapping):
             self._parent_path = (None if not parent_path else str(
                 Path(parent_path).resolve()))
 
-        if env is None and self._parent_path is not None:
-            env = default.path_to_env(self._parent_path)
+        # try to look env.yaml in default locations
+        env_default_path = default.path_to_env(self._parent_path)
 
         self.data = data
 
@@ -229,18 +230,23 @@ class DAGSpec(MutableMapping):
 
         logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env))
 
-        if env is not None:
-            # NOTE: when loading from a path, EnvDict recursively looks
-            # at parent folders, this is useful when loading envs
-            # in nested directories where scripts/functions need the env
-            # but here, since we just need this for the spec, we might
-            # want to turn it off. should we add a parameter to EnvDict
-            # to control this?
-            self.env = EnvDict(env)
-            self.data = expand_raw_dictionary(self.data, self.env)
+        env = env or dict()
+
+        # NOTE: when loading from a path, EnvDict recursively looks
+        # at parent folders, this is useful when loading envs
+        # in nested directories where scripts/functions need the env
+        # but here, since we just need this for the spec, we might
+        # want to turn it off. should we add a parameter to EnvDict
+        # to control this?
+        if env_default_path:
+            defaults = yaml.safe_load(Path(env_default_path).read_text())
+            self.env = EnvDict(env,
+                               path_to_here=self._parent_path,
+                               defaults=defaults)
         else:
-            self.env = EnvDict.default(path_to_here=self._parent_path)
-            self.data = expand_raw_dictionary(self.data, self.env)
+            self.env = EnvDict(env, path_to_here=self._parent_path)
+
+        self.data = expand_raw_dictionary(self.data, self.env)
 
         logger.debug('Expanded DAGSpec:\n%s', pp.pformat(data))
 

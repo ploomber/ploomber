@@ -8,7 +8,7 @@ import pytest
 
 from ploomber.cli.parsers import (_add_args_from_callable,
                                   _process_file_dir_or_glob, CustomParser,
-                                  _add_args_from_env_dict)
+                                  _add_cli_args_from_env_dict_keys)
 from ploomber.env.EnvDict import EnvDict
 
 
@@ -136,9 +136,9 @@ def test_cli_from_param_with_annotation(monkeypatch):
     assert returned == 41
 
 
-def test_add_args_from_env_dict():
+def test_add_cli_args_from_env_dict_keys():
     parser = ArgumentParser()
 
-    _add_args_from_env_dict(parser, EnvDict({'a': 1}))
+    _add_cli_args_from_env_dict_keys(parser, EnvDict({'a': 1}))
 
     assert {action.dest for action in parser._actions} == {'env__a', 'help'}

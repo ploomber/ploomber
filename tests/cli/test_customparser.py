@@ -85,15 +85,15 @@ def test_dagspec_initialization_from_yaml_and_env(tmp_nbs, monkeypatch):
     they have a slightly different behavior. This ensure the cli passes
     the path, instead of a dictionary
     """
-    mock_dagspec = Mock(wraps=parsers.DAGSpec)
+    mock_DAGSpec = Mock(wraps=parsers.DAGSpec)
     mock_default_path_to_env = Mock(wraps=parsers.default.path_to_env)
-    mock_envdict = Mock(wraps=parsers.EnvDict)
+    mock_EnvDict = Mock(wraps=parsers.EnvDict)
 
     monkeypatch.setattr(sys, 'argv', ['python'])
-    monkeypatch.setattr(parsers, 'DAGSpec', mock_dagspec)
+    monkeypatch.setattr(parsers, 'DAGSpec', mock_DAGSpec)
     monkeypatch.setattr(parsers.default, 'path_to_env',
                         mock_default_path_to_env)
-    monkeypatch.setattr(parsers, 'EnvDict', mock_envdict)
+    monkeypatch.setattr(parsers, 'EnvDict', mock_EnvDict)
 
     parser = CustomParser()
 
@@ -102,7 +102,9 @@ def test_dagspec_initialization_from_yaml_and_env(tmp_nbs, monkeypatch):
 
     dag, args = _custom_command(parser)
 
-    mock_dagspec.assert_called_once_with('pipeline.yaml',
+    # ensure called using the path to the yaml spec
+    mock_DAGSpec.assert_called_once_with('pipeline.yaml',
                                          env=EnvDict({'sample': False}))
-    mock_default_path_to_env.assert_called_once_with(Path('.'))
-    mock_envdict.assert_called_once_with(str(Path('env.yaml').resolve()))
+
+    # and EnvDict initialized from env.yaml
+    mock_EnvDict.assert_called_once_with(str(Path('env.yaml').resolve()))

@@ -31,6 +31,9 @@ class EnvDict(Mapping):
         location of the YAML spec. If initialized with a dict and None,
         the {{here}} placeholder is not available.
 
+    defaults : dict, default=None
+        Default values to use. If not None, it uses these as defaults and
+        overwrites keys using values in source
 
     Notes
     -----
@@ -39,7 +42,8 @@ class EnvDict(Mapping):
     {{cwd}} (working directory), {{here}} (env.yaml location, if any), {{root}}
     (project's root folder, if any)
     """
-    def __init__(self, source, path_to_here=None):
+    def __init__(self, source, path_to_here=None, defaults=None):
+
         # if initialized from another EnvDict, copy the attributes to
         # initialize
         # this happens in the  CLI parser, which instanttiates the env
@@ -61,6 +65,9 @@ class EnvDict(Mapping):
                 raw_data,
                 # this will be None if source is a dict
                 self._path_to_env) = load_from_source(source)
+
+            if defaults:
+                raw_data = {**defaults, **raw_data}
 
             # add default placeholders but override them if they are defined
             # in the raw data
@@ -111,19 +118,6 @@ class EnvDict(Mapping):
             placeholders['here'] = '{{here}}'
 
         return placeholders
-
-    # FIXME: now that the constructor also uses the default values, we can
-    # remove this and replace EnvDict.default with EnvDict(dict())
-    @classmethod
-    def default(cls, path_to_here=None):
-        """
-        Returns and EnvDict with built-in placeholders
-        Always available: {{user}}, {{cwd}}
-        {{root}} available if a parent path has a setup.py
-        {{here}} available is path_to_here is not None
-        """
-        placeholders = cls._default_dict(include_here=path_to_here is not None)
-        return cls(placeholders, path_to_here=path_to_here)
 
     @property
     def path_to_env(self):

@@ -209,6 +209,13 @@ def test_loads_env_if_exists(tmp_nbs):
     assert spec.env.a == 1
 
 
+def test_loads_env_and_replaces_keys(tmp_nbs):
+    Path('env.yaml').write_text("{'a': 1, 'b': 2}")
+    spec = DAGSpec('pipeline.yaml', env=dict(b=3))
+    assert spec.env.a == 1
+    assert spec.env.b == 3
+
+
 def test_prioritizes_local_env_over_sibling_env(tmp_nbs):
     files = os.listdir()
     sub_dir = Path('subdir')
@@ -223,14 +230,14 @@ def test_prioritizes_local_env_over_sibling_env(tmp_nbs):
     assert spec.env.a == 100
 
 
-def test_loads_default_env_if_loading_from_dict(tmp_nbs):
+def test_loads_env_in_default_location_if_loading_from_dict(tmp_nbs):
     Path('env.yaml').write_text("{'a': 1}")
 
     with open('pipeline.yaml') as f:
         d = yaml.safe_load(f)
 
     spec = DAGSpec(d)
-    assert set(spec.env) == {'user', 'cwd'}
+    assert set(spec.env) == {'user', 'cwd', 'a'}
 
 
 def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):

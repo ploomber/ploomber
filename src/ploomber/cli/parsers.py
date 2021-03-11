@@ -111,7 +111,7 @@ class CustomParser(argparse.ArgumentParser):
         # if entry point was decorated with @with_env, add arguments
         # to replace declared variables in env.yaml
         if hasattr(entry, '_env_dict'):
-            _add_args_from_env_dict(self, entry._env_dict)
+            _add_cli_args_from_env_dict_keys(self, entry._env_dict)
 
         args = self.parse_args()
 
@@ -124,7 +124,7 @@ class CustomParser(argparse.ArgumentParser):
         kwargs = {key: getattr(args, key) for key in required}
 
         # env and function defaults replaced
-        replaced = _args_to_replace_in_env(args, self.static_args)
+        replaced = _env_keys_to_override(args, self.static_args)
 
         # TODO: add a way of test this by the parameters it will use to
         # call the function, have an aux function to get those then another
@@ -309,7 +309,7 @@ def _parse_doc(callable_):
     return {'params': parameters, 'summary': summary}
 
 
-def _args_to_replace_in_env(args, static_args):
+def _env_keys_to_override(args, static_args):
     """
     Returns a dictionary with all extra cli parameters passed, all these must
     be parameters that part of the env or params (with no defaults) if
@@ -322,7 +322,7 @@ def _args_to_replace_in_env(args, static_args):
     }
 
 
-def _add_args_from_env_dict(parser, env_dict):
+def _add_cli_args_from_env_dict_keys(parser, env_dict):
     """
     Add one parameter to the args parser by taking a look at all values
     defined in an env dict object
@@ -433,7 +433,7 @@ def _process_file_dir_or_glob(parser):
 
     if path_to_env:
         env_dict = EnvDict(path_to_env)
-        _add_args_from_env_dict(parser, env_dict)
+        _add_cli_args_from_env_dict_keys(parser, env_dict)
 
     args = parser.parse_args()
 
@@ -450,7 +450,7 @@ def _process_file_dir_or_glob(parser):
     else:
         if path_to_env:
             # and replace keys depending on passed cli args
-            replaced = _args_to_replace_in_env(args, parser.static_args)
+            replaced = _env_keys_to_override(args, parser.static_args)
             env = env_dict._replace_flatten_keys(replaced)
             dag = DAGSpec(args.entry_point, env=env).to_dag()
         else:

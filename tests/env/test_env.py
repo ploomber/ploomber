@@ -638,7 +638,7 @@ def test_default(monkeypatch):
     monkeypatch.setattr(getpass, 'getuser', Mock(return_value='User'))
     monkeypatch.setattr(os, 'getcwd', Mock(return_value='/some_path'))
 
-    env = EnvDict.default()
+    env = EnvDict(dict())
 
     assert env.cwd == str(Path('/some_path').resolve())
     assert env.user == 'User'
@@ -646,13 +646,13 @@ def test_default(monkeypatch):
 
 def test_default_with_here_relative(tmp_directory):
     Path('dir').mkdir()
-    env = EnvDict.default(path_to_here='dir')
+    env = EnvDict(dict(), path_to_here='dir')
     assert env.here == str(Path(tmp_directory, 'dir').resolve())
 
 
 def test_default_with_here_absolute(tmp_directory):
     here = str(Path(tmp_directory, 'dir').resolve())
-    env = EnvDict.default(path_to_here=here)
+    env = EnvDict(dict(), path_to_here=here)
 
     assert env.here == here
 
@@ -661,7 +661,7 @@ def test_default_with_root(monkeypatch):
     mock = Mock(return_value='some_value')
     monkeypatch.setattr(default, 'find_root_recursively', mock)
 
-    env = EnvDict.default()
+    env = EnvDict(dict())
 
     assert env.root == 'some_value'
 
