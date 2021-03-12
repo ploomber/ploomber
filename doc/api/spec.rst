@@ -148,6 +148,7 @@ to backup pipeline results (say, for example, you run a job that trains
 several models and want to save output results. You can use
 :py:mod:`ploomber.clients.GCloudStorageClient` for that.
 
+.. _serializer-and-unserializer:
 
 ``serializer`` and ``unserializer``
 ***********************************
