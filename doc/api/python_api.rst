@@ -14,6 +14,8 @@ DAG
     DAGConfigurator
     InMemoryDAG
 
+.. _tasks-list:
+
 Tasks
 -----
 
@@ -25,12 +27,12 @@ Tasks
     Task
     PythonCallable
     NotebookRunner
-    ShellScript
     SQLScript
     SQLDump
     SQLTransfer
     SQLUpload
     PostgresCopyFrom
+    ShellScript
     DownloadFromURL
     Link
     Input

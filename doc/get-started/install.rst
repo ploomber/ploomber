@@ -44,4 +44,4 @@ Then you can install ``pygraphviz``
 
 
 If you are not using ``conda`` nor ``brew``, check out more options for
-installing ``graphviz`` `here <https://www.graphviz.org/download/>`_
+installing ``graphviz`` `here <https://www.graphviz.org/download/>`_.

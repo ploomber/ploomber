@@ -4,13 +4,13 @@ Deployment
 The two most common ways to deploy data pipelines are batch and online.
 Ploomber supports both deployment options.
 
-Batch means obtaining new observationsn (usually on a schedule),
-make predictions and save them for later use. For example, you may develop a
+In batch, you obtain new data to make predictions and store them for later
+use. This process usually happens on a schedule. For example, you may develop a
 Machine Learning pipeline that runs every morning, predicts the probability
-of user churn and stores such probabilities in a database table.
+of user churn, and stores such probabilities in a database table.
 
 Alternatively, you may deploy a pipeline as an online service and expose your
-model as a REST APIl; users request predictions at any time by sending input
+model as a REST API; users request predictions at any time by sending input
 data.
 
 Pipeline composition
@@ -20,10 +20,10 @@ Before diving into deployment details, let's introduce the concept of
 pipeline composition.
 
 The only difference between a Machine Learning training pipeline and its serving
-counterpart is what happens at the begininng and at the end.
+counterpart is what happens at the beginning and the end.
 
 
-At **training** time, we obtain historical data, generate features and train a
+At **training** time, we obtain historical data, generate features, and train a
 model:
 
 
@@ -59,16 +59,16 @@ predictions using a trained model:
 
 When the feature engineering process does not match,
 `training-serving skew <https://ploomber.io/posts/train-serve-skew/>`_ arises.
-This is one of the most common problems when deploying ML models. To fix it,
+Training-serving skew is one of the most common problems when deploying ML models. To fix it,
 Ploomber allows you to compose pipelines: **write your
-feature generation once and re-use it to compose your training and serving
-pipelines**; this ensures that the feature engineering code matches exactly.
+feature generation once and re-use it to organize your training and serving
+pipelines**; this ensures that the feature engineering code matches precisely.
 
 
 Batch processing
 ================
 
-Ploomber pipelines can be exported to production-grade schedulers for batch
+Ploomber pipelines can export to production-grade schedulers for batch
 processing. Check out our package
 `Soopervisor <https://soopervisor.readthedocs.io/en/stable/index.html>`_, which
 allows you to export to
@@ -164,7 +164,7 @@ Online service (API)
 ====================
 
 To encapsulate all your pipeline's logic for online predictions, use
-:py:mod:`ploomber.OnlineDAG`. Once implemented, you can generate predictons
+:py:mod:`ploomber.OnlineDAG`. Once implemented, you can generate predictions
 like this:
 
 .. code-block:: python
@@ -189,14 +189,14 @@ Composing online pipelines
 
 To create an online DAG, list your feature tasks in a ``features.yaml`` and
 use ``import_tasks_from`` in your training pipeline (``pipeline.yaml``).
-Subclass :py:mod:`ploomber.OnlineDAG` to create a serving pipelines.
+Subclass :py:mod:`ploomber.OnlineDAG` to create a serving pipeline.
 
 ``OnlineDAG`` will take your tasks from ``features.yaml`` and create
 new "input tasks" based on ``upstream`` references in yout feature tasks.
 
 For example, if ``features.yaml`` has tasks ``a_feature`` and
 ``another_feature`` (see the diagram in the first section), and both obtain
-their inputs from a task named ``get``, the source code may look like this:
+their inputs from a task named ``get``; the source code may look like this:
 
 .. code-block:: py
     :class: text-editor
@@ -282,7 +282,7 @@ To call ``MyOnlineDAG``:
     prediction = dag.predict(get=input_data)
 
 
-You can import and call ``MyOnlineDAG`` in any framework (e.g., flask) to
+You can import and call ``MyOnlineDAG`` in any framework (e.g., Flask) to
 expose your pipeline as an online service.
 
 
@@ -314,4 +314,4 @@ Example
 *******
 
 `Click here <https://github.com/ploomber/projects/tree/master/ml-online>`_ to
-see a full sample project that trains a model and exposes an API via flask.
+see a complete sample project that trains a model and exposes an API via Flask.

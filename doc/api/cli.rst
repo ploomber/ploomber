@@ -191,17 +191,21 @@ If you also want to build the task, you need to explicitly pass ``--build``.
 Create new project
 ******************
 
+The ``scaffold`` command allows you to start a new project. Note that this
+creates a complete layout with packaging, version management, and testing.
+
 .. code-block:: console
 
     ploomber scaffold
 
 
+If you run this command in a folder that already has a ``pipeline.yaml`` in a
+:ref:`api-cli-default-locations`, it will parse your pipeline declaration
+looking for declared tasks whose source code file does not exist and proceed to
+create them.
+
 Interactive sessions
 ********************
-
-Interactive sessions are a great way to develop your pipeline. Everything you
-can do with the commands above (and more), you can do it with an interactive
-session.
 
 To start an interactive session:
 
@@ -209,35 +213,36 @@ To start an interactive session:
 
     ploomber interact
 
-The command above starts a Python session, parses your pipeline and exposes it
-in a ``dag`` variable, which is an instance of the :py:mod:`ploomber.DAG` class.
+Your pipeline is available in the  ``dag`` variable. Refer to
+:py:mod:`ploomber.DAG` documentation for details.
 
-For example, to generate the plot:
+Doing ``dag['task_name']`` returns a Task instance, all task instances have a
+common API, but there are a few differences. Refer to the tasks documentation
+for details: :ref:`tasks-list`.
 
-.. code-block:: python
-    :class: ipython
+The CLI guide describes some of the most common use cases for interactive
+sessions: :ref:`user-guide-cli-interactive-sessions`.
 
-    dag.plot()
+Examples
+********
 
-You can also interact with tasks, the specific API depends on which type of
-task you are dealing with, see the :py:mod:`ploomber.tasks` documentation for
-more information.
+To get a copy of the examples from the
+`Github repository <https://github.com/ploomber/projects>`_.
 
-If you are working with Python scripts, you can start a line by line debugging
-session:
+List examples:
 
-.. code-block:: python
-    :class: ipython
+.. code-block:: console
 
-    dag['some_task'].debug()
+    ploomber examples
 
-To print the rendered source code from SQL scripts:
+Get one:
 
-.. code-block:: python
-    :class: ipython
+.. code-block:: console
 
-    print(dag['some_sql_task'].source)
+    ploomber examples --name {name}
 
+
+.. _api-cli-default-locations:
 
 Default locations
 *****************
@@ -250,11 +255,10 @@ Ploomber looks for a ``pipeline.yaml`` file using the following order:
 4. Parent folders of current working directory
 5. Look for a ``setup.py`` in parent folders, then ``src/{package}/pipeline.yaml``
 
-If you want to know which file will be used based on your project's layout:
-
+If you want to know which file will be used based on your project's:
 
 .. code-block:: console
 
     ploomber status --help
 
-(See the ``--entry-point`` description)
+Look at the ``--entry-point`` description in the printed output.

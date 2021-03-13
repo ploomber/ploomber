@@ -1,10 +1,22 @@
 Command line interface
 ======================
 
-Once you assemble a pipeline and start developing, you'd want to see how
-changes to the source code affect the pipeline's output. Ploomber provides
-a command line interface to do this and to perform other common tasks. Here
-are the most common commands.
+**Note:** This is an introductory tutorial to the command line interface, for
+a full API description, see: :doc:`../api/cli`.
+
+Entry points
+------------
+
+By default, the CLi looks for an ``pipeline.yaml`` file in certain standard
+locations (:ref:`api-cli-default-locations`). If your pipeline exists in a
+non-standard location, pass the ``--entry-point`` argument.
+
+The ``pipeline.yaml`` file is known as "entry point". However, this is
+not the only type of entry point (See this guide to learn
+more: :doc:`../user-guide/spec-vs-python`).
+
+Basic commands
+--------------
 
 Build pipeline (skips up-to-date tasks):
 
@@ -13,7 +25,7 @@ Build pipeline (skips up-to-date tasks):
     ploomber build
 
 
-Forced build (runs all tasks):
+Forced build (runs all tasks, regardless of status):
 
 .. code-block:: console
 
@@ -27,99 +39,123 @@ Generate pipeline plot:
     ploomber plot
 
 
-By default, all commands assume your pipeline is defined in a ``pipeline.yaml``
-file in the current directory. The ``pipeline.yaml`` file is known as "entry
-point", there are other types of entry points, which we explain in the next
-section.
+.. _user-guide-cli-interactive-sessions:
 
-Entry points
-------------
+Interactive sessions
+--------------------
 
-There are three types of entry points (ordered by flexibility):
+Interactive sessions are a great way to develop your pipeline. Everything you
+can do with the commands above (and more), you can do it with an interactive
+session.
 
-1. Directory (a directory with scripts)
-2. Spec (aka ``pipeline.yaml``)
-3. Factory function (a function that returns a ``DAG`` object)
-
-For more information on entry points, see :doc:`/user-guide/spec-vs-python`.
-
-Directory
-*********
-
-Ploomber can figure out your pipeline without even having a ``pipeline.yaml``,
-by just passing a directory. This kind of entry point is the simplest one but
-also the less flexible, it is a good option for small pipelines where you
-don't need to customize settings.
-
-Internally, Ploomber uses the :class:`ploomber.spec.DAGSpec.from_directory`
-method. See the documentation for details on how a directory is converted into a
-pipeline.
-
-All commands that accept the ``--entry-point/-e`` parameter, can take a
-directory as a value. For example, to build a pipeline using the current
-directory:
+To start an interactive session:
 
 .. code-block:: console
 
-    ploomber build --entry-point .
+    ploomber interact
 
+The command above starts a Python session, parses your pipeline, and exposes
+a ``dag`` variable (an instance of the :py:mod:`ploomber.DAG` class).
 
-Spec
-****
+For example, to generate the plot:
 
-This is the default entry point because it allows a greater level of
-flexibility without requiring you to write Python code to specify your
-pipeline. It is a good choice for simple to moderately sophisticated pipelines.
+.. code-block:: python
+    :class: ipython
 
-It is a ``YAML`` file with certain structure, for schema details see:
-:doc:`../api/spec`.
+    dag.plot()
 
+Get task names:
 
-Factory function
-****************
+.. code-block:: python
+    :class: ipython
 
-This is the most flexible type of entry point. A factory function is a Python
-function that returns a DAG object. Factory functions are a good choice for
-pipelines that require a high level of flexibility than a ``YAML`` file
-cannot easily express. However it requires you to write your pipeline using
-the Python API.
+    list(dag)
+
+You can also interact with specific tasks:
+
+.. code-block:: python
+    :class: ipython
+
+    task = dag['task_name']
+
+**Tip:** If using IPython or Jupyter, press ``Tab`` to get autocompletion when
+typing the task name: ``dag['some_task']``
+
+Get task's product:
+
+.. code-block:: python
+    :class: ipython
+
+    dag['some_task'].product
+
+If the product is a dictionary:
+
+.. code-block:: python
+    :class: ipython
+
+    dag['some_task'].product['product_name']
+
+You can use this to avoid hardcoding paths to load products:
+
 
 .. code-block:: python
     :class: text-editor
-    :name: factory-py
 
-    from ploomber import DAG
+    import pandas as pd
 
-    def make():
-        dag = DAG()
-        # add tasks to your pipeline...
-        return dag
+    df = pd.read_csv(dag['some_task'].product)
 
 
-To use it in the command line interface, use the ``--entry-point/-e`` and pass
-a dotted path to the function. Assuming ``factory.py`` is importable in the
-current directory, you can build the pipeline with the following command:
+If you are working with Python tasks (functions, scripts, or notebooks), you can
+start a line by line debugging session:
 
-.. code-block:: console
+.. code-block:: python
+    :class: ipython
 
-    ploomber build --entry-point factory.make
+    dag['some_task'].debug()
+
+Enter ``quit`` to exit the debugging session. Refer to
+`The Python Debugger <https://docs.python.org/3/library/pdb.html>`_
+documentation for details.
+
+To print the source code of a given task:
+
+.. code-block:: python
+    :class: ipython
+
+    dag['some_task'].source
+
+To find the source code location of a given task:
+
+.. code-block:: python
+    :class: ipython
+
+    dag['some_task'].source.loc
 
 
-**Note:** If your factory function has a docstring, the first line will be
-displayed in the CLI help menu (e.g.
-``ploomber build --entry-point factory.make --help``). If the docstring is in
-the `numpydoc format <https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard>`_
-(and numpydoc is installed, ``pip install numpydoc``), descriptions for
-documented parameters will be displayed as well.
+Get upstream dependencies:
 
+.. code-block:: python
+    :class: ipython
 
-Where to go next
-****************
+    dag['some_task'].upstream
 
-The command line interface is a convenient way to quickly iterate pipeline
-development, just modify your source code and use the CLI to see results.
+Get downstream tasks:
 
-In some cases, we don't want our pipeline to be static but to have input
-parameters determine its behavior. Go to the next guide to see how you can
-add parameters to your pipeline and use the CLI to pass different parameter
-values.
+.. code-block:: python
+    :class: ipython
+
+    dag.get_downstream('some_task')
+
+Other commands
+--------------
+
+Here's a list of commands that this introductory guide didn't cover:
+
+* ``examples``: Locally copy Ploomber examples from (link to repo)
+* ``report``: Generate a pipeline report
+* ``scaffold``: Create base project layout
+* ``status``: Pipeline status summary
+* ``task``: Execute a single task
+
+To learn more, see the CLI API documentation: :doc:`../api/cli`.

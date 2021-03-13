@@ -21,8 +21,7 @@ form, and Ploomber automatically constructs the pipeline for you.
 Tasks can be anything from Python functions, Jupyter notebooks,
 Python/R/shell scripts, and SQL scripts.
 
-Ploomber provides several features to experiment faster. When you're ready, deploy to Airflow or
-Kubernetes (using Argo) without code changes.
+When you're ready, deploy to Airflow or Kubernetes (using Argo) without code changes.
 
 Here's how pipeline tasks look like:
 
@@ -118,11 +117,49 @@ tasks:
 
 </table>
 
-To run your pipeline, call `ploomber build`. For full flexibility, you can directly use the Python API. [Click here to see an
-example](https://github.com/ploomber/projects/blob/master/ml-advanced/src/ml_advanced/pipeline.py).
+## Resources
 
-[Watch JupyterCon 2020
-talk](https://www.youtube.com/watch?v=M6mtgPfsA3M)
+* [Documentation](https://ploomber.readthedocs.io/)
+* [Sample projects (Machine Learning pipeline, ETL, among others)](https://github.com/ploomber/projects)
+* [Watch JupyterCon 2020 talk](https://www.youtube.com/watch?v=M6mtgPfsA3M)
+
+## Installation
+
+```sh
+pip install ploomber
+```
+
+Compatible with Python 3.6 and higher.
+
+## Try it out!
+
+You can choose from one of the hosted options:
+
+[![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fspec-api-python%252FREADME.ipynb%26branch%3Dmaster)
+[![image](https://deepnote.com/buttons/launch-in-deepnote-small.svg)](https://deepnote.com/launch?template=deepnote&url=https://github.com/ploomber/projects/blob/master/spec-api-python/README.ipynb)
+
+Or run locally:
+
+```sh
+# ML pipeline example
+ploomber examples --name ml-basic
+cd ml-basic
+
+# if using pip
+pip install -r requirements.txt
+
+# if using conda
+conda env create --file environment.yml
+conda activate ml-basic
+
+# run pipeline
+ploomber build
+```
+
+Pipeline output saved in the `output/` folder. Check out the pipeline definition
+in the `pipeline.yaml` file.
+
+To get a list of examples, run `ploomber examples`.
 
 ## Main features
 
@@ -143,50 +180,6 @@ talk](https://www.youtube.com/watch?v=M6mtgPfsA3M)
     and execute locally. Once you are ready to deploy, export to
     [Kubernetes](https://soopervisor.readthedocs.io/en/stable/kubernetes.html) or [Airflow](https://soopervisor.readthedocs.io/en/stable/airflow.html).
 
-## Try it out!
-
-You can choose from one of the hosted options (no installation
-required):
-
-[![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fspec-api-python%252FREADME.ipynb%26branch%3Dmaster)
-[![image](https://deepnote.com/buttons/launch-in-deepnote-small.svg)](https://deepnote.com/launch?template=deepnote&url=https://github.com/ploomber/projects/blob/master/spec-api-python/README.ipynb)
-
-Or run an example locally:
-
-```sh
-# clone the sample projects
-git clone https://github.com/ploomber/projects
-
-# move to the machine learning pipeline example
-cd projects/spec-api-python
-
-# install dependencies
-# 1) if you have conda installed
-conda env create -f environment.yml
-conda activate spec-api-python
-# 2) if you don't have conda
-pip install ploomber pandas scikit-learn pyarrow sklearn-evaluation
-
-# open README.ipynb or execute the following commands in the terminal...
-
-# create output folder
-mkdir output
-
-# run the pipeline
-ploomber build    
-```
-
-When execution finishes, you'll see the output in the `output/` folder.
-
-More examples available [here](https://github.com/ploomber/projects).
-
-## Installation
-
-```sh
-pip install ploomber
-```
-
-Compatible with Python 3.6 and higher.
 
 ## How does Ploomber compare to X?
 
@@ -200,9 +193,3 @@ a fundamental part of this.
 
 For a complete comparison, read our
 [survey on workflow management tools](https://ploomber.io/posts/survey/).
-
-## Resources
-
-- [Sample projects (Machine Learning pipeline, ETL, among
-    others)](https://github.com/ploomber/projects)
-- [Documentation](https://ploomber.readthedocs.io/)

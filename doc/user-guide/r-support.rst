@@ -1,7 +1,7 @@
 R support
 =========
 
-R is officially supported by Ploomber. The same concepts that apply to Python
+Ploomber officially supports R. The same concepts that apply to Python
 scripts apply to R scripts. The only difference is how to declare ``upstream``
 dependencies and ``product``.
 
@@ -32,7 +32,7 @@ If you prefer, you can also use plain R scripts:
 Configuring R environment
 -------------------------
 
-To run R scripts as Jupyter notebooks you need to install Jupyter first, have 
+To run R scripts as Jupyter notebooks, you need to install Jupyter first, have 
 an existing R installation and install the IRkernel package.
 
 If you are using ``conda`` and a ``environment.yml`` file to manage
@@ -43,7 +43,7 @@ instructions <https://github.com/IRkernel/IRkernel>`_.
 Setting up R and IRkernel via ``conda``
 ---------------------------------------
 
-Even if you already have R installed, it is a good practice to isolate your
+Even if you already have R installed, it is good to isolate your
 environments from one project to another. ``conda`` can install R inside your
 project's environment.
 
@@ -76,7 +76,7 @@ Once you update your ``environment.yml``, re-create or update your environment.
 
 
 
-Finally, activate the R kernel for Jupyter. If you're using Linux or MacOS:
+Finally, activate the R kernel for Jupyter. If you're using Linux or macOS:
 
 .. code-block:: console
 

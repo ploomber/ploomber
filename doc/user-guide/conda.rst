@@ -4,12 +4,12 @@ Managing project dependencies
 **Note:** *This guide is not about Ploomber, but rather to explain our
 recommended way to manage project dependencies.*
 
-To make sure someone else is able to reproduce your results, you have to ensure
+To make sure someone else can reproduce your results, you have to ensure
 that they can install all required packages.
 
-There are a few options to do so, however, we highly recommend you to use
-``conda``. ``conda`` is able to handle many dependencies that otherwise
-would require a lot of setup to be installed correctly. Even if you use
+There are a few options to do so; however, we highly recommend you use
+``conda``. ``conda`` can handle many dependencies that otherwise
+would require a complicated installation process. Even if you use
 ``conda``, you'll still be able to use ``pip``.
 
 If you want to know more about dependency management, check out
@@ -18,7 +18,7 @@ If you want to know more about dependency management, check out
 Installing miniconda (aka ``conda``)
 ------------------------------------
 
-Conda is available for Windows, MacOS and Linux, `click here for installation
+Conda is available for Windows, macOS, and Linux. `Click here for installation
 instructions <https://conda.io/projects/conda/en/latest/user-guide/install/index.html#regular-installation>`_.
 
 
@@ -34,7 +34,7 @@ correctly by running:
 Declaring dependencies (``environment.yml``)
 --------------------------------------------
 
-Once conda is installed, declare dependencies in an ``environment.yml`` file,
+Once conda installs, declare dependencies in an ``environment.yml`` file,
 here's an example with common dependencies to get you started:
 
 .. code-block:: yaml
@@ -93,8 +93,7 @@ running ``conda install`` and ``pip install`` on it. Whenever you
 encounter issues, the safe way to fix them is to modify your
 ``environment.yml`` and then create the environment again.
 
-To re-create your environment, first move to the base environment (created
-by default):
+To re-create your environment, move to the base environment:
 
 .. code-block:: console
 

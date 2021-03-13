@@ -19,7 +19,7 @@ from pygments.lexers.markup import MarkdownLexer
 from pygments import highlight
 
 _URL = 'https://github.com/ploomber/projects'
-_BRANCH = 'refactor'
+_DEFAULT_BRANCH = 'master'
 _home = Path('~', '.ploomber')
 
 _lexer = MarkdownLexer()
@@ -81,10 +81,11 @@ def _list_examples(path):
 class _ExamplesManager:
     """Class for managing examples data
     """
-    def __init__(self, home):
+    def __init__(self, home, branch=None):
         self._home = Path(home).expanduser()
         self._path_to_metadata = self._home / '.metadata'
         self._examples = self._home / 'projects'
+        self._branch = branch or _DEFAULT_BRANCH
 
     @property
     def home(self):
@@ -97,6 +98,10 @@ class _ExamplesManager:
     @property
     def path_to_metadata(self):
         return self._path_to_metadata
+
+    @property
+    def branch(self):
+        return self._branch
 
     def save_metadata(self):
         timestamp = datetime.now().timestamp()
@@ -125,7 +130,7 @@ class _ExamplesManager:
                 '--depth',
                 '1',
                 '--branch',
-                _BRANCH,
+                self.branch,
                 _URL,
                 str(self.examples),
             ],
@@ -169,8 +174,8 @@ class _ExamplesManager:
 
 
 @cli_endpoint
-def main(name, force):
-    manager = _ExamplesManager(_home)
+def main(name, force, branch):
+    manager = _ExamplesManager(home=_home, branch=branch)
     tw = TerminalWriter()
 
     if not manager.examples.exists() or manager.outdated() or force:

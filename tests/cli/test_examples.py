@@ -28,9 +28,29 @@ def test_clones_in_home_directory(monkeypatch, tmp_directory):
 
     # check clones inside home directory
     mock_run.assert_called_once_with([
-        'git', 'clone', '--depth', '1', '--branch', 'refactor',
+        'git', 'clone', '--depth', '1', '--branch', 'master',
         'https://github.com/ploomber/projects',
         str(Path(tmp_directory, 'projects'))
+    ],
+                                     check=True)
+
+
+def test_change_default_branch(monkeypatch, tmp_directory):
+    # mock subprocess.run
+    mock_run = Mock()
+    monkeypatch.setattr(examples.subprocess, 'run', mock_run)
+
+    # mock _list_example, otherwise this will fail since we aren't cloning the
+    # code
+    monkeypatch.setattr(examples, '_list_examples', lambda _: None)
+
+    examples.main(name=None, force=False, branch='custom-branch')
+
+    # check clones inside home directory
+    mock_run.assert_called_once_with([
+        'git', 'clone', '--depth', '1', '--branch', 'custom-branch',
+        'https://github.com/ploomber/projects',
+        str(Path('~', '.ploomber', 'projects').expanduser())
     ],
                                      check=True)
 

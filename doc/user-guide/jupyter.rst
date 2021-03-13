@@ -135,8 +135,11 @@ There are two ways to use Ploomber in Jupyter. The first one, explained in
 previous sections, is by loading a task file in Jupyter. However, this implies
 that the file opened in Jupyter is a task in your pipeline.
 
-A second way is to load your whole pipeline in Jupyter to interact with it. This is a great approach during the initial stages since you don't know what's the best
-to organize tasks or how many of them you need. Say that you have a single task that loads the data:
+A second way is to load your whole pipeline in Jupyter to interact with it.
+Jupyter is an excellent approach during the initial stages since you don't know what's the best
+to organize tasks or how many of them you need.
+
+Say that you have a single task that loads the data:
 
 .. code-block:: yaml
     :class: text-editor
@@ -161,8 +164,8 @@ cleaning). You can create a new notebook with the following code:
 
 
 Note that this exploratory notebook **is not** part of your pipeline (i.e., it
-doesn't appear in the ``tasks`` section of your ``pipeline.yaml``), but a
-notebook that loads the pipeline itself.
+doesn't appear in the ``tasks`` section of your ``pipeline.yaml``), but an
+exploratory notebook that loads the pipeline.
 
 The ``dag`` variable is an object that contains your pipeline definition. If you
 want to load your raw data:
@@ -176,28 +179,8 @@ want to load your raw data:
 
 Using the ``dag`` object avoids hardcoded paths to keep notebooks clean.
 
-There are other things you can do with the ``dag`` object:
-
-.. code-block:: python
-    :class: text-editor
-
-    # get task names
-    list(dag)
-
-    # get a specific task
-    dag['load']
-
-    # where is the source code located?
-    dag['load'].source
-
-    # start a debugging session     
-    dag['load'].debug()
-
-    # which are upstream dependencies?
-    dag['load'].upstream
-
-    # which are downstream dependencies?
-    dag.get_downstream('load')
+There are other things you can do with the ``dag`` object. See the following
+guide for more examples: :ref:`user-guide-cli-interactive-sessions`.
 
 As your pipeline grows, exploring it from Jupyter helps you decide what tasks to
 build next and understand dependencies among tasks.

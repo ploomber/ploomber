@@ -30,10 +30,14 @@ def scaffold():
 @cli.command()
 @click.option('-n', '--name', help='Example to use', default=None)
 @click.option('-f', '--force', help='Force examples download', is_flag=True)
-def examples(name, force):
+@click.option('-b',
+              '--branch',
+              help='Git branch to use. Defaults to master',
+              default='master')
+def examples(name, force, branch):
     """Get sample projects. Run "ploomber examples" to list them
     """
-    cli_module.examples.main(name=name, force=force)
+    cli_module.examples.main(name=name, force=force, branch=branch)
 
 
 def cmd_router():

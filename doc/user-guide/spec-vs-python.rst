@@ -4,70 +4,143 @@ Spec API vs Python API
 There are two ways of writing pipelines with Ploomber. This document discusses
 the differences and how to decide which API to use.
 
-Data projects span a wide range of applications; from a small projects that just
+Data projects span a wide range of applications; from small projects that just
 need a few scripts to large ones that require a greater degree of flexibility.
-Ploomber is designed to make as simple as possible, and only use a more
+Ploomber is designed to make it as simple as possible and only use a more
 sophisticated solution if you need to.
 
 For examples using both APIs, `click here <https://github.com/ploomber/projects>`_
 
+Entry points
+------------
+
+To execute your pipeline, Ploomber needs to know where it is. This location is
+known as "entry point". There are three types of entry points (ordered by
+flexibility):
+
+1. Directory
+2. [Spec API] Spec (aka ``pipeline.yaml``)
+3. [Python API] Factory function (a function that returns a ``DAG`` object)
+
+As you can see, the entry point type determines which API to use.
+
+
+Which entry point to use?
+-------------------------
+
 tl; dr;
--------
 
 * For simple script-based pipelines: Spec API with a :ref:`directory entry point <Directory entry point>`
 * Simple pipelines with SQL tasks: Spec API with a :ref:`spec entry point <Spec entry point>`
-* For dynamic pipelines where input parameters determine number of tasks and/or dependencies: Python API with a :ref:`factory entry point <Factory entry point>`
+* For dynamic pipelines where input parameters determine the number of tasks and/or dependencies: Python API with a :ref:`factory entry point <Factory entry point>`
 
-
-Spec API
---------
-
+For a longer explanation, keep reading.
 
 Directory entry point
-*********************
+---------------------
 
-The Spec API is a "no-code" solution for writing pipelines, its simplest
-(and implicit) case is to just use a directory with scripts. Ploomber will
-analyze your code, find dependencies and execute the pipeline. There is no
-need to write any "plumbing code". This is great for simple
-script-based projects. Since Ploomber executes your pipeline by pointing it
-to a directory, this approach is known as a **directory entry point**.
+Ploomber can figure out your pipeline without even having a ``pipeline.yaml``,
+by just passing a directory. This kind of entry point is the simplest one but
+also, the less flexible, since there isn't a pipeline definition, **products
+must be declared in the source code itself**. Note that only Python and R
+scripts support this, for example:
 
-Spec entry point
-****************
+.. code-block:: python
+    :class: text-editor
+    :name: task-py
 
-If you want to customize how Ploomber analyzes and executes your pipeline,
-you have to create a ``pipeline.yaml`` file. This approach uses
-the Spec API explicitly, to give you a place to configure your pipeline.
-The most common use cases are small pipelines that have SQL tasks. By specifying
-how to connect to a database in your ``pipeline.yaml`` file, you let Ploomber
-take care of managing db connections and focus on writing SQL scripts.
-Since Ploomber executes your pipeline by pointing it to a spec file, this is
-known as a **spec entry point**.
+    # + tags=["parameters"]
+    product = {'nb': 'output.ipynb', 'data': 'output.csv'}
+    upstream = ['a_task']
+    # -
 
-Another added feature of this approach is pipeline parametrization,
-see to learn more :doc:`/user-guide/parametrized`.
+    # continues...
 
-Python API
-----------
 
-Factory entry point
-*******************
+Internally, Ploomber uses the :py:mod:`ploomber.spec.DAGSpec.from_directory`
+method. See the documentation for details.
+
+All commands that accept the ``--entry-point/-e`` parameter can take a
+directory as a value. For example, to build a pipeline using the current
+directory:
+
+.. code-block:: console
+
+    ploomber build --entry-point .
+
+It's also possible to select a subset of the files in a directory using a
+glob-like pattern:
+
+
+.. code-block:: console
+
+    # note the parenthesis
+    ploomber build --entry-point "*.py"
+
+
+Or a list of files:
+
+.. code-block:: console
+
+    # note the parenthesis
+    ploomber build --entry-point get.py transform.py plot.py
+
+
+This is implemented using :py:mod:`ploomber.spec.DAGSpec.from_files`  
+
+
+[Spec API] Spec entry point
+----------------------------
+
+If you want to customize how Ploomber executes your pipeline,
+you have to create a ``pipeline.yaml`` file; this is known as a
+**spec entry point**. A ``pipeline.yaml`` file is the recommended approach for
+most projects: it has a good level of flexibility and doesn't require you to
+learn Ploomber's internal Python API.
+
+An added feature is pipeline parametrization, to learn more :doc:`/user-guide/parametrized`.
+
+For schema details see: :doc:`../api/spec`.
+
+[Python API] Factory entry point
+--------------------------------
 
 The last approach requires you to write Python code to specify your pipeline.
 It has a steeper learning curve because you have to become familiar with the
-API specifics but it provides the greatest level of flexibility.
+API specifics, but it provides the most significant level of flexibility.
 
-The biggest advantage are dynamic pipelines, whose exact number of tasks
+The primary advantage is dynamic pipelines, whose exact number of tasks
 and dependency relations are determined when executing your Python code.
 For example, you might use a for loop to dynamically generate a few tasks
 based on some input parameters.
 
 For Ploomber to know how to build your pipeline written as Python code, you have
-to provide a **factory entry point**, which is just a function that returns a
+to provide a **factory entry point**, which is a function that returns a
 ``DAG`` object. For example, if your factory is a function called `make` in
 a file called ``pipeline.py``, then your entry point is the dotted path
-``pipeline.make``. Internally, Ploomber will do something like this:
+``pipeline.make``, which may look like this:
+
+.. code-block:: python
+    :class: text-editor
+    :name: factory-py
+
+    from ploomber import DAG
+
+    def make():
+        dag = DAG()
+        # add tasks to your pipeline...
+        return dag
+
+
+You can execute commands against your pipeline like this:
+
+
+.. code-block:: console
+
+    ploomber {command} --entry-point pipeline.make
+
+
+Internally, Ploomber will do something like this:
 
 .. code-block:: python
     :class: text-editor
@@ -76,6 +149,17 @@ a file called ``pipeline.py``, then your entry point is the dotted path
 
     dag = make()
 
+    # (if using ploomber build)
     dag.build()
 
 
+If your factory function has arguments, they will show up in the CLI. This
+guide shows how to parametrize a factory
+function: :doc:`../user-guide/parametrized`
+
+If your factory function has a docstring, the first line displays
+in the CLI help menu (e.g. ``ploomber build --entry-point factory.make --help``). If
+the docstring is in
+the `numpydoc format <https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard>`_
+(and numpydoc is installed, ``pip install numpydoc``), descriptions for
+documented parameters will be displayed as well.
