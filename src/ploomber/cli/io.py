@@ -7,11 +7,11 @@ from ploomber.exceptions import DAGBuildError, DAGRenderError
 
 def cli_endpoint(fn):
     """
-    Decorator for command line endpoints (note: they must be called with
-    keyword arguments). It runs the cli endpoint, captures exception (if any),
-    sends a colored traceback to standard error and exits with code 1. Call
-    some_endpoint(catch_exception=False) to disable this behavior (e.g. for
-    testing)
+    Decorator for command line endpoints (note: functions decorated with
+    this must be called with keyword arguments). It runs the cli endpoint,
+    captures exception (if any), sends a colored traceback to standard error
+    and exits with code 1. Call some_endpoint(catch_exception=False) to disable
+    this behavior (e.g. for testing)
     """
     @wraps(fn)
     def wrapper(catch_exception=True, **kwargs):

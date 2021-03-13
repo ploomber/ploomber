@@ -27,6 +27,15 @@ def scaffold():
         scaffold_project.cli(project_path=None)
 
 
+@cli.command()
+@click.option('-n', '--name', help='Example to use', default=None)
+@click.option('-f', '--force', help='Force examples download', is_flag=True)
+def examples(name, force):
+    """Get sample projects. Run "ploomber examples" to list them
+    """
+    cli_module.examples.main(name=name, force=force)
+
+
 def cmd_router():
     cmd_name = None if len(sys.argv) < 2 else sys.argv[1]
 

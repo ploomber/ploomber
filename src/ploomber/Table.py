@@ -136,7 +136,9 @@ class Table:
         return values
 
     def to_format(self, fmt):
-        return tabulate(self.values, headers='keys', tablefmt=fmt)
+        values = wrap_table_dict(self.values, self.column_width,
+                                 self.EXCLUDE_WRAP)
+        return tabulate(values, headers='keys', tablefmt=fmt)
 
     def to_pandas(self):
         import pandas as pd
@@ -148,6 +150,10 @@ class Table:
     @property
     def values(self):
         return self._values
+
+    @classmethod
+    def from_dicts(cls, dicts):
+        return cls([Row(d) for d in dicts])
 
 
 class TaskReport(Row):
