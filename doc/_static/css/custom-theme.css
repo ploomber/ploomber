@@ -1,11 +1,12 @@
-@import '../nature.css';
-
 /* Based on https://codeeverywhere.ca/post.php?id=10 */
 
 /* Available code lexers in sphinx 
 https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCodeExamplesInSphinx.html
 */
 
+.container-fluid {
+    padding-bottom: 15px;
+}
 
 .navbar {
     background-color: black;
