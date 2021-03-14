@@ -2,7 +2,7 @@ Installation
 ============
 
 Using ``pip``
------------
+-------------
 
 .. code-block:: console
 

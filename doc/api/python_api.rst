@@ -7,7 +7,7 @@ DAG
 .. currentmodule:: ploomber
 
 .. autosummary::
-    :toctree:
+    :toctree: _modules/root
 
     DAG
     OnlineDAG
@@ -22,7 +22,7 @@ Tasks
 .. currentmodule:: ploomber.tasks
 
 .. autosummary::
-    :toctree:
+    :toctree: _modules/tasks
 
     Task
     PythonCallable
@@ -44,7 +44,7 @@ Products
 .. currentmodule:: ploomber.products
 
 .. autosummary::
-    :toctree:
+    :toctree: _modules/products
 
     Product
     File
@@ -61,7 +61,7 @@ Clients
 .. currentmodule:: ploomber.clients
 
 .. autosummary::
-    :toctree:
+    :toctree: _modules/clients
 
     Client
     DBAPIClient
@@ -75,7 +75,7 @@ Spec
 .. currentmodule:: ploomber.spec
 
 .. autosummary::
-    :toctree:
+    :toctree: _modules/spec
 
     DAGSpec
 
@@ -87,7 +87,7 @@ Env
 .. currentmodule:: ploomber
 
 .. autosummary::
-    :toctree:
+    :toctree: _modules/root
 
     with_env
     load_env
@@ -100,6 +100,6 @@ SourceLoader
 .. currentmodule:: ploomber
 
 .. autosummary::
-    :toctree:
+    :toctree: _modules/root
 
     SourceLoader
