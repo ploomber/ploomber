@@ -5,6 +5,9 @@
 - Changes `extract_product` default in spec API to False
 - Tasks get a default name equal to the filename without extension (e.g., plot.py -> plot)
 - `File` saves metadata in a `.{filename}.metadata` file instead of `{filename}.source`
+- Adds `ploomber examples` command
+- Adds Deployment guide to documentation
+- `EnvDict` loads `env.yaml` and uses values as defaults when passing a custom dict
 - Simpler repr for SQL products
 - Improved Spec API docs
 - Adds `ploomber.tasks.TaskGroup.from_params` to create multiple tasks at once
