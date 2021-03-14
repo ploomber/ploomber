@@ -30,8 +30,11 @@ release = version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.autosummary',
-    'sphinx.ext.autosectionlabel', 'nbsphinx'
+    'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.autosectionlabel',
+    'nbsphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -74,7 +77,7 @@ master_doc = 'contents'
 # landing page
 html_additional_pages = {'index': 'index.html'}
 
-# sphinx-gallery
+# nbsphinx
 
 # This is inserted only in pages that load generate from notebooks
 nbsphinx_prolog = """
@@ -88,6 +91,14 @@ nbsphinx_prolog = """
 
     <script src="../_static/js/nbsphinx.js"></script>
 """
+
+# disable require.js loading - giving an exception. we don't need this anyway
+# since this is only required to display widgets
+nbsphinx_requirejs_path = ''
+
+autosummary_generate = True
+
+html_show_copyright = False
 
 
 def setup(app):

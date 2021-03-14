@@ -7,7 +7,7 @@ SQL
 .. currentmodule:: ploomber.testing.sql
 
 .. autosummary::
-    :toctree:
+    :toctree: _modules/testing
 
     nulls_in_columns
     distinct_values_in_column
