@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.10dev
+## 0.10 (2021-03-13)
 
 - Changes `extract_product` default in spec API to False
 - Tasks get a default name equal to the filename without extension (e.g., plot.py -> plot)
