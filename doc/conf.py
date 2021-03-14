@@ -55,7 +55,7 @@ html_style = 'css/custom-theme.css'
 
 html_js_files = [
     'js/custom.js',
-    'https://unpkg.com/mermaid@8.6.0/dist/mermaid.min.js',
+    'js/mermaid.min.js',
     'js/terminal.js',
 ]
 
