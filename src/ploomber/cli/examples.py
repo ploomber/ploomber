@@ -174,7 +174,7 @@ class _ExamplesManager:
 
 
 @cli_endpoint
-def main(name, force, branch):
+def main(name, force=False, branch=None):
     manager = _ExamplesManager(home=_home, branch=branch)
     tw = TerminalWriter()
 

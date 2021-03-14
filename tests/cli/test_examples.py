@@ -36,6 +36,11 @@ def test_clones_in_home_directory(monkeypatch, tmp_directory):
 
 
 def test_change_default_branch(monkeypatch, tmp_directory):
+    # mock metadata to make it look older
+    metadata = dict(timestamp=(datetime.now() - timedelta(days=1)).timestamp())
+    monkeypatch.setattr(examples._ExamplesManager, 'load_metadata',
+                        lambda _: metadata)
+
     # mock subprocess.run
     mock_run = Mock()
     monkeypatch.setattr(examples.subprocess, 'run', mock_run)
