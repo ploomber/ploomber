@@ -769,6 +769,13 @@ class Task(abc.ABC):
             '"develop" is not implemented in "{}" tasks'.format(
                 type(self).__name__))
 
+    def load(self):
+        """Load task as pandas.DataFrame. Only implemented in certain tasks
+        """
+        raise NotImplementedError(
+            '"load" is not implemented in "{}" tasks'.format(
+                type(self).__name__))
+
     def _render_product(self):
         params_names = list(self.params)
 

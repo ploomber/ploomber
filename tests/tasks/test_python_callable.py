@@ -164,16 +164,20 @@ def test_serialize_unserialize(tmp_directory, dag_with_unserializer):
     assert pd.read_parquet('t2.parquet')['x'].tolist() == [2, 3, 4]
 
 
-def test_load(tmp_directory, dag_with_unserializer):
+def test_load_with_unserializer_function(tmp_directory, dag_with_unserializer,
+                                         monkeypatch):
     dag_with_unserializer.build()
 
-    with pytest.raises(ValueError) as excinfo:
-        dag_with_unserializer['t1'].load()
+    mock_t1 = Mock(wraps=dag_with_unserializer['t1']._unserializer)
+    monkeypatch.setattr(dag_with_unserializer['t1'], '_unserializer', mock_t1)
+    mock_t2 = Mock(wraps=dag_with_unserializer['t2']._unserializer)
+    monkeypatch.setattr(dag_with_unserializer['t2'], '_unserializer', mock_t2)
 
-    assert str(excinfo.value) == (
-        'Cannot load product, task was not initialized with '
-        'an unserializer function')
-    assert dag_with_unserializer['t2'].load()['x'].tolist() == [2, 3, 4]
+    dag_with_unserializer['t1'].load()
+    mock_t1.assert_called_once_with('t1.parquet')
+
+    dag_with_unserializer['t2'].load()['x'].tolist() == [2, 3, 4]
+    mock_t2.assert_called_once_with('t2.parquet')
 
 
 def test_uses_default_serializer_and_deserializer():

@@ -83,7 +83,7 @@ class SQLScript(Task):
         return SQLScriptSource(source, **kwargs)
 
 
-class SQLDump(Task):
+class SQLDump(io.FileLoaderMixin, Task):
     """Dumps data from a SQL SELECT statement to a file(s)
 
     Parameters
