@@ -31,6 +31,8 @@ class TaskStatus(Enum):
     # outdated: waits for upstream dependencies to be either Executed
     # or Skipped
     WaitingUpstream = 'waiting_upstream'
+    # up-to-date but need to download from remote location
+    WaitingDownload = 'waiting_download'
 
     # failed to render, propagate ErroredRender to downstream dependencies
     # downstream dependencies and set them to AbortedRender

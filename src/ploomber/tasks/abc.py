@@ -53,8 +53,7 @@ import abc
 import logging
 from datetime import datetime
 from ploomber.products import Product, MetaProduct, EmptyProduct
-from ploomber.exceptions import (TaskBuildError, DAGBuildEarlyStop,
-                                 TaskRenderError)
+from ploomber.exceptions import TaskBuildError, DAGBuildEarlyStop
 from ploomber.tasks.taskgroup import TaskGroup
 from ploomber.constants import TaskStatus
 from ploomber.tasks._upstream import Upstream
@@ -296,9 +295,10 @@ class Task(abc.ABC):
                                     self._available_callback_kwargs)
             self.on_finish(**kwargs)
 
-    def _finish_task_execution(self):
+    def _post_run_actions(self):
         """
-        Call on_finish hook, verify products exist and save metadata
+        Call on_finish hook, save metadata, verify products exist and upload
+        product
         """
         # run on finish first, if this fails, we don't want to save metadata
         try:
@@ -310,7 +310,12 @@ class Task(abc.ABC):
             self.exec_status = TaskStatus.Errored
             raise
 
-        self.product.metadata.update(str(self.source))
+        if self.exec_status == TaskStatus.WaitingDownload:
+            # clear current metadata to force reload
+            # and ensure the task uses the downloaded metadata
+            self.product.metadata.clear()
+        else:
+            self.product.metadata.update(str(self.source))
 
         # For most Products, it's ok to do this check before
         # saving metadata, but not for GenericProduct, since the way
@@ -331,6 +336,9 @@ class Task(abc.ABC):
                     'products in "{}" does not exist yet '
                     '(task.product.exists() returned False). '.format(
                         self.name, self.product))
+
+        if self.exec_status != TaskStatus.WaitingDownload:
+            self.product.upload()
 
     @property
     def on_failure(self):
@@ -432,18 +440,48 @@ class Task(abc.ABC):
         DAGBuildEarlyStop
             If any task or on_finish hook raises a DAGBuildEarlyStop error
         """
-        if any(t.exec_status == TaskStatus.WaitingRender
-               for t in self.upstream.values()):
+
+        upstream_exec_status = [t.exec_status for t in self.upstream.values()]
+
+        if any(exec_status == TaskStatus.WaitingRender
+               for exec_status in upstream_exec_status):
             raise TaskBuildError('Cannot directly build task "{}" as it '
                                  'has upstream dependencies, call '
                                  'dag.render() first'.format(self.name))
 
+        # we can execute an individual tasks if missing up-to-date upstream
+        # dependencies exist in remote storage
+        if self.exec_status == TaskStatus.WaitingUpstream:
+            ok = {
+                t
+                for t in self.upstream.values() if t.exec_status in
+                {TaskStatus.Skipped, TaskStatus.WaitingDownload}
+            }
+
+            not_ok = set(self.upstream.values()) - ok
+
+            if not_ok:
+                raise TaskBuildError(
+                    f'Cannot build task {self.name!r} because '
+                    'the following upstream dependencies are '
+                    f'missing: {[t.name for t in not_ok]!r}. Execute upstream '
+                    'tasks first. If upstream tasks generate File(s) and you'
+                    'configured a File.client, you may also upload '
+                    'up-to-date copies to remote storage and they will be '
+                    'automatically downloaded')
+
+            for t in ok:
+                if t.exec_status == TaskStatus.WaitingDownload:
+                    t.product.download()
+
         # This is the public API for users who'd to run tasks in isolation,
         # we have to make sure we clear product cache status, otherwise
-        # this will interfer with other render calls
+        # this will interfere with other render calls
         self.render(force=force)
 
+        # at this point the task must be WaitingDownload or WaitingExecution
         res, _ = self._build(catch_exceptions=catch_exceptions)
+
         self.product.metadata.clear()
         return res
 
@@ -462,13 +500,18 @@ class Task(abc.ABC):
             [exception with context info]. Set it to False when debugging
             tasks to drop-in a debugging session at the failing line.
         """
-
         if not catch_exceptions:
             res = self._run()
-            self._finish_task_execution()
+            self._post_run_actions()
             return res, self.product.metadata.to_dict()
         else:
             try:
+                # TODO: this calls download, if this happens. should
+                # hooks be executed when dwnloading? if so, we could
+                # change the ran? column from the task report to something
+                # like:
+                # ran/downloaded/skipped and use that to determine if we should
+                # run hooks
                 res = self._run()
             except Exception as e:
                 msg = 'Error building task "{}"'.format(self.name)
@@ -498,11 +541,7 @@ class Task(abc.ABC):
 
             if build_success:
                 try:
-                    # FIXME: move metadata saving and product checking,
-                    # the error message is misleading
-                    # this not only runs the hook, but also
-                    # calls save metadata and checks that the product exists
-                    self._finish_task_execution()
+                    self._post_run_actions()
                 except Exception as e:
                     self.exec_status = TaskStatus.Errored
                     msg = ('Exception when running on_finish '
@@ -516,9 +555,12 @@ class Task(abc.ABC):
                     else:
                         raise TaskBuildError(msg) from e
                 else:
+                    # sucessful task execution, on_finish hook execution,
+                    # metadata saving and upload
                     self.exec_status = TaskStatus.Executed
 
                 return res, self.product.metadata.to_dict()
+            # error bulding task
             else:
                 try:
                     self._run_on_failure()
@@ -564,15 +606,26 @@ class Task(abc.ABC):
         self._logger.info('Starting execution: %s', repr(self))
 
         then = datetime.now()
-        self.run()
+
+        if self.exec_status == TaskStatus.WaitingDownload:
+            try:
+                self.product.download()
+            except Exception as e:
+                raise TaskBuildError(
+                    f'Error downloading Product {self.product!r} '
+                    f'from task {self!r}. Check the full traceback above for '
+                    'details') from e
+
+        # NOTE: should we validate status here?
+        # (i.e., check it's WaitingExecution)
+        else:
+            self.run()
+
         now = datetime.now()
 
         elapsed = (now - then).total_seconds()
         self._logger.info(
             'Done. Operation took {:.1f} seconds'.format(elapsed))
-
-        # Upload product, if needed
-        self.product.upload()
 
         # TODO: also check that the Products were updated:
         # if they did not exist, they must exist now, if they alredy
@@ -593,8 +646,9 @@ class Task(abc.ABC):
         ----------
         force : bool, default=False
             If True, mark status as WaitingExecution/WaitingUpstream even if
-            the task is up-to-date, otherwise, the normal process follows and
-            only up-to-date tasks are marked as Skipped.
+            the task is up-to-date (if there are any File(s) with clients, this
+            also ignores the status of the remote copy), otherwise, the normal
+            process follows and only up-to-date tasks are marked as Skipped.
 
         outdated_by_code : bool, default=True
             Factors to determine if Task.product is marked outdated when source
@@ -632,31 +686,66 @@ class Task(abc.ABC):
             self.exec_status = TaskStatus.ErroredRender
             raise e
 
+        # we use outdated status several time, this caches the result
+        # for performance reasons. TODO: move this to Product and make it
+        # a property
         is_outdated = ProductEvaluator(self.product, outdated_by_code)
 
+        # task with no dependencies
         if not self.upstream:
-            # NOTE: is_outdated goes second so it's lazily evaluated
-            if force or is_outdated.check():
+            # nothing to do, just mark it ready for execution
+            if force:
                 self._exec_status = TaskStatus.WaitingExecution
-                if force:
-                    self._logger.debug(
-                        'Forcing status "%s", outdated conditions'
-                        ' ignored...', self.name)
+                self._logger.debug(
+                    'Forcing status "%s", outdated conditions'
+                    ' ignored...', self.name)
 
+            # task is outdated, check if we need to execute or download
+            elif is_outdated.check():
+                # This only happens with File
+                if is_outdated.check() == TaskStatus.WaitingDownload:
+                    self._exec_status = TaskStatus.WaitingDownload
+                else:
+                    self._exec_status = TaskStatus.WaitingExecution
+
+            # task is up-to-date
             else:
                 self._exec_status = TaskStatus.Skipped
 
+        # tasks with dependencies
         else:
-            all_upstream_ready = all([
-                t.exec_status in {TaskStatus.Executed, TaskStatus.Skipped}
-                for t in self.upstream.values()
-            ])
+            upstream_exec_status = set(t.exec_status
+                                       for t in self.upstream.values())
 
+            all_upstream_ready = upstream_exec_status <= {
+                TaskStatus.Executed, TaskStatus.Skipped
+            }
+
+            # some upstream tasks need execution (or download)
             if not all_upstream_ready:
-                self._exec_status = TaskStatus.WaitingUpstream
+                # special case: if all upstream tasks can be downloaded and
+                # this one too, we can do so
+                # FIXME:  I dont think i need this, should be taken care
+                # by is_outdated.check()
+                if upstream_exec_status <= {
+                        TaskStatus.WaitingDownload, TaskStatus.Skipped
+                } and is_outdated.check() == TaskStatus.WaitingDownload:
+                    self._exec_status = TaskStatus.WaitingDownload
+                elif force or is_outdated.check():
+                    self._exec_status = TaskStatus.WaitingUpstream
+                else:
+                    self._exec_status = TaskStatus.Skipped
+
+            # al upstream ready
             else:
+                # check if we need to execute or download
                 if force or is_outdated.check():
-                    self._exec_status = TaskStatus.WaitingExecution
+                    # This only happens with File
+                    if is_outdated.check() == TaskStatus.WaitingDownload:
+                        self._exec_status = TaskStatus.WaitingDownload
+                    else:
+                        self._exec_status = TaskStatus.WaitingExecution
+                # task is up-to-date, nothing to do
                 else:
                     self._exec_status = TaskStatus.Skipped
 
@@ -801,14 +890,6 @@ class Task(abc.ABC):
                           ' check the full traceback above for details'.format(
                               repr(self))) from e
 
-        try:
-            self.product.download()
-        except Exception as e:
-            raise TaskRenderError(
-                f'Error downloading Product {self.product!r} '
-                f'from task {self!r}. Check the full traceback above for '
-                'details') from e
-
     def _get_downstream(self):
         # make the _get_downstream more efficient by
         # using the networkx data structure directly
@@ -841,7 +922,11 @@ class Task(abc.ABC):
                     for t in task.upstream.values()
             ]):
                 task.exec_status = TaskStatus.AbortedRender
-            elif all_upstream_ready:
+            # mark as waiting execution if moving from waiting upstream
+            # the second situation if when task is waitingdownload, in which
+            # case we don't do anything
+            elif all_upstream_ready and (task.exec_status
+                                         == TaskStatus.WaitingUpstream):
                 task.exec_status = TaskStatus.WaitingExecution
 
         for t in self._get_downstream():
@@ -892,8 +977,8 @@ def _doc_short(doc):
 
 class ProductEvaluator:
     """
-    A class to temporarily keep the outdated status of a product, when products
-    are remote, this operation is expensive
+    A class to temporarily keep the outdated status of a product (when products
+    are remote this operation is expensive)
     """
     def __init__(self, product, outdated_by_code):
         self.product = product

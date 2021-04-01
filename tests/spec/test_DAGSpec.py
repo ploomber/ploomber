@@ -459,7 +459,6 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
 
     dag = DAGSpec(dag_spec).to_dag()
 
-    # FIXME: this does no show the custom Upstream key missing error
     dag.build()
 
 

@@ -5,7 +5,7 @@ the pipeline.yaml
 """
 # + tags=["parameters"]
 upstream = {'clean': None}
-product = 'output/plot.ipynb'
+product = 'output/dummy.ipynb'
 
 # +
 1 + 1

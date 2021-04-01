@@ -126,10 +126,19 @@ def find_file_recursively(name, max_levels_up=6, starting_dir=None):
     return path_to_file
 
 
-def find_root_recursively(starting_dir=None):
-    setup_py = find_file_recursively('setup.py',
+def find_root_recursively(starting_dir=None, raise_=False):
+    options = ['environment.yml', 'requirements.txt', 'setup.py']
+
+    for name in options:
+        path = find_file_recursively(name,
                                      max_levels_up=6,
                                      starting_dir=starting_dir)
 
-    if setup_py:
-        return setup_py.parent
+        if path:
+            return path.parent
+
+    if raise_:
+        raise ValueError(
+            'Could not determine project\'s root directory. '
+            'Looked recursively for an environment.yml, requirements.txt or'
+            ' setup.py file. Add one of those and try again.')

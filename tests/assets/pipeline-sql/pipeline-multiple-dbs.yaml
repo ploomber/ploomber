@@ -12,14 +12,14 @@ tasks:
     name: load-pg
     client: config.get_pg_client
     source: load.sql
-    product: [raw, table]
+    product: [raw_pg, table]
     product_class: PostgresRelation
 
   - class: SQLScript
     name: load-lite
     client: config.get_client
     source: load.sql
-    product: [raw, table]
+    product: [raw_lite, table]
     product_class: SQLiteRelation
 
   - class: SQLScript

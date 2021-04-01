@@ -16,16 +16,39 @@ When DAG.build() is called, actual execution happens. Tasks are executed in
 order (but up-to-date tasks are skipped). If tasks succeed, their downstream
 dependencies will be executed, otherwise they are aborted.
 
-If any tasks fail, DAG executes the on_failure hook, otherwise, it executes
+If any task fails, DAG executes the on_failure hook, otherwise, it executes
 the on_finish hook.
-
-Tasks support hooks as well and building a task is a process by itself, see
-the docstring in the Task module for details.
 
 The DAG does not execute tasks, but delegates this to an Executor object,
 executors adhere to task status and do not build tasks if they are marked
-as Aborted or Skipped.
+as Aborted or Skipped. But executors are free to execute tasks in
+subprocesses, in such case, the have to report back the result of task
+building to the main process.
 
+DAGs can be executed in different forms. Changes to the execution model must
+take these four scenarios into account:
+
+1) Single process. This is the simplest way of executing DAGs. Everything is
+executed in the same process (i.e., using the Serial executor with the option
+for using subprocesses turned off).
+
+2) Multiple processes, single node. This happens when executing the DAG using
+Serial with the option for subprocesses turned on or when using the Parallel
+executor. On this case, subprocesses must report back the result of building
+a given task to the main process.
+
+3) Multiple nodes, single filesystem. This happens when execution is
+orchestrated by another system such as Argo or Airflow. We no longer use
+an executor but rather build each task individually. We can no longer monitor
+task status as a whole so we rely on the external system for doing so. Since
+there is a shared filesystem, upstream products are available to any given
+task.
+
+4) Multiple nodes, multiple filesystems. This is the most complex setup.
+(e.g., executing in Argo with completely isolated pods). Since File
+products from one task aren't available for the next one, the user has to
+configure a File.client. When executing each task (Task.build), we use the
+client to fetch upstream dependencies and execute a given task.
 """
 import os
 from collections.abc import Iterable
@@ -65,6 +88,8 @@ from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.dag.DAGLogger import DAGLogger
 from ploomber.dag.dagclients import DAGClients
 from ploomber.dag.abstractdag import AbstractDAG
+from ploomber.dag.util import check_duplicated_products
+from ploomber.tasks.abc import Task
 
 
 class DAG(AbstractDAG):
@@ -189,9 +214,11 @@ class DAG(AbstractDAG):
         # render errored
         elif value == DAGStatus.ErroredRender:
             allowed = {
-                TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream,
-                TaskStatus.ErroredRender, TaskStatus.AbortedRender,
-                TaskStatus.Skipped
+                TaskStatus.WaitingExecution,
+                TaskStatus.WaitingUpstream,
+                TaskStatus.ErroredRender,
+                TaskStatus.AbortedRender,
+                TaskStatus.Skipped,
             }
             self.check_tasks_have_allowed_status(allowed, value)
 
@@ -199,8 +226,10 @@ class DAG(AbstractDAG):
         elif value == DAGStatus.WaitingExecution:
             exec_values = set(task.exec_status for task in self.values())
             allowed = {
-                TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream,
-                TaskStatus.Skipped
+                TaskStatus.WaitingExecution,
+                TaskStatus.WaitingDownload,
+                TaskStatus.WaitingUpstream,
+                TaskStatus.Skipped,
             }
             self.check_tasks_have_allowed_status(allowed, value)
 
@@ -350,6 +379,8 @@ class DAG(AbstractDAG):
             if exceptions:
                 self._exec_status = DAGStatus.ErroredRender
                 raise DAGRenderError(str(exceptions))
+
+            check_duplicated_products(self)
 
         self._exec_status = DAGStatus.WaitingExecution
 
@@ -825,7 +856,7 @@ class DAG(AbstractDAG):
         for task in self.values():
             task.product.metadata.clear()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> Task:
         try:
             return self._G.nodes[key]['task']
         except KeyError as e:

@@ -14,7 +14,7 @@ class AbstractMetadata(abc.ABC):
     """Abstract class to represent Product's metadata
 
     If product does not exist, initialize empty metadata, otherwise use
-    product.fetch_metadata, and accept it after doing some validations
+    ``product.fetch_metadata`` to load it
     """
     def __init__(self, product):
         self.__data = None
@@ -75,9 +75,10 @@ class AbstractMetadata(abc.ABC):
     @abc.abstractmethod
     def update_locally(self, data):
         """
-        Updates metadata locally. Called then tasks are successfully
-        executed in a subproces, to make the local copy synced again (because
-        the call to .update() happens in the subprocess as well)
+        Updates metadata locally. Called when tasks are successfully
+        executed in a subproces, to sync the values in the main
+        process (because the call to .update() happens in the subprocess as
+        well)
         """
         pass  # pragma: no cover
 
@@ -87,7 +88,14 @@ class AbstractMetadata(abc.ABC):
         return deepcopy(self._data)
 
     def __eq__(self, other):
-        return self._data == other
+        self._get()
+
+        if isinstance(other, type(self)):
+            # metadata is lazily loaded, ensure you have a local copy
+            other._get()
+            return self._data == other._data
+        else:
+            return self._data == other
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -111,9 +119,14 @@ class Metadata(AbstractMetadata):
     This implementation tries to avoid fetching metadata when it can, because
     it might be a slow process. Since this class also performs metadata
     validation, there are cases when the metadata here and the one in the
-    storage backend don't match, for example when the product does not exist,
+    storage backend won't match, for example when the product does not exist,
     metadata in the storage backend is simply ignored. The values returned
     by this class should be considered the "true metadata".
+
+    Note that Metadata relies the actual Product implementation for
+    most operations. The objective of this class is to encapsuate logic
+    that requires calling several of Products's methods and do validation
+    upon metadata fetching.
 
     Attributes
     ----------
@@ -132,17 +145,6 @@ class Metadata(AbstractMetadata):
         self._did_fetch = False
 
     @property
-    def _data(self):
-        return self.__data
-
-    @_data.setter
-    def _data(self, value):
-        self.__data = value
-        # whenever metadata changes, we have to reset these
-        self._product._outdated_data_dependencies_status = None
-        self._product._outdated_code_dependency_status = None
-
-    @property
     def timestamp(self):
         if not self._did_fetch:
             self._get()
@@ -151,18 +153,28 @@ class Metadata(AbstractMetadata):
 
     @property
     def stored_source_code(self):
-        """
-        Public attribute for getting metadata source code
-        """
         if not self._did_fetch:
             self._get()
 
         return self._data.get('stored_source_code')
 
+    @property
+    def _data(self):
+        if not self._did_fetch:
+            self._get()
+
+        return self.__data
+
+    @_data.setter
+    def _data(self, value):
+        # if data changes, cached status in product is no longer valid
+        self._product._reset_cached_outdated_status()
+        self.__data = value
+
     def _get(self):
         """
-        Get the "true metadata", fetches only if it needs to. Should not
-        be called directly, it is used bu the timestamp and stored_source_code
+        Get the "true metadata", ignores actual metadata if the product does
+        not exist. It is lazily called by the timestamp and stored_source_code
         attributes
         """
         # if the product does not exist, ignore metadata in backend storage
@@ -201,9 +213,6 @@ class Metadata(AbstractMetadata):
         backend storage. If saving in the backend storage succeeds the local
         copy is updated as well
         """
-        if self._data is None:
-            self._data = dict(timestamp=None, stored_source_code=None)
-
         new_data = dict(timestamp=datetime.now().timestamp(),
                         stored_source_code=source_code)
 
@@ -217,10 +226,13 @@ class Metadata(AbstractMetadata):
 
         self._product.save_metadata(data)
 
-        # if saving went good, we can update the local copy
+        # if saving worked, we can update the local in-memory copy
         self.update_locally(new_data)
 
     def update_locally(self, data):
+        # may be the case that we haven't fetched metadata yet. since this
+        # overwrites existing metadata. we no longer have to fetch
+        self._did_fetch = True
         self._data = deepcopy(data)
 
     def delete(self):
@@ -238,6 +250,9 @@ class Metadata(AbstractMetadata):
         """
         self._did_fetch = False
         self._data = dict(timestamp=None, stored_source_code=None)
+
+    def __repr__(self):
+        return f'{type(self).__name__}({self._data!r})'
 
 
 class MetadataCollection(AbstractMetadata):

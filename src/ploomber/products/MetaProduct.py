@@ -5,6 +5,7 @@ from reprlib import Repr
 from collections.abc import Mapping
 
 from ploomber.products.Metadata import MetadataCollection
+from ploomber.constants import TaskStatus
 
 
 class ProductsContainer:
@@ -109,10 +110,18 @@ class MetaProduct(Mapping):
             product.upload()
 
     def _is_outdated(self, outdated_by_code=True):
-        return any([
+        is_outdated = [
             p._is_outdated(outdated_by_code=outdated_by_code)
             for p in self.products
-        ])
+        ]
+
+        if set(is_outdated) == {False}:
+            return False
+
+        if set(is_outdated) <= {TaskStatus.WaitingDownload, False}:
+            return TaskStatus.WaitingDownload
+
+        return any(is_outdated)
 
     def _outdated_data_dependencies(self):
         return any([p._outdated_data_dependencies() for p in self.products])

@@ -1,3 +1,4 @@
+import json
 from unittest.mock import Mock
 from pathlib import Path
 
@@ -12,6 +13,8 @@ from ploomber.tasks.abc import Task
 from ploomber.tasks import abc as task_abc
 from ploomber.constants import TaskStatus
 from ploomber.placeholders.Placeholder import Placeholder
+from ploomber.executors import Serial
+from ploomber.clients import LocalStorageClient
 
 import pytest
 
@@ -352,12 +355,65 @@ def test_building_a_single_task_when_has_unrendered_upstream():
     assert msg == str(excinfo.value)
 
 
-def test_building_a_single_task_when_rendered_upstream():
-    dag = DAG()
-    t1 = PythonCallable(touch, File('1.txt'), dag, name=1)
-    t2 = PythonCallable(touch_w_upstream, File('2.txt'), dag, name=2)
+def test_building_a_single_task_when_rendered_upstream(tmp_directory):
+    def make_dag():
+        dag = DAG(executor=Serial(build_in_subprocess=False))
+        t1 = PythonCallable(touch, File('1.txt'), dag, name=1)
+        t2 = PythonCallable(touch_w_upstream, File('2.txt'), dag, name=2)
+        t1 >> t2
+        return dag
 
-    t1 >> t2
+    make_dag().build_partially(1)
 
+    dag = make_dag()
     dag.render()
-    t2.build()
+
+    dag[2].build()
+
+
+def test_task_build_does_not_upload_if_downloaded(
+        tmp_directory_with_project_root, monkeypatch):
+    def make_dag():
+        dag = DAG(executor=Serial(build_in_subprocess=False))
+        dag.clients[File] = LocalStorageClient('backup')
+        PythonCallable(touch, File('file.txt'), dag, name='root')
+        return dag
+
+    # build and upload
+    make_dag().build()
+
+    # delete local product
+    Path('file.txt').unlink()
+
+    dag = make_dag()
+
+    monkeypatch.setattr(dag['root'].product, 'upload',
+                        Mock(wraps=dag['root'].product.upload))
+
+    # this should download and *not* upload
+    dag.build()
+
+    dag['root'].product.upload.assert_not_called()
+
+
+def test_task_build_does_not_overwrite_metadata_if_downloaded(
+        tmp_directory_with_project_root, monkeypatch):
+    def make_dag():
+        dag = DAG(executor=Serial(build_in_subprocess=False))
+        dag.clients[File] = LocalStorageClient('backup')
+        PythonCallable(touch, File('file.txt'), dag, name='root')
+        return dag
+
+    # build and upload
+    make_dag().build()
+
+    metadata = json.loads(Path('.file.txt.metadata').read_text())
+
+    # delete local product and build again
+    Path('file.txt').unlink()
+    dag = make_dag()
+    dag.build()
+
+    metadata_new = json.loads(Path('.file.txt.metadata').read_text())
+
+    assert metadata == metadata_new
