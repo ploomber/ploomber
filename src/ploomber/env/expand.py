@@ -6,6 +6,7 @@ import getpass
 from copy import deepcopy, copy
 from collections.abc import Mapping
 from pathlib import Path
+import warnings
 
 from jinja2 import Template, StrictUndefined
 
@@ -21,8 +22,17 @@ def expand_raw_dictionary(raw, mapping):
     """
     data = deepcopy(raw)
 
+    placeholders_all = []
+
     for (d, current_key, current_val, _) in iterate_nested_dict(data):
-        d[current_key] = expand_if_needed(current_val, mapping)
+        d[current_key], placeholders = expand_if_needed(current_val, mapping)
+        placeholders_all.extend(placeholders)
+
+    extra = set(mapping) - mapping.default_keys - set(placeholders_all)
+
+    warnings.warn(
+        'The following placeholders are declared in the environment but '
+        f'unused in the spec: {extra}')
 
     return data
 
@@ -53,7 +63,7 @@ def expand_if_needed(raw_value, mapping):
                 f'Error replacing placeholder: {exception}. Loaded env: '
                 f'{mapping!r}')
 
-    return cast_if_possible(value)
+    return cast_if_possible(value), placeholders
 
 
 def cast_if_possible(value):
