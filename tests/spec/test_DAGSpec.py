@@ -1139,3 +1139,20 @@ def test_warn_if_param_declared_in_env_but_unused_in_spec():
     expected = ("The following placeholders are declared in the "
                 "environment but unused in the spec: {'a'}")
     assert str(record[0].message) == expected
+
+
+def test_doesnt_warn_if_param_declared_in_env_is_used_in_spec():
+
+    with pytest.warns(None) as record:
+        DAGSpec(
+            {
+                'tasks': [
+                    {
+                        'source': 'sample.sql',
+                        'product': ['{{a}}', 'table']
+                    },
+                ]
+            },
+            env=dict(a=1))
+
+    assert not record

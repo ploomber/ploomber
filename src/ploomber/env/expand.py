@@ -30,9 +30,10 @@ def expand_raw_dictionary(raw, mapping):
 
     extra = set(mapping) - mapping.default_keys - set(placeholders_all)
 
-    warnings.warn(
-        'The following placeholders are declared in the environment but '
-        f'unused in the spec: {extra}')
+    if extra:
+        warnings.warn(
+            'The following placeholders are declared in the environment but '
+            f'unused in the spec: {extra}')
 
     return data
 
