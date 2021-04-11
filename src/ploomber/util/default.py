@@ -142,3 +142,19 @@ def find_root_recursively(starting_dir=None, raise_=False):
             'Could not determine project\'s root directory. '
             'Looked recursively for an environment.yml, requirements.txt or'
             ' setup.py file. Add one of those and try again.')
+
+
+def find_package_name(starting_dir=None):
+    """
+    Find package name for this project. Raises an error if it cannot find it
+    """
+    root = find_root_recursively(starting_dir=starting_dir, raise_=True)
+
+    pkg = _package_location(root_path=root)
+
+    if not pkg:
+        raise ValueError('Could not find a valid package. Make sure '
+                         'there is a src/package/pipeline.yaml file relative '
+                         f'to your project root ({root})')
+
+    return Path(pkg).parent.name
