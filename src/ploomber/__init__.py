@@ -2,7 +2,7 @@ import logging
 from ploomber.dag.DAG import DAG
 from ploomber.dag.InMemoryDAG import InMemoryDAG
 from ploomber.dag.DAGConfigurator import DAGConfigurator
-from ploomber.dag.OnlineDAG import OnlineDAG
+from ploomber.dag.OnlineDAG import OnlineDAG, OnlineModel
 from ploomber.env.env import Env
 from ploomber.env.decorators import load_env, with_env
 from ploomber.placeholders.SourceLoader import SourceLoader
@@ -23,6 +23,7 @@ __all__ = [
     'DAGConfigurator',
     'InMemoryDAG',
     'OnlineDAG',
+    'OnlineModel',
 ]
 
 
