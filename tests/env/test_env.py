@@ -485,16 +485,19 @@ def test_error_when_flatten_key_doesnt_exist():
         }, ('a', 'b')],
     ])
 def test_env_dict_initialized_with_env_dict(data, keys):
-    env = EnvDict(EnvDict(data))
+    original = EnvDict(data)
+    env = EnvDict(original)
 
     # ensure we initialized the object correctly
     assert repr(env)
     assert str(env)
 
+    # check default keys are correctly copied
+    assert original._default_keys == env._default_keys
+
     # check we can access nested keys
     for key in keys:
         env = env[key]
-
     assert env == 1
 
 
@@ -508,13 +511,13 @@ def test_env_dict_initialized_with_replaced_env_dict():
 
 
 def test_expand_raw_dictionary():
-    mapping = {'key': 'value'}
+    mapping = EnvDict({'key': 'value'})
     d = {'some_setting': '{{key}}'}
     assert expand_raw_dictionary(d, mapping) == {'some_setting': 'value'}
 
 
 def test_expand_raw_dictionaries():
-    mapping = {'key': 'value'}
+    mapping = EnvDict({'key': 'value'})
     d = [{'some_setting': '{{key}}'}, {'another_setting': '{{key}}'}]
     assert expand_raw_dictionaries(d, mapping) == [
         {
@@ -527,7 +530,7 @@ def test_expand_raw_dictionaries():
 
 
 def test_expand_raw_dict_nested():
-    mapping = {'key': 'value'}
+    mapping = EnvDict({'key': 'value'})
     d = {
         'section': {
             'some_settting': '{{key}}'
