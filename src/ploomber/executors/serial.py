@@ -76,7 +76,10 @@ class Serial(Executor):
                 continue
 
             if show_progress:
-                scheduled.set_description('Building task "{}"'.format(t.name))
+                label = ('Building task'
+                         if t.exec_status == TaskStatus.WaitingExecution else
+                         'Downloading product')
+                scheduled.set_description(f'{label} {t.name!r}')
 
             if self._build_in_subprocess:
                 fn = LazyFunction(
@@ -231,5 +234,4 @@ def build_in_subprocess(task, build_kwargs, reports_all):
         # we run other tasks in the same process
         report, meta = task._build(**build_kwargs)
         task.product.metadata.update_locally(meta)
-        task.product.upload()
         reports_all.append(report)

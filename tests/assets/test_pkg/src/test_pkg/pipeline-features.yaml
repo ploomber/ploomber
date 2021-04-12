@@ -1,0 +1,2 @@
+- source: test_pkg.pipeline_features.features
+  product: add_one.parquet

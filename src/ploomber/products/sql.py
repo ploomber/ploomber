@@ -214,7 +214,7 @@ class SQLiteRelation(SQLiteBackedProductMixin, Product):
         return self._identifier.kind
 
     def __eq__(self, other):
-        return self._identifier == other
+        return str(self) == str(other)
 
     def __hash__(self):
         return hash((self.schema, self.name, self.kind))
@@ -357,7 +357,7 @@ class PostgresRelation(ProductWithClientMixin, Product):
         return self._identifier.kind
 
     def __eq__(self, other):
-        return self._identifier == other
+        return str(self) == str(other)
 
     def __hash__(self):
         return hash((self.schema, self.name, self.kind))

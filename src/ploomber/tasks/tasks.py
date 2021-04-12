@@ -19,6 +19,7 @@ from ploomber.exceptions import TaskBuildError
 from ploomber.constants import TaskStatus
 from ploomber.sources.interact import CallableInteractiveDeveloper
 from ploomber.tasks._params import Params
+from ploomber.io.loaders import _file_load
 
 
 def _unserialize_params(params_original, unserializer):
@@ -209,16 +210,25 @@ class PythonCallable(Task):
         elif kind == 'pdb':
             pdb.runcall(self.source.primitive, **params)
 
-    def load(self):
+    def load(self, key=None, **kwargs):
         """
-        Loads the product, only works if the task is initialized with an
-        unzerializer
-        """
-        if self._unserializer is None:
-            raise ValueError('Cannot load product, task was not initialized '
-                             'with an unserializer function')
+        Loads the product. It uses the unserializer function if any, otherwise
+        it tries to load it based on the file extension
 
-        return self._unserializer(str(self.product))
+        Parameters
+        ----------
+        key
+            Key to load, if this task generates more than one product
+
+        **kwargs
+            Arguments passed to the unserializer function
+        """
+        prod = self.product if not key else self.product[key]
+
+        if self._unserializer is not None:
+            return self._unserializer(str(prod), **kwargs)
+        else:
+            return _file_load(prod, **kwargs)
 
 
 # FIXME: there is already a TaskFactory, this is confusing

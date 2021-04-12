@@ -10,6 +10,7 @@ DAG
     :toctree: _modules/root
 
     DAG
+    OnlineModel
     OnlineDAG
     DAGConfigurator
     InMemoryDAG

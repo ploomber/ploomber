@@ -32,6 +32,7 @@ from ploomber.sources.NotebookSource import _cleanup_rendered_nb
 from ploomber.products import File, MetaProduct
 from ploomber.tasks.abc import Task
 from ploomber.util import requires, chdir_code
+from ploomber.io import FileLoaderMixin
 
 
 class NotebookConverter:
@@ -145,7 +146,7 @@ class NotebookConverter:
         return content
 
 
-class NotebookRunner(Task):
+class NotebookRunner(FileLoaderMixin, Task):
     """
     Run a Jupyter notebook using papermill. Support several input formats
     via jupytext and several output formats via nbconvert

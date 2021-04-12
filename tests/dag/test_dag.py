@@ -294,20 +294,21 @@ def test_forced_build(executor, tmp_directory):
     assert report['Ran?'] == [True]
 
 
-def test_forced_render(monkeypatch):
+def test_forced_render_does_not_call_is_outdated(monkeypatch):
     """
-    Forced render should not call Product._is_oudated. For products whose
-    metadata is stored remotely this is an expensive operation
+    For products whose metadata is stored remotely, checking status is an
+    expensive operation. Make dure forced render does not call
+    Product._is_oudated
     """
     dag = DAG()
     t1 = PythonCallable(touch_root, File('1.txt'), dag, name=1)
     t2 = PythonCallable(touch, File('2.txt'), dag, name=2)
     t1 >> t2
 
-    def patched(self, outdated_by_code):
+    def _is_outdated(self, outdated_by_code):
         raise ValueError
 
-    monkeypatch.setattr(File, '_is_outdated', patched)
+    monkeypatch.setattr(File, '_is_outdated', _is_outdated)
 
     dag.render(force=True)
 
@@ -394,6 +395,7 @@ def test_dag_functions_do_not_fetch_metadata(function_name, executor,
     PythonCallable(touch_root, product, dag, name=1)
 
     m = Mock(wraps=product.fetch_metadata)
+
     # to make this work with pickle
     m.__reduce__ = lambda self: (MagicMock, ())
 
@@ -408,22 +410,6 @@ def test_dag_functions_do_not_fetch_metadata(function_name, executor,
         # if building, we should still see the metadata
         assert product.metadata._data['stored_source_code']
         assert product.metadata._data['timestamp']
-
-
-# def test_can_use_null_task(tmp_directory):
-#     dag = DAG('dag')
-
-#     Path('a.txt').write_text('hello')
-
-#     ta = Null(File('a.txt'), dag, 'ta')
-#     tb = ShellScript('cat {{upstream["ta"]}} > {{product}}', File('b.txt'),
-#                      dag, 'tb')
-
-#     ta >> tb
-
-#     dag.build()
-
-#     assert Path('b.txt').read_text() == 'hello'
 
 
 def test_can_get_upstream_and_downstream_tasks():

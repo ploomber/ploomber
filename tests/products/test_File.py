@@ -1,8 +1,10 @@
+import json
 import os
 import sys
 from pathlib import Path
-from unittest.mock import Mock, _Call
+from unittest.mock import Mock, call
 import string
+from collections.abc import Mapping
 
 import pytest
 
@@ -10,14 +12,86 @@ from ploomber.executors import Serial, Parallel
 from ploomber.products import File
 from ploomber.tasks import PythonCallable
 from ploomber.constants import TaskStatus
-from ploomber.exceptions import DAGBuildError, DAGRenderError
+from ploomber.exceptions import DAGBuildError, TaskBuildError
+from ploomber.clients.storage.local import LocalStorageClient
 from ploomber import DAG
-
-# TODO: test download/upload folder
 
 
 def _touch(product):
     Path(str(product)).touch()
+
+
+def _touch_upstream(product, upstream):
+    Path(upstream['root']).read_text()
+
+    # if metaproduct...
+    if isinstance(product, Mapping):
+        for prod in product:
+            Path(str(prod)).touch()
+    # if single product...
+    else:
+        Path(str(product)).touch()
+
+
+def _load_json(path):
+    return json.loads(Path(path).read_text())
+
+
+def _write_json(obj, path):
+    with open(path, 'w') as f:
+        json.dump(obj, f)
+
+
+def _make_dag(with_client=True):
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+
+    if with_client:
+        dag.clients[File] = LocalStorageClient('remote')
+
+    root = PythonCallable(_touch, File('root'), dag=dag, name='root')
+    task = PythonCallable(_touch_upstream,
+                          File('file.txt'),
+                          dag=dag,
+                          name='task')
+    root >> task
+    return dag
+
+
+def _make_dag_with_two_upstream():
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+    dag.clients[File] = LocalStorageClient('remote')
+
+    root = PythonCallable(_touch, File('root'), dag=dag, name='root')
+    another = PythonCallable(_touch, File('another'), dag=dag, name='another')
+    task = PythonCallable(_touch_upstream,
+                          File('file.txt'),
+                          dag=dag,
+                          name='task')
+    (root + another) >> task
+    return dag
+
+
+def _make_dag_with_metaproduct(with_client=True):
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+
+    if with_client:
+        dag.clients[File] = LocalStorageClient('remote',
+                                               path_to_project_root='.')
+
+    root = PythonCallable(_touch, File('root'), dag=dag, name='root')
+    task = PythonCallable(_touch_upstream, {
+        'one': File('file.txt'),
+        'another': File('another.txt')
+    },
+                          dag=dag,
+                          name='task')
+    root >> task
+    return dag
+
+
+@pytest.fixture
+def dag():
+    return _make_dag(with_client=True)
 
 
 def test_is_a_file_like_object():
@@ -160,17 +234,27 @@ def test_dag_level_client():
     assert product.client is client
 
 
-def test_download(tmp_directory):
+def test_build_triggers_metadata_download(tmp_directory):
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+
+    def download(path, destination=None):
+        Path(path).touch()
+
     client = Mock()
+    client.download.side_effect = download
+
     product = File('file.txt', client=client)
+    PythonCallable(_touch, product, dag=dag)
 
-    product.download()
+    # this should download files instead of executing the task
+    dag.build()
 
-    assert client.download.call_args_list == [(('.file.txt.metadata', ), ),
-                                              (('file.txt', ), )]
+    client.download.assert_called_with(
+        Path('.file.txt.metadata'),
+        destination=Path('.file.txt.metadata.remote'))
 
 
-def test_upload(tmp_directory):
+def test_product_upload_uploads_metadata_and_product(tmp_directory):
     Path('file.txt').touch()
     Path('.file.txt.metadata').touch()
     client = Mock()
@@ -178,8 +262,194 @@ def test_upload(tmp_directory):
 
     product.upload()
 
-    assert client.upload.call_args_list == [(('.file.txt.metadata', ), ),
-                                            (('file.txt', ), )]
+    client.upload.assert_has_calls(
+        [call(Path('.file.txt.metadata')),
+         call(Path('file.txt'))])
+
+
+def test_task_without_client_is_outdated_by_data(tmp_directory):
+    dag = _make_dag(with_client=False)
+    t = dag['task']
+    dag.build()
+    # clear metadata to force reload
+    t.product.metadata.clear()
+
+    # change timestamp to make this outdated by data (upstream timestamp
+    # will be higher)
+    m = _load_json('.file.txt.metadata')
+    m['timestamp'] = 0
+    _write_json(m, '.file.txt.metadata')
+
+    assert t.product._is_outdated()
+    assert t.product._outdated_data_dependencies()
+
+
+def test_task_without_client_is_outdated_by_code(tmp_directory):
+    dag = _make_dag(with_client=False)
+    t = dag['task']
+    dag.build()
+    # clear metadata to force reload
+    t.product.metadata.clear()
+
+    # simulate outdated task
+    m = _load_json('.file.txt.metadata')
+    m['stored_source_code'] = m['stored_source_code'] + '1 + 1\n'
+    _write_json(m, '.file.txt.metadata')
+
+    assert t.product._outdated_code_dependency()
+    assert t.product._is_outdated()
+
+
+def _edit_source_code(path):
+    m = _load_json(path)
+    m['stored_source_code'] = m['stored_source_code'] + '1 + 1\n'
+    _write_json(m, path)
+
+
+def _delete_metadata(path):
+    Path(path).unlink()
+
+
+@pytest.mark.parametrize('operation', [_edit_source_code, _delete_metadata])
+def test_task_with_client_is_not_outdated_returns_waiting_download(
+        operation, tmp_directory_with_project_root):
+    dag = _make_dag(with_client=True)
+    dag.build()
+
+    # simulate local outdated tasks
+    operation('.file.txt.metadata')
+    operation('.root.metadata')
+
+    dag = _make_dag(with_client=True).render()
+
+    assert dag['root'].product._is_outdated() == TaskStatus.WaitingDownload
+    assert dag['task'].product._is_outdated() == TaskStatus.WaitingDownload
+    assert set(v.exec_status
+               for v in dag.values()) == {TaskStatus.WaitingDownload}
+
+
+@pytest.mark.parametrize('operation', [_edit_source_code, _delete_metadata])
+def test_task_with_client_and_metaproduct_isnt_outdated_rtrns_waiting_download(
+        operation, tmp_directory_with_project_root):
+    """
+    Checking MetaProduct correctly forwards WaitingDownload when calling
+    MetaProduct._is_outdated
+    """
+    dag = _make_dag_with_metaproduct(with_client=True)
+    dag.build()
+
+    # simulate local outdated tasks
+    operation('.file.txt.metadata')
+    operation('.another.txt.metadata')
+    operation('.root.metadata')
+
+    dag = _make_dag_with_metaproduct(with_client=True).render()
+
+    assert dag['root'].product._is_outdated() == TaskStatus.WaitingDownload
+    assert dag['task'].product._is_outdated() == TaskStatus.WaitingDownload
+    assert set(v.exec_status
+               for v in dag.values()) == {TaskStatus.WaitingDownload}
+
+
+@pytest.mark.parametrize('operation', [_edit_source_code, _delete_metadata])
+def test_task_with_client_and_metaproduct_with_some_missing_products(
+        operation, tmp_directory):
+    """
+    If local MetaProduct content isn't consistent, it should execute instead of
+    download
+    """
+    dag = _make_dag_with_metaproduct(with_client=True)
+    dag.build()
+
+    # simulate *some* local outdated tasks
+    operation('.file.txt.metadata')
+    operation('.root.metadata')
+
+    dag = _make_dag_with_metaproduct(with_client=True).render()
+
+    assert dag['root'].product._is_outdated() == TaskStatus.WaitingDownload
+    assert dag['task'].product._is_outdated() == TaskStatus.WaitingDownload
+    assert dag['root'].exec_status == TaskStatus.WaitingDownload
+    assert dag['task'].exec_status == TaskStatus.WaitingDownload
+
+
+def test_downloads_if_missing_some_products_in_metaproduct(tmp_directory):
+    dag = _make_dag_with_metaproduct(with_client=True)
+    dag.build()
+
+    # simulate *some* local outdated tasks
+    _delete_metadata('.file.txt.metadata')
+
+    dag = _make_dag_with_metaproduct(with_client=True).render()
+
+    assert not dag['root'].product._is_outdated()
+    assert dag['root'].exec_status == TaskStatus.Skipped
+    assert dag['task'].product._is_outdated() == TaskStatus.WaitingDownload
+    assert dag['task'].exec_status == TaskStatus.WaitingDownload
+
+
+@pytest.mark.parametrize('operation', [_edit_source_code, _delete_metadata])
+def test_task_with_client_and_metaproduct_with_some_missing_remote_products(
+        operation, tmp_directory):
+    """
+    If remote MetaProduct content isn't consistent, it should execute instead
+    of download
+    """
+    dag = _make_dag_with_metaproduct(with_client=True)
+    dag.build()
+
+    # simulate *some* local outdated tasks (to force remote metadata lookup)
+    operation('.file.txt.metadata')
+    operation('.root.metadata')
+
+    # simulate corrupted remote MetaProduct metadata
+    operation('remote/.file.txt.metadata')
+
+    dag = _make_dag_with_metaproduct(with_client=True).render()
+
+    assert dag['root'].product._is_outdated() == TaskStatus.WaitingDownload
+    assert dag['task'].product._is_outdated() is True
+    assert dag['root'].exec_status == TaskStatus.WaitingDownload
+    assert dag['task'].exec_status == TaskStatus.WaitingUpstream
+
+
+def test_task_with_skipped_and_waiting_to_download_upstream_downloads(
+        tmp_directory_with_project_root):
+    _make_dag_with_two_upstream().build()
+
+    # force an upstream task to be waiting for download
+    # (the other should be skipped since we didn't change anything)
+    Path('root').unlink()
+
+    dag = _make_dag_with_two_upstream().render()
+
+    assert dag['task'].exec_status == TaskStatus.Skipped
+
+
+def test_task_with_client_does_not_return_waiting_download_if_outdated_remote(
+        tmp_directory_with_project_root):
+    dag = _make_dag(with_client=True)
+    dag.build()
+
+    # simulate outdated remote metadata (no need to download)
+    m = _load_json('remote/.file.txt.metadata')
+    m['stored_source_code'] = m['stored_source_code'] + '1 + 1\n'
+    _write_json(m, 'remote/.file.txt.metadata')
+
+    dag = _make_dag(with_client=True)
+
+    assert not dag['root'].product._is_outdated()
+
+
+def test_task_with_client_is_not_outdated_after_build(
+        tmp_directory_with_project_root):
+    dag = _make_dag(with_client=True)
+    dag.build()
+
+    dag = _make_dag(with_client=True)
+
+    assert not dag['root'].product._is_outdated()
+    assert not dag['task'].product._is_outdated()
 
 
 @pytest.mark.parametrize('to_touch', [
@@ -187,66 +457,77 @@ def test_upload(tmp_directory):
     ['.file.txt.metadata'],
     [],
 ])
-def test_do_not_upload_if_none_or_one(to_touch, tmp_directory):
+def test_upload_error_if_metadata_or_product_do_not_exist(
+        to_touch, tmp_directory):
     for f in to_touch:
         Path(f).touch()
 
     client = Mock()
     product = File('file.txt', client=client)
 
-    product.upload()
+    with pytest.raises(RuntimeError):
+        product.upload()
 
     client.upload.assert_not_called()
 
 
-@pytest.mark.parametrize('to_touch', [
-    ['file.txt'],
-    ['.file.txt.metadata'],
-    ['file.txt', '.file.txt.metadata'],
-])
-def test_do_not_download_if_file_or_metadata_exists(to_touch, tmp_directory):
-    for f in to_touch:
-        Path(f).touch()
-
+def test_download_triggers_client_download(tmp_directory):
     client = Mock()
     product = File('file.txt', client=client)
 
     product.download()
 
-    client.download.assert_not_called()
+    client.download.assert_has_calls(
+        [call('file.txt'), call('.file.txt.metadata')])
 
 
-@pytest.mark.parametrize('remote_exists', [
-    [False, True],
-    [False, False],
-])
+@pytest.mark.parametrize(
+    'to_touch',
+    [
+        [Path('remote', 'file.txt')],
+        [],
+    ],
+    ids=['product-exists', 'none-exists'],
+)
 def test_do_not_download_if_metadata_does_not_exist_in_remote(
-        remote_exists, tmp_directory):
-    client = Mock()
-    client._remote_exists.side_effect = remote_exists
+        to_touch, tmp_directory_with_project_root):
+    client = LocalStorageClient('remote')
+    client.download = Mock(wraps=client.download)
+    client._remote_exists = Mock(wraps=client._remote_exists)
+
+    for f in to_touch:
+        f.touch()
+
+    dag = DAG(executor=Serial(build_in_subprocess=False))
     product = File('file.txt', client=client)
+    PythonCallable(_touch, product, dag=dag)
 
-    product.download()
+    dag.build()
 
-    # should call this to verify if the remote copy exists
-    client._remote_exists.assert_called_with('.file.txt.metadata')
-    client._remote_exists.assert_called_once()
+    # should call this to verify if the remote metadata exists
+    client._remote_exists.assert_called_with(Path('.file.txt.metadata'))
     # should not attempt to download
     client.download.assert_not_called()
 
 
-def test_do_not_download_if_file_does_not_exist_in_remote(tmp_directory):
-    client = Mock()
-    client._remote_exists.side_effect = [True, False]
-    product = File('file.txt', client=client)
+def test_do_not_download_if_file_does_not_exist_in_remote(
+        tmp_directory_with_project_root):
+    client = LocalStorageClient('remote')
+    client.download = Mock(wraps=client.download)
+    client._remote_exists = Mock(wraps=client._remote_exists)
 
-    product.download()
+    Path('remote', '.file.txt.metadata').touch()
+
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+    product = File('file.txt', client=client)
+    PythonCallable(_touch, product, dag=dag)
+
+    dag.build()
 
     # should call twice, since metadata exists, it has to also check the file
-    client._remote_exists.assert_has_calls([
-        _Call((('.file.txt.metadata', ), {})),
-        _Call((('file.txt', ), {})),
-    ])
+    client._remote_exists.assert_has_calls(
+        [call(Path('.file.txt.metadata')),
+         call(Path('file.txt'))])
     # should not attempt to download
     client.download.assert_not_called()
 
@@ -279,6 +560,13 @@ def test_upload_after_task_build(tmp_directory):
 
 class FileWithUploadCounter(File):
     def upload(self):
+        if not Path('.file.txt.metadata').exists():
+            # we have to ensure File.upload is called after saving metadata
+            # is there a better way to do this? Embedding this test checking
+            # logic here doesn't seem right
+            raise ValueError(
+                'By the time File.upload is called, metadata must exist')
+
         path = Path('upload_count')
 
         if not path.exists():
@@ -299,13 +587,16 @@ class FileWithDownloadError(File):
     def download(self):
         raise ValueError('download failed!')
 
+    def _is_outdated(self, outdated_by_code=True):
+        return TaskStatus.WaitingDownload
+
 
 @pytest.mark.parametrize('executor', [
     Serial(build_in_subprocess=False),
     Serial(build_in_subprocess=True),
     Parallel(),
 ])
-def test_upload_after_dag_build(tmp_directory, monkeypatch, executor):
+def test_upload_after_dag_build(tmp_directory, executor):
     dag = DAG(executor=executor)
     product = FileWithUploadCounter('file.txt')
     PythonCallable(_touch, product, dag=dag)
@@ -324,7 +615,7 @@ def test_upload_after_dag_build(tmp_directory, monkeypatch, executor):
     Serial(build_in_subprocess=True),
     Parallel(),
 ])
-def test_upload_error(executor, tmp_directory, monkeypatch):
+def test_upload_error(executor, tmp_directory):
     dag = DAG(executor=executor)
 
     product = FileWithUploadError('file.txt')
@@ -337,38 +628,143 @@ def test_upload_error(executor, tmp_directory, monkeypatch):
     assert dag['_touch'].exec_status == TaskStatus.Errored
 
 
+class MyFakeClient:
+    def _remote_exists(self, path):
+        return True
+
+    def close(self):
+        pass
+
+
 @pytest.mark.parametrize('executor', [
     Serial(build_in_subprocess=False),
     Serial(build_in_subprocess=True),
     Parallel(),
 ])
-def test_download_error(executor, monkeypatch, tmp_directory):
+def test_download_error(executor, tmp_directory):
     dag = DAG(executor=executor)
 
-    product = FileWithDownloadError('file.txt')
+    product = FileWithDownloadError('file.txt', client=MyFakeClient())
     PythonCallable(_touch, product, dag=dag)
 
-    with pytest.raises(DAGRenderError) as excinfo:
+    with pytest.raises(DAGBuildError) as excinfo:
         dag.build()
 
     assert 'download failed!' in str(excinfo.getrepr())
-    assert dag['_touch'].exec_status == TaskStatus.ErroredRender
+    assert dag['_touch'].exec_status == TaskStatus.Errored
 
 
-def test_attempts_to_download_on_each_build(tmp_directory, monkeypatch):
-    # run in the same process, otherwise we won't know if the mock object
-    # is called
+def test_task_build_calls_download_if_remote_up_to_date_products(
+        tmp_directory_with_project_root, monkeypatch):
+    dag = _make_dag()
+    dag.build()
+
+    Path('file.txt').unlink()
+    Path('root').unlink()
+    dag = _make_dag()
+
+    monkeypatch.setattr(File, 'download',
+                        Mock(wraps=dag['root'].product.download))
+    dag['root'].build()
+
+    assert dag['root'].product.download.call_count == 1
+
+
+def _make_dag_with_upstream():
+    # run in the same process, to ensure the mock object is called
     dag = DAG(executor=Serial(build_in_subprocess=False))
-    product = File('file.txt')
-    PythonCallable(_touch, product, dag=dag)
+    dag.clients[File] = LocalStorageClient('remote')
+    t1 = PythonCallable(_touch, File('1.txt'), dag=dag, name='root')
+    PythonCallable(_touch, File('2.txt'), dag=dag, name=2)
+    t3 = PythonCallable(_touch_upstream, File('3.txt'), dag=dag, name=3)
+    t1 >> t3
+    return dag
 
-    monkeypatch.setattr(File, 'download', Mock(wraps=product.download))
 
-    # download is called on each call to dag.render(), dag.build() calls it...
+def test_task_build_raises_error_if_upstream_do_not_exist_in_remote(
+        tmp_directory_with_project_root, monkeypatch):
+    dag = _make_dag_with_upstream().render()
+
+    with pytest.raises(TaskBuildError) as excinfo:
+        dag[3].build()
+
+    expected = ("Cannot build task 3 because the following upstream "
+                "dependencies are missing: ['root']")
+    assert expected in str(excinfo.value)
+
+
+def test_task_build_downloads_upstream_if_up_to_date_then_executes(
+        tmp_directory_with_project_root, monkeypatch):
+    _make_dag_with_upstream().build()
+    Path('1.txt').unlink()
+    Path('3.txt').unlink()
+    Path('remote/3.txt').unlink()
+    dag = _make_dag_with_upstream().render()
+    monkeypatch.setattr(dag['root'].product, 'download',
+                        Mock(wraps=dag['root'].product.download))
+    monkeypatch.setattr(dag[3].product, 'download',
+                        Mock(wraps=dag[3].product.download))
+
+    dag[3].build()
+
+    # this should be downloaded
+    assert dag['root'].product.download.call_count == 1
+    # this should now be downloaded but executed
+    dag[3].product.download.assert_not_called() == 1
+
+
+def test_task_build_downloads_if_upstream_up_to_date_and_remote_up_to_date(
+        tmp_directory_with_project_root, monkeypatch):
+    _make_dag_with_upstream().build()
+    Path('3.txt').unlink()
+    dag = _make_dag_with_upstream().render()
+    monkeypatch.setattr(File, 'download', Mock(wraps=dag[3].product.download))
+
+    dag[3].build()
+
+    assert dag[3].product.download.call_count == 1
+
+
+def test_dag_build_calls_download_if_remote_up_to_date_products(
+        tmp_directory_with_project_root, monkeypatch):
+    dag = _make_dag()
     dag.build()
-    assert product.download.call_count == 1
 
-    # second time, it should attempt to download again as the remote files
-    # could've been modified
+    Path('file.txt').unlink()
+    Path('root').unlink()
+    dag = _make_dag()
+
+    monkeypatch.setattr(dag['root'].product, 'download',
+                        Mock(wraps=dag['root'].product.download))
+    monkeypatch.setattr(dag['task'].product, 'download',
+                        Mock(wraps=dag['task'].product.download))
+
     dag.build()
-    assert product.download.call_count == 2
+
+    assert dag['root'].product.download.call_count == 1
+    assert dag['task'].product.download.call_count == 1
+
+
+def test_keeps_waiting_download_status_after_downloading_upstream_dependency(
+        tmp_directory_with_project_root):
+    dag = _make_dag(with_client=True)
+    dag.build()
+    Path('root').unlink()
+    Path('file.txt').unlink()
+    dag = _make_dag().render()
+    dag['root'].build()
+
+    assert dag['task'].exec_status == TaskStatus.WaitingDownload
+
+
+def test_downloads_task_with_upstream_after_full_build_and_skips_after_it(
+        tmp_directory_with_project_root):
+    dag = _make_dag(with_client=True)
+    dag.build()
+    Path('root').unlink()
+    Path('file.txt').unlink()
+    dag = _make_dag().render()
+
+    dag['task'].build()
+
+    assert _make_dag().render()['task'].exec_status == TaskStatus.Skipped

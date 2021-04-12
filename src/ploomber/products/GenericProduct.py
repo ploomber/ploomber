@@ -105,6 +105,9 @@ class GenericSQLRelation(GenericProduct):
     def __repr__(self):
         return f'{type(self).__name__}({self._identifier._raw_repr()})'
 
+    def __eq__(self, other):
+        return str(self) == str(other)
+
     def __hash__(self):
         return hash((self.schema, self.name, self.kind))
 
@@ -148,6 +151,9 @@ class SQLRelation(Product):
 
     def __repr__(self):
         return f'{type(self).__name__}({self._identifier._raw_repr()})'
+
+    def __eq__(self, other):
+        return str(self) == str(other)
 
     def __hash__(self):
         return hash((self.schema, self.name, self.kind))

@@ -1,11 +1,20 @@
+import pickle
+from unittest.mock import Mock
 from pathlib import Path
 
+import test_pkg
 import yaml
 import pandas as pd
 import pytest
 
-from ploomber.dag.OnlineDAG import OnlineDAG
+from ploomber.dag import OnlineDAG as online_dag
+from ploomber.dag.OnlineDAG import OnlineDAG, OnlineModel
 from ploomber.spec import DAGSpec
+
+
+class FakePredictor:
+    def predict(self, x):
+        return x
 
 
 class BaseModel(OnlineDAG):
@@ -83,4 +92,32 @@ def test_error_if_init_with_invalid_type():
 
     expected = ('Expected ModelFromInvalidType.get_partial() to '
                 'return a str, pathlib.Path or ploomber.DAG, got dict')
+    assert str(excinfo.value) == expected
+
+
+def test_online_model(monkeypatch):
+
+    mock_read = Mock(return_value=pickle.dumps(FakePredictor()))
+    monkeypatch.setattr(online_dag.importlib_resources, 'read_binary',
+                        mock_read)
+
+    model = OnlineModel(test_pkg)
+
+    assert model.predict(root=41) == 42
+    mock_read.assert_called_once_with(test_pkg, 'model.pickle')
+
+
+def test_error_initializing_if_partial_is_not_a_list(tmp_directory):
+    class ModelFromInvalidYAML(BaseModel):
+        @staticmethod
+        def get_partial():
+            return 'not-a-list.yaml'
+
+    Path('not-a-list.yaml').write_text('{"a": 1}')
+
+    with pytest.raises(ValueError) as excinfo:
+        ModelFromInvalidYAML()
+
+    expected = ("Expected partial 'not-a-list.yaml' to be a list of "
+                "tasks, but got a dict instead")
     assert str(excinfo.value) == expected

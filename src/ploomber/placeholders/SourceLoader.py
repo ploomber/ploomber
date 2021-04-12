@@ -68,7 +68,7 @@ class SourceLoader:
 
         # for module objects
         if hasattr(module, '__file__'):
-            module_path = str(Path(module.__file__).parent.absolute())
+            module_path = str(Path(module.__file__).parent.resolve())
 
         elif module is None:
             module_path = ''

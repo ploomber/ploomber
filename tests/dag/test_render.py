@@ -1,6 +1,7 @@
 import warnings
 from pathlib import Path
 
+from unittest.mock import Mock
 import pytest
 
 from ploomber.exceptions import DAGRenderError
@@ -8,6 +9,7 @@ from ploomber.constants import TaskStatus
 from ploomber import DAG
 from ploomber.tasks import ShellScript, PythonCallable
 from ploomber.products import File
+from ploomber.executors import Serial
 
 
 class WarningA(Warning):
@@ -226,8 +228,6 @@ def test_warnings_are_shown(tmp_directory):
     assert len(record) == 1
     assert 'This is a warning' in str(record[0].message)
     assert 'This is another warning' in str(record[0].message)
-    # assert isinstance(record[0], WarningA)
-    # assert isinstance(record[1], WarningB)
 
 
 def test_recover_from_failed_render():
@@ -250,3 +250,34 @@ def test_recover_from_failed_render():
 
     assert t1.exec_status == TaskStatus.WaitingExecution
     assert t2.exec_status == TaskStatus.WaitingUpstream
+
+
+def test_render_checks_outdated_status_once(monkeypatch, tmp_directory):
+    """
+    _check_is_outdated is an expensive operation and it should only run
+    once per task
+    """
+    def _make_dag():
+        dag = DAG(executor=Serial(build_in_subprocess=False))
+        t1 = PythonCallable(touch_root, File('one.txt'), dag, name='one')
+        t2 = PythonCallable(touch, File('two.txt'), dag, name='two')
+        t1 >> t2
+        return dag
+
+    _make_dag().build()
+
+    dag = _make_dag()
+
+    t1 = dag['one']
+    t2 = dag['two']
+
+    monkeypatch.setattr(t1.product, '_check_is_outdated',
+                        Mock(wraps=t1.product._check_is_outdated))
+    monkeypatch.setattr(t2.product, '_check_is_outdated',
+                        Mock(wraps=t2.product._check_is_outdated))
+
+    # after building for the first time
+    dag.render()
+
+    t1.product._check_is_outdated.assert_called_once()
+    t2.product._check_is_outdated.assert_called_once()

@@ -94,3 +94,89 @@ def test_path_to_env_none(tmp_directory, arg):
     Path('dir').mkdir()
 
     assert default.path_to_env(arg) is None
+
+
+@pytest.mark.parametrize(
+    'to_create, to_move',
+    [
+        [
+            ['environment.yml'],
+            '.',
+        ],
+        [
+            ['requirements.txt'],
+            '.',
+        ],
+        [
+            ['setup.py'],
+            '.',
+        ],
+        [
+            ['setup.py', 'subdir/'],
+            'subdir',
+        ],
+        [
+            # environment.yml has higher priority than setup.py
+            ['environment.yml', 'package/setup.py', 'package/nested/'],
+            'package/nested/',
+        ],
+        [
+            # requirements.txt has higher priority than setup.py
+            ['requirements.txt', 'package/setup.py', 'package/nested/'],
+            'package/nested/',
+        ],
+    ])
+def test_find_root_recursively(tmp_directory, to_create, to_move):
+    expected = Path().resolve()
+
+    for f in to_create:
+
+        Path(f).parent.mkdir(exist_ok=True, parents=True)
+
+        if f.endswith('/'):
+            Path(f).mkdir()
+        else:
+            Path(f).touch()
+
+    os.chdir(to_move)
+
+    assert default.find_root_recursively() == expected
+
+
+def test_raise_if_no_project_root(tmp_directory):
+    with pytest.raises(ValueError) as excinfo:
+        default.find_root_recursively(raise_=True)
+
+    expected = "Could not determine project's root directory"
+    assert expected in str(excinfo.value)
+
+
+@pytest.mark.parametrize('to_create, to_move', [
+    [
+        ['environment.yml', 'src/my_package/pipeline.yaml'],
+        '.',
+    ],
+])
+def test_find_package_name(tmp_directory, to_create, to_move):
+    for f in to_create:
+
+        Path(f).parent.mkdir(exist_ok=True, parents=True)
+
+        if f.endswith('/'):
+            Path(f).mkdir()
+        else:
+            Path(f).touch()
+
+    os.chdir(to_move)
+
+    assert default.find_package_name() == 'my_package'
+
+
+def test_error_if_no_package(tmp_directory):
+    Path('environment.yml').touch()
+
+    with pytest.raises(ValueError) as excinfo:
+        default.find_package_name()
+
+    expected = "Could not find a valid package"
+    assert expected in str(excinfo.value)

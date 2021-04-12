@@ -1,4 +1,3 @@
-# TODO: test with sh files
 meta:
   extract_upstream: False
   extract_product: False
