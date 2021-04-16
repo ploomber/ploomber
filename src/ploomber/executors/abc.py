@@ -53,8 +53,10 @@ class Executor(abc.ABC):
         exec_status = set([t.exec_status for t in dag.values()])
 
         if exec_status - {
-                TaskStatus.WaitingExecution, TaskStatus.WaitingUpstream,
-                TaskStatus.Skipped
+                TaskStatus.WaitingExecution,
+                TaskStatus.WaitingUpstream,
+                TaskStatus.Skipped,
+                TaskStatus.WaitingDownload,
         }:
             raise ValueError('Tasks should only have either '
                              'TaskStatus.WaitingExecution or '

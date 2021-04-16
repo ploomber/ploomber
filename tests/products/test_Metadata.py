@@ -101,13 +101,12 @@ def test_delete():
 
 def test_update():
     prod = FakeProduct(identifier='fake-product')
-
     metadata = Metadata(prod)
 
     metadata.update('new code')
 
     # check code was updated
-    assert metadata._data['stored_source_code'] == 'new code'
+    assert metadata.stored_source_code == 'new code'
 
 
 @pytest.mark.parametrize(

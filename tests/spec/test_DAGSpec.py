@@ -459,7 +459,6 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
 
     dag = DAGSpec(dag_spec).to_dag()
 
-    # FIXME: this does no show the custom Upstream key missing error
     dag.build()
 
 
@@ -1119,3 +1118,40 @@ def test_validate_product_default_class_values():
     expected = ("Error validating product_default_class: "
                 "'unknown_product' is not a valid Product class name")
     assert str(excinfo.value) == expected
+
+
+def test_warn_if_param_declared_in_env_but_unused_in_spec():
+
+    with pytest.warns(UserWarning) as record:
+        DAGSpec(
+            {
+                'tasks': [
+                    {
+                        'source': 'sample.sql',
+                        'product': ['name', 'table']
+                    },
+                ]
+            },
+            env=dict(a=1))
+
+    assert len(record) == 1
+    expected = ("The following placeholders are declared in the "
+                "environment but unused in the spec: {'a'}")
+    assert str(record[0].message) == expected
+
+
+def test_doesnt_warn_if_param_declared_in_env_is_used_in_spec():
+
+    with pytest.warns(None) as record:
+        DAGSpec(
+            {
+                'tasks': [
+                    {
+                        'source': 'sample.sql',
+                        'product': ['{{a}}', 'table']
+                    },
+                ]
+            },
+            env=dict(a=1))
+
+    assert not record

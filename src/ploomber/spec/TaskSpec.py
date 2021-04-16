@@ -172,9 +172,9 @@ class TaskSpec(MutableMapping):
         is_path = isinstance(self.data['source'], Path)
 
         # check if we need to use the source_loader. we don't if the path is
-        # relative because that doesn't sense with a source_loader.
-        # furthermore, this allows the user to load some sources from
-        # arbitrary locations
+        # relative because that doesn't make sense with a source_loader, and
+        # this gives the user the ability to load some files that might
+        # not be part of the source loader
         if source_loader and is_path and not self.data['source'].is_absolute():
             if lazy_import:
                 self.data['source'] = source_loader.path_to(

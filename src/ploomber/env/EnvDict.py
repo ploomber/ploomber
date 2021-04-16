@@ -56,6 +56,7 @@ class EnvDict(Mapping):
                     '_expander',
                     '_data',
                     '_repr',
+                    '_default_keys',
             ):
                 original = getattr(source, attr)
                 setattr(self, attr, deepcopy(original))
@@ -100,7 +101,8 @@ class EnvDict(Mapping):
 
     @property
     def default_keys(self):
-        """Returns keys whose default value is used
+        """Returns keys whose default value is used (i.e., if the user
+        overrides them, they won't appear)
         """
         return self._default_keys
 

@@ -127,8 +127,9 @@ class Parallel(Executor):
                 # ignore tasks that are already started, I should probably add
                 # an executing status but that cannot exist in the task itself,
                 # maybe in the manaer?
-                if (task.exec_status == TaskStatus.WaitingExecution
-                        and task not in started):
+                if (task.exec_status in {
+                        TaskStatus.WaitingExecution, TaskStatus.WaitingDownload
+                } and task not in started):
                     return task
                 # there might be some up-to-date tasks, add them
 

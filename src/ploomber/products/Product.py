@@ -45,6 +45,7 @@ class Product(abc.ABC):
 
         self._outdated_data_dependencies_status = None
         self._outdated_code_dependency_status = None
+        self._is_outdated_status = None
         # not all products have clients, but they should still have a client
         # property to keep the API consistent
         self._client = None
@@ -85,6 +86,12 @@ class Product(abc.ABC):
         bool
             True if the Task should execute
         """
+        if self._is_outdated_status is None:
+            self._is_outdated_status = self._check_is_outdated(
+                outdated_by_code)
+        return self._is_outdated_status
+
+    def _check_is_outdated(self, outdated_by_code):
         # check product...
         p_exists = self.exists()
 
@@ -123,20 +130,10 @@ class Product(abc.ABC):
                               self._outdated_data_dependencies_status)
             return self._outdated_data_dependencies_status
 
-        def is_outdated(up_prod):
-            """
-            A task becomes data outdated if an upstream product has a higher
-            timestamp or if an upstream product is outdated
-            """
-            if (self.metadata.timestamp is None
-                    or up_prod.metadata.timestamp is None):
-                return True
-            else:
-                return ((up_prod.metadata.timestamp > self.metadata.timestamp)
-                        or up_prod._is_outdated())
-
-        outdated = any(
-            [is_outdated(up.product) for up in self.task.upstream.values()])
+        outdated = any([
+            self._is_outdated_due_to_upstream(up.product)
+            for up in self.task.upstream.values()
+        ])
 
         self._outdated_data_dependencies_status = outdated
 
@@ -145,6 +142,23 @@ class Product(abc.ABC):
                           self._outdated_data_dependencies_status)
 
         return self._outdated_data_dependencies_status
+
+    def _is_outdated_due_to_upstream(self, up_prod):
+        """
+        A task becomes data outdated if an upstream product has a higher
+        timestamp or if an upstream product is outdated
+        """
+        if (self.metadata.timestamp is None
+                or up_prod.metadata.timestamp is None):
+            return True
+        else:
+            return (
+                (up_prod.metadata.timestamp > self.metadata.timestamp)
+                # this second condition propagates outdated status
+                # from indirect upstream dependencies. e.g., a -> b -> c
+                # user runs in order but then it only runs a. Since a is
+                # outdated, so should c
+                or up_prod._is_outdated())
 
     def _outdated_code_dependency(self):
         """
@@ -173,6 +187,11 @@ class Product(abc.ABC):
                              self.task.name, diff)
 
         return self._outdated_code_dependency_status
+
+    def _reset_cached_outdated_status(self):
+        self._outdated_data_dependencies_status = None
+        self._outdated_code_dependency_status = None
+        self._is_outdated_status = None
 
     def __str__(self):
         return str(self._identifier)

@@ -122,6 +122,7 @@ tasks:
 * [Documentation](https://ploomber.readthedocs.io/)
 * [Sample projects (Machine Learning pipeline, ETL, among others)](https://github.com/ploomber/projects)
 * [Watch JupyterCon 2020 talk](https://www.youtube.com/watch?v=M6mtgPfsA3M)
+* [Argo Community Meeting talk](https://youtu.be/FnpXyg-5W_c)
 
 ## Installation
 

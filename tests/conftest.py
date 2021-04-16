@@ -23,7 +23,7 @@ import pandas as pd
 
 
 def _path_to_tests():
-    return Path(__file__).absolute().parent
+    return Path(__file__).resolve().parent
 
 
 def fixture_tmp_dir(source):
@@ -348,3 +348,12 @@ def no_sys_modules_cache():
 
     for a_module in to_remove:
         del sys.modules[a_module]
+
+
+@pytest.fixture
+def tmp_directory_with_project_root(tmp_directory):
+    """
+    Uses tmp_directory and adds a pipeline.yaml file. Used by tests that
+    need a project root folderf
+    """
+    Path(tmp_directory, 'environment.yml').touch()

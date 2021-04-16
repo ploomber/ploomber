@@ -1,3 +1,9 @@
+import pickle
+try:
+    import importlib.resources as importlib_resources
+except ImportError:  # pragma: no cover
+    # backported
+    import importlib_resources
 import abc
 from pathlib import Path
 from itertools import chain
@@ -72,8 +78,14 @@ class OnlineDAG(abc.ABC):
             with open(partial) as f:
                 tasks = yaml.safe_load(f)
 
+            if not isinstance(tasks, list):
+                raise ValueError(
+                    f'Expected partial {partial!r} to be a '
+                    f'list of tasks, but got a {type(tasks).__name__} instead')
+
             # cannot extract upstream because this is an incomplete DAG
             meta = {'extract_product': False, 'extract_upstream': False}
+
             spec = DAGSpec(
                 {
                     'tasks': tasks,
@@ -127,3 +139,56 @@ class OnlineDAG(abc.ABC):
         Must return a dictionary with parameters passed to ``terminal_task``
         """
         pass
+
+
+class OnlineModel(OnlineDAG):
+    """
+    A subclass of :py:mod:`ploomber.OnlineDAG` to provider a simpler interface
+    for online DAGs whose terminal task calls ``model.predict``.
+    ``OnlineModel`` is initialized with a module following a standard
+    structure. Looks for a ``pipeline-features.yaml`` in the module's
+    root directory (e.g. ``src/my_module/pipeline-features.yaml``),
+    a ``model.pickle`` in the module's root directory. The terminal task
+    is executed with a ``model`` parameter which contains the load model
+    and calls ``model.predict``. The last task in ``pipeline-features.yaml``
+    should be named ``features``.
+
+    See here for a complete example:
+    https://github.com/ploomber/projects/blob/master/ml-online/src/ml_online/infer.py
+
+    Parameters
+    ----------
+    module
+        A module following a standard structure
+
+    Examples
+    --------
+    >>> import my_module
+    >>> model = OnlineModel(my_module
+    >>> model.predict(x=some_input)
+    """
+    def __init__(self, module):
+        self._module = module
+        super().__init__()
+
+    def get_partial(self):
+        with importlib_resources.path(
+                self._module, 'pipeline-features.yaml') as path_to_spec:
+            path = path_to_spec
+
+        return path
+
+    def terminal_params(self):
+        model = pickle.loads(
+            importlib_resources.read_binary(self._module, 'model.pickle'))
+        return dict(model=model)
+
+    @staticmethod
+    def terminal_task(upstream, model):
+        return model.predict(upstream['features'])
+
+    def predict(self, **kwargs):
+        """
+        Returns the output of ``model.predict(upstream['features'])``
+        """
+        return self.in_memory.build(kwargs)['terminal']
