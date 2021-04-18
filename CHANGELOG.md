@@ -2,6 +2,12 @@
 
 ## 0.10.1dev
 
+- `DAGSpec` warns if parameter declared in env but unused
+- Implements `{SQLDump, NotebookRunner, PythonCallable}.load()`
+- `File.client` downloads during task execution instead of render
+- Adds `ploomber.OnlineModel`, which provides a simpler API than `OnlineDAG` for models that implement a `.predict()` method
+- Adds function to find package name if using standard layout
+
 ## 0.10 (2021-03-13)
 
 - Changes `extract_product` default in spec API to False
