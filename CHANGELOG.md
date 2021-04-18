@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.10.1dev
+## 0.10.1 (2021-04-17)
 
 - `DAGSpec` warns if parameter declared in env but unused
 - Implements `{SQLDump, NotebookRunner, PythonCallable}.load()`
