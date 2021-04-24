@@ -1,10 +1,10 @@
 Jupyter and Exploratory Data Analysis
 =====================================
 
-Scripts go through a cell injection process that replaces the original upstream
-variable (which only contains names for dependencies) with a dictionary that
-maps these names to output files, so you can use them as inputs in the current
-task.
+Scripts and notebooks go through a cell injection process that replaces the
+original upstream variable (which only contains names for dependencies) with
+a dictionary that maps these names to output files so you can use them as inputs
+in the current task.
 
 For example if a Python script (``task.py``) declares the following dependency:
 
@@ -42,7 +42,13 @@ Jupyter notebook and the cell injection process will happen automatically
 (this cell is just temporary and not saved). The Jupyter extension installs
 when you install Ploomber.
 
-**NOTE:** To view scripts as notebooks in Jupyter Lab: Right-click -> Open With -> Notebook.
+**NOTE:** When using ``jupyter notebook``, scripts automatically render as
+notebooks. When using ``jupyter lab``: Right-click -> Open With -> Notebook,
+as depicted below:
+
+.. image:: https://ploomber.io/doc/lab-open-with-notebook.png
+   :target: https://ploomber.io/doc/lab-open-with-notebook.png
+   :alt: lab-open-with-notebook
 
 Activating the Jupyter extension
 --------------------------------
@@ -131,13 +137,13 @@ is only recommended for small pipelines.
 Exploratory Data Analysis
 -------------------------
 
-There are two ways to use Ploomber in Jupyter. The first one, explained in
-previous sections, is by loading a task file in Jupyter. However, this implies
-that the file opened in Jupyter is a task in your pipeline.
+There are two ways to use Ploomber in Jupyter. The first one is by opening a
+task file in Jupyter (i.e., the source file is listed in your ``pipeline.yaml``
+file.
 
-A second way is to load your whole pipeline in Jupyter to interact with it.
-Jupyter is an excellent approach during the initial stages since you don't know what's the best
-to organize tasks or how many of them you need.
+A second way is to load your pipeline in Jupyter to interact with it. This second
+approach is best when you already have some tasks and you want to explore their
+outputs to decide how to proceed with further analysis.
 
 Say that you have a single task that loads the data:
 
@@ -164,8 +170,8 @@ cleaning). You can create a new notebook with the following code:
 
 
 Note that this exploratory notebook **is not** part of your pipeline (i.e., it
-doesn't appear in the ``tasks`` section of your ``pipeline.yaml``), but an
-exploratory notebook that loads the pipeline.
+doesn't appear in the ``tasks`` section of your ``pipeline.yaml``), it's an
+independent notebook that loads your pipeline declaration.
 
 The ``dag`` variable is an object that contains your pipeline definition. If you
 want to load your raw data:
