@@ -166,7 +166,7 @@ class Parallel(Executor):
                         future_mapping[future] = task
                         future.add_done_callback(callback)
                         started.append(task)
-                        logging.info('Added %s to the pool...', task.name)
+                        self._logger.info('Added %s to the pool...', task.name)
 
         results = [
             # results are the output of Task._build: (report, metadata)
