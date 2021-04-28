@@ -4,7 +4,7 @@ Spec API vs Python API
 There are two ways of writing pipelines with Ploomber. This document discusses
 the differences and how to decide which API to use.
 
-Data projects span a wide range of applications; from small projects that just
+Data projects span a wide range of applications, from small projects that just
 need a few scripts to large ones that require a greater degree of flexibility.
 Ploomber is designed to make it as simple as possible and only use a more
 sophisticated solution if you need to.
@@ -97,6 +97,22 @@ you have to create a ``pipeline.yaml`` file; this is known as a
 **spec entry point**. A ``pipeline.yaml`` file is the recommended approach for
 most projects: it has a good level of flexibility and doesn't require you to
 learn Ploomber's internal Python API.
+
+To call a DAG defined in a ``path/to/pipeline.yaml`` file pass the path:
+
+.. code-block:: console
+
+    ploomber build --entry-point pah/to/pipeline.yaml
+
+If your pipeline exists inside a package:
+
+.. code-block:: console
+
+    ploomber build --entry-point my_package::pah/to/pipeline.yaml
+
+The command above searches for package ``my_package`` (by doing ``import my_package``), then uses the relative path.
+
+You can omit the ``--entry-point`` argument if the ``pipeline.yaml`` is in a standard location (:ref:`api-cli-default-locations`).
 
 An added feature is pipeline parametrization, to learn more :doc:`/user-guide/parametrized`.
 

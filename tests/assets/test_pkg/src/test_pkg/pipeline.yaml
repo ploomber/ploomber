@@ -1,0 +1,3 @@
+tasks:
+  - source: test_pkg.tasks.root
+    product: '{{cwd}}/root.csv'

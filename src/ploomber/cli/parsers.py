@@ -5,8 +5,12 @@ import inspect
 from pathlib import Path
 import argparse
 from collections.abc import Mapping
-
 import warnings
+try:
+    import importlib.resources as importlib_resources
+except ImportError:  # pragma: no cover
+    # backported
+    import importlib_resources
 
 from ploomber.spec.dagspec import DAGSpec
 from ploomber.env.EnvDict import EnvDict
@@ -134,6 +138,16 @@ class CustomParser(argparse.ArgumentParser):
         return dag, args
 
 
+def _path_for_module_path(module_path):
+    mod_name, path_part = module_path.split('::')
+
+    # TODO: check it's only two parts after splitting
+    with importlib_resources.path('test_pkg', path_part) as p:
+        path = str(p)
+
+    return path
+
+
 class EntryPoint:
     """
     Handles common operations on the 4 types of entry points. Exposes a
@@ -143,6 +157,7 @@ class EntryPoint:
     Pattern = 'pattern'
     File = 'file'
     DottedPath = 'dotted-path'
+    ModulePath = 'module-path'
 
     def __init__(self, value):
         self.value = value
@@ -161,7 +176,8 @@ class EntryPoint:
 
     @property
     def suffix(self):
-        return None if self.type != self.File else Path(self.value).suffix
+        return None if self.type not in {self.File, self.ModulePath} else Path(
+            self.value).suffix
 
     def __repr__(self):
         return repr(self.value)
@@ -213,6 +229,9 @@ class EntryPoint:
                                  'such file does not exist')
 
             dag, args = parser.process_factory_dotted_path(self)
+        elif self.type == EntryPoint.ModulePath:
+            dag, args = _process_file_dir_or_glob(
+                parser, dagspec_arg=_path_for_module_path(self.value))
         else:
             # process file, directory or glob pattern
             dag, args = _process_file_dir_or_glob(parser)
@@ -239,6 +258,8 @@ def find_entry_point_type(entry_point):
     """
     if '*' in entry_point:
         return EntryPoint.Pattern
+    elif '::' in entry_point:
+        return EntryPoint.ModulePath
     elif Path(entry_point).exists():
         if Path(entry_point).is_dir():
             return EntryPoint.Directory
@@ -417,7 +438,7 @@ def _add_args_from_callable(parser, callable_):
     return required, defaults
 
 
-def _process_file_dir_or_glob(parser):
+def _process_file_dir_or_glob(parser, dagspec_arg=None):
     """
     Process a file entry point file or directory), returns the initialized dag
     and parsed args
@@ -436,25 +457,26 @@ def _process_file_dir_or_glob(parser):
         _add_cli_args_from_env_dict_keys(parser, env_dict)
 
     args = parser.parse_args()
+    dagspec_arg = dagspec_arg or args.entry_point
 
     if hasattr(args, 'log'):
         if args.log is not None:
             logging.basicConfig(level=args.log.upper())
 
-    entry_point = EntryPoint(args.entry_point)
+    entry_point = EntryPoint(dagspec_arg)
 
     if entry_point.type == EntryPoint.Directory:
-        dag = DAGSpec.from_directory(args.entry_point).to_dag()
+        dag = DAGSpec.from_directory(dagspec_arg).to_dag()
     elif entry_point.type == EntryPoint.Pattern:
-        dag = DAGSpec.from_files(args.entry_point).to_dag()
+        dag = DAGSpec.from_files(dagspec_arg).to_dag()
     else:
         if path_to_env:
             # and replace keys depending on passed cli args
             replaced = _env_keys_to_override(args, parser.static_args)
             env = env_dict._replace_flatten_keys(replaced)
-            dag = DAGSpec(args.entry_point, env=env).to_dag()
+            dag = DAGSpec(dagspec_arg, env=env).to_dag()
         else:
-            dag = DAGSpec(args.entry_point).to_dag()
+            dag = DAGSpec(dagspec_arg).to_dag()
 
     return dag, args
 
