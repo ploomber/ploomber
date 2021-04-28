@@ -121,6 +121,7 @@ class GCloudStorageClient:
 
     def _download(self, local, remote):
         blob = self._bucket.blob(remote)
+        Path(local).parent.mkdir(exist_ok=True, parents=True)
         blob.download_to_filename(local)
 
     def _upload(self, local, remote):
