@@ -142,7 +142,7 @@ def _path_for_module_path(module_path):
     mod_name, path_part = module_path.split('::')
 
     # TODO: check it's only two parts after splitting
-    with importlib_resources.path('test_pkg', path_part) as p:
+    with importlib_resources.path(mod_name, path_part) as p:
         path = str(p)
 
     return path
