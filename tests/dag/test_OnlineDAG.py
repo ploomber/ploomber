@@ -107,6 +107,31 @@ def test_online_model(monkeypatch):
     mock_read.assert_called_once_with(test_pkg, 'model.pickle')
 
 
+def test_online_model_missing_model_file():
+
+    with pytest.raises(FileNotFoundError) as excinfo:
+        OnlineModel(test_pkg)
+
+    assert 'Error initializing OnlineModel' in str(excinfo.value)
+
+
+def test_online_model_without_features_task(monkeypatch, backup_test_pkg):
+    mock_read = Mock(return_value=pickle.dumps(FakePredictor()))
+    monkeypatch.setattr(online_dag.importlib_resources, 'read_binary',
+                        mock_read)
+
+    # change task name
+    path = Path(backup_test_pkg, 'pipeline-features.yaml')
+    tasks = yaml.safe_load(path.read_text())
+    tasks[0]['name'] = 'another_name'
+    Path(path).write_text(yaml.dump(tasks))
+
+    with pytest.raises(ValueError) as excinfo:
+        OnlineModel(test_pkg)
+
+    assert 'Error initializing OnlineModel' in str(excinfo.value)
+
+
 def test_error_initializing_if_partial_is_not_a_list(tmp_directory):
     class ModelFromInvalidYAML(BaseModel):
         @staticmethod

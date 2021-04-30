@@ -28,6 +28,13 @@ def scaffold():
 
 
 @cli.command()
+def install():
+    """Install dependencies and package
+    """
+    cli_module.install.main()
+
+
+@cli.command()
 @click.option('-n', '--name', help='Example to use', default=None)
 @click.option('-f', '--force', help='Force examples download', is_flag=True)
 @click.option('-b',

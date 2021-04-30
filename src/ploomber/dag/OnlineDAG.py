@@ -171,6 +171,14 @@ class OnlineModel(OnlineDAG):
         self._module = module
         super().__init__()
 
+        names = list(self.in_memory.dag._iter())
+
+        if 'features' not in names:
+            raise ValueError(
+                f'Error initializing {type(self).__name__}. The initialized '
+                'DAG must contain a task named "features". '
+                f'Got tasks with names: {names}')
+
     def get_partial(self):
         with importlib_resources.path(
                 self._module, 'pipeline-features.yaml') as path_to_spec:
@@ -179,8 +187,21 @@ class OnlineModel(OnlineDAG):
         return path
 
     def terminal_params(self):
-        model = pickle.loads(
-            importlib_resources.read_binary(self._module, 'model.pickle'))
+        error = None
+
+        try:
+            content = importlib_resources.read_binary(self._module,
+                                                      'model.pickle')
+        except FileNotFoundError as e:
+            error = e
+
+        if error:
+            raise FileNotFoundError(
+                f'Error initializing {type(self).__name__} '
+                f'from module {self._module.__name__!r}: Missing model file. '
+                f'Expected location: {error.filename}')
+
+        model = pickle.loads(content)
         return dict(model=model)
 
     @staticmethod

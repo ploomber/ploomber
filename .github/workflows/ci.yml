@@ -71,7 +71,7 @@ jobs:
         # this was used to debug a hanging test, it's fixed now but leaving
         # it temporarily in case some other intermitent bug shows up
         pip install pytest-timeout
-        pytest  --cov=ploomber --timeout=120
+        pytest --cov=ploomber --timeout=120
 
         coveralls
         flake8
