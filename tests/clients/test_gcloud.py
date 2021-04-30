@@ -26,12 +26,22 @@ def test_init(tmp_directory_with_project_root, mock_client):
     assert client._bucket is mock_client().bucket()
 
 
+@pytest.mark.parametrize('relative_to_project_root', [False, True])
 def test_from_service_account_json(tmp_directory_with_project_root,
-                                   mock_client):
-    client = GCloudStorageClient('my-bucket-name', 'folder', 'my.json', arg=1)
+                                   mock_client, relative_to_project_root):
+    client = GCloudStorageClient(
+        'my-bucket-name',
+        'folder',
+        'my.json',
+        arg=1,
+        credentials_relative_to_project_root=relative_to_project_root,
+    )
+
+    expected = 'my.json' if not relative_to_project_root else Path(
+        tmp_directory_with_project_root, 'my.json')
 
     mock_client.from_service_account_json.assert_called_once_with(
-        json_credentials_path='my.json', arg=1)
+        json_credentials_path=expected, arg=1)
 
     assert client._parent == 'folder'
     assert client._bucket_name == 'my-bucket-name'

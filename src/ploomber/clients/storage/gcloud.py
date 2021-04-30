@@ -28,13 +28,17 @@ class GCloudStorageClient:
         initializes the client using Client(**kwargs)
 
     path_to_project_root : str, default=None
-        Path to project root. Product locations ares stored in a path relative
+        Path to project root. Product locations are stored in a path relative
         to this folder. e.g. If project root is ``/my-project``, backup is
         ``/backup`` and you save a file in ``/my-project/reports/report.html``,
         it will be saved at ``/backup/reports/report.html``. If None, it
         looks up recursively for ``environment.yml``, ``requirements.txt`` and
         ``setup.py`` (in that order) file and assigns its parent as project
         root folder.
+
+    credentials_relative_to_project_root : bool, default=True
+        If True, relative paths in json_credentials_path are so to the
+        path_to_project_root, instead of the current working directory
 
     **kwargs
         Keyword arguments for the client constructor
@@ -47,7 +51,17 @@ class GCloudStorageClient:
                  parent,
                  json_credentials_path=None,
                  path_to_project_root=None,
+                 credentials_relative_to_project_root=True,
                  **kwargs):
+        project_root = (path_to_project_root
+                        or find_root_recursively(raise_=True))
+        self._path_to_project_root = Path(project_root).resolve()
+
+        if (credentials_relative_to_project_root and json_credentials_path
+                and not Path(json_credentials_path).is_absolute()):
+            json_credentials_path = Path(self._path_to_project_root,
+                                         json_credentials_path)
+
         self._from_json = json_credentials_path is not None
 
         if not self._from_json:
@@ -62,10 +76,6 @@ class GCloudStorageClient:
         self._parent = parent
         self._bucket_name = bucket_name
         self._bucket = storage_client.bucket(bucket_name)
-
-        project_root = (path_to_project_root
-                        or find_root_recursively(raise_=True))
-        self._path_to_project_root = Path(project_root).resolve()
 
     def _init_client(self):
         constructor = (storage.Client.from_service_account_json
