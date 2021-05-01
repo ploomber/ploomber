@@ -1,4 +1,3 @@
-import glob
 from pathlib import PurePosixPath, Path
 
 try:
@@ -8,10 +7,10 @@ except ImportError:
 
 from ploomber.util.default import find_root_recursively
 from ploomber.util.util import requires
-from ploomber.clients.storage.util import _resolve
+from ploomber.clients.storage.abc import AbstractStorageClient
 
 
-class GCloudStorageClient:
+class GCloudStorageClient(AbstractStorageClient):
     """Client for Google Cloud Storage
 
     Parameters
@@ -96,23 +95,6 @@ class GCloudStorageClient:
                 destination_file.parent.mkdir(exist_ok=True, parents=True)
                 blob.download_to_filename(destination_file)
 
-    def upload(self, local):
-        if Path(local).is_dir():
-            for f in glob.iglob(str(Path(local, '**')), recursive=True):
-                if Path(f).is_file():
-                    remote = self._remote_path(f)
-                    self._upload(f, remote)
-        else:
-            remote = self._remote_path(local)
-            self._upload(local, remote)
-
-    def close(self):
-        pass
-
-    def _remote_path(self, local):
-        relative = _resolve(local).relative_to(self._path_to_project_root)
-        return str(PurePosixPath(self._parent, *relative.parts))
-
     def _is_file(self, remote):
         return self._bucket.blob(remote).exists()
 
@@ -120,21 +102,13 @@ class GCloudStorageClient:
         return any(
             self._bucket.client.list_blobs(self._bucket_name, prefix=remote))
 
-    def _remote_exists(self, local):
-        remote = self._remote_path(local)
-        is_file = self._is_file(remote)
-
-        if is_file:
-            return True
-
-        return self._is_dir(remote)
-
     def _download(self, local, remote):
         blob = self._bucket.blob(remote)
         Path(local).parent.mkdir(exist_ok=True, parents=True)
         blob.download_to_filename(local)
 
-    def _upload(self, local, remote):
+    def _upload(self, local):
+        remote = self._remote_path(local)
         blob = self._bucket.blob(remote)
         blob.upload_from_filename(local)
 

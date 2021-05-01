@@ -57,5 +57,14 @@ class LocalStorageClient(AbstractStorageClient):
         else:
             shutil.copytree(local, remote_path)
 
-    def close(self):
-        pass
+    def _download(self, local, remote):
+        raise NotImplementedError
+
+    def _upload(self, local):
+        raise NotImplementedError
+
+    def _is_file(self, remote):
+        raise NotImplementedError
+
+    def _is_dir(self, remote):
+        raise NotImplementedError

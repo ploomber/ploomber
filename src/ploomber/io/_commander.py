@@ -3,7 +3,6 @@ import sys
 import subprocess
 import shutil
 from pathlib import Path
-import shlex
 
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
@@ -39,17 +38,50 @@ class Commander:
         else:
             self._env = None
 
-    def run(self, cmd, description, capture_output=False):
-        self.tw.sep('=', f'{description}: {cmd}', blue=True)
-        posix = os.name == 'posix'
+    def run(self,
+            *cmd,
+            description=None,
+            capture_output=False,
+            expected_output=None,
+            error_message=None,
+            hint=None):
+        cmd_str = ' '.join(cmd)
+
+        if expected_output is not None and not capture_output:
+            raise RuntimeError('capture_output must be True when '
+                               'expected_output is not None')
+
+        if description:
+            self.tw.sep('=', f'{description}: {cmd_str}', blue=True)
+
+        error = None
 
         # py 3.6 compatibility: cannot use subprocess.run directly
         # because the check_output arg was included until version 3.7
         if not capture_output:
-            return subprocess.check_call(shlex.split(cmd, posix=posix))
+            try:
+                result = subprocess.check_call(cmd)
+            except Exception as e:
+                error = e
         else:
-            out = subprocess.check_output(shlex.split(cmd, posix=posix))
-            return out.decode(sys.stdout.encoding)
+            try:
+                result = subprocess.check_output(cmd)
+            except Exception as e:
+                error = e
+            else:
+                result = result.decode(sys.stdout.encoding)
+
+            if expected_output is not None:
+                error = result != expected_output
+
+        if error:
+            cmd_str = ' '.join(cmd)
+            hint = '' if not hint else f' Hint: {hint}.'
+            error_message = (error_message
+                             or 'An error ocurred when executing command')
+            raise RuntimeError(f'({error_message} ' f'{cmd_str!r}).{hint}')
+        else:
+            return result
 
     def __enter__(self):
         if self.workspace and not Path(self.workspace).exists():
@@ -64,29 +96,29 @@ class Commander:
         for f in args:
             _delete(f)
 
-    def copy_template(self, path, requires_manual_edit=False, **render_kwargs):
+    def copy_template(self, path, **render_kwargs):
         path = Path(path)
+        dst = Path(self.workspace, path.name)
 
-        if path.exists():
-            self.tw.write(f'Using existing {path!s}...', green=True)
+        # This message is no longer valid since this is only called
+        # when there is no env yet
+        if dst.exists():
+            self.success(f'Using existing {path!s}...')
         else:
-            self.tw.write(f'Missing {path!s}, adding it...')
-            path.parent.mkdir(exist_ok=True, parents=True)
+            self.warn(f'Missing {dst!s}, adding it...')
+            dst.parent.mkdir(exist_ok=True, parents=True)
             content = self._env.get_template(str(path)).render(**render_kwargs)
-            path.write_text(content)
-
-            if requires_manual_edit:
-                raise ValueError(f'Edit {path}')
+            dst.write_text(content)
 
     def cd(self, dir_):
         os.chdir(dir_)
 
-    def cp(self, src, dir_):
+    def cp(self, src):
         """
-        Copies a file from another folder, replacing it if necessary. Used
-        mainly for preparing Dockerfiles since they can only copy from the
-        current working directory. Files are deleted after exiting the
-        context manager
+        Copies a file from another folder to the workspace, replacing it if
+        necessary. Used mainly for preparing Dockerfiles since they can only
+        copy from the current working directory. Files are deleted after
+        exiting the context manager
         """
         path = Path(src)
 
@@ -95,7 +127,7 @@ class Commander:
                 f'Missing {src} file. Add it to your root folder.')
 
         # convert to absolute to ensure we delete the right file on __exit__
-        dst = Path(dir_, path.name).resolve()
+        dst = Path(self.workspace, path.name).resolve()
         self._to_delete.append(dst)
 
         _delete(dst)
@@ -112,9 +144,22 @@ class Commander:
             Path(name).write_text(content)
             self._names.append(name)
 
-    # ONLY used by lambda config
-    def append(self, name, dst):
-        # TODO: keep a copy of the original content to restore if needed
-        content = self._env.get_template(name).render()
+    def append(self, name, dst, **kwargs):
+        if not Path(dst).exists():
+            Path(dst).touch()
+
+        content = self._env.get_template(name).render(**kwargs)
         original = Path(dst).read_text()
         Path(dst).write_text(original + '\n' + content)
+
+    def print(self, line):
+        self.tw.write(f'{line}\n')
+
+    def success(self, line=None):
+        self.tw.sep('=', line, green=True)
+
+    def info(self, line=None):
+        self.tw.sep('=', line, blue=True)
+
+    def warn(self, line=None):
+        self.tw.sep('=', line, yellow=True)

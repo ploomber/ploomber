@@ -49,15 +49,15 @@ def test_from_service_account_json(tmp_directory_with_project_root,
 
 
 def test_underscore_upload(tmp_directory_with_project_root, mock_client):
-    Path('source.txt').touch()
+    Path('my-file.txt').touch()
     client = GCloudStorageClient('my-bucket-name', parent='')
 
-    client._upload('source.txt', 'destiny.txt')
+    client._upload('my-file.txt')
 
     mock_client().bucket.assert_called_once_with('my-bucket-name')
-    mock_client().bucket().blob.assert_called_once_with('destiny.txt')
+    mock_client().bucket().blob.assert_called_once_with('my-file.txt')
     mock_client().bucket().blob().upload_from_filename.assert_called_once_with(
-        'source.txt')
+        'my-file.txt')
 
 
 def test_underscore_download(tmp_directory_with_project_root, mock_client):
@@ -73,15 +73,14 @@ def test_underscore_download(tmp_directory_with_project_root, mock_client):
 
 
 @pytest.mark.parametrize('parent', ['', 'some/parent/', 'some/parent'])
-def test_upload(monkeypatch, parent, mock_client):
+def test_upload_file(monkeypatch, parent, mock_client):
     mock = Mock()
     client = GCloudStorageClient('my-bucket-name', parent=parent)
     monkeypatch.setattr(client, '_upload', mock)
 
     client.upload('file.txt')
 
-    mock.assert_called_once_with('file.txt',
-                                 str(PurePosixPath(parent, 'file.txt')))
+    mock.assert_called_once_with('file.txt')
 
 
 @pytest.mark.parametrize('parent', ['', 'some/parent/', 'some/parent'])
@@ -111,10 +110,10 @@ def test_upload_folder(tmp_directory_with_project_root, monkeypatch,
     client.upload('dir')
 
     mock.assert_has_calls([
-        call(str(Path('dir', 'a')), 'dir/a'),
-        call(str(Path('dir', 'b')), 'dir/b'),
-        call(str(Path('dir', 'subdir', 'c')), 'dir/subdir/c'),
-        call(str(Path('dir', 'subdir', 'nested', 'd')), 'dir/subdir/nested/d'),
+        call(str(Path('dir', 'a'))),
+        call(str(Path('dir', 'b'))),
+        call(str(Path('dir', 'subdir', 'c'))),
+        call(str(Path('dir', 'subdir', 'nested', 'd'))),
     ],
                           any_order=True)
 
