@@ -2,15 +2,15 @@
   <img src="https://ploomber.io/ploomber-logo.png" height="250">
 </p>
 
-
 [![CI Linux](https://github.com/ploomber/ploomber/workflows/CI%20Linux/badge.svg)](https://github.com/ploomber/ploomber/workflows/CI%20Linux/badge.svg)
 [![CI macOS](https://github.com/ploomber/ploomber/workflows/CI%20macOS/badge.svg)](https://github.com/ploomber/ploomber/workflows/CI%20macOS/badge.svg)
 [![CI Windows](https://github.com/ploomber/ploomber/workflows/CI%20Windows/badge.svg)](https://github.com/ploomber/ploomber/workflows/CI%20Windows/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/ploomber/badge/?version=latest)](https://ploomber.readthedocs.io/en/latest/?badge=latest)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fspec-api-python%252FREADME.ipynb%26branch%3Dmaster)
-[![Deepnote](https://deepnote.com/buttons/launch-in-deepnote-small.svg)](https://deepnote.com/launch?template=deepnote&url=https://github.com/ploomber/projects/blob/master/spec-api-python/README.ipynb)
 [![PyPI](https://badge.fury.io/py/ploomber.svg)](https://badge.fury.io/py/ploomber)
 [![Coverage](https://coveralls.io/repos/github/ploomber/ploomber/badge.svg?branch=master)](https://coveralls.io/github/ploomber/ploomber?branch=master)
+[![Twitter](https://img.shields.io/twitter/follow/edublancas?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=edublancas)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fspec-api-python%252FREADME.ipynb%26branch%3Dmaster)
+[![Deepnote](https://deepnote.com/buttons/launch-in-deepnote-small.svg)](https://deepnote.com/launch?template=deepnote&url=https://github.com/ploomber/projects/blob/master/spec-api-python/README.ipynb)
 
 
 ![Diagram](https://ploomber.io/main-diagram.png)
@@ -165,14 +165,14 @@ To get a list of examples, run `ploomber examples`.
 ## Main features
 
 1.  **Jupyter integration**. When you open your notebooks, Ploomber will
-    automatically inject a new cell with the location of your input
+automatically inject a new cell with the location of your input
     files, as inferred from your `upstream` variable. If you open a
-    Python or R script, it will be converted to a notebook on the fly.
+    Python or R script, it's converted to a notebook on the fly.
 2.  **Incremental builds**. Speed up execution by skipping tasks whose
     source code hasn't changed.
 3.  **Parallelization**. Run tasks in parallel to speed up computations.
 4.  **Pipeline testing**. Run tests upon task execution to verify that
-    the output data has the right properties (e.g. values within
+    the output data has the right properties (e.g., values within
     expected range).
 5.  **Pipeline inspection**. Start an interactive session with
     `ploomber interact` to debug your pipeline. Call
