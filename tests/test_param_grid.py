@@ -85,3 +85,35 @@ def test_param_grid_w_interval():
         'a': (8, 10),
         'b': 10
     }])
+
+
+def test_param_grid_list():
+    first = {'a': [1, 2], 'b': [1, 2]}
+    second = {'c': [3, 4], 'd': [3, 4]}
+    pg = ParamGrid([first, second])
+
+    assert list(pg.product()) == [{
+        'a': 1,
+        'b': 1
+    }, {
+        'a': 1,
+        'b': 2
+    }, {
+        'a': 2,
+        'b': 1
+    }, {
+        'a': 2,
+        'b': 2
+    }, {
+        'c': 3,
+        'd': 3
+    }, {
+        'c': 3,
+        'd': 4
+    }, {
+        'c': 4,
+        'd': 3
+    }, {
+        'c': 4,
+        'd': 4
+    }]

@@ -3,6 +3,7 @@ A generic product whose metadata is saved in a given directory and
 exists/delete methods are bash commands
 """
 from ploomber.products.Product import Product
+from ploomber.products.mixins import SQLProductMixin
 from ploomber.products.sql import SQLiteBackedProductMixin
 from ploomber.placeholders.Placeholder import (Placeholder,
                                                SQLRelationPlaceholder)
@@ -72,7 +73,7 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
         return str(self._identifier)
 
 
-class GenericSQLRelation(GenericProduct):
+class GenericSQLRelation(SQLProductMixin, GenericProduct):
     """
     A GenericProduct whose identifier is a SQL relation, uses SQLite as
     metadata backend
@@ -112,7 +113,7 @@ class GenericSQLRelation(GenericProduct):
         return hash((self.schema, self.name, self.kind))
 
 
-class SQLRelation(Product):
+class SQLRelation(SQLProductMixin, Product):
     """A product that represents a SQL relation but has no metadata
 
     Parameters

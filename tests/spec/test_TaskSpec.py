@@ -416,3 +416,18 @@ def test_error_on_invalid_product_class(backup_spec_with_functions_flat,
     expected = ("Error validating Task spec (product_class field): "
                 "'unknown_class' is not a valid Product class name")
     assert str(excinfo.value) == expected
+
+
+def test_grid(backup_spec_with_functions_flat, add_current_to_sys_path):
+    meta = Meta.default_meta()
+
+    spec = {
+        'source': 'my_tasks_flat.raw.function',
+        'product': 'some_file.txt',
+        'grid': {
+            'a': [1, 2],
+            'b': [3, 4]
+        }
+    }
+
+    task, _ = TaskSpec(spec, meta, project_root='.').to_task(dag=DAG())

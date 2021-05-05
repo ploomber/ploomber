@@ -618,10 +618,12 @@ def process_tasks(dag, dag_spec, root_path=None):
     """
     root_path = root_path or '.'
 
-    upstream = {}
-    source_obj = {}
+    # options
     extract_up = dag_spec['meta']['extract_upstream']
     extract_prod = dag_spec['meta']['extract_product']
+
+    upstream = {}
+    source_obj = {}
 
     # first pass: init tasks and them to dag
     for task_dict in dag_spec['tasks']:
@@ -633,19 +635,25 @@ def process_tasks(dag, dag_spec, root_path=None):
         if extract_prod:
             task_dict['product'] = source.extract_product()
 
-        # convert to task
+        # convert to task, up has the content of "upstream"
+        # if any
         task, up = task_dict.to_task(dag)
+
+        # TODO: handle task group case
 
         if extract_prod:
             logger.debug('Extracted product for task "%s": %s', task.name,
                          task.product)
 
         upstream[task] = up
+
+        # delete, unused
         source_obj[task] = source
 
     # second optional pass: extract upstream
     tasks = list(dag.values())
 
+    # if extracting upstream from sources
     if extract_up:
         for task in tasks:
             upstream[task] = task.source.extract_upstream()
