@@ -105,7 +105,7 @@ class Commander:
         if dst.exists():
             self.success(f'Using existing {path!s}...')
         else:
-            self.warn(f'Missing {dst!s}, adding it...')
+            self.info(f'Adding {dst!s}...')
             dst.parent.mkdir(exist_ok=True, parents=True)
             content = self._env.get_template(str(path)).render(**render_kwargs)
             dst.write_text(content)
