@@ -218,8 +218,8 @@ def _init_product_with_str(product_class, product_primitive, index):
     path = Path(product_primitive)
     suffix = ''.join(path.suffixes)
     filename = path.name.replace(suffix, '')
-    primitive = f'{filename}-{index}{suffix}'
-    return product_class(primitive)
+    filename_with_index = f'{filename}-{index}{suffix}'
+    return product_class(path.parent / filename_with_index)
 
 
 def _init_product_with_sql_elements(product_class, product_primitive, index):

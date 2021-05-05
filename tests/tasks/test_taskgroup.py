@@ -17,7 +17,7 @@ def test_from_params():
     dag = DAG()
     group = TaskGroup.from_params(PythonCallable,
                                   File,
-                                  'file.txt', {'source': touch},
+                                  'dir/file.txt', {'source': touch},
                                   dag,
                                   name='task_group',
                                   params_array=[{
@@ -32,8 +32,8 @@ def test_from_params():
 
     assert dag['task_group0'].source.primitive is touch
     assert dag['task_group1'].source.primitive is touch
-    assert str(dag['task_group0'].product) == 'file_0.txt'
-    assert str(dag['task_group1'].product) == 'file_1.txt'
+    assert str(dag['task_group0'].product) == 'dir/file-0.txt'
+    assert str(dag['task_group1'].product) == 'dir/file-1.txt'
 
 
 def test_from_grid():
@@ -68,10 +68,10 @@ def test_metaproduct():
                                       'param': 2
                                   }])
 
-    assert str(dag['task_group0'].product['one']) == 'one_0.txt'
-    assert str(dag['task_group0'].product['another']) == 'another_0.txt'
-    assert str(dag['task_group1'].product['one']) == 'one_1.txt'
-    assert str(dag['task_group1'].product['another']) == 'another_1.txt'
+    assert str(dag['task_group0'].product['one']) == 'one-0.txt'
+    assert str(dag['task_group0'].product['another']) == 'another-0.txt'
+    assert str(dag['task_group1'].product['one']) == 'one-1.txt'
+    assert str(dag['task_group1'].product['another']) == 'another-1.txt'
     assert len(group) == 2
 
 

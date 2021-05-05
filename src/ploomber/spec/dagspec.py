@@ -83,6 +83,7 @@ is implemented by OnlineDAG, which takes a partial definition
 predictions using ``OnlineDAG().predict()``. See ``OnlineDAG`` documentation
 for details.
 """
+import fnmatch
 import os
 import yaml
 import logging
@@ -652,11 +653,13 @@ def process_tasks(dag, dag_spec, root_path=None):
 
     # second optional pass: extract upstream
     tasks = list(dag.values())
+    task_names = list(dag._iter())
 
     # if extracting upstream from sources
     if extract_up:
         for task in tasks:
-            upstream[task] = task.source.extract_upstream()
+            upstream[task] = _expand_upstream(task.source.extract_upstream(),
+                                              task_names)
             logger.debug('Extracted upstream dependencies for task %s: %s',
                          task.name, upstream[task])
 
@@ -693,3 +696,18 @@ def add_base_path_to_source_if_relative(task, base_path):
     # be a dotted path
     if relative_source and path.suffix in set(suffix2taskclass):
         task['source'] = str(Path(base_path, task['source']).resolve())
+
+
+def _expand_upstream(upstream, task_names):
+    if not upstream:
+        return None
+
+    expanded = []
+
+    for up in upstream:
+        if '*' in up:
+            expanded.extend(fnmatch.filter(task_names, up))
+        else:
+            expanded.append(up)
+
+    return set(expanded)
