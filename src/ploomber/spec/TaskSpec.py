@@ -9,8 +9,8 @@ from collections.abc import MutableMapping, Mapping
 from ploomber import tasks, products
 from ploomber.util.util import _make_iterable
 from ploomber.util import validate, dotted_path
+from ploomber.tasks.taskgroup import TaskGroup
 from ploomber import validators
-
 from ploomber.exceptions import DAGSpecInitializationError
 
 suffix2taskclass = {
@@ -212,62 +212,45 @@ class TaskSpec(MutableMapping):
                                  self.data))
 
     def to_task(self, dag):
-        """Converts the spec to a Task instance and adds it to the dag
         """
-        task_dict = copy(self.data)
-        upstream = _make_iterable(task_dict.pop('upstream'))
-        class_ = task_dict.pop('class')
+        Convert the spec to a Task or TaskGroup and add it to the dag.
+        Returns a (task, upstream) tuple with the Task instance and list of
+        upstream dependencies (as described in the 'upstream' key, if any,
+        empty if no 'upstream' key). If the spec has a 'grid' key, a TaskGroup
+        instance instead
 
-        product = init_product(task_dict, self.meta, class_, self.project_root)
+        Parameters
+        ----------
+        dag
+            The DAG to add the task(s) to
+        """
+        data = copy(self.data)
+        upstream = _make_iterable(data.pop('upstream'))
 
-        _init_client(task_dict)
+        if 'grid' in data:
+            if 'name' not in data:
+                raise KeyError(f'Error initializing task with spec {data!r}: '
+                               'tasks with grids must have a \'name\' key')
 
-        source = task_dict.pop('source')
-
-        name = task_dict.pop('name', None)
-
-        on_finish = task_dict.pop('on_finish', None)
-        on_render = task_dict.pop('on_render', None)
-        on_failure = task_dict.pop('on_failure', None)
-
-        if 'serializer' in task_dict:
-            task_dict['serializer'] = dotted_path.load_callable_dotted_path(
-                task_dict['serializer'])
-
-        if 'unserializer' in task_dict:
-            task_dict['unserializer'] = dotted_path.load_callable_dotted_path(
-                task_dict['unserializer'])
-
-        # edge case: if using lazy_import, we should not check if the kernel
-        # is installed. this is used when exporting to Argo/Airflow using
-        # soopervisor, since the exporting process should not require to have
-        # the ir kernel installed. The same applies when Airflow has to convert
-        # the DAG, the Airflow environment shouldn't require the ir kernel
-        if (class_ == tasks.NotebookRunner and self.lazy_import
-                and 'check_if_kernel_installed' not in task_dict):
-            task_dict['check_if_kernel_installed'] = False
-
-        try:
-            task = class_(source=source,
-                          product=product,
-                          name=name,
-                          dag=dag,
-                          **task_dict)
-        except Exception as e:
-            msg = f'Error initializing Task from {self!r}. Error: {e.args[0]}'
-            e.args = (msg, )
-            raise
-
-        if on_finish:
-            task.on_finish = dotted_path.load_callable_dotted_path(on_finish)
-
-        if on_render:
-            task.on_render = dotted_path.load_callable_dotted_path(on_render)
-
-        if on_failure:
-            task.on_failure = dotted_path.load_callable_dotted_path(on_failure)
-
-        return task, upstream
+            task_class = data.pop('class')
+            product_class = _find_product_class(task_class, data, self.meta)
+            product = data.pop('product')
+            name = data.pop('name')
+            grid = data.pop('grid')
+            # TODO: support for hooks
+            return TaskGroup.from_grid(task_class=task_class,
+                                       product_class=product_class,
+                                       product_primitive=product,
+                                       task_kwargs=data,
+                                       dag=dag,
+                                       name=name,
+                                       grid=grid), upstream
+        else:
+            return _init_task(data=data,
+                              meta=self.meta,
+                              project_root=self.project_root,
+                              lazy_import=self.lazy_import,
+                              dag=dag), upstream
 
     def __getitem__(self, key):
         return self.data[key]
@@ -289,8 +272,66 @@ class TaskSpec(MutableMapping):
         return '{}({!r})'.format(type(self).__name__, self.data)
 
 
+def _init_task(data, meta, project_root, lazy_import, dag):
+    """Initialize a single task from a dictionary spec
+    """
+    task_dict = copy(data)
+    class_ = task_dict.pop('class')
+
+    product = _init_product(task_dict, meta, class_, project_root)
+
+    _init_client(task_dict)
+
+    source = task_dict.pop('source')
+
+    name = task_dict.pop('name', None)
+
+    on_finish = task_dict.pop('on_finish', None)
+    on_render = task_dict.pop('on_render', None)
+    on_failure = task_dict.pop('on_failure', None)
+
+    if 'serializer' in task_dict:
+        task_dict['serializer'] = dotted_path.load_callable_dotted_path(
+            task_dict['serializer'])
+
+    if 'unserializer' in task_dict:
+        task_dict['unserializer'] = dotted_path.load_callable_dotted_path(
+            task_dict['unserializer'])
+
+    # edge case: if using lazy_import, we should not check if the kernel
+    # is installed. this is used when exporting to Argo/Airflow using
+    # soopervisor, since the exporting process should not require to have
+    # the ir kernel installed. The same applies when Airflow has to convert
+    # the DAG, the Airflow environment shouldn't require the ir kernel
+    if (class_ == tasks.NotebookRunner and lazy_import
+            and 'check_if_kernel_installed' not in task_dict):
+        task_dict['check_if_kernel_installed'] = False
+
+    try:
+        task = class_(source=source,
+                      product=product,
+                      name=name,
+                      dag=dag,
+                      **task_dict)
+    except Exception as e:
+        msg = f'Error initializing Task from {data!r}. Error: {e.args[0]}'
+        e.args = (msg, )
+        raise
+
+    if on_finish:
+        task.on_finish = dotted_path.load_callable_dotted_path(on_finish)
+
+    if on_render:
+        task.on_render = dotted_path.load_callable_dotted_path(on_render)
+
+    if on_failure:
+        task.on_failure = dotted_path.load_callable_dotted_path(on_failure)
+
+    return task
+
+
 # FIXME: how do we make a default product client? use the task's client?
-def init_product(task_dict, meta, task_class, root_path):
+def _init_product(task_dict, meta, task_class, root_path):
     """
     Initialize product.
 
@@ -303,24 +344,11 @@ def init_product(task_dict, meta, task_class, root_path):
     """
     product_raw = task_dict.pop('product')
 
-    # if the product is not yet initialized (e.g. scripts extract products
-    # as dictionaries, lists or strings)
+    # return if we already have a product
     if isinstance(product_raw, products.Product):
         return product_raw
 
-    key = 'product_default_class.' + task_class.__name__
-    meta_product_default_class = get_value_at(meta, key)
-
-    if 'product_class' in task_dict:
-        CLASS = validate_product_class_name(task_dict.pop('product_class'))
-    elif meta_product_default_class:
-        CLASS = validate_product_class_name(meta_product_default_class)
-    else:
-        raise ValueError('Could not determine a product class for task: '
-                         '"{}". Add an explicit value in the '
-                         '"product_class" key or provide a default value in '
-                         'meta.product_default_class by setting the '
-                         'key to the applicable task class'.format(task_dict))
+    CLASS = _find_product_class(task_class, task_dict, meta)
 
     if 'product_client' in task_dict:
         kwargs = {
@@ -342,6 +370,22 @@ def init_product(task_dict, meta, task_class, root_path):
     else:
         source = resolve_if_file(product_raw, relative_to, CLASS)
         return try_product_init(CLASS, source, kwargs)
+
+
+def _find_product_class(task_class, task_dict, meta):
+    key = 'product_default_class.' + task_class.__name__
+    meta_product_default_class = get_value_at(meta, key)
+
+    if 'product_class' in task_dict:
+        return validate_product_class_name(task_dict.pop('product_class'))
+    elif meta_product_default_class:
+        return validate_product_class_name(meta_product_default_class)
+    else:
+        raise ValueError('Could not determine a product class for task: '
+                         '"{}". Add an explicit value in the '
+                         '"product_class" key or provide a default value in '
+                         'meta.product_default_class by setting the '
+                         'key to the applicable task class'.format(task_dict))
 
 
 def try_product_init(class_, source, kwargs):

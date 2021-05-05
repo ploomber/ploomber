@@ -418,11 +418,11 @@ def test_error_on_invalid_product_class(backup_spec_with_functions_flat,
     assert str(excinfo.value) == expected
 
 
-def test_grid(backup_spec_with_functions_flat, add_current_to_sys_path):
-    meta = Meta.default_meta()
-
-    spec = {
+@pytest.fixture
+def spec():
+    return {
         'source': 'my_tasks_flat.raw.function',
+        'name': 'function-',
         'product': 'some_file.txt',
         'grid': {
             'a': [1, 2],
@@ -430,4 +430,27 @@ def test_grid(backup_spec_with_functions_flat, add_current_to_sys_path):
         }
     }
 
-    task, _ = TaskSpec(spec, meta, project_root='.').to_task(dag=DAG())
+
+def test_grid(backup_spec_with_functions_flat, add_current_to_sys_path, spec):
+    meta = Meta.default_meta()
+    dag = DAG()
+
+    task_group, upstream = TaskSpec(spec, meta,
+                                    project_root='.').to_task(dag=dag)
+
+    assert len(task_group) == 4
+    assert str(dag['function-0'].product) == 'some_file-0.txt'
+    assert str(dag['function-1'].product) == 'some_file-1.txt'
+    assert str(dag['function-2'].product) == 'some_file-2.txt'
+    assert str(dag['function-3'].product) == 'some_file-3.txt'
+
+
+def test_grid_with_missing_name(backup_spec_with_functions_flat,
+                                add_current_to_sys_path, spec):
+    del spec['name']
+
+    with pytest.raises(KeyError) as excinfo:
+        TaskSpec(spec, Meta.default_meta(),
+                 project_root='.').to_task(dag=DAG())
+
+    assert 'Error initializing task with spec' in str(excinfo.value)

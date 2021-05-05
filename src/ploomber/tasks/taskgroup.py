@@ -218,8 +218,7 @@ def _init_product_with_str(product_class, product_primitive, index):
     path = Path(product_primitive)
     suffix = ''.join(path.suffixes)
     filename = path.name.replace(suffix, '')
-    # TODO: remove _, users shoiuld choose that character bc some might not be supported when exporting.e.g. argo doesnt support _
-    primitive = f'{filename}_{index}{suffix}'
+    primitive = f'{filename}-{index}{suffix}'
     return product_class(primitive)
 
 
