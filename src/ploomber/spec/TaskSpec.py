@@ -230,7 +230,7 @@ class TaskSpec(MutableMapping):
         if 'grid' in data:
             if 'name' not in data:
                 raise KeyError(f'Error initializing task with spec {data!r}: '
-                               'tasks with grids must have a \'name\' key')
+                               'tasks with \'grid\' must have a \'name\'')
 
             task_class = data.pop('class')
             product_class = _find_product_class(task_class, data, self.meta)

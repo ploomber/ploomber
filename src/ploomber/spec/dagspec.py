@@ -636,8 +636,7 @@ def process_tasks(dag, dag_spec, root_path=None):
         if extract_prod:
             task_dict['product'] = source.extract_product()
 
-        # convert to task, up has the content of "upstream"
-        # if any
+        # convert to task, up has the content of "upstream" if any
         task, up = task_dict.to_task(dag)
 
         # TODO: handle task group case
@@ -706,8 +705,11 @@ def _expand_upstream(upstream, task_names):
 
     for up in upstream:
         if '*' in up:
-            expanded.extend(fnmatch.filter(task_names, up))
+            matches = fnmatch.filter(task_names, up)
+            expanded.extend(matches)
         else:
             expanded.append(up)
 
-    return set(expanded)
+    # sort them to return name-0, name-1, name-2, ...
+    # this makes things cleaner when injecting to jupyter notebook
+    return sorted(expanded)

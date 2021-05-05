@@ -150,7 +150,14 @@ class Commander:
 
         content = self._env.get_template(name).render(**kwargs)
         original = Path(dst).read_text()
-        Path(dst).write_text(original + '\n' + content)
+        Path(dst).write_text(original + '\n' + content + '\n')
+
+    def append_inline(self, line, dst):
+        if not Path(dst).exists():
+            Path(dst).touch()
+
+        original = Path(dst).read_text()
+        Path(dst).write_text(original + '\n' + line + '\n')
 
     def print(self, line):
         self.tw.write(f'{line}\n')

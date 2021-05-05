@@ -9,6 +9,37 @@ from ploomber.io._commander import Commander
 
 
 def main():
+    if shutil.which('conda'):
+        main_conda()
+    else:
+        main_pip()
+
+
+def main_pip():
+    cmdr = Commander()
+
+    # TODO: modify readme to add how to activate env? probably also in conda
+    # TODO: add to gitignore, create if it doesn't exist
+    name = Path('.').resolve().name
+
+    venv_dir = f'venv-{name}'
+    cmdr.run('python', '-m', 'venv', venv_dir, description='Creating venv')
+    cmdr.append_inline(venv_dir, '.gitignore')
+
+    pip = str(Path(venv_dir, 'bin', 'pip'))
+
+    _pip_install_and_lock(cmdr, pip)
+    _pip_install_and_lock_dev(cmdr, pip)
+
+    if os.name == 'nt':
+        cmd_activate = (
+            f'\nIf using cmd.exe: {venv_dir}\\Scripts\\activate.bat'
+            f'\nIf using PowerShell: {venv_dir}\\Scripts\\Activate.ps1')
+    else:
+        cmd_activate = f'source {venv_dir}/bin/activate'
+
+
+def main_conda():
     if not Path('setup.py').exists():
         raise FileNotFoundError(
             '"ploomber install" only works with packaged '
@@ -76,11 +107,7 @@ def main():
             f'Could not locate pip in environment {env_name!r}, make sure '
             'it is included in your environment.yml and try again')
 
-    cmdr.run(pip,
-             'install',
-             '--editable',
-             '.',
-             description='Installing project')
+    _pip_install_and_lock(cmdr, pip)
 
     env_lock = cmdr.run('conda',
                         'env',
@@ -92,18 +119,7 @@ def main():
                         capture_output=True)
     Path('environment.lock.yml').write_text(env_lock)
 
-    pip_lock = cmdr.run(pip,
-                        'freeze',
-                        '--exclude-editable',
-                        description='Locking dependencies',
-                        capture_output=True)
-    Path('requirements.lock.txt').write_text(pip_lock)
-
-    cmdr.run(pip,
-             'install',
-             '--editable',
-             '.[dev]',
-             description='Installing dev dependencies')
+    _pip_install_and_lock_dev(cmdr, pip)
 
     env_lock_dev = cmdr.run('conda',
                             'env',
@@ -115,6 +131,32 @@ def main():
                             capture_output=True)
     Path('environment.dev.lock.yml').write_text(env_lock_dev)
 
+    cmd_activate = f'conda activate {env_name}'
+    _next_steps(cmdr, cmd_activate)
+
+
+def _pip_install_and_lock(cmdr, pip):
+    cmdr.run(pip,
+             'install',
+             '--editable',
+             '.',
+             description='Installing project')
+
+    pip_lock = cmdr.run(pip,
+                        'freeze',
+                        '--exclude-editable',
+                        description='Locking dependencies',
+                        capture_output=True)
+    Path('requirements.lock.txt').write_text(pip_lock)
+
+
+def _pip_install_and_lock_dev(cmdr, pip):
+    cmdr.run(pip,
+             'install',
+             '--editable',
+             '.[dev]',
+             description='Installing dev dependencies')
+
     pip_lock_dev = cmdr.run(pip,
                             'freeze',
                             '--exclude-editable',
@@ -122,7 +164,9 @@ def main():
                             capture_output=True)
     Path('requirements.dev.lock.txt').write_text(pip_lock_dev)
 
+
+def _next_steps(cmdr, cmd_activate):
     cmdr.success('Done')
-    cmdr.print((f'Activate environment: conda activate {env_name}\n'
-                'Run pipeline: ploomber build'))
+    cmdr.print((f'Next steps:\n1. Activate environment: {cmd_activate}\n'
+                '2. Run pipeline: ploomber build'))
     cmdr.success()

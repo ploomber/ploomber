@@ -1,14 +1,21 @@
 from ploomber.spec.dagspec import DAGSpec
 from ploomber.scaffold.ScaffoldLoader import ScaffoldLoader
 from ploomber.util.util import add_to_sys_path
+from ploomber.exceptions import DAGSpecInitializationError
 
 
-def add():
-    """Add scaffold templates for tasks whose source does not exist
-    """
+def load_dag():
     # setting lazy_import to true causes sources to be returned as paths,
     # instead of placeholders
-    spec, path_to_spec = DAGSpec._auto_load(to_dag=False, lazy_import=True)
+    try:
+        return DAGSpec._auto_load(to_dag=False, lazy_import=True)
+    except DAGSpecInitializationError:
+        return None
+
+
+def add(spec, path_to_spec):
+    """Add scaffold templates for tasks whose source does not exist
+    """
     loader = ScaffoldLoader('ploomber_add')
 
     # TODO: when the dag has a source loader, the argument passed to
