@@ -24,6 +24,7 @@ from ploomber.clients import db
 from ploomber.env import expand
 from ploomber.tasks import SQLScript
 from ploomber import exceptions
+from ploomber.executors import Serial, Parallel
 
 
 def create_engine_with_schema(schema):
@@ -180,6 +181,23 @@ def test_python_callables_with_extract_upstream(tmp_directory):
     assert not dag['root'].upstream
     assert set(dag['a'].upstream) == {'root'}
     assert set(dag['b'].upstream) == {'root'}
+
+
+@pytest.mark.parametrize('executor, expected', [
+    ['serial', Serial],
+    ['parallel', Parallel],
+])
+def test_custom_serializer(executor, expected):
+    dag = DAGSpec({
+        'tasks': [{
+            'source': 'test_pkg.callables.root',
+            'product': 'root.csv'
+        }],
+        'executor':
+        executor,
+    }).to_dag()
+
+    assert isinstance(dag.executor, expected)
 
 
 @pytest.mark.parametrize('processor', [

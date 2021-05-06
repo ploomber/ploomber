@@ -38,6 +38,8 @@ def main_pip():
     else:
         cmd_activate = f'source {venv_dir}/bin/activate'
 
+    _next_steps(cmdr, cmd_activate)
+
 
 def main_conda():
     if not Path('setup.py').exists():

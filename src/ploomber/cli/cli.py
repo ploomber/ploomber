@@ -1,6 +1,5 @@
 import os
 import sys
-from pathlib import Path
 
 import click
 from ploomber import __version__

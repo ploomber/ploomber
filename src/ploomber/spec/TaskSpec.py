@@ -98,8 +98,12 @@ def task_class_from_spec(task_spec, lazy_import, reload):
     return class_
 
 
-def source_for_task_class(source_str, task_class, project_root, lazy_import,
-                          make_absolute):
+def _init_source_for_task_class(source_str, task_class, project_root,
+                                lazy_import, make_absolute):
+    """
+    Initialize source. Loads dotted patht to callable if a PythonCallable
+    task, otherwise it returns a path
+    """
     if task_class is tasks.PythonCallable:
         if lazy_import:
             return source_str
@@ -130,7 +134,8 @@ class TaskSpec(MutableMapping):
     meta : dict
         The "meta" section information from the calling DAGSpec
     project_root : str or pathlib.Path
-        The project root folder (pipeline.yaml parent)
+        The project root folder. Relative paths in "product" are so to this
+        folder
     lazy_import : bool, default=False
         If False, sources are loaded when initializing the spec (e.g.
         a dotted path is imported, a source loaded using a SourceLoader
@@ -160,7 +165,7 @@ class TaskSpec(MutableMapping):
                                                   reload)
         # preprocess source obj, at this point it will either be a Path if the
         # task requires a file or a callable if it's a PythonCallable task
-        self.data['source'] = source_for_task_class(
+        self.data['source'] = _init_source_for_task_class(
             self.data['source'],
             self.data['class'],
             self.project_root,

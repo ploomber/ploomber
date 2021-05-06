@@ -5,6 +5,7 @@ unusable, get rid of the logic that updates it automatically, however,
 we ar eusing here the _update status here to propagate dowstream updates.
 So think about which parts can go away and which ones should not
 """
+import os
 import logging
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
@@ -46,6 +47,11 @@ class TaskBuildWrapper:
 class Parallel(Executor):
     """Runs a DAG in parallel using multiprocessing
 
+    Parameters
+    ----------
+    processes : int, default=None
+        The number of processes to use. If None, uses ``os.cpu_count``
+
     Notes
     -----
     If any task crashes, downstream tasks execution is aborted, building
@@ -55,8 +61,8 @@ class Parallel(Executor):
     # NOTE: Tasks should not create child processes
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.daemon
 
-    def __init__(self, processes=4):
-        self.processes = processes
+    def __init__(self, processes=None):
+        self.processes = processes or os.cpu_count()
 
         self._logger = logging.getLogger(__name__)
         self._i = 0

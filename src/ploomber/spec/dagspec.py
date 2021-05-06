@@ -108,6 +108,7 @@ from ploomber.env.expand import expand_raw_dictionary, expand_raw_dictionaries
 from ploomber.tasks import NotebookRunner
 from ploomber.validators.string import (validate_product_class_name,
                                         validate_task_class_name)
+from ploomber.executors import Parallel
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4)
@@ -172,6 +173,7 @@ class DAGSpec(MutableMapping):
                  lazy_import=False,
                  reload=False,
                  parent_path=None):
+        # initialized with a path to a yaml file...
         if isinstance(data, (str, Path)):
             if parent_path is not None:
                 raise ValueError('parent_path must be None when '
@@ -183,6 +185,10 @@ class DAGSpec(MutableMapping):
             # resolve the parent path to make sources and products unambiguous
             # even if the current working directory changes
             path_to_entry_point = Path(data).resolve()
+
+            # FIXME: since pipeline.yaml can be inside src/, its parent
+            # is not a good place to store artifacts by default. but rather
+            # try to find the "project root" automatically.
             self._parent_path = str(path_to_entry_point.parent)
 
             content = Path(data).read_text()
@@ -207,6 +213,7 @@ class DAGSpec(MutableMapping):
                 else:
                     raise error
 
+        # initialized with a dictionary...
         else:
             path_for_errors = None
             # FIXME: add test cases, some of those features wont work if
@@ -319,8 +326,13 @@ class DAGSpec(MutableMapping):
                                'it must be the unique key in the spec')
         else:
             valid = {
-                'meta', 'config', 'clients', 'tasks', 'serializer',
-                'unserializer'
+                'meta',
+                'config',
+                'clients',
+                'tasks',
+                'serializer',
+                'unserializer',
+                'executor',
             }
             validate.keys(valid, spec.keys(), name='dag spec')
 
@@ -368,6 +380,17 @@ class DAGSpec(MutableMapping):
 
         if 'config' in self:
             dag._params = DAGConfiguration.from_dict(self['config'])
+
+        if 'executor' in self:
+            valid = {'serial', 'parallel'}
+            executor = self['executor']
+
+            if executor not in valid:
+                raise ValueError('executor must be one '
+                                 f'of {valid}, got: {executor}')
+
+            if executor == 'parallel':
+                dag.executor = Parallel()
 
         clients = self.get('clients')
 

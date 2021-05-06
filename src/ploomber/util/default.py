@@ -127,6 +127,10 @@ def find_file_recursively(name, max_levels_up=6, starting_dir=None):
 
 
 def find_root_recursively(starting_dir=None, raise_=False):
+    """
+    Finds a project root by looking recursively for environment files
+    or a setup.py file
+    """
     options = ['environment.yml', 'requirements.txt', 'setup.py']
 
     for name in options:
