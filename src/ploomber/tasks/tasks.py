@@ -8,6 +8,7 @@ import shlex
 import subprocess
 import pdb
 import functools
+from pathlib import Path
 
 from IPython.terminal.debugger import TerminalPdb, Pdb
 
@@ -20,6 +21,7 @@ from ploomber.constants import TaskStatus
 from ploomber.sources.interact import CallableInteractiveDeveloper
 from ploomber.tasks._params import Params
 from ploomber.io.loaders import _file_load
+from ploomber.products import MetaProduct, File
 
 
 def _unserialize_params(params_original, unserializer):
@@ -98,6 +100,7 @@ class PythonCallable(Task):
             product = params.pop('product')
         else:
             product = params['product']
+            _ensure_parents_exist(product)
 
         # call function
         out = self.source.primitive(**params)
@@ -448,3 +451,16 @@ class Input(Task):
         # this should be __true but we can't due to
         # https://bugs.python.org/issue33007
         return True
+
+
+def _ensure_parents_exist(product):
+    if isinstance(product, MetaProduct):
+        for prod in product:
+            _ensure_file_parents_exist(prod)
+    else:
+        _ensure_file_parents_exist(product)
+
+
+def _ensure_file_parents_exist(product):
+    if isinstance(product, File):
+        Path(product).parent.mkdir(parents=True, exist_ok=True)
