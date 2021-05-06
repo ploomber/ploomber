@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.10.2dev
+## 0.10.2 (2021-05-05)
 
 - `GCloudStorageClient` loads credentials relative to the project root
 - Adds `ploomber install`
