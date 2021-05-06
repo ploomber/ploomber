@@ -186,9 +186,6 @@ class DAGSpec(MutableMapping):
             # even if the current working directory changes
             path_to_entry_point = Path(data).resolve()
 
-            # FIXME: since pipeline.yaml can be inside src/, its parent
-            # is not a good place to store artifacts by default. but rather
-            # try to find the "project root" automatically.
             self._parent_path = str(path_to_entry_point.parent)
 
             content = Path(data).read_text()
@@ -299,13 +296,18 @@ class DAGSpec(MutableMapping):
                 normalize_task(task) for task in self.data['tasks']
             ]
 
+            # "products" are relative to the project root. if no project
+            # root, then use the parent path
+            project_root = (default.find_root_recursively()
+                            or self._parent_path)
+
             # make sure the folder where the pipeline is located is in sys.path
             # otherwise dynamic imports needed by TaskSpec will fail
             with add_to_sys_path(self._parent_path, chdir=False):
                 self.data['tasks'] = [
                     TaskSpec(t,
                              self.data['meta'],
-                             project_root=self._parent_path,
+                             project_root=project_root,
                              lazy_import=lazy_import,
                              reload=reload) for t in self.data['tasks']
                 ]
