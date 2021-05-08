@@ -79,7 +79,8 @@ class Commander:
             hint = '' if not hint else f' Hint: {hint}.'
             error_message = (error_message
                              or 'An error ocurred when executing command')
-            raise RuntimeError(f'({error_message} ' f'{cmd_str!r}).{hint}')
+            raise RuntimeError(f'({error_message} {cmd_str!r}): {error}.'
+                               f'\n{hint}')
         else:
             return result
 
