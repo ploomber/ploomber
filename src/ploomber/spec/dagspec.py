@@ -459,7 +459,7 @@ class DAGSpec(MutableMapping):
             raise exc from e
 
     @classmethod
-    def find(cls, env=None, reload=False):
+    def find(cls, env=None, reload=False, lazy_import=False):
         """
         Automatically find pipeline.yaml and return a DAGSpec object, which
         can be converted to a DAG using .to_dag()
@@ -472,7 +472,7 @@ class DAGSpec(MutableMapping):
         spec, _ = DAGSpec._auto_load(to_dag=False,
                                      starting_dir=None,
                                      env=env,
-                                     lazy_import=False,
+                                     lazy_import=lazy_import,
                                      reload=reload)
         return spec
 
