@@ -993,10 +993,16 @@ def test_task_grouping():
     t1 = PythonCallable(touch_root, File('1.txt'), dag, name='first')
     t2 = PythonCallable(touch_root, File('2.txt'), dag, name='second')
     t3 = PythonCallable(touch, File('3.txt'), dag, name='third')
-    t3.set_upstream(t1)
-    t3.set_upstream(t2)
+    t3.set_upstream(t1, group_name='group')
+    t3.set_upstream(t2, group_name='group')
     dag.render()
 
     assert set(t3.upstream) == {'first', 'second'}
+
+    assert set(t3._upstream_product_grouped) == {'group'}
+    assert set(t3._upstream_product_grouped['group']) == {'first', 'second'}
+
     assert set(t3.params['upstream']) == {'group'}
-    assert set(t3.params['upstream']['group']) == {'first', 'second'}
+
+    assert t3.params['upstream']['group']['first'] is t1.product
+    assert t3.params['upstream']['group']['second'] is t2.product

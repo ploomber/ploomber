@@ -52,6 +52,8 @@ TODO: describe BrokenProcesssPool status
 import abc
 import logging
 from datetime import datetime
+from collections import defaultdict
+
 from ploomber.products import Product, MetaProduct, EmptyProduct
 from ploomber.exceptions import TaskBuildError, DAGBuildEarlyStop
 from ploomber.tasks.taskgroup import TaskGroup
@@ -244,6 +246,29 @@ class Task(abc.ABC):
         # this always return a copy to prevent global state if contents
         # are modified (e.g. by using pop)
         return self.dag._get_upstream(self.name)
+
+    @property
+    def _upstream_product_grouped(self):
+        """
+        Similar to .upstream but this one nests groups. Output will be the
+        same as .upstream if no upstream dependencies are grouped. This is
+        only used internally in .render to correctly pass upstream to
+        task.params.
+
+        Unlike .upstream, this method returns products instead of task names
+        """
+        grouped = defaultdict(lambda: {})
+
+        for up_name, up_task in self.upstream.items():
+            data = self.dag._G.get_edge_data(up_name, self.name)
+
+            if data and 'group_name' in data:
+                group_name = data['group_name']
+                grouped[group_name][up_name] = up_task.product
+            else:
+                grouped[up_name] = up_task.product
+
+        return dict(grouped)
 
     @property
     def params(self):
@@ -751,8 +776,8 @@ class Task(abc.ABC):
 
         self._run_on_render()
 
-    def set_upstream(self, other):
-        self.dag._add_edge(other, self)
+    def set_upstream(self, other, group_name=None):
+        self.dag._add_edge(other, self, group_name=group_name)
 
     def status(self, return_code_diff=False, sections=None):
         """Prints the current task status
@@ -875,9 +900,7 @@ class Task(abc.ABC):
         if self.upstream:
             self.params._setitem(
                 'upstream',
-                Upstream({n: t.product
-                          for n, t in self.upstream.items()},
-                         name=self.name))
+                Upstream(self._upstream_product_grouped, name=self.name))
 
         # render the current product
         try:

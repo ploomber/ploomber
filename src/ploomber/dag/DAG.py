@@ -794,12 +794,21 @@ class DAG(AbstractDAG):
 
         return G if not return_graphviz else nx.nx_agraph.to_agraph(G)
 
-    def _add_edge(self, task_from, task_to):
+    def _add_edge(self, task_from, task_to, group_name=None):
         """Add an edge between two tasks
+
+        Parameters
+        ----------
+        group_name : str
+            Pass a string to group this edge, upon rendering, upstream
+            products are available via task[group_name][tas_name]
         """
         # if a new task is added, rendering is required again
         self._did_render = False
 
+        attrs = {} if group_name is None else {'group_name': group_name}
+
+        # when adding a task group (but not a dag)
         if isiterable(task_from) and not isinstance(task_from, DAG):
             # if iterable, add all components as separate upstream tasks
             for a_task_from in task_from:
@@ -809,7 +818,7 @@ class DAG(AbstractDAG):
                 if a_task_from.name not in self._G:
                     self._G.add_node(a_task_from.name, task=a_task_from)
 
-                self._G.add_edge(a_task_from.name, task_to.name)
+                self._G.add_edge(a_task_from.name, task_to.name, **attrs)
 
         else:
             # this happens when the task was originally declared in
@@ -818,13 +827,13 @@ class DAG(AbstractDAG):
                 self._G.add_node(task_from.name, task=task_from)
 
             # DAGs are treated like a single task
-            self._G.add_edge(task_from.name, task_to.name)
+            self._G.add_edge(task_from.name, task_to.name, **attrs)
 
     def _get_upstream(self, task_name):
         """Get upstream tasks given a task name (returns Task objects)
         """
-        upstream = self._G.predecessors(task_name)
-        return {u: self._G.nodes[u]['task'] for u in upstream}
+        upstream_names = self._G.predecessors(task_name)
+        return {name: self._G.nodes[name]['task'] for name in upstream_names}
 
     def get_downstream(self, task_name):
         """
