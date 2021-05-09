@@ -10,6 +10,7 @@ from ploomber.tasks import PythonCallable, task_factory
 from ploomber.products import File
 from ploomber.exceptions import (DAGBuildError, TaskRenderError,
                                  DAGRenderError, TaskBuildError)
+from ploomber.executors import Serial
 
 
 @pytest.fixture
@@ -80,6 +81,11 @@ def df_unserializer(product):
 
 def touch(product):
     Path(str(product)).touch()
+
+
+def touch_meta(product):
+    for path in product:
+        Path(path).touch()
 
 
 def touch_with_upstream(upstream, product, param):
@@ -360,3 +366,27 @@ def test_task_factory_override_params():
 
     assert list(dag) == ['touch']
     assert str(dag['touch'].product) == 'another.txt'
+
+
+def test_creates_parent_dirs(tmp_directory):
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+
+    PythonCallable(touch, File('some/nested/product.txt'), dag=dag)
+
+    dag.build()
+
+    return dag
+
+
+def test_creates_parent_dirs_meta_product(tmp_directory):
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+
+    PythonCallable(touch_meta, {
+        'one': File('some/nested/product.txt'),
+        'another': File('some/another/product.txt')
+    },
+                   dag=dag)
+
+    dag.build()
+
+    return dag

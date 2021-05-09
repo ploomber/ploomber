@@ -1,5 +1,6 @@
 from ploomber.cli.parsers import _custom_command, CustomParser
 from ploomber.cli.io import cli_endpoint
+from ploomber.executors import Parallel
 
 
 # this parameter is only set to True when calling "ploomber interactive"
@@ -26,6 +27,11 @@ def main(render_only=False):
             default=False)
 
     dag, args = _custom_command(parser)
+
+    # when using the parallel executor from the CLI, ensure we print progress
+    # to stdout
+    if isinstance(dag.executor, Parallel):
+        dag.executor.print_progress = True
 
     if render_only:
         dag.render()

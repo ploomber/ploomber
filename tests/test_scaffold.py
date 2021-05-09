@@ -66,7 +66,9 @@ def test_add_task_from_scaffold(backup_test_pkg, tmp_directory):
 
     Path('pipeline.yaml').write_text(yaml)
 
-    scaffold.add()
+    spec, path_to_spec = scaffold.load_dag()
+    scaffold.add(spec, path_to_spec)
+
     code = Path(backup_test_pkg, 'functions.py').read_text()
     module = ast.parse(code)
 
@@ -99,6 +101,7 @@ def test_add_task_when_using_import_tasks_from(tmp_directory):
 
     (subdir / 'tasks.yaml').write_text(tasks)
 
-    scaffold.add()
+    spec, path_to_spec = scaffold.load_dag()
+    scaffold.add(spec, path_to_spec)
 
     assert (subdir / 'notebook.py').exists()

@@ -79,7 +79,8 @@ class Commander:
             hint = '' if not hint else f' Hint: {hint}.'
             error_message = (error_message
                              or 'An error ocurred when executing command')
-            raise RuntimeError(f'({error_message} ' f'{cmd_str!r}).{hint}')
+            raise RuntimeError(f'({error_message} {cmd_str!r}): {error}.'
+                               f'\n{hint}')
         else:
             return result
 
@@ -105,7 +106,7 @@ class Commander:
         if dst.exists():
             self.success(f'Using existing {path!s}...')
         else:
-            self.warn(f'Missing {dst!s}, adding it...')
+            self.info(f'Adding {dst!s}...')
             dst.parent.mkdir(exist_ok=True, parents=True)
             content = self._env.get_template(str(path)).render(**render_kwargs)
             dst.write_text(content)
@@ -150,7 +151,14 @@ class Commander:
 
         content = self._env.get_template(name).render(**kwargs)
         original = Path(dst).read_text()
-        Path(dst).write_text(original + '\n' + content)
+        Path(dst).write_text(original + '\n' + content + '\n')
+
+    def append_inline(self, line, dst):
+        if not Path(dst).exists():
+            Path(dst).touch()
+
+        original = Path(dst).read_text()
+        Path(dst).write_text(original + '\n' + line + '\n')
 
     def print(self, line):
         self.tw.write(f'{line}\n')

@@ -159,7 +159,7 @@ class DottedPathSpec(BaseModel):
 
 
 def call_spec(dotted_path_spec, raise_=True, reload=False):
-    """Call a dotted path initialized from a DottedPathSpec
+    """Call a dotted path initialized from a spec (dictionary)
     """
     if isinstance(dotted_path_spec, str):
         dp = DottedPathSpec(dotted_path=dotted_path_spec)

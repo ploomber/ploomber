@@ -127,6 +127,19 @@ def find_file_recursively(name, max_levels_up=6, starting_dir=None):
 
 
 def find_root_recursively(starting_dir=None, raise_=False):
+    """
+    Finds a project root by looking recursively for environment files
+    or a setup.py file. If None of those files exist, it returns the current
+    working directory if there is a pipeline.yaml file
+
+    Parameters
+    ---------
+    starting_dir : str or pathlib.Path
+        The directory to start the search
+
+    raise_ : bool
+        Whether to raise an error or not if no root folder is found
+    """
     options = ['environment.yml', 'requirements.txt', 'setup.py']
 
     for name in options:

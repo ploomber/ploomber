@@ -83,6 +83,7 @@ is implemented by OnlineDAG, which takes a partial definition
 predictions using ``OnlineDAG().predict()``. See ``OnlineDAG`` documentation
 for details.
 """
+import fnmatch
 import os
 import yaml
 import logging
@@ -107,6 +108,7 @@ from ploomber.env.expand import expand_raw_dictionary, expand_raw_dictionaries
 from ploomber.tasks import NotebookRunner
 from ploomber.validators.string import (validate_product_class_name,
                                         validate_task_class_name)
+from ploomber.executors import Parallel
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4)
@@ -171,6 +173,7 @@ class DAGSpec(MutableMapping):
                  lazy_import=False,
                  reload=False,
                  parent_path=None):
+        # initialized with a path to a yaml file...
         if isinstance(data, (str, Path)):
             if parent_path is not None:
                 raise ValueError('parent_path must be None when '
@@ -182,6 +185,7 @@ class DAGSpec(MutableMapping):
             # resolve the parent path to make sources and products unambiguous
             # even if the current working directory changes
             path_to_entry_point = Path(data).resolve()
+
             self._parent_path = str(path_to_entry_point.parent)
 
             content = Path(data).read_text()
@@ -206,6 +210,7 @@ class DAGSpec(MutableMapping):
                 else:
                     raise error
 
+        # initialized with a dictionary...
         else:
             path_for_errors = None
             # FIXME: add test cases, some of those features wont work if
@@ -291,13 +296,18 @@ class DAGSpec(MutableMapping):
                 normalize_task(task) for task in self.data['tasks']
             ]
 
+            # "products" are relative to the project root. if no project
+            # root, then use the parent path
+            project_root = (default.find_root_recursively()
+                            or self._parent_path)
+
             # make sure the folder where the pipeline is located is in sys.path
             # otherwise dynamic imports needed by TaskSpec will fail
             with add_to_sys_path(self._parent_path, chdir=False):
                 self.data['tasks'] = [
                     TaskSpec(t,
                              self.data['meta'],
-                             project_root=self._parent_path,
+                             project_root=project_root,
                              lazy_import=lazy_import,
                              reload=reload) for t in self.data['tasks']
                 ]
@@ -318,8 +328,13 @@ class DAGSpec(MutableMapping):
                                'it must be the unique key in the spec')
         else:
             valid = {
-                'meta', 'config', 'clients', 'tasks', 'serializer',
-                'unserializer'
+                'meta',
+                'config',
+                'clients',
+                'tasks',
+                'serializer',
+                'unserializer',
+                'executor',
             }
             validate.keys(valid, spec.keys(), name='dag spec')
 
@@ -367,6 +382,17 @@ class DAGSpec(MutableMapping):
 
         if 'config' in self:
             dag._params = DAGConfiguration.from_dict(self['config'])
+
+        if 'executor' in self:
+            valid = {'serial', 'parallel'}
+            executor = self['executor']
+
+            if executor not in valid:
+                raise ValueError('executor must be one '
+                                 f'of {valid}, got: {executor}')
+
+            if executor == 'parallel':
+                dag.executor = Parallel()
 
         clients = self.get('clients')
 
@@ -433,7 +459,7 @@ class DAGSpec(MutableMapping):
             raise exc from e
 
     @classmethod
-    def find(cls, env=None, reload=False):
+    def find(cls, env=None, reload=False, lazy_import=False):
         """
         Automatically find pipeline.yaml and return a DAGSpec object, which
         can be converted to a DAG using .to_dag()
@@ -446,7 +472,7 @@ class DAGSpec(MutableMapping):
         spec, _ = DAGSpec._auto_load(to_dag=False,
                                      starting_dir=None,
                                      env=env,
-                                     lazy_import=False,
+                                     lazy_import=lazy_import,
                                      reload=reload)
         return spec
 
@@ -618,13 +644,16 @@ def process_tasks(dag, dag_spec, root_path=None):
     """
     root_path = root_path or '.'
 
-    upstream = {}
-    source_obj = {}
+    # options
     extract_up = dag_spec['meta']['extract_upstream']
     extract_prod = dag_spec['meta']['extract_product']
 
+    upstream = {}
+    source_obj = {}
+
     # first pass: init tasks and them to dag
     for task_dict in dag_spec['tasks']:
+        # init source to extract product
         fn = task_dict['class']._init_source
         kwargs = {'kwargs': {}, **task_dict}
         source = call_with_dictionary(fn, kwargs=kwargs)
@@ -632,21 +661,29 @@ def process_tasks(dag, dag_spec, root_path=None):
         if extract_prod:
             task_dict['product'] = source.extract_product()
 
+        # convert to task, up has the content of "upstream" if any
         task, up = task_dict.to_task(dag)
+
+        # TODO: handle task group case
 
         if extract_prod:
             logger.debug('Extracted product for task "%s": %s', task.name,
                          task.product)
 
         upstream[task] = up
+
+        # delete, unused
         source_obj[task] = source
 
     # second optional pass: extract upstream
     tasks = list(dag.values())
+    task_names = list(dag._iter())
 
+    # if extracting upstream from sources
     if extract_up:
         for task in tasks:
-            upstream[task] = task.source.extract_upstream()
+            upstream[task] = _expand_upstream(task.source.extract_upstream(),
+                                              task_names)
             logger.debug('Extracted upstream dependencies for task %s: %s',
                          task.name, upstream[task])
 
@@ -683,3 +720,21 @@ def add_base_path_to_source_if_relative(task, base_path):
     # be a dotted path
     if relative_source and path.suffix in set(suffix2taskclass):
         task['source'] = str(Path(base_path, task['source']).resolve())
+
+
+def _expand_upstream(upstream, task_names):
+    if not upstream:
+        return None
+
+    expanded = []
+
+    for up in upstream:
+        if '*' in up:
+            matches = fnmatch.filter(task_names, up)
+            expanded.extend(matches)
+        else:
+            expanded.append(up)
+
+    # sort them to return name-0, name-1, name-2, ...
+    # this makes things cleaner when injecting to jupyter notebook
+    return sorted(expanded)

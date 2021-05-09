@@ -5,6 +5,7 @@ unusable, get rid of the logic that updates it automatically, however,
 we ar eusing here the _update status here to propagate dowstream updates.
 So think about which parts can go away and which ones should not
 """
+import os
 import logging
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
@@ -43,8 +44,23 @@ class TaskBuildWrapper:
                            obj=e)
 
 
+def _log(msg, logger, print_progress):
+    logger(msg)
+
+    if print_progress:
+        print(msg)
+
+
 class Parallel(Executor):
     """Runs a DAG in parallel using multiprocessing
+
+    Parameters
+    ----------
+    processes : int, default=None
+        The number of processes to use. If None, uses ``os.cpu_count``
+
+    print_progress : bool, default=False
+        Whether to print progress to stdout, otherwise just log it
 
     Notes
     -----
@@ -55,8 +71,9 @@ class Parallel(Executor):
     # NOTE: Tasks should not create child processes
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.daemon
 
-    def __init__(self, processes=4):
-        self.processes = processes
+    def __init__(self, processes=None, print_progress=False):
+        self.processes = processes or os.cpu_count()
+        self.print_progress = print_progress
 
         self._logger = logging.getLogger(__name__)
         self._i = 0
@@ -136,10 +153,15 @@ class Parallel(Executor):
             set_done = set([t.name for t in done])
 
             if not self._i % 50000:
-                self._logger.debug('Finished tasks so far: %s', set_done)
-                self._logger.debug('Remaining tasks: %s', set_all - set_done)
-                self._logger.info('Finished %i out of %i tasks', len(set_done),
-                                  len(set_all))
+                _log(f'Finished tasks so far: {set_done or ""}',
+                     self._logger.debug,
+                     print_progress=self.print_progress)
+                _log(f'Remaining tasks: {set_all - set_done}',
+                     self._logger.debug,
+                     print_progress=self.print_progress)
+                _log(f'Finished {len(set_done)} out of {len(set_all)} tasks',
+                     self._logger.info,
+                     print_progress=self.print_progress)
 
             if set_done == set_all:
                 self._logger.debug('All tasks done')

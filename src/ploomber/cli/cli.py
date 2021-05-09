@@ -1,6 +1,5 @@
 import os
 import sys
-from pathlib import Path
 
 import click
 from ploomber import __version__
@@ -21,8 +20,11 @@ def cli():
 def scaffold():
     """Create new projects and add template tasks
     """
-    if Path('pipeline.yaml').exists():
-        _scaffold.add()
+    loaded = _scaffold.load_dag()
+
+    if loaded:
+        spec, path_to_spec = loaded
+        _scaffold.add(spec, path_to_spec)
     else:
         scaffold_project.cli(project_path=None)
 

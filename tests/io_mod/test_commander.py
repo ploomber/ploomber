@@ -1,6 +1,10 @@
 from pathlib import Path
 
-from ploomber.io._commander import Commander
+from ploomber.io._commander import Commander, to_pascal_case
+
+
+def test_to_pascal_case():
+    assert to_pascal_case('ml_online') == 'MlOnline'
 
 
 def test_empty_workspace():

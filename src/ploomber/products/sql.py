@@ -8,6 +8,7 @@ import json
 from jinja2 import Template
 
 from ploomber.products import Product
+from ploomber.products.mixins import SQLProductMixin
 from ploomber.products.serializers import Base64Serializer
 from ploomber.placeholders.Placeholder import SQLRelationPlaceholder
 
@@ -150,7 +151,7 @@ class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
         cur.close()
 
 
-class SQLiteRelation(SQLiteBackedProductMixin, Product):
+class SQLiteRelation(SQLProductMixin, SQLiteBackedProductMixin, Product):
     """A SQLite relation
 
     Parameters
@@ -225,7 +226,7 @@ class SQLiteRelation(SQLiteBackedProductMixin, Product):
 
 # FIXME: self._identifier should not be accessed direclty since it might
 # be a placeholder
-class PostgresRelation(ProductWithClientMixin, Product):
+class PostgresRelation(SQLProductMixin, ProductWithClientMixin, Product):
     """A PostgreSQL relation
 
     Parameters

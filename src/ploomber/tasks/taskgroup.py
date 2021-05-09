@@ -29,9 +29,13 @@ A few notes from a first implemenation attempt:
         task that looks like one from the outside. It might be better to
         have separate implementations, instead of a single TaskGroup
 """
-from copy import deepcopy
+from collections.abc import Mapping
+from pathlib import Path
+from copy import deepcopy, copy
 
-from ploomber.util import isiterable
+from ploomber.products import File
+from ploomber.util import isiterable, ParamGrid
+from ploomber.products.mixins import SQLProductMixin
 
 
 class TaskGroup:
@@ -79,6 +83,8 @@ class TaskGroup:
     @classmethod
     def from_params(cls,
                     task_class,
+                    product_class,
+                    product_primitive,
                     task_kwargs,
                     dag,
                     name,
@@ -122,15 +128,18 @@ class TaskGroup:
         if 'params' in task_kwargs:
             raise KeyError('params should not be part of task_kwargs')
 
-        if 'product' not in task_kwargs:
-            raise KeyError('product should be in task_kwargs')
+        if 'product' in task_kwargs:
+            raise KeyError('product should not be part of task_kwargs')
+
+        if 'source' not in task_kwargs:
+            raise KeyError('source should be in task_kwargs')
 
         # TODO: validate {{index}} appears in product - maybe all products
         # should have a way to extract which placeholders exist?
 
         tasks_all = []
 
-        for i, params in enumerate(params_array):
+        for index, params in enumerate(params_array):
 
             # each task should get a different deep copy, primarily cause they
             # should have a different product
@@ -140,14 +149,82 @@ class TaskGroup:
             # have side-effects
             params = deepcopy(params)
 
+            # assign task name
             if namer:
                 task_name = namer(params)
-                params['name'] = task_name
             else:
-                task_name = name + str(i)
-                params['name'] = i
+                task_name = name + str(index)
 
-            t = task_class(**kwargs, dag=dag, name=task_name, params=params)
+            # add index to product primitive
+            if product_class is File or issubclass(product_class,
+                                                   SQLProductMixin):
+                product = _init_product(product_class, product_primitive,
+                                        index)
+            else:
+                raise NotImplementedError('TaskGroup only sypported for '
+                                          'File and SQL products. '
+                                          f'{product_class} is not supported')
+
+            t = task_class(product=product,
+                           dag=dag,
+                           name=task_name,
+                           params=params,
+                           **kwargs)
             tasks_all.append(t)
 
         return cls(tasks_all)
+
+    @classmethod
+    def from_grid(cls,
+                  task_class,
+                  product_class,
+                  product_primitive,
+                  task_kwargs,
+                  dag,
+                  name,
+                  grid,
+                  namer=None):
+        params_array = ParamGrid(grid).product()
+        return cls.from_params(task_class=task_class,
+                               product_class=product_class,
+                               product_primitive=product_primitive,
+                               task_kwargs=task_kwargs,
+                               dag=dag,
+                               name=name,
+                               params_array=params_array,
+                               namer=namer)
+
+
+def _init_product(product_class, product_primitive, index):
+    if isinstance(product_primitive, Mapping):
+        return {
+            key: _init_product(product_class, primitive, index)
+            for key, primitive in product_primitive.items()
+        }
+    elif isinstance(product_primitive, str):
+        return _init_product_with_str(product_class, product_primitive, index)
+    # is there a better way to check this? Sequence also matches str/bytes
+    elif isinstance(product_primitive, (list, tuple)):
+        return _init_product_with_sql_elements(product_class,
+                                               product_primitive, index)
+    else:
+        raise NotImplementedError('TaskGroup only supported for task dict '
+                                  'and str product primitives. Got '
+                                  f'{product_primitive}, an object of type '
+                                  f'{type(product_primitive).__name__}')
+
+
+def _init_product_with_str(product_class, product_primitive, index):
+    path = Path(product_primitive)
+    suffix = ''.join(path.suffixes)
+    filename = path.name.replace(suffix, '')
+    filename_with_index = f'{filename}-{index}{suffix}'
+    return product_class(path.parent / filename_with_index)
+
+
+def _init_product_with_sql_elements(product_class, product_primitive, index):
+    # this could be [schema, name, type] or just [name, type]
+    index_to_change = 1 if len(product_primitive) == 3 else 0
+    updated = copy(product_primitive)
+    updated[index_to_change] = product_primitive[index_to_change] + f'_{index}'
+    return product_class(updated)

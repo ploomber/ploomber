@@ -1,4 +1,5 @@
-from itertools import product
+from collections.abc import Mapping
+from itertools import product, chain
 
 
 class Interval:
@@ -12,7 +13,6 @@ class Interval:
     ...          date(year=2019, month=6, day=1),
     ...          relativedelta(years=1)).expand()
     """
-
     def __init__(self, lower, upper, delta):
         if lower >= upper:
             raise ValueError('lower must be strictly lower than upper')
@@ -39,13 +39,21 @@ class Interval:
         return tuples
 
     def __repr__(self):
-        return ('Interval from {} to {} with delta {}'
-                .format(self.lower, self.upper, self.delta))
+        return ('Interval from {} to {} with delta {}'.format(
+            self.lower, self.upper, self.delta))
 
 
 class ParamGrid:
     """Generate parameter grids
 
+    Parameters
+    ----------
+    grid : list or dict
+        Grid to generate. Can generate multiple grids at once by passing
+        a list of grids
+
+    Examples
+    --------
     >>> pg = ParamGrid({'a': [1, 2, 3], 'b': [2, 4, 6]})
     >>> list(pg.zip())
     >>> list(pg.product())
@@ -54,37 +62,45 @@ class ParamGrid:
     >>> list(pg.zip())
 
     """
-
     def __init__(self, grid):
-        expanded = {}
+        if isinstance(grid, Mapping):
+            grid = [grid]
 
-        for k, v in grid.items():
-            if isinstance(v, Interval):
-                expanded[k] = v.expand()
-            else:
-                expanded[k] = v
-
-        self.expanded = expanded
+        self.expanded = [expand_intervals_in_dict(d) for d in grid]
 
     def zip(self):
-        lengths = set(len(v) for v in self.expanded.values())
+        for d in chain(self.expanded):
+            lengths = set(len(v) for v in d.values())
 
-        if len(lengths) != 1:
-            raise ValueError('All parameters should have the same length')
+            if len(lengths) != 1:
+                raise ValueError('All parameters should have the same length')
 
-        length = list(lengths)[0]
+            length = list(lengths)[0]
 
-        for i in range(length):
-            yield {k: v[i] for k, v in self.expanded.items()}
+            for i in range(length):
+                yield {k: v[i] for k, v in d.items()}
 
     def product(self):
-        keys = self.expanded.keys()
-        values = self.expanded.values()
+        for d in chain(self.expanded):
+            keys = d.keys()
+            values = d.values()
 
-        for elements in product(*values):
-            d = {}
+            for elements in product(*values):
+                d = {}
 
-            for k, v in zip(keys, elements):
-                d[k] = v
+                for k, v in zip(keys, elements):
+                    d[k] = v
 
-            yield d
+                yield d
+
+
+def expand_intervals_in_dict(d):
+    expanded = {}
+
+    for k, v in d.items():
+        if isinstance(v, Interval):
+            expanded[k] = v.expand()
+        else:
+            expanded[k] = v
+
+    return expanded
