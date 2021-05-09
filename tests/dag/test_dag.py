@@ -986,3 +986,17 @@ def test_clients_are_closed_after_build(tmp_directory):
     dag.build()
 
     assert all(client.close.called for client in clients)
+
+
+def test_task_grouping():
+    dag = DAG()
+    t1 = PythonCallable(touch_root, File('1.txt'), dag, name='first')
+    t2 = PythonCallable(touch_root, File('2.txt'), dag, name='second')
+    t3 = PythonCallable(touch, File('3.txt'), dag, name='third')
+    t3.set_upstream(t1)
+    t3.set_upstream(t2)
+    dag.render()
+
+    assert set(t3.upstream) == {'first', 'second'}
+    assert set(t3.params['upstream']) == {'group'}
+    assert set(t3.params['upstream']['group']) == {'first', 'second'}

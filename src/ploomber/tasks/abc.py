@@ -871,6 +871,7 @@ class Task(abc.ABC):
         # add upstream product identifiers to params, if any
         # Params are read-only for users, but we have to add upstream
         # dependencies so we do it directly to the dictionary
+        # TODO: process wilcards such as fit-*
         if self.upstream:
             self.params._setitem(
                 'upstream',

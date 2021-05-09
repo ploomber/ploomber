@@ -198,11 +198,23 @@ creates a complete layout with packaging, version management, and testing.
 
     ploomber scaffold
 
+Note that if you run this command in a folder that already has a
+``pipeline.yaml`` in a :ref:`api-cli-default-locations`, it will parse your
+pipeline declaration looking for declared tasks whose source code file does
+not exist and proceed to create them.
 
-If you run this command in a folder that already has a ``pipeline.yaml`` in a
-:ref:`api-cli-default-locations`, it will parse your pipeline declaration
-looking for declared tasks whose source code file does not exist and proceed to
-create them.
+After creating a project, you can configure the development environment with:
+
+.. code-block:: console
+
+    ploomber install
+
+The command above configures a virtual environment using ``conda``, if
+installed; otherwise, it uses
+`venv <https://docs.python.org/3/library/venv.html>`_ and ``pip``. Note that
+``ploomber install`` only works with projects created using
+``ploomber scaffold``.
+
 
 Interactive sessions
 ********************

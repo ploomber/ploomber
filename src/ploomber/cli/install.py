@@ -26,7 +26,9 @@ def main_pip():
     cmdr.run('python', '-m', 'venv', venv_dir, description='Creating venv')
     cmdr.append_inline(venv_dir, '.gitignore')
 
-    pip = str(Path(venv_dir, 'bin', 'pip'))
+    folder = 'Scripts' if os.name == 'nt' else 'bin'
+    bin_name = 'pip.EXE' if os.name == 'nt' else 'pip'
+    pip = str(Path(venv_dir, folder, bin_name))
 
     _pip_install_and_lock(cmdr, pip)
     _pip_install_and_lock_dev(cmdr, pip)

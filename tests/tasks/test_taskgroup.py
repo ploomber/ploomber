@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from ploomber import DAG
@@ -32,8 +34,8 @@ def test_from_params():
 
     assert dag['task_group0'].source.primitive is touch
     assert dag['task_group1'].source.primitive is touch
-    assert str(dag['task_group0'].product) == 'dir/file-0.txt'
-    assert str(dag['task_group1'].product) == 'dir/file-1.txt'
+    assert str(dag['task_group0'].product) == str(Path('dir', 'file-0.txt'))
+    assert str(dag['task_group1'].product) == str(Path('dir', 'file-1.txt'))
 
 
 def test_from_grid():
@@ -89,9 +91,9 @@ def test_sql_product():
                           }])
 
     id_ = dag['task_group0'].product
-    assert (id_.schema, id_.name, id_.kind) == ('schema', 'one_0', 'table')
+    assert (id_.schema, id_.name, id_.kind) == ('schema', 'one-0', 'table')
     id_ = dag['task_group1'].product
-    assert (id_.schema, id_.name, id_.kind) == ('schema', 'one_1', 'table')
+    assert (id_.schema, id_.name, id_.kind) == ('schema', 'one-1', 'table')
 
 
 def test_sql_meta_product():
@@ -110,13 +112,13 @@ def test_sql_meta_product():
                           }])
 
     id_ = dag['task_group0'].product['one']
-    assert (id_.schema, id_.name, id_.kind) == ('schema', 'one_0', 'table')
+    assert (id_.schema, id_.name, id_.kind) == ('schema', 'one-0', 'table')
     id_ = dag['task_group0'].product['another']
-    assert (id_.schema, id_.name, id_.kind) == (None, 'another_0', 'view')
+    assert (id_.schema, id_.name, id_.kind) == (None, 'another-0', 'view')
     id_ = dag['task_group1'].product['one']
-    assert (id_.schema, id_.name, id_.kind) == ('schema', 'one_1', 'table')
+    assert (id_.schema, id_.name, id_.kind) == ('schema', 'one-1', 'table')
     id_ = dag['task_group1'].product['another']
-    assert (id_.schema, id_.name, id_.kind) == (None, 'another_1', 'view')
+    assert (id_.schema, id_.name, id_.kind) == (None, 'another-1', 'view')
 
 
 @pytest.mark.parametrize('key', ['dag', 'name', 'params'])

@@ -226,5 +226,5 @@ def _init_product_with_sql_elements(product_class, product_primitive, index):
     # this could be [schema, name, type] or just [name, type]
     index_to_change = 1 if len(product_primitive) == 3 else 0
     updated = copy(product_primitive)
-    updated[index_to_change] = product_primitive[index_to_change] + f'_{index}'
+    updated[index_to_change] = product_primitive[index_to_change] + f'-{index}'
     return product_class(updated)
