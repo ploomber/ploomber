@@ -1,6 +1,9 @@
 from copy import copy
 import warnings
 from collections import defaultdict, abc
+from collections.abc import Mapping
+
+from ploomber.products import MetaProduct
 from ploomber.exceptions import UpstreamKeyError
 
 
@@ -65,9 +68,11 @@ class Upstream(abc.Mapping):
     def to_json_serializable(self):
         """
         Converts the object to a dictionary, calls .to_json_serializable
-        on all values
+        on all products. In case of grouped products (e.g., when using
+        group_name in task.set_upstream), it calls .to_json_serializable
+        on each element of the group
         """
-        return {k: v.to_json_serializable() for k, v in self._dict.items()}
+        return {k: _to_json_serializable(v) for k, v in self._dict.items()}
 
     def __getitem__(self, key):
         if self._in_context:
@@ -115,3 +120,12 @@ class Upstream(abc.Mapping):
         if unused:
             warnings.warn('The following upstream dependencies in task "{}" '
                           'were not used {}'.format(self._name, unused))
+
+
+def _to_json_serializable(value):
+    # when value is a mapping but not a metaproduct, we are dealing with
+    # a task group and need to process elements individually
+    if isinstance(value, Mapping) and not isinstance(value, MetaProduct):
+        return {k: v.to_json_serializable() for k, v in value.items()}
+    else:
+        return value.to_json_serializable()

@@ -422,10 +422,8 @@ def json_serializable_params(params):
     params['product'] = params['product'].to_json_serializable()
 
     if params.get('upstream'):
-        params['upstream'] = {
-            k: n.to_json_serializable()
-            for k, n in params['upstream'].items()
-        }
+        params['upstream'] = params['upstream'].to_json_serializable()
+
     return params
 
 

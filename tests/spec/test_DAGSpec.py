@@ -1173,3 +1173,128 @@ def test_doesnt_warn_if_param_declared_in_env_is_used_in_spec():
             env=dict(a=1))
 
     assert not record
+
+
+_spec_upstream_extract = {
+    'tasks': [{
+        'source': 'upstream.py',
+        'name': 'upstream-',
+        'product': 'upstream.ipynb',
+        'grid': {
+            'param': [1, 2]
+        }
+    }, {
+        'source': 'downstream.py',
+        'product': 'downstream.ipynb'
+    }]
+}
+
+_spec_upstream_manual = {
+    'meta': {
+        'extract_upstream': False
+    },
+    'tasks': [{
+        'source': 'upstream.py',
+        'name': 'upstream-',
+        'product': 'upstream.ipynb',
+        'grid': {
+            'param': [1, 2]
+        }
+    }, {
+        'source': 'downstream.py',
+        'product': 'downstream.ipynb',
+        'upstream': ['upstream-*'],
+    }]
+}
+
+
+@pytest.mark.parametrize('spec',
+                         [_spec_upstream_extract, _spec_upstream_manual])
+def test_grid_and_upstream_wildcard_scripts(spec, tmp_path):
+    Path('upstream.py').write_text("""
+# + tags=['parameters']
+upstream = None
+""")
+
+    Path('downstream.py').write_text("""
+# + tags=['parameters']
+upstream = ['upstream-*']
+""")
+
+    spec = DAGSpec(spec)
+
+    dag = spec.to_dag().render()
+
+    assert set(dag) == {'upstream-1', 'upstream-0', 'downstream'}
+
+    assert set(dag['downstream'].params['upstream']['upstream-*']) == {
+        'upstream-1', 'upstream-0'
+    }
+
+
+_spec_callables = {
+    'tasks': [{
+        'source': 'sample_source_callables.upstream',
+        'name': 'upstream-',
+        'product': 'upstream.txt',
+        'grid': {
+            'param': [1, 2]
+        }
+    }, {
+        'source': 'sample_source_callables.downstream',
+        'product': 'downstream.txt'
+    }]
+}
+
+_spec_callables_unserializer = {
+    'unserializer':
+    'sample_source_callables.unserializer',
+    'tasks': [{
+        'source': 'sample_source_callables.upstream',
+        'name': 'upstream-',
+        'product': 'upstream.txt',
+        'grid': {
+            'param': [1, 2]
+        }
+    }, {
+        'source': 'sample_source_callables.downstream',
+        'product': 'downstream.txt'
+    }]
+}
+
+
+@pytest.mark.parametrize('spec_raw',
+                         [_spec_callables, _spec_callables_unserializer],
+                         ids=['simple', 'with-unserializer'])
+def test_grid_and_upstream_wildcard_callables(spec_raw, tmp_directory,
+                                              add_current_to_sys_path,
+                                              no_sys_modules_cache):
+    Path('sample_source_callables.py').write_text("""
+from pathlib import Path
+
+def unserializer(product):
+    return Path(product).read_text()
+
+def upstream(product, param):
+    Path(product).touch()
+
+def downstream(product, upstream):
+    up = upstream['upstream-*']
+    one = up['upstream-0']
+    another = up['upstream-1']
+    Path(product).touch()
+""")
+
+    spec = DAGSpec(spec_raw)
+
+    dag = spec.to_dag().render()
+    # to build faster
+    dag.executor = Serial(build_in_subprocess=False)
+
+    # make sure unserializing works correctly
+    dag.build()
+
+    assert set(dag) == {'upstream-1', 'upstream-0', 'downstream'}
+    assert set(dag['downstream'].params['upstream']['upstream-*']) == {
+        'upstream-1', 'upstream-0'
+    }

@@ -106,6 +106,7 @@ from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.env.EnvDict import EnvDict
 from ploomber.env.expand import expand_raw_dictionary, expand_raw_dictionaries
 from ploomber.tasks import NotebookRunner
+from ploomber.tasks.taskgroup import TaskGroup
 from ploomber.validators.string import (validate_product_class_name,
                                         validate_task_class_name)
 from ploomber.executors import Parallel
@@ -648,8 +649,8 @@ def process_tasks(dag, dag_spec, root_path=None):
     extract_up = dag_spec['meta']['extract_upstream']
     extract_prod = dag_spec['meta']['extract_product']
 
-    upstream = {}
-    source_obj = {}
+    # raw values extracted from the upstream key
+    upstream_raw = {}
 
     # first pass: init tasks and them to dag
     for task_dict in dag_spec['tasks']:
@@ -664,33 +665,36 @@ def process_tasks(dag, dag_spec, root_path=None):
         # convert to task, up has the content of "upstream" if any
         task, up = task_dict.to_task(dag)
 
-        # TODO: handle task group case
-
-        if extract_prod:
-            logger.debug('Extracted product for task "%s": %s', task.name,
-                         task.product)
-
-        upstream[task] = up
-
-        # delete, unused
-        source_obj[task] = source
+        if isinstance(task, TaskGroup):
+            for t in task:
+                upstream_raw[t] = up
+        else:
+            if extract_prod:
+                logger.debug('Extracted product for task "%s": %s', task.name,
+                             task.product)
+            upstream_raw[task] = up
 
     # second optional pass: extract upstream
     tasks = list(dag.values())
     task_names = list(dag._iter())
+    # actual upstream values after matching wildcards
+    upstream = {}
 
-    # if extracting upstream from sources
-    if extract_up:
-        for task in tasks:
+    # expand upstream dependencies (in case there are any wildcards)
+    for task in tasks:
+        if extract_up:
             upstream[task] = _expand_upstream(task.source.extract_upstream(),
                                               task_names)
-            logger.debug('Extracted upstream dependencies for task %s: %s',
-                         task.name, upstream[task])
+        else:
+            upstream[task] = _expand_upstream(upstream_raw[task], task_names)
+
+        logger.debug('Extracted upstream dependencies for task %s: %s',
+                     task.name, upstream[task])
 
     # Last pass: set upstream dependencies
     for task in tasks:
         if upstream[task]:
-            for task_name in upstream[task]:
+            for task_name, group_name in upstream[task].items():
                 try:
                     up = dag[task_name]
                 except KeyError:
@@ -700,7 +704,7 @@ def process_tasks(dag, dag_spec, root_path=None):
                                    f'{task_name!r}, but a task with such name '
                                    f'doesn\'t exist. Loaded tasks: {names}')
 
-                task.set_upstream(up)
+                task.set_upstream(up, group_name=group_name)
 
 
 def normalize_task(task):
@@ -723,18 +727,23 @@ def add_base_path_to_source_if_relative(task, base_path):
 
 
 def _expand_upstream(upstream, task_names):
+    """
+    Processes a list of upstream values extracted from source (or declared in
+    the spec's "upstream" key). Expands wildcards like "some-task-*" to all
+    the values that match. Returns a dictionary where keys are the upstream
+    dependencies and the corresponding value is the wildcard. If no wildcard,
+    the value is None
+    """
     if not upstream:
         return None
 
-    expanded = []
+    expanded = {}
 
     for up in upstream:
         if '*' in up:
             matches = fnmatch.filter(task_names, up)
-            expanded.extend(matches)
+            expanded.update({match: up for match in matches})
         else:
-            expanded.append(up)
+            expanded[up] = None
 
-    # sort them to return name-0, name-1, name-2, ...
-    # this makes things cleaner when injecting to jupyter notebook
-    return sorted(expanded)
+    return expanded

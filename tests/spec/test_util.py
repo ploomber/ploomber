@@ -10,9 +10,18 @@ def task_names():
 
 @pytest.mark.parametrize('upstream, expected', [
     [None, None],
-    [{'one'}, ['one']],
-    [['prefix-*'], ['prefix-1', 'prefix-2']],
-    [['prefix-*', 'one'], ['one', 'prefix-1', 'prefix-2']],
+    [{'one'}, {
+        'one': None
+    }],
+    [['prefix-*'], {
+        'prefix-1': 'prefix-*',
+        'prefix-2': 'prefix-*'
+    }],
+    [['prefix-*', 'one'], {
+        'one': None,
+        'prefix-1': 'prefix-*',
+        'prefix-2': 'prefix-*'
+    }],
 ])
 def test_expand_upstream(upstream, task_names, expected):
     assert _expand_upstream(upstream, task_names) == expected

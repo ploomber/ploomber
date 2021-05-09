@@ -9,6 +9,7 @@ import subprocess
 import pdb
 import functools
 from pathlib import Path
+from collections.abc import Mapping
 
 from IPython.terminal.debugger import TerminalPdb, Pdb
 
@@ -24,11 +25,22 @@ from ploomber.io.loaders import _file_load
 from ploomber.products import MetaProduct, File
 
 
+def _unserializer(product, unserializer):
+    # this happens when we have a task group
+    if isinstance(product, Mapping):
+        return {k: unserializer(p) for k, p in product.items()}
+    else:
+        return unserializer(product)
+
+
 def _unserialize_params(params_original, unserializer):
+    """
+    User the user-provided function to unserialize params['upstream']
+    """
     params = params_original.to_dict()
 
     params['upstream'] = {
-        k: unserializer(product=v)
+        k: _unserializer(v, unserializer)
         for k, v in params['upstream'].items()
     }
 

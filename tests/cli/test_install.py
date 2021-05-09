@@ -14,13 +14,14 @@ from setuptools import setup, find_packages
 
 setup(
     name='sample_package',
-    version='1.0'
+    version='1.0',
+    extras_require={'dev': []}
 )
 """
 
 
 # FIXME: i tested this locally on a windows machine and it works but for some
-# reason, the machine running on github actions is unable to locale "conda"
+# reason, the machine running on github actions is unable to locate "conda"
 # hence this fails. it's weird because I'm calling conda without issues
 # to install dependencies during setup
 @pytest.mark.xfail(sys.platform == 'win32',
@@ -40,10 +41,22 @@ def test_install_conda(tmp_directory):
     assert result.exit_code == 0
 
 
+# FIXME: I tested this locally on a windows machine but breaks on Github
+# Actions.
+# Problem happens when running pip:
+# AssertionError: Egg-link c:\users\runner~1\appdata\local\temp\tmp30cvb5ki
+# does not match installed location of sample-package-pip
+# (at c:\users\runneradmin\appdata\local\temp\tmp30cvb5ki)
+# I think it's because of some weird configuration on github actions
+# creates symlinks
+@pytest.mark.xfail(sys.platform == 'win32',
+                   reason='Test not working on Github Actions on Windows')
 def test_install_pip(tmp_directory, monkeypatch):
 
     mock = Mock(return_value=False)
+    # simulate conda is not installed
     monkeypatch.setattr(install_module.shutil, 'which', mock)
+
     Path('setup.py').write_text(setup_py)
     name = f'venv-{Path(tmp_directory).name}'
 
