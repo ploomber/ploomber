@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ploomber.io._commander import Commander, to_pascal_case
+from ploomber.io._commander import Commander, CommanderStop, to_pascal_case
 
 
 def test_to_pascal_case():
@@ -16,3 +16,13 @@ def test_creates_workpace(tmp_directory):
         pass
 
     assert Path('workspace').is_dir()
+
+
+def test_commander_stop(capsys):
+    msg = 'Stopping because of reasons'
+
+    with Commander():
+        raise CommanderStop(msg)
+
+    captured = capsys.readouterr()
+    assert msg in captured.out

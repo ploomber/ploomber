@@ -23,6 +23,14 @@ def _delete(dst):
         shutil.rmtree(dst)
 
 
+class CommanderStop(Exception):
+    """
+    An exception that stops the execution of a commander without raising
+    an exception
+    """
+    pass
+
+
 class Commander:
     """A helper to write scripts
     """
@@ -30,6 +38,8 @@ class Commander:
         self.tw = TerminalWriter()
         self.workspace = None if not workspace else Path(workspace).resolve()
         self._to_delete = []
+
+        self._wd = Path('.').resolve()
 
         if templates_path:
             self._env = Environment(loader=PackageLoader(*templates_path),
@@ -90,8 +100,17 @@ class Commander:
 
         return self
 
-    def __exit__(self, *exc):
+    def __exit__(self, exc_type, exc_value, traceback):
+        # move to the original working directory
+        os.chdir(self._wd)
+
         self.rm(*self._to_delete)
+        supress = isinstance(exc_value, CommanderStop)
+
+        if supress:
+            self.info(str(exc_value))
+
+        return supress
 
     def rm(self, *args):
         for f in args:
