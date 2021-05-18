@@ -23,8 +23,6 @@ dependencies:
 
     # for converting notebooks
     - nbsphinx
-    # nbsphinx not compatible with jinja2 >=3 yet
-    - Jinja2<3
 
     # for plotting
     - pygraphviz
@@ -35,3 +33,6 @@ dependencies:
 
     # has a function to orchestrate execution of notebook examples
     - git+https://github.com/ploomber/projects.git#subdirectory=pkg
+
+    # install ploomber
+    - -e ..

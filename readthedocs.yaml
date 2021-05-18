@@ -15,9 +15,12 @@ conda:
 
 
 # install package with pip[all] from this directory
-python:
-  install:
-    - method: pip
-      path: .
-      extra_requirements:
-        - all
+# no longer installing here since read the docs uses --upgrade-strategy eager
+# which breaks the build due to nbsphinx incompatibility with jinja2>=3.0.0
+# installing in doc/environment.yml instead
+# python:
+#   install:
+#     - method: pip
+#       path: .
+#       extra_requirements:
+#         - all
