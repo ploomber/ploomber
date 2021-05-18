@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.10.4dev
+
 ## 0.10.3 (2021-05-17)
 
 - `ParamGrid` supports initialization from a list
