@@ -2,7 +2,6 @@
 
 ## 0.10.3dev
 
-- `TaskGroup` API changes
 - `ParamGrid` supports initialization from a list
 - Adds `tasks[*].grid` to generate multiple tasks at once
 - Support for using wildcards to declare dependencies (e.g., `task-*`)
@@ -10,6 +9,7 @@
 - `PythonCallable` creates parent directories before execution
 - Support for the parallel executor in Spec API
 - `DagSpec.find` exposes `lazy_import` argument
+- `TaskGroup` internal API changes
 
 ## 0.10.2 (2021-05-05)
 
