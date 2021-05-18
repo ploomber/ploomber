@@ -21,8 +21,9 @@ dependencies:
     - Pygments==2.5.2
     - mistune<2
 
-    # for converting notebooks
-    - nbsphinx
+    # for converting notebooks. pinning version bc 0.8.5 is breaking readthedocs
+    # (althought I couldnt reproduce the error locally)
+    - nbsphinx==0.8.4
 
     # for plotting
     - pygraphviz
