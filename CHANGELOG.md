@@ -2,6 +2,11 @@
 
 ## 0.10.4dev
 
+- `DAGSpec.find` exposes `starting_dir` parameter
+- `ploomber install` supports `pip`'s `requirements.txt` files
+- `ploomber install` supports non-packages (i.e., no `setup.py`)
+- `ploomber scaffold` flags to use conda (`--conda`) and create package (`--package`)
+
 ## 0.10.3 (2021-05-17)
 
 - `ParamGrid` supports initialization from a list
