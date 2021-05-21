@@ -20,6 +20,14 @@ setup(
 """
 
 
+def _write_sample_conda_env(name='environment.yml'):
+    Path(name).write_text('name: my_tmp_env\ndependencies:\n- pip')
+
+
+def _write_sample_pip_req(name='requirements.txt'):
+    Path(name).touch()
+
+
 # FIXME: i tested this locally on a windows machine and it works but for some
 # reason, the machine running on github actions is unable to locate "conda"
 # hence this fails. it's weird because I'm calling conda without issues
@@ -27,18 +35,62 @@ setup(
 @pytest.mark.xfail(sys.platform == 'win32',
                    reason='Test not working on Github Actions on Windows')
 def test_install_conda(tmp_directory):
-    Path('environment.yml').write_text(
-        'name: my_tmp_env\ndependencies:\n- pip')
+    _write_sample_conda_env()
     Path('setup.py').write_text(setup_py)
 
     runner = CliRunner()
-    result = runner.invoke(install, catch_exceptions=False)
+    runner.invoke(install, catch_exceptions=False)
 
-    assert Path('environment.lock.yml').exists()
-    assert Path('environment.dev.lock.yml').exists()
-    assert Path('requirements.lock.txt').exists()
-    assert Path('requirements.dev.lock.txt').exists()
-    assert result.exit_code == 0
+    assert set(os.listdir()) == {
+        'environment.yml',
+        'environment.lock.yml',
+        'sample_package.egg-info',
+        'setup.py',
+    }
+
+
+def test_non_package_with_conda(tmp_directory):
+    _write_sample_conda_env()
+    runner = CliRunner()
+
+    runner.invoke(install, catch_exceptions=False)
+
+    assert set(os.listdir()) == {
+        'environment.yml',
+        'environment.lock.yml',
+    }
+
+
+def test_non_package_with_conda_with_dev_deps(tmp_directory):
+    _write_sample_conda_env()
+    _write_sample_conda_env('environment.dev.yml')
+    runner = CliRunner()
+
+    runner.invoke(install, catch_exceptions=False)
+
+    assert set(os.listdir()) == {
+        'environment.yml',
+        'environment.lock.yml',
+        'environment.dev.yml',
+        'environment.dev.lock.yml',
+    }
+
+
+def test_conda_error_missing_env_and_reqs(tmp_directory):
+    runner = CliRunner()
+
+    result = runner.invoke(install, catch_exceptions=False)
+    assert 'Expected a' in result.stdout
+
+
+def test_error_if_env_yml_but_conda_not_installed(monkeypatch):
+    _write_sample_conda_env()
+    runner = CliRunner()
+    mock = Mock(return_value=False)
+    monkeypatch.setattr(install_module.shutil, 'which', mock)
+
+    result = runner.invoke(install, catch_exceptions=False)
+    assert 'Found environment.yml file' in result.stdout
 
 
 # FIXME: I tested this locally on a windows machine but breaks on Github
@@ -51,11 +103,8 @@ def test_install_conda(tmp_directory):
 # creates symlinks
 @pytest.mark.xfail(sys.platform == 'win32',
                    reason='Test not working on Github Actions on Windows')
-def test_install_pip(tmp_directory, monkeypatch):
-
-    mock = Mock(return_value=False)
-    # simulate conda is not installed
-    monkeypatch.setattr(install_module.shutil, 'which', mock)
+def test_install_pip(tmp_directory):
+    _write_sample_pip_req()
 
     Path('setup.py').write_text(setup_py)
     name = f'venv-{Path(tmp_directory).name}'
@@ -73,5 +122,38 @@ def test_install_pip(tmp_directory, monkeypatch):
     assert Path('.gitignore').read_text() == f'\n{name}\n'
     assert expected_command in result.stdout
     assert Path('requirements.lock.txt').exists()
+    assert result.exit_code == 0
+
+
+def test_non_package_with_pip(tmp_directory):
+    _write_sample_pip_req()
+
+    Path('setup.py').write_text(setup_py)
+    name = f'venv-{Path(tmp_directory).name}'
+
+    runner = CliRunner()
+    result = runner.invoke(install, catch_exceptions=False)
+
+    assert Path('.gitignore').read_text() == f'\n{name}\n'
+    assert Path('requirements.lock.txt').exists()
+    assert result.exit_code == 0
+
+
+def test_non_package_with_pip_with_dev_deps(tmp_directory):
+    _write_sample_pip_req()
+    _write_sample_pip_req('requirements.dev.txt')
+
+    Path('setup.py').write_text(setup_py)
+    name = f'venv-{Path(tmp_directory).name}'
+
+    runner = CliRunner()
+    result = runner.invoke(install, catch_exceptions=False)
+
+    assert Path('.gitignore').read_text() == f'\n{name}\n'
+    assert Path('requirements.lock.txt').exists()
     assert Path('requirements.dev.lock.txt').exists()
+    assert '# Editable install' not in Path(
+        'requirements.lock.txt').read_text()
+    assert '# Editable install' not in Path(
+        'requirements.dev.lock.txt').read_text()
     assert result.exit_code == 0
