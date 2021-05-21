@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import Mock, _Call
+from unittest.mock import Mock
 
 import pytest
 import yaml
@@ -9,7 +9,13 @@ from ploomber.cli.cli import scaffold
 from ploomber.cli import cli
 
 
-def test_ploomber_scaffold(tmp_directory, monkeypatch):
+@pytest.mark.parametrize('args, conda, package', [
+    [[], False, False],
+    [['--conda'], True, False],
+    [['--package'], False, True],
+    [['--conda', '--package'], True, True],
+])
+def test_ploomber_scaffold(tmp_directory, monkeypatch, args, conda, package):
     """
     Testing scaffold for creating a new project
     """
@@ -17,10 +23,12 @@ def test_ploomber_scaffold(tmp_directory, monkeypatch):
     monkeypatch.setattr(cli.scaffold_project, 'cli', mock)
 
     runner = CliRunner()
-    result = runner.invoke(scaffold)
+    result = runner.invoke(scaffold, args=args)
 
     assert not result.exit_code
-    assert mock.call_args == _Call(((), {'project_path': None}))
+    mock.assert_called_once_with(project_path=None,
+                                 conda=conda,
+                                 package=package)
 
 
 @pytest.mark.parametrize(

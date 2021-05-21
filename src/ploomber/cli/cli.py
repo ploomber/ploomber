@@ -17,7 +17,17 @@ def cli():
 
 
 @cli.command()
-def scaffold():
+@click.option(
+    '--conda',
+    is_flag=True,
+    help='Use conda (environemnt.yml)',
+)
+@click.option(
+    '--package',
+    is_flag=True,
+    help='Use package template (setup.py)',
+)
+def scaffold(conda, package):
     """Create new projects and add template tasks
     """
     loaded = _scaffold.load_dag()
@@ -26,7 +36,7 @@ def scaffold():
         spec, path_to_spec = loaded
         _scaffold.add(spec, path_to_spec)
     else:
-        scaffold_project.cli(project_path=None)
+        scaffold_project.cli(project_path=None, conda=conda, package=package)
 
 
 @cli.command()

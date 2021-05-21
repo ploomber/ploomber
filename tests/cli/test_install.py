@@ -31,7 +31,7 @@ def _write_sample_pip_req(name='requirements.txt'):
 # FIXME: i tested this locally on a windows machine and it works but for some
 # reason, the machine running on github actions is unable to locate "conda"
 # hence this fails. it's weird because I'm calling conda without issues
-# to install dependencies during setup
+# to install dependencies during setup. Same with the next two tests
 @pytest.mark.xfail(sys.platform == 'win32',
                    reason='Test not working on Github Actions on Windows')
 def test_install_conda(tmp_directory):
@@ -49,6 +49,8 @@ def test_install_conda(tmp_directory):
     }
 
 
+@pytest.mark.xfail(sys.platform == 'win32',
+                   reason='Test not working on Github Actions on Windows')
 def test_non_package_with_conda(tmp_directory):
     _write_sample_conda_env()
     runner = CliRunner()
@@ -61,6 +63,8 @@ def test_non_package_with_conda(tmp_directory):
     }
 
 
+@pytest.mark.xfail(sys.platform == 'win32',
+                   reason='Test not working on Github Actions on Windows')
 def test_non_package_with_conda_with_dev_deps(tmp_directory):
     _write_sample_conda_env()
     _write_sample_conda_env('environment.dev.yml')
