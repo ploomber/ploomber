@@ -116,6 +116,9 @@ class Commander:
         for f in args:
             _delete(f)
 
+    def rm_on_exit(self, path):
+        self._to_delete.append(Path(path).resolve())
+
     def copy_template(self, path, **render_kwargs):
         path = Path(path)
         dst = Path(self.workspace, path.name)
