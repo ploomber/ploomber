@@ -110,7 +110,6 @@ def find_file_recursively(name, max_levels_up=6, starting_dir=None):
         Absolute path to the file
     """
     current_dir = starting_dir or os.getcwd()
-    # if we don't resolve, we can't get parents of '.'
     current_dir = Path(current_dir).resolve()
     path_to_file = None
 
@@ -140,7 +139,13 @@ def find_root_recursively(starting_dir=None, raise_=False):
     raise_ : bool
         Whether to raise an error or not if no root folder is found
     """
-    options = ['environment.yml', 'requirements.txt', 'setup.py']
+    options = [
+        'environment.yml',
+        'environment.lock.yml',
+        'requirements.txt',
+        'requirements.lock.txt',
+        'setup.py',
+    ]
 
     for name in options:
         path = find_file_recursively(name,

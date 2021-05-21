@@ -9,9 +9,12 @@ from ploomber.io._commander import Commander
 
 
 def main():
+    # support for both versions when where isn't a setup.py
+
     if shutil.which('conda'):
         main_conda()
     else:
+        # NOTE: add a warning if an environment.yml exists
         main_pip()
 
 
