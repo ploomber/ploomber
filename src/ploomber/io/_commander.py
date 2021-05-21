@@ -4,6 +4,7 @@ import subprocess
 import shutil
 from pathlib import Path
 
+from click import ClickException
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
 from ploomber.io import TerminalWriter
@@ -23,6 +24,15 @@ def _delete(dst):
         shutil.rmtree(dst)
 
 
+class CommanderException(ClickException):
+    """
+    Exception raised when the workflow cannot proceed and require a fix
+    from the user. It is a subclass of ClickException, which signals the CLI
+    to hide the traceback
+    """
+    pass
+
+
 class CommanderStop(Exception):
     """
     An exception that stops the execution of a commander without raising
@@ -32,7 +42,7 @@ class CommanderStop(Exception):
 
 
 class Commander:
-    """A helper to write scripts
+    """Manage script workflows
     """
     def __init__(self, workspace=None, templates_path=None):
         self.tw = TerminalWriter()
@@ -55,7 +65,40 @@ class Commander:
             capture_output=False,
             expected_output=None,
             error_message=None,
-            hint=None):
+            hint=None,
+            show_cmd=True):
+        """Execute a command in a subprocess
+
+        Parameters
+        ----------
+        *cmd
+            Command to execute
+
+        description: str, default=None
+            Label to display before executing the command
+
+        capture_output: bool, default=False
+            Captures output, otherwise prints to standard output and standard
+            error
+
+        expected_output: str, default=None
+            Raises a RuntimeError if the output is different than this value.
+            Only valid when capture_output=True
+
+        error_message: str, default=None
+            Error to display when expected_output does not match. If None,
+            a generic message is shown
+
+        hint: str, default=None
+            An optional string to show when at the end of the error when
+            the expected_output does not match. Used to hint the user how
+            to fix the problem
+
+        show_cmd : bool, default=True
+            Whether to display the command next to the description
+            (and error message if it fails) or not. Only valid when
+            description is not None
+        """
         cmd_str = ' '.join(cmd)
 
         if expected_output is not None and not capture_output:
@@ -63,7 +106,8 @@ class Commander:
                                'expected_output is not None')
 
         if description:
-            self.tw.sep('=', f'{description}: {cmd_str}', blue=True)
+            header = f'{description}: {cmd_str}' if show_cmd else description
+            self.tw.sep('=', header, blue=True)
 
         error = None
 
@@ -74,6 +118,7 @@ class Commander:
                 result = subprocess.check_call(cmd)
             except Exception as e:
                 error = e
+        # capture outpuut
         else:
             try:
                 result = subprocess.check_output(cmd)
@@ -86,12 +131,27 @@ class Commander:
                 error = result != expected_output
 
         if error:
-            cmd_str = ' '.join(cmd)
-            hint = '' if not hint else f' Hint: {hint}.'
-            error_message = (error_message
-                             or 'An error ocurred when executing command')
-            raise RuntimeError(f'({error_message} {cmd_str!r}): {error}.'
-                               f'\n{hint}')
+            lines = []
+
+            if error_message:
+                line_first = error_message
+            else:
+                if show_cmd:
+                    cmd_str = ' '.join(cmd)
+                    line_first = ('An error occurred when executing '
+                                  f'command: {cmd_str}')
+                else:
+                    line_first = 'An error occurred.'
+
+            lines.append(line_first)
+
+            if not capture_output:
+                lines.append(f'Original error message: {error}')
+
+            if hint:
+                lines.append(f'Hint: {hint}.')
+
+            raise CommanderException('\n'.join(lines))
         else:
             return result
 
@@ -116,13 +176,41 @@ class Commander:
         return supress
 
     def rm(self, *args):
+        """Deletes all files/directories
+
+        Examples
+        --------
+        >>> cmdr.rm('file', 'directory')
+        """
         for f in args:
             _delete(f)
 
     def rm_on_exit(self, path):
+        """Removes file upon exit
+
+        Examples
+        --------
+        >>> cmdr.rm_on_exit('some_temporary_file')
+        """
         self._to_delete.append(Path(path).resolve())
 
     def copy_template(self, path, **render_kwargs):
+        """Copy template to the workspace
+
+        Parameters
+        ----------
+        path : str
+            Path to template (relative to templates path)
+
+        **render_kwargs
+            Keyword arguments passed to the template
+
+        Examples
+        --------
+        >>> # copies template in {templates-path}/directory/template.yaml
+        >>> # to {workspace}/template.yaml
+        >>> cmdr.copy_template('directory/template.yaml')
+        """
         path = Path(path)
         dst = Path(self.workspace, path.name)
 
@@ -137,20 +225,30 @@ class Commander:
             dst.write_text(content)
 
     def cd(self, dir_):
+        """Change current working directory
+        """
         os.chdir(dir_)
 
     def cp(self, src):
         """
-        Copies a file from another folder to the workspace, replacing it if
-        necessary. Used mainly for preparing Dockerfiles since they can only
-        copy from the current working directory. Files are deleted after
-        exiting the context manager
+        Copies a file or directory to the workspace, replacing it if necessary.
+        Deleted on exit.
+
+        Notes
+        -----
+        Used mainly for preparing Dockerfiles since they can only
+        copy from the current working directory
+
+        Examples
+        --------
+        >>> # copies dir/file to {workspace}/file
+        >>> cmdr.cp('dir/file')
         """
         path = Path(src)
 
         if not path.exists():
-            raise FileNotFoundError(
-                f'Missing {src} file. Add it to your root folder.')
+            raise CommanderException(
+                f'Missing {src} file. Add it and try again.')
 
         # convert to absolute to ensure we delete the right file on __exit__
         dst = Path(self.workspace, path.name).resolve()
@@ -163,22 +261,21 @@ class Commander:
         else:
             shutil.copytree(src, dst)
 
-    # ONLY used by lambda config
-    def create_if_not_exists(self, name):
-        if not Path(name).exists():
-            content = self._env.get_template(f'default/{name}').render()
-            Path(name).write_text(content)
-            self._names.append(name)
-
-    def append(self, name, dst, **kwargs):
-        if not Path(dst).exists():
-            Path(dst).touch()
-
-        content = self._env.get_template(name).render(**kwargs)
-        original = Path(dst).read_text()
-        Path(dst).write_text(original + '\n' + content + '\n')
-
     def append_inline(self, line, dst):
+        """Append line to a file
+
+        Parameters
+        ----------
+        line : str
+            Line to append
+
+        dst : str
+            File to append (can be outside the workspace)
+
+        Examples
+        --------
+        >>> cmdr.append_inline('*.csv', '.gitignore')
+        """
         if not Path(dst).exists():
             Path(dst).touch()
 
@@ -186,21 +283,33 @@ class Commander:
         Path(dst).write_text(original + '\n' + line + '\n')
 
     def print(self, line):
+        """Print message (no color)
+        """
         self.tw.write(f'{line}\n')
 
     def success(self, line=None):
+        """Print success message (green)
+        """
         self.tw.sep('=', line, green=True)
 
     def info(self, line=None):
+        """Print information message (blue)
+        """
         self.tw.sep('=', line, blue=True)
 
     def warn(self, line=None):
+        """Print warning (yellow)
+        """
         self.tw.sep('=', line, yellow=True)
 
     def warn_on_exit(self, line):
+        """Append a warning message to be displayed on exit
+        """
         self._warnings.append(line)
 
     def _warn_show(self):
+        """Display accumulated warning messages (via .warn_on_exit)
+        """
         if self._warnings:
             self.tw.sep('=', 'Warnings', yellow=True)
             self.tw.write('\n\n'.join(self._warnings) + '\n')
