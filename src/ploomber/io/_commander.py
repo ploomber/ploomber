@@ -38,6 +38,7 @@ class Commander:
         self.tw = TerminalWriter()
         self.workspace = None if not workspace else Path(workspace).resolve()
         self._to_delete = []
+        self._warnings = []
 
         self._wd = Path('.').resolve()
 
@@ -109,6 +110,8 @@ class Commander:
 
         if supress:
             self.info(str(exc_value))
+
+        self._warn_show()
 
         return supress
 
@@ -193,3 +196,12 @@ class Commander:
 
     def warn(self, line=None):
         self.tw.sep('=', line, yellow=True)
+
+    def warn_on_exit(self, line):
+        self._warnings.append(line)
+
+    def _warn_show(self):
+        if self._warnings:
+            self.tw.sep('=', 'Warnings', yellow=True)
+            self.tw.write('\n\n'.join(self._warnings) + '\n')
+            self.tw.sep('=', yellow=True)
