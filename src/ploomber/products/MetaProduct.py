@@ -8,6 +8,11 @@ from ploomber.products.Metadata import MetadataCollection
 from ploomber.constants import TaskStatus
 
 
+# TODO: raise error (or warning?) if products[*].client are different
+# objects - that should not be possible
+# NOTE: what do we do if metadata among products does not match?
+# what if there are some products are File and others are not?
+# maybe do not allow that scenario?
 class ProductsContainer:
     """
     An iterator that when initialized with a sequence behaves just like it
@@ -17,6 +22,15 @@ class ProductsContainer:
     """
     def __init__(self, products):
         self.products = products
+
+        if isinstance(self.products, Mapping):
+            self._first = list(self.products.values())[0]
+        else:
+            self._first = self.products[0]
+
+    @property
+    def first(self):
+        return self._first
 
     def __iter__(self):
         if isinstance(self.products, Mapping):
@@ -58,6 +72,10 @@ class ClientContainer:
         for product in self._products:
             if product.client:
                 product.client.close()
+
+    def download(self, local, destination=None):
+        client = self._products.first.client
+        return client.download(local, destination)
 
 
 # NOTE: rename this to ProductCollection?
@@ -156,3 +174,13 @@ class MetaProduct(Mapping):
 
     def __len__(self):
         return len(self.products)
+
+    # NOTE: the next two are only applicable when dealing with files
+
+    @property
+    def _path_to_metadata(self):
+        return self.products.first._path_to_metadata
+
+    @property
+    def _path_to_file(self):
+        return self.products.first._path_to_file

@@ -7,10 +7,16 @@ from ploomber.executors import Serial
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
 from ploomber.clients import LocalStorageClient
+from ploomber.constants import TaskStatus
 
 
 def _touch(product):
     Path(product).touch()
+
+
+def _touch_many(product):
+    for prod in product:
+        Path(prod).touch()
 
 
 def _touch_upstream(product, upstream):
@@ -120,3 +126,34 @@ def test_keeps_folder_layout(tmp_directory):
     assert Path('backup', 'dir', '.nested.metadata').is_file()
     assert Path('backup', 'file').is_file()
     assert Path('backup', '.file.metadata').is_file()
+
+
+def test_outdated_task_with_metaproduct_downloads_metadata(tmp_directory):
+    def _make():
+        dag = DAG(executor=Serial(build_in_subprocess=True))
+        dag.clients[File] = LocalStorageClient('backup',
+                                               path_to_project_root='.')
+        t1 = PythonCallable(_touch_many, {
+            'one': File('one'),
+            'two': File('two')
+        },
+                            dag,
+                            name='task')
+        t2 = PythonCallable(_touch_upstream,
+                            File('three'),
+                            dag,
+                            name='another')
+        t1 >> t2
+        return dag
+
+    _make().build()
+
+    Path('one').unlink()
+
+    # this triggers remote metadata download to determine status
+    dag = _make().render()
+
+    status = {n: t.exec_status for n, t in dag.items()}
+
+    assert status['task'] == TaskStatus.WaitingDownload
+    assert status['another'] == TaskStatus.Skipped
