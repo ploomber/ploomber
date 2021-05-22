@@ -14,9 +14,8 @@ from ploomber.tasks import notebook
 from ploomber import DAG
 import ploomber.dag.DAG as dag_module
 
-# TODO: refactor all tests that are using subprocess to use CLIRunner
-# this is faster and more flexible
-# https://click.palletsprojects.com/en/7.x/testing/
+# TODO: optimize some of the tests that build dags by mocking and checking
+# that the build function is called with the appropriate args
 
 
 def test_no_options(monkeypatch):
@@ -30,42 +29,57 @@ def test_no_options(monkeypatch):
 
 
 @pytest.mark.parametrize('cmd', [
-    None, 'scaffold', 'build', 'interact', 'plot', 'report', 'status', 'task',
-    'interact'
+    None,
+    'scaffold',
+    'build',
+    'interact',
+    'plot',
+    'report',
+    'status',
+    'task',
+    'interact',
 ])
-def test_help_commands(cmd):
-
+def test_help(cmd, monkeypatch):
     elements = ['ploomber']
 
     if cmd:
         elements.append(cmd)
 
-    subprocess.run(elements + ['--help'], check=True)
+    monkeypatch.setattr(sys, 'argv', elements + ['--help'])
+
+    with pytest.raises(SystemExit) as excinfo:
+        cmd_router()
+
+    assert not excinfo.value.code
 
 
 @pytest.mark.parametrize(
     'cmd', ['build', 'plot', 'report', 'status', 'task', 'interact'])
-def test_help_shows_env_keys(cmd, tmp_nbs):
-    res = subprocess.run(['ploomber', 'build', '--help'],
-                         stdout=subprocess.PIPE,
-                         check=True)
+def test_help_shows_env_keys(cmd, monkeypatch, tmp_nbs, capsys):
+    monkeypatch.setattr(sys, 'argv', ['ploomber', cmd, '--help'])
 
-    out = res.stdout.decode()
+    with pytest.raises(SystemExit) as excinfo:
+        cmd_router()
 
-    assert '--env--sample' in out
+    captured = capsys.readouterr()
+    assert '--env--sample' in captured.out
+    assert not excinfo.value.code
 
 
 @pytest.mark.parametrize(
     'cmd', ['build', 'plot', 'report', 'status', 'task', 'interact'])
 def test_help_shows_env_keys_w_entry_point(cmd, tmp_nbs,
-                                           add_current_to_sys_path):
-    res = subprocess.run(['ploomber', 'build', '-e', 'factory.make', '--help'],
-                         stdout=subprocess.PIPE,
-                         check=True)
+                                           add_current_to_sys_path,
+                                           monkeypatch, capsys):
+    monkeypatch.setattr(sys, 'argv',
+                        ['ploomber', cmd, '-e', 'factory.make', '--help'])
 
-    out = res.stdout.decode()
+    with pytest.raises(SystemExit) as excinfo:
+        cmd_router()
 
-    assert '--env--sample' in out
+    captured = capsys.readouterr()
+    assert '--env--sample' in captured.out
+    assert not excinfo.value.code
 
 
 def test_build(monkeypatch, tmp_sample_dir):
