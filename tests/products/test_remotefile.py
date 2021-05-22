@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+from unittest.mock import Mock
 
 import pytest
 
@@ -86,3 +87,31 @@ def test_is_outdated_due_code(tmp_directory_with_project_root, dag):
 
     assert rf._outdated_code_dependency()
     assert rf._is_outdated()
+
+
+def test_caches_result(tmp_directory_with_project_root, monkeypatch, dag):
+    dag.build()
+
+    file_ = dag['task'].product
+    rf = _RemoteFile(file_=file_)
+
+    mock_check = Mock(wraps=rf._check_is_outdated)
+    monkeypatch.setattr(rf, '_check_is_outdated', mock_check)
+
+    # call a first time
+    rf._is_outdated()
+
+    # this call shouldn't call _check_is_outdated
+    rf._is_outdated()
+
+    mock_check.assert_called_once()
+
+
+def test_deletes_metadata_file_after_init(tmp_directory_with_project_root,
+                                          monkeypatch, dag):
+    dag.build()
+
+    file_ = dag['task'].product
+    _RemoteFile(file_=file_)
+
+    assert not Path('.file.metadata.remote').exists()

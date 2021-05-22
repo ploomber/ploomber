@@ -768,3 +768,29 @@ def test_downloads_task_with_upstream_after_full_build_and_skips_after_it(
     dag['task'].build()
 
     assert _make_dag().render()['task'].exec_status == TaskStatus.Skipped
+
+
+def test_check_remote_status(tmp_directory_with_project_root):
+    dag = _make_dag(with_client=True)
+    root = dag['root'].product
+    task = dag['task'].product
+
+    assert root._is_remote_outdated(outdated_by_code=True)
+    assert task._is_remote_outdated(outdated_by_code=True)
+
+    dag.build()
+
+    dag = _make_dag(with_client=True)
+    root = dag['root'].product
+    task = dag['task'].product
+
+    assert not root._is_remote_outdated(outdated_by_code=True)
+    assert not task._is_remote_outdated(outdated_by_code=True)
+
+    Path('remote', 'root').unlink()
+    dag = _make_dag(with_client=True)
+    root = dag['root'].product
+    task = dag['task'].product
+
+    assert root._is_remote_outdated(outdated_by_code=True)
+    assert not task._is_remote_outdated(outdated_by_code=True)

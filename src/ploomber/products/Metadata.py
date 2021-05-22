@@ -88,11 +88,11 @@ class AbstractMetadata(abc.ABC):
         return deepcopy(self._data)
 
     def __eq__(self, other):
-        self._get()
+        self._fetch()
 
         if isinstance(other, type(self)):
             # metadata is lazily loaded, ensure you have a local copy
-            other._get()
+            other._fetch()
             return self._data == other._data
         else:
             return self._data == other
@@ -110,6 +110,12 @@ class AbstractMetadata(abc.ABC):
         self._logger = logging.getLogger('{}.{}'.format(
             __name__,
             type(self).__name__))
+
+    def _fetch(self):
+        """Fetches metadata if needed. If already fetched, does nothing
+        """
+        if not self._did_fetch:
+            self._get()
 
 
 class Metadata(AbstractMetadata):
@@ -175,7 +181,8 @@ class Metadata(AbstractMetadata):
         """
         Get the "true metadata", ignores actual metadata if the product does
         not exist. It is lazily called by the timestamp and stored_source_code
-        attributes
+        attributes. Ignores fetched metadata and replaces it with the stored
+        metadata
         """
         # if the product does not exist, ignore metadata in backend storage
 

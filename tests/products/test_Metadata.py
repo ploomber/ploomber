@@ -45,6 +45,9 @@ class ConcreteMetadata(AbstractMetadata):
     def delete(self):
         pass
 
+    def _fetch(self):
+        pass
+
     def _get(self):
         pass
 

@@ -2,7 +2,6 @@
 A product representing a File in the local filesystem with an optional client,
 which allows the file to be retrieved or backed up in remote storage
 """
-import warnings
 import json
 import shutil
 import os
@@ -32,7 +31,15 @@ class _RemoteFile:
                                          destination=self._path_to_metadata)
 
         self._metadata = Metadata(self)
+
+        # force load from file
         self._metadata._get()
+
+        # delete file
+        if self._path_to_metadata.exists():
+            self._path_to_metadata.unlink()
+
+        self._is_outdated_status = None
 
     def fetch_metadata(self):
         return _fetch_metadata_from_file_product(self, check_file_exists=False)
@@ -57,7 +64,7 @@ class _RemoteFile:
         return self._local_file._path_to_file.with_name(name)
 
     def _reset_cached_outdated_status(self):
-        pass
+        self._is_outdated_status = None
 
     def _is_equal_to_local_copy(self):
         """
@@ -74,6 +81,13 @@ class _RemoteFile:
         Determines outdated status using remote metadata, to decide
         whether to download the remote file or not
         """
+        if self._is_outdated_status is None:
+            self._is_outdated_status = self._check_is_outdated(
+                outdated_by_code)
+
+        return self._is_outdated_status
+
+    def _check_is_outdated(self, outdated_by_code):
         oudated_data = self._outdated_data_dependencies()
         outdated_code = (outdated_by_code and self._outdated_code_dependency())
         return oudated_data or outdated_code
@@ -124,8 +138,10 @@ class _RemoteFile:
         # if task is waiting for download, we must use the remote
         # timestamp (not the local copy) to determine status
         if up.exec_status == TaskStatus.WaitingDownload:
-            with _RemoteFile(up.product) as remote_file:
-                upstream_timestamp = remote_file.metadata.timestamp
+            if up.product._remote:
+                upstream_timestamp = up.product._remote.metadata.timestamp
+            else:
+                upstream_timestamp = None
         else:
             upstream_timestamp = up.product.metadata.timestamp
 
@@ -153,6 +169,8 @@ class File(Product, os.PathLike):
         self._client = client
         self._repr = Repr()
         self._repr.maxstring = 40
+        self._did_check_remote = False
+        self._remote_ = None
 
     def _init_identifier(self, identifier):
         if not isinstance(identifier, (str, Path)):
@@ -169,6 +187,25 @@ class File(Product, os.PathLike):
     def _path_to_metadata(self):
         name = f'.{self._path_to_file.name}.metadata'
         return self._path_to_file.with_name(name)
+
+    @property
+    def _remote(self):
+        """
+        RemoteFile for this File. Returns None if a
+        File.client doesn't exist, remote file doesn't exist or remote
+        metadata doesn't exist
+        """
+        # TODO: show warning if client exists but remote file or
+        # remote metadata doesn't
+        if not self._did_check_remote:
+            if (self.client is not None
+                    and self.client._remote_exists(self._path_to_metadata)
+                    and self.client._remote_exists(self._path_to_file)):
+                self._remote_ = _RemoteFile(self)
+
+            self._did_check_remote = True
+
+        return self._remote_
 
     def fetch_metadata(self):
         # migrate metadata file to keep compatibility with ploomber<0.10
@@ -220,36 +257,37 @@ class File(Product, os.PathLike):
     def _check_is_outdated(self, outdated_by_code):
         """
         Unlike other Product implementation that only have to check the
-        current metadaat, File has to check if there is a metadata remote copy
+        current metadata, File has to check if there is a metadata remote copy
         and download it to decide outdated status, which yield to task
         execution or product downloading
         """
         should_download = False
 
-        if (self.client is not None
-                and self.client._remote_exists(self._path_to_metadata)):
-
-            # only check remote metadata if the file exists
-            if self.client._remote_exists(self._path_to_file):
-                with _RemoteFile(self) as remote_file:
-                    if remote_file._is_equal_to_local_copy():
-                        return remote_file._is_outdated()
-                    else:
-                        # download when doing so will bring the product
-                        # up-to-date (this takes into account upstream
-                        # timestamps)
-                        should_download = not remote_file._is_outdated()
-
+        if self._remote:
+            if self._remote._is_equal_to_local_copy():
+                return self._remote._is_outdated()
             else:
-                warnings.warn('Found remote metadata but '
-                              f'remote product {self._path_to_file} does '
-                              'not exist. Ignoring remote metadata')
+                # download when doing so will bring the product
+                # up-to-date (this takes into account upstream
+                # timestamps)
+                should_download = not self._remote._is_outdated(
+                    outdated_by_code=outdated_by_code)
 
         if should_download:
             return TaskStatus.WaitingDownload
 
         # no need to download, check status using local metadata
         return super()._check_is_outdated(outdated_by_code=outdated_by_code)
+
+    def _is_remote_outdated(self, outdated_by_code):
+        """
+        Check status using remote metadata, if no remote is available
+        (or remote metadata is corrupted) returns True
+        """
+        if self._remote:
+            return self._remote._is_outdated(outdated_by_code=outdated_by_code)
+        else:
+            return True
 
     @property
     def client(self):
