@@ -10,6 +10,7 @@ from ploomber import DAG
 from ploomber.tasks import ShellScript, PythonCallable
 from ploomber.products import File
 from ploomber.executors import Serial
+from ploomber.clients.storage.local import LocalStorageClient
 
 
 class WarningA(Warning):
@@ -281,3 +282,26 @@ def test_render_checks_outdated_status_once(monkeypatch, tmp_directory):
 
     t1.product._check_is_outdated.assert_called_once()
     t2.product._check_is_outdated.assert_called_once()
+
+
+def make_dag_with_client():
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+
+    dag.clients[File] = LocalStorageClient('remote')
+
+    root = PythonCallable(touch_root, File('root'), dag=dag, name='root')
+    task = PythonCallable(touch, File('file'), dag=dag, name='task')
+    root >> task
+    return dag
+
+
+def test_render_remote(tmp_directory_with_project_root):
+    make_dag_with_client().build()
+
+    Path('root').unlink()
+    Path('file').unlink()
+
+    dag = make_dag_with_client()
+    dag.render(remote=True)
+
+    assert set(t.exec_status for t in dag.values()) == {TaskStatus.Skipped}

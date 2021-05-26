@@ -659,7 +659,7 @@ class Task(abc.ABC):
 
         return TaskReport.with_data(name=self.name, ran=True, elapsed=elapsed)
 
-    def render(self, force=False, outdated_by_code=True):
+    def render(self, force=False, outdated_by_code=True, remote=False):
         """
         Renders code and product, all upstream tasks must have been rendered
         first, for that reason, this method will usually not be called
@@ -678,6 +678,9 @@ class Task(abc.ABC):
         outdated_by_code : bool, default=True
             Factors to determine if Task.product is marked outdated when source
             code changes. Otherwise just the upstream timestamps are used.
+
+        remote : bool, default=False
+            Use remote metadata to determine status
 
         Notes
         -----
@@ -714,7 +717,9 @@ class Task(abc.ABC):
         # we use outdated status several time, this caches the result
         # for performance reasons. TODO: move this to Product and make it
         # a property
-        is_outdated = ProductEvaluator(self.product, outdated_by_code)
+        is_outdated = ProductEvaluator(self.product,
+                                       outdated_by_code,
+                                       remote=remote)
 
         # task with no dependencies
         if not self.upstream:
@@ -1004,14 +1009,18 @@ class ProductEvaluator:
     A class to temporarily keep the outdated status of a product (when products
     are remote this operation is expensive)
     """
-    def __init__(self, product, outdated_by_code):
+    def __init__(self, product, outdated_by_code, remote):
         self.product = product
         self.outdated_by_code = outdated_by_code
         self._is_outdated = None
+        self._remote = remote
 
     def check(self):
         if self._is_outdated is None:
-            self._is_outdated = (self.product._is_outdated(
+            callable_ = (self.product._is_remote_outdated
+                         if self._remote else self.product._is_outdated)
+
+            self._is_outdated = (callable_(
                 outdated_by_code=self.outdated_by_code))
 
         return self._is_outdated

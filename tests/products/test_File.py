@@ -793,4 +793,4 @@ def test_check_remote_status(tmp_directory_with_project_root):
     task = dag['task'].product
 
     assert root._is_remote_outdated(outdated_by_code=True)
-    assert not task._is_remote_outdated(outdated_by_code=True)
+    assert task._is_remote_outdated(outdated_by_code=True)

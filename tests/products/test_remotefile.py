@@ -54,9 +54,9 @@ def test_is_not_outdated_after_build(tmp_directory_with_project_root, dag):
     file_ = dag['task'].product
     rf = _RemoteFile(file_=file_)
 
-    assert not rf._outdated_data_dependencies()
+    assert not rf._outdated_data_dependencies(with_respect_to_local=True)
     assert not rf._outdated_code_dependency()
-    assert not rf._is_outdated()
+    assert not rf._is_outdated(with_respect_to_local=True)
 
 
 def test_is_outdated_due_data(tmp_directory_with_project_root, dag):
@@ -70,8 +70,8 @@ def test_is_outdated_due_data(tmp_directory_with_project_root, dag):
     file_ = dag['task'].product
     rf = _RemoteFile(file_=file_)
 
-    assert rf._outdated_data_dependencies()
-    assert rf._is_outdated()
+    assert rf._outdated_data_dependencies(with_respect_to_local=True)
+    assert rf._is_outdated(with_respect_to_local=True)
 
 
 def test_is_outdated_due_code(tmp_directory_with_project_root, dag):
@@ -86,7 +86,7 @@ def test_is_outdated_due_code(tmp_directory_with_project_root, dag):
     rf = _RemoteFile(file_=file_)
 
     assert rf._outdated_code_dependency()
-    assert rf._is_outdated()
+    assert rf._is_outdated(with_respect_to_local=True)
 
 
 def test_caches_result(tmp_directory_with_project_root, monkeypatch, dag):
@@ -99,10 +99,10 @@ def test_caches_result(tmp_directory_with_project_root, monkeypatch, dag):
     monkeypatch.setattr(rf, '_check_is_outdated', mock_check)
 
     # call a first time
-    rf._is_outdated()
+    rf._is_outdated(with_respect_to_local=True)
 
     # this call shouldn't call _check_is_outdated
-    rf._is_outdated()
+    rf._is_outdated(with_respect_to_local=True)
 
     mock_check.assert_called_once()
 

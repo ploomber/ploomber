@@ -284,7 +284,7 @@ class DAG(AbstractDAG):
         self._G.remove_node(name)
         return t
 
-    def render(self, force=False, show_progress=True):
+    def render(self, force=False, show_progress=True, remote=False):
         """
         Render resolves all placeholders in tasks and determines whether
         a task should run or not based on the task.product metadata, this
@@ -299,6 +299,8 @@ class DAG(AbstractDAG):
             need to fetch metadata over the network. If the DAG won't be
             built, this option is recommended.
 
+        remote
+            Use remote metadata for determining task status
         """
         g = self._to_graph()
 
@@ -317,14 +319,18 @@ class DAG(AbstractDAG):
         # and over
         for dag in dags:
             if dag is not self:
-                dag._render_current(force=force, show_progress=show_progress)
+                dag._render_current(force=force,
+                                    show_progress=show_progress,
+                                    remote=remote)
 
         # then, render this dag
-        self._render_current(force=force, show_progress=show_progress)
+        self._render_current(force=force,
+                             show_progress=show_progress,
+                             remote=remote)
 
         return self
 
-    def _render_current(self, force, show_progress):
+    def _render_current(self, force, show_progress, remote):
         """
         Render tasks, and update exec_status
         """
@@ -360,7 +366,8 @@ class DAG(AbstractDAG):
                     try:
                         t.render(
                             force=force,
-                            outdated_by_code=self._params.outdated_by_code)
+                            outdated_by_code=self._params.outdated_by_code,
+                            remote=remote)
                     except Exception:
                         tr = traceback.format_exc()
                         exceptions.append(task=t, message=tr)
