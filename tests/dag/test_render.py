@@ -1,3 +1,4 @@
+import shutil
 import warnings
 from pathlib import Path
 
@@ -23,6 +24,16 @@ class WarningB(Warning):
 
 def touch_root(product):
     Path(str(product)).touch()
+
+
+def touch_root_with_metaproduct(product):
+    for p in product:
+        Path(str(p)).touch()
+
+
+def touch_with_metaproduct(upstream, product):
+    for p in product:
+        Path(str(p)).touch()
 
 
 def touch(upstream, product):
@@ -289,19 +300,91 @@ def make_dag_with_client():
 
     dag.clients[File] = LocalStorageClient('remote')
 
-    root = PythonCallable(touch_root, File('root'), dag=dag, name='root')
+    root = PythonCallable(touch_root, File('out/root'), dag=dag, name='root')
+    task = PythonCallable(touch, File('out/file'), dag=dag, name='task')
+    root >> task
+    return dag
+
+
+def make_larger_dag_with_client():
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+
+    dag.clients[File] = LocalStorageClient('remote')
+
+    root = PythonCallable(touch_root, File('out/root'), dag=dag, name='root')
+    task = PythonCallable(touch, File('out/file'), dag=dag, name='task')
+    another = PythonCallable(touch,
+                             File('out/another'),
+                             dag=dag,
+                             name='another')
+    root >> task >> another
+    return dag
+
+
+def make_dag_with_client_and_metaproduct():
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+
+    dag.clients[File] = LocalStorageClient('remote')
+
+    root = PythonCallable(touch_root_with_metaproduct, {
+        'root': File('out/root'),
+        'another': File('out/another')
+    },
+                          dag=dag,
+                          name='root')
     task = PythonCallable(touch, File('file'), dag=dag, name='task')
     root >> task
     return dag
 
 
-def test_render_remote(tmp_directory_with_project_root):
+def make_dag_with_client_and_metaproduct_2():
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+
+    dag.clients[File] = LocalStorageClient('remote')
+
+    root = PythonCallable(touch_root_with_metaproduct, {
+        'root': File('out/root'),
+        'another': File('out/another')
+    },
+                          dag=dag,
+                          name='root')
+    task = PythonCallable(touch_with_metaproduct, {
+        'file': File('out/file'),
+        'another_file': File('out/another_file')
+    },
+                          dag=dag,
+                          name='task')
+    last = PythonCallable(touch, File('last'), dag=dag, name='last')
+    root >> task >> last
+    return dag
+
+
+@pytest.mark.parametrize('factory', [
+    make_dag_with_client,
+    make_dag_with_client_and_metaproduct,
+    make_dag_with_client_and_metaproduct_2,
+    make_larger_dag_with_client,
+])
+def test_render_remote(factory, tmp_directory_with_project_root):
+    factory().build()
+    shutil.rmtree('out')
+
+    dag = factory()
+    dag.render(remote=True)
+
+    assert set(t.exec_status for t in dag.values()) == {TaskStatus.Skipped}
+
+
+def test_render_remote_checks_remote_timestamp(
+        tmp_directory_with_project_root):
     make_dag_with_client().build()
 
-    Path('root').unlink()
-    Path('file').unlink()
+    Path('remote', 'out', 'root').unlink()
 
     dag = make_dag_with_client()
     dag.render(remote=True)
 
-    assert set(t.exec_status for t in dag.values()) == {TaskStatus.Skipped}
+    status = {n: t.exec_status for n, t in dag.items()}
+
+    assert status['root'] == TaskStatus.WaitingExecution
+    assert status['task'] == TaskStatus.WaitingUpstream

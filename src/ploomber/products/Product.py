@@ -89,6 +89,7 @@ class Product(abc.ABC):
         if self._is_outdated_status is None:
             self._is_outdated_status = self._check_is_outdated(
                 outdated_by_code)
+
         return self._is_outdated_status
 
     def _check_is_outdated(self, outdated_by_code):

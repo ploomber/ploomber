@@ -442,8 +442,7 @@ def test_str():
     source = NotebookSource(notebook_ab, ext_in='py')
     source.render(Params._from_dict({'product':
                                      File('path/to/file/data.csv')}))
-    assert str(source) == ('\na = 1\nb = 2\nproduct = None\n# Parameters'
-                           '\nproduct = "path/to/file/data.csv"\n\na + b')
+    assert str(source) == ('\na = 1\nb = 2\nproduct = None\na + b')
 
 
 def test_repr_from_path(tmp_directory):

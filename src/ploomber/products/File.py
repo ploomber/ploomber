@@ -39,7 +39,8 @@ class _RemoteFile:
         if self._path_to_metadata.exists():
             self._path_to_metadata.unlink()
 
-        self._is_outdated_status = None
+        self._is_outdated_status_local = None
+        self._is_outdated_status_remote = None
 
     def fetch_metadata(self):
         return _fetch_metadata_from_file_product(self, check_file_exists=False)
@@ -85,11 +86,16 @@ class _RemoteFile:
             If True, determines status by comparing timestamps with upstream
             local metadata, otherwise it uses upstream remote metadata
         """
-        if self._is_outdated_status is None:
-            self._is_outdated_status = self._check_is_outdated(
-                with_respect_to_local, outdated_by_code)
-
-        return self._is_outdated_status
+        if with_respect_to_local:
+            if self._is_outdated_status_local is None:
+                self._is_outdated_status_local = self._check_is_outdated(
+                    with_respect_to_local, outdated_by_code)
+            return self._is_outdated_status_local
+        else:
+            if self._is_outdated_status_remote is None:
+                self._is_outdated_status_remote = self._check_is_outdated(
+                    with_respect_to_local, outdated_by_code)
+            return self._is_outdated_status_remote
 
     def _check_is_outdated(self, with_respect_to_local, outdated_by_code):
         oudated_data = self._outdated_data_dependencies(with_respect_to_local)
@@ -105,6 +111,7 @@ class _RemoteFile:
             self.metadata.stored_source_code,
             str(self._local_file.task.source),
             extension=self._local_file.task.source.extension)
+
         return outdated
 
     def _outdated_data_dependencies(self, with_respect_to_local):
@@ -134,27 +141,33 @@ class _RemoteFile:
         if self._path_to_metadata.exists():
             self._path_to_metadata.unlink()
 
-    def _is_outdated_due_to_upstream(self, up, with_respect_to_local):
+    def _is_outdated_due_to_upstream(self, upstream, with_respect_to_local):
         """
         A task becomes data outdated if an upstream product has a higher
         timestamp or if an upstream product is outdated
         """
-        # if task is waiting for download, we must use the remote
-        # timestamp (not the local copy) to determine status
-        if (up.exec_status == TaskStatus.WaitingDownload
+        if (upstream.exec_status == TaskStatus.WaitingDownload
                 or not with_respect_to_local):
-            if up.product._remote:
-                upstream_timestamp = up.product._remote.metadata.timestamp
+            if upstream.product._remote:
+                upstream_timestamp = (
+                    upstream.product._remote.metadata.timestamp)
             else:
                 upstream_timestamp = None
         else:
-            upstream_timestamp = up.product.metadata.timestamp
+            upstream_timestamp = upstream.product.metadata.timestamp
 
         if (self.metadata.timestamp is None or upstream_timestamp is None):
             return True
         else:
-            return ((upstream_timestamp > self.metadata.timestamp)
-                    or up.product._is_outdated())
+            more_recent_upstream = upstream_timestamp > self.metadata.timestamp
+
+            if with_respect_to_local:
+                outdated_upstream_prod = upstream.product._is_outdated()
+            else:
+                outdated_upstream_prod = upstream.product._is_remote_outdated(
+                    True)
+
+            return more_recent_upstream or outdated_upstream_prod
 
     def __repr__(self):
         return f'{type(self).__name__}({self._local_file!r})'

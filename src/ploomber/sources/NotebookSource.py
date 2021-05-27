@@ -301,7 +301,10 @@ Add a cell at the top like this:
         return self._nb_obj_rendered
 
     def __str__(self):
-        return '\n'.join([c.source for c in self.nb_obj_rendered.cells])
+        # reload if empty or hot_reload=True
+        self._read_nb_str_unrendered()
+
+        return '\n'.join([c.source for c in self._nb_obj_unrendered.cells])
 
     def __repr__(self):
         if self.loc is not None:
