@@ -340,7 +340,9 @@ class Task(abc.ABC):
             # and ensure the task uses the downloaded metadata
             self.product.metadata.clear()
         else:
-            self.product.metadata.update(str(self.source))
+            self.product.metadata.update(
+                source_code=str(self.source),
+                params=self.params.to_json_serializable(params_only=True))
 
         # For most Products, it's ok to do this check before
         # saving metadata, but not for GenericProduct, since the way

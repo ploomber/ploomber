@@ -49,3 +49,46 @@ def test_set_item():
 def test_error_if_initialized_with_non_mapping(value):
     with pytest.raises(TypeError):
         Params(value)
+
+
+@pytest.mark.parametrize('params, expected', [
+    [
+        {
+            'a': 1
+        },
+        {
+            'a': 1
+        },
+    ],
+    [
+        {
+            'a': 1,
+            'product': 2
+        },
+        {
+            'a': 1
+        },
+    ],
+    [
+        {
+            'a': 1,
+            'upstream': 2
+        },
+        {
+            'a': 1
+        },
+    ],
+    [
+        {
+            'a': 1,
+            'product': 2,
+            'upstream': 3
+        },
+        {
+            'a': 1
+        },
+    ],
+])
+def test_params_only(params, expected):
+    p = Params._from_dict(params)
+    assert p.to_json_serializable(params_only=True) == expected

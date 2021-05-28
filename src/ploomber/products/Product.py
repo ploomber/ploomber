@@ -173,8 +173,10 @@ class Product(abc.ABC):
             return self._outdated_code_dependency_status
 
         outdated, diff = self.task.dag.differ.is_different(
-            self.metadata.stored_source_code,
-            str(self.task.source),
+            a=self.metadata.stored_source_code,
+            b=str(self.task.source),
+            a_params=self.metadata.params,
+            b_params=self.task.params.to_json_serializable(params_only=True),
             extension=self.task.source.extension)
 
         self._outdated_code_dependency_status = outdated

@@ -2,6 +2,7 @@
 Metadata represents the information we need to save in order to support
 incremental builds: source code and build timestmp
 """
+import json
 import logging
 import warnings
 import abc
@@ -46,8 +47,15 @@ class AbstractMetadata(abc.ABC):
         """
         pass  # pragma: no cover
 
+    @property
+    @abc.abstractclassmethod
+    def params(self):
+        """Task params
+        """
+        pass
+
     @abc.abstractmethod
-    def update(self, source_code):
+    def update(self, source_code, params):
         """
         """
         pass  # pragma: no cover
@@ -141,6 +149,9 @@ class Metadata(AbstractMetadata):
     stored_source_code
         Last updates product source code
     """
+    def _default_metadata(self):
+        return dict(timestamp=None, stored_source_code=None, params=None)
+
     def __init__(self, product):
         self.__data = None
         self._product = product
@@ -151,17 +162,15 @@ class Metadata(AbstractMetadata):
         self._did_fetch = False
 
     @property
-    def timestamp(self):
-        if not self._did_fetch:
-            self._get()
+    def params(self):
+        return self._data.get('params')
 
+    @property
+    def timestamp(self):
         return self._data.get('timestamp')
 
     @property
     def stored_source_code(self):
-        if not self._did_fetch:
-            self._get()
-
         return self._data.get('stored_source_code')
 
     @property
@@ -191,7 +200,7 @@ class Metadata(AbstractMetadata):
         # look for product.exists() references and .exists() references
         # in the Product definition
         if not self._product.exists():
-            metadata = dict(timestamp=None, stored_source_code=None)
+            metadata = self._default_metadata()
         else:
             # FIXME: if anything goes wrong when fetching metadata, warn
             # and set it to a valid dictionary with None values, validation
@@ -202,7 +211,7 @@ class Metadata(AbstractMetadata):
                 self._logger.debug(
                     'fetch_metadata for product %s returned '
                     'None', self._product)
-                metadata = dict(timestamp=None, stored_source_code=None)
+                metadata = self._default_metadata()
             else:
                 # FIXME: we need to further validate this, need to check
                 # that this is an instance of mapping, if yes, then
@@ -213,15 +222,38 @@ class Metadata(AbstractMetadata):
         self._did_fetch = True
         self._data = metadata
 
-    def update(self, source_code):
+    def update(self, source_code, params):
         """
         Update metadata in the storage backend, this should be called by
         Task objects when running successfully to update metadata in the
         backend storage. If saving in the backend storage succeeds the local
         copy is updated as well
+
+        Parameters
+        ----------
+        source_code : str
+            Task's source code
+
+        params : dict
+            Task's params
         """
+        # make sure params are json serializable
+        try:
+            # TODO: check this to prevent this error happennig in
+            # Product.save_metadata implementation. All current implementations
+            # serialize using json. I think it's best to serialize here and
+            # pass the string to the save_metadata method. but this will do
+            # for now
+            json.dumps(params)
+        except Exception:
+            warnings.warn(f'Params {params!r} are not serializable, they '
+                          'will be ignored. Changes to them wont trigger '
+                          'task execution.')
+            params = {}
+
         new_data = dict(timestamp=datetime.now().timestamp(),
-                        stored_source_code=source_code)
+                        stored_source_code=source_code,
+                        params=params)
 
         kwargs = callback_check(self._product.prepare_metadata,
                                 available={
@@ -237,14 +269,18 @@ class Metadata(AbstractMetadata):
         self.update_locally(new_data)
 
     def update_locally(self, data):
-        # may be the case that we haven't fetched metadata yet. since this
+        """Updates the in-memory copy, does not update persistent copy
+        """
+        # could be the case that we haven't fetched metadata yet. since this
         # overwrites existing metadata. we no longer have to fetch
         self._did_fetch = True
         self._data = deepcopy(data)
 
     def delete(self):
+        """Calls ._product._delete_metadata()
+        """
         self._product._delete_metadata()
-        self._data = dict(timestamp=None, stored_source_code=None)
+        self._data = self._default_metadata()
 
     def clear(self):
         """
@@ -256,7 +292,7 @@ class Metadata(AbstractMetadata):
         DAG. hence our local copy in the original DAG is not valid anymore
         """
         self._did_fetch = False
-        self._data = dict(timestamp=None, stored_source_code=None)
+        self._data = self._default_metadata()
 
     def __repr__(self):
         return f'{type(self).__name__}({self._data!r})'
@@ -317,9 +353,13 @@ class MetadataCollection(AbstractMetadata):
         else:
             return stored_source_code[0]
 
-    def update(self, source_code):
+    @property
+    def params(self):
+        return self._products.first.params
+
+    def update(self, source_code, params):
         for p in self._products:
-            p.metadata.update(source_code)
+            p.metadata.update(source_code, params)
 
     def update_locally(self, data):
         for p in self._products:
@@ -402,10 +442,14 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
     def stored_source_code(self):
         return None
 
+    @property
+    def params(self):
+        return None
+
     def _get(self):
         pass  # pragma: no cover
 
-    def update(self, source_code):
+    def update(self, source_code, params):
         pass  # pragma: no cover
 
     def update_locally(self, data):
@@ -413,7 +457,7 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
 
     @property
     def _data(self):
-        return {'timestamp': 0, 'stored_source_code': None}
+        return {'timestamp': 0, 'stored_source_code': None, 'params': {}}
 
     def delete(self):
         pass  # pragma: no cover

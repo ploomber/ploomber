@@ -108,8 +108,11 @@ class _RemoteFile:
         metadata
         """
         outdated, _ = self._local_file.task.dag.differ.is_different(
-            self.metadata.stored_source_code,
-            str(self._local_file.task.source),
+            a=self.metadata.stored_source_code,
+            b=str(self._local_file.task.source),
+            a_params=self.metadata.params,
+            b_params=self._local_file.task.params.to_json_serializable(
+                params_only=True),
             extension=self._local_file.task.source.extension)
 
         return outdated
@@ -362,8 +365,6 @@ class File(Product, os.PathLike):
 
 
 def _fetch_metadata_from_file_product(product, check_file_exists):
-    empty = dict(timestamp=None, stored_source_code=None)
-
     if check_file_exists:
         file_exists = product._path_to_file.exists()
     else:
@@ -386,4 +387,4 @@ def _fetch_metadata_from_file_product(product, check_file_exists):
             # TODO: validate 'stored_source_code', 'timestamp' exist
             return parsed
     else:
-        return empty
+        return None

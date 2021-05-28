@@ -104,17 +104,55 @@ class CodeDiffer:
         'sql': normalize_sql
     }
 
-    def is_different(self, a, b, extension=None):
-        normalizer = self._get_normalizer(extension)
+    def is_different(self, a, b, a_params, b_params, extension=None):
+        """Compares code and params to determine if it's changed
 
+        Parameters
+        ----------
+        a : str
+            Code to compare
+
+        b : str
+            Code to compare
+
+        a_params : dict
+            Params passed to a
+
+        b_params : dict
+            Params passed to b
+
+        extension : str, default=None
+            Code extension. Used to normalize code to prevent changes such
+            as whitespace to trigger false positives. Normalization only
+            available for .py and .sql, other languages are compared as is
+
+        Returns
+        -------
+        result : bool
+            True if code is different (different code or params),
+            False if they are the same (same code and params)
+
+        diff : str
+            A diff view of the differences
+        """
+        # TODO: this can be more efficient. ie only compare source code
+        # if params are the same and only get diff if result is True
+        normalizer = self._get_normalizer(extension)
         a_norm = normalizer(a)
         b_norm = normalizer(b)
-
+        result = (a_params != b_params) or (a_norm != b_norm)
+        # TODO: improve diff view, also show a params diff view. probably
+        # we need to normalize them first (maybe using pprint?) then take
+        # the diff
         diff = self.get_diff(a_norm, b_norm, normalize=False)
 
-        return a_norm != b_norm, diff
+        return result, diff
 
     def get_diff(self, a, b, extension=None, normalize=True):
+        """Get the diff view
+        """
+        # TODO: remove normalize param, we are already normalizing in the
+        # is_different method
         if normalize:
             normalizer = self._get_normalizer(extension)
 
@@ -129,6 +167,8 @@ class CodeDiffer:
         return diff
 
     def _get_normalizer(self, extension):
+        """Get the normalizer function for a given extension
+        """
         if extension in self.NORMALIZERS:
             return self.NORMALIZERS[extension]
         else:

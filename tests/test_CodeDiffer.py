@@ -19,8 +19,10 @@ def x():
 def test_python_differ_ignores_docstrings():
 
     differ = CodeDiffer()
-    res, _ = differ.is_different(fn_w_docsting,
-                                 fn_w_docsting_v2,
+    res, _ = differ.is_different(a=fn_w_docsting,
+                                 b=fn_w_docsting_v2,
+                                 a_params={},
+                                 b_params={},
                                  extension='py')
     assert not res
 
@@ -41,7 +43,11 @@ def x():
 '''
 
     differ = CodeDiffer()
-    res, _ = differ.is_different(a, b, extension='py')
+    res, _ = differ.is_different(a=a,
+                                 b=b,
+                                 a_params={},
+                                 b_params={},
+                                 extension='py')
     assert not res
 
 
@@ -55,7 +61,11 @@ def test_sql_is_normalized():
     FROM table
     """
     differ = CodeDiffer()
-    different, _ = differ.is_different(a, b, extension='sql')
+    different, _ = differ.is_different(a=a,
+                                       b=b,
+                                       a_params={},
+                                       b_params={},
+                                       extension='sql')
     assert not different
 
 
@@ -64,7 +74,7 @@ def test_get_diff(extension):
     differ = CodeDiffer()
     a = 'some code...'
     b = 'some other code...'
-    differ.get_diff(a, b, extension=extension)
+    differ.get_diff(a=a, b=b, extension=extension)
 
 
 fn = '''
@@ -123,3 +133,13 @@ def x():
 )
 def test_normalize_python(code, expected):
     assert normalize_python(code) == expected
+
+
+def test_different_params():
+    differ = CodeDiffer()
+    res, _ = differ.is_different(a='some code',
+                                 b='some code',
+                                 a_params={'a': 1},
+                                 b_params={'a': 2},
+                                 extension='py')
+    assert res

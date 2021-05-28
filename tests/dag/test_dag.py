@@ -61,6 +61,10 @@ def touch_root(product):
     Path(str(product)).touch()
 
 
+def touch_root_w_param(product, some_param):
+    Path(str(product)).touch()
+
+
 def touch(upstream, product):
     Path(str(product)).touch()
 
@@ -1006,3 +1010,21 @@ def test_task_grouping():
 
     assert t3.params['upstream']['group']['first'] is t1.product
     assert t3.params['upstream']['group']['second'] is t2.product
+
+
+def test_outdated_if_different_params(tmp_directory):
+    def make(some_param):
+        dag = DAG()
+        PythonCallable(touch_root_w_param,
+                       File('1.txt'),
+                       dag,
+                       name='first',
+                       params={'some_param': some_param})
+        return dag
+
+    make(some_param=1).build()
+
+    dag = make(some_param=2).render()
+
+    assert {t.exec_status
+            for t in dag.values()} == {TaskStatus.WaitingExecution}

@@ -454,7 +454,7 @@ class Input(Task):
     def _init_source(kwargs):
         return EmptySource(None, **kwargs)
 
-    def _null_update_metadata(self, metadata):
+    def _null_update_metadata(self, source_code, params):
         # this should be __null_update_metadata but we can't due to
         # https://bugs.python.org/issue33007
         pass

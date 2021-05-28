@@ -53,10 +53,22 @@ class Params(abc.MutableMapping):
         # NOTE: do we need this?
         return copy_module.copy(self._dict)
 
-    def to_json_serializable(self):
+    def to_json_serializable(self, params_only=False):
+        """
+        Converts params into a dictionary
+
+        Parameters
+        ----------
+        params_only : bool, default=False
+            If True, it only returns user params, excluding 'upstream' and
+            'product'
+        """
         out = self.to_dict()
 
-        if 'upstream' in out:
+        if params_only:
+            out.pop('product', None)
+            out.pop('upstream', None)
+        elif 'upstream' in out:
             out['upstream'] = out['upstream'].to_json_serializable()
 
         return out

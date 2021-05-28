@@ -1,3 +1,4 @@
+from pathlib import Path
 from datetime import datetime
 from unittest.mock import Mock
 
@@ -5,7 +6,7 @@ import pytest
 
 from ploomber.products.Metadata import (Metadata, AbstractMetadata,
                                         MetadataCollection)
-from ploomber.products import Product
+from ploomber.products import Product, File
 from ploomber._testing_utils import assert_no_extra_attributes_in_class
 
 
@@ -37,6 +38,9 @@ class ConcreteMetadata(AbstractMetadata):
         pass
 
     def stored_source_code(self):
+        pass
+
+    def params(self):
         pass
 
     def update(self, source_code):
@@ -106,15 +110,16 @@ def test_update():
     prod = FakeProduct(identifier='fake-product')
     metadata = Metadata(prod)
 
-    metadata.update('new code')
+    metadata.update('new code', params={'a': 1})
 
     # check code was updated
     assert metadata.stored_source_code == 'new code'
+    assert metadata.params == {'a': 1}
 
 
 @pytest.mark.parametrize(
     'method, kwargs',
-    [['clear', dict()], ['update', dict(source_code='')],
+    [['clear', dict()], ['update', dict(source_code='', params={})],
      ['update_locally', dict(data=dict())]])
 def test_cache_flags_are_cleared_up(method, kwargs):
     prod = FakeProduct(identifier='fake-product')
@@ -190,18 +195,31 @@ def test_metadata_collection_forwards_calls_to_all_products(method):
     getattr(p1.metadata, method).assert_called_once()
 
 
-@pytest.mark.parametrize('method', ['update', 'update_locally'])
-def test_metadata_collection_forwards_calls_and_arg_to_all_products(method):
+def test_metadata_collection_update_forwards_to_all_products():
+    p1 = Mock()
+    p2 = Mock()
+    arg = Mock()
+    arg2 = Mock()
+
+    m = MetadataCollection([p1, p2])
+
+    m.update(arg, arg2)
+
+    p1.metadata.update.assert_called_once_with(arg, arg2)
+    p2.metadata.update.assert_called_once_with(arg, arg2)
+
+
+def test_metadata_collection_update_locally_forwards_to_all_products():
     p1 = Mock()
     p2 = Mock()
     arg = Mock()
 
     m = MetadataCollection([p1, p2])
 
-    getattr(m, method)(arg)
+    m.update_locally(arg)
 
-    getattr(p1.metadata, method).assert_called_once_with(arg)
-    getattr(p1.metadata, method).assert_called_once_with(arg)
+    p1.metadata.update_locally.assert_called_once_with(arg)
+    p2.metadata.update_locally.assert_called_once_with(arg)
 
 
 _METADATA_CASES = [
@@ -341,3 +359,36 @@ def test_metadata_collection_underscore_data(d1, d2, expected, should_warn):
 
     assert bool(record) is should_warn
     assert d == expected
+
+
+def test_file(tmp_directory):
+    Path('file').touch()
+    product = File('file')
+
+    m = Metadata(product)
+
+    m.update('some_source_code', {'a': 1})
+
+    m2 = Metadata(product)
+
+    assert m2.stored_source_code == 'some_source_code'
+    assert m2.timestamp
+    assert m2.params == {'a': 1}
+
+
+def test_warns_on_unserializable_params(tmp_directory):
+    Path('file').touch()
+    product = File('file')
+
+    m = Metadata(product)
+
+    with pytest.warns(UserWarning) as record:
+        m.update('some_source_code', {'a': object()})
+
+    m2 = Metadata(product)
+
+    assert len(record) == 1
+    assert 'are not serializable' in record[0].message.args[0]
+    assert m2.stored_source_code == 'some_source_code'
+    assert m2.timestamp
+    assert m2.params == {}
