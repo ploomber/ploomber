@@ -136,7 +136,7 @@ class Task(abc.ABC):
             if self._name is None:
                 raise AttributeError('Task name can only be None if it '
                                      'can be inferred from the source object. '
-                                     'This only works when the task receives a'
+                                     'For example, when the task receives a '
                                      'pathlib.Path, when using SourceLoader '
                                      'or in PythonCallable. Pass a value '
                                      'explicitly')

@@ -50,6 +50,8 @@ products from one task aren't available for the next one, the user has to
 configure a File.client. When executing each task (Task.build), we use the
 client to fetch upstream dependencies and execute a given task.
 """
+from functools import reduce
+import fnmatch
 import os
 from collections.abc import Iterable
 import traceback
@@ -613,8 +615,9 @@ class DAG(AbstractDAG):
 
         Parameters
         ----------
-        target : str,
-            Name of the target task (last one to build)
+        target : str
+            Name of the target task (last one to build). Can pass a wildcard
+            such as 'tasks-*'
 
         force : bool, default=False
             If True, it will run all tasks regardless of status, defaults to
@@ -629,10 +632,25 @@ class DAG(AbstractDAG):
             with subprocess off and catching exceptions/warnings off. Restores
             the original executor at the end.
         """
-        lineage = self[target]._lineage
         dag_copy = deepcopy(self)
 
-        to_pop = set(dag_copy) - {target}
+        # task names are usually str, although this isn't strictly enforced
+        if isinstance(target, str) and '*' in target:
+            targets = fnmatch.filter(self._iter(), target)
+            to_pop = set(dag_copy) - set(targets)
+
+            to_include = [
+                self[target]._lineage for target in targets
+                if self[target]._lineage
+            ]
+
+            if to_include:
+                lineage = reduce(lambda a, b: a.union(b), to_include)
+            else:
+                lineage = set()
+        else:
+            lineage = self[target]._lineage
+            to_pop = set(dag_copy) - {target}
 
         if lineage:
             to_pop = to_pop - lineage

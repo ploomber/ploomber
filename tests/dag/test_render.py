@@ -4,14 +4,16 @@ from pathlib import Path
 
 from unittest.mock import Mock
 import pytest
+import pandas as pd
 
 from ploomber.exceptions import DAGRenderError
 from ploomber.constants import TaskStatus
 from ploomber import DAG
-from ploomber.tasks import ShellScript, PythonCallable
-from ploomber.products import File
+from ploomber.tasks import ShellScript, PythonCallable, SQLScript
+from ploomber.products import File, SQLiteRelation
 from ploomber.executors import Serial
 from ploomber.clients.storage.local import LocalStorageClient
+from ploomber.clients import SQLAlchemyClient
 
 
 class WarningA(Warning):
@@ -388,3 +390,29 @@ def test_render_remote_checks_remote_timestamp(
 
     assert status['root'] == TaskStatus.WaitingExecution
     assert status['task'] == TaskStatus.WaitingUpstream
+
+
+def test_render_remote_with_non_file_products(tmp_directory):
+    client = SQLAlchemyClient('sqlite:///my.db')
+
+    pd.DataFrame({'x': range(3)}).to_sql('data', client.engine)
+
+    def make(client):
+        dag = DAG()
+        dag.clients[SQLScript] = client
+        dag.clients[SQLiteRelation] = client
+
+        SQLScript('CREATE TABLE {{product}} AS SELECT * FROM data',
+                  SQLiteRelation(['data2', 'table']),
+                  dag=dag,
+                  name='task')
+
+        return dag
+
+    make(client).build()
+
+    dag = make(client)
+    dag.render(remote=True)
+
+    # should match the local status
+    assert {t.exec_status for t in dag.values()} == {TaskStatus.Skipped}

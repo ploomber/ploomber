@@ -310,6 +310,9 @@ class File(Product, os.PathLike):
             return self._remote._is_outdated(with_respect_to_local=False,
                                              outdated_by_code=outdated_by_code)
         else:
+            # if no remote, return True. This is the least destructive option
+            # since we don't know what will be available and what not when this
+            # executes
             return True
 
     @property

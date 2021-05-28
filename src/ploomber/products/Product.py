@@ -92,6 +92,16 @@ class Product(abc.ABC):
 
         return self._is_outdated_status
 
+    def _is_remote_outdated(self, outdated_by_code):
+        """
+        Check if the remote version of this Product is outdated. Note that
+        this is only valid for File products (which have their own)
+        implementation. For non-File products (e.g., SQL products), there
+        isn't a notion of "remote version", since they're already remote
+        hence we simply use the existing implementation
+        """
+        return self._is_outdated(outdated_by_code=outdated_by_code)
+
     def _check_is_outdated(self, outdated_by_code):
         # check product...
         p_exists = self.exists()
