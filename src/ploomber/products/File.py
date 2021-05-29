@@ -17,8 +17,13 @@ class _RemoteFile:
     """
     A product-like object to check status using remote metadata. Since it
     partially conforms to the Product API, it can use the same Metadata
-    implementation (just like File). This is used to determine whether a
+    implementation (like File). This is used to determine whether a
     task should be executed or downloaded from remote storage.
+
+    Parameters
+    ----------
+    file_ : ploomber.products.File
+        Product to check status
 
     Notes
     -----
@@ -26,18 +31,7 @@ class _RemoteFile:
     """
     def __init__(self, file_):
         self._local_file = file_
-        # download metadata from file_ to an tmp destination
-        self._local_file.client.download(self._local_file._path_to_metadata,
-                                         destination=self._path_to_metadata)
-
         self._metadata = Metadata(self)
-
-        # force load from file
-        self._metadata._get()
-
-        # delete file
-        if self._path_to_metadata.exists():
-            self._path_to_metadata.unlink()
 
         self._is_outdated_status_local = None
         self._is_outdated_status_remote = None
@@ -54,6 +48,18 @@ class _RemoteFile:
 
     @property
     def metadata(self):
+        # check if we already downloaded remote metadata
+        if not self._metadata._did_fetch:
+            self._local_file.client.download(
+                self._local_file._path_to_metadata,
+                destination=self._path_to_metadata)
+
+            # load from values from file
+            self._metadata._fetch()
+
+            if self._path_to_metadata.exists():
+                self._path_to_metadata.unlink()
+
         return self._metadata
 
     @property
@@ -132,13 +138,6 @@ class _RemoteFile:
             return False
 
         return any(upstream_outdated)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self._path_to_metadata.exists():
-            self._path_to_metadata.unlink()
 
     def __del__(self):
         if self._path_to_metadata.exists():
@@ -220,8 +219,9 @@ class File(Product, os.PathLike):
         # remote metadata doesn't
         if not self._did_check_remote:
             if (self.client is not None
-                    and self.client._remote_exists(self._path_to_metadata)
-                    and self.client._remote_exists(self._path_to_file)):
+                    # FIXME: get rid of these two calls, they slow things down
+                    and self.client._remote_exists(self._path_to_metadata) and
+                    self.client._remote_exists(self._path_to_file)):
                 self._remote_ = _RemoteFile(self)
 
             self._did_check_remote = True

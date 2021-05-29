@@ -79,6 +79,8 @@ class ClientContainer:
 
 
 # NOTE: rename this to ProductCollection?
+# TODO: create a superclass of Product, define the interface there,
+# then make MetaProduct and Product inherit from it
 class MetaProduct(Mapping):
     """
     Exposes a Product-like API to allow Tasks to create more than one Product,
@@ -174,20 +176,6 @@ class MetaProduct(Mapping):
 
     def __len__(self):
         return len(self.products)
-
-    # NOTE: the next four are only applicable when dealing with files
-
-    @property
-    def _path_to_metadata(self):
-        return self.products.first._path_to_metadata
-
-    @property
-    def _path_to_file(self):
-        return self.products.first._path_to_file
-
-    @property
-    def _remote(self):
-        return self.products.first._remote
 
     def _is_remote_outdated(self, outdated_by_code):
         return self.products.first._is_remote_outdated(outdated_by_code)
