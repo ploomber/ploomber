@@ -42,7 +42,13 @@ class AbstractStorageClient(abc.ABC):
             self._upload(local)
 
     @abc.abstractmethod
-    def _download(self, local, remote):
+    def download_bulk(self, locals, destinations):
+        """Download multiple files at once
+        """
+        pass
+
+    @abc.abstractmethod
+    def _download(self, local, destination):
         """Download a single file
         """
         pass

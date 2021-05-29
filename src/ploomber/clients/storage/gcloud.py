@@ -95,6 +95,11 @@ class GCloudStorageClient(AbstractStorageClient):
                 destination_file.parent.mkdir(exist_ok=True, parents=True)
                 blob.download_to_filename(destination_file)
 
+    def download_bulk(self, locals, destinations):
+        """Download multiple files at once
+        """
+        raise NotImplementedError
+
     def _is_file(self, remote):
         return self._bucket.blob(remote).exists()
 

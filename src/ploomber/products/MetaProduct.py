@@ -177,5 +177,9 @@ class MetaProduct(Mapping):
     def __len__(self):
         return len(self.products)
 
+    @property
+    def _remote(self):
+        return self.products.first._remote
+
     def _is_remote_outdated(self, outdated_by_code):
         return self.products.first._is_remote_outdated(outdated_by_code)

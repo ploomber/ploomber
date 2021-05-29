@@ -48,6 +48,11 @@ class LocalStorageClient(AbstractStorageClient):
         else:
             shutil.copytree(remote, destination)
 
+    def download_bulk(self, locals, destinations):
+        """Download multiple files at once
+        """
+        raise NotImplementedError
+
     def upload(self, local):
         remote_path = self._remote_path(local)
         remote_path.parent.mkdir(exist_ok=True, parents=True)

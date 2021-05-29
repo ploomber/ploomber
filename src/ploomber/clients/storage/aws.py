@@ -1,5 +1,6 @@
 import json
 from pathlib import PurePosixPath, Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 try:
     import boto3
@@ -100,6 +101,22 @@ class S3Client(AbstractStorageClient):
                     destination_file = Path(destination, *rel.parts)
                     destination_file.parent.mkdir(exist_ok=True, parents=True)
                     self._download(str(destination_file), remote_path)
+
+    def download_bulk(self, locals, destinations):
+        with ThreadPoolExecutor(max_workers=64) as executor:
+            future2local = {
+                executor.submit(self.download, local, destination): local
+                for local, destination in zip(locals, destinations)
+            }
+
+            for future in as_completed(future2local):
+                exception = future.exception()
+
+                if exception:
+                    local = future2local[future]
+                    raise RuntimeError(
+                        f'An error occurred when downloading file {local!r}'
+                    ) from exception
 
     def _upload(self, local):
         remote = self._remote_path(local)
