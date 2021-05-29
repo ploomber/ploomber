@@ -181,5 +181,25 @@ class MetaProduct(Mapping):
     def _remote(self):
         return self.products.first._remote
 
+    @property
+    def _path_to_metadata(self):
+        """Returns all ._path_to_metadata properties for each product
+
+        Notes
+        -----
+        This is used when doing remote metadata bulk download
+        """
+        return [p._path_to_metadata for p in self.products]
+
+    @property
+    def _remote_path_to_metadata(self):
+        """Returns all ._remote_path_to_metadata properties for each product
+
+        Notes
+        -----
+        This is used when doing remote metadata bulk download
+        """
+        return [p._remote_path_to_metadata for p in self.products]
+
     def _is_remote_outdated(self, outdated_by_code):
         return self.products.first._is_remote_outdated(outdated_by_code)

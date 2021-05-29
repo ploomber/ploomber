@@ -36,23 +36,27 @@ class _RemoteFile:
         self._is_outdated_status_local = None
         self._is_outdated_status_remote = None
 
+    def exists(self):
+        return (self._local_file.client is not None
+                and self._local_file.client._remote_exists(
+                    self._local_file._path_to_metadata)
+                and self._local_file.client._remote_exists(
+                    self._local_file._path_to_file))
+
     def fetch_metadata(self):
         return _fetch_metadata_from_file_product(self, check_file_exists=False)
-
-    def exists(self):
-        # This is needed to make this class compatible with Metadata.
-        # Since this object is created under the assumption that the remote
-        # file exists and can be downloaded, we simply return True to make
-        # it compatible with the Metadata implementation
-        return True
 
     @property
     def metadata(self):
         # check if we already downloaded remote metadata
         if not self._metadata._did_fetch:
-            self._local_file.client.download(
-                self._local_file._path_to_metadata,
-                destination=self._path_to_metadata)
+
+            # only download if it doesn't exist (might have been downloaded
+            # using bulk download in DAG.render)
+            if not self._path_to_metadata.exists():
+                self._local_file.client.download(
+                    self._local_file._path_to_metadata,
+                    destination=self._path_to_metadata)
 
             # load from values from file
             self._metadata._fetch()
@@ -189,8 +193,7 @@ class File(Product, os.PathLike):
         self._client = client
         self._repr = Repr()
         self._repr.maxstring = 40
-        self._did_check_remote = False
-        self._remote_ = None
+        self._remote_ = _RemoteFile(self)
 
     def _init_identifier(self, identifier):
         if not isinstance(identifier, (str, Path)):
@@ -215,18 +218,11 @@ class File(Product, os.PathLike):
         File.client doesn't exist, remote file doesn't exist or remote
         metadata doesn't exist
         """
-        # TODO: show warning if client exists but remote file or
-        # remote metadata doesn't
-        if not self._did_check_remote:
-            if (self.client is not None
-                    # FIXME: get rid of these two calls, they slow things down
-                    and self.client._remote_exists(self._path_to_metadata) and
-                    self.client._remote_exists(self._path_to_file)):
-                self._remote_ = _RemoteFile(self)
-
-            self._did_check_remote = True
-
         return self._remote_
+
+    @property
+    def _remote_path_to_metadata(self):
+        return self._remote._path_to_metadata
 
     def fetch_metadata(self):
         # migrate metadata file to keep compatibility with ploomber<0.10
@@ -284,7 +280,7 @@ class File(Product, os.PathLike):
         """
         should_download = False
 
-        if self._remote:
+        if self._remote.exists():
             if self._remote._is_equal_to_local_copy():
                 return self._remote._is_outdated(with_respect_to_local=True)
             else:
@@ -306,7 +302,7 @@ class File(Product, os.PathLike):
         Check status using remote metadata, if no remote is available
         (or remote metadata is corrupted) returns True
         """
-        if self._remote:
+        if self._remote.exists():
             return self._remote._is_outdated(with_respect_to_local=False,
                                              outdated_by_code=outdated_by_code)
         else:

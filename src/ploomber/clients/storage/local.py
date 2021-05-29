@@ -50,14 +50,25 @@ class LocalStorageClient(AbstractStorageClient):
             shutil.copytree(remote, destination)
         else:
             raise RemoteFileNotFound('Could not download '
-                                     f'{local!r} using client {self}: '
+                                     f'{str(local)!r} using client {self}: '
                                      'No such file or directory')
 
-    def download_bulk(self, locals_, destinations):
+    def download_bulk(self, locals_, destinations, silence_missing=False):
         """Download multiple files at once
         """
+        missing = []
+
         for local, destination in zip(locals_, destinations):
-            self.download(local, destination)
+
+            try:
+                self.download(local, destination)
+            except RemoteFileNotFound:
+                if silence_missing:
+                    missing.append(destination)
+                else:
+                    raise
+
+        return missing
 
     def upload(self, local):
         remote_path = self._remote_path(local)

@@ -1,6 +1,10 @@
+from contextlib import contextmanager
 from collections import defaultdict
+from pathlib import Path
+
 from ploomber.exceptions import DAGRenderError
 from ploomber.products.MetaProduct import MetaProduct
+from ploomber.products import File
 
 
 def check_duplicated_products(dag):
@@ -33,3 +37,45 @@ def check_duplicated_products(dag):
         raise DAGRenderError('Tasks must generate unique Products. '
                              'The following Products appear in more than '
                              f'one task {duplicated!r}')
+
+
+def flatten(elements):
+    flat = []
+
+    for e in elements:
+        if isinstance(e, list):
+            flat.extend(e)
+        else:
+            flat.append(e)
+
+    return flat
+
+
+@contextmanager
+def file_remote_metadata_download_bulk(dag):
+    if File not in dag.clients:
+        # cannot do bulk download if there isn't dag-level client
+        yield
+    else:
+        selected = [
+            dag[t].product for t in dag._iter()
+            if isinstance(dag[t].product, File)
+            or isinstance(dag[t].product, MetaProduct)
+        ]
+
+        local_paths = flatten(p._path_to_metadata for p in selected)
+        remotes = flatten(p._remote_path_to_metadata for p in selected)
+
+        missing = dag.clients[File].download_bulk(local_paths,
+                                                  remotes,
+                                                  silence_missing=True)
+
+        for f in missing:
+            Path(f).write_text("{}")
+
+        try:
+            yield
+        finally:
+            for f in remotes:
+                if Path(f).exists():
+                    Path(f).unlink()

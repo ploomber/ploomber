@@ -67,6 +67,22 @@ def test_download_bulk(tmp_directory_with_project_root):
     assert Path('two-local').exists()
 
 
+def test_download_bulk_with_some_missing_silenced(
+        tmp_directory_with_project_root):
+    Path('backup').mkdir()
+    Path('backup', 'one').touch()
+    Path('backup', 'two').touch()
+    client = LocalStorageClient('backup')
+
+    missing = client.download_bulk(['one', 'two', 'missing'],
+                                   ['one-local', 'two-local', 'missing-local'],
+                                   silence_missing=True)
+
+    assert missing == ['missing-local']
+    assert Path('one-local').exists()
+    assert Path('two-local').exists()
+
+
 def test_error_when_downloading_non_existing(tmp_directory_with_project_root):
     client = LocalStorageClient('backup')
 

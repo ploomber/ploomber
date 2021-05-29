@@ -90,7 +90,8 @@ from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.dag.DAGLogger import DAGLogger
 from ploomber.dag.dagclients import DAGClients
 from ploomber.dag.abstractdag import AbstractDAG
-from ploomber.dag.util import check_duplicated_products
+from ploomber.dag.util import (check_duplicated_products,
+                               file_remote_metadata_download_bulk)
 from ploomber.tasks.abc import Task
 
 
@@ -334,58 +335,63 @@ class DAG(AbstractDAG):
         Render tasks, and update exec_status
         """
         if not self._params.cache_rendered_status:
-            self._logger.info('Rendering DAG %s', self)
+            # this context manager download remote metadata in parallel, if
+            # needed and cleans up all files upon exit
+            with file_remote_metadata_download_bulk(self):
 
-            if show_progress:
-                tasks = tqdm(self.values(), total=len(self))
-            else:
-                tasks = self.values()
-
-            exceptions = RenderExceptionsCollector()
-            warnings_ = RenderWarningsCollector()
-
-            # reset all tasks status
-            for task in tasks:
-                task.exec_status = TaskStatus.WaitingRender
-
-            for t in tasks:
-                # no need to process task with AbortedRender
-                if t.exec_status == TaskStatus.AbortedRender:
-                    continue
+                self._logger.info('Rendering DAG %s', self)
 
                 if show_progress:
-                    tasks.set_description(
-                        'Rendering DAG "{}"'.format(self.name)
-                        if self.name != 'No name' else 'Rendering DAG')
+                    tasks = tqdm(self.values(), total=len(self))
+                else:
+                    tasks = self.values()
 
-                with warnings.catch_warnings(record=True) as warnings_current:
-                    try:
-                        t.render(
-                            force=force,
-                            outdated_by_code=self._params.outdated_by_code,
-                            remote=remote)
-                    except Exception:
-                        tr = traceback.format_exc()
-                        exceptions.append(task=t, message=tr)
+                exceptions = RenderExceptionsCollector()
+                warnings_ = RenderWarningsCollector()
 
-                if warnings_current:
-                    w = [
-                        str(a_warning.message)
-                        for a_warning in warnings_current
-                    ]
-                    warnings_.append(task=t, message='\n'.join(w))
+                # reset all tasks status
+                for task in tasks:
+                    task.exec_status = TaskStatus.WaitingRender
 
-            if warnings_:
-                # FIXME: maybe raise one by one to keep the warning type
-                warnings.warn(str(warnings_))
+                for t in tasks:
+                    # no need to process task with AbortedRender
+                    if t.exec_status == TaskStatus.AbortedRender:
+                        continue
 
-            if exceptions:
-                self._exec_status = DAGStatus.ErroredRender
-                raise DAGRenderError(str(exceptions))
+                    if show_progress:
+                        tasks.set_description(
+                            'Rendering DAG "{}"'.format(self.name)
+                            if self.name != 'No name' else 'Rendering DAG')
 
-            check_duplicated_products(self)
+                    with warnings.catch_warnings(
+                            record=True) as warnings_current:
+                        try:
+                            t.render(
+                                force=force,
+                                outdated_by_code=self._params.outdated_by_code,
+                                remote=remote)
+                        except Exception:
+                            tr = traceback.format_exc()
+                            exceptions.append(task=t, message=tr)
 
-        self._exec_status = DAGStatus.WaitingExecution
+                    if warnings_current:
+                        w = [
+                            str(a_warning.message)
+                            for a_warning in warnings_current
+                        ]
+                        warnings_.append(task=t, message='\n'.join(w))
+
+                if warnings_:
+                    # FIXME: maybe raise one by one to keep the warning type
+                    warnings.warn(str(warnings_))
+
+                if exceptions:
+                    self._exec_status = DAGStatus.ErroredRender
+                    raise DAGRenderError(str(exceptions))
+
+                check_duplicated_products(self)
+
+            self._exec_status = DAGStatus.WaitingExecution
 
     def build(self,
               force=False,

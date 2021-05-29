@@ -200,6 +200,38 @@ def test_download_bulk(s3, tmp_directory):
     assert Path('three-downloaded').exists()
 
 
+def test_download_bulk_with_some_missing(s3, tmp_directory):
+    client = S3Client('some-bucket', 'my-folder', path_to_project_root='.')
+
+    for name in ['one', 'two']:
+        Path(name).touch()
+        client._upload(name)
+
+    with pytest.raises(RuntimeError):
+        client.download_bulk(
+            ['one', 'two', 'missing'],
+            ['one-downloaded', 'two-downloaded', 'missing-downloaded'],
+        )
+
+
+def test_download_bulk_with_some_missing_silenced(s3, tmp_directory):
+    client = S3Client('some-bucket', 'my-folder', path_to_project_root='.')
+
+    for name in ['one', 'two']:
+        Path(name).touch()
+        client._upload(name)
+
+    missing = client.download_bulk(
+        ['one', 'two', 'missing'],
+        ['one-downloaded', 'two-downloaded', 'missing-downloaded'],
+        silence_missing=True,
+    )
+
+    assert missing == ['missing-downloaded']
+    assert Path('one-downloaded').exists()
+    assert Path('two-downloaded').exists()
+
+
 def test_error_if_download_fails(s3, tmp_directory, monkeypatch):
     client = S3Client('some-bucket', 'my-folder', path_to_project_root='.')
 

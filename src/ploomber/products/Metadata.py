@@ -204,7 +204,10 @@ class Metadata(AbstractMetadata):
         else:
             # FIXME: if anything goes wrong when fetching metadata, warn
             # and set it to a valid dictionary with None values, validation
-            # should happen here, not in the fetch_metadata method
+            # should happen here, not in the fetch_metadata method, but we
+            # shouldn't catch all exceptions. Create a new one in
+            # ploomber.exceptions and raise it on each fetch_metadata
+            # implementation when failing to unserialize
             metadata_fetched = self._product.fetch_metadata()
 
             if metadata_fetched is None:

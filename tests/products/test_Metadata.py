@@ -392,3 +392,23 @@ def test_warns_on_unserializable_params(tmp_directory):
     assert m2.stored_source_code == 'some_source_code'
     assert m2.timestamp
     assert m2.params == {}
+
+
+# still missing implementation - check note on Metadata@._get
+@pytest.mark.skip
+def test_warns_on_corruped_metadata(tmp_directory):
+    Path('file').touch()
+    product = File('file')
+    mock = Mock(side_effect=ValueError)
+    product.fetch_metadata = mock
+
+    m = Metadata(product)
+
+    with pytest.warns(UserWarning) as record:
+        m._get()
+
+    assert len(record) == 1
+    assert 'corrupted metadata, ignoring' in record[0].message.args[0]
+    assert m.stored_source_code is None
+    assert m.timestamp is None
+    assert m.params is None
