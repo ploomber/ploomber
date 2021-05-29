@@ -85,6 +85,13 @@ class SpecValidationError(Exception):
         return msg
 
 
+class RemoteFileNotFound(Exception):
+    """
+    Raised by File clients when atempting to download a file that doesn't exist
+    """
+    pass
+
+
 def display_errors(errors):
     return '\n'.join(f'{_display_error_loc(e)} ({e["msg"]})' for e in errors)
 

@@ -8,6 +8,7 @@ except ImportError:
 from ploomber.util.default import find_root_recursively
 from ploomber.util.util import requires
 from ploomber.clients.storage.abc import AbstractStorageClient
+from ploomber.exceptions import RemoteFileNotFound
 
 
 class GCloudStorageClient(AbstractStorageClient):
@@ -85,15 +86,24 @@ class GCloudStorageClient(AbstractStorageClient):
         remote = self._remote_path(local)
         destination = destination or local
 
+        # FIXME: downlod and catch exception to avoid making two API calls
         if self._is_file(remote):
             self._download(destination, remote)
         else:
+            counter = 0
+
             for blob in self._bucket.client.list_blobs(self._bucket_name,
                                                        prefix=remote):
                 rel = PurePosixPath(blob.name).relative_to(remote)
                 destination_file = Path(destination, *rel.parts)
                 destination_file.parent.mkdir(exist_ok=True, parents=True)
                 blob.download_to_filename(destination_file)
+                counter += 1
+
+            if not counter:
+                raise RemoteFileNotFound('Could not download '
+                                         f'{local!r} using client {self}: '
+                                         'No such file or directory')
 
     def download_bulk(self, locals, destinations):
         """Download multiple files at once

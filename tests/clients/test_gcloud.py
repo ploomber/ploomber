@@ -6,6 +6,7 @@ import pytest
 
 from ploomber.clients import GCloudStorageClient
 from ploomber.clients.storage.gcloud import storage
+from ploomber.exceptions import RemoteFileNotFound
 
 
 @pytest.fixture
@@ -93,6 +94,19 @@ def test_download(monkeypatch, parent, mock_client):
 
     mock.assert_called_once_with('file.txt',
                                  str(PurePosixPath(parent, 'file.txt')))
+
+
+def test_error_when_downloading_non_existing(monkeypatch, mock_client):
+    client = GCloudStorageClient('my-bucket-name', parent='parent')
+    monkeypatch.setattr(client, '_is_file', lambda _: False)
+    list_blobs_mock = Mock(return_value=[])
+    monkeypatch.setattr(client._bucket.client, 'list_blobs', list_blobs_mock)
+
+    with pytest.raises(RemoteFileNotFound) as excinfo:
+        client.download('non-existing-file')
+
+    assert ("Could not download 'non-existing-file' using client"
+            in str(excinfo.value))
 
 
 def test_upload_folder(tmp_directory_with_project_root, monkeypatch,

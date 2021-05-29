@@ -4,6 +4,7 @@ import shutil
 from ploomber.util.default import find_root_recursively
 from ploomber.clients.storage.abc import AbstractStorageClient
 from ploomber.clients.storage.util import _resolve
+from ploomber.exceptions import RemoteFileNotFound
 
 
 class LocalStorageClient(AbstractStorageClient):
@@ -45,13 +46,18 @@ class LocalStorageClient(AbstractStorageClient):
 
         if remote.is_file():
             shutil.copy(remote, destination)
-        else:
+        elif remote.is_dir():
             shutil.copytree(remote, destination)
+        else:
+            raise RemoteFileNotFound('Could not download '
+                                     f'{local!r} using client {self}: '
+                                     'No such file or directory')
 
-    def download_bulk(self, locals, destinations):
+    def download_bulk(self, locals_, destinations):
         """Download multiple files at once
         """
-        raise NotImplementedError
+        for local, destination in zip(locals_, destinations):
+            self.download(local, destination)
 
     def upload(self, local):
         remote_path = self._remote_path(local)
@@ -73,3 +79,6 @@ class LocalStorageClient(AbstractStorageClient):
 
     def _is_dir(self, remote):
         raise NotImplementedError
+
+    def __repr__(self):
+        return f'{type(self).__name__}({str(self._path_to_backup_dir)!r})'

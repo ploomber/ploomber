@@ -15,6 +15,7 @@ except ImportError:
 from ploomber.util.default import find_root_recursively
 from ploomber.util.util import requires
 from ploomber.clients.storage.abc import AbstractStorageClient
+from ploomber.exceptions import RemoteFileNotFound
 
 
 class S3Client(AbstractStorageClient):
@@ -88,6 +89,8 @@ class S3Client(AbstractStorageClient):
         remote = self._remote_path(local)
         destination = destination or local
 
+        # FIXME: call _download directly and catch the exception to avoid
+        # doing to api calls
         if self._is_file(remote):
             self._download(destination, remote)
         else:
@@ -95,6 +98,11 @@ class S3Client(AbstractStorageClient):
 
             for page in paginator.paginate(Bucket=self._bucket_name,
                                            Prefix=remote):
+                if 'Contents' not in page:
+                    raise RemoteFileNotFound('Could not download '
+                                             f'{local!r} using client {self}: '
+                                             'No such file or directory')
+
                 for remote_file in page['Contents']:
                     remote_path = remote_file['Key']
                     rel = PurePosixPath(remote_path).relative_to(remote)

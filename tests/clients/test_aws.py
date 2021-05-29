@@ -10,6 +10,7 @@ import boto3
 from moto import mock_s3
 
 from ploomber.clients.storage.aws import S3Client
+from ploomber.exceptions import RemoteFileNotFound
 
 
 @pytest.fixture(scope='function')
@@ -100,6 +101,17 @@ def test_download(s3, tmp_directory, destination, expected):
     client.download('dir/a', destination=destination)
 
     assert Path(expected).read_text() == 'hello'
+
+
+def test_error_when_downloading_non_existing(s3):
+    client = S3Client('some-bucket',
+                      parent='my-folder',
+                      path_to_project_root='.')
+
+    with pytest.raises(RemoteFileNotFound) as excinfo:
+        client.download('some-file')
+
+    assert "Could not download 'some-file' using client" in str(excinfo.value)
 
 
 def test_download_folder(s3, tmp_directory):

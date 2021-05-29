@@ -40,6 +40,10 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
 
+        # make the build fail quickly on flake8 errors
+        pip install flake8
+        flake8
+
         # for some reason, conda does not resolve the env correctly and
         # installs and old version of pygraphviz (1.3) which breaks in
         # Python 3.7
@@ -67,8 +71,6 @@ jobs:
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env
-
-        flake8
 
         # this was used to debug a hanging test, it's fixed now but leaving
         # it temporarily in case some other intermitent bug shows up

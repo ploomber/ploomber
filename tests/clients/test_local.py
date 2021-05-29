@@ -8,6 +8,7 @@ from ploomber.tasks import PythonCallable
 from ploomber.products import File
 from ploomber.clients import LocalStorageClient
 from ploomber.constants import TaskStatus
+from ploomber.exceptions import RemoteFileNotFound
 
 
 def _touch(product):
@@ -52,6 +53,29 @@ def test_download_file(tmp_directory_with_project_root):
     client.download('file')
 
     assert Path('file').read_text() == 'content'
+
+
+def test_download_bulk(tmp_directory_with_project_root):
+    Path('backup').mkdir()
+    Path('backup', 'one').touch()
+    Path('backup', 'two').touch()
+    client = LocalStorageClient('backup')
+
+    client.download_bulk(['one', 'two'], ['one-local', 'two-local'])
+
+    assert Path('one-local').exists()
+    assert Path('two-local').exists()
+
+
+def test_error_when_downloading_non_existing(tmp_directory_with_project_root):
+    client = LocalStorageClient('backup')
+
+    with pytest.raises(RemoteFileNotFound) as excinfo:
+        client.download('file')
+
+    expected = ("Could not download 'file' using client "
+                "LocalStorageClient('backup'): No such file or directory")
+    assert expected == str(excinfo.value)
 
 
 def test_download_file_nested_dir(tmp_directory_with_project_root):
