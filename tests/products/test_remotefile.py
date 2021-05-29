@@ -115,3 +115,23 @@ def test_deletes_metadata_file_after_init(tmp_directory_with_project_root,
     _RemoteFile(file_=file_)
 
     assert not Path('.file.metadata.remote').exists()
+
+
+def test_calls_client_download_lazily(tmp_directory_with_project_root,
+                                      monkeypatch, dag):
+    dag.build()
+
+    file_ = dag['task'].product
+
+    download_mock = Mock(wraps=file_.client.download)
+    monkeypatch.setattr(file_.client, 'download', download_mock)
+
+    rf = _RemoteFile(file_=file_)
+
+    download_mock.assert_not_called()
+
+    assert rf.metadata.stored_source_code is not None
+    assert rf.metadata.timestamp is not None
+    assert rf.metadata.params is not None
+
+    download_mock.assert_called_once()

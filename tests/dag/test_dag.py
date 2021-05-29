@@ -381,6 +381,22 @@ def test_build_partially_with_wildcard_that_has_upstream(tmp_directory):
     assert not Path('b.txt').exists()
 
 
+def test_build_partially_with_wildcard_skip_upstream(tmp_directory):
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+    root = PythonCallable(touch_root, File('root.txt'), dag, name='root')
+    a1 = PythonCallable(touch, File('a-1.txt'), dag, name='a-1')
+    root >> a1
+    PythonCallable(touch_root, File('a-2.txt'), dag, name='a-2')
+    PythonCallable(touch_root, File('b.txt'), dag, name='b')
+
+    dag.build_partially('a-*', skip_upstream=True)
+
+    assert not Path('root.txt').exists()
+    assert Path('a-1.txt').exists()
+    assert Path('a-2.txt').exists()
+    assert not Path('b.txt').exists()
+
+
 def test_build_partially_diff_sessions(tmp_directory):
     def make():
         dag = DAG()

@@ -413,6 +413,7 @@ def test_render_remote_with_non_file_products(tmp_directory):
 
     dag = make(client)
     dag.render(remote=True)
+    client.close()
 
     # should match the local status
     assert {t.exec_status for t in dag.values()} == {TaskStatus.Skipped}

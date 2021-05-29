@@ -166,9 +166,6 @@ class DAG(AbstractDAG):
                 'an instance of executors.Executor, got type {}'.format(
                     type(executor)))
 
-        # FIXME: delete, no longer used
-        self._did_render = False
-
         self.on_finish = None
         self.on_failure = None
         self._available_callback_kwargs = {'dag': self}
@@ -336,10 +333,7 @@ class DAG(AbstractDAG):
         """
         Render tasks, and update exec_status
         """
-        # FIXME: should also render again if errored render, maybe change
-        # _did_render for needs render which is on the first time
-        # and when there's an error
-        if not self._params.cache_rendered_status or not self._did_render:
+        if not self._params.cache_rendered_status:
             self._logger.info('Rendering DAG %s', self)
 
             if show_progress:
@@ -610,7 +604,8 @@ class DAG(AbstractDAG):
                         target,
                         force=False,
                         show_progress=True,
-                        debug=False):
+                        debug=False,
+                        skip_upstream=False):
         """Partially build a dag until certain task
 
         Parameters
@@ -631,13 +626,18 @@ class DAG(AbstractDAG):
             this modifies the executor and temporarily sets it to Serial
             with subprocess off and catching exceptions/warnings off. Restores
             the original executor at the end.
+
+        skip_upstream : bool, default=False
+            If False, includes all upstream dependencies required to build
+            target, otherwise it skips them. Note that if this is True and
+            it's not possible to build a given task (e.g., missing upstream
+            products), this will fail
         """
         dag_copy = deepcopy(self)
 
         # task names are usually str, although this isn't strictly enforced
         if isinstance(target, str) and '*' in target:
-            targets = fnmatch.filter(self._iter(), target)
-            to_pop = set(dag_copy) - set(targets)
+            targets = set(fnmatch.filter(self._iter(), target))
 
             to_include = [
                 self[target]._lineage for target in targets
@@ -648,19 +648,29 @@ class DAG(AbstractDAG):
                 lineage = reduce(lambda a, b: a.union(b), to_include)
             else:
                 lineage = set()
+
         else:
-            lineage = self[target]._lineage
-            to_pop = set(dag_copy) - {target}
+            targets = {target}
+            lineage = self[target]._lineage or set()
 
-        if lineage:
-            to_pop = to_pop - lineage
+        to_remove = set(dag_copy) - targets - lineage
 
-        for task in to_pop:
+        for task in to_remove:
             dag_copy.pop(task)
 
         # clear metadata in the original dag, because building the copy
         # will make it outdated, we have to force reload from disk
         self._clear_metadata()
+
+        if skip_upstream:
+            dag_copy.render(force=force, show_progress=show_progress)
+            # to prevent call to dag_copy.render() inside dag_copy.build()
+            # to overwrite Skipped status
+            dag_copy._params.cache_rendered_status = True
+
+            for name, task in dag_copy.items():
+                if name not in targets:
+                    dag_copy[name].exec_status = TaskStatus.Skipped
 
         return dag_copy.build(force=force,
                               show_progress=show_progress,
@@ -828,9 +838,6 @@ class DAG(AbstractDAG):
             Pass a string to group this edge, upon rendering, upstream
             products are available via task[group_name][tas_name]
         """
-        # if a new task is added, rendering is required again
-        self._did_render = False
-
         attrs = {} if group_name is None else {'group_name': group_name}
 
         # when adding a task group (but not a dag)

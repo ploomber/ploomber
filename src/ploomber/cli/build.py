@@ -14,6 +14,12 @@ def main(render_only=False):
                             help='Force execution by ignoring status',
                             action='store_true',
                             default=False)
+        parser.add_argument('--skip-upstream',
+                            '-su',
+                            help='Skip building upstream dependencies. '
+                            'Only applicable when using --partially',
+                            action='store_true',
+                            default=False)
         parser.add_argument(
             '--partially',
             '-p',
@@ -39,7 +45,8 @@ def main(render_only=False):
         if args.partially:
             report = dag.build_partially(args.partially,
                                          force=args.force,
-                                         debug=args.debug)
+                                         debug=args.debug,
+                                         skip_upstream=args.skip_upstream)
         else:
             report = dag.build(force=args.force, debug=args.debug)
 
