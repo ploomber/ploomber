@@ -76,6 +76,7 @@ def file_remote_metadata_download_bulk(dag):
         ]
 
         # TODO: delete download bulk implementation
+        # TODO: delete extra methods to metaproduct
         files = flatten_prods(selected)
 
         # from IPython import embed
