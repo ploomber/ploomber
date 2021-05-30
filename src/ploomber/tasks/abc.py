@@ -467,6 +467,11 @@ class Task(abc.ABC):
         DAGBuildEarlyStop
             If any task or on_finish hook raises a DAGBuildEarlyStop error
         """
+        # This is the public API for users who'd to run tasks in isolation,
+        # we have to make sure we clear product cache status, otherwise
+        # this will interfere with other render calls
+        self.render(force=force)
+
         upstream_exec_status = [t.exec_status for t in self.upstream.values()]
 
         if any(exec_status == TaskStatus.WaitingRender
@@ -499,11 +504,6 @@ class Task(abc.ABC):
             for t in ok:
                 if t.exec_status == TaskStatus.WaitingDownload:
                     t.product.download()
-
-        # This is the public API for users who'd to run tasks in isolation,
-        # we have to make sure we clear product cache status, otherwise
-        # this will interfere with other render calls
-        self.render(force=force)
 
         # at this point the task must be WaitingDownload or WaitingExecution
         res, _ = self._build(catch_exceptions=catch_exceptions)

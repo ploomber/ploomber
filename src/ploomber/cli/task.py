@@ -21,7 +21,7 @@ def main():
             action='store_true')
         parser.add_argument('--force',
                             '-f',
-                            help='Force build task (ignore up-to-date status)',
+                            help='Force task build (ignore up-to-date status)',
                             action='store_true')
         parser.add_argument('--status',
                             '-st',

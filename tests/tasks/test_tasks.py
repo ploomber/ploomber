@@ -31,6 +31,10 @@ def touch(product):
 
 
 def touch_w_upstream(product, upstream):
+    # read to ensure the files exist
+    for p in upstream.values():
+        Path(p).read_text()
+
     Path(str(product)).touch()
 
 
@@ -201,20 +205,6 @@ def test_task_change_in_status(tmp_directory):
     assert (ta.exec_status == TaskStatus.WaitingExecution
             and tb.exec_status == TaskStatus.WaitingUpstream
             and tc.exec_status == TaskStatus.WaitingUpstream)
-
-    # ta.build()
-
-    # assert (ta.exec_status == TaskStatus.Executed
-    #         and tb.exec_status == TaskStatus.WaitingExecution
-    #         and tc.exec_status == TaskStatus.WaitingUpstream)
-
-    # tb.build()
-
-    # assert (ta.exec_status == TaskStatus.Executed
-    #         and tb.exec_status == TaskStatus.Executed
-    #         and tc.exec_status == TaskStatus.WaitingExecution)
-
-    # tc.build()
 
     dag.build()
 
@@ -417,3 +407,40 @@ def test_task_build_does_not_overwrite_metadata_if_downloaded(
     metadata_new = json.loads(Path('.file.txt.metadata').read_text())
 
     assert metadata == metadata_new
+
+
+def _make_dag_with_client():
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+    dag.clients[File] = LocalStorageClient('backup')
+    t1 = PythonCallable(touch, File('1.txt'), dag, name=1)
+    t2 = PythonCallable(touch_w_upstream, File('2.txt'), dag, name=2)
+    t1 >> t2
+    return dag
+
+
+def test_forced_render_overrides_waiting_download(
+        tmp_directory_with_project_root):
+    _make_dag_with_client().build()
+
+    Path('1.txt').unlink()
+    Path('2.txt').unlink()
+
+    dag = _make_dag_with_client()
+    dag.render()
+
+    dag[2].render(force=True)
+    assert dag[2].exec_status == TaskStatus.WaitingUpstream
+
+
+def test_forced_build_overrides_waiting_download(
+        tmp_directory_with_project_root):
+    _make_dag_with_client().build()
+
+    Path('1.txt').unlink()
+    Path('2.txt').unlink()
+
+    dag = _make_dag_with_client()
+    dag.render()
+
+    # should download 1.txt then generate 2.txt
+    dag[2].build(force=True)
