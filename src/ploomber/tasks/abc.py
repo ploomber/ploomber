@@ -60,6 +60,7 @@ from ploomber.tasks.taskgroup import TaskGroup
 from ploomber.constants import TaskStatus
 from ploomber.tasks._upstream import Upstream
 from ploomber.tasks._params import Params
+from ploomber.tasks.util import download_products_in_parallel
 from ploomber.Table import TaskReport, Row
 from ploomber.util import isiterable
 from ploomber.util.util import callback_check
@@ -501,9 +502,8 @@ class Task(abc.ABC):
                     'up-to-date copies to remote storage and they will be '
                     'automatically downloaded')
 
-            for t in ok:
-                if t.exec_status == TaskStatus.WaitingDownload:
-                    t.product.download()
+            download_products_in_parallel(
+                t for t in ok if t.exec_status == TaskStatus.WaitingDownload)
 
         # at this point the task must be WaitingDownload or WaitingExecution
         res, _ = self._build(catch_exceptions=catch_exceptions)
