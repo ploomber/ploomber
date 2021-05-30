@@ -37,34 +37,11 @@ class _RemoteFile:
         self._is_outdated_status_remote = None
         self._exists = None
 
-    def is_valid(self):
-        return (self._local_file.client is not None
-                and self._local_file.client._remote_exists(
-                    self._local_file._path_to_metadata)
-                and self._local_file.client._remote_exists(
-                    self._local_file._path_to_file))
-
-    def fetch_metadata(self):
-        return _fetch_metadata_from_file_product(self, check_file_exists=False)
-
-    def exists(self):
-        # This is needed to make this class compatible with Metadata.
-        # Since this object is created under the assumption that the remote
-        # file exists and can be downloaded, we simply return True to make
-        # it compatible with the Metadata implementation
-        return True
-
-    @property
-    def metadata(self):
-        # check if we already downloaded remote metadata
-        if not self._metadata._did_fetch:
-
-            # only download if it doesn't exist (might have been downloaded
-            # using bulk download in DAG.render)
-            if not self._path_to_metadata.exists():
-                self._local_file.client.download(
-                    self._local_file._path_to_metadata,
-                    destination=self._path_to_metadata)
+    def _fetch_remote_metadata(self):
+        if self.exists() and not self._metadata._did_fetch:
+            self._local_file.client.download(
+                self._local_file._path_to_metadata,
+                destination=self._path_to_metadata)
 
             # load from values from file
             self._metadata._fetch()
@@ -312,7 +289,7 @@ class File(Product, os.PathLike):
         """
         should_download = False
 
-        if self._remote.is_valid():
+        if self._remote.exists():
             if self._remote._is_equal_to_local_copy():
                 return self._remote._is_outdated(with_respect_to_local=True)
             else:
@@ -334,7 +311,7 @@ class File(Product, os.PathLike):
         Check status using remote metadata, if no remote is available
         (or remote metadata is corrupted) returns True
         """
-        if self._remote.is_valid():
+        if self._remote.exists():
             return self._remote._is_outdated(with_respect_to_local=False,
                                              outdated_by_code=outdated_by_code)
         else:

@@ -635,6 +635,9 @@ class MyFakeClient:
     def close(self):
         pass
 
+    def download(self, local, destination=None):
+        pass
+
 
 @pytest.mark.parametrize('executor', [
     Serial(build_in_subprocess=False),

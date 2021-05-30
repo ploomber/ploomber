@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 from collections import defaultdict
-from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from ploomber.exceptions import DAGRenderError
 from ploomber.products.MetaProduct import MetaProduct
@@ -39,18 +39,6 @@ def check_duplicated_products(dag):
                              f'one task {duplicated!r}')
 
 
-def flatten(elements):
-    flat = []
-
-    for e in elements:
-        if isinstance(e, list):
-            flat.extend(e)
-        else:
-            flat.append(e)
-
-    return flat
-
-
 def flatten_prods(elements):
     flat = []
 
@@ -59,64 +47,39 @@ def flatten_prods(elements):
             flat.extend(list(e))
         elif isinstance(e, File):
             flat.append(e)
+        # ignore everything else...
 
     return flat
 
 
+# TODO: this no longer needs to be a context manager
 @contextmanager
 def file_remote_metadata_download_bulk(dag):
-    if File not in dag.clients:
-        # cannot do bulk download if there isn't dag-level client
-        yield
-    else:
-        selected = [
-            dag[t].product for t in dag._iter()
-            if isinstance(dag[t].product, File)
-            or isinstance(dag[t].product, MetaProduct)
-        ]
+    files = flatten_prods(dag[t].product for t in dag._iter()
+                          if isinstance(dag[t].product, File)
+                          or isinstance(dag[t].product, MetaProduct))
 
-        # TODO: delete download bulk implementation
-        # TODO: delete extra methods to metaproduct
-        files = flatten_prods(selected)
+    # TODO: delete download bulk implementation
 
-        # from IPython import embed
-        # embed()
+    fetch_remote_metadata_in_parallel(files)
 
-        # local_paths = flatten(p._path_to_metadata for p in selected)
-        # remotes = flatten(p._remote_path_to_metadata for p in selected)
-
-        # missing = dag.clients[File].download_bulk(local_paths,
-        #                                           remotes,
-        #                                           silence_missing=True)
-
-        # for f in missing:
-        #     Path(f).write_text("{}")
-
-        # try:
-        #     yield
-        # finally:
-        #     for f in remotes:
-        #         if Path(f).exists():
-        #             Path(f).unlink()
-
-        download(files)
-
-        yield
+    yield
 
 
-def download(files):
-    from concurrent.futures import ThreadPoolExecutor, as_completed
-
+def fetch_remote_metadata_in_parallel(files):
+    """Fetches remote metadta in parallel from a list of Files
+    """
     with ThreadPoolExecutor(max_workers=64) as executor:
-        future2local = {
+        future2file = {
             executor.submit(file._remote._fetch_remote_metadata): file
             for file in files
         }
 
-        for future in as_completed(future2local):
+        for future in as_completed(future2file):
             exception = future.exception()
 
             if exception:
-                local = future2local[future]
-                raise RuntimeError('An error occurred when downloading '
-                                   f'file {local!r}') from exception
+                local = future2file[future]
+                raise RuntimeError(
+                    'An error occurred when fetching '
+                    f'remote metadata for file {local!r}') from exception
