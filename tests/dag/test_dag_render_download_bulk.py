@@ -41,10 +41,10 @@ def dag_w_error():
     return dag
 
 
-def test_calls_bulk_download(tmp_directory, monkeypatch, dag):
+def test_calls_parallel_download(tmp_directory, monkeypatch, dag):
     dag.build()
-    mock = Mock(wraps=dag_module.file_remote_metadata_download_bulk)
-    monkeypatch.setattr(dag_module, 'file_remote_metadata_download_bulk', mock)
+    mock = Mock(wraps=dag_module.fetch_remote_metadata_in_parallel)
+    monkeypatch.setattr(dag_module, 'fetch_remote_metadata_in_parallel', mock)
 
     dag.render()
 
@@ -71,7 +71,7 @@ def test_silences_downloading_missing_remote_metadata_files(
     # assert not Path('.one.metadata.remote').exists()
 
 
-def test_cleans_up_files_if_bulk_download_fails(dag_w_error):
+def test_cleans_up_files_if_parallel_download_fails(dag_w_error):
     pass
 
 
@@ -97,6 +97,8 @@ def test_ignores_non_file_products(tmp_directory):
 
     dag.render()
 
+    client.close()
+
 
 def tes_processes_metaproducts(tmp_directory, monkeypatch):
     dag = DAG(executor=Serial(build_in_subprocess=False))
@@ -108,8 +110,8 @@ def tes_processes_metaproducts(tmp_directory, monkeypatch):
                    dag=dag)
     dag.build()
 
-    mock = Mock(wraps=dag_module.file_remote_metadata_download_bulk)
-    monkeypatch.setattr(dag_module, 'file_remote_metadata_download_bulk', mock)
+    mock = Mock(wraps=dag_module.fetch_remote_metadata_in_parallel)
+    monkeypatch.setattr(dag_module, 'fetch_remote_metadata_in_parallel', mock)
 
     dag.render()
 
@@ -129,8 +131,8 @@ def test_ignores_files_with_product_level_client():
 
 
 def test_dag_without_client(monkeypatch, tmp_directory):
-    mock = Mock(wraps=dag_module.file_remote_metadata_download_bulk)
-    monkeypatch.setattr(dag_module, 'file_remote_metadata_download_bulk', mock)
+    mock = Mock(wraps=dag_module.fetch_remote_metadata_in_parallel)
+    monkeypatch.setattr(dag_module, 'fetch_remote_metadata_in_parallel', mock)
 
     dag = DAG(executor=Serial(build_in_subprocess=False))
     PythonCallable(touch_root, File('one'), dag=dag)

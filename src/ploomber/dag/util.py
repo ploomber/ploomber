@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -52,23 +51,17 @@ def flatten_prods(elements):
     return flat
 
 
-# TODO: this no longer needs to be a context manager
-@contextmanager
-def file_remote_metadata_download_bulk(dag):
+def fetch_remote_metadata_in_parallel(dag):
+    """Fetches remote metadta in parallel from a list of Files
+    """
+
     files = flatten_prods(dag[t].product for t in dag._iter()
                           if isinstance(dag[t].product, File)
                           or isinstance(dag[t].product, MetaProduct))
 
     # TODO: delete download bulk implementation
+    # TODO: do some testing with gcp client - see if it's thread safe
 
-    fetch_remote_metadata_in_parallel(files)
-
-    yield
-
-
-def fetch_remote_metadata_in_parallel(files):
-    """Fetches remote metadta in parallel from a list of Files
-    """
     with ThreadPoolExecutor(max_workers=64) as executor:
         future2file = {
             executor.submit(file._remote._fetch_remote_metadata): file
