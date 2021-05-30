@@ -467,7 +467,6 @@ class Task(abc.ABC):
         DAGBuildEarlyStop
             If any task or on_finish hook raises a DAGBuildEarlyStop error
         """
-
         upstream_exec_status = [t.exec_status for t in self.upstream.values()]
 
         if any(exec_status == TaskStatus.WaitingRender
@@ -607,8 +606,8 @@ class Task(abc.ABC):
 
     def _run(self):
         """
-        Run task if certain status conditions are ok, otherwise raise a
-        TaskBuildError exception
+        Run or download task if certain status conditions are met, otherwise
+        raise a TaskBuildError exception
         """
         # cannot keep running, we depend on the render step to get all the
         # parameters resolved (params, upstream, product)
@@ -759,6 +758,8 @@ class Task(abc.ABC):
                 # this one too, we can do so
                 # FIXME:  I dont think i need this, should be taken care
                 # by is_outdated.check()
+                # FIXME: this should set to WaitingExecution if can download
+                # upstream tasks and force=True
                 if upstream_exec_status <= {
                         TaskStatus.WaitingDownload, TaskStatus.Skipped
                 } and is_outdated.check() == TaskStatus.WaitingDownload:

@@ -43,10 +43,9 @@ def flatten_products(elements):
 
     for prod in elements:
         if isinstance(prod, MetaProduct):
-            flat.extend([p for p in prod if isinstance(p, File)])
-        elif isinstance(prod, File):
+            flat.extend([p for p in prod if isinstance(p, File) and p.client])
+        elif isinstance(prod, File) and prod.client:
             flat.append(prod)
-        # ignore everything else...
 
     return flat
 
@@ -54,22 +53,22 @@ def flatten_products(elements):
 def fetch_remote_metadata_in_parallel(dag):
     """Fetches remote metadta in parallel from a list of Files
     """
-
     files = flatten_products(dag[t].product for t in dag._iter()
                              if isinstance(dag[t].product, File)
                              or isinstance(dag[t].product, MetaProduct))
 
-    with ThreadPoolExecutor(max_workers=64) as executor:
-        future2file = {
-            executor.submit(file._remote._fetch_remote_metadata): file
-            for file in files
-        }
+    if files:
+        with ThreadPoolExecutor(max_workers=64) as executor:
+            future2file = {
+                executor.submit(file._remote._fetch_remote_metadata): file
+                for file in files
+            }
 
-        for future in as_completed(future2file):
-            exception = future.exception()
+            for future in as_completed(future2file):
+                exception = future.exception()
 
-            if exception:
-                local = future2file[future]
-                raise RuntimeError(
-                    'An error occurred when fetching '
-                    f'remote metadata for file {local!r}') from exception
+                if exception:
+                    local = future2file[future]
+                    raise RuntimeError(
+                        'An error occurred when fetching '
+                        f'remote metadata for file {local!r}') from exception

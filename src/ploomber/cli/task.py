@@ -48,5 +48,6 @@ def main():
     # task if build by default, but when --source or --status are passed,
     # the --build flag is required
     no_flags = not any((args.build, args.status, args.source, args.on_finish))
+
     if no_flags or args.build:
         task.build(force=args.force)
