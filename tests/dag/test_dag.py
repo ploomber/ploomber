@@ -310,7 +310,7 @@ def test_forced_render_does_not_call_is_outdated(monkeypatch):
     t1 >> t2
 
     def _is_outdated(self, outdated_by_code):
-        raise ValueError
+        raise ValueError(f'Called _is_outdated on {self}')
 
     monkeypatch.setattr(File, '_is_outdated', _is_outdated)
 

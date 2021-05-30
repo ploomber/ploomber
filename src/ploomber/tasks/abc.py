@@ -754,34 +754,19 @@ class Task(abc.ABC):
 
             # some upstream tasks need execution (or download)
             if not all_upstream_ready:
-                # special case: if all upstream tasks can be downloaded and
-                # this one too, we can do so
-                # FIXME:  I dont think i need this, should be taken care
-                # by is_outdated.check()
-                # FIXME: this should set to WaitingExecution if can download
-                # upstream tasks and force=True
-                can_download_upstream = upstream_exec_status <= {
-                    TaskStatus.WaitingDownload, TaskStatus.Skipped
-                }
-
-                if can_download_upstream and is_outdated.check(
-                ) == TaskStatus.WaitingDownload:
-                    self._exec_status = TaskStatus.WaitingDownload
-                elif force or is_outdated.check():
+                if force or is_outdated.check() is True:
                     self._exec_status = TaskStatus.WaitingUpstream
+                elif is_outdated.check() == TaskStatus.WaitingDownload:
+                    self._exec_status = TaskStatus.WaitingDownload
                 else:
                     self._exec_status = TaskStatus.Skipped
 
-            # al upstream ready
+            # all upstream ready
             else:
-                # check if we need to execute or download
-                if force or is_outdated.check():
-                    # This only happens with File
-                    if is_outdated.check() == TaskStatus.WaitingDownload:
-                        self._exec_status = TaskStatus.WaitingDownload
-                    else:
-                        self._exec_status = TaskStatus.WaitingExecution
-                # task is up-to-date, nothing to do
+                if force or is_outdated.check() is True:
+                    self._exec_status = TaskStatus.WaitingExecution
+                elif is_outdated.check() == TaskStatus.WaitingDownload:
+                    self._exec_status = TaskStatus.WaitingDownload
                 else:
                     self._exec_status = TaskStatus.Skipped
 
