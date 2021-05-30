@@ -130,9 +130,10 @@ def test_dag_without_client(monkeypatch, tmp_directory):
 
     dag.render()
 
-    # should call it but nothing will happen
+    # should call it
     mock.assert_called_once_with(dag)
-    mock_remote.assert_called_once_with()
+    # but should not call remotes
+    mock_remote.assert_not_called()
 
 
 def test_dag_with_files_and_metaproducts(monkeypatch, tmp_directory):

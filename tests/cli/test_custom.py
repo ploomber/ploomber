@@ -2,7 +2,7 @@ import subprocess
 import importlib
 import sys
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 
 import jupytext
 import nbformat
@@ -10,6 +10,7 @@ import pytest
 
 from ploomber.cli import plot, build, parsers, task, report, status, interact
 from ploomber.cli.cli import cmd_router
+from ploomber.cli.parsers import _custom_command
 from ploomber.tasks import notebook
 from ploomber import DAG
 import ploomber.dag.DAG as dag_module
@@ -378,6 +379,29 @@ def test_task_command(args, tmp_nbs, monkeypatch):
     args = ['task', '--entry-point', 'pipeline.yaml', 'load'] + args
     monkeypatch.setattr(sys, 'argv', args)
     task.main(catch_exception=False)
+
+
+def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
+    """
+    Make sure the force flag is only used in task.render and not dag.render
+    because we don't want to override the status of other tasks
+    """
+    args = ['task', 'load', '--force']
+    monkeypatch.setattr(sys, 'argv', args)
+
+    class CustomCommandWrapper:
+        def __call__(self, parser):
+            dag, args = _custom_command(parser)
+            self.dag_mock = MagicMock(wraps=dag)
+            return self.dag_mock, args
+
+    wrapper = CustomCommandWrapper()
+
+    monkeypatch.setattr(task, '_custom_command', wrapper)
+
+    task.main(catch_exception=False)
+
+    wrapper.dag_mock.render.assert_called_once_with()
 
 
 def test_build_with_replaced_env_value(tmp_nbs, monkeypatch):

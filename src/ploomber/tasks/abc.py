@@ -760,9 +760,12 @@ class Task(abc.ABC):
                 # by is_outdated.check()
                 # FIXME: this should set to WaitingExecution if can download
                 # upstream tasks and force=True
-                if upstream_exec_status <= {
-                        TaskStatus.WaitingDownload, TaskStatus.Skipped
-                } and is_outdated.check() == TaskStatus.WaitingDownload:
+                can_download_upstream = upstream_exec_status <= {
+                    TaskStatus.WaitingDownload, TaskStatus.Skipped
+                }
+
+                if can_download_upstream and is_outdated.check(
+                ) == TaskStatus.WaitingDownload:
                     self._exec_status = TaskStatus.WaitingDownload
                 elif force or is_outdated.check():
                     self._exec_status = TaskStatus.WaitingUpstream

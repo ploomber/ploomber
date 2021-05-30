@@ -33,7 +33,7 @@ def main():
                             action='store_true')
     dag, args = _custom_command(parser)
 
-    dag.render(force=args.force)
+    dag.render()
     task = dag[args.task_name]
 
     if args.source:
