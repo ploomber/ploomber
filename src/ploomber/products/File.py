@@ -35,28 +35,13 @@ class _RemoteFile:
 
         self._is_outdated_status_local = None
         self._is_outdated_status_remote = None
+        self._exists = None
 
-    def exists(self):
-        return (self._local_file.client is not None
-                and self._local_file.client._remote_exists(
-                    self._local_file._path_to_metadata)
-                and self._local_file.client._remote_exists(
-                    self._local_file._path_to_file))
-
-    def fetch_metadata(self):
-        return _fetch_metadata_from_file_product(self, check_file_exists=False)
-
-    @property
-    def metadata(self):
-        # check if we already downloaded remote metadata
+    def _fetch_remote_metadata(self):
         if not self._metadata._did_fetch:
-
-            # only download if it doesn't exist (might have been downloaded
-            # using bulk download in DAG.render)
-            if not self._path_to_metadata.exists():
-                self._local_file.client.download(
-                    self._local_file._path_to_metadata,
-                    destination=self._path_to_metadata)
+            self._local_file.client.download(
+                self._local_file._path_to_metadata,
+                destination=self._path_to_metadata)
 
             # load from values from file
             self._metadata._fetch()
@@ -64,6 +49,29 @@ class _RemoteFile:
             if self._path_to_metadata.exists():
                 self._path_to_metadata.unlink()
 
+    def exists(self):
+        """
+        Checks if remote File exists. This is used by Metadata to determine
+        whether to use the existing remote metadat (if any) or ignore it: if
+        this returns False, remote metadata is ignored even if it exists
+        """
+        if self._exists is None:
+            # TODO remove checking if file exists and just make the API
+            # call directly
+            self._exists = (self._local_file.client is not None
+                            and self._local_file.client._remote_exists(
+                                self._local_file._path_to_metadata)
+                            and self._local_file.client._remote_exists(
+                                self._local_file._path_to_file))
+
+        return self._exists
+
+    def fetch_metadata(self):
+        return _fetch_metadata_from_file_product(self, check_file_exists=False)
+
+    @property
+    def metadata(self):
+        self._fetch_remote_metadata()
         return self._metadata
 
     @property
@@ -154,6 +162,7 @@ class _RemoteFile:
         """
         if (upstream.exec_status == TaskStatus.WaitingDownload
                 or not with_respect_to_local):
+            # TODO: delete ._remote will never be None
             if upstream.product._remote:
                 upstream_timestamp = (
                     upstream.product._remote.metadata.timestamp)

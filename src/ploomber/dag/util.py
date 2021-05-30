@@ -51,6 +51,18 @@ def flatten(elements):
     return flat
 
 
+def flatten_prods(elements):
+    flat = []
+
+    for e in elements:
+        if isinstance(e, MetaProduct):
+            flat.extend(list(e))
+        elif isinstance(e, File):
+            flat.append(e)
+
+    return flat
+
+
 @contextmanager
 def file_remote_metadata_download_bulk(dag):
     if File not in dag.clients:
@@ -63,19 +75,47 @@ def file_remote_metadata_download_bulk(dag):
             or isinstance(dag[t].product, MetaProduct)
         ]
 
-        local_paths = flatten(p._path_to_metadata for p in selected)
-        remotes = flatten(p._remote_path_to_metadata for p in selected)
+        # TODO: delete download bulk implementation
+        files = flatten_prods(selected)
 
-        missing = dag.clients[File].download_bulk(local_paths,
-                                                  remotes,
-                                                  silence_missing=True)
+        # from IPython import embed
+        # embed()
 
-        for f in missing:
-            Path(f).write_text("{}")
+        # local_paths = flatten(p._path_to_metadata for p in selected)
+        # remotes = flatten(p._remote_path_to_metadata for p in selected)
 
-        try:
-            yield
-        finally:
-            for f in remotes:
-                if Path(f).exists():
-                    Path(f).unlink()
+        # missing = dag.clients[File].download_bulk(local_paths,
+        #                                           remotes,
+        #                                           silence_missing=True)
+
+        # for f in missing:
+        #     Path(f).write_text("{}")
+
+        # try:
+        #     yield
+        # finally:
+        #     for f in remotes:
+        #         if Path(f).exists():
+        #             Path(f).unlink()
+
+        download(files)
+
+        yield
+
+
+def download(files):
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    with ThreadPoolExecutor(max_workers=64) as executor:
+        future2local = {
+            executor.submit(file._remote._fetch_remote_metadata): file
+            for file in files
+        }
+
+        for future in as_completed(future2local):
+            exception = future.exception()
+
+            if exception:
+                local = future2local[future]
+                raise RuntimeError('An error occurred when downloading '
+                                   f'file {local!r}') from exception
