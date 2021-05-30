@@ -105,11 +105,6 @@ class GCloudStorageClient(AbstractStorageClient):
                                          f'{local!r} using client {self}: '
                                          'No such file or directory')
 
-    def download_bulk(self, locals, destinations):
-        """Download multiple files at once
-        """
-        raise NotImplementedError
-
     def _is_file(self, remote):
         return self._bucket.blob(remote).exists()
 

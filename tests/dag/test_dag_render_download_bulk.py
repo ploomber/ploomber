@@ -55,26 +55,6 @@ def test_calls_parallel_download(tmp_directory, monkeypatch, dag):
     assert not glob('*.metadata.remote')
 
 
-def test_silences_downloading_missing_remote_metadata_files(
-        tmp_directory, dag):
-    pass
-    # dag.build()
-
-    # dag.render()
-
-    # mock.assert_called_once_with(dag)
-
-    # # case where some files exist remotely while others doesn't
-    # # check it creates an empty file anyway
-
-    # # should clean up remote copies
-    # assert not Path('.one.metadata.remote').exists()
-
-
-def test_cleans_up_files_if_parallel_download_fails(dag_w_error):
-    pass
-
-
 def test_cleans_up_files_if_render_fails(dag_w_error):
     with pytest.raises(DAGRenderError):
         dag_w_error.render()
@@ -120,15 +100,6 @@ def tes_processes_metaproducts(tmp_directory, monkeypatch):
     # should clean up remote copies
     assert not glob('*.metadata.remote')
 
-    # TODO: check copies are downloaded while in the context
-
-
-# TODO: test metaproducts with mixed files and non files?
-
-
-def test_ignores_files_with_product_level_client():
-    pass
-
 
 def test_dag_without_client(monkeypatch, tmp_directory):
     mock = Mock(wraps=dag_module.fetch_remote_metadata_in_parallel)
@@ -143,4 +114,6 @@ def test_dag_without_client(monkeypatch, tmp_directory):
     mock.assert_called_once_with(dag)
 
 
-# TODO: add silence missing to gcloud client
+# TODO: test metaproducts with mixed files and non files?
+# TODO: test mixed inside a metaproduct
+# TODO: do some testing with gcp client - see if it's thread safe

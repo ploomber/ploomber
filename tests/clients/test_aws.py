@@ -3,7 +3,6 @@ import shutil
 from itertools import chain
 from glob import iglob
 from pathlib import Path, PurePosixPath
-from unittest.mock import Mock
 
 import pytest
 import boto3
@@ -182,70 +181,3 @@ def test_pickle():
 def test_close():
     S3Client('some-bucket', parent='my-folder',
              path_to_project_root='.').close()
-
-
-def test_download_bulk(s3, tmp_directory):
-    client = S3Client('some-bucket', 'my-folder', path_to_project_root='.')
-
-    for name in ['one', 'two', 'three']:
-        Path(name).touch()
-        client._upload(name)
-
-    client.download_bulk(
-        ['one', 'two', 'three'],
-        ['one-downloaded', 'two-downloaded', 'three-downloaded'])
-
-    assert Path('one-downloaded').exists()
-    assert Path('two-downloaded').exists()
-    assert Path('three-downloaded').exists()
-
-
-def test_download_bulk_with_some_missing(s3, tmp_directory):
-    client = S3Client('some-bucket', 'my-folder', path_to_project_root='.')
-
-    for name in ['one', 'two']:
-        Path(name).touch()
-        client._upload(name)
-
-    with pytest.raises(RuntimeError):
-        client.download_bulk(
-            ['one', 'two', 'missing'],
-            ['one-downloaded', 'two-downloaded', 'missing-downloaded'],
-        )
-
-
-def test_download_bulk_with_some_missing_silenced(s3, tmp_directory):
-    client = S3Client('some-bucket', 'my-folder', path_to_project_root='.')
-
-    for name in ['one', 'two']:
-        Path(name).touch()
-        client._upload(name)
-
-    missing = client.download_bulk(
-        ['one', 'two', 'missing'],
-        ['one-downloaded', 'two-downloaded', 'missing-downloaded'],
-        silence_missing=True,
-    )
-
-    assert missing == ['missing-downloaded']
-    assert Path('one-downloaded').exists()
-    assert Path('two-downloaded').exists()
-
-
-def test_error_if_download_fails(s3, tmp_directory, monkeypatch):
-    client = S3Client('some-bucket', 'my-folder', path_to_project_root='.')
-
-    for name in ['one', 'two', 'three']:
-        Path(name).touch()
-        client._upload(name)
-
-    download_mock = Mock(side_effect=ValueError('service not working'))
-    monkeypatch.setattr(client, 'download', download_mock)
-
-    with pytest.raises(RuntimeError) as excinfo:
-        client.download_bulk(
-            ['one', 'two', 'three'],
-            ['one-downloaded', 'two-downloaded', 'three-downloaded'])
-
-    assert 'An error occurred when downloading file' in str(excinfo.value)
-    assert 'service not working' in str(excinfo.getrepr())

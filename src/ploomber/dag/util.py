@@ -38,7 +38,7 @@ def check_duplicated_products(dag):
                              f'one task {duplicated!r}')
 
 
-def flatten_prods(elements):
+def flatten_products(elements):
     flat = []
 
     for e in elements:
@@ -55,12 +55,9 @@ def fetch_remote_metadata_in_parallel(dag):
     """Fetches remote metadta in parallel from a list of Files
     """
 
-    files = flatten_prods(dag[t].product for t in dag._iter()
-                          if isinstance(dag[t].product, File)
-                          or isinstance(dag[t].product, MetaProduct))
-
-    # TODO: delete download bulk implementation
-    # TODO: do some testing with gcp client - see if it's thread safe
+    files = flatten_products(dag[t].product for t in dag._iter()
+                             if isinstance(dag[t].product, File)
+                             or isinstance(dag[t].product, MetaProduct))
 
     with ThreadPoolExecutor(max_workers=64) as executor:
         future2file = {

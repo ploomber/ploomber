@@ -8,6 +8,7 @@ import subprocess
 import datetime
 import os
 from pathlib import Path
+import shutil
 
 
 def replace_in_file(path_to_file, original, replacement):
@@ -23,6 +24,12 @@ def replace_in_file(path_to_file, original, replacement):
 
 def call(*args, **kwargs):
     return subprocess.run(*args, **kwargs, check=True)
+
+
+def delete_dirs(*dirs):
+    for dir_ in dirs:
+        if Path(dir_).exists():
+            shutil.rmtree(dir_)
 
 
 def _input(prompt):
@@ -201,11 +208,14 @@ def make_header(content, path, add_date=False):
         raise ValueError('Unsupported format, must be .rst or .md')
 
 
-def release(project_root='.', tag=True):
+def version(project_root='.', tag=True):
     """
-    Create a new version for the project: updates __init__.py, CHANGELOG,
-    creates new commit for released version (creating a tag) and commits
-    to a new dev version
+    Create a new version:
+    1. Set new stable version in package_name/__init__.py
+    2. Update header in CHANGELOG file, and ask to review CHANGELOG
+    3. Create commit for new version, create git tag, and push
+    4. Set new development version in package_name/__init__.py, and CHANGELOG
+    5. Commit new development version and push
     """
     versioner = Versioner(project_root=project_root)
 
@@ -254,15 +264,16 @@ def upload(tag, production):
     print('Checking out tag {}'.format(tag))
     call(['git', 'checkout', tag])
 
-    current = Versioner().current_version()
+    versioner = Versioner()
+    current = versioner.current_version()
 
     input_confirm('Version in {} tag is {}. Do you want to continue?'.format(
         tag, current),
                   abort=True)
 
     # create distribution
-    call(['rm', '-rf', 'dist/', 'build/', 'src/*.egg-info'])
-    call(['python', 'setup.py', 'sdist', 'bdist_wheel'])
+    delete_dirs('dist', 'build', f'{versioner.PACKAGE}.egg-info')
+    call(['python', 'setup.py', 'bdist_wheel', 'sdist'])
 
     print('Publishing to PyPI...')
 
