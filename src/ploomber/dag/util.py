@@ -41,11 +41,11 @@ def check_duplicated_products(dag):
 def flatten_products(elements):
     flat = []
 
-    for e in elements:
-        if isinstance(e, MetaProduct):
-            flat.extend(list(e))
-        elif isinstance(e, File):
-            flat.append(e)
+    for prod in elements:
+        if isinstance(prod, MetaProduct):
+            flat.extend([p for p in prod if isinstance(p, File)])
+        elif isinstance(prod, File):
+            flat.append(prod)
         # ignore everything else...
 
     return flat

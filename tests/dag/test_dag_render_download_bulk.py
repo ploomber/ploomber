@@ -14,6 +14,11 @@ from ploomber.tasks import PythonCallable, SQLScript
 from ploomber.executors import Serial
 from ploomber.dag import DAG as dag_module
 from ploomber.exceptions import DAGRenderError
+from ploomber.products import file
+
+
+def touch(product, upstream):
+    Path(product).touch()
 
 
 def touch_root(product):
@@ -43,18 +48,18 @@ def dag_w_error():
 
 def test_calls_parallel_download(tmp_directory, monkeypatch, dag):
     dag.build()
+
     mock = Mock(wraps=dag_module.fetch_remote_metadata_in_parallel)
     monkeypatch.setattr(dag_module, 'fetch_remote_metadata_in_parallel', mock)
-    # mock_remote = Mock(wraps=file._RemoteFile)
-    # monkeypatch.setattr(file, '_RemoteFile', mock_remote)
+    mock_remote = Mock()
+    monkeypatch.setattr(file._RemoteFile, '_fetch_remote_metadata',
+                        mock_remote)
 
     dag.render()
 
-    # TODO: check files are actually there when inside the context
     mock.assert_called_once_with(dag)
-
-    # mock_remote.assert_called_once()
-
+    # called once since this dag has a single product
+    mock_remote.assert_called_once_with()
     # should clean up remote copies
     assert not glob('*.metadata.remote')
 
@@ -66,7 +71,11 @@ def test_cleans_up_files_if_render_fails(dag_w_error):
     assert not glob('*.metadata.remote')
 
 
-def test_ignores_non_file_products(tmp_directory):
+def test_ignores_non_file_products(tmp_directory, monkeypatch):
+    mock_remote = Mock()
+    monkeypatch.setattr(file._RemoteFile, '_fetch_remote_metadata',
+                        mock_remote)
+
     client = SQLAlchemyClient('sqlite:///my.db')
 
     dag = DAG()
@@ -80,11 +89,12 @@ def test_ignores_non_file_products(tmp_directory):
               name='task')
 
     dag.render()
-
     client.close()
 
+    mock_remote.assert_not_called()
 
-def tes_processes_metaproducts(tmp_directory, monkeypatch):
+
+def test_processes_metaproducts(tmp_directory, monkeypatch):
     dag = DAG(executor=Serial(build_in_subprocess=False))
     dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
     PythonCallable(touch_root_metaproduct, {
@@ -96,11 +106,14 @@ def tes_processes_metaproducts(tmp_directory, monkeypatch):
 
     mock = Mock(wraps=dag_module.fetch_remote_metadata_in_parallel)
     monkeypatch.setattr(dag_module, 'fetch_remote_metadata_in_parallel', mock)
+    mock_remote = Mock()
+    monkeypatch.setattr(file._RemoteFile, '_fetch_remote_metadata',
+                        mock_remote)
 
     dag.render()
 
     mock.assert_called_once_with(dag)
-
+    assert mock_remote.call_count == 2
     # should clean up remote copies
     assert not glob('*.metadata.remote')
 
@@ -108,6 +121,9 @@ def tes_processes_metaproducts(tmp_directory, monkeypatch):
 def test_dag_without_client(monkeypatch, tmp_directory):
     mock = Mock(wraps=dag_module.fetch_remote_metadata_in_parallel)
     monkeypatch.setattr(dag_module, 'fetch_remote_metadata_in_parallel', mock)
+    mock_remote = Mock()
+    monkeypatch.setattr(file._RemoteFile, '_fetch_remote_metadata',
+                        mock_remote)
 
     dag = DAG(executor=Serial(build_in_subprocess=False))
     PythonCallable(touch_root, File('one'), dag=dag)
@@ -116,9 +132,30 @@ def test_dag_without_client(monkeypatch, tmp_directory):
 
     # should call it but nothing will happen
     mock.assert_called_once_with(dag)
+    mock_remote.assert_called_once_with()
 
 
-# TODO: mock remote file to ensure _fetch_metadata is called on each
-# TODO: test metaproducts with mixed files and non files?
-# TODO: test mixed inside a metaproduct
-# TODO: do some testing with gcp client - see if it's thread safe
+def test_dag_with_files_and_metaproducts(monkeypatch, tmp_directory):
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
+    t1 = PythonCallable(touch_root_metaproduct, {
+        'one': File('one'),
+        'two': File('two')
+    },
+                        dag=dag)
+    t2 = PythonCallable(touch, File('three'), dag=dag)
+    t1 >> t2
+
+    dag.build()
+
+    mock = Mock(wraps=dag_module.fetch_remote_metadata_in_parallel)
+    monkeypatch.setattr(dag_module, 'fetch_remote_metadata_in_parallel', mock)
+    mock_remote = Mock()
+    monkeypatch.setattr(file._RemoteFile, '_fetch_remote_metadata',
+                        mock_remote)
+
+    dag.render()
+
+    mock.assert_called_once_with(dag)
+    assert mock_remote.call_count == 3
+    assert not glob('*.metadata.remote')
