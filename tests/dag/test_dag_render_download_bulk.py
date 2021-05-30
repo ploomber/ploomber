@@ -45,11 +45,15 @@ def test_calls_parallel_download(tmp_directory, monkeypatch, dag):
     dag.build()
     mock = Mock(wraps=dag_module.fetch_remote_metadata_in_parallel)
     monkeypatch.setattr(dag_module, 'fetch_remote_metadata_in_parallel', mock)
+    # mock_remote = Mock(wraps=file._RemoteFile)
+    # monkeypatch.setattr(file, '_RemoteFile', mock_remote)
 
     dag.render()
 
     # TODO: check files are actually there when inside the context
     mock.assert_called_once_with(dag)
+
+    # mock_remote.assert_called_once()
 
     # should clean up remote copies
     assert not glob('*.metadata.remote')
@@ -114,6 +118,7 @@ def test_dag_without_client(monkeypatch, tmp_directory):
     mock.assert_called_once_with(dag)
 
 
+# TODO: mock remote file to ensure _fetch_metadata is called on each
 # TODO: test metaproducts with mixed files and non files?
 # TODO: test mixed inside a metaproduct
 # TODO: do some testing with gcp client - see if it's thread safe

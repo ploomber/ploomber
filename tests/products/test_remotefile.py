@@ -9,7 +9,7 @@ from ploomber.executors import Serial
 from ploomber.tasks import PythonCallable
 from ploomber.clients import LocalStorageClient
 from ploomber.products import File
-from ploomber.products.File import _RemoteFile
+from ploomber.products.file import _RemoteFile
 
 
 def _touch(product):
