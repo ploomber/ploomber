@@ -131,17 +131,18 @@ class DAGSpec(MutableMapping):
     Parameters
     ----------
     data : str, pathlib.Path or dict
-        Path to a YAML spec or dict spec to construct the DAG
+        Path to a YAML spec or dict spec
 
     env : dict, pathlib.path or str, optional
-        Dictionary or path/str to a YAML file with the environment to use,
-        tags in any of the keys (i.e. {{some_tag}}) in "data" will be replaced
-        by the corresponding values in "env". A regular :py:mod:`ploomber.Env`
-        object is created, see documentation for details. If None and
-        data is a dict, no env is loaded. If None and loaded from a YAML spec,
-        an env.yaml file is loaded (in the current working diirectory), if
-        it doesn't exist, it is loaded from the YAML spec parent folder, if it
-        exists. If none of these exist, no env is loaded.
+        If path it must be a YAML file. Environment to load. Any string with
+        the format '{{placeholder}}' in the spec is replaced by the
+        corresponding value in the given key (i.e., placeholder). If ``env``
+        is None and spec is a dict, no env is loaded. If None and loaded
+        from a YAML file, an ``env.yaml`` file is loaded from the current
+        working diirectory, if it doesn't exist, it is loaded from the YAML
+        spec parent folder. If none of these exist, no env is loaded.
+        A :py:mod:`ploomber.Env` object is initialized, see documentation for
+        details.
 
     lazy_import : bool, optional
         Whether to import dotted paths to initialize PythonCallables with the
