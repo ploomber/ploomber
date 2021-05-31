@@ -5,9 +5,13 @@ import tempfile
 import subprocess
 from pathlib import Path
 from nbconvert import ExporterNameError
+import warnings
 
 try:
-    import papermill as pm
+    # papermill is importing a deprecated module from pyarrow
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', FutureWarning)
+        import papermill as pm
 except ImportError:
     pm = None
 

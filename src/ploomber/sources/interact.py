@@ -35,9 +35,13 @@ import importlib
 from itertools import chain
 from pathlib import Path
 import inspect
+import warnings
 
 import jupyter_client
-from papermill.translators import PythonTranslator
+# papermill is importing a deprecated module from pyarrow
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', FutureWarning)
+    from papermill.translators import PythonTranslator
 import parso
 import nbformat
 

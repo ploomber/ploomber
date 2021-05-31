@@ -30,7 +30,10 @@ from io import StringIO
 import warnings
 
 import parso
-from papermill.parameterize import parameterize_notebook
+# papermill is importing a deprecated module from pyarrow
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', FutureWarning)
+    from papermill.parameterize import parameterize_notebook
 import nbformat
 
 from ploomber.exceptions import RenderError, SourceInitializationError
