@@ -1175,6 +1175,32 @@ def test_doesnt_warn_if_param_declared_in_env_is_used_in_spec():
     assert not record
 
 
+def test_doesnt_warn_if_param_is_used_in_import_task_from(tmp_directory):
+    Path('more_tasks.yaml').write_text("""
+- source: another.sql
+  product: [name, table]
+  params:
+    a: '{{a}}'
+""")
+
+    with pytest.warns(None) as record:
+        DAGSpec(
+            {
+                'meta': {
+                    'import_tasks_from': 'more_tasks.yaml'
+                },
+                'tasks': [
+                    {
+                        'source': 'sample.sql',
+                        'product': ['name', 'table']
+                    },
+                ]
+            },
+            env=dict(a=1))
+
+    assert not record
+
+
 _spec_upstream_extract = {
     'tasks': [{
         'source': 'upstream.py',

@@ -92,6 +92,7 @@ from collections.abc import MutableMapping
 from glob import iglob
 from itertools import chain
 import pprint
+import warnings
 
 from ploomber.dag.DAG import DAG
 from ploomber.placeholders.SourceLoader import SourceLoader
@@ -104,7 +105,8 @@ from ploomber.util import default
 from ploomber.dag.DAGConfiguration import DAGConfiguration
 from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.env.EnvDict import EnvDict
-from ploomber.env.expand import expand_raw_dictionary, expand_raw_dictionaries
+from ploomber.env.expand import (expand_raw_dictionary_and_extract_tags,
+                                 expand_raw_dictionaries_and_extract_tags)
 from ploomber.tasks import NotebookRunner
 from ploomber.tasks.taskgroup import TaskGroup
 from ploomber.validators.string import (validate_product_class_name,
@@ -253,7 +255,8 @@ class DAGSpec(MutableMapping):
         else:
             self.env = EnvDict(env, path_to_here=self._parent_path)
 
-        self.data = expand_raw_dictionary(self.data, self.env)
+        self.data, tags = expand_raw_dictionary_and_extract_tags(
+            self.data, self.env)
 
         logger.debug('Expanded DAGSpec:\n%s', pp.pformat(data))
 
@@ -282,7 +285,10 @@ class DAGSpec(MutableMapping):
                     Path(self.data['meta']['import_tasks_from']).read_text())
 
                 if self.env is not None:
-                    imported = expand_raw_dictionaries(imported, self.env)
+                    (imported,
+                     tags_other) = expand_raw_dictionaries_and_extract_tags(
+                         imported, self.env)
+                    tags = tags | tags_other
 
                 # relative paths here are relative to the file where they
                 # are declared
@@ -293,6 +299,15 @@ class DAGSpec(MutableMapping):
                                                         base_path=base_path)
 
                 self.data['tasks'].extend(imported)
+
+            # check if there are any params declared in env, not used in
+            # in the pipeline
+            extra = set(self.env) - self.env.default_keys - tags
+
+            if extra:
+                warnings.warn('The following placeholders are declared in the '
+                              'environment but '
+                              f'unused in the spec: {extra}')
 
             self.data['tasks'] = [
                 normalize_task(task) for task in self.data['tasks']

@@ -6,7 +6,7 @@ import getpass
 from copy import deepcopy, copy
 from collections.abc import Mapping
 from pathlib import Path
-import warnings
+from functools import reduce
 
 from jinja2 import Template, StrictUndefined
 
@@ -15,11 +15,7 @@ from ploomber import repo
 from ploomber.util import default
 
 
-def expand_raw_dictionary(raw, mapping):
-    """
-    Expands a dictionary where some values are {{tags}} using their values
-    in a mapping
-    """
+def expand_raw_dictionary_and_extract_tags(raw, mapping):
     data = deepcopy(raw)
 
     placeholders_all = []
@@ -28,21 +24,30 @@ def expand_raw_dictionary(raw, mapping):
         d[current_key], placeholders = expand_if_needed(current_val, mapping)
         placeholders_all.extend(placeholders)
 
-    extra = set(mapping) - mapping.default_keys - set(placeholders_all)
-
-    if extra:
-        warnings.warn(
-            'The following placeholders are declared in the environment but '
-            f'unused in the spec: {extra}')
-
-    return data
+    return data, set(placeholders_all)
 
 
-def expand_raw_dictionaries(raw, mapping):
+def expand_raw_dictionary(raw, mapping):
+    """
+    Expands a dictionary where some values are {{tags}} using their values
+    in a mapping
+    """
+    return expand_raw_dictionary_and_extract_tags(raw, mapping)[0]
+
+
+def expand_raw_dictionaries_and_extract_tags(raw, mapping):
     """
     Expands a list of dictionaries
     """
-    return [expand_raw_dictionary(element, mapping) for element in raw]
+    expanded, tags = list(
+        zip(*[
+            expand_raw_dictionary_and_extract_tags(element, mapping)
+            for element in raw
+        ]))
+
+    tags_unique = set(reduce(lambda x, y: x | y, tags))
+
+    return expanded, tags_unique
 
 
 def expand_if_needed(raw_value, mapping):
