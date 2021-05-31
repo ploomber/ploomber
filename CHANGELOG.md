@@ -2,6 +2,17 @@
 
 ## 0.10.5dev
 
+- Adds `remote` parameter to `DAG.render` to check status against remote storage
+- `NotebookSource` no longer includes the injected cell in its `str` representation
+- `Metadata` uses task params to determine task status
+- Support for wildcards when building dag partially
+- Support to skip upstream dependencies when building partially
+- Faster `File` remote metadata downloads using multi-threading during `DAG.render`
+- Faster upstream dependencies parallel download using multi-threading during `Task.build`
+- Suppresses papermill `FutureWarning` due to importing a deprecated `pyarrow` module
+- Fixes error that caused a warning due to unused env params when using `import_tasks_from`
+- Other bug fixes
+
 ## 0.10.4 (2021-05-22)
 
 - `DAGSpec.find` exposes `starting_dir` parameter
