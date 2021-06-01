@@ -109,7 +109,28 @@ Builds your pipeline until it reaches task named ``C``.
 (Skips ``D`` because it's not needed to build ``C``)
 
 
-To force execution of tasks regardless of status use the ``--force/-f`` option.
+To force the execution of tasks regardless of status, use the ``--force/-f`` option.
+
+You can also select several tasks at the same time using wildcards:
+
+.. code-block:: console
+
+    # note the single quotes
+    ploomber build --partially 'fit-*'
+
+
+The previous command will execute all tasks with the ``fit-*`` prefix and all
+their upstream dependencies.
+
+You may skip building upstream dependencies using the ``--skip-upstream``
+
+.. code-block:: console
+
+    # note the single quotes
+    ploomber build --partially 'fit-*' --skip-upstream
+
+Note that the previous command fails if the upstream products of ``fit-*`` tasks
+do no exist yet.
 
 Plot
 ****
