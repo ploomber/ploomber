@@ -33,6 +33,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from copy import deepcopy, copy
 
+from jinja2 import Template
+
 from ploomber.products import File
 from ploomber.util import isiterable, ParamGrid
 from ploomber.products.mixins import SQLProductMixin
@@ -87,37 +89,52 @@ class TaskGroup:
                     product_primitive,
                     task_kwargs,
                     dag,
-                    name,
                     params_array,
+                    name=None,
                     namer=None):
         """
-        Build a group of tasks of the same class that operate over an array of
-        parameters but have the same source. This is better than using a for
-        loop to create multiple tasks as it takes care of validation and proper
-        object creation.
+        Build a group of tasks of the same class from an array of parameters
+        using the same source. Generates one task per element in params_array.
 
         Parameters
         ----------
         task_class : class
             The task class for all generated tasks
 
+        product_class : class
+            The class used to initialize the products
+
+        product_primitive : str or list
+            The object used to initialize the product. For File, this is a str,
+            for SQL-like products, it must be a list.
+
         task_kwargs : dict
             Task keyword arguments passed to the constructor, must not contain:
             dag, name, params, nor product, as this parameters are passed by
-            this function. Must include source
+            this function. Must include source.
 
         dag : ploomber.DAG
             The DAG object to add these tasks to
-
-        name : str
-            The name for the task group
 
         params_array : list
             Each element is passed to the "params" argument on each task. This
             determines the number of tasks to be created. "name" is added to
             each
             element.
+
+        name : str, default=None
+            The name prefix for each of the tasks in the task group. If namer
+            is None, this must not be None.
+
+        namer : callable, default=None
+            A function that receives a single argument (the task parameters
+            dict) and returns a string used as a task name. If name is None,
+            this must not be None.
         """
+        if name is None and namer is None:
+            raise ValueError(
+                'Only one of name and namer can be None, but not both')
+
         # validate task_kwargs
         if 'dag' in task_kwargs:
             raise KeyError('dag should not be part of task_kwargs')
@@ -149,17 +166,29 @@ class TaskGroup:
             # have side-effects
             params = deepcopy(params)
 
-            # assign task name
+            # user provided a namer function
             if namer:
                 task_name = namer(params)
+                # if function provided, do not use indexing
+                index = None
+            # no namer function, just add an index
             else:
                 task_name = name + str(index)
+
+            if isinstance(product_primitive, str):
+                product_primitive_to_use = Template(product_primitive).render(
+                    name=task_name)
+            else:
+                product_primitive_to_use = product_primitive
 
             # add index to product primitive
             if product_class is File or issubclass(product_class,
                                                    SQLProductMixin):
-                product = _init_product(product_class, product_primitive,
-                                        index)
+                product = _init_product(
+                    product_class,
+                    product_primitive_to_use,
+                    index,
+                )
             else:
                 raise NotImplementedError('TaskGroup only sypported for '
                                           'File and SQL products. '
@@ -181,9 +210,24 @@ class TaskGroup:
                   product_primitive,
                   task_kwargs,
                   dag,
-                  name,
                   grid,
+                  name=None,
                   namer=None):
+        """
+        Build a group of tasks of the same class from an grid of parameters
+        using the same source.
+
+        Parameters
+        ----------
+        grid : dict or list of dicts
+            If dict, all combinations of individual parameters are generated.
+            If list of dicts, each dict is processed individually, then
+            concatenated to generate the final set.
+
+        Notes
+        -----
+        All parameters, except for grid are the same as in .from_params
+        """
         params_array = ParamGrid(grid).product()
         return cls.from_params(task_class=task_class,
                                product_class=product_class,
@@ -215,11 +259,14 @@ def _init_product(product_class, product_primitive, index):
 
 
 def _init_product_with_str(product_class, product_primitive, index):
-    path = Path(product_primitive)
-    suffix = ''.join(path.suffixes)
-    filename = path.name.replace(suffix, '')
-    filename_with_index = f'{filename}-{index}{suffix}'
-    return product_class(path.parent / filename_with_index)
+    if index is not None:
+        path = Path(product_primitive)
+        suffix = ''.join(path.suffixes)
+        filename = path.name.replace(suffix, '')
+        filename_with_index = f'{filename}-{index}{suffix}'
+        return product_class(path.parent / filename_with_index)
+    else:
+        return product_class(product_primitive)
 
 
 def _init_product_with_sql_elements(product_class, product_primitive, index):

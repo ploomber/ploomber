@@ -38,6 +38,51 @@ def test_from_params():
     assert str(dag['task_group1'].product) == str(Path('dir', 'file-1.txt'))
 
 
+def test_from_params_with_namer():
+    def namer(params):
+        return 'param={}'.format(params['param'])
+
+    dag = DAG()
+    group = TaskGroup.from_params(PythonCallable,
+                                  File,
+                                  '{{name}}.txt', {'source': touch},
+                                  dag,
+                                  namer=namer,
+                                  params_array=[{
+                                      'param': 1
+                                  }, {
+                                      'param': 2
+                                  }])
+
+    assert len(group) == 2
+
+    dag.render()
+
+    assert dag['param=1'].source.primitive is touch
+    assert dag['param=2'].source.primitive is touch
+    assert str(dag['param=1'].product) == 'param=1.txt'
+    assert str(dag['param=2'].product) == 'param=2.txt'
+
+
+def test_from_params_error_if_name_and_namer_are_nome():
+    dag = DAG()
+
+    with pytest.raises(ValueError) as excinfo:
+        TaskGroup.from_params(PythonCallable,
+                              File,
+                              'dir/file.txt', {'source': touch},
+                              dag,
+                              name=None,
+                              namer=None,
+                              params_array=[{
+                                  'param': 1
+                              }, {
+                                  'param': 2
+                              }])
+    expected = 'Only one of name and namer can be None, but not both'
+    assert expected == str(excinfo.value)
+
+
 def test_from_grid():
     dag = DAG()
     group = TaskGroup.from_grid(PythonCallable,

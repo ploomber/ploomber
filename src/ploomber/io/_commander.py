@@ -308,7 +308,7 @@ class Commander:
         self._warnings.append(line)
 
     def _warn_show(self):
-        """Display accumulated warning messages (via .warn_on_exit)
+        """Display accumulated warning messages (added via .warn_on_exit)
         """
         if self._warnings:
             self.tw.sep('=', 'Warnings', yellow=True)
