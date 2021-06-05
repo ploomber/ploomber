@@ -98,8 +98,8 @@ from ploomber.dag.DAG import DAG
 from ploomber.placeholders.SourceLoader import SourceLoader
 from ploomber.util.util import call_with_dictionary, add_to_sys_path
 from ploomber.util import dotted_path
-from ploomber.util.default import entry_point
-from ploomber.spec.TaskSpec import TaskSpec, suffix2taskclass
+from ploomber.util.default import entry_point, entry_point_relative
+from ploomber.spec.taskspec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
 from ploomber.util import default
 from ploomber.dag.DAGConfiguration import DAGConfiguration
@@ -483,6 +483,22 @@ class DAGSpec(MutableMapping):
             exc = DAGSpecInitializationError('Error initializing DAG from '
                                              f'{path!s}')
             raise exc from e
+
+    @classmethod
+    def _find_relative(cls, name=None):
+        """
+        Searches for a spec in default locations relative to the current
+        working directory
+
+        Notes
+        -----
+        This is a private API used by Soopervisor to locate which YAML spec
+        to use for exporting. It needs a relative path since the location
+        is used for loading the DAG and submitting tasks and as an argument
+        in "ploomber task --entry-point {relative-path}" when executing tasks
+        """
+        path = entry_point_relative(name=name)
+        return cls(path)
 
     @classmethod
     def find(cls,

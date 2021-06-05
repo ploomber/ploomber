@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ploomber.spec.TaskSpec import TaskSpec, task_class_from_source_str
+from ploomber.spec.taskspec import TaskSpec, task_class_from_source_str
 from ploomber.spec.dagspec import Meta
 from ploomber.tasks import (NotebookRunner, SQLScript, SQLDump, ShellScript,
                             PythonCallable)
