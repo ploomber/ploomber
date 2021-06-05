@@ -9,8 +9,8 @@ from os.path import relpath
 from ploomber.exceptions import DAGSpecNotFound
 
 
-def _package_location(root_path):
-    pattern = str(Path(root_path, 'src', '*', 'pipeline.yaml'))
+def _package_location(root_path, name='pipeline.yaml'):
+    pattern = str(Path(root_path, 'src', '*', name))
     candidates = sorted([
         f for f in glob(pattern)
         if not str(Path(f).parent).endswith('.egg-info')
@@ -43,10 +43,6 @@ def entry_point(root_path=None, name=None):
         If None, searchs for a pipeline.yaml file otherwise for a
         pipeline.{name}.yaml
 
-    Raises
-    ------
-    DAGSpecNotFound
-        If cannot locate the requested file
 
     Notes
     -----
@@ -62,7 +58,7 @@ def entry_point(root_path=None, name=None):
         return env_var
 
     # try to find a src/*/pipeline.yaml relative to the initial dir
-    pkg_location = _package_location(root_path)
+    pkg_location = _package_location(root_path, name=FILENAME)
 
     # but only return it if there isn't one relative to root dir
     if not Path(root_path, FILENAME).exists() and pkg_location:
@@ -84,18 +80,55 @@ def entry_point(root_path=None, name=None):
     root_project = find_root_recursively(starting_dir=root_path)
 
     if root_project:
-        pkg_location = _package_location(root_project)
+        pkg_location = _package_location(root_project, name=FILENAME)
 
         if pkg_location:
             return relpath(Path(pkg_location).resolve(),
                            start=Path(root_path).resolve())
 
-    raise DAGSpecNotFound(
-        f'Could not find dag spec with name {FILENAME}, '
-        'make sure the file is located in one of the standard locations: '
-        f'current working directory, or in src/*/{FILENAME} if your '
-        'project is a package. Alternatively you may define an ENTRY_POINT '
-        'environment variable')
+    # FIXME: this should raise a DAGSpecNotFound error
+    return FILENAME
+
+
+def entry_point_relative(name=None):
+    """
+    Returns a relative path to the entry point with the given name.
+
+    Raises
+    ------
+    DAGSpecNotFound
+        If cannot locate the requested file
+
+    ValueError
+        If more than one file with the name exist (i.e., both
+        pipeline.{name}.yaml and src/*/pipeline.{name}.yaml)
+
+    Notes
+    -----
+    This is used by Soopervisor when loading dags. We must ensure it gets
+    a relative path since such file is used for loading the spec in the client
+    and in the hosted container (which has a different filesystem structure)
+    """
+    FILENAME = 'pipeline.yaml' if name is None else f'pipeline.{name}.yaml'
+
+    location_pkg = _package_location(root_path='.', name=FILENAME)
+    location = FILENAME if Path(FILENAME).exists() else None
+
+    if location_pkg and location:
+        raise ValueError(f'Error loading {FILENAME}, both {location} '
+                         '(relative to the current working directory) '
+                         f'and {location_pkg} exist, but expected only one. '
+                         f'If your project is a package, keep {location_pkg}, '
+                         f'if it\'s not, keep {location}')
+
+    if location_pkg is None and location is None:
+        raise DAGSpecNotFound(
+            f'Could not find dag spec with name {FILENAME}, '
+            'make sure the file is located relative to the working directory '
+            f'or in src/pkg_name/{FILENAME} (where pkg_name is the name of '
+            'your package if your project is one)')
+
+    return location_pkg or location
 
 
 def path_to_env(path_to_parent):

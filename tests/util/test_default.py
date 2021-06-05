@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from ploomber.util import default
+from ploomber.exceptions import DAGSpecNotFound
 
 
 @pytest.fixture
@@ -180,3 +181,31 @@ def test_error_if_no_package(tmp_directory):
 
     expected = "Could not find a valid package"
     assert expected in str(excinfo.value)
+
+
+@pytest.mark.parametrize('filename, name', [
+    ['pipeline.yaml', None],
+    ['pipeline.serve.yaml', 'serve'],
+    [Path('src', 'my_pkg', 'pipeline.yaml'), None],
+    [Path('src', 'my_pkg', 'pipeline.serve.yaml'), 'serve'],
+])
+def test_entry_point_relative(tmp_directory, filename, name):
+    Path(filename).parent.mkdir(parents=True, exist_ok=True)
+    Path(filename).touch()
+
+    assert default.entry_point_relative(name=name) == str(filename)
+
+
+def test_entry_point_relative_error_if_both_exist(tmp_directory):
+    Path('pipeline.yaml').touch()
+    dir_ = Path('src', 'some_pkg')
+    dir_.mkdir(parents=True)
+    (dir_ / 'pipeline.yaml').touch()
+
+    with pytest.raises(ValueError):
+        default.entry_point_relative()
+
+
+def test_entry_point_relative_error_if_doesnt_exist(tmp_directory):
+    with pytest.raises(DAGSpecNotFound):
+        default.entry_point_relative()
