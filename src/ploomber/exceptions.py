@@ -65,6 +65,13 @@ class DAGSpecInitializationError(Exception):
     pass
 
 
+class DAGSpecNotFound(Exception):
+    """
+    Raised when trying to find dagspec automatically but the file doesn't exist
+    """
+    pass
+
+
 class SpecValidationError(Exception):
     """
     Raised when failing to validate a spec

@@ -159,6 +159,12 @@ class DAGSpec(MutableMapping):
     reload : bool, optional
         Reloads modules before getting dotted paths. Has no effect if
         lazy_import=True
+
+    Attributes
+    ----------
+    path : str or None
+        Returns the path used to load the data. None if loaded from a
+        dictionary
     """
 
     # NOTE: lazy_import is used where we need to initialized a a spec but don't
@@ -183,9 +189,7 @@ class DAGSpec(MutableMapping):
                 raise ValueError('parent_path must be None when '
                                  f'initializing {type(self).__name__} with '
                                  'a path to a YAML spec')
-            # this is only used to display an error message with the path
-            # to the loaded file
-            path_for_errors = data
+            self._path = data
             # resolve the parent path to make sources and products unambiguous
             # even if the current working directory changes
             path_to_entry_point = Path(data).resolve()
@@ -216,7 +220,7 @@ class DAGSpec(MutableMapping):
 
         # initialized with a dictionary...
         else:
-            path_for_errors = None
+            self._path = None
             # FIXME: add test cases, some of those features wont work if
             # _parent_path is None. We should make sure that we either raise
             # an error if _parent_path is needed or use the current working
@@ -235,7 +239,7 @@ class DAGSpec(MutableMapping):
             self.data = {'tasks': self.data}
 
         # validate keys defined at the top (nested keys are not validated here)
-        self._validate_top_keys(self.data, path_for_errors)
+        self._validate_top_keys(self.data, self._path)
 
         logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env))
 
@@ -428,13 +432,18 @@ class DAGSpec(MutableMapping):
 
         return dag
 
+    @property
+    def path(self):
+        return self._path
+
     @classmethod
     def _auto_load(cls,
                    to_dag=True,
                    starting_dir=None,
                    env=None,
                    lazy_import=False,
-                   reload=False):
+                   reload=False,
+                   name=None):
         """
         NOTE: this is a private API. Use DAGSpec.find() instead
 
@@ -452,7 +461,7 @@ class DAGSpec(MutableMapping):
         Returns DAG and the directory where the pipeline.yaml file is located.
         """
         root_path = starting_dir or os.getcwd()
-        rel_path = entry_point(root_path=root_path)
+        rel_path = entry_point(root_path=root_path, name=name)
 
         if rel_path is None:
             if to_dag:
@@ -472,7 +481,7 @@ class DAGSpec(MutableMapping):
 
         except Exception as e:
             exc = DAGSpecInitializationError('Error initializing DAG from '
-                                             'pipeline.yaml')
+                                             f'{path!s}')
             raise exc from e
 
     @classmethod
@@ -480,7 +489,8 @@ class DAGSpec(MutableMapping):
              env=None,
              reload=False,
              lazy_import=False,
-             starting_dir=None):
+             starting_dir=None,
+             name=None):
         """
         Automatically find pipeline.yaml and return a DAGSpec object, which
         can be converted to a DAG using .to_dag()
@@ -489,12 +499,17 @@ class DAGSpec(MutableMapping):
         ----------
         env
             The environment to pass to the spec
+
+        name : str, default=None
+            Filename to search for. If None, it looks for a pipeline.yaml file,
+            otherwise it looks for a pipeline.{name}.yaml file.
         """
         spec, _ = DAGSpec._auto_load(to_dag=False,
                                      starting_dir=starting_dir,
                                      env=env,
                                      lazy_import=lazy_import,
-                                     reload=reload)
+                                     reload=reload,
+                                     name=name)
         return spec
 
     @classmethod

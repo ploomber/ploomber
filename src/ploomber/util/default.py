@@ -6,6 +6,8 @@ from glob import glob
 from pathlib import Path
 from os.path import relpath
 
+from ploomber.exceptions import DAGSpecNotFound
+
 
 def _package_location(root_path):
     pattern = str(Path(root_path, 'src', '*', 'pipeline.yaml'))
@@ -20,7 +22,7 @@ def _package_location(root_path):
 
 # NOTE: this is documented in doc/api/cli.rst, changes should also be reflected
 # there
-def entry_point(root_path=None):
+def entry_point(root_path=None, name=None):
     """
     Determines default entry point (relative to root_path),
     using the following order:
@@ -30,7 +32,6 @@ def entry_point(root_path=None):
     3. Package layout default location src/*/pipeline.yaml
     4. Parent folders of root_path
     5. Looks for a setup.py in the parent folders, then src/*/pipeline.yaml
-    6. If none works, returns 'pipeline.yaml'
 
     Parameters
     ----------
@@ -38,29 +39,48 @@ def entry_point(root_path=None):
         Root path to look for the entry point. Defaults to the current working
         directory
 
+    name : str, default=None
+        If None, searchs for a pipeline.yaml file otherwise for a
+        pipeline.{name}.yaml
+
+    Raises
+    ------
+    DAGSpecNotFound
+        If cannot locate the requested file
+
     Notes
     -----
     CLI calls this functions with root_path=None
     """
+    FILENAME = 'pipeline.yaml' if name is None else f'pipeline.{name}.yaml'
+
     root_path = root_path or '.'
     env_var = os.environ.get('ENTRY_POINT')
 
+    # env variable gets to priority
     if env_var:
         return env_var
 
+    # try to find a src/*/pipeline.yaml relative to the initial dir
     pkg_location = _package_location(root_path)
 
-    if not Path(root_path, 'pipeline.yaml').exists() and pkg_location:
+    # but only return it if there isn't one relative to root dir
+    if not Path(root_path, FILENAME).exists() and pkg_location:
         return pkg_location
 
-    parent_location = find_file_recursively('pipeline.yaml',
+    # look recursively
+    parent_location = find_file_recursively(FILENAME,
                                             max_levels_up=6,
                                             starting_dir=root_path)
 
+    # if you found it, return it
     if parent_location:
         return relpath(Path(parent_location).resolve(),
                        start=Path(root_path).resolve())
 
+    # the only remaining case is a src/*/pipeline.yaml relative to a parent
+    # directory. First, find the project root, then try to look for the
+    # src/*/pipeline.yaml
     root_project = find_root_recursively(starting_dir=root_path)
 
     if root_project:
@@ -70,7 +90,12 @@ def entry_point(root_path=None):
             return relpath(Path(pkg_location).resolve(),
                            start=Path(root_path).resolve())
 
-    return 'pipeline.yaml'
+    raise DAGSpecNotFound(
+        f'Could not find dag spec with name {FILENAME}, '
+        'make sure the file is located in one of the standard locations: '
+        f'current working directory, or in src/*/{FILENAME} if your '
+        'project is a package. Alternatively you may define an ENTRY_POINT '
+        'environment variable')
 
 
 def path_to_env(path_to_parent):

@@ -25,6 +25,7 @@ from ploomber.env import expand
 from ploomber.tasks import SQLScript
 from ploomber import exceptions
 from ploomber.executors import Serial, Parallel
+from ploomber.exceptions import DAGSpecNotFound
 
 
 def create_engine_with_schema(schema):
@@ -966,7 +967,7 @@ def test_searches_in_default_locations(monkeypatch, tmp_nbs, root_path):
 
     DAGSpec._auto_load(starting_dir=root_path)
 
-    mock.assert_called_once_with(root_path=root_path)
+    mock.assert_called_once_with(root_path=root_path, name=None)
 
 
 def test_find(tmp_nbs, monkeypatch):
@@ -980,7 +981,8 @@ def test_find(tmp_nbs, monkeypatch):
                                  starting_dir=None,
                                  env={'a': 1},
                                  lazy_import=False,
-                                 reload=False)
+                                 reload=False,
+                                 name=None)
 
 
 def test_error_invalid_yaml_displays_error_line(tmp_directory):
@@ -1324,3 +1326,14 @@ def downstream(product, upstream):
     assert set(dag['downstream'].params['upstream']['upstream-*']) == {
         'upstream-1', 'upstream-0'
     }
+
+
+def test_load_spec_with_custom_name(tmp_nbs):
+    os.rename('pipeline.yaml', 'pipeline.serve.yaml')
+    spec = DAGSpec.find(name='serve')
+    assert spec.path == Path('pipeline.serve.yaml').resolve()
+
+
+def test_raises_error_if_missing_file(tmp_directory):
+    with pytest.raises(DAGSpecNotFound):
+        DAGSpec.find()
