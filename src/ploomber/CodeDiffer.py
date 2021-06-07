@@ -134,13 +134,23 @@ class CodeDiffer:
 
         diff : str
             A diff view of the differences
+
+        Notes
+        -----
+        Params comparison is ignored if either a_params or b_params is None
         """
         # TODO: this can be more efficient. ie only compare source code
         # if params are the same and only get diff if result is True
         normalizer = self._get_normalizer(extension)
         a_norm = normalizer(a)
         b_norm = normalizer(b)
-        result = (a_params != b_params) or (a_norm != b_norm)
+
+        if a_params is None or b_params is None:
+            outdated_params = False
+        else:
+            outdated_params = (a_params != b_params)
+
+        result = outdated_params or (a_norm != b_norm)
         # TODO: improve diff view, also show a params diff view. probably
         # we need to normalize them first (maybe using pprint?) then take
         # the diff

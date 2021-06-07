@@ -1059,7 +1059,7 @@ def test_task_grouping():
 
 def test_outdated_if_different_params(tmp_directory):
     def make(some_param):
-        dag = DAG()
+        dag = DAG(executor=Serial(build_in_subprocess=False))
         PythonCallable(touch_root_w_param,
                        File('1.txt'),
                        dag,
@@ -1073,3 +1073,20 @@ def test_outdated_if_different_params(tmp_directory):
 
     assert {t.exec_status
             for t in dag.values()} == {TaskStatus.WaitingExecution}
+
+
+def test_up_to_date_status_when_unserializable_params(tmp_directory):
+    def make():
+        dag = DAG(executor=Serial(build_in_subprocess=False))
+        PythonCallable(touch_root_w_param,
+                       File('1.txt'),
+                       dag,
+                       name='first',
+                       params={'some_param': object()})
+        return dag
+
+    make().build()
+
+    dag = make().render()
+
+    assert {t.exec_status for t in dag.values()} == {TaskStatus.Skipped}

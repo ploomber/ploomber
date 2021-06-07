@@ -2,6 +2,9 @@
 
 ## 0.11.1dev
 
+- Task's `metadata.params` stores `null` if any parameter isn't serializable
+- Task status ignores `metadata.params` if they are `null`
+
 ## 0.11 (2021-05-31)
 
 - Adds `remote` parameter to `DAG.render` to check status against remote storage

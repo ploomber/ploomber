@@ -252,7 +252,7 @@ class Metadata(AbstractMetadata):
             warnings.warn(f'Params {params!r} are not serializable, they '
                           'will be ignored. Changes to them wont trigger '
                           'task execution.')
-            params = {}
+            params = None
 
         new_data = dict(timestamp=datetime.now().timestamp(),
                         stored_source_code=source_code,
