@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from unittest.mock import Mock
 from pathlib import Path
 
@@ -79,6 +80,19 @@ def df_unserializer(product):
     return pd.read_parquet(str(product))
 
 
+def metaproduct_unserializer(product):
+    if isinstance(product, Mapping):
+        # FIXME: we only need this bc the current MetaProduct implementation
+        # iterates over values (instead of keys like a dict does) - we should
+        # make it work like a regular dict and deprecate support for
+        # MetaProduct initialized from lists
+        products_d = product.products.to_json_serializable()
+
+        return {k: Path(v).read_text() for k, v in products_d.items()}
+    else:
+        return Path(product).read_text()
+
+
 def touch(product):
     Path(str(product)).touch()
 
@@ -86,6 +100,11 @@ def touch(product):
 def touch_meta(product):
     for path in product:
         Path(path).touch()
+
+
+def touch_with_first_as_upstream(upstream, product):
+    upstream['first']
+    Path(product).touch()
 
 
 def touch_with_upstream(upstream, product, param):
@@ -236,6 +255,21 @@ def test_uses_override_default_serializer_and_deserializer():
 
     assert t._serializer is _new_serializer
     assert t._unserializer is _new_unserializer
+
+
+def test_unserializes_upstream_metaproduct(tmp_directory):
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+    dag.unserializer = metaproduct_unserializer
+    t1 = PythonCallable(touch_meta, {
+        'one': File('one'),
+        'another': File('another')
+    },
+                        dag=dag,
+                        name='first')
+    t2 = PythonCallable(touch_with_first_as_upstream, File('last'), dag=dag)
+    t1 >> t2
+
+    dag.build()
 
 
 @pytest.mark.parametrize(

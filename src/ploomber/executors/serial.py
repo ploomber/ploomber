@@ -6,7 +6,7 @@ import logging
 from tqdm.auto import tqdm
 from ploomber.executors.abc import Executor
 from ploomber.exceptions import DAGBuildError, DAGBuildEarlyStop
-from ploomber.MessageCollector import (BuildExceptionsCollector,
+from ploomber.messagecollector import (BuildExceptionsCollector,
                                        BuildWarningsCollector)
 from ploomber.constants import TaskStatus
 

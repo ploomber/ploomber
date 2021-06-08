@@ -13,7 +13,7 @@ except ImportError:  # pragma: no cover
     import importlib_resources
 
 from ploomber.spec.dagspec import DAGSpec
-from ploomber.env.EnvDict import EnvDict
+from ploomber.env.envdict import EnvDict
 from ploomber.util.dotted_path import load_dotted_path
 from ploomber.util import default
 

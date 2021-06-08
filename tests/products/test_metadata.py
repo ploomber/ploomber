@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from ploomber.products.Metadata import (Metadata, AbstractMetadata,
+from ploomber.products.metadata import (Metadata, AbstractMetadata,
                                         MetadataCollection)
 from ploomber.products import Product, File
 from ploomber._testing_utils import assert_no_extra_attributes_in_class

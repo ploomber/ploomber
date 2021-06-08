@@ -8,7 +8,7 @@ are lazy evaluated, they can be built from templates
 import abc
 import logging
 
-from ploomber.products.Metadata import Metadata
+from ploomber.products.metadata import Metadata
 
 
 def _prepare_metadata(metadata):

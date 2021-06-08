@@ -1,5 +1,5 @@
 from ploomber.static_analysis.parser.parser import Parser
-from ploomber.static_analysis.parser.RLexer import RLexer
+from ploomber.static_analysis.parser.rlexer import RLexer
 from ploomber.static_analysis.abc import NotebookExtractor
 
 

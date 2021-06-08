@@ -2,7 +2,7 @@ from itertools import chain
 from jinja2 import Environment
 from jinja2.nodes import Getattr, Getitem, Assign
 
-from ploomber.placeholders.Placeholder import Placeholder
+from ploomber.placeholders.placeholder import Placeholder
 
 
 class JinjaExtractor:

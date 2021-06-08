@@ -2,10 +2,10 @@
 A generic product whose metadata is saved in a given directory and
 exists/delete methods are bash commands
 """
-from ploomber.products.Product import Product
+from ploomber.products.product import Product
 from ploomber.products.mixins import SQLProductMixin
 from ploomber.products.sql import SQLiteBackedProductMixin
-from ploomber.placeholders.Placeholder import (Placeholder,
+from ploomber.placeholders.placeholder import (Placeholder,
                                                SQLRelationPlaceholder)
 
 

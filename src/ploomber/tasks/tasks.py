@@ -16,7 +16,7 @@ from IPython.terminal.debugger import TerminalPdb, Pdb
 from ploomber.tasks.abc import Task
 from ploomber.sources import (PythonCallableSource, GenericSource, EmptySource)
 from ploomber.clients import ShellClient
-from ploomber.products.Metadata import MetadataAlwaysUpToDate
+from ploomber.products.metadata import MetadataAlwaysUpToDate
 from ploomber.exceptions import TaskBuildError
 from ploomber.constants import TaskStatus
 from ploomber.sources.interact import CallableInteractiveDeveloper
@@ -27,9 +27,10 @@ from ploomber.products import MetaProduct, File
 
 def _unserializer(product, unserializer):
     # this happens when we have a task group
-    if isinstance(product, Mapping):
+    if isinstance(product, Mapping) and not isinstance(product, MetaProduct):
         return {k: unserializer(p) for k, p in product.items()}
     else:
+        # pass metaproduct and products directly to the unserializer function
         return unserializer(product)
 
 

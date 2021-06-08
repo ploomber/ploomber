@@ -3,7 +3,7 @@ A placeholder Product that doesn't do anything, used internally for
 InMemoryDAG
 """
 from ploomber.products import Product
-from ploomber.placeholders.Placeholder import Placeholder
+from ploomber.placeholders.placeholder import Placeholder
 
 
 class EmptyProduct(Product):

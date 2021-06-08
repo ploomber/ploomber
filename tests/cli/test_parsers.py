@@ -13,7 +13,7 @@ from ploomber.cli.parsers import (
     _add_cli_args_from_env_dict_keys,
     EntryPoint,
 )
-from ploomber.env.EnvDict import EnvDict
+from ploomber.env.envdict import EnvDict
 
 
 def fn(a: int, b: float, c: str, d: bool, e):

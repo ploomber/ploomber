@@ -14,7 +14,7 @@ mod.children
 
 import pytest
 
-from ploomber.static_analysis.parser.RLexer import RLexer
+from ploomber.static_analysis.parser.rlexer import RLexer
 from ploomber.static_analysis.parser.tokens import (Integer, BinaryOperator,
                                                     Assignment, Name, Operator,
                                                     String, Null)

@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from ploomber import DAG
-from ploomber.dag.DAGConfigurator import DAGConfigurator
+from ploomber.dag.dagconfigurator import DAGConfigurator
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
 from ploomber.executors import Serial, Parallel

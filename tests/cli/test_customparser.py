@@ -5,7 +5,7 @@ from unittest.mock import Mock
 import pytest
 
 from ploomber.cli.parsers import CustomParser, _custom_command
-from ploomber.env.EnvDict import EnvDict
+from ploomber.env.envdict import EnvDict
 from ploomber.cli import parsers
 
 

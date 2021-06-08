@@ -7,8 +7,8 @@ import yaml
 import pandas as pd
 import pytest
 
-from ploomber.dag import OnlineDAG as online_dag
-from ploomber.dag.OnlineDAG import OnlineDAG, OnlineModel
+from ploomber.dag import onlinedag
+from ploomber.dag.onlinedag import OnlineDAG, OnlineModel
 from ploomber.spec import DAGSpec
 
 
@@ -98,7 +98,7 @@ def test_error_if_init_with_invalid_type():
 def test_online_model(monkeypatch):
 
     mock_read = Mock(return_value=pickle.dumps(FakePredictor()))
-    monkeypatch.setattr(online_dag.importlib_resources, 'read_binary',
+    monkeypatch.setattr(onlinedag.importlib_resources, 'read_binary',
                         mock_read)
 
     model = OnlineModel(test_pkg)
@@ -117,7 +117,7 @@ def test_online_model_missing_model_file():
 
 def test_online_model_without_features_task(monkeypatch, backup_test_pkg):
     mock_read = Mock(return_value=pickle.dumps(FakePredictor()))
-    monkeypatch.setattr(online_dag.importlib_resources, 'read_binary',
+    monkeypatch.setattr(onlinedag.importlib_resources, 'read_binary',
                         mock_read)
 
     # change task name

@@ -12,7 +12,7 @@ import numpy as np
 
 from tests_util import executors_w_exception_logging
 from ploomber import DAG
-from ploomber import dag as dag_module
+from ploomber.dag import dag as dag_module
 from ploomber.tasks import PythonCallable, SQLDump, SQLScript
 from ploomber.products import File, SQLiteRelation
 from ploomber.constants import TaskStatus, DAGStatus
@@ -130,8 +130,8 @@ def monkeypatch_plot(monkeypatch):
     def to_agraph(*args, **kwargs):
         return mock_to_agraph
 
-    monkeypatch.setattr(dag_module.DAG, 'Image', mock_Image)
-    monkeypatch.setattr(dag_module.DAG.nx.nx_agraph, 'to_agraph',
+    monkeypatch.setattr(dag_module, 'Image', mock_Image)
+    monkeypatch.setattr(dag_module.nx.nx_agraph, 'to_agraph',
                         Mock(side_effect=to_agraph))
 
     yield mock_Image, mock_to_agraph, image_out
@@ -968,7 +968,7 @@ def test_on_failure_crashes_gracefully(caplog):
 @pytest.mark.parametrize('method', ['build', 'build_partially'])
 def test_build_debug(dag, method, monkeypatch):
     m = Mock()
-    monkeypatch.setattr(dag_module.DAG, 'debug_if_exception', m)
+    monkeypatch.setattr(dag_module, 'debug_if_exception', m)
 
     fake_executor = Mock()
     dag.executor = fake_executor

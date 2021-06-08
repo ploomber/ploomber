@@ -8,8 +8,8 @@ import os
 from pathlib import Path
 from reprlib import Repr
 
-from ploomber.products.Product import Product
-from ploomber.placeholders.Placeholder import Placeholder
+from ploomber.products.product import Product
+from ploomber.placeholders.placeholder import Placeholder
 from ploomber.constants import TaskStatus
 from ploomber.products._remotefile import (_RemoteFile,
                                            _fetch_metadata_from_file_product)

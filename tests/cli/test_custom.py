@@ -13,7 +13,7 @@ from ploomber.cli.cli import cmd_router
 from ploomber.cli.parsers import _custom_command
 from ploomber.tasks import notebook
 from ploomber import DAG
-import ploomber.dag.DAG as dag_module
+import ploomber.dag.dag as dag_module
 
 # TODO: optimize some of the tests that build dags by mocking and checking
 # that the build function is called with the appropriate args
@@ -154,7 +154,7 @@ def test_interactive_session(tmp_sample_dir):
         input=b'type(dag)',
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    assert 'Out[1]: ploomber.dag.DAG.DAG' in res.stdout.decode()
+    assert 'Out[1]: ploomber.dag.dag.DAG' in res.stdout.decode()
 
 
 def test_interact_command_starts_full_ipython_session(monkeypatch, tmp_nbs):

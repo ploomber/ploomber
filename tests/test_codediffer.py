@@ -1,5 +1,5 @@
 import pytest
-from ploomber.CodeDiffer import CodeDiffer, normalize_python
+from ploomber.codediffer import CodeDiffer, normalize_python
 
 fn_w_docsting = '''
 def x():

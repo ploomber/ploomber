@@ -13,7 +13,7 @@ import yaml
 from ploomber.env.env import Env
 from ploomber.env.decorators import with_env, load_env
 from ploomber.env import validate
-from ploomber.env.EnvDict import EnvDict
+from ploomber.env.envdict import EnvDict
 from ploomber.env import expand
 from ploomber.env.expand import (EnvironmentExpander, expand_raw_dictionary,
                                  cast_if_possible, iterate_nested_dict,

@@ -1,4 +1,4 @@
-from ploomber.testing.sql.SQLParser import SQLParser
+from ploomber.testing.sql.sqlparser import SQLParser
 from ploomber.testing.sql.functions import (
     nulls_in_columns,
     distinct_values_in_column,

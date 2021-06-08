@@ -1,7 +1,7 @@
 import warnings
 
 from ploomber.products import Product
-from ploomber.placeholders.Placeholder import Placeholder
+from ploomber.placeholders.placeholder import Placeholder
 from ploomber.exceptions import SourceInitializationError
 from ploomber import static_analysis
 from ploomber.static_analysis.string import StringExtractor

@@ -2,7 +2,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from ploomber.exceptions import DAGRenderError
-from ploomber.products.MetaProduct import MetaProduct
+from ploomber.products.metaproduct import MetaProduct
 from ploomber.products import File
 
 

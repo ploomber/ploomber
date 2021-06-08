@@ -10,8 +10,8 @@ import logging
 import shlex
 import subprocess
 
-from ploomber.clients.Client import Client
-from ploomber.placeholders.Placeholder import Placeholder
+from ploomber.clients.client import Client
+from ploomber.placeholders.placeholder import Placeholder
 from ploomber.util import requires
 
 

@@ -12,7 +12,7 @@ from ploomber.products import File, SQLiteRelation
 from ploomber.clients import LocalStorageClient, SQLAlchemyClient
 from ploomber.tasks import PythonCallable, SQLScript
 from ploomber.executors import Serial
-from ploomber.dag import DAG as dag_module
+from ploomber.dag import dag as dag_module
 from ploomber.exceptions import DAGRenderError
 from ploomber.products import file
 

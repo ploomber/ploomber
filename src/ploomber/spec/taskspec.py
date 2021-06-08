@@ -350,7 +350,7 @@ def _init_product(task_dict, meta, task_class, root_path):
     product_raw = task_dict.pop('product')
 
     # return if we already have a product
-    if isinstance(product_raw, products.Product):
+    if isinstance(product_raw, products.product.Product):
         return product_raw
 
     CLASS = _find_product_class(task_class, task_dict, meta)
