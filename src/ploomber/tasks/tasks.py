@@ -27,9 +27,10 @@ from ploomber.products import MetaProduct, File
 
 def _unserializer(product, unserializer):
     # this happens when we have a task group
-    if isinstance(product, Mapping):
+    if isinstance(product, Mapping) and not isinstance(product, MetaProduct):
         return {k: unserializer(p) for k, p in product.items()}
     else:
+        # pass metaproduct and products directly to the unserializer function
         return unserializer(product)
 
 

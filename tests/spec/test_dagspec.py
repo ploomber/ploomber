@@ -1330,7 +1330,7 @@ def downstream(product, upstream):
 def test_load_spec_with_custom_name(tmp_nbs):
     os.rename('pipeline.yaml', 'pipeline.serve.yaml')
     spec = DAGSpec.find(name='serve')
-    assert spec.path == Path('pipeline.serve.yaml').resolve()
+    assert spec.path.resolve() == Path('pipeline.serve.yaml').resolve()
 
 
 def test_load_spec_with_custom_name_in_packaged_structure(backup_test_pkg):
