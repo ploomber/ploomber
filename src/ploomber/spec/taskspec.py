@@ -365,16 +365,7 @@ def _init_product(task_dict, meta, task_class, root_path):
     relative_to = (Path(task_dict['source']).parent
                    if meta['product_relative_to_source'] else root_path)
 
-    if isinstance(product_raw, Mapping):
-        return {
-            key: try_product_init(CLASS,
-                                  resolve_if_file(value, relative_to, CLASS),
-                                  kwargs)
-            for key, value in product_raw.items()
-        }
-    else:
-        source = resolve_if_file(product_raw, relative_to, CLASS)
-        return try_product_init(CLASS, source, kwargs)
+    return try_product_init(CLASS, product_raw, relative_to, kwargs)
 
 
 def _find_product_class(task_class, task_dict, meta):
@@ -393,18 +384,48 @@ def _find_product_class(task_class, task_dict, meta):
                          'key to the applicable task class'.format(task_dict))
 
 
-def try_product_init(class_, source, kwargs):
+def try_product_init(class_, product_raw, relative_to, kwargs):
+    """Initializes Product (or MetaProduct)
+
+    Parameters
+    ----------
+    class_ : class
+        Product class
+
+    product_raw : str, list or dict
+        The raw value as indicated by the user in the pipeline.yaml file. str
+        if a single file, list if a SQL relation or dict if a MetaProduct
+
+    relative_to : str
+        Prefix for all relative paths (only applicable to File products)
+
+    kwargs : dict
+        Other kwargs to initialize product
+    """
+    if isinstance(product_raw, Mapping):
+        return {
+            key: _try_product_init(class_,
+                                   resolve_if_file(value, relative_to, class_),
+                                   kwargs)
+            for key, value in product_raw.items()
+        }
+    else:
+        path_to_source = resolve_if_file(product_raw, relative_to, class_)
+        return _try_product_init(class_, path_to_source, kwargs)
+
+
+def _try_product_init(class_, path_to_source, kwargs):
     """
     Try to initialize product, raises a chained exception if not possible.
-    This provides more contextual information
+    To provide more context.
     """
     try:
-        return class_(source, **kwargs)
+        return class_(path_to_source, **kwargs)
     except Exception as e:
         kwargs_msg = f'and keyword arguments: {kwargs!r}' if kwargs else ''
         raise DAGSpecInitializationError(
             f'Error initializing {class_.__name__} with source: '
-            f'{source!r}' + kwargs_msg) from e
+            f'{path_to_source!r}' + kwargs_msg) from e
 
 
 def validate_product_class_name(product_class_name):
