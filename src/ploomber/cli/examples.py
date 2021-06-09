@@ -12,7 +12,7 @@ import click
 
 from ploomber.cli.io import cli_endpoint
 from ploomber.io.terminalwriter import TerminalWriter
-from ploomber.Table import Table
+from ploomber.table import Table
 
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer

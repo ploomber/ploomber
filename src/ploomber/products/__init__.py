@@ -1,10 +1,10 @@
-from ploomber.products.Product import Product
-from ploomber.products.MetaProduct import MetaProduct
+from ploomber.products.product import Product
+from ploomber.products.metaproduct import MetaProduct
 from ploomber.products.file import File
-from ploomber.products.GenericProduct import (GenericProduct,
+from ploomber.products.genericproduct import (GenericProduct,
                                               GenericSQLRelation, SQLRelation)
 from ploomber.products.sql import SQLiteRelation, PostgresRelation
-from ploomber.products.EmptyProduct import EmptyProduct
+from ploomber.products.emptyproduct import EmptyProduct
 
 __all__ = [
     'File', 'MetaProduct', 'Product', 'SQLiteRelation', 'PostgresRelation',

@@ -1,6 +1,6 @@
 import pydoc
 from pathlib import Path
-from ploomber.placeholders.Placeholder import Placeholder
+from ploomber.placeholders.placeholder import Placeholder
 from ploomber.placeholders import extensions
 from ploomber.util.util import isiterable_not_str
 

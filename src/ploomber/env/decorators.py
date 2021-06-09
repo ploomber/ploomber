@@ -3,7 +3,7 @@ import types
 from functools import wraps
 
 from ploomber.env.env import Env
-from ploomber.env.EnvDict import EnvDict
+from ploomber.env.envdict import EnvDict
 
 
 def _get_function_name_w_module(fn):

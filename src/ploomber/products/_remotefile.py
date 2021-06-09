@@ -1,7 +1,7 @@
 import json
 
 from ploomber.constants import TaskStatus
-from ploomber.products.Metadata import Metadata
+from ploomber.products.metadata import Metadata
 
 
 class _RemoteFile:

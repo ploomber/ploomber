@@ -12,7 +12,7 @@ from ploomber.tasks import (PythonCallable, SQLScript, ShellScript, SQLDump,
 from ploomber.tasks.abc import Task
 from ploomber.tasks import abc as task_abc
 from ploomber.constants import TaskStatus
-from ploomber.placeholders.Placeholder import Placeholder
+from ploomber.placeholders.placeholder import Placeholder
 from ploomber.executors import Serial
 from ploomber.clients import LocalStorageClient
 

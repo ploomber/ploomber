@@ -17,7 +17,7 @@ class SQLScript(Task):
     source: str or pathlib.Path
         SQL script source, if str, the content is interpreted as the actual
         script, if pathlib.Path, the content of the file is loaded
-    product: ploomber.products.Product
+    product: ploomber.products.product
         Product generated upon successful execution
     dag: ploomber.DAG
         A DAG to add this task to
@@ -91,7 +91,7 @@ class SQLDump(io.FileLoaderMixin, Task):
     source: str or pathlib.Path
         SQL script source, if str, the content is interpreted as the actual
         script, if pathlib.Path, the content of the file is loaded
-    product: ploomber.products.Product
+    product: ploomber.products.product
         Product generated upon successful execution
     dag: ploomber.DAG
         A DAG to add this task to
@@ -214,7 +214,7 @@ class SQLTransfer(Task):
     source: str or pathlib.Path
         SQL script source, if str, the content is interpreted as the actual
         script, if pathlib.Path, the content of the file is loaded
-    product: ploomber.products.Product
+    product: ploomber.products.product
         Product generated upon successful execution. For SQLTransfer, usually
         product.client != task.client. task.client represents the data source
         while product.client represents the data destination
@@ -306,7 +306,7 @@ class SQLUpload(Task):
     source : str or pathlib.Path
         Path to parquet or a csv file to upload
 
-    product : ploomber.products.Product
+    product : ploomber.products.product
         Product generated upon successful execution. The client for the product
         must be in the target database, where as task.client should be a client
         in the source database.

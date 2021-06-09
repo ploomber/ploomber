@@ -2,7 +2,7 @@ from inspect import isclass
 from collections.abc import MutableMapping
 
 from ploomber.tasks.abc import Task
-from ploomber.products.Product import Product
+from ploomber.products.product import Product
 from ploomber.validators.string import get_suggestion, str_to_class
 
 

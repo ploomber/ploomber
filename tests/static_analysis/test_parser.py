@@ -1,6 +1,6 @@
 import pytest
 from ploomber.static_analysis.parser.parser import Parser
-from ploomber.static_analysis.parser.RLexer import RLexer
+from ploomber.static_analysis.parser.rlexer import RLexer
 
 
 @pytest.mark.parametrize('code, expected', [

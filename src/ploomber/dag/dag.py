@@ -74,7 +74,7 @@ from tqdm.auto import tqdm
 from jinja2 import Template
 from IPython.display import Image
 
-from ploomber.Table import Table, TaskReport, BuildReport
+from ploomber.table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
 from ploomber.util import (image_bytes2html, isiterable, requires)
 from ploomber.util.debug import debug_if_exception
@@ -83,11 +83,11 @@ from ploomber import executors
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop)
-from ploomber.MessageCollector import (RenderExceptionsCollector,
+from ploomber.messagecollector import (RenderExceptionsCollector,
                                        RenderWarningsCollector)
 from ploomber.util.util import callback_check
-from ploomber.dag.DAGConfiguration import DAGConfiguration
-from ploomber.dag.DAGLogger import DAGLogger
+from ploomber.dag.dagconfiguration import DAGConfiguration
+from ploomber.dag.daglogger import DAGLogger
 from ploomber.dag.dagclients import DAGClients
 from ploomber.dag.abstractdag import AbstractDAG
 from ploomber.dag.util import (check_duplicated_products,

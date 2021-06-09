@@ -10,7 +10,7 @@ from pathlib import Path
 
 from jupytext.contentsmanager import TextFileContentsManager
 
-from ploomber.sources.NotebookSource import (_cleanup_rendered_nb, inject_cell)
+from ploomber.sources.notebooksource import (_cleanup_rendered_nb, inject_cell)
 from ploomber.spec.dagspec import DAGSpec
 from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.cli import parsers

@@ -1,4 +1,4 @@
-from ploomber.CodeDiffer import CodeDiffer
+from ploomber.codediffer import CodeDiffer
 
 
 def _logging_factory():
@@ -9,8 +9,10 @@ class DAGConfiguration:
     """
     DAGConfiguration() initializes a configuration object with default values.
     """
-    __attrs = {'outdated_by_code', 'cache_rendered_status',
-               'logging_factory', 'differ', 'hot_reload'}
+    __attrs = {
+        'outdated_by_code', 'cache_rendered_status', 'logging_factory',
+        'differ', 'hot_reload'
+    }
 
     @classmethod
     def from_dict(cls, d):

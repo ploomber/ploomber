@@ -37,7 +37,7 @@ with warnings.catch_warnings():
 import nbformat
 
 from ploomber.exceptions import RenderError, SourceInitializationError
-from ploomber.placeholders.Placeholder import Placeholder
+from ploomber.placeholders.placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources.abc import Source
 from ploomber.sources.nb_utils import find_cell_with_tag

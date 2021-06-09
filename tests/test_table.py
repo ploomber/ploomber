@@ -6,12 +6,12 @@ from unittest.mock import Mock
 
 import pytest
 import pandas as pd
-from ploomber.Table import (Row, Table, BuildReport, rows2columns,
+from ploomber.table import (Row, Table, BuildReport, rows2columns,
                             wrap_elementwise, calculate_wrapping,
                             width_required_for_column, apply_wrapping,
                             equal_column_width, separator_width)
 
-from ploomber import Table as table
+from ploomber import table
 
 
 @pytest.mark.parametrize('header_length, max_value_length, expected', [

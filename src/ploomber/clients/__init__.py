@@ -1,4 +1,4 @@
-from ploomber.clients.Client import Client
+from ploomber.clients.client import Client
 from ploomber.clients.db import DBAPIClient, SQLAlchemyClient
 from ploomber.clients.shell import ShellClient, RemoteShellClient
 from ploomber.clients.storage.gcloud import GCloudStorageClient

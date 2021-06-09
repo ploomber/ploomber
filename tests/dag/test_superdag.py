@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from ploomber import DAG
-from ploomber.dag.SuperDAG import SuperDAG
+from ploomber.dag.superdag import SuperDAG
 from ploomber.tasks import PythonCallable
 from ploomber.products import File
 

@@ -7,7 +7,7 @@ import pickle
 from ploomber import DAG
 from ploomber.tasks import PythonCallable, ShellScript
 from ploomber.products import File, PostgresRelation
-from ploomber.placeholders.Placeholder import Placeholder
+from ploomber.placeholders.placeholder import Placeholder
 
 
 def fn():
@@ -17,7 +17,9 @@ def fn():
 def test_can_pickle_dag():
     dag = DAG()
 
-    t = ShellScript('cat "hi" > {{product}}', File('/tmp/file.txt'), dag,
+    t = ShellScript('cat "hi" > {{product}}',
+                    File('/tmp/file.txt'),
+                    dag,
                     name='bash')
 
     t2 = PythonCallable(fn, File('/tmp/file2.txt'), dag, name='fn')

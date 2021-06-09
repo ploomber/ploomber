@@ -1,7 +1,7 @@
 """
 Environment management
 """
-from ploomber.env.EnvDict import EnvDict
+from ploomber.env.envdict import EnvDict
 
 # TODO: add defaults functionality if defined in {module}/env.defaults.yaml
 

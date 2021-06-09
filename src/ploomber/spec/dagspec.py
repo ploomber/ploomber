@@ -94,17 +94,17 @@ from itertools import chain
 import pprint
 import warnings
 
-from ploomber.dag.DAG import DAG
-from ploomber.placeholders.SourceLoader import SourceLoader
+from ploomber.dag.dag import DAG
+from ploomber.placeholders.sourceloader import SourceLoader
 from ploomber.util.util import call_with_dictionary, add_to_sys_path
 from ploomber.util import dotted_path
 from ploomber.util.default import entry_point, entry_point_relative
 from ploomber.spec.taskspec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
 from ploomber.util import default
-from ploomber.dag.DAGConfiguration import DAGConfiguration
+from ploomber.dag.dagconfiguration import DAGConfiguration
 from ploomber.exceptions import DAGSpecInitializationError
-from ploomber.env.EnvDict import EnvDict
+from ploomber.env.envdict import EnvDict
 from ploomber.env.expand import (expand_raw_dictionary_and_extract_tags,
                                  expand_raw_dictionaries_and_extract_tags)
 from ploomber.tasks import NotebookRunner

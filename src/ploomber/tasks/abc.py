@@ -61,7 +61,7 @@ from ploomber.constants import TaskStatus
 from ploomber.tasks._upstream import Upstream
 from ploomber.tasks._params import Params
 from ploomber.tasks.util import download_products_in_parallel
-from ploomber.Table import TaskReport, Row
+from ploomber.table import TaskReport, Row
 from ploomber.util import isiterable
 from ploomber.util.util import callback_check
 from ploomber.dag.abstractdag import AbstractDAG

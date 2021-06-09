@@ -1,5 +1,5 @@
 from ploomber.spec.dagspec import DAGSpec
-from ploomber.scaffold.ScaffoldLoader import ScaffoldLoader
+from ploomber.scaffold.scaffoldloader import ScaffoldLoader
 from ploomber.util.util import add_to_sys_path
 from ploomber.exceptions import DAGSpecInitializationError
 

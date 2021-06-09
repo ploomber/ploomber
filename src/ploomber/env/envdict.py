@@ -9,7 +9,7 @@ import yaml
 
 from ploomber.env import validate
 from ploomber.env.expand import EnvironmentExpander
-from ploomber.env.FrozenJSON import FrozenJSON
+from ploomber.env.frozenjson import FrozenJSON
 from ploomber.util import default
 
 

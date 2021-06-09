@@ -6,7 +6,7 @@ import nbformat
 from jupyter_client.kernelspec import NoSuchKernel
 
 from ploomber.tasks._params import Params
-from ploomber.sources.NotebookSource import (NotebookSource, is_python,
+from ploomber.sources.notebooksource import (NotebookSource, is_python,
                                              inject_cell,
                                              determine_kernel_name)
 from ploomber.products import File

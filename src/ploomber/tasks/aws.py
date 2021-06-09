@@ -13,7 +13,7 @@ class UploadToS3(Task):
     ----------
     source: str
         Path to file to upload
-    product: ploomber.products.GenericProduct
+    product: ploomber.products.genericproduct
         Product must be initialized with the desired Key
     dag: ploomber.DAG
         A DAG to add this task to

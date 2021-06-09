@@ -10,7 +10,7 @@ from jinja2 import Template
 from ploomber.products import Product
 from ploomber.products.mixins import SQLProductMixin
 from ploomber.products.serializers import Base64Serializer
-from ploomber.placeholders.Placeholder import SQLRelationPlaceholder
+from ploomber.placeholders.placeholder import SQLRelationPlaceholder
 
 
 class ProductWithClientMixin:

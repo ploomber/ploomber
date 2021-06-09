@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from ploomber.env.FrozenJSON import FrozenJSON
+from ploomber.env.frozenjson import FrozenJSON
 
 
 def test_init_from_dict():

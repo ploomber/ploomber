@@ -6,7 +6,7 @@ from copy import copy, deepcopy
 from pathlib import Path
 
 import pytest
-from ploomber.placeholders.Placeholder import (Placeholder,
+from ploomber.placeholders.placeholder import (Placeholder,
                                                SQLRelationPlaceholder)
 from ploomber.placeholders.util import get_tags_in_str, get_defined_variables
 from ploomber.tasks._upstream import Upstream

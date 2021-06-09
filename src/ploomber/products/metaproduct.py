@@ -4,7 +4,7 @@ Handling tasks that generate multiple products
 from reprlib import Repr
 from collections.abc import Mapping
 
-from ploomber.products.Metadata import MetadataCollection
+from ploomber.products.metadata import MetadataCollection
 from ploomber.constants import TaskStatus
 
 

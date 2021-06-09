@@ -1,6 +1,6 @@
 from ploomber.tasks.tasks import (PythonCallable, ShellScript, DownloadFromURL,
                                   Link, Input, task_factory)
-from ploomber.tasks.TaskFactory import TaskFactory
+from ploomber.tasks.taskfactory import TaskFactory
 from ploomber.tasks.sql import (SQLScript, SQLDump, SQLTransfer, SQLUpload,
                                 PostgresCopyFrom)
 from ploomber.tasks.notebook import NotebookRunner

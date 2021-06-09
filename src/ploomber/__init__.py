@@ -1,11 +1,11 @@
 import logging
-from ploomber.dag.DAG import DAG
-from ploomber.dag.InMemoryDAG import InMemoryDAG
-from ploomber.dag.DAGConfigurator import DAGConfigurator
-from ploomber.dag.OnlineDAG import OnlineDAG, OnlineModel
+from ploomber.dag.dag import DAG
+from ploomber.dag.inmemorydag import InMemoryDAG
+from ploomber.dag.dagconfigurator import DAGConfigurator
+from ploomber.dag.onlinedag import OnlineDAG, OnlineModel
 from ploomber.env.env import Env
 from ploomber.env.decorators import load_env, with_env
-from ploomber.placeholders.SourceLoader import SourceLoader
+from ploomber.placeholders.sourceloader import SourceLoader
 from ploomber.jupyter.manager import _load_jupyter_server_extension
 
 __version__ = '0.11.2dev'

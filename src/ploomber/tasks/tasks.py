@@ -16,7 +16,7 @@ from IPython.terminal.debugger import TerminalPdb, Pdb
 from ploomber.tasks.abc import Task
 from ploomber.sources import (PythonCallableSource, GenericSource, EmptySource)
 from ploomber.clients import ShellClient
-from ploomber.products.Metadata import MetadataAlwaysUpToDate
+from ploomber.products.metadata import MetadataAlwaysUpToDate
 from ploomber.exceptions import TaskBuildError
 from ploomber.constants import TaskStatus
 from ploomber.sources.interact import CallableInteractiveDeveloper

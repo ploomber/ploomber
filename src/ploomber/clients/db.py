@@ -6,7 +6,7 @@ try:
 except ImportError:
     create_engine = None
 
-from ploomber.clients.Client import Client
+from ploomber.clients.client import Client
 from ploomber.util import requires
 
 import re
