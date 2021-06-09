@@ -70,14 +70,12 @@ Batch processing
 
 Ploomber pipelines can export to production-grade schedulers for batch
 processing. Check out our package
-`Soopervisor <https://soopervisor.readthedocs.io/en/stable/index.html>`_, which
+`Soopervisor <https://soopervisor.readthedocs.io/en/latest/>`_, which
 allows you to export to
-`Kubernetes <https://soopervisor.readthedocs.io/en/stable/kubernetes.html>`_
-(via `Argo workflows <argoproj.github.io/>`_) and
-`Airflow <https://soopervisor.readthedocs.io/en/stable/airflow.html>`_. It's
-also possible to run Ploomber projects using `cron
-<https://soopervisor.readthedocs.io/en/stable/scheduling.html#cron>`_ or
-`Github Actions <https://soopervisor.readthedocs.io/en/stable/scheduling.html#github-actions>`_.
+`Kubernetes <https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html>`_
+(via `Argo workflows <argoproj.github.io/>`_),
+`AWS Batch <https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html>`_,
+and `Airflow <https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html>`_.
 
 Composing batch pipelines
 *************************
@@ -310,8 +308,11 @@ expose your pipeline as an online service.
         return jsonify({'prediction': int(out['terminal'])})
 
 
-Example
-*******
+Examples
+********
+
+`Click here <https://soopervisor.readthedocs.io/en/latest/tutorials/aws-lambda.html>`_ to
+see a deployment example using AWS Lambda.
 
 `Click here <https://github.com/ploomber/projects/tree/master/ml-online>`_ to
 see a complete sample project that trains a model and exposes an API via Flask.

@@ -177,9 +177,9 @@ automatically inject a new cell with the location of your input
 5.  **Pipeline inspection**. Start an interactive session with
     `ploomber interact` to debug your pipeline. Call
     `dag['task_name'].debug()` to start a debugging session.
-6.  **Deployment to Kubernetes and Airflow**. You can develop
+6.  **Deployment to Kubernetes, AWS Batch, or Airflow**. You can develop
     and execute locally. Once you are ready to deploy, export to
-    [Kubernetes](https://soopervisor.readthedocs.io/en/stable/kubernetes.html) or [Airflow](https://soopervisor.readthedocs.io/en/stable/airflow.html).
+    [Kubernetes](https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html), [AWS Batch](https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html) or [Airflow](https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html).
 
 
 ## How does Ploomber compare to X?
