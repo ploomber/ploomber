@@ -4,6 +4,7 @@
 
 - Task's `metadata.params` stores `null` if any parameter isn't serializable
 - Task status ignores `metadata.params` if they are `null`
+- Fixes unserialization when an upstream task produces a `MetaProduct`
 
 ## 0.11 (2021-05-31)
 
