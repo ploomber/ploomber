@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.11.1dev
+## 0.11.1 (2021-06-08)
 
 - Task's `metadata.params` stores `null` if any parameter isn't serializable
 - Task status ignores `metadata.params` if they are `null`
