@@ -7,6 +7,8 @@ import os
 import contextlib
 from pprint import pprint
 from pathlib import Path
+from collections.abc import Mapping
+from collections import defaultdict
 
 from jupytext.contentsmanager import TextFileContentsManager
 
@@ -15,6 +17,36 @@ from ploomber.spec.dagspec import DAGSpec
 from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.cli import parsers
 from ploomber.jupyter.dag import JupyterDAGManager
+
+
+class DAGMapping(Mapping):
+    """dict-like object that maps source files to Tasks
+    """
+    def __init__(self, pairs):
+        default = defaultdict(lambda: [])
+
+        for name, task in pairs:
+            default[name].append(task)
+
+        self._mapping = dict(default)
+
+    def __iter__(self):
+        for k in self._mapping:
+            yield k
+
+    def __getitem__(self, key):
+        """Return the first task associated with a given key
+        """
+        return self._mapping[key][0]
+
+    def __len__(self):
+        return len(self._mapping)
+
+    def delete_metadata(self, key):
+        """Delete metadata for all tasks associated with a given key
+        """
+        for task in self._mapping[key]:
+            task.product.metadata.delete()
 
 
 @contextlib.contextmanager
@@ -124,13 +156,10 @@ class PloomberContentsManager(TextFileContentsManager):
                     else:
                         self.manager = None
 
-                    tuples = [(resolve_path(base_path, t.source.loc), t)
-                              for t in self.dag.values()
-                              if t.source.loc is not None]
-                    self.dag_mapping = {
-                        t[0]: t[1]
-                        for t in tuples if t[0] is not None
-                    }
+                    pairs = [(resolve_path(base_path, t.source.loc), t)
+                             for t in self.dag.values()
+                             if t.source.loc is not None]
+                    self.dag_mapping = DAGMapping(pairs)
 
                     self.log.info('[Ploomber] Initialized dag from '
                                   'pipeline.yaml at'
@@ -224,7 +253,7 @@ class PloomberContentsManager(TextFileContentsManager):
                 model['content'] = _cleanup_rendered_nb(model['content'])
 
                 self.log.info("[Ploomber] Deleting product's metadata...")
-                self.dag_mapping[key].product.metadata.delete()
+                self.dag_mapping.delete_metadata(key)
 
             return super(PloomberContentsManager, self).save(model, path)
 

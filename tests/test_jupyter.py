@@ -133,6 +133,39 @@ def test_deletes_metadata_on_save(tmp_nbs):
     assert not metadata.exists()
 
 
+def test_deletes_metadata_on_save_for_file_used_multiple_times(tmp_directory):
+    Path('my-task.py').write_text("""
+# + tags=['parameters']
+upstream = None
+""")
+
+    # generate two tasks with the same script (but different params)
+    spec = {
+        'tasks': [{
+            'source': 'my-task.py',
+            'name': 'my-task-',
+            'product': 'my-task.ipynb',
+            'grid': {
+                'param': [1, 2]
+            }
+        }]
+    }
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec))
+
+    m1 = Path('.my-task-0.ipynb.metadata')
+    m2 = Path('.my-task-1.ipynb.metadata')
+    m1.touch()
+    m2.touch()
+
+    cm = PloomberContentsManager()
+    model = cm.get('my-task.py')
+    cm.save(model, path='/my-task.py')
+
+    assert not m1.exists()
+    assert not m2.exists()
+
+
 def test_skips_if_file_not_in_dag(tmp_nbs):
     cm = PloomberContentsManager()
     model = cm.get('dummy.py')
