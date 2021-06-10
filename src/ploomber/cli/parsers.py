@@ -449,8 +449,7 @@ def _process_file_dir_or_glob(parser, dagspec_arg=None):
         CLI arg parser
     """
     # look for env.yaml by searching in default locations
-    path_to_env = default.path_to_env(
-        Path(parser.parse_entry_point_value()).parent)
+    path_to_env = default.path_to_env(Path(parser.parse_entry_point_value()))
 
     if path_to_env:
         env_dict = EnvDict(path_to_env)

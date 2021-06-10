@@ -189,12 +189,10 @@ class DAGSpec(MutableMapping):
                 raise ValueError('parent_path must be None when '
                                  f'initializing {type(self).__name__} with '
                                  'a path to a YAML spec')
-            self._path = data
             # resolve the parent path to make sources and products unambiguous
             # even if the current working directory changes
-            path_to_entry_point = Path(data).resolve()
-
-            self._parent_path = str(path_to_entry_point.parent)
+            self._path = Path(data).resolve()
+            self._parent_path = str(self._path.parent)
 
             content = Path(data).read_text()
 
@@ -230,9 +228,6 @@ class DAGSpec(MutableMapping):
             self._parent_path = (None if not parent_path else str(
                 Path(parent_path).resolve()))
 
-        # try to look env.yaml in default locations
-        env_default_path = default.path_to_env(self._parent_path)
-
         self.data = data
 
         if isinstance(self.data, list):
@@ -244,6 +239,7 @@ class DAGSpec(MutableMapping):
         logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env))
 
         env = env or dict()
+        path_to_defaults = default.path_to_env(path_to_spec=self._path)
 
         # NOTE: when loading from a path, EnvDict recursively looks
         # at parent folders, this is useful when loading envs
@@ -251,8 +247,8 @@ class DAGSpec(MutableMapping):
         # but here, since we just need this for the spec, we might
         # want to turn it off. should we add a parameter to EnvDict
         # to control this?
-        if env_default_path:
-            defaults = yaml.safe_load(Path(env_default_path).read_text())
+        if path_to_defaults:
+            defaults = yaml.safe_load(Path(path_to_defaults).read_text())
             self.env = EnvDict(env,
                                path_to_here=self._parent_path,
                                defaults=defaults)

@@ -74,27 +74,73 @@ def test_entry_point_in_src_while_in_sibling_folder(tmp_directory):
         Path('..', 'src', 'package', 'pipeline.yaml'))
 
 
-def test_path_to_env_local(tmp_directory):
+@pytest.mark.parametrize('spec_name, env_name', [
+    ['pipeline.yaml', 'env.yaml'],
+    ['pipeline.train.yaml', 'env.yaml'],
+])
+def test_path_to_env_local(tmp_directory, spec_name, env_name):
+    Path(env_name).touch()
+
+    Path('dir').mkdir()
+    Path('dir', spec_name).touch()
+
+    assert default.path_to_env(Path('dir', spec_name)) == str(
+        Path(env_name).resolve())
+
+
+def test_path_to_env_loads_file_with_same_name(tmp_directory):
+    Path('env.train.yaml').touch()
+
+    Path('dir').mkdir()
+    Path('dir', 'pipeline.train.yaml').touch()
+
+    assert default.path_to_env(Path('dir', 'pipeline.train.yaml')) == str(
+        Path('env.train.yaml').resolve())
+
+
+def test_path_to_env_prefers_file_wih_name_over_plain_env_yaml(tmp_directory):
+    Path('env.train.yaml').touch()
     Path('env.yaml').touch()
 
     Path('dir').mkdir()
-    Path('dir', 'env.yaml').touch()
+    Path('dir', 'pipeline.train.yaml').touch()
 
-    assert default.path_to_env('dir') == str(Path('env.yaml').resolve())
+    assert default.path_to_env(Path('dir', 'pipeline.train.yaml')) == str(
+        Path('env.train.yaml').resolve())
 
 
 def test_path_to_parent_sibling(tmp_directory):
     Path('dir').mkdir()
     Path('dir', 'env.yaml').touch()
 
-    assert default.path_to_env('dir') == str(Path('dir', 'env.yaml').resolve())
+    assert default.path_to_env('dir/pipeline.yaml') == str(
+        Path('dir', 'env.yaml').resolve())
 
 
-@pytest.mark.parametrize('arg', ['dir', None])
+@pytest.mark.parametrize('arg', ['dir/pipeline.yaml', None])
 def test_path_to_env_none(tmp_directory, arg):
     Path('dir').mkdir()
 
     assert default.path_to_env(arg) is None
+
+
+def test_path_to_env_error_if_no_extension():
+    with pytest.raises(ValueError) as excinfo:
+        default.path_to_env('pipeline')
+
+    expected = "Expected path to spec to have an extension but got: 'pipeline'"
+    assert str(excinfo.value) == expected
+
+
+def test_path_to_env_error_if_dir(tmp_directory):
+    Path('pipeline.yaml').mkdir()
+
+    with pytest.raises(ValueError) as excinfo:
+        default.path_to_env('pipeline.yaml')
+
+    expected = ("Expected path to spec 'pipeline.yaml' to be a file "
+                "but got a directory instead")
+    assert str(excinfo.value) == expected
 
 
 @pytest.mark.parametrize(
@@ -209,3 +255,13 @@ def test_entry_point_relative_error_if_both_exist(tmp_directory):
 def test_entry_point_relative_error_if_doesnt_exist(tmp_directory):
     with pytest.raises(DAGSpecNotFound):
         default.entry_point_relative()
+
+
+@pytest.mark.parametrize('arg, expected', [
+    ['env.x.yaml', 'x'],
+    ['env.x.y.yaml', 'x'],
+    ['env.yaml', None],
+    ['env', None],
+])
+def test_extract_name(arg, expected):
+    assert default._extract_name(arg) == expected

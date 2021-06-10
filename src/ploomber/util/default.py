@@ -131,25 +131,75 @@ def entry_point_relative(name=None):
     return location_pkg or location
 
 
-def path_to_env(path_to_parent):
+def path_to_env(path_to_spec):
     """
-    Determines the env.yaml to use
+    Determines the env.yaml to use. Prefers a file in the local working
+    directory, otherwise, one relative to the spec's parent. If the appropriate
+    env.yaml file does not exist, returns None. If path to spec has a
+    pipeline.{name}.yaml format, it tries to look up an env.{name}.yaml
+    first
 
     Parameters
     ----------
-    path_to_parent : str or pathlib.Path
-        Entry point parent folder
+    path_to_spec : str or pathlib.Path
+        Path to YAML spec
+
+    Raises
+    ------
+    ValueError
+        If path_to_spec does not have an extension or if it's a directory
     """
-    local_env = Path('.', 'env.yaml').resolve()
+    if path_to_spec is not None and Path(path_to_spec).is_dir():
+        raise ValueError(
+            f'Expected path to spec {str(path_to_spec)!r} to be a '
+            'file but got a directory instead')
+
+    if path_to_spec is not None and not Path(path_to_spec).suffix:
+        raise ValueError('Expected path to spec to have an extension '
+                         f'but got: {str(path_to_spec)!r}')
+
+    path_to_parent = None if path_to_spec is None else Path(
+        path_to_spec).parent
+    name = None if path_to_parent is None else _extract_name(path_to_spec)
+
+    if name is None:
+        return _path_to_env_with_name(name=None, path_to_parent=path_to_parent)
+    else:
+        path = _path_to_env_with_name(name=name, path_to_parent=path_to_parent)
+
+        if path is None:
+            return _path_to_env_with_name(name=None,
+                                          path_to_parent=path_to_parent)
+        else:
+            return path
+
+
+def _path_to_env_with_name(name, path_to_parent):
+    filename = 'env.yaml' if name is None else f'env.{name}.yaml'
+    local_env = Path('.', filename).resolve()
 
     if local_env.exists():
         return str(local_env)
 
     if path_to_parent:
-        sibling_env = Path(path_to_parent, 'env.yaml').resolve()
+        sibling_env = Path(path_to_parent, filename).resolve()
 
         if sibling_env.exists():
             return str(sibling_env)
+
+
+def _extract_name(path):
+    """
+    Extract name from a path whose filename is something.{name}.{extension}.
+    Returns none if the file doesn't follow the naming convention
+    """
+    name = Path(path).name
+    parts = name.split('.')
+
+    if len(parts) < 3:
+        return None
+    else:
+        return parts[1]
 
 
 def find_file_recursively(name, max_levels_up=6, starting_dir=None):

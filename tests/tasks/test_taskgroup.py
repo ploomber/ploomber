@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from ploomber import DAG
+from ploomber.executors import Serial
 from ploomber.tasks import PythonCallable, TaskGroup
 from ploomber.products import File, SQLRelation
 
@@ -163,8 +164,12 @@ def test_metaproduct():
     assert len(group) == 2
 
 
-def test_from_params_resolves_paths_in_metaproduct():
-    dag = DAG()
+def test_from_params_resolves_paths_in_metaproduct(tmp_directory):
+    def touch(product, param):
+        Path(product['one']).touch()
+        Path(product['another']).touch()
+
+    dag = DAG(executor=Serial(build_in_subprocess=False))
     TaskGroup.from_params(PythonCallable,
                           File, {
                               'one': 'one.txt',
@@ -178,6 +183,10 @@ def test_from_params_resolves_paths_in_metaproduct():
                               'param': 2
                           }],
                           resolve_relative_to='')
+
+    # on windows, paths do not resolve if the file doesn't exist, so we run
+    # the pipeline to ensure they do
+    dag.build()
 
     assert Path(dag['task_group0'].product['one']).resolve() == Path(
         'one-0.txt').resolve()

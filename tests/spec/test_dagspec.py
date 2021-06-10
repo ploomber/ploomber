@@ -1329,7 +1329,7 @@ def downstream(product, upstream):
 
 @pytest.mark.parametrize('spec',
                          [_spec_upstream_extract, _spec_upstream_manual])
-def test_spec_from_yaml_resolves_paths_from_wildcard(spec):
+def test_spec_from_yaml_resolves_paths_from_wildcard(tmp_directory, spec):
     Path('upstream.py').write_text("""
 # + tags=['parameters']
 upstream = None
@@ -1343,6 +1343,10 @@ upstream = ['upstream-*']
     spec = DAGSpec(spec)
 
     dag = spec.to_dag().render()
+
+    # on windows, paths do not resolve if the file doesn't exist
+    Path('upstream-0.ipynb').touch()
+    Path('upstream-1.ipynb').touch()
 
     assert str(Path(dag['upstream-0'].product).resolve()) == str(
         Path('upstream-0.ipynb').resolve())
@@ -1373,7 +1377,7 @@ def test_load_spec_with_custom_name_in_packaged_structure(backup_test_pkg):
 def test_load_spec_relative(tmp_nbs, filename, name):
     os.rename('pipeline.yaml', filename)
     spec = DAGSpec._find_relative(name=name)
-    assert spec.path == filename
+    assert spec.path == Path(filename).resolve()
 
 
 @pytest.mark.parametrize('filename, name', [
@@ -1387,4 +1391,4 @@ def test_load_spec_relative_and_in_a_package(backup_test_pkg, filename, name):
     os.rename(path / 'pipeline.yaml', path / filename)
 
     spec = DAGSpec._find_relative(name=name)
-    assert spec.path == str(Path('src', 'test_pkg', filename))
+    assert spec.path == Path('src', 'test_pkg', filename).resolve()
