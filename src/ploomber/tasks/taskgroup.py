@@ -91,7 +91,8 @@ class TaskGroup:
                     dag,
                     params_array,
                     name=None,
-                    namer=None):
+                    namer=None,
+                    resolve_relative_to=None):
         """
         Build a group of tasks of the same class from an array of parameters
         using the same source. Generates one task per element in params_array.
@@ -130,6 +131,10 @@ class TaskGroup:
             A function that receives a single argument (the task parameters
             dict) and returns a string used as a task name. If name is None,
             this must not be None.
+
+        resolve_relative_to : str or pathlib.Path, default=None
+            If not None, paths in File products are resolved to be absolute
+            paths
         """
         if name is None and namer is None:
             raise ValueError(
@@ -188,6 +193,7 @@ class TaskGroup:
                     product_class,
                     product_primitive_to_use,
                     index,
+                    resolve_relative_to=resolve_relative_to,
                 )
             else:
                 raise NotImplementedError('TaskGroup only sypported for '
@@ -212,7 +218,8 @@ class TaskGroup:
                   dag,
                   grid,
                   name=None,
-                  namer=None):
+                  namer=None,
+                  resolve_relative_to=None):
         """
         Build a group of tasks of the same class from an grid of parameters
         using the same source.
@@ -236,17 +243,21 @@ class TaskGroup:
                                dag=dag,
                                name=name,
                                params_array=params_array,
-                               namer=namer)
+                               namer=namer,
+                               resolve_relative_to=resolve_relative_to)
 
 
-def _init_product(product_class, product_primitive, index):
+def _init_product(product_class, product_primitive, index,
+                  resolve_relative_to):
     if isinstance(product_primitive, Mapping):
         return {
-            key: _init_product(product_class, primitive, index)
+            key: _init_product(product_class, primitive, index,
+                               resolve_relative_to)
             for key, primitive in product_primitive.items()
         }
     elif isinstance(product_primitive, str):
-        return _init_product_with_str(product_class, product_primitive, index)
+        return _init_product_with_str(product_class, product_primitive, index,
+                                      resolve_relative_to)
     # is there a better way to check this? Sequence also matches str/bytes
     elif isinstance(product_primitive, (list, tuple)):
         return _init_product_with_sql_elements(product_class,
@@ -258,9 +269,12 @@ def _init_product(product_class, product_primitive, index):
                                   f'{type(product_primitive).__name__}')
 
 
-def _init_product_with_str(product_class, product_primitive, index):
+def _init_product_with_str(product_class, product_primitive, index,
+                           resolve_relative_to):
     if index is not None:
-        path = Path(product_primitive)
+        path = (Path(product_primitive) if resolve_relative_to is None else
+                Path(resolve_relative_to, product_primitive).resolve())
+
         suffix = ''.join(path.suffixes)
         filename = path.name.replace(suffix, '')
         filename_with_index = f'{filename}-{index}{suffix}'

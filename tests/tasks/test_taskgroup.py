@@ -28,14 +28,35 @@ def test_from_params():
                                       'param': 2
                                   }])
 
-    assert len(group) == 2
-
     dag.render()
 
+    assert len(group) == 2
     assert dag['task_group0'].source.primitive is touch
     assert dag['task_group1'].source.primitive is touch
     assert str(dag['task_group0'].product) == str(Path('dir', 'file-0.txt'))
     assert str(dag['task_group1'].product) == str(Path('dir', 'file-1.txt'))
+
+
+def test_from_params_resolves_paths():
+    dag = DAG()
+    TaskGroup.from_params(PythonCallable,
+                          File,
+                          'dir/file.txt', {'source': touch},
+                          dag,
+                          name='task_group',
+                          params_array=[{
+                              'param': 1
+                          }, {
+                              'param': 2
+                          }],
+                          resolve_relative_to='')
+
+    dag.render()
+
+    assert Path(dag['task_group0'].product) == Path('dir',
+                                                    'file-0.txt').resolve()
+    assert Path(dag['task_group1'].product) == Path('dir',
+                                                    'file-1.txt').resolve()
 
 
 def test_from_params_with_namer():
@@ -54,10 +75,9 @@ def test_from_params_with_namer():
                                       'param': 2
                                   }])
 
-    assert len(group) == 2
-
     dag.render()
 
+    assert len(group) == 2
     assert dag['param=1'].source.primitive is touch
     assert dag['param=2'].source.primitive is touch
     assert str(dag['param=1'].product) == 'param=1.txt'
@@ -100,6 +120,27 @@ def test_from_grid():
     assert len(group) == 4
 
 
+def test_from_grid_resolve_relative_to():
+    dag = DAG()
+    TaskGroup.from_grid(PythonCallable,
+                        File,
+                        'file.txt', {
+                            'source': touch_a_b,
+                        },
+                        dag,
+                        name='task_group',
+                        grid={
+                            'a': [1, 2],
+                            'b': [3, 4]
+                        },
+                        resolve_relative_to='')
+
+    assert str(dag['task_group0'].product) == str(Path('file-0.txt').resolve())
+    assert str(dag['task_group1'].product) == str(Path('file-1.txt').resolve())
+    assert str(dag['task_group2'].product) == str(Path('file-2.txt').resolve())
+    assert str(dag['task_group3'].product) == str(Path('file-3.txt').resolve())
+
+
 def test_metaproduct():
     dag = DAG()
     group = TaskGroup.from_params(PythonCallable,
@@ -120,6 +161,30 @@ def test_metaproduct():
     assert str(dag['task_group1'].product['one']) == 'one-1.txt'
     assert str(dag['task_group1'].product['another']) == 'another-1.txt'
     assert len(group) == 2
+
+
+def test_from_params_resolves_paths_in_metaproduct():
+    dag = DAG()
+    TaskGroup.from_params(PythonCallable,
+                          File, {
+                              'one': 'one.txt',
+                              'another': 'another.txt'
+                          }, {'source': touch},
+                          dag,
+                          name='task_group',
+                          params_array=[{
+                              'param': 1
+                          }, {
+                              'param': 2
+                          }],
+                          resolve_relative_to='')
+
+    assert dag['task_group0'].product['one'] == Path('one-0.txt').resolve()
+    assert dag['task_group0'].product['another'] == Path(
+        'another-0.txt').resolve()
+    assert dag['task_group1'].product['one'] == Path('one-1.txt').resolve()
+    assert dag['task_group1'].product['another'] == Path(
+        'another-1.txt').resolve()
 
 
 def test_sql_product():
