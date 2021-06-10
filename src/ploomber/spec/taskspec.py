@@ -243,13 +243,15 @@ class TaskSpec(MutableMapping):
             name = data.pop('name')
             grid = data.pop('grid')
             # TODO: support for hooks
-            return TaskGroup.from_grid(task_class=task_class,
-                                       product_class=product_class,
-                                       product_primitive=product,
-                                       task_kwargs=data,
-                                       dag=dag,
-                                       name=name,
-                                       grid=grid), upstream
+            return TaskGroup.from_grid(
+                task_class=task_class,
+                product_class=product_class,
+                product_primitive=product,
+                task_kwargs=data,
+                dag=dag,
+                name=name,
+                grid=grid,
+                resolve_relative_to=self.project_root), upstream
         else:
             return _init_task(data=data,
                               meta=self.meta,

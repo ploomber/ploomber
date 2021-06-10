@@ -179,11 +179,13 @@ def test_from_params_resolves_paths_in_metaproduct():
                           }],
                           resolve_relative_to='')
 
-    assert dag['task_group0'].product['one'] == Path('one-0.txt').resolve()
-    assert dag['task_group0'].product['another'] == Path(
+    assert Path(dag['task_group0'].product['one']).resolve() == Path(
+        'one-0.txt').resolve()
+    assert Path(dag['task_group0'].product['another']).resolve() == Path(
         'another-0.txt').resolve()
-    assert dag['task_group1'].product['one'] == Path('one-1.txt').resolve()
-    assert dag['task_group1'].product['another'] == Path(
+    assert Path(dag['task_group1'].product['one']).resolve() == Path(
+        'one-1.txt').resolve()
+    assert Path(dag['task_group1'].product['another']).resolve() == Path(
         'another-1.txt').resolve()
 
 

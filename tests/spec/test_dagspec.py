@@ -1327,6 +1327,29 @@ def downstream(product, upstream):
     }
 
 
+@pytest.mark.parametrize('spec',
+                         [_spec_upstream_extract, _spec_upstream_manual])
+def test_spec_from_yaml_resolves_paths_from_wildcard(spec):
+    Path('upstream.py').write_text("""
+# + tags=['parameters']
+upstream = None
+""")
+
+    Path('downstream.py').write_text("""
+# + tags=['parameters']
+upstream = ['upstream-*']
+""")
+
+    spec = DAGSpec(spec)
+
+    dag = spec.to_dag().render()
+
+    assert str(Path(dag['upstream-0'].product).resolve()) == str(
+        Path('upstream-0.ipynb').resolve())
+    assert str(Path(dag['upstream-1'].product).resolve()) == str(
+        Path('upstream-1.ipynb').resolve())
+
+
 def test_load_spec_with_custom_name(tmp_nbs):
     os.rename('pipeline.yaml', 'pipeline.serve.yaml')
     spec = DAGSpec.find(name='serve')
