@@ -264,4 +264,4 @@ def test_entry_point_relative_error_if_doesnt_exist(tmp_directory):
     ['env', None],
 ])
 def test_extract_name(arg, expected):
-    assert default._extract_name(arg) == expected
+    assert default.extract_name(arg) == expected

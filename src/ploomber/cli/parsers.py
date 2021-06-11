@@ -440,16 +440,29 @@ def _add_args_from_callable(parser, callable_):
 
 def _process_file_dir_or_glob(parser, dagspec_arg=None):
     """
-    Process a file entry point file or directory), returns the initialized dag
-    and parsed args
+    Process a file entry point file, directory or glob-like pattern,
+    the initialized dag and parsed args
 
     Parameters
     ----------
     parser : CustomParser
         CLI arg parser
     """
-    # look for env.yaml by searching in default locations
-    path_to_env = default.path_to_env(Path(parser.parse_entry_point_value()))
+    # NOTE: we must use parser.parse_entry_point_value() instead or
+    # args.parse_args because calling the latter wont allow us to add more
+    # cli parameters, but we want that to expose parms from env
+    entry_point_value = dagspec_arg or parser.parse_entry_point_value()
+    entry = EntryPoint(entry_point_value)
+
+    if entry.type == EntryPoint.Directory:
+        path_to_env = default.path_to_env_with_name(
+            name=None, path_to_parent=entry_point_value)
+    elif entry.type == EntryPoint.Pattern:
+        path_to_env = default.path_to_env_with_name(
+            name=None, path_to_parent=Path(entry_point_value).parent)
+    # file
+    else:
+        path_to_env = default.path_to_env(entry_point_value)
 
     if path_to_env:
         env_dict = EnvDict(path_to_env)
@@ -464,10 +477,13 @@ def _process_file_dir_or_glob(parser, dagspec_arg=None):
 
     entry_point = EntryPoint(dagspec_arg)
 
+    # directory
     if entry_point.type == EntryPoint.Directory:
         dag = DAGSpec.from_directory(dagspec_arg).to_dag()
+    # pattern
     elif entry_point.type == EntryPoint.Pattern:
         dag = DAGSpec.from_files(dagspec_arg).to_dag()
+    # file
     else:
         if path_to_env:
             # and replace keys depending on passed cli args

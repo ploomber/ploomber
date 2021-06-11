@@ -1,3 +1,4 @@
+import os
 import subprocess
 import importlib
 import sys
@@ -128,6 +129,18 @@ def test_plot(custom_args, monkeypatch, tmp_sample_dir):
     plot.main(catch_exception=False)
 
     mock.assert_called_once()
+
+
+def test_plot_uses_name_if_any(tmp_nbs, monkeypatch):
+    os.rename('pipeline.yaml', 'pipeline.train.yaml')
+
+    args_defaults = ['ploomber', '--entry-point', 'pipeline.train.yaml']
+    monkeypatch.setattr(sys, 'argv', args_defaults)
+    mock = Mock()
+    monkeypatch.setattr(dag_module.DAG, 'plot', mock)
+    plot.main(catch_exception=False)
+
+    mock.assert_called_once_with(output='pipeline.train.png')
 
 
 def test_report_includes_plot(monkeypatch, tmp_sample_dir):
