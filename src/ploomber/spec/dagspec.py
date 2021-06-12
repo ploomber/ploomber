@@ -247,6 +247,10 @@ class DAGSpec(MutableMapping):
         # but here, since we just need this for the spec, we might
         # want to turn it off. should we add a parameter to EnvDict
         # to control this?
+        # FIXME: consolidate env discovery logic because we are calling
+        # default.path_to_env, but EnvDict constructor also implements
+        # some discovery logic, maybe create a class method like
+        # EnvDict.find()?
         if path_to_defaults:
             defaults = yaml.safe_load(Path(path_to_defaults).read_text())
             self.env = EnvDict(env,
@@ -315,6 +319,8 @@ class DAGSpec(MutableMapping):
 
             # "products" are relative to the project root. if no project
             # root, then use the parent path
+            # TODO: this should not use _parent_path but only the recursive
+            # call
             project_root = (default.find_root_recursively()
                             or self._parent_path)
 

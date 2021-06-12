@@ -116,6 +116,7 @@ class PloomberContentsManager(TextFileContentsManager):
 
             try:
                 if env_var:
+                    # call parsers.load_entry_point to support directories
                     (self.spec, self.dag,
                      self.path) = parsers.load_entry_point(env_var)
                 else:

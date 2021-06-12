@@ -140,6 +140,60 @@ def test_cli_from_param_with_annotation(monkeypatch):
     assert returned == 41
 
 
+def test_help_does_not_display_location_if_missing_entry_point():
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    assert 'Entry point\n' in parser.format_help()
+
+
+def test_help_displays_location_of_located_entry_point(tmp_directory):
+    Path('pipeline.yaml').touch()
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    assert 'Entry point, defaults to pipeline.yaml\n' in parser.format_help()
+
+
+def test_custom_parser_error_if_unable_to_automatically_locate_entry_point(
+        capsys):
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    with pytest.raises(SystemExit) as excinfo:
+        parser.parse_entry_point_value()
+
+    captured = capsys.readouterr()
+
+    assert excinfo.value.code == 2
+    assert 'Unable to find a pipeline entry point' in captured.err
+
+
+def test_error_if_missing_entry_point_value(monkeypatch, capsys):
+    monkeypatch.setattr(sys, 'argv', ['ploomber', '--entry-point'])
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    with pytest.raises(SystemExit) as excinfo:
+        parser.parse_entry_point_value()
+
+    captured = capsys.readouterr()
+
+    assert excinfo.value.code == 2
+    assert ('ploomber: error: argument --entry-point/-e: expected one argument'
+            in captured.err)
+
+
 def test_add_cli_args_from_env_dict_keys():
     parser = ArgumentParser()
 

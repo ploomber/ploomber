@@ -41,7 +41,9 @@ def test_no_options(monkeypatch):
     'task',
     'interact',
 ])
-def test_help(cmd, monkeypatch):
+def test_help(cmd, monkeypatch, tmp_directory):
+    Path('pipeline.yaml').touch()
+
     elements = ['ploomber']
 
     if cmd:
@@ -270,7 +272,6 @@ def test_invalid_entry_point_value(monkeypatch):
 @pytest.mark.parametrize('args', [
     ['--entry-point', 'pipeline.yaml'],
     ['--entry-point', 'pipeline.yml'],
-    [],
 ])
 def test_invalid_spec_entry_point(args, monkeypatch):
     monkeypatch.setattr(sys, 'argv', ['python'] + args)

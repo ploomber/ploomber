@@ -49,7 +49,8 @@ class CustomParser(argparse.ArgumentParser):
         try:
             self.DEFAULT_ENTRY_POINT = default.entry_point()
         except DAGSpecNotFound:
-            self.DEFAULT_ENTRY_POINT = 'pipeline.yaml'
+            # do not raise error here since the user may supply a entry point
+            self.DEFAULT_ENTRY_POINT = None
 
         self.static_args = []
         self.finished_static_api = False
@@ -63,11 +64,16 @@ class CustomParser(argparse.ArgumentParser):
                           'specified level',
                           default=None)
 
-        self.add_argument(
-            '--entry-point',
-            '-e',
-            help=f'Entry point, defaults to {self.DEFAULT_ENTRY_POINT}',
-            default=self.DEFAULT_ENTRY_POINT)
+        if self.DEFAULT_ENTRY_POINT:
+            entry_point_help = ('Entry point, defaults '
+                                f'to {self.DEFAULT_ENTRY_POINT}')
+        else:
+            entry_point_help = 'Entry point'
+
+        self.add_argument('--entry-point',
+                          '-e',
+                          help=entry_point_help,
+                          default=self.DEFAULT_ENTRY_POINT)
 
         self.finished_init = True
 
@@ -89,8 +95,25 @@ class CustomParser(argparse.ArgumentParser):
         except ValueError:
             pass
 
-        return self.DEFAULT_ENTRY_POINT if index is None else sys.argv[index +
-                                                                       1]
+        # no --entry-point/-e arg passed, use default
+        if index is None:
+            if self.DEFAULT_ENTRY_POINT is None:
+                self.error('Unable to find a pipeline entry point. '
+                           'Use --entry-point/-e to pass a '
+                           'entry point\'s location directly or '
+                           'place it in a standard location.')
+
+            return self.DEFAULT_ENTRY_POINT
+        else:
+            try:
+                return sys.argv[index + 1]
+            except IndexError:
+                pass
+
+            # replicate the original message emitted by argparse
+            action = self._option_string_actions['-e']
+            options = '/'.join(action.option_strings)
+            self.error(f'argument {options}: expected one argument')
 
     def add_argument(self, *args, **kwargs):
         if not self.finished_static_api:
