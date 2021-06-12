@@ -9,6 +9,7 @@ from ploomber.exceptions import DAGSpecNotFound
 
 @pytest.fixture
 def pkg_location():
+    Path('setup.py').touch()
     parent = Path('src', 'package_a')
     parent.mkdir(parents=True)
     pkg_location = (parent / 'pipeline.yaml')
@@ -16,21 +17,35 @@ def pkg_location():
     return str(pkg_location)
 
 
-def test_entry_point_env_var(monkeypatch, tmp_directory, pkg_location):
-    monkeypatch.setenv('ENTRY_POINT', 'some.entry.point')
-    assert default.entry_point() == 'some.entry.point'
+def test_entry_point_env_var(monkeypatch, tmp_directory):
+    Path('pipeline.yaml').touch()
+    Path('pipeline-custom.yaml').touch()
+    monkeypatch.setenv('ENTRY_POINT', 'pipeline-custom.yaml')
+    assert default.entry_point() == 'pipeline-custom.yaml'
+
+
+def test_entry_point_env_var_in_pkg(monkeypatch, tmp_directory, pkg_location):
+    Path('src', 'package_a', 'pipeline-custom.yaml').touch()
+    monkeypatch.setenv('ENTRY_POINT', 'pipeline-custom.yaml')
+    assert default.entry_point() == 'src/package_a/pipeline-custom.yaml'
+
+
+def test_error_if_env_var_contains_directories(monkeypatch):
+    monkeypatch.setenv('ENTRY_POINT', 'path/to/pipeline.yaml')
+
+    with pytest.raises(ValueError) as excinfo:
+        default.entry_point()
+
+    assert 'must be a filename' in str(excinfo.value)
 
 
 def test_entry_point_pkg_location(tmp_directory, pkg_location):
     assert default.entry_point() == str(pkg_location)
 
 
-def test_entry_point_pkg_location_and_yaml(tmp_directory, pkg_location):
-    Path('pipeline.yaml').touch()
-    assert default.entry_point() == 'pipeline.yaml'
-
-
 def test_entry_point_pkg_location_ignore_egg_info(tmp_directory):
+    Path('setup.py').touch()
+
     for pkg in ['package_a.egg-info', 'package_b']:
         parent = Path('src', pkg)
         parent.mkdir(parents=True)
@@ -42,6 +57,8 @@ def test_entry_point_pkg_location_ignore_egg_info(tmp_directory):
 
 
 def test_entry_point_pkg_location_multiple_pkgs(tmp_directory):
+    Path('setup.py').touch()
+
     for pkg in ['package_a', 'package_b']:
         parent = Path('src', pkg)
         parent.mkdir(parents=True)
@@ -172,64 +189,131 @@ def test_path_to_env_error_if_dir(tmp_directory):
     assert str(excinfo.value) == expected
 
 
-@pytest.mark.parametrize(
-    'to_create, to_move',
-    [
-        [
-            ['environment.yml'],
-            '.',
-        ],
-        [
-            ['requirements.txt'],
-            '.',
-        ],
-        [
-            ['setup.py'],
-            '.',
-        ],
-        [
-            ['setup.py', 'subdir/'],
-            'subdir',
-        ],
-        [
-            # environment.yml has higher priority than setup.py
-            ['environment.yml', 'package/setup.py', 'package/nested/'],
-            'package/nested/',
-        ],
-        [
-            # requirements.txt has higher priority than setup.py
-            ['requirements.txt', 'package/setup.py', 'package/nested/'],
-            'package/nested/',
-        ],
-    ])
-def test_find_root_recursively(tmp_directory, to_create, to_move):
-    expected = Path().resolve()
+def test_finds_pipeline_yaml(tmp_directory):
+    pip = Path('pipeline.yaml').resolve()
+    pip.touch()
 
-    for f in to_create:
+    dir_ = Path('path', 'to', 'dir')
+    dir_.mkdir(parents=True)
+    os.chdir(dir_)
 
-        Path(f).parent.mkdir(exist_ok=True, parents=True)
-
-        if f.endswith('/'):
-            Path(f).mkdir()
-        else:
-            Path(f).touch()
-
-    os.chdir(to_move)
-
-    assert default.find_root_recursively() == expected
+    assert pip.parent == default.find_root_recursively()
 
 
-def test_raise_if_no_project_root(tmp_directory):
-    with pytest.raises(ValueError) as excinfo:
-        default.find_root_recursively(raise_=True)
+def test_finds_setup_py(tmp_directory):
+    pip = Path('setup.py').resolve()
+    pip.touch()
 
-    expected = "Could not determine project's root directory"
-    assert expected in str(excinfo.value)
+    Path('src', 'package').mkdir(parents=True)
+    Path('src', 'package', 'pipeline.yaml').touch()
+
+    dir_ = Path('path', 'to', 'dir')
+    dir_.mkdir(parents=True)
+    os.chdir(dir_)
+
+    assert pip.parent == default.find_root_recursively()
+
+
+def test_ignores_src_package_pipeline_if_setup_py(tmp_directory):
+    pip = Path('setup.py').resolve()
+    pip.touch()
+
+    dir_ = Path('src', 'package')
+    dir_.mkdir(parents=True)
+    os.chdir(dir_)
+    Path('pipeline.yaml').touch()
+
+    assert pip.parent == default.find_root_recursively()
+
+
+def test_error_if_no_pipeline_yaml_and_no_setup_py(tmp_directory):
+    with pytest.raises(FileNotFoundError) as excinfo:
+        default.find_root_recursively()
+
+    assert ('Looked recursively for a setup.py or '
+            'pipeline.yaml in parent folders') in str(excinfo.value)
+
+
+def test_error_if_setup_py_but_no_src_package_pipeline(tmp_directory):
+    pip = Path('setup.py').resolve()
+    pip.touch()
+
+    dir_ = Path('path', 'to', 'dir')
+    dir_.mkdir(parents=True)
+    os.chdir(dir_)
+
+    with pytest.raises(FileNotFoundError) as excinfo:
+        default.find_root_recursively()
+
+    assert 'expected to find a pipeline.yaml file' in str(excinfo.value)
+
+
+def test_error_if_setup_py_and_pipeline_are_siblings(tmp_directory):
+    pip = Path('setup.py').resolve()
+    Path('pipeline.yaml').touch()
+    pip.touch()
+
+    dir_ = Path('path', 'to', 'dir')
+    dir_.mkdir(parents=True)
+    os.chdir(dir_)
+
+    with pytest.raises(FileNotFoundError) as excinfo:
+        default.find_root_recursively()
+
+    assert 'Move the pipeline.yaml' in str(excinfo.value)
+
+
+def test_error_if_both_setup_py_and_pipeline_yaml_exist(tmp_directory):
+    Path('setup.py').touch()
+    Path('pipeline.yaml').touch()
+
+    Path('src', 'package').mkdir(parents=True)
+    Path('src', 'package', 'pipeline.yaml').touch()
+
+    dir_ = Path('path', 'to', 'dir')
+    dir_.mkdir(parents=True)
+    os.chdir(dir_)
+
+    with pytest.raises(FileExistsError):
+        default.find_root_recursively()
+
+
+@pytest.mark.parametrize('filenames', [
+    ['path/pipeline.yaml'],
+    ['path/to/pipeline.yaml'],
+    ['path/to/pipeline.train.yaml'],
+    ['path/pipeline.yaml', 'path/pipeline.train.yaml'],
+    ['path/pipeline.yaml', 'another/pipeline.train.yaml'],
+])
+def test_warns_if_other_pipeline_yaml_as_children_of_root_path(
+        tmp_directory, filenames):
+    pip = Path('pipeline.yaml').resolve()
+    pip.touch()
+
+    for filename in filenames:
+        filename = Path(filename)
+        filename.parent.mkdir(parents=True, exist_ok=True)
+        filename.touch()
+
+    # try switching this off
+    dir_ = Path('some', 'path')
+    dir_.mkdir(parents=True)
+    os.chdir(dir_)
+
+    # try in the same location and check not warn
+    # do not warn if setup.py and src/*/pipeline.yaml
+
+    with pytest.warns(UserWarning) as record:
+        default.find_root_recursively()
+
+    assert len(record) == 1
+    assert 'Found other pipeline files' in record[0].message.args[0]
+    assert all([f in record[0].message.args[0] for f in filenames])
 
 
 @pytest.mark.parametrize('to_create, to_move', [
     [
-        ['environment.yml', 'src/my_package/pipeline.yaml'],
+        ['setup.py', 'src/my_package/pipeline.yaml'],
         '.',
     ],
 ])
@@ -249,12 +333,12 @@ def test_find_package_name(tmp_directory, to_create, to_move):
 
 
 def test_error_if_no_package(tmp_directory):
-    Path('environment.yml').touch()
+    Path('setup.py').touch()
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(FileNotFoundError) as excinfo:
         default.find_package_name()
 
-    expected = "Could not find a valid package"
+    expected = "Failed to determine project root"
     assert expected in str(excinfo.value)
 
 

@@ -1,3 +1,4 @@
+import shutil
 from unittest.mock import Mock
 import sys
 import os
@@ -255,7 +256,7 @@ def test_loads_env_in_default_location_if_loading_from_dict(tmp_nbs):
         d = yaml.safe_load(f)
 
     spec = DAGSpec(d)
-    assert set(spec.env) == {'user', 'cwd', 'a'}
+    assert set(spec.env) == {'user', 'cwd', 'a', 'root'}
 
 
 def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
@@ -575,6 +576,7 @@ def test_expand_env(save, tmp_directory):
 def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
     tmp_directory = Path(tmp_directory).resolve()
     Path('setup.py').touch()
+    Path('src', 'pkg').mkdir(parents=True)
     Path('subdir').mkdir()
 
     def mockreturn():
@@ -595,19 +597,17 @@ def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
         }]
     }
 
-    Path('subdir', 'pipeline.yaml').write_text(yaml.dump(spec_dict))
+    Path('src', 'pkg', 'pipeline.yaml').write_text(yaml.dump(spec_dict))
 
-    path = Path('subdir', 'anotherdir')
-    path.mkdir()
-    os.chdir(path)
+    os.chdir(Path('src', 'pkg'))
 
     spec = DAGSpec.find()
 
     assert spec.data['tasks'][0]['source'] == Path(tmp_directory, 'script.py')
     assert spec.data['tasks'][0]['product']['nb'] == str(
-        Path(tmp_directory, 'subdir', 'anotherdir', 'username', 'nb.html'))
+        Path(tmp_directory, 'src', 'pkg', 'username', 'nb.html'))
     assert spec.data['tasks'][0]['product']['data'] == str(
-        Path(tmp_directory, 'subdir', 'data.csv'))
+        Path(tmp_directory, 'src', 'pkg', 'data.csv'))
 
 
 @pytest.mark.parametrize('method, kwargs', [
@@ -1355,7 +1355,7 @@ upstream = ['upstream-*']
 
 
 def test_load_spec_with_custom_name(tmp_nbs):
-    os.rename('pipeline.yaml', 'pipeline.serve.yaml')
+    shutil.copy('pipeline.yaml', 'pipeline.serve.yaml')
     spec = DAGSpec.find(name='serve')
     assert spec.path.resolve() == Path('pipeline.serve.yaml').resolve()
 
@@ -1364,7 +1364,7 @@ def test_load_spec_with_custom_name_in_packaged_structure(backup_test_pkg):
     os.chdir(Path(backup_test_pkg).parents[1])
 
     path = Path('src', 'test_pkg')
-    os.rename(path / 'pipeline.yaml', path / 'pipeline.serve.yaml')
+    shutil.copy(path / 'pipeline.yaml', path / 'pipeline.serve.yaml')
 
     spec = DAGSpec.find(name='serve')
     assert spec.path == (path / 'pipeline.serve.yaml').resolve()

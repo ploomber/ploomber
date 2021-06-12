@@ -113,7 +113,7 @@ class EnvDict(Mapping):
             'cwd': '{{cwd}}',
         }
 
-        if default.find_root_recursively() is not None:
+        if default.try_to_find_root_recursively() is not None:
             placeholders['root'] = '{{root}}'
 
         if include_here:

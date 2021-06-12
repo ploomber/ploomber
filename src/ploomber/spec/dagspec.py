@@ -321,7 +321,9 @@ class DAGSpec(MutableMapping):
             # root, then use the parent path
             # TODO: this should not use _parent_path but only the recursive
             # call
-            project_root = (default.find_root_recursively()
+            # TODO: if loading from a dict, {{root}} should not be available
+            # or perhaps make it = to parent_path?
+            project_root = (default.try_to_find_root_recursively()
                             or self._parent_path)
 
             # make sure the folder where the pipeline is located is in sys.path
@@ -463,16 +465,16 @@ class DAGSpec(MutableMapping):
         Returns DAG and the directory where the pipeline.yaml file is located.
         """
         root_path = starting_dir or os.getcwd()
-        rel_path = entry_point(root_path=root_path, name=name)
+        # FIXME: simplify this. entry_point looks for root path but
+        # the constructor also does it (in the try version)
+        path = entry_point(root_path=root_path, name=name)
 
-        if rel_path is None:
+        # FIXME: due to recent changes, this cannot be none
+        if path is None:
             if to_dag:
                 return None, None, None
             else:
                 return None, None
-
-        path = Path(root_path, rel_path)
-
         try:
             spec = cls(path, env=env, lazy_import=lazy_import, reload=reload)
 

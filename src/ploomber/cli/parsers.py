@@ -45,12 +45,7 @@ class CustomParser(argparse.ArgumentParser):
     parser.add_argument.
     """
     def __init__(self, *args, **kwargs):
-        # auto-discover entry point to use
-        try:
-            self.DEFAULT_ENTRY_POINT = default.entry_point()
-        except DAGSpecNotFound:
-            # do not raise error here since the user may supply a entry point
-            self.DEFAULT_ENTRY_POINT = None
+        self.DEFAULT_ENTRY_POINT = default.try_to_find_entry_point()
 
         self.static_args = []
         self.finished_static_api = False
