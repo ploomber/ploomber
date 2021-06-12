@@ -52,8 +52,9 @@ def test_entry_point_pkg_location_multiple_pkgs(tmp_directory):
         Path('src', 'package_a', 'pipeline.yaml'))
 
 
-def test_entry_point():
-    assert default.entry_point() == 'pipeline.yaml'
+def test_entry_point_error_if_not_exists():
+    with pytest.raises(DAGSpecNotFound):
+        default.entry_point()
 
 
 def test_entry_point_in_parent_folder(tmp_directory):
@@ -107,6 +108,34 @@ def test_path_to_env_prefers_file_wih_name_over_plain_env_yaml(tmp_directory):
 
     assert default.path_to_env(Path('dir', 'pipeline.train.yaml')) == str(
         Path('env.train.yaml').resolve())
+
+
+def test_path_to_env_prefers_env_variable(tmp_directory, monkeypatch):
+    monkeypatch.setenv('PLOOMBER_ENV_FILENAME', 'env.local.yaml')
+
+    Path('env.local.yaml').touch()
+    Path('env.train.yaml').touch()
+    Path('env.yaml').touch()
+
+    Path('dir').mkdir()
+    Path('dir', 'pipeline.train.yaml').touch()
+
+    assert default.path_to_env(Path('dir', 'pipeline.train.yaml')) == str(
+        Path('env.local.yaml').resolve())
+
+
+def test_error_if_env_var_has_directories(monkeypatch):
+    monkeypatch.setenv('PLOOMBER_ENV_FILENAME', 'path/to/env.local.yaml')
+
+    with pytest.raises(ValueError):
+        default.path_to_env('pipeline.yaml')
+
+
+def test_error_if_env_var_file_missing(monkeypatch):
+    monkeypatch.setenv('PLOOMBER_ENV_FILENAME', 'env.local.yaml')
+
+    with pytest.raises(FileNotFoundError):
+        default.path_to_env('pipeline.yaml')
 
 
 def test_path_to_parent_sibling(tmp_directory):

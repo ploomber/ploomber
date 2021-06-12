@@ -14,7 +14,7 @@ from jupytext.contentsmanager import TextFileContentsManager
 
 from ploomber.sources.notebooksource import (_cleanup_rendered_nb, inject_cell)
 from ploomber.spec.dagspec import DAGSpec
-from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.exceptions import DAGSpecInitializationError, DAGSpecNotFound
 from ploomber.cli import parsers
 from ploomber.jupyter.dag import JupyterDAGManager
 
@@ -125,7 +125,7 @@ class PloomberContentsManager(TextFileContentsManager):
                     (self.spec, self.dag,
                      self.path) = DAGSpec._auto_load(starting_dir=starting_dir,
                                                      reload=hot_reload)
-            except DAGSpecInitializationError:
+            except (DAGSpecInitializationError, DAGSpecNotFound):
                 self.reset_dag()
                 self.log.exception(msg)
             else:

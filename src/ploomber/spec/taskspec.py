@@ -101,7 +101,7 @@ def task_class_from_spec(task_spec, lazy_import, reload):
 def _init_source_for_task_class(source_str, task_class, project_root,
                                 lazy_import, make_absolute):
     """
-    Initialize source. Loads dotted patht to callable if a PythonCallable
+    Initialize source. Loads dotted path to callable if a PythonCallable
     task, otherwise it returns a path
     """
     if task_class is tasks.PythonCallable:

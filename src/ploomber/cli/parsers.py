@@ -16,6 +16,7 @@ from ploomber.spec.dagspec import DAGSpec
 from ploomber.env.envdict import EnvDict
 from ploomber.util.dotted_path import load_dotted_path
 from ploomber.util import default
+from ploomber.exceptions import DAGSpecNotFound
 
 
 def process_arg(s):
@@ -44,7 +45,11 @@ class CustomParser(argparse.ArgumentParser):
     parser.add_argument.
     """
     def __init__(self, *args, **kwargs):
-        self.DEFAULT_ENTRY_POINT = default.entry_point()
+        # auto-discover entry point to use
+        try:
+            self.DEFAULT_ENTRY_POINT = default.entry_point()
+        except DAGSpecNotFound:
+            self.DEFAULT_ENTRY_POINT = 'pipeline.yaml'
 
         self.static_args = []
         self.finished_static_api = False

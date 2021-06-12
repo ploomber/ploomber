@@ -43,10 +43,14 @@ def entry_point(root_path=None, name=None):
         If None, searchs for a pipeline.yaml file otherwise for a
         pipeline.{name}.yaml
 
-
     Notes
     -----
     CLI calls this functions with root_path=None
+
+    Raises
+    ------
+    DAGSpecNotFound
+        If no pipeline.yaml exists in any of the standard locations
     """
     FILENAME = 'pipeline.yaml' if name is None else f'pipeline.{name}.yaml'
 
@@ -86,8 +90,8 @@ def entry_point(root_path=None, name=None):
             return relpath(Path(pkg_location).resolve(),
                            start=Path(root_path).resolve())
 
-    # FIXME: this should raise a DAGSpecNotFound error
-    return FILENAME
+    raise DAGSpecNotFound(f'Unable to locate a {FILENAME} in any of the '
+                          'expected locations')
 
 
 def entry_point_relative(name=None):
@@ -175,10 +179,39 @@ def path_to_env(path_to_spec):
 
 
 def path_to_env_with_name(name, path_to_parent):
+    """Loads an env.yaml file given a parent folder
+
+    It first looks up the PLOOMBER_ENV_FILENAME env var, it if exists, it uses
+    the filename defined there. If it doesn't exist, it tries to look for
+    env.{name}.yaml, if it doesn't exist, it looks for env.yaml. It returns
+    None if None of those files exist, except when PLOOMBER_ENV_FILENAME, in
+    such case, it raises an error.
+
+    Raises
+    ------
+    FileNotFoundError
+        If PLOOMBER_ENV_FILENAME is defined but doesn't exist
+    ValueError
+        If PLOOMBER_ENV_FILENAME is defined and contains a value with
+        directories. It must only be a filename
     """
-    Loads an env.{name}.yaml file given a parent folder
-    """
-    filename = 'env.yaml' if name is None else f'env.{name}.yaml'
+    env_var = os.environ.get('PLOOMBER_ENV_FILENAME')
+
+    if env_var:
+        if len(Path(env_var).parts) > 1:
+            path_to_parent_abs = str(Path(path_to_parent).resolve())
+            raise ValueError(f'PLOOMBER_ENV_FILENAME value ({env_var!r}) '
+                             'must be a filename and do not contain any '
+                             'directory components (e.g., env.yaml, '
+                             'not path/to/env.yaml). Fix the value and place '
+                             'the file in the same folder as the YAML '
+                             f'spec ({path_to_parent_abs!r}) or next to the '
+                             'current working directory')
+
+        filename = env_var
+    else:
+        filename = 'env.yaml' if name is None else f'env.{name}.yaml'
+
     local_env = Path('.', filename).resolve()
 
     if local_env.exists():
@@ -189,6 +222,15 @@ def path_to_env_with_name(name, path_to_parent):
 
         if sibling_env.exists():
             return str(sibling_env)
+
+    if env_var:
+        raise FileNotFoundError('Faield to load env: PLOOMBER_ENV_FILENAME '
+                                f'is defined with value {env_var!r} but '
+                                'there isn\'t a file with such name. '
+                                'Tried looking it up relative to the '
+                                'current working directory '
+                                f'({str(local_env)!r}) and relative '
+                                f'to the YAML spec ({str(sibling_env)!r})')
 
 
 def extract_name(path):

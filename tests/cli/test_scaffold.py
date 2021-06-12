@@ -23,7 +23,7 @@ def test_ploomber_scaffold(tmp_directory, monkeypatch, args, conda, package):
     monkeypatch.setattr(cli.scaffold_project, 'cli', mock)
 
     runner = CliRunner()
-    result = runner.invoke(scaffold, args=args)
+    result = runner.invoke(scaffold, args=args, catch_exceptions=False)
 
     assert not result.exit_code
     mock.assert_called_once_with(project_path=None,
