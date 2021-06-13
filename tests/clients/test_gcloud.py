@@ -43,7 +43,7 @@ def test_from_service_account_json(tmp_directory, mock_client,
     )
 
     expected = 'my.json' if not relative_to_project_root else Path(
-        tmp_directory, 'my.json')
+        tmp_directory, 'my.json').resolve()
 
     mock_client.from_service_account_json.assert_called_once_with(
         json_credentials_path=expected, arg=1)

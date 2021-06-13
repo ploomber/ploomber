@@ -364,7 +364,8 @@ def test_building_a_single_task_when_rendered_upstream(tmp_directory):
 def test_task_build_does_not_upload_if_downloaded(tmp_directory, monkeypatch):
     def make_dag():
         dag = DAG(executor=Serial(build_in_subprocess=False))
-        dag.clients[File] = LocalStorageClient('backup')
+        dag.clients[File] = LocalStorageClient('backup',
+                                               path_to_project_root='.')
         PythonCallable(touch, File('file.txt'), dag, name='root')
         return dag
 
@@ -389,7 +390,8 @@ def test_task_build_does_not_overwrite_metadata_if_downloaded(
         tmp_directory, monkeypatch):
     def make_dag():
         dag = DAG(executor=Serial(build_in_subprocess=False))
-        dag.clients[File] = LocalStorageClient('backup')
+        dag.clients[File] = LocalStorageClient('backup',
+                                               path_to_project_root='.')
         PythonCallable(touch, File('file.txt'), dag, name='root')
         return dag
 

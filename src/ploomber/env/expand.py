@@ -244,7 +244,7 @@ class EnvironmentExpander:
         return str(Path(os.getcwd()).resolve())
 
     def get_root(self):
-        root = default.find_root_recursively()
+        root = default.try_to_find_root_recursively()
 
         if root is None:
             raise ValueError('Failed to expand {{root}}, could not '

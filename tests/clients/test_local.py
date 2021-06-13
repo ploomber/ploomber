@@ -8,7 +8,7 @@ from ploomber.tasks import PythonCallable
 from ploomber.products import File
 from ploomber.clients import LocalStorageClient
 from ploomber.constants import TaskStatus
-from ploomber.exceptions import RemoteFileNotFound
+from ploomber.exceptions import RemoteFileNotFound, DAGSpecInvalidError
 
 
 def _touch(product):
@@ -120,7 +120,7 @@ def test_remote_path(tmp_directory, arg, expected):
 
 
 def test_error_if_not_in_project_path(tmp_directory):
-    with pytest.raises(FileNotFoundError) as excinfo:
+    with pytest.raises(DAGSpecInvalidError) as excinfo:
         LocalStorageClient('backup')
 
     expected = "Failed to determine project root"

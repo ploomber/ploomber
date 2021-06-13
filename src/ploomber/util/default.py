@@ -64,12 +64,17 @@ from glob import glob
 from pathlib import Path
 from os.path import relpath
 
-from ploomber.exceptions import DAGSpecNotFound
+from ploomber.exceptions import DAGSpecInvalidError
 
 
 def _package_location(root_path, name='pipeline.yaml'):
     """
-    Look for a src/{package-name}/pipeline.yaml. Returns path to package
+    Look for a src/{package-name}/pipeline.yaml relative to root_path
+
+    Returns
+    -------
+    str
+        Path to package
     """
     pattern = str(Path(root_path, 'src', '*', name))
     candidates = sorted([
@@ -83,14 +88,13 @@ def _package_location(root_path, name='pipeline.yaml'):
 
 # NOTE: this is documented in doc/api/cli.rst, changes should also be reflected
 # there
-# FIXME: re-write docstring
 def entry_point(root_path=None, name=None):
     """
-    Determines the default entry point. It first looks for the project root. If
-    the project isn't a package, it returns project_root/pipeline.{name}.yaml,
-    otherwise src/*/pipeline.{name}.yaml. If the ENTRY_POINT environment
-    variable is set, it looks for a file with such name
-    (e.g., project_root/{ENTRY_POINT}).
+    Determines the default entry point. It first determines the project root.
+    If the project isn't a package, it returns
+    project_root/pipeline.{name}.yaml, otherwise src/*/pipeline.{name}.yaml.
+    If the ENTRY_POINT environment variable is set, it looks for a file with
+    such name (e.g., project_root/{ENTRY_POINT}).
 
     Parameters
     ----------
@@ -105,14 +109,21 @@ def entry_point(root_path=None, name=None):
 
     Notes
     -----
-    CLI calls this functions with root_path=None
+    Use cases for this function:
+    * Called by the cli to locate the default entry point to use (nor args)
+    * Via DAGSpec.find (calls DAGspec._auto_load), user may supply args
+    * When deciding whether to add a new scaffold structure or parse the
+        current one and add new files (catches DAGSpecInvalidError), no args
 
     Raises
     ------
-    DAGSpecNotFound
-        If no pipeline.yaml exists in any of the standard locations
-    ValueError
+    DAGSpecInvalidError
+        If fails to determine project root or if no pipeline.yaml or
+        pipeline.{name}.yaml exists in the expected location
+        (once project root is determined).
     """
+    # TODO: it must be clear this env var works. it must have a project root
+    # for this to work
     # FIXME: rename env var used
     root_path = root_path or '.'
     env_var = os.environ.get('ENTRY_POINT')
@@ -146,23 +157,12 @@ def entry_point(root_path=None, name=None):
         # path
         return relpath(Path(project_root, filename), Path().resolve())
 
-    # use cases: called by the cli to locate the default entry point to use
-    # (called without any arguments)
-
-    # when using DAGSpec.find (calls DAGspec._auto_load), user may supply
-    # arguments
-
-    # when deciding whether to add a new scaffold structure or parse the
-    # current one and add new files (catches DAGSpecNotFound), called without
-    # arguments
-
     # FIXME: manager.py:115 is also reading ENTRY_POINT
     # when initializing via jupyter (using _auto_load without args)
     # FIXME: jupyter also calls _auto_load with starting dir arg, which should
     # not be the case
-
     # TODO: include link to guide explaining how project root is determined
-    raise DAGSpecNotFound(
+    raise DAGSpecInvalidError(
         f"""Unable to locate a {filename} at one of the standard locations:
 
 1. A path defined in an ENTRY_POINT environment variable (variable not set)
@@ -176,6 +176,9 @@ environment variable.
 
 
 def try_to_find_entry_point():
+    """Try to find the default entry point. Returns None if it isn't possible
+    """
+    # TODO: maybe display a warning with the error?
     try:
         return entry_point(root_path=None, name=None)
     except Exception:
@@ -188,12 +191,8 @@ def entry_point_relative(name=None):
 
     Raises
     ------
-    DAGSpecNotFound
+    DAGSpecInvalidError
         If cannot locate the requested file
-
-    ValueError
-        If more than one file with the name exist (i.e., both
-        pipeline.{name}.yaml and src/*/pipeline.{name}.yaml)
 
     Notes
     -----
@@ -207,14 +206,15 @@ def entry_point_relative(name=None):
     location = FILENAME if Path(FILENAME).exists() else None
 
     if location_pkg and location:
-        raise ValueError(f'Error loading {FILENAME}, both {location} '
-                         '(relative to the current working directory) '
-                         f'and {location_pkg} exist, but expected only one. '
-                         f'If your project is a package, keep {location_pkg}, '
-                         f'if it\'s not, keep {location}')
+        raise DAGSpecInvalidError(
+            f'Error loading {FILENAME}, both {location} '
+            '(relative to the current working directory) '
+            f'and {location_pkg} exist, but expected only one. '
+            f'If your project is a package, keep {location_pkg}, '
+            f'if it\'s not, keep {location}')
 
     if location_pkg is None and location is None:
-        raise DAGSpecNotFound(
+        raise DAGSpecInvalidError(
             f'Could not find dag spec with name {FILENAME}, '
             'make sure the file is located relative to the working directory '
             f'or in src/pkg_name/{FILENAME} (where pkg_name is the name of '
@@ -347,8 +347,10 @@ def find_file_recursively(name, max_levels_up=6, starting_dir=None):
 
     Returns
     -------
-    path
+    path : str
         Absolute path to the file
+    levels : int
+        How many levels up the file is located
     """
     current_dir = starting_dir or os.getcwd()
     current_dir = Path(current_dir).resolve()
@@ -393,9 +395,8 @@ def find_root_recursively(starting_dir=None):
 
     Raises
     ------
-    FileNotFoundError
-        If no setup.py/pipeline.yaml is found or if an incorrect folder layout
-        exists
+    DAGSpecInvalidError
+        If fails to determine a valid project root
     """
     # NOTE: update the docstrings of all clients - we must catch errors
     # from here and explain that if there isn't a project root a value must
@@ -415,11 +416,13 @@ def find_root_recursively(starting_dir=None):
         starting_dir=starting_dir,
     )
 
-    # use found pipeline.yaml if there is no setup.py OR if the pipeline.yaml
-    # if closer to the starting_dir than the setup.py. e.g.,
-    # project/some/pipeline.yaml vs project/setup.py
-    if root_by_pipeline and (not root_by_setup
-                             or pipeline_levels < setup_levels):
+    # use found pipeline.yaml if not in a src/*/pipeline.yaml structure when
+    # there is no setup.py
+    # OR
+    # if the pipeline.yaml if closer to the starting_dir than the setup.py.
+    # e.g., project/some/pipeline.yaml vs project/setup.py
+    if (root_by_pipeline and root_by_pipeline.parents[0].name != 'src'
+            and (not root_by_setup or pipeline_levels < setup_levels)):
         others = glob(str(Path(root_by_pipeline, '**', 'pipeline*.yaml')),
                       recursive=True)
 
@@ -451,31 +454,34 @@ def find_root_recursively(starting_dir=None):
             else:
                 msg = ''
 
-            raise FileNotFoundError('Failed to determine project root. Found '
-                                    'a setup.py file at '
-                                    f'{str(root_by_setup)!r} and expected '
-                                    'to find a pipeline.yaml file at '
-                                    'src/*/pipeline.yaml (relative to '
-                                    'setup.py parent) but no such file was '
-                                    'found' + msg)
+            raise DAGSpecInvalidError(
+                'Failed to determine project root. Found '
+                'a setup.py file at '
+                f'{str(root_by_setup)!r} and expected '
+                'to find a pipeline.yaml file at '
+                'src/*/pipeline.yaml (relative to '
+                'setup.py parent) but no such file was '
+                'found' + msg)
         elif pipeline_yaml.exists():
             pkg = Path(*Path(pkg_location).parts[-3:-1])
             example = str(pkg / 'pipeline.another.yaml')
-            raise FileExistsError('Failed to determine project root: found '
-                                  f'two pipeline.yaml files: {pkg_location} '
-                                  f'and {pipeline_yaml}. To fix it, move '
-                                  'and rename the second file '
-                                  f'under {str(pkg)} (e.g., {example})')
+            raise DAGSpecInvalidError(
+                'Failed to determine project root: found '
+                f'two pipeline.yaml files: {pkg_location} '
+                f'and {pipeline_yaml}. To fix it, move '
+                'and rename the second file '
+                f'under {str(pkg)} (e.g., {example})')
 
         return root_by_setup
 
-    raise FileNotFoundError('Failed to determine project root. Looked '
-                            'recursively for a setup.py or '
-                            'pipeline.yaml in parent folders but none of '
-                            'those files exist')
+    raise DAGSpecInvalidError('Failed to determine project root. Looked '
+                              'recursively for a setup.py or '
+                              'pipeline.yaml in parent folders but none of '
+                              'those files exist')
 
 
 def try_to_find_root_recursively():
+    # TODO: display warning
     try:
         return find_root_recursively()
     except Exception:
@@ -484,8 +490,9 @@ def try_to_find_root_recursively():
 
 def find_package_name(starting_dir=None):
     """
-    Find package name for this project. Raises an error if it cannot find it
+    Find package name for this project. Raises an error if it cannot determine
+    a valid root path
     """
-    root = find_root_recursively(starting_dir=starting_dir, raise_=True)
+    root = find_root_recursively(starting_dir=starting_dir)
     pkg = _package_location(root_path=root)
     return Path(pkg).parent.name

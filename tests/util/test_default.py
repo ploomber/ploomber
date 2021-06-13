@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from ploomber.util import default
-from ploomber.exceptions import DAGSpecNotFound
+from ploomber.exceptions import DAGSpecInvalidError
 
 
 @pytest.fixture
@@ -27,7 +27,8 @@ def test_entry_point_env_var(monkeypatch, tmp_directory):
 def test_entry_point_env_var_in_pkg(monkeypatch, tmp_directory, pkg_location):
     Path('src', 'package_a', 'pipeline-custom.yaml').touch()
     monkeypatch.setenv('ENTRY_POINT', 'pipeline-custom.yaml')
-    assert default.entry_point() == 'src/package_a/pipeline-custom.yaml'
+    assert default.entry_point() == str(
+        Path('src', 'package_a', 'pipeline-custom.yaml'))
 
 
 def test_error_if_env_var_contains_directories(monkeypatch):
@@ -70,7 +71,7 @@ def test_entry_point_pkg_location_multiple_pkgs(tmp_directory):
 
 
 def test_entry_point_error_if_not_exists():
-    with pytest.raises(DAGSpecNotFound):
+    with pytest.raises(DAGSpecInvalidError):
         default.entry_point()
 
 
@@ -190,6 +191,7 @@ def test_path_to_env_error_if_dir(tmp_directory):
 
 
 def test_finds_pipeline_yaml(tmp_directory):
+    expected = Path(tmp_directory).resolve()
     pip = Path('pipeline.yaml').resolve()
     pip.touch()
 
@@ -197,10 +199,11 @@ def test_finds_pipeline_yaml(tmp_directory):
     dir_.mkdir(parents=True)
     os.chdir(dir_)
 
-    assert pip.parent == default.find_root_recursively()
+    assert expected == default.find_root_recursively().resolve()
 
 
 def test_finds_setup_py(tmp_directory):
+    expected = Path(tmp_directory).resolve()
     pip = Path('setup.py').resolve()
     pip.touch()
 
@@ -211,10 +214,11 @@ def test_finds_setup_py(tmp_directory):
     dir_.mkdir(parents=True)
     os.chdir(dir_)
 
-    assert pip.parent == default.find_root_recursively()
+    assert expected == default.find_root_recursively().resolve()
 
 
 def test_ignores_src_package_pipeline_if_setup_py(tmp_directory):
+    expected = Path(tmp_directory).resolve()
     pip = Path('setup.py').resolve()
     pip.touch()
 
@@ -223,11 +227,11 @@ def test_ignores_src_package_pipeline_if_setup_py(tmp_directory):
     os.chdir(dir_)
     Path('pipeline.yaml').touch()
 
-    assert pip.parent == default.find_root_recursively()
+    assert expected == default.find_root_recursively().resolve()
 
 
 def test_error_if_no_pipeline_yaml_and_no_setup_py(tmp_directory):
-    with pytest.raises(FileNotFoundError) as excinfo:
+    with pytest.raises(DAGSpecInvalidError) as excinfo:
         default.find_root_recursively()
 
     assert ('Looked recursively for a setup.py or '
@@ -242,7 +246,7 @@ def test_error_if_setup_py_but_no_src_package_pipeline(tmp_directory):
     dir_.mkdir(parents=True)
     os.chdir(dir_)
 
-    with pytest.raises(FileNotFoundError) as excinfo:
+    with pytest.raises(DAGSpecInvalidError) as excinfo:
         default.find_root_recursively()
 
     assert 'expected to find a pipeline.yaml file' in str(excinfo.value)
@@ -257,7 +261,7 @@ def test_error_if_setup_py_and_pipeline_are_siblings(tmp_directory):
     dir_.mkdir(parents=True)
     os.chdir(dir_)
 
-    with pytest.raises(FileNotFoundError) as excinfo:
+    with pytest.raises(DAGSpecInvalidError) as excinfo:
         default.find_root_recursively()
 
     assert 'Move the pipeline.yaml' in str(excinfo.value)
@@ -274,7 +278,7 @@ def test_error_if_both_setup_py_and_pipeline_yaml_exist(tmp_directory):
     dir_.mkdir(parents=True)
     os.chdir(dir_)
 
-    with pytest.raises(FileExistsError):
+    with pytest.raises(DAGSpecInvalidError):
         default.find_root_recursively()
 
 
@@ -308,7 +312,7 @@ def test_warns_if_other_pipeline_yaml_as_children_of_root_path(
 
     assert len(record) == 1
     assert 'Found other pipeline files' in record[0].message.args[0]
-    assert all([f in record[0].message.args[0] for f in filenames])
+    assert all([str(Path(f)) in record[0].message.args[0] for f in filenames])
 
 
 @pytest.mark.parametrize('to_create, to_move', [
@@ -335,7 +339,7 @@ def test_find_package_name(tmp_directory, to_create, to_move):
 def test_error_if_no_package(tmp_directory):
     Path('setup.py').touch()
 
-    with pytest.raises(FileNotFoundError) as excinfo:
+    with pytest.raises(DAGSpecInvalidError) as excinfo:
         default.find_package_name()
 
     expected = "Failed to determine project root"
@@ -361,12 +365,12 @@ def test_entry_point_relative_error_if_both_exist(tmp_directory):
     dir_.mkdir(parents=True)
     (dir_ / 'pipeline.yaml').touch()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(DAGSpecInvalidError):
         default.entry_point_relative()
 
 
 def test_entry_point_relative_error_if_doesnt_exist(tmp_directory):
-    with pytest.raises(DAGSpecNotFound):
+    with pytest.raises(DAGSpecInvalidError):
         default.entry_point_relative()
 
 

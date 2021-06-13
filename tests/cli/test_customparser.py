@@ -46,7 +46,9 @@ def test_add_dynamic_arguments():
     assert not set(parser.static_args) & added
 
 
-def test_default_loaded_from_env_var(monkeypatch):
+def test_default_loaded_from_env_var(tmp_directory, monkeypatch):
+    Path('pipeline.yaml').touch()
+    Path('dag.yaml').touch()
     monkeypatch.setenv('ENTRY_POINT', 'dag.yaml')
     monkeypatch.setattr(sys, 'argv', ['ploomber'])
 

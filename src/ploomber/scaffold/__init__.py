@@ -1,7 +1,7 @@
 from ploomber.spec.dagspec import DAGSpec
 from ploomber.scaffold.scaffoldloader import ScaffoldLoader
 from ploomber.util.util import add_to_sys_path
-from ploomber.exceptions import DAGSpecNotFound
+from ploomber.exceptions import DAGSpecInvalidError
 
 
 def load_dag():
@@ -9,7 +9,7 @@ def load_dag():
     # instead of placeholders
     try:
         return DAGSpec._auto_load(to_dag=False, lazy_import=True)
-    except DAGSpecNotFound:
+    except DAGSpecInvalidError:
         return None
 
 

@@ -677,10 +677,10 @@ def test_default_with_root(monkeypatch):
 @pytest.mark.parametrize('kwargs, expected', [
     [
         dict(source={'cwd': 'some_value'}, path_to_here='value'),
-        {'here', 'user', 'root'}
+        {'here', 'user'}
     ],
-    [dict(source={'cwd': 'some_value'}), {'user', 'root'}],
-    [dict(source={'user': 'some_value'}), {'cwd', 'root'}],
+    [dict(source={'cwd': 'some_value'}), {'user'}],
+    [dict(source={'user': 'some_value'}), {'cwd'}],
 ])
 def test_default_keys(kwargs, expected):
     assert EnvDict(**kwargs).default_keys == expected
