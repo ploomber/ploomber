@@ -175,6 +175,13 @@ environment variable.
 """)
 
 
+def try_to_find_entry_point():
+    try:
+        return entry_point(root_path=None, name=None)
+    except:
+        pass
+
+
 def entry_point_relative(name=None):
     """
     Returns a relative path to the entry point with the given name.
@@ -347,7 +354,7 @@ def find_file_recursively(name, max_levels_up=6, starting_dir=None):
     current_dir = Path(current_dir).resolve()
     path_to_file = None
 
-    for _ in range(max_levels_up):
+    for levels in range(max_levels_up):
         current_path = Path(current_dir, name)
 
         if current_path.exists():
@@ -356,16 +363,18 @@ def find_file_recursively(name, max_levels_up=6, starting_dir=None):
 
         current_dir = current_dir.parent
 
-    return path_to_file
+    return path_to_file, levels
 
 
 def find_parent_of_file_recursively(name, max_levels_up=6, starting_dir=None):
-    path = find_file_recursively(name,
-                                 max_levels_up=6,
-                                 starting_dir=starting_dir)
+    path, levels = find_file_recursively(name,
+                                         max_levels_up=6,
+                                         starting_dir=starting_dir)
 
     if path:
-        return path.parent
+        return path.parent, levels
+
+    return None, None
 
 
 def find_root_recursively(starting_dir=None):
@@ -387,22 +396,29 @@ def find_root_recursively(starting_dir=None):
         If no setup.py/pipeline.yaml is found or if an incorrect folder layout
         exists
     """
-    # NOTE: update the docstrings of all clients
+    # NOTE: update the docstrings of all clients - we must catch errors
+    # from here and explain that if there isn't a project root a value must
+    # be passed explicitly
     # TODO: warn if packaged structured but source loader not configured
     # NOTE: warn if more pipelines in parent directories?
     # TODO: check who is calling raise_=False and check how to fix it
+    # FIXME: maybe check that once you found pipeline.yaml, there aren't
+    # setup.py as children?
 
-    root_by_setup = find_parent_of_file_recursively('setup.py',
-                                                    max_levels_up=6,
-                                                    starting_dir=starting_dir)
+    root_by_setup, setup_levels = find_parent_of_file_recursively(
+        'setup.py', max_levels_up=6, starting_dir=starting_dir)
 
-    root_by_pipeline = find_parent_of_file_recursively(
+    root_by_pipeline, pipeline_levels = find_parent_of_file_recursively(
         'pipeline.yaml',
         max_levels_up=6,
         starting_dir=starting_dir,
     )
 
-    if root_by_pipeline and not root_by_setup:
+    # use found pipeline.yaml if there is no setup.py OR if the pipeline.yaml
+    # if closer to the starting_dir than the setup.py. e.g.,
+    # project/some/pipeline.yaml vs project/setup.py
+    if root_by_pipeline and (not root_by_setup
+                             or pipeline_levels < setup_levels):
         others = glob(str(Path(root_by_pipeline, '**', 'pipeline*.yaml')),
                       recursive=True)
 
@@ -421,6 +437,7 @@ def find_root_recursively(starting_dir=None):
 
         return root_by_pipeline
 
+    # FIXME: maybe apply the same levels rule?
     if root_by_setup:
         pipeline_yaml = Path(root_by_setup, 'pipeline.yaml')
         pkg_location = _package_location(root_path=root_by_setup)
