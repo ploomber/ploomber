@@ -185,6 +185,7 @@ class DAGSpec(MutableMapping):
                  parent_path=None):
         # initialized with a path to a yaml file...
         if isinstance(data, (str, Path)):
+            # TODO: test this
             if parent_path is not None:
                 raise ValueError('parent_path must be None when '
                                  f'initializing {type(self).__name__} with '
@@ -319,10 +320,14 @@ class DAGSpec(MutableMapping):
 
             # "products" are relative to the project root. if no project
             # root, then use the parent path
-            # TODO: this should not use _parent_path but only the recursive
-            # call
             # TODO: if loading from a dict, {{root}} should not be available
             # or perhaps make it = to parent_path?
+
+            # for simple projects project root and self._parent_path are the
+            # same. For packaged projects, this is not the case. This creates
+            # some ambiguity between the two that we have to address. This is
+            # important because File products and sources are resolved relative
+            # to the project_root arg passed to TaskSpec
             project_root = (default.try_to_find_root_recursively()
                             or self._parent_path)
 
@@ -465,27 +470,22 @@ class DAGSpec(MutableMapping):
         Returns DAG and the directory where the pipeline.yaml file is located.
         """
         root_path = starting_dir or os.getcwd()
-        # FIXME: simplify this. entry_point looks for root path but
-        # the constructor also does it (in the try version)
-        path = entry_point(root_path=root_path, name=name)
+        path_to_entry_point = entry_point(root_path=root_path, name=name)
 
-        # FIXME: due to recent changes, this cannot be none
-        if path is None:
-            if to_dag:
-                return None, None, None
-            else:
-                return None, None
         try:
-            spec = cls(path, env=env, lazy_import=lazy_import, reload=reload)
+            spec = cls(path_to_entry_point,
+                       env=env,
+                       lazy_import=lazy_import,
+                       reload=reload)
 
             if to_dag:
-                return spec, spec.to_dag(), Path(path).parent
+                return spec, spec.to_dag(), Path(path_to_entry_point).parent
             else:
-                return spec, Path(path).parent
+                return spec, Path(path_to_entry_point).parent
 
         except Exception as e:
             exc = DAGSpecInitializationError('Error initializing DAG from '
-                                             f'{path!s}')
+                                             f'{path_to_entry_point!s}')
             raise exc from e
 
     @classmethod
