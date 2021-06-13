@@ -350,14 +350,3 @@ def no_sys_modules_cache():
 
     for a_module in to_remove:
         del sys.modules[a_module]
-
-
-@pytest.fixture
-def tmp_directory_with_project_root(tmp_directory):
-    """
-    Uses tmp_directory and adds a pipeline.yaml file. Used by tests that
-    need a project root folder
-    """
-    dir_ = Path(tmp_directory).resolve()
-    (dir_ / 'environment.yml').touch()
-    return dir_

@@ -390,8 +390,10 @@ def test_expand_tags(monkeypatch, tmp_directory):
 
     monkeypatch.setattr(getpass, "getuser", mockreturn)
 
-    # this is required for {{root}}
+    # this is required to enable {{root}}
     Path('setup.py').touch()
+    Path('src', 'package').mkdir(parents=True)
+    Path('src', 'package', 'pipeline.yaml').touch()
 
     raw = {
         'a': '{{user}}',

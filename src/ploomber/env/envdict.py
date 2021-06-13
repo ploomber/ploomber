@@ -273,7 +273,7 @@ def load_from_source(source):
     elif isinstance(source, (str, Path)):
         # if not pointing to a file, try to locate it...
         if not Path(source).exists():
-            source_found = default.find_file_recursively(source)
+            source_found, _ = default.find_file_recursively(source)
 
             if source_found is None:
                 raise FileNotFoundError('Could not find file "{}" in the '
@@ -379,9 +379,11 @@ def find_env_w_name(name):
     path_to_env : pathlib.Path
         Path to environment file, None if no file could be found
     """
-    path = default.find_file_recursively(name='env.{}.yaml'.format(name))
+    # TODO: there is some duplicated logic for looking up env.{name}.yaml
+    # refactor and only use default
+    path, _ = default.find_file_recursively(name='env.{}.yaml'.format(name))
 
     if path is None:
-        return default.find_file_recursively(name='env.yaml')
+        return default.find_file_recursively(name='env.yaml')[0]
     else:
         return path

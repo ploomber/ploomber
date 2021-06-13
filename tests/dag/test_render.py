@@ -300,7 +300,7 @@ def test_render_checks_outdated_status_once(monkeypatch, tmp_directory):
 def make_dag_with_client():
     dag = DAG(executor=Serial(build_in_subprocess=False))
 
-    dag.clients[File] = LocalStorageClient('remote')
+    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
 
     root = PythonCallable(touch_root, File('out/root'), dag=dag, name='root')
     task = PythonCallable(touch, File('out/file'), dag=dag, name='task')
@@ -311,7 +311,7 @@ def make_dag_with_client():
 def make_larger_dag_with_client():
     dag = DAG(executor=Serial(build_in_subprocess=False))
 
-    dag.clients[File] = LocalStorageClient('remote')
+    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
 
     root = PythonCallable(touch_root, File('out/root'), dag=dag, name='root')
     task = PythonCallable(touch, File('out/file'), dag=dag, name='task')
@@ -326,7 +326,7 @@ def make_larger_dag_with_client():
 def make_dag_with_client_and_metaproduct():
     dag = DAG(executor=Serial(build_in_subprocess=False))
 
-    dag.clients[File] = LocalStorageClient('remote')
+    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
 
     root = PythonCallable(touch_root_with_metaproduct, {
         'root': File('out/root'),
@@ -342,7 +342,7 @@ def make_dag_with_client_and_metaproduct():
 def make_dag_with_client_and_metaproduct_2():
     dag = DAG(executor=Serial(build_in_subprocess=False))
 
-    dag.clients[File] = LocalStorageClient('remote')
+    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
 
     root = PythonCallable(touch_root_with_metaproduct, {
         'root': File('out/root'),
@@ -367,7 +367,7 @@ def make_dag_with_client_and_metaproduct_2():
     make_dag_with_client_and_metaproduct_2,
     make_larger_dag_with_client,
 ])
-def test_render_remote(factory, tmp_directory_with_project_root):
+def test_render_remote(factory, tmp_directory):
     factory().build()
     shutil.rmtree('out')
 
@@ -377,8 +377,7 @@ def test_render_remote(factory, tmp_directory_with_project_root):
     assert set(t.exec_status for t in dag.values()) == {TaskStatus.Skipped}
 
 
-def test_render_remote_checks_remote_timestamp(
-        tmp_directory_with_project_root):
+def test_render_remote_checks_remote_timestamp(tmp_directory):
     make_dag_with_client().build()
 
     Path('remote', 'out', 'root').unlink()

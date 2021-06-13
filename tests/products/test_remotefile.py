@@ -32,14 +32,14 @@ def _write_json(obj, path):
 @pytest.fixture
 def dag():
     dag = DAG(executor=Serial(build_in_subprocess=False))
-    dag.clients[File] = LocalStorageClient('remote')
+    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
     root = PythonCallable(_touch, File('root'), dag=dag, name='root')
     task = PythonCallable(_touch_upstream, File('file'), dag=dag, name='task')
     root >> task
     return dag
 
 
-def test_metadata_is_equal_to_local_copy(tmp_directory_with_project_root, dag):
+def test_metadata_is_equal_to_local_copy(tmp_directory, dag):
     dag.build()
 
     file_ = dag['task'].product
@@ -48,7 +48,7 @@ def test_metadata_is_equal_to_local_copy(tmp_directory_with_project_root, dag):
     assert rf._is_equal_to_local_copy()
 
 
-def test_is_not_outdated_after_build(tmp_directory_with_project_root, dag):
+def test_is_not_outdated_after_build(tmp_directory, dag):
     dag.build()
 
     file_ = dag['task'].product
@@ -59,7 +59,7 @@ def test_is_not_outdated_after_build(tmp_directory_with_project_root, dag):
     assert not rf._is_outdated(with_respect_to_local=True)
 
 
-def test_is_outdated_due_data(tmp_directory_with_project_root, dag):
+def test_is_outdated_due_data(tmp_directory, dag):
     dag.build()
 
     # modify metadata to make it look older
@@ -74,7 +74,7 @@ def test_is_outdated_due_data(tmp_directory_with_project_root, dag):
     assert rf._is_outdated(with_respect_to_local=True)
 
 
-def test_is_outdated_due_code(tmp_directory_with_project_root, dag):
+def test_is_outdated_due_code(tmp_directory, dag):
     dag.build()
 
     # modify metadata to make the code look outdated
@@ -89,7 +89,7 @@ def test_is_outdated_due_code(tmp_directory_with_project_root, dag):
     assert rf._is_outdated(with_respect_to_local=True)
 
 
-def test_caches_result(tmp_directory_with_project_root, monkeypatch, dag):
+def test_caches_result(tmp_directory, monkeypatch, dag):
     dag.build()
 
     file_ = dag['task'].product
@@ -107,8 +107,7 @@ def test_caches_result(tmp_directory_with_project_root, monkeypatch, dag):
     mock_check.assert_called_once()
 
 
-def test_deletes_metadata_file_after_init(tmp_directory_with_project_root,
-                                          monkeypatch, dag):
+def test_deletes_metadata_file_after_init(tmp_directory, monkeypatch, dag):
     dag.build()
 
     file_ = dag['task'].product
@@ -117,8 +116,7 @@ def test_deletes_metadata_file_after_init(tmp_directory_with_project_root,
     assert not Path('.file.metadata.remote').exists()
 
 
-def test_calls_client_download_lazily(tmp_directory_with_project_root,
-                                      monkeypatch, dag):
+def test_calls_client_download_lazily(tmp_directory, monkeypatch, dag):
     dag.build()
 
     file_ = dag['task'].product

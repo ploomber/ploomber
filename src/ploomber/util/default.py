@@ -178,7 +178,7 @@ environment variable.
 def try_to_find_entry_point():
     try:
         return entry_point(root_path=None, name=None)
-    except:
+    except Exception:
         pass
 
 
@@ -353,6 +353,7 @@ def find_file_recursively(name, max_levels_up=6, starting_dir=None):
     current_dir = starting_dir or os.getcwd()
     current_dir = Path(current_dir).resolve()
     path_to_file = None
+    levels = None
 
     for levels in range(max_levels_up):
         current_path = Path(current_dir, name)

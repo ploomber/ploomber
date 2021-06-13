@@ -17,8 +17,11 @@ def mock_client(monkeypatch):
     return mock_client
 
 
-def test_init(tmp_directory_with_project_root, mock_client):
-    client = GCloudStorageClient('my-bucket-name', parent='folder', arg=1)
+def test_init(tmp_directory, mock_client):
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent='folder',
+                                 arg=1,
+                                 path_to_project_root='.')
 
     mock_client.assert_called_once_with(arg=1)
     mock_client().bucket.assert_called_once_with('my-bucket-name')
@@ -28,18 +31,19 @@ def test_init(tmp_directory_with_project_root, mock_client):
 
 
 @pytest.mark.parametrize('relative_to_project_root', [False, True])
-def test_from_service_account_json(tmp_directory_with_project_root,
-                                   mock_client, relative_to_project_root):
+def test_from_service_account_json(tmp_directory, mock_client,
+                                   relative_to_project_root):
     client = GCloudStorageClient(
         'my-bucket-name',
         'folder',
         'my.json',
         arg=1,
         credentials_relative_to_project_root=relative_to_project_root,
+        path_to_project_root='.',
     )
 
     expected = 'my.json' if not relative_to_project_root else Path(
-        tmp_directory_with_project_root, 'my.json')
+        tmp_directory, 'my.json')
 
     mock_client.from_service_account_json.assert_called_once_with(
         json_credentials_path=expected, arg=1)
@@ -49,9 +53,11 @@ def test_from_service_account_json(tmp_directory_with_project_root,
     assert client._bucket is mock_client.from_service_account_json().bucket()
 
 
-def test_underscore_upload(tmp_directory_with_project_root, mock_client):
+def test_underscore_upload(tmp_directory, mock_client):
     Path('my-file.txt').touch()
-    client = GCloudStorageClient('my-bucket-name', parent='')
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent='',
+                                 path_to_project_root='.')
 
     client._upload('my-file.txt')
 
@@ -61,9 +67,11 @@ def test_underscore_upload(tmp_directory_with_project_root, mock_client):
         'my-file.txt')
 
 
-def test_underscore_download(tmp_directory_with_project_root, mock_client):
+def test_underscore_download(tmp_directory, mock_client):
     Path('source.txt').touch()
-    client = GCloudStorageClient('my-bucket-name', parent='')
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent='',
+                                 path_to_project_root='.')
 
     client._download('source.txt', 'destiny.txt')
 
@@ -76,7 +84,9 @@ def test_underscore_download(tmp_directory_with_project_root, mock_client):
 @pytest.mark.parametrize('parent', ['', 'some/parent/', 'some/parent'])
 def test_upload_file(monkeypatch, parent, mock_client):
     mock = Mock()
-    client = GCloudStorageClient('my-bucket-name', parent=parent)
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent=parent,
+                                 path_to_project_root='.')
     monkeypatch.setattr(client, '_upload', mock)
 
     client.upload('file.txt')
@@ -87,7 +97,9 @@ def test_upload_file(monkeypatch, parent, mock_client):
 @pytest.mark.parametrize('parent', ['', 'some/parent/', 'some/parent'])
 def test_download(monkeypatch, parent, mock_client):
     mock = Mock()
-    client = GCloudStorageClient('my-bucket-name', parent=parent)
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent=parent,
+                                 path_to_project_root='.')
     monkeypatch.setattr(client, '_download', mock)
 
     client.download('file.txt')
@@ -97,7 +109,9 @@ def test_download(monkeypatch, parent, mock_client):
 
 
 def test_error_when_downloading_non_existing(monkeypatch, mock_client):
-    client = GCloudStorageClient('my-bucket-name', parent='parent')
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent='parent',
+                                 path_to_project_root='.')
     monkeypatch.setattr(client, '_is_file', lambda _: False)
     list_blobs_mock = Mock(return_value=[])
     monkeypatch.setattr(client._bucket.client, 'list_blobs', list_blobs_mock)
@@ -109,8 +123,7 @@ def test_error_when_downloading_non_existing(monkeypatch, mock_client):
             in str(excinfo.value))
 
 
-def test_upload_folder(tmp_directory_with_project_root, monkeypatch,
-                       mock_client):
+def test_upload_folder(tmp_directory, monkeypatch, mock_client):
     Path('dir', 'subdir', 'nested').mkdir(parents=True)
     Path('dir', 'a').touch()
     Path('dir', 'b').touch()
@@ -118,7 +131,9 @@ def test_upload_folder(tmp_directory_with_project_root, monkeypatch,
     Path('dir', 'subdir', 'nested', 'd').touch()
 
     mock = Mock()
-    client = GCloudStorageClient('my-bucket-name', parent='.')
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent='.',
+                                 path_to_project_root='.')
     monkeypatch.setattr(client, '_upload', mock)
 
     client.upload('dir')
@@ -132,8 +147,7 @@ def test_upload_folder(tmp_directory_with_project_root, monkeypatch,
                           any_order=True)
 
 
-def test_download_folder(tmp_directory_with_project_root, monkeypatch,
-                         mock_client):
+def test_download_folder(tmp_directory, monkeypatch, mock_client):
     Path('backup', 'dir', 'subdir', 'nested').mkdir(parents=True)
     Path('backup', 'dir', 'a').touch()
     Path('backup', 'dir', 'b').touch()
@@ -151,7 +165,9 @@ def test_download_folder(tmp_directory_with_project_root, monkeypatch,
         mock_blobs.append(m)
 
     mock = Mock()
-    client = GCloudStorageClient('my-bucket-name', parent='backup')
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent='backup',
+                                 path_to_project_root='.')
     monkeypatch.setattr(client, '_download', mock)
     # simulate this is not a file
     mock_client().bucket().blob('backup/a').exists.return_value = False
@@ -169,7 +185,9 @@ def test_download_folder(tmp_directory_with_project_root, monkeypatch,
 
 def test_download_with_custom_destination(monkeypatch, mock_client):
     mock = Mock()
-    client = GCloudStorageClient('my-bucket-name', parent='parent')
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent='parent',
+                                 path_to_project_root='.')
     monkeypatch.setattr(client, '_download', mock)
 
     client.download('file.txt', destination='another.txt')
@@ -179,32 +197,41 @@ def test_download_with_custom_destination(monkeypatch, mock_client):
 
 
 def test_pickle(mock_client):
-    c = GCloudStorageClient('my-bucket-name', parent='')
+    c = GCloudStorageClient('my-bucket-name',
+                            parent='',
+                            path_to_project_root='.')
     pickle.loads(pickle.dumps(c))
 
 
 def test_pickle_from_service_acccount(mock_client):
-    c = GCloudStorageClient('my-bucket-name', 'folder', 'my.json')
+    c = GCloudStorageClient('my-bucket-name',
+                            'folder',
+                            'my.json',
+                            path_to_project_root='.')
     pickle.loads(pickle.dumps(c))
 
 
 def test_close(mock_client):
-    GCloudStorageClient('my-bucket-name', parent='').close()
+    GCloudStorageClient('my-bucket-name', parent='',
+                        path_to_project_root='.').close()
 
 
 @pytest.mark.parametrize('arg, expected', [
     ['file.txt', ('backup', 'file.txt')],
     ['subdir/file.txt', ('backup', 'subdir', 'file.txt')],
 ])
-def test_remote_path(tmp_directory_with_project_root, arg, expected,
-                     mock_client):
-    client = GCloudStorageClient('my-bucket-name', parent='backup')
+def test_remote_path(tmp_directory, arg, expected, mock_client):
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent='backup',
+                                 path_to_project_root='.')
 
     assert PurePosixPath(client._remote_path(arg)) == PurePosixPath(*expected)
 
 
 def test_remote_exists(monkeypatch, mock_client):
-    client = GCloudStorageClient('my-bucket-name', parent='backup')
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent='backup',
+                                 path_to_project_root='.')
 
     client._remote_exists('a')
 
@@ -212,7 +239,9 @@ def test_remote_exists(monkeypatch, mock_client):
 
 
 def test_is_file(monkeypatch, mock_client):
-    client = GCloudStorageClient('my-bucket-name', parent='backup')
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent='backup',
+                                 path_to_project_root='.')
     # simulate file exists
     client._bucket.blob('backup/a').exists.return_value = True
 
@@ -220,7 +249,9 @@ def test_is_file(monkeypatch, mock_client):
 
 
 def test_remote_exists_directory(monkeypatch, mock_client):
-    client = GCloudStorageClient('my-bucket-name', parent='backup')
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent='backup',
+                                 path_to_project_root='.')
     bucket = mock_client().bucket()
     # simulate file does not exist
     bucket.blob('backup/a').exists.return_value = False
@@ -235,7 +266,9 @@ def test_remote_exists_directory(monkeypatch, mock_client):
 
 
 def test_is_dir(monkeypatch, mock_client):
-    client = GCloudStorageClient('my-bucket-name', parent='backup')
+    client = GCloudStorageClient('my-bucket-name',
+                                 parent='backup',
+                                 path_to_project_root='.')
     # test dir exists
     client._bucket.client.list_blobs.return_value = ['file', 'another']
 

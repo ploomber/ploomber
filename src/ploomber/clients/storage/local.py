@@ -28,8 +28,7 @@ class LocalStorageClient(AbstractStorageClient):
         self._path_to_backup_dir = Path(path_to_backup_dir)
         self._path_to_backup_dir.mkdir(exist_ok=True, parents=True)
 
-        project_root = (path_to_project_root
-                        or find_root_recursively(raise_=True))
+        project_root = (path_to_project_root or find_root_recursively())
         self._path_to_project_root = Path(project_root).resolve()
 
     def _remote_path(self, local):

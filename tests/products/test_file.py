@@ -46,7 +46,8 @@ def _make_dag(with_client=True):
     dag = DAG(executor=Serial(build_in_subprocess=False))
 
     if with_client:
-        dag.clients[File] = LocalStorageClient('remote')
+        dag.clients[File] = LocalStorageClient('remote',
+                                               path_to_project_root='.')
 
     root = PythonCallable(_touch, File('root'), dag=dag, name='root')
     task = PythonCallable(_touch_upstream,
@@ -59,7 +60,7 @@ def _make_dag(with_client=True):
 
 def _make_dag_with_two_upstream():
     dag = DAG(executor=Serial(build_in_subprocess=False))
-    dag.clients[File] = LocalStorageClient('remote')
+    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
 
     root = PythonCallable(_touch, File('root'), dag=dag, name='root')
     another = PythonCallable(_touch, File('another'), dag=dag, name='another')
@@ -312,7 +313,7 @@ def _delete_metadata(path):
 
 @pytest.mark.parametrize('operation', [_edit_source_code, _delete_metadata])
 def test_task_with_client_is_not_outdated_returns_waiting_download(
-        operation, tmp_directory_with_project_root):
+        operation, tmp_directory):
     dag = _make_dag(with_client=True)
     dag.build()
 
@@ -330,7 +331,7 @@ def test_task_with_client_is_not_outdated_returns_waiting_download(
 
 @pytest.mark.parametrize('operation', [_edit_source_code, _delete_metadata])
 def test_task_with_client_and_metaproduct_isnt_outdated_rtrns_waiting_download(
-        operation, tmp_directory_with_project_root):
+        operation, tmp_directory):
     """
     Checking MetaProduct correctly forwards WaitingDownload when calling
     MetaProduct._is_outdated
@@ -414,7 +415,7 @@ def test_task_with_client_and_metaproduct_with_some_missing_remote_products(
 
 
 def test_task_with_skipped_and_waiting_to_download_upstream_downloads(
-        tmp_directory_with_project_root):
+        tmp_directory):
     _make_dag_with_two_upstream().build()
 
     # force an upstream task to be waiting for download
@@ -427,7 +428,7 @@ def test_task_with_skipped_and_waiting_to_download_upstream_downloads(
 
 
 def test_task_with_client_does_not_return_waiting_download_if_outdated_remote(
-        tmp_directory_with_project_root):
+        tmp_directory):
     dag = _make_dag(with_client=True)
     dag.build()
 
@@ -441,8 +442,7 @@ def test_task_with_client_does_not_return_waiting_download_if_outdated_remote(
     assert not dag['root'].product._is_outdated()
 
 
-def test_task_with_client_is_not_outdated_after_build(
-        tmp_directory_with_project_root):
+def test_task_with_client_is_not_outdated_after_build(tmp_directory):
     dag = _make_dag(with_client=True)
     dag.build()
 
@@ -490,8 +490,8 @@ def test_download_triggers_client_download(tmp_directory):
     ids=['product-exists', 'none-exists'],
 )
 def test_do_not_download_if_metadata_does_not_exist_in_remote(
-        to_touch, tmp_directory_with_project_root):
-    client = LocalStorageClient('remote')
+        to_touch, tmp_directory):
+    client = LocalStorageClient('remote', path_to_project_root='.')
     client.download = Mock(wraps=client.download)
     client._remote_exists = Mock(wraps=client._remote_exists)
 
@@ -510,9 +510,8 @@ def test_do_not_download_if_metadata_does_not_exist_in_remote(
     client.download.assert_not_called()
 
 
-def test_do_not_download_if_file_does_not_exist_in_remote(
-        tmp_directory_with_project_root):
-    client = LocalStorageClient('remote')
+def test_do_not_download_if_file_does_not_exist_in_remote(tmp_directory):
+    client = LocalStorageClient('remote', path_to_project_root='.')
     client.download = Mock(wraps=client.download)
     client._remote_exists = Mock(wraps=client._remote_exists)
 
@@ -658,7 +657,7 @@ def test_download_error(executor, tmp_directory):
 
 
 def test_task_build_calls_download_if_remote_up_to_date_products(
-        tmp_directory_with_project_root, monkeypatch):
+        tmp_directory, monkeypatch):
     dag = _make_dag()
     dag.build()
 
@@ -676,7 +675,7 @@ def test_task_build_calls_download_if_remote_up_to_date_products(
 def _make_dag_with_upstream():
     # run in the same process, to ensure the mock object is called
     dag = DAG(executor=Serial(build_in_subprocess=False))
-    dag.clients[File] = LocalStorageClient('remote')
+    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
     t1 = PythonCallable(_touch, File('1.txt'), dag=dag, name='root')
     PythonCallable(_touch, File('2.txt'), dag=dag, name=2)
     t3 = PythonCallable(_touch_upstream, File('3.txt'), dag=dag, name=3)
@@ -685,7 +684,7 @@ def _make_dag_with_upstream():
 
 
 def test_task_build_raises_error_if_upstream_do_not_exist_in_remote(
-        tmp_directory_with_project_root, monkeypatch):
+        tmp_directory, monkeypatch):
     dag = _make_dag_with_upstream().render()
 
     with pytest.raises(TaskBuildError) as excinfo:
@@ -697,7 +696,7 @@ def test_task_build_raises_error_if_upstream_do_not_exist_in_remote(
 
 
 def test_task_build_downloads_upstream_if_up_to_date_then_executes(
-        tmp_directory_with_project_root, monkeypatch):
+        tmp_directory, monkeypatch):
     _make_dag_with_upstream().build()
     Path('1.txt').unlink()
     Path('3.txt').unlink()
@@ -717,7 +716,7 @@ def test_task_build_downloads_upstream_if_up_to_date_then_executes(
 
 
 def test_task_build_downloads_if_upstream_up_to_date_and_remote_up_to_date(
-        tmp_directory_with_project_root, monkeypatch):
+        tmp_directory, monkeypatch):
     _make_dag_with_upstream().build()
     Path('3.txt').unlink()
     dag = _make_dag_with_upstream().render()
@@ -729,7 +728,7 @@ def test_task_build_downloads_if_upstream_up_to_date_and_remote_up_to_date(
 
 
 def test_dag_build_calls_download_if_remote_up_to_date_products(
-        tmp_directory_with_project_root, monkeypatch):
+        tmp_directory, monkeypatch):
     dag = _make_dag()
     dag.build()
 
@@ -749,7 +748,7 @@ def test_dag_build_calls_download_if_remote_up_to_date_products(
 
 
 def test_keeps_waiting_download_status_after_downloading_upstream_dependency(
-        tmp_directory_with_project_root):
+        tmp_directory):
     dag = _make_dag(with_client=True)
     dag.build()
     Path('root').unlink()
@@ -761,7 +760,7 @@ def test_keeps_waiting_download_status_after_downloading_upstream_dependency(
 
 
 def test_downloads_task_with_upstream_after_full_build_and_skips_after_it(
-        tmp_directory_with_project_root):
+        tmp_directory):
     dag = _make_dag(with_client=True)
     dag.build()
     Path('root').unlink()
@@ -773,7 +772,7 @@ def test_downloads_task_with_upstream_after_full_build_and_skips_after_it(
     assert _make_dag().render()['task'].exec_status == TaskStatus.Skipped
 
 
-def test_check_remote_status(tmp_directory_with_project_root):
+def test_check_remote_status(tmp_directory):
     dag = _make_dag(with_client=True)
     root = dag['root'].product
     task = dag['task'].product

@@ -361,8 +361,7 @@ def test_building_a_single_task_when_rendered_upstream(tmp_directory):
     dag[2].build()
 
 
-def test_task_build_does_not_upload_if_downloaded(
-        tmp_directory_with_project_root, monkeypatch):
+def test_task_build_does_not_upload_if_downloaded(tmp_directory, monkeypatch):
     def make_dag():
         dag = DAG(executor=Serial(build_in_subprocess=False))
         dag.clients[File] = LocalStorageClient('backup')
@@ -387,7 +386,7 @@ def test_task_build_does_not_upload_if_downloaded(
 
 
 def test_task_build_does_not_overwrite_metadata_if_downloaded(
-        tmp_directory_with_project_root, monkeypatch):
+        tmp_directory, monkeypatch):
     def make_dag():
         dag = DAG(executor=Serial(build_in_subprocess=False))
         dag.clients[File] = LocalStorageClient('backup')
@@ -411,15 +410,14 @@ def test_task_build_does_not_overwrite_metadata_if_downloaded(
 
 def _make_dag_with_client():
     dag = DAG(executor=Serial(build_in_subprocess=False))
-    dag.clients[File] = LocalStorageClient('backup')
+    dag.clients[File] = LocalStorageClient('backup', path_to_project_root='.')
     t1 = PythonCallable(touch, File('1.txt'), dag, name=1)
     t2 = PythonCallable(touch_w_upstream, File('2.txt'), dag, name=2)
     t1 >> t2
     return dag
 
 
-def test_forced_render_overrides_waiting_download(
-        tmp_directory_with_project_root):
+def test_forced_render_overrides_waiting_download(tmp_directory):
     _make_dag_with_client().build()
 
     Path('1.txt').unlink()
@@ -432,8 +430,7 @@ def test_forced_render_overrides_waiting_download(
     assert dag[2].exec_status == TaskStatus.WaitingUpstream
 
 
-def test_forced_build_overrides_waiting_download(
-        tmp_directory_with_project_root):
+def test_forced_build_overrides_waiting_download(tmp_directory):
     _make_dag_with_client().build()
 
     Path('1.txt').unlink()
