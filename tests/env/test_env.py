@@ -1,6 +1,5 @@
 import os
 import importlib
-import platform
 from pathlib import Path
 import getpass
 import inspect
@@ -112,12 +111,6 @@ def test_load_env_default_name(tmp_directory, cleanup_env):
     Env()
 
 
-def test_load_env_hostname(tmp_directory, cleanup_env):
-    name = 'env.{}.yaml'.format(platform.node())
-    Path(name).write_text(yaml.dump({'a': 1}))
-    Env()
-
-
 def test_path_returns_Path_objects(cleanup_env):
     env = Env(
         {'path': {
@@ -204,16 +197,33 @@ def test_can_instantiate_env_if_located_in_sample_dir(tmp_sample_dir,
     Env()
 
 
-def test_can_instantiate_env_if_located_in_sample_subdir(
-        tmp_sample_subdir, cleanup_env):
-    Env()
-
-
 def test_raise_file_not_found_if(cleanup_env):
-    msg = ('Could not find file "env.non_existing.yaml" '
-           'in the current working directory nor 6 levels up')
-    with pytest.raises(FileNotFoundError, match=msg):
+    with pytest.raises(FileNotFoundError):
         Env('env.non_existing.yaml')
+
+
+def test_with_env_initialized_from_path(cleanup_env, tmp_directory):
+    Path('env.yaml').write_text('{"a": 42}')
+
+    @with_env('env.yaml')
+    def my_fn(env):
+        return env.a
+
+    assert my_fn() == 42
+
+
+def test_with_env_initialized_from_path_looks_recursively(
+        cleanup_env, tmp_directory):
+    Path('env.yaml').write_text('{"a": 42}')
+
+    Path('dir').mkdir()
+    os.chdir('dir')
+
+    @with_env('env.yaml')
+    def my_fn(env):
+        return env.a
+
+    assert my_fn() == 42
 
 
 def test_with_env_decorator(cleanup_env):

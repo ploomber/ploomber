@@ -208,21 +208,6 @@ def tmp_pipeline_sql():
     pass
 
 
-@pytest.fixture()
-def tmp_sample_subdir():
-    old = os.getcwd()
-    tmp = Path(tempfile.mkdtemp(), 'sample_dir')
-    sample_dir = _path_to_tests() / 'assets' / 'sample_dir'
-    shutil.copytree(str(sample_dir), str(tmp))
-
-    os.chdir(str(tmp / 'subdir'))
-
-    yield tmp
-
-    os.chdir(old)
-    shutil.rmtree(str(tmp))
-
-
 @fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs')
 def tmp_nbs():
     pass

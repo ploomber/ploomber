@@ -1,6 +1,5 @@
 from copy import copy, deepcopy
 import importlib
-import platform
 from pathlib import Path
 from collections.abc import Mapping
 from reprlib import Repr
@@ -98,6 +97,24 @@ class EnvDict(Mapping):
             self._data = self._expander.expand_raw_dictionary(raw_data)
 
             self._repr = Repr()
+
+    @classmethod
+    def find(cls, source):
+        """
+        Find env file recursively, currently only used by the @with_env
+        decorator
+        """
+        if not Path(source).exists():
+            source_found, _ = default.find_file_recursively(source)
+
+            if source_found is None:
+                raise FileNotFoundError('Could not find file "{}" in the '
+                                        'current working directory nor '
+                                        '6 levels up'.format(source))
+            else:
+                source = source_found
+
+        return cls(source, path_to_here=source)
 
     @property
     def default_keys(self):
@@ -255,33 +272,6 @@ def load_from_source(source):
         # dictiionary, path
         return source, None
 
-    elif source is None:
-        # look for an env.{name}.yaml, if that fails, try env.yaml
-        name = platform.node()
-        path_found = find_env_w_name(name)
-
-        if path_found is None:
-            raise FileNotFoundError(
-                'Tried to initialize environment with '
-                'None, but automatic '
-                'file search failed to locate '
-                'env.{}.yaml nor env.yaml in the '
-                'current directory nor 6 levels up'.format(name))
-        else:
-            source = path_found
-
-    elif isinstance(source, (str, Path)):
-        # if not pointing to a file, try to locate it...
-        if not Path(source).exists():
-            source_found, _ = default.find_file_recursively(source)
-
-            if source_found is None:
-                raise FileNotFoundError('Could not find file "{}" in the '
-                                        'current working directory nor '
-                                        '6 levels up'.format(source))
-            else:
-                source = source_found
-
     with open(str(source)) as f:
         try:
             raw = yaml.load(f, Loader=yaml.SafeLoader)
@@ -366,24 +356,3 @@ def raw_preprocess(raw, path_to_raw):
             preprocessed['_module'] = path_to_module
 
     return preprocessed
-
-
-def find_env_w_name(name):
-    """
-    Find environment named 'env.{name}.yaml' by looking into the current
-    directory and upper folders. If this fails, attempt to do the same
-    for a file named just 'env.yaml'
-
-    Returns
-    -------
-    path_to_env : pathlib.Path
-        Path to environment file, None if no file could be found
-    """
-    # TODO: there is some duplicated logic for looking up env.{name}.yaml
-    # refactor and only use default
-    path, _ = default.find_file_recursively(name='env.{}.yaml'.format(name))
-
-    if path is None:
-        return default.find_file_recursively(name='env.yaml')[0]
-    else:
-        return path

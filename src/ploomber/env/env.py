@@ -59,18 +59,14 @@ class Env:
             raise RuntimeError('Cannot start environment, one has already '
                                'started: {}'.format(repr(cls.__instance)))
 
-    def __init__(self, source=None):
+    def __init__(self, source='env.yaml'):
         """Start the environment
 
         Parameters
         ----------
         source: dict, pathlib.Path, str, optional
-            If dict, loads it directly, if pathlib.Path, reads the file
-            (assumes yaml format), if str, looks for a file named that way
-            in the current directory and their parents. If None, it first looks
-            for a file named env.{host}.yaml where host is replaced by the
-            hostname (by calling platform.node()), if it fails, it looks for a
-            file called env.yaml
+            If dict, loads it directly, if pathlib.Path or path, reads the file
+            (assumes yaml format).
 
         Raises
         ------

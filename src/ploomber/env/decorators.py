@@ -1,6 +1,7 @@
 import inspect
 import types
 from functools import wraps
+from collections.abc import Mapping
 
 from ploomber.env.env import Env
 from ploomber.env.envdict import EnvDict
@@ -74,7 +75,14 @@ def with_env(source):
         _validate_and_modify_signature(fn)
 
         try:
-            env_dict = EnvDict(source)
+            # FIXME: we should deprecate initializing from a decorator
+            # with a dictionary, it isn't useful. leaving it for now
+            if isinstance(source, Mapping):
+                env_dict = EnvDict(source)
+            else:
+                # when the decorator is called without args, look for
+                # 'env.yaml'
+                env_dict = EnvDict.find(source or 'env.yaml')
         except Exception as e:
             raise RuntimeError('Failed to resolve environment using '
                                '@with_env decorator in function "{}". '
