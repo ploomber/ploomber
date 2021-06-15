@@ -273,3 +273,9 @@ def test_is_dir(monkeypatch, mock_client):
     client._bucket.client.list_blobs.return_value = ['file', 'another']
 
     assert client._is_dir('backup/a')
+
+
+def test_can_initialize_if_valid_project_root(tmp_directory, mock_client):
+    Path('pipeline.yaml').touch()
+    client = GCloudStorageClient('some-bucket', 'some-folder')
+    assert client._path_to_project_root == Path(tmp_directory).resolve()

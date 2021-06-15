@@ -181,3 +181,9 @@ def test_pickle():
 def test_close():
     S3Client('some-bucket', parent='my-folder',
              path_to_project_root='.').close()
+
+
+def test_can_initialize_if_valid_project_root(tmp_directory):
+    Path('pipeline.yaml').touch()
+    client = S3Client('some-bucket', 'some-folder')
+    assert client._path_to_project_root == Path(tmp_directory).resolve()

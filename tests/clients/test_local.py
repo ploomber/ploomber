@@ -170,3 +170,9 @@ def test_outdated_task_with_metaproduct_downloads_metadata(tmp_directory):
 
     assert status['task'] == TaskStatus.WaitingDownload
     assert status['another'] == TaskStatus.Skipped
+
+
+def test_can_initialize_if_valid_project_root(tmp_directory):
+    Path('pipeline.yaml').touch()
+    client = LocalStorageClient('remote')
+    assert client._path_to_project_root == Path(tmp_directory).resolve()

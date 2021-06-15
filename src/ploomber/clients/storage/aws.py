@@ -57,8 +57,7 @@ class S3Client(AbstractStorageClient):
                  path_to_project_root=None,
                  credentials_relative_to_project_root=True,
                  **kwargs):
-        project_root = (path_to_project_root
-                        or find_root_recursively(raise_=True))
+        project_root = (path_to_project_root or find_root_recursively())
         self._path_to_project_root = Path(project_root).resolve()
 
         if (credentials_relative_to_project_root and json_credentials_path
