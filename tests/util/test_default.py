@@ -295,7 +295,7 @@ def test_error_if_both_setup_py_and_pipeline_yaml_exist(tmp_directory):
         default.find_root_recursively()
 
 
-@pytest.mark.parametrize('filenames', [
+@pytest.mark.parametrize('to_create', [
     ['path/pipeline.yaml'],
     ['path/to/pipeline.yaml'],
     ['path/to/pipeline.train.yaml'],
@@ -303,19 +303,19 @@ def test_error_if_both_setup_py_and_pipeline_yaml_exist(tmp_directory):
     ['path/pipeline.yaml', 'another/pipeline.train.yaml'],
 ])
 def test_warns_if_other_pipeline_yaml_as_children_of_root_path(
-        tmp_directory, filenames):
+        tmp_directory, to_create):
     pip = Path('pipeline.yaml').resolve()
     pip.touch()
 
-    for filename in filenames:
+    for filename in to_create:
         filename = Path(filename)
         filename.parent.mkdir(parents=True, exist_ok=True)
         filename.touch()
 
     # try switching this off
-    dir_ = Path('some', 'path')
-    dir_.mkdir(parents=True)
-    os.chdir(dir_)
+    # dir_ = Path('some', 'path')
+    # dir_.mkdir(parents=True)
+    # os.chdir(dir_)
 
     # try in the same location and check not warn
     # do not warn if setup.py and src/*/pipeline.yaml
@@ -325,7 +325,17 @@ def test_warns_if_other_pipeline_yaml_as_children_of_root_path(
 
     assert len(record) == 1
     assert 'Found other pipeline files' in record[0].message.args[0]
-    assert all([str(Path(f)) in record[0].message.args[0] for f in filenames])
+    assert all([str(Path(f)) in record[0].message.args[0] for f in to_create])
+
+
+def test_doesnt_warn_if_pipeline_yaml_in_the_same_directory(tmp_directory):
+    Path('pipeline.yaml').touch()
+    Path('pipeline.serve.yaml').touch()
+
+    with pytest.warns(None) as record:
+        default.find_root_recursively()
+
+    assert not len(record)
 
 
 @pytest.mark.parametrize('to_create, to_move', [

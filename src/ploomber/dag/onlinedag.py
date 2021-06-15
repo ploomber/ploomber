@@ -144,7 +144,7 @@ class OnlineModel(OnlineDAG):
     Examples
     --------
     >>> import my_module
-    >>> model = OnlineModel(my_module
+    >>> model = OnlineModel(my_module)
     >>> model.predict(x=some_input)
     """
     def __init__(self, module):

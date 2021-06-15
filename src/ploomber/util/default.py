@@ -426,8 +426,15 @@ def find_root_recursively(starting_dir=None, filename=None):
     # e.g., project/some/pipeline.yaml vs project/setup.py
     if (root_by_pipeline and root_by_pipeline.parents[0].name != 'src'
             and (not root_by_setup or pipeline_levels < setup_levels)):
-        others = glob(str(Path(root_by_pipeline, '**', 'pipeline*.yaml')),
-                      recursive=True)
+
+        # look for other pipeline.yaml but ignore the ones in the root
+        # directory
+        others = [
+            path for path in glob(str(
+                Path(root_by_pipeline, '**', 'pipeline*.yaml')),
+                                  recursive=True)
+            if Path(path).parent != root_by_pipeline
+        ]
 
         if others:
             others_fmt = ''.join(f'* {other}\n' for other in others)

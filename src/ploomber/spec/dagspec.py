@@ -117,8 +117,6 @@ logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4)
 
 
-# TODO: document what happens when inside a package (root path becomes
-# the parent of setup.py)
 class DAGSpec(MutableMapping):
     """
     A DAG spec is a dictionary with certain structure that can be converted
@@ -135,7 +133,12 @@ class DAGSpec(MutableMapping):
     Parameters
     ----------
     data : str, pathlib.Path or dict
-        Path to a YAML spec or dict spec
+        Path to a YAML spec or dict spec. If loading from a file, sources
+        and products are resolved to the file's parent. If the file is in a
+        packaged structure (i.e., src/package/pipeline.yaml), the existence
+        of a setup.py in the same folder as src/ is validated. If loaded from
+        a dict, sources and products aren't resolved, unless a parent_path
+        is not None.
 
     env : dict, pathlib.path or str, optional
         If path it must be a YAML file. Environment to load. Any string with
@@ -318,9 +321,6 @@ class DAGSpec(MutableMapping):
             self.data['tasks'] = [
                 normalize_task(task) for task in self.data['tasks']
             ]
-
-            # TODO: if loading from a dict, {{root}} should not be available
-            # or perhaps make it = to parent_path?
 
             # NOTE: for simple projects, project root is the parent folder
             # of pipeline.yaml, for package projects is the parent folder
