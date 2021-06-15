@@ -141,10 +141,8 @@ def entry_point(root_path=None, name=None):
     else:
         filename = 'pipeline.yaml' if name is None else f'pipeline.{name}.yaml'
 
-    # FIXME: it's confusing it it fails at this point, maybe raise a chained
-    # exception? - example looking for pipeline.train.yaml which exists
-    # but pipeline.yaml doesnt
-    project_root = find_root_recursively(starting_dir=root_path)
+    project_root = find_root_recursively(starting_dir=root_path,
+                                         filename=filename)
 
     if Path(project_root, 'setup.py').exists():
         entry_point = _package_location(root_path=project_root, name=filename)
@@ -380,7 +378,7 @@ def find_parent_of_file_recursively(name, max_levels_up=6, starting_dir=None):
     return None, None
 
 
-def find_root_recursively(starting_dir=None):
+def find_root_recursively(starting_dir=None, filename=None):
     """
     Finds a project root by looking recursively for pipeline.yaml or a setup.py
     file. Ignores pipeline.yaml if located in src/*/pipeline.yaml.
@@ -396,6 +394,10 @@ def find_root_recursively(starting_dir=None):
     DAGSpecInvalidError
         If fails to determine a valid project root
     """
+    filename = filename or 'pipeline.yaml'
+
+    # TODO: validate filename paramers to have the pipeline.{name}.yaml format
+
     # TODO: add filename parameter. this should be the whole filename
     # to allow ENTRY_POINT to work. do not forget to update the name
     # that you'll look for when a package and error messages
@@ -405,7 +407,6 @@ def find_root_recursively(starting_dir=None):
     # be passed explicitly
     # TODO: warn if packaged structured but source loader not configured
     # NOTE: warn if more pipelines in parent directories?
-    # TODO: check who is calling raise_=False and check how to fix it
     # FIXME: maybe check that once you found pipeline.yaml, there aren't
     # setup.py as children?
 
@@ -413,7 +414,7 @@ def find_root_recursively(starting_dir=None):
         'setup.py', max_levels_up=6, starting_dir=starting_dir)
 
     root_by_pipeline, pipeline_levels = find_parent_of_file_recursively(
-        'pipeline.yaml',
+        filename,
         max_levels_up=6,
         starting_dir=starting_dir,
     )
@@ -445,13 +446,14 @@ def find_root_recursively(starting_dir=None):
 
     # FIXME: maybe apply the same levels rule?
     if root_by_setup:
-        pipeline_yaml = Path(root_by_setup, 'pipeline.yaml')
-        pkg_location = _package_location(root_path=root_by_setup)
+        pipeline_yaml = Path(root_by_setup, filename)
+        pkg_location = _package_location(root_path=root_by_setup,
+                                         name=filename)
 
         if not pkg_location:
             if pipeline_yaml.exists():
-                msg = ('. Move the pipeline.yaml file that exists in the '
-                       'same folder than setup.py to src/{pkg}/pipeline.yaml '
+                msg = (f'. Move the {filename} file that exists in the '
+                       f'same folder than setup.py to src/pkg/{filename} '
                        'where pkg is the name of your package.')
             else:
                 msg = ''
@@ -460,8 +462,8 @@ def find_root_recursively(starting_dir=None):
                 'Failed to determine project root. Found '
                 'a setup.py file at '
                 f'{str(root_by_setup)!r} and expected '
-                'to find a pipeline.yaml file at '
-                'src/*/pipeline.yaml (relative to '
+                f'to find a {filename} file at '
+                f'src/*/{filename} (relative to '
                 'setup.py parent) but no such file was '
                 'found' + msg)
         elif pipeline_yaml.exists():
@@ -469,7 +471,7 @@ def find_root_recursively(starting_dir=None):
             example = str(pkg / 'pipeline.another.yaml')
             raise DAGSpecInvalidError(
                 'Failed to determine project root: found '
-                f'two pipeline.yaml files: {pkg_location} '
+                f'two {filename} files: {pkg_location} '
                 f'and {pipeline_yaml}. To fix it, move '
                 'and rename the second file '
                 f'under {str(pkg)} (e.g., {example})')
@@ -478,7 +480,7 @@ def find_root_recursively(starting_dir=None):
 
     raise DAGSpecInvalidError('Failed to determine project root. Looked '
                               'recursively for a setup.py or '
-                              'pipeline.yaml in parent folders but none of '
+                              f'{filename} in parent folders but none of '
                               'those files exist')
 
 

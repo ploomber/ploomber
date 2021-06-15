@@ -202,6 +202,19 @@ def test_finds_pipeline_yaml(tmp_directory):
     assert expected == default.find_root_recursively().resolve()
 
 
+def test_finds_pipeline_with_name(tmp_directory):
+    expected = Path(tmp_directory).resolve()
+    pip = Path('pipeline.serve.yaml').resolve()
+    pip.touch()
+
+    dir_ = Path('path', 'to', 'dir')
+    dir_.mkdir(parents=True)
+    os.chdir(dir_)
+
+    assert expected == default.find_root_recursively(
+        filename='pipeline.serve.yaml').resolve()
+
+
 def test_finds_setup_py(tmp_directory):
     expected = Path(tmp_directory).resolve()
     pip = Path('setup.py').resolve()

@@ -316,9 +316,11 @@ class DAGSpec(MutableMapping):
             # NOTE: for simple projects, project root is the parent folder
             # of pipeline.yaml, for package projects is the parent folder
             # of setup.py
-            project_root = (None if not self._parent_path else
-                            default.find_root_recursively(
-                                starting_dir=self._parent_path))
+            project_root = (
+                None
+                if not self._parent_path else default.find_root_recursively(
+                    starting_dir=self._parent_path,
+                    filename=None if not self._path else self._path.name))
 
             # make sure the folder where the pipeline is located is in sys.path
             # otherwise dynamic imports needed by TaskSpec will fail
