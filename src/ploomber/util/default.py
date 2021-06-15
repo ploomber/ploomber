@@ -390,14 +390,16 @@ def find_root_recursively(starting_dir=None):
     starting_dir : str or pathlib.Path
         The directory to start the search
 
-    raise_ : bool
-        Whether to raise an error or not if no root folder is found
 
     Raises
     ------
     DAGSpecInvalidError
         If fails to determine a valid project root
     """
+    # TODO: add filename parameter. this should be the whole filename
+    # to allow ENTRY_POINT to work. do not forget to update the name
+    # that you'll look for when a package and error messages
+
     # NOTE: update the docstrings of all clients - we must catch errors
     # from here and explain that if there isn't a project root a value must
     # be passed explicitly

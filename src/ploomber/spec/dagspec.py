@@ -313,13 +313,12 @@ class DAGSpec(MutableMapping):
             # TODO: if loading from a dict, {{root}} should not be available
             # or perhaps make it = to parent_path?
 
-            # for simple projects project root and self._parent_path are the
-            # same. For packaged projects, this is not the case. This creates
-            # some ambiguity between the two that we have to address. This is
-            # important because File products and sources are resolved relative
-            # to the project_root arg passed to TaskSpec
-            project_root = (default.try_to_find_root_recursively()
-                            or self._parent_path)
+            # NOTE: for simple projects, project root is the parent folder
+            # of pipeline.yaml, for package projects is the parent folder
+            # of setup.py
+            project_root = (None if not self._parent_path else
+                            default.find_root_recursively(
+                                starting_dir=self._parent_path))
 
             # make sure the folder where the pipeline is located is in sys.path
             # otherwise dynamic imports needed by TaskSpec will fail

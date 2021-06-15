@@ -26,6 +26,7 @@ from ploomber.env import expand
 from ploomber.tasks import SQLScript
 from ploomber import exceptions
 from ploomber.executors import Serial, Parallel
+from ploomber.products import MetaProduct
 
 
 def create_engine_with_schema(schema):
@@ -112,6 +113,18 @@ def extract_product(dag_spec):
         task.pop('product', None)
 
     return dag_spec
+
+
+def get_all_products(dag):
+    products = []
+
+    for task in dag.values():
+        if isinstance(task.product, MetaProduct):
+            products.extend(list(task.product))
+        else:
+            products.append(task.product)
+
+    return products
 
 
 def test_error_if_missing_tasks_key():
@@ -307,6 +320,144 @@ def test_file_spec_resolves_sources_location(tmp_nbs):
     spec = DAGSpec('pipeline.yaml')
     absolute = str(tmp_nbs.resolve())
     assert all(str(t['source']).startswith(absolute) for t in spec['tasks'])
+
+
+@pytest.mark.parametrize(
+    'spec',
+    [
+        {
+            'tasks': [{
+                'source': 'task.py',
+                'product': 'out.ipynb'
+            }]
+        },
+        {
+            'tasks': [{
+                'source': 'task.py',
+                'product': 'out.ipynb',
+                'name': 'task-',
+                'grid': {
+                    'param': [1, 2]
+                }
+            }]
+        },
+        {
+            'tasks': [{
+                'source': 'task.py',
+                'product': {
+                    'nb': 'out.ipynb',
+                    'data': 'data.csv'
+                }
+            }]
+        },
+    ],
+)
+@pytest.mark.parametrize('base, cwd', [
+    ['.', '.'],
+    ['.', 'dir'],
+    ['dir', '.'],
+])
+# TODO try metyaproduct
+def test_init_from_file_resolves_source_location(tmp_directory, spec, base,
+                                                 cwd):
+    """
+    DAGSpec resolves sources and products to absolute values, this process
+    should be independent of the current working directory and ignore the
+    existence of other pipeline.yaml in parent directories
+    """
+    Path('dir').mkdir()
+    Path('pipeline.yaml').touch()
+    Path('dir', 'pipeline.yaml').touch()
+
+    base = Path(base)
+
+    Path(base, 'task.py').write_text("""
+# + tags = ["parameters"]
+upstream = None
+# -
+""")
+    Path(base, 'pipeline.yaml').write_text(yaml.dump(spec))
+    path_to_pipeline = Path(base, 'pipeline.yaml').resolve()
+
+    os.chdir(cwd)
+
+    dag = DAGSpec(path_to_pipeline).to_dag()
+    absolute = str(Path(tmp_directory, base).resolve())
+
+    assert all(
+        [str(dag[name].source.loc).startswith(absolute) for name in list(dag)])
+    assert all([
+        str(product).startswith(absolute) for product in get_all_products(dag)
+    ])
+
+
+@pytest.mark.parametrize(
+    'spec',
+    [
+        {
+            'tasks': [{
+                'source': 'task.py',
+                'product': 'out.ipynb'
+            }]
+        },
+        {
+            'tasks': [{
+                'source': 'task.py',
+                'product': 'out.ipynb',
+                'name': 'task-',
+                'grid': {
+                    'param': [1, 2]
+                }
+            }]
+        },
+        {
+            'tasks': [{
+                'source': 'task.py',
+                'product': {
+                    'nb': 'out.ipynb',
+                    'data': 'data.csv'
+                }
+            }]
+        },
+    ],
+)
+@pytest.mark.parametrize('base, cwd', [
+    ['.', '.'],
+    ['.', 'dir'],
+    ['.', 'src'],
+    ['.', 'src/pkg'],
+    ['dir', '.'],
+    ['dir', 'dir'],
+    ['dir', 'dir/src'],
+    ['dir', 'dir/src/pkg'],
+])
+def test_init_from_file_resolves_source_location_in_pkg_structure(
+        tmp_directory, spec, base, cwd):
+    Path('dir').mkdir()
+
+    base = Path(base)
+    Path(base, 'setup.py').touch()
+
+    Path(base, 'task.py').write_text("""
+# + tags = ["parameters"]
+upstream = None
+# -
+""")
+
+    pkg = Path(base, 'src', 'pkg')
+    pkg.mkdir(parents=True)
+    path_to_pipeline = Path(pkg, 'pipeline.yaml').resolve()
+    path_to_pipeline.write_text(yaml.dump(spec))
+
+    os.chdir(cwd)
+
+    dag = DAGSpec(path_to_pipeline).to_dag()
+    absolute = str(Path(tmp_directory, base).resolve())
+    assert all(
+        [str(dag[name].source.loc).startswith(absolute) for name in list(dag)])
+    assert all([
+        str(product).startswith(absolute) for product in get_all_products(dag)
+    ])
 
 
 @pytest.mark.parametrize(
