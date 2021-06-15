@@ -117,6 +117,8 @@ logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4)
 
 
+# TODO: document what happens when inside a package (root path becomes
+# the parent of setup.py)
 class DAGSpec(MutableMapping):
     """
     A DAG spec is a dictionary with certain structure that can be converted
@@ -183,6 +185,15 @@ class DAGSpec(MutableMapping):
                  lazy_import=False,
                  reload=False,
                  parent_path=None):
+        self._init(data=data,
+                   env=env,
+                   lazy_import=lazy_import,
+                   reload=reload,
+                   parent_path=parent_path,
+                   look_up_project_root_recursively=True)
+
+    def _init(self, data, env, lazy_import, reload, parent_path,
+              look_up_project_root_recursively):
         # initialized with a path to a yaml file...
         if isinstance(data, (str, Path)):
             # TODO: test this
@@ -308,19 +319,20 @@ class DAGSpec(MutableMapping):
                 normalize_task(task) for task in self.data['tasks']
             ]
 
-            # "products" are relative to the project root. if no project
-            # root, then use the parent path
             # TODO: if loading from a dict, {{root}} should not be available
             # or perhaps make it = to parent_path?
 
             # NOTE: for simple projects, project root is the parent folder
             # of pipeline.yaml, for package projects is the parent folder
             # of setup.py
-            project_root = (
-                None
-                if not self._parent_path else default.find_root_recursively(
-                    starting_dir=self._parent_path,
-                    filename=None if not self._path else self._path.name))
+            if look_up_project_root_recursively:
+                project_root = (
+                    None if not self._parent_path else
+                    default.find_root_recursively(
+                        starting_dir=self._parent_path,
+                        filename=None if not self._path else self._path.name))
+            else:
+                project_root = self._parent_path
 
             # make sure the folder where the pipeline is located is in sys.path
             # otherwise dynamic imports needed by TaskSpec will fail
@@ -587,6 +599,32 @@ class DAGSpec(MutableMapping):
         tasks = [{'source': file_} for file_ in files]
         meta = {'extract_product': True, 'extract_upstream': True}
         return cls({'tasks': tasks, 'meta': meta})
+
+
+class DAGSpecPartial(DAGSpec):
+    """
+    A DAGSpec subclass that initializes from a list of tasks (used in the
+    onlinedag.py) module
+    """
+    def __init__(self, path_to_partial, env=None):
+        with open(path_to_partial) as f:
+            tasks = yaml.safe_load(f)
+
+        if not isinstance(tasks, list):
+            raise ValueError(
+                f'Expected partial {path_to_partial!r} to be a '
+                f'list of tasks, but got a {type(tasks).__name__} instead')
+
+        # cannot extract upstream because this is an incomplete DAG
+        meta = {'extract_product': False, 'extract_upstream': False}
+        data = {'tasks': tasks, 'meta': meta}
+
+        self._init(data=data,
+                   env=env,
+                   lazy_import=False,
+                   reload=False,
+                   parent_path=Path(path_to_partial).parent,
+                   look_up_project_root_recursively=False)
 
 
 class Meta:

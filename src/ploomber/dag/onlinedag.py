@@ -8,10 +8,8 @@ import abc
 from pathlib import Path
 from itertools import chain
 
-import yaml
-
 from ploomber import InMemoryDAG, DAG
-from ploomber.spec import DAGSpec
+from ploomber.spec.dagspec import DAGSpecPartial
 from ploomber.tasks import input_data_passer, in_memory_callable
 
 
@@ -75,25 +73,7 @@ class OnlineDAG(abc.ABC):
         """Initialize partial returned by get_partial()
         """
         if isinstance(partial, (str, Path)):
-            with open(partial) as f:
-                tasks = yaml.safe_load(f)
-
-            if not isinstance(tasks, list):
-                raise ValueError(
-                    f'Expected partial {partial!r} to be a '
-                    f'list of tasks, but got a {type(tasks).__name__} instead')
-
-            # cannot extract upstream because this is an incomplete DAG
-            meta = {'extract_product': False, 'extract_upstream': False}
-
-            spec = DAGSpec(
-                {
-                    'tasks': tasks,
-                    'meta': meta
-                },
-                parent_path=Path(partial).parent,
-            )
-
+            spec = DAGSpecPartial(partial)
             return spec.to_dag()
         elif isinstance(partial, DAG):
             return partial
