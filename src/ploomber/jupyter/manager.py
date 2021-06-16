@@ -13,10 +13,9 @@ from collections import defaultdict
 from jupytext.contentsmanager import TextFileContentsManager
 
 from ploomber.sources.notebooksource import (_cleanup_rendered_nb, inject_cell)
-from ploomber.spec.dagspec import DAGSpec
 from ploomber.exceptions import DAGSpecInitializationError, DAGSpecInvalidError
-from ploomber.cli import parsers
 from ploomber.jupyter.dag import JupyterDAGManager
+from ploomber.util import loader
 
 
 class DAGMapping(Mapping):
@@ -112,20 +111,12 @@ class PloomberContentsManager(TextFileContentsManager):
             if self.spec and not self.spec['meta']['jupyter_hot_reload']:
                 msg += self.restart_msg
 
-            env_var = os.environ.get('ENTRY_POINT')
-
             try:
-                if env_var:
-                    # call parsers.load_entry_point to support directories
-                    (self.spec, self.dag,
-                     self.path) = parsers.load_entry_point(env_var)
-                else:
-                    hot_reload = (self.spec
-                                  and self.spec['meta']['jupyter_hot_reload'])
+                hot_reload = (self.spec
+                              and self.spec['meta']['jupyter_hot_reload'])
 
-                    (self.spec, self.dag,
-                     self.path) = DAGSpec._auto_load(starting_dir=starting_dir,
-                                                     reload=hot_reload)
+                (self.spec, self.dag, self.path) = loader.entry_point_load(
+                    starting_dir=starting_dir, reload=hot_reload)
             except (DAGSpecInitializationError, DAGSpecInvalidError):
                 self.reset_dag()
                 self.log.exception(msg)

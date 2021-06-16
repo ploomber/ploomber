@@ -12,6 +12,7 @@ from notebook.notebookapp import NotebookApp
 import jupytext
 import parso
 import nbformat
+import pytest
 
 from ploomber.jupyter.manager import PloomberContentsManager
 from ploomber.jupyter.dag import JupyterDAGManager
@@ -99,6 +100,22 @@ def test_dag_from_directory(monkeypatch, tmp_nbs):
     model = cm.get('plot.py')
     injected = get_injected_cell(model['content'])
     assert injected
+
+
+@pytest.mark.parametrize('cwd, file_to_get', [
+    ['.', 'clean/clean.py'],
+    ['clean', 'clean.py'],
+],
+                         ids=['from_root', 'from_subdirectory'])
+def test_dag_from_env_var_with_custom_name(monkeypatch, tmp_nbs_nested, cwd,
+                                           file_to_get):
+    monkeypatch.setenv('ENTRY_POINT', 'pipeline.another.yaml')
+
+    os.chdir(cwd)
+
+    cm = PloomberContentsManager()
+    model = cm.get(file_to_get)
+    assert get_injected_cell(model['content'])
 
 
 def test_save(tmp_nbs):

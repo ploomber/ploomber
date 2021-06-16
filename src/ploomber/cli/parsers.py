@@ -297,23 +297,6 @@ def find_entry_point_type(entry_point):
             'dotted path (dot-separated string). Verify your input.')
 
 
-def load_entry_point(entry_point):
-    type_ = find_entry_point_type(entry_point)
-
-    if type_ == EntryPoint.Directory:
-        spec = DAGSpec.from_directory(entry_point)
-        path = Path(entry_point)
-
-    elif type_ == EntryPoint.File:
-        spec = DAGSpec(entry_point)
-        path = Path(entry_point).parent
-    else:
-        raise NotImplementedError(
-            f'loading entry point type {type_!r} is unsupported')
-
-    return spec, spec.to_dag(), path
-
-
 def _first_non_empty_line(doc):
     for line in doc.split('\n'):
         if line:

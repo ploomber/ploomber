@@ -1,0 +1,6 @@
+tasks:
+  - source: load/load.py
+    product: load.ipynb
+
+  - source: clean/clean.py
+    product: clean.ipynb
