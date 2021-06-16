@@ -451,10 +451,8 @@ class DAGSpec(MutableMapping):
     def _auto_load(cls,
                    to_dag=True,
                    starting_dir=None,
-                   env=None,
                    lazy_import=False,
-                   reload=False,
-                   name=None):
+                   reload=False):
         """
         NOTE: this is a private API. Use DAGSpec.find() instead
 
@@ -471,14 +469,12 @@ class DAGSpec(MutableMapping):
 
         Returns DAG and the directory where the pipeline.yaml file is located.
         """
-        # FIXME: this should not expose the name arg
         root_path = starting_dir or os.getcwd()
-        path_to_entry_point = default.entry_point_with_name(
-            root_path=root_path, name=name)
+        path_to_entry_point = default.entry_point(root_path=root_path)
 
         try:
             spec = cls(path_to_entry_point,
-                       env=env,
+                       env=None,
                        lazy_import=lazy_import,
                        reload=reload)
 
@@ -526,15 +522,21 @@ class DAGSpec(MutableMapping):
 
         name : str, default=None
             Filename to search for. If None, it looks for a pipeline.yaml file,
-            otherwise it looks for a pipeline.{name}.yaml file.
+            otherwise it looks for a file with such name.
         """
-        spec, _ = DAGSpec._auto_load(to_dag=False,
-                                     starting_dir=starting_dir,
-                                     env=env,
-                                     lazy_import=lazy_import,
-                                     reload=reload,
-                                     name=name)
-        return spec
+        starting_dir = starting_dir or os.getcwd()
+        path_to_entry_point = default.entry_point_with_name(
+            root_path=starting_dir, name=name)
+
+        try:
+            return cls(path_to_entry_point,
+                       env=env,
+                       lazy_import=lazy_import,
+                       reload=reload)
+        except Exception as e:
+            exc = DAGSpecInitializationError('Error initializing DAG from '
+                                             f'{path_to_entry_point!s}')
+            raise exc from e
 
     @classmethod
     def from_directory(cls, path_to_dir):

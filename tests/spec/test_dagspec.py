@@ -763,7 +763,7 @@ def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
 
 @pytest.mark.parametrize('method, kwargs', [
     [None, dict(data='pipeline.yaml')],
-    ['_auto_load', dict(to_dag=False)],
+    ['find', dict()],
 ])
 def test_passing_env_in_class_methods(method, kwargs, tmp_directory):
 
@@ -786,10 +786,6 @@ def test_passing_env_in_class_methods(method, kwargs, tmp_directory):
         callable_ = DAGSpec
 
     spec = callable_(**kwargs, env={'key': 'value'})
-
-    # auto_load returns a tuple
-    if isinstance(spec, tuple):
-        spec = spec[0]
 
     assert spec['tasks'][0]['params']['some_param'] == 'value'
 
@@ -1108,31 +1104,30 @@ def test_loads_serializer_and_unserializer(backup_online,
 
 
 @pytest.mark.parametrize('root_path', ['.', 'subdir'])
-def test_searches_in_default_locations(monkeypatch, tmp_nbs, root_path):
+def test_find_searches_in_default_locations(monkeypatch, tmp_nbs, root_path):
     root_path = Path(root_path).resolve()
     Path('subdir').mkdir()
 
     mock = Mock(wraps=dagspec.default.entry_point_with_name)
     monkeypatch.setattr(dagspec.default, 'entry_point_with_name', mock)
 
-    DAGSpec._auto_load(starting_dir=root_path)
+    DAGSpec.find(starting_dir=root_path)
 
     mock.assert_called_once_with(root_path=root_path, name=None)
 
 
-def test_find(tmp_nbs, monkeypatch):
-    mock = Mock(return_value=[None, None])
-    monkeypatch.setattr(dagspec.DAGSpec, '_auto_load', mock)
+@pytest.mark.parametrize('root_path', ['.', 'subdir'])
+def test_auto_load_searches_in_default_locations(monkeypatch, tmp_nbs,
+                                                 root_path):
+    root_path = Path(root_path).resolve()
+    Path('subdir').mkdir()
 
-    env = {'a': 1}
-    DAGSpec.find(env=env)
+    mock = Mock(wraps=dagspec.default.entry_point)
+    monkeypatch.setattr(dagspec.default, 'entry_point', mock)
 
-    mock.assert_called_once_with(to_dag=False,
-                                 starting_dir=None,
-                                 env={'a': 1},
-                                 lazy_import=False,
-                                 reload=False,
-                                 name=None)
+    DAGSpec._auto_load(starting_dir=root_path)
+
+    mock.assert_called_once_with(root_path=root_path)
 
 
 def test_error_invalid_yaml_displays_error_line(tmp_directory):
