@@ -1116,20 +1116,6 @@ def test_find_searches_in_default_locations(monkeypatch, tmp_nbs, root_path):
     mock.assert_called_once_with(root_path=root_path, name=None)
 
 
-@pytest.mark.parametrize('root_path', ['.', 'subdir'])
-def test_auto_load_searches_in_default_locations(monkeypatch, tmp_nbs,
-                                                 root_path):
-    root_path = Path(root_path).resolve()
-    Path('subdir').mkdir()
-
-    mock = Mock(wraps=dagspec.default.entry_point)
-    monkeypatch.setattr(dagspec.default, 'entry_point', mock)
-
-    DAGSpec._auto_load(starting_dir=root_path)
-
-    mock.assert_called_once_with(root_path=root_path)
-
-
 def test_error_invalid_yaml_displays_error_line(tmp_directory):
     Path('pipeline.yaml').write_text('key: [')
 

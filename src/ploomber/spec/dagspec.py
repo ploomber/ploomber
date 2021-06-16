@@ -448,47 +448,6 @@ class DAGSpec(MutableMapping):
         return self._path
 
     @classmethod
-    def _auto_load(cls,
-                   to_dag=True,
-                   starting_dir=None,
-                   lazy_import=False,
-                   reload=False):
-        """
-        NOTE: this is a private API. Use DAGSpec.find() instead
-
-        Looks for a pipeline.yaml, generates a DAGSpec and returns a DAG.
-        Currently, this is only used by the PloomberContentsManager, this is
-        not intended to be a public API since initializing specs from paths
-        where we have to recursively look for a pipeline.yaml has some
-        considerations regarding relative paths that make this confusing,
-        inside the contents manager, all those things are all handled for that
-        use case.
-
-        The pipeline.yaml parent folder is temporarily added to sys.path when
-        calling DAGSpec.to_dag() to make sure imports work as expected
-
-        Returns DAG and the directory where the pipeline.yaml file is located.
-        """
-        root_path = starting_dir or os.getcwd()
-        path_to_entry_point = default.entry_point(root_path=root_path)
-
-        try:
-            spec = cls(path_to_entry_point,
-                       env=None,
-                       lazy_import=lazy_import,
-                       reload=reload)
-
-            if to_dag:
-                return spec, spec.to_dag(), Path(path_to_entry_point).parent
-            else:
-                return spec, Path(path_to_entry_point).parent
-
-        except Exception as e:
-            exc = DAGSpecInitializationError('Error initializing DAG from '
-                                             f'{path_to_entry_point!s}')
-            raise exc from e
-
-    @classmethod
     def _find_relative(cls, name=None):
         """
         Searches for a spec in default locations relative to the current

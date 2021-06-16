@@ -40,11 +40,13 @@ def test_error_if_env_var_contains_directories(monkeypatch):
     assert 'must be a filename' in str(excinfo.value)
 
 
-def test_entry_point_pkg_location(tmp_directory, pkg_location):
-    assert default.entry_point() == str(pkg_location)
+@pytest.mark.parametrize('method', ['entry_point', 'entry_point_with_name'])
+def test_entry_point_pkg_location(tmp_directory, pkg_location, method):
+    assert getattr(default, method)() == str(pkg_location)
 
 
-def test_entry_point_pkg_location_ignore_egg_info(tmp_directory):
+@pytest.mark.parametrize('method', ['entry_point', 'entry_point_with_name'])
+def test_entry_point_pkg_location_ignore_egg_info(tmp_directory, method):
     Path('setup.py').touch()
 
     for pkg in ['package_a.egg-info', 'package_b']:
@@ -53,11 +55,12 @@ def test_entry_point_pkg_location_ignore_egg_info(tmp_directory):
         pkg_location = (parent / 'pipeline.yaml')
         pkg_location.touch()
 
-    assert default.entry_point() == str(
-        Path('src', 'package_b', 'pipeline.yaml'))
+    assert getattr(default,
+                   method)() == str(Path('src', 'package_b', 'pipeline.yaml'))
 
 
-def test_entry_point_pkg_location_multiple_pkgs(tmp_directory):
+@pytest.mark.parametrize('method', ['entry_point', 'entry_point_with_name'])
+def test_entry_point_pkg_location_multiple_pkgs(tmp_directory, method):
     Path('setup.py').touch()
 
     for pkg in ['package_a', 'package_b']:
@@ -66,31 +69,42 @@ def test_entry_point_pkg_location_multiple_pkgs(tmp_directory):
         pkg_location = (parent / 'pipeline.yaml')
         pkg_location.touch()
 
-    assert default.entry_point() == str(
-        Path('src', 'package_a', 'pipeline.yaml'))
+    assert getattr(default,
+                   method)() == str(Path('src', 'package_a', 'pipeline.yaml'))
 
 
-def test_entry_point_error_if_not_exists():
+@pytest.mark.parametrize('method', ['entry_point', 'entry_point_with_name'])
+def test_entry_point_error_if_not_exists(method):
     with pytest.raises(DAGSpecInvalidError):
-        default.entry_point()
+        getattr(default, method)()
 
 
-def test_entry_point_in_parent_folder(tmp_directory):
+@pytest.mark.parametrize('method', ['entry_point', 'entry_point_with_name'])
+def test_entry_point_in_parent_folder(tmp_directory, method):
     Path('dir').mkdir()
     Path('pipeline.yaml').touch()
     os.chdir('dir')
-    assert default.entry_point() == str(Path('..', 'pipeline.yaml'))
+    assert getattr(default, method)() == str(Path('..', 'pipeline.yaml'))
 
 
-def test_entry_point_in_src_while_in_sibling_folder(tmp_directory):
+@pytest.mark.parametrize('method', ['entry_point', 'entry_point_with_name'])
+def test_entry_point_in_src_while_in_sibling_folder(tmp_directory, method):
     Path('setup.py').touch()
     pkg = Path('src', 'package')
     pkg.mkdir(parents=True)
     (pkg / 'pipeline.yaml').touch()
     Path('tests').mkdir()
     os.chdir('tests')
-    assert default.entry_point() == str(
+    assert getattr(default, method)() == str(
         Path('..', 'src', 'package', 'pipeline.yaml'))
+
+
+@pytest.mark.parametrize('method', ['entry_point', 'entry_point_with_name'])
+def test_entry_point_from_root_path(tmp_directory, method):
+    Path('dir').mkdir()
+    Path('dir', 'pipeline.yaml').touch()
+
+    assert getattr(default, method)(root_path='dir')
 
 
 @pytest.mark.parametrize('spec_name, env_name', [

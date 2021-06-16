@@ -86,6 +86,7 @@ def _package_location(root_path, name='pipeline.yaml'):
     return candidates[0] if candidates else None
 
 
+# TODO: test this with name!=None
 def entry_point_with_name(root_path=None, name=None):
     """
 
@@ -108,8 +109,6 @@ def entry_point_with_name(root_path=None, name=None):
             return relpath(entry_point, Path().resolve())
 
     if Path(project_root, filename).exists():
-        # TODO: handle the case where filename isn't a filename but a dotted
-        # path
         return relpath(Path(project_root, filename), Path().resolve())
 
     # TODO: include link to guide explaining how project root is determined
@@ -147,7 +146,6 @@ def entry_point(root_path=None):
     -----
     Use cases for this function:
     * Called by the cli to locate the default entry point to use (nor args)
-    * Via DAGSpec.find (calls DAGspec._auto_load), user may supply args
     * When deciding whether to add a new scaffold structure or parse the
         current one and add new files (catches DAGSpecInvalidError), no args
 
@@ -177,7 +175,7 @@ def entry_point(root_path=None):
     else:
         filename = 'pipeline.yaml'
 
-    return entry_point_with_name(root_path=None, name=filename)
+    return entry_point_with_name(root_path=root_path, name=filename)
 
 
 def try_to_find_entry_point():

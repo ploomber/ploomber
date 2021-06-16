@@ -1,6 +1,6 @@
-from ploomber.spec.dagspec import DAGSpec
 from ploomber.scaffold.scaffoldloader import ScaffoldLoader
 from ploomber.util.util import add_to_sys_path
+from ploomber.util import loader
 from ploomber.exceptions import DAGSpecInvalidError
 
 
@@ -8,7 +8,7 @@ def load_dag():
     # setting lazy_import to true causes sources to be returned as paths,
     # instead of placeholders
     try:
-        return DAGSpec._auto_load(to_dag=False, lazy_import=True)
+        return loader._default_spec_load(lazy_import=True)
     except DAGSpecInvalidError:
         return None
 

@@ -13,7 +13,6 @@ from collections import defaultdict
 from jupytext.contentsmanager import TextFileContentsManager
 
 from ploomber.sources.notebooksource import (_cleanup_rendered_nb, inject_cell)
-from ploomber.exceptions import DAGSpecInitializationError, DAGSpecInvalidError
 from ploomber.jupyter.dag import JupyterDAGManager
 from ploomber.util import loader
 
@@ -46,6 +45,9 @@ class DAGMapping(Mapping):
         """
         for task in self._mapping[key]:
             task.product.metadata.delete()
+
+    def __repr__(self):
+        return f'{type(self).__name__}({self._mapping}!r)'
 
 
 @contextlib.contextmanager
@@ -114,10 +116,9 @@ class PloomberContentsManager(TextFileContentsManager):
             try:
                 hot_reload = (self.spec
                               and self.spec['meta']['jupyter_hot_reload'])
-
                 (self.spec, self.dag, self.path) = loader.entry_point_load(
                     starting_dir=starting_dir, reload=hot_reload)
-            except (DAGSpecInitializationError, DAGSpecInvalidError):
+            except Exception:
                 self.reset_dag()
                 self.log.exception(msg)
             else:
