@@ -86,9 +86,49 @@ def _package_location(root_path, name='pipeline.yaml'):
     return candidates[0] if candidates else None
 
 
+def entry_point_with_name(root_path=None, name=None):
+    """
+
+    Parameters
+    ----------
+    name : str, default=None
+        If None, searchs for a pipeline.yaml file otherwise for a
+        pipeline.{name}.yaml. Must be None if the ENTRY_POINT environment
+        variable is set
+    """
+    filename = name or 'pipeline.yaml'
+
+    project_root = find_root_recursively(starting_dir=root_path,
+                                         filename=filename)
+
+    if Path(project_root, 'setup.py').exists():
+        entry_point = _package_location(root_path=project_root, name=filename)
+
+        if entry_point is not None:
+            return relpath(entry_point, Path().resolve())
+
+    if Path(project_root, filename).exists():
+        # TODO: handle the case where filename isn't a filename but a dotted
+        # path
+        return relpath(Path(project_root, filename), Path().resolve())
+
+    # TODO: include link to guide explaining how project root is determined
+    raise DAGSpecInvalidError(
+        f"""Unable to locate a {filename} at one of the standard locations:
+
+1. A path defined in an ENTRY_POINT environment variable (variable not set)
+2. A file relative to {str(root_path)!r} \
+(or relative to any of their parent directories)
+3. A src/*/{filename} relative to {str(root_path)!r}
+
+Place your {filename} in any of the standard locations or set an ENTRY_POINT
+environment variable.
+""")
+
+
 # NOTE: this is documented in doc/api/cli.rst, changes should also be reflected
 # there
-def entry_point(root_path=None, name=None):
+def entry_point(root_path=None):
     """
     Determines the default entry point. It first determines the project root.
     If the project isn't a package, it returns
@@ -102,10 +142,6 @@ def entry_point(root_path=None, name=None):
         Root path to look for the entry point. Defaults to the current working
         directory
 
-    name : str, default=None
-        If None, searchs for a pipeline.yaml file otherwise for a
-        pipeline.{name}.yaml. Must be None if the ENTRY_POINT environment
-        variable is set
 
     Notes
     -----
@@ -139,38 +175,9 @@ def entry_point(root_path=None, name=None):
 
         filename = env_var
     else:
-        filename = 'pipeline.yaml' if name is None else f'pipeline.{name}.yaml'
+        filename = 'pipeline.yaml'
 
-    project_root = find_root_recursively(starting_dir=root_path,
-                                         filename=filename)
-
-    if Path(project_root, 'setup.py').exists():
-        entry_point = _package_location(root_path=project_root, name=filename)
-
-        if entry_point is not None:
-            return relpath(entry_point, Path().resolve())
-
-    if Path(project_root, filename).exists():
-        # TODO: handle the case where filename isn't a filename but a dotted
-        # path
-        return relpath(Path(project_root, filename), Path().resolve())
-
-    # FIXME: manager.py:115 is also reading ENTRY_POINT
-    # when initializing via jupyter (using _auto_load without args)
-    # FIXME: jupyter also calls _auto_load with starting dir arg, which should
-    # not be the case
-    # TODO: include link to guide explaining how project root is determined
-    raise DAGSpecInvalidError(
-        f"""Unable to locate a {filename} at one of the standard locations:
-
-1. A path defined in an ENTRY_POINT environment variable (variable not set)
-2. A file relative to {str(root_path)!r} \
-(or relative to any of their parent directories)
-3. A src/*/{filename} relative to {str(root_path)!r}
-
-Place your {filename} in any of the standard locations or set an ENTRY_POINT
-environment variable.
-""")
+    return entry_point_with_name(root_path=None, name=filename)
 
 
 def try_to_find_entry_point():
@@ -178,7 +185,7 @@ def try_to_find_entry_point():
     """
     # TODO: maybe display a warning with the error?
     try:
-        return entry_point(root_path=None, name=None)
+        return entry_point(root_path=None)
     except Exception:
         pass
 

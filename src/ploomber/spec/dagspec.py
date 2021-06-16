@@ -98,7 +98,6 @@ from ploomber.dag.dag import DAG
 from ploomber.placeholders.sourceloader import SourceLoader
 from ploomber.util.util import call_with_dictionary, add_to_sys_path
 from ploomber.util import dotted_path
-from ploomber.util.default import entry_point, entry_point_relative
 from ploomber.spec.taskspec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
 from ploomber.util import default
@@ -472,8 +471,10 @@ class DAGSpec(MutableMapping):
 
         Returns DAG and the directory where the pipeline.yaml file is located.
         """
+        # FIXME: this should not expose the name arg
         root_path = starting_dir or os.getcwd()
-        path_to_entry_point = entry_point(root_path=root_path, name=name)
+        path_to_entry_point = default.entry_point_with_name(
+            root_path=root_path, name=name)
 
         try:
             spec = cls(path_to_entry_point,
@@ -504,7 +505,7 @@ class DAGSpec(MutableMapping):
         is used for loading the DAG and submitting tasks and as an argument
         in "ploomber task --entry-point {relative-path}" when executing tasks
         """
-        path = entry_point_relative(name=name)
+        path = default.entry_point_relative(name=name)
         return cls(path)
 
     @classmethod

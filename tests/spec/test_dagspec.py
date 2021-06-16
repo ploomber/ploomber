@@ -1112,8 +1112,8 @@ def test_searches_in_default_locations(monkeypatch, tmp_nbs, root_path):
     root_path = Path(root_path).resolve()
     Path('subdir').mkdir()
 
-    mock = Mock(wraps=dagspec.entry_point)
-    monkeypatch.setattr(dagspec, 'entry_point', mock)
+    mock = Mock(wraps=dagspec.default.entry_point_with_name)
+    monkeypatch.setattr(dagspec.default, 'entry_point_with_name', mock)
 
     DAGSpec._auto_load(starting_dir=root_path)
 
@@ -1507,7 +1507,7 @@ upstream = ['upstream-*']
 
 def test_load_spec_with_custom_name(tmp_nbs):
     shutil.copy('pipeline.yaml', 'pipeline.serve.yaml')
-    spec = DAGSpec.find(name='serve')
+    spec = DAGSpec.find(name='pipeline.serve.yaml')
     assert spec.path.resolve() == Path('pipeline.serve.yaml').resolve()
 
 
@@ -1517,7 +1517,7 @@ def test_load_spec_with_custom_name_in_packaged_structure(backup_test_pkg):
     path = Path('src', 'test_pkg')
     shutil.copy(path / 'pipeline.yaml', path / 'pipeline.serve.yaml')
 
-    spec = DAGSpec.find(name='serve')
+    spec = DAGSpec.find(name='pipeline.serve.yaml')
     assert spec.path == (path / 'pipeline.serve.yaml').resolve()
 
 
