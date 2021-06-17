@@ -26,13 +26,18 @@ def test_can_upload_a_file(tmp_directory, pg_client_and_schema):
     dag.clients[PostgresCopyFrom] = pg_client
 
     PostgresCopyFrom('data.parquet',
-                     product=PostgresRelation((schema,
-                                               'test_can_upload_a_file',
-                                               'table')),
+                     product=PostgresRelation(
+                         (schema, 'test_can_upload_a_file', 'table')),
                      dag=dag,
                      name='upload')
 
     dag.build()
+
+    product = str(dag['upload'])
+    assert pd.read_sql(f'SELECT * FROM {product}',
+                       pg_client).to_dict(orient='list') == {
+                           'a': [1, 2, 3]
+                       }
 
 
 def test_can_upload_a_file_using_a_path(tmp_directory, pg_client_and_schema):
@@ -47,13 +52,18 @@ def test_can_upload_a_file_using_a_path(tmp_directory, pg_client_and_schema):
     dag.clients[PostgresCopyFrom] = pg_client
 
     PostgresCopyFrom(Path('data.parquet'),
-                     product=PostgresRelation((schema,
-                                               'test_can_upload_a_file',
-                                               'table')),
+                     product=PostgresRelation(
+                         (schema, 'test_can_upload_a_file', 'table')),
                      dag=dag,
                      name='upload')
 
     dag.build()
+
+    product = str(dag['upload'])
+    assert pd.read_sql(f'SELECT * FROM {product}',
+                       pg_client).to_dict(orient='list') == {
+                           'a': [1, 2, 3]
+                       }
 
 
 def test_can_upload_file_from_upstream_dependency(tmp_directory,
@@ -73,12 +83,16 @@ def test_can_upload_file_from_upstream_dependency(tmp_directory,
 
     name = 'test_can_upload_file_from_upstream_dependency'
     pg = PostgresCopyFrom('{{upstream["make"]}}',
-                          product=PostgresRelation((schema,
-                                                    name,
-                                                    'table')),
+                          product=PostgresRelation((schema, name, 'table')),
                           dag=dag,
                           name='upload')
 
     make >> pg
 
     dag.build()
+
+    product = str(dag['upload'])
+    assert pd.read_sql(f'SELECT * FROM {product}',
+                       pg_client).to_dict(orient='list') == {
+                           'a': [1, 2, 3]
+                       }

@@ -446,8 +446,6 @@ class PostgresCopyFrom(Task):
                  name=None,
                  client=None,
                  params=None,
-                 sep='\t',
-                 null='\\N',
                  columns=None):
         params = params or {}
         kwargs = dict(hot_reload=dag._params.hot_reload)
@@ -460,8 +458,6 @@ class PostgresCopyFrom(Task):
             raise ValueError('{} must be initialized with a connection'.format(
                 type(self).__name__))
 
-        self.sep = sep
-        self.null = null
         self.columns = columns
 
     @staticmethod
@@ -483,9 +479,6 @@ class PostgresCopyFrom(Task):
                           index=False)
         self._logger.info('Done creating table.')
 
-        # if product.kind != 'table':
-        #     raise ValueError('COPY is only supportted in tables')
-
         # create file-like object
         f = StringIO()
         df.to_csv(f, sep='\t', na_rep='\\N', header=False, index=False)
@@ -495,7 +488,7 @@ class PostgresCopyFrom(Task):
         cur = self.client.connection.cursor()
 
         self._logger.info('Copying data...')
-        cur.copy_from(f, table=str(product), sep='\t', null='\\N')
+        cur.copy_expert(f'COPY {product} FROM STDIN', f)
 
         f.close()
         cur.close()
