@@ -360,6 +360,13 @@ def test_doesnt_warn_if_pipeline_yaml_in_the_same_directory(tmp_directory):
     assert not len(record)
 
 
+def test_error_if_filename_contains_directories():
+    with pytest.raises(ValueError) as excinfo:
+        default.find_root_recursively(filename='a/b')
+
+    assert "'a/b' should be a filename" in str(excinfo.value)
+
+
 @pytest.mark.parametrize('to_create, to_move', [
     [
         ['setup.py', 'src/my_package/pipeline.yaml'],

@@ -153,8 +153,6 @@ def entry_point(root_path=None):
     root_path = root_path or '.'
     env_var = os.environ.get('ENTRY_POINT')
 
-    # TODO: raise error if env var and name
-
     if env_var:
         if len(Path(env_var).parts) > 1:
             raise ValueError(f'ENTRY_POINT ({env_var!r}) '
@@ -392,8 +390,10 @@ def find_root_recursively(starting_dir=None, filename=None):
     """
     filename = filename or 'pipeline.yaml'
 
-    # TODO: validate filename paramers to have the pipeline.{name}.yaml format
-    # TODO: warn if packaged structured but source loader not configured
+    if len(Path(filename).parts) > 1:
+        raise ValueError(f'{filename!r} should be a filename '
+                         '(e.g., pipeline.yaml), not a path '
+                         '(e.g., path/to/pipeline.yaml)')
 
     root_by_setup, setup_levels = find_parent_of_file_recursively(
         'setup.py', max_levels_up=6, starting_dir=starting_dir)

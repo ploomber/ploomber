@@ -5,7 +5,6 @@ import sys
 import datetime
 import os
 import contextlib
-from pprint import pprint
 from pathlib import Path
 from collections.abc import Mapping
 from collections import defaultdict
@@ -15,6 +14,7 @@ from jupytext.contentsmanager import TextFileContentsManager
 from ploomber.sources.notebooksource import (_cleanup_rendered_nb, inject_cell)
 from ploomber.jupyter.dag import JupyterDAGManager
 from ploomber.util import loader
+from ploomber.exceptions import DAGSpecInvalidError
 
 
 class DAGMapping(Mapping):
@@ -102,10 +102,10 @@ class PloomberContentsManager(TextFileContentsManager):
     """
     restart_msg = (' Fix the issue and and restart "jupyter notebook"')
 
+    # TODO: we can cache this depending on the folder where it's called
+    # all files in the same folder share the same dag
     def load_dag(self, starting_dir=None):
         if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
-            self.log.info('[Ploomber] Loading dag...')
-
             msg = ('[Ploomber] An error occured when trying to initialize '
                    'the pipeline. Cells won\' be injected until your '
                    'pipeline processes correctly. See error details below.')
@@ -118,52 +118,54 @@ class PloomberContentsManager(TextFileContentsManager):
                               and self.spec['meta']['jupyter_hot_reload'])
                 (self.spec, self.dag, self.path) = loader.entry_point_load(
                     starting_dir=starting_dir, reload=hot_reload)
+            # this error means we couldn't locate a parent root (which is
+            # required to determine which spec to use). Since it's expected
+            # that this happens for some folder, we simply emit a warning
+            except DAGSpecInvalidError as e:
+                self.reset_dag()
+                self.log.warning('Skipping DAG initialization since there '
+                                 'isn\'t a project root in the current or '
+                                 'parent directories. Error message: '
+                                 f'{str(e)}')
             except Exception:
                 self.reset_dag()
                 self.log.exception(msg)
             else:
-                if self.dag is not None:
-                    current = os.getcwd()
+                current = os.getcwd()
 
-                    if self.spec['meta'][
-                            'jupyter_hot_reload'] and current not in sys.path:
-                        # jupyter does not add the current working dir by
-                        # default, if using hot reload and the dag loads
-                        # functions from local files, importlib.reload will
-                        # fail
-                        # NOTE: might be better to only add this when the dag
-                        # is actually loading from local files but that means
-                        # we have to run some logic and increases load_dag
-                        # running time, which we need to be fast
-                        sys.path.append(current)
+                if self.spec['meta'][
+                        'jupyter_hot_reload'] and current not in sys.path:
+                    # jupyter does not add the current working dir by
+                    # default, if using hot reload and the dag loads
+                    # functions from local files, importlib.reload will
+                    # fail
+                    # NOTE: might be better to only add this when the dag
+                    # is actually loading from local files but that means
+                    # we have to run some logic and increases load_dag
+                    # running time, which we need to be fast
+                    sys.path.append(current)
 
-                    base_path = Path(self.path).resolve()
+                base_path = Path(self.path).resolve()
 
-                    with chdir(base_path):
-                        # this dag object won't be executed, forcing speeds
-                        # rendering up
-                        self.dag.render(force=True)
+                with chdir(base_path):
+                    # this dag object won't be executed, forcing speeds
+                    # up rendering
+                    self.dag.render(force=True, show_progress=False)
 
-                    if self.spec['meta']['jupyter_functions_as_notebooks']:
-                        self.manager = JupyterDAGManager(self.dag)
-                    else:
-                        self.manager = None
-
-                    pairs = [(resolve_path(base_path, t.source.loc), t)
-                             for t in self.dag.values()
-                             if t.source.loc is not None]
-                    self.dag_mapping = DAGMapping(pairs)
-
-                    self.log.info('[Ploomber] Initialized dag from '
-                                  'pipeline.yaml at'
-                                  ': {}'.format(base_path))
-                    self.log.info('[Ploomber] Pipeline mapping: {}'.format(
-                        pprint(self.dag_mapping)))
+                if self.spec['meta']['jupyter_functions_as_notebooks']:
+                    self.manager = JupyterDAGManager(self.dag)
                 else:
-                    # no pipeline.yaml found...
-                    self.log.info('[Ploomber] No pipeline.yaml found, '
-                                  'skipping DAG initialization...')
-                    self.dag_mapping = None
+                    self.manager = None
+
+                pairs = [(resolve_path(base_path, t.source.loc), t)
+                         for t in self.dag.values()
+                         if t.source.loc is not None]
+                self.dag_mapping = DAGMapping(pairs)
+
+                self.log.info('[Ploomber] Using dag defined at'
+                              ': {}'.format(base_path))
+                self.log.info(
+                    f'[Ploomber] Pipeline mapping: {self.dag_mapping}')
 
     def reset_dag(self):
         self.spec = None
@@ -180,7 +182,9 @@ class PloomberContentsManager(TextFileContentsManager):
         """
         self.reset_dag()
 
-        # try to automatically locate the dag spec
+        # try to automatically locate the dag spec - this is needed in case
+        # jupyter_functions_as_notebooks=True since we may need to add a new
+        # folder here
         self.load_dag()
 
         return super(PloomberContentsManager, self).__init__(*args, **kwargs)
@@ -212,13 +216,9 @@ class PloomberContentsManager(TextFileContentsManager):
 
         # if opening a file (ignore file listing), load dag again
         if (model['content'] and model['type'] == 'notebook'):
-            # Look for the pipeline.yaml file from the file we are rendering
-            # and search recursively. This is required to cover the case when
-            # pipeline.yaml is in a subdirectory from the folder where the
-            # user executed "jupyter notebook"
-            # FIXME: we actually don't need to reload the dag again, we just
-            # have to rebuild the mapping to make _model_in_dag work
+            # instantiate the dag using starting at the current folder
             self.load_dag(starting_dir=Path(os.getcwd(), model['path']).parent)
+
             if self._model_in_dag(model):
                 self.log.info('[Ploomber] Injecting cell...')
                 inject_cell(model=model,

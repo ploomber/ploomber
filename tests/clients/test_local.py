@@ -119,14 +119,6 @@ def test_remote_path(tmp_directory, arg, expected):
     assert client._remote_path(arg) == Path(*expected)
 
 
-def test_error_if_not_in_project_path(tmp_directory):
-    with pytest.raises(DAGSpecInvalidError) as excinfo:
-        LocalStorageClient('backup')
-
-    expected = "Failed to determine project root"
-    assert expected in str(excinfo.value)
-
-
 def test_keeps_folder_layout(tmp_directory):
     dag = DAG(executor=Serial(build_in_subprocess=False))
     dag.clients[File] = LocalStorageClient('backup', path_to_project_root='.')

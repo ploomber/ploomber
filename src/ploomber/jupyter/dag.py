@@ -121,8 +121,6 @@ class JupyterDAGManager:
                 # self.resources_keys.append(task_resource.path)
                 self.resources[task_resource.path] = task_resource
 
-        # self.resources_keys += list(self.resources)
-
         pairs = ((str(PurePosixPath(path).parent), res)
                  for path, res in self.resources.items())
 
