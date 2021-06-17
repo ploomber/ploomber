@@ -107,6 +107,14 @@ def test_entry_point_from_root_path(tmp_directory, method):
     assert getattr(default, method)(root_path='dir')
 
 
+def test_entry_point_with_name(tmp_directory):
+    Path('pipeline.yaml').touch()
+    Path('pipeline.train.yaml').touch()
+
+    assert default.entry_point_with_name(
+        name='pipeline.train.yaml') == 'pipeline.train.yaml'
+
+
 @pytest.mark.parametrize('spec_name, env_name', [
     ['pipeline.yaml', 'env.yaml'],
     ['pipeline.train.yaml', 'env.yaml'],

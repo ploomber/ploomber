@@ -86,7 +86,6 @@ def _package_location(root_path, name='pipeline.yaml'):
     return candidates[0] if candidates else None
 
 
-# TODO: test this with name!=None
 def entry_point_with_name(root_path=None, name=None):
     """
 
@@ -99,30 +98,22 @@ def entry_point_with_name(root_path=None, name=None):
     """
     filename = name or 'pipeline.yaml'
 
+    # first, find project root
     project_root = find_root_recursively(starting_dir=root_path,
                                          filename=filename)
+    setup_py = Path(project_root, 'setup.py')
+    setup_py_exists = setup_py.exists()
 
-    if Path(project_root, 'setup.py').exists():
+    # if ther is a setup.py file, look up a {project_root}/src/*/{name} file
+    if setup_py_exists:
         entry_point = _package_location(root_path=project_root, name=filename)
 
         if entry_point is not None:
             return relpath(entry_point, Path().resolve())
 
-    if Path(project_root, filename).exists():
-        return relpath(Path(project_root, filename), Path().resolve())
-
-    # TODO: include link to guide explaining how project root is determined
-    raise DAGSpecInvalidError(
-        f"""Unable to locate a {filename} at one of the standard locations:
-
-1. A path defined in an ENTRY_POINT environment variable (variable not set)
-2. A file relative to {str(root_path)!r} \
-(or relative to any of their parent directories)
-3. A src/*/{filename} relative to {str(root_path)!r}
-
-Place your {filename} in any of the standard locations or set an ENTRY_POINT
-environment variable.
-""")
+    # otherwise use {project_root}/{file}. note that this file must
+    # exust since find_root_recursively raises an error if it doesn't
+    return relpath(Path(project_root, filename), Path().resolve())
 
 
 # NOTE: this is documented in doc/api/cli.rst, changes should also be reflected
@@ -402,18 +393,11 @@ def find_root_recursively(starting_dir=None, filename=None):
     filename = filename or 'pipeline.yaml'
 
     # TODO: validate filename paramers to have the pipeline.{name}.yaml format
-
-    # TODO: add filename parameter. this should be the whole filename
-    # to allow ENTRY_POINT to work. do not forget to update the name
-    # that you'll look for when a package and error messages
-
     # NOTE: update the docstrings of all clients - we must catch errors
-    # from here and explain that if there isn't a project root a value must
+    # there and explain that if there isn't a project root a value must
     # be passed explicitly
     # TODO: warn if packaged structured but source loader not configured
     # NOTE: warn if more pipelines in parent directories?
-    # FIXME: maybe check that once you found pipeline.yaml, there aren't
-    # setup.py as children?
 
     root_by_setup, setup_levels = find_parent_of_file_recursively(
         'setup.py', max_levels_up=6, starting_dir=starting_dir)
