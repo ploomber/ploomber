@@ -194,3 +194,9 @@ a fundamental part of this.
 
 For a complete comparison, read our
 [survey on workflow management tools](https://ploomber.io/posts/survey/).
+
+## Community
+
+Stay up to date and get support via:
+
+- [Contact us](https://forms.gle/Xf9h1Q2TGoSk15NEA) (for anything)
