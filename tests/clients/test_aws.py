@@ -9,7 +9,7 @@ import boto3
 from moto import mock_s3
 
 from ploomber.clients.storage.aws import S3Client
-from ploomber.exceptions import RemoteFileNotFound
+from ploomber.exceptions import RemoteFileNotFound, DAGSpecInvalidError
 
 
 @pytest.fixture(scope='function')
@@ -187,3 +187,11 @@ def test_can_initialize_if_valid_project_root(tmp_directory):
     Path('pipeline.yaml').touch()
     client = S3Client('some-bucket', 'some-folder')
     assert client._path_to_project_root == Path(tmp_directory).resolve()
+
+
+def test_error_if_missing_project_root(tmp_directory):
+
+    with pytest.raises(DAGSpecInvalidError) as excinfo:
+        S3Client('some-bucket', 'some-folder')
+
+    assert 'Cannot initialize' in str(excinfo.value)

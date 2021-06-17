@@ -4,7 +4,7 @@ import shutil
 from ploomber.util.default import find_root_recursively
 from ploomber.clients.storage.abc import AbstractStorageClient
 from ploomber.clients.storage.util import _resolve
-from ploomber.exceptions import RemoteFileNotFound
+from ploomber.exceptions import RemoteFileNotFound, DAGSpecInvalidError
 
 
 class LocalStorageClient(AbstractStorageClient):
@@ -19,16 +19,25 @@ class LocalStorageClient(AbstractStorageClient):
         Path to project root. Product locations ares stored in a path relative
         to this folder. e.g. If project root is ``/my-project``, backup is
         ``/backup`` and you save a file in ``/my-project/reports/report.html``,
-        it will be saved at ``/backup/reports/report.html``. If None, it
-        looks up recursively for ``environment.yml``, ``requirements.txt`` and
-        ``setup.py`` (in that order) file and assigns its parent as project
-        root folder.
+        it will be saved at ``/backup/reports/report.html``. If None, looks it
+        up automatically and assigns it to the parent folder of the root YAML
+        spec ot setup.py (if your project is a package).
     """
     def __init__(self, path_to_backup_dir, path_to_project_root=None):
         self._path_to_backup_dir = Path(path_to_backup_dir)
         self._path_to_backup_dir.mkdir(exist_ok=True, parents=True)
 
-        project_root = path_to_project_root or find_root_recursively()
+        if path_to_project_root:
+            project_root = path_to_project_root
+        else:
+            try:
+                project_root = find_root_recursively()
+            except Exception as e:
+                raise DAGSpecInvalidError(
+                    f'Cannot initialize {self!r} because there '
+                    'is not project root. Set one or explicitly pass '
+                    'a value in the path_to_project_root argument') from e
+
         self._path_to_project_root = Path(project_root).resolve()
 
     def _remote_path(self, local):

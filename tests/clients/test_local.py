@@ -176,3 +176,11 @@ def test_can_initialize_if_valid_project_root(tmp_directory):
     Path('pipeline.yaml').touch()
     client = LocalStorageClient('remote')
     assert client._path_to_project_root == Path(tmp_directory).resolve()
+
+
+def test_error_if_missing_project_root(tmp_directory):
+
+    with pytest.raises(DAGSpecInvalidError) as excinfo:
+        LocalStorageClient('remote')
+
+    assert 'Cannot initialize' in str(excinfo.value)

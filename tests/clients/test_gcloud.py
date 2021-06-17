@@ -6,7 +6,7 @@ import pytest
 
 from ploomber.clients import GCloudStorageClient
 from ploomber.clients.storage.gcloud import storage
-from ploomber.exceptions import RemoteFileNotFound
+from ploomber.exceptions import RemoteFileNotFound, DAGSpecInvalidError
 
 
 @pytest.fixture
@@ -279,3 +279,11 @@ def test_can_initialize_if_valid_project_root(tmp_directory, mock_client):
     Path('pipeline.yaml').touch()
     client = GCloudStorageClient('some-bucket', 'some-folder')
     assert client._path_to_project_root == Path(tmp_directory).resolve()
+
+
+def test_error_if_missing_project_root(tmp_directory):
+
+    with pytest.raises(DAGSpecInvalidError) as excinfo:
+        GCloudStorageClient('some-bucket', 'some-folder')
+
+    assert 'Cannot initialize' in str(excinfo.value)

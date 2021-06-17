@@ -8,7 +8,7 @@ except ImportError:
 from ploomber.util.default import find_root_recursively
 from ploomber.util.util import requires
 from ploomber.clients.storage.abc import AbstractStorageClient
-from ploomber.exceptions import RemoteFileNotFound
+from ploomber.exceptions import RemoteFileNotFound, DAGSpecInvalidError
 
 
 class GCloudStorageClient(AbstractStorageClient):
@@ -31,10 +31,9 @@ class GCloudStorageClient(AbstractStorageClient):
         Path to project root. Product locations are stored in a path relative
         to this folder. e.g. If project root is ``/my-project``, backup is
         ``/backup`` and you save a file in ``/my-project/reports/report.html``,
-        it will be saved at ``/backup/reports/report.html``. If None, it
-        looks up recursively for ``environment.yml``, ``requirements.txt`` and
-        ``setup.py`` (in that order) file and assigns its parent as project
-        root folder.
+        it will be saved at ``/backup/reports/report.html``. If None, looks it
+        up automatically and assigns it to the parent folder of the root YAML
+        spec ot setup.py (if your project is a package).
 
     credentials_relative_to_project_root : bool, default=True
         If True, relative paths in json_credentials_path are so to the
@@ -53,7 +52,17 @@ class GCloudStorageClient(AbstractStorageClient):
                  path_to_project_root=None,
                  credentials_relative_to_project_root=True,
                  **kwargs):
-        project_root = path_to_project_root or find_root_recursively()
+        if path_to_project_root:
+            project_root = path_to_project_root
+        else:
+            try:
+                project_root = find_root_recursively()
+            except Exception as e:
+                raise DAGSpecInvalidError(
+                    f'Cannot initialize {type(self).__name__} because there '
+                    'is not project root. Set one or explicitly pass '
+                    'a value in the path_to_project_root argument') from e
+
         self._path_to_project_root = Path(project_root).resolve()
 
         if (credentials_relative_to_project_root and json_credentials_path

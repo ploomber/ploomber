@@ -393,11 +393,7 @@ def find_root_recursively(starting_dir=None, filename=None):
     filename = filename or 'pipeline.yaml'
 
     # TODO: validate filename paramers to have the pipeline.{name}.yaml format
-    # NOTE: update the docstrings of all clients - we must catch errors
-    # there and explain that if there isn't a project root a value must
-    # be passed explicitly
     # TODO: warn if packaged structured but source loader not configured
-    # NOTE: warn if more pipelines in parent directories?
 
     root_by_setup, setup_levels = find_parent_of_file_recursively(
         'setup.py', max_levels_up=6, starting_dir=starting_dir)
