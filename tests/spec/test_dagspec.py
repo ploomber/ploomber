@@ -682,9 +682,9 @@ def test_meta_defaults(raw):
     spec = DAGSpec(raw)
     meta = spec['meta']
     assert meta['extract_upstream']
+    assert meta['jupyter_hot_reload']
     assert not meta['extract_product']
     assert not meta['product_relative_to_source']
-    assert not meta['jupyter_hot_reload']
 
 
 @pytest.mark.parametrize('name, value', [

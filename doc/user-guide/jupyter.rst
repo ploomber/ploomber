@@ -78,21 +78,22 @@ To disable it:
 Custom Jupyter pipeline loading
 -------------------------------
 
-When you start the Jupyter app (via the ``jupyter notebook`` command), the
+When you start the Jupyter app (via the ``jupyter notebook/lab`` command), the
 extension looks for a ``pipeline.yaml`` file in the current directory and
 parent directories. If it finds one, it will load the pipeline and inject
 the appropriate cell if the existing file is a task in the loaded pipeline.
 
-If you are not using a ``pipeline.yaml`` file, but using just a directory with
-scripts, you can override the default behavior by setting an ``ENTRY_POINT``
-environment variable. For example, to load a pipeline from scripts in the
-current directory:
+If your pipeline spec has a different name, you can set the ``ENTRY_POINT``
+environment variable. For example, to load a ``pipeline.serve.yaml``:
 
 .. code-block:: console
 
-    export ENTRY_POINT=. && jupyter notebook
+    export ENTRY_POINT=pipeline.serve.yaml && jupyter lab
 
 
+Note that ``ENTRY_POINT`` must be a file name and not a path. When you start
+Jupyter, Ploomber will look for that file in the current and parent directories
+until it finds one.
 
 Troubleshooting pipeline loading
 --------------------------------
@@ -103,36 +104,77 @@ not detect a pipeline by looking at the messages displayed after initializing Ju
 
 .. code-block:: console
 
-    [Ploomber] No pipeline.yaml found, skipping DAG initialization...
+    [Ploomber] Skipping DAG initialization since there isn't a project root in the current or parent directories. Error message: {SOME_MESSAGE}
 
-If it is detected but fails to initialize, the Jupyter notebook will show an
-error message in the terminal and then initialize:
+
+This means that given the location of the current file, Ploomber could not
+locate a ``pipeline.yaml`` file to use for cell injection. The error message
+will contain more details. If you see this error ensure that there is a valid
+``pipeline.yaml`` the same directory than the file you opened or in a parent
+directory.
+
+
+If a pipeline sec is found but fails to initialize, the Jupyter console will
+show an error message:
 
 .. code-block:: console
 
     [Ploomber] An error occurred when trying to initialize the pipeline.
 
-Below such an error message, you'll see more details to help you debug your pipeline.
+Below such an error message, you'll see more details to help you debug your
+pipeline. Note that even if your pipeline isn't found or fails to initialize,
+Jupyter will start anyway so ensure to take a look at the console if you
+experience problems.
 
 
 Detecting changes
 -----------------
 
-By default, pipelines load when you start the Jupyter application, which
-implies that upstream dependencies are defined at this point and don't change
-even if you change them in your code (either the scripts themselves or the
-``pipeline.yaml`` file). If you change dependencies, you have to restart the
-Jupyter app.
+To detect changes to your pipeline, Ploomber has to parse it whenever you open
+a file. The parsing runtime depends on the number of tasks, and although it is
+fast, it may slow down file loading in pipelines with lots of tasks. You can
+turn off continuous parsing by setting ``jupyter_hot_reload`` (in the ``meta``
+section) option to ``False``. You'll have to restart Jupyter if you turn this
+option off for changes to be detected.
 
-You can enable hot reloading to make changes in dependencies refresh without
-having to restart Jupyter; however, this is only supported if you're using
-a ``pipeline.yaml`` file (not if your pipeline builds from a directory).
+Managing multiple pipelines
+---------------------------
 
-To enable this, set the ``jupyter_hot_reload`` (in the ``meta`` section) option
-to ``True``. When this setting is enabled, the pipeline is loaded every time
-you open a file, the time required to load a pipeline depends on the number
-of tasks, for large pipelines, this might take a few seconds; hence, this option
-is only recommended for small pipelines.
+It's possible for Jupyter to detect more than one pipeline in a single project.
+There are two ways to achieve this.
+
+The first one is to create sibling folders, each one with its own
+``pipeline.yaml``:
+
+.. code-block:: sh
+
+    some-pipeline/
+        pipeline.yaml
+        some-script.py
+    another-pipeline/
+        pipeline.yaml
+        another-script.py
+
+Since Ploomber looks for a ``pipeline.yaml`` file in the current directory
+and parents, it will correctly find the appropriate file if you open
+``some-script.py`` or ``another-script.py`` (assuming they're already declared
+as tasks in their corresponding ``pipeline.yaml``.
+
+
+The second option is to keep a unique project root and name each pipeline
+differently:
+
+.. code-block:: sh
+
+    pipeline.yaml
+    some-script.py
+    pipeline.another.yaml
+    another-script.py
+
+On this case, Ploomber will load ``pipeline.yaml`` by default, but you can
+switch this by setting the ``ENTRY_POINT`` variable to the other spec.
+(e.g., ``pipeline.another.yaml``). Note that the environment variable must be
+a filename and not a path.
 
 Exploratory Data Analysis
 -------------------------

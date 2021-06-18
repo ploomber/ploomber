@@ -123,14 +123,16 @@ class PloomberContentsManager(TextFileContentsManager):
             # that this happens for some folder, we simply emit a warning
             except DAGSpecInvalidError as e:
                 self.reset_dag()
-                self.log.warning('Skipping DAG initialization since there '
-                                 'isn\'t a project root in the current or '
-                                 'parent directories. Error message: '
-                                 f'{str(e)}')
+                self.log.warning(
+                    '[Ploomber] Skipping DAG initialization since there '
+                    'isn\'t a project root in the current or '
+                    'parent directories. Error message: '
+                    f'{str(e)}')
             except Exception:
                 self.reset_dag()
                 self.log.exception(msg)
             else:
+                # dag initialized successfully...
                 current = os.getcwd()
 
                 if self.spec['meta'][
@@ -162,8 +164,8 @@ class PloomberContentsManager(TextFileContentsManager):
                          if t.source.loc is not None]
                 self.dag_mapping = DAGMapping(pairs)
 
-                self.log.info('[Ploomber] Using dag defined at'
-                              ': {}'.format(base_path))
+                self.log.info(
+                    f'[Ploomber] Using dag defined at: {base_path!r}')
                 self.log.info(
                     f'[Ploomber] Pipeline mapping: {self.dag_mapping}')
 

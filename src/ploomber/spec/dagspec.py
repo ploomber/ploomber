@@ -161,8 +161,9 @@ class DAGSpec(MutableMapping):
         it will return None instead of raising an error.
 
     reload : bool, optional
-        Reloads modules before getting dotted paths. Has no effect if
-        lazy_import=True
+        Reloads modules before importing dotted paths to detect code changes
+        if the module has already been imported. Has no effect if
+        lazy_import=True.
 
     Attributes
     ----------
@@ -631,7 +632,7 @@ class Meta:
             meta['product_relative_to_source'] = False
 
         if 'jupyter_hot_reload' not in meta:
-            meta['jupyter_hot_reload'] = False
+            meta['jupyter_hot_reload'] = True
 
         if 'jupyter_functions_as_notebooks' not in meta:
             meta['jupyter_functions_as_notebooks'] = False

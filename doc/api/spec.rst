@@ -68,9 +68,10 @@ sections are shown first:
         # See section below for details
         import_tasks_from: /path/to/tasks.yaml
 
-        # Reload your pipeline every time you open a Jupyter notebook. Not
-        # recommended for large pipelines
-        jupyter_hot_reload: False
+        # Reload your pipeline every time you open a Jupyter notebook. May
+        # affect performance Jupyter's file loading performance if pipeline
+        # has many tasks
+        jupyter_hot_reload: True
 
         # Show function tasks as notebooks in jupyter
         jupyter_functions_as_notebooks: False

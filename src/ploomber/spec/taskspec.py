@@ -141,8 +141,9 @@ class TaskSpec(MutableMapping):
         a dotted path is imported, a source loaded using a SourceLoader
         is converted to a Placeholder object)
     reload : bool, default=False
-        Reloads modules before getting dotted paths. Has no effect if
-        lazy_import=True
+        Reloads modules before importing dotted paths to detect code changes
+        if the module has already been imported. Has no effect if
+        lazy_import=True.
     """
     def __init__(self,
                  data,
