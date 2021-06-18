@@ -16,6 +16,9 @@ def entry_point_load(starting_dir, reload):
         spec = DAGSpec.from_directory(entry_point)
         path = Path(entry_point)
     else:
+        # TODO: set lazy import to true. This is called by the jupyter
+        # process and there is no guarantee that all packages will be
+        # installed
         spec, path = _default_spec_load(starting_dir=starting_dir,
                                         reload=reload)
 

@@ -1,3 +1,0 @@
-
-# + tags=['parameters']
-upstream = ['upstream-*']

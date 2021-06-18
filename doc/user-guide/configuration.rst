@@ -1,0 +1,116 @@
+Configuration (``dev``/``prod``)
+============================================
+
+In the previous guide (:doc:`../user-guide/parametrized`), we saw how to use an
+``env.yaml`` file to parametrize our pipeline and switch parameters from the
+command line.
+
+Sometimes we want to change all the parameters at once. The most common
+scenario is to change configuration during development and production.
+
+For example, say you're working on a Machine Learning pipeline whose
+``pipeline.yaml`` looks like this:
+
+.. code-block:: yaml
+    :class: text-editor
+    :name: pipeline-yaml
+
+    tasks:
+
+      - source: get.py
+        product:
+          nb: get.ipynb
+          data: raw.csv
+        params:
+          sample_pct: '{{sample_pct}}'
+
+      - source: get.py
+        product:
+          nb: get.ipynb
+          data: raw.csv
+
+      - source: get.py
+        product:
+          nb: get.ipynb
+          data: raw.csv
+
+
+The pipeline above has one placeholder ``'{{sample_pct}}'``, which controls
+which percentage of raw data to download. You may want to develop locally with a
+fraction of the data, say 20%, to iterate quickly. To
+`smoke test <https://en.wikipedia.org/wiki/Smoke_testing_(software)>`_ quickly,
+you may run it with a smaller sample, say 1%. Finally, to train a model, you'll
+use 100% of the data.
+
+By default, Ploomber looks for an ``env.yaml``. To enable rapid local
+development with 20% of the data, you may create an ``env.yaml`` file like this:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    sample_pct: 20
+
+For smoke testing, ``env.test.yaml``:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    sample_pct: 1
+
+And for training, ``env.train.yaml``:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    sample_pct: 100
+
+To switch configurations, you can set the ``ENTRY_POINT`` environment variable
+to ``env.test.yaml`` in the testing environment and to ``env.train.yaml`` in
+the training environment.
+
+Whenever ``ENTRY_POINT`` has a value, Ploomber uses it and looks for a file
+with such name. Note that this must be a filename, not a path, since Ploomber
+expects ``env.yaml`` files to exist in the same folder as the ``pipeline.yaml``
+file.
+
+
+**Note:** You can use placeholders (e.g., ``{{sample_pct}}``) anywhere in the
+``pipeline.yaml`` file. Another typical use case is to switch the product
+location (e.g., ``product: '{{product_directory}}/some-data.csv'``.
+
+Managing multiple pipelines
+---------------------------
+
+If your project has more than one pipeline, they'll likely need
+different ``env.yaml`` files.
+
+Say you have two pipelines, one for training a model (``pipeline.yaml``) and
+one for serving it (``pipeline.serve.yaml``). You can create an ``env.yaml``
+file to parametrize ``pipeline.yaml`` and an ``env.serve.yaml`` to parametrize
+``pipeline.serve.yaml``:
+
+.. code-block:: sh
+
+    project/
+        pipeline.yaml
+        pipeline.serve.yaml
+        env.yaml
+        env.serve.yaml
+
+The general rule is as follows: When loading a ``pipeline.{name}.yaml``,
+extract the ``{name}`` portion. Then look for a ``env.{name}.yaml`` file, if
+such file doesn't exist, look for an ``env.yaml`` file. Note that the
+``ENTRY_POINT`` environment variable overrides this process.
+
+Alternatively, you may separate the pipelines into different directories, and
+put an ``env.yaml`` on each one:
+
+.. code-block:: sh
+
+    project-a/
+        pipeline.yaml
+        env.yaml
+    project-b/
+        pipeline.yaml
+        env.yaml
+

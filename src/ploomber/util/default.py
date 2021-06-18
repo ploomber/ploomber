@@ -244,11 +244,16 @@ def path_to_env(path_to_spec):
         path_to_spec).parent
     name = None if path_to_parent is None else extract_name(path_to_spec)
 
+    # pipeline.yaml....
     if name is None:
+        # look for env.yaml...
         return path_to_env_with_name(name=None, path_to_parent=path_to_parent)
+    # pipeline.{name}.yaml
     else:
+        # look for env.{name}.yaml
         path = path_to_env_with_name(name=name, path_to_parent=path_to_parent)
 
+        # not found, try with env.yaml...
         if path is None:
             return path_to_env_with_name(name=None,
                                          path_to_parent=path_to_parent)

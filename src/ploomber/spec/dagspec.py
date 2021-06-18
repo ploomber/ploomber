@@ -156,9 +156,13 @@ class DAGSpec(MutableMapping):
         with the dotted path, which means some verifications such as import
         statements in that function's module are delayed until the pipeline
         is executed. This also applies to placeholders loaded using a
-        SourceLoader, if a placeholder exists, it will return the path
-        to it, instead of an initialized Placeholder object, if it doesn't,
-        it will return None instead of raising an error.
+        SourceLoader, if a template exists, it will return the path
+        to it, instead of initializing it, if it doesn't, it will return None
+        instead of raising an error. This setting is useful when we require to
+        load YAML spec and instantiate the DAG object to extract information
+        from it (e.g., which are the declared tasks) but the process running
+        it may not have all the required dependencies to do so (e.g., an
+        imported library in a PythonCallable task).
 
     reload : bool, optional
         Reloads modules before importing dotted paths to detect code changes

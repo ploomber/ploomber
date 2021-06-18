@@ -276,6 +276,7 @@ Get one:
 
 
 .. _api-cli-default-locations:
+
 Default locations
 *****************
 

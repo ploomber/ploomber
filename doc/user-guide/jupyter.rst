@@ -35,7 +35,9 @@ The following cell will be injected in ``task.py`` before execution:
     upstream = {'another_task': {'nb': 'output/another-task.ipynb',
                                  'data': 'output/another-task.parquet'}}
 
-Without the injected cell, your code cannot execute because it doesn't know the input files' location. To enable interactive development, Ploomber integrates with the Jupyter (notebook and lab).
+Your code cannot execute without the injected cell because it doesn't know the
+input files' location. To enable interactive development, Ploomber integrates
+with Jupyter (notebook and lab).
 
 If you open a script that is a task in your pipeline, it will render as a
 Jupyter notebook and the cell injection process will happen automatically
