@@ -276,19 +276,23 @@ Get one:
 
 
 .. _api-cli-default-locations:
-
 Default locations
 *****************
 
-Ploomber looks for a ``pipeline.yaml`` file using the following order: 
+If you don't pass the ``--entry-point/-e`` argument to the command line,
+Ploomber will try to find one automatically by searching for a
+``pipeline.yaml`` file at the current directory and parent directories.
 
-1. Use path in the ``ENTRY_POINT`` environment variable
-2. ``pipeline.yaml``, relative to the current working directory
-3. ``src/{package}/pipeline.yaml`` where ``{package}`` is any package name
-4. Parent folders of current working directory
-5. Look for a ``setup.py`` in parent folders, then ``src/{package}/pipeline.yaml``
+If no such file exists, it looks for a ``setup.py``. If it exists, it searches
+for a ``src/{pkg}/pipeline.yaml`` file where ``{pkg}`` is a folder with any
+name. ``setup.py`` is only required to package projects.
 
-If you want to know which file will be used based on your project's:
+If your pipeline has a different filename, you may set the ``ENTRY_POINT``
+environment variable to a different filename (e.g.,
+``export ENTRY_POINT=pipeline.serve.yaml``). Note that this must be a filename,
+not a path to a file.
+
+If you want to know which file will be used based on your project's layout:
 
 .. code-block:: console
 

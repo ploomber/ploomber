@@ -116,8 +116,8 @@ def entry_point_with_name(root_path=None, name=None):
     return relpath(Path(project_root, filename), Path().resolve())
 
 
-# NOTE: this is documented in doc/api/cli.rst, changes should also be reflected
-# there
+# NOTE: this is described in doc/api/cli.rst. changes to this function must
+# be also documented there
 def entry_point(root_path=None):
     """
     Determines the default entry point. It first determines the project root.
@@ -143,12 +143,10 @@ def entry_point(root_path=None):
     Raises
     ------
     DAGSpecInvalidError
-        If fails to determine project root or if no pipeline.yaml or
-        pipeline.{name}.yaml exists in the expected location
-        (once project root is determined).
+        If fails to determine project root or if no pipeline.yaml (or
+        the content of the ENTRY_POINT environment variable, if any) exists in
+        the expected location (once project root is determined).
     """
-    # TODO: it must be clear this env var works. it must have a project root
-    # for this to work
     # FIXME: rename env var used
     root_path = root_path or '.'
     env_var = os.environ.get('ENTRY_POINT')

@@ -161,6 +161,20 @@ and parents, it will correctly find the appropriate file if you open
 as tasks in their corresponding ``pipeline.yaml``.
 
 
+**Important:** If you're using Python functions as tasks, you must use
+different module names for each pipeline. Otherwise, the module imports first
+will be cached and used for the other pipeline. For example:
+
+.. code-block:: sh
+
+    some-pipeline/
+        pipeline.yaml
+        some_tasks.py
+    another-pipeline/
+        pipeline.yaml
+        other_tasks.py
+
+
 The second option is to keep a unique project root and name each pipeline
 differently:
 
@@ -175,6 +189,7 @@ On this case, Ploomber will load ``pipeline.yaml`` by default, but you can
 switch this by setting the ``ENTRY_POINT`` variable to the other spec.
 (e.g., ``pipeline.another.yaml``). Note that the environment variable must be
 a filename and not a path.
+
 
 Exploratory Data Analysis
 -------------------------
