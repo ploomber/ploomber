@@ -11,6 +11,7 @@ from ploomber.tasks import SQLScript
 from ploomber.products import SQLiteRelation, GenericSQLRelation
 from ploomber import DAG
 from ploomber._testing_utils import assert_no_extra_attributes_in_class
+from ploomber.util import dotted_path
 
 from test_pkg import functions
 
@@ -328,18 +329,153 @@ def test_python_callable_properties(path_to_test_pkg):
 
 
 def test_python_callable_with_dotted_path_does_not_import(
-        tmp_directory, add_current_to_sys_path):
-    Path('some_dotted_path.py').write_text("""
+        tmp_directory, add_current_to_sys_path, no_sys_modules_cache):
+    loc = Path('some_dotted_path.py').resolve()
+    loc.write_text("""
 import some_unknown_package
 
 def some_fn():
     pass
 """)
-    # doing it this way should not import anything
+
     source = PythonCallableSource('some_dotted_path.some_fn')
 
     assert str(source) == 'def some_fn():\n    pass\n'
     assert source.name == 'some_fn'
+    assert source.loc == f'{loc}:4'
+
+
+def test_python_callable_with_nested_dotted_path_does_not_import(
+        tmp_directory, add_current_to_sys_path, no_sys_modules_cache):
+    Path('nested').mkdir()
+    Path('nested', '__init__.py').write_text("""
+import some_unknown_package
+""")
+
+    loc = Path('nested', 'some_dotted_path.py').resolve()
+    loc.write_text("""
+def some_fn():
+    pass
+""")
+
+    source = PythonCallableSource('nested.some_dotted_path.some_fn')
+
+    assert str(source) == 'def some_fn():\n    pass\n'
+    assert source.name == 'some_fn'
+    assert source.loc == f'{loc}:2'
+
+
+@pytest.mark.parametrize('target_file, dotted_path_str', [
+    ['a.py', 'a.symbol'],
+    ['a/__init__.py', 'a.symbol'],
+    ['a/b.py', 'a.b.symbol'],
+    ['a/b/__init__.py', 'a.b.symbol'],
+    ['a/b/c.py', 'a.b.c.symbol'],
+    ['a/b/c/__init__.py', 'a.b.c.symbol'],
+    ['a/b/c/d.py', 'a.b.c.d.symbol'],
+    ['a/b/c/d/__init__.py', 'a.b.c.d.symbol'],
+    ['a/b/c/d/e.py', 'a.b.c.d.e.symbol'],
+    ['a/b/c/d/e/__init__.py', 'a.b.c.d.e.symbol'],
+])
+def test_loc_is_consisent_when_initialized_from_str(tmp_directory,
+                                                    add_current_to_sys_path,
+                                                    no_sys_modules_cache,
+                                                    target_file,
+                                                    dotted_path_str):
+    target_parent = Path(target_file).parent
+    target_parent.mkdir(parents=True, exist_ok=True)
+
+    for parent in Path(target_file).parents:
+        (parent / '__init__.py').touch()
+
+    Path(target_file).write_text("""
+def symbol():
+    pass
+""")
+
+    # TODO: this is only possible with >3 parts
+    # Path('a', '__init__.py').write_text('import some_unknown_pkg')
+
+    # TODO: add another test that checks that no things are imported
+
+    # TODO: this sould be a test at the python callable source level
+    # to ensure lazy load and no lazy load return the same results
+
+    # from IPython import embed
+    # embed()
+
+    # test when symbol is not defined
+
+    loc = PythonCallableSource(
+        dotted_path.load_dotted_path(dotted_path_str)).loc
+
+    out = PythonCallableSource(dotted_path_str).loc
+
+    assert out == str(Path(loc).resolve())
+
+
+def test_error_if_doesnt_define_name(tmp_directory, add_current_to_sys_path,
+                                     no_sys_modules_cache):
+
+    Path('a.py').touch()
+
+    with pytest.raises(AttributeError) as excinfo:
+        dotted_path.lazily_locate_dotted_path('a.unknown_name')
+
+    assert "Failed to locate dotted path 'a.unknown_name'" in str(
+        excinfo.value)
+    assert "a.py" in str(excinfo.value)
+    assert "a function named 'unknown_name'" in str(excinfo.value)
+
+
+def test_defined_name_twice(tmp_directory, add_current_to_sys_path,
+                            no_sys_modules_cache):
+
+    Path('a.py').write_text("""
+
+def b():
+    pass
+
+def b():
+    pass
+""")
+
+    loc = PythonCallableSource(dotted_path.load_dotted_path('a.b')).loc
+    out = PythonCallableSource('a.b').loc
+
+    assert out == str(Path(loc).resolve())
+
+
+def test_detects_aliasing(tmp_directory, add_current_to_sys_path,
+                          no_sys_modules_cache):
+
+    Path('a.py').write_text("""
+from alias import b
+""")
+
+    with pytest.raises(NotImplementedError):
+        PythonCallableSource('a.b').loc
+
+
+@pytest.mark.parametrize('source', [
+    'from pkg import b',
+    'b = 1',
+])
+def test_error_if_last_def_not_a_function(tmp_directory,
+                                          add_current_to_sys_path,
+                                          no_sys_modules_cache, source):
+    Path('a.py').write_text(f"""
+def b():
+    pass
+
+{source}
+""")
+
+    with pytest.raises(TypeError) as excinfo:
+        PythonCallableSource('a.b').loc
+
+    assert ("Failed to load dotted path 'a.b'. Expected last "
+            "defined 'b' to be a function." in str(excinfo.value))
 
 
 def test_python_callable_with_dotted_path(tmp_directory,

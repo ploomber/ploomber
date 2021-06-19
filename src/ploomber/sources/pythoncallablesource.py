@@ -6,38 +6,9 @@ import parso
 
 from ploomber.sources.abc import Source
 from ploomber.util.util import signature_check
-from ploomber.util.dotted_path import load_dotted_path
+from ploomber.util.dotted_path import (load_dotted_path,
+                                       lazily_locate_dotted_path)
 from ploomber.static_analysis.python import PythonCallableExtractor
-
-
-def find_code_for_fn_dotted_path(dotted_path):
-    """
-    Returns the source code for a function given the dotted path without
-    importting it
-    """
-    tokens = dotted_path.split('.')
-    module, name = '.'.join(tokens[:-1]), tokens[-1]
-    spec = importlib.util.find_spec(module)
-
-    if spec is None:
-        raise ModuleNotFoundError('Error processing dotted '
-                                  f'path {dotted_path!r}, '
-                                  f'there is no module {module!r}')
-
-    module_location = spec.origin
-
-    module_code = Path(module_location).read_text()
-    m = parso.parse(module_code)
-
-    for f in m.iter_funcdefs():
-        if f.name.value == name:
-            # remove leading whitespace that parso keeps, which is not
-            # what inspect.getsource does - this way we get the same code
-            return f.get_code().lstrip()
-
-    raise ValueError(f'Error processing dotted path {dotted_path!r}, '
-                     f'there is no function named {name!r} in module '
-                     f'{module!r} (module loaded from: {module_location!r})')
 
 
 class CallableLoader:
@@ -79,9 +50,19 @@ class CallableLoader:
 
     def get_source(self):
         if self._from_dotted_path:
-            return find_code_for_fn_dotted_path(self._primitive)
+            _, source = lazily_locate_dotted_path(self._primitive)
+            return source
         else:
             return inspect.getsource(self.load())
+
+    def get_loc(self):
+        if self._from_dotted_path:
+            loc, _ = lazily_locate_dotted_path(self._primitive)
+            return loc
+        else:
+            path = inspect.getsourcefile(self.load())
+            _, line = inspect.getsourcelines(self.load())
+            return '{}:{}'.format(path, line)
 
     @property
     def from_dotted_path(self):
@@ -126,18 +107,10 @@ class PythonCallableSource(Source):
         self._loc = None
         self._hot_reload = hot_reload
         self._needs_product = needs_product
-        self.__source_lineno = None
 
     @property
     def primitive(self):
         return self._callable_loader.load()
-
-    @property
-    def _source_lineno(self):
-        if self.__source_lineno is None or self._hot_reload:
-            _, self.__source_lineno = inspect.getsourcelines(self.primitive)
-
-        return self.__source_lineno
 
     def __repr__(self):
         return "{}({}) (defined at: '{}')".format(
@@ -156,9 +129,9 @@ class PythonCallableSource(Source):
     @property
     def loc(self):
         if self._loc is None or self._hot_reload:
-            self._loc = inspect.getsourcefile(self.primitive)
+            self._loc = self._callable_loader.get_loc()
 
-        return '{}:{}'.format(self._loc, self._source_lineno)
+        return self._loc
 
     def render(self, params):
         self._post_render_validation(None, params)
