@@ -202,20 +202,6 @@ def signature_check(fn, params, task_name):
     return True
 
 
-def _parse_module(dotted_path, raise_=True):
-    parts = dotted_path.split('.')
-
-    if len(parts) < 2 or not all(parts):
-        if raise_:
-            raise ValueError('Invalid module name, must be a dot separated '
-                             'string, with at least '
-                             '[module_name].[function_name]')
-        else:
-            return False
-
-    return '.'.join(parts[:-1]), parts[-1]
-
-
 def call_with_dictionary(fn, kwargs):
     """
     Call a function by passing elements from a dictionary that appear in the
