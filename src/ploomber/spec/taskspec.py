@@ -42,7 +42,9 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
     """
     extension = Path(source_str).suffix
 
+    # we verify if this is a valid dotted path
     # if lazy load, just locate the module without importing it
+
     fn_checker = dotted_path.locate_dotted_path if lazy_import else partial(
         dotted_path.load_dotted_path, raise_=True, reload=reload)
 

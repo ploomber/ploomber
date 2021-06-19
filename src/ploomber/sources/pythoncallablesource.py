@@ -1,8 +1,5 @@
 import importlib
 import inspect
-from pathlib import Path
-
-import parso
 
 from ploomber.sources.abc import Source
 from ploomber.util.util import signature_check

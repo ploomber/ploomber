@@ -116,8 +116,9 @@ class PloomberContentsManager(TextFileContentsManager):
             try:
                 hot_reload = (self.spec
                               and self.spec['meta']['jupyter_hot_reload'])
-                (self.spec, self.dag, self.path) = loader.entry_point_load(
-                    starting_dir=starting_dir, reload=hot_reload)
+                (self.spec, self.dag,
+                 self.path) = loader.lazily_load_entry_point(
+                     starting_dir=starting_dir, reload=hot_reload)
             # this error means we couldn't locate a parent root (which is
             # required to determine which spec to use). Since it's expected
             # that this happens for some folder, we simply emit a warning
