@@ -121,8 +121,9 @@ tasks:
 
 * [Documentation](https://ploomber.readthedocs.io/)
 * [Sample projects (Machine Learning pipeline, ETL, among others)](https://github.com/ploomber/projects)
-* [Watch JupyterCon 2020 talk](https://www.youtube.com/watch?v=M6mtgPfsA3M)
+* [JupyterCon 2020 talk](https://www.youtube.com/watch?v=M6mtgPfsA3M)
 * [Argo Community Meeting talk](https://youtu.be/FnpXyg-5W_c)
+* [Pangeo Showcase talk (AWS Batch demo)](https://youtu.be/XCgX1AszVF4)
 
 ## Installation
 
@@ -200,3 +201,4 @@ For a complete comparison, read our
 Stay up to date and get support via:
 
 - [Contact us](https://forms.gle/Xf9h1Q2TGoSk15NEA) (for anything)
+- [Join us on Slack](https://join.slack.com/t/ploomber-io/shared_invite/zt-rzu2e9f6-kaWgCfsLY~xeJ9vG9EIuBw)
