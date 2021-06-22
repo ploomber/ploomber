@@ -198,5 +198,5 @@ For a complete comparison, read our
 ## Community
 
 Stay up to date and get support via:
-
+- [Contact us](https://join.slack.com/t/ploomber-io/shared_invite/zt-rzu2e9f6-kaWgCfsLY~xeJ9vG9EIuBw) (for support from our team & community)
 - [Contact us](https://forms.gle/Xf9h1Q2TGoSk15NEA) (for anything)
