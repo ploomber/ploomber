@@ -255,27 +255,6 @@ def test_path_to_env_error_if_dir(tmp_directory):
     assert str(excinfo.value) == expected
 
 
-def test_path_to_env_from_parent(tmp_directory):
-    p = Path('env.yaml').resolve()
-    p.touch()
-    assert default.path_to_env_from_parent(path_to_parent='.') == str(p)
-
-
-def test_path_to_env_from_parent_from_env_var(tmp_directory, monkeypatch):
-    monkeypatch.setenv('PLOOMBER_ENV_FILENAME', 'env.local.yaml')
-    p = Path('env.local.yaml').resolve()
-    p.touch()
-    assert default.path_to_env_from_parent(path_to_parent='.') == str(p)
-
-
-def test_path_to_env_from_parent_error_if_env_var_set_but_missing(
-        tmp_directory, monkeypatch):
-    monkeypatch.setenv('PLOOMBER_ENV_FILENAME', 'env.local.yaml')
-
-    with pytest.raises(FileNotFoundError):
-        default.path_to_env_from_parent(path_to_parent='.')
-
-
 def test_finds_pipeline_yaml(tmp_directory):
     expected = Path(tmp_directory).resolve()
     pip = Path('pipeline.yaml').resolve()

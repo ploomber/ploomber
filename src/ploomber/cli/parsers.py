@@ -459,12 +459,10 @@ def _process_file_dir_or_glob(parser, dagspec_arg=None):
     entry_point_value = dagspec_arg or parser.parse_entry_point_value()
     entry = EntryPoint(entry_point_value)
 
-    if entry.type == EntryPoint.Directory:
-        path_to_env = default.path_to_env_from_parent(
-            path_to_parent=entry_point_value)
-    elif entry.type == EntryPoint.Pattern:
-        path_to_env = default.path_to_env_from_parent(
-            path_to_parent=Path(entry_point_value).parent)
+    if entry.type in {EntryPoint.Directory, EntryPoint.Pattern}:
+        # pipelines initialized from directories or patterns cannot be
+        # parametrized
+        path_to_env = None
     # file
     else:
         path_to_env = default.path_to_env_from_spec(entry_point_value)

@@ -275,17 +275,6 @@ def path_to_env_from_spec(path_to_spec):
                                                 raise_=environ is not None)
 
 
-def path_to_env_from_parent(path_to_parent):
-    """
-    Similar to path_to_env_from_spec but takes a path to a directory as
-    argument. sed for directory-based pipeline
-    """
-    filename = _get_env_filename_environment_variable(path_to_parent)
-    return _search_for_env_with_name_and_parent(filename=filename,
-                                                path_to_parent=path_to_parent,
-                                                raise_=filename is not None)
-
-
 def _search_for_env_with_name_and_parent(filename, path_to_parent, raise_):
     # pipeline.yaml....
     if filename is None:
