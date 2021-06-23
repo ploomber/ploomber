@@ -132,6 +132,9 @@ in your project root using the
 ``venv-project-name`` directory. If you prefer to use another virtual
 environment manager, you must install dependencies directly.
 
+If you want to know more about dependency management, check out
+`this post in our blog <https://ploomber.io/posts/python-envs/>`_.
+
 Locking dependencies
 --------------------
 
@@ -139,7 +142,8 @@ Changes in your dependencies may break your project at any moment if you don't
 pin versions. For example, if you train a model using scikit-learn version
 0.24 but only set `scikit-learn` as a dependency (without the version number).
 As soon as scikit-learn introduces breaking API changes, your project will
-fail. It is important to record specific versions to prevent broken projects.
+fail. Therefore, it is essential to record specific versions to prevent broken
+projects.
 
 You can do so with:
 

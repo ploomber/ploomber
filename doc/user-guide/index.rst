@@ -5,7 +5,6 @@ User Guide
     :maxdepth: 2
 
     scaffold
-    conda
     cli
     jupyter
     parametrized

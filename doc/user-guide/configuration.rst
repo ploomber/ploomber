@@ -64,15 +64,14 @@ And for training, ``env.train.yaml``:
 
     sample_pct: 100
 
-To switch configurations, you can set the ``ENTRY_POINT`` environment variable
+To switch configurations, you can set the ``PLOOMBER_ENV_FILENAME`` environment variable
 to ``env.test.yaml`` in the testing environment and to ``env.train.yaml`` in
 the training environment.
 
-Whenever ``ENTRY_POINT`` has a value, Ploomber uses it and looks for a file
-with such name. Note that this must be a filename, not a path, since Ploomber
+Whenever ``PLOOMBER_ENV_FILENAME`` has a value, Ploomber uses it and looks for a file
+with such a name. Note that this must be a filename, not a path since Ploomber
 expects ``env.yaml`` files to exist in the same folder as the ``pipeline.yaml``
 file.
-
 
 **Note:** You can use placeholders (e.g., ``{{sample_pct}}``) anywhere in the
 ``pipeline.yaml`` file. Another typical use case is to switch the product
@@ -100,7 +99,7 @@ file to parametrize ``pipeline.yaml`` and an ``env.serve.yaml`` to parametrize
 The general rule is as follows: When loading a ``pipeline.{name}.yaml``,
 extract the ``{name}`` portion. Then look for a ``env.{name}.yaml`` file, if
 such file doesn't exist, look for an ``env.yaml`` file. Note that the
-``ENTRY_POINT`` environment variable overrides this process.
+``PLOOMBER_ENV_FILENAME`` environment variable overrides this process.
 
 Alternatively, you may separate the pipelines into different directories, and
 put an ``env.yaml`` on each one:
