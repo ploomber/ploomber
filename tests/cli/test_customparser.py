@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from ploomber import DAG
 from ploomber.cli.parsers import CustomParser, _custom_command
 from ploomber.env.envdict import EnvDict
 from ploomber.cli import parsers
@@ -111,3 +112,17 @@ def test_dagspec_initialization_from_yaml_and_env(tmp_nbs, monkeypatch):
 
     # and EnvDict initialized from env.yaml
     mock_EnvDict.assert_called_once_with(str(Path('env.yaml').resolve()))
+
+
+def test_entry_point_from_factory_in_environment_variable(
+        backup_test_pkg, monkeypatch):
+    monkeypatch.setattr(sys, 'argv', ['python'])
+    monkeypatch.setenv('ENTRY_POINT', 'test_pkg.entry.plain_function')
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    dag, _ = _custom_command(parser)
+
+    assert isinstance(dag, DAG)

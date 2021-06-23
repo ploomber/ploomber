@@ -178,6 +178,12 @@ def try_to_find_entry_point():
     """Try to find the default entry point. Returns None if it isn't possible
     """
     # TODO: maybe display a warning with the error?
+
+    env_var = os.environ.get('ENTRY_POINT')
+
+    if env_var and '.' in env_var and Path(env_var).suffix != '.yaml':
+        return os.environ.get('ENTRY_POINT')
+
     try:
         return entry_point(root_path=None)
     except Exception:
