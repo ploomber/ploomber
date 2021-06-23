@@ -115,8 +115,7 @@ You can also select several tasks at the same time using wildcards:
 
 .. code-block:: console
 
-    # note the single quotes
-    ploomber build --partially 'fit-*'
+    ploomber build --partially 'fit-*' # note the single quotes
 
 
 The previous command will execute all tasks with the ``fit-*`` prefix and all
@@ -126,8 +125,7 @@ You may skip building upstream dependencies using the ``--skip-upstream``
 
 .. code-block:: console
 
-    # note the single quotes
-    ploomber build --partially 'fit-*' --skip-upstream
+    ploomber build --partially 'fit-*' --skip-upstream # note the single quotes
 
 Note that the previous command fails if the upstream products of ``fit-*`` tasks
 do no exist yet.
@@ -207,13 +205,12 @@ Task source code
     ploomber task task_name --source
 
 
-If you also want to build the task, you need to explicitly pass ``--build``.
+If you also want to build the task, you need to pass ``--build`` explicitly.
 
 Create new project
 ******************
 
-The ``scaffold`` command allows you to start a new project. Note that this
-creates a complete layout with packaging, version management, and testing.
+The ``scaffold`` command allows you to start a new project:
 
 .. code-block:: console
 
@@ -233,9 +230,10 @@ After creating a project, you can configure the development environment with:
 The command above configures a virtual environment using ``conda``, if
 installed; otherwise, it uses
 `venv <https://docs.python.org/3/library/venv.html>`_ and ``pip``. Note that
-``ploomber install`` only works with projects created using
+``ploomber install`` may not work if you didn't create your project with
 ``ploomber scaffold``.
 
+For a detailed look at the ``ploomber scaffold`` command, check out the :doc:`../user-guide/scaffold` tutorial.
 
 Interactive sessions
 ********************
