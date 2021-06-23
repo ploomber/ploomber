@@ -74,20 +74,9 @@ glob-like pattern:
 
 .. code-block:: console
 
-    # note the parenthesis
-    ploomber build --entry-point "*.py"
+    ploomber build --entry-point "*.py" # note the quotes
 
-
-Or a list of files:
-
-.. code-block:: console
-
-    # note the parenthesis
-    ploomber build --entry-point get.py transform.py plot.py
-
-
-This is implemented using :py:mod:`ploomber.spec.DAGSpec.from_files`  
-
+**Note:** Pipelines built without a ``pipeline.yaml`` file cannot be parametrized.
 
 [Spec API] Spec entry point
 ----------------------------

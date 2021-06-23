@@ -284,7 +284,7 @@ Ploomber will try to find one automatically by searching for a
 
 If no such file exists, it looks for a ``setup.py``. If it exists, it searches
 for a ``src/{pkg}/pipeline.yaml`` file where ``{pkg}`` is a folder with any
-name. ``setup.py`` is only required to package projects.
+name. ``setup.py`` is only required for packaged projects.
 
 If your pipeline has a different filename, you may set the ``ENTRY_POINT``
 environment variable to a different filename (e.g.,

@@ -71,10 +71,18 @@ def _package_location(root_path, name='pipeline.yaml'):
     """
     Look for a src/{package-name}/pipeline.yaml relative to root_path
 
+    Parameters
+    ----------
+    root_path : str or pathlib.Path
+        Looks for a package relative to this
+
+    name : str, default='pipeline.yaml'
+        YAML spec to search for
+
     Returns
     -------
     str
-        Path to package
+        Path to package. None if no package exists.
     """
     pattern = str(Path(root_path, 'src', '*', name))
     candidates = sorted([
@@ -82,19 +90,21 @@ def _package_location(root_path, name='pipeline.yaml'):
         if not str(Path(f).parent).endswith('.egg-info')
     ])
 
-    # FIXME: warn user if more than one
+    if len(candidates) > 1:
+        warnings.warn(f'Found more than one package location: {candidates}. '
+                      f'Using the first one: {candidates[0]!r}')
+
     return candidates[0] if candidates else None
 
 
 def entry_point_with_name(root_path=None, name=None):
-    """
+    """Search for an entry point with a given name
 
     Parameters
     ----------
     name : str, default=None
         If None, searchs for a pipeline.yaml file otherwise for a
-        pipeline.{name}.yaml. Must be None if the ENTRY_POINT environment
-        variable is set
+        file with such name
     """
     filename = name or 'pipeline.yaml'
 
@@ -116,15 +126,14 @@ def entry_point_with_name(root_path=None, name=None):
     return relpath(Path(project_root, filename), Path().resolve())
 
 
-# NOTE: this is described in doc/api/cli.rst. changes to this function must
-# be also documented there
+# NOTE: this is described in doc/api/cli.rst. changes here must be also
+# documented there
 def entry_point(root_path=None):
     """
     Determines the default entry point. It first determines the project root.
-    If the project isn't a package, it returns
-    project_root/pipeline.{name}.yaml, otherwise src/*/pipeline.{name}.yaml.
-    If the ENTRY_POINT environment variable is set, it looks for a file with
-    such name (e.g., project_root/{ENTRY_POINT}).
+    If the project isn't a package, it returns project_root/pipeline.yaml,
+    otherwise src/*/pipeline.yaml. If the ENTRY_POINT environment variable is
+    set, it looks for a file with such name (e.g., project_root/{ENTRY_POINT}).
 
     Parameters
     ----------
@@ -215,11 +224,16 @@ def entry_point_relative(name=None):
 
 def path_to_env_from_spec(path_to_spec):
     """
-    Determines the env.yaml to use given a spec. Prefers a file in the
-    working directory, otherwise, one relative to the spec's parent. If the
-    appropriate env.yaml file does not exist, returns None. If path to spec has
-    a pipeline.{name}.yaml format, it tries to look up an env.{name}.yaml
-    first
+
+    It first looks up the PLOOMBER_ENV_FILENAME env var, it if exists, it uses
+    the filename defined there. If not, it looks for an env.yaml file. Prefers
+    a file in the working directory, otherwise, one relative to the spec's
+    parent. If the appropriate env.yaml file does not exist, returns None.
+    If path to spec has a pipeline.{name}.yaml format, it tries to look up an
+    env.{name}.yaml first.
+
+    It returns None if None of those files exist, except when
+    PLOOMBER_ENV_FILENAME, in such case, it raises an error.
 
     Parameters
     ----------
@@ -228,7 +242,11 @@ def path_to_env_from_spec(path_to_spec):
 
     Raises
     ------
+    FileNotFoundError
+        If PLOOMBER_ENV_FILENAME is defined but doesn't exist
     ValueError
+        If PLOOMBER_ENV_FILENAME is defined and contains a path with
+        directory components.
         If path_to_spec does not have an extension or if it's a directory
     """
     # FIXME: delete this
@@ -244,7 +262,6 @@ def path_to_env_from_spec(path_to_spec):
         raise ValueError('Expected path to spec to have a file extension '
                          f'but got: {str(path_to_spec)!r}')
 
-    # TODO: test env var entry point logic
     path_to_parent = Path(path_to_spec).parent
     environ = _get_env_filename_environment_variable(path_to_parent)
     if environ:
@@ -259,8 +276,10 @@ def path_to_env_from_spec(path_to_spec):
 
 
 def path_to_env_from_parent(path_to_parent):
-    # TODO: test this function
-    # TODO: test env var entry point logic
+    """
+    Similar to path_to_env_from_spec but takes a path to a directory as
+    argument. sed for directory-based pipeline
+    """
     filename = _get_env_filename_environment_variable(path_to_parent)
     return _search_for_env_with_name_and_parent(filename=filename,
                                                 path_to_parent=path_to_parent,
@@ -271,46 +290,40 @@ def _search_for_env_with_name_and_parent(filename, path_to_parent, raise_):
     # pipeline.yaml....
     if filename is None:
         # look for env.yaml...
-        return _path_to_env_with_name(filename='env.yaml',
-                                      path_to_parent=path_to_parent,
-                                      raise_=raise_)
+        return _path_to_filename_in_cwd_or_with_parent(
+            filename='env.yaml', path_to_parent=path_to_parent, raise_=raise_)
     # pipeline.{name}.yaml
     else:
         # look for env.{name}.yaml
-        path = _path_to_env_with_name(filename=filename,
-                                      path_to_parent=path_to_parent,
-                                      raise_=raise_)
+        path = _path_to_filename_in_cwd_or_with_parent(
+            filename=filename, path_to_parent=path_to_parent, raise_=raise_)
 
         # not found, try with env.yaml...
         if path is None:
-            return _path_to_env_with_name(filename='env.yaml',
-                                          path_to_parent=path_to_parent,
-                                          raise_=raise_)
+            return _path_to_filename_in_cwd_or_with_parent(
+                filename='env.yaml',
+                path_to_parent=path_to_parent,
+                raise_=raise_)
         else:
             return path
 
 
-def _path_to_env_with_name(filename, path_to_parent, raise_):
-    """Loads an env.yaml file given a parent folder
-
-    It first looks up the PLOOMBER_ENV_FILENAME env var, it if exists, it uses
-    the filename defined there. If it doesn't exist, it tries to look for
-    env.{name}.yaml, if it doesn't exist, it looks for env.yaml. It returns
-    None if None of those files exist, except when PLOOMBER_ENV_FILENAME, in
-    such case, it raises an error.
+def _path_to_filename_in_cwd_or_with_parent(filename, path_to_parent, raise_):
+    """
+    Looks for a file with filename in the current working directory, if it
+    doesn't exist, it looks for it relative to path_to_parent.
 
     Parameters
     ----------
     filename : str
-        The filename to search for
+        Filename to search for
 
-    Raises
-    ------
-    FileNotFoundError
-        If PLOOMBER_ENV_FILENAME is defined but doesn't exist
-    ValueError
-        If PLOOMBER_ENV_FILENAME is defined and contains a value with
-        directories. It must only be a filename
+    path_to_parent : str or pathlib.Path
+        If filename does not exist in the current working directory, look
+        relative to this path
+
+    raise_ : bool
+        If Trye, raises an error if the file doesn't exist
     """
     local_env = Path('.', filename).resolve()
 

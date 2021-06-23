@@ -7,14 +7,53 @@ from ploomber.util import default
 from ploomber.exceptions import DAGSpecInvalidError
 
 
-@pytest.fixture
-def pkg_location():
+def create_package_with_name(name, base='.'):
     Path('setup.py').touch()
-    parent = Path('src', 'package_a')
+    parent = Path(base, 'src', name)
     parent.mkdir(parents=True)
     pkg_location = (parent / 'pipeline.yaml')
     pkg_location.touch()
-    return str(pkg_location)
+    return pkg_location
+
+
+@pytest.fixture
+def pkg_location():
+    location = create_package_with_name('package_a')
+    return str(location)
+
+
+def test_package_location(tmp_directory, pkg_location):
+    assert default._package_location(root_path='.') == str(
+        Path('src', 'package_a', 'pipeline.yaml'))
+
+
+def test_package_location_with_root_path(tmp_directory):
+    create_package_with_name('package_a', 'some-dir')
+    assert default._package_location(root_path='some-dir') == str(
+        Path('some-dir', 'src', 'package_a', 'pipeline.yaml'))
+
+
+def test_package_location_with_custom_name(tmp_directory):
+    create_package_with_name('package_b')
+    assert default._package_location(root_path='.') == str(
+        Path('src', 'package_b', 'pipeline.yaml'))
+
+
+def test_no_package_location(tmp_directory):
+    assert default._package_location(root_path='.') is None
+
+
+def test_package_location_warns_if_more_than_one(tmp_directory):
+    create_package_with_name('package_a')
+    create_package_with_name('package_b')
+
+    with pytest.warns(UserWarning) as record:
+        out = default._package_location(root_path='.')
+
+    assert len(record) == 1
+    assert 'Found more than one package' in record[0].message.args[0]
+    # most return the first one in alphabetical order
+    assert out == str(Path('src', 'package_a', 'pipeline.yaml'))
 
 
 def test_entry_point_env_var(monkeypatch, tmp_directory):
@@ -214,6 +253,27 @@ def test_path_to_env_error_if_dir(tmp_directory):
     expected = ("Expected path to spec 'pipeline.yaml' to be a file "
                 "but got a directory instead")
     assert str(excinfo.value) == expected
+
+
+def test_path_to_env_from_parent(tmp_directory):
+    p = Path('env.yaml').resolve()
+    p.touch()
+    assert default.path_to_env_from_parent(path_to_parent='.') == str(p)
+
+
+def test_path_to_env_from_parent_from_env_var(tmp_directory, monkeypatch):
+    monkeypatch.setenv('PLOOMBER_ENV_FILENAME', 'env.local.yaml')
+    p = Path('env.local.yaml').resolve()
+    p.touch()
+    assert default.path_to_env_from_parent(path_to_parent='.') == str(p)
+
+
+def test_path_to_env_from_parent_error_if_env_var_set_but_missing(
+        tmp_directory, monkeypatch):
+    monkeypatch.setenv('PLOOMBER_ENV_FILENAME', 'env.local.yaml')
+
+    with pytest.raises(FileNotFoundError):
+        default.path_to_env_from_parent(path_to_parent='.')
 
 
 def test_finds_pipeline_yaml(tmp_directory):
