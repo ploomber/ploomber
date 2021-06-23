@@ -317,37 +317,34 @@ def test_error_if_both_setup_py_and_pipeline_yaml_exist(tmp_directory):
         default.find_root_recursively()
 
 
-@pytest.mark.parametrize('to_create', [
-    ['path/pipeline.yaml'],
-    ['path/to/pipeline.yaml'],
-    ['path/to/pipeline.train.yaml'],
-    ['path/pipeline.yaml', 'path/pipeline.train.yaml'],
-    ['path/pipeline.yaml', 'another/pipeline.train.yaml'],
+@pytest.mark.parametrize('root_location, working_dir, to_create, filename', [
+    ['some/dir/pipeline.yaml', 'some/dir', 'some/pipeline.yaml', None],
+    [
+        'some/dir/pipeline.x.yaml', 'some/dir', 'some/pipeline.x.yaml',
+        'pipeline.x.yaml'
+    ],
+    [
+        'some/dir/another/dir/pipeline.yaml', 'some/dir/another/dir',
+        'some/pipeline.yaml', None
+    ],
 ])
-def test_warns_if_other_pipeline_yaml_as_children_of_root_path(
-        tmp_directory, to_create):
-    pip = Path('pipeline.yaml').resolve()
+def test_warns_if_other_pipeline_yaml_as_parents_of_root_path(
+        tmp_directory, root_location, working_dir, to_create, filename):
+    Path(root_location).parent.mkdir(parents=True, exist_ok=True)
+    pip = Path(root_location).resolve()
     pip.touch()
 
-    for filename in to_create:
-        filename = Path(filename)
-        filename.parent.mkdir(parents=True, exist_ok=True)
-        filename.touch()
+    to_create = Path(to_create)
+    to_create.parent.mkdir(parents=True, exist_ok=True)
+    to_create.touch()
 
-    # try switching this off
-    # dir_ = Path('some', 'path')
-    # dir_.mkdir(parents=True)
-    # os.chdir(dir_)
-
-    # try in the same location and check not warn
-    # do not warn if setup.py and src/*/pipeline.yaml
+    os.chdir(working_dir)
 
     with pytest.warns(UserWarning) as record:
-        default.find_root_recursively()
+        default.find_root_recursively(filename=filename)
 
     assert len(record) == 1
-    assert 'Found other pipeline files' in record[0].message.args[0]
-    assert all([str(Path(f)) in record[0].message.args[0] for f in to_create])
+    assert 'Found project root with filename' in record[0].message.args[0]
 
 
 def test_doesnt_warn_if_pipeline_yaml_in_the_same_directory(tmp_directory):
@@ -358,6 +355,33 @@ def test_doesnt_warn_if_pipeline_yaml_in_the_same_directory(tmp_directory):
         default.find_root_recursively()
 
     assert not len(record)
+
+
+def test_doesnt_warn_if_there_arent_nested_pipeline_yaml(tmp_directory):
+    p = Path('path', 'to', 'dir', 'pipeline.yaml')
+    p.parent.mkdir(parents=True)
+    p.touch()
+
+    os.chdir(p.parent)
+
+    with pytest.warns(None) as record:
+        default.find_root_recursively()
+
+    assert not len(record)
+
+
+def test_erturns_spec_location_if_setup_py_is_in_a_parent_folder(
+        tmp_directory):
+    p = Path('path', 'to', 'dir', 'pipeline.yaml').resolve()
+    p.parent.mkdir(parents=True)
+    p.touch()
+
+    Path('setup.py').touch()
+
+    os.chdir(p.parent)
+
+    assert Path(
+        default.find_root_recursively()).resolve() == p.parent.resolve()
 
 
 def test_error_if_filename_contains_directories():
