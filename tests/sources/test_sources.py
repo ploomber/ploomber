@@ -443,7 +443,7 @@ def b():
     loc = PythonCallableSource(dotted_path.load_dotted_path('a.b')).loc
     out = PythonCallableSource('a.b').loc
 
-    assert out == str(Path(loc).resolve())
+    assert str(Path(out).resolve()) == str(Path(loc).resolve())
 
 
 def test_detects_aliasing(tmp_directory, add_current_to_sys_path,

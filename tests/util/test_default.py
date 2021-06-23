@@ -413,10 +413,11 @@ def test_doesnt_warn_if_there_arent_nested_pipeline_yaml(tmp_directory):
     assert not len(record)
 
 
-def test_erturns_spec_location_if_setup_py_is_in_a_parent_folder(
+def test_returns_spec_location_if_setup_py_is_in_a_parent_folder(
         tmp_directory):
-    p = Path('path', 'to', 'dir', 'pipeline.yaml').resolve()
+    p = Path('path', 'to', 'dir', 'pipeline.yaml')
     p.parent.mkdir(parents=True)
+    p = p.resolve()
     p.touch()
 
     Path('setup.py').touch()

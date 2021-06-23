@@ -6,13 +6,9 @@ import test_pkg
 import yaml
 import pytest
 
-from ploomber.cli.parsers import (
-    _add_args_from_callable,
-    _process_file_dir_or_glob,
-    CustomParser,
-    _add_cli_args_from_env_dict_keys,
-    EntryPoint,
-)
+from ploomber.cli.parsers import (_add_args_from_callable,
+                                  _process_file_dir_or_glob, CustomParser,
+                                  _add_cli_args_from_env_dict_keys)
 from ploomber.env.envdict import EnvDict
 
 
@@ -200,15 +196,3 @@ def test_add_cli_args_from_env_dict_keys():
     _add_cli_args_from_env_dict_keys(parser, EnvDict({'a': 1}))
 
     assert {action.dest for action in parser._actions} == {'env__a', 'help'}
-
-
-def test_entry_point_module_path(monkeypatch):
-    monkeypatch.setattr(sys, 'argv', ['python'])
-
-    e = EntryPoint('test_pkg::pipeline.yaml')
-    parser = CustomParser()
-
-    assert e.type == 'module-path'
-    assert not e.is_dir()
-    assert e.suffix == '.yaml'
-    assert e.load(parser, sys.argv)
