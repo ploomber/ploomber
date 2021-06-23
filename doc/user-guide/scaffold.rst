@@ -7,11 +7,9 @@ You can quickly create new projects using the ``scaffold`` command:
 
     ploomber scaffold
 
-After running it, type a name for your project and press enter. The
-command will create a pre-configured project with a sample pipeline.
+After running it, type a name for your project and press enter. The command will create a pre-configured project with a sample pipeline.
 
-By default, ``scaffold`` adds a ``requirements.txt`` file to use with pip. If
-you want to use conda:
+By default, ``scaffold`` adds a ``requirements.txt`` file to use with pip. If you want to use conda:
 
 .. code-block:: console
 
@@ -23,8 +21,8 @@ Scaffolding tasks
 -----------------
 
 Once you have a ``pipeline.yaml`` file, ``ploomber scaffold`` behaves
-differently; allowing you to create new task files quickly. For example, say
-you add the following task:
+differently, allowing you to create new task files quickly. For example, say
+you add the following task to your YAML file:
 
 .. code-block:: yaml
     :class: text-editor
@@ -38,11 +36,11 @@ you add the following task:
           product: output/my-new-task.ipynb
 
 Executing ``ploomber scaffold`` will create a base task at
-``tasks/my-new-task.py``. This also works with Python functions and SQL
+``tasks/my-new-task.py``. This command also works with Python functions and SQL
 scripts.
 
 ``ploomber scaffold`` works as long as your ``pipeline.yaml`` file
-is in a standard location (:ref:`api-cli-default-locations`), hence, you can
+is in a standard location (:ref:`api-cli-default-locations`); hence, you can
 use it even if you didn't create your project with an initial call to
 ``ploomber scaffold``.
 
@@ -50,25 +48,23 @@ use it even if you didn't create your project with an initial call to
 Packaging projects
 ------------------
 
-To organize larger projects, it's best to configure them as a Python
-package (just like any other package that you get using ``pip install``).
-Packaged projects have more structure and require a bit more configuration, but
+When working on larger projects, it's a good idea to configure them as a Python
+package. Packaged projects have more structure and require a bit more configuration, but
 they allow you to organize your work better.
 
 For example, if you have Python functions that you re-use in several files,
 you must modify your ``PYTHONPATH`` or ``sys.path`` to ensure that such
 functions are importable wherever you want to use them. If you package your
-project, this is no longer necessary, since you can install your project using
+project, this is no longer necessary since you can install your project using
 ``pip``:
 
 .. code-block:: console
 
     pip install --editable path/to/myproject
 
-This effectively treats your project as any other package, allowing you to
-import modules anywhere (in a Python session, notebook, or other modules inside
-your project), making it simpler to organize your work.
-
+Installing with `pip` tells Python to treat your project as any other package,
+allowing you to import modules anywhere (in a Python session, notebook, or other modules inside
+your project).
 
 You can scaffold a packaged project with:
 
@@ -95,9 +91,9 @@ run:
 
     processors.process_data(X)
 
-Such import statement works independently of the current working directory, you
+Such import statement works independently of the current working directory; you
 no longer have to modify the ``PYTHONPATH`` or ``sys.path``. Everything under
-``src/{package-name}`` is importable. This prevents a lot of import errors.
+``src/{package-name}`` is importable.
 
 
 Managing development and production dependencies
@@ -110,8 +106,8 @@ Managing development and production dependencies
 
 While not required, separating development from production
 dependencies is highly recommended. During development, we usually need more
-dependencies than we do in production. Typical example are plotting libraries
-(e.g., matplotlib or seaborn); we need them for model evaluation, but not for
+dependencies than we do in production. A typical example is plotting libraries
+(e.g., matplotlib or seaborn); we need them for model evaluation but not for
 making predictions. Fewer production dependencies make the project faster to
 install, but more importantly, it reduces dependency resolution errors. The
 more dependencies you have, the higher the chance of running into installation
@@ -123,28 +119,27 @@ After executing ``ploomber scaffold`` command, you can run:
 
     ploomber install
 
-To setup your development environment. Such command detects whether to use pip
-or conda, takes care of installing dependencies from both files and configures
-your project if it's a package (i.e., you created it with
-``ploomber scaffold --package``).
+To configure your development environment. Such command detects whether to use pip
+or conda and takes care of installing dependencies from both files.
+Furthermore, it configures your project if it's a package (i.e., you created it
+with ``ploomber scaffold --package``).
 
-During deployment, only install production ignore development ones.
+During deployment, only install production dependencies and ignore development ones.
 
 **Note** If using ``pip``, ``ploomber install`` creates a virtual environment
 in your project root using the
 `venv <https://docs.python.org/3/tutorial/venv.html>`_ module in a
 ``venv-project-name`` directory. If you prefer to use another virtual
-environment manager, you must install dependencies with the applicable commands
-for the library you use.
+environment manager, you must install dependencies directly.
 
 Locking dependencies
 --------------------
 
 Changes in your dependencies may break your project at any moment if you don't
 pin versions. For example, if you train a model using scikit-learn version
-0.24 but only set scikit-learn as dependency (without version number).
+0.24 but only set `scikit-learn` as a dependency (without the version number).
 As soon as scikit-learn introduces breaking API changes, your project will
-break. It is impportant to record specific version to prevent broken projects.
+fail. It is important to record specific versions to prevent broken projects.
 
 You can do so with:
 
@@ -153,8 +148,8 @@ You can do so with:
     ploomber install
 
 Such command detects whether to use pip/conda and creates lock
-files for development and production dependencies; lock files contain and
-exhaustive list of dependencies with specific version. Alternatively, you can use
+files for development and production dependencies; lock files contain an
+exhaustive list of dependencies with a specific version. Alternatively, you can use
 your package manager. For pip:
 
 .. code-block:: console
