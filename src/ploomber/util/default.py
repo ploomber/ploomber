@@ -213,12 +213,12 @@ def entry_point_relative(name=None):
     return location_pkg or location
 
 
-def path_to_env(path_to_spec):
+def path_to_env_from_spec(path_to_spec):
     """
-    Determines the env.yaml to use. Prefers a file in the local working
-    directory, otherwise, one relative to the spec's parent. If the appropriate
-    env.yaml file does not exist, returns None. If path to spec has a
-    pipeline.{name}.yaml format, it tries to look up an env.{name}.yaml
+    Determines the env.yaml to use given a spec. Prefers a file in the
+    working directory, otherwise, one relative to the spec's parent. If the
+    appropriate env.yaml file does not exist, returns None. If path to spec has
+    a pipeline.{name}.yaml format, it tries to look up an env.{name}.yaml
     first
 
     Parameters
@@ -231,37 +231,66 @@ def path_to_env(path_to_spec):
     ValueError
         If path_to_spec does not have an extension or if it's a directory
     """
-    if path_to_spec is not None and Path(path_to_spec).is_dir():
+    # FIXME: delete this
+    if path_to_spec is None:
+        return None
+
+    if Path(path_to_spec).is_dir():
         raise ValueError(
             f'Expected path to spec {str(path_to_spec)!r} to be a '
             'file but got a directory instead')
 
-    if path_to_spec is not None and not Path(path_to_spec).suffix:
-        raise ValueError('Expected path to spec to have an extension '
+    if not Path(path_to_spec).suffix:
+        raise ValueError('Expected path to spec to have a file extension '
                          f'but got: {str(path_to_spec)!r}')
 
-    path_to_parent = None if path_to_spec is None else Path(
-        path_to_spec).parent
-    name = None if path_to_parent is None else extract_name(path_to_spec)
+    # TODO: test env var entry point logic
+    path_to_parent = Path(path_to_spec).parent
+    environ = _get_env_filename_environment_variable(path_to_parent)
+    if environ:
+        filename = environ
+    else:
+        name = environ or extract_name(path_to_spec)
+        filename = 'env.yaml' if name is None else f'env.{name}.yaml'
 
+    return _search_for_env_with_name_and_parent(filename,
+                                                path_to_parent,
+                                                raise_=environ is not None)
+
+
+def path_to_env_from_parent(path_to_parent):
+    # TODO: test this function
+    # TODO: test env var entry point logic
+    filename = _get_env_filename_environment_variable(path_to_parent)
+    return _search_for_env_with_name_and_parent(filename=filename,
+                                                path_to_parent=path_to_parent,
+                                                raise_=filename is not None)
+
+
+def _search_for_env_with_name_and_parent(filename, path_to_parent, raise_):
     # pipeline.yaml....
-    if name is None:
+    if filename is None:
         # look for env.yaml...
-        return path_to_env_with_name(name=None, path_to_parent=path_to_parent)
+        return _path_to_env_with_name(filename='env.yaml',
+                                      path_to_parent=path_to_parent,
+                                      raise_=raise_)
     # pipeline.{name}.yaml
     else:
         # look for env.{name}.yaml
-        path = path_to_env_with_name(name=name, path_to_parent=path_to_parent)
+        path = _path_to_env_with_name(filename=filename,
+                                      path_to_parent=path_to_parent,
+                                      raise_=raise_)
 
         # not found, try with env.yaml...
         if path is None:
-            return path_to_env_with_name(name=None,
-                                         path_to_parent=path_to_parent)
+            return _path_to_env_with_name(filename='env.yaml',
+                                          path_to_parent=path_to_parent,
+                                          raise_=raise_)
         else:
             return path
 
 
-def path_to_env_with_name(name, path_to_parent):
+def _path_to_env_with_name(filename, path_to_parent, raise_):
     """Loads an env.yaml file given a parent folder
 
     It first looks up the PLOOMBER_ENV_FILENAME env var, it if exists, it uses
@@ -272,8 +301,8 @@ def path_to_env_with_name(name, path_to_parent):
 
     Parameters
     ----------
-    name : str
-        The name of the env.{name}.yaml file to search for
+    filename : str
+        The filename to search for
 
     Raises
     ------
@@ -283,6 +312,28 @@ def path_to_env_with_name(name, path_to_parent):
         If PLOOMBER_ENV_FILENAME is defined and contains a value with
         directories. It must only be a filename
     """
+    local_env = Path('.', filename).resolve()
+
+    if local_env.exists():
+        return str(local_env)
+
+    if path_to_parent:
+        sibling_env = Path(path_to_parent, filename).resolve()
+
+        if sibling_env.exists():
+            return str(sibling_env)
+
+    if raise_:
+        raise FileNotFoundError('Failed to load env: PLOOMBER_ENV_FILENAME '
+                                f'has value {filename!r} but '
+                                'there isn\'t a file with such name. '
+                                'Tried looking it up relative to the '
+                                'current working directory '
+                                f'({str(local_env)!r}) and relative '
+                                f'to the YAML spec ({str(sibling_env)!r})')
+
+
+def _get_env_filename_environment_variable(path_to_parent):
     env_var = os.environ.get('PLOOMBER_ENV_FILENAME')
 
     if env_var:
@@ -296,29 +347,7 @@ def path_to_env_with_name(name, path_to_parent):
                              f'spec ({path_to_parent_abs!r}) or next to the '
                              'current working directory')
 
-        filename = env_var
-    else:
-        filename = 'env.yaml' if name is None else f'env.{name}.yaml'
-
-    local_env = Path('.', filename).resolve()
-
-    if local_env.exists():
-        return str(local_env)
-
-    if path_to_parent:
-        sibling_env = Path(path_to_parent, filename).resolve()
-
-        if sibling_env.exists():
-            return str(sibling_env)
-
-    if env_var:
-        raise FileNotFoundError('Failed to load env: PLOOMBER_ENV_FILENAME '
-                                f'has value {env_var!r} but '
-                                'there isn\'t a file with such name. '
-                                'Tried looking it up relative to the '
-                                'current working directory '
-                                f'({str(local_env)!r}) and relative '
-                                f'to the YAML spec ({str(sibling_env)!r})')
+    return env_var
 
 
 def extract_name(path):

@@ -258,7 +258,8 @@ class DAGSpec(MutableMapping):
         logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env))
 
         env = env or dict()
-        path_to_defaults = default.path_to_env(path_to_spec=self._path)
+        path_to_defaults = default.path_to_env_from_spec(
+            path_to_spec=self._path)
 
         if path_to_defaults:
             defaults = yaml.safe_load(Path(path_to_defaults).read_text())

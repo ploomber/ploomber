@@ -88,12 +88,13 @@ def test_dagspec_initialization_from_yaml_and_env(tmp_nbs, monkeypatch):
     the path, instead of a dictionary
     """
     mock_DAGSpec = Mock(wraps=parsers.DAGSpec)
-    mock_default_path_to_env = Mock(wraps=parsers.default.path_to_env)
+    mock_default_path_to_env = Mock(
+        wraps=parsers.default.path_to_env_from_spec)
     mock_EnvDict = Mock(wraps=parsers.EnvDict)
 
     monkeypatch.setattr(sys, 'argv', ['python'])
     monkeypatch.setattr(parsers, 'DAGSpec', mock_DAGSpec)
-    monkeypatch.setattr(parsers.default, 'path_to_env',
+    monkeypatch.setattr(parsers.default, 'path_to_env_from_spec',
                         mock_default_path_to_env)
     monkeypatch.setattr(parsers, 'EnvDict', mock_EnvDict)
 

@@ -125,7 +125,7 @@ def test_path_to_env_local(tmp_directory, spec_name, env_name):
     Path('dir').mkdir()
     Path('dir', spec_name).touch()
 
-    assert default.path_to_env(Path('dir', spec_name)) == str(
+    assert default.path_to_env_from_spec(Path('dir', spec_name)) == str(
         Path(env_name).resolve())
 
 
@@ -135,8 +135,9 @@ def test_path_to_env_loads_file_with_same_name(tmp_directory):
     Path('dir').mkdir()
     Path('dir', 'pipeline.train.yaml').touch()
 
-    assert default.path_to_env(Path('dir', 'pipeline.train.yaml')) == str(
-        Path('env.train.yaml').resolve())
+    assert default.path_to_env_from_spec(
+        Path('dir',
+             'pipeline.train.yaml')) == str(Path('env.train.yaml').resolve())
 
 
 def test_path_to_env_prefers_file_wih_name_over_plain_env_yaml(tmp_directory):
@@ -146,8 +147,9 @@ def test_path_to_env_prefers_file_wih_name_over_plain_env_yaml(tmp_directory):
     Path('dir').mkdir()
     Path('dir', 'pipeline.train.yaml').touch()
 
-    assert default.path_to_env(Path('dir', 'pipeline.train.yaml')) == str(
-        Path('env.train.yaml').resolve())
+    assert default.path_to_env_from_spec(
+        Path('dir',
+             'pipeline.train.yaml')) == str(Path('env.train.yaml').resolve())
 
 
 def test_path_to_env_prefers_env_variable(tmp_directory, monkeypatch):
@@ -160,29 +162,30 @@ def test_path_to_env_prefers_env_variable(tmp_directory, monkeypatch):
     Path('dir').mkdir()
     Path('dir', 'pipeline.train.yaml').touch()
 
-    assert default.path_to_env(Path('dir', 'pipeline.train.yaml')) == str(
-        Path('env.local.yaml').resolve())
+    assert default.path_to_env_from_spec(
+        Path('dir',
+             'pipeline.train.yaml')) == str(Path('env.local.yaml').resolve())
 
 
 def test_error_if_env_var_has_directories(monkeypatch):
     monkeypatch.setenv('PLOOMBER_ENV_FILENAME', 'path/to/env.local.yaml')
 
     with pytest.raises(ValueError):
-        default.path_to_env('pipeline.yaml')
+        default.path_to_env_from_spec('pipeline.yaml')
 
 
 def test_error_if_env_var_file_missing(monkeypatch):
     monkeypatch.setenv('PLOOMBER_ENV_FILENAME', 'env.local.yaml')
 
     with pytest.raises(FileNotFoundError):
-        default.path_to_env('pipeline.yaml')
+        default.path_to_env_from_spec('pipeline.yaml')
 
 
 def test_path_to_parent_sibling(tmp_directory):
     Path('dir').mkdir()
     Path('dir', 'env.yaml').touch()
 
-    assert default.path_to_env('dir/pipeline.yaml') == str(
+    assert default.path_to_env_from_spec('dir/pipeline.yaml') == str(
         Path('dir', 'env.yaml').resolve())
 
 
@@ -190,14 +193,15 @@ def test_path_to_parent_sibling(tmp_directory):
 def test_path_to_env_none(tmp_directory, arg):
     Path('dir').mkdir()
 
-    assert default.path_to_env(arg) is None
+    assert default.path_to_env_from_spec(arg) is None
 
 
 def test_path_to_env_error_if_no_extension():
     with pytest.raises(ValueError) as excinfo:
-        default.path_to_env('pipeline')
+        default.path_to_env_from_spec('pipeline')
 
-    expected = "Expected path to spec to have an extension but got: 'pipeline'"
+    expected = ("Expected path to spec to have a file extension "
+                "but got: 'pipeline'")
     assert str(excinfo.value) == expected
 
 
@@ -205,7 +209,7 @@ def test_path_to_env_error_if_dir(tmp_directory):
     Path('pipeline.yaml').mkdir()
 
     with pytest.raises(ValueError) as excinfo:
-        default.path_to_env('pipeline.yaml')
+        default.path_to_env_from_spec('pipeline.yaml')
 
     expected = ("Expected path to spec 'pipeline.yaml' to be a file "
                 "but got a directory instead")

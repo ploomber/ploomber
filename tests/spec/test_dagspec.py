@@ -262,14 +262,14 @@ def test_prioritizes_local_env_over_sibling_env(tmp_nbs):
     assert spec.env.a == 100
 
 
-def test_loads_env_in_default_location_if_loading_from_dict(tmp_nbs):
+def test_doesnt_load_env_in_default_location_if_loading_from_dict(tmp_nbs):
     Path('env.yaml').write_text("{'a': 1}")
 
     with open('pipeline.yaml') as f:
         d = yaml.safe_load(f)
 
     spec = DAGSpec(d)
-    assert set(spec.env) == {'user', 'cwd', 'a', 'root'}
+    assert set(spec.env) == {'user', 'cwd', 'root'}
 
 
 def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
@@ -1369,7 +1369,7 @@ _spec_upstream_manual = {
 
 @pytest.mark.parametrize('spec',
                          [_spec_upstream_extract, _spec_upstream_manual])
-def test_grid_and_upstream_wildcard_scripts(spec, tmp_path):
+def test_grid_and_upstream_wildcard_scripts(spec, tmp_directory):
     Path('upstream.py').write_text("""
 # + tags=['parameters']
 upstream = None

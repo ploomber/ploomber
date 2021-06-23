@@ -460,14 +460,14 @@ def _process_file_dir_or_glob(parser, dagspec_arg=None):
     entry = EntryPoint(entry_point_value)
 
     if entry.type == EntryPoint.Directory:
-        path_to_env = default.path_to_env_with_name(
-            name=None, path_to_parent=entry_point_value)
+        path_to_env = default.path_to_env_from_parent(
+            path_to_parent=entry_point_value)
     elif entry.type == EntryPoint.Pattern:
-        path_to_env = default.path_to_env_with_name(
-            name=None, path_to_parent=Path(entry_point_value).parent)
+        path_to_env = default.path_to_env_from_parent(
+            path_to_parent=Path(entry_point_value).parent)
     # file
     else:
-        path_to_env = default.path_to_env(entry_point_value)
+        path_to_env = default.path_to_env_from_spec(entry_point_value)
 
     if path_to_env:
         env_dict = EnvDict(path_to_env)
