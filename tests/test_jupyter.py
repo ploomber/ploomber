@@ -437,6 +437,7 @@ def new_task(product):
     ]
 
 
+@pytest.mark.xfail
 def test_hot_reload_when_adding_function_task_in_existing_module(
         backup_spec_with_functions_flat):
     # setup: configure jupyter settings and save spec
