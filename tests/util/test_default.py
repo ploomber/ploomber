@@ -360,6 +360,22 @@ def test_error_if_both_setup_py_and_pipeline_yaml_exist(tmp_directory):
         default.find_root_recursively()
 
 
+def test_find_root_recursively_error_pipeline_yaml_under_src_but_no_setup_py(
+        tmp_directory):
+    parent = Path('src', 'package')
+    parent.mkdir(parents=True)
+
+    (parent / 'pipeline.yaml').touch()
+
+    os.chdir(parent)
+
+    with pytest.raises(DAGSpecInvalidError) as excinfo:
+        default.find_root_recursively()
+
+    assert 'Invalid project layout' in str(excinfo.value)
+    assert str(Path('src', 'package')) in str(excinfo.value)
+
+
 @pytest.mark.parametrize('root_location, working_dir, to_create, filename', [
     ['some/dir/pipeline.yaml', 'some/dir', 'some/pipeline.yaml', None],
     [

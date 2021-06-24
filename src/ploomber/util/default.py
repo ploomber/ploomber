@@ -459,8 +459,9 @@ def find_root_recursively(starting_dir=None,
     # if the pipeline.yaml if closer to the starting_dir than the setup.py.
     # e.g., project/some/pipeline.yaml vs project/setup.py
 
-    if (root_by_pipeline and root_by_pipeline.parents[0].name != 'src'
-            and (not root_by_setup or pipeline_levels < setup_levels)):
+    if (root_by_pipeline
+            and (not root_by_setup or pipeline_levels < setup_levels)
+            and root_by_pipeline.parents[0].name != 'src'):
         root_found = root_by_pipeline
 
     if root_by_setup and (not root_by_pipeline
@@ -497,6 +498,16 @@ def find_root_recursively(starting_dir=None,
                 f'under {str(pkg)} (e.g., {example})')
 
         root_found = root_by_setup
+
+    if root_by_pipeline and root_by_pipeline.parents[
+            0].name == 'src' and not root_by_setup:
+        pkg_portion = str(Path(*root_by_pipeline.parts[-2:]))
+        raise DAGSpecInvalidError(
+            'Invalid project layout. Found project root at '
+            f'{root_by_pipeline}  under a parent with name {pkg_portion}. '
+            'This suggests a package '
+            'structure but no setup.py exists. If your project is a package '
+            'create a setup.py file, otherwise rename the src directory')
 
     if root_found:
         if check_parents:
