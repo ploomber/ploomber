@@ -102,6 +102,16 @@ def test_dag_from_directory(monkeypatch, tmp_nbs):
     assert injected
 
 
+def test_dag_from_dotted_path(monkeypatch, tmp_nbs, add_current_to_sys_path,
+                              no_sys_modules_cache):
+    monkeypatch.setenv('ENTRY_POINT', 'factory.make')
+
+    cm = PloomberContentsManager()
+    model = cm.get('plot.py')
+    injected = get_injected_cell(model['content'])
+    assert injected
+
+
 @pytest.mark.parametrize('cwd, file_to_get', [
     ['.', 'clean/clean.py'],
     ['clean', 'clean.py'],

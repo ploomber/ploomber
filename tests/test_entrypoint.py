@@ -22,3 +22,8 @@ def test_entry_point_module_path(monkeypatch):
     assert e.type == 'module-path'
     assert not e.is_dir()
     assert e.suffix == '.yaml'
+
+
+def test_dotted_path_that_ends_with_yaml():
+    with pytest.raises(ValueError):
+        EntryPoint('some.dotted.path.yaml').type

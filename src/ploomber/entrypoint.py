@@ -48,7 +48,6 @@ class EntryPoint:
 # also contains some CLI specific parts that we don't require here
 def find_entry_point_type(entry_point):
     """
-
     Step 1: If not ENTRY_POINT is defined nor a value is passed, a default
     value is used (pipeline.yaml for CLI, recursive lookup for Jupyter client).
     If ENTRY_POINT is defined, this simply overrides the default value, but
@@ -67,7 +66,7 @@ def find_entry_point_type(entry_point):
             return EntryPoint.Directory
         else:
             return EntryPoint.File
-    elif '.' in entry_point:
+    elif '.' in entry_point and Path(entry_point).suffix != '.yaml':
         return EntryPoint.DottedPath
     else:
         raise ValueError(

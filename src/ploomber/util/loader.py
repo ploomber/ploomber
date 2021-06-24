@@ -3,7 +3,9 @@ import os
 
 from ploomber.spec import DAGSpec
 from ploomber.util import default
+from ploomber.util.dotted_path import load_callable_dotted_path
 from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.entrypoint import EntryPoint
 
 
 def lazily_load_entry_point(starting_dir, reload):
@@ -12,9 +14,17 @@ def lazily_load_entry_point(starting_dir, reload):
     # TODO: validate that entry_point is a valid .yaml value
     # any other thing should raise an exception
 
-    if entry_point and Path(entry_point).is_dir():
+    if entry_point and EntryPoint(entry_point).type == EntryPoint.Directory:
         spec = DAGSpec.from_directory(entry_point)
         path = Path(entry_point)
+    elif entry_point and EntryPoint(entry_point).type == EntryPoint.DottedPath:
+        entry = load_callable_dotted_path(str(entry_point), raise_=True)
+        dag = entry()
+        spec = dict(meta=dict(jupyter_hot_reload=False,
+                              jupyter_functions_as_notebooks=False))
+        # potential issue: dag defines sources as relative paths
+        path = Path().resolve()
+        return spec, dag, path
     else:
         spec, path = _default_spec_load(starting_dir=starting_dir,
                                         reload=reload,
