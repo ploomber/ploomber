@@ -283,3 +283,17 @@ def test_lazily_locate_dotted_path_missing_module(tmp_directory,
 
     assert "No module named 'a.b'. Expected to find one of" in str(
         excinfo.value)
+
+
+def test_error_if_doesnt_define_name(tmp_directory, add_current_to_sys_path,
+                                     no_sys_modules_cache):
+
+    Path('a.py').touch()
+
+    with pytest.raises(AttributeError) as excinfo:
+        dotted_path.lazily_locate_dotted_path('a.unknown_name')
+
+    assert "Failed to locate dotted path 'a.unknown_name'" in str(
+        excinfo.value)
+    assert "a.py" in str(excinfo.value)
+    assert "a function named 'unknown_name'" in str(excinfo.value)

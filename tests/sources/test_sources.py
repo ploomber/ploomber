@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -330,19 +331,20 @@ def test_python_callable_properties(path_to_test_pkg):
 
 def test_python_callable_with_dotted_path_does_not_import(
         tmp_directory, add_current_to_sys_path, no_sys_modules_cache):
-    loc = Path('some_dotted_path.py').resolve()
+    loc = Path('some_dotted_path.py')
     loc.write_text("""
 import some_unknown_package
 
 def some_fn():
     pass
 """)
+    loc = loc.resolve()
 
     source = PythonCallableSource('some_dotted_path.some_fn')
 
     assert str(source) == 'def some_fn():\n    pass\n'
     assert source.name == 'some_fn'
-    assert source.loc == f'{loc}:4'
+    assert str(Path(source.loc).resolve()) == f'{loc}:4'
 
 
 def test_python_callable_with_nested_dotted_path_does_not_import(
@@ -357,12 +359,13 @@ import some_unknown_package
 def some_fn():
     pass
 """)
+    loc = loc.resolve()
 
     source = PythonCallableSource('nested.some_dotted_path.some_fn')
 
     assert str(source) == 'def some_fn():\n    pass\n'
     assert source.name == 'some_fn'
-    assert source.loc == f'{loc}:2'
+    assert str(Path(source.loc).resolve()) == f'{loc}:2'
 
 
 @pytest.mark.parametrize('target_file, dotted_path_str', [
@@ -393,39 +396,14 @@ def symbol():
     pass
 """)
 
-    # TODO: this is only possible with >3 parts
-    # Path('a', '__init__.py').write_text('import some_unknown_pkg')
-
-    # TODO: add another test that checks that no things are imported
-
-    # TODO: this sould be a test at the python callable source level
-    # to ensure lazy load and no lazy load return the same results
-
-    # from IPython import embed
-    # embed()
-
-    # test when symbol is not defined
+    out = PythonCallableSource(dotted_path_str).loc
+    # check that a.py hasn't been imported
+    assert 'a' not in sys.modules
 
     loc = PythonCallableSource(
         dotted_path.load_dotted_path(dotted_path_str)).loc
 
-    out = PythonCallableSource(dotted_path_str).loc
-
-    assert out == str(Path(loc).resolve())
-
-
-def test_error_if_doesnt_define_name(tmp_directory, add_current_to_sys_path,
-                                     no_sys_modules_cache):
-
-    Path('a.py').touch()
-
-    with pytest.raises(AttributeError) as excinfo:
-        dotted_path.lazily_locate_dotted_path('a.unknown_name')
-
-    assert "Failed to locate dotted path 'a.unknown_name'" in str(
-        excinfo.value)
-    assert "a.py" in str(excinfo.value)
-    assert "a function named 'unknown_name'" in str(excinfo.value)
+    assert str(Path(out).resolve()) == str(Path(loc).resolve())
 
 
 def test_defined_name_twice(tmp_directory, add_current_to_sys_path,
