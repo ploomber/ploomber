@@ -2,14 +2,14 @@
 
 ## 0.11.2dev
 
-- Changes to the logic that determines project root: only considers `pipeline.yaml` and `setup.py` (instead of `environment.yml` or `requirements.txt`)
+- Changes the logic that determines project root: only considers `pipeline.yaml` and `setup.py` (instead of `environment.yml` or `requirements.txt`)
 - Adds configuration and scaffold user guides
 - Updates Jupyter user guide
 - Deletes conda user guide
 - Renames internal modules for consistency (this should not impact end-users)
 - Fixes error that caused Files generated from TaskGroups in the spec API not to resolve to their absolute values
 - Fixes error that caused metadata not to delete on when saving files in Jupyter if using a source in more than one task
-- `DAGSpec` loads an `env.{name}.yaml` file wen loading a `pipeline.{name}.yaml` if one exists
+- `DAGSpec` loads an `env.{name}.yaml` file when loading a `pipeline.{name}.yaml` if one exists
 - `ploomber plot` saves to `pipeline.{name}.png`
 - Override `env.yaml` to load using `PLOOMBER_ENV_FILENAME` environment variable
 - `EnvDict` init no longer searches recursively, moved that logic to `EnvDict.find`. `with_env` decorator now uses the latter to prevent breaking the API
