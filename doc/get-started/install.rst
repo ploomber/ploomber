@@ -15,6 +15,17 @@ To install Ploomber along with all optional dependencies:
 
     pip install "ploomber[all]"
 
+Using ``conda``
+-------------
+
+.. code-block:: console
+
+    conda install ploomber -c conda-forge
+
+.. note::
+
+    This includes all optional dependencies by default
+
 To plot your pipeline (Optional)
 --------------------------------
 
