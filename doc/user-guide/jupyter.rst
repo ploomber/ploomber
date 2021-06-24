@@ -1,10 +1,19 @@
 Jupyter and Exploratory Data Analysis
 =====================================
 
-Scripts and notebooks go through a cell injection process that replaces the
-original upstream variable (which only contains names for dependencies) with
-a dictionary that maps these names to output files so you can use them as inputs
-in the current task.
+**Note:** If you're new to Ploomber, check out the
+:doc:`../get-started/basic-concepts` guide, this tutorial assumes you're
+already familiar with Ploomber's core concepts.
+
+Ploomber integrates with Jupyter to make it easy to create multi-stage
+pipelines composed of small notebooks. Breaking down logic in multiple
+steps allows you to develop modularized pipelines that are easier to maintain
+and deploy.
+
+Before executing scripts or notebooks, Ploomber injects a new cell that
+replaces the ``upstream`` variable at the top of the notebook (which only
+contains dependency names) with a dictionary that maps these names to their
+corresponding output files so you can use them as inputs in the current task.
 
 For example if a Python script (``task.py``) declares the following dependency:
 
@@ -32,17 +41,13 @@ The following cell will be injected in ``task.py`` before execution:
 .. code-block:: python
     :class: text-editor
 
+    # this is injected automatically
     upstream = {'another_task': {'nb': 'output/another-task.ipynb',
                                  'data': 'output/another-task.parquet'}}
 
-Your code cannot execute without the injected cell because it doesn't know the
-input files' location. To enable interactive development, Ploomber integrates
-with Jupyter (notebook and lab).
 
-If you open a script that is a task in your pipeline, it will render as a
-Jupyter notebook and the cell injection process will happen automatically
-(this cell is just temporary and not saved). The Jupyter extension installs
-when you install Ploomber.
+The cell injection process happens during execution and development, allowing
+you to develop pipelines interactively.
 
 **NOTE:** When using ``jupyter notebook``, scripts automatically render as
 notebooks. When using ``jupyter lab``: Right-click -> Open With -> Notebook,
@@ -51,6 +56,72 @@ as depicted below:
 .. image:: https://ploomber.io/doc/lab-open-with-notebook.png
    :target: https://ploomber.io/doc/lab-open-with-notebook.png
    :alt: lab-open-with-notebook
+
+
+Developing pipelines interactively
+----------------------------------
+
+You can develop entire pipelines without leaving Jupyter. The fastest way to get
+started is to use the ``ploomber scaffold`` command, which creates a base
+project, check out the guide to learn more: :doc:`../user-guide/scaffold`.
+
+Once you have a ``pipeline.yaml`` file, you may add new tasks and run
+``ploomber scaffold`` again to create base scripts. For example, say you
+create a ``pipeline.yaml`` like this:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    tasks:
+      - source: scripts/get.py
+        product:
+          nb: output/get.ipynb
+          data: output/get.csv
+
+      - source: scripts/clean.py
+        product:
+          nb: output/clean.ipynb
+          data: output/clean.csv
+    
+      - source: scripts/fit.py
+        product:
+          nb: output/fit.ipynb
+          model: output/model.pickle
+
+Once you execute ``ploomber scaffold``, you'll see the three new scripts
+under the ``scripts/`` directory. You can then start adding the relationships
+between tasks. For example, in your ``scripts/clean.py`` file, you may add
+the following:
+
+
+.. code-block:: python
+    :class: text-editor
+    :name: clean-py
+
+    # ensure we get the data, and then we clean it
+    upstream = ['get']
+
+
+To inject the cell, reload the file from disk:
+
+.. image:: https://ploomber.io/doc/lab-reload-file.png
+   :target: https://ploomber.io/doc/lab-reload-file.png
+   :alt: lab-reload-file
+
+
+Then, you'll see something like this:
+
+.. code-block:: python
+    :class: text-editor
+
+    # injected cell
+    upstream = {'get': 'nb': 'output/clean.ipynb', 'data': 'output/clean.csv'}
+
+
+**Note:** Ploomber needs to parse your ``pipeline.yaml`` file to inject cells
+in your scripts/notebooks; if an error happens during the parsing process, you
+won't see any injected cells. Check out the Troubleshooting section below
+for details.
 
 Activating the Jupyter extension
 --------------------------------
@@ -102,30 +173,32 @@ Troubleshooting pipeline loading
 
 If a pipeline is not detected, the Jupyter notebook application will work
 as expected, but no cell injection will happen. You can see if Ploomber could
-not detect a pipeline by looking at the messages displayed after initializing Jupyter, you'll see something like this:
+not detect a pipeline by looking at the messages displayed after
+initializing Jupyter (the terminal window where you executed the
+``jupyter notebook/lab`` command, you'll see something like this:
 
 .. code-block:: console
 
     [Ploomber] Skipping DAG initialization since there isn't a project root in the current or parent directories. Error message: {SOME_MESSAGE}
 
 
-This means that given the location of the current file, Ploomber could not
-locate a ``pipeline.yaml`` file to use for cell injection. The error message
-will contain more details. If you see this error ensure that there is a valid
-``pipeline.yaml`` the same directory than the file you opened or in a parent
-directory.
+The message above means that Ploomber could not locate a ``pipeline.yaml`` file
+to use for cell injection, take a look at the entire error message as it will
+contain more details to help you fix the problem. A common mistake is not to
+include a ``pipeline.yaml`` file in the same directory (or parent) of the script/notebook you're editing.
 
-
-If a pipeline sec is found but fails to initialize, the Jupyter console will
-show an error message:
+If a ``pipeline.yaml`` is found but fails to initialize, the Jupyter console
+will show another error message:
 
 .. code-block:: console
 
     [Ploomber] An error occurred when trying to initialize the pipeline.
 
-Below such an error message, you'll see more details to help you debug your
-pipeline. Note that even if your pipeline isn't found or fails to initialize,
-Jupyter will start anyway so ensure to take a look at the console if you
+
+A common reason for this is an invalid ``pipeline.yaml`` file.
+
+Note that even if your pipeline is missing or fails to initialize,
+Jupyter will start anyway, so ensure to take a look at the console if you
 experience problems.
 
 
@@ -142,7 +215,7 @@ option off for changes to be detected.
 Managing multiple pipelines
 ---------------------------
 
-It's possible for Jupyter to detect more than one pipeline in a single project.
+Jupyter can detect more than one pipeline in a single project.
 There are two ways to achieve this.
 
 The first one is to create sibling folders, each one with its own
@@ -187,7 +260,7 @@ differently:
     pipeline.another.yaml
     another-script.py
 
-On this case, Ploomber will load ``pipeline.yaml`` by default, but you can
+In this case, Ploomber will load ``pipeline.yaml`` by default, but you can
 switch this by setting the ``ENTRY_POINT`` variable to the other spec.
 (e.g., ``pipeline.another.yaml``). Note that the environment variable must be
 a filename and not a path.
@@ -201,7 +274,7 @@ task file in Jupyter (i.e., the source file is listed in your ``pipeline.yaml``
 file.
 
 A second way is to load your pipeline in Jupyter to interact with it. This second
-approach is best when you already have some tasks and you want to explore their
+approach is best when you already have some tasks, and you want to explore their
 outputs to decide how to proceed with further analysis.
 
 Say that you have a single task that loads the data:
