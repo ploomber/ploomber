@@ -127,8 +127,16 @@ tasks:
 
 ## Installation
 
+Via `pip`
+
 ```sh
 pip install ploomber
+```
+
+Via `conda` 
+
+```sh
+conda install ploomber -c conda-forge
 ```
 
 Compatible with Python 3.6 and higher.
