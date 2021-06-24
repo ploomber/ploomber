@@ -48,6 +48,7 @@ import nbformat
 from ploomber.util import chdir_code
 from ploomber.sources.nb_utils import find_cell_with_tag
 from ploomber.static_analysis.python import PythonCallableExtractor
+from ploomber.sources.inspect import getfile
 
 # TODO: test for locally defined objects
 # TODO: reloading the fn causes trobule if it enters into an inconsistent
@@ -293,7 +294,7 @@ def parse_function(fn):
 
 
 def extract_imports(fn):
-    source = Path(inspect.getfile(fn)).read_text()
+    source = Path(getfile(fn)).read_text()
 
     module = parso.parse(source)
     lines = source.splitlines()

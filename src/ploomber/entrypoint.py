@@ -57,6 +57,22 @@ def find_entry_point_type(entry_point):
     if it's a file, it's loaded from that file (spec), finally, it's
     interpreted as a dotted path
     """
+    type_ = try_to_find_entry_point_type(entry_point)
+
+    if type_:
+        return type_
+    else:
+        raise ValueError(
+            'Could not determine the entry point type from value: '
+            f'{entry_point!r}. Expected '
+            'an existing file, directory, glob-like pattern '
+            '(i.e., *.py) or dotted path '
+            '(dot-separated string). Verify your input.')
+
+
+def try_to_find_entry_point_type(entry_point):
+    if entry_point is None:
+        return None
     if '*' in entry_point:
         return EntryPoint.Pattern
     elif '::' in entry_point:
@@ -66,11 +82,7 @@ def find_entry_point_type(entry_point):
             return EntryPoint.Directory
         else:
             return EntryPoint.File
-    elif '.' in entry_point and Path(entry_point).suffix != '.yaml':
+    elif '.' in entry_point and Path(entry_point).suffix not in {
+            '.yaml', '.yml'
+    }:
         return EntryPoint.DottedPath
-    else:
-        raise ValueError(
-            'Could not determine the entry point type from value: '
-            f'{entry_point!r}. Expected '
-            'an existing file, directory glob-like pattern (i.e. *.py) or '
-            'dotted path (dot-separated string). Verify your input.')

@@ -1,6 +1,6 @@
 import pytest
 
-from ploomber.entrypoint import EntryPoint
+from ploomber.entrypoint import EntryPoint, try_to_find_entry_point_type
 
 
 @pytest.mark.parametrize('value, type_', [
@@ -25,5 +25,11 @@ def test_entry_point_module_path(monkeypatch):
 
 
 def test_dotted_path_that_ends_with_yaml():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as excinfo:
         EntryPoint('some.dotted.path.yaml').type
+
+    assert 'Could not determine the entry point type' in str(excinfo.value)
+
+
+def test_try_to_find_entry_point_type_with_none():
+    assert try_to_find_entry_point_type(None) is None

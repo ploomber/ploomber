@@ -335,3 +335,12 @@ def no_sys_modules_cache():
 
     for a_module in to_remove:
         del sys.modules[a_module]
+
+
+@pytest.fixture
+def tmp_imports(add_current_to_sys_path, no_sys_modules_cache):
+    """
+    Adds current directory to sys.path and deletes everything imported during
+    test execution upon exit
+    """
+    yield

@@ -279,7 +279,7 @@ def test_invalid_spec_entry_point(args, monkeypatch):
     with pytest.raises(ValueError) as excinfo:
         build.main(catch_exception=False)
 
-    assert 'YAML file is expected' in str(excinfo.value)
+    assert 'Could not determine the entry point type' in str(excinfo.value)
 
 
 def test_nonexisting_module(monkeypatch):

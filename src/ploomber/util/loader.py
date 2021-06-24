@@ -5,19 +5,25 @@ from ploomber.spec import DAGSpec
 from ploomber.util import default
 from ploomber.util.dotted_path import load_callable_dotted_path
 from ploomber.exceptions import DAGSpecInitializationError
-from ploomber.entrypoint import EntryPoint
+from ploomber.entrypoint import try_to_find_entry_point_type, EntryPoint
 
 
-def lazily_load_entry_point(starting_dir, reload):
+def lazily_load_entry_point(starting_dir=None, reload=False):
+    """
+    Lazily loads entry point by recursively looking in starting_dir directory
+    and parent directories.
+    """
+
+    starting_dir = starting_dir or '.'
+
     entry_point = os.environ.get('ENTRY_POINT')
 
-    # TODO: validate that entry_point is a valid .yaml value
-    # any other thing should raise an exception
+    type_ = try_to_find_entry_point_type(entry_point)
 
-    if entry_point and EntryPoint(entry_point).type == EntryPoint.Directory:
+    if type_ == EntryPoint.Directory:
         spec = DAGSpec.from_directory(entry_point)
         path = Path(entry_point)
-    elif entry_point and EntryPoint(entry_point).type == EntryPoint.DottedPath:
+    elif type_ == EntryPoint.DottedPath:
         entry = load_callable_dotted_path(str(entry_point), raise_=True)
         dag = entry()
         spec = dict(meta=dict(jupyter_hot_reload=False,

@@ -213,6 +213,12 @@ class DAGSpec(MutableMapping):
             self._path = Path(data).resolve()
             self._parent_path = str(self._path.parent)
 
+            if not Path(data).is_file():
+                raise FileNotFoundError(
+                    'Error initializing DAGSpec with argument '
+                    f'{data!r}: Expected it to be a path to a YAML file, but '
+                    'such file does not exist')
+
             content = Path(data).read_text()
 
             try:

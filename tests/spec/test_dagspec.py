@@ -127,6 +127,22 @@ def get_all_products(dag):
     return products
 
 
+def test_init_with_dir(tmp_directory):
+    Path('something').mkdir()
+
+    with pytest.raises(FileNotFoundError) as excinfo:
+        DAGSpec('something')
+
+    assert 'Expected it to be a path to a YAML file' in str(excinfo.value)
+
+
+def test_init_with_missing_file(tmp_directory):
+    with pytest.raises(FileNotFoundError) as excinfo:
+        DAGSpec('pipeline.yaml')
+
+    assert 'Expected it to be a path to a YAML file' in str(excinfo.value)
+
+
 def test_error_if_missing_tasks_key():
     with pytest.raises(KeyError):
         DAGSpec({'some_key': None})
