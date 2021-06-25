@@ -65,15 +65,16 @@ def find_entry_point_type(entry_point):
         raise ValueError(
             'Could not determine the entry point type from value: '
             f'{entry_point!r}. Expected '
-            'an existing file, directory, glob-like pattern '
+            'an existing file with extension .yaml or .yml, '
+            'existing directory, glob-like pattern '
             '(i.e., *.py) or dotted path '
-            '(dot-separated string). Verify your input.')
+            '(i.e., module.sub_module.factory_function). Verify your input.')
 
 
 def try_to_find_entry_point_type(entry_point):
     if entry_point is None:
         return None
-    if '*' in entry_point:
+    elif '*' in entry_point:
         return EntryPoint.Pattern
     elif '::' in entry_point:
         return EntryPoint.ModulePath
