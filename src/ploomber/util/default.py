@@ -65,6 +65,7 @@ from pathlib import Path
 from os.path import relpath
 
 from ploomber.exceptions import DAGSpecInvalidError
+from ploomber.entrypoint import try_to_find_entry_point_type, EntryPoint
 
 
 def _package_location(root_path, name='pipeline.yaml'):
@@ -130,10 +131,11 @@ def entry_point_with_name(root_path=None, name=None):
 # documented there
 def entry_point(root_path=None):
     """
-    Determines the default entry point. It first determines the project root.
-    If the project isn't a package, it returns project_root/pipeline.yaml,
-    otherwise src/*/pipeline.yaml. If the ENTRY_POINT environment variable is
-    set, it looks for a file with such name (e.g., project_root/{ENTRY_POINT}).
+    Determines the default YAML specentry point. It first determines the
+    project root. If the project isn't a package, it returns
+    project_root/pipeline.yaml, otherwise src/*/pipeline.yaml. If the
+    ENTRY_POINT environment variable is set, it looks for a file with
+    such name (e.g., project_root/{ENTRY_POINT}).
 
     Parameters
     ----------
@@ -177,16 +179,19 @@ def entry_point(root_path=None):
 def try_to_find_entry_point():
     """Try to find the default entry point. Returns None if it isn't possible
     """
-    # TODO: maybe display a warning with the error?
+    # check if it's a dotted path
 
-    env_var = os.environ.get('ENTRY_POINT')
+    type_ = try_to_find_entry_point_type(os.environ.get('ENTRY_POINT'))
 
-    if env_var and '.' in env_var and Path(env_var).suffix != '.yaml':
+    if type_ == EntryPoint.DottedPath:
         return os.environ.get('ENTRY_POINT')
+
+    # entry_point searches recursively for a YAML spec
 
     try:
         return entry_point(root_path=None)
     except Exception:
+        # TODO: maybe display a warning with the error?
         pass
 
 
