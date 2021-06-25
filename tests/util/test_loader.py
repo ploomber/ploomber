@@ -37,3 +37,12 @@ def some_task(product):
 
     # this should not fail because it should not try to import unknown_package
     loader.lazily_load_entry_point(starting_dir='.', reload=False)
+
+
+def test_top_level_importable():
+    """
+    Must be importable from the top-level package since users may
+    use it to debug errors when using the Jupyter integration
+    """
+    from ploomber import lazily_load_entry_point
+    assert lazily_load_entry_point

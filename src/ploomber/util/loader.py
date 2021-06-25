@@ -8,6 +8,8 @@ from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.entrypoint import try_to_find_entry_point_type, EntryPoint
 
 
+# NOTE: this function is importable in the top-level package to allow
+# users debug errors when using the Jupyter integration
 def lazily_load_entry_point(starting_dir=None, reload=False):
     """
     Lazily loads entry point by recursively looking in starting_dir directory

@@ -7,6 +7,7 @@ from ploomber.env.env import Env
 from ploomber.env.decorators import load_env, with_env
 from ploomber.placeholders.sourceloader import SourceLoader
 from ploomber.jupyter.manager import _load_jupyter_server_extension
+from ploomber.util.loader import lazily_load_entry_point
 
 __version__ = '0.11.2dev'
 
@@ -24,6 +25,7 @@ __all__ = [
     'InMemoryDAG',
     'OnlineDAG',
     'OnlineModel',
+    'lazily_load_entry_point',
 ]
 
 

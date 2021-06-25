@@ -201,6 +201,25 @@ Note that even if your pipeline is missing or fails to initialize,
 Jupyter will start anyway, so ensure to take a look at the console if you
 experience problems.
 
+Another common situation is ``ModuleNotFoundError`` errors. Jupyter must
+parse your pipeline in the process that runs the Jupyter application itself.
+If your pipeline contains dotted paths (e.g., tasks that are Python functions,
+task hooks, task clients, etc.), loading the pipeline will fail if such dotted
+paths are not importable. Scripts and notebooks are handled differently. Hence,
+a pipeline whose tasks are all notebooks/scripts won't have this issue.
+
+If you cannot find the problem, you can move to a directory that stores
+any of the scripts that aren't having the cell injected, start a Python
+session and run:
+
+.. code-block:: python
+    :class: ipython
+
+    from ploomber import lazily_load_entry_point; lazily_load_entry_point()
+
+``lazily_load_entry_point`` is the function that Ploomber uses internally
+to initialize your pipeline. Calling this function allows you to replicate
+the same conditions when initializing your pipeline for cell injection.
 
 Detecting changes
 -----------------
