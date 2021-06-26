@@ -37,8 +37,10 @@ class _RemoteFile:
             # load from values from file
             self._metadata._fetch()
 
-            if self._path_to_metadata.exists():
+            try:
                 self._path_to_metadata.unlink()
+            except FileNotFoundError:
+                pass
 
     def exists(self):
         """
