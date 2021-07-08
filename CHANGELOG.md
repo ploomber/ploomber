@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.12.1dev
+
 ## 0.12 (2021-07-08)
 
 - Changes the logic that determines project root: only considers `pipeline.yaml` and `setup.py` (instead of `environment.yml` or `requirements.txt`)
