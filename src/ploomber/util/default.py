@@ -559,8 +559,13 @@ def find_package_name(starting_dir=None):
     Find package name for this project. Raises an error if it cannot determine
     a valid root path
     """
-    # TODO: the error raised here is going to be confusing when using
-    # soopervisor
     root = find_root_recursively(starting_dir=starting_dir)
     pkg = _package_location(root_path=root)
+
+    if not pkg:
+        raise ValueError(
+            'Could not find a valid package. Make sure '
+            'there is a src/package-name/pipeline.yaml file relative '
+            f'to your project root ({root})')
+
     return Path(pkg).parent.name

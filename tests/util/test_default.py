@@ -472,13 +472,23 @@ def test_find_package_name(tmp_directory, to_create, to_move):
     assert default.find_package_name() == 'my_package'
 
 
-def test_error_if_no_package(tmp_directory):
+def test_error_if_no_project_root(tmp_directory):
     Path('setup.py').touch()
 
     with pytest.raises(DAGSpecInvalidError) as excinfo:
         default.find_package_name()
 
     expected = "Failed to determine project root"
+    assert expected in str(excinfo.value)
+
+
+def test_error_if_no_package(tmp_directory):
+    Path('pipeline.yaml').touch()
+
+    with pytest.raises(ValueError) as excinfo:
+        default.find_package_name()
+
+    expected = "Could not find a valid package."
     assert expected in str(excinfo.value)
 
 
