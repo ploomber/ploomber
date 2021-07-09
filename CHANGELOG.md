@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.12.1dev
+## 0.12.1 (2021-07-09)
 
 - Allowing `pipeline.yaml` at project root if setup.py but `src/*/pipeline.yaml` is missing
 - Fixes bug in `EnvDict.find` that caused the `{{here}}` placeholder to point to the `env.yaml` file instead of its parent
