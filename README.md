@@ -16,7 +16,7 @@
 
 
 <p align="center">
-  <a href="https://join.slack.com/t/ploomber-io/shared_invite/zt-rzu2e9f6-kaWgCfsLY~xeJ9vG9EIuBw">Join us on Slack</a>
+  <a href="http://community.ploomber.io">Join our community</a>
   |
   <a href="https://forms.gle/Xf9h1Q2TGoSk15NEA">Contact us</a>
   |
