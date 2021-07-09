@@ -472,8 +472,8 @@ class DAGSpec(MutableMapping):
         is used for loading the DAG and submitting tasks and as an argument
         in "ploomber task --entry-point {relative-path}" when executing tasks
         """
-        path = default.entry_point_relative(name=name)
-        return cls(path)
+        relative_path = default.entry_point_relative(name=name)
+        return cls(relative_path), relative_path
 
     @classmethod
     def find(cls,
