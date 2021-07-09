@@ -114,7 +114,7 @@ class EnvDict(Mapping):
             else:
                 source = source_found
 
-        return cls(source, path_to_here=source)
+        return cls(source, path_to_here=Path(source).parent)
 
     @property
     def default_keys(self):

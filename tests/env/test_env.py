@@ -712,4 +712,15 @@ def test_adds_default_keys_if_they_dont_exist(monkeypatch):
     assert env.default_keys == {'cwd', 'here', 'user', 'root'}
 
 
-# TODO: test {{here}} allowed in _module
+def test_find(tmp_directory):
+    path = Path('some', 'dir')
+    path.mkdir(parents=True)
+    Path('some', 'env.yaml').write_text('key: value')
+    expected_here = str(Path('some').resolve())
+
+    os.chdir(path)
+
+    env = EnvDict.find('env.yaml')
+
+    assert env.cwd == str(Path('.').resolve())
+    assert env.here == expected_here
