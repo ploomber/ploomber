@@ -22,6 +22,8 @@ Or run it locally:
 Connecting to databases
 -----------------------
 
+**Note:** For a more detailed explanation on connecting to a database, see: :doc:`../cookbook/db-config`.
+
 The first step to write a SQL pipeline is to tell Ploomber how to connect to
 the database, by providing a function that returns either a
 :py:mod:`ploomber.clients.SQLAlchemyClient` or a
@@ -29,7 +31,8 @@ the database, by providing a function that returns either a
 supported by Python, even systems like Snowflake or Apache
 Hive.
 
-``SQLAlchemyClient`` takes a single argument, the database URI. As the name
+``SQLAlchemyClient`` takes a single argument, the database URI
+(`Click here for documentation on sqlalchemy URIs <https://docs.sqlalchemy.org/en/13/core/engines.html>`_.). As the name
 suggests, it uses SQLAlchemy under the hood, so any database supported by such
 library is supported as well. Below, there's is an example that connects to
 a local SQLite database:
@@ -45,10 +48,7 @@ a local SQLite database:
         return SQLAlchemyClient('sqlite:///database.db')
 
 
-`Click here for documentation on database URIs <https://docs.sqlalchemy.org/en/13/core/engines.html>`_.
-
-
-If your database isn't supported by SQLAlchemy, you must use
+If SQLAlchemy doesn't support your database, you must use
 :py:mod:`ploomber.clients.DBAPIClient` instead. Refer to the documentation for
 details.
 
@@ -65,12 +65,9 @@ include the ``client`` key:
 
     tasks:
         source: sql/create-table.sql
-        product: [schema, name, table]
         client: clients.get_client
+        # task declaration continues...
 
-
-``product`` can be a list with three elements: ``[schema, name, kind]``,
-or 2: ``[name, kind]``. Where kind can be ``table`` or ``view``.
 
 ``client`` must be a dotted path to a function that
 instantiates a client. If your ``pipeline.yaml`` and ``clients.py`` are in the same
@@ -87,25 +84,69 @@ client like this:
     clients:
         # all SQLScript tasks use the same client instance
         SQLScript: clients.get_client
+        # all SQLDump tasks use the same client instance
+        SQLDump: clients.get_client
 
     tasks:
         source: sql/create-table.sql
-        product: [schema, name, table]
         # no need to add client here
 
-Product's metadata
-------------------
+``SQLScript`` (creates a table/view), and ``SQLDump`` (dump to a local file)
+are the two most common types of SQL tasks, let's review them in detail.
 
-Incremental builds (:ref:`incremental-builds`) allow you speed-up pipeline
+Creating SQL tables/views with ``SQLScript``
+--------------------------------------------
+
+If you want to organize your SQL processing in multiple steps, you can use
+``SQLScript`` to generate one table/view per task. The declaration in the
+``pipeline.yaml`` file looks like this:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    tasks:
+        source: sql/create-table.sql
+        client: clients.get_client
+        product: [schema, name, table]
+
+``product`` can be a list with three elements: ``[schema, name, kind]``,
+or 2: ``[name, kind]``. Where ``kind`` can be ``table`` or ``view``.
+
+A typical script (``sql/create-table.sql`` in our case) looks like this:
+
+.. code-block:: postgresql
+    :class: text-editor
+    :name: task-sql
+
+    DROP TABLE IF EXISTS {{product}};
+
+    CREATE TABLE {{product}} AS
+    SELECT * FROM schema.clean
+    # continues...
+
+This ``DROP TABLE ... CREATE TABLE ..`` format ensures that the table
+(or view) is deleted before creating a new version if the source code changes.
+
+Note that we are using a ``{{product}}`` placeholder in our script, this will
+be replaced at runtime for the name value in ``tasks[*].product`` (in our case:
+``schema.name``.
+
+
+``SQLScript`` and Product's metadata
+-------------------------------------
+
+Incremental builds (:ref:`incremental-builds`) allow you speed up pipeline
 execution. To enable this, Ploomber keeps track of source code changes. When
 tasks generate files (say ``data.csv``), a metadata file is saved next to
-the product file (e.g., ``.data.csv.metadata``). To enable incremental builds
-in SQL pipelines, you must configure a product metadata backend.
+the product file (e.g., ``.data.csv.metadata``).
+
+To enable incremental builds in ``SQLScript`` tasks, you must configure a
+product metadata backend.
 
 If you are using PostgreSQL, you can use
-:py:mod:`ploomber.products.PostgresRelation`, if using SQLite, you can use
+:py:mod:`ploomber.products.PostgresRelation`; if using SQLite, you can use
 :py:mod:`ploomber.products.SQLiteRelation`. In both cases, metadata is saved
-in the same database where the tables/views are created, hence, you can reuse
+in the same database where the tables/views are created. Hence, you can reuse
 the task client. Here's an example if using PostgreSQL:
 
 
@@ -131,8 +172,8 @@ the task client. Here's an example if using PostgreSQL:
 For any other database, you have two options, either use
 :py:mod:`ploomber.products.SQLRelation` which is a product that does not save
 any metadata at all (this means you don't get incremental builds) or use
-:py:mod:`ploomber.products.GenericSQLRelation`, which stores metadata in a SQLite
-database.
+:py:mod:`ploomber.products.GenericSQLRelation`, which stores metadata in a
+SQLite database.
 
 A typical configuration to enable incremental builds looks like this:
 
@@ -154,7 +195,7 @@ A typical configuration to enable incremental builds looks like this:
 
 
 Don't confuse the task's client with the product's client. **Task clients control
-where to execute the code. Product clients control where to save metadata.**
+where to execute the code. Product clients manage where to save metadata.**
 
 
 Placeholders in SQL scripts
@@ -217,15 +258,21 @@ to write a single ``.sql`` file to perform the
 ``DROP TABLE IF EXISTS`` then ``CREATE TABLE AS`` logic.
 
 
-Mixing Python and SQL scripts via ``SQLDump``
----------------------------------------------
+The following diagram shows our example pipeline along with some sample
+source code for each task and the rendered version.
 
-It's common to have pipelines where with some parts in SQL and others in
-Python (e.g., preprocess the data in the database but train a model in Python).
+.. image:: https://ploomber.io/doc/sql/diag.png
+   :target: https://ploomber.io/doc/sql/diag.png
+   :alt: sql-diag
 
-To easily move data from your database to a local file, use the
-:py:mod:`ploomber.tasks.SQLDump` task. Configuring this task is very similar
-to a regular SQL task:
+Dumping data with ``SQLDump``
+-----------------------------
+
+**Note:** ``SQLDump`` only works with :py:mod:`ploomber.clients.SQLAlchemyClient`.
+
+If you want to dump the result of a SQL query, use
+:py:mod:`ploomber.tasks.SQLDump`. Configuring this task is very similar to a
+regular SQL task:
 
 .. code-block:: yaml
     :class: text-editor
@@ -254,26 +301,30 @@ If you want to dump an entire table, you can do:
     SELECT * FROM {{upstream['some_task']}}
 
 Note that ``SQLDump`` only works with ``SQLAlchemyClient``. Product must be
-a file with ``.csv`` or ``.parquet`` extension. The extension also helps
-Ploomber that the given task is a ``SQLDump`` (instead of a ``SQLScript``).
+a file with ``.csv`` or ``.parquet`` extension.
 
-By default, ``SQLDump`` downloads data in chunks of 10,000 rows. To dump
-a single file: ``chunksize: null``, to choose another size:
-``chunksize: n`` (e.g., ``chunksize: 1000000``).
+By default, ``SQLDump`` downloads data in chunks of 10,000 rows, but yu can
+change this value:
 
-**Important:** ``SQLDump`` uses ``pandas`` to dump data, which introduces
-a considerable performance overhead. If you're dumping large tables, you may want
-to implement a solution tailored to your database type.
+.. code-block:: yaml
+    :class: text-editor
 
-Example pipeline
-----------------
+    tasks:
+        source: sql/dump-query.sql
+        product: output/data.csv
+        # set chunksize to 1 million rows
+        chunksize: 1000000
 
-The following diagram shows our example pipeline along with some sample
-source code for each task and the rendered version.
+To dump a single file: ``chunksize: null``.
 
-.. image:: https://ploomber.io/doc/sql/diag.png
-   :target: https://ploomber.io/doc/sql/diag.png
-   :alt: sql-diag
+**Important:** Downloading ``.parquet`` in chunks may yield to errors if the
+schema inferred from one chunk is not the same as the one in another chunk.
+If you experience issue, either change to ``.csv`` or set ``chunksize: null``.
+
+**Important:** ``SQLDump`` works with all databases supported by Python because
+it relies on ``pandas`` to dump data. However this introduces a performance
+overhead. If you're dumping large tables, you may want to implement a
+solution optimized for your database.
 
 Other SQL tasks
 ---------------

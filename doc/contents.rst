@@ -7,4 +7,5 @@ Ploomber documentation
 
    get-started/index
    user-guide/index
+   cookbook/index
    api/index

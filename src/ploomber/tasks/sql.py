@@ -97,7 +97,7 @@ class SQLDump(io.FileLoaderMixin, Task):
         A DAG to add this task to
     name: str
         A str to indentify this task. Should not already exist in the dag
-    client: ploomber.clients.DBAPIClient or SQLAlchemyClient, optional
+    client: ploomber.clients.SQLAlchemyClient, optional
         The client used to connect to the database. Only required
         if no dag-level client has been declared using dag.clients[class]
     params: dict, optional
