@@ -270,6 +270,8 @@ Dumping data with ``SQLDump``
 
 **Note:** ``SQLDump`` only works with :py:mod:`ploomber.clients.SQLAlchemyClient`.
 
+A minimal SQLDump example is available `here <https://github.com/ploomber/projects/tree/master/cookbook/sql-dump>`_
+
 If you want to dump the result of a SQL query, use
 :py:mod:`ploomber.tasks.SQLDump`. Configuring this task is very similar to a
 regular SQL task:
@@ -317,13 +319,13 @@ change this value:
 
 To dump a single file: ``chunksize: null``.
 
-**Important:** Downloading ``.parquet`` in chunks may yield to errors if the
+**Important:** Downloading ``.parquet`` in chunks may yield errors if the
 schema inferred from one chunk is not the same as the one in another chunk.
-If you experience issue, either change to ``.csv`` or set ``chunksize: null``.
+If you experience an issue, either change to ``.csv`` or set ``chunksize: null``.
 
 **Important:** ``SQLDump`` works with all databases supported by Python because
-it relies on ``pandas`` to dump data. However this introduces a performance
-overhead. If you're dumping large tables, you may want to implement a
+it relies on ``pandas`` to dump data. However, this introduces a performance
+overhead. So if you're dumping large tables, you may want to implement a
 solution optimized for your database.
 
 Other SQL tasks
