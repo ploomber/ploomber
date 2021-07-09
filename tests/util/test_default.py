@@ -154,6 +154,14 @@ def test_entry_point_with_name(tmp_directory):
         name='pipeline.train.yaml') == 'pipeline.train.yaml'
 
 
+def test_entry_point_with_nameuses_pipeline_yaml_if_src_one_is_missing(
+        tmp_directory):
+    Path('setup.py').touch()
+    Path('pipeline.yaml').touch()
+
+    assert default.entry_point_with_name() == 'pipeline.yaml'
+
+
 @pytest.mark.parametrize('spec_name, env_name', [
     ['pipeline.yaml', 'env.yaml'],
     ['pipeline.train.yaml', 'env.yaml'],
@@ -328,21 +336,6 @@ def test_error_if_setup_py_but_no_src_package_pipeline(tmp_directory):
         default.find_root_recursively()
 
     assert 'expected to find a pipeline.yaml file' in str(excinfo.value)
-
-
-def test_error_if_setup_py_and_pipeline_are_siblings(tmp_directory):
-    pip = Path('setup.py').resolve()
-    Path('pipeline.yaml').touch()
-    pip.touch()
-
-    dir_ = Path('path', 'to', 'dir')
-    dir_.mkdir(parents=True)
-    os.chdir(dir_)
-
-    with pytest.raises(DAGSpecInvalidError) as excinfo:
-        default.find_root_recursively()
-
-    assert 'Move the pipeline.yaml' in str(excinfo.value)
 
 
 def test_error_if_both_setup_py_and_pipeline_yaml_exist(tmp_directory):

@@ -484,17 +484,13 @@ def find_root_recursively(starting_dir=None,
                           or setup_levels <= pipeline_levels
                           or root_by_pipeline.parents[0].name == 'src'):
         pipeline_yaml = Path(root_by_setup, filename)
+
+        # pkg_location checks if there is a src/{package-name}/{filename}
+        # e.g., src/my_pkg/pipeline.yaml
         pkg_location = _package_location(root_path=root_by_setup,
                                          name=filename)
 
-        if not pkg_location:
-            if pipeline_yaml.exists():
-                msg = (f'. Move the {filename} file that exists in the '
-                       f'same folder than setup.py to src/pkg/{filename} '
-                       'where pkg is the name of your package.')
-            else:
-                msg = ''
-
+        if not pkg_location and not pipeline_yaml.exists():
             raise DAGSpecInvalidError(
                 'Failed to determine project root. Found '
                 'a setup.py file at '
@@ -502,8 +498,9 @@ def find_root_recursively(starting_dir=None,
                 f'to find a {filename} file at '
                 f'src/*/{filename} (relative to '
                 'setup.py parent) but no such file was '
-                'found' + msg)
-        elif pipeline_yaml.exists():
+                'found')
+
+        if pkg_location and pipeline_yaml.exists():
             pkg = Path(*Path(pkg_location).parts[-3:-1])
             example = str(pkg / 'pipeline.another.yaml')
             raise DAGSpecInvalidError(
@@ -511,7 +508,8 @@ def find_root_recursively(starting_dir=None,
                 f'two {filename} files: {pkg_location} '
                 f'and {pipeline_yaml}. To fix it, move '
                 'and rename the second file '
-                f'under {str(pkg)} (e.g., {example})')
+                f'under {str(pkg)} (e.g., {example}) or move {pkg_location} '
+                'to your root directory')
 
         root_found = root_by_setup
 
