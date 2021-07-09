@@ -15,6 +15,17 @@
 [![Deepnote](https://deepnote.com/buttons/launch-in-deepnote-small.svg)](https://deepnote.com/launch?template=deepnote&url=https://github.com/ploomber/projects/blob/master/spec-api-python/README.ipynb)
 
 
+<p align="center">
+  <a href="https://join.slack.com/t/ploomber-io/shared_invite/zt-rzu2e9f6-kaWgCfsLY~xeJ9vG9EIuBw">Join us on Slack</a>
+  |
+  <a href="https://forms.gle/Xf9h1Q2TGoSk15NEA">Contact us</a>
+  |
+  <a href="https://ploomber.readthedocs.io/">Docs</a>
+  |
+  <a href="https://ploomber.io/">Blog</a>
+</p>
+
+
 ![Diagram](https://ploomber.io/main-diagram.png)
 
 Ploomber is the simplest way to build reliable data pipelines for Data
@@ -205,10 +216,3 @@ a fundamental part of this.
 
 For a complete comparison, read our
 [survey on workflow management tools](https://ploomber.io/posts/survey/).
-
-## Community
-
-Stay up to date and get support via:
-
-- [Contact us](https://forms.gle/Xf9h1Q2TGoSk15NEA) (for anything)
-- [Join us on Slack](https://join.slack.com/t/ploomber-io/shared_invite/zt-rzu2e9f6-kaWgCfsLY~xeJ9vG9EIuBw)
