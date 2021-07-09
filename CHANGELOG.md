@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.12.2dev
+
 ## 0.12.1 (2021-07-09)
 
 - Allowing `pipeline.yaml` at project root if setup.py but `src/*/pipeline.yaml` is missing
