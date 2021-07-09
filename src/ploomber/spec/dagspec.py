@@ -593,6 +593,8 @@ class DAGSpecPartial(DAGSpec):
         meta = {'extract_product': False, 'extract_upstream': False}
         data = {'tasks': tasks, 'meta': meta}
 
+        env = env or default.path_to_env_from_spec(path_to_partial)
+
         self._init(data=data,
                    env=env,
                    lazy_import=False,

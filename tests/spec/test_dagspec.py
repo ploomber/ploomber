@@ -18,7 +18,7 @@ import jupyter_client
 from sqlalchemy import create_engine
 
 from ploomber.spec import dagspec
-from ploomber.spec.dagspec import DAGSpec, Meta
+from ploomber.spec.dagspec import DAGSpec, Meta, DAGSpecPartial
 from ploomber.util.dotted_path import load_dotted_path
 from ploomber.tasks import PythonCallable
 from ploomber.clients import db
@@ -1542,3 +1542,11 @@ def test_load_spec_relative_and_in_a_package(backup_test_pkg, filename, name):
     spec, relative = DAGSpec._find_relative(name=name)
     assert spec.path == Path('src', 'test_pkg', filename).resolve()
     assert relative == str(Path('src', 'test_pkg', filename))
+
+
+def test_dagspec_partial(tmp_partial):
+    partial = DAGSpecPartial('partial.yaml')
+
+    assert partial
+    # check that env is resolved automatically
+    assert partial['tasks'][0]['product'] == 'output/load.ipynb'

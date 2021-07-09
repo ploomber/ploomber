@@ -1,0 +1,2 @@
+- source: load.py
+  product: '{{dir}}/load.ipynb'
