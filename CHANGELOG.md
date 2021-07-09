@@ -2,6 +2,11 @@
 
 ## 0.12.1dev
 
+- Allowing `pipeline.yaml` at project root if setup.py but `src/*/pipeline.yaml` is missing
+- Fixes bug in `EnvDict.find` that caused the `{{here}}` placeholder to point to the `env.yaml` file instead of its parent
+- `DAGSpec._find_relative` returns relative path to spec
+- Fixes error that missed `env.yaml` loading when initializing DAGSpecPartial
+
 ## 0.12 (2021-07-08)
 
 - Changes the logic that determines project root: only considers `pipeline.yaml` and `setup.py` (instead of `environment.yml` or `requirements.txt`)
