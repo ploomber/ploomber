@@ -235,8 +235,8 @@ def test_loads_serializer_and_unserializer(backup_online,
 
     from online_io import serialize, unserialize
 
-    assert task._serializer is serialize
-    assert task._unserializer is unserialize
+    assert task._serializer.callable is serialize
+    assert task._unserializer.callable is unserialize
 
 
 def test_error_on_invalid_value_for_file_product(backup_online,
@@ -459,22 +459,23 @@ def test_grid_with_missing_name(backup_spec_with_functions_flat,
     assert 'Error initializing task with spec' in str(excinfo.value)
 
 
-# TODO: try with serializer, and also clients
-# TODO: try at the dagspec level, and also test the hooks run and everything
-def test_lazy_load_hooks(tmp_directory):
-    Path('script.py').write_text("""
-# + tags=["parameters"]
-upstream = None
+# TODO: try with task clients
+def test_lazy_load(tmp_directory, tmp_imports):
+    Path('my_module.py').write_text("""
+def fn():
+    pass
 """)
 
     meta = Meta.default_meta()
     spec = TaskSpec(
         {
-            'source': 'script.py',
+            'source': 'my_module.fn',
             'product': 'report.ipynb',
             'on_finish': 'not_a_module.not_a_function',
             'on_render': 'not_a_module.not_a_function',
             'on_failure': 'not_a_module.not_a_function',
+            'serializer': 'not_a_module.not_a_function',
+            'unserializer': 'not_a_module.not_a_function',
         },
         meta,
         '.',

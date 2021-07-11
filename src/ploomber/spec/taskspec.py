@@ -301,12 +301,12 @@ def _init_task(data, meta, project_root, lazy_import, dag):
     on_failure = task_dict.pop('on_failure', None)
 
     if 'serializer' in task_dict:
-        task_dict['serializer'] = dotted_path.load_callable_dotted_path(
-            task_dict['serializer'])
+        task_dict['serializer'] = dotted_path.DottedPath(
+            task_dict['serializer'], lazy_load=lazy_import)
 
     if 'unserializer' in task_dict:
-        task_dict['unserializer'] = dotted_path.load_callable_dotted_path(
-            task_dict['unserializer'])
+        task_dict['unserializer'] = dotted_path.DottedPath(
+            task_dict['unserializer'], lazy_load=lazy_import)
 
     # edge case: if using lazy_import, we should not check if the kernel
     # is installed. this is used when exporting to Argo/Airflow using

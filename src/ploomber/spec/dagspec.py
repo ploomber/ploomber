@@ -201,6 +201,8 @@ class DAGSpec(MutableMapping):
 
     def _init(self, data, env, lazy_import, reload, parent_path,
               look_up_project_root_recursively):
+        self._lazy_import = lazy_import
+
         # initialized with a path to a yaml file...
         if isinstance(data, (str, Path)):
             # TODO: test this
@@ -445,11 +447,12 @@ class DAGSpec(MutableMapping):
                 dag.clients[class_name] = dotted_path.call_spec(
                     dotted_path_spec)
 
-        # FIXME: this violates lazy_import, we must change DAG's implementation
-        # to accept strings as attribute and load them until they are called
         for attr in ['serializer', 'unserializer']:
             if attr in self:
-                setattr(dag, attr, dotted_path.load_dotted_path(self[attr]))
+                setattr(
+                    dag, attr,
+                    dotted_path.DottedPath(self[attr],
+                                           lazy_load=self._lazy_import))
 
         process_tasks(dag, self, root_path=self._parent_path)
 

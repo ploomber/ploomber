@@ -31,6 +31,8 @@ class DottedPath:
     lazy_load : bool, default=False
         If True, defers dotted path loading until __call__ is executed
     """
+
+    # TODO: this should also accept a dotted_path_spec
     def __init__(self, dotted_path, lazy_load=False):
         self._dotted_path = dotted_path
         self._callable = None
@@ -152,8 +154,15 @@ def load_callable_dotted_path(dotted_path, raise_=True, reload=False):
 
 def call_dotted_path(dotted_path, raise_=True, reload=False, kwargs=None):
     """
-    Load dotted path (using load_callable_dotted_path), and call it without
-    arguments, raises an exception if returns None
+    Load dotted path (using load_callable_dotted_path), and call it with
+    kwargs arguments, raises an exception if returns None
+
+    Parameters
+    ----------
+    dotted_path : str
+        Dotted path to call
+    kwargs : dict, default=None
+        Keyword arguments to call the dotted path
     """
     callable_ = load_callable_dotted_path(dotted_path=dotted_path,
                                           raise_=raise_,
@@ -327,24 +336,33 @@ class BaseModel(pydantic.BaseModel):
                                       kwargs=kwargs)
 
 
-class DottedPathSpec(BaseModel):
+class DottedPathSpecModel(BaseModel):
     dotted_path: str
 
     class Config:
         extra = 'allow'
 
 
-def call_spec(dotted_path_spec, raise_=True, reload=False):
+class DottedPathSpec:
+    def __init__(self, dotted_path_spec):
+        if isinstance(dotted_path_spec, str):
+            self._model = DottedPathSpecModel(dotted_path=dotted_path_spec)
+        elif isinstance(dotted_path_spec, Mapping):
+            self._model = DottedPathSpecModel(**dotted_path_spec)
+        else:
+            raise TypeError(
+                'Expected dotted path spec to be a str or Mapping, '
+                f'got {dotted_path_spec!r} '
+                f'(type: {type(dotted_path_spec).__name__})')
+
+    def __call__(self):
+        return call_dotted_path(
+            self._model.dotted_path,
+            kwargs=self._model.dict(exclude={'dotted_path'}))
+
+
+def call_spec(dotted_path_spec):
     """Call a dotted path initialized from a spec (dictionary)
     """
-    if isinstance(dotted_path_spec, str):
-        dp = DottedPathSpec(dotted_path=dotted_path_spec)
-    elif isinstance(dotted_path_spec, Mapping):
-        dp = DottedPathSpec(**dotted_path_spec)
-    else:
-        raise TypeError('Expected dotted path spec to be a str or Mapping, '
-                        f'got {dotted_path_spec!r} '
-                        f'(type: {type(dotted_path_spec).__name__})')
-
-    return call_dotted_path(dp.dotted_path,
-                            kwargs=dp.dict(exclude={'dotted_path'}))
+    dps = DottedPathSpec(dotted_path_spec)
+    return dps()

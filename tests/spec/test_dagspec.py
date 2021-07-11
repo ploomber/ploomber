@@ -1113,10 +1113,10 @@ def test_loads_serializer_and_unserializer(backup_online,
 
     from online_io import serialize, unserialize
 
-    assert dag['get']._serializer is serialize
-    assert dag['get']._unserializer is unserialize
-    assert dag['square']._serializer is serialize
-    assert dag['square']._unserializer is unserialize
+    assert dag['get']._serializer.callable is serialize
+    assert dag['get']._unserializer.callable is unserialize
+    assert dag['square']._serializer.callable is serialize
+    assert dag['square']._unserializer.callable is unserialize
 
 
 @pytest.mark.parametrize('root_path', ['.', 'subdir'])
@@ -1550,3 +1550,37 @@ def test_dagspec_partial(tmp_partial):
     assert partial
     # check that env is resolved automatically
     assert partial['tasks'][0]['product'] == 'output/load.ipynb'
+
+
+def test_lazy_load(tmp_directory, tmp_imports):
+    Path('my_module.py').write_text("""
+def fn():
+    pass
+""")
+
+    tasks = [
+        {
+            'source': 'my_module.fn',
+            'product': 'report.ipynb',
+            'on_finish': 'not_a_module.not_a_function',
+            'on_render': 'not_a_module.not_a_function',
+            'on_failure': 'not_a_module.not_a_function',
+            'serializer': 'not_a_module.not_a_function',
+            'unserializer': 'not_a_module.not_a_function',
+            # 'client': 'not_a_module.not_a_function',
+            # 'product_client': 'not_a_module.not_a_function'
+        },
+    ]
+
+    data = {
+        'tasks': tasks,
+        # 'clients': {
+        #     'File': 'not_a_module.not_a_function'
+        # },
+        'serializer': 'not_a_module.not_a_function',
+        'unserializer': 'not_a_module.not_a_function',
+    }
+
+    spec = DAGSpec(data, lazy_import=True)
+
+    assert spec.to_dag()
