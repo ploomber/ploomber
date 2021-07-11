@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -5,6 +6,8 @@ import pytest
 from ploomber.dag.dagclients import DAGClients
 from ploomber.tasks import SQLScript
 from ploomber.products import File
+from ploomber.util.dotted_path import DottedPathSpec
+from ploomber.clients import LocalStorageClient
 
 
 def test_error_if_setting_invalid_key():
@@ -102,3 +105,21 @@ def test_repr():
 
     expected = "DAGClients({<class 'ploomber.tasks.sql.SQLScript'>: 1})"
     assert repr(clients) == expected
+
+
+def test_initializes_dotted_path_spec(tmp_directory, tmp_imports):
+    Path('my_testing_clients.py').write_text("""
+from ploomber.clients import LocalStorageClient
+
+def get_client():
+    return LocalStorageClient('backup', path_to_project_root='.')
+""")
+
+    clients = DAGClients()
+    # this happens when using the spec API and lazy load is turned on
+    clients[File] = DottedPathSpec('my_testing_clients.get_client')
+
+    client = clients[File]
+
+    assert isinstance(client, LocalStorageClient)
+    assert clients[File] is client

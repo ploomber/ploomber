@@ -288,9 +288,13 @@ def _init_task(data, meta, project_root, lazy_import, dag):
     task_dict = copy(data)
     class_ = task_dict.pop('class')
 
-    product = _init_product(task_dict, meta, class_, project_root)
+    product = _init_product(task_dict,
+                            meta,
+                            class_,
+                            project_root,
+                            lazy_import=lazy_import)
 
-    _init_client(task_dict)
+    _init_client(task_dict, lazy_import=lazy_import)
 
     source = task_dict.pop('source')
 
@@ -324,7 +328,8 @@ def _init_task(data, meta, project_root, lazy_import, dag):
                       dag=dag,
                       **task_dict)
     except Exception as e:
-        msg = f'Error initializing Task from {data!r}. Error: {e.args[0]}'
+        msg = (f'Error initializing {class_.__name__} from {data!r}. '
+               f'Error: {e.args[0]}')
         e.args = (msg, )
         raise
 
@@ -344,7 +349,7 @@ def _init_task(data, meta, project_root, lazy_import, dag):
 
 
 # FIXME: how do we make a default product client? use the task's client?
-def _init_product(task_dict, meta, task_class, root_path):
+def _init_product(task_dict, meta, task_class, root_path, lazy_import):
     """
     Initialize product.
 
@@ -364,9 +369,14 @@ def _init_product(task_dict, meta, task_class, root_path):
     CLASS = _find_product_class(task_class, task_dict, meta)
 
     if 'product_client' in task_dict:
-        kwargs = {
-            'client': dotted_path.call_spec(task_dict.pop('product_client'))
-        }
+        dps = dotted_path.DottedPathSpec(task_dict.pop('product_client'))
+
+        if lazy_import:
+            client = dps
+        else:
+            client = dps()
+
+        kwargs = {'client': client}
     else:
         kwargs = {}
 
@@ -471,9 +481,14 @@ def _resolve_if_file(product_raw, relative_to, class_):
         return Path(product_raw).resolve()
 
 
-def _init_client(task_dict):
+def _init_client(task_dict, lazy_import):
     if 'client' in task_dict:
-        task_dict['client'] = dotted_path.call_spec(task_dict.pop('client'))
+        dps = dotted_path.DottedPathSpec(task_dict.pop('client'))
+
+        if lazy_import:
+            task_dict['client'] = dps
+        else:
+            task_dict['client'] = dps()
 
 
 def get_value_at(d, dotted_path):

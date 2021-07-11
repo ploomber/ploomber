@@ -345,6 +345,8 @@ class DottedPathSpecModel(BaseModel):
 
 class DottedPathSpec:
     def __init__(self, dotted_path_spec):
+        self._dotted_path_spec = dotted_path_spec
+
         if isinstance(dotted_path_spec, str):
             self._model = DottedPathSpecModel(dotted_path=dotted_path_spec)
         elif isinstance(dotted_path_spec, Mapping):
@@ -360,7 +362,11 @@ class DottedPathSpec:
             self._model.dotted_path,
             kwargs=self._model.dict(exclude={'dotted_path'}))
 
+    def __repr__(self):
+        return f'{type(self).__name__}({self._dotted_path_spec!r})'
 
+
+# TODO: deprecate and replace with DottedPathSpec
 def call_spec(dotted_path_spec):
     """Call a dotted path initialized from a spec (dictionary)
     """

@@ -1567,16 +1567,12 @@ def fn():
             'on_failure': 'not_a_module.not_a_function',
             'serializer': 'not_a_module.not_a_function',
             'unserializer': 'not_a_module.not_a_function',
-            # 'client': 'not_a_module.not_a_function',
-            # 'product_client': 'not_a_module.not_a_function'
+            'product_client': 'not_a_module.not_a_function'
         },
     ]
 
     data = {
         'tasks': tasks,
-        # 'clients': {
-        #     'File': 'not_a_module.not_a_function'
-        # },
         'serializer': 'not_a_module.not_a_function',
         'unserializer': 'not_a_module.not_a_function',
     }
@@ -1584,3 +1580,50 @@ def fn():
     spec = DAGSpec(data, lazy_import=True)
 
     assert spec.to_dag()
+
+
+def test_lazy_load_dag_level_client(tmp_directory, tmp_imports):
+    # TODO: add an actual client but test the package is not imported
+
+    Path('my_testing_module.py').write_text("""
+from pathlib import Path
+from ploomber.clients import LocalStorageClient
+
+def task(product):
+    Path(product).touch()
+
+def get_client():
+    return LocalStorageClient('backup', path_to_project_root='.')
+""")
+
+    tasks = [
+        {
+            'source': 'my_testing_module.task',
+            'product': 'output.csv',
+            # 'client': 'not_a_module.not_a_function',
+            # 'product_client': 'not_a_module.not_a_function'
+        },
+    ]
+
+    # TODO: initialize client with parameters
+    data = {
+        'tasks': tasks,
+        'clients': {
+            'File': 'my_testing_module.get_client'
+        },
+    }
+
+    spec = DAGSpec(data, lazy_import=True)
+
+    dag = spec.to_dag()
+    dag.executor = Serial(build_in_subprocess=False)
+
+    # since lazy_load=True, creating the dag should not import
+    # my_testing_module
+    assert 'my_testing_module' not in sys.modules
+
+    dag.build()
+
+    # should be imported now
+    assert 'my_testing_module' in sys.modules
+    assert Path('backup', 'output.csv').exists()

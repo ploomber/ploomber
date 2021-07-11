@@ -444,8 +444,12 @@ class DAGSpec(MutableMapping):
 
         if clients:
             for class_name, dotted_path_spec in clients.items():
-                dag.clients[class_name] = dotted_path.call_spec(
-                    dotted_path_spec)
+                dps = dotted_path.DottedPathSpec(dotted_path_spec)
+
+                if self._lazy_import:
+                    dag.clients[class_name] = dps
+                else:
+                    dag.clients[class_name] = dps()
 
         for attr in ['serializer', 'unserializer']:
             if attr in self:
