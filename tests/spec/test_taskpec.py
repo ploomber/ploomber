@@ -457,3 +457,27 @@ def test_grid_with_missing_name(backup_spec_with_functions_flat,
                  project_root='.').to_task(dag=DAG())
 
     assert 'Error initializing task with spec' in str(excinfo.value)
+
+
+# TODO: try with serializer, and also clients
+# TODO: try at the dagspec level, and also test the hooks run and everything
+def test_lazy_load_hooks(tmp_directory):
+    Path('script.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+""")
+
+    meta = Meta.default_meta()
+    spec = TaskSpec(
+        {
+            'source': 'script.py',
+            'product': 'report.ipynb',
+            'on_finish': 'not_a_module.not_a_function',
+            'on_render': 'not_a_module.not_a_function',
+            'on_failure': 'not_a_module.not_a_function',
+        },
+        meta,
+        '.',
+        lazy_import=True)
+
+    assert spec.to_task(dag=DAG())

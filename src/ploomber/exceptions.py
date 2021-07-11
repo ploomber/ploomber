@@ -48,6 +48,14 @@ class CallbackSignatureError(Exception):
     pass
 
 
+class CallbackCheckAborted(Exception):
+    """
+    Used by callback_check to signal that signature check is unfeasible because
+    the user passed a DottedPath whose underlying function hasn't been imported
+    """
+    pass
+
+
 class UpstreamKeyError(Exception):
     """
     Raised when trying to get an upstream dependency that does not exist,

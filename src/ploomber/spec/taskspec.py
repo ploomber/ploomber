@@ -329,13 +329,16 @@ def _init_task(data, meta, project_root, lazy_import, dag):
         raise
 
     if on_finish:
-        task.on_finish = dotted_path.load_callable_dotted_path(on_finish)
+        task.on_finish = dotted_path.DottedPath(on_finish,
+                                                lazy_load=lazy_import)
 
     if on_render:
-        task.on_render = dotted_path.load_callable_dotted_path(on_render)
+        task.on_render = dotted_path.DottedPath(on_render,
+                                                lazy_load=lazy_import)
 
     if on_failure:
-        task.on_failure = dotted_path.load_callable_dotted_path(on_failure)
+        task.on_failure = dotted_path.DottedPath(on_failure,
+                                                 lazy_load=lazy_import)
 
     return task
 
