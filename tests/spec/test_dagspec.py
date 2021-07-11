@@ -1582,14 +1582,8 @@ def fn():
     assert spec.to_dag()
 
 
-@pytest.mark.parametrize('client_spec', [
-    'my_testing_module.get_client',
-    {
-        'dotted_path': 'my_testing_module.get_client',
-        'param': 10
-    },
-])
-def test_lazy_load_dag_level_client(tmp_directory, tmp_imports, client_spec):
+@pytest.fixture
+def my_testing_module():
     Path('my_testing_module.py').write_text("""
 from pathlib import Path
 from ploomber.clients import LocalStorageClient
@@ -1601,13 +1595,21 @@ def get_client(param=1):
     return LocalStorageClient('backup', path_to_project_root='.')
 """)
 
+
+@pytest.mark.parametrize('client_spec', [
+    'my_testing_module.get_client',
+    {
+        'dotted_path': 'my_testing_module.get_client',
+        'param': 10
+    },
+])
+def test_lazy_load_dag_level_client(tmp_directory, tmp_imports,
+                                    my_testing_module, client_spec):
+
     tasks = [
         {
             'source': 'my_testing_module.task',
-            'product': 'output.csv',
-            # TODO: initialize client with parameters
-            # 'client': 'not_a_module.not_a_function',
-            # 'product_client': 'not_a_module.not_a_function'
+            'product': 'output.csv'
         },
     ]
 
@@ -1626,6 +1628,47 @@ def get_client(param=1):
     # since lazy_load=True, creating the dag should not import
     # my_testing_module
     assert 'my_testing_module' not in sys.modules
+
+    dag.build()
+
+    # should be imported now
+    assert 'my_testing_module' in sys.modules
+    assert Path('backup', 'output.csv').exists()
+
+
+@pytest.mark.parametrize('client_spec', [
+    'my_testing_module.get_client',
+    {
+        'dotted_path': 'my_testing_module.get_client',
+        'param': 10
+    },
+])
+def test_lazy_load_product_level_client(tmp_directory, tmp_imports,
+                                        my_testing_module, client_spec):
+
+    tasks = [
+        {
+            'source': 'my_testing_module.task',
+            'product': 'output.csv',
+            # TODO: initialize client with parameters
+            # 'client': 'not_a_module.not_a_function',
+            'product_client': client_spec
+        },
+    ]
+
+    data = {'tasks': tasks}
+
+    spec = DAGSpec(data, lazy_import=True)
+
+    dag = spec.to_dag()
+    dag.executor = Serial(build_in_subprocess=False)
+
+    # since lazy_load=True, creating the dag should not import
+    # my_testing_module
+    assert 'my_testing_module' not in sys.modules
+
+    # TODO: must check if the client is a dottedpathsec, call it and override
+    # the client (but only if it's a task-level client). same with product
 
     dag.build()
 
