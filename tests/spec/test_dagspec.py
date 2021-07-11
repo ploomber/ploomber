@@ -1582,9 +1582,14 @@ def fn():
     assert spec.to_dag()
 
 
-def test_lazy_load_dag_level_client(tmp_directory, tmp_imports):
-    # TODO: add an actual client but test the package is not imported
-
+@pytest.mark.parametrize('client_spec', [
+    'my_testing_module.get_client',
+    {
+        'dotted_path': 'my_testing_module.get_client',
+        'param': 10
+    },
+])
+def test_lazy_load_dag_level_client(tmp_directory, tmp_imports, client_spec):
     Path('my_testing_module.py').write_text("""
 from pathlib import Path
 from ploomber.clients import LocalStorageClient
@@ -1592,7 +1597,7 @@ from ploomber.clients import LocalStorageClient
 def task(product):
     Path(product).touch()
 
-def get_client():
+def get_client(param=1):
     return LocalStorageClient('backup', path_to_project_root='.')
 """)
 
@@ -1600,16 +1605,16 @@ def get_client():
         {
             'source': 'my_testing_module.task',
             'product': 'output.csv',
+            # TODO: initialize client with parameters
             # 'client': 'not_a_module.not_a_function',
             # 'product_client': 'not_a_module.not_a_function'
         },
     ]
 
-    # TODO: initialize client with parameters
     data = {
         'tasks': tasks,
         'clients': {
-            'File': 'my_testing_module.get_client'
+            'File': client_spec
         },
     }
 
