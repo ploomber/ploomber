@@ -1,4 +1,5 @@
 from ploomber.util.dotted_path import DottedPathSpec
+from ploomber.exceptions import MissingClientError
 
 
 class ProductWithClientMixin:
@@ -19,15 +20,16 @@ class ProductWithClientMixin:
 
             dag_client = self.task.dag.clients.get(type(self))
 
-            # TODO: raise a different error to be able to catch it
             if dag_client is None:
-                raise ValueError(
+                raise MissingClientError(
                     f'{type(self).__name__} must be initialized with a client.'
                     ' Pass a client directly or set a DAG-level one')
 
             return dag_client
 
         if isinstance(self._client, DottedPathSpec):
+            # NOTE: should we test the output ot self._client()?
+            # maybe check if it's a subclass of the Client abstract class
             self._client = self._client()
 
         return self._client

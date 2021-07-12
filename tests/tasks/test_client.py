@@ -9,10 +9,11 @@ from ploomber.products import (File, SQLiteRelation, PostgresRelation,
                                GenericSQLRelation, GenericProduct)
 from ploomber.util.dotted_path import DottedPathSpec
 
-# TODO: maybe test all classes automatically to prevent listing one by one
-# and having new ones tested automaticallt
+# TODO: maybe list all classes automatically to prevent listing one by one
+# and having new ones tested
 # TODO: test error if no task and no dag level client duting init
-# TODO: if client is a dotted_path spec, check the output type
+# TODO: test SQLScript
+# TODO: test that accessing .client raises a custom error
 
 
 @pytest.mark.parametrize('product_class, arg', [

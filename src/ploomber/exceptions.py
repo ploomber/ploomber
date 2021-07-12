@@ -108,6 +108,14 @@ class RemoteFileNotFound(Exception):
     pass
 
 
+class MissingClientError(Exception):
+    """
+    Raised when failing to get a valid task-level or dag-level client
+    for a Task or Product
+    """
+    pass
+
+
 def display_errors(errors):
     return '\n'.join(f'{_display_error_loc(e)} ({e["msg"]})' for e in errors)
 
