@@ -14,6 +14,7 @@ from ploomber.constants import TaskStatus
 from ploomber.products._remotefile import (_RemoteFile,
                                            _fetch_metadata_from_file_product)
 from ploomber.products.mixins import ProductWithClientMixin
+from ploomber.exceptions import MissingClientError
 
 
 class File(ProductWithClientMixin, os.PathLike, Product):
@@ -152,7 +153,7 @@ class File(ProductWithClientMixin, os.PathLike, Product):
     def client(self):
         try:
             client = super().client
-        except ValueError:
+        except MissingClientError:
             return None
         else:
             return client

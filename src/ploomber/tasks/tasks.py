@@ -18,7 +18,7 @@ from ploomber.tasks.mixins import ClientMixin
 from ploomber.sources import (PythonCallableSource, GenericSource, EmptySource)
 from ploomber.clients import ShellClient
 from ploomber.products.metadata import MetadataAlwaysUpToDate
-from ploomber.exceptions import TaskBuildError
+from ploomber.exceptions import TaskBuildError, MissingClientError
 from ploomber.constants import TaskStatus
 from ploomber.sources.interact import CallableInteractiveDeveloper
 from ploomber.tasks._params import Params
@@ -305,7 +305,7 @@ class ShellScript(ClientMixin, Task):
     def client(self):
         try:
             client = super().client
-        except ValueError:
+        except MissingClientError:
             self._client = ShellClient()
             return self._client
         else:
