@@ -2,39 +2,12 @@ from pathlib import Path
 from io import StringIO
 
 from ploomber.tasks.abc import Task
+from ploomber.tasks.mixins import ClientMixin
 from ploomber.sources import (SQLScriptSource, SQLQuerySource, FileSource)
 from ploomber.products import (File, PostgresRelation, SQLiteRelation,
                                GenericSQLRelation, GenericProduct, SQLRelation)
 from ploomber import io
 from ploomber.util import requires
-from ploomber.util.dotted_path import DottedPathSpec
-
-
-class ClientMixin:
-    """
-    A mixin that exposes a client property. Looks at the _client attribute,
-    then looks at self.dag. If _client returns a DottedSpecPath, it is called,
-    replaced, and returned
-
-    Raises
-    ------
-    ValueError
-        If there is no valid client to use
-    """
-    @property
-    def client(self):
-        if self._client is None:
-            dag_client = self.dag.clients.get(type(self))
-
-            if dag_client is None:
-                raise ValueError(
-                    f'{type(self).__name__} must be initialized with a '
-                    'client. Pass a client directly or set a DAG-level one')
-
-        if isinstance(self._client, DottedPathSpec):
-            self._client = self._client()
-
-        return self._client
 
 
 class SQLScript(Task):
@@ -93,7 +66,7 @@ class SQLScript(Task):
 
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
-        self.client = client
+        self._client = client
         self.dag = dag
 
     def run(self):

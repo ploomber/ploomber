@@ -1650,6 +1650,7 @@ def test_lazy_load_product_level_client(tmp_directory, tmp_imports,
         {
             'source': 'my_testing_module.task',
             'product': 'output.csv',
+            # TODO: test task-level client
             # 'client': 'not_a_module.not_a_function',
             'product_client': client_spec
         },

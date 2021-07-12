@@ -213,7 +213,7 @@ class Task(abc.ABC):
 
     @property
     def client(self):
-        return None
+        return self._client
 
     @property
     def name(self):

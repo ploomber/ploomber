@@ -2,6 +2,8 @@ from ploomber.util import dotted_path
 from ploomber.util.util import callback_check
 
 
+# TODO: remove and merge with DottedPathSpec, we are actually not
+# using this and its purpose is the same as DottedPathSpec
 class LazyCallable:
     """A callable that can be lazily imported from a dotted path
 

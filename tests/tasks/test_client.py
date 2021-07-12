@@ -3,7 +3,8 @@ from pathlib import Path
 import pytest
 
 from ploomber import DAG
-from ploomber.tasks import (SQLDump, SQLTransfer, SQLUpload, PostgresCopyFrom)
+from ploomber.tasks import (SQLDump, SQLTransfer, SQLUpload, PostgresCopyFrom,
+                            ShellScript)
 from ploomber.products import (File, SQLiteRelation, PostgresRelation)
 from ploomber.util.dotted_path import DottedPathSpec
 
@@ -19,23 +20,34 @@ def test_resolve_client():
 
 
 @pytest.mark.parametrize(
-    'task_class, product',
+    'task_class, task_arg, product',
     [
-        [SQLDump, File('data.csv')],
+        [SQLDump, 'SELECT * FROM my_table',
+         File('data.csv')],
         # [SQLScript, SQLRelation(['schema', 'name', 'table'])],
-        [SQLTransfer, SQLiteRelation(['schema', 'name', 'table'])],
-        [SQLUpload, SQLiteRelation(['schema', 'name', 'table'])],
-        [PostgresCopyFrom,
-         PostgresRelation(['schema', 'name', 'table'])]
+        [
+            SQLTransfer, 'SELECT * FROM my_table',
+            SQLiteRelation(['schema', 'name', 'table'])
+        ],
+        [
+            SQLUpload, 'SELECT * FROM my_table',
+            SQLiteRelation(['schema', 'name', 'table'])
+        ],
+        [
+            PostgresCopyFrom, 'SELECT * FROM my_table',
+            PostgresRelation(['schema', 'name', 'table'])
+        ],
+        [ShellScript, 'touch {{product}}',
+         File('data.csv')]
     ])
 def test_initialize_task_level_client_with_dotted_spec_path(
-        tmp_directory, tmp_imports, task_class, product):
+        tmp_directory, tmp_imports, task_class, task_arg, product):
     Path('my_testing_client.py').write_text("""
 def get():
     return 1
 """)
 
-    task = task_class('SELECT * FROM my_table',
+    task = task_class(task_arg,
                       product,
                       DAG(),
                       name='task',
