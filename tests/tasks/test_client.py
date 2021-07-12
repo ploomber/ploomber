@@ -5,7 +5,8 @@ import pytest
 from ploomber import DAG
 from ploomber.tasks import (SQLDump, SQLTransfer, SQLUpload, PostgresCopyFrom,
                             ShellScript)
-from ploomber.products import (File, SQLiteRelation, PostgresRelation)
+from ploomber.products import (File, SQLiteRelation, PostgresRelation,
+                               GenericSQLRelation, GenericProduct)
 from ploomber.util.dotted_path import DottedPathSpec
 
 # TODO: maybe test all classes automatically to prevent listing one by one
@@ -14,8 +15,14 @@ from ploomber.util.dotted_path import DottedPathSpec
 # TODO: if client is a dotted_path spec, check the output type
 
 
-@pytest.mark.parametrize('product_class', [SQLiteRelation, PostgresRelation])
-def test_resolve_client(tmp_directory, tmp_imports, product_class):
+@pytest.mark.parametrize('product_class, arg', [
+    [SQLiteRelation, ['name', 'schema', 'table']],
+    [PostgresRelation, ['name', 'schema', 'table']],
+    [GenericSQLRelation, ['name', 'schema', 'table']],
+    [GenericProduct, 'something'],
+    [File, 'something'],
+])
+def test_resolve_client(tmp_directory, tmp_imports, product_class, arg):
     """
     Test tries to use task-level client, then dag-level client
     """
@@ -24,8 +31,7 @@ def get():
     return 1
 """)
 
-    task = product_class(['name', 'schema', 'table'],
-                         client=DottedPathSpec('my_testing_client.get'))
+    task = product_class(arg, client=DottedPathSpec('my_testing_client.get'))
 
     assert task.client == 1
 
