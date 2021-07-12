@@ -212,6 +212,10 @@ class Task(abc.ABC):
         }
 
     @property
+    def client(self):
+        return None
+
+    @property
     def name(self):
         """
         A str that represents the name of the task, you can access tasks
