@@ -147,6 +147,8 @@ class File(Product, os.PathLike):
             # executes
             return True
 
+    # TODO: use mixin
+
     @property
     def client(self):
         if self._client is None:
