@@ -1,3 +1,6 @@
+from ploomber.util.dotted_path import DottedPathSpec
+
+
 class ProductWithClientMixin:
     """
     Adds the client property to a Product with the hierarchical resolution
@@ -6,9 +9,7 @@ class ProductWithClientMixin:
     """
     @property
     def client(self):
-        # FIXME: this nested reference looks ugly, how can we improve this?
         if self._client is None:
-            # TODO: raise a different error to be able to catch it
             if self._task is None:
                 raise ValueError('Cannot obtain client for this product, '
                                  'the constructor did not receive a client '
@@ -16,16 +17,18 @@ class ProductWithClientMixin:
                                  'to a DAG yet (cannot look up for clients in'
                                  'dag.clients)')
 
-            default = self.task.dag.clients.get(type(self))
+            dag_client = self.task.dag.clients.get(type(self))
 
-            if default is None:
+            # TODO: raise a different error to be able to catch it
+            if dag_client is None:
                 raise ValueError(
                     f'{type(self).__name__} must be initialized with a client.'
                     ' Pass a client directly or set a DAG-level one')
-            else:
-                self._client = default
 
-            # TODO: process dotted path spec
+            return dag_client
+
+        if isinstance(self._client, DottedPathSpec):
+            self._client = self._client()
 
         return self._client
 

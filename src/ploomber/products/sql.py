@@ -14,6 +14,8 @@ from ploomber.placeholders.placeholder import SQLRelationPlaceholder
 
 
 class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
+    """Mixin for products that store metadata in a SQLite database
+    """
     @property
     @abc.abstractmethod
     def name(self):

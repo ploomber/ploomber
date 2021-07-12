@@ -8,15 +8,26 @@ from ploomber.tasks import (SQLDump, SQLTransfer, SQLUpload, PostgresCopyFrom,
 from ploomber.products import (File, SQLiteRelation, PostgresRelation)
 from ploomber.util.dotted_path import DottedPathSpec
 
+# TODO: maybe test all classes automatically to prevent listing one by one
+# and having new ones tested automaticallt
 # TODO: test error if no task and no dag level client duting init
 # TODO: if client is a dotted_path spec, check the output type
 
 
-def test_resolve_client():
+@pytest.mark.parametrize('product_class', [SQLiteRelation, PostgresRelation])
+def test_resolve_client(tmp_directory, tmp_imports, product_class):
     """
     Test tries to use task-level client, then dag-level client
     """
-    pass
+    Path('my_testing_client.py').write_text("""
+def get():
+    return 1
+""")
+
+    task = product_class(['name', 'schema', 'table'],
+                         client=DottedPathSpec('my_testing_client.get'))
+
+    assert task.client == 1
 
 
 @pytest.mark.parametrize(
