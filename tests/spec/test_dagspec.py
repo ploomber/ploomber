@@ -1650,7 +1650,6 @@ def test_lazy_load_product_level_client(tmp_directory, tmp_imports,
         {
             'source': 'my_testing_module.task',
             'product': 'output.csv',
-            # TODO: initialize client with parameters
             # 'client': 'not_a_module.not_a_function',
             'product_client': client_spec
         },
@@ -1669,7 +1668,6 @@ def test_lazy_load_product_level_client(tmp_directory, tmp_imports,
 
     # TODO: must check if the client is a dottedpathsec, call it and override
     # the client (but only if it's a task-level client). same with product
-
     dag.build()
 
     # should be imported now

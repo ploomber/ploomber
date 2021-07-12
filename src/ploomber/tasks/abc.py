@@ -192,7 +192,7 @@ class Task(abc.ABC):
             type(self).__name__))
 
         self.product.task = self
-        self.client = None
+        self._client = None
 
         self.exec_status = TaskStatus.WaitingRender
 
