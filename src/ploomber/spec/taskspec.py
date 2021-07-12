@@ -440,7 +440,7 @@ def _try_product_init(class_, path_to_source, kwargs):
     try:
         return class_(path_to_source, **kwargs)
     except Exception as e:
-        kwargs_msg = f'and keyword arguments: {kwargs!r}' if kwargs else ''
+        kwargs_msg = f' and keyword arguments: {kwargs!r}' if kwargs else ''
         raise DAGSpecInitializationError(
             f'Error initializing {class_.__name__} with source: '
             f'{path_to_source!r}' + kwargs_msg) from e

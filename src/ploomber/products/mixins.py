@@ -16,7 +16,7 @@ class ProductWithClientMixin:
                                  'the constructor did not receive a client '
                                  'and this product has not been assigned '
                                  'to a DAG yet (cannot look up for clients in'
-                                 'dag.clients)')
+                                 ' dag.clients)')
 
             dag_client = self.task.dag.clients.get(type(self))
 

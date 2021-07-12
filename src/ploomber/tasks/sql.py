@@ -10,7 +10,7 @@ from ploomber import io
 from ploomber.util import requires
 
 
-class SQLScript(Task):
+class SQLScript(ClientMixin, Task):
     """Execute a script in a SQL database to create a relation or view
 
     Parameters
@@ -46,23 +46,14 @@ class SQLScript(Task):
                  client=None,
                  params=None):
         params = params or {}
-
-        client = client or dag.clients.get(type(self))
-
-        if client is None:
-            raise ValueError(
-                f'{type(self).__name__} must be initialized with a client. '
-                'Pass a client directly or set a DAG-level one')
-
-        if not hasattr(client, 'split_source'):
-            raise TypeError(
-                f'client with value {client!r} does not have a split_source '
-                'attribute. Make sure this is a valid client object '
-                '(e.g., ploomber.clients.SQLALChemy or '
-                'ploomber.clients.DBAPIClient)')
+        # TODO: access self.client so it uses the dag-level if available
+        try:
+            split_source = client.split_source
+        except AttributeError:
+            split_source = None
 
         kwargs = dict(hot_reload=dag._params.hot_reload,
-                      split_source=client.split_source)
+                      split_source=split_source)
 
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
