@@ -11,7 +11,7 @@ The `DAG` impementation is in `src/ploomber/dag/dag.py`. A `DAG` is a
 mapping-like object that contains tasks and relationships among them.
 
 DAG is used to manage the status of tasks; for example, if a tasks's source
-code changes, `DAG` marks such task as `skipped` and is not executed
+code hasn't changed since the last execution, `DAG` marks such task as `skipped` and is not executed
 again if the source doesn't change. Status resolution happens during a rendering
 step (`DAG.render()`), which runs before building the DAG.
 
