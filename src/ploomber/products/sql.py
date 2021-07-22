@@ -8,41 +8,14 @@ import json
 from jinja2 import Template
 
 from ploomber.products import Product
-from ploomber.products.mixins import SQLProductMixin
+from ploomber.products.mixins import SQLProductMixin, ProductWithClientMixin
 from ploomber.products.serializers import Base64Serializer
 from ploomber.placeholders.placeholder import SQLRelationPlaceholder
 
 
-class ProductWithClientMixin:
-    """
-    Adds the client property to a Product with the hierarchical resolution
-    logic: Product -> Task -> DAG.clients. Product.client is only used
-    for storing metadata
-    """
-    @property
-    def client(self):
-        # FIXME: this nested reference looks ugly, how can we improve this?
-        if self._client is None:
-            if self._task is None:
-                raise ValueError('Cannot obtain client for this product, '
-                                 'the constructor did not receive a client '
-                                 'and this product has not been assigned '
-                                 'to a DAG yet (cannot look up for clients in'
-                                 'dag.clients)')
-
-            default = self.task.dag.clients.get(type(self))
-
-            if default is None:
-                raise ValueError(
-                    f'{type(self).__name__} must be initialized with a client.'
-                    ' Pass a client directly or set a DAG-level one')
-            else:
-                self._client = default
-
-        return self._client
-
-
 class SQLiteBackedProductMixin(ProductWithClientMixin, abc.ABC):
+    """Mixin for products that store metadata in a SQLite database
+    """
     @property
     @abc.abstractmethod
     def name(self):

@@ -25,21 +25,17 @@ def get_more_numbers(a, b):
         'b': 2
     }, (42, 1, 2)],
 ])
-def test_lazy_callable_from_str(primitive, args, kwargs, out,
-                                add_current_to_sys_path, no_sys_modules_cache,
-                                tmp_directory):
+def test_lazy_callable_from_str(primitive, args, kwargs, out, tmp_directory,
+                                tmp_imports):
     Path('functions.py').write_text("""
 def get_numbers(a=0, b=1):
     return 42, a, b
 """)
-
     callable_ = LazyCallable(primitive)
     assert callable_(*args, **kwargs) == out
 
 
-def test_lazy_callable_from_str_does_not_import(add_current_to_sys_path,
-                                                no_sys_modules_cache,
-                                                tmp_directory):
+def test_lazy_callable_from_str_does_not_import(tmp_directory, tmp_imports):
     Path('functions.py').write_text("""
 import unknown_package
 

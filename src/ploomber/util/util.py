@@ -9,7 +9,9 @@ import inspect
 from collections.abc import Iterable
 from contextlib import contextmanager
 
-from ploomber.exceptions import CallbackSignatureError, TaskRenderError
+from ploomber.exceptions import (CallbackSignatureError, CallbackCheckAborted,
+                                 TaskRenderError)
+from ploomber.util.dotted_path import DottedPath
 
 
 def requires(pkgs, name=None, extra_msg=None, pip_names=None):
@@ -121,7 +123,23 @@ def callback_check(fn, available, allow_default=True):
     -------
     dict
         Dictionary with requested parameters
+
+    Raises
+    ------
+    ploomber.exceptions.CallbackCheckAborted
+        When passing a dotted path whose underlying function hasn't been
+        imported
+    ploomber.exceptions.CallbackSignatureError
+        When fn does not have the required signature
     """
+    if isinstance(fn, DottedPath):
+        if fn.callable is None:
+            raise CallbackCheckAborted(
+                'Cannot check callback because function '
+                'is a dotted path whose function has not been imported yet')
+        else:
+            fn = fn.callable
+
     parameters = inspect.signature(fn).parameters
     optional = {
         name

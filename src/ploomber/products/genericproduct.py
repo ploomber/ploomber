@@ -3,7 +3,7 @@ A generic product whose metadata is saved in a given directory and
 exists/delete methods are bash commands
 """
 from ploomber.products.product import Product
-from ploomber.products.mixins import SQLProductMixin
+from ploomber.products.mixins import SQLProductMixin, ProductWithClientMixin
 from ploomber.products.sql import SQLiteBackedProductMixin
 from ploomber.placeholders.placeholder import (Placeholder,
                                                SQLRelationPlaceholder)
@@ -11,7 +11,8 @@ from ploomber.placeholders.placeholder import (Placeholder,
 
 # TODO: add check_product and run tests: e.g .name should return a string
 # no placeholders objects or {{}}
-class GenericProduct(SQLiteBackedProductMixin, Product):
+class GenericProduct(SQLiteBackedProductMixin, ProductWithClientMixin,
+                     Product):
     """
     GenericProduct is used when there is no specific Product implementation.
     Sometimes it is technically possible to write a Product implementation
@@ -39,21 +40,6 @@ class GenericProduct(SQLiteBackedProductMixin, Product):
     def __init__(self, identifier, client=None):
         super().__init__(identifier)
         self._client = client
-
-    # TODO: create a mixing with this so all client-based tasks can include it
-    @property
-    def client(self):
-        if self._client is None:
-            default = self.task.dag.clients.get(type(self))
-
-            if default is None:
-                raise ValueError(
-                    f'{type(self).__name__} must be initialized with a client.'
-                    ' Pass a client directly or a DAG-level one')
-            else:
-                self._client = default
-
-        return self._client
 
     def _init_identifier(self, identifier):
         return Placeholder(identifier)

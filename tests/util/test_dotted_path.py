@@ -297,3 +297,39 @@ def test_error_if_doesnt_define_name(tmp_directory, add_current_to_sys_path,
         excinfo.value)
     assert "a.py" in str(excinfo.value)
     assert "a function named 'unknown_name'" in str(excinfo.value)
+
+
+def test_lazy_load_missing_function():
+    dp = dotted_path.DottedPath('not_a_module.not_a_function', lazy_load=True)
+
+    with pytest.raises(ModuleNotFoundError):
+        dp()
+
+
+def test_eager_load_missing_function():
+    with pytest.raises(ModuleNotFoundError):
+        dotted_path.DottedPath('not_a_module.not_a_function', lazy_load=False)
+
+
+def test_init_and_call_dotted_path(tmp_directory, tmp_imports):
+    Path('some_module.py').write_text("""
+def fn(some_arg):
+    return some_arg
+""")
+
+    dp = dotted_path.DottedPath('some_module.fn', lazy_load=False)
+    assert dp(42) == 42
+
+
+def test_dotted_path_repr(tmp_directory, tmp_imports):
+    Path('some_module.py').write_text("""
+def fn(some_arg):
+    return some_arg
+""")
+
+    dp = dotted_path.DottedPath('some_module.fn', lazy_load=True)
+    assert repr(dp) == "DottedPath('some_module.fn')"
+
+    dp._load_callable()
+
+    assert 'loaded:' in repr(dp)

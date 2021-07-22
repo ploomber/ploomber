@@ -7,6 +7,23 @@ from ploomber import DAG
 from ploomber.products import File
 from ploomber.tasks import ShellScript
 from ploomber.exceptions import SourceInitializationError
+from ploomber.tasks import tasks
+
+
+def test_init_client_automatically(monkeypatch):
+    m = Mock()
+    monkeypatch.setattr(tasks, 'ShellClient', lambda: m)
+
+    dag = DAG()
+    # if client is None
+    task = ShellScript('touch {{product}}',
+                       File('file.txt'),
+                       dag,
+                       name='touch',
+                       client=None)
+
+    # must initialize one using ShelClient()
+    assert task.client is m
 
 
 def test_build_task(tmp_directory, monkeypatch):

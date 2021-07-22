@@ -48,6 +48,14 @@ class CallbackSignatureError(Exception):
     pass
 
 
+class CallbackCheckAborted(Exception):
+    """
+    Used by callback_check to signal that signature check is unfeasible because
+    the user passed a DottedPath whose underlying function hasn't been imported
+    """
+    pass
+
+
 class UpstreamKeyError(Exception):
     """
     Raised when trying to get an upstream dependency that does not exist,
@@ -96,6 +104,14 @@ class SpecValidationError(Exception):
 class RemoteFileNotFound(Exception):
     """
     Raised by File clients when atempting to download a file that doesn't exist
+    """
+    pass
+
+
+class MissingClientError(Exception):
+    """
+    Raised when failing to get a valid task-level or dag-level client
+    for a Task or Product
     """
     pass
 

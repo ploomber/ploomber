@@ -288,9 +288,13 @@ def _init_task(data, meta, project_root, lazy_import, dag):
     task_dict = copy(data)
     class_ = task_dict.pop('class')
 
-    product = _init_product(task_dict, meta, class_, project_root)
+    product = _init_product(task_dict,
+                            meta,
+                            class_,
+                            project_root,
+                            lazy_import=lazy_import)
 
-    _init_client(task_dict)
+    _init_client(task_dict, lazy_import=lazy_import)
 
     source = task_dict.pop('source')
 
@@ -301,12 +305,12 @@ def _init_task(data, meta, project_root, lazy_import, dag):
     on_failure = task_dict.pop('on_failure', None)
 
     if 'serializer' in task_dict:
-        task_dict['serializer'] = dotted_path.load_callable_dotted_path(
-            task_dict['serializer'])
+        task_dict['serializer'] = dotted_path.DottedPath(
+            task_dict['serializer'], lazy_load=lazy_import)
 
     if 'unserializer' in task_dict:
-        task_dict['unserializer'] = dotted_path.load_callable_dotted_path(
-            task_dict['unserializer'])
+        task_dict['unserializer'] = dotted_path.DottedPath(
+            task_dict['unserializer'], lazy_load=lazy_import)
 
     # edge case: if using lazy_import, we should not check if the kernel
     # is installed. this is used when exporting to Argo/Airflow using
@@ -324,24 +328,28 @@ def _init_task(data, meta, project_root, lazy_import, dag):
                       dag=dag,
                       **task_dict)
     except Exception as e:
-        msg = f'Error initializing Task from {data!r}. Error: {e.args[0]}'
+        msg = (f'Error initializing {class_.__name__} from {data!r}. '
+               f'Error: {e.args[0]}')
         e.args = (msg, )
         raise
 
     if on_finish:
-        task.on_finish = dotted_path.load_callable_dotted_path(on_finish)
+        task.on_finish = dotted_path.DottedPath(on_finish,
+                                                lazy_load=lazy_import)
 
     if on_render:
-        task.on_render = dotted_path.load_callable_dotted_path(on_render)
+        task.on_render = dotted_path.DottedPath(on_render,
+                                                lazy_load=lazy_import)
 
     if on_failure:
-        task.on_failure = dotted_path.load_callable_dotted_path(on_failure)
+        task.on_failure = dotted_path.DottedPath(on_failure,
+                                                 lazy_load=lazy_import)
 
     return task
 
 
 # FIXME: how do we make a default product client? use the task's client?
-def _init_product(task_dict, meta, task_class, root_path):
+def _init_product(task_dict, meta, task_class, root_path, lazy_import):
     """
     Initialize product.
 
@@ -361,9 +369,14 @@ def _init_product(task_dict, meta, task_class, root_path):
     CLASS = _find_product_class(task_class, task_dict, meta)
 
     if 'product_client' in task_dict:
-        kwargs = {
-            'client': dotted_path.call_spec(task_dict.pop('product_client'))
-        }
+        dps = dotted_path.DottedPathSpec(task_dict.pop('product_client'))
+
+        if lazy_import:
+            client = dps
+        else:
+            client = dps()
+
+        kwargs = {'client': client}
     else:
         kwargs = {}
 
@@ -427,7 +440,7 @@ def _try_product_init(class_, path_to_source, kwargs):
     try:
         return class_(path_to_source, **kwargs)
     except Exception as e:
-        kwargs_msg = f'and keyword arguments: {kwargs!r}' if kwargs else ''
+        kwargs_msg = f' and keyword arguments: {kwargs!r}' if kwargs else ''
         raise DAGSpecInitializationError(
             f'Error initializing {class_.__name__} with source: '
             f'{path_to_source!r}' + kwargs_msg) from e
@@ -468,9 +481,14 @@ def _resolve_if_file(product_raw, relative_to, class_):
         return Path(product_raw).resolve()
 
 
-def _init_client(task_dict):
+def _init_client(task_dict, lazy_import):
     if 'client' in task_dict:
-        task_dict['client'] = dotted_path.call_spec(task_dict.pop('client'))
+        dps = dotted_path.DottedPathSpec(task_dict.pop('client'))
+
+        if lazy_import:
+            task_dict['client'] = dps
+        else:
+            task_dict['client'] = dps()
 
 
 def get_value_at(d, dotted_path):

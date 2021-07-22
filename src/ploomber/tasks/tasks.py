@@ -14,10 +14,11 @@ from collections.abc import Mapping
 from IPython.terminal.debugger import TerminalPdb, Pdb
 
 from ploomber.tasks.abc import Task
+from ploomber.tasks.mixins import ClientMixin
 from ploomber.sources import (PythonCallableSource, GenericSource, EmptySource)
 from ploomber.clients import ShellClient
 from ploomber.products.metadata import MetadataAlwaysUpToDate
-from ploomber.exceptions import TaskBuildError
+from ploomber.exceptions import TaskBuildError, MissingClientError
 from ploomber.constants import TaskStatus
 from ploomber.sources.interact import CallableInteractiveDeveloper
 from ploomber.tasks._params import Params
@@ -262,7 +263,7 @@ def task_factory(_func=None, **factory_kwargs):
     return decorator if _func is None else decorator(_func)
 
 
-class ShellScript(Task):
+class ShellScript(ClientMixin, Task):
     """Execute a shell script in a shell
 
     Parameters
@@ -298,11 +299,17 @@ class ShellScript(Task):
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
+        self._client = client
 
-        self.client = client or self.dag.clients.get(type(self))
-
-        if self.client is None:
-            self.client = ShellClient()
+    @property
+    def client(self):
+        try:
+            client = super().client
+        except MissingClientError:
+            self._client = ShellClient()
+            return self._client
+        else:
+            return client
 
     @staticmethod
     def _init_source(source, kwargs):

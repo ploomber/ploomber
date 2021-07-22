@@ -2,6 +2,7 @@ from pathlib import Path
 from io import StringIO
 
 from ploomber.tasks.abc import Task
+from ploomber.tasks.mixins import ClientMixin
 from ploomber.sources import (SQLScriptSource, SQLQuerySource, FileSource)
 from ploomber.products import (File, PostgresRelation, SQLiteRelation,
                                GenericSQLRelation, GenericProduct, SQLRelation)
@@ -9,7 +10,7 @@ from ploomber import io
 from ploomber.util import requires
 
 
-class SQLScript(Task):
+class SQLScript(ClientMixin, Task):
     """Execute a script in a SQL database to create a relation or view
 
     Parameters
@@ -45,27 +46,18 @@ class SQLScript(Task):
                  client=None,
                  params=None):
         params = params or {}
-
-        client = client or dag.clients.get(type(self))
-
-        if client is None:
-            raise ValueError(
-                f'{type(self).__name__} must be initialized with a client. '
-                'Pass a client directly or set a DAG-level one')
-
-        if not hasattr(client, 'split_source'):
-            raise TypeError(
-                f'client with value {client!r} does not have a split_source '
-                'attribute. Make sure this is a valid client object '
-                '(e.g., ploomber.clients.SQLALChemy or '
-                'ploomber.clients.DBAPIClient)')
+        # TODO: access self.client so it uses the dag-level if available
+        try:
+            split_source = client.split_source
+        except AttributeError:
+            split_source = None
 
         kwargs = dict(hot_reload=dag._params.hot_reload,
-                      split_source=client.split_source)
+                      split_source=split_source)
 
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
-        self.client = client
+        self._client = client
         self.dag = dag
 
     def run(self):
@@ -83,7 +75,7 @@ class SQLScript(Task):
         return SQLScriptSource(source, **kwargs)
 
 
-class SQLDump(io.FileLoaderMixin, Task):
+class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
     """Dumps data from a SQL SELECT statement to a file(s)
 
     Parameters
@@ -141,7 +133,7 @@ class SQLDump(io.FileLoaderMixin, Task):
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
 
-        self.client = client or self.dag.clients.get(type(self))
+        self._client = client
         self.chunksize = chunksize
 
         if io_handler is None:
@@ -151,11 +143,6 @@ class SQLDump(io.FileLoaderMixin, Task):
                 self.io_handler = io.CSVIO
         else:
             self.io_handler = io_handler
-
-        if self.client is None:
-            raise ValueError(
-                f'{type(self).__name__} must be initialized with a client. '
-                'Pass a client directly or set a DAG-level one')
 
     @staticmethod
     def _init_source(source, kwargs):
@@ -204,7 +191,7 @@ class SQLDump(io.FileLoaderMixin, Task):
 # to pull the data from and product.client is to save metadata, and we should
 # require the target database to be the place to save metadata, this restrics
 # this to sqlite and postgres
-class SQLTransfer(Task):
+class SQLTransfer(ClientMixin, Task):
     """
     Transfers data from a SQL database to another (Note: this relies on
     pandas, only use it for small to medium size datasets)
@@ -257,13 +244,7 @@ class SQLTransfer(Task):
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
-
-        self.client = client or self.dag.clients.get(type(self))
-
-        if self.client is None:
-            raise ValueError('{} must be initialized with a connection'.format(
-                type(self).__name__))
-
+        self._client = client
         self.chunksize = chunksize
 
     @staticmethod
@@ -293,7 +274,7 @@ class SQLTransfer(Task):
                       index=False)
 
 
-class SQLUpload(Task):
+class SQLUpload(ClientMixin, Task):
     """
     Upload data to a SQL database from a parquet or a csv file. Note: this
     task relies uses pandas.to_sql which introduces some overhead. Only use it
@@ -366,13 +347,7 @@ class SQLUpload(Task):
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
-
-        self.client = client or self.dag.clients.get(type(self))
-
-        if self.client is None:
-            raise ValueError('{} must be initialized with a connection'.format(
-                type(self).__name__))
-
+        self._client = client
         self.chunksize = chunksize
         self.io_handler = io_handler
         self.to_sql_kwargs = to_sql_kwargs or {}
@@ -414,7 +389,7 @@ class SQLUpload(Task):
 
 
 # TODO: provide more flexibility to configure the COPY statement
-class PostgresCopyFrom(Task):
+class PostgresCopyFrom(ClientMixin, Task):
     """Efficiently copy data to a postgres database using COPY FROM (faster
     alternative to SQLUpload for postgres). If using SQLAlchemy client
     for postgres is psycopg2. Replaces the table if exists.
@@ -451,13 +426,7 @@ class PostgresCopyFrom(Task):
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
-
-        self.client = client or self.dag.clients.get(type(self))
-
-        if self.client is None:
-            raise ValueError('{} must be initialized with a connection'.format(
-                type(self).__name__))
-
+        self._client = client
         self.columns = columns
 
     @staticmethod

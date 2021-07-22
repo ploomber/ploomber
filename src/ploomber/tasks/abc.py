@@ -55,7 +55,8 @@ from datetime import datetime
 from collections import defaultdict
 
 from ploomber.products import Product, MetaProduct, EmptyProduct
-from ploomber.exceptions import TaskBuildError, DAGBuildEarlyStop
+from ploomber.exceptions import (TaskBuildError, DAGBuildEarlyStop,
+                                 CallbackCheckAborted)
 from ploomber.tasks.taskgroup import TaskGroup
 from ploomber.constants import TaskStatus
 from ploomber.tasks._upstream import Upstream
@@ -191,7 +192,7 @@ class Task(abc.ABC):
             type(self).__name__))
 
         self.product.task = self
-        self.client = None
+        self._client = None
 
         self.exec_status = TaskStatus.WaitingRender
 
@@ -209,6 +210,10 @@ class Task(abc.ABC):
             'product': self.product,
             'params': self.params
         }
+
+    @property
+    def client(self):
+        return self._client
 
     @property
     def name(self):
@@ -310,7 +315,13 @@ class Task(abc.ABC):
 
     @on_finish.setter
     def on_finish(self, value):
-        callback_check(value, self._available_callback_kwargs)
+        try:
+            callback_check(value, self._available_callback_kwargs)
+        # raised when value is a dotted path with lazy loading turned on.
+        # cannot check because that requires importing the dotted path
+        except CallbackCheckAborted:
+            pass
+
         self._on_finish = value
 
     def _run_on_finish(self):
@@ -378,7 +389,12 @@ class Task(abc.ABC):
 
     @on_failure.setter
     def on_failure(self, value):
-        callback_check(value, self._available_callback_kwargs)
+        try:
+            callback_check(value, self._available_callback_kwargs)
+        # raised when value is a dotted path with lazy loading turned on.
+        # cannot check because that requires importing the dotted path
+        except CallbackCheckAborted:
+            pass
         self._on_failure = value
 
     def _run_on_failure(self):
@@ -393,7 +409,12 @@ class Task(abc.ABC):
 
     @on_render.setter
     def on_render(self, value):
-        callback_check(value, self._available_callback_kwargs)
+        try:
+            callback_check(value, self._available_callback_kwargs)
+        # raised when value is a dotted path with lazy loading turned on.
+        # cannot check because that requires importing the dotted path
+        except CallbackCheckAborted:
+            pass
         self._on_render = value
 
     def _run_on_render(self):

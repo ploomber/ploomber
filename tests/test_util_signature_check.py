@@ -1,6 +1,10 @@
+from pathlib import Path
+
 import pytest
 from ploomber.util.util import callback_check, signature_check
-from ploomber.exceptions import CallbackSignatureError, TaskRenderError
+from ploomber.util.dotted_path import DottedPath
+from ploomber.exceptions import (CallbackSignatureError, CallbackCheckAborted,
+                                 TaskRenderError)
 
 
 def test_fn_with_default_values():
@@ -24,6 +28,24 @@ def test_returns_kwargs_to_use():
         pass
 
     assert callback_check(fn, {'a': 1, 'b': 2, 'c': 3}) == {'a': 1, 'b': 2}
+
+
+def test_callback_check_from_dotted_path(tmp_directory, tmp_imports):
+    Path('some_module.py').write_text("""
+def fn(some_arg):
+    return some_arg
+""")
+
+    dp = DottedPath('some_module.fn', lazy_load=False)
+
+    assert callback_check(dp, available={'some_arg': 42}) == {'some_arg': 42}
+
+
+def test_error_if_lazy_loaded_dotted_path():
+    dp = DottedPath('not_a_module.not_a_function', lazy_load=True)
+
+    with pytest.raises(CallbackCheckAborted):
+        callback_check(dp, available={'some_arg': 42})
 
 
 def test_signature_check_extra():

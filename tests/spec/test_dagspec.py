@@ -1,3 +1,4 @@
+import sqlite3
 import shutil
 from unittest.mock import Mock
 import sys
@@ -1113,10 +1114,10 @@ def test_loads_serializer_and_unserializer(backup_online,
 
     from online_io import serialize, unserialize
 
-    assert dag['get']._serializer is serialize
-    assert dag['get']._unserializer is unserialize
-    assert dag['square']._serializer is serialize
-    assert dag['square']._unserializer is unserialize
+    assert dag['get']._serializer.callable is serialize
+    assert dag['get']._unserializer.callable is unserialize
+    assert dag['square']._serializer.callable is serialize
+    assert dag['square']._unserializer.callable is unserialize
 
 
 @pytest.mark.parametrize('root_path', ['.', 'subdir'])
@@ -1156,29 +1157,20 @@ def test_error_invalid_yaml_with_placeholders_without_parentheses(
 
 
 @pytest.mark.parametrize(
-    'code, expected_error',
-    [[
+    'code, expected_error', [[
         'get = 1', "Error loading dotted path 'dag_level_client_dotted_path"
         ".get'. Expected a callable object (i.e., some kind of function). "
         "Got 1 (an object of type: int)"
     ],
-     [
-         """
+                             [
+                                 """
 def get():
     return None
 """, "Error calling dotted path "
-         "'dag_level_client_dotted_path.get'. "
-         "Expected a value but got None"
-     ],
-     [
-         """
-def get():
-    return 42
-""", 'client with value 42 does not have a split_source attribute. Make sure '
-         'this is a valid client object (e.g., ploomber.clients.SQLALChemy '
-         'or ploomber.clients.DBAPIClient)'
-     ]],
-    ids=['not-a-callable', 'returns-none', 'returns-not-a-client'])
+                                 "'dag_level_client_dotted_path.get'. "
+                                 "Expected a value but got None"
+                             ]],
+    ids=['not-a-callable', 'returns-none'])
 def test_error_invalid_dag_level_client_dotted_path(tmp_sample_tasks,
                                                     add_current_to_sys_path,
                                                     no_sys_modules_cache, code,
@@ -1550,3 +1542,133 @@ def test_dagspec_partial(tmp_partial):
     assert partial
     # check that env is resolved automatically
     assert partial['tasks'][0]['product'] == 'output/load.ipynb'
+
+
+def test_lazy_load(tmp_directory, tmp_imports):
+    Path('my_module.py').write_text("""
+def fn():
+    pass
+""")
+
+    tasks = [
+        {
+            'source': 'my_module.fn',
+            'product': 'report.ipynb',
+            'on_finish': 'not_a_module.not_a_function',
+            'on_render': 'not_a_module.not_a_function',
+            'on_failure': 'not_a_module.not_a_function',
+            'serializer': 'not_a_module.not_a_function',
+            'unserializer': 'not_a_module.not_a_function',
+            'product_client': 'not_a_module.not_a_function'
+        },
+    ]
+
+    data = {
+        'tasks': tasks,
+        'serializer': 'not_a_module.not_a_function',
+        'unserializer': 'not_a_module.not_a_function',
+    }
+
+    spec = DAGSpec(data, lazy_import=True)
+
+    assert spec.to_dag()
+
+
+@pytest.fixture
+def my_testing_module():
+    Path('my_testing_module.py').write_text("""
+from pathlib import Path
+from ploomber.clients import LocalStorageClient, SQLAlchemyClient
+
+def task(product):
+    Path(product).touch()
+
+def get_client(param=1):
+    return LocalStorageClient('backup', path_to_project_root='.')
+
+def get_db_client(param=1):
+    return SQLAlchemyClient('sqlite:///my.db')
+""")
+
+
+@pytest.mark.parametrize('client_spec', [
+    'my_testing_module.get_client',
+    {
+        'dotted_path': 'my_testing_module.get_client',
+        'param': 10
+    },
+])
+def test_lazy_load_dag_level_client(tmp_directory, tmp_imports,
+                                    my_testing_module, client_spec):
+
+    tasks = [
+        {
+            'source': 'my_testing_module.task',
+            'product': 'output.csv'
+        },
+    ]
+
+    data = {
+        'tasks': tasks,
+        'clients': {
+            'File': client_spec
+        },
+    }
+
+    spec = DAGSpec(data, lazy_import=True)
+
+    dag = spec.to_dag()
+    dag.executor = Serial(build_in_subprocess=False)
+
+    # since lazy_load=True, creating the dag should not import
+    # my_testing_module
+    assert 'my_testing_module' not in sys.modules
+
+    dag.build()
+
+    # should be imported now
+    assert 'my_testing_module' in sys.modules
+    assert Path('backup', 'output.csv').exists()
+
+
+@pytest.mark.parametrize('client_spec', [
+    'my_testing_module.get_db_client',
+    {
+        'dotted_path': 'my_testing_module.get_db_client',
+        'param': 10
+    },
+])
+def test_lazy_load_product_level_client(tmp_directory, tmp_imports,
+                                        my_testing_module, client_spec):
+    Path('script.sql').write_text("""
+CREATE TABLE {{product}} AS SELECT * FROM my_table
+""")
+
+    with sqlite3.connect('my.db') as conn:
+        pd.DataFrame({'x': range(5)}).to_sql('my_table', conn)
+
+    tasks = [
+        {
+            'source': 'script.sql',
+            'product': [None, 'name', 'table'],
+            'client': client_spec,
+            'product_client': client_spec,
+            'product_class': 'GenericSQLRelation',
+        },
+    ]
+
+    data = {'tasks': tasks}
+
+    spec = DAGSpec(data, lazy_import=True)
+
+    dag = spec.to_dag()
+    dag.executor = Serial(build_in_subprocess=False)
+
+    # since lazy_load=True, creating the dag should not import
+    # my_testing_module
+    assert 'my_testing_module' not in sys.modules
+
+    dag.build()
+
+    # should be imported now
+    assert 'my_testing_module' in sys.modules

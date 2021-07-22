@@ -13,9 +13,11 @@ from ploomber.placeholders.placeholder import Placeholder
 from ploomber.constants import TaskStatus
 from ploomber.products._remotefile import (_RemoteFile,
                                            _fetch_metadata_from_file_product)
+from ploomber.products.mixins import ProductWithClientMixin
+from ploomber.exceptions import MissingClientError
 
 
-class File(Product, os.PathLike):
+class File(ProductWithClientMixin, os.PathLike, Product):
     """A file (or directory) in the local filesystem
 
     Parameters
@@ -149,17 +151,12 @@ class File(Product, os.PathLike):
 
     @property
     def client(self):
-        if self._client is None:
-            if self._task is None:
-                raise ValueError('Cannot obtain client for this product, '
-                                 'the constructor did not receive a client '
-                                 'and this product has not been assigned '
-                                 'to a DAG yet (cannot look up for clients in'
-                                 'dag.clients)')
-
-            self._client = self.task.dag.clients.get(type(self))
-
-        return self._client
+        try:
+            client = super().client
+        except MissingClientError:
+            return None
+        else:
+            return client
 
     def download(self):
         self.logger.info('Downloading %s...', self._path_to_file)
