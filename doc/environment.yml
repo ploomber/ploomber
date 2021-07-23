@@ -24,6 +24,9 @@ dependencies:
     # for converting notebooks
     - nbsphinx
 
+    # https://github.com/spatialaudio/nbsphinx/issues/584
+    - sphinx==4.0.2
+
     # for plotting
     - pygraphviz
 
