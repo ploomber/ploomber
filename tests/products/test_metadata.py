@@ -5,7 +5,7 @@ from unittest.mock import Mock
 import pytest
 
 from ploomber.products.metadata import (Metadata, AbstractMetadata,
-                                        MetadataCollection)
+                                        MetadataCollection, process_params)
 from ploomber.products import Product, File
 from ploomber._testing_utils import assert_no_extra_attributes_in_class
 
@@ -412,3 +412,59 @@ def test_warns_on_corruped_metadata(tmp_directory):
     assert m.stored_source_code is None
     assert m.timestamp is None
     assert m.params is None
+
+
+@pytest.mark.parametrize('params, expected', [
+    [{
+        'a': 1
+    }, {
+        'a': 1
+    }],
+    [{
+        'resource__file': 'file.txt'
+    }, {
+        'resource__file': '7a00ddbdae0c81b8824e2b0aaf548df7'
+    }],
+    [{
+        'resource__file': 'file.txt',
+        'a': 1
+    }, {
+        'resource__file': '7a00ddbdae0c81b8824e2b0aaf548df7',
+        'a': 1
+    }],
+])
+def test_process_params(tmp_directory, params, expected):
+    Path('file.txt').write_text('my resource file')
+    assert process_params(params) == expected
+
+
+def test_error_on_incorrect_process_params_value_type():
+    with pytest.raises(TypeError) as excinfo:
+        process_params({'resource__file': 1})
+
+    expected = ("Error reading params resource with key 'resource__file'. "
+                "Expected value 1 to be a str, bytes or os.PathLike, not int")
+    assert str(excinfo.value) == expected
+
+
+def test_error_on_missing_file_in_process_params_value(tmp_directory):
+    with pytest.raises(FileNotFoundError) as excinfo:
+        process_params({'resource__file': 'non-existing-file'})
+
+    expected = ("Error reading params resource with key 'resource__file'. "
+                "Expected value 'non-existing-file' to be an existing file.")
+    assert str(excinfo.value) == expected
+
+
+def test_update_with_resource(tmp_directory):
+    Path('file.txt').touch()
+
+    prod = FakeProduct(identifier='fake-product')
+    metadata = Metadata(prod)
+
+    metadata.update('new code', params={'resource__file': 'file.txt'})
+
+    assert metadata.stored_source_code == 'new code'
+    assert metadata.params == {
+        'resource__file': 'd41d8cd98f00b204e9800998ecf8427e'
+    }

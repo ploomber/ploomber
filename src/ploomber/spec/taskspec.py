@@ -381,9 +381,12 @@ def _init_product(task_dict, meta, task_class, root_path, lazy_import):
     else:
         kwargs = {}
 
+    # determine the base path for the product (only relevant if product
+    # is a File)
     relative_to = (Path(task_dict['source']).parent
                    if meta['product_relative_to_source'] else root_path)
 
+    # initialize Product instance
     return try_product_init(CLASS, product_raw, relative_to, kwargs)
 
 
@@ -459,6 +462,8 @@ def validate_product_class_name(product_class_name):
 
 
 def resolve_if_file(product_raw, relative_to, class_):
+    """Resolve Product argument if it's a File to make it an absolute path
+    """
     try:
         return _resolve_if_file(product_raw, relative_to, class_)
     except Exception as e:
@@ -468,8 +473,12 @@ def resolve_if_file(product_raw, relative_to, class_):
 
 
 def _resolve_if_file(product_raw, relative_to, class_):
+    """Resolve File argument to make it an absolute path
+    """
+    # not a file, nothing to do...
     if class_ != products.File:
         return product_raw
+    # resolve...
     elif relative_to:
         # To keep things consistent, product relative paths are so to the
         # pipeline.yaml file (not to the current working directory). This is
@@ -478,6 +487,7 @@ def _resolve_if_file(product_raw, relative_to, class_):
         # when using the integration with Jupyter notebooks, each notebook
         # will set its working directory to the current parent.
         return str(Path(relative_to, product_raw).resolve())
+    # no realtive_to argument, nothing to do...
     else:
         return Path(product_raw).resolve()
 

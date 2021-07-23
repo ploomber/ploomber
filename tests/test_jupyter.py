@@ -623,3 +623,36 @@ def test_disable_functions_as_notebooks(backup_spec_with_functions):
         'functions.py',
         'util.py',
     }
+
+
+def test_injected_cell_with_resources(tmp_directory):
+    resource = Path('file.txt')
+    resource.touch()
+
+    Path('notebooks').mkdir()
+    path = Path('notebooks', 'nb.py')
+    path.write_text("""
+from pathlib import Path
+
+# + tags=["parameters"]
+upstream = None
+
+# +
+Path(resource__file).read_text()
+    """)
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: notebooks/nb.py
+      product: out.ipynb
+      params:
+        resource__file: file.txt
+""")
+
+    cm = PloomberContentsManager()
+
+    model = cm.get('notebooks/nb.py')
+
+    absolute = str(resource.resolve())
+    cell = get_injected_cell(model['content'])
+    assert absolute in cell['source']
