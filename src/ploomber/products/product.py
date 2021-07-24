@@ -9,6 +9,7 @@ import abc
 import logging
 
 from ploomber.products.metadata import Metadata
+from ploomber.products._resources import process_resources
 
 
 def _prepare_metadata(metadata):
@@ -186,7 +187,10 @@ class Product(abc.ABC):
             a=self.metadata.stored_source_code,
             b=str(self.task.source),
             a_params=self.metadata.params,
-            b_params=self.task.params.to_json_serializable(params_only=True),
+            # process resource params to compare the file hash instead of
+            # the path to the file
+            b_params=process_resources(
+                self.task.params.to_json_serializable(params_only=True)),
             extension=self.task.source.extension)
 
         self._outdated_code_dependency_status = outdated
