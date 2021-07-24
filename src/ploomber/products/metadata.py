@@ -2,15 +2,15 @@
 Metadata represents the information we need to save in order to support
 incremental builds: source code and build timestmp
 """
-from pathlib import Path
-import hashlib
 import json
 import logging
 import warnings
 import abc
 from datetime import datetime
 from copy import deepcopy
+
 from ploomber.util.util import callback_check
+from ploomber.products._resources import process_resources
 
 
 class AbstractMetadata(abc.ABC):
@@ -256,15 +256,12 @@ class Metadata(AbstractMetadata):
                           'task execution.')
             params = None
 
-        # NOTE: resources should be relative paths. Maybe validate them here?
-        # but I also need them as absolute to prevent inconsistencies...
-
         new_data = dict(
             timestamp=datetime.now().timestamp(),
             stored_source_code=source_code,
             # process params to store hashes in case they're
             # declared as resources
-            params=process_params(params))
+            params=process_resources(params))
 
         kwargs = callback_check(self._product.prepare_metadata,
                                 available={
@@ -307,47 +304,6 @@ class Metadata(AbstractMetadata):
 
     def __repr__(self):
         return f'{type(self).__name__}({self._data!r})'
-
-
-def process_params(params):
-    """
-    Process parameters, computes the hash of the file for resources
-    (i.e., params with the resource__ prefix)
-
-    Parameters
-    ----------
-    params : dict
-        Task parameters
-    """
-    # params can be None
-    if params is None:
-        return None
-
-    params_processed = {}
-
-    for key, value in params.items():
-        # TODO: make sure this wont cause issues with the CLI that also
-        # uses __
-        if key.startswith('resource__'):
-            try:
-                path = Path(value)
-            except TypeError as e:
-                raise TypeError(
-                    f'Error reading params resource with key {key!r}. '
-                    f'Expected value {value!r} to be a str, bytes '
-                    f'or os.PathLike, not {type(value).__name__}') from e
-
-            if not path.is_file():
-                raise FileNotFoundError(
-                    f'Error reading params resource with key {key!r}. '
-                    f'Expected value {value!r} to be an existing file.')
-
-            digest = hashlib.md5(path.read_bytes()).hexdigest()
-            params_processed[key] = digest
-        else:
-            params_processed[key] = value
-
-    return params_processed
 
 
 class MetadataCollection(AbstractMetadata):

@@ -12,6 +12,7 @@ from ploomber.util import validate, dotted_path
 from ploomber.tasks.taskgroup import TaskGroup
 from ploomber import validators
 from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.products._resources import resolve_resources
 
 suffix2taskclass = {
     '.py': tasks.NotebookRunner,
@@ -321,6 +322,11 @@ def _init_task(data, meta, project_root, lazy_import, dag):
     if (class_ == tasks.NotebookRunner and lazy_import
             and 'check_if_kernel_installed' not in task_dict):
         task_dict['check_if_kernel_installed'] = False
+
+    # make paths to resources absolute
+    if 'params' in task_dict:
+        task_dict['params'] = resolve_resources(task_dict['params'],
+                                                relative_to=project_root)
 
     try:
         task = class_(source=source,
