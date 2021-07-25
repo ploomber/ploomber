@@ -31,20 +31,29 @@ def cli():
     help='Use package template (setup.py)',
 )
 @click.option(
+    '--empty',
+    is_flag=True,
+    help='Create a sample pipeline.yaml with no tasks',
+)
+@click.option(
     '--entry-point',
     '-e',
     default=None,
-    help='Entry point to add tasks. Invalid if --conda or --package',
+    help='Entry point to add tasks. Invalid if other flags present',
 )
-def scaffold(conda, package, entry_point):
+def scaffold(conda, package, entry_point, empty):
     """Create new projects (if no pipeline.yaml exists) or add missings tasks
     """
+    template = '-e/--entry-point is not compatible with the {flag} flag'
+
     if entry_point and conda:
-        raise click.ClickException(
-            '-e/--entry-point is not compatible with the --conda flag')
+        raise click.ClickException(template.format(flag='--conda'))
+
     if entry_point and package:
-        raise click.ClickException(
-            '-e/--entry-point is not compatible with the --package flag')
+        raise click.ClickException(template.format(flag='--package'))
+
+    if entry_point and empty:
+        raise click.ClickException(template.format(flag='--empty'))
 
     # try to load a dag by looking in default places
     if not entry_point:
@@ -60,7 +69,10 @@ def scaffold(conda, package, entry_point):
         spec, path_to_spec = loaded
         _scaffold.add(spec, path_to_spec)
     else:
-        scaffold_project.cli(project_path=None, conda=conda, package=package)
+        scaffold_project.cli(project_path=None,
+                             conda=conda,
+                             package=package,
+                             empty=empty)
 
 
 @cli.command()

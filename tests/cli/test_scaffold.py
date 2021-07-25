@@ -9,13 +9,16 @@ from ploomber.cli.cli import scaffold
 from ploomber.cli import cli
 
 
-@pytest.mark.parametrize('args, conda, package', [
-    [[], False, False],
-    [['--conda'], True, False],
-    [['--package'], False, True],
-    [['--conda', '--package'], True, True],
+@pytest.mark.parametrize('args, conda, package, empty', [
+    [[], False, False, False],
+    [['--conda'], True, False, False],
+    [['--package'], False, True, False],
+    [['--empty'], False, False, True],
+    [['--conda', '--package'], True, True, False],
+    [['--conda', '--package', '--empty'], True, True, True],
 ])
-def test_ploomber_scaffold(tmp_directory, monkeypatch, args, conda, package):
+def test_ploomber_scaffold(tmp_directory, monkeypatch, args, conda, package,
+                           empty):
     """
     Testing scaffold for creating a new project
     """
@@ -28,7 +31,8 @@ def test_ploomber_scaffold(tmp_directory, monkeypatch, args, conda, package):
     assert not result.exit_code
     mock.assert_called_once_with(project_path=None,
                                  conda=conda,
-                                 package=package)
+                                 package=package,
+                                 empty=empty)
 
 
 @pytest.mark.parametrize(
@@ -151,7 +155,7 @@ tasks:
     assert Path('script.py').is_file()
 
 
-@pytest.mark.parametrize('flag', ['--conda', '--package'])
+@pytest.mark.parametrize('flag', ['--conda', '--package', '--empty'])
 def test_error_if_conflicting_options(flag):
     runner = CliRunner()
     result = runner.invoke(scaffold,

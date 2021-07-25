@@ -2,6 +2,11 @@
 
 ## 0.12.2dev
 
+* CLI `--help` message shows if `ENTRY_POINT` environment variable is defined
+* `ploomber scaffold` now takes a `-e/--entry-point` optional argument
+*  Fixes error that caused the `{{here}}` placeholder not to work if an `env.yaml` exists
+*  Adds `--empty` option to `ploomber scaffold` to create a `pipeline.yaml` with no tasks
+
 ## 0.12.1 (2021-07-09)
 
 - Allowing `pipeline.yaml` at project root if setup.py but `src/*/pipeline.yaml` is missing
