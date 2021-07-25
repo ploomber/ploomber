@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 import sys
 from unittest.mock import Mock
@@ -126,3 +127,32 @@ def test_entry_point_from_factory_in_environment_variable(
     dag, _ = _custom_command(parser)
 
     assert isinstance(dag, DAG)
+
+
+def test_shows_default_value(tmp_directory, capsys):
+    Path('pipeline.yaml').touch()
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    parser.print_help()
+
+    captured = capsys.readouterr()
+    assert 'defaults to pipeline.yaml' in captured.out
+
+
+def test_shows_default_value_from_env_var(tmp_directory, monkeypatch, capsys):
+    monkeypatch.setenv('ENTRY_POINT', 'dag.yaml')
+
+    Path('dag.yaml').touch()
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    parser.print_help()
+
+    captured = capsys.readouterr()
+    assert re.search(r'defaults\s+to\s+dag.yaml\s+\(ENTRY_POINT\s+env\s+var\)',
+                     captured.out)

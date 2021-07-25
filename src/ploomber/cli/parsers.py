@@ -1,3 +1,4 @@
+import os
 import logging
 import sys
 import importlib
@@ -61,6 +62,8 @@ class CustomParser(argparse.ArgumentParser):
         if self.DEFAULT_ENTRY_POINT:
             entry_point_help = ('Entry point, defaults '
                                 f'to {self.DEFAULT_ENTRY_POINT}')
+            if os.environ.get('ENTRY_POINT'):
+                entry_point_help += ' (ENTRY_POINT env var)'
         else:
             entry_point_help = 'Entry point'
 
