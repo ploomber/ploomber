@@ -37,8 +37,7 @@ def normalize_sql(code):
 
 def _delete_python_comments(code):
     tokens = tokenize.generate_tokens(io.StringIO(code).readline)
-    tokens = [(num, val) for num, val, _, _, _ in tokens
-              if num != tokenize.COMMENT]
+    tokens = [token for token in tokens if token[0] != tokenize.COMMENT]
     return tokenize.untokenize(tokens)
 
 
