@@ -1,7 +1,10 @@
+from pathlib import Path
 import os
 import sys
 
 import click
+
+from ploomber.spec import DAGSpec
 from ploomber import __version__
 from ploomber import cli as cli_module
 from ploomber import scaffold as _scaffold
@@ -27,12 +30,33 @@ def cli():
     is_flag=True,
     help='Use package template (setup.py)',
 )
-def scaffold(conda, package):
-    """Create new projects and add template tasks
+@click.option(
+    '--entry-point',
+    '-e',
+    default=None,
+    help='Entry point to add tasks. Invalid if --conda or --package',
+)
+def scaffold(conda, package, entry_point):
+    """Create new projects (if no pipeline.yaml exists) or add missings tasks
     """
-    loaded = _scaffold.load_dag()
+    if entry_point and conda:
+        raise click.ClickException(
+            '-e/--entry-point is not compatible with the --conda flag')
+    if entry_point and package:
+        raise click.ClickException(
+            '-e/--entry-point is not compatible with the --package flag')
+
+    # try to load a dag by looking in default places
+    if not entry_point:
+        loaded = _scaffold.load_dag()
+    else:
+        try:
+            loaded = DAGSpec(entry_point, lazy_import=True), Path(entry_point)
+        except Exception as e:
+            raise click.ClickException(e) from e
 
     if loaded:
+        # add scaffold tasks
         spec, path_to_spec = loaded
         _scaffold.add(spec, path_to_spec)
     else:

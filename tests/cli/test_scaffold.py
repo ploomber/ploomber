@@ -122,3 +122,42 @@ def test_ploomber_scaffold_skip_if_file_exists(tmp_directory, capsys):
 
     assert result.exit_code == 0
     assert Path('task.py').read_text() == ''
+
+
+def test_scaffold_with_missing_custom_entry_point(tmp_directory):
+
+    runner = CliRunner()
+    result = runner.invoke(scaffold,
+                           args=['-e', 'pipeline.serve.yaml'],
+                           catch_exceptions=False)
+
+    assert result.exit_code
+    assert 'Expected it to be a path to a YAML file' in result.output
+
+
+def test_scaffold_in_custom_entry_point(tmp_directory):
+    Path('pipeline.serve.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: out.ipynb
+""")
+
+    runner = CliRunner()
+    result = runner.invoke(scaffold,
+                           args=['-e', 'pipeline.serve.yaml'],
+                           catch_exceptions=False)
+
+    assert not result.exit_code
+    assert Path('script.py').is_file()
+
+
+@pytest.mark.parametrize('flag', ['--conda', '--package'])
+def test_error_if_conflicting_options(flag):
+    runner = CliRunner()
+    result = runner.invoke(scaffold,
+                           args=['-e', 'pipeline.serve.yaml', flag],
+                           catch_exceptions=False)
+
+    assert result.exit_code
+    assert (f'Error: -e/--entry-point is not compatible with the {flag} flag\n'
+            == result.output)
