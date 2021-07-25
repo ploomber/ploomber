@@ -70,6 +70,35 @@ def test_process_file_or_entry_point_param_replace(argv, expected, monkeypatch,
     assert dag['plot'].params['some_param'] == expected
 
 
+@pytest.mark.parametrize('create_env', [False, True])
+def test_use_here_placeholder_when_processing_file(create_env, tmp_directory,
+                                                   monkeypatch):
+    monkeypatch.setattr(sys, 'argv', ['ploomber'])
+
+    if create_env:
+        Path('env.yaml').write_text("""
+key: value
+""")
+
+    Path('script.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: "{{here}}/out.ipynb"
+""")
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    _process_file_dir_or_glob(parser)
+
+
 @pytest.mark.parametrize('default', [False, True])
 def test_cli_from_bool_flag(default, monkeypatch):
     def factory(flag: bool = default):

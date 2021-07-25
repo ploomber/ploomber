@@ -109,10 +109,12 @@ def test_dagspec_initialization_from_yaml_and_env(tmp_nbs, monkeypatch):
 
     # ensure called using the path to the yaml spec
     mock_DAGSpec.assert_called_once_with('pipeline.yaml',
-                                         env=EnvDict({'sample': False}))
+                                         env=EnvDict({'sample': False},
+                                                     path_to_here='.'))
 
     # and EnvDict initialized from env.yaml
-    mock_EnvDict.assert_called_once_with(str(Path('env.yaml').resolve()))
+    mock_EnvDict.assert_called_once_with(str(Path('env.yaml').resolve()),
+                                         path_to_here=Path('.'))
 
 
 def test_entry_point_from_factory_in_environment_variable(
