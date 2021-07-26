@@ -2,6 +2,7 @@
 
 ## 0.12.2dev
 
+* Lazy load for ``serializer``, ``unserialize``, DAG clients, Task clients, Product clients, and task hooks, which allows the Jupyter plugin to work even if the Jupyter process does not have the dependencies required to import such dotted paths
 * CLI `--help` message shows if `ENTRY_POINT` environment variable is defined
 * `ploomber scaffold` now takes a `-e/--entry-point` optional argument
 *  Fixes error that caused the `{{here}}` placeholder not to work if an `env.yaml` exists
