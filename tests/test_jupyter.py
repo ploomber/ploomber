@@ -71,7 +71,7 @@ def test_cell_injection_if_using_notebook_dir_option(tmp_nbs):
     app = serverapp.ServerApp()
     app.initialize(argv=[])
     # simulate doing: jupyter lab --notebook-dir path/to/dir
-    app.root_dir = str(tmp_nbs)
+    app.root_dir = str(tmp_nbs.resolve())
 
     model = app.contents_manager.get(str('plot.py'))
 
@@ -85,7 +85,7 @@ def test_cell_injection_if_using_notebook_dir_option_nested_script(tmp_nbs):
     app = serverapp.ServerApp()
     app.initialize(argv=[])
     # simulate doing: jupyter lab --notebook-dir path/to/dir
-    app.root_dir = str(Path(tmp_nbs).parent)
+    app.root_dir = str(Path(tmp_nbs).resolve().parent)
 
     model = app.contents_manager.get(str('content/plot.py'))
 
@@ -144,6 +144,21 @@ def test_dag_from_directory(monkeypatch, tmp_nbs):
     model = cm.get('plot.py')
     injected = get_injected_cell(model['content'])
     assert injected
+
+
+def test_ignores_module_in_cache_when_importing_functions():
+    pass
+
+
+def test_ignores_function_tasks_if_fns_as_nbs_is_turned_off(
+        tmp_fns_and_scripts, tmp_imports):
+    pass
+
+
+def test_loads_functions_from_the_appropriate_directory(
+        tmp_fns_and_scripts, tmp_imports):
+    cm = PloomberContentsManager()
+    assert cm.get('project/another.py')
 
 
 def test_dag_from_dotted_path(monkeypatch, tmp_nbs, add_current_to_sys_path,

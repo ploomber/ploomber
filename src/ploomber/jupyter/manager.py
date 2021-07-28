@@ -90,6 +90,8 @@ def check_metadata_filter(log, model):
 
 
 def derive_class(base_class):
+    # FIXME: is it possible that the base class is jupyter's native contents
+    # manager and we need to include jupytext as well?
     class PloomberContentsManager(base_class):
         """
         Ploomber content manager subclasses jupytext TextFileContentsManager
@@ -135,13 +137,14 @@ def derive_class(base_class):
                 else:
                     # dag initialized successfully...
                     # TODO: we have to remove this because the same
-                    # jupyter session may more than one pipeline
+                    # jupyter session may more than one pipeline. should
+                    # only be in sys path during pipeline loading
                     # NOTE: we only need this when we are using
                     # functions as notebooks
-                    current = os.getcwd()
+                    base_path = Path(self.path).resolve()
 
                     if self.spec['meta'][
-                            'jupyter_hot_reload'] and current not in sys.path:
+                            'jupyter_hot_reload'] and base_path not in sys.path:
                         # jupyter does not add the current working dir by
                         # default, if using hot reload and the dag loads
                         # functions from local files, importlib.reload will
@@ -150,9 +153,7 @@ def derive_class(base_class):
                         # is actually loading from local files but that means
                         # we have to run some logic and increases load_dag
                         # running time, which we need to be fast
-                        sys.path.append(current)
-
-                    base_path = Path(self.path).resolve()
+                        sys.path.insert(0, str(base_path))
 
                     with chdir(base_path):
                         # this dag object won't be executed, forcing speeds

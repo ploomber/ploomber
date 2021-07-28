@@ -88,6 +88,9 @@ TESTING = [
     'psycopg2',
     # requires for some Table tests where we parse the HTML repr
     'lxml',
+
+    # for testing jupyter lab plugin
+    'jupyter_server',
 ]
 
 # packages needed for development

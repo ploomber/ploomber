@@ -1,0 +1,6 @@
+tasks:
+  - source: fns_and_scripts.get
+    product: out.txt
+
+  - source: another.py
+    product: another.ipynb
