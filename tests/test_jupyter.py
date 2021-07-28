@@ -13,10 +13,15 @@ import jupytext
 import parso
 import nbformat
 import pytest
+from jupyter_server import serverapp
 
-from ploomber.jupyter.manager import PloomberContentsManager
+from ploomber.jupyter.manager import derive_class
 from ploomber.jupyter.dag import JupyterDAGManager
 from ploomber.spec import DAGSpec
+
+from jupytext.contentsmanager import TextFileContentsManager
+
+PloomberContentsManager = derive_class(TextFileContentsManager)
 
 
 class PloomberContentsManagerTestCase(TestContentsManager):
@@ -46,6 +51,45 @@ def get_injected_cell(nb):
             injected = cell
 
     return injected
+
+
+def test_manager_initialization(tmp_directory):
+    dir_ = Path('some_dir').resolve()
+    dir_.mkdir()
+    dir_ = str(dir_)
+
+    app = serverapp.ServerApp()
+    app.initialize(argv=[])
+    app.root_dir = dir_
+    assert app.contents_manager.root_dir == dir_
+
+
+def test_cell_injection_if_using_notebook_dir_option(tmp_nbs):
+    Path('jupyter_init').mkdir()
+    os.chdir('jupyter_init')
+
+    app = serverapp.ServerApp()
+    app.initialize(argv=[])
+    # simulate doing: jupyter lab --notebook-dir path/to/dir
+    app.root_dir = str(tmp_nbs)
+
+    model = app.contents_manager.get(str('plot.py'))
+
+    assert get_injected_cell(model['content'])
+
+
+def test_cell_injection_if_using_notebook_dir_option_nested_script(tmp_nbs):
+    Path('jupyter_init').mkdir()
+    os.chdir('jupyter_init')
+
+    app = serverapp.ServerApp()
+    app.initialize(argv=[])
+    # simulate doing: jupyter lab --notebook-dir path/to/dir
+    app.root_dir = str(Path(tmp_nbs).parent)
+
+    model = app.contents_manager.get(str('content/plot.py'))
+
+    assert get_injected_cell(model['content'])
 
 
 def test_injects_cell_if_file_in_dag(tmp_nbs):
@@ -263,7 +307,7 @@ def test_hot_reload(tmp_nbs):
 def test_server_extension_is_initialized():
     app = NotebookApp()
     app.initialize()
-    assert isinstance(app.contents_manager, PloomberContentsManager)
+    assert hasattr(app.contents_manager, 'load_dag')
 
 
 def test_ignores_tasks_whose_source_is_not_a_file(monkeypatch, capsys,
