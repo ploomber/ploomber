@@ -1,3 +1,4 @@
+import inspect
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -7,6 +8,7 @@ import pytest
 
 from ploomber.util import dotted_path
 from ploomber.exceptions import SpecValidationError
+from ploomber.sources.inspect import getfile
 
 
 @pytest.mark.parametrize('spec', [
@@ -247,6 +249,32 @@ def test_check_defines_function_with_name_detects_aliasing(
     with pytest.raises(NotImplementedError):
         dotted_path._check_defines_function_with_name('function.py',
                                                       'some_name', None)
+
+
+@pytest.mark.parametrize('dotted_path_str', [
+    'test_pkg.decorated.functions.function',
+    'test_pkg.decorated.functions.decorated_function',
+    'test_pkg.decorated.functions.double_decorated_function',
+    'test_pkg.callables.root',
+],
+                         ids=[
+                             'regular',
+                             'decorated-function',
+                             'double-decorated-function',
+                             'defined-in-init-file',
+                         ])
+def test_lazily_located_dotted_path(dotted_path_str, tmp_imports):
+    loc, source = dotted_path.lazily_locate_dotted_path(dotted_path_str)
+
+    obj = dotted_path.load_dotted_path(dotted_path_str)
+
+    loc_real = getfile(obj)
+    lines, line = inspect.getsourcelines(obj)
+    source_expected = ''.join(lines)
+    loc_expected = f'{loc_real}:{line}'
+
+    assert loc == loc_expected
+    assert source == source_expected
 
 
 @pytest.mark.parametrize('dotted_path_str', ['a.b', 'a.b.c'])

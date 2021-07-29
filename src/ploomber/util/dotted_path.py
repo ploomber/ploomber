@@ -250,7 +250,6 @@ def _check_last_definition_is_function(module, name, dotted_path):
 
 
 def _check_defines_function_with_name(path, name, dotted_path):
-
     module = parso.parse(Path(path).read_text())
 
     # there could be multiple with the same name
@@ -281,6 +280,10 @@ def _check_defines_function_with_name(path, name, dotted_path):
 
     # return the last definition to be consistent with inspect.getsourcefile
     fn_found = fns[-1]
+
+    # if function is decorated, include decorators in the returned source code
+    if fn_found.parent.type == 'decorated':
+        fn_found = fn_found.parent
 
     _check_last_definition_is_function(module, name, dotted_path)
 
