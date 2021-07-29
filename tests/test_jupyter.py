@@ -146,19 +146,35 @@ def test_dag_from_directory(monkeypatch, tmp_nbs):
     assert injected
 
 
+# TODO: turn fns as notebooks ON, then ensure that it correctly
+# imports the module in pipeline.yaml even if there is already
+# a module with such a name in sys.modules
 def test_ignores_module_in_cache_when_importing_functions():
     pass
 
 
 def test_ignores_function_tasks_if_fns_as_nbs_is_turned_off(
         tmp_fns_and_scripts, tmp_imports):
-    pass
+    path = Path('project', 'fns_and_scripts.py')
+    source = path.read_text()
+    # add a import to a non existing module to make the test fail if it
+    # attempts to import
+    path.write_text('import not_a_module\n' + source)
+
+    cm = PloomberContentsManager()
+    model = cm.get('project/another.py')['content']
+
+    # should not import module
+    assert 'fns_and_scripts' not in sys.modules
+    # but cell injection should still work
+    assert get_injected_cell(model)
 
 
 def test_loads_functions_from_the_appropriate_directory(
         tmp_fns_and_scripts, tmp_imports):
     cm = PloomberContentsManager()
     assert cm.get('project/another.py')
+    assert callable(cm.dag['get'].source.primitive)
 
 
 def test_dag_from_dotted_path(monkeypatch, tmp_nbs, add_current_to_sys_path,

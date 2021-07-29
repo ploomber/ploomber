@@ -114,9 +114,10 @@ setup(
     py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
     include_package_data=True,
     data_files=[
-        # like `jupyter serverextension enable --sys-prefix`
         ("etc/jupyter/jupyter_notebook_config.d",
-         ["jupyter-config/jupyter_notebook_config.d/ploomber.json"])
+         ["jupyter-config/jupyter_notebook_config.d/ploomber.json"]),
+        ("etc/jupyter/jupyter_server_config.d",
+         ["jupyter-config/jupyter_server_config.d/ploomber.json"]),
     ],
     zip_safe=False,
     classifiers=[

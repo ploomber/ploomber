@@ -66,6 +66,10 @@ def test_add_task_from_scaffold(backup_test_pkg, tmp_directory):
 
     Path('pipeline.yaml').write_text(yaml)
 
+    # FIXME: this will fail because TaskSpec validates that the
+    # dotted path actually exists. I think the cleanest solution
+    # is to add a special class method for DAGSpec that allows the lazy
+    # load to skip validating the last attribute...
     spec, path_to_spec = scaffold.load_dag()
     scaffold.add(spec, path_to_spec)
 

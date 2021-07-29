@@ -6,7 +6,7 @@
 #     name: python3
 # ---
 
-# Add description here
+from pathlib import Path
 
 # + tags=["parameters"]
 # extract_upstream=True in your pipeline.yaml file, if this task has
@@ -20,6 +20,5 @@ product = None
 
 # +
 # your code here...
-from pathlib import Path
 
 Path(product).touch()

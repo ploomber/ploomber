@@ -45,8 +45,9 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
     # we verify if this is a valid dotted path
     # if lazy load, just locate the module without importing it
 
-    fn_checker = dotted_path.locate_dotted_path if lazy_import else partial(
-        dotted_path.load_dotted_path, raise_=True, reload=reload)
+    fn_checker = (
+        dotted_path.locate_dotted_path_root if lazy_import else partial(
+            dotted_path.load_dotted_path, raise_=True, reload=reload))
 
     if extension and extension in suffix2taskclass:
         if extension == '.sql' and _safe_suffix(product) in {

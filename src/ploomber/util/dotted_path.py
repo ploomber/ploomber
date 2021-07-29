@@ -202,6 +202,20 @@ def locate_dotted_path(dotted_path):
     return spec
 
 
+def locate_dotted_path_root(dotted_path):
+    """
+    Returns the module spec for a given dotted path.
+    e.g. module.sub.another, checks that module exists
+    """
+    tokens = dotted_path.split('.')
+    spec = importlib.util.find_spec(tokens[0])
+
+    if spec is None:
+        raise ModuleNotFoundError(f'Module {tokens[0]!r} does not exist')
+
+    return spec
+
+
 def _process_children(ch):
     if hasattr(ch, 'name'):
         return [(ch.name.value, ch.type, ch.get_code())]

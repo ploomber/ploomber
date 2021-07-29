@@ -963,12 +963,16 @@ def test_import_tasks_from(tmp_nbs):
     ]
 
 
-def test_import_tasks_from_does_not_change_dotted_paths(tmp_nbs):
+def test_import_tasks_from_does_not_resolve_dotted_paths(tmp_nbs):
+    """
+    Sources defined in a file used in "import_tasks_from" are resolved
+    if they're paths to files but dotted paths should remain the same
+    """
     some_tasks = [{
         'source': 'extra_task.py',
         'product': 'extra.ipynb'
     }, {
-        'source': 'test_pkg.touch_root',
+        'source': 'test_pkg.functions.touch_root',
         'product': 'some_file.csv'
     }]
     Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
@@ -977,7 +981,9 @@ def test_import_tasks_from_does_not_change_dotted_paths(tmp_nbs):
     spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
 
     spec = DAGSpec(spec_d, lazy_import=True)
-    assert 'test_pkg.touch_root' in [t['source'] for t in spec['tasks']]
+    assert 'test_pkg.functions.touch_root' in [
+        t['source'] for t in spec['tasks']
+    ]
 
 
 def test_import_tasks_from_with_non_empty_env(tmp_nbs):
@@ -1544,15 +1550,29 @@ def test_dagspec_partial(tmp_partial):
     assert partial['tasks'][0]['product'] == 'output/load.ipynb'
 
 
-def test_lazy_load(tmp_directory, tmp_imports):
+@pytest.mark.parametrize('source', [
+    'my_module.fn',
+    'some_module.nested.fn',
+],
+                         ids=['simple', 'nested'])
+def test_lazy_load(source, tmp_directory, tmp_imports):
+    some = Path('some_module')
+    some.mkdir()
+    (some / '__init__.py').touch()
+
     Path('my_module.py').write_text("""
+def fn():
+    pass
+""")
+
+    (some / 'nested.py').write_text("""
 def fn():
     pass
 """)
 
     tasks = [
         {
-            'source': 'my_module.fn',
+            'source': source,
             'product': 'report.ipynb',
             'on_finish': 'not_a_module.not_a_function',
             'on_render': 'not_a_module.not_a_function',
@@ -1572,6 +1592,8 @@ def fn():
     spec = DAGSpec(data, lazy_import=True)
 
     assert spec.to_dag()
+    # source should not be imported
+    assert source.split('.')[0] not in sys.modules
 
 
 @pytest.fixture

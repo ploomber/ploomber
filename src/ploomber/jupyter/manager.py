@@ -143,8 +143,8 @@ def derive_class(base_class):
                     # functions as notebooks
                     base_path = Path(self.path).resolve()
 
-                    if self.spec['meta'][
-                            'jupyter_hot_reload'] and base_path not in sys.path:
+                    if (self.spec['meta']['jupyter_hot_reload']
+                            and base_path not in sys.path):
                         # jupyter does not add the current working dir by
                         # default, if using hot reload and the dag loads
                         # functions from local files, importlib.reload will
