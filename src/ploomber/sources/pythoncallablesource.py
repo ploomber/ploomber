@@ -2,6 +2,7 @@ import importlib
 import inspect
 
 from ploomber.sources.abc import Source
+from ploomber.sources.inspect import getfile
 from ploomber.util.util import signature_check
 from ploomber.util.dotted_path import (load_dotted_path,
                                        lazily_locate_dotted_path)
@@ -57,7 +58,7 @@ class CallableLoader:
             loc, _ = lazily_locate_dotted_path(self._primitive)
             return loc
         else:
-            path = inspect.getsourcefile(self.load())
+            path = getfile(self.load())
             _, line = inspect.getsourcelines(self.load())
             return '{}:{}'.format(path, line)
 

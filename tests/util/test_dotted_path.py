@@ -143,8 +143,8 @@ def some_name():
     [_test_many_names, 'function.py:7'],
     [_two, 'function.py:5'],
     [_nested_before, 'function.py:6'],
-    [_decorated, 'function.py:3'],
-    [_decorated_many, 'function.py:4'],
+    [_decorated, 'function.py:2'],
+    [_decorated_many, 'function.py:2'],
     [_nested_after, 'function.py:2'],
 ],
                          ids=[

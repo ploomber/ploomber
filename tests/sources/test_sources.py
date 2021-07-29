@@ -15,6 +15,7 @@ from ploomber._testing_utils import assert_no_extra_attributes_in_class
 from ploomber.util import dotted_path
 
 from test_pkg import functions
+from test_pkg.decorated import functions as decorated_functions
 
 
 @pytest.mark.parametrize('concrete_class', Source.__subclasses__())
@@ -404,6 +405,17 @@ def symbol():
         dotted_path.load_dotted_path(dotted_path_str)).loc
 
     assert str(Path(out).resolve()) == str(Path(loc).resolve())
+
+
+def test_fn_loc_returns_fn_def_even_if_decorated(tmp_imports):
+    source = PythonCallableSource(decorated_functions.decorated_function)
+    assert Path(source.loc.split(':')[0]).name == 'functions.py'
+
+
+def test_str_loc_returns_fn_def_even_if_decorated(tmp_imports):
+    source = PythonCallableSource(
+        'test_pkg.decorated.functions.decorated_function')
+    assert Path(source.loc.split(':')[0]).name == 'functions.py'
 
 
 def test_defined_name_twice(tmp_directory, add_current_to_sys_path,
