@@ -409,13 +409,21 @@ def symbol():
 
 def test_fn_loc_returns_fn_def_even_if_decorated(tmp_imports):
     source = PythonCallableSource(decorated_functions.decorated_function)
-    assert Path(source.loc.split(':')[0]).name == 'functions.py'
+    # remove the :line_number part
+    # find by the last : since windows paths contain multiple :
+    idx = max(i for i, value in enumerate(source.loc) if value == ':')
+
+    assert Path(source.loc[:idx]).name == 'functions.py'
 
 
 def test_str_loc_returns_fn_def_even_if_decorated(tmp_imports):
     source = PythonCallableSource(
         'test_pkg.decorated.functions.decorated_function')
-    assert Path(source.loc.split(':')[0]).name == 'functions.py'
+    # remove the :line_number part
+    # find by the last : since windows paths contain multiple :
+    idx = max(i for i, value in enumerate(source.loc) if value == ':')
+
+    assert Path(source.loc[:idx]).name == 'functions.py'
 
 
 def test_defined_name_twice(tmp_directory, add_current_to_sys_path,

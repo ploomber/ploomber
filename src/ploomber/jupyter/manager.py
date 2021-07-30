@@ -128,8 +128,8 @@ def derive_class(base_class):
                     self.reset_dag()
                     if log:
                         self.log.warning(
-                            '[Ploomber] Skipping DAG initialization since there '
-                            'isn\'t a project root in the current or '
+                            '[Ploomber] Skipping DAG initialization since '
+                            'there isn\'t a project root in the current or '
                             'parent directories. Error message: '
                             f'{str(e)}')
                 except Exception:
@@ -175,8 +175,8 @@ def derive_class(base_class):
 
                     self.log.info(
                         f'[Ploomber] Using dag defined at: {str(base_path)!r}')
-                    self.log.info(
-                        f'[Ploomber] Pipeline mapping: {self.dag_mapping}')
+                    self.log.info('[Ploomber] Pipeline mapping keys: '
+                                  f'{list(self.dag_mapping)}')
 
         def reset_dag(self):
             self.spec = None

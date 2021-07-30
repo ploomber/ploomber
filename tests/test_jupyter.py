@@ -54,8 +54,9 @@ def get_injected_cell(nb):
 
 
 def test_manager_initialization(tmp_directory):
-    dir_ = Path('some_dir').resolve()
+    dir_ = Path('some_dir')
     dir_.mkdir()
+    dir_ = dir_.resolve()
     dir_ = str(dir_)
 
     app = serverapp.ServerApp()
