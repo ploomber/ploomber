@@ -2,6 +2,10 @@
 
 ## 0.12.3dev
 
+* Fixes cell injection when using the `--notebook-dir` during Jupyter initialization
+* Reduces verbosity in Jupyter logs (#314)
+* Minor bug fixes
+
 ## 0.12.2 (2021-07-26)
 
 * Lazy load for ``serializer``, ``unserialize``, DAG clients, Task clients, Product clients, and task hooks, which allows the Jupyter plugin to work even if the Jupyter process does not have the dependencies required to import such dotted paths
