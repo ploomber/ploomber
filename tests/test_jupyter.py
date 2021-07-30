@@ -78,7 +78,27 @@ def test_cell_injection_if_using_notebook_dir_option(tmp_nbs):
     assert get_injected_cell(model['content'])
 
 
-def test_only_logs_skip_dag_initialization_once(tmp_directory, capsys):
+def test_does_not_log_error_dag_when_getting_a_directory(
+        tmp_directory, capsys):
+    Path('pipeline.yaml').touch()
+
+    app = serverapp.ServerApp()
+    app.initialize(argv=[])
+
+    # jupyter refreshes the current directory every few seconds
+    # (by calling.get('')), we simulate taht here
+    app.contents_manager.get('')
+    app.contents_manager.get('')
+
+    captured = capsys.readouterr()
+    lines = captured.err.splitlines()
+    log_with_skip_message = [
+        line for line in lines if '[Ploomber] An error occured' in line
+    ]
+    assert not len(log_with_skip_message)
+
+
+def test_does_not_log_skip_dag_when_getting_a_directory(tmp_directory, capsys):
     app = serverapp.ServerApp()
     app.initialize(argv=[])
 
@@ -93,7 +113,7 @@ def test_only_logs_skip_dag_initialization_once(tmp_directory, capsys):
         line for line in lines
         if '[Ploomber] Skipping DAG initialization' in line
     ]
-    assert len(log_with_skip_message) == 1
+    assert not len(log_with_skip_message)
 
 
 def test_cell_injection_if_using_notebook_dir_option_nested_script(tmp_nbs):

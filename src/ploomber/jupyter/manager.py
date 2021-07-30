@@ -104,7 +104,7 @@ def derive_class(base_class):
 
         # TODO: we can cache this depending on the folder where it's called
         # all files in the same folder share the same dag
-        def load_dag(self, starting_dir=None):
+        def load_dag(self, starting_dir=None, log=True):
             if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
                 msg = (
                     '[Ploomber] An error occured when trying to initialize '
@@ -126,14 +126,16 @@ def derive_class(base_class):
                 # that this happens for some folder, we simply emit a warning
                 except DAGSpecInvalidError as e:
                     self.reset_dag()
-                    self.log.warning(
-                        '[Ploomber] Skipping DAG initialization since there '
-                        'isn\'t a project root in the current or '
-                        'parent directories. Error message: '
-                        f'{str(e)}')
+                    if log:
+                        self.log.warning(
+                            '[Ploomber] Skipping DAG initialization since there '
+                            'isn\'t a project root in the current or '
+                            'parent directories. Error message: '
+                            f'{str(e)}')
                 except Exception:
                     self.reset_dag()
-                    self.log.exception(msg)
+                    if log:
+                        self.log.exception(msg)
                 else:
                     # dag initialized successfully...
                     # TODO: we have to remove this because the same
@@ -202,7 +204,11 @@ def derive_class(base_class):
             """
             # FIXME: reloading inside a (functions) folder causes 404
             if content:
-                self.load_dag()
+                # this load_dag() is required to list the folder that contains
+                # the notebooks exported from functions, however, since jupyter
+                # continuosly calls this for the current directory it gets
+                # too verbose so we skip showing the log message
+                self.load_dag(log=False)
 
             if self.manager and path in self.manager:
                 return self.manager.get(path, content)
