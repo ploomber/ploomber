@@ -1,5 +1,33 @@
+from copy import deepcopy
 import hashlib
 from pathlib import Path
+from collections.abc import Mapping
+
+_KEY = 'resources_'
+
+
+def _cast_to_path(value, key):
+    try:
+        return Path(value)
+    except TypeError as e:
+        raise TypeError(f'Error reading params.resources_ with key {key!r}. '
+                        f'Expected value {value!r} to be a str, bytes '
+                        f'or os.PathLike, not {type(value).__name__}') from e
+
+
+def _check_is_file(path, key):
+    if not path.is_file():
+        raise FileNotFoundError(
+            f'Error reading params.resources_ with key {key!r}. '
+            f'Expected value {str(path)!r} to be an existing file.')
+
+
+def _validate(params):
+    if not isinstance(params[_KEY], Mapping):
+        raise TypeError(
+            "Error reading params.resources_. 'resources_' must be a "
+            "dictionary with paths to files to track, but got a value "
+            f"{params[_KEY]} with type {type(params[_KEY]).__name__}")
 
 
 def resolve_resources(params, relative_to):
@@ -7,15 +35,23 @@ def resolve_resources(params, relative_to):
     if params is None:
         return None
 
-    params_resolved = {}
+    if _KEY not in params:
+        return deepcopy(params)
 
-    for key, value in params.items():
-        if isinstance(key, str) and key.startswith('resource__'):
-            params_resolved[key] = str(Path(relative_to, value).resolve())
-        else:
-            params_resolved[key] = value
+    _validate(params)
 
-    return params_resolved
+    resources = {}
+
+    for key, value in params[_KEY].items():
+        path = _cast_to_path(value, key)
+        path_with_suffix = Path(relative_to, path)
+        _check_is_file(path_with_suffix, key)
+        resources[key] = str(path_with_suffix.resolve())
+
+    params_out = deepcopy(params)
+    params_out[_KEY] = resources
+
+    return params_out
 
 
 def process_resources(params):
@@ -28,32 +64,25 @@ def process_resources(params):
     params : dict
         Task parameters
     """
+
     # params can be None
     if params is None:
         return None
 
-    params_processed = {}
+    if _KEY not in params:
+        return deepcopy(params)
 
-    for key, value in params.items():
-        # TODO: make sure this wont cause issues with the CLI that also
-        # uses __
-        if isinstance(key, str) and key.startswith('resource__'):
-            try:
-                path = Path(value)
-            except TypeError as e:
-                raise TypeError(
-                    f'Error reading params resource with key {key!r}. '
-                    f'Expected value {value!r} to be a str, bytes '
-                    f'or os.PathLike, not {type(value).__name__}') from e
+    _validate(params)
 
-            if not path.is_file():
-                raise FileNotFoundError(
-                    f'Error reading params resource with key {key!r}. '
-                    f'Expected value {value!r} to be an existing file.')
+    resources = {}
 
-            digest = hashlib.md5(path.read_bytes()).hexdigest()
-            params_processed[key] = digest
-        else:
-            params_processed[key] = value
+    for key, value in params[_KEY].items():
+        path = _cast_to_path(value, key)
+        _check_is_file(path, key)
+        digest = hashlib.md5(path.read_bytes()).hexdigest()
+        resources[key] = digest
 
-    return params_processed
+    params_out = deepcopy(params)
+    params_out[_KEY] = resources
+
+    return params_out

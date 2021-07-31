@@ -638,7 +638,7 @@ from pathlib import Path
 upstream = None
 
 # +
-Path(resource__file).read_text()
+Path(resources['file']).read_text()
     """)
 
     Path('pipeline.yaml').write_text("""
@@ -646,7 +646,8 @@ tasks:
     - source: notebooks/nb.py
       product: out.ipynb
       params:
-        resource__file: file.txt
+        resources_:
+          file: file.txt
 """)
 
     cm = PloomberContentsManager()
@@ -654,5 +655,9 @@ tasks:
     model = cm.get('notebooks/nb.py')
 
     absolute = str(resource.resolve())
+
+    if sys.platform == 'win32':
+        absolute = absolute.replace('\\', '\\\\')
+
     cell = get_injected_cell(model['content'])
     assert absolute in cell['source']

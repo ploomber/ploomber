@@ -429,9 +429,9 @@ def test_update_with_resource(tmp_directory):
     prod = FakeProduct(identifier='fake-product')
     metadata = Metadata(prod)
 
-    metadata.update('new code', params={'resource__file': 'file.txt'})
+    metadata.update('new code', params={'resources_': {'file': 'file.txt'}})
 
     assert metadata.stored_source_code == 'new code'
     assert metadata.params == {
-        'resource__file': 'd41d8cd98f00b204e9800998ecf8427e'
+        'resources_': {'file': 'd41d8cd98f00b204e9800998ecf8427e'}
     }

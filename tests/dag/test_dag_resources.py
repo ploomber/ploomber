@@ -10,7 +10,7 @@ from ploomber.executors import Serial
 from ploomber.constants import TaskStatus
 
 
-def task_with_resource(product, resource__file):
+def task_with_resource(product, resources_):
     Path(product).touch()
 
 
@@ -21,7 +21,7 @@ def test_outdated_if_resource_changes(tmp_directory):
         PythonCallable(task_with_resource,
                        File('output'),
                        dag,
-                       params=dict(resource__file='resource.txt'))
+                       params=dict(resources_=dict(file='resource.txt')))
 
         return dag
 
