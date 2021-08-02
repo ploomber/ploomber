@@ -79,8 +79,8 @@ is and what the products are. This is done via a ``pipeline.yaml`` file:
           nb: output/plots.ipynb
 
 
-You can set a specific name using ``name``. If not present, it is inferred from
-the ``source`` value.
+You can set a specific name using ``name``. If not present, Ploomber infers it
+from the ``source`` value.
 
 Once you have a ``pipeline.yaml`` file, run it with:
 
@@ -91,12 +91,16 @@ Once you have a ``pipeline.yaml`` file, run it with:
 Ploomber keeps track of source changes to skip up-to-date tasks if you run
 that command again, only tasks whose source code has changed are executed.
 
-For a full reference on ``pipeline.yaml`` files see: :doc:`../api/spec`
+**Note:** You can use the ``resources_`` section in a task definition to tell
+Ploomber to track the content of other
+files. :ref:`Click here to learn more <tasks-params-resources>`.
 
-**Note:** Writing a ``pipeline.yaml`` file is optional; you can also create
-pipelines by pointing to a directory with scripts. `Click here <https://github.com/ploomber/projects/tree/master/spec-api-directory>`_
+For a full reference on ``pipeline.yaml`` files see: :doc:`../api/spec`.
+
+**Note:** Writing a ``pipeline.yaml`` file is optional; you can create
+pipelines by pointing to a directory. `Click here <https://github.com/ploomber/projects/tree/master/spec-api-directory>`_
 to see an example. However, this is only recommended for simple projects
-(i.e., pipelines with just a couple tasks).
+(i.e., pipelines with just a couple of tasks).
 
 
 Tasks: scripts/notebooks

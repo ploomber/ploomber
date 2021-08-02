@@ -134,7 +134,14 @@ sections are shown first:
           # params for the task, see section below for details
           params:
             some_param: some_value
-          # grid of params (can be a dictionary or a list), see section below for details
+
+            # resources is a special section, changes to the *contents* of
+            # the files listed here cause the task to execute again, see the
+            # corresponding section for details
+            resources_:
+                my_resource: file.json
+          # grid of params (can be a dictionary or a list), see the section
+          # below for details
           grid:
             some_param: some_value
 
@@ -552,7 +559,7 @@ SQL tasks receive them as placeholders.
     -- {{my_param}} is replaced by 42
     SELECT * FROM my_table WHERE my_column > {{my_param}}
 
-Python/R scripts/notebnooks receive them in the "injected-parameters" cell:
+Python/R scripts/notebooks receive them in the "injected-parameters" cell:
 
 .. code-block:: py
     :class: text-editor
@@ -575,6 +582,30 @@ Python functions receive them as arguments:
     # function is called with my_param=42
     def my_task(product, my_param):
         pass
+
+.. _tasks-params-resources:
+
+``tasks[*].params.resources_``
+******************************
+
+The ``params`` section contains an optional section called ``resources_`` (note
+the trailing underscore). By default, Ploomber marks tasks as outdated when
+their parameters change in value; however, parameters in the ``resources_``
+section work differently: they're marked as outdated when the contents of the file
+change. For example, suppose you're using a JSON file as a configuration
+source for a given task. If you put the path to the file in the ``resources_``
+section, Ploomber will mark the task as outdated whenever such file changes:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    tasks:
+        - source: scripts/my-script.py
+          product: report.html
+          params:
+            # whenever the JSON file changes, my-script.py runs again
+            resources_: my-config-file.json
+
 
 ``tasks[*].grid``
 *****************
