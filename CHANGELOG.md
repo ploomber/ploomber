@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.12.4dev
+
 ## 0.12.3 (2021-08-03)
 
 * Fixes cell injection when using the `--notebook-dir` during Jupyter initialization
