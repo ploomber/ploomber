@@ -590,11 +590,11 @@ Python functions receive them as arguments:
 
 The ``params`` section contains an optional section called ``resources_`` (note
 the trailing underscore). By default, Ploomber marks tasks as outdated when
-their parameters change in value; however, parameters in the ``resources_``
+their parameters change; however, parameters in the ``resources_``
 section work differently: they're marked as outdated when the contents of the file
 change. For example, suppose you're using a JSON file as a configuration
-source for a given task. If you put the path to the file in the ``resources_``
-section, Ploomber will mark the task as outdated whenever such file changes:
+source for a given task, and want to make Ploomber re-run a task if such file
+changes, you can do something like this:
 
 .. code-block:: yaml
     :class: text-editor
@@ -603,8 +603,9 @@ section, Ploomber will mark the task as outdated whenever such file changes:
         - source: scripts/my-script.py
           product: report.html
           params:
-            # whenever the JSON file changes, my-script.py runs again
-            resources_: my-config-file.json
+            resources_:
+                # whenever the JSON file changes, my-script.py runs again
+                file: my-config-file.json
 
 
 ``tasks[*].grid``
