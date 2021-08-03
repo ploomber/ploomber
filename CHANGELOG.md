@@ -4,6 +4,7 @@
 
 * Fixes cell injection when using the `--notebook-dir` during Jupyter initialization
 * Reduces verbosity in Jupyter logs (#314)
+* Adds `tasks[*].params.resources_` to track changes in external files
 * Minor bug fixes
 
 ## 0.12.2 (2021-07-26)
