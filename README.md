@@ -17,6 +17,8 @@
 <p align="center">
   <a href="http://community.ploomber.io">Join our community</a>
   |
+  <a href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+  |
   <a href="https://forms.gle/Xf9h1Q2TGoSk15NEA">Contact us</a>
   |
   <a href="https://ploomber.readthedocs.io/">Docs</a>
@@ -41,6 +43,7 @@
 ## Community
 
 * [Join us on Slack](http://community.ploomber.io)
+* [Newsletter](https://www.getrevue.co/profile/ploomber)
 * [Contact the development team](https://forms.gle/Xf9h1Q2TGoSk15NEA)
 
 ## Resources
