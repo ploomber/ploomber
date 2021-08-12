@@ -166,11 +166,11 @@ def test_plot_path(dag, tmp_directory, monkeypatch_plot):
 
     img = dag.plot(output='pipeline.png')
 
-    kwargs = mock_Image.call_args[1]
-    mock_Image.assert_called_once()
-    assert kwargs == {'filename': 'pipeline.png'}
+    # user may select a format that is not compatible with
+    # IPython.display.image, hence, we should not call it
+    mock_Image.assert_not_called()
     assert Path('pipeline.png').exists()
-    assert img is image_out
+    assert img is None
     mock_to_agraph.draw.assert_called_once()
 
 

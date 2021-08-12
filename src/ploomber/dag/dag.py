@@ -753,6 +753,12 @@ class DAG(AbstractDAG):
             'https://graphviz.org/'))
     def plot(self, output='embed'):
         """Plot the DAG
+
+        Parameters
+        ----------
+        output : str, default='embed'
+            Where to save the output (e.g., pipeline.png). If 'embed', it
+            returns an IPython image instead.
         """
         if output == 'embed':
             fd, path = tempfile.mkstemp(suffix='.png')
@@ -769,12 +775,10 @@ class DAG(AbstractDAG):
         G = self._to_graph(return_graphviz=True)
         G.draw(path, prog='dot', args='-Grankdir=LR')
 
-        image = Image(filename=path)
-
         if output == 'embed':
+            image = Image(filename=path)
             Path(path).unlink()
-
-        return image
+            return image
 
     def _add_task(self, task):
         """Adds a task to the DAG
