@@ -260,7 +260,7 @@ class DAGSpec(MutableMapping):
         if isinstance(self.data, list):
             self.data = {'tasks': self.data}
 
-        if not isinstance(self.data['tasks'], list):
+        if self.data.get('tasks') and not isinstance(self.data['tasks'], list):
             raise TypeError(
                 'Expected \'tasks\' to contain a list, but got: '
                 f'{self.data["tasks"]!r} '

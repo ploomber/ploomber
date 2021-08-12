@@ -4,6 +4,7 @@ Tests for the custom jupyter contents manager
 import sys
 import os
 from pathlib import Path
+from unittest.mock import Mock
 
 import yaml
 from ipython_genutils.tempdir import TemporaryDirectory
@@ -104,17 +105,147 @@ def test_does_not_log_skip_dag_when_getting_a_directory(tmp_directory, capsys):
     app.initialize(argv=[])
 
     # jupyter refreshes the current directory every few seconds
-    # (by calling.get('')), we simulate taht here
+    # (by calling.get('')), we simulate that here
     app.contents_manager.get('')
     app.contents_manager.get('')
 
     captured = capsys.readouterr()
     lines = captured.err.splitlines()
+
     log_with_skip_message = [
         line for line in lines
         if '[Ploomber] Skipping DAG initialization' in line
     ]
     assert not len(log_with_skip_message)
+
+
+def test_does_not_log_again_if_using_the_same_spec(tmp_nbs):
+    # NOTE: unlike other tests that check logs, we're not using the capsys
+    # fixture here. For some reason, the output isn't captured.
+    app = serverapp.ServerApp()
+    app.initialize(argv=[])
+    app.contents_manager.log.info = Mock()
+
+    app.contents_manager.get('plot.py')
+
+    # Jupyter constantly requests the current file, so we simulate here
+    app.contents_manager.get('plot.py')
+
+    lines = [
+        call[0][0] for call in app.contents_manager.log.info.call_args_list
+    ]
+
+    log_messages = [
+        line for line in lines if '[Ploomber] Using dag defined at:' in line
+        or '[Ploomber] Pipeline mapping keys:' in line
+    ]
+
+    # since the spec is still the same, we should not log the spec info again
+    # and there must only be one record to log the spec location and another
+    # one for the mapping keys
+    assert len(log_messages) == 2
+
+
+def test_logs_if_spec_keys_change(tmp_directory):
+    Path('one.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+""")
+
+    Path('another.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: one.py
+      product: one.ipynb
+""")
+
+    app = serverapp.ServerApp()
+    app.initialize(argv=[])
+    app.contents_manager.log.info = Mock()
+
+    app.contents_manager.get('one.py')
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: one.py
+      product: one.ipynb
+    - source: another.py
+      product: another.ipynb
+""")
+
+    app.contents_manager.get('one.py')
+
+    lines = [
+        call[0][0] for call in app.contents_manager.log.info.call_args_list
+    ]
+
+    log_messages = [
+        line for line in lines if '[Ploomber] Using dag defined at:' in line
+        or '[Ploomber] Pipeline mapping keys:' in line
+    ]
+
+    assert len(log_messages) == 4
+
+
+def test_logs_if_spec_location_changes(tmp_directory):
+    Path('one').mkdir()
+    Path('another').mkdir()
+
+    Path('script.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+""")
+
+    Path('one', 'one.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+""")
+
+    Path('another', 'another.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: another.ipynb
+""")
+
+    Path('one', 'pipeline.yaml').write_text("""
+tasks:
+    - source: ../script.py
+      product: one.ipynb
+""")
+    Path('another', 'pipeline.yaml').write_text("""
+tasks:
+    - source: ../script.py
+      product: another.ipynb
+""")
+
+    app = serverapp.ServerApp()
+    app.initialize(argv=[])
+    app.contents_manager.log.info = Mock()
+
+    app.contents_manager.get('one/one.py')
+    app.contents_manager.get('another/another.py')
+
+    lines = [
+        call[0][0] for call in app.contents_manager.log.info.call_args_list
+    ]
+
+    log_messages = [
+        line for line in lines if '[Ploomber] Using dag defined at:' in line
+        or '[Ploomber] Pipeline mapping keys:' in line
+    ]
+
+    # note that this logs 8 times because each call to contents_manager.get
+    # calls load dag twice. see the implementation of get for details
+    assert len(log_messages) == 8
 
 
 def test_cell_injection_if_using_notebook_dir_option_nested_script(tmp_nbs):

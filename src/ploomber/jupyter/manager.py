@@ -118,9 +118,9 @@ def derive_class(base_class):
                     hot_reload = (self.spec
                                   and self.spec['meta']['jupyter_hot_reload'])
                     (self.spec, self.dag,
-                     self.path) = loader.lazily_load_entry_point(
+                     path) = loader.lazily_load_entry_point(
                          starting_dir=starting_dir, reload=hot_reload)
-                    self.path = str(Path(self.path).resolve())
+                    path = str(Path(path).resolve())
                 # this error means we couldn't locate a parent root (which is
                 # required to determine which spec to use). Since it's expected
                 # that this happens for some folder, we simply emit a warning
@@ -143,7 +143,7 @@ def derive_class(base_class):
                     # only be in sys path during pipeline loading
                     # NOTE: we only need this when we are using
                     # functions as notebooks
-                    base_path = Path(self.path).resolve()
+                    base_path = Path(path).resolve()
 
                     if (self.spec['meta']['jupyter_hot_reload']
                             and base_path not in sys.path):
@@ -171,12 +171,20 @@ def derive_class(base_class):
                         Path(self.root_dir).resolve(), t.source.loc), t)
                              for t in self.dag.values()
                              if t.source.loc is not None]
-                    self.dag_mapping = DAGMapping(pairs)
+                    dag_mapping = DAGMapping(pairs)
 
-                    self.log.info(
-                        f'[Ploomber] Using dag defined at: {str(base_path)!r}')
-                    self.log.info('[Ploomber] Pipeline mapping keys: '
-                                  f'{list(self.dag_mapping)}')
+                    did_keys_change = (
+                        self.dag_mapping is None
+                        or set(self.dag_mapping) != set(dag_mapping))
+
+                    if did_keys_change or self.path != path:
+                        self.log.info('[Ploomber] Using dag defined '
+                                      f'at: {str(base_path)!r}')
+                        self.log.info('[Ploomber] Pipeline mapping keys: '
+                                      f'{list(dag_mapping)}')
+
+                    self.dag_mapping = dag_mapping
+                    self.path = path
 
         def reset_dag(self):
             self.spec = None
@@ -202,6 +210,7 @@ def derive_class(base_class):
             This is called when a file/directory is requested (even in the list
             view)
             """
+            # FIXME: we only need this call when functions as notebooks is true
             # FIXME: reloading inside a (functions) folder causes 404
             if content:
                 # this load_dag() is required to list the folder that contains

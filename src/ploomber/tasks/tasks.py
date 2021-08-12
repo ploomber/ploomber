@@ -27,7 +27,10 @@ from ploomber.products import MetaProduct, File
 
 
 def _unserializer(product, unserializer):
-    # this happens when we have a task group
+    # this happens when we have a task group. e.g., product declares
+    # 'fit-*' as dependency, which matches fit-1, fit-2, etc. Then product
+    # becomes...
+    # {'fit-*': {'fit-1': product, 'fit-2': another, ...}}
     if isinstance(product, Mapping) and not isinstance(product, MetaProduct):
         return {k: unserializer(p) for k, p in product.items()}
     else:

@@ -342,8 +342,6 @@ class DAG(AbstractDAG):
         if not self._params.cache_rendered_status:
             fetch_remote_metadata_in_parallel(self)
 
-            self._logger.info('Rendering DAG %s', self)
-
             if show_progress:
                 tasks = tqdm(self.values(), total=len(self))
             else:
