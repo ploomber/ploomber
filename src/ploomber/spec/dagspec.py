@@ -260,6 +260,12 @@ class DAGSpec(MutableMapping):
         if isinstance(self.data, list):
             self.data = {'tasks': self.data}
 
+        if not isinstance(self.data['tasks'], list):
+            raise TypeError(
+                'Expected \'tasks\' to contain a list, but got: '
+                f'{self.data["tasks"]!r} '
+                f'(an object of type {type(self.data["tasks"]).__name__!r})')
+
         # validate keys defined at the top (nested keys are not validated here)
         self._validate_top_keys(self.data, self._path)
 

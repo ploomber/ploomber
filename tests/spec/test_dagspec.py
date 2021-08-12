@@ -1694,3 +1694,17 @@ CREATE TABLE {{product}} AS SELECT * FROM my_table
 
     # should be imported now
     assert 'my_testing_module' in sys.modules
+
+
+def test_error_when_tasks_is_not_a_list(tmp_directory, tmp_imports):
+    Path('pipeline.yaml').write_text("""
+tasks:
+    not_a_list: value
+""")
+
+    with pytest.raises(TypeError) as excinfo:
+        DAGSpec('pipeline.yaml')
+
+    expected = ("Expected 'tasks' to contain a list, but got: "
+                "{'not_a_list': 'value'} (an object of type 'dict')")
+    assert str(excinfo.value) == expected
