@@ -65,6 +65,11 @@ class SQLScript(ClientMixin, Task):
 
     def load(self, limit=10):
         """Load this task's product in a pandas.DataFrame
+
+        Parameters
+        ----------
+        limit : int, default=10
+            How many records to load, defaults to 10
         """
         import pandas as pd
         return pd.read_sql(f'SELECT * FROM {self.product} LIMIT {int(limit)}',
