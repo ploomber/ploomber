@@ -316,6 +316,41 @@ def test_dag_from_directory(monkeypatch, tmp_nbs):
     assert injected
 
 
+def test_switch_env_file(tmp_directory, monkeypatch):
+
+    Path('script.py').write_text("""
+# + tags=['parameters']
+upstream = None
+""")
+
+    Path('env.yaml').write_text("""
+some_param: value
+""")
+
+    Path('env.another.yaml').write_text("""
+some_param: another
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: out.ipynb
+      params:
+        some_param: '{{some_param}}'
+""")
+
+    cm = PloomberContentsManager()
+
+    model = cm.get('script.py')
+    injected = get_injected_cell(model['content'])
+    assert 'param = "value"' in injected['source']
+
+    monkeypatch.setenv('PLOOMBER_ENV_FILENAME', 'env.another.yaml')
+    model = cm.get('script.py')
+    injected = get_injected_cell(model['content'])
+    assert 'param = "another"' in injected['source']
+
+
 # TODO: turn fns as notebooks ON, then ensure that it correctly
 # imports the module in pipeline.yaml even if there is already
 # a module with such a name in sys.modules
