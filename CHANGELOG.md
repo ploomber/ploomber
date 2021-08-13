@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.12.4dev
+## 0.12.4 (2021-08-12)
 
 * Clearer error message when failing to import function
 * Better error message when `tasks` in YAML spec is not a list
