@@ -2,6 +2,11 @@
 
 ## 0.12.4dev
 
+* Clearer error message when failing to import function
+* Better error message when `tasks` in YAML spec is not a list
+* Fixes an issue that caused dag plot to fail when using `.svg`
+* Fixes duplicated log entries when viewing a file in Jupyter
+
 ## 0.12.3 (2021-08-03)
 
 * Fixes cell injection when using the `--notebook-dir` during Jupyter initialization
