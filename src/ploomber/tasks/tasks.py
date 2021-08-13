@@ -243,6 +243,10 @@ class PythonCallable(Task):
         **kwargs
             Arguments passed to the unserializer function
         """
+        if isinstance(self.product, MetaProduct) and key is None:
+            raise ValueError(f'Task {self!r} generates multiple products, '
+                             'use the "key" argument to load one')
+
         prod = self.product if not key else self.product[key]
 
         if self._unserializer is not None:

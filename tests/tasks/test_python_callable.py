@@ -205,6 +205,28 @@ def test_load_with_unserializer_function(tmp_directory, dag_with_unserializer,
     mock_t2.assert_called_once_with('t2.parquet')
 
 
+def test_load_error_if_task_has_metaproduct_and_no_key():
+    dag = DAG()
+
+    task = PythonCallable(touch_meta, {'a': File('a'), 'b': File('b')}, dag)
+
+    with pytest.raises(ValueError):
+        task.load()
+
+
+def test_load_from_metaproduct(tmp_directory):
+    Path('a.csv').write_text('a,b\n1,2')
+
+    dag = DAG()
+
+    task = PythonCallable(touch_meta, {
+        'a': File('a.csv'),
+        'b': File('b')
+    }, dag)
+
+    assert task.load(key='a') is not None
+
+
 def test_uses_default_serializer_and_deserializer():
     dag = DAG()
 
