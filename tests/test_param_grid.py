@@ -1,5 +1,8 @@
 import datetime
 from dateutil.relativedelta import relativedelta
+
+import pytest
+
 from ploomber.util import ParamGrid, Interval
 
 
@@ -117,3 +120,31 @@ def test_param_grid_list():
         'c': 4,
         'd': 4
     }]
+
+
+def test_param_grid_with_str_list():
+    pg = ParamGrid({
+        'a': ['one', 'another'],
+        'b': ['more', 'final'],
+    })
+    assert len(list(pg.product())) == 4
+
+
+@pytest.mark.parametrize('val', [
+    'one',
+    1,
+    1.1,
+])
+def test_param_grid_product_with_single_value(val):
+    pg = ParamGrid({'a': val, 'b': ['more', 'final']})
+    assert len(list(pg.product())) == 2
+
+
+@pytest.mark.parametrize('val', [
+    'one',
+    1,
+    1.1,
+])
+def test_param_grid_zip_with_single_value(val):
+    pg = ParamGrid({'a': val, 'b': ['more']})
+    assert len(list(pg.zip())) == 1

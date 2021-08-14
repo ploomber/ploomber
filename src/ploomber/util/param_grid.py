@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import Mapping, Iterable
 from itertools import product, chain
 
 
@@ -61,15 +61,18 @@ class ParamGrid:
     >>> pg = ParamGrid({'a': Interval(0, 10, 2), 'b': [2, 4, 6, 8, 10]})
     >>> list(pg.zip())
 
+    Notes
+    -----
+    Parameters with a single element are converted to lists of length 1
     """
     def __init__(self, grid):
         if isinstance(grid, Mapping):
             grid = [grid]
 
-        self.expanded = [expand_intervals_in_dict(d) for d in grid]
+        self._expanded = [_expand(d) for d in grid]
 
     def zip(self):
-        for d in chain(self.expanded):
+        for d in chain(self._expanded):
             lengths = set(len(v) for v in d.values())
 
             if len(lengths) != 1:
@@ -81,7 +84,7 @@ class ParamGrid:
                 yield {k: v[i] for k, v in d.items()}
 
     def product(self):
-        for d in chain(self.expanded):
+        for d in chain(self._expanded):
             keys = d.keys()
             values = d.values()
 
@@ -94,12 +97,14 @@ class ParamGrid:
                 yield d
 
 
-def expand_intervals_in_dict(d):
+def _expand(d):
     expanded = {}
 
     for k, v in d.items():
         if isinstance(v, Interval):
             expanded[k] = v.expand()
+        elif not isinstance(v, Iterable) or isinstance(v, str):
+            expanded[k] = [v]
         else:
             expanded[k] = v
 
