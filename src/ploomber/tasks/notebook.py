@@ -80,6 +80,16 @@ class NotebookConverter:
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
 
     def convert(self):
+        if self.exporter is None and self.nbconvert_export_kwargs:
+            warnings.warn(
+                f'Output {self.path_to_output!r} is a '
+                'notebook file. nbconvert_export_kwargs '
+                f'{self.nbconvert_export_kwargs!r} will be '
+                'ignored since they only apply '
+                'when exporting the notebook to other formats '
+                'such as html. You may change the extension to apply '
+                'the conversion parameters')
+
         if self.exporter is not None:
             self._from_ipynb(self.path_to_output, self.exporter,
                              self.nbconvert_export_kwargs)
@@ -182,7 +192,7 @@ class NotebookRunner(FileLoaderMixin, Task):
         Once the notebook is run, this parameter controls whether to export
         the notebook to a different parameter using the nbconvert package,
         it is not needed unless the extension cannot be used to infer the
-        final output format, in which case the nbconvert.get_exporter is used
+        final output format, in which case the nbconvert.get_exporter is used.
     ext_in: str, optional
         Source extension. Required if loading from a str. If source is a
         ``pathlib.Path``, the extension from the file is used.
@@ -205,6 +215,7 @@ class NotebookRunner(FileLoaderMixin, Task):
         only used if exporting the output ipynb notebook to another format).
         You can use this, for example, to hide code cells using the
         exclude_input parameter. See ``nbconvert`` documentation for details.
+        Ignored if the product is file with .ipynb extension.
     local_execution : bool, optional
         Change working directory to be the parent of the notebook's source.
         Defaults to False. This resembles the default behavior when

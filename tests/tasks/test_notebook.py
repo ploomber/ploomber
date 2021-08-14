@@ -12,6 +12,7 @@ from ploomber.tasks import NotebookRunner
 from ploomber.products import File
 from ploomber.exceptions import DAGBuildError
 from ploomber.tasks import notebook
+from ploomber.executors import Serial
 
 
 def fake_from_notebook_node(self, nb, resources):
@@ -440,3 +441,19 @@ def test_debug(monkeypatch, kind, to_patch, tmp_dag):
 
     if to_patch:
         mock.assert_called_once()
+
+
+def test_warns_if_export_args_but_ipynb_output(tmp_sample_tasks):
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+
+    NotebookRunner(Path('sample.ipynb'),
+                   File('out.ipynb'),
+                   dag,
+                   nbconvert_export_kwargs=dict(exclude_input=True))
+
+    with pytest.warns(UserWarning) as record:
+        dag.build()
+
+    assert len(record) == 1
+    assert ("Output 'out.ipynb' is a notebook file"
+            in record[0].message.args[0])
