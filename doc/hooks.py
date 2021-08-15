@@ -19,18 +19,24 @@ def config_init(app, config):
         git_clone()
         projects = Path('../../projects-master')
 
+    # key: directory in the projects directory
+    # value: directory in the documentation
     directories = {
         'parametrized': 'user-guide',
         'sql-templating': 'user-guide',
         'testing': 'user-guide',
         'debugging': 'user-guide',
-        'spec-api-python': 'get-started'
+        'guides/serialization': 'user-guide',
+        'spec-api-python': 'get-started',
     }
 
+    # execute notebooks
     process_readme_md(list(directories), parent_dir=projects)
 
-    for name, target_dir in directories.items():
-        src = Path(projects, name, 'README.ipynb')
+    # move README.ipynb files to their corresponding location in the docs
+    for path, target_dir in directories.items():
+        src = Path(projects, path, 'README.ipynb')
+        name = Path(path).name
         dst = Path(target_dir, f'{name}.ipynb')
         print(f'Copying {src} to {dst}')
         shutil.copy(src, dst)

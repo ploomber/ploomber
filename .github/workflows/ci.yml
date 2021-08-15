@@ -55,6 +55,7 @@ jobs:
         python -c 'import ploomber.tasks'
         python -c 'import ploomber.products'
         python -c 'import ploomber.clients'
+        python -c 'import ploomber.io'
 
         # install dev requirements
         pip install .[dev]

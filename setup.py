@@ -91,6 +91,10 @@ TESTING = [
 
     # for testing jupyter lab plugin
     'jupyter_server',
+
+    # optional dependencies for @serializer and @unserializer
+    'joblib',
+    'cloudpickle',
 ]
 
 # packages needed for development

@@ -13,6 +13,7 @@ User Guide
     testing
     debugging
     deployment
+    serialization
     r-support
     faq_index
     spec-vs-python

@@ -117,7 +117,8 @@ class PythonCallable(Task):
             product = params.pop('product')
         else:
             product = params['product']
-            _ensure_parents_exist(product)
+
+        _ensure_parents_exist(product)
 
         # call function
         out = self.source.primitive(**params)
