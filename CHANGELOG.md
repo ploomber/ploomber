@@ -2,6 +2,9 @@
 
 ## 0.12.5dev
 
+* Simplifies serializer and unserializer creation with new decorators
+* Adds guide on serializer/unserializer decorators to the documentation
+
 ## 0.12.4 (2021-08-12)
 
 * Clearer error message when failing to import function
