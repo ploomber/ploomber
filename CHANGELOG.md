@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.12.5dev
+## 0.12.5 (2021-08-16)
 
 * Simplifies serializer and unserializer creation with new decorators
 * Adds guide on serializer/unserializer decorators to the documentation
