@@ -17,7 +17,7 @@ from ploomber.tasks import PythonCallable, SQLDump, SQLScript
 from ploomber.products import File, SQLiteRelation
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
-                                 DAGBuildEarlyStop)
+                                 DAGBuildEarlyStop, DAGCycle)
 from ploomber.executors import Serial, Parallel, serial
 from ploomber.clients import SQLAlchemyClient
 from ploomber.dag.dagclients import DAGClients
@@ -1090,3 +1090,11 @@ def test_up_to_date_status_when_unserializable_params(tmp_directory):
     dag = make().render()
 
     assert {t.exec_status for t in dag.values()} == {TaskStatus.Skipped}
+
+def test_cycle_exception():
+    dag = DAG()
+    ta = PythonCallable(touch_root, File(Path("a.txt")), dag, "ta")
+    tb = PythonCallable(touch, File(Path("b.txt")), dag, "tb")
+    ta >> tb >> ta
+    with pytest.raises(DAGCycle):
+        dag.build()

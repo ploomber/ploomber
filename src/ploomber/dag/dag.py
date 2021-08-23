@@ -82,7 +82,7 @@ from ploomber import resources
 from ploomber import executors
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
-                                 DAGBuildEarlyStop)
+                                 DAGBuildEarlyStop, DAGCycle)
 from ploomber.messagecollector import (RenderExceptionsCollector,
                                        RenderWarningsCollector)
 from ploomber.util.util import callback_check
@@ -937,8 +937,11 @@ class DAG(AbstractDAG):
         """
         # TODO: raise a warning if this any of this dag tasks have tasks
         # from other tasks as dependencies (they won't show up here)
-        for name in nx.algorithms.topological_sort(self._G):
-            yield name
+        try:
+            for name in nx.algorithms.topological_sort(self._G):
+                yield name
+        except nx.NetworkXUnfeasible:
+            raise DAGCycle
 
     def _iter(self):
         """Iterate over tasks names (unordered but more efficient than __iter__

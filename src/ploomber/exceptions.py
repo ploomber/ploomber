@@ -81,6 +81,18 @@ class DAGSpecInvalidError(Exception):
     pass
 
 
+class DAGCycle(Exception):
+    """
+    Raised when a DAG is defined with cycles.
+    """
+
+    def __init__(self):
+        error_message = """
+        Failed to process DAG because it contains cycles.
+        """
+        super().__init__(error_message)
+
+
 class SpecValidationError(Exception):
     """
     Raised when failing to validate a spec
