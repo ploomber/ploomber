@@ -1091,6 +1091,7 @@ def test_up_to_date_status_when_unserializable_params(tmp_directory):
 
     assert {t.exec_status for t in dag.values()} == {TaskStatus.Skipped}
 
+
 def test_cycle_exception():
     dag = DAG()
     ta = PythonCallable(touch_root, File(Path("a.txt")), dag, "ta")
