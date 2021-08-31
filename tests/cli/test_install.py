@@ -20,6 +20,13 @@ setup(
 """
 
 
+@pytest.fixture
+def mock_cmdr(monkeypatch):
+    mock = Mock(wraps=install_module.Commander().run)
+    monkeypatch.setattr(install_module.Commander, 'run', mock)
+    return mock
+
+
 def _write_sample_conda_env(name='environment.yml'):
     Path(name).write_text('name: my_tmp_env\ndependencies:\n- pip')
 
@@ -28,18 +35,67 @@ def _write_sample_pip_req(name='requirements.txt'):
     Path(name).touch()
 
 
+@pytest.mark.parametrize('conda_bin, conda_root', [
+    [('something', 'Miniconda3', 'conda'), ('something', 'Miniconda3')],
+    [('something', 'miniconda3', 'conda'), ('something', 'miniconda3')],
+    [('one', 'miniconda3', 'dir', 'conda'), ('one', 'miniconda3')],
+    [('one', 'another', 'Miniconda3', 'conda'),
+     ('one', 'another', 'Miniconda3')],
+])
+def test_find_conda_root(conda_bin, conda_root):
+    assert install_module._find_conda_root(
+        Path(*conda_bin)).parts == conda_root
+
+
+def test_error_if_unknown_conda_layout():
+    with pytest.raises(RuntimeError):
+        install_module._find_conda_root(Path('a', 'b'))
+
+
+@pytest.mark.parametrize(
+    'conda_bin',
+    [
+        # old versions of conda may have the conda binary in a different
+        # location see #319
+        ['Users', 'user', 'Miniconda3', 'Library', 'bin', 'conda.BAT'],
+        ['Users', 'user', 'Miniconda3', 'condabin', 'conda.BAT'],
+    ],
+    ids=['location-old', 'location-new'])
+def test_locate_pip_inside_conda(monkeypatch, tmp_directory, conda_bin):
+    mock = Mock(return_value=str(Path(*conda_bin)))
+
+    path = Path('Users', 'user', 'Miniconda3', 'envs', 'myenv',
+                'Scripts' if os.name == 'nt' else 'bin',
+                'pip.exe' if os.name == 'nt' else 'pip')
+
+    path.parent.mkdir(parents=True)
+    path.touch()
+
+    monkeypatch.setattr(install_module.shutil, 'which', mock)
+
+    assert install_module._locate_pip_inside_conda('myenv') == str(path)
+
+
 # FIXME: i tested this locally on a windows machine and it works but for some
 # reason, the machine running on github actions is unable to locate "conda"
 # hence this fails. it's weird because I'm calling conda without issues
 # to install dependencies during setup. Same with the next two tests
 @pytest.mark.xfail(sys.platform == 'win32',
                    reason='Test not working on Github Actions on Windows')
-def test_install_conda(tmp_directory):
+def test_install_package_conda(tmp_directory, mock_cmdr):
     _write_sample_conda_env()
     Path('setup.py').write_text(setup_py)
 
     runner = CliRunner()
     runner.invoke(install, catch_exceptions=False)
+
+    # check it calls "pip install --editable ."
+    assert mock_cmdr.call_args_list[-2][1][
+        'description'] == 'Installing project'
+
+    # check first argument is the path to the conda binary instead of just
+    # "conda" since we discovered that fails sometimes on Windows
+    assert all([Path(c[0][0]).is_file() for c in mock_cmdr.call_args_list])
 
     assert set(os.listdir()) == {
         'environment.yml',
@@ -51,11 +107,21 @@ def test_install_conda(tmp_directory):
 
 @pytest.mark.xfail(sys.platform == 'win32',
                    reason='Test not working on Github Actions on Windows')
-def test_non_package_with_conda(tmp_directory):
-    _write_sample_conda_env()
-    runner = CliRunner()
+def test_install_non_package_with_conda(tmp_directory, monkeypatch, mock_cmdr):
+    # to make it fail if it attempts to look for pip, see docstring in the
+    # '_locate_pip_inside_conda' method for details
+    mock_locate = Mock(side_effect=ValueError)
+    monkeypatch.setattr(install_module, '_locate_pip_inside_conda',
+                        mock_locate)
 
+    _write_sample_conda_env()
+
+    runner = CliRunner()
     runner.invoke(install, catch_exceptions=False)
+
+    # check first argument is the path to the conda binary instead of just
+    # "conda" since we discovered that fails sometimes on Windows
+    assert all([Path(c[0][0]).is_file() for c in mock_cmdr.call_args_list])
 
     assert set(os.listdir()) == {
         'environment.yml',
@@ -87,7 +153,7 @@ def test_conda_error_missing_env_and_reqs(tmp_directory):
     assert 'Expected a' in result.stdout
 
 
-def test_error_if_env_yml_but_conda_not_installed(monkeypatch):
+def test_error_if_env_yml_but_conda_not_installed(tmp_directory, monkeypatch):
     _write_sample_conda_env()
     runner = CliRunner()
     mock = Mock(return_value=False)
