@@ -1,3 +1,4 @@
+import subprocess
 import os
 import sys
 from pathlib import Path
@@ -45,10 +46,10 @@ def mock_cmdr_wrapped(monkeypatch):
 
 
 @pytest.fixture
-def mock_cmdr(monkeypatch):
-    mock = Mock()
-    monkeypatch.setattr(install_module.Commander, 'run', mock)
-    return mock
+def cleanup_conda_tmp_env():
+    if os.name == 'nt':
+        conda = shutil.which('conda')
+        subprocess.run([conda, 'env', 'remove', '--name', 'my_tmp_env'])
 
 
 def _write_sample_conda_env(name='environment.yml'):
@@ -219,8 +220,9 @@ def test_non_package_with_conda_with_dev_deps(tmp_directory):
 
 @pytest.mark.parametrize('create_dev_lock', [True, False])
 def test_install_lock_non_package_with_conda(
-        tmp_directory, monkeypatch, mock_cmdr, pkg_manager,
-        error_if_calling_locate_pip_inside_conda, create_dev_lock):
+        tmp_directory, monkeypatch, mock_cmdr_wrapped, pkg_manager,
+        error_if_calling_locate_pip_inside_conda, cleanup_conda_tmp_env,
+        create_dev_lock):
     _write_sample_conda_env('environment.lock.yml')
 
     if create_dev_lock:
@@ -245,16 +247,23 @@ def test_install_lock_non_package_with_conda(
              description='Installing dev dependencies')
     ]
 
+    if os.name == 'nt':
+        expected.insert(
+            0, call(pkg_manager, 'env', 'list', '--json', capture_output=True))
+
     if not create_dev_lock:
         expected.pop(-1)
 
-    assert mock_cmdr.call_args_list == expected
-    assert all([Path(c[0][0]).is_file() for c in mock_cmdr.call_args_list])
+    assert mock_cmdr_wrapped.call_args_list == expected
+    assert all(
+        [Path(c[0][0]).is_file() for c in mock_cmdr_wrapped.call_args_list])
 
 
 @pytest.mark.parametrize('create_dev_lock', [True, False])
-def test_install_lock_package_with_conda(tmp_directory, monkeypatch, mock_cmdr,
-                                         pkg_manager, create_dev_lock):
+def test_install_lock_package_with_conda(tmp_directory, monkeypatch,
+                                         mock_cmdr_wrapped, pkg_manager,
+                                         cleanup_conda_tmp_env,
+                                         create_dev_lock):
     _write_sample_conda_env('environment.lock.yml')
 
     if create_dev_lock:
@@ -289,11 +298,16 @@ def test_install_lock_package_with_conda(tmp_directory, monkeypatch, mock_cmdr,
              description='Installing dev dependencies')
     ]
 
+    if os.name == 'nt':
+        expected.insert(
+            0, call(pkg_manager, 'env', 'list', '--json', capture_output=True))
+
     if not create_dev_lock:
         expected.pop(-1)
 
-    assert mock_cmdr.call_args_list == expected
-    assert all([Path(c[0][0]).is_file() for c in mock_cmdr.call_args_list])
+    assert mock_cmdr_wrapped.call_args_list == expected
+    assert all(
+        [Path(c[0][0]).is_file() for c in mock_cmdr_wrapped.call_args_list])
 
 
 # FIXME: I tested this locally on a windows machine but breaks on Github
