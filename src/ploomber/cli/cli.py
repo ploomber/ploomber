@@ -76,10 +76,15 @@ def scaffold(conda, package, entry_point, empty):
 
 
 @cli.command()
-def install():
+@click.option('-l',
+              '--use-lock',
+              help='Use lock files',
+              default=False,
+              is_flag=True)
+def install(use_lock):
     """Install dependencies and package
     """
-    cli_module.install.main()
+    cli_module.install.main(use_lock=use_lock)
 
 
 @cli.command()

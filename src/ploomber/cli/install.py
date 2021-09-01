@@ -8,31 +8,71 @@ from click import exceptions
 
 from ploomber.io._commander import Commander
 
+_SETUP_PY = 'setup.py'
 
-def main():
-    if Path('environment.yml').exists():
+_REQS_LOCK_TXT = 'requirements.lock.txt'
+_REQS_TXT = 'requirements.txt'
+
+_ENV_YML = 'environment.yml'
+_ENV_LOCK_YML = 'environment.lock.yml'
+
+
+def main(use_lock):
+    """
+    Install project, automatically detecting if it's a conda-based or pip-based
+    project.
+
+    Parameters
+    ---------
+    use_lock : bool
+        If True Uses requirements.lock.txt/environment.lock.yml and
+        requirements.dev.lock.txt/environment.dev.lock.yml files. Otherwise
+        it uses regular files and creates the lock ones after installing
+        dependencies
+    """
+    if Path(_ENV_YML).exists() or Path(_ENV_LOCK_YML).exists():
 
         if not shutil.which('conda'):
             raise exceptions.ClickException('Found environment.yml file but '
                                             'conda is not installed. Install '
                                             'it and try again')
 
-        main_conda()
-    elif Path('requirements.txt').exists():
-        main_pip()
+        if use_lock and not Path(_ENV_LOCK_YML).exists():
+            raise exceptions.ClickException(
+                'Expected an environment.lock.yml due to the '
+                '--use-lock/-l option. Run "ploomber install" to create '
+                'an environment.lock.yml from an environment.yml')
+
+        main_conda(use_lock)
+    elif Path(_REQS_TXT).exists() or Path(_REQS_LOCK_TXT).exists():
+
+        if use_lock and not Path(_REQS_LOCK_TXT).exists():
+            raise exceptions.ClickException(
+                'Expected a requirements.lock.txt due to the '
+                '--use-lock/-l option. Run "ploomber install" to create '
+                'a requirements.lock.txt from a requirements.txt')
+
+        main_pip(use_lock)
     else:
         raise exceptions.ClickException(
             'Expected a conda environment.yml or '
             'pip requirements.txt file, but none of those exist. '
-            'Add one and try again')
+            'Add one and try again. You can generate a sample project using '
+            'the "ploomber scaffold" command')
 
 
-def main_pip():
-    if not Path('requirements.txt').exists():
-        raise exceptions.ClickException(
-            '"ploomber install" requires a pip '
-            'requirements.txt file. Use "ploomber scaffold" to create one '
-            'from a template or create one manually')
+def main_pip(use_lock):
+    """
+    Install pip-based project (uses venv), looks for requirements.txt files
+
+    Parameters
+    ----------
+    use_lock : bool
+        If True Uses requirements.txt and requirements.dev.lock.txt files
+    """
+    reqs_txt = _REQS_LOCK_TXT if use_lock else _REQS_TXT
+    reqs_dev_txt = ('requirements.dev.lock.txt'
+                    if use_lock else 'requirements.dev.txt')
 
     cmdr = Commander()
 
@@ -47,13 +87,13 @@ def main_pip():
     folder, bin_name = _get_pip_folder_and_bin_name()
     pip = str(Path(venv_dir, folder, bin_name))
 
-    if Path('setup.py').exists():
+    if Path(_SETUP_PY).exists():
         _pip_install_setup_py_pip(cmdr, pip)
 
-    _pip_install_and_lock(cmdr, pip, requirements='requirements.txt')
+    _pip_install(cmdr, pip, lock=not use_lock, requirements=reqs_txt)
 
-    if Path('requirements.dev.txt').exists():
-        _pip_install_and_lock(cmdr, pip, requirements='requirements.dev.txt')
+    if Path(reqs_dev_txt).exists():
+        _pip_install(cmdr, pip, lock=not use_lock, requirements=reqs_dev_txt)
 
     if os.name == 'nt':
         cmd_activate = (
@@ -65,12 +105,16 @@ def main_pip():
     _next_steps(cmdr, cmd_activate)
 
 
-def main_conda():
-    if not Path('environment.yml').exists():
-        raise exceptions.ClickException(
-            '"ploomber install" requires a conda '
-            'environment.yml file. Use "ploomber scaffold" to create one '
-            'from a template or create one manually')
+def main_conda(use_lock):
+    """
+    Install conda-based project, looks for environment.yml files
+
+    Parameters
+    ----------
+    use_lock : bool
+        If True Uses environment.lock.yml and environment.dev.lock.yml files
+    """
+    env_yml = _ENV_LOCK_YML if use_lock else _ENV_YML
 
     # TODO: ensure ploomber-scaffold includes dependency file (including
     # lock files in MANIFEST.in
@@ -78,13 +122,13 @@ def main_conda():
 
     # TODO: provide helpful error messages on each command
 
-    with open('environment.yml') as f:
+    with open(env_yml) as f:
         env_name = yaml.safe_load(f)['name']
 
     current_env = Path(shutil.which('python')).parents[1].name
 
     if env_name == current_env:
-        raise RuntimeError('environment.yaml will create an environment '
+        raise RuntimeError(f'{env_yml} will create an environment '
                            f'named {env_name!r}, which is the current active '
                            'environment. Move to a different one and try '
                            'again (e.g., "conda activate base")')
@@ -93,44 +137,49 @@ def main_conda():
     conda = shutil.which('conda')
     mamba = shutil.which('mamba')
 
-    envs = cmdr.run(conda, 'env', 'list', '--json', capture_output=True)
-    already_installed = any([
-        env for env in json.loads(envs)['envs']
-        # only check in the envs folder, ignore envs in other locations
-        if 'envs' in env and env_name in env
-    ])
-
     # if already installed and running on windows, ask to delete first,
     # otherwise it might lead to an intermitent error (permission denied
     # on vcruntime140.dll)
-    if already_installed and os.name == 'nt':
-        raise ValueError(f'Environment {env_name!r} already exists, '
-                         f'delete it and try again '
-                         f'(conda env remove --name {env_name})')
+    if os.name == 'nt':
+        envs = cmdr.run(conda, 'env', 'list', '--json', capture_output=True)
+        already_installed = any([
+            env for env in json.loads(envs)['envs']
+            # only check in the envs folder, ignore envs in other locations
+            if 'envs' in env and env_name in env
+        ])
+
+        if already_installed:
+            raise ValueError(f'Environment {env_name!r} already exists, '
+                             f'delete it and try again '
+                             f'(conda env remove --name {env_name})')
 
     pkg_manager = mamba if mamba else conda
     cmdr.run(pkg_manager,
              'env',
              'create',
              '--file',
-             'environment.yml',
+             env_yml,
              '--force',
              description='Creating env')
 
-    if Path('setup.py').exists():
+    if Path(_SETUP_PY).exists():
         _pip_install_setup_py_conda(cmdr, env_name)
 
-    env_lock = cmdr.run(conda,
-                        'env',
-                        'export',
-                        '--no-build',
-                        '--name',
-                        env_name,
-                        description='Locking dependencies',
-                        capture_output=True)
-    Path('environment.lock.yml').write_text(env_lock)
+    if not use_lock:
+        env_lock = cmdr.run(conda,
+                            'env',
+                            'export',
+                            '--no-build',
+                            '--name',
+                            env_name,
+                            description='Locking dependencies',
+                            capture_output=True)
+        Path(_ENV_LOCK_YML).write_text(env_lock)
 
-    _try_conda_install_and_lock_dev(cmdr, pkg_manager, env_name)
+    _try_conda_install_and_lock_dev(cmdr,
+                                    pkg_manager,
+                                    env_name,
+                                    use_lock=use_lock)
 
     cmd_activate = f'conda activate {env_name}'
     _next_steps(cmdr, cmd_activate)
@@ -157,13 +206,17 @@ def _find_conda_root(conda_bin):
         'https://github.com/ploomber/ploomber/issues/new')
 
 
+def _path_to_pip_in_env_with_name(conda_bin, env_name):
+    conda_root = _find_conda_root(conda_bin)
+    folder, bin_name = _get_pip_folder_and_bin_name()
+    return str(conda_root / 'envs' / env_name / folder / bin_name)
+
+
 def _locate_pip_inside_conda(env_name):
     """
     Locates pip inside the conda env with a given name
     """
-    conda_root = _find_conda_root(shutil.which('conda'))
-    folder, bin_name = _get_pip_folder_and_bin_name()
-    pip = str(conda_root / 'envs' / env_name / folder / bin_name)
+    pip = _path_to_pip_in_env_with_name(shutil.which('conda'), env_name)
 
     # this might happen if the environment does not contain python/pip
     if not Path(pip).exists():
@@ -191,24 +244,27 @@ def _pip_install_setup_py_pip(cmdr, pip):
              description='Installing project')
 
 
-def _try_conda_install_and_lock_dev(cmdr, pkg_manager, env_name):
-    if Path('environment.dev.yml').exists():
+def _try_conda_install_and_lock_dev(cmdr, pkg_manager, env_name, use_lock):
+    env_yml = 'environment.dev.lock.yml' if use_lock else 'environment.dev.yml'
+
+    if Path(env_yml).exists():
         cmdr.run(pkg_manager,
                  'env',
                  'update',
                  '--file',
-                 'environment.dev.yml',
-                 description='Installing dev dependncies')
+                 env_yml,
+                 description='Installing dev dependencies')
 
-        env_lock = cmdr.run(shutil.which('conda'),
-                            'env',
-                            'export',
-                            '--no-build',
-                            '--name',
-                            env_name,
-                            description='Locking dev dependencies',
-                            capture_output=True)
-        Path('environment.dev.lock.yml').write_text(env_lock)
+        if not use_lock:
+            env_lock = cmdr.run(shutil.which('conda'),
+                                'env',
+                                'export',
+                                '--no-build',
+                                '--name',
+                                env_name,
+                                description='Locking dev dependencies',
+                                capture_output=True)
+            Path('environment.dev.lock.yml').write_text(env_lock)
 
 
 def _next_steps(cmdr, cmd_activate):
@@ -218,18 +274,19 @@ def _next_steps(cmdr, cmd_activate):
     cmdr.success()
 
 
-def _pip_install_and_lock(cmdr, pip, requirements='requirements.txt'):
+def _pip_install(cmdr, pip, lock, requirements=_REQS_TXT):
     cmdr.run(pip,
              'install',
              '--requirement',
              requirements,
              description='Installing dependencies')
 
-    pip_lock = cmdr.run(pip,
-                        'freeze',
-                        '--exclude-editable',
-                        description='Locking dependencies',
-                        capture_output=True)
+    if lock:
+        pip_lock = cmdr.run(pip,
+                            'freeze',
+                            '--exclude-editable',
+                            description='Locking dependencies',
+                            capture_output=True)
 
-    name = Path(requirements).stem
-    Path(f'{name}.lock.txt').write_text(pip_lock)
+        name = Path(requirements).stem
+        Path(f'{name}.lock.txt').write_text(pip_lock)

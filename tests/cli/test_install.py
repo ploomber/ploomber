@@ -1,7 +1,8 @@
 import os
 import sys
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, call
+import shutil
 
 import pytest
 from click.testing import CliRunner
@@ -21,8 +22,31 @@ setup(
 
 
 @pytest.fixture
-def mock_cmdr(monkeypatch):
+def pkg_manager():
+    mamba = shutil.which('mamba')
+    conda = shutil.which('conda')
+    return mamba if mamba else conda
+
+
+@pytest.fixture
+def error_if_calling_locate_pip_inside_conda(monkeypatch):
+    # to make it fail if it attempts to look for pip, see docstring in the
+    # '_locate_pip_inside_conda' method for details
+    mock_locate = Mock(side_effect=ValueError)
+    monkeypatch.setattr(install_module, '_locate_pip_inside_conda',
+                        mock_locate)
+
+
+@pytest.fixture
+def mock_cmdr_wrapped(monkeypatch):
     mock = Mock(wraps=install_module.Commander().run)
+    monkeypatch.setattr(install_module.Commander, 'run', mock)
+    return mock
+
+
+@pytest.fixture
+def mock_cmdr(monkeypatch):
+    mock = Mock()
     monkeypatch.setattr(install_module.Commander, 'run', mock)
     return mock
 
@@ -33,6 +57,50 @@ def _write_sample_conda_env(name='environment.yml'):
 
 def _write_sample_pip_req(name='requirements.txt'):
     Path(name).touch()
+
+
+def _get_venv_and_pip():
+    name = Path().resolve().name
+    venv = f'venv-{name}'
+    pip = str(
+        Path(venv, 'Scripts' if os.name == 'nt' else 'bin',
+             'pip.exe' if os.name == 'nt' else 'pip'))
+    return venv, pip
+
+
+def test_error_missing_env_yml_and_reqs_txt(tmp_directory):
+    runner = CliRunner()
+
+    result = runner.invoke(install, catch_exceptions=False)
+    assert 'Expected a conda environment.yml or' in result.stdout
+
+
+def test_error_if_env_yml_but_conda_not_installed(tmp_directory, monkeypatch):
+    _write_sample_conda_env()
+    runner = CliRunner()
+    mock = Mock(return_value=False)
+    monkeypatch.setattr(install_module.shutil, 'which', mock)
+
+    result = runner.invoke(install, catch_exceptions=False)
+    assert 'Found environment.yml file' in result.stdout
+
+
+@pytest.mark.parametrize('args', ['--use-lock', '-l'])
+def test_error_if_use_lock_but_env_file_missing(tmp_directory, args):
+    _write_sample_conda_env()
+
+    runner = CliRunner()
+    result = runner.invoke(install, args=args, catch_exceptions=False)
+    assert 'Expected an environment.lock.yml' in result.stdout
+
+
+@pytest.mark.parametrize('args', ['--use-lock', '-l'])
+def test_error_if_use_lock_but_reqs_file_missing(tmp_directory, args):
+    _write_sample_pip_req()
+
+    runner = CliRunner()
+    result = runner.invoke(install, args=args, catch_exceptions=False)
+    assert 'Expected a requirements.lock.txt' in result.stdout
 
 
 @pytest.mark.parametrize('conda_bin, conda_root', [
@@ -82,7 +150,7 @@ def test_locate_pip_inside_conda(monkeypatch, tmp_directory, conda_bin):
 # to install dependencies during setup. Same with the next two tests
 @pytest.mark.xfail(sys.platform == 'win32',
                    reason='Test not working on Github Actions on Windows')
-def test_install_package_conda(tmp_directory, mock_cmdr):
+def test_install_package_conda(tmp_directory, mock_cmdr_wrapped):
     _write_sample_conda_env()
     Path('setup.py').write_text(setup_py)
 
@@ -90,12 +158,13 @@ def test_install_package_conda(tmp_directory, mock_cmdr):
     runner.invoke(install, catch_exceptions=False)
 
     # check it calls "pip install --editable ."
-    assert mock_cmdr.call_args_list[-2][1][
+    assert mock_cmdr_wrapped.call_args_list[-2][1][
         'description'] == 'Installing project'
 
     # check first argument is the path to the conda binary instead of just
     # "conda" since we discovered that fails sometimes on Windows
-    assert all([Path(c[0][0]).is_file() for c in mock_cmdr.call_args_list])
+    assert all(
+        [Path(c[0][0]).is_file() for c in mock_cmdr_wrapped.call_args_list])
 
     assert set(os.listdir()) == {
         'environment.yml',
@@ -107,7 +176,8 @@ def test_install_package_conda(tmp_directory, mock_cmdr):
 
 @pytest.mark.xfail(sys.platform == 'win32',
                    reason='Test not working on Github Actions on Windows')
-def test_install_non_package_with_conda(tmp_directory, monkeypatch, mock_cmdr):
+def test_install_non_package_with_conda(tmp_directory, monkeypatch,
+                                        mock_cmdr_wrapped):
     # to make it fail if it attempts to look for pip, see docstring in the
     # '_locate_pip_inside_conda' method for details
     mock_locate = Mock(side_effect=ValueError)
@@ -121,7 +191,8 @@ def test_install_non_package_with_conda(tmp_directory, monkeypatch, mock_cmdr):
 
     # check first argument is the path to the conda binary instead of just
     # "conda" since we discovered that fails sometimes on Windows
-    assert all([Path(c[0][0]).is_file() for c in mock_cmdr.call_args_list])
+    assert all(
+        [Path(c[0][0]).is_file() for c in mock_cmdr_wrapped.call_args_list])
 
     assert set(os.listdir()) == {
         'environment.yml',
@@ -146,21 +217,83 @@ def test_non_package_with_conda_with_dev_deps(tmp_directory):
     }
 
 
-def test_conda_error_missing_env_and_reqs(tmp_directory):
+@pytest.mark.parametrize('create_dev_lock', [True, False])
+def test_install_lock_non_package_with_conda(
+        tmp_directory, monkeypatch, mock_cmdr, pkg_manager,
+        error_if_calling_locate_pip_inside_conda, create_dev_lock):
+    _write_sample_conda_env('environment.lock.yml')
+
+    if create_dev_lock:
+        _write_sample_conda_env('environment.dev.lock.yml')
+
     runner = CliRunner()
+    runner.invoke(install, args='--use-lock', catch_exceptions=False)
 
-    result = runner.invoke(install, catch_exceptions=False)
-    assert 'Expected a' in result.stdout
+    expected = [
+        call(pkg_manager,
+             'env',
+             'create',
+             '--file',
+             'environment.lock.yml',
+             '--force',
+             description='Creating env'),
+        call(pkg_manager,
+             'env',
+             'update',
+             '--file',
+             'environment.dev.lock.yml',
+             description='Installing dev dependencies')
+    ]
+
+    if not create_dev_lock:
+        expected.pop(-1)
+
+    assert mock_cmdr.call_args_list == expected
+    assert all([Path(c[0][0]).is_file() for c in mock_cmdr.call_args_list])
 
 
-def test_error_if_env_yml_but_conda_not_installed(tmp_directory, monkeypatch):
-    _write_sample_conda_env()
+@pytest.mark.parametrize('create_dev_lock', [True, False])
+def test_install_lock_package_with_conda(tmp_directory, monkeypatch, mock_cmdr,
+                                         pkg_manager, create_dev_lock):
+    _write_sample_conda_env('environment.lock.yml')
+
+    if create_dev_lock:
+        _write_sample_conda_env('environment.dev.lock.yml')
+
+    Path('setup.py').write_text(setup_py)
+
     runner = CliRunner()
-    mock = Mock(return_value=False)
-    monkeypatch.setattr(install_module.shutil, 'which', mock)
+    runner.invoke(install, args='--use-lock', catch_exceptions=False)
 
-    result = runner.invoke(install, catch_exceptions=False)
-    assert 'Found environment.yml file' in result.stdout
+    pip = install_module._path_to_pip_in_env_with_name(shutil.which('conda'),
+                                                       'my_tmp_env')
+
+    expected = [
+        call(pkg_manager,
+             'env',
+             'create',
+             '--file',
+             'environment.lock.yml',
+             '--force',
+             description='Creating env'),
+        call(pip,
+             'install',
+             '--editable',
+             '.',
+             description='Installing project'),
+        call(pkg_manager,
+             'env',
+             'update',
+             '--file',
+             'environment.dev.lock.yml',
+             description='Installing dev dependencies')
+    ]
+
+    if not create_dev_lock:
+        expected.pop(-1)
+
+    assert mock_cmdr.call_args_list == expected
+    assert all([Path(c[0][0]).is_file() for c in mock_cmdr.call_args_list])
 
 
 # FIXME: I tested this locally on a windows machine but breaks on Github
@@ -226,4 +359,51 @@ def test_non_package_with_pip_with_dev_deps(tmp_directory):
         'requirements.lock.txt').read_text()
     assert '# Editable install' not in Path(
         'requirements.dev.lock.txt').read_text()
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize('create_setup_py', [True, False])
+@pytest.mark.parametrize('create_dev_lock', [True, False])
+def test_install_lock_pip(tmp_directory, mock_cmdr_wrapped, create_setup_py,
+                          create_dev_lock):
+    _write_sample_pip_req('requirements.lock.txt')
+
+    if create_dev_lock:
+        _write_sample_pip_req('requirements.dev.lock.txt')
+
+    if create_setup_py:
+        Path('setup.py').write_text(setup_py)
+
+    runner = CliRunner()
+    result = runner.invoke(install, args='--use-lock', catch_exceptions=False)
+
+    venv, pip = _get_venv_and_pip()
+
+    expected = [
+        call('python', '-m', 'venv', venv, description='Creating venv'),
+        call(pip,
+             'install',
+             '--editable',
+             '.',
+             description='Installing project'),
+        call(pip,
+             'install',
+             '--requirement',
+             'requirements.lock.txt',
+             description='Installing dependencies'),
+        call(pip,
+             'install',
+             '--requirement',
+             'requirements.dev.lock.txt',
+             description='Installing dependencies')
+    ]
+
+    if not create_setup_py:
+        expected.pop(1)
+
+    if not create_dev_lock:
+        expected.pop(-1)
+
+    assert mock_cmdr_wrapped.call_args_list == expected
+    assert Path('.gitignore').read_text() == f'\n{venv}\n'
     assert result.exit_code == 0
