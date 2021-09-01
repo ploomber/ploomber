@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 0.12.6dev
+* Fixes `ploomber install` on Windows when conda binary is inside the `Library` directory
+* Adds `--use-lock/-l` option to `ploomber install` to install using lock files
 
 ## 0.12.5 (2021-08-16)
 
