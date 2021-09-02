@@ -1,7 +1,8 @@
 # CHANGELOG
 
 ## 0.12.6dev
-* Fixes `ploomber install` on Windows when conda binary is inside the `Library` directory
+* Fixes look up of conda root when running `ploomber install` when conda binary is inside the `Library` directory (Windows)
+* No longer looking up pip inside conda when running `ploomber install` and `setup.py` does not exist
 * Adds `--use-lock/-l` option to `ploomber install` to install using lock files
 
 ## 0.12.5 (2021-08-16)
