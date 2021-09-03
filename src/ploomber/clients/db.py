@@ -10,6 +10,7 @@ from ploomber.clients.client import Client
 from ploomber.util import requires
 
 import re
+from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 
 
@@ -142,6 +143,10 @@ class SQLAlchemyClient(Client):
         self.flavor = self._uri_parsed.scheme
         self._engine = None
         self.split_source = split_source
+
+        if self.flavor == "sqlite":
+            parent_folder = Path(self._uri_parsed.path[1:]).parent
+            parent_folder.mkdir(exist_ok=True, parents=True)
 
         self._connection = None
 
