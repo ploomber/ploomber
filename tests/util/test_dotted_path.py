@@ -17,11 +17,11 @@ from ploomber.sources.inspect import getfile
         'dotted_path': 'test_pkg.functions.some_function'
     },
 ])
-def test_call_spec(monkeypatch, spec):
+def test_call_dotted_path_calls_function(monkeypatch, spec):
     mock = Mock()
     monkeypatch.setattr(functions, 'some_function', mock)
 
-    dotted_path.call_spec(spec)
+    dotted_path.DottedPath(spec)()
 
     mock.assert_called_once_with()
 
@@ -36,7 +36,7 @@ def test_call_spec_with_kwargs(monkeypatch):
         'b': 2,
     }
 
-    dotted_path.call_spec(spec)
+    dotted_path.DottedPath(spec)()
 
     mock.assert_called_once_with(a=1, b=2)
 
@@ -45,7 +45,7 @@ def test_call_spec_without_dotted_path_key():
     spec = {'a': 1}
 
     with pytest.raises(SpecValidationError) as excinfo:
-        dotted_path.call_spec(spec)
+        dotted_path.DottedPath(spec)()
 
     assert excinfo.value.errors == [{
         'loc': ('dotted_path', ),
@@ -349,15 +349,38 @@ def fn(some_arg):
     assert dp(42) == 42
 
 
-def test_dotted_path_repr(tmp_directory, tmp_imports):
+@pytest.mark.parametrize('primitive', [
+    'some_module.fn',
+    {
+        'dotted_path': 'some_module.fn'
+    },
+    {
+        'dotted_path': 'some_module.fn',
+        'some_arg': 42,
+    },
+])
+def test_dotted_path_repr(tmp_directory, tmp_imports, primitive):
     Path('some_module.py').write_text("""
 def fn(some_arg):
     return some_arg
 """)
 
-    dp = dotted_path.DottedPath('some_module.fn', lazy_load=True)
+    dp = dotted_path.DottedPath(primitive, lazy_load=True)
     assert repr(dp) == "DottedPath('some_module.fn')"
 
     dp._load_callable()
 
     assert 'loaded:' in repr(dp)
+
+
+def test_dotted_path_from_dict(tmp_directory, tmp_imports):
+    Path('some_module.py').write_text("""
+def fn(some_arg):
+    return some_arg
+""")
+
+    dp = dotted_path.DottedPath(dict(dotted_path='some_module.fn',
+                                     some_arg=10),
+                                lazy_load=False)
+
+    assert dp() == 10

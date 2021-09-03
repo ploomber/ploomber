@@ -4,7 +4,7 @@ from collections.abc import MutableMapping
 from ploomber.tasks.abc import Task
 from ploomber.products.product import Product
 from ploomber.validators.string import get_suggestion, str_to_class
-from ploomber.util.dotted_path import DottedPathSpec
+from ploomber.util.dotted_path import DottedPath
 
 
 class DAGClients(MutableMapping):
@@ -35,8 +35,8 @@ class DAGClients(MutableMapping):
         value = self._mapping[key_obj]
 
         # this happens when loading DAGSpec with lazy_load turned on,
-        # clients are not initialized but passed as DottedPathSpec
-        if isinstance(value, DottedPathSpec):
+        # clients are not initialized but passed as DottedPath
+        if isinstance(value, DottedPath):
             client = value()
             self[key] = client
             return client

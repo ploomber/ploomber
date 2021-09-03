@@ -375,12 +375,14 @@ def _init_product(task_dict, meta, task_class, root_path, lazy_import):
     CLASS = _find_product_class(task_class, task_dict, meta)
 
     if 'product_client' in task_dict:
-        dps = dotted_path.DottedPathSpec(task_dict.pop('product_client'))
+        dp = dotted_path.DottedPath(task_dict.pop('product_client'),
+                                    lazy_load=lazy_import,
+                                    allow_return_none=False)
 
         if lazy_import:
-            client = dps
+            client = dp
         else:
-            client = dps()
+            client = dp()
 
         kwargs = {'client': client}
     else:
@@ -499,12 +501,14 @@ def _resolve_if_file(product_raw, relative_to, class_):
 
 def _init_client(task_dict, lazy_import):
     if 'client' in task_dict:
-        dps = dotted_path.DottedPathSpec(task_dict.pop('client'))
+        dp = dotted_path.DottedPath(task_dict.pop('client'),
+                                    lazy_load=lazy_import,
+                                    allow_return_none=False)
 
         if lazy_import:
-            task_dict['client'] = dps
+            task_dict['client'] = dp
         else:
-            task_dict['client'] = dps()
+            task_dict['client'] = dp()
 
 
 def get_value_at(d, dotted_path):

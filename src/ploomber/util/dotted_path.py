@@ -25,17 +25,22 @@ class DottedPath:
 
     Parameters
     ----------
-    dotted_path : str
-        A dotted path string such as module.function_name
+    dotted_path : str or dict
+        A dotted path string such as module.function_name or a dictionary
+        with a "dotted_path" key and any extra keys to be used as keyword
+        arguments when calling the dotted path
 
     lazy_load : bool, default=False
         If True, defers dotted path loading until __call__ is executed
-    """
 
-    # TODO: this should also accept a dotted_path_spec
-    def __init__(self, dotted_path, lazy_load=False):
-        self._dotted_path = dotted_path
+    allow_return_none : bool, default=True
+        If True, it allows calling the dotted path to return None, otherwise
+        it raises an exception
+    """
+    def __init__(self, dotted_path, lazy_load=False, allow_return_none=True):
+        self._spec = DottedPathSpecModel.from_spec(dotted_path)
         self._callable = None
+        self._allow_return_none = allow_return_none
 
         if not lazy_load:
             self._load_callable()
@@ -45,16 +50,29 @@ class DottedPath:
         return self._callable
 
     def _load_callable(self):
-        self._callable = load_callable_dotted_path(self._dotted_path)
+        self._callable = load_callable_dotted_path(self._spec.dotted_path)
 
     def __call__(self, *args, **kwargs):
         if self._callable is None:
             self._load_callable()
 
-        return self._callable(*args, **kwargs)
+        # TODO: check if there are duplicates
+        kwargs_final = {**self._spec.get_kwargs(), **kwargs}
+
+        # FIXME: this overlaps in functionality
+        # with call_dotted_path so we must evaluate if we can replace
+        # call_dotted_path with DottedPath
+        out = self._callable(*args, **kwargs_final)
+
+        if out is None and not self._allow_return_none:
+            raise TypeError('Error calling dotted '
+                            f'path {self._spec.dotted_path!r}. '
+                            'Expected a value but got None')
+
+        return out
 
     def __repr__(self):
-        repr_ = f'{type(self).__name__}({self._dotted_path!r})'
+        repr_ = f'{type(self).__name__}({self._spec.dotted_path!r})'
 
         if self._callable is not None:
             repr_ += f' (loaded: {self._callable})'
@@ -359,33 +377,17 @@ class DottedPathSpecModel(BaseModel):
     class Config:
         extra = 'allow'
 
-
-class DottedPathSpec:
-    def __init__(self, dotted_path_spec):
-        self._dotted_path_spec = dotted_path_spec
-
+    @classmethod
+    def from_spec(cls, dotted_path_spec):
         if isinstance(dotted_path_spec, str):
-            self._model = DottedPathSpecModel(dotted_path=dotted_path_spec)
+            return cls(dotted_path=dotted_path_spec)
         elif isinstance(dotted_path_spec, Mapping):
-            self._model = DottedPathSpecModel(**dotted_path_spec)
+            return cls(**dotted_path_spec)
         else:
             raise TypeError(
                 'Expected dotted path spec to be a str or Mapping, '
                 f'got {dotted_path_spec!r} '
                 f'(type: {type(dotted_path_spec).__name__})')
 
-    def __call__(self):
-        return call_dotted_path(
-            self._model.dotted_path,
-            kwargs=self._model.dict(exclude={'dotted_path'}))
-
-    def __repr__(self):
-        return f'{type(self).__name__}({self._dotted_path_spec!r})'
-
-
-# TODO: deprecate and replace with DottedPathSpec
-def call_spec(dotted_path_spec):
-    """Call a dotted path initialized from a spec (dictionary)
-    """
-    dps = DottedPathSpec(dotted_path_spec)
-    return dps()
+    def get_kwargs(self):
+        return self.dict(exclude={'dotted_path'})

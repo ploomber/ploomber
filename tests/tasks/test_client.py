@@ -7,7 +7,7 @@ from ploomber.tasks import (SQLDump, SQLTransfer, SQLUpload, PostgresCopyFrom,
                             ShellScript, PythonCallable, SQLScript)
 from ploomber.products import (File, SQLiteRelation, PostgresRelation,
                                GenericSQLRelation, GenericProduct, SQLRelation)
-from ploomber.util.dotted_path import DottedPathSpec
+from ploomber.util.dotted_path import DottedPath
 from ploomber.exceptions import MissingClientError
 
 # TODO: test error if no task and no dag level client duting init
@@ -81,7 +81,7 @@ def get():
     return 1
 """)
 
-    task = product_class(arg, client=DottedPathSpec('my_testing_client.get'))
+    task = product_class(arg, client=DottedPath('my_testing_client.get'))
 
     assert task.client == 1
 
@@ -118,6 +118,6 @@ def get():
                       product,
                       DAG(),
                       name='task',
-                      client=DottedPathSpec('my_testing_client.get'))
+                      client=DottedPath('my_testing_client.get'))
 
     assert task.client == 1

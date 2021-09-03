@@ -133,6 +133,9 @@ def callback_check(fn, available, allow_default=True):
         When fn does not have the required signature
     """
     if isinstance(fn, DottedPath):
+        # TODO: check if there are duplicates
+        available = {**fn._spec.get_kwargs(), **available}
+
         if fn.callable is None:
             raise CallbackCheckAborted(
                 'Cannot check callback because function '

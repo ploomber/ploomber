@@ -1,4 +1,4 @@
-from ploomber.util.dotted_path import DottedPathSpec
+from ploomber.util.dotted_path import DottedPath
 from ploomber.exceptions import MissingClientError
 
 
@@ -27,7 +27,7 @@ class ProductWithClientMixin:
 
             return dag_client
 
-        if isinstance(self._client, DottedPathSpec):
+        if isinstance(self._client, DottedPath):
             # NOTE: should we test the output ot self._client()?
             # maybe check if it's a subclass of the Client abstract class
             self._client = self._client()

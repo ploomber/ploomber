@@ -6,7 +6,7 @@ import pytest
 from ploomber.dag.dagclients import DAGClients
 from ploomber.tasks import SQLScript
 from ploomber.products import File
-from ploomber.util.dotted_path import DottedPathSpec
+from ploomber.util.dotted_path import DottedPath
 from ploomber.clients import LocalStorageClient
 
 
@@ -117,7 +117,7 @@ def get_client():
 
     clients = DAGClients()
     # this happens when using the spec API and lazy load is turned on
-    clients[File] = DottedPathSpec('my_testing_clients.get_client')
+    clients[File] = DottedPath('my_testing_clients.get_client')
 
     client = clients[File]
 

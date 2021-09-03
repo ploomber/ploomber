@@ -48,6 +48,41 @@ def test_error_if_lazy_loaded_dotted_path():
         callback_check(dp, available={'some_arg': 42})
 
 
+def test_no_error_if_args_passed_to_the_constructor(tmp_directory,
+                                                    tmp_imports):
+    Path('some_module.py').write_text("""
+def fn(some_arg, another_arg):
+    return some_arg
+""")
+
+    dp = DottedPath(dict(dotted_path='some_module.fn', some_arg=42),
+                    lazy_load=False)
+
+    assert callback_check(dp, available={'another_arg': 100}) == {
+        'another_arg': 100,
+        'some_arg': 42
+    }
+
+
+def test_overrides_default_param_with_available_param(tmp_directory,
+                                                      tmp_imports):
+    Path('some_module.py').write_text("""
+def fn(some_arg, another_arg):
+    return some_arg
+""")
+
+    dp = DottedPath(dict(dotted_path='some_module.fn', some_arg=42),
+                    lazy_load=False)
+
+    assert callback_check(dp, available={
+        'another_arg': 100,
+        'some_arg': 200
+    }) == {
+        'another_arg': 100,
+        'some_arg': 200
+    }
+
+
 def test_signature_check_extra():
     def fn():
         pass
