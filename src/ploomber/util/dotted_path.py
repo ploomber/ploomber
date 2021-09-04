@@ -8,6 +8,7 @@ Definitions:
         a str or dict pointing to an object with optional parameters for
         calling it (a superset of the above)
 """
+import warnings
 from pathlib import Path
 import importlib
 from collections.abc import Mapping
@@ -56,8 +57,16 @@ class DottedPath:
         if self._callable is None:
             self._load_callable()
 
-        # TODO: check if there are duplicates
-        kwargs_final = {**self._spec.get_kwargs(), **kwargs}
+        spec_kwargs = self._spec.get_kwargs()
+        overlap = set(spec_kwargs) & set(kwargs)
+
+        if overlap:
+            overlap_pretty = ", ".join(f"'{w}'" for w in overlap)
+            warnings.warn('Got duplicated arguments '
+                          f'({overlap_pretty}) when calling dotted path '
+                          f'{self._spec.dotted_path!r}. Overriding values...')
+
+        kwargs_final = {**spec_kwargs, **kwargs}
 
         # FIXME: this overlaps in functionality
         # with call_dotted_path so we must evaluate if we can replace

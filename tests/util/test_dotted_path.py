@@ -384,3 +384,21 @@ def fn(some_arg):
                                 lazy_load=False)
 
     assert dp() == 10
+
+
+def test_dotted_path_if_overriding_args(tmp_directory, tmp_imports):
+    Path('some_module.py').write_text("""
+def fn(some_arg):
+    return some_arg
+""")
+
+    dp = dotted_path.DottedPath(dict(dotted_path='some_module.fn',
+                                     some_arg=10),
+                                lazy_load=False)
+
+    with pytest.warns(UserWarning) as record:
+        dp(some_arg=20)
+
+    expected = ("Got duplicated arguments ('some_arg') when calling "
+                "dotted path 'some_module.fn'. Overriding values...")
+    assert record[0].message.args[0] == expected
