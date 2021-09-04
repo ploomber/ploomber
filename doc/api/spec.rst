@@ -353,14 +353,25 @@ With such configuration, commands such as ``ploomber build`` will work.
     # Task name. If missing, inferred from the task's source
     name: {task name, optional}
 
-    # Function to execute when the task renders successfully
-    on_render: {dotted.path.to.function, optional}
-
     # Function to execute when the task finishes successfully
     on_finish: {dotted.path.to.function, optional}
 
+    # Example
+    # Assuming an on_finish function is defined in hooks.py, this will call it
+    # without arguments
+    on_finish: hooks.on_finish
+    # to call a function with arguments
+    on_finish:
+        dotted_path: hooks.on_finish
+        argument: value
+    # Note: on_render and on_finish work the same way
+
     # Function to execute when the task fails
     on_failure: {dotted.path.to.function, optional}
+
+    # Function to execute when the task renders successfully (happens right
+    # before execution
+    on_render: {dotted.path.to.function, optional}
 
     # Task parameters. See section below for details
     params:
