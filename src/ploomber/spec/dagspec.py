@@ -387,6 +387,9 @@ class DAGSpec(MutableMapping):
                 'serializer',
                 'unserializer',
                 'executor',
+                'on_finish',
+                'on_render',
+                'on_failure',
             }
             validate.keys(valid, spec.keys(), name='dag spec')
 
@@ -459,7 +462,8 @@ class DAGSpec(MutableMapping):
                 else:
                     dag.clients[class_name] = dps()
 
-        for attr in ['serializer', 'unserializer']:
+        for attr in ('serializer', 'unserializer', 'on_finish', 'on_render',
+                     'on_failure'):
             if attr in self:
                 setattr(
                     dag, attr,

@@ -890,6 +890,32 @@ def test_task_errors_are_logged(executor, caplog):
     assert 'Error building task "t"' in caplog.text
 
 
+def test_on_render_hook_is_executed(tmp_directory):
+    hook.count = 0
+
+    dag = DAG()
+    PythonCallable(touch_root, File('file.txt'), dag, name='t')
+    dag.on_render = hook
+
+    dag.render()
+
+    assert hook.count == 1
+
+
+def test_on_render_crashes(tmp_directory):
+    dag = DAG()
+    PythonCallable(touch_root, File('file.txt'), dag, name='t')
+    dag.on_render = hook_crashing
+
+    with pytest.raises(DAGRenderError) as excinfo:
+        dag.build()
+
+    msg = 'Exception when running on_render for DAG "No name": crash!'
+    assert str(excinfo.value) == msg
+    assert 'crash!' in str(excinfo.getrepr())
+    assert dag._exec_status == DAGStatus.ErroredRender
+
+
 def test_on_finish_hook_is_executed(tmp_directory):
     hook.count = 0
 
@@ -910,7 +936,7 @@ def test_on_finish_crashes(tmp_directory):
     with pytest.raises(DAGBuildError) as excinfo:
         dag.build()
 
-    msg = 'Exception when running on_finish for DAG "No name"'
+    msg = 'Exception when running on_finish for DAG "No name": crash!'
     assert str(excinfo.value) == msg
     assert 'crash!' in str(excinfo.getrepr())
     assert dag._exec_status == DAGStatus.Errored
@@ -945,12 +971,15 @@ def test_on_failure_crashes(caplog):
     PythonCallable(failing_root, File('file.txt'), dag, name='t')
     dag.on_failure = hook_crashing
 
-    with pytest.raises(DAGBuildError):
+    with pytest.raises(DAGBuildError) as excinfo:
         with caplog.at_level(logging.ERROR):
             dag.build()
 
     assert hook_crashing.count == 1
-    assert 'Exception when running on_failure for DAG "dag"' in caplog.text
+    msg = 'Exception when running on_failure for DAG "dag": crash!'
+    assert str(excinfo.value) == msg
+    assert 'crash!' in str(excinfo.getrepr())
+    assert dag._exec_status == DAGStatus.Errored
 
 
 def test_on_failure_crashes_gracefully(caplog):
