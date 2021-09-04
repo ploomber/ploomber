@@ -59,8 +59,7 @@ def fn(some_arg, another_arg):
                     lazy_load=False)
 
     assert callback_check(dp, available={'another_arg': 100}) == {
-        'another_arg': 100,
-        'some_arg': 42
+        'another_arg': 100
     }
 
 
@@ -81,6 +80,19 @@ def fn(some_arg, another_arg):
         'another_arg': 100,
         'some_arg': 200
     }
+
+
+def test_callback_check_doesnt_include_constructor_args(
+        tmp_directory, tmp_imports):
+    Path('some_module.py').write_text("""
+def add(x, y):
+    return x + y
+""")
+
+    dp = DottedPath(dict(dotted_path='some_module.add', x=1), lazy_load=False)
+
+    assert callback_check(dp, available={'y': 2}) == {'y': 2}
+    assert dp(y=2) == 3
 
 
 def test_signature_check_extra():

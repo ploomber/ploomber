@@ -132,8 +132,11 @@ def callback_check(fn, available, allow_default=True):
     ploomber.exceptions.CallbackSignatureError
         When fn does not have the required signature
     """
+    # keep a copy of the original value because we'll modified it if this is
+    # a DottedPath
+    available_raw = available
+
     if isinstance(fn, DottedPath):
-        # TODO: check if there are duplicates
         available = {**fn._spec.get_kwargs(), **available}
 
         if fn.callable is None:
@@ -173,7 +176,7 @@ def callback_check(fn, available, allow_default=True):
                                      '{}'.format(fn_name, extra,
                                                  available_set))
 
-    return {k: v for k, v in available.items() if k in required}
+    return {k: v for k, v in available_raw.items() if k in required}
 
 
 def signature_check(fn, params, task_name):
