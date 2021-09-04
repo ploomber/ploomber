@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.12.7dev
+*  Task hooks (e.g., `on_finish`) accept custom args
 
 ## 0.12.6 (2021-09-02)
 * Fixes look up of conda root when running `ploomber install` when conda binary is inside the `Library` directory (Windows)
