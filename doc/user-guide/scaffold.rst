@@ -108,7 +108,7 @@ While not required, separating development from production
 dependencies is highly recommended. During development, we usually need more
 dependencies than we do in production. A typical example is plotting libraries
 (e.g., matplotlib or seaborn); we need them for model evaluation but not for
-making predictions. Fewer production dependencies make the project faster to
+serving predictions. Fewer production dependencies make the project faster to
 install, but more importantly, it reduces dependency resolution errors. The
 more dependencies you have, the higher the chance of running into installation
 issues.
@@ -126,7 +126,10 @@ with ``ploomber scaffold --package``).
 
 During deployment, only install production dependencies and ignore development ones.
 
-**Note** If using ``pip``, ``ploomber install`` creates a virtual environment
+If you want to learn more about the ``ploomber install`` command, check out
+the documentation: :ref:`api-cli-create-new-project`.
+
+**Note:** If using ``pip``, ``ploomber install`` creates a virtual environment
 in your project root using the
 `venv <https://docs.python.org/3/tutorial/venv.html>`_ module in a
 ``venv-project-name`` directory. If you prefer to use another virtual
