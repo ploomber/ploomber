@@ -41,9 +41,6 @@ def _delete_python_comments(code):
 
 
 def normalize_python(code):
-    # TODO: we should really be comparing the tree between a, b but this
-    # works for now
-
     if code is None:
         return None
 
