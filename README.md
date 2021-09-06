@@ -36,7 +36,7 @@
 4. **Production-ready.** Deploy to [Kubernetes](https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html) (via Argo Workflows), [Airflow](https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html), and [AWS Batch](https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html) without code changes.
 5. **Parallelization.** Run independent tasks in parallel.
 6. **Testing.** Import pipelines in any testing frameworks and test them with any CI service (e.g. GitHub Actions).
-7. **Flexible.** Use Jupyter notebooks, Python scripts, R scripts, SQL scripts, Python functions or a combination of them as pipeline tasks.
+7. **Flexible.** Use Jupyter notebooks, Python scripts, R scripts, SQL scripts, Python functions, or a combination of them as pipeline tasks. Write pipelines using a `pipeline.yaml` file or with Python.
 
 ![repo-lab-example](https://ploomber.io/repo-lab-example.png)
 
@@ -101,3 +101,5 @@ Pipeline output saved in the `output/` folder. Check out the pipeline definition
 in the `pipeline.yaml` file.
 
 To get a list of examples, run `ploomber examples`.
+
+Click here to go to our [examples](https://github.com/ploomber/projects) repository.
