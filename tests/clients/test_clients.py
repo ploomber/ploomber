@@ -61,11 +61,25 @@ def test_pickle_sqlalchemyclient(tmp_directory):
     assert pickle.dumps(client)
 
 
-def test_creates_dir_sqlalchemyclient(tmp_directory):
-    intermediate_path = "an/intermediate/path"
+def test_creates_relative_dir_sqlalchemyclient(tmp_directory):
+    intermediate_path = "a/relative/path"
     client = SQLAlchemyClient(f'sqlite:///{intermediate_path}/my_db.db')
     client.execute('CREATE TABLE my_table (num INT)')
     assert Path(tmp_directory + "/" + intermediate_path).exists()
+
+
+def test_creates_absolute_dir_sqlalchemyclient(tmp_directory):
+    intermediate_path = Path(tmp_directory, "an/absolute/path")
+    client = SQLAlchemyClient(f'sqlite:///{intermediate_path}/my_db.db')
+    client.execute('CREATE TABLE my_table (num INT)')
+    assert intermediate_path.exists()
+
+
+def test_does_not_create_in_memory_sqlalchemyclient(tmp_directory):
+    client = SQLAlchemyClient(f'sqlite://')
+    client.execute('CREATE TABLE my_table (num INT)')
+    # Assert no folder/file was created in the temporary folder:
+    assert next(Path(tmp_directory).iterdir(), None) is None
 
 
 def test_custom_create_engine_kwargs(monkeypatch):
