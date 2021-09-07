@@ -76,7 +76,7 @@ def test_creates_absolute_dir_sqlalchemyclient(tmp_directory):
 
 
 def test_does_not_create_in_memory_sqlalchemyclient(tmp_directory):
-    client = SQLAlchemyClient(f'sqlite://')
+    client = SQLAlchemyClient('sqlite://')
     client.execute('CREATE TABLE my_table (num INT)')
     # Assert no folder/file was created in the temporary folder:
     assert next(Path(tmp_directory).iterdir(), None) is None
