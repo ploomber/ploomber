@@ -870,8 +870,11 @@ even if not defined in the ``env.yaml`` (or if you don't have a ``env.yaml`` alt
 
 * ``{{here}}``: Absolute path to the parent folder of ``pipeline.yaml``
 * ``{{cwd}}``: Absolute path to the current working directory
-* ``{{root}}``: Absolute path to project's root folder. Only available if there is a ``setup.py`` file in your project, the parent of such file is considered the project's root
+* ``{{root}}``: Absolute path to project's root folder. It is usually the same as ``{{here}}``, except when the project is a package (i.e., it has ``setup.py`` file), in such a case, it points to the parent directory of the ``setup.py`` file.
 * ``{{user}}``: Current username
+
+
+A common use case for this is when passing paths to files to scripts/notebooks. For example, let's say your script has to read a file from a specific location. Using ``{{here}}`` turns path into absolute so you can ready it when using Jupyter, even if the script is in a different location than your ``pipeline.yaml``.
 
 
 By default, paths in ``tasks[*].product`` are interpreted relative to the
@@ -882,13 +885,13 @@ to override this behavior:
     :class: text-editor
 
     tasks:
-        - source: module.function
-          product: '{{cwd}}/products/output.csv'
-
-        - source: module.another_function
-          product: '{{cwd}}/products/another_output.csv'
-
-Using ``{{cwd}}`` ensures that no matter where your ``pipeline.yaml`` is, products will
-be stored relative to the current working directory.
+        - source: scripts/my-script.py
+          product:
+            nb: products/report.html
+            data: product/data.csv
+          params:
+            # make this an absolute file so you can read it when opening
+            # scripts/my-script.py in tJupyter
+            input_path: '{{here}}/some/path/file.json'
 
 For more on parametrized pipelines, check out the guide: :doc:`../user-guide/parametrized`.
