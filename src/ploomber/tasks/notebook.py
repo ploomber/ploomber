@@ -121,19 +121,27 @@ class NotebookConverter:
             # it raises ExporterNameError. However the exception is defined
             # since 5.6.1 so we can safely import it
             except (ValueError, ExporterNameError):
-                raise ValueError('Could not find nbconvert exporter '
-                                 'with name "{}". '
-                                 'Either change the extension '
-                                 'or pass a valid "nbconvert_exporter_name" '
-                                 'value. Valid exporters are: {}. If "{}" '
-                                 'is not intended to be the output noteboook, '
-                                 'pass a dictionary with "nb" as the key '
-                                 'for the output notebook, and other '
-                                 'keys for the rest of the outputs'.format(
-                                     exporter_name,
-                                     nbconvert.get_export_names(),
-                                     path_to_output,
-                                 ))
+                example_dict = {
+                    'source': 'script.ipynb',
+                    'product': {
+                        'nb': 'output.ipynb',
+                        'other': path_to_output
+                    }
+                }
+                raise ValueError(
+                    'Could not find nbconvert exporter '
+                    'with name "{}". '
+                    'Change the extension '
+                    'or pass a valid "nbconvert_exporter_name" '
+                    'value. Valid exporters are: {}.\n\nIf "{}" '
+                    'is not intended to be the output noteboook, '
+                    'register multiple products and identify the '
+                    'output notebooks with "nb". Example: {}'.format(
+                        exporter_name,
+                        nbconvert.get_export_names(),
+                        path_to_output,
+                        example_dict,
+                    ))
 
         return exporter
 

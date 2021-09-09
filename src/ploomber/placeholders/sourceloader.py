@@ -1,5 +1,5 @@
 import pydoc
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from ploomber.placeholders.placeholder import Placeholder
 from ploomber.placeholders import extensions
 from ploomber.util.util import isiterable_not_str
@@ -112,9 +112,18 @@ class SourceLoader:
 
     def get_template(self, name):
         """Load a template by name
+
+        Parameters
+        ----------
+        name : str or pathlib.Path
+            Template to load
         """
+        # if name is a nested path, this will return an appropriate
+        # a/b/c string even on Windows
+        path = str(PurePosixPath(*Path(name).parts))
+
         try:
-            template = self.env.get_template(str(name))
+            template = self.env.get_template(path)
         except exceptions.TemplateNotFound as e:
             exception = e
         else:

@@ -205,7 +205,9 @@ Task source code
     ploomber task task_name --source
 
 
-If you also want to build the task, you need to pass ``--build`` explicitly.
+If you also want to build the task, you must explicitly pass ``--build``.
+
+.. _api-cli-create-new-project:
 
 Create new project
 ******************
@@ -228,12 +230,22 @@ After creating a project, you can configure the development environment with:
     ploomber install
 
 The command above configures a virtual environment using ``conda``, if
-installed; otherwise, it uses
-`venv <https://docs.python.org/3/library/venv.html>`_ and ``pip``. Note that
+you declared dependencies in an ``environment.yml``, or using
+`venv <https://docs.python.org/3/library/venv.html>`_ and ``pip`` if you
+declared dependencies in a ``requirements.txt`` file. Note that
 ``ploomber install`` may not work if you didn't create your project with
-``ploomber scaffold``.
+``ploomber scaffold``. For a tutorial on the ``ploomber scaffold``
+command: :doc:`../user-guide/scaffold`.
 
-For a detailed look at the ``ploomber scaffold`` command, check out the :doc:`../user-guide/scaffold` tutorial.
+Upon installation, ``ploomber install`` generates lock files that contain
+specific versions for all required packages. If you already have such files
+and want to install using lock files (e.g., ``environment.lock.yml``) instead
+of regular files (e.g., ``environment.yml``):
+
+.. code-block:: console
+
+    ploomber install --use-lock
+
 
 Interactive sessions
 ********************

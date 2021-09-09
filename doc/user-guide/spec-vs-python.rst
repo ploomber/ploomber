@@ -1,15 +1,26 @@
-Spec API vs Python API
-======================
+Spec API vs. Python API
+=======================
 
 There are two ways of writing pipelines with Ploomber. This document discusses
 the differences and how to decide which API to use.
 
-Data projects span a wide range of applications, from small projects that just
-need a few scripts to large ones that require a greater degree of flexibility.
-Ploomber is designed to make it as simple as possible and only use a more
-sophisticated solution if you need to.
+Data projects span a wide range of applications, from small projects requiring
+a few scripts to large ones requiring greater flexibility.
 
-For examples using both APIs, `click here <https://github.com/ploomber/projects>`_
+For small projects with just a dozen of tasks, the :ref:`Spec API <Spec entry point>` is recommended,
+however, if you're developing a more extensive pipeline, the  :ref:`Python API is a <Factory entry point>`
+better choice since you can write custom logic to assemble your pipeline.
+
+There is a third way of assembling a pipeline by pointing to a :ref:`directory <Directory entry point>` with
+scripts. This API allows you quickly test simple pipelines that may only have
+a couple of tasks.
+
+For examples using different APIs, `click here <https://github.com/ploomber/projects>`_
+
+Depending on the API you use, the pipeline will be exposed to Ploomber
+differently. For example, if using the Spec API, you tell the pipeline to
+Ploomber by pointing to the path to a ``pipeline.yaml`` file, known
+as an entry point, discussed below.
 
 Entry points
 ------------
@@ -18,23 +29,11 @@ To execute your pipeline, Ploomber needs to know where it is. This location is
 known as "entry point". There are three types of entry points (ordered by
 flexibility):
 
-1. Directory
+1. A directory
 2. [Spec API] Spec (aka ``pipeline.yaml``)
 3. [Python API] Factory function (a function that returns a ``DAG`` object)
 
-As you can see, the entry point type determines which API to use.
-
-
-Which entry point to use?
--------------------------
-
-tl; dr;
-
-* For simple script-based pipelines: Spec API with a :ref:`directory entry point <Directory entry point>`
-* Simple pipelines with SQL tasks: Spec API with a :ref:`spec entry point <Spec entry point>`
-* For dynamic pipelines where input parameters determine the number of tasks and/or dependencies: Python API with a :ref:`factory entry point <Factory entry point>`
-
-For a longer explanation, keep reading.
+The following sections describe each entry point in detail.
 
 Directory entry point
 ---------------------

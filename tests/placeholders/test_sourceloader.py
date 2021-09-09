@@ -137,3 +137,13 @@ def test_get_item_calls_get_template(monkeypatch):
     loader['some_template.sql']
 
     mock.assert_called_once_with('some_template.sql')
+
+
+def test_get_template_nested_with_path(tmp_directory):
+    Path('dir').mkdir()
+    path = Path('dir', 'template.txt')
+    path.write_text('something')
+
+    loader = SourceLoader(path='.')
+
+    assert str(loader[path]) == 'something'

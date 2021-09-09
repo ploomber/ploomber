@@ -125,6 +125,9 @@ class DAG(AbstractDAG):
     executor : ploomber.Executor
         Executor object to run tasks
 
+    on_render : callable
+        Function to execute upon rendering. Can request a "dag" parameter.
+
     on_finish : callable
         Function to execute upon execution. Can request a "dag" parameter
         and/or "report", which containes the report object returned by the
@@ -169,6 +172,7 @@ class DAG(AbstractDAG):
 
         self.on_finish = None
         self.on_failure = None
+        self.on_render = None
         self._available_callback_kwargs = {'dag': self}
 
         self._params = DAGConfiguration()
@@ -389,6 +393,16 @@ class DAG(AbstractDAG):
                 self._exec_status = DAGStatus.ErroredRender
                 raise DAGRenderError(str(exceptions))
 
+            try:
+                self._run_on_render()
+            except Exception as e:
+                # error in hook, log exception
+                msg = ('Exception when running on_render '
+                       'for DAG "{}": {}'.format(self.name, e))
+                self._logger.exception(msg)
+                self._exec_status = DAGStatus.ErroredRender
+                raise DAGRenderError(msg) from e
+
             check_duplicated_products(self)
 
             self._exec_status = DAGStatus.WaitingExecution
@@ -532,7 +546,7 @@ class DAG(AbstractDAG):
                     tb['on_finish'] = traceback.format_exc()
                     # on_finish error, log exception and set status
                     msg = ('Exception when running on_finish '
-                           'for DAG "{}"'.format(self.name))
+                           'for DAG "{}": {}'.format(self.name, e))
                     self._logger.exception(msg)
                     self._exec_status = DAGStatus.Errored
 
@@ -604,6 +618,17 @@ class DAG(AbstractDAG):
             self.on_finish(**kwargs)
         else:
             self._logger.debug('No on_finish hook for dag '
+                               '"%s", skipping', self.name)
+
+    def _run_on_render(self):
+        if self.on_render:
+            self._logger.debug('Executing on_render hook '
+                               'for dag "%s"', self.name)
+            kwargs_available = copy(self._available_callback_kwargs)
+            kwargs = callback_check(self.on_render, kwargs_available)
+            self.on_render(**kwargs)
+        else:
+            self._logger.debug('No on_render hook for dag '
                                '"%s", skipping', self.name)
 
     def build_partially(self,

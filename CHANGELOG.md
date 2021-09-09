@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## 0.12.8dev
+* Support for dag-level hooks in Spec API
+* Better error message when invalid extension in `NotebookRunner` product
+* Fixes an error when loading nested templates on Windows
 
 ## 0.12.7 (2021-09-03)
 *  Task hooks (e.g., `on_finish`) accept custom args

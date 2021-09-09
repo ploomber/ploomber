@@ -3,11 +3,11 @@ Spec API (``pipeline.yaml``)
 
 This section describes how to specify pipelines using a ``pipeline.yaml``.
 
-**Note:** This document assumes you are already familiar with Ploomber's core
+** Note:** This document assumes you are already familiar with Ploomber's core
 concepts (DAG, product, task, and upstream). If you're not, check out this
 guide: :doc:`../get-started/basic-concepts`.
 
-**Note:** The `projects repository <https://github.com/ploomber/projects>`_
+** Note:** The `projects repository <https://github.com/ploomber/projects>`_
 contains several ``pipeline.yaml`` examples.
 
 
@@ -118,12 +118,21 @@ sections are shown first:
 
     # DAG-level serializer/unserializer for Python functions (both optional)
     # see section below for details
-    serializer: {dotted.path.to.serializer}
+    serializer: {dotted.path.to.serializer, optional}
     unserializer: {dotted.path.to.unserializer}
+
+    # DAG-level hooks execute a function on certain events
+    # (see section below for more details)
+    on_render: {dotted.path.to.hook, optional}
+    # executes upon successful execution (all tasks succeed)
+    on_finish: {dotted.path.to.hook, optional}
+    # executes upon failure (at least one task failed)
+    on_failure: {dotted.path.to.hook, optional}
 
     # (this section is required)
     tasks:
-        - {task dictionary, see next section}
+        - {task dictionary, see next section for full details}
+
         # Example (notebook task)
         - source: clean_data.py
           # assuming meta.extract_product: False
@@ -159,10 +168,61 @@ names, values must be dotted paths to functions that return a
 `Here's an example <https://github.com/ploomber/projects/tree/master/spec-api-sql>`_
 that uses ``clients`` to configure Task and Product clients.
 
-Another scenario are :py:mod:`ploomber.products.File` clients, which Ploomber can use
+Other scenarios are :py:mod:`ploomber.products.File` clients, which Ploomber can use
 to backup pipeline results (say, for example, you run a job that trains
 several models and want to save output results. You can use
 :py:mod:`ploomber.clients.GCloudStorageClient` for that.
+
+.. _on-render-finish-failure:
+
+``on_{render, finish, failure}``
+********************************
+
+These are hooks that execure when specific events happen:
+
+1. ``on_render``: executes after verifiying there are no errors in your pipeline declaration (e.g., a task that doesn't exist declared as upstream dependency)
+2. ``on_finish``: executes upon successful pipeline run
+3. ``on_failure``: executes upon failed pipeline run
+
+They all are optional and take a dotted path as an argument. For example,
+assume your ``hooks.py`` looks like this:
+
+.. code-block:: python
+    :class: text-editor
+
+    def on_render():
+        print('finished rendering!')
+
+    def on_finish():
+        print('finished executing!')
+
+    def on_failure():
+        print('error when executing!')
+
+
+You may add those hooks to your ``pipeline.yaml`` like this:
+
+
+.. code-block:: yaml
+    :class: text-editor
+
+    on_render: hooks.on_render
+    on_finish: hooks.on_finish
+    on_failure: hooks.on_failure
+
+
+If your hook takes arguments, you may call it like this:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    # to call any hook with arguments
+    {hook-name}:
+        dotted_path: {dotted.path.to.hook}
+        argument: value
+
+Calling with arguments is useful when they are
+:doc:`pipeline parameters <../user-guide/parametrized>`.
 
 .. _serializer-and-unserializer:
 
@@ -241,8 +301,8 @@ In your task function, you receive objects (instead of paths):
         return df_product
 
 If you want to provide a Task-level serializer/unserializer pass it directly to
-the task, if you set a DAG-level serializer/unserializer and want to exclude
-certain task pass ``serializer: null`` or ``unserializer: null`` in the
+the task, if you set a DAG-level serializer/unserializer and wish to exclude
+specific task pass ``serializer: null`` or ``unserializer: null`` in the
 selected task.
 
 
@@ -281,7 +341,7 @@ The above should print something like ``path/to/my_package/__init__.py``.
 Using the configuration above, it implies that source loader will load the file
 from ``path/to/my_package/my_sources/script.sql``.
 
-**Note:** this only applies to tasks whose ``source`` is a relative path. Dotted
+** Note:** this only applies to tasks whose ``source`` is a relative path. Dotted
 paths and absolute paths are not affected.
 
 For details, see :py:mod:`ploomber.SourceLoader`, which is the underlying Python
@@ -305,7 +365,7 @@ For more information on product clients, see: :doc:`../user-guide/faq_index`.
 *********************
 
 When training a Machine Learning pipeline, we obtain raw data, generate
-features, and train a model. When serving, we receive new observations, generate
+features, and train a model. When serving, we receive new observations, create
 features, and make predictions. Only the first and last parts change, but what
 happens in the middle remains the same (i.e., feature engineering).
 ``import_tasks_from`` allows you to compose pipelines for training and serving.
@@ -355,22 +415,9 @@ With such configuration, commands such as ``ploomber build`` will work.
 
     # Function to execute when the task finishes successfully
     on_finish: {dotted.path.to.function, optional}
-
-    # Example
-    # Assuming an on_finish function is defined in hooks.py, this will call it
-    # without arguments
-    on_finish: hooks.on_finish
-    # to call a function with arguments
-    on_finish:
-        dotted_path: hooks.on_finish
-        argument: value
-    # Note: on_render and on_finish work the same way
-
     # Function to execute when the task fails
     on_failure: {dotted.path.to.function, optional}
-
-    # Function to execute when the task renders successfully (happens right
-    # before execution
+    # Function to execute after checking task declaration has no errors
     on_render: {dotted.path.to.function, optional}
 
     # Task parameters. See section below for details
@@ -594,12 +641,32 @@ Python functions receive them as arguments:
     def my_task(product, my_param):
         pass
 
+
+``tasks[*].on_{render, finish, failure}``
+*****************************************
+
+These are hooks that execute under certain events. They are equivalent to
+:ref:`dag-level hooks <on-render-finish-failure>`, except they apply to a
+specific task. See the dag-level hooks documentation for details.
+
+.. code-block:: yaml
+    :class: text-editor
+
+    # to call without arguments
+    {hook-name}: hooks.some_function
+
+    # to call a function with arguments
+    {hook-name}:
+        dotted_path: hooks.some_function
+        argument: value
+
+
 .. _tasks-params-resources:
 
 ``tasks[*].params.resources_``
 ******************************
 
-The ``params`` section contains an optional section called ``resources_`` (note
+The ``params`` section contains an optional section called ``resources_`` (Note
 the trailing underscore). By default, Ploomber marks tasks as outdated when
 their parameters change; however, parameters in the ``resources_``
 section work differently: they're marked as outdated when the contents of the file
@@ -803,8 +870,11 @@ even if not defined in the ``env.yaml`` (or if you don't have a ``env.yaml`` alt
 
 * ``{{here}}``: Absolute path to the parent folder of ``pipeline.yaml``
 * ``{{cwd}}``: Absolute path to the current working directory
-* ``{{root}}``: Absolute path to project's root folder. Only available if there is a ``setup.py`` file in your project, the parent of such file is considered the project's root
+* ``{{root}}``: Absolute path to project's root folder. It is usually the same as ``{{here}}``, except when the project is a package (i.e., it has ``setup.py`` file), in such a case, it points to the parent directory of the ``setup.py`` file.
 * ``{{user}}``: Current username
+
+
+A common use case for this is when passing paths to files to scripts/notebooks. For example, let's say your script has to read a file from a specific location. Using ``{{here}}`` turns path into absolute so you can ready it when using Jupyter, even if the script is in a different location than your ``pipeline.yaml``.
 
 
 By default, paths in ``tasks[*].product`` are interpreted relative to the
@@ -815,13 +885,13 @@ to override this behavior:
     :class: text-editor
 
     tasks:
-        - source: module.function
-          product: '{{cwd}}/products/output.csv'
-
-        - source: module.another_function
-          product: '{{cwd}}/products/another_output.csv'
-
-Using ``{{cwd}}`` ensures that no matter where your ``pipeline.yaml`` is, products will
-be stored relative to the current working directory.
+        - source: scripts/my-script.py
+          product:
+            nb: products/report.html
+            data: product/data.csv
+          params:
+            # make this an absolute file so you can read it when opening
+            # scripts/my-script.py in tJupyter
+            input_path: '{{here}}/some/path/file.json'
 
 For more on parametrized pipelines, check out the guide: :doc:`../user-guide/parametrized`.
