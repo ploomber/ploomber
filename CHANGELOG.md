@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.12.8dev
+## 0.12.8 (2021-09-08)
 * Support for dag-level hooks in Spec API
 * Better error message when invalid extension in `NotebookRunner` product
 * Fixes an error when loading nested templates on Windows
