@@ -35,7 +35,8 @@ But you can still get a pretty good development environment using `pip` alone.
 ```sh
 # install ploomber in editable mode and include development dependencies
 pip install --editable ".[dev]"
-bash install_test_pkg.sh
+# install sample package required in some tests
+pip install --editable --editable tests/assets/test_pkg
 ```
 
 ### Checking setup

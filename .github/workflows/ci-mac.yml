@@ -39,7 +39,7 @@ jobs:
         echo "IRkernel::installspec()" | Rscript -
 
         # install sample package for tests
-        bash install_test_pkg.sh
+        pip install --editable tests/assets/test_pkg
 
     - name: Run tests
       env:
