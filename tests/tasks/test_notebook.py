@@ -10,7 +10,7 @@ import nbconvert
 from ploomber import DAG, DAGConfigurator
 from ploomber.tasks import NotebookRunner
 from ploomber.products import File
-from ploomber.exceptions import DAGBuildError
+from ploomber.exceptions import DAGBuildError, DAGRenderError
 from ploomber.tasks import notebook
 from ploomber.executors import Serial
 
@@ -93,6 +93,235 @@ def test_execute_sample_nb(name, out_dir, tmp_sample_tasks):
     dag.build()
 
 
+def _dag_simple(nb_params=True, params=None):
+    path = Path('sample.py')
+
+    if nb_params:
+        path.write_text("""
+# + tags=["parameters"]
+a = None
+b = 1
+c = 'hello'
+""")
+    else:
+        path.write_text("""
+# + tags=["parameters"]
+""")
+
+    dag = DAG()
+    NotebookRunner(path,
+                   product=File('out.ipynb'),
+                   dag=dag,
+                   params=params,
+                   static_analysis=True)
+    return dag
+
+
+def _dag_two_tasks(nb_params=True, params=None):
+    root = Path('root.py')
+    root.write_text("""
+# + tags=["parameters"]
+""")
+
+    path = Path('sample.py')
+    if nb_params:
+        path.write_text("""
+# + tags=["parameters"]
+a = None
+b = 1
+c = 'hello'
+""")
+    else:
+        path.write_text("""
+# + tags=["parameters"]
+""")
+
+    dag = DAG()
+    root = NotebookRunner(root, product=File('root.ipynb'), dag=dag)
+    task = NotebookRunner(path,
+                          product=File('out.ipynb'),
+                          dag=dag,
+                          params=params,
+                          static_analysis=True)
+    root >> task
+    return dag
+
+
+def test_dag_r(tmp_directory):
+    path = Path('sample.R')
+
+    path.write_text("""
+# + tags=["parameters"]
+a <- NULL
+b <- 1
+c <- c(1, 2, 3)
+""")
+
+    dag = DAG()
+    NotebookRunner(path, product=File('out.ipynb'), dag=dag, params=dict(z=1))
+
+    # parameter extraction is not implemented but should not raise an error
+    dag.render()
+
+
+def test_render_error_on_syntax_error(tmp_directory):
+    path = Path('sample.py')
+
+    path.write_text("""
+# + tags=["parameters"]
+if
+""")
+
+    dag = DAG()
+    NotebookRunner(path,
+                   product=File('out.ipynb'),
+                   dag=dag,
+                   static_analysis=True)
+
+    with pytest.raises(DAGRenderError) as excinfo:
+        dag.render()
+
+    assert 'invalid syntax\n\nif\n\n  ^\n' in str(excinfo.value)
+
+
+def test_render_error_on_undefined_name_error(tmp_directory):
+    path = Path('sample.py')
+
+    path.write_text("""
+# + tags=["parameters"]
+
+# +
+df.head()
+""")
+
+    dag = DAG()
+    NotebookRunner(path,
+                   product=File('out.ipynb'),
+                   dag=dag,
+                   static_analysis=True)
+
+    with pytest.raises(DAGRenderError) as excinfo:
+        dag.render()
+
+    assert "undefined name 'df'" in str(excinfo.value)
+
+
+def test_render_pass_on_missing_product_parameter(tmp_directory):
+    path = Path('sample.py')
+
+    path.write_text("""
+# + tags=["parameters"]
+
+# +
+df = None
+df.to_csv(product)
+""")
+
+    dag = DAG()
+    NotebookRunner(path,
+                   product=File('out.ipynb'),
+                   dag=dag,
+                   static_analysis=True)
+
+    # the render process injects the cell with the product variable so this
+    # should not raise any errors, even if the raw source code does not contain
+    # the product variable
+    assert dag.render()
+
+
+@pytest.mark.parametrize('code', [
+    """
+# + tags=["parameters"]
+
+
+# +
+import pandas as pd
+df = pd.read_csv(upstream['root'])
+""",
+    """
+# + tags=["parameters"]
+
+# +
+x
+
+# +
+import pandas as pd
+df = pd.read_csv(upstream['root'])
+""",
+],
+                         ids=['simple', 'multiple-undefined'])
+def test_render_error_on_missing_upstream(tmp_directory, code):
+    path = Path('sample.py')
+    path.write_text(code)
+
+    dag = DAG()
+    NotebookRunner(path,
+                   product=File('out.ipynb'),
+                   dag=dag,
+                   static_analysis=True)
+
+    with pytest.raises(DAGRenderError) as excinfo:
+        dag.render()
+
+    expected = ("undefined name 'upstream'. Did you forget"
+                " to declare upstream dependencies?")
+    assert expected in str(excinfo.value)
+
+
+@pytest.mark.parametrize('factory', [_dag_simple, _dag_two_tasks])
+def test_render_error_on_missing_params(tmp_directory, factory):
+    dag = factory()
+
+    with pytest.raises(DAGRenderError) as excinfo:
+        dag.render()
+
+    assert "Missing params: 'a', 'b', and 'c'" in str(excinfo.value)
+
+
+@pytest.mark.parametrize('factory', [_dag_simple, _dag_two_tasks])
+def test_render_error_on_unexpected_params(tmp_directory, factory):
+    dag = factory(nb_params=False, params=dict(a=1, b=2, c=3))
+
+    with pytest.raises(DAGRenderError) as excinfo:
+        dag.render()
+
+    assert "Unexpected params: 'a', 'b', and 'c'" in str(excinfo.value)
+
+
+@pytest.mark.parametrize('factory', [_dag_simple, _dag_two_tasks])
+def test_render_error_on_missing_and_unexpected_params(tmp_directory, factory):
+    dag = factory(nb_params=True, params=dict(d=1, e=2, f=3))
+
+    with pytest.raises(DAGRenderError) as excinfo:
+        dag.render()
+
+    assert "Unexpected params: 'd', 'e', and 'f'" in str(excinfo.value)
+    assert "Missing params: 'a', 'b', and 'c'" in str(excinfo.value)
+
+
+@pytest.mark.parametrize('code', [
+    """
+# + tags=["parameters"]
+upstream = None
+product = None
+""", """
+# + tags=["parameters"]
+upstream = None
+""", """
+# + tags=["parameters"]
+product = None
+"""
+])
+def test_ignores_declared_product_and_upstream(tmp_directory, code):
+    path = Path('sample.py')
+
+    path.write_text(code)
+
+    dag = DAG()
+    NotebookRunner(path, product=File('out.ipynb'), dag=dag)
+    dag.render()
+
+
 @pytest.mark.xfail(
     sys.platform == 'win32',
     reason='nbconvert has a bug when exporting to HTML on windows')
@@ -111,7 +340,7 @@ def test_can_execute_with_parameters(tmp_directory):
 
     code = """
 # + tags=["parameters"]
-1 + 1
+var = None
     """
 
     NotebookRunner(code,
@@ -129,7 +358,7 @@ def test_can_execute_when_product_is_metaproduct(tmp_directory):
 
     code = """
 # + tags=["parameters"]
-# something
+var = None
 
 # +
 from pathlib import Path
@@ -163,7 +392,7 @@ def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory):
 
     code = """
 # + tags=["parameters"]
-# some code
+var = None
 
 # +
     """
@@ -186,7 +415,7 @@ def test_failing_notebook_saves_partial_result(tmp_directory):
 
     code = """
 # + tags=["parameters"]
-# some code
+var = None
 
 raise Exception('failing notebook')
     """
@@ -259,7 +488,7 @@ def tmp_dag(tmp_directory):
 
     code = """
 # + tags=["parameters"]
-# some code
+var = None
 
 # +
 1 + 1
@@ -326,7 +555,7 @@ def test_develop_workflow_with_hot_reload(tmp_directory, monkeypatch):
 
     code = """
 # + tags=["parameters"]
-# some code
+var = None
 
 # +
 1 + 1
@@ -343,7 +572,14 @@ def test_develop_workflow_with_hot_reload(tmp_directory, monkeypatch):
                        name='nb')
 
     def mock_jupyter_notebook(args, check):
-        nb = jupytext.reads('2 + 2', fmt='py')
+        nb = jupytext.reads("""
+# + tags=["parameters"]
+var = None
+
+# +
+2 + 2
+""",
+                            fmt='py')
         # args: "jupyter" {app} {path} {others, ...}
         nbformat.write(nb, args[2])
 

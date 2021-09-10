@@ -7,7 +7,7 @@ from ploomber.static_analysis.python import (PythonNotebookExtractor,
                                              PythonCallableExtractor)
 from ploomber.static_analysis.r import RNotebookExtractor
 from ploomber.static_analysis.sql import SQLExtractor
-from ploomber.static_analysis.string import StringExtractor
+from ploomber.static_analysis.string_ import StringExtractor
 from ploomber.static_analysis.jinja import JinjaExtractor
 from ploomber.products import (PostgresRelation, SQLiteRelation,
                                GenericSQLRelation, SQLRelation)

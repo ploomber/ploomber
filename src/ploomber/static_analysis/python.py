@@ -72,6 +72,18 @@ def extract_variable(code_str, name):
     variable_found = False
     value = None
 
+    for stmt in _iterate_assignments(code_str):
+        if hasattr(stmt, 'get_defined_names'):
+            defined = stmt.get_defined_names()
+
+            if len(defined) == 1 and defined[0].value == name:
+                variable_found = True
+                value = eval(stmt.children[2].get_code())
+
+    return variable_found, value
+
+
+def _iterate_assignments(code_str):
     p = parso.parse(code_str)
 
     for ch in p.children:
@@ -83,14 +95,7 @@ def extract_variable(code_str, name):
             elif ch.type == 'expr_stmt':
                 stmt = ch
 
-            if hasattr(stmt, 'get_defined_names'):
-                defined = stmt.get_defined_names()
-
-                if len(defined) == 1 and defined[0].value == name:
-                    variable_found = True
-                    value = eval(stmt.children[2].get_code())
-
-    return variable_found, value
+            yield stmt
 
 
 def extract_upstream_assign(cell_code):

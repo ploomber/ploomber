@@ -1,5 +1,4 @@
 """
-
 On languages and kernels
 ------------------------
 NotebookSource represents source code in a Jupyter notebook format (language
@@ -26,22 +25,21 @@ script/notebook.
 """
 import ast
 from pathlib import Path
-from io import StringIO
 import warnings
 
-import parso
 # papermill is importing a deprecated module from pyarrow
 with warnings.catch_warnings():
     warnings.simplefilter('ignore', FutureWarning)
     from papermill.parameterize import parameterize_notebook
 import nbformat
 
-from ploomber.exceptions import RenderError, SourceInitializationError
+from ploomber.exceptions import SourceInitializationError
 from ploomber.placeholders.placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources.abc import Source
 from ploomber.sources.nb_utils import find_cell_with_tag
 from ploomber.static_analysis.extractors import extractor_class_for_language
+from ploomber.static_analysis.pyflakes import check_notebook
 from ploomber.sources import docstring
 
 
@@ -251,12 +249,9 @@ Add a cell at the top like this:
         """
         if self.static_analysis:
             if self.language == 'python':
+                # check for errors (e.g., undeclared variables, syntax errors)
                 nb = self._nb_str_to_obj(nb_str)
                 check_notebook(nb, params, filename=self._path or 'notebook')
-            else:
-                raise NotImplementedError(
-                    'static_analysis is only implemented for Python notebooks'
-                    ', set the option to False')
 
     @property
     def doc(self):
@@ -364,63 +359,6 @@ Add a cell at the top like this:
         return extractor_class(self._get_parameters_cell()).extract_product()
 
 
-# FIXME: some of this only applies to Python notebooks (error about missing
-# parameters cells applies to every notebook), make sure the source takes
-# this into account, also check if there are any other functions that
-# are python specific
-def check_notebook(nb, params, filename):
-    """
-    Perform static analysis on a Jupyter notebook code cell sources
-
-    Parameters
-    ----------
-    nb_source : str
-        Jupyter notebook source code in jupytext's py format,
-        must have a cell with the tag "parameters"
-
-    params : dict
-        Parameter that will be added to the notebook source
-
-    filename : str
-        Filename to identify pyflakes warnings and errors
-
-    Raises
-    ------
-    RenderError
-        If the notebook does not have a cell with the tag 'parameters',
-        if the parameters in the notebook do not match the passed params or
-        if pyflakes validation fails
-    """
-    # variable to collect all error messages
-    error_message = '\n'
-
-    params_cell, _ = find_cell_with_tag(nb, 'parameters')
-
-    # compare passed parameters with declared
-    # parameters. This will make our notebook behave more
-    # like a "function", if any parameter is passed but not
-    # declared, this will return an error message, if any parameter
-    # is declared but not passed, a warning is shown
-    res_params = compare_params(params_cell['source'], params)
-    error_message += res_params
-
-    # run pyflakes and collect errors
-    res = check_source(nb, filename=filename)
-
-    # pyflakes returns "warnings" and "errors", collect them separately
-    if res['warnings']:
-        error_message += 'pyflakes warnings:\n' + res['warnings']
-
-    if res['errors']:
-        error_message += 'pyflakes errors:\n' + res['errors']
-
-    # if any errors were returned, raise an exception
-    if error_message != '\n':
-        raise RenderError(error_message)
-
-    return True
-
-
 def json_serializable_params(params):
     # papermill only allows JSON serializable parameters
     # convert Params object to dict
@@ -431,62 +369,6 @@ def json_serializable_params(params):
         params['upstream'] = params['upstream'].to_json_serializable()
 
     return params
-
-
-def compare_params(params_source, params):
-    """
-    Compare the parameters cell's source with the passed parameters, warn
-    on missing parameter and raise error if an extra parameter was passed.
-    """
-    # params are keys in "params" dictionary
-    params = set(params)
-
-    # use parso to parse the "parameters" cell source code and get all
-    # variable names declared
-    declared = set(parso.parse(params_source).get_used_names().keys())
-
-    # now act depending on missing variables and/or extra variables
-
-    missing = declared - params
-    extra = params - declared
-
-    if missing:
-        warnings.warn(
-            'Missing parameters: {}, will use default value'.format(missing))
-
-    if extra:
-        return 'Passed non-declared parameters: {}'.format(extra)
-    else:
-        return ''
-
-
-def check_source(nb, filename):
-    """
-    Run pyflakes on a notebook, wil catch errors such as missing passed
-    parameters that do not have default values
-    """
-    from pyflakes.api import check as pyflakes_check
-    from pyflakes.reporter import Reporter
-
-    # concatenate all cell's source code in a single string
-    source = '\n'.join([c['source'] for c in nb.cells])
-
-    # this objects are needed to capture pyflakes output
-    warn = StringIO()
-    err = StringIO()
-    reporter = Reporter(warn, err)
-
-    # run pyflakes.api.check on the source code
-    pyflakes_check(source, filename=filename, reporter=reporter)
-
-    warn.seek(0)
-    err.seek(0)
-
-    # return any error messages returned by pyflakes
-    return {
-        'warnings': '\n'.join(warn.readlines()),
-        'errors': '\n'.join(err.readlines())
-    }
 
 
 def _to_nb_obj(source,

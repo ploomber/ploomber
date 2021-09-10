@@ -209,17 +209,32 @@ def test_nb_str_contains_kernel_info():
         nb.metadata.kernelspec.keys()) == {'display_name', 'language', 'name'})
 
 
-# Static analysis tests (Pytnon only)
+# Static analysis tests (Python only)
 
 
-def test_error_if_static_analysis_on_a_non_python_nb():
+def test_ignores_static_analysis_if_non_python_file():
     source = NotebookSource(new_nb(fmt='r:light'),
                             ext_in='R',
                             static_analysis=True)
     params = Params._from_dict({'product': File('output.ipynb')})
 
-    with pytest.raises(NotImplementedError):
-        source.render(params)
+    source.render(params)
+
+
+def test_no_error_if_missing_product_or_upstream():
+    code = """
+# + tags=["parameters"]
+
+# +
+"""
+    source = NotebookSource(code,
+                            ext_in='py',
+                            kernelspec_name='python3',
+                            static_analysis=True)
+
+    params = Params._from_dict({'product': File('output.ipynb')})
+
+    source.render(params)
 
 
 @pytest.mark.parametrize('hot_reload', [True, False])
@@ -239,7 +254,7 @@ def test_static_analysis(hot_reload, tmp_directory):
     source.render(params)
 
 
-def test_warn_if_using_default_value():
+def test_error_if_missing_params():
     source = NotebookSource(notebook_ab,
                             ext_in='py',
                             kernelspec_name='python3',
@@ -247,12 +262,10 @@ def test_warn_if_using_default_value():
 
     params = Params._from_dict({'product': File('output.ipynb'), 'a': 1})
 
-    with pytest.warns(UserWarning) as record:
+    with pytest.raises(TypeError) as excinfo:
         source.render(params)
 
-    assert "Missing parameters: {'b'}, will use default value" in [
-        str(warning.message) for warning in record
-    ]
+    assert "Missing params: 'b'" in str(excinfo.value)
 
 
 def test_error_if_passing_undeclared_parameter():
@@ -268,10 +281,10 @@ def test_error_if_passing_undeclared_parameter():
         'c': 3
     })
 
-    with pytest.raises(RenderError) as excinfo:
+    with pytest.raises(TypeError) as excinfo:
         source.render(params)
 
-    assert str(excinfo.value) == "\nPassed non-declared parameters: {'c'}"
+    assert "Unexpected params: 'c'" in str(excinfo.value)
 
 
 def test_error_if_using_undeclared_variable():
@@ -321,10 +334,30 @@ if
         'b': 2
     })
 
+    with pytest.raises(SyntaxError) as excinfo:
+        source.render(params)
+
+    assert 'invalid syntax\n\nif\n\n  ^\n' in str(excinfo.value)
+
+
+def test_error_if_undefined_name():
+    notebook_w_error = """
+# + tags=['parameters']
+
+# +
+df.head()
+"""
+    source = NotebookSource(notebook_w_error,
+                            ext_in='py',
+                            kernelspec_name='python3',
+                            static_analysis=True)
+
+    params = Params._from_dict({'product': File('output.ipynb')})
+
     with pytest.raises(RenderError) as excinfo:
         source.render(params)
 
-    assert 'invalid syntax' in str(excinfo.value)
+    assert "undefined name 'df'" in str(excinfo.value)
 
 
 # Parameter injection

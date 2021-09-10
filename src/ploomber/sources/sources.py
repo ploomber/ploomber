@@ -4,7 +4,7 @@ from ploomber.products import Product
 from ploomber.placeholders.placeholder import Placeholder
 from ploomber.exceptions import SourceInitializationError
 from ploomber import static_analysis
-from ploomber.static_analysis.string import StringExtractor
+from ploomber.static_analysis.string_ import StringExtractor
 from ploomber.sources import docstring, abc
 
 

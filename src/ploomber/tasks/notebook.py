@@ -210,14 +210,11 @@ class NotebookRunner(FileLoaderMixin, Task):
         ploomber.File, pass the index pointing to the notebook path). If the
         only output is the notebook itself, this parameter is not needed
     static_analysis : bool
-        Run static analysis after rendering.
-        This requires a cell with the tag 'parameters' to exist in the
-        notebook, such cell should have at least a "product = None" variable
-        declared. Passed and declared parameters are compared (they make
-        notebooks behave more like "functions"), pyflakes is also run to
-        detect errors before executing the notebook. If the task has
-        upstream dependencies an upstream parameter should also be declared
-        "upstream = None"
+        Run static analysis after rendering. This compares the "params"
+        argument with the declared arguments in the "parameters" cell (they
+        make notebooks behave more like "functions"), pyflakes is also run to
+        detect errors before executing the notebook. Has no effect if it's not
+        a Python file.
     nbconvert_export_kwargs : dict
         Keyword arguments to pass to the ``nbconvert.export`` function (this is
         only used if exporting the output ipynb notebook to another format).
@@ -270,10 +267,18 @@ class NotebookRunner(FileLoaderMixin, Task):
                  nbconvert_exporter_name=None,
                  ext_in=None,
                  nb_product_key='nb',
-                 static_analysis=False,
+                 static_analysis='warn',
                  nbconvert_export_kwargs=None,
                  local_execution=False,
                  check_if_kernel_installed=True):
+        if static_analysis == 'warn':
+            warnings.warn(
+                "The default value of static_analysis (NotebookRunner) "
+                "will change from False to True in 0.13.1. For details, see "
+                "https://github.com/ploomber/ploomber/issues/336",
+                FutureWarning)
+            static_analysis = False
+
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name
