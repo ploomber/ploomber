@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 import shutil
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from click import ClickException
 from jinja2 import Environment, PackageLoader, StrictUndefined
@@ -211,8 +211,7 @@ class Commander:
         >>> # to {workspace}/template.yaml
         >>> cmdr.copy_template('directory/template.yaml')
         """
-        path = Path(path)
-        dst = Path(self.workspace, path.name)
+        dst = Path(self.workspace, PurePosixPath(path).name)
 
         # This message is no longer valid since this is only called
         # when there is no env yet

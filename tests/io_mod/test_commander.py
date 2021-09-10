@@ -21,6 +21,28 @@ def test_creates_workpace(tmp_directory):
     assert Path('workspace').is_dir()
 
 
+def test_get_template(tmp_directory):
+    Path('workspace').mkdir()
+    Path('workspace', 'template').touch()
+
+    with Commander('workspace',
+                   templates_path=('test_pkg', 'templates')) as cmdr:
+        cmdr.copy_template('simple.sql')
+
+    assert Path('workspace', 'simple.sql').read_text() == 'SELECT * FROM data'
+
+
+def test_get_template_nested(tmp_directory):
+    Path('workspace').mkdir()
+    Path('workspace', 'template').touch()
+
+    with Commander('workspace',
+                   templates_path=('test_pkg', 'templates')) as cmdr:
+        cmdr.copy_template('nested/simple.sql')
+
+    assert Path('workspace', 'simple.sql').read_text() == 'SELECT * FROM data'
+
+
 def test_commander_stop(capsys):
     msg = 'Stopping because of reasons'
 
