@@ -217,9 +217,21 @@ If your hook takes arguments, you may call it like this:
     :class: text-editor
 
     # to call any hook with arguments
+    # {hook-name} must be one of: on_render, on_finish, on_failure
     {hook-name}:
         dotted_path: {dotted.path.to.hook}
         argument: value
+
+For example:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    on_render:
+        dotted_path: hooks.on_render
+        # on_render function defined in hooks.py must take an argument named
+        # "some_param"
+        some_param: 42
 
 Calling with arguments is useful when they are
 :doc:`pipeline parameters <../user-guide/parametrized>`.
@@ -653,9 +665,11 @@ specific task. See the dag-level hooks documentation for details.
     :class: text-editor
 
     # to call without arguments
+    # {hook-name} must be one of: on_render, on_finish, on_failure
     {hook-name}: hooks.some_function
 
     # to call a function with arguments
+    # {hook-name} must be one of: on_render, on_finish, on_failure
     {hook-name}:
         dotted_path: hooks.some_function
         argument: value
