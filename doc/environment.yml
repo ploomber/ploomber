@@ -33,6 +33,7 @@ dependencies:
     # for running notebooks from the projects repo
     - papermill
     - jupytext
+    - ipywidgets
 
     # has a function to orchestrate execution of notebook examples
     - git+https://github.com/ploomber/projects.git#subdirectory=pkg
