@@ -27,6 +27,7 @@ def config_init(app, config):
         'testing': 'user-guide',
         'debugging': 'user-guide',
         'guides/serialization': 'user-guide',
+        'guides/logging': 'user-guide',
         'spec-api-python': 'get-started',
     }
 

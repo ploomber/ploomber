@@ -16,7 +16,7 @@ To install Ploomber along with all optional dependencies:
     pip install "ploomber[all]"
 
 Using ``conda``
--------------
+---------------
 
 .. code-block:: console
 

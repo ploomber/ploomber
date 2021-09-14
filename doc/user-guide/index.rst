@@ -12,6 +12,7 @@ User Guide
     sql-templating
     testing
     debugging
+    logging
     deployment
     serialization
     r-support
