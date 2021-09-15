@@ -22,7 +22,7 @@ def _build_message(exception):
     return msg
 
 
-class MyException(ClickException):
+class BaseException(ClickException):
     """
     A subclass of ClickException that adds support for printing error messages
     from chained exceptions
@@ -103,7 +103,7 @@ class UpstreamKeyError(Exception):
     pass
 
 
-class DAGSpecInitializationError(Exception):
+class DAGSpecInitializationError(BaseException):
     """
     Raised when failing to initialize a DAGSpec object
     """

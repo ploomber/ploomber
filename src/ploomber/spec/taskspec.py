@@ -83,7 +83,7 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
         if imported is None:
             raise ValueError(
                 'Could not determine task class for '
-                f'source {source_str!r} due to error: {error!s}.\n\n'
+                f'source {source_str!r} due to error: {error!s}. '
                 'This looks like a dotted path but it failed to import. '
                 'You can also set the task class using the "class" key.')
         else:
