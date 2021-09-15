@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 0.12.9dev
+* Refactors scripts/notebooks `static_analysis` feature
+* Shows warning if using default value in scripts/notebooks `static_analysis` parameter
 
 ## 0.12.8 (2021-09-08)
 * Support for dag-level hooks in Spec API
