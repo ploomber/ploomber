@@ -81,6 +81,59 @@ def test_ploomber_scaffold_task_template(file_, extract_flag, tmp_directory):
                 'in your pipeline.yaml'.format(extract_flag) in content)
 
 
+@pytest.mark.parametrize(
+    'file_',
+    [
+        'task.py',
+        # TODO: add extensions: .r, .R
+    ])
+def test_non_ipynb_file_content(file_, tmp_directory):
+    sample_spec = {
+        'tasks': [
+            {
+                'source': file_,
+                'product': 'nb.ipynb'
+            },
+        ]
+    }
+
+    with open('pipeline.yaml', 'w') as f:
+        yaml.dump(sample_spec, f)
+
+    runner = CliRunner()
+    result = runner.invoke(scaffold)
+
+    content = Path(file_).read_text()
+
+    assert result.exit_code == 0
+    expected = ('#\n# *Note:* You can open this file as a notebook '
+                '(JupyterLab: right-click on it in the side '
+                'bar -> Open With -> Notebook)\n\n')
+    assert expected in content
+
+
+def test_ipynb_file_content(tmp_directory):
+    sample_spec = {
+        'tasks': [
+            {
+                'source': 'task.ipynb',
+                'product': 'nb.ipynb'
+            },
+        ]
+    }
+
+    with open('pipeline.yaml', 'w') as f:
+        yaml.dump(sample_spec, f)
+
+    runner = CliRunner()
+    result = runner.invoke(scaffold, catch_exceptions=False)
+
+    content = Path('task.ipynb').read_text()
+
+    assert result.exit_code == 0
+    assert '*Note:* You can open this file as a notebook' not in content
+
+
 def test_ploomber_scaffold_unknown_extension(tmp_directory):
     sample_spec = {
         'meta': {
