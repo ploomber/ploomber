@@ -227,6 +227,27 @@ class Metadata(AbstractMetadata):
         self._did_fetch = True
         self._data = metadata
 
+    def _toJSON(self, o, params, root_obj=None):
+        # Serialize the __dict__ of objects
+        obj = o if root_obj is None else root_obj
+        if hasattr(o, '__dict__'):
+            try:
+                # Return the __dict__ if it is serializable.
+                json.dumps(o.__dict__)
+                return o.__dict__
+            except Exception:
+                # Call this with `o=None` to hit the `else` statement
+                return self._toJSON(None, params, obj)
+        else:
+            # Remove any parameter that does not have a serializable dictionary
+            for key in params:
+                if params[key] is o:
+                    params.pop(key)
+                    break
+            warnings.warn(f'Parameter {obj!r} is not serializable, it '
+                          'will be ignored. Changes to it will not '
+                          'trigger task execution.')
+
     def update(self, source_code, params):
         """
         Update metadata in the storage backend, this should be called by
@@ -249,7 +270,7 @@ class Metadata(AbstractMetadata):
             # serialize using json. I think it's best to serialize here and
             # pass the string to the save_metadata method. but this will do
             # for now
-            json.dumps(params)
+            json.dumps(params, default=lambda o: self._toJSON(o, params))
         except Exception:
             warnings.warn(f'Params {params!r} are not serializable, they '
                           'will be ignored. Changes to them wont trigger '
