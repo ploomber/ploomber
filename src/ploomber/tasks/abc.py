@@ -354,6 +354,9 @@ class Task(abc.ABC):
             # and ensure the task uses the downloaded metadata
             self.product.metadata.clear()
         else:
+            # NOTE: this is where we should make the change when detecting
+            # source code changes from import statements
+
             self.product.metadata.update(
                 source_code=str(self.source),
                 params=self.params.to_json_serializable(params_only=True))

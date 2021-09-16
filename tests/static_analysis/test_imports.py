@@ -131,6 +131,8 @@ from package import sub_other
 
 """, {}
         ],
+        # FIXME: the output reference here is wrong. a, b arent used so they
+        # should be ignored
         [
             """
 # from .. import attribute1, attrbute2
@@ -207,9 +209,9 @@ sub_other.a()
 def test_extract_from_script(sample_files, script, expected):
     Path('script.py').write_text(script)
 
-    # TODO: finding imports recursively
+    # TODO: add recursive test case
 
-    # TODO: try with nested imports (i.e. inside a function)
+    # TODO: try with nested imports (i.e. inside a function's body)
 
     # TODO: try accessing an attribute that's imported in __init__
     # hence the source isn't there...
@@ -552,18 +554,20 @@ class B:
     assert imports.extract_symbol(code, symbol) == source
 
 
-# TODO: should this check that the function is called?
+# TODO: try with a[1], a.something
 def test_get_source_from_function_import(tmp_directory, tmp_imports):
     Path('functions.py').write_text("""
 def a():
     pass
 """)
 
-    assert imports.get_source_from_import('functions.a', '', 'functions',
-                                          Path('.').resolve()) == {
-                                              'functions.a':
-                                              'def a():\n    pass'
-                                          }
+    code = """
+a()
+"""
+
+    assert imports.get_source_from_import('functions.a', code, 'a') == {
+        'functions.a': 'def a():\n    pass'
+    }
 
 
 def test_get_source_with_nested_access(sample_files, tmp_imports,
@@ -571,8 +575,8 @@ def test_get_source_with_nested_access(sample_files, tmp_imports,
     code = """
 package.sub.x()
 """
-    assert imports.get_source_from_import('package.sub', code, 'package.sub',
-                                          Path('.').resolve()) == {
+    assert imports.get_source_from_import('package.sub', code,
+                                          'package.sub') == {
                                               'package.sub.x':
                                               'def x():\n    pass'
                                           }
@@ -591,11 +595,9 @@ functions.a()
 """
 
     # TODO: what if accessing attributes that do not exist e.g., functions.b()
-    assert imports.get_source_from_import('functions', code, 'functions',
-                                          Path('.').resolve()) == {
-                                              'functions.a':
-                                              'def a():\n    pass'
-                                          }
+    assert imports.get_source_from_import('functions', code, 'functions') == {
+        'functions.a': 'def a():\n    pass'
+    }
 
 
 def test_missing_init_in_submodule(tmp_directory, tmp_imports):
@@ -618,8 +620,7 @@ functions.a()
 """
 
     assert imports.get_source_from_import('package.sub.functions.a', code,
-                                          'functions',
-                                          Path('.').resolve()) == {
+                                          'functions') == {
                                               'package.sub.functions.a':
                                               'def a():\n    pass'
                                           }
@@ -643,8 +644,7 @@ functions.a()
 """
 
     assert imports.get_source_from_import('package.functions.a', code,
-                                          'functions',
-                                          Path('.').resolve()) == {
+                                          'functions') == {
                                               'package.functions.a':
                                               'def a():\n    pass'
                                           }
@@ -661,5 +661,225 @@ import package
 
 package.a()
 """
-    assert imports.get_source_from_import('package', code, 'package',
-                                          Path('.').resolve()) == {}
+    assert imports.get_source_from_import('package', code, 'package') == {}
+
+
+def test_get_source_from_function_source(tmp_directory, tmp_imports):
+    Path('utils.py').write_text("""
+def do_more():
+    pass
+""")
+    assert imports.get_source_from_import('utils.do_more',
+                                          'def call_do():\n    do()\n',
+                                          'do_more') == {}
+
+
+# TODO: cover the case when a function calls another function/class defined
+# in the same file
+# TODO: same test cases as when extracting from script
+# FIXME: support class inheritance?
+@pytest.mark.parametrize('fn_name, expected', [
+    ['call_do', {
+        'utils.do': 'def do():\n    pass'
+    }],
+    ['call_do_more', {
+        'utils.do_more': 'def do_more():\n    pass'
+    }],
+    [
+        'call_both', {
+            'utils.do': 'def do():\n    pass',
+            'utils.do_more': 'def do_more():\n    pass',
+        }
+    ],
+    [
+        'call_local', {
+            'functions.call_nothing': 'def call_nothing():\n    pass',
+        }
+    ],
+    [
+        'call_local_class', {
+            'functions.LocalClass': 'class LocalClass:\n    pass',
+        }
+    ],
+    [
+        'call_external_class', {
+            'utils.ExternalClass': 'class ExternalClass:\n    pass',
+        }
+    ],
+    [
+        'call_nested', {
+            'utils.nested': 'def nested():\n    do()',
+            'utils.do': 'def do():\n    pass',
+        }
+    ],
+],
+                         ids=[
+                             'call_do',
+                             'call_do_more',
+                             'call_both',
+                             'call_local',
+                             'call_local_class',
+                             'call_external_class',
+                             'call_nested',
+                         ])
+def test_extract_from_function(sample_files, tmp_imports, fn_name, expected):
+    Path('functions.py').write_text("""
+from utils import do, do_more
+import utils
+
+class LocalClass:
+    pass
+
+def call_do():
+    do()
+
+def call_do_more():
+    for x in range(10):
+        do_more()
+
+def call_both():
+    for x in range(10):
+        do_more()
+
+    do()
+
+def call_nothing():
+    pass
+
+def call_local():
+    return call_nothing()
+
+def call_local_class():
+    obj = LocalClass()
+
+def call_external_class():
+    obj = utils.ExternalClass()
+
+def call_nested():
+    utils.nested()
+""")
+
+    Path('utils.py').write_text("""
+class ExternalClass:
+    pass
+
+def do():
+    pass
+
+def do_more():
+    pass
+
+def nested():
+    do()
+""")
+
+    import functions
+
+    assert (imports.extract_from_callable(getattr(functions,
+                                                  fn_name)) == expected)
+
+
+@pytest.mark.parametrize('code', [
+    """
+def fn():
+    do_more()
+""", """
+def fn():
+    do_more['something']
+""", """
+def fn():
+    do_more.some_attribute
+""", """
+def fn():
+    do_more.some_static_method()
+""", """
+def fn():
+    new_name = do_more
+""", """
+def fn():
+    do_more
+"""
+])
+def test_did_access_name(code):
+    assert imports.did_access_name(code, 'do_more')
+
+
+def test_did_access_name_false():
+    code = """
+def call_do_more():
+    for x in range(10):
+        do_more()
+"""
+    assert not imports.did_access_name(code, 'do')
+
+
+@pytest.mark.parametrize('code, names, expected', [
+    [
+        """
+a()
+b()
+""",
+        ['a', 'b', 'c'],
+        ['a', 'b'],
+    ],
+    [
+        """
+a.something()
+z()
+""",
+        ['a', 'b', 'x'],
+        ['a'],
+    ],
+])
+def test_accessed_names(code, names, expected):
+    assert imports.get_accessed_names(code, names) == expected
+
+
+@pytest.mark.parametrize('code, expected', [
+    [
+        """
+def a():
+    pass
+
+def b():
+    pass
+
+def c():
+    pass
+
+def fn():
+    a()
+""",
+        {
+            'functions.a': 'def a():\n    pass'
+        },
+    ],
+    [
+        """
+def a():
+    pass
+
+
+def b():
+    pass
+
+def fn(something):
+    a()
+
+    numbers = [b(n) for n in something]
+""",
+        {
+            'functions.a': 'def a():\n    pass',
+            'functions.b': 'def b():\n    pass'
+        },
+    ],
+])
+def test_get_source_from_accessed_symbol_in_callable(tmp_directory,
+                                                     tmp_imports, code,
+                                                     expected):
+    Path('functions.py').write_text(code)
+
+    import functions
+
+    assert imports._extract_accessed_objects_from_callable(
+        functions.fn) == expected
