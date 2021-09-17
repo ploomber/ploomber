@@ -506,6 +506,27 @@ def test_error_if_python_callable_does_not_need_product_but_has_it():
             "parameter, but return its result instead") == str(excinfo.value)
 
 
+def test_pythoncallable_source_extract_source_tree(tmp_directory, tmp_imports):
+    Path('functions.py').write_text("""
+def another():
+    pass
+
+def fn():
+    another()
+""")
+
+    import functions
+
+    source = PythonCallableSource(functions.fn)
+
+    expected = {'functions.another': 'def another():\n    pass'}
+
+    source_current, source_tree = source.extract_source_tree()
+
+    assert source_current == 'def fn():\n    another()\n'
+    assert source_tree == expected
+
+
 @pytest.mark.parametrize(
     'class_', [SQLScriptSource, SQLQuerySource, GenericSource, FileSource])
 def test_file_location_included_if_initialized_from_file(

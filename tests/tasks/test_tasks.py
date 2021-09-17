@@ -43,6 +43,7 @@ class ConcreteTask(Task):
         # FIXME: concrete classes are required to assign ._source before
         # calling init in the super class, this isn't clean, refactor
         mock = Mock()
+        mock.extract_source_tree.return_value = '', {}
         mock.doc = 'some docstring'
         self._source = mock
         super().__init__(product, dag, name, params)
@@ -61,8 +62,14 @@ def test_task_status(monkeypatch):
     monkeypatch.setattr(task_abc, 'Row', lambda x: x)
 
     out = task.status(sections=[
-        'type', 'status', 'client', 'last_run', 'outdated_dependencies',
-        'outdated_code', 'product_type', 'product_client'
+        'type',
+        'status',
+        'client',
+        'last_run',
+        'outdated_dependencies',
+        'outdated_code',
+        'product_type',
+        'product_client',
     ])
 
     assert out == {

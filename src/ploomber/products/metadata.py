@@ -50,6 +50,13 @@ class AbstractMetadata(abc.ABC):
         pass  # pragma: no cover
 
     @property
+    @abc.abstractmethod
+    def source_tree(self):
+        """Source code for objects called in the source code
+        """
+        pass  # pragma: no cover
+
+    @property
     @abc.abstractclassmethod
     def params(self):
         """Task params
@@ -57,7 +64,7 @@ class AbstractMetadata(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def update(self, source_code, params):
+    def update(self, source_code, source_tree, params):
         """
         """
         pass  # pragma: no cover
@@ -176,6 +183,10 @@ class Metadata(AbstractMetadata):
         return self._data.get('stored_source_code')
 
     @property
+    def source_tree(self):
+        return self._data.get('source_tree')
+
+    @property
     def _data(self):
         if not self._did_fetch:
             self._get()
@@ -227,7 +238,7 @@ class Metadata(AbstractMetadata):
         self._did_fetch = True
         self._data = metadata
 
-    def update(self, source_code, params):
+    def update(self, source_code, source_tree, params):
         """
         Update metadata in the storage backend, this should be called by
         Task objects when running successfully to update metadata in the
@@ -238,6 +249,10 @@ class Metadata(AbstractMetadata):
         ----------
         source_code : str
             Task's source code
+
+        source_tree : dict
+            {dotted-path} -> {source-code} mapping for all objects called
+            by source_code
 
         params : dict
             Task's params
@@ -351,12 +366,28 @@ class MetadataCollection(AbstractMetadata):
             return stored_source_code[0]
 
     @property
+    def source_tree(self):
+        source_tree = [
+            tuple((k, v) for k, v in p.metadata.source_tree.items())
+            for p in self._products
+        ]
+
+        if len(set(source_tree)) > 1:
+            warnings.warn('Stored source_tree for products {} '
+                          'are different, but they are part of the same '
+                          'MetaProduct, returning source_tree as None'.format(
+                              self._products))
+            return None
+        else:
+            return self._products[0].metadata.source_tree
+
+    @property
     def params(self):
         return self._products.first.params
 
-    def update(self, source_code, params):
+    def update(self, source_code, source_tree, params):
         for p in self._products:
-            p.metadata.update(source_code, params)
+            p.metadata.update(source_code, source_tree, params)
 
     def update_locally(self, data):
         for p in self._products:
@@ -437,6 +468,10 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
 
     @property
     def stored_source_code(self):
+        return None
+
+    @property
+    def source_tree(self):
         return None
 
     @property

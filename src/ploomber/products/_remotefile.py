@@ -118,9 +118,14 @@ class _RemoteFile:
         Determine if the source code has changed by looking at the remote
         metadata
         """
+        (source_code,
+         source_tree) = self._local_file.task.source.extract_source_tree()
+
         outdated, _ = self._local_file.task.dag.differ.is_different(
             a=self.metadata.stored_source_code,
-            b=str(self._local_file.task.source),
+            b=source_code,
+            a_source_tree=self.metadata.source_tree,
+            b_source_tree=source_tree,
             a_params=self.metadata.params,
             b_params=self._local_file.task.params.to_json_serializable(
                 params_only=True),

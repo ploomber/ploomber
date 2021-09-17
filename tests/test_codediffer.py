@@ -22,6 +22,8 @@ def test_python_differ_ignores_docstrings():
     differ = CodeDiffer()
     res, _ = differ.is_different(a=fn_w_docsting,
                                  b=fn_w_docsting_v2,
+                                 a_source_tree={},
+                                 b_source_tree={},
                                  a_params={},
                                  b_params={},
                                  extension='py')
@@ -46,6 +48,8 @@ def x():
     differ = CodeDiffer()
     res, _ = differ.is_different(a=a,
                                  b=b,
+                                 a_source_tree={},
+                                 b_source_tree={},
                                  a_params={},
                                  b_params={},
                                  extension='py')
@@ -64,6 +68,8 @@ def test_sql_is_normalized():
     differ = CodeDiffer()
     different, _ = differ.is_different(a=a,
                                        b=b,
+                                       a_source_tree={},
+                                       b_source_tree={},
                                        a_params={},
                                        b_params={},
                                        extension='sql')
@@ -146,6 +152,8 @@ def test_different_params():
     differ = CodeDiffer()
     res, _ = differ.is_different(a='some code',
                                  b='some code',
+                                 a_source_tree={},
+                                 b_source_tree={},
                                  a_params={'a': 1},
                                  b_params={'a': 2},
                                  extension='py')
@@ -190,6 +198,44 @@ def test_different_with_unserializable_params(a_params, b_params, expected):
                                  extension='py')
 
     assert res is expected
+
+
+def test_different_source_tree():
+    differ = CodeDiffer()
+    res, _ = differ.is_different(a='some code',
+                                 b='some code',
+                                 a_source_tree={'z': 'code'},
+                                 b_source_tree={'z': 'another code'},
+                                 a_params={'a': 1},
+                                 b_params={'a': 1},
+                                 extension='py')
+    assert res
+
+
+def test_normalizes_source_tree():
+    a_code = '''
+def x():
+    """
+    """
+    pass
+'''
+
+    b_code = '''
+def x():
+    """another
+    """
+    pass
+'''
+
+    differ = CodeDiffer()
+    res, _ = differ.is_different(a='some code',
+                                 b='some code',
+                                 a_source_tree={'mod.fn': a_code},
+                                 b_source_tree={'mod.fn': b_code},
+                                 a_params={'a': 1},
+                                 b_params={'a': 1},
+                                 extension='py')
+    assert not res
 
 
 def test_delete_python_comments():

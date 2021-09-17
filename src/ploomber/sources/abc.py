@@ -138,6 +138,15 @@ class Source(abc.ABC):
 
     # optional
 
+    def extract_source_tree(self):
+        """
+        Must return the source code for this object and a dictionary with
+        {dotted paths} -> {source code} for all dotted paths used to execute
+        the code. Any change to either the source code or any of the dotted
+        paths wil outdate the task
+        """
+        return str(self), {}
+
     def extract_product(self):
         raise NotImplementedError('extract_product is not implemented in '
                                   '{}'.format(type(self).__name__))

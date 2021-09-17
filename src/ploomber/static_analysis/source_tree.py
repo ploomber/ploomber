@@ -1,7 +1,26 @@
 """
+Extract the source code of objects (functions and classes) used by a
+task (script or function) so changes to them trigger a task re-build. Example
+if a function "some_task" used as a task calls "some_function", we look up
+the source code of "some_function" and keep track of source code changes to it
+to trigger "some_task" re-build, this works recursively so changes to objects
+called by "some_function" are detected as well.
+
+
+Limitations
+-----------
+* Only tracks changes of functions and classes (no constants, literals)
+* Ignores dynamic changes to sys.path in scripts/notebooks
+* Ignores non-top-level imports (e.g., imports inside a function)
+* Ignores indirect imports (e.g., "import module.fn") but inside module.py
+    there's another import like "from another import fn"
+* Ignores class inheritance e.g., if task uses SubClass and Subclass is a
+    subclass of SomeClass, changes to SomeClass won't trigger a task build
+
 Reference material:
 https://tenthousandmeters.com/blog/python-behind-the-scenes-11-how-the-python-import-system-works
 """
+import os
 from copy import copy
 import sys
 import warnings
@@ -34,9 +53,6 @@ def should_track_origin(path_to_origin):
     if str(path_to_origin) == 'built-in':
         return False
 
-    # TODO: there might be some edge cases if running in a virtual env
-    # and sys/site returns the paths to the python installation where the
-    # virtual env was created from
     if _path_is_relative_to(path_to_origin, sys.prefix):
         return False
 
@@ -46,6 +62,24 @@ def should_track_origin(path_to_origin):
     for path in _SITE_PACKAGES:
         if _path_is_relative_to(path_to_origin, path):
             return False
+
+    # when using IPython in a virtualenv (i.e., a python installation with
+    # IPython installed runs "python -m venv env", then starts IPython) will
+    # have sys.{prefix, base_prefix} point to the path in the original
+    # installation instead of the venv, however IPython will modifies sys.path
+    # and adds the venv's site-packages folder:
+    # https://github.com/ipython/ipython/blob/77e188547e5705a0e960551519a851ac45db8bfc/IPython/core/interactiveshell.py#L895
+    # we don't want to track that
+
+    # detect if on virtualenv
+    # when using python:
+    # https://docs.python.org/3/library/sys.html#sys.base_prefix
+    # when using IPython, the above method doesn't work so we use os.environ
+    in_virtualenv = (sys.prefix != sys.base_prefix
+                     or 'VIRTUAL_ENV' in os.environ)
+
+    if in_virtualenv and 'site-packages' in Path(path_to_origin).parts:
+        return False
 
     return True
 
@@ -62,6 +96,9 @@ def get_dotted_path_origin(dotted_path):
     Returns the path to the root file of a given dotted_path and if the
     dotted_path is a module (a .py file) or not
     """
+    # NOTE: find_spec(name).origin returns None for some built-in modules
+    # such as 'sys', but not for others (e.g., 'math')
+
     try:
         # FIXME: how would this work for relative imports if the .. parts
         # does not get here?
@@ -72,7 +109,7 @@ def get_dotted_path_origin(dotted_path):
         spec = None
 
     if spec:
-        return Path(spec.origin), True
+        return spec.origin, True
 
     # name could be an attribute (e.g. a function), not a module (a file). So
     # we try to locate the module instead
@@ -83,7 +120,7 @@ def get_dotted_path_origin(dotted_path):
     except (ModuleNotFoundError, AttributeError):
         return None, None
     else:
-        return Path(spec.origin), False
+        return spec.origin, False
 
 
 def get_source_from_import(dotted_path, source_code, name_defined):
@@ -127,11 +164,12 @@ def get_source_from_import(dotted_path, source_code, name_defined):
 
         # TODO: only read origin once
         out = {
-            f'{dotted_path}.{attr}': extract_symbol(origin.read_text(), attr)
+            f'{dotted_path}.{attr}':
+            extract_symbol(Path(origin).read_text(), attr)
             for attr in accessed_attributes
         }
 
-        # remove symbols that do not exist
+        # remove symbols that do not exist or are not objects
         return {k: v for k, v in out.items() if v is not None}
 
     # it's a single symbol (user imported the function/class)
@@ -143,18 +181,25 @@ def get_source_from_import(dotted_path, source_code, name_defined):
         return _get_source_from_accessed_symbol(
             dotted_path,
             source_code,
-            origin.read_text(),
+            Path(origin).read_text(),
             symbol,
         )
 
 
-def _get_source_from_accessed_symbol(dotted_path, source_code, origin, symbol):
+def _get_source_from_accessed_symbol(dotted_path, source_code, origin_text,
+                                     symbol):
     name_accessed = did_access_name(source_code, symbol)
 
     if name_accessed:
         # TODO: only read once
-        source_code_extracted = extract_symbol(origin, symbol)
-        return {dotted_path: source_code_extracted}
+        source_code_extracted = extract_symbol(origin_text, symbol)
+
+        # source_code_extracted will be None if symbol isn't a function
+        # or a class
+        return ({} if not source_code_extracted else {
+            dotted_path: source_code_extracted
+        })
+
     else:
         return {}
 
@@ -173,23 +218,29 @@ def extract_from_script(path_to_script):
     return _extract_imported_objects_from_source(source, path_to_script)
 
 
-def extract_from_callable(callable_):
+def extract_from_object(obj):
     """
-    Extract source code from all objects used inside a function's body. These
-    include imported objects and objects defined in the same module as the
-    callable.
+    Extract source code from all objects used in a object's definition (classes
+    and functions). These include imported objects and objects defined in the
+    same module as the object.
     """
     # NOTE: we can use the inspect module here since by the time we call
     # this, the function has already been imported and executed
-    source = inspect.getsource(callable_)
-    path_to_source = inspect.getsourcefile(callable_)
+
+    try:
+        source = inspect.getsource(obj)
+    # this happens if trying to extract from a constant (e.g., CONSTANT = 1)
+    except TypeError:
+        return None
+
+    path_to_source = inspect.getsourcefile(obj)
     imports = Path(path_to_source).read_text()
 
     # this returns symbols used through imports
     from_imports = _extract_imported_objects_from_source(
         source, path_to_source, imports)
     # and this from symbols defined in the same file
-    local = _extract_accessed_objects_from_callable(callable_)
+    local = _extract_accessed_objects_from_callable(obj)
 
     # NOTE: what if there are duplicates?
     # import x
@@ -199,8 +250,9 @@ def extract_from_callable(callable_):
     extracted = {**from_imports, **local}
     final = copy(extracted)
 
+    # search recursively for objects used indirectly
     for dotted_path in extracted.keys():
-        new = extract_from_callable(_load_dotted_path(dotted_path))
+        new = extract_from_object(_load_dotted_path(dotted_path))
         final.update(new)
 
     return final
@@ -406,9 +458,9 @@ def extract_symbol(code, name):
     name : str
         Symbol name
     """
-    m = parso.parse(code)
+    tree = parso.parse(code)
 
-    for node in chain(m.iter_funcdefs(), m.iter_classdefs()):
+    for node in chain(tree.iter_funcdefs(), tree.iter_classdefs()):
         if node.name.value == name:
             return node.get_code().strip()
 

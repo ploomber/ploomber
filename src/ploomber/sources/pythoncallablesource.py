@@ -7,6 +7,7 @@ from ploomber.util.util import signature_check
 from ploomber.util.dotted_path import (load_dotted_path,
                                        lazily_locate_dotted_path)
 from ploomber.static_analysis.python import PythonCallableExtractor
+from ploomber.static_analysis.source_tree import extract_from_object
 
 
 class CallableLoader:
@@ -181,3 +182,7 @@ class PythonCallableSource(Source):
 
     def extract_product(self):
         return PythonCallableExtractor(str(self)).extract_product()
+
+    def extract_source_tree(self):
+        source_tree = extract_from_object(self.primitive)
+        return str(self), source_tree
