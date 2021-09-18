@@ -48,6 +48,7 @@ from ploomber.sources.abc import Source
 from ploomber.sources.nb_utils import find_cell_with_tag, find_cell_with_tags
 from ploomber.static_analysis.extractors import extractor_class_for_language
 from ploomber.static_analysis.pyflakes import check_notebook
+from ploomber.static_analysis.source_tree import extract_from_script
 from ploomber.sources import docstring
 from ploomber.io import pretty_print
 
@@ -605,6 +606,10 @@ Go to: https://ploomber.io/s/params for more information
         for path, fmt_ in iter_paired_notebooks(self._nb_obj_unrendered, fmt_,
                                                 self._path.stem):
             jupytext.write(nb_clean, fp=path, fmt=fmt_)
+
+    def extract_source_tree(self):
+        source_tree = extract_from_script(self._path)
+        return str(self), source_tree
 
     @requires_path
     def format(self, fmt, entry_point):

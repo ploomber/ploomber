@@ -15,7 +15,7 @@ import numpy as np
 from tests_util import executors_w_exception_logging
 from ploomber import DAG
 from ploomber.dag import dag as dag_module
-from ploomber.tasks import PythonCallable, SQLDump, SQLScript
+from ploomber.tasks import PythonCallable, SQLDump, SQLScript, NotebookRunner
 from ploomber.products import File, SQLiteRelation
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
@@ -1340,6 +1340,79 @@ def touch(product):
     dag = make().render()
 
     functions = importlib.reload(functions)
+
+    assert {t.exec_status
+            for t in dag.values()} == {TaskStatus.WaitingExecution}
+
+
+def test_outdates_notebook_if_source_tree_changes(tmp_directory):
+    Path('script.py').write_text("""
+from functions import my_fn
+
+# + tags=["parameters"]
+
+# +
+my_fn()
+""")
+
+    Path('functions.py').write_text("""
+def my_fn():
+    1 + 1
+""")
+
+    def make():
+        dag = DAG()
+        NotebookRunner(Path('script.py'),
+                       File('file.ipynb'),
+                       dag,
+                       name='first')
+        return dag
+
+    make().build()
+
+    Path('functions.py').write_text("""
+def my_fn():
+    1 + 2
+""")
+
+    dag = make().render()
+
+    assert {t.exec_status
+            for t in dag.values()} == {TaskStatus.WaitingExecution}
+
+
+def test_outdates_notebook_if_source_tree_changes_init_literal(tmp_directory):
+    code = """
+from functions import my_fn
+
+# + tags=["parameters"]
+
+# +
+my_fn()
+"""
+
+    Path('functions.py').write_text("""
+def my_fn():
+    1 + 1
+""")
+
+    def make():
+        dag = DAG()
+        NotebookRunner(code,
+                       File('file.ipynb'),
+                       dag,
+                       name='first',
+                       ext_in='py')
+        return dag
+
+    make().build()
+
+    Path('functions.py').write_text("""
+def my_fn():
+    1 + 2
+""")
+
+    dag = make().render()
 
     assert {t.exec_status
             for t in dag.values()} == {TaskStatus.WaitingExecution}
