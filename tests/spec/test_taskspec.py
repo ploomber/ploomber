@@ -20,9 +20,23 @@ from ploomber import DAG
     ['script.sh', ShellScript],
 ])
 def test_task_class_from_script(tmp_directory, source_str, expected):
-    Path(source_str).touch()
     assert task_class_from_source_str(
         source_str, lazy_import=False, reload=False, product=None) is expected
+
+
+@pytest.mark.parametrize('source_str', [
+    str(Path('something', 'script.md')),
+    str(Path('something', 'another', 'script.json')),
+])
+def test_task_class_from_script_unknown_extension(tmp_directory, source_str):
+    with pytest.raises(ValueError) as excinfo:
+        task_class_from_source_str(source_str,
+                                   lazy_import=False,
+                                   reload=False,
+                                   product=None)
+
+    assert 'Failed to determine task class' in str(excinfo.value)
+    assert 'invalid extension' in str(excinfo.value)
 
 
 def test_task_class_from_dotted_path(tmp_directory, add_current_to_sys_path):

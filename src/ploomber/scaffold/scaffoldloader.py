@@ -29,15 +29,18 @@ class ScaffoldLoader:
         return self.env.get_template(name)
 
     def render(self, name, params):
+        # if requested the ipynb template, we must convert it from the .py file
         if name == 'task.ipynb':
             p = Path(name)
             convert_to = p.suffix[1:]
             name = str(p.with_suffix('.py'))
+            is_ipynb = True
         else:
             convert_to = None
+            is_ipynb = False
 
         t = self.get_template(name)
-        out = t.render(**params)
+        out = t.render(**params, is_ipynb=is_ipynb)
 
         if convert_to:
             nb = jupytext.reads(out, fmt='py:light')

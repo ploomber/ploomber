@@ -193,9 +193,7 @@ def test_error_when_adding_task_with_existing_name(dag):
     with pytest.raises(ValueError) as excinfo:
         PythonCallable(touch_root, File('another.txt'), dag, name='first')
 
-    msg = ("DAGs cannot have Tasks with repeated names, "
-           "there is a Task with name 'first' already")
-    assert str(excinfo.value) == msg
+    assert "DAG already has a task with name 'first'" in str(excinfo.value)
 
 
 def test_to_graph_prepare_for_graphviz(dag):
