@@ -5,6 +5,7 @@ from functools import partial
 from copy import copy
 from pathlib import Path
 from collections.abc import MutableMapping, Mapping
+import platform
 
 from ploomber import tasks, products
 from ploomber.util.util import _make_iterable
@@ -13,6 +14,7 @@ from ploomber.tasks.taskgroup import TaskGroup
 from ploomber import validators
 from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.products._resources import resolve_resources
+from ploomber.io import pretty_print
 
 suffix2taskclass = {
     '.py': tasks.NotebookRunner,
@@ -30,6 +32,14 @@ def _safe_suffix(product):
         return Path(product).suffix
     except Exception:
         return None
+
+
+def _looks_like_path(s):
+    system = platform.system()
+    if system == 'Windows':
+        return '\\' in s
+    else:
+        return '/' in s
 
 
 def task_class_from_source_str(source_str, lazy_import, reload, product):
@@ -57,6 +67,11 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
             return tasks.SQLDump
 
         return suffix2taskclass[extension]
+    elif _looks_like_path(source_str):
+        raise ValueError('Failed to determine task class for '
+                         f'source {source_str!r} (invalid '
+                         f'extension {extension!r}). Valid extensions '
+                         f'are: {pretty_print.iterable(suffix2taskclass)}')
     else:
         try:
             imported = fn_checker(source_str)
@@ -68,7 +83,7 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
         if imported is None:
             raise ValueError(
                 'Could not determine task class for '
-                f'source {source_str!r} due to error: {error!s}.\n\n'
+                f'source {source_str!r} due to error: {error!s}. '
                 'This looks like a dotted path but it failed to import. '
                 'You can also set the task class using the "class" key.')
         else:

@@ -807,9 +807,10 @@ class DAG(AbstractDAG):
         """Adds a task to the DAG
         """
         if task.name in self._G:
-            raise ValueError('DAGs cannot have Tasks with repeated names, '
-                             'there is a Task with name {} '
-                             'already'.format(repr(task.name)))
+            raise ValueError('DAG already has a task with name '
+                             f'{task.name!r}. Pass a "name" '
+                             'argument to the task to '
+                             'change it')
 
         if task.name is not None:
             self._G.add_node(task.name, task=task)

@@ -1,3 +1,40 @@
+import typing as t
+from click.exceptions import ClickException
+from click._compat import get_text_stderr
+from click.utils import echo
+from gettext import gettext as _
+
+
+def _format_message(exception):
+    if hasattr(exception, 'format_message'):
+        return exception.format_message()
+    else:
+        return str(exception)
+
+
+def _build_message(exception):
+    msg = _format_message(exception)
+
+    while exception.__cause__:
+        msg += f'\n{_format_message(exception.__cause__)}'
+        exception = exception.__cause__
+
+    return msg
+
+
+class BaseException(ClickException):
+    """
+    A subclass of ClickException that adds support for printing error messages
+    from chained exceptions
+    """
+    def show(self, file: t.Optional[t.IO] = None) -> None:
+        if file is None:
+            file = get_text_stderr()
+
+        message = _build_message(self)
+        echo(_("Error: {message}").format(message=message), file=file)
+
+
 class DAGRenderError(Exception):
     """Raise when a dag fails to build
     """
@@ -66,7 +103,7 @@ class UpstreamKeyError(Exception):
     pass
 
 
-class DAGSpecInitializationError(Exception):
+class DAGSpecInitializationError(BaseException):
     """
     Raised when failing to initialize a DAGSpec object
     """
@@ -85,7 +122,6 @@ class DAGCycle(Exception):
     """
     Raised when a DAG is defined with cycles.
     """
-
     def __init__(self):
         error_message = """
         Failed to process DAG because it contains cycles.
