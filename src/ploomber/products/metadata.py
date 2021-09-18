@@ -227,26 +227,23 @@ class Metadata(AbstractMetadata):
         self._did_fetch = True
         self._data = metadata
 
-    def _toJSON(self, o, params, root_obj=None):
-        # Serialize the __dict__ of objects
-        obj = o if root_obj is None else root_obj
-        if hasattr(o, '__dict__'):
+    def _mark_unserializable(self, params):
+        """
+        Marks unserializable parameters with 'Not Serializable' so that they 
+        can be filtered out in CodeDiffer.is_different
+        """
+        _params = params
+        # Check each parameter and mark the ones that can't be serialized
+        for key in _params:
             try:
-                # Return the __dict__ if it is serializable.
-                json.dumps(o.__dict__)
-                return o.__dict__
+                json.dumps(_params[key])
             except Exception:
-                # Call this with `o=None` to hit the `else` statement
-                return self._toJSON(None, params, obj)
-        else:
-            # Remove any parameter that does not have a serializable dictionary
-            for key in params:
-                if params[key] is o:
-                    params.pop(key)
-                    break
-            warnings.warn(f'Parameter {obj!r} is not serializable, it '
-                          'will be ignored. Changes to it will not '
-                          'trigger task execution.')
+                _params[key] = 'Not Serializable'
+                warnings.warn(f'Parameter {key!r} in Params {params!r} '
+                              'is not serializable, it will be ignored. '
+                              'Changes to it will not trigger task '
+                              'execution.')
+        return _params
 
     def update(self, source_code, params):
         """
@@ -270,8 +267,9 @@ class Metadata(AbstractMetadata):
             # serialize using json. I think it's best to serialize here and
             # pass the string to the save_metadata method. but this will do
             # for now
-            json.dumps(params, default=lambda o: self._toJSON(o, params))
+            params = self._mark_unserializable(params)
         except Exception:
+            # this should never be hit now, but I will leave it as a fail safe
             warnings.warn(f'Params {params!r} are not serializable, they '
                           'will be ignored. Changes to them wont trigger '
                           'task execution.')

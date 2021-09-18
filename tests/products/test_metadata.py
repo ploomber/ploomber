@@ -397,10 +397,10 @@ def test_warns_on_unserializable_params(tmp_directory):
     m2 = Metadata(product)
 
     assert len(record) == 1
-    assert 'are not serializable' in record[0].message.args[0]
+    assert 'is not serializable' in record[0].message.args[0]
     assert m2.stored_source_code == 'some_source_code'
     assert m2.timestamp
-    assert m2.params is None
+    assert 'Not Serializable' in m2.params.values()
 
 
 # still missing implementation - check note on Metadata@._get
