@@ -146,13 +146,14 @@ class CodeDiffer:
             outdated_params = False
         else:
             if 'Not Serializable' in a_params.values():
-                remove_keys = [
-                    key for key in a_params
-                    if a_params[key] == 'Not Serializable' and key in b_params
+                remove_params = [
+                    param for param in a_params
+                    if (a_params[param] == 'Not Serializable'
+                        and param in b_params)
                 ]
-                for key in remove_keys:
-                    a_params.pop(key)
-                    b_params.pop(key)
+                for param in remove_params:
+                    a_params.pop(param)
+                    b_params.pop(param)
             outdated_params = (a_params != b_params)
 
         result = outdated_params or (a_norm != b_norm)

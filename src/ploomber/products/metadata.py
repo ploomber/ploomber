@@ -232,7 +232,7 @@ class Metadata(AbstractMetadata):
         Marks unserializable parameters with 'Not Serializable' so that they 
         can be filtered out in CodeDiffer.is_different
         """
-        _params = params
+        _params = dict(params)
         # Check each parameter and mark the ones that can't be serialized
         for key in _params:
             try:
