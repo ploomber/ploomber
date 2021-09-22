@@ -390,35 +390,35 @@ _UNSERIALIZABLE_CASES = [
         1,  # number of instances of object()
         # Single parameter with an unserializable object
         {
-            "foo": object()
+            'foo': object()
         }
     ],
     [
         2,
         # Single parameter with multiple unserializable objects
         {
-            "foo": [1, 2, object(), object()]
+            'foo': [1, 2, object(), object()]
         }
     ],
     [
         1,
         # Single parameter with a nested unserializable object
         {
-            "foo": ["bar", {"another": object()}]
+            'foo': ['bar', {'another': object()}]
         }
     ],
     [
         4,
         # Multiple parameters with unserializable parameters
         {
-            "foo": ["bar", object(), {"another": [1, 2, object(), object()]}],
-            "stuff": object(),
+            'foo': ['bar', object(), {'another': [1, 2, object(), object()]}],
+            'stuff': object(),
         }
     ]
 ]
 
 
-@pytest.mark.parametrize("num_warnings,params", _UNSERIALIZABLE_CASES)
+@pytest.mark.parametrize('num_warnings,params', _UNSERIALIZABLE_CASES)
 def test_warns_on_unserializable_params(tmp_directory, num_warnings, params):
     Path('file').touch()
     product = File('file')
