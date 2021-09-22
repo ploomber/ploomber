@@ -11,6 +11,7 @@ from copy import deepcopy
 
 from ploomber.util.util import callback_check
 from ploomber.products._resources import process_resources
+from ploomber.products.serializeparams import remove_non_serializable_top_keys
 
 
 class AbstractMetadata(abc.ABC):
@@ -227,24 +228,6 @@ class Metadata(AbstractMetadata):
         self._did_fetch = True
         self._data = metadata
 
-    def _mark_unserializable(self, params):
-        """
-        Marks unserializable parameters with 'Not Serializable' so that they 
-        can be filtered out in CodeDiffer.is_different
-        """
-        _params = dict(params)
-        # Check each parameter and mark the ones that can't be serialized
-        for key in _params:
-            try:
-                json.dumps(_params[key])
-            except Exception:
-                _params[key] = 'Not Serializable'
-                warnings.warn(f'Parameter {key!r} in Params {params!r} '
-                              'is not serializable, it will be ignored. '
-                              'Changes to it will not trigger task '
-                              'execution.')
-        return _params
-
     def update(self, source_code, params):
         """
         Update metadata in the storage backend, this should be called by
@@ -260,20 +243,15 @@ class Metadata(AbstractMetadata):
         params : dict
             Task's params
         """
-        # make sure params are json serializable
-        try:
-            # TODO: check this to prevent this error happennig in
-            # Product.save_metadata implementation. All current implementations
-            # serialize using json. I think it's best to serialize here and
-            # pass the string to the save_metadata method. but this will do
-            # for now
-            params = self._mark_unserializable(params)
-        except Exception:
-            # this should never be hit now, but I will leave it as a fail safe
-            warnings.warn(f'Params {params!r} are not serializable, they '
-                          'will be ignored. Changes to them wont trigger '
-                          'task execution.')
-            params = None
+
+        # TODO: remove unserializable params to prevent this error
+        # happening in Product.save_metadata implementation. All current
+        # implementations serialize using json. I think it's best to
+        # serialize here and pass the string to the save_metadata method.
+        # but this will do for now
+
+        # remove any unserializable parameters
+        params = remove_non_serializable_top_keys(params)
 
         new_data = dict(
             timestamp=datetime.now().timestamp(),

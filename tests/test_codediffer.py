@@ -143,3 +143,24 @@ def test_different_params():
                                  b_params={'a': 2},
                                  extension='py')
     assert res
+
+
+def test_different_with_unserializable_params():
+    differ = CodeDiffer()
+
+    def check_different(_b_params):
+        res, _ = differ.is_different(a='some code',
+                                     b='some code',
+                                     a_params={'a': 1},
+                                     b_params=_b_params,
+                                     extension='py')
+        return res
+
+    params = {'a': 1, 'b': object()}
+    res1 = check_different(params)
+
+    params['a'] = 2
+    res2 = check_different(params)
+
+    assert not res1
+    assert res2

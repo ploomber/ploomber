@@ -385,22 +385,58 @@ def test_file(tmp_directory):
     assert m2.params == {'a': 1}
 
 
-def test_warns_on_unserializable_params(tmp_directory):
+_UNSERIALIZABLE_CASES = [
+    [
+        1,  # number of instances of object()
+        # Single parameter with an unserializable object
+        {
+            "foo": object()
+        }
+    ],
+    [
+        2,
+        # Single parameter with multiple unserializable objects
+        {
+            "foo": [1, 2, object(), object()]
+        }
+    ],
+    [
+        1,
+        # Single parameter with a nested unserializable object
+        {
+            "foo": ["bar", {"another": object()}]
+        }
+    ],
+    [
+        4,
+        # Multiple parameters with unserializable parameters
+        {
+            "foo": ["bar", object(), {"another": [1, 2, object(), object()]}],
+            "stuff": object(),
+        }
+    ]
+]
+
+
+@pytest.mark.parametrize("num_warnings,params", _UNSERIALIZABLE_CASES)
+def test_warns_on_unserializable_params(tmp_directory, num_warnings, params):
     Path('file').touch()
     product = File('file')
 
     m = Metadata(product)
+    params.update(final_metadata='this')
 
-    with pytest.warns(UserWarning) as record:
-        m.update('some_source_code', {'a': object()})
+    with pytest.warns(UserWarning) as records:
+        m.update('some_source_code', params)
 
     m2 = Metadata(product)
 
-    assert len(record) == 1
-    assert 'is not serializable' in record[0].message.args[0]
+    assert len(records) == num_warnings
+    for record in records:
+        assert 'contains an unserializable object' in record.message.args[0]
     assert m2.stored_source_code == 'some_source_code'
     assert m2.timestamp
-    assert 'Not Serializable' in m2.params.values()
+    assert m2.params == {'final_metadata': 'this'}
 
 
 # still missing implementation - check note on Metadata@._get

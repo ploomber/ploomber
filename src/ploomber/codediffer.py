@@ -15,6 +15,7 @@ try:
     import autopep8
 except ImportError:
     autopep8 = None
+from ploomber.products.serializeparams import remove_non_serializable_top_keys
 
 
 def normalize_null(code):
@@ -135,6 +136,9 @@ class CodeDiffer:
         Notes
         -----
         Params comparison is ignored if either a_params or b_params is None
+
+        When comparing to metadata, the metadata should always passed to
+        a and a_params
         """
         # TODO: this can be more efficient. ie only compare source code
         # if params are the same and only get diff if result is True
@@ -145,16 +149,8 @@ class CodeDiffer:
         if a_params is None or b_params is None:
             outdated_params = False
         else:
-            if 'Not Serializable' in a_params.values():
-                remove_params = [
-                    param for param in a_params
-                    if (a_params[param] == 'Not Serializable'
-                        and param in b_params)
-                ]
-                for param in remove_params:
-                    a_params.pop(param)
-                    b_params.pop(param)
-            outdated_params = (a_params != b_params)
+            params_to_compare = remove_non_serializable_top_keys(b_params)
+            outdated_params = (a_params != params_to_compare)
 
         result = outdated_params or (a_norm != b_norm)
         # TODO: improve diff view, also show a params diff view. probably

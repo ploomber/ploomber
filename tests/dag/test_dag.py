@@ -65,10 +65,6 @@ def touch_root_w_param(product, some_param):
     Path(str(product)).touch()
 
 
-def touch_root_w_params(product, some_param, some_obj):
-    Path(str(product)).touch()
-
-
 def touch(upstream, product):
     Path(str(product)).touch()
 
@@ -1121,27 +1117,6 @@ def test_up_to_date_status_when_unserializable_params(tmp_directory):
     dag = make().render()
 
     assert {t.exec_status for t in dag.values()} == {TaskStatus.Skipped}
-
-
-def test_outdated_with_serializable_and_unserializable_params(tmp_directory):
-    def make(some_param):
-        dag = DAG(executor=Serial(build_in_subprocess=False))
-        PythonCallable(touch_root_w_params,
-                       File('1.txt'),
-                       dag,
-                       name='first',
-                       params={
-                           'some_param': some_param,
-                           'some_obj': object()
-                       })
-        return dag
-
-    make(some_param=1).build()
-
-    dag = make(some_param=2).render()
-
-    assert {t.exec_status
-            for t in dag.values()} == {TaskStatus.WaitingExecution}
 
 
 def test_cycle_exception():
