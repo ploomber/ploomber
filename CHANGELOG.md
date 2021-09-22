@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.12.9dev
+## 0.13 (2021-09-22)
 * Refactors scripts/notebooks `static_analysis` feature
 * Shows warning if using default value in scripts/notebooks `static_analysis` parameter
 * Better error message when `DAG` has duplicated task names
