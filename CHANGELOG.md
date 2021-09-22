@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.13.1dev
+
 ## 0.13 (2021-09-22)
 * Refactors scripts/notebooks `static_analysis` feature
 * Shows warning if using default value in scripts/notebooks `static_analysis` parameter
