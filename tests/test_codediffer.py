@@ -143,3 +143,43 @@ def test_different_params():
                                  b_params={'a': 2},
                                  extension='py')
     assert res
+
+
+@pytest.mark.parametrize('a_params, b_params, expected', [[
+    {
+        'a': 1,
+        'b': object()
+    },
+    {
+        'a': 1
+    },
+    False,
+], [
+    {
+        'a': 1
+    },
+    {
+        'a': 1,
+        'b': object()
+    },
+    False,
+], [
+    {
+        'a': 2,
+        'b': object()
+    },
+    {
+        'a': 1
+    },
+    True,
+]])
+def test_different_with_unserializable_params(a_params, b_params, expected):
+    differ = CodeDiffer()
+
+    res, _ = differ.is_different(a='some code',
+                                 b='some code',
+                                 a_params=a_params,
+                                 b_params=b_params,
+                                 extension='py')
+
+    assert res is expected

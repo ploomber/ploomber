@@ -2,7 +2,6 @@
 Metadata represents the information we need to save in order to support
 incremental builds: source code and build timestmp
 """
-import json
 import logging
 import warnings
 import abc
@@ -11,6 +10,7 @@ from copy import deepcopy
 
 from ploomber.util.util import callback_check
 from ploomber.products._resources import process_resources
+from ploomber.products.serializeparams import remove_non_serializable_top_keys
 
 
 class AbstractMetadata(abc.ABC):
@@ -242,19 +242,8 @@ class Metadata(AbstractMetadata):
         params : dict
             Task's params
         """
-        # make sure params are json serializable
-        try:
-            # TODO: check this to prevent this error happennig in
-            # Product.save_metadata implementation. All current implementations
-            # serialize using json. I think it's best to serialize here and
-            # pass the string to the save_metadata method. but this will do
-            # for now
-            json.dumps(params)
-        except Exception:
-            warnings.warn(f'Params {params!r} are not serializable, they '
-                          'will be ignored. Changes to them wont trigger '
-                          'task execution.')
-            params = None
+        # remove any unserializable parameters
+        params = remove_non_serializable_top_keys(params)
 
         new_data = dict(
             timestamp=datetime.now().timestamp(),

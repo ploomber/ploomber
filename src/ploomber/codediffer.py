@@ -15,6 +15,7 @@ try:
     import autopep8
 except ImportError:
     autopep8 = None
+from ploomber.products.serializeparams import remove_non_serializable_top_keys
 
 
 def normalize_null(code):
@@ -102,7 +103,9 @@ class CodeDiffer:
     }
 
     def is_different(self, a, b, a_params, b_params, extension=None):
-        """Compares code and params to determine if it's changed
+        """
+        Compares code and params to determine if it's changed. Ignores top-keys
+        in a_params or b_params if they're no JSON serializable.
 
         Parameters
         ----------
@@ -145,7 +148,9 @@ class CodeDiffer:
         if a_params is None or b_params is None:
             outdated_params = False
         else:
-            outdated_params = (a_params != b_params)
+            a_params_ = remove_non_serializable_top_keys(a_params)
+            b_params_ = remove_non_serializable_top_keys(b_params)
+            outdated_params = (a_params_ != b_params_)
 
         result = outdated_params or (a_norm != b_norm)
         # TODO: improve diff view, also show a params diff view. probably

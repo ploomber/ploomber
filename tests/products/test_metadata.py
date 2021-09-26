@@ -385,22 +385,63 @@ def test_file(tmp_directory):
     assert m2.params == {'a': 1}
 
 
-def test_warns_on_unserializable_params(tmp_directory):
+@pytest.mark.parametrize(
+    'num_warnings, params',
+    [
+        [
+            1,  # number of instances of object()
+            # Single parameter with an unserializable object
+            {
+                'foo': object()
+            }
+        ],
+        [
+            2,
+            # Single parameter with multiple unserializable objects
+            {
+                'foo': [1, 2, object(), object()]
+            }
+        ],
+        [
+            1,
+            # Single parameter with a nested unserializable object
+            {
+                'foo': ['bar', {
+                    'another': object()
+                }]
+            }
+        ],
+        [
+            4,
+            # Multiple parameters with unserializable parameters
+            {
+                'foo':
+                ['bar',
+                 object(), {
+                     'another': [1, 2, object(), object()]
+                 }],
+                'stuff': object(),
+            }
+        ]
+    ])
+def test_warns_on_unserializable_params(tmp_directory, num_warnings, params):
+    params.update(final_metadata='this')
+
     Path('file').touch()
     product = File('file')
 
     m = Metadata(product)
 
-    with pytest.warns(UserWarning) as record:
-        m.update('some_source_code', {'a': object()})
+    with pytest.warns(UserWarning) as records:
+        m.update('some_source_code', params)
 
-    m2 = Metadata(product)
-
-    assert len(record) == 1
-    assert 'are not serializable' in record[0].message.args[0]
-    assert m2.stored_source_code == 'some_source_code'
-    assert m2.timestamp
-    assert m2.params is None
+    assert len(records) == num_warnings
+    assert all([
+        'contains an unserializable object' in record.message.args[0]
+        for record in records
+    ])
+    assert m.stored_source_code == 'some_source_code'
+    assert m.params == {'final_metadata': 'this'}
 
 
 # still missing implementation - check note on Metadata@._get
@@ -433,5 +474,7 @@ def test_update_with_resource(tmp_directory):
 
     assert metadata.stored_source_code == 'new code'
     assert metadata.params == {
-        'resources_': {'file': 'd41d8cd98f00b204e9800998ecf8427e'}
+        'resources_': {
+            'file': 'd41d8cd98f00b204e9800998ecf8427e'
+        }
     }
