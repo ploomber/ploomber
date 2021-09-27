@@ -22,13 +22,15 @@ def get_pg_client():
         with open(p) as f:
             uri = json.load(f)['uri']
 
-    # if no credentials file, use env variable (used in windows CI)
+    # if no credentials file, use env variable (previously, this was the method
+    # used for running the Windows and macOS CI, but we not updated them to
+    # use a local db)
     elif 'POSTGRES' in os.environ:
         b64 = os.environ['POSTGRES']
         json_str = base64.b64decode(b64).decode()
         uri = json.loads(json_str)['uri']
 
-    # otherwise, use local posttgres db (used in linux CI)
+    # otherwise, use local db
     else:
         uri = 'postgresql://postgres:postgres@localhost:5432/postgres'
 

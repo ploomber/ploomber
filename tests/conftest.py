@@ -257,13 +257,15 @@ def _load_db_credentials():
         with open(p) as f:
             db = json.load(f)
 
-    # if no credentials file, use env variable (used in windows CI)
+    # if no credentials file, use env variable (previously, this was the method
+    # used for running the Windows and macOS CI, but we not updated them to
+    # use a local db)
     elif 'POSTGRES' in os.environ:
         b64 = os.environ['POSTGRES']
         json_str = base64.b64decode(b64).decode()
         db = json.loads(json_str)
 
-    # otherwise, use local posttgres db (used in linux CI)
+    # otherwise, use local db
     else:
         db = {
             'uri': 'postgresql://postgres:postgres@localhost:5432/postgres',

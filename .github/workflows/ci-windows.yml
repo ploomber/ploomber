@@ -2,13 +2,26 @@ name: CI Windows
 on: [push, pull_request]
 
 jobs:
-  build:
+  test:
     runs-on: windows-latest
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
 
     steps:
+    # https://www.cybertec-postgresql.com/en/postgresql-github-actions-continuous-integration/
+    - name: Start PostgreSQL
+      run: |
+        $pgService = Get-Service -Name postgresql*
+        Set-Service -InputObject $pgService -Status running -StartupType automatic
+        Start-Process -FilePath "$env:PGBIN\pg_isready" -Wait -PassThru
+    - name: Change PostgreSQL password
+      run: |
+        & $env:PGBIN\psql --command  "ALTER USER postgres PASSWORD 'postgres'"
+    - name: Check PostgreSQL authentication
+      run: |
+        $env:PGPASSWORD = 'postgres'
+        & $env:PGBIN\pg_isready --dbname postgres --username postgres
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: conda-incubator/setup-miniconda@v2
@@ -60,8 +73,6 @@ jobs:
 
     - name: Run tests
       shell: bash -l {0}
-      env:
-        POSTGRES: ${{ secrets.POSTGRES }}
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env

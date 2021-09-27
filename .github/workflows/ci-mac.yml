@@ -2,13 +2,37 @@ name: CI macOS
 on: [push, pull_request]
 
 jobs:
-  build:
+  test:
     runs-on: macos-latest
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
 
     steps:
+    # https://www.cybertec-postgresql.com/en/postgresql-github-actions-continuous-integration/
+    - name: Start PostgreSQL
+      run: |
+        brew services start postgresql
+        echo "Check PostgreSQL service is running"
+        i=10
+        COMMAND='pg_isready'
+        while [ $i -gt 0 ]; do
+            echo "Check PostgreSQL service status"
+            eval $COMMAND && break
+            ((i--))
+            if [ $i == 0 ]; then
+                echo "PostgreSQL service not ready, all attempts exhausted"
+                exit 1
+            fi
+            echo "PostgreSQL service not ready, wait 10 more sec, attempts left: $i"
+            sleep 10
+        done
+    - name: Create PostgreSQL user
+      run: psql --command="CREATE USER postgres PASSWORD 'postgres'" postgres
+    - name: Update PostgreSQL permissions
+      run: psql --command="ALTER DATABASE postgres OWNER TO postgres" postgres
+    - name: Check PostgreSQL authentication
+      run: PGPASSWORD=postgres pg_isready --dbname postgres --username postgres
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: conda-incubator/setup-miniconda@v2
@@ -42,8 +66,6 @@ jobs:
         pip install --editable tests/assets/test_pkg
 
     - name: Run tests
-      env:
-        POSTGRES: ${{ secrets.POSTGRES }}
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env
