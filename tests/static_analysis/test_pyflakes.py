@@ -133,3 +133,14 @@ def test_check_params(params, source, first, second):
     assert first in str(excinfo.value)
     assert second in str(excinfo.value)
     assert 'script.py' in str(excinfo.value)
+
+
+@pytest.mark.parametrize('passed, params_source', [
+    [set(), 'raise Exception'],
+    [set(), """
+def x():
+    pass
+    """],
+])
+def test_check_params_ignores_non_variable_assignment(passed, params_source):
+    pyflakes.check_params(passed, params_source, 'script.py')

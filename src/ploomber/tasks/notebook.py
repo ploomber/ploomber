@@ -267,18 +267,10 @@ class NotebookRunner(FileLoaderMixin, Task):
                  nbconvert_exporter_name=None,
                  ext_in=None,
                  nb_product_key='nb',
-                 static_analysis='warn',
+                 static_analysis=True,
                  nbconvert_export_kwargs=None,
                  local_execution=False,
                  check_if_kernel_installed=True):
-        if static_analysis == 'warn':
-            warnings.warn(
-                "The default value of static_analysis (NotebookRunner) "
-                "will change from False to True in 0.13.1. For details, see "
-                "https://github.com/ploomber/ploomber/issues/336",
-                FutureWarning)
-            static_analysis = False
-
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name

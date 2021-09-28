@@ -321,6 +321,7 @@ def test_switch_env_file(tmp_directory, monkeypatch):
     Path('script.py').write_text("""
 # + tags=['parameters']
 upstream = None
+some_param = None
 """)
 
     Path('env.yaml').write_text("""
@@ -444,6 +445,7 @@ def test_deletes_metadata_on_save_for_file_used_multiple_times(tmp_directory):
     Path('my-task.py').write_text("""
 # + tags=['parameters']
 upstream = None
+param = None
 """)
 
     # generate two tasks with the same script (but different params)
@@ -802,9 +804,10 @@ from pathlib import Path
 
 # + tags=["parameters"]
 upstream = None
+resources_ = None
 
 # +
-Path(resources['file']).read_text()
+Path(resources_['file']).read_text()
     """)
 
     Path('pipeline.yaml').write_text("""

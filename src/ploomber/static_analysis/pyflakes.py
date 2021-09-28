@@ -161,7 +161,8 @@ def check_params(passed, params_source, filename):
     # dot not complain if product or upstream are missing since
     # they are not user-defined params
     IGNORE = {'product', 'upstream'}
-    declared = set(parso.parse(params_source).get_used_names().keys()) - IGNORE
+
+    declared = _get_defined_variables(params_source) - IGNORE
     passed = set(passed) - IGNORE
     missing = declared - passed
     unexpected = passed - declared
@@ -185,3 +186,15 @@ def check_params(passed, params_source, filename):
             f"Error rendering notebook {str(filename)!r}, parameters "
             "declared in the 'parameters' cell do not match task "
             f"params. {pretty_print.trailing_dot(errors)}")
+
+
+def _get_defined_variables(params_source):
+    """
+    Return the variables defined in a given source. If a name is defined more
+    than once, it uses the last definition. Ignores anything other than
+    variable assignments (e.g., function definitions, exceptions)
+    """
+    used_names = parso.parse(params_source).get_used_names()
+    return set(key for key, value in used_names.items()
+               if value[-1].is_definition()
+               and value[-1].get_definition().type == 'expr_stmt')

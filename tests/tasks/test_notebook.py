@@ -109,11 +109,7 @@ c = 'hello'
 """)
 
     dag = DAG()
-    NotebookRunner(path,
-                   product=File('out.ipynb'),
-                   dag=dag,
-                   params=params,
-                   static_analysis=True)
+    NotebookRunner(path, product=File('out.ipynb'), dag=dag, params=params)
     return dag
 
 
@@ -141,8 +137,7 @@ c = 'hello'
     task = NotebookRunner(path,
                           product=File('out.ipynb'),
                           dag=dag,
-                          params=params,
-                          static_analysis=True)
+                          params=params)
     root >> task
     return dag
 
@@ -173,10 +168,7 @@ if
 """)
 
     dag = DAG()
-    NotebookRunner(path,
-                   product=File('out.ipynb'),
-                   dag=dag,
-                   static_analysis=True)
+    NotebookRunner(path, product=File('out.ipynb'), dag=dag)
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
@@ -195,10 +187,7 @@ df.head()
 """)
 
     dag = DAG()
-    NotebookRunner(path,
-                   product=File('out.ipynb'),
-                   dag=dag,
-                   static_analysis=True)
+    NotebookRunner(path, product=File('out.ipynb'), dag=dag)
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
@@ -218,10 +207,7 @@ df.to_csv(product)
 """)
 
     dag = DAG()
-    NotebookRunner(path,
-                   product=File('out.ipynb'),
-                   dag=dag,
-                   static_analysis=True)
+    NotebookRunner(path, product=File('out.ipynb'), dag=dag)
 
     # the render process injects the cell with the product variable so this
     # should not raise any errors, even if the raw source code does not contain
@@ -255,10 +241,7 @@ def test_render_error_on_missing_upstream(tmp_directory, code):
     path.write_text(code)
 
     dag = DAG()
-    NotebookRunner(path,
-                   product=File('out.ipynb'),
-                   dag=dag,
-                   static_analysis=True)
+    NotebookRunner(path, product=File('out.ipynb'), dag=dag)
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()

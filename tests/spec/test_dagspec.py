@@ -1387,6 +1387,7 @@ def test_grid_and_upstream_wildcard_scripts(spec, tmp_directory):
     Path('upstream.py').write_text("""
 # + tags=['parameters']
 upstream = None
+param = None
 """)
 
     Path('downstream.py').write_text("""
@@ -1479,6 +1480,7 @@ def test_spec_from_yaml_resolves_paths_from_wildcard(tmp_directory, spec):
     Path('upstream.py').write_text("""
 # + tags=['parameters']
 upstream = None
+param = None
 """)
 
     Path('downstream.py').write_text("""
