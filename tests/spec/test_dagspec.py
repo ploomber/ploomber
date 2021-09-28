@@ -998,6 +998,7 @@ def test_import_tasks_from_with_non_empty_env(tmp_nbs):
     Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
     Path('extra_task.py').write_text("""
 # + tags=["parameters"]
+some_param = None
 # -
 """)
     spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())

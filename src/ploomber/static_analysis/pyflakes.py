@@ -1,3 +1,4 @@
+import re
 import warnings
 from io import StringIO
 
@@ -23,6 +24,9 @@ _ERRORS = (
     ContinueOutsideLoop,
     BreakOutsideLoop,
 )
+
+_CELL_IS_IPYTHON_CELL_MAGIC_REGEX = r'^%{2}[a-zA-Z]+'
+_LINE_IS_IPYTHON_LINE_MAGIC_REGEX = r'^%{1}[a-zA-Z]+'
 
 
 def _process_messages(mesages):
@@ -145,8 +149,10 @@ def check_source(nb):
     parameters that do not have default values
     """
     # concatenate all cell's source code in a single string
-    source_code = '\n'.join(
-        [c['source'] for c in nb.cells if c.cell_type == 'code'])
+    source_code = '\n'.join([
+        _comment_if_ipython_magic(c['source']) for c in nb.cells
+        if c.cell_type == 'code'
+    ])
 
     # this objects are needed to capture pyflakes output
     reporter = MyReporter()
@@ -155,6 +161,31 @@ def check_source(nb):
     pyflakes_api.check(source_code, filename='', reporter=reporter)
 
     reporter._check()
+
+
+def _comment_if_ipython_magic(source):
+    """Comments lines into comments if they're IPython magics
+    """
+    if _is_ipython_cell_magic(source):
+        # comment all lines
+        return '\n'.join(f'# {line}' for line in source.splitlines())
+    else:
+        return '\n'.join(
+            (line if not _is_ipython_line_magic(line) else f'# {line}')
+            for line in source.splitlines())
+
+
+def _is_ipython_line_magic(line):
+    """Determines if the source line is an IPython magic
+    """
+    return re.match(_LINE_IS_IPYTHON_LINE_MAGIC_REGEX, line) is not None
+
+
+def _is_ipython_cell_magic(source):
+    """Determines if the source is an IPython cell magic
+    """
+    return re.match(_CELL_IS_IPYTHON_CELL_MAGIC_REGEX,
+                    source.lstrip()) is not None
 
 
 def check_params(passed, params_source, filename):

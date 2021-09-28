@@ -85,6 +85,100 @@ def test_check_source_errors(code):
         pyflakes.check_source(nb)
 
 
+@pytest.mark.parametrize('code', [
+    """
+%debug
+""", """
+# some comment
+%line_magic
+""", """
+# +
+x = 1
+
+# +
+y = 2
+
+# +
+%debug
+
+# +
+%%sh
+"""
+])
+def test_check_source_ignores_ipython_magics(code):
+    pyflakes.check_source(jupytext.reads(code))
+
+
+@pytest.mark.parametrize('code, expected', [
+    [
+        """%%html
+some html""",
+        """# %%html
+# some html""",
+    ],
+    [
+        """%%html
+some html
+more html""",
+        """# %%html
+# some html
+# more html""",
+    ],
+    [
+        """# some comment
+%%html
+some html""", """# some comment
+%%html
+some html"""
+    ],
+    [
+        """
+# some comment
+%%html
+some html""", """
+# some comment
+%%html
+some html"""
+    ],
+    ['%cd', '# %cd'],
+    ['%cd\n%cd', '# %cd\n# %cd'],
+    ['\n%cd', '\n# %cd'],
+])
+def test_comment_if_ipython_magic(code, expected):
+    assert pyflakes._comment_if_ipython_magic(code) == expected
+
+
+@pytest.mark.parametrize('code, expected', [
+    ['%debug', True],
+    ['%%sh', False],
+    ['%%sh --no-raise-error', False],
+    ['# %debug', False],
+    ['% debug', False],
+    ['%%%debug', False],
+])
+def test_is_ipython_line_magic(code, expected):
+    assert pyflakes._is_ipython_line_magic(code) is expected
+
+
+@pytest.mark.parametrize(
+    'code, expected',
+    [
+        ['%debug', False],
+        ['%%sh', True],
+        ['%%sh --no-raise-error', True],
+        ['# %debug', False],
+        ['% debug', False],
+        ['%%%debug', False],
+        # cell magics cannot contain comments
+        ['# comment\n%%html\nhello', False],
+        # cell magics may contain whitespace
+        ['\n\n%%html\nhello', True],
+        ['  %%html\nhello', True],
+    ])
+def test_is_ipython_cell_magic(code, expected):
+    assert pyflakes._is_ipython_cell_magic(code) is expected
+
+
 @pytest.mark.parametrize('params, source, first, second', [
     [
         dict(a=1),
