@@ -89,6 +89,12 @@ class MyReporter(Reporter):
         self._stdout.seek(0)
         self._stderr.seek(0)
 
+    def _make_error_message(self, error):
+        return ('An error happened when checking the source code. '
+                f'\n{error}\n\n'
+                '(if you want to proceed with execution anyway, set '
+                'static_analysis to False to the task and execute again)')
+
     def _check(self):
         self._seek_zero()
 
@@ -98,7 +104,7 @@ class MyReporter(Reporter):
         error_message = '\n'.join(self._stderr.readlines())
 
         if self._syntax:
-            raise SyntaxError(error_message)
+            raise SyntaxError(self._make_error_message(error_message))
         elif self._unexpected:
             warnings.warn('An unexpected error happened '
                           f'when analyzing code: {error_message.strip()!r}')
@@ -109,7 +115,7 @@ class MyReporter(Reporter):
                 warnings.warn(warnings_)
 
             if errors:
-                raise RenderError(errors)
+                raise RenderError(self._make_error_message(errors))
 
 
 def check_notebook(nb, params, filename):

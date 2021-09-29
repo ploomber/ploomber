@@ -672,11 +672,11 @@ def test_warns_if_export_args_but_ipynb_output(tmp_sample_tasks):
                    dag,
                    nbconvert_export_kwargs=dict(exclude_input=True))
 
-    with pytest.warns(UserWarning) as record:
+    with pytest.warns(UserWarning) as records:
         dag.build()
 
-    # NOTE: not sure why on windows two records are displayed, maybe another
+    # NOTE: not sure why sometimes two records are displayed, maybe another
     # library is throwing the warning
-    assert len(record) == 1
-    assert ("Output 'out.ipynb' is a notebook file"
-            in record[0].message.args[0])
+    assert any(
+        "Output 'out.ipynb' is a notebook file" in record.message.args[0]
+        for record in records)
