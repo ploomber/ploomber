@@ -88,13 +88,8 @@ def cast_if_possible(value):
             return None
 
         try:
-            return int(value)
-        except ValueError:
-            pass
-
-        try:
-            return float(value)
-        except ValueError:
+            return ast.literal_eval(value)
+        except Exception:
             pass
 
     return value

@@ -572,6 +572,13 @@ def test_expand_raw_dict_error_if_missing_key():
     assert expected in str(excinfo.value)
 
 
+def test_expand_raw_dictionary_parses_literals():
+    raw = {'a': '{{a}}', 'b': '{{b}}', 'c': '{{c}}'}
+    mapping = {'a': {1, 2, 3}, 'b': [1, 2, 3], 'c': {'z': 1}}
+    out = expand_raw_dictionary(raw, mapping)
+    assert out == mapping
+
+
 def test_iterate_nested_dict():
     numbers = [1, 2, 3]
     c = {'c': numbers}

@@ -1733,3 +1733,42 @@ tasks:
 """)
 
     assert DAGSpec('pipeline.yaml')
+
+
+@pytest.mark.parametrize('literal', [
+    [1, 2, 3],
+    {
+        'a': 1,
+        'b': 2
+    },
+    1,
+    1.1,
+    'some str',
+    None,
+    False,
+    True,
+])
+def test_pipeline_yaml_parses_env_yaml_literals(tmp_directory, tmp_imports,
+                                                literal):
+    Path('functions.py').write_text("""
+def function(product):
+    pass
+""")
+
+    Path('env.yaml').write_text(f"""
+collection: {literal}
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: functions.function
+      product: output.csv
+      params:
+        a_param: '{{collection}}'
+""")
+
+    spec = DAGSpec('pipeline.yaml')
+    dag = spec.to_dag()
+
+    assert spec['tasks'][0]['params']['a_param'] == literal
+    assert dag['function'].params['a_param'] == literal
