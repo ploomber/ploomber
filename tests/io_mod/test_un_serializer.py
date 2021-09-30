@@ -1,3 +1,4 @@
+import os
 import json
 import pickle
 from pathlib import Path
@@ -43,6 +44,11 @@ def serializer_txt(obj, product):
 
 @serialize.serializer({'.txt': write_text, '.json': write_json})
 def serializer_multi(obj, product):
+    raise NotImplementedError
+
+
+@serialize.serializer({'.txt': write_text, '.json': write_json}, unpack=True)
+def serializer_unpack(obj, product):
     raise NotImplementedError
 
 
@@ -129,6 +135,41 @@ def test_serialize_multi(tmp_directory):
 
     assert Path('a.txt').read_text() == 'something'
     assert json.loads(Path('b.json').read_text()) == dict(a=1, b=2)
+
+
+def test_serialize_unpack(tmp_directory):
+    serializer_unpack('something', File('something.txt'))
+    serializer_unpack({'a.txt': 'a', 'b.txt': 'b'}, File('directory'))
+
+    assert Path('something.txt').read_text() == 'something'
+    assert Path('directory', 'a.txt').read_text() == 'a'
+    assert Path('directory', 'b.txt').read_text() == 'b'
+
+
+def test_serialize_unpack_deletes_file_if_exists(tmp_directory):
+    Path('directory').touch()
+
+    serializer_unpack({'a.txt': 'a', 'b.txt': 'b'}, File('directory'))
+
+    assert set(os.listdir('directory')) == {'a.txt', 'b.txt'}
+
+
+def test_serialize_unpack_deletes_previous_files(tmp_directory):
+    Path('directory').mkdir()
+    Path('directory', 'c.txt').touch()
+
+    serializer_unpack({'a.txt': 'a', 'b.txt': 'b'}, File('directory'))
+
+    assert set(os.listdir('directory')) == {'a.txt', 'b.txt'}
+
+
+def test_serialize_unpack_error_if_invalid_keys(tmp_directory):
+    with pytest.raises(TypeError) as excinfo:
+        serializer_unpack({1: 'a'}, File('directory'))
+
+    expected = ('Error creating output path from key with value 1: '
+                'expected str, bytes or os.PathLike object, not int')
+    assert str(excinfo.value) == expected
 
 
 def test_serialize_executes_function_if_no_suffix_match():
@@ -271,6 +312,11 @@ def unserializer_multi(obj):
     raise NotImplementedError
 
 
+@unserialize.unserializer({'.txt': read_text, '.json': read_json}, unpack=True)
+def unserializer_unpack(obj):
+    raise NotImplementedError
+
+
 def unserializer_undecorated(obj):
     raise NotImplementedError
 
@@ -364,6 +410,16 @@ def test_unserialize_multi(tmp_directory):
 
     assert obj_txt == 'something'
     assert obj_json == dict(a=1, b=2)
+
+
+def test_unserialize_unpack(tmp_directory):
+    Path('directory').mkdir()
+    Path('directory', 'a.txt').write_text('something')
+    Path('directory', '.b.json').write_text(json.dumps(dict(a=1, b=2)))
+
+    obj = unserializer_unpack(File('directory'))
+
+    assert obj == {'a.txt': 'something', '.b.json': dict(a=1, b=2)}
 
 
 def test_unserialize_executes_function_if_no_suffix_match():

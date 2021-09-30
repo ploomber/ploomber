@@ -62,7 +62,11 @@ _DEFAULTS = {
 }
 
 
-def unserializer(extension_mapping=None, *, fallback=False, defaults=None):
+def unserializer(extension_mapping=None,
+                 *,
+                 fallback=False,
+                 defaults=None,
+                 unpack=False):
     """Decorator for unserializing functions
 
     Parameters
@@ -88,6 +92,13 @@ def unserializer(extension_mapping=None, *, fallback=False, defaults=None):
         .parquet return a pandas.DataFrame. If using .parquet, a parquet
         library must be installed (e.g., pyarrow). If extension_mapping
         and defaults contain overlapping keys, an error is raises
+
+    unpack : bool, default=False
+        If True and the task product points to a directory, it will call
+        the unserializer one time per file in the directory. The unserialized
+        object will be a dictionary where keys are the filenames and values
+        are the unserialized objects. Note that this isn't recursive, it only
+        looks at files that are immediate children of the product directory.
     """
     def _unserializer(fn):
         extension_mapping_final = _build_extension_mapping_final(
@@ -121,16 +132,16 @@ def unserializer(extension_mapping=None, *, fallback=False, defaults=None):
         def wrapper(product):
             if isinstance(product, MetaProduct):
                 return {
-                    key:
-                    _unserialize_product(value, extension_mapping_final,
-                                         fallback, unserializer_fallback, fn)
+                    key: _unserialize_product(value, extension_mapping_final,
+                                              fallback, unserializer_fallback,
+                                              fn, unpack)
                     for key, value in product.products.products.items()
                 }
 
             else:
                 return _unserialize_product(product, extension_mapping_final,
                                             fallback, unserializer_fallback,
-                                            fn)
+                                            fn, unpack)
 
         return wrapper
 
@@ -145,16 +156,47 @@ def unserializer_pickle(product):
     raise RuntimeError('Error when unserializing with pickle module')
 
 
+def _make_unserializer(fn):
+    def _unserialize(product):
+        with open(product, 'rb') as f:
+            obj = fn(f)
+
+        return obj
+
+    return _unserialize
+
+
 def _unserialize_product(product, extension_mapping, fallback,
-                         unserializer_fallback, fn):
+                         unserializer_fallback, fn, unpack):
+
+    if unpack and Path(product).is_dir():
+        out = {}
+
+        for path in Path(product).glob('*'):
+            unserializer = _determine_unserializer(path, extension_mapping,
+                                                   fallback,
+                                                   unserializer_fallback, fn)
+
+            out[path.name] = unserializer(path)
+
+        return out
+
+    # treat product as a single file...
+    else:
+        unserializer = _determine_unserializer(product, extension_mapping,
+                                               fallback, unserializer_fallback,
+                                               fn)
+        return unserializer(product)
+
+
+def _determine_unserializer(product, extension_mapping, fallback,
+                            unserializer_fallback, fn):
     suffix = Path(product).suffix
 
     if extension_mapping and suffix in extension_mapping:
-        obj = extension_mapping[suffix](product)
+        return extension_mapping[suffix]
     elif fallback:
-        with open(product, 'rb') as f:
-            obj = unserializer_fallback(f)
+        unserializer = _make_unserializer(unserializer_fallback)
+        return unserializer
     else:
-        obj = fn(product)
-
-    return obj
+        return fn

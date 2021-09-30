@@ -1,3 +1,4 @@
+import shutil
 import json
 import pickle
 from pathlib import Path
@@ -145,7 +146,11 @@ def _build_extension_mapping_final(extension_mapping, defaults, fn,
     return extension_mapping_final
 
 
-def serializer(extension_mapping=None, *, fallback=False, defaults=None):
+def serializer(extension_mapping=None,
+               *,
+               fallback=False,
+               defaults=None,
+               unpack=False):
     """Decorator for serializing functions
 
     Parameters
@@ -171,6 +176,11 @@ def serializer(extension_mapping=None, *, fallback=False, defaults=None):
         .parquet it must be a pandas.DataFrame. If using .parquet, a parquet
         library must be installed (e.g., pyarrow). If extension_mapping
         and defaults contain overlapping keys, an error is raised
+
+    unpack : bool, default=False
+        If True, it treats every element in a dictionary as a different
+        file, calling the serializing function one per (key, value) pair and
+        using the key as filename.
     """
     def _serializer(fn):
         extension_mapping_final = _build_extension_mapping_final(
@@ -208,10 +218,10 @@ def serializer(extension_mapping=None, *, fallback=False, defaults=None):
                 for key, value in obj.items():
                     _serialize_product(value, product[key],
                                        extension_mapping_final, fallback,
-                                       serializer_fallback, fn)
+                                       serializer_fallback, fn, unpack)
             else:
                 _serialize_product(obj, product, extension_mapping_final,
-                                   fallback, serializer_fallback, fn)
+                                   fallback, serializer_fallback, fn, unpack)
 
         return wrapper
 
@@ -251,13 +261,68 @@ def _validate_obj(obj, product):
 
 
 def _serialize_product(obj, product, extension_mapping, fallback,
-                       serializer_fallback, fn):
+                       serializer_fallback, fn, unpack):
+    """
+    Determine which function to use for serialization. Note that this
+    function operates on single products. If the task generates multiple
+    products, this function is called multiple times.
+    """
     suffix = Path(product).suffix
 
-    if extension_mapping and suffix in extension_mapping:
-        extension_mapping[suffix](obj, product)
-    elif fallback:
-        with open(product, 'wb') as f:
-            serializer_fallback(obj, f)
+    if unpack and isinstance(obj, Mapping):
+        parent = Path(product)
+
+        # if the directory exists, delete it, otherwise old files will
+        # mix with the new ones
+        if parent.is_dir():
+            shutil.rmtree(product)
+        # if it's a file, delete it as well
+        elif parent.is_file():
+            parent.unlink()
+
+        parent.mkdir(exist_ok=True, parents=True)
+
+        for filename, o in obj.items():
+            out_path = _Path(product, filename)
+
+            suffix_current = Path(filename).suffix
+            serializer = _determine_serializer(suffix_current,
+                                               extension_mapping, fallback,
+                                               serializer_fallback, fn)
+            serializer(o, out_path)
     else:
-        fn(obj, product)
+        serializer = _determine_serializer(suffix, extension_mapping, fallback,
+                                           serializer_fallback, fn)
+        serializer(obj, product)
+
+
+def _make_serializer(fn):
+    def _serialize(obj, product):
+        with open(product, 'wb') as f:
+            fn(obj, f)
+
+    return _serialize
+
+
+def _determine_serializer(suffix, extension_mapping, fallback,
+                          serializer_fallback, fn):
+    # if there is a serializer for the given extension, use it...
+    if extension_mapping and suffix in extension_mapping:
+        return extension_mapping[suffix]
+    # no serializer for the given extension, check fallback...
+    elif fallback:
+        return _make_serializer(serializer_fallback)
+    # otherwise call the function's body...
+    else:
+        return fn
+
+
+def _Path(parent, filename):
+    try:
+        return Path(parent, filename)
+    except TypeError:
+        pass
+
+    raise TypeError('Error creating output path from key with value '
+                    f'{filename!r}: expected str, bytes or os.PathLike '
+                    f'object, not {type(filename).__name__}')
