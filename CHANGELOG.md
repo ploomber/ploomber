@@ -5,7 +5,11 @@
 * NotebookRunner `static_analysis` turned on by default
 * NotebookRunner `static_analysis` ignores IPython magics
 * Improved error message when NotebookRunner `static_analysis` fails
-
+* Support for collections in `env.yaml`
+* Adds `unpack` argument to `serializer`/`unserializer` decorators to allow a variable number of outputs
+* Adds serialization cookbook
+* Adds FAQ on variable number of outputs
+* Documents `io` module
 
 ## 0.13 (2021-09-22)
 * Refactors scripts/notebooks `static_analysis` feature
