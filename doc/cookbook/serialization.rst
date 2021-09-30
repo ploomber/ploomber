@@ -13,7 +13,7 @@ For example, your task may look like this:
     :class: text-editor
 
     def my_function():
-        # do not serialize, simply return the output
+        # no need to serialize here, simply return the output
         return [1, 2, 3]
 
 

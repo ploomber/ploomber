@@ -102,6 +102,19 @@ Env
     load_env
     Env
 
+Serialization
+-------------
+
+.. currentmodule:: ploomber.io
+
+.. autosummary::
+    :toctree: _modules/io
+
+    serializer
+    serializer_pickle
+    unserializer
+    unserializer_pickle
+
 
 SourceLoader
 ------------

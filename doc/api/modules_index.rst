@@ -9,4 +9,5 @@ Modules
     modules/products
     modules/env
     modules/clients
+    modules/io
     modules/source_loader

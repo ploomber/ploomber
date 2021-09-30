@@ -7,6 +7,8 @@ FAQ and Glossary
 
 .. include:: faq/incremental_builds.rst
 
+.. include:: faq/variable_number_of_files.rst
+
 Glossary
 --------
 
