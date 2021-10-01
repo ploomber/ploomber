@@ -152,7 +152,7 @@ editing your ``.py`` file, you need to run the task to create the executed
 notebook (the one you declare as a product of the task).
 
 However, if you want a more ipynb-like experience with ``.py`` files, you can
-use `jupytext's pairing feature <https://jupytext.readthedocs.io/en/latest/formats.html#notebooks-as-scripts>`_
+use `jupytext's pairing feature <https://jupytext.readthedocs.io/en/latest/paired-notebooks.html>`_
 to sync the output of a ``.py`` to a ``.ipynb`` file.
 
 We rely on Jupytext for the ``.py`` to ``.ipynb`` conversion so that you can use
@@ -188,7 +188,7 @@ Percent format
     # another cell
 
 
-`Check out Jupytext documentation <https://jupytext.readthedocs.io/en/latest/paired-notebooks.html>`_ for more details on the supported formats.
+`Check out Jupytext documentation <https://jupytext.readthedocs.io/en/latest/formats.html#notebooks-as-scripts>`_ for more details on the supported formats.
 
 Activating the Jupyter extension
 --------------------------------
