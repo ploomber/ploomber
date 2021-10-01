@@ -101,15 +101,15 @@ class Task(abc.ABC):
 
     on_render : callable
         Function to execute after rendering. The function can request any of
-        the following parmeters: task, client and/or product.
+        the following arguments: task, client, product, and params.
 
     on_finish : callable
-        Function to execute upon execution. Can request the same params as the
-        on_render hook.
+        Function to execute upon execution. Can request the same arguments as
+        the on_render hook.
 
     on_failure : callable
-        Function to execute upon failure. Can request the same params as the
-        on_render hook.
+        Function to execute upon failure. Can request the same arguments as
+        the on_render hook.
 
     Notes
     -----

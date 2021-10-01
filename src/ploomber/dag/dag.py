@@ -130,7 +130,7 @@ class DAG(AbstractDAG):
 
     on_finish : callable
         Function to execute upon execution. Can request a "dag" parameter
-        and/or "report", which containes the report object returned by the
+        and/or "report", which contains the report object returned by the
         build function.
 
     on_failure : callable
