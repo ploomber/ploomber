@@ -1,5 +1,5 @@
-Jupyter and Exploratory Data Analysis
-=====================================
+Jupyter integration
+===================
 
 **Note:** If you're new to Ploomber, check out the
 :doc:`../get-started/basic-concepts` guide, this tutorial assumes you're
@@ -58,8 +58,8 @@ as depicted below:
    :alt: lab-open-with-notebook
 
 
-Developing pipelines interactively
-----------------------------------
+Interactive development
+-----------------------
 
 You can develop entire pipelines without leaving Jupyter. The fastest way to get
 started is to use the ``ploomber scaffold`` command, which creates a base
@@ -95,8 +95,8 @@ between tasks.
 
 .. _modifying-the-upstream-variable:
 
-Modifying the ``upstream`` variable
------------------------------------
+The ``upstream`` variable
+-------------------------
 
 Let's say your ``scripts/clean.py`` script cleans some raw data. That means
 you want to use the raw data as input (which is downloaded by
@@ -130,13 +130,65 @@ Then, you'll see something like this:
 
 Now you can continue developing your cleaning logic without hardcoding any
 paths. Furthermore, when executing your pipeline, Ploomber will
-execute ``scripts/get.py`` and then ``scripts/clean.py``
+run ``scripts/get.py`` and then ``scripts/clean.py``
 
 **Note:** Ploomber needs to parse your ``pipeline.yaml`` file to inject cells
 in your scripts/notebooks; if an error happens during the parsing process, you
 won't see any injected cells. Check out
 the :ref:`Troubleshooting <troubleshooting-pipeline-loading>` section below
 for details.
+
+Choosing the source format
+--------------------------
+
+Ploomber supports scripts and notebooks as source formats for tasks. We
+recommend using ``.py`` files, but you can use the traditional ``.ipynb`` format
+if you prefer so. As long as your file has a tag named ``parameters``, it will
+work fine (`click here <https://papermill.readthedocs.io/en/stable/usage-parameterize.html>`_ to learn how to add the ``parameters`` cell)
+
+The advantage of using ``.py`` files is that they're much easier to manage with
+git, the disadvantage is that ``.py`` only contain code (not output), so after
+editing your ``.py`` file, you need to run the task to create the executed
+notebook (the one you declare as a product of the task).
+
+However, if you want a more ipynb-like experience with ``.py`` files, you can
+use `jupytext's pairing feature <https://jupytext.readthedocs.io/en/latest/formats.html#notebooks-as-scripts>`_
+to sync the output of a ``.py`` to a ``.ipynb`` file.
+
+We rely on Jupytext for the ``.py`` to ``.ipynb`` conversion so that you can use
+any of the ``.py`` flavors, here are some examples:
+
+Light format
+************
+
+.. code-block:: python
+    :class: text-editor
+    :name: light-format-py
+
+    # + tags=["parameters"]
+    upstream = None
+    product = None
+
+    # +
+    # another cell
+
+
+Percent format
+**************
+
+.. code-block:: python
+    :class: text-editor
+    :name: percent-format-py
+
+    # %% tags=["parameters"]
+    upstream = None
+    product = None
+
+    # %%
+    # another cell
+
+
+`Check out Jupytext documentation <https://jupytext.readthedocs.io/en/latest/paired-notebooks.html>`_ for more details on the supported formats.
 
 Activating the Jupyter extension
 --------------------------------

@@ -131,8 +131,8 @@ to `jupytext <https://github.com/mwouts/jupytext>`_ documentation for details.
 
 Thanks to the integration with Jupyter, you can open scripts as
 if they were notebooks. However, you can still use regular ``.ipynb``
-files if you prefer so. To know more about integration with Jupyter, see the
-:doc:`../user-guide/jupyter` guide.
+files if you prefer so. To know more about integration with Jupyter and choose
+the right format, see the :doc:`../user-guide/jupyter` guide.
 
 R scripts/notebooks are supported as well. See this: :doc:`../user-guide/r-support`.
 
