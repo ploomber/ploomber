@@ -125,14 +125,12 @@ as script (what you write) and as a notebook (what executes):
    :target: https://ploomber.io/doc/script-and-notebook.png
    :alt: script-and-nb
 
-Note the ``# +`` and ``# -`` markers in the script; they delimit
-notebook cells. Other formats are supported, refer
-to `jupytext <https://github.com/mwouts/jupytext>`_ documentation for details.
 
 Thanks to the integration with Jupyter, you can open scripts as
-if they were notebooks. However, you can still use regular ``.ipynb``
-files if you prefer so. To know more about integration with Jupyter and choose
-the right format, see the :doc:`../user-guide/jupyter` guide.
+if they were notebooks (note that the ``.py`` script has special ``# +``
+markers to delimit code cells). However, you can still use regular ``.ipynb``
+files if you prefer so. To know more about integration with Jupyter and how to
+choose the right format for your project, see the :doc:`../user-guide/jupyter` guide.
 
 R scripts/notebooks are supported as well. See this: :doc:`../user-guide/r-support`.
 
