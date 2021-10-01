@@ -1,6 +1,11 @@
 Cookbook
 ========
 
+.. raw:: html
+
+    <p class="lead">Quick reference for common use cases.</p>
+
+
 .. toctree::
     :maxdepth: 2
 

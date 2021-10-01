@@ -3,7 +3,7 @@ Get Started
 
 .. raw:: html
 
-    <p class="lead">If you are new to Ploomber, start here</p>
+    <p class="lead">High-level tutorials covering the basics of Ploomber.</p>
 
 .. toctree::
     :maxdepth: 2

@@ -1,6 +1,11 @@
 User Guide
 ==========
 
+.. raw:: html
+
+    <p class="lead">In-depth tutorials covering Ploomber features.</p>
+
+
 .. toctree::
     :maxdepth: 2
 

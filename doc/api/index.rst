@@ -1,6 +1,11 @@
 API
 ===
 
+.. raw:: html
+
+    <p class="lead">Technical documentation.</p>
+
+
 .. toctree::
    :maxdepth: 2
 
