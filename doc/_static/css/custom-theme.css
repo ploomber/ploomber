@@ -330,3 +330,11 @@ dl.py dd dt {
 dl.py dd {
      padding-left: 1.2em;
 }
+
+/* top table in contents.html */
+
+#description-table, #description-table th, #description-table td {
+    border: 1px solid gray;
+    padding-top: 10px;
+    padding-left: 10px;
+}

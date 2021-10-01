@@ -3,6 +3,7 @@ Ploomber documentation
 
 .. list-table::
    :stub-columns: 1
+   :name: description-table
 
    * - :doc:`get-started/index`
      - High-level tutorials covering the basics of Ploomber.
@@ -14,8 +15,8 @@ Ploomber documentation
      - Technical documentation.
 
 
-Index
------
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2

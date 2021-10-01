@@ -10,6 +10,7 @@ Cookbook
     :maxdepth: 2
 
     debugging
+    parametrization
     serialization
     db-config
     grid
