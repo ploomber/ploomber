@@ -175,18 +175,20 @@ script/notebooks, with new ``product`` and ``upstream`` variables.
 As you can see in the image, the task in the picture has an upstream
 dependency called ``raw``. Thus, the cell injected is a dictionary that gives
 you the outputs of ``raw``, which we use as input. The value in ``product``
-is also passed. In our code, we then use the ``upstream`` variable to read
-inputs for our task and ``product`` as the output location.
+is also passed. We then use the ``upstream`` variable to read
+inputs for our task and ``product`` as the output location in our code.
 
 To enable interactive development, the cell injection process also
 happens when opening the notebook/script in Jupyter.
+:ref:`Click here <modifying-the-upstream-variable>` to learn more about
+cell injection and the integration with Jupyter.
 
 **Note:** When using ``jupyter notebook``, scripts open automatically as
 notebooks. If using ``jupyter lab``, you have to click right and select the
 notebook option.
 
 Since scripts/notebooks always create an executed notebook, you must specify
-where to save such file, a typical task declaration looks like this:
+where to save such a file, a typical task declaration looks like this:
 
 .. code-block:: yaml
     :class: text-editor

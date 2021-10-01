@@ -90,8 +90,18 @@ create a ``pipeline.yaml`` like this:
 
 Once you execute ``ploomber scaffold``, you'll see the three new scripts
 under the ``scripts/`` directory. You can then start adding the relationships
-between tasks. For example, in your ``scripts/clean.py`` file, you may add
-the following:
+between tasks.
+
+
+.. _modifying-the-upstream-variable:
+
+Modifying the ``upstream`` variable
+-----------------------------------
+
+Let's say your ``scripts/clean.py`` script cleans some raw data. That means
+you want to use the raw data as input (which is downloaded by
+``scripts/get.py``), you can modify the ``upstream`` variable to establish this
+execution dependency.
 
 
 .. code-block:: python
@@ -118,9 +128,14 @@ Then, you'll see something like this:
     upstream = {'get': 'nb': 'output/clean.ipynb', 'data': 'output/clean.csv'}
 
 
+Now you can continue developing your cleaning logic without hardcoding any
+paths. Furthermore, when executing your pipeline, Ploomber will
+execute ``scripts/get.py`` and then ``scripts/clean.py``
+
 **Note:** Ploomber needs to parse your ``pipeline.yaml`` file to inject cells
 in your scripts/notebooks; if an error happens during the parsing process, you
-won't see any injected cells. Check out the Troubleshooting section below
+won't see any injected cells. Check out
+the :ref:`Troubleshooting <troubleshooting-pipeline-loading>` section below
 for details.
 
 Activating the Jupyter extension
@@ -167,6 +182,8 @@ environment variable. For example, to load a ``pipeline.serve.yaml``:
 Note that ``ENTRY_POINT`` must be a file name and not a path. When you start
 Jupyter, Ploomber will look for that file in the current and parent directories
 until it finds one.
+
+.. _troubleshooting-pipeline-loading:
 
 Troubleshooting pipeline loading
 --------------------------------
