@@ -3,11 +3,11 @@ Spec API (``pipeline.yaml``)
 
 This section describes how to specify pipelines using a ``pipeline.yaml``.
 
-** Note:** This document assumes you are already familiar with Ploomber's core
+**Note:** This document assumes you are already familiar with Ploomber's core
 concepts (DAG, product, task, and upstream). If you're not, check out this
 guide: :doc:`../get-started/basic-concepts`.
 
-** Note:** The `projects repository <https://github.com/ploomber/projects>`_
+**Note:** The `projects repository <https://github.com/ploomber/projects>`_
 contains several ``pipeline.yaml`` examples.
 
 
@@ -178,9 +178,9 @@ several models and want to save output results. You can use
 ``on_{render, finish, failure}``
 ********************************
 
-These are hooks that execure when specific events happen:
+These are hooks that execute when specific events happen:
 
-1. ``on_render``: executes after verifiying there are no errors in your pipeline declaration (e.g., a task that doesn't exist declared as upstream dependency)
+1. ``on_render``: executes after verifying there are no errors in your pipeline declaration (e.g., a task that doesn't exist declared as an upstream dependency)
 2. ``on_finish``: executes upon successful pipeline run
 3. ``on_failure``: executes upon failed pipeline run
 
@@ -200,8 +200,7 @@ assume your ``hooks.py`` looks like this:
         print('error when executing!')
 
 
-You may add those hooks to your ``pipeline.yaml`` like this:
-
+Add those hooks to your ``pipeline.yaml`` like this:
 
 .. code-block:: yaml
     :class: text-editor
@@ -233,8 +232,27 @@ For example:
         # "some_param"
         some_param: 42
 
-Calling with arguments is useful when they are
-:doc:`pipeline parameters <../user-guide/parametrized>`.
+Calling with arguments is useful when you have :doc:`a parametrized pipeline <../user-guide/parametrized>`.
+
+
+If you need information from your DAG in your hook, you may request the ``dag`` argument:
+
+.. code-block:: python
+    :class: text-editor
+
+    def on_finish(dag):
+        print(f'finished executing a dag with {len(dag)} tasks!')
+
+
+``dag`` is an instance of :class:`ploomber.DAG`.
+
+``on_finish`` can also request a ``report`` argument, containing a summary
+report of the pipeline's execution. ``on_failure`` can request a ``traceback``
+argument which will have a dictionary, possible keys are ``build`` which
+has the build error traceback, and ``on_finish`` which includes the
+``on_finish`` hook traceback, if any. For more information, see the DAG
+documentation :class:`ploomber.DAG`.
+
 
 .. _serializer-and-unserializer:
 
@@ -653,26 +671,91 @@ Python functions receive them as arguments:
     def my_task(product, my_param):
         pass
 
+.. _tasks-on-render-finish-failure:
 
 ``tasks[*].on_{render, finish, failure}``
 *****************************************
 
 These are hooks that execute under certain events. They are equivalent to
 :ref:`dag-level hooks <on-render-finish-failure>`, except they apply to a
-specific task. See the dag-level hooks documentation for details.
+specific task. There are three types of hooks:
+
+1. ``on_render`` executes right before executing the task.
+2. ``on_finish`` executes when a task finishes successfully.
+3. ``on_failure`` executes when a task errors during execution.
+
+They all are optional and take a dotted path as an argument. For example,
+assume your ``hooks.py`` looks like this:
+
+.. code-block:: python
+    :class: text-editor
+
+    def on_render():
+        print('finished rendering!')
+
+    def on_finish():
+        print('finished executing!')
+
+    def on_failure():
+        print('error when executing!')
+
+
+Add those hooks to a task in your ``pipeline.yaml`` like this:
 
 .. code-block:: yaml
     :class: text-editor
 
-    # to call without arguments
-    # {hook-name} must be one of: on_render, on_finish, on_failure
-    {hook-name}: hooks.some_function
+    tasks:
+        - source: tasks.my_task
+          product: products/output.csv
+          on_render: hooks.on_render
+          on_finish: hooks.on_finish
+          on_failure: hooks.on_failure
 
-    # to call a function with arguments
+If your hook takes arguments, you may call it like this:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    # to call any hook with arguments
     # {hook-name} must be one of: on_render, on_finish, on_failure
     {hook-name}:
-        dotted_path: hooks.some_function
+        dotted_path: {dotted.path.to.hook}
         argument: value
+
+For example:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    on_render:
+        dotted_path: hooks.on_render
+        # on_render function defined in hooks.py must take an argument named
+        # "some_param"
+        some_param: 42
+
+Calling with arguments is useful when you have :doc:`a parametrized pipeline <../user-guide/parametrized>`.
+
+If you need information from the task, you may add any of the following
+arguments to the hook:
+
+1. ``task``: Task object (a subclass of  :class:`ploomber.tasks.Task`)
+2. ``client``: Tasks's client (a subclass of  :class:`ploomber.clients.Client`)
+3. ``product``: Tasks's product (a subclass of  :class:`ploomber.products.Product`)
+4. ``params``: Tasks's params (a dictionary)
+
+For example, if you want to check the data quality of a function that cleans some data, you may want to add an ``on_finish`` hook that loads the output and tests the data:
+
+.. code-block:: python
+    :class: text-editor
+
+    import pandas as pd
+
+    def on_finish(product):
+        df = pd.read_csv(product)
+
+        # check that column "age" has no NAs
+        assert not df.age.isna().sum()
 
 
 .. _tasks-params-resources:

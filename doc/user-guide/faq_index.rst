@@ -9,6 +9,8 @@ FAQ and Glossary
 
 .. include:: faq/variable_number_of_files.rst
 
+.. include:: faq/no_products.rst
+
 Glossary
 --------
 
