@@ -3,6 +3,13 @@ SQL pipelines
 
 This guide explains how to develop pipelines where some of all tasks are SQL scripts.
 
+**Note:** This tutorial shows the built-in SQL features. However, this is not
+the only way for Ploomber to interact with databases. You may as well create
+functions (or scripts) that run queries in a database. The primary benefit
+of using the built-in features is that Ploomber manages many things for you
+(such as active connections, running queries in parallel, dumping tables to
+local files), so you only write ``.sql`` files.
+
 Quick Start
 -----------
 

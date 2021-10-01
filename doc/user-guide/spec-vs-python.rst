@@ -7,9 +7,21 @@ the differences and how to decide which API to use.
 Data projects span a wide range of applications, from small projects requiring
 a few scripts to large ones requiring greater flexibility.
 
-For small projects with just a dozen of tasks, the :ref:`Spec API <Spec entry point>` is recommended,
-however, if you're developing a more extensive pipeline, the  :ref:`Python API is a <Factory entry point>`
-better choice since you can write custom logic to assemble your pipeline.
+If you're getting started, the :ref:`Spec API <Spec entry point>` is
+recommended. The Spec API is flexible enough to handle many common use cases
+without requiring you to learn a Python API, you can get started quickly and get
+pretty far using some of the advanced feature, check out the full
+:doc:`documentation <../api/spec>` for details.
+
+However, the Spec API is static, meaning that your ``pipeline.yaml``
+completely describes your pipeline's structure. Under some circumstances, you
+may want your pipeline to be more "dynamic." For example, you may use some
+input parameters and create a "pipeline factory," which is a function that
+takes those input parameters and creates a pipeline, allowing you to morph
+the specifics of your pipeline (number of tasks, dependencies among them, etc.)
+dynamically, you can only achieve so via
+the :ref:`Python API is a <Factory entry point>`. The downside is that it has
+a steeper learning curve.
 
 There is a third way of assembling a pipeline by pointing to a :ref:`directory <Directory entry point>` with
 scripts. This API allows you quickly test simple pipelines that may only have
