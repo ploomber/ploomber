@@ -10,7 +10,8 @@ Ploomber has some built-in debugging features, and it integrates with the Python
 Debugging a task
 ----------------
 
-**Note:** ``.debug()`` works with Python functions, scripts, and notebooks.
+.. note:: ``.debug()`` works with Python functions, scripts, and notebooks.
+
 
 Start an interactive session:
 
@@ -30,12 +31,12 @@ To get the list of task names: ``list(dag)``.
 
 After running ``.debug()``, you'll start a debugging session, type ``quit`` and hit enter to exit the debugging session.
 
-**Note:** If debugging a script or notebook, you may call ``.debug(kind='pm')`` to start a post-mortem session, which runs the script/notebook until the code raises an exception, then the debugging session begins.
+.. tip:: If debugging a script or notebook, you may call ``.debug(kind='pm')`` to start a post-mortem session, which runs the script/notebook until the code raises an exception, then the debugging session begins.
 
 Post-mortem debugging
 ---------------------
 
-**Note:** ``--debug`` only works with Python functions,  go to the :ref:`next section <debugging-in-jupyter>` to learn how to debug scripts/notebooks.
+.. note:: ``--debug`` only works with Python functions,  go to the :ref:`next section <debugging-in-jupyter>` to learn how to debug scripts/notebooks.
 
 If you want the pipeline to run and start the debugging session the momeent it raises an exception:
 
@@ -48,7 +49,7 @@ If you want the pipeline to run and start the debugging session the momeent it r
 Breakpoints
 -----------
 
-**Note:** This only work with Python functions, go to the :ref:`next section <debugging-in-jupyter>` to learn how to debug scripts/notebooks.
+.. note:: This only work with Python functions, go to the :ref:`next section <debugging-in-jupyter>` to learn how to debug scripts/notebooks.
 
 If you want to stop execution at an arbitrary line:
 
@@ -96,7 +97,7 @@ If you want a debugging session to start whenever your code raises an exception:
 
     %pdb
 
-**Note:** run ``%pdb`` again to turn it off.
+.. note:: run ``%pdb`` again to turn it off.
 
 `Click here <https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-pdb>`_ to see the ``%pdb`` documentation.
 

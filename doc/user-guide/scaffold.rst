@@ -129,11 +129,13 @@ During deployment, only install production dependencies and ignore development o
 If you want to learn more about the ``ploomber install`` command, check out
 the documentation: :ref:`api-cli-create-new-project`.
 
-**Note:** If using ``pip``, ``ploomber install`` creates a virtual environment
-in your project root using the
-`venv <https://docs.python.org/3/tutorial/venv.html>`_ module in a
-``venv-project-name`` directory. If you prefer to use another virtual
-environment manager, you must install dependencies directly.
+.. note::
+    
+    If using ``pip``. ``ploomber install`` creates a virtual environment
+    in your project root using the
+    `venv <https://docs.python.org/3/tutorial/venv.html>`_ module in a
+    ``venv-project-name`` directory. If you prefer to use another virtual
+    environment manager, you must install dependencies directly.
 
 If you want to know more about dependency management, check out
 `this post in our blog <https://ploomber.io/posts/python-envs/>`_.
@@ -170,12 +172,18 @@ For conda:
     conda env export --no-build --file environment.lock.yml
 
 
-**Note:** If you're using separate files for development and production
-dependencies and you use ``pip``/``conda`` directly, make sure you generate
-separate lock files.
+.. note::
+    
+    If you're using separate files for development and production dependencies
+    and you use ``pip``/``conda`` directly, make sure you generate separate
+    lock files.
 
-**Note:** If you create your project with ``ploomber scaffold``,
-``ploomber install`` will work. But if you didn't, it will do the right thing
-as long as you have the two dependency files for pip (``requirements.txt``
-and ``requirements.dev.txt``) or conda (``environment.yml`` and
-``environment.dev.yml``)
+
+
+.. note::
+    
+    If you create your project with ``ploomber scaffold``,
+    ``ploomber install`` will work. But if you didn't, it will do the right thing
+    as long as you have the two dependency files for pip (``requirements.txt``
+    and ``requirements.dev.txt``) or conda (``environment.yml`` and
+    ``environment.dev.yml``)

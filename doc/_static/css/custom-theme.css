@@ -403,6 +403,57 @@ dl.py dd {
     padding-left: 10px;
 }
 
+/* highlighting (for viewing search results */
+
 span.highlighted {
     background-color: #ffdf80;
 }
+
+/* admonitions */
+
+.admonition {
+    position: relative;
+    padding: .2rem .75rem;
+    padding-right: 1.25rem;
+    border: 2px solid transparent;
+    border-radius: .3rem;
+    max-width: 80%;
+    margin: auto;
+    margin-top: .75rem;
+    margin-bottom: .75rem;
+}
+
+.admonition.note {
+    color: #004085;
+    background-color: #cce5ff;
+    border-color: #b8daff;
+}
+
+.admonition.tip {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+
+.admonition.warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+.admonition.important {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.admonition-title {
+    font-weight: bold;
+}
+
+.admonition p {
+    margin: 0;
+    font-size: .95em;
+}
+

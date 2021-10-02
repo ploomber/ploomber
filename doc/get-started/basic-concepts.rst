@@ -91,16 +91,20 @@ Once you have a ``pipeline.yaml`` file, run it with:
 Ploomber keeps track of source changes to skip up-to-date tasks if you run
 that command again, only tasks whose source code has changed are executed.
 
-**Note:** You can use the ``resources_`` section in a task definition to tell
-Ploomber to track the content of other
-files. :ref:`Click here to learn more <tasks-params-resources>`.
+.. note::
+   
+   You can use the ``resources_`` section in a task definition to tell
+   Ploomber to track the content of other
+   files. :ref:`Click here to learn more <tasks-params-resources>`.
 
 For a full reference on ``pipeline.yaml`` files see: :doc:`../api/spec`.
 
-**Note:** Writing a ``pipeline.yaml`` file is optional; you can create
-pipelines by pointing to a directory. `Click here <https://github.com/ploomber/projects/tree/master/spec-api-directory>`_
-to see an example. However, this is only recommended for simple projects
-(i.e., pipelines with just a couple of tasks).
+.. note::
+   
+   Writing a ``pipeline.yaml`` file is optional; you can create
+   pipelines by pointing to a directory. `Click here <https://github.com/ploomber/projects/tree/master/spec-api-directory>`_
+   to see an example. However, this is only recommended for simple projects
+   (i.e., pipelines with just a couple of tasks).
 
 
 Tasks: scripts/notebooks
@@ -155,9 +159,11 @@ variable:
 We tagged the cell using ``tags=["parameters"]``. If the notebook doesn't
 have dependencies, set ``upstream = None``.
 
-**Note:** the ``# +`` and ``# -`` markers only apply to scripts.
-`Click here <https://papermill.readthedocs.io/en/stable/usage-parameterize.html>`_
-for information on adding tags to ``.ipynb`` files.
+.. note::
+   
+   the ``# +`` and ``# -`` markers only apply to scripts.
+   `Click here <https://papermill.readthedocs.io/en/stable/usage-parameterize.html>`_
+   for information on adding tags to ``.ipynb`` files.
 
 The previous code won't run as it is. It only contains upstream tasks, but we
 don't know where its related products are. Furthermore, we don't
@@ -183,9 +189,11 @@ happens when opening the notebook/script in Jupyter.
 :ref:`Click here <modifying-the-upstream-variable>` to learn more about
 cell injection and the integration with Jupyter.
 
-**Note:** When using ``jupyter notebook``, scripts open automatically as
-notebooks. If using ``jupyter lab``, you have to click right and select the
-notebook option.
+.. note::
+   
+   When using ``jupyter notebook``, scripts open automatically as
+   notebooks. If using ``jupyter lab``, you have to click right and select the
+   notebook option.
 
 Since scripts/notebooks always create an executed notebook, you must specify
 where to save such a file, a typical task declaration looks like this:

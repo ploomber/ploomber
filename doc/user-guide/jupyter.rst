@@ -1,9 +1,11 @@
 Jupyter integration
 ===================
 
-**Note:** If you're new to Ploomber, check out the
-:doc:`../get-started/basic-concepts` guide, this tutorial assumes you're
-already familiar with Ploomber's core concepts.
+.. note::
+    
+    If you're new to Ploomber, check out the
+    :doc:`../get-started/basic-concepts` guide, this tutorial assumes you're
+    already familiar with Ploomber's core concepts.
 
 Ploomber integrates with Jupyter to make it easy to create multi-stage
 pipelines composed of small notebooks. Breaking down logic in multiple
@@ -49,9 +51,11 @@ The following cell will be injected in ``task.py`` before execution:
 The cell injection process happens during execution and development, allowing
 you to develop pipelines interactively.
 
-**NOTE:** When using ``jupyter notebook``, scripts automatically render as
-notebooks. When using ``jupyter lab``: Right-click -> Open With -> Notebook,
-as depicted below:
+.. note::
+    
+    When using ``jupyter notebook``, scripts automatically render as
+    notebooks. If using ``jupyter lab``: ``Right-click`` -> ``Open With``
+    -> ``Notebook`` as depicted below:
 
 .. image:: https://ploomber.io/doc/lab-open-with-notebook.png
    :target: https://ploomber.io/doc/lab-open-with-notebook.png
@@ -132,11 +136,13 @@ Now you can continue developing your cleaning logic without hardcoding any
 paths. Furthermore, when executing your pipeline, Ploomber will
 run ``scripts/get.py`` and then ``scripts/clean.py``
 
-**Note:** Ploomber needs to parse your ``pipeline.yaml`` file to inject cells
-in your scripts/notebooks; if an error happens during the parsing process, you
-won't see any injected cells. Check out
-the :ref:`Troubleshooting <troubleshooting-pipeline-loading>` section below
-for details.
+.. important::
+    
+    Ploomber needs to parse your ``pipeline.yaml`` file to inject cells
+    in your scripts/notebooks; if an error happens during the parsing process, you
+    won't see any injected cells. Check out
+    the :ref:`Troubleshooting <troubleshooting-pipeline-loading>` section below
+    for details.
 
 Choosing the source format
 --------------------------
@@ -324,9 +330,12 @@ and parents, it will correctly find the appropriate file if you open
 as tasks in their corresponding ``pipeline.yaml``.
 
 
-**Important:** If you're using Python functions as tasks, you must use
-different module names for each pipeline. Otherwise, the module imports first
-will be cached and used for the other pipeline. For example:
+.. important::
+    
+    If you're using Python functions as tasks, you must use different module
+    names for each pipeline. Otherwise, the module imports first will be cached
+    and used for the other pipeline. See the following example.
+
 
 .. code-block:: sh
 

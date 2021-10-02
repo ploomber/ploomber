@@ -1,8 +1,7 @@
 Command line interface
 ======================
 
-**Note:** This is an introductory tutorial to the command line interface, for
-a full API description, see: :doc:`../api/cli`.
+.. note::  This is an introductory tutorial to the command line interface, for a full API description, see: :doc:`../api/cli`.
 
 Entry points
 ------------

@@ -1,15 +1,16 @@
 Spec API (``pipeline.yaml``)
 ============================
 
+.. note::
+    
+    This document assumes you are already familiar with Ploomber's core concepts (DAG, product, task, and upstream). If you're not, check out this guide: :doc:`../get-started/basic-concepts`.
+
+.. tip::
+    
+    The `projects repository <https://github.com/ploomber/projects>`_ contains several ``pipeline.yaml`` examples.
+
+
 This section describes how to specify pipelines using a ``pipeline.yaml``.
-
-**Note:** This document assumes you are already familiar with Ploomber's core
-concepts (DAG, product, task, and upstream). If you're not, check out this
-guide: :doc:`../get-started/basic-concepts`.
-
-**Note:** The `projects repository <https://github.com/ploomber/projects>`_
-contains several ``pipeline.yaml`` examples.
-
 
 Quick reference
 ---------------

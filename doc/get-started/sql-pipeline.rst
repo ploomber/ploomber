@@ -3,12 +3,14 @@ SQL pipelines
 
 This guide explains how to develop pipelines where some of all tasks are SQL scripts.
 
-**Note:** This tutorial shows the built-in SQL features. However, this is not
-the only way for Ploomber to interact with databases. You may as well create
-functions (or scripts) that run queries in a database. The primary benefit
-of using the built-in features is that Ploomber manages many things for you
-(such as active connections, running queries in parallel, dumping tables to
-local files), so you only write ``.sql`` files.
+.. note::
+
+    This tutorial shows the built-in SQL features. However, this is not
+    the only way for Ploomber to interact with databases. You may as well create
+    functions (or scripts) that run queries in a database. The primary benefit
+    of using the built-in features is that Ploomber manages many things for you
+    (such as active connections, running queries in parallel, dumping tables to
+    local files), so you only write ``.sql`` files.
 
 Quick Start
 -----------
@@ -29,7 +31,7 @@ Or run it locally:
 Connecting to databases
 -----------------------
 
-**Note:** For a more detailed explanation on connecting to a database, see: :doc:`../cookbook/db-config`.
+.. note:: For a more detailed explanation on connecting to a database, see: :doc:`../cookbook/db-config`.
 
 The first step to write a SQL pipeline is to tell Ploomber how to connect to
 the database, by providing a function that returns either a
@@ -252,17 +254,21 @@ the terminal:
 (Change ``task_name`` for the task you want)
 
 
-**Note**: when executing a SQL script, you usually want to replace any existing
-table/view. Some databases support the
-``DROP TABLE IF EXISTS`` statement to do so, but other databases (e.g., Oracle)
-have different procedures. Check your database's documentation for details.
+.. note::
+    
+    when executing a SQL script, you usually want to replace any existing
+    table/view. Some databases support the
+    ``DROP TABLE IF EXISTS`` statement to do so, but other databases (e.g., Oracle)
+    have different procedures. Check your database's documentation for details.
 
-**Important**: Some database drivers do not support sending multiple statements to the
-database in a single call (e.g., SQLite), in such case, you can use the
-``split_source`` parameter in either ``SQLAlchemyClient`` or ``DBAPIClient``
-to split your statements and execute them one at a time, allowing you
-to write a single ``.sql`` file to perform the
-``DROP TABLE IF EXISTS`` then ``CREATE TABLE AS`` logic.
+.. important::
+    
+    Some database drivers do not support sending multiple statements to the
+    database in a single call (e.g., SQLite), in such case, you can use the
+    ``split_source`` parameter in either ``SQLAlchemyClient`` or ``DBAPIClient``
+    to split your statements and execute them one at a time, allowing you
+    to write a single ``.sql`` file to perform the
+    ``DROP TABLE IF EXISTS`` then ``CREATE TABLE AS`` logic.
 
 
 The following diagram shows our example pipeline along with some sample
@@ -275,7 +281,7 @@ source code for each task and the rendered version.
 Dumping data with ``SQLDump``
 -----------------------------
 
-**Note:** ``SQLDump`` only works with :py:mod:`ploomber.clients.SQLAlchemyClient`.
+.. note:: ``SQLDump`` only works with :py:mod:`ploomber.clients.SQLAlchemyClient`.
 
 A minimal SQLDump example is available `here <https://github.com/ploomber/projects/tree/master/cookbook/sql-dump>`_
 
@@ -326,14 +332,18 @@ change this value:
 
 To dump a single file: ``chunksize: null``.
 
-**Important:** Downloading ``.parquet`` in chunks may yield errors if the
-schema inferred from one chunk is not the same as the one in another chunk.
-If you experience an issue, either change to ``.csv`` or set ``chunksize: null``.
+.. important::
+    
+    Downloading ``.parquet`` in chunks may yield errors if the schema inferred
+    from one chunk is not the same as the one in another chunk. If you
+    experience an issue, either change to ``.csv`` or set ``chunksize: null``.
 
-**Important:** ``SQLDump`` works with all databases supported by Python because
-it relies on ``pandas`` to dump data. However, this introduces a performance
-overhead. So if you're dumping large tables, you may want to implement a
-solution optimized for your database.
+.. important::
+    
+    ``SQLDump`` works with all databases supported by Python because it
+    relies on ``pandas`` to dump data. However, this introduces a
+    performance overhead. So if you're dumping large tables, consider
+    implementing a solution optimized for your database.
 
 Other SQL tasks
 ---------------

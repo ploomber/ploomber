@@ -1,7 +1,7 @@
 Serialization
 =============
 
-*Note:* Serialization only works for function tasks.
+.. note:: Serialization only works for function tasks.
 
 By default, tasks receive a ``product`` argument and must take care of
 serializing their outputs at the passed location. Serialization allows tasks
