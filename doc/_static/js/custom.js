@@ -28,6 +28,7 @@ $(document).ready(function () {
     })
 
     updateCurrentSection()
+
 });
 
 function elementInViewport(el) {

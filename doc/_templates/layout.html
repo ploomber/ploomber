@@ -62,13 +62,23 @@ titles_only=false) %}
 
 {%- block relbar1 %}
 <nav class="navbar navbar-expand-md navbar-dark fixed-top">
-    <a class="navbar-brand" href="{{ pathto('index') }}">Ploomber</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
-        aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
         <span class="navbar-toggler-icon"></span>
     </button>
 
-    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+    <a class="navbar-brand" href="{{ pathto('index') }}">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
                 <a class="nav-link" href="{{ pathto('contents') }}">Documentation <span
@@ -100,10 +110,10 @@ titles_only=false) %}
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-2 first-column">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
             {{ sidebar1() }}
         </div>
-        <div class="col-8">
+        <div class="col-md-9 col-xl-8">
             <div class="document">
                 {%- block document %}
                 <div class="documentwrapper">
@@ -122,7 +132,7 @@ titles_only=false) %}
                 <div class="clearer"></div>
             </div>
         </div>
-        <div class="col-2">
+        <div class="d-none d-xl-block col-xl-2 third-column">
             {{ sidebar2() }}
         </div>
     </div>
