@@ -402,3 +402,7 @@ dl.py dd {
     padding-top: 10px;
     padding-left: 10px;
 }
+
+span.highlighted {
+    background-color: #ffdf80;
+}
