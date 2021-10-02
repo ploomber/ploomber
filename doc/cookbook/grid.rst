@@ -6,6 +6,9 @@ You can use ``tasks[*].grid`` to create multiple tasks from a single task declar
 .. code-block:: yaml
     :class: text-editor
 
+    # execute independent tasks in parallel
+    executor: parallel
+
     tasks:
       - source: random-forest.py
         # generates random-forest-1, random-forest-2, ..., random-forest-6

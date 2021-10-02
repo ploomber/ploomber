@@ -9,8 +9,9 @@ Cookbook
 .. toctree::
     :maxdepth: 2
 
-    debugging
     parametrization
+    debugging
+    logging
     serialization
     db-config
     grid
