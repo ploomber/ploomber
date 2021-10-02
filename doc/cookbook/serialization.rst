@@ -1,7 +1,9 @@
 Serialization
 =============
 
-.. note:: Serialization only works for function tasks.
+
+.. note:: This is a quick reference, for an in-depth tutorial, :doc:`click here <../user-guide/serialization>`.
+
 
 By default, tasks receive a ``product`` argument and must take care of
 serializing their outputs at the passed location. Serialization allows tasks
@@ -16,6 +18,7 @@ For example, your task may look like this:
         # no need to serialize here, simply return the output
         return [1, 2, 3]
 
+.. important:: Serialization only works on function tasks.
 
 And your serializer may look like this:
 

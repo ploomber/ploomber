@@ -1,7 +1,7 @@
 Parametrization
 ===============
 
-*This is a quick reference, for an in-depth tutorial,* :doc:`click here <../user-guide/parametrized>`.
+.. note:: This is a quick reference, for an in-depth tutorial, :doc:`click here <../user-guide/parametrized>`.
 
 To parametrize your pipeline, create an ``env.yaml``:
 

@@ -1,7 +1,7 @@
 Debugging
 =========
 
-*This is a quick reference, for an in-depth tutorial,* :doc:`click here <../user-guide/debugging>`.
+.. note:: This is a quick reference, for an in-depth tutorial,* :doc:`click here <../user-guide/debugging>`.
 
 Ploomber has some built-in debugging features, and it integrates with the Python `debugger <https://docs.python.org/3/library/pdb.html>`_
 
