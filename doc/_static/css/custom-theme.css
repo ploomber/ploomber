@@ -457,3 +457,21 @@ span.highlighted {
     font-size: .95em;
 }
 
+/* search results list */
+
+.search li > a {
+    font-weight: bolder;
+    font-size: 1.2rem;
+}
+
+.search {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.context {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    margin-left: 2rem;
+}
