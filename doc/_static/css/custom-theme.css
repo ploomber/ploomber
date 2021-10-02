@@ -42,7 +42,7 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
     opacity: 0;
 }
 
-/* CSS for terminal-like code snippeds */
+/* CSS for terminal-like code snippets */
 
 [class*="highlight-"] {
     width: 80%;
@@ -394,6 +394,69 @@ dl.py dd dt {
 dl.py dd {
      padding-left: 1.2em;
 }
+
+/* sections (notes, examples, etc) */
+p.rubric {
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-decoration: underline;
+    margin-top: 2rem;
+}
+
+/* sections inside methods */
+
+.py > dd > dl > dd > p.rubric {
+    font-size: 1rem;
+}
+
+/* list of init parameters */
+.field-list.simple ul {
+    list-style-type: none;
+    margin-top: 1rem;
+    padding: 0px;
+    margin-left: 2rem;
+}
+
+
+/* class signature */
+.py.class > .sig.sig-object.py, .py.function > .sig.sig-object.py {
+    margin-bottom: 2rem;
+    font-size: 1.3rem;
+  }
+
+/* attributes */
+.py.attribute dd {
+    margin-top: 0rem;
+    margin-left: 1.5rem;
+  }
+
+
+.py.attribute dd dl dd {
+    padding: 0;
+    margin-left: 1rem;
+    margin: 0 0 0 1rem;
+}
+
+.py.attribute {
+    margin-top: 0rem !important;
+    margin-bottom: 0rem;
+}
+
+.py.attribute p {
+    margin-bottom: 0.2rem;
+}
+
+/* methods names */
+
+.py.method .sig {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+}
+
+/* monospace name of attributes, init args, names of classes/functions */
+.py.attribute .sig-name.descname, .field-list.simple strong, .sig.py {
+    font-family: monospace;
+  }
 
 /* top table in contents.html */
 
