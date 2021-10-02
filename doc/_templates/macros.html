@@ -1,0 +1,48 @@
+{% macro nav_bar(pathto, active=none) %}
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="{{ pathto('index') }}">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item {% if active == 'Documentation' %} active {% endif %}">
+                <a class="nav-link" href="{{ pathto('contents') }}">Documentation
+                </a>
+            </li>
+            <li class="nav-item {% if active == 'Videos' %} active {% endif %}">
+                <a class="nav-link" href="{{ pathto('videos') }}">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="http://community.ploomber.io">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+        <form class="search form-inline my-2 my-lg-0" action="{{ pathto('search') }}" method="get">
+            <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+            <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+        </form>
+    </div>
+</nav>
+{% endmacro %}

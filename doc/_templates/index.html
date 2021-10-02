@@ -59,33 +59,8 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-md navbar-dark fixed-top">
-    <a class="navbar-brand" href="#">Ploomber</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
-      aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="{{ pathto('contents') }}">Documentation</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="http://community.ploomber.io">Community</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="https://ploomber.io">Blog</a>
-        </li>
-      </ul>
-    </div>
-  </nav>
+  {% import 'macros.html' as macros %}
+  {{ macros.nav_bar(pathto=pathto, active=none) }}
 
   <main role="main">
 

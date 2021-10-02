@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{%- block relbar1 %}
+{% import 'macros.html' as macros %}
+{{ macros.nav_bar(pathto=pathto, active='Videos') }}
+{% endblock %}
+
+
+{%- block body %}
+
+<h1>Videos</h1>
+
+<section id="workshops">
+    <h2>Workshops</h2>
+    <p>In-depth tutorials showing how to use Ploomber.</p>
+
+    <div>
+        <h3>Vancouver Datajam 2021</h3>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/Ca-bdknV6ik" title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+        <div><a href="https://github.com/edublancas/vancouver-datajam">Workshop material</a></div>
+    </div>
+</section>
+
+
+<section id="presentations">
+    <h2>Presentations</h2>
+    <p>Conference and meetup presentations showcasing specific features.</p>
+
+    <div>
+        <h3>JupyterCon 2020</h3>
+
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/M6mtgPfsA3M" title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+    </div>
+
+    <div>
+        <h3>Argo Community Meeting</h3>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/FnpXyg-5W_c" title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+    </div>
+
+    <div>
+        <h3>Pangeo Showcase (AWS Batch demo)</h3><iframe width="560" height="315"
+            src="https://www.youtube.com/embed/XCgX1AszVF4" title="YouTube video player" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+    </div>
+</section>
+
+
+
+
+{%- endblock %}

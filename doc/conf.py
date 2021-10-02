@@ -13,13 +13,14 @@
 import os
 import sys
 from ploomber import __version__
+
 sys.path.insert(0, os.path.abspath('.'))
 import hooks  # noqa
 
 # -- Project information -----------------------------------------------------
 
 project = 'ploomber'
-copyright = '2020, ploomber'
+copyright = '2021, ploomber'
 author = 'ploomber'
 version = __version__
 release = version
@@ -75,7 +76,10 @@ html_static_path = ['_static']
 master_doc = 'contents'
 
 # landing page
-html_additional_pages = {'index': 'index.html'}
+html_additional_pages = {
+    'index': 'index.html',
+    'videos': 'videos.html',
+}
 
 # nbsphinx
 
