@@ -7,7 +7,10 @@
 * Improved error message when NotebookRunner `static_analysis` fails
 * Support for collections in `env.yaml`
 * Adds `unpack` argument to `serializer`/`unserializer` decorators to allow a variable number of outputs
-* Adds serialization cookbook
+* General CSS documentation improvements
+* Mobile-friendly docs
+* Add table explaining each documentation section
+* Adds hoosks, serialization, debugging, logging, and parametrization cookbook
 * Adds FAQ on variable number of outputs
 * Documents `io` module
 
