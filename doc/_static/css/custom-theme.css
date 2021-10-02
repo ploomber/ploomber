@@ -140,9 +140,9 @@ div.output_area [class*="highlight-"] {
 @media (min-width: 768px) {
     .first-column {
         position: sticky !important;
-        top: 5rem;
+        top: 3.5rem;
         z-index: 1000;
-        height: calc(100vh - 5rem);
+        height: calc(100vh - 3.5rem);
         display: block !important;
     }
 }
@@ -152,7 +152,7 @@ div.output_area [class*="highlight-"] {
 @media (max-width: 767px) {
     .first-column {
         position: fixed !important;
-        top: 5rem;
+        top: 3.5rem;
         left: 0;
         width: 100%;
         height: 100%;
@@ -190,7 +190,7 @@ div.document .toctree-l2 {
 /* independent scrolling in table of contents */
 
 .global-toc {
-    max-height: calc(100vh - 5rem);
+    max-height: calc(100vh - 3.5rem);
     overflow-y: auto;
 }
 
@@ -209,9 +209,9 @@ div.document .toctree-l2 {
 
 .third-column {
     position: sticky !important;
-    top: 5rem;
+    top: 3.5rem;
     z-index: 1000;
-    height: calc(100vh - 5rem);
+    height: calc(100vh - 3.5rem);
 }
 
 div.sphinxsidebarwrapper {
@@ -221,7 +221,7 @@ div.sphinxsidebarwrapper {
 
     /* independent scrolling in page contents bar */
 
-    max-height: calc(100vh - 5rem);
+    max-height: calc(100vh - 3.5rem);
     overflow-y: auto;
 }
 

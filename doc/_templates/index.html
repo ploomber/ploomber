@@ -51,6 +51,10 @@
     .lead {
       margin-top: 20px;
     }
+
+    .my-button {
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 
@@ -94,10 +98,10 @@
         <div class="container">
           <h1 class="display-3">Ploomber</h1>
           <div>
-            <div class="mermaid">
+            <div class="mermaid row">
               graph LR
               r1[Get<br />dataset A] --> c1[Clean] --> f1[Features] --> f[Join features]
-              f --> t[Train model] --> e[Evaluate model]
+              f --> t[Train model]
               r2[Get<br />dataset B] --> c2[Clean] --> f2[Features] --> f
 
               class r1 done;
@@ -110,7 +114,6 @@
 
               class f pending;
               class t pending;
-              class e pending;
             </div>
 
           </div>
@@ -127,8 +130,8 @@
           <div>
 
             <div>
-              <a href="{{ pathto('contents') }}" class="btn btn-dark btn-lg" role="button">Get started</a>
-              <a href="https://www.youtube.com/watch?v=M6mtgPfsA3M" class="btn btn-outline-secondary btn-lg"
+              <a href="{{ pathto('contents') }}" class="btn btn-dark btn-lg my-button" role="button">Get started</a>
+              <a href="https://www.youtube.com/watch?v=M6mtgPfsA3M" class="btn btn-outline-secondary btn-lg my-button"
                 role="button">Watch JupyterCon 2020 talk</a>
             </div>
 
