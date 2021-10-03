@@ -72,14 +72,8 @@ pygments_style = 'monokai'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-# https://github.com/readthedocs/readthedocs.org/issues/2569
-master_doc = 'contents'
-
 # landing page
-html_additional_pages = {
-    'index': 'index.html',
-    'videos': 'videos.html',
-}
+html_additional_pages = {'videos': 'videos.html'}
 
 # nbsphinx
 
