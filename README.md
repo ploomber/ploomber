@@ -53,9 +53,8 @@
 * [Blog](https://ploomber.io/)
 * [Guest blog post on the official Jupyter blog](https://blog.jupyter.org/ploomber-maintainable-and-collaborative-pipelines-in-jupyter-acb3ad2101a7)
 * [Comparison with other tools](https://ploomber.io/posts/survey)
-* [JupyterCon 2020 talk](https://www.youtube.com/watch?v=M6mtgPfsA3M)
-* [Argo Community Meeting talk](https://youtu.be/FnpXyg-5W_c)
-* [Pangeo Showcase talk (AWS Batch demo)](https://youtu.be/XCgX1AszVF4)
+* [PyData Chicago talk (covers motivation and demo)](https://youtu.be/qUL7QabcKcw)
+* [More videos](https://ploomber.readthedocs.io/en/latest/videos.html)
 
 ## Installation
 
