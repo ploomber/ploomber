@@ -41,6 +41,14 @@ def lazily_load_entry_point(starting_dir=None, reload=False):
     # chain exception to provide more context
     dag = spec.to_dag()
 
+    # we remove the on_render hook because this is a lazy load, if we don't do
+    # it, calling the hook will cause an error since the function never loads
+    dag.on_render = None
+
+    # same with task-level hooks
+    for name in dag._iter():
+        dag[name]._on_render = None
+
     return spec, dag, path
 
 

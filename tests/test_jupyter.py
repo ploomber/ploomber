@@ -303,6 +303,53 @@ def test_injects_cell_even_if_pipeline_yaml_in_subdirectory(tmp_nbs):
     assert injected
 
 
+def test_injects_cell_even_if_there_are_dag_level_hooks(tmp_nbs, tmp_imports):
+    Path('hooks.py').write_text("""
+def some_hook():
+    pass
+""")
+
+    Path('pipeline.yaml').write_text("""
+on_render: hooks.some_hook
+on_failure: hooks.some_hook
+on_finish: hooks.some_hook
+
+tasks:
+  - source: load.py
+    product:
+      nb: output/load.ipynb
+      data: output/data.csv
+""")
+
+    cm = PloomberContentsManager()
+
+    model = cm.get(str('load.py'))
+    assert get_injected_cell(model['content'])
+
+
+def test_injects_cell_even_if_there_are_task_level_hooks(tmp_nbs, tmp_imports):
+    Path('hooks.py').write_text("""
+def some_hook():
+    pass
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+  - source: load.py
+    product:
+      nb: output/load.ipynb
+      data: output/data.csv
+    on_render: hooks.some_hook
+    on_failure: hooks.some_hook
+    on_finish: hooks.some_hook
+""")
+
+    cm = PloomberContentsManager()
+
+    model = cm.get(str('load.py'))
+    assert get_injected_cell(model['content'])
+
+
 def test_dag_from_directory(monkeypatch, tmp_nbs):
     # remove files we don't need for this test case
     Path('pipeline.yaml').unlink()

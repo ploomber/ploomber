@@ -179,6 +179,12 @@ several models and want to save output results. You can use
 ``on_{render, finish, failure}``
 ********************************
 
+.. important::
+
+    Hooks are **not** executed when opening scripts/notebooks
+    in :doc:`Jupyter. <../user-guide/jupyter>`
+
+
 These are hooks that execute when specific events happen:
 
 1. ``on_render``: executes after verifying there are no errors in your pipeline declaration (e.g., a task that doesn't exist declared as an upstream dependency)
@@ -676,6 +682,12 @@ Python functions receive them as arguments:
 
 ``tasks[*].on_{render, finish, failure}``
 *****************************************
+
+.. important::
+
+    Hooks are **not** executed when opening scripts/notebooks
+    in :doc:`Jupyter. <../user-guide/jupyter>`
+
 
 These are hooks that execute under certain events. They are equivalent to
 :ref:`dag-level hooks <on-render-finish-failure>`, except they apply to a

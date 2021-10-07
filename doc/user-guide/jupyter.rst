@@ -62,6 +62,13 @@ you to develop pipelines interactively.
    :alt: lab-open-with-notebook
 
 
+.. important::
+
+    :ref:`Task-level <tasks-on-render-finish-failure>` and
+    :ref:`DAG-level <on-render-finish-failure>` hooks
+    are **not** executed when opening scripts/notebooks in Jupyter.
+
+
 Interactive development
 -----------------------
 
