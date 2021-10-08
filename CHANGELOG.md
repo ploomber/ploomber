@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.13.2dev
+
 ## 0.13.1 (2021-10-08)
 * Allow serialization of a subset of params (#338)
 * NotebookRunner `static_analysis` turned on by default
