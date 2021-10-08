@@ -680,3 +680,19 @@ def test_warns_if_export_args_but_ipynb_output(tmp_sample_tasks):
     assert any(
         "Output 'out.ipynb' is a notebook file" in record.message.args[0]
         for record in records)
+
+
+def test_change_static_analysis(tmp_sample_tasks):
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+
+    # static_analysis is True by default, this should fail
+    t = NotebookRunner(Path('sample.ipynb'),
+                       File('out.ipynb'),
+                       dag,
+                       params=dict(a=1, b=2))
+
+    # disable it
+    t.static_analysis = False
+
+    # this should work
+    dag.render()

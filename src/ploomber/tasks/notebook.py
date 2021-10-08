@@ -277,7 +277,6 @@ class NotebookRunner(FileLoaderMixin, Task):
         self.nbconvert_exporter_name = nbconvert_exporter_name
         self.ext_in = ext_in
         self.nb_product_key = nb_product_key
-        self.static_analysis = static_analysis
         self.local_execution = local_execution
         self.check_if_kernel_installed = check_if_kernel_installed
 
@@ -312,6 +311,17 @@ class NotebookRunner(FileLoaderMixin, Task):
         self._converter = NotebookConverter(product_nb,
                                             nbconvert_exporter_name,
                                             nbconvert_export_kwargs)
+
+    # expose the static_analysis attribute from the source, we need this
+    # since we disable static_analysis when rendering the DAG in Jupyter
+
+    @property
+    def static_analysis(self):
+        return self._source._static_analysis
+
+    @static_analysis.setter
+    def static_analysis(self, value):
+        self._source.static_analysis = value
 
     @staticmethod
     def _init_source(source,
