@@ -164,7 +164,7 @@ def derive_class(base_class):
                         # up rendering
                         try:
                             self.dag.render(force=True, show_progress=False)
-                        except Exception as e:
+                        except Exception:
                             render_success = False
                             self.reset_dag()
                             if log:

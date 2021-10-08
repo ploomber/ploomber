@@ -46,8 +46,14 @@ def lazily_load_entry_point(starting_dir=None, reload=False):
     dag.on_render = None
 
     # same with task-level hooks
+    # also disable static_analysis since we don't want to break cell injection
+    # because of some issues in te code
     for name in dag._iter():
-        dag[name]._on_render = None
+        task = dag[name]
+        task._on_render = None
+
+        if hasattr(task, 'static_analysis'):
+            task.static_analysis = False
 
     return spec, dag, path
 

@@ -896,3 +896,20 @@ tasks:
 
     cell = get_injected_cell(model['content'])
     assert absolute in cell['source']
+
+
+def test_ignores_static_analysis_failure(tmp_nbs):
+    Path('pipeline.yaml').write_text("""
+tasks:
+  - source: load.py
+    product:
+      nb: output/load.ipynb
+      data: output/data.csv
+    params:
+      some_param: some_value
+""")
+
+    cm = PloomberContentsManager()
+
+    model = cm.get(str('load.py'))
+    assert get_injected_cell(model['content'])

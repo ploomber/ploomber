@@ -317,7 +317,7 @@ class NotebookRunner(FileLoaderMixin, Task):
 
     @property
     def static_analysis(self):
-        return self._source._static_analysis
+        return self._source.static_analysis
 
     @static_analysis.setter
     def static_analysis(self, value):

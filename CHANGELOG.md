@@ -10,8 +10,9 @@
 * General CSS documentation improvements
 * Mobile-friendly docs
 * Add table explaining each documentation section
-* Adds hoosks, serialization, debugging, logging, and parametrization cookbook
-* Adds FAQ on variable number of outputs
+* Adds hooks, serialization, debugging, logging, and parametrization cookbook
+* Adds FAQ on tasks with a variable number of outputs
+* Auto-documenting methods/attributes for classes in the Python API section
 * Documents `io` module
 
 ## 0.13 (2021-09-22)
