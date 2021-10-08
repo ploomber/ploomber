@@ -229,6 +229,20 @@ def test_check_params(params, source, first, second):
     assert 'script.py' in str(excinfo.value)
 
 
+def test_check_params_warns_if_warn_flag_is_on():
+    params = {'a', 'b'}
+    source = """
+a = None
+"""
+    with pytest.warns(UserWarning) as record:
+        pyflakes.check_params(params, source, 'script.py', warn=True)
+
+    assert len(record) == 1
+    assert ("Parameters declared in "
+            "the 'parameters' cell do not match task params"
+            ) in record[0].message.args[0]
+
+
 @pytest.mark.parametrize('passed, params_source', [
     [set(), 'raise Exception'],
     [set(), """

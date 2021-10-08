@@ -93,7 +93,8 @@ class MyReporter(Reporter):
         return ('An error happened when checking the source code. '
                 f'\n{error}\n\n'
                 '(if you want to proceed with execution anyway, set '
-                'static_analysis to False to the task and execute again)')
+                'static_analysis to False in the task declaration '
+                'and execute again)')
 
     def _check(self):
         self._seek_zero()
@@ -194,7 +195,32 @@ def _is_ipython_cell_magic(source):
                     source.lstrip()) is not None
 
 
-def check_params(passed, params_source, filename):
+def check_params(passed, params_source, filename, warn=False):
+    """
+    Check that parameters passed to the notebook match the ones defined
+    in the parameters variable
+
+    Parameters
+    ----------
+    passed : iterable
+        Paramters passed to the notebook (params argument)
+
+    params_source : str
+        Parameters cell source code
+
+    filename : str
+        The task's filename. Only used for displaying in the error message
+
+    warn : bool
+        If False, it raises a TypeError if params do not match. If True,
+        it displays a warning instead.
+
+    Raises
+    ------
+    TypeError
+        If passed parameters do not match variables declared in params_source
+        and warn is False
+    """
     # dot not complain if product or upstream are missing since
     # they are not user-defined params
     IGNORE = {'product', 'upstream'}
@@ -206,6 +232,7 @@ def check_params(passed, params_source, filename):
 
     if missing or unexpected:
         errors = []
+
         if missing:
             errors.append(f'Missing params: {pretty_print.iterable(missing)} '
                           '(to fix this, pass '
@@ -219,10 +246,18 @@ def check_params(passed, params_source, filename):
                 f'add {pretty_print.them_or_name(unexpected)} to the '
                 '\'parameters\' cell and assign the value as '
                 f'None. e.g., {first} = None)')
-        raise TypeError(
-            f"Error rendering notebook {str(filename)!r}, parameters "
+
+        msg = (
+            f"Parameters "
             "declared in the 'parameters' cell do not match task "
-            f"params. {pretty_print.trailing_dot(errors)}")
+            f"params. {pretty_print.trailing_dot(errors)} To disable this "
+            "check, set 'static_analysis' to False in the task declaration.")
+
+        if warn:
+            warnings.warn(msg)
+        else:
+            raise TypeError(
+                f"Error rendering notebook {str(filename)!r}. {msg}")
 
 
 def _get_defined_variables(params_source):
