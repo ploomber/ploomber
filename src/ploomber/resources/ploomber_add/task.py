@@ -12,6 +12,13 @@
 # *Note:* You can open this file as a notebook (JupyterLab: right-click on it in the side bar -> Open With -> Notebook)
 [% endif %]
 
+# +
+# Uncomment the next two lines to enable auto reloading for imported modules
+# # %load_ext autoreload
+# # %autoreload 2
+# For more info, see:
+# https://ploomber.readthedocs.io/en/latest/user-guide/faq_index.html#auto-reloading-code-in-jupyter
+
 # + tags=["parameters"]
 [% if extract_upstream -%]
 # extract_upstream=True in your pipeline.yaml file, if this task has

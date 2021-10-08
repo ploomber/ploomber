@@ -110,6 +110,8 @@ def test_non_ipynb_file_content(file_, tmp_directory):
                 '(JupyterLab: right-click on it in the side '
                 'bar -> Open With -> Notebook)\n\n')
     assert expected in content
+    assert '# %load_ext autoreload' in content
+    assert '# %autoreload 2' in content
 
 
 def test_ipynb_file_content(tmp_directory):
@@ -132,6 +134,8 @@ def test_ipynb_file_content(tmp_directory):
 
     assert result.exit_code == 0
     assert '*Note:* You can open this file as a notebook' not in content
+    assert '# %load_ext autoreload' in content
+    assert '# %autoreload 2' in content
 
 
 def test_ploomber_scaffold_unknown_extension(tmp_directory):

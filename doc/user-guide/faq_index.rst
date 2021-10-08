@@ -11,6 +11,8 @@ FAQ and Glossary
 
 .. include:: faq/no_products.rst
 
+.. include:: faq/autoreload.rst
+
 Glossary
 --------
 
