@@ -157,10 +157,25 @@ def derive_class(base_class):
                         # running time, which we need to be fast
                         sys.path.insert(0, str(base_path))
 
+                    render_success = True
+
                     with chdir(base_path):
                         # this dag object won't be executed, forcing speeds
                         # up rendering
-                        self.dag.render(force=True, show_progress=False)
+                        try:
+                            self.dag.render(force=True, show_progress=False)
+                        except Exception as e:
+                            render_success = False
+                            self.reset_dag()
+                            if log:
+                                msg = ("[Ploomber] An error ocurred when "
+                                       "rendering your DAG, cells won't be "
+                                       "injected until the issue is resolved")
+                                self.log.exception(msg)
+
+                    # if rendering failed, do not continue
+                    if not render_success:
+                        return
 
                     if self.spec['meta']['jupyter_functions_as_notebooks']:
                         self.manager = JupyterDAGManager(self.dag)

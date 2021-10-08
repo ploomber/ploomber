@@ -16,6 +16,7 @@ import nbformat
 import pytest
 from jupyter_server import serverapp
 
+from ploomber import DAG
 from ploomber.jupyter.manager import derive_class
 from ploomber.jupyter.dag import JupyterDAGManager
 from ploomber.spec import DAGSpec
@@ -550,6 +551,24 @@ def test_injects_cell_when_initialized_from_sub_directory(tmp_nbs_nested):
 
     injected = get_injected_cell(model['content'])
     assert injected
+
+
+def test_shows_error_if_dag_fails_to_render(tmp_nbs, monkeypatch):
+    cm = PloomberContentsManager()
+
+    mock_render = Mock(side_effect=Exception('some error'))
+    mock_log, mock_reset = Mock(), Mock(wraps=cm.reset_dag)
+    monkeypatch.setattr(DAG, 'render', mock_render)
+    monkeypatch.setattr(cm.log, 'exception', mock_log)
+    monkeypatch.setattr(cm, 'reset_dag', mock_reset)
+
+    # should catch the exception
+    cm.get('load.py')
+
+    msg = ("[Ploomber] An error ocurred when rendering your DAG, cells won't "
+           "be injected until the issue is resolved")
+    cm.log.exception.assert_called_with(msg)
+    cm.reset_dag.assert_called()
 
 
 def test_hot_reload(tmp_nbs):
