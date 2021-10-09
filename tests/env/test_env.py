@@ -8,6 +8,7 @@ from unittest.mock import Mock
 
 import pytest
 import yaml
+import numpy as np
 
 from ploomber.env.env import Env
 from ploomber.env.decorators import with_env, load_env
@@ -389,11 +390,6 @@ def test_load_env_decorator(cleanup_env):
     assert fn() == 10
 
 
-# def test_iterate_nested_dict():
-#     env = {'a': 1, 'b': 2, 'c': {'d': 1}}
-#     list(expand.iterate_nested_dict(env))
-
-
 def test_expand_tags(monkeypatch, tmp_directory):
     def mockreturn():
         return 'username'
@@ -579,8 +575,9 @@ def test_expand_raw_dictionary_parses_literals():
     assert out == mapping
 
 
-def test_iterate_nested_dict():
-    numbers = [1, 2, 3]
+@pytest.mark.parametrize('constructor', [list, tuple, np.array])
+def test_iterate_nested_dict(constructor):
+    numbers = constructor([1, 2, 3])
     c = {'c': numbers}
     b = {'b': c}
     g = iterate_nested_dict({'a': b})
@@ -599,6 +596,12 @@ def test_iterate_nested_dict():
     assert parent is numbers and key == 2 and value == 3, preffix == [
         'a', 'b', 'c', 2
     ]
+
+
+def test_iterate_nested_dict_with_str():
+    assert list(iterate_nested_dict({'a': 'string'})) == [({
+        'a': 'string'
+    }, 'a', 'string', ['a'])]
 
 
 @pytest.mark.parametrize('value, expected', [

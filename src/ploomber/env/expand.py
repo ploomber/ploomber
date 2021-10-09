@@ -4,7 +4,7 @@ import ast
 import pydoc
 import getpass
 from copy import deepcopy, copy
-from collections.abc import Mapping
+from collections.abc import Mapping, Iterable
 from pathlib import Path
 from functools import reduce
 
@@ -283,7 +283,7 @@ def _iterate(parent, key, value, preffix):
             preffix_new.append(k)
             for i in _iterate(value, k, v, preffix_new):
                 yield i
-    elif isinstance(value, list):
+    elif isinstance(value, Iterable) and not isinstance(value, str):
         for idx, some_val in enumerate(value):
             preffix_new = copy(preffix)
             preffix_new.append(idx)
