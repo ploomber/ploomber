@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.13.2dev
+## 0.13.2 (2021-10-09)
 * Adds support for using `grid` and task-level hooks in spec API
 
 ## 0.13.1 (2021-10-08)
