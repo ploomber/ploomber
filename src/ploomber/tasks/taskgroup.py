@@ -92,7 +92,10 @@ class TaskGroup:
                     params_array,
                     name=None,
                     namer=None,
-                    resolve_relative_to=None):
+                    resolve_relative_to=None,
+                    on_render=None,
+                    on_finish=None,
+                    on_failure=None):
         """
         Build a group of tasks of the same class from an array of parameters
         using the same source. Generates one task per element in params_array.
@@ -205,6 +208,16 @@ class TaskGroup:
                            name=task_name,
                            params=params,
                            **kwargs)
+
+            if on_render:
+                t.on_render = on_render
+
+            if on_finish:
+                t.on_finish = on_finish
+
+            if on_failure:
+                t.on_failure = on_failure
+
             tasks_all.append(t)
 
         return cls(tasks_all)
@@ -219,7 +232,10 @@ class TaskGroup:
                   grid,
                   name=None,
                   namer=None,
-                  resolve_relative_to=None):
+                  resolve_relative_to=None,
+                  on_render=None,
+                  on_finish=None,
+                  on_failure=None):
         """
         Build a group of tasks of the same class from an grid of parameters
         using the same source.
@@ -244,7 +260,10 @@ class TaskGroup:
                                name=name,
                                params_array=params_array,
                                namer=namer,
-                               resolve_relative_to=resolve_relative_to)
+                               resolve_relative_to=resolve_relative_to,
+                               on_render=on_render,
+                               on_finish=on_finish,
+                               on_failure=on_failure)
 
 
 def _init_product(product_class, product_primitive, index,

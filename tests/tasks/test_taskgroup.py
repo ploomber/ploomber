@@ -38,6 +38,28 @@ def test_from_params():
     assert str(dag['task_group1'].product) == str(Path('dir', 'file-1.txt'))
 
 
+@pytest.mark.parametrize('hook_name', ['on_render', 'on_finish', 'on_failure'])
+def test_from_params_with_hook(hook_name):
+    def my_hook():
+        pass
+
+    dag = DAG()
+    group = TaskGroup.from_params(PythonCallable,
+                                  File,
+                                  'dir/file.txt', {'source': touch},
+                                  dag,
+                                  name='task_group',
+                                  params_array=[{
+                                      'param': 1
+                                  }, {
+                                      'param': 2
+                                  }],
+                                  **{hook_name: my_hook})
+
+    assert len(group) == 2
+    assert all(getattr(t, hook_name) is my_hook for t in dag.values())
+
+
 def test_from_params_resolves_paths():
     dag = DAG()
     TaskGroup.from_params(PythonCallable,
@@ -119,6 +141,29 @@ def test_from_grid():
                                 })
 
     assert len(group) == 4
+
+
+@pytest.mark.parametrize('hook_name', ['on_render', 'on_finish', 'on_failure'])
+def test_from_grid_with_hook(hook_name):
+    def my_hook():
+        pass
+
+    dag = DAG()
+    group = TaskGroup.from_grid(PythonCallable,
+                                File,
+                                'file.txt', {
+                                    'source': touch_a_b,
+                                },
+                                dag,
+                                name='task_group',
+                                grid={
+                                    'a': [1, 2],
+                                    'b': [3, 4]
+                                },
+                                **{hook_name: my_hook})
+
+    assert len(group) == 4
+    assert all(getattr(t, hook_name) is my_hook for t in dag.values())
 
 
 def test_from_grid_resolve_relative_to():
