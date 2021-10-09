@@ -39,7 +39,7 @@ def test_task_class_from_script_unknown_extension(tmp_directory, source_str):
     assert 'invalid extension' in str(excinfo.value)
 
 
-def test_task_class_from_dotted_path(tmp_directory, add_current_to_sys_path):
+def test_task_class_from_dotted_path(tmp_directory, tmp_imports):
     Path('test_task_class_from_dotted_path.py').write_text("""
 def fn():
     pass
@@ -151,8 +151,7 @@ def test_task_class_from_source_str_error():
             SQLDump,
         ],
     ])
-def test_initialization(spec, expected, tmp_sample_tasks,
-                        add_current_to_sys_path, no_sys_modules_cache):
+def test_initialization(spec, expected, tmp_sample_tasks, tmp_imports):
     meta = Meta.default_meta({
         'extract_product': False,
         'extract_upstream': True
@@ -200,7 +199,7 @@ def test_error_if_extract_but_keys_declared(task, meta):
         TaskSpec(task, meta, project_root='.')
 
 
-def test_add_hook(tmp_directory, add_current_to_sys_path):
+def test_add_hook(tmp_directory, tmp_imports):
     task = {
         'product': 'notebook.ipynb',
         'source': 'source.py',
@@ -229,8 +228,7 @@ def some_hook():
     assert t.on_failure
 
 
-def test_loads_serializer_and_unserializer(backup_online,
-                                           add_current_to_sys_path):
+def test_loads_serializer_and_unserializer(backup_online, tmp_imports):
     meta = Meta.default_meta()
     meta['extract_product'] = False
 
@@ -253,8 +251,7 @@ def test_loads_serializer_and_unserializer(backup_online,
     assert task._unserializer.callable is unserialize
 
 
-def test_error_on_invalid_value_for_file_product(backup_online,
-                                                 add_current_to_sys_path):
+def test_error_on_invalid_value_for_file_product(backup_online, tmp_imports):
     meta = Meta.default_meta()
     meta['extract_product'] = False
 
@@ -288,8 +285,7 @@ def test_error_on_invalid_value_for_file_product(backup_online,
         'client': 'db.get_client'
     },
 ])
-def test_error_when_failing_to_init(spec, tmp_sample_tasks,
-                                    add_current_to_sys_path):
+def test_error_when_failing_to_init(spec, tmp_sample_tasks, tmp_imports):
     meta = Meta.default_meta({
         'extract_product': False,
         'extract_upstream': True
@@ -303,8 +299,7 @@ def test_error_when_failing_to_init(spec, tmp_sample_tasks,
     assert 'Error initializing SQLRelation' in str(excinfo.value)
 
 
-def test_skips_source_loader_if_absolute_path(tmp_sample_tasks,
-                                              add_current_to_sys_path):
+def test_skips_source_loader_if_absolute_path(tmp_sample_tasks, tmp_imports):
     Path('templates').mkdir()
 
     meta = Meta.default_meta({
@@ -328,8 +323,7 @@ def test_skips_source_loader_if_absolute_path(tmp_sample_tasks,
 
 @pytest.mark.parametrize('key', ['client', 'product_client'])
 def test_error_if_client_dotted_path_returns_none(tmp_sample_tasks,
-                                                  add_current_to_sys_path,
-                                                  no_sys_modules_cache, key):
+                                                  tmp_imports, key):
     Path('client_dotted_path_returns_none.py').write_text("""
 def get():
     return None
@@ -368,8 +362,7 @@ def get():
     'product_client',
 ])
 def test_error_if_dotted_path_does_not_return_a_callable(
-        backup_spec_with_functions_flat, add_current_to_sys_path,
-        no_sys_modules_cache, key):
+        backup_spec_with_functions_flat, tmp_imports, key):
 
     Path('test_error_if_dotted_path_does_not_return_a_callable.py').write_text(
         """
@@ -396,8 +389,7 @@ some_non_function = 1
     assert str(excinfo.value) == expected
 
 
-def test_error_on_invalid_class(backup_spec_with_functions_flat,
-                                add_current_to_sys_path):
+def test_error_on_invalid_class(backup_spec_with_functions_flat, tmp_imports):
     meta = Meta.default_meta({'extract_product': False})
 
     spec = {
@@ -415,7 +407,7 @@ def test_error_on_invalid_class(backup_spec_with_functions_flat,
 
 
 def test_error_on_invalid_product_class(backup_spec_with_functions_flat,
-                                        add_current_to_sys_path):
+                                        tmp_imports):
     meta = Meta.default_meta({'extract_product': False})
 
     spec = {
@@ -433,7 +425,7 @@ def test_error_on_invalid_product_class(backup_spec_with_functions_flat,
 
 
 @pytest.fixture
-def spec():
+def grid_spec():
     return {
         'source': 'my_tasks_flat.raw.function',
         'name': 'function-',
@@ -445,11 +437,12 @@ def spec():
     }
 
 
-def test_grid(backup_spec_with_functions_flat, add_current_to_sys_path, spec):
+def test_grid(backup_spec_with_functions_flat, tmp_imports, grid_spec):
     meta = Meta.default_meta()
     dag = DAG()
 
-    task_group, _ = TaskSpec(spec, meta, project_root='.').to_task(dag=dag)
+    task_group, _ = TaskSpec(grid_spec, meta,
+                             project_root='.').to_task(dag=dag)
 
     assert len(task_group) == 4
     assert str(dag['function-0'].product) == str(
@@ -462,12 +455,71 @@ def test_grid(backup_spec_with_functions_flat, add_current_to_sys_path, spec):
         Path('some_file-3.txt').resolve())
 
 
-def test_grid_with_missing_name(backup_spec_with_functions_flat,
-                                add_current_to_sys_path, spec):
-    del spec['name']
+def test_grid_with_hook(backup_spec_with_functions_flat, tmp_imports):
+    grid_spec = {
+        'source': 'my_tasks_flat.raw.function',
+        'name': 'function-',
+        'product': 'some_file.txt',
+        'grid': {
+            'a': [1, 2],
+            'b': [3, 4]
+        },
+        'on_render': 'hooks.on_render',
+        'on_finish': 'hooks.on_finish',
+        'on_failure': 'hooks.on_failure',
+    }
+
+    meta = Meta.default_meta()
+    dag = DAG()
+
+    TaskSpec(grid_spec, meta, project_root='.').to_task(dag=dag)
+
+    import hooks
+
+    assert all(t.on_render.callable is hooks.on_render for t in dag.values())
+    assert all(t.on_finish.callable is hooks.on_finish for t in dag.values())
+    assert all(t.on_failure.callable is hooks.on_failure for t in dag.values())
+
+
+def test_grid_with_hook_lazy_import(backup_spec_with_functions_flat,
+                                    tmp_imports):
+    grid_spec = {
+        'source': 'my_tasks_flat.raw.function',
+        'name': 'function-',
+        'product': 'some_file.txt',
+        'grid': {
+            'a': [1, 2],
+            'b': [3, 4]
+        },
+        'on_render': 'hooks.on_render',
+        'on_finish': 'hooks.on_finish',
+        'on_failure': 'hooks.on_failure',
+    }
+
+    meta = Meta.default_meta()
+    dag = DAG()
+
+    TaskSpec(grid_spec, meta, project_root='.',
+             lazy_import=True).to_task(dag=dag)
+
+    assert all(t.on_render.callable is None for t in dag.values())
+    assert all(t.on_finish.callable is None for t in dag.values())
+    assert all(t.on_failure.callable is None for t in dag.values())
+
+    assert all(t.on_render._spec.dotted_path == 'hooks.on_render'
+               for t in dag.values())
+    assert all(t.on_finish._spec.dotted_path == 'hooks.on_finish'
+               for t in dag.values())
+    assert all(t.on_failure._spec.dotted_path == 'hooks.on_failure'
+               for t in dag.values())
+
+
+def test_grid_with_missing_name(backup_spec_with_functions_flat, tmp_imports,
+                                grid_spec):
+    del grid_spec['name']
 
     with pytest.raises(KeyError) as excinfo:
-        TaskSpec(spec, Meta.default_meta(),
+        TaskSpec(grid_spec, Meta.default_meta(),
                  project_root='.').to_task(dag=DAG())
 
     assert 'Error initializing task with spec' in str(excinfo.value)

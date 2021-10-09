@@ -261,16 +261,35 @@ class TaskSpec(MutableMapping):
             product = data.pop('product')
             name = data.pop('name')
             grid = data.pop('grid')
-            # TODO: support for hooks
-            return TaskGroup.from_grid(
-                task_class=task_class,
-                product_class=product_class,
-                product_primitive=product,
-                task_kwargs=data,
-                dag=dag,
-                name=name,
-                grid=grid,
-                resolve_relative_to=self.project_root), upstream
+
+            # hooks
+            on_render = data.pop('on_render', None)
+            on_finish = data.pop('on_finish', None)
+            on_failure = data.pop('on_failure', None)
+
+            if on_render:
+                on_render = dotted_path.DottedPath(on_render,
+                                                   lazy_load=self.lazy_import)
+
+            if on_finish:
+                on_finish = dotted_path.DottedPath(on_finish,
+                                                   lazy_load=self.lazy_import)
+
+            if on_failure:
+                on_failure = dotted_path.DottedPath(on_failure,
+                                                    lazy_load=self.lazy_import)
+
+            return TaskGroup.from_grid(task_class=task_class,
+                                       product_class=product_class,
+                                       product_primitive=product,
+                                       task_kwargs=data,
+                                       dag=dag,
+                                       name=name,
+                                       grid=grid,
+                                       resolve_relative_to=self.project_root,
+                                       on_render=on_render,
+                                       on_finish=on_finish,
+                                       on_failure=on_failure), upstream
         else:
             return _init_task(data=data,
                               meta=self.meta,
