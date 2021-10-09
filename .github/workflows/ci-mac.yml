@@ -49,6 +49,8 @@ jobs:
         conda install -y pygraphviz -c conda-forge
 
         # Test vanilla installation, make sure core modules are importable
+        # note: I needed to add "--ignore-installed certifi" because the
+        installation started failing suddenly
         pip install .  --ignore-installed certifi
         python -c 'import ploomber'
         python -c 'import ploomber.tasks'

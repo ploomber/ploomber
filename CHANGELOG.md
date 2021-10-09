@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.13.2dev
+* Adds support for using `grid` and task-level hooks in spec API
 
 ## 0.13.1 (2021-10-08)
 * Allow serialization of a subset of params (#338)
