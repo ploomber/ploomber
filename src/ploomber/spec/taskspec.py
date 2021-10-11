@@ -252,6 +252,10 @@ class TaskSpec(MutableMapping):
         upstream = _make_iterable(data.pop('upstream'))
 
         if 'grid' in data:
+            if 'params' in data:
+                raise KeyError(f'Error initializing task with spec {data!r}: '
+                               '\'params\' is not allowed when using \'grid\'')
+
             if 'name' not in data:
                 raise KeyError(f'Error initializing task with spec {data!r}: '
                                'tasks with \'grid\' must have a \'name\'')

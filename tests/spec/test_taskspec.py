@@ -525,6 +525,17 @@ def test_grid_with_missing_name(backup_spec_with_functions_flat, tmp_imports,
     assert 'Error initializing task with spec' in str(excinfo.value)
 
 
+def test_grid_and_params(backup_spec_with_functions_flat, tmp_imports,
+                         grid_spec):
+    grid_spec['params'] = {'a': 1}
+
+    with pytest.raises(KeyError) as excinfo:
+        TaskSpec(grid_spec, Meta.default_meta(),
+                 project_root='.').to_task(dag=DAG())
+
+    assert "'params' is not allowed when using 'grid'" in str(excinfo.value)
+
+
 # TODO: try with task clients
 def test_lazy_load(tmp_directory, tmp_imports):
     Path('my_module.py').write_text("""
