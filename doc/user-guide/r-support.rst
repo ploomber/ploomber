@@ -2,8 +2,9 @@ R support
 =========
 
 Ploomber officially supports R. The same concepts that apply to Python
-scripts apply to R scripts. The only difference is how to declare ``upstream``
-dependencies and ``product``.
+scripts apply to R scripts; this implies that R scripts can render as notebooks
+in Jupyter and the cell injection works. The only difference is how
+to declare ``upstream`` dependencies and ``product``.
 
 For the R Markdown format (``.Rmd``):
 
@@ -28,6 +29,8 @@ If you prefer, you can also use plain R scripts:
     product = list(nb='path/to/task.ipynb', some_output='path/to/output.csv')
     # -
 
+To read more about how Ploomber executes scripts and integrates with Jupyter,
+check the :doc:`Jupyter Integration guide <../user-guide/jupyter>`.
 
 Configuring R environment
 -------------------------
