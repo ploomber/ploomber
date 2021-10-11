@@ -1,7 +1,7 @@
 Task grids
 ==========
 
-You can use ``tasks[*].grid`` to create multiple tasks from a single task declaration, for example to train multiple models with different parameters and run them in parallel.
+You can use ``tasks[*].grid`` to create multiple tasks from a single task declaration, for example, to train various models with different parameters and run them in parallel.
 
 .. code-block:: yaml
     :class: text-editor
@@ -20,6 +20,8 @@ You can use ``tasks[*].grid`` to create multiple tasks from a single task declar
             criterion: [gini, entropy]
 
 
-Click here to see the full `example <https://github.com/ploomber/projects/tree/master/cookbook/grid>`_.
+Click here to see the complete `example <https://github.com/ploomber/projects/tree/master/cookbook/grid>`_.
 
-Click here to go to the :ref:`documentation <tasks-grid>`.
+Click here to go to the ``grid`` API  `:ref:`documentation <tasks-grid>`.
+
+An in-depth tutorial showing how to use ``grid`` and MLflow for experiment tracking is `available here <https://github.com/ploomber/projects/blob/master/mlflow/README.ipynb>`_.
