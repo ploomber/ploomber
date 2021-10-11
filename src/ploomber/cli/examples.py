@@ -1,3 +1,4 @@
+import platform
 import stat
 import os
 import csv
@@ -10,7 +11,6 @@ from collections import defaultdict
 
 import click
 
-from ploomber.cli.io import cli_endpoint
 from ploomber.io.terminalwriter import TerminalWriter
 from ploomber.table import Table
 
@@ -74,8 +74,9 @@ def _list_examples(path):
 
     tw.sep('=', blue=True)
 
-    tw.write(f'\nTo run these examples in a hosted environment: {_URL}\n')
-    tw.write('\nTo copy locally: ploomber examples -n {name}\n\n')
+    tw.write('\nTo run these examples in a hosted '
+             f'environment, see instructions at: {_URL}')
+    tw.write('\nTo get the source code: ploomber examples -n {name}\n\n')
 
 
 class _ExamplesManager:
@@ -173,7 +174,6 @@ class _ExamplesManager:
         return self.examples / 'README.md'
 
 
-@cli_endpoint
 def main(name, force=False, branch=None):
     manager = _ExamplesManager(home=_home, branch=branch)
     tw = TerminalWriter()
@@ -191,11 +191,27 @@ def main(name, force=False, branch=None):
                        'To get available examples: ploomber examples')
         else:
             click.echo(f'Copying example to {name}/')
+
+            if Path(name).exists():
+                raise click.ClickException(
+                    f"{name!r} already exists in the current working "
+                    "directory, please rename it or move it "
+                    "to another location and try again.")
+
             shutil.copytree(selected, name)
+
             path_to_readme = Path(name, 'README.md')
+            path_to_req = Path(name, 'requirements.txt')
+            path_to_env = Path(name, 'environment.yml')
+            name_dir = name + ('\\' if platform.system() == 'Windows' else '/')
 
             tw.sep('=', str(path_to_readme), blue=True)
             _display_markdown(path_to_readme)
             tw.sep('=', blue=True)
-            tw.write(f'Done. Check out {path_to_readme} for details.\n',
-                     green=True)
+            tw.write(
+                f'Done.\n\nTo install dependencies, use any of the following: '
+                f'\n  1. Move to {name_dir} and run "ploomber install"'
+                f'\n  2. conda env create -f {path_to_env}'
+                f'\n  3. pip install -r {path_to_req}'
+                f'\n\nCheck out {path_to_readme} for more details.\n',
+                green=True)

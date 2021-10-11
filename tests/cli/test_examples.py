@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock
 from pathlib import Path
 
+from click import ClickException
 import pytest
 
 from ploomber.cli import examples
@@ -85,7 +86,7 @@ def test_do_not_clone_if_recent(clone_examples, monkeypatch):
     # prevent actual deletion
     monkeypatch.setattr(examples.shutil, 'rmtree', lambda _: None)
 
-    examples.main(name=None, force=False, catch_exception=False)
+    examples.main(name=None, force=False)
 
     mock_run.assert_not_called()
 
@@ -102,7 +103,7 @@ def test_clones_if_outdated(clone_examples, monkeypatch):
     # prevent actual deletion
     monkeypatch.setattr(examples.shutil, 'rmtree', lambda _: None)
 
-    examples.main(name=None, force=False, catch_exception=False)
+    examples.main(name=None, force=False)
 
     mock_run.assert_called_once()
 
@@ -121,7 +122,7 @@ def test_clones_if_corrupted_metadata(clone_examples, tmp_directory,
     # prevent actual deletion
     monkeypatch.setattr(examples.shutil, 'rmtree', lambda _: None)
 
-    examples.main(name=None, force=False, catch_exception=False)
+    examples.main(name=None, force=False)
 
     mock_run.assert_called_once()
 
@@ -139,7 +140,7 @@ def test_force_clone(clone_examples, monkeypatch):
     monkeypatch.setattr(examples.shutil, 'rmtree', lambda _: None)
 
     # force download
-    examples.main(name=None, force=True, catch_exception=False)
+    examples.main(name=None, force=True)
 
     mock_run.assert_called_once()
 
@@ -155,6 +156,18 @@ def test_error_unknown_example(clone_examples, capsys):
     assert "There is no example named 'not-an-example'" in captured.out
 
 
+def test_error_if_already_exists(clone_examples, tmp_directory):
+    examples.main(name='ml-online', force=False)
+
+    with pytest.raises(ClickException) as excinfo:
+        examples.main(name='ml-online', force=False)
+
+    expected = ("'ml-online' already exists in the current working "
+                "directory, please rename it or move it to another "
+                "location and try again.")
+    assert expected == str(excinfo.value)
+
+
 def test_error_if_git_clone_fails(monkeypatch):
     # mock metadata to make it look recent
     metadata = dict(timestamp=datetime.now().timestamp())
@@ -165,7 +178,7 @@ def test_error_if_git_clone_fails(monkeypatch):
     monkeypatch.setattr(examples.subprocess, 'run', mock_run)
 
     with pytest.raises(RuntimeError) as excinfo:
-        examples.main(name=None, force=True, catch_exception=False)
+        examples.main(name=None, force=True)
 
     assert str(excinfo.value) == (
         'An error occurred when downloading '
