@@ -1,6 +1,37 @@
-# Documentation
+# Contributing to Ploomber's documentation
 
-## Syntax highlighting
+## Setup with conda
+
+The simplest way to setup the environment is via conda. [Click here for installation details](https://docs.conda.io/en/latest/miniconda.html).
+
+
+```sh
+# invoke is a library we use to manage one-off commands
+pip install invoke
+
+# setup development environment, add doc dependencies
+invoke setup --doc
+```
+
+Then activate the environment:
+
+```sh
+conda activate ploomber
+```
+
+## Setup with pip
+
+If you don't want to install conda, you can setup the environment with pip.
+First, follow the "Setup with pip" instructions from the
+main [CONTRIBUTING.md](../CONTRIBUTING.md), then install the dependencies in
+the `pip` section of the `doc/environment.yml` file (ignore the last entry `-e ..`).
+For example:
+
+```sh
+pip install joblib scikit-learn
+```
+
+## Editing code snippets
 
 To make the docs clear, we distinguish between a Python script and a Python
 session by adding CSS to each code snippet, the same happens for bash
@@ -18,7 +49,6 @@ Summary:
 * `postgresql` For SQL templated scripts (`sql` does not work)
 
 If nothing applies, don't add any lexer.
-
 
 ## Pages generated from notebooks
 

@@ -6,6 +6,8 @@ Issues tagged with [good first issue](https://github.com/ploomber/ploomber/issue
 
 If you get stuck, [open an issue](https://github.com/ploomber/ploomber/issues/new?title=CONTRIBUTING.md%20issue) or reach out to us on [Slack](http://community.ploomber.io/) and we'll happily help you.
 
+If you're contributing to the documentation, go to [doc/CONTRIBUTING.md](doc/CONTRIBUTING.md).
+
 ## Setup with conda
 
 The easiest way to setup the development environment is via the setup command; you must have miniconda installed. If you don't want to use conda, skip to the next section.
