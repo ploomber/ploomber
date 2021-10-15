@@ -49,11 +49,12 @@
 ## Resources
 
 * [Documentation](https://ploomber.readthedocs.io/)
+* [Develop and deploy an ML pipeline in 30 minutes (EuroPython 2021)](https://youtu.be/O8tqiCkIWPs)
+* [Guest blog post on the official Jupyter blog](https://blog.jupyter.org/ploomber-maintainable-and-collaborative-pipelines-in-jupyter-acb3ad2101a7)
+* [PyData Chicago talk (covers motivation and demo)](https://youtu.be/qUL7QabcKcw)
 * [Examples (Machine Learning pipeline, ETL, among others)](https://github.com/ploomber/projects)
 * [Blog](https://ploomber.io/)
-* [Guest blog post on the official Jupyter blog](https://blog.jupyter.org/ploomber-maintainable-and-collaborative-pipelines-in-jupyter-acb3ad2101a7)
 * [Comparison with other tools](https://ploomber.io/posts/survey)
-* [PyData Chicago talk (covers motivation and demo)](https://youtu.be/qUL7QabcKcw)
 * [More videos](https://ploomber.readthedocs.io/en/latest/videos.html)
 
 ## Installation
