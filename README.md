@@ -28,6 +28,14 @@
 
 **Notebooks are hard to maintain.** Teams often prototype projects in notebooks, but maintaining them is an error-prone process that slows progress down. Ploomber overcomes the challenges of working with `.ipynb` files allowing teams to develop collaborative, production-ready pipelines using JupyterLab or any text editor.
 
+
+<p align="center">
+  <a href="https://ploomber.readthedocs.io/en/latest/get-started/spec-api-python.html"> <img src="_static/button.svg" alt="Get Started"> </a>
+  <a href="https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fspec-api-python%252FREADME.ipynb%26branch%3Dmaster"> <img src="_static/button.svg" alt="Open JupyerLab"> </a>
+</p>
+
+
+
 ## Main Features
 
 1. **Scripts as notebooks.** Open `.py` files as notebooks, then execute them from the terminal and generate an output notebook to review results.
