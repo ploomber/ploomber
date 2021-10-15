@@ -159,3 +159,62 @@ def test_shows_default_value_from_env_var(tmp_directory, monkeypatch, capsys):
     captured = capsys.readouterr()
     assert re.search(r'defaults\s+to\s+dag.yaml\s+\(ENTRY_POINT\s+env\s+var\)',
                      captured.out)
+
+
+def test_log(tmp_nbs, monkeypatch):
+    mock = Mock()
+    monkeypatch.setattr(
+        sys, 'argv',
+        ['python', '--log', 'info', '--entry-point', 'pipeline.yaml'])
+    monkeypatch.setattr(parsers, 'logging', mock)
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    parsers._custom_command(parser)
+
+    mock.basicConfig.assert_called_with(level='INFO')
+
+
+@pytest.mark.parametrize('opt', ['--log-file', '-F'])
+def test_log_file(tmp_nbs, monkeypatch, opt):
+    mock = Mock()
+    monkeypatch.setattr(sys, 'argv', [
+        'python', '--log', 'info', opt, 'my.log', '--entry-point',
+        'pipeline.yaml'
+    ])
+    monkeypatch.setattr(parsers, 'logging', mock)
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    parsers._custom_command(parser)
+
+    mock.basicConfig.assert_called_with(level='INFO')
+    mock.FileHandler.assert_called_with('my.log')
+    mock.getLogger().addHandler.assert_called()
+
+
+@pytest.mark.parametrize('opt', ['--log-file', '-F'])
+def test_log_file_with_factory_entry_point(backup_test_pkg, monkeypatch, opt):
+    mock = Mock()
+    monkeypatch.setattr(sys, 'argv', [
+        'python', '--log', 'info', opt, 'my.log', '--entry-point',
+        'test_pkg.entry.plain_function'
+    ])
+    monkeypatch.setattr(parsers, 'logging', mock)
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    parsers._custom_command(parser)
+
+    mock.basicConfig.assert_called_with(level='INFO')
+    mock.FileHandler.assert_called_with('my.log')
+    mock.getLogger().addHandler.assert_called()
