@@ -1,6 +1,7 @@
 """
 Setup tasks (requires invoke: pip install invoke)
 """
+import sys
 import platform
 from pathlib import Path
 import base64
@@ -9,6 +10,10 @@ import versioneer
 
 _IS_WINDOWS = platform.system() == 'Windows'
 _PY_DEFAULT_VERSION = '3.9'
+
+if not Path('versioneer.py').exists():
+    sys.exit('Error: Run the command from the root folder (the directory '
+             'with the README.md and setup.py files)')
 
 
 @task
@@ -23,7 +28,7 @@ def db_credentials(c):
 @task
 def setup(c, doc=False, version=None):
     """
-    Setup dev environment, requires conda
+    [conda] Setup dev environment
     """
     if doc and version:
         raise ValueError('doc and version options are incompatible, '
@@ -61,6 +66,32 @@ def setup(c, doc=False, version=None):
             c.run(' && '.join(cmds))
 
     print(f'Done! Activate your environment with:\nconda activate {env_name}')
+
+
+@task
+def setup_pip(c, doc=False):
+    """[pip] Setup dev environment
+    """
+    # install ploomber in editable mode and include development dependencies
+    c.run('pip install --editable ".[dev]"')
+
+    # install sample package required in some tests
+    c.run('pip install --editable tests/assets/test_pkg')
+
+    # install doc dependencies
+    if doc:
+        c.run('pip install -r doc/requirements.txt')
+
+    print('Warning: installing with pip skips some dependencies. '
+          'See contributing.md "Setup with pip for details"')
+
+
+@task
+def docs(c):
+    """Build docs
+    """
+    with c.cd('doc'):
+        c.run('make html')
 
 
 @task
