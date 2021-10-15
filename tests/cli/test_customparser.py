@@ -15,8 +15,9 @@ def test_custom_parser_static_args():
 
     parser = CustomParser()
 
-    assert set(
-        parser.static_args) == {'h', 'help', 'log', 'l', 'entry_point', 'e'}
+    assert set(parser.static_args) == {
+        'h', 'help', 'log', 'l', 'entry_point', 'e', 'log_file', 'F'
+    }
 
 
 def test_cannot_add_arguments_without_context_manager():
