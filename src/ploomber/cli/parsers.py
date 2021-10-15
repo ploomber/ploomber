@@ -60,6 +60,12 @@ class CustomParser(argparse.ArgumentParser):
                           'specified level',
                           default=None)
 
+        self.add_argument('--log-file',
+                          '-f',
+                          help='Enables logging stdout to '
+                          'a specified logfile',
+                          default=None)
+
         if self.DEFAULT_ENTRY_POINT:
             entry_point_help = ('Entry point, defaults '
                                 f'to {self.DEFAULT_ENTRY_POINT}')
@@ -356,6 +362,11 @@ def _process_file_dir_or_glob(parser, dagspec_arg=None):
     if hasattr(args, 'log'):
         if args.log is not None:
             logging.basicConfig(level=args.log.upper())
+            
+    if hasattr(args, "log_file"):
+        if args.log_file is not None:
+            file_handler = logging.FileHandler(args.log_file)
+            logging.getLogger().addHandler(file_handler)
 
     entry_point = EntryPoint(dagspec_arg)
 
