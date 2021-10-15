@@ -19,7 +19,7 @@
   |
   <a href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
   |
-  <a href="https://forms.gle/Xf9h1Q2TGoSk15NEA">Contact us</a>
+  <a href="mailto:contact@ploomber.io">Contact us</a>
   |
   <a href="https://ploomber.readthedocs.io/">Docs</a>
   |
