@@ -1,0 +1,17 @@
+# needed for the examples
+joblib
+scikit-learn
+seaborn
+psycopg2
+Pygments==2.5.2
+mistune<2
+# for converting notebooks
+nbsphinx
+# https://github.com/spatialaudio/nbsphinx/issues/584
+sphinx==4.0.2
+# for plotting (disabled because it breaks if graphviz not installed)
+# pygraphviz
+# for running notebooks from the projects repo
+papermill
+jupytext
+ipywidgets

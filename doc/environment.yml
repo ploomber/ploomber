@@ -1,3 +1,5 @@
+# IMPORTANT: if you change this file, remember to edit doc/requirements.txt as
+# well
 name: ploomber-docs
 
 channels:
