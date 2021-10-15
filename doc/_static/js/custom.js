@@ -52,16 +52,22 @@ function elementInViewport(el) {
 }
 
 function findCurrentSection() {
-    current = null
-    $("div.section > div.section").each(function (i, section) {
-        if (elementInViewport(section)) {
-            current = $(this).find('a').attr('href')
-            // break when you find the first one
-            return false;
-        }
-    });
+    let current = [];
+    function getYOffset(id) {return $(id).offset().top - $(window).scrollTop();}
 
-    return current
+    // Find all visible sections
+    $("section > section").each(function (i, section) {
+            if (elementInViewport(section)) {
+                const href = $(this).find('a').attr('href');
+                current.push({ href, top: getYOffset(href) });
+            }
+        });
+    
+    // Ensure visible sections are sorted in top-to-bottom order
+    current.sort((a,b) => a.top - b.top);
+
+    // Prioritize highlighting the first section that has its top visible in the viewport
+    return current.some(section => section.top > 0) ? current.filter(section => section.top > 0)[0].href : current.pop().href;
 }
 
 function updateCurrentSection() {
