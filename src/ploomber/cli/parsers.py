@@ -150,14 +150,7 @@ class CustomParser(argparse.ArgumentParser):
 
         args = self.parse_args()
 
-        if hasattr(args, 'log'):
-            if args.log is not None:
-                logging.basicConfig(level=args.log.upper())
-
-        if hasattr(args, "log_file"):
-            if args.log_file is not None:
-                file_handler = logging.FileHandler(args.log_file)
-                logging.getLogger().addHandler(file_handler)
+        _configure_logger(args)
 
         # extract required (by using function signature) params from the cli
         # args
@@ -363,14 +356,7 @@ def _process_file_dir_or_glob(parser, dagspec_arg=None):
     args = parser.parse_args()
     dagspec_arg = dagspec_arg or args.entry_point
 
-    if hasattr(args, 'log'):
-        if args.log is not None:
-            logging.basicConfig(level=args.log.upper())
-
-    if hasattr(args, "log_file"):
-        if args.log_file is not None:
-            file_handler = logging.FileHandler(args.log_file)
-            logging.getLogger().addHandler(file_handler)
+    _configure_logger(args)
 
     entry_point = EntryPoint(dagspec_arg)
 
@@ -465,3 +451,16 @@ def _flatten_dict(d, prefix=''):
             out[prefix + k] = v
 
     return out
+
+
+def _configure_logger(args):
+    """Configure logger if user passed --log/--log-file args
+    """
+    if hasattr(args, 'log'):
+        if args.log is not None:
+            logging.basicConfig(level=args.log.upper())
+
+    if hasattr(args, "log_file"):
+        if args.log_file is not None:
+            file_handler = logging.FileHandler(args.log_file)
+            logging.getLogger().addHandler(file_handler)
