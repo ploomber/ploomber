@@ -1320,7 +1320,10 @@ def test_doesnt_warn_if_param_declared_in_env_is_used_in_spec():
             },
             env=dict(a=1))
 
-    assert not record
+    message = ("The following placeholders are declared in the "
+               "environment but unused in the spec")
+
+    assert not any(message in str(r.message) for r in record)
 
 
 def test_doesnt_warn_if_param_is_used_in_import_task_from(tmp_directory):
