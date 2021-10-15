@@ -5,6 +5,7 @@ import io
 import tokenize
 from difflib import Differ
 import parso
+import ast
 
 try:
     import sqlparse
@@ -45,27 +46,35 @@ def normalize_python(code):
     if code is None:
         return None
 
-    code = _delete_python_comments(code)
-
-    if not autopep8 or not parso:
-        raise ImportError('autopep8 and parso are required for normalizing '
-                          'Python code: pip install autopep8 parso')
-
-    node = parso.parse(code).children[0]
-
-    if node.type == 'decorated':
-        node = node.children[-1]
-
     try:
-        doc_node = node.get_doc_node()
-    except Exception:
-        # function without docstring...
-        doc_node = None
+        ast.parse(code)
 
-    if doc_node is not None:
-        code = code.replace('\n' + doc_node.get_code(), '')
+    except SyntaxError:
+        pass
 
-    code = autopep8.fix_code(code)
+    else:
+        code = _delete_python_comments(code)
+
+        if not autopep8 or not parso:
+            raise ImportError(
+                'autopep8 and parso are required for normalizing '
+                'Python code: pip install autopep8 parso')
+
+        node = parso.parse(code).children[0]
+
+        if node.type == 'decorated':
+            node = node.children[-1]
+
+        try:
+            doc_node = node.get_doc_node()
+        except Exception:
+            # function without docstring...
+            doc_node = None
+
+        if doc_node is not None:
+            code = code.replace('\n' + doc_node.get_code(), '')
+
+        code = autopep8.fix_code(code)
 
     return code
 

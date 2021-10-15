@@ -119,17 +119,23 @@ def x():
     pass
 """
 
+fn_not_in_python = '''
+#include <iostream>
+using namespace std;
+int main(){
+    pass;
+}
+'''
+
 
 @pytest.mark.parametrize(
     'code, expected',
-    [
-        [fn, fn_no_doc],
-        [fn_no_doc, fn_no_doc],
-        [fn_decorated, fn_decorated_no_doc],
-        [fn_decorated_no_doc, fn_decorated_no_doc],
-        [fn_double_decorated, fn_double_decorated_no_doc],
-        [fn_double_decorated_no_doc, fn_double_decorated_no_doc],
-    ],
+    [[fn, fn_no_doc], [fn_no_doc, fn_no_doc],
+     [fn_decorated, fn_decorated_no_doc],
+     [fn_decorated_no_doc, fn_decorated_no_doc],
+     [fn_double_decorated, fn_double_decorated_no_doc],
+     [fn_double_decorated_no_doc, fn_double_decorated_no_doc],
+     [fn_not_in_python, fn_not_in_python]],
 )
 def test_normalize_python(code, expected):
     assert normalize_python(code) == expected
