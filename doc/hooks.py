@@ -1,4 +1,3 @@
-from ploomberutils.nb import process_readme_md
 from pathlib import Path
 import shutil
 from urllib import request
@@ -22,17 +21,14 @@ def config_init(app, config):
     # key: directory in the projects directory
     # value: directory in the documentation
     directories = {
+        'spec-api-python': 'get-started',
         'parametrized': 'user-guide',
         'sql-templating': 'user-guide',
         'testing': 'user-guide',
         'debugging': 'user-guide',
         'guides/serialization': 'user-guide',
         'guides/logging': 'user-guide',
-        'spec-api-python': 'get-started',
     }
-
-    # execute notebooks
-    process_readme_md(list(directories), parent_dir=projects)
 
     # move README.ipynb files to their corresponding location in the docs
     for path, target_dir in directories.items():
