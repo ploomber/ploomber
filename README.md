@@ -30,8 +30,8 @@
 
 
 <p align="center">
-  <a href="https://ploomber.readthedocs.io/en/latest/get-started/spec-api-python.html"> <img src="_static/button.svg" alt="Get Started"> </a>
-  <a href="https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fspec-api-python%252FREADME.ipynb%26branch%3Dmaster"> <img src="_static/button.svg" alt="Open JupyerLab"> </a>
+  <a href="https://ploomber.readthedocs.io/en/latest/get-started/spec-api-python.html"> <img src="_static/get-started.svg" alt="Get Started"> </a>
+  <a href="https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fspec-api-python%252FREADME.ipynb%26branch%3Dmaster"> <img src="_static/open-jupyterlab.svg" alt="Open JupyerLab"> </a>
 </p>
 
 
