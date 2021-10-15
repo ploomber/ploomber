@@ -56,8 +56,16 @@ If using scripts/notebooks tasks, add this a the top of **each** one:
           log_output: True
 
 
-Then, use the ``--log`` option when building the pipeline:
+Then, use the ``--log`` option when building the pipeline to print records to the terminal:
 
 .. code-block:: console
 
     ploomber build --log info
+
+
+If you also want to send logs to a file:
+
+
+.. code-block:: console
+
+    ploomber build --log info --log-file my.log
