@@ -48,7 +48,7 @@ def normalize_python(code):
 
     try:
         ast.parse(code)
-    
+
     except SyntaxError:
         pass
 
@@ -56,8 +56,9 @@ def normalize_python(code):
         code = _delete_python_comments(code)
 
         if not autopep8 or not parso:
-            raise ImportError('autopep8 and parso are required for normalizing '
-                          'Python code: pip install autopep8 parso')
+            raise ImportError(
+                'autopep8 and parso are required for normalizing '
+                'Python code: pip install autopep8 parso')
 
         node = parso.parse(code).children[0]
 
