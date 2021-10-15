@@ -3,7 +3,7 @@ joblib
 scikit-learn
 seaborn
 psycopg2
-Pygments==2.5.2
+Pygments==2.7.4
 mistune<2
 # for converting notebooks
 nbsphinx
