@@ -12,7 +12,7 @@ If you're contributing to the documentation, go to [doc/CONTRIBUTING.md](doc/CON
 
 The easiest way to setup the development environment is via the setup command; you must have miniconda installed. If you don't want to use conda, skip to the next section.
 
-[Click here for installation details](https://docs.conda.io/en/latest/miniconda.html).
+[Click here for miniconda installation details](https://docs.conda.io/en/latest/miniconda.html).
 
 Once you have conda:
 
@@ -32,11 +32,11 @@ conda activate ploomber
 
 ## Setup with pip
 
-Ploomber has optional features that depend on packages that aren't straightforward to install (for example: R and pygraphviz); that's why we use `conda` for quickly setting up the development environment.
+Ploomber has optional features that depend on packages that aren't straightforward to install, so we use `conda` for quickly setting up the development environment. But you can still get a pretty good development environment using `pip` alone.
 
-But you can still get a pretty good development environment using `pip` alone.
+### [Optional] Create virtual environment
 
-**Note**: we highly recommend you to install the following in a virtual environment (the most straightforward alternative is the [venv](https://docs.python.org/3/library/venv.html) built-in module).
+**Note**: we highly recommend you to install ploomber in a virtual environment (the most straightforward alternative is the [venv](https://docs.python.org/3/library/venv.html) built-in module):
 
 ```sh
 # create virtual env
@@ -47,15 +47,24 @@ source ploomber-venv/bin/activate
 ```
 *Note:* [Check venv docs](https://docs.python.org/3/library/venv.html#creating-virtual-environments) to find the appropriate command if you're using Windows.
 
-To install development dependencies:
+### Install dependencies
 
 ```sh
-# install ploomber in editable mode and include development dependencies
-pip install --editable ".[dev]"
+# required to run the next command
+pip install invoke
 
-# install sample package required in some tests
-pip install --editable tests/assets/test_pkg
+# install dependencies with pip
+invoke setup-pip
 ```
+
+### Caveats of installing with pip
+
+Conda takes care of installing all dependencies required to run all tests. However, we need to skip a few of them when installing with pip because either the library is not pip-installable or any of their dependencies are. So if you use `invoke setup-pip` to configure your environment, some tests will fail. This isn't usually a problem if you're developing a specific feature; you can run a subset of the testing suite and let GitHub run the entire test suite when pushing your code.
+
+However, if you wish to have a full setup, you must install the following dependencies:
+
+1. [pygrapviz](https://github.com/pygraphviz/pygraphviz) (note that this depends on [graphviz](https://graphviz.org/)) which can't be installed by pip
+2. [IRKernel](https://github.com/IRkernel/IRkernel) (note that this requires an R installation)
 
 ## Checking setup
 

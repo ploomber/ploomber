@@ -2,14 +2,14 @@
 
 ## Setup with conda
 
-The simplest way to setup the environment is via conda. [Click here for installation details](https://docs.conda.io/en/latest/miniconda.html).
+The simplest way to setup the environment is via conda. [Click here for miniconda installation details](https://docs.conda.io/en/latest/miniconda.html).
 
 
 ```sh
-# invoke is a library we use to manage one-off commands
+# invoke is needed to run the next command
 pip install invoke
 
-# setup development environment, add doc dependencies
+# install dev + doc dependencies
 invoke setup --doc
 ```
 
@@ -21,15 +21,28 @@ conda activate ploomber
 
 ## Setup with pip
 
-If you don't want to install conda, you can setup the environment with pip.
-First, follow the "Setup with pip" instructions from the
-main [CONTRIBUTING.md](../CONTRIBUTING.md), then install the dependencies in
-the `pip` section of the `doc/environment.yml` file (ignore the last entry `-e ..`).
-For example:
+If you don't want to install conda, you can setup the environment with pip:
+
+*Note* we highly recommend you to install dependencies in a virtual environment. See the *Setup with pip* section in the main [`CONTRIBUTING.md`](../CONTRIBUTING.md) file for details.
 
 ```sh
-pip install joblib scikit-learn
+# invoke is needed to run the next command
+pip install invoke
+
+# install dev + doc dependencies
+invoke setup-pip --doc
 ```
+
+*Note* there are some minor caveats when installing using git, see the *Caveats of installing with pip* in the main [`CONTRIBUTING.md`](../CONTRIBUTING.md) file for details.
+
+## Build docs
+
+```
+invoke docs
+```
+
+To see the docs, open `doc/_build/html/index.html`
+
 
 ## Editing code snippets
 
@@ -52,8 +65,14 @@ If nothing applies, don't add any lexer.
 
 ## Pages generated from notebooks
 
-Link to other pages using relative paths so they work locally as well:
+Some pages in the documentation are pulled from a separate repository, you can identify them because they're Jupyter notebooks ([here's an example](https://ploomber.readthedocs.io/en/latest/get-started/spec-api-python.html)), if you want to contribute to one of those, you open your Pull Request in the [projects repository](https://github.com/ploomber/projects).
 
-e.g.: [some-label](../api/testing.rst)
+If such notebooks link to other documents, use relative paths, so they work locally as well:
 
-Reference: https://nbsphinx.readthedocs.io/en/0.7.1/markdown-cells.html#Links-to-*.rst-Files-(and-Other-Sphinx-Source-Files)
+e.g.:
+
+```md
+[some-label](../api/testing.rst)
+```
+
+[Reference](https://nbsphinx.readthedocs.io/en/0.7.1/markdown-cells.html#Links-to-*.rst-Files-(and-Other-Sphinx-Source-Files)).
