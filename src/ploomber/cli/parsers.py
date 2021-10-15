@@ -61,7 +61,7 @@ class CustomParser(argparse.ArgumentParser):
                           default=None)
 
         self.add_argument('--log-file',
-                          '-f',
+                          '-F',
                           help='Enables logging stdout to '
                           'a specified logfile',
                           default=None)
