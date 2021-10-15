@@ -52,7 +52,7 @@
 
 * [Join us on Slack](http://community.ploomber.io)
 * [Newsletter](https://www.getrevue.co/profile/ploomber)
-* [Contact the development team](https://forms.gle/Xf9h1Q2TGoSk15NEA)
+* [Contact the development team](mailto:contact@ploomber.io)
 
 ## Resources
 
