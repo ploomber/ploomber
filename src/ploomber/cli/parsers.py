@@ -155,6 +155,11 @@ class CustomParser(argparse.ArgumentParser):
             if args.log is not None:
                 logging.basicConfig(level=args.log.upper())
 
+        if hasattr(args, "log_file"):
+            if args.log_file is not None:
+                file_handler = logging.FileHandler(args.log_file)
+                logging.getLogger().addHandler(file_handler)
+
         # extract required (by using function signature) params from the cli
         # args
         kwargs = {key: getattr(args, key) for key in required}
