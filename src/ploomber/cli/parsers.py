@@ -362,7 +362,7 @@ def _process_file_dir_or_glob(parser, dagspec_arg=None):
     if hasattr(args, 'log'):
         if args.log is not None:
             logging.basicConfig(level=args.log.upper())
-            
+
     if hasattr(args, "log_file"):
         if args.log_file is not None:
             file_handler = logging.FileHandler(args.log_file)
