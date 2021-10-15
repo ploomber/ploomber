@@ -2,11 +2,15 @@
 
 Thanks for considering contributing to Ploomber!
 
-The issues tagged as [good first issue](https://github.com/ploomber/ploomber/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are great options to start contributing.
+Issues tagged with [good first issue](https://github.com/ploomber/ploomber/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are great options to start contributing.
 
-## Setup
+If you get stuck, [open an issue](https://github.com/ploomber/ploomber/issues/new?title=CONTRIBUTING.md%20issue) or reach out to us on [Slack](http://community.ploomber.io/) and we'll happily help you.
 
-The easiest way to setup the development environment is via the setup command; you must have miniconda installed. [Click here for installation details.](https://docs.conda.io/en/latest/miniconda.html).
+## Setup with conda
+
+The easiest way to setup the development environment is via the setup command; you must have miniconda installed. If you don't want to use conda, skip to the next section.
+
+[Click here for installation details](https://docs.conda.io/en/latest/miniconda.html).
 
 Once you have conda:
 
@@ -24,22 +28,36 @@ Then activate the environment:
 conda activate ploomber
 ```
 
-### If you don't have conda
+## Setup with pip
 
-Ploomber has optional features that depend on packages that aren't trivial to install (for example: R and pygraphviz), that's why we use `conda` for quickly setting up the development environment.
+Ploomber has optional features that depend on packages that aren't straightforward to install (for example: R and pygraphviz); that's why we use `conda` for quickly setting up the development environment.
 
 But you can still get a pretty good development environment using `pip` alone.
 
-**Note**: we highly recommend you to install the following in a virtual environment (the simplest alternative is the [venv](https://docs.python.org/3/library/venv.html) built-in module).
+**Note**: we highly recommend you to install the following in a virtual environment (the most straightforward alternative is the [venv](https://docs.python.org/3/library/venv.html) built-in module).
+
+```sh
+# create virtual env
+python -m venv ploomber-venv
+
+# activate virtual env (linux/macOS)
+source ploomber-venv/bin/activate
+```
+*Note:* [Check venv docs](https://docs.python.org/3/library/venv.html#creating-virtual-environments) to find the appropriate command if you're using Windows.
+
+To install development dependencies:
 
 ```sh
 # install ploomber in editable mode and include development dependencies
 pip install --editable ".[dev]"
+
 # install sample package required in some tests
-pip install --editable --editable tests/assets/test_pkg
+pip install --editable tests/assets/test_pkg
 ```
 
-### Checking setup
+## Checking setup
+
+Make sure everything is working correctly:
 
 ```sh
 # import ploomber
@@ -53,15 +71,31 @@ pytest tests/util
 
 We receive contributions via Pull Requests (PRs). [We recommend you check out this guide.](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests)
 
-* We use [yapf](https://github.com/google/yapf) for formatting code
-* We use [flake8](https://flake8.pycqa.org/en/latest/) for linting
 
-## General information
+We use [yapf](https://github.com/google/yapf) for formatting code. *Please run yapf on your code before submitting*:
 
-* We use [pytest](https://docs.pytest.org/en/6.2.x/) for testing,a  basic understanding of `pytest` is highly recommended to get started
-* In most cases, for a given in `src/ploomber/{module-name}`, there is a testing module in `tests/{module-name}`, if you're working on a certain module, you can execute the corresponding testing module for faster development but when submitting a pull request, all tests run
-* Ploomber loads user's code dynamically via dotted paths (e.g., `my_module.my_function`. Hencee, some of our tests do this as well. This can become a problem if new modules created in a task an imported (i.e., create a new `.py` file and loading it). To prevent temporary modules from polluting other tasks, use the `no_sys_modules_cache` fixture, which deletes all packages imported inside a test
-* Some tests make calls to a PostgreSQL database. When running on Github Actions (Linux), a dabatase is automatically provisioned but the tests will fail locally if you don't have a database connection configured (we'll improve this in the near future)
+```sh
+yapf --in-place path/to/file.py
+```
+
+We use [flake8](https://flake8.pycqa.org/en/latest/) for linting. *Please check your code with flake8 before submitting*:
+
+```sh
+# run this in the project directory to check code with flake8
+# note: this takes a few seconds to finish
+flake8
+```
+
+If you don't see any output after running `flake8`, you're good to go!
+
+*Note:* If you created a virtual env in a child directory, exclude it from `flake8` using the `--exclude` argument (e.g., `flake8 --exclude my-venv`), `ploomber-venv` is excluded by default.
+
+## Tips for writing tests
+
+* We use [pytest](https://docs.pytest.org/en/6.2.x/) for testing. A basic understanding of `pytest` is highly recommended to get started
+* In most cases, for a given in `src/ploomber/{module-name}`, there is a testing module in `tests/{module-name}`, if you're working on a particular module, you can execute the corresponding testing module for faster development but when submitting a pull request, all tests will run
+* Ploomber loads user's code dynamically via dotted paths (e.g., `my_module.my_function` is similar to doing `from my_module import my_function`). Hence, some of our tests do this as well. Dynamic imports can become a problem if tests create and import modules (i.e., create a new `.py` file and import it). To prevent temporary modules from polluting other tasks, use the `tmp_imports` pytest fixture, which deletes all packages imported inside a test
+* Some tests make calls to a PostgreSQL database. When running on Github Actions, a database is automatically provisioned, but the tests will fail locally.
 
 
 ## Conda releases
