@@ -187,8 +187,9 @@ def main(name, force=False, branch=None):
         selected = manager.path_to(name)
 
         if not selected.exists():
-            click.echo(f'There is no example named {name!r}. '
-                       'To get available examples: ploomber examples')
+            click.echo(f'\n\nThere is no example named {name!r}.\n'
+                       'To list examples: ploomber examples\n'
+                       'To update local copy: ploomber examples -f')
         else:
             click.echo(f'Copying example to {name}/')
 
