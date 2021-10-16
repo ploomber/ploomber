@@ -106,7 +106,7 @@ def examples(name, force, branch):
             'again or upgrading Ploomber may fix the '
             'issue.\nDownload: ploomber examples -f\n'
             'Update: pip install ploomber -U\n'
-            'Update [conda]: conda update ploomber -c conda-forge')
+            'Update [conda]: conda update ploomber -c conda-forge') from e
 
 
 def cmd_router():
