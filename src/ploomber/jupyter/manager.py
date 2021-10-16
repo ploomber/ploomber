@@ -266,8 +266,8 @@ def derive_class(base_class):
                     inject_cell(model=model,
                                 params=self.dag_mapping[model['path']]._params)
 
-            # if self.error:
-            #     model = add_error_top_message(model, error=self.error)
+            if self.error:
+                model = add_error_top_message(model, error=self.error)
 
             return model
 
@@ -294,8 +294,8 @@ def derive_class(base_class):
                     self.dag_mapping.delete_metadata(key)
 
                 # if we displayed an error, we still have to clean up
-                # elif self.error:
-                #     model['content'] = _cleanup_rendered_nb(model['content'])
+                elif self.error:
+                    model['content'] = _cleanup_rendered_nb(model['content'])
 
                 return super().save(model, path)
 
