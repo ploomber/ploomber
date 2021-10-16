@@ -3,14 +3,34 @@ from unittest.mock import Mock
 from pathlib import Path
 
 from click import ClickException
+from click.testing import CliRunner
 import pytest
 
 from ploomber.cli import examples
+from ploomber.cli import cli
+
+
+def _mock_metadata(**kwargs):
+    default = dict(timestamp=datetime.now().timestamp(), branch='master')
+    return {**default, **kwargs}
 
 
 @pytest.fixture(scope='session')
 def clone_examples():
     examples.main(name=None, force=False)
+
+
+def test_error_if_exception_during_execution(monkeypatch):
+    monkeypatch.setattr(cli.cli_module.examples, 'main',
+                        Mock(side_effect=ValueError('some error')))
+
+    runner = CliRunner()
+
+    with pytest.raises(RuntimeError) as excinfo:
+        runner.invoke(cli.cli, ['examples'], catch_exceptions=False)
+
+    assert 'An error happened when executing the examples' in str(
+        excinfo.value)
 
 
 def test_clones_in_home_directory(monkeypatch, tmp_directory):
@@ -38,7 +58,8 @@ def test_clones_in_home_directory(monkeypatch, tmp_directory):
 
 def test_change_default_branch(monkeypatch, tmp_directory):
     # mock metadata to make it look older
-    metadata = dict(timestamp=(datetime.now() - timedelta(days=1)).timestamp())
+    metadata = _mock_metadata(timestamp=(datetime.now() -
+                                         timedelta(days=1)).timestamp())
     monkeypatch.setattr(examples._ExamplesManager, 'load_metadata',
                         lambda _: metadata)
 
@@ -76,7 +97,7 @@ def test_list(clone_examples, capsys):
 
 def test_do_not_clone_if_recent(clone_examples, monkeypatch):
     # mock metadata to make it look recent
-    metadata = dict(timestamp=datetime.now().timestamp())
+    metadata = _mock_metadata()
     monkeypatch.setattr(examples._ExamplesManager, 'load_metadata',
                         lambda _: metadata)
 
@@ -91,9 +112,11 @@ def test_do_not_clone_if_recent(clone_examples, monkeypatch):
     mock_run.assert_not_called()
 
 
-def test_clones_if_outdated(clone_examples, monkeypatch):
+def test_clones_if_outdated(clone_examples, monkeypatch, capsys):
     # mock metadata to make it look older
-    metadata = dict(timestamp=(datetime.now() - timedelta(days=1)).timestamp())
+    metadata = _mock_metadata(timestamp=(datetime.now() -
+                                         timedelta(days=1)).timestamp(),
+                              branch='another-branch')
     monkeypatch.setattr(examples._ExamplesManager, 'load_metadata',
                         lambda _: metadata)
 
@@ -106,6 +129,27 @@ def test_clones_if_outdated(clone_examples, monkeypatch):
     examples.main(name=None, force=False)
 
     mock_run.assert_called_once()
+    captured = capsys.readouterr()
+    assert 'Examples copy is more than 1 day old...' in captured.out
+
+
+def test_clones_if_different_branch(clone_examples, monkeypatch, capsys):
+    # mock metadata to make it look like another branch
+    metadata = _mock_metadata(branch='another-branch')
+    monkeypatch.setattr(examples._ExamplesManager, 'load_metadata',
+                        lambda _: metadata)
+
+    mock_run = Mock()
+    monkeypatch.setattr(examples.subprocess, 'run', mock_run)
+
+    # prevent actual deletion
+    monkeypatch.setattr(examples.shutil, 'rmtree', lambda _: None)
+
+    examples.main(name=None, force=False)
+
+    mock_run.assert_called_once()
+    captured = capsys.readouterr()
+    assert 'Different branch requested...' in captured.out
 
 
 def test_clones_if_corrupted_metadata(clone_examples, tmp_directory,
@@ -129,7 +173,7 @@ def test_clones_if_corrupted_metadata(clone_examples, tmp_directory,
 
 def test_force_clone(clone_examples, monkeypatch):
     # mock metadata to make it look recent
-    metadata = dict(timestamp=datetime.now().timestamp())
+    metadata = _mock_metadata()
     monkeypatch.setattr(examples._ExamplesManager, 'load_metadata',
                         lambda _: metadata)
 
@@ -182,5 +226,5 @@ def test_error_if_git_clone_fails(monkeypatch):
 
     assert str(excinfo.value) == (
         'An error occurred when downloading '
-        'examples. Verify git is installed and internet connection. '
+        'examples. Verify git is installed and your internet connection. '
         "(Error message: 'message')")

@@ -104,9 +104,9 @@ class _ExamplesManager:
     def branch(self):
         return self._branch
 
-    def save_metadata(self):
+    def save_metadata(self, branch):
         timestamp = datetime.now().timestamp()
-        metadata = json.dumps(dict(timestamp=timestamp))
+        metadata = json.dumps(dict(timestamp=timestamp, branch=branch))
         self.path_to_metadata.write_text(metadata)
 
     def load_metadata(self):
@@ -144,10 +144,10 @@ class _ExamplesManager:
         if exception:
             raise RuntimeError(
                 'An error occurred when downloading examples. '
-                'Verify git is installed and internet '
+                'Verify git is installed and your internet '
                 f'connection. (Error message: {str(exception)!r})')
 
-        self.save_metadata()
+        self.save_metadata(branch=self.branch)
 
     def outdated(self):
         metadata = self.load_metadata()
@@ -157,12 +157,17 @@ class _ExamplesManager:
             then = datetime.fromtimestamp(timestamp)
             now = datetime.now()
             elapsed = (now - then).days
-            is_outdated = elapsed >= 1
+            is_more_than_one_day_old = elapsed >= 1
 
-            if is_outdated:
-                click.echo('Examples copy is more than 1 day old. Cloning...')
+            is_different_branch = metadata.get('branch') != self.branch
 
-            return is_outdated
+            if is_more_than_one_day_old:
+                click.echo('Examples copy is more than 1 day old...')
+
+            if is_different_branch:
+                click.echo('Different branch requested...')
+
+            return is_more_than_one_day_old or is_different_branch
         else:
             click.echo('Cloning...')
             return True
