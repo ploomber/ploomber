@@ -562,6 +562,7 @@ def add_error_top_message(model, error):
     message = f'<h3 style="color: red">{error}</h1>'
     cell = nbformat.v4.new_markdown_cell(message)
     cell.metadata['tags'] = ['ploomber-message']
+    cell.metadata['trusted'] = True
     cells.insert(0, cell)
 
     return model
