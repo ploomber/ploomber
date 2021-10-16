@@ -1,85 +1,140 @@
 {% extends "layout.html" %}
 
 {%- block relbar1 %}
-{% import 'macros.html' as macros %}
-{{ macros.nav_bar(pathto=pathto, active='Videos') }}
+    {% import 'macros.html' as macros %}
+    {{ macros.nav_bar(pathto=pathto, active='Videos') }}
 {% endblock %}
 
 
-{%- block body %}
+{%- block body %} <!-- Start Block Element -->
 
-<h1>Videos</h1>
+    <h1>Videos</h1>
 
-<section id="workshops">
-    <h2>Workshops</h2>
-    <p>In-depth tutorials showing how to use Ploomber.</p>
+    <!-- start of Table -->
 
-    <div>
-        <h3>Vancouver Datajam 2021</h3>
-        <p>2-hour tutorial. Extensively covers Ploomber features.</p>
-        <p><a href="https://github.com/edublancas/vancouver-datajam">Workshop material.</a></p>
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/Ca-bdknV6ik" title="YouTube video player"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen></iframe>
-    </div>
-</section>
+    <div class="table-responsive">
+        <table class="table table-striped text-center bg-light w-auto">
+            <thead>
+                <tr class="text-muted">
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Resources</th>
+                </tr>
+            </thead>
 
 
-<section id="presentations">
-    <h2>Presentations</h2>
-    <p>Conference and meetup presentations showcasing specific features.</p>
-
-    <div>
-        <h3>PyData Chicago Meetup</h3>
-        <p>Covers project's motivation and a demo showcasing basic features.</p>
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/qUL7QabcKcw" title="YouTube video player"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen></iframe>
-    </div>
-
-    <div>
-        <h3>EuroPython 2021</h3>
-        <p>Develop and deploy a Machine Learning pipeline in 30 minutes</p>
-
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/O8tqiCkIWPs" title="YouTube video player"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen></iframe>
+            <tbody>
+                <tr class="thead-dark">
+                    <th>Workshop: Vancouver Datajam 2021</th>
+                    <th>2-hour tutorial. Extensively covers Ploomber features.</th>
+                    <th><p><a href="https://github.com/edublancas/vancouver-datajam">Workshop material.</a></p></th>
+                </tr>
+                <th></th>
+                <th>
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/Ca-bdknV6ik" title="YouTube video player"
+                    frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+                </th>                                
+            </tbody>
+        </table>
     </div>
 
+    <br>
+    <br>
 
-    <div>
-        <h3>Argo Community Meeting</h3>
-        <p>Basic introduction and Kubernetes (Argo Workflows) demo.</p>
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/FnpXyg-5W_c" title="YouTube video player"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen></iframe>
+    <div class="table-responsive">
+        <table class="table table-striped text-center bg-light w-auto">
+            <thead class="text-muted">
+                <tr>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Resources</th>
+                </tr>
+            </thead>
+            
+            <tbody>
+                <tr class="thead-dark">
+                    <th>Presentations</th>
+                    <th>Conference and meetup presentations showcasing specific features.</th>
+                    <th></th>
+                </tr>
+                <th></th>
+                <th>
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/qUL7QabcKcw" title="YouTube video player"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+                </th>
+
+                
+                <tr class="thead-dark">
+                    <th>PyData Chicago Meetup</th>
+                    <th>Covers project's motivation and a demo showcasing basic features.</th>
+                    <th></th>
+                </tr>
+                <th></th>
+                <th>
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/qUL7QabcKcw" title="YouTube video player" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+                </th>
+
+
+                <tr class="thead-dark">
+                    <th>EuroPython 2021</th>
+                    <th>Develop and deploy a Machine Learning pipeline in 30 minutes</th>
+                    <th></th>
+                </tr>
+                <th></th>
+                <th>
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/O8tqiCkIWPs" title="YouTube video player" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+                </th>
+
+
+                <tr class="thead-dark">
+                    <th>Argo Community Meeting</th>
+                    <th>Basic introduction and Kubernetes (Argo Workflows) demo.</th>
+                    <th></th>
+                </tr>
+                <th></th>
+                <th>
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/FnpXyg-5W_c" title="YouTube video player" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+                </th>
+
+
+                <tr class="thead-dark">
+                    <th>Pangeo Showcase</th>
+                    <th>Basic introduction and AWS Batch demo.</th>
+                    <th></th>
+                </tr>
+                <th></th>
+                <th>
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/XCgX1AszVF4" title="YouTube video player" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+                </th>
+
+
+                <tr class="thead-dark">
+                    <th>JupyterCon 2020</th>
+                    <th>First public presentation (a bit outdated). Describes motivation and brief description (no demo).</th>
+                    <th></th>
+                </tr>
+                <th></th>
+                <th>
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/M6mtgPfsA3M" title="YouTube video player" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+                </th>
+
+            </tbody>
+        </table>
     </div>
 
-    <div>
-        <h3>Pangeo Showcase</h3>
-        <p>Basic introduction and AWS Batch demo.</p>
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/XCgX1AszVF4" title="YouTube video player"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen></iframe>
-    </div>
+    <!-- End of Table -->
 
-    <div>
-        <h3>JupyterCon 2020</h3>
-        <p>First public presentation (a bit outdated). Describes motivation and brief description (no demo).</p>
-
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/M6mtgPfsA3M" title="YouTube video player"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen></iframe>
-    </div>
-</section>
-
-
-
-
-{%- endblock %}
+{%- endblock %}  <!-- End Block Element -->
