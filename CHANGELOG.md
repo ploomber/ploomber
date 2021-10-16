@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.13.4dev
+
 ## 0.13.3 (2021-10-15)
 * Adds `--log-file/-F` option to CLI to log to a file
 * Clearer error message when a task in a `pipeline.yaml` has `grid` and `params`
