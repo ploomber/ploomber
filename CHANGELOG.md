@@ -1,7 +1,13 @@
 # CHANGELOG
 
 ## 0.13.3dev
-* - Adding `--log-file` option to CLI commands
+* Adds `--log-file/-F` option to CLI to log to a file
+* Clearer error message when a task in a `pipeline.yaml` has `grid` and `params`
+* Right bar highlighting fixed
+* `normalize_python` returns input if passed non-Python code
+* Better error message when requesting an unknown example in `ploomber examples`
+* Better error message when `ploomber examples` fails due to an unexpected error
+* Fixes an error in `ploomber examples` that caused the `--branch/-b` argument to be ignored
 
 ## 0.13.2 (2021-10-09)
 * Adds support for using `grid` and task-level hooks in spec API
