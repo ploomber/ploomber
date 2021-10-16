@@ -97,7 +97,16 @@ def install(use_lock):
 def examples(name, force, branch):
     """Get sample projects. Run "ploomber examples" to list them
     """
-    cli_module.examples.main(name=name, force=force, branch=branch)
+    try:
+        cli_module.examples.main(name=name, force=force, branch=branch)
+    except Exception as e:
+        raise RuntimeError(
+            'An error happened when executing the examples command. Check out '
+            'the full error message for details. Downloading the examples '
+            'again or upgrading Ploomber may fix the '
+            'issue.\nDownload: ploomber examples -f\n'
+            'Update: pip install ploomber -U\n'
+            'Update [conda]: conda update ploomber -c conda-forge')
 
 
 def cmd_router():
