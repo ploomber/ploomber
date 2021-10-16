@@ -551,20 +551,35 @@ def inject_cell(model, params):
                                              comment=comment)
 
 
-# FIXME: this is used in the task itself in the .develop() feature, maybe
-# move there?
+def add_error_top_message(model, error):
+    # todo: use the right format
+    try:
+        cells = model['content']['cells']
+    except Exception:
+        # may happen if listing notebook or showing directory
+        return model
+
+    message = f'<h3 style="color: red">{error}</h1>'
+    cell = nbformat.v4.new_markdown_cell(message)
+    cell.metadata['tags'] = ['ploomber-message']
+    cells.insert(0, cell)
+
+    return model
+
+
 def _cleanup_rendered_nb(nb):
-    cell, i = find_cell_with_tag(nb, 'injected-parameters')
+    """
+    We add some special cells to notebooks, this function removes them.
+    It's called by NotebookRunner.develop() and PloomberContentsManager
+    """
+    tags = ['debugging-settings', 'injected-parameters', 'ploomber-message']
 
-    if i is not None:
-        print('Removing injected-parameters cell...')
-        nb['cells'].pop(i)
+    for tag in tags:
+        cell, i = find_cell_with_tag(nb, tag)
 
-    cell, i = find_cell_with_tag(nb, 'debugging-settings')
-
-    if i is not None:
-        print('Removing debugging-settings cell...')
-        nb['cells'].pop(i)
+        if i is not None:
+            print(f'Removing {tag} cell...')
+            nb['cells'].pop(i)
 
     # papermill adds "tags" to all cells that don't have them, remove them
     # if they are empty to avoid cluttering the script

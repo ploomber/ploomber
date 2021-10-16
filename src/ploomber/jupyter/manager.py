@@ -9,7 +9,8 @@ from pathlib import Path
 from collections.abc import Mapping
 from collections import defaultdict
 
-from ploomber.sources.notebooksource import (_cleanup_rendered_nb, inject_cell)
+from ploomber.sources.notebooksource import (_cleanup_rendered_nb, inject_cell,
+                                             add_error_top_message)
 from ploomber.jupyter.dag import JupyterDAGManager
 from ploomber.util import loader
 from ploomber.exceptions import DAGSpecInvalidError
@@ -125,15 +126,15 @@ def derive_class(base_class):
                 # required to determine which spec to use). Since it's expected
                 # that this happens for some folder, we simply emit a warning
                 except DAGSpecInvalidError as e:
-                    self.reset_dag()
+                    self.reset_dag(error=str(e))
                     if log:
                         self.log.warning(
                             '[Ploomber] Skipping DAG initialization since '
                             'there isn\'t a project root in the current or '
                             'parent directories. Error message: '
                             f'{str(e)}')
-                except Exception:
-                    self.reset_dag()
+                except Exception as e:
+                    self.reset_dag(error=str(e))
                     if log:
                         self.log.exception(msg)
                 else:
@@ -164,9 +165,9 @@ def derive_class(base_class):
                         # up rendering
                         try:
                             self.dag.render(force=True, show_progress=False)
-                        except Exception:
+                        except Exception as e:
                             render_success = False
-                            self.reset_dag()
+                            self.reset_dag(error=e)
                             if log:
                                 msg = ("[Ploomber] An error ocurred when "
                                        "rendering your DAG, cells won't be "
@@ -201,7 +202,8 @@ def derive_class(base_class):
                     self.dag_mapping = dag_mapping
                     self.path = path
 
-        def reset_dag(self):
+        def reset_dag(self, error):
+            self.error = error
             self.spec = None
             self.dag = None
             self.path = None
@@ -217,7 +219,7 @@ def derive_class(base_class):
             # NOTE: there is some strange behavior in Jupyter contents
             # manager. We should not access attributes here (e.g.,
             # self.root_dir) otherwise they aren't correctly initialized
-            self.reset_dag()
+            self.reset_dag(error=None)
             super().__init__(*args, **kwargs)
 
         def get(self, path, content=True, type=None, format=None):
@@ -264,6 +266,9 @@ def derive_class(base_class):
                     inject_cell(model=model,
                                 params=self.dag_mapping[model['path']]._params)
 
+            # if self.error:
+            #     model = add_error_top_message(model, error=self.error)
+
             return model
 
         def save(self, model, path=""):
@@ -287,6 +292,10 @@ def derive_class(base_class):
 
                     self.log.info("[Ploomber] Deleting product's metadata...")
                     self.dag_mapping.delete_metadata(key)
+
+                # if we displayed an error, we still have to clean up
+                # elif self.error:
+                #     model['content'] = _cleanup_rendered_nb(model['content'])
 
                 return super().save(model, path)
 

@@ -19,6 +19,7 @@ from jupyter_server import serverapp
 from ploomber import DAG
 from ploomber.jupyter.manager import derive_class
 from ploomber.jupyter.dag import JupyterDAGManager
+from ploomber.sources.nb_utils import find_cell_with_tag
 from ploomber.spec import DAGSpec
 
 from jupytext.contentsmanager import TextFileContentsManager
@@ -913,3 +914,33 @@ tasks:
 
     model = cm.get(str('load.py'))
     assert get_injected_cell(model['content'])
+
+
+def test_no_error_message_if_dag_loads_ok():
+    pass
+
+
+def test_adds_error_message_if_dag_fails_to_load(tmp_nbs):
+    Path('pipeline.yaml').write_text('')
+
+    cm = PloomberContentsManager()
+
+    model = cm.get('load.py')
+    first = model['content']['cells'][0]
+
+    assert first['cell_type'] == 'markdown'
+    expected = ('<h3 style="color: red">'
+                'Error initializing DAG from pipeline.yaml</h1>')
+    assert first['source'] == expected
+    assert first['metadata']['tags'] == ['ploomber-message']
+
+
+def test_deletes_error_message_when_saving(tmp_nbs):
+    Path('pipeline.yaml').write_text('')
+
+    cm = PloomberContentsManager()
+    model = cm.get('load.py')
+    cm.save(model, path='/load.py')
+    nb = jupytext.read('load.py')
+
+    assert find_cell_with_tag(nb, 'ploomber-message') == (None, None)
