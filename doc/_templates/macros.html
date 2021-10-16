@@ -39,10 +39,15 @@
                 <a class="nav-link" href="https://ploomber.io">Blog</a>
             </li>
         </ul>
-        <form class="search form-inline my-2 my-lg-0" action="{{ pathto('search') }}" method="get">
-            <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
-            <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
-        </form>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->                
+        <div class="flex-md-shrink-0">  <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="{{ pathto('search') }}" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
     </div>
 </nav>
 {% endmacro %}

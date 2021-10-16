@@ -44,6 +44,9 @@ python -m venv ploomber-venv
 
 # activate virtual env (linux/macOS)
 source ploomber-venv/bin/activate
+
+# activate virtual env (windows)
+.\ploomber-venv\Scripts\activate
 ```
 *Note:* [Check venv docs](https://docs.python.org/3/library/venv.html#creating-virtual-environments) to find the appropriate command if you're using Windows.
 
