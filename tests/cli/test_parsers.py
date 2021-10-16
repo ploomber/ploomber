@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentError
+from unittest.mock import Mock
 
 import test_pkg
 import yaml
@@ -28,6 +29,42 @@ def test_add_type_to_arg_parser():
     assert actions['c'].type is str
     assert actions['d'].type is bool
     assert actions['e'].type is None
+
+
+def test_error_if_fn_signature_clashes_with_existing_args():
+    def my_fn(log=True):
+        pass
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    with pytest.raises(ValueError) as excinfo:
+        _add_args_from_callable(parser, my_fn)
+
+    expected = ("The signature from 'my_fn' conflicts with existing arguments"
+                " in the command-line interface, please rename the following "
+                "argument: 'log'")
+    assert expected == str(excinfo.value)
+
+
+def test_doesnt_modify_error_if_unknown_reason():
+    def my_fn(log=True):
+        pass
+
+    parser = CustomParser()
+    arg = Mock()
+    arg.options_strings = ['a', 'b']
+    parser.add_argument = Mock(side_effect=ArgumentError(None, 'message'))
+
+    with parser:
+        pass
+
+    with pytest.raises(ArgumentError) as excinfo:
+        _add_args_from_callable(parser, my_fn)
+
+    assert 'message' == str(excinfo.value)
 
 
 @pytest.mark.parametrize('argv, expected', [

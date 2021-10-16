@@ -307,9 +307,24 @@ def _add_args_from_callable(parser, callable_):
     required, defaults, params = _parse_signature_from_callable(callable_)
 
     for arg in defaults.keys():
-        parser.add_argument('--' + arg,
-                            help=get_desc(doc, arg),
-                            **add_argument_kwargs(params, arg))
+        conflict = False
+
+        try:
+            parser.add_argument('--' + arg,
+                                help=get_desc(doc, arg),
+                                **add_argument_kwargs(params, arg))
+        except argparse.ArgumentError as e:
+            conflict = e
+
+        if conflict:
+            if 'conflicting option string' in conflict.message:
+                raise ValueError(
+                    f'The signature from {callable_.__name__!r} '
+                    'conflicts with existing arguments in the command-line '
+                    'interface, please rename the following '
+                    f'argument: {arg!r}')
+            else:
+                raise conflict
 
     for arg in required:
         parser.add_argument(arg,
