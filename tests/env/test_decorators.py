@@ -19,24 +19,30 @@ def test_many_args_not_start_with_env():
 
 
 def test_one_arg_starting_with_env():
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError) as excinfo:
 
         @with_env({'a': 1})
-        def does_not_works(env, env_something):
+        def does_not_work(env, env_something):
             return env_something
+
+    assert 'has arguments starting with "env"' in str(excinfo.value)
 
 
 def test_many_args_starting_with_env():
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError) as excinfo:
 
         @with_env({'a': 1})
-        def does_not_works(env, env_a, env_b):
+        def does_not_work(env, env_a, env_b):
             return env_a, env_b
+
+    assert 'has arguments starting with "env"' in str(excinfo.value)
 
 
 def test_cap_arg_starting_with_env():
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError) as excinfo:
 
         @with_env({'a': 1})
-        def does_not_works(env, ENV_something):
+        def does_not_work(env, ENV_something):
             return ENV_something
+
+    assert 'has arguments starting with "env"' in str(excinfo.value)

@@ -28,8 +28,8 @@ def _validate_and_modify_signature(fn):
 
     for arg in list(sig.parameters.keys())[1:]:
         if arg.lower().startswith('env'):
-            raise RuntimeError('Function "{}" has arguments'
-                               'starting with "env". Only the'
+            raise RuntimeError('Function "{}" has arguments '
+                               'starting with "env". Only the '
                                'first one should start with "env"'.format(
                                    fn.__name__))
 
