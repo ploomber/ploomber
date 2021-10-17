@@ -98,7 +98,7 @@ TESTING = [
 ]
 
 # packages needed for development
-DEV = ['twine', 'invoke']
+DEV = ['twine', 'invoke', 'pkgmt']
 
 DESCRIPTION = (
     'A convention over configuration workflow orchestrator. Develop locally '
