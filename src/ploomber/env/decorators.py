@@ -26,6 +26,13 @@ def _validate_and_modify_signature(fn):
                            'argument, which is required to use the '
                            '@with_env decorator'.format(fn.__name__))
 
+    for arg in list(sig.parameters.keys())[1:]:
+        if arg[:3].lower() == 'env':
+            raise RuntimeError('Function "{}" accept arguments'
+                               'starting with "env". Only the'
+                               'first should start with "env"'.format(
+                                   fn.__name__))
+
     # https://www.python.org/dev/peps/pep-0362/#examples
     new_sig = sig.replace(parameters=tuple(sig.parameters.values())[1:])
     fn.__signature__ = new_sig
