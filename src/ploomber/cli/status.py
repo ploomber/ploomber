@@ -8,5 +8,5 @@ def main():
     with parser:
         # this command has no static args
         pass
-    dag, args = _custom_command(parser)
+    dag, args = parser._custom_command(parser)
     print(dag.status())

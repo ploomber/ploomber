@@ -11,7 +11,7 @@ import pytest
 
 from ploomber.cli import plot, build, parsers, task, report, status, interact
 from ploomber.cli.cli import cmd_router
-from ploomber.cli.parsers import _custom_command
+from ploomber.cli.parsers import CustomParser
 from ploomber.tasks import notebook
 from ploomber import DAG
 import ploomber.dag.dag as dag_module
@@ -405,7 +405,8 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
 
     class CustomCommandWrapper:
         def __call__(self, parser):
-            dag, args = _custom_command(parser)
+            parser = CustomParser()
+            dag, args = parser._custom_command(parser)
             self.dag_mock = MagicMock(wraps=dag)
             return self.dag_mock, args
 

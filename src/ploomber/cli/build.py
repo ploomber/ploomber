@@ -32,7 +32,7 @@ def main(render_only=False):
             action='store_true',
             default=False)
 
-    dag, args = _custom_command(parser)
+    dag, args = parser._custom_command(parser)
 
     # when using the parallel executor from the CLI, ensure we print progress
     # to stdout

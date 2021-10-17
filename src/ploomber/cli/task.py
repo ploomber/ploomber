@@ -31,7 +31,7 @@ def main():
                             '-of',
                             help='Only execute on_finish hook',
                             action='store_true')
-    dag, args = _custom_command(parser)
+    dag, args = parser._custom_command(parser)
 
     dag.render()
     task = dag[args.task_name]

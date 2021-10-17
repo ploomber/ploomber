@@ -11,7 +11,7 @@ def main():
         # this command has no static args
         pass
 
-    dag, _ = _custom_command(parser)
+    dag, _ = parser._custom_command(parser)
 
     try:
         dag.render()

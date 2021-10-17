@@ -127,7 +127,7 @@ def test_entry_point_from_factory_in_environment_variable(
     with parser:
         pass
 
-    dag, _ = _custom_command(parser)
+    dag, _ = parser._custom_command(parser)
 
     assert isinstance(dag, DAG)
 
@@ -213,7 +213,7 @@ def test_log_file_with_factory_entry_point(backup_test_pkg, monkeypatch, opt):
     with parser:
         pass
 
-    parsers._custom_command(parser)
+    parser._custom_command(parser)
 
     mock.basicConfig.assert_called_with(level='INFO')
     mock.FileHandler.assert_called_with('my.log')

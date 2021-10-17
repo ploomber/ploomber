@@ -12,7 +12,7 @@ def main():
             '-o',
             help='Where to save the plot, defaults to pipeline.png',
             default=None)
-    dag, args = _custom_command(parser)
+    dag, args = parser._custom_command(parser)
 
     if args.output is not None:
         output = args.output

@@ -11,6 +11,6 @@ def main():
             '-o',
             help='Where to save the report, defaults to pipeline.html',
             default='pipeline.html')
-    dag, args = _custom_command(parser)
+    dag, args = parser._custom_command(parser)
     dag.to_markup(path=args.output)
     print('Report saved at:', args.output)
