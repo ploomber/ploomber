@@ -559,10 +559,12 @@ def add_error_top_message(model, error):
         # may happen if listing notebook or showing directory
         return model
 
-    message = f'<h3 style="color: red">{error}</h1>'
+    message = (f'<h3 style="color: red">Ploomber error: {error}</h3>'
+               '<p>Check the Jupyter console (the terminal where you '
+               'executed the jupyter command)</p><br>')
     cell = nbformat.v4.new_markdown_cell(message)
+    cell['id'] = 'ploomber-message'
     cell.metadata['tags'] = ['ploomber-message']
-    cell.metadata['trusted'] = True
     cells.insert(0, cell)
 
     return model
@@ -579,7 +581,7 @@ def _cleanup_rendered_nb(nb):
         cell, i = find_cell_with_tag(nb, tag)
 
         if i is not None:
-            print(f'Removing {tag} cell...')
+            print(f'Found cell with tag {tag}, removing...')
             nb['cells'].pop(i)
 
     # papermill adds "tags" to all cells that don't have them, remove them
