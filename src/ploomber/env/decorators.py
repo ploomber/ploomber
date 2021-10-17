@@ -26,7 +26,7 @@ def _validate_and_modify_signature(fn):
                            'argument, which is required to use the '
                            '@with_env decorator'.format(fn.__name__))
 
-    for arg in sig.parameters.keys()[1:]:
+    for arg in list(sig.parameters.keys())[1:]:
         if arg.lower().startswith('env'):
             raise RuntimeError('Function "{}" has arguments'
                                'starting with "env". Only the'
