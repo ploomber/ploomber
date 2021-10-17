@@ -191,7 +191,25 @@ def test_force_clone(clone_examples, monkeypatch):
 
 def test_copy_example(clone_examples, tmp_directory):
     examples.main(name='templates/ml-online', force=False)
-    assert Path(tmp_directory, 'templates/ml-online').exists()
+
+    assert Path(tmp_directory, 'ml-online').is_dir()
+    assert Path(tmp_directory, 'ml-online', 'src', 'ml_online').is_dir()
+
+
+@pytest.mark.parametrize('opt, target', [
+    ['--output', 'custom-dir'],
+    ['-o', 'custom/dir'],
+])
+def test_copy_to_custom_directory(clone_examples, tmp_directory, opt, target):
+    runner = CliRunner()
+
+    result = runner.invoke(cli.cli,
+                           ['examples', '--name', 'ml-online', opt, target],
+                           catch_exceptions=False)
+
+    assert not result.exit_code
+    assert Path(tmp_directory, target).is_dir()
+    assert Path(tmp_directory, target, 'src', 'ml_online').is_dir()
 
 
 def test_error_unknown_example(clone_examples, capsys):

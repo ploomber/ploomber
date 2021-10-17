@@ -285,6 +285,14 @@ Get one:
     ploomber examples --name {name}
 
 
+To download in a specific location:
+
+
+.. code-block:: console
+
+    ploomber examples --name {name} --output path/to/dir
+
+
 .. _api-cli-default-locations:
 
 Default locations

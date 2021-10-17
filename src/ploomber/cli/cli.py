@@ -88,17 +88,21 @@ def install(use_lock):
 
 
 @cli.command()
-@click.option('-n', '--name', help='Example to use', default=None)
+@click.option('-n', '--name', help='Example to download', default=None)
 @click.option('-f', '--force', help='Force examples download', is_flag=True)
+@click.option('-o', '--output', help='Target directory', default=None)
 @click.option('-b',
               '--branch',
               help='Git branch to use. Defaults to master',
               default='master')
-def examples(name, force, branch):
+def examples(name, force, branch, output):
     """Get sample projects. Run "ploomber examples" to list them
     """
     try:
-        cli_module.examples.main(name=name, force=force, branch=branch)
+        cli_module.examples.main(name=name,
+                                 force=force,
+                                 branch=branch,
+                                 output=output)
     except Exception as e:
         raise RuntimeError(
             'An error happened when executing the examples command. Check out '

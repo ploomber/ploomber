@@ -179,7 +179,7 @@ class _ExamplesManager:
         return self.examples / 'README.md'
 
 
-def main(name, force=False, branch=None):
+def main(name, force=False, branch=None, output=None):
     manager = _ExamplesManager(home=_home, branch=branch)
     tw = TerminalWriter()
 
@@ -196,27 +196,30 @@ def main(name, force=False, branch=None):
                        'To list examples: ploomber examples\n'
                        'To update local copy: ploomber examples -f')
         else:
-            click.echo(f'Copying example to {name}/')
+            output = output or name
 
-            if Path(name).exists():
+            click.echo(f'Copying example to {output}/')
+
+            if Path(output).exists():
                 raise click.ClickException(
-                    f"{name!r} already exists in the current working "
+                    f"{output!r} already exists in the current working "
                     "directory, please rename it or move it "
                     "to another location and try again.")
 
-            shutil.copytree(selected, name)
+            shutil.copytree(selected, output)
 
-            path_to_readme = Path(name, 'README.md')
-            path_to_req = Path(name, 'requirements.txt')
-            path_to_env = Path(name, 'environment.yml')
-            name_dir = name + ('\\' if platform.system() == 'Windows' else '/')
+            path_to_readme = Path(output, 'README.md')
+            path_to_req = Path(output, 'requirements.txt')
+            path_to_env = Path(output, 'environment.yml')
+            out_dir = output + ('\\'
+                                if platform.system() == 'Windows' else '/')
 
             tw.sep('=', str(path_to_readme), blue=True)
             _display_markdown(path_to_readme)
             tw.sep('=', blue=True)
             tw.write(
                 f'Done.\n\nTo install dependencies, use any of the following: '
-                f'\n  1. Move to {name_dir} and run "ploomber install"'
+                f'\n  1. Move to {out_dir} and run "ploomber install"'
                 f'\n  2. conda env create -f {path_to_env}'
                 f'\n  3. pip install -r {path_to_req}'
                 f'\n\nCheck out {path_to_readme} for more details.\n',
