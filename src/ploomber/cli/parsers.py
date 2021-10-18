@@ -166,11 +166,12 @@ class CustomParser(argparse.ArgumentParser):
 
         return dag, args
     
-    def _custom_command(self, parser):
+    def load_from_entry_point_arg(self):
         """Parses an entry point, adding arguments by extracting them from the env.
+
         Returns a dag and the parsed args
         """
-        entry_point = EntryPoint(parser.parse_entry_point_value())
+        entry_point = EntryPoint(self.parse_entry_point_value())
         dag, args = load_dag_from_entry_point_and_parser(entry_point, parser,
                                                          sys.argv)
         return dag, args

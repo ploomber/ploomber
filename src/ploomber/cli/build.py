@@ -1,4 +1,4 @@
-from ploomber.cli.parsers import _custom_command, CustomParser
+from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.executors import Parallel
 
@@ -32,7 +32,7 @@ def main(render_only=False):
             action='store_true',
             default=False)
 
-    dag, args = parser._custom_command(parser)
+    dag, args = parser.load_from_entry_point_arg()
 
     # when using the parallel executor from the CLI, ensure we print progress
     # to stdout

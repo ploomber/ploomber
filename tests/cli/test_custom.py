@@ -177,7 +177,7 @@ def test_interact_command_starts_full_ipython_session(monkeypatch, tmp_nbs):
     mock_start_ipython = Mock()
     monkeypatch.setattr(sys, 'argv', ['interact'])
     monkeypatch.setattr(interact, 'start_ipython', mock_start_ipython)
-    monkeypatch.setattr(interact, '_custom_command', lambda _:
+    monkeypatch.setattr(interact, 'load_from_entry_point_arg', lambda _:
                         (mock_dag, None))
 
     interact.main(catch_exception=False)
@@ -406,13 +406,13 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
     class CustomCommandWrapper:
         def __call__(self, parser):
             parser = CustomParser()
-            dag, args = parser._custom_command(parser)
+            dag, args = parser.load_from_entry_point_arg()
             self.dag_mock = MagicMock(wraps=dag)
             return self.dag_mock, args
 
     wrapper = CustomCommandWrapper()
 
-    monkeypatch.setattr(task, '_custom_command', wrapper)
+    monkeypatch.setattr(task, 'load_from_entry_point_arg', wrapper)
 
     task.main(catch_exception=False)
 

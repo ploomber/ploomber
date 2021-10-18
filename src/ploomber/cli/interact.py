@@ -1,5 +1,5 @@
 from IPython import start_ipython
-from ploomber.cli.parsers import CustomParser, _custom_command
+from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 
 
@@ -11,7 +11,7 @@ def main():
         # this command has no static args
         pass
 
-    dag, _ = parser._custom_command(parser)
+    dag, _ = parser.load_from_entry_point_arg()
 
     try:
         dag.render()

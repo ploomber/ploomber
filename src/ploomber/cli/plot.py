@@ -1,4 +1,4 @@
-from ploomber.cli.parsers import _custom_command, CustomParser
+from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.util.default import extract_name
 
@@ -12,7 +12,7 @@ def main():
             '-o',
             help='Where to save the plot, defaults to pipeline.png',
             default=None)
-    dag, args = parser._custom_command(parser)
+    dag, args = parser.load_from_entry_point_arg()
 
     if args.output is not None:
         output = args.output
