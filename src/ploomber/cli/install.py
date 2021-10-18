@@ -30,35 +30,39 @@ def main(use_lock):
         it uses regular files and creates the lock ones after installing
         dependencies
     """
-    if Path(_ENV_YML).exists() or Path(_ENV_LOCK_YML).exists():
+    HAS_CONDA = shutil.which('conda')
+    HAS_ENV_YML = Path(_ENV_YML).exists()
+    HAS_ENV_LOCK_YML = Path(_ENV_LOCK_YML).exists()
+    HAS_REQS_TXT = Path(_REQS_TXT).exists()
+    HAS_REQS_LOCK_TXT = Path(_REQS_LOCK_TXT).exists()
 
-        if not shutil.which('conda'):
-            raise exceptions.ClickException('Found environment.yml file but '
-                                            'conda is not installed. Install '
-                                            'it and try again')
-
-        if use_lock and not Path(_ENV_LOCK_YML).exists():
-            raise exceptions.ClickException(
-                'Expected an environment.lock.yml due to the '
-                '--use-lock/-l option. Run "ploomber install" to create '
-                'an environment.lock.yml from an environment.yml')
-
-        main_conda(use_lock)
-    elif Path(_REQS_TXT).exists() or Path(_REQS_LOCK_TXT).exists():
-
-        if use_lock and not Path(_REQS_LOCK_TXT).exists():
-            raise exceptions.ClickException(
-                'Expected a requirements.lock.txt due to the '
-                '--use-lock/-l option. Run "ploomber install" to create '
-                'a requirements.lock.txt from a requirements.txt')
-
-        main_pip(use_lock)
-    else:
+    if use_lock and not HAS_ENV_LOCK_YML and not HAS_REQS_LOCK_TXT:
         raise exceptions.ClickException(
-            'Expected a conda environment.yml or '
-            'pip requirements.txt file, but none of those exist. '
-            'Add one and try again. You can generate a sample project using '
-            'the "ploomber scaffold" command')
+            'Expected and environment.lock.yaml '
+            '(conda) or requirementx.lock.txt (pip) in the current directory. '
+            'Add one of them and try again.')
+    elif not use_lock and not HAS_ENV_YML and not HAS_REQS_TXT:
+        raise exceptions.ClickException(
+            'Expected an environment.yaml (conda)'
+            ' or requirements.txt (pip) in the current directory.'
+            ' Add one of them and try again.')
+    elif (not HAS_CONDA and use_lock and HAS_ENV_LOCK_YML
+          and not HAS_REQS_LOCK_TXT):
+        raise exceptions.ClickException(
+            'Found env environment.lock.yaml '
+            'but conda is not installed. Install conda or add a '
+            'requirements.lock.txt to use pip instead')
+    elif not HAS_CONDA and not use_lock and HAS_ENV_YML and not HAS_REQS_TXT:
+        raise exceptions.ClickException(
+            'Found environment.yaml but conda '
+            'is not installed. Install conda or add a '
+            'requirements.txt to use pip instead')
+    elif HAS_CONDA and use_lock and HAS_ENV_LOCK_YML:
+        main_conda(use_lock=True)
+    elif HAS_CONDA and not use_lock and HAS_ENV_YML:
+        main_conda(use_lock=False)
+    else:
+        main_pip(use_lock=use_lock)
 
 
 def main_pip(use_lock):
