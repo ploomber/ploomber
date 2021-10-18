@@ -10,7 +10,7 @@ from invoke import task
 _IS_WINDOWS = platform.system() == 'Windows'
 _PY_DEFAULT_VERSION = '3.9'
 
-if not Path('versioneer.py').exists():
+if not Path('LICENSE').exists():
     sys.exit('Error: Run the command from the root folder (the directory '
              'with the README.md and setup.py files)')
 
