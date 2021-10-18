@@ -6,7 +6,6 @@ import platform
 from pathlib import Path
 import base64
 from invoke import task
-import versioneer
 
 _IS_WINDOWS = platform.system() == 'Windows'
 _PY_DEFAULT_VERSION = '3.9'
@@ -98,6 +97,7 @@ def docs(c):
 def new(c):
     """Release a new version
     """
+    from pkgmt import versioneer
     versioneer.version(project_root='.', tag=True)
 
 
@@ -105,6 +105,7 @@ def new(c):
 def upload(c, tag, production=True):
     """Upload to PyPI
     """
+    from pkgmt import versioneer
     versioneer.upload(tag, production=production)
 
 
