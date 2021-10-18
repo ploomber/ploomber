@@ -165,16 +165,17 @@ class CustomParser(argparse.ArgumentParser):
         dag = entry(**{**kwargs, **replaced})
 
         return dag, args
-    
+
     def load_from_entry_point_arg(self):
         """Parses an entry point, adding arguments by extracting them from the env.
 
         Returns a dag and the parsed args
         """
         entry_point = EntryPoint(self.parse_entry_point_value())
-        dag, args = load_dag_from_entry_point_and_parser(entry_point, parser,
+        dag, args = load_dag_from_entry_point_and_parser(entry_point, self,
                                                          sys.argv)
         return dag, args
+
 
 def _path_for_module_path(module_path):
     mod_name, path_part = module_path.split('::')
