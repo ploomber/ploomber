@@ -91,10 +91,7 @@ def install(use_lock):
 @click.option('-n', '--name', help='Example to download', default=None)
 @click.option('-f', '--force', help='Force examples download', is_flag=True)
 @click.option('-o', '--output', help='Target directory', default=None)
-@click.option('-b',
-              '--branch',
-              help='Git branch to use. Defaults to master',
-              default='master')
+@click.option('-b', '--branch', help='Git branch to use.', default=None)
 def examples(name, force, branch, output):
     """Get sample projects. Run "ploomber examples" to list them
     """
@@ -103,6 +100,8 @@ def examples(name, force, branch, output):
                                  force=force,
                                  branch=branch,
                                  output=output)
+    except click.ClickException:
+        raise
     except Exception as e:
         raise RuntimeError(
             'An error happened when executing the examples command. Check out '

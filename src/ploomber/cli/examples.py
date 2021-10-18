@@ -26,6 +26,29 @@ _lexer = MarkdownLexer()
 _formatter = TerminalFormatter(bg="dark")
 
 
+def _find_header(md):
+    """Find header markers
+    """
+    mark = '<!-- end header -->'
+    lines = md.splitlines()
+
+    for n, line in enumerate(lines):
+        if mark == line:
+            return n
+
+    return None
+
+
+def _skip_header(md):
+    line = _find_header(md)
+
+    if line:
+        lines = md.splitlines()
+        return '\n'.join(lines[line + 1:])
+    else:
+        return md
+
+
 def _delete_git_repo(path):
     """
     If on windows, we need to change permissionsto delete the repo
@@ -39,44 +62,28 @@ def _delete_git_repo(path):
                 os.chmod(Path(root, file_), stat.S_IRWXU)
 
 
-def _display_markdown(source):
-    if isinstance(source, Path):
-        source = source.read_text()
+def _delete(source, sub):
+    return source.replace(sub, '')
+
+
+def _cleanup_markdown(source):
+    source = _delete(source, '<!-- start description -->\n')
+    source = _delete(source, '<!-- end description -->\n')
+    source = _skip_header(source)
+    return source
+
+
+def _display_markdown(tw, path):
+    source = _cleanup_markdown(path.read_text())
 
     lines = source.splitlines()
 
     top_lines = '\n'.join(lines[:25])
 
+    tw.write(highlight(top_lines, _lexer, _formatter))
+
     if len(lines) > 25:
-        top_lines += '\n\n[...continues]'
-
-    click.echo(highlight(top_lines, _lexer, _formatter))
-
-
-def _list_examples(path):
-    with open(path / 'index.csv', newline='', encoding='utf-8-sig') as f:
-        rows = list(csv.DictReader(f))
-
-    by_type = defaultdict(lambda: [])
-
-    for row in rows:
-        type_ = row.pop('type')
-        del row['entry']
-        by_type[type_].append(row)
-
-    tw = TerminalWriter()
-
-    tw.sep('=', 'Ploomber examples', blue=True)
-
-    for type_ in ['basic', 'intermediate', 'advanced']:
-        tw.sep(' ', type_.capitalize(), green=True)
-        print(Table.from_dicts(by_type[type_]).to_format('simple'))
-
-    tw.sep('=', blue=True)
-
-    tw.write('\nTo run these examples in a hosted '
-             f'environment, see instructions at: {_URL}')
-    tw.write('\nTo get the source code: ploomber examples -n {name}\n\n')
+        tw.write(f'\n[...{str(path)} continues]\n', yellow=True)
 
 
 class _ExamplesManager:
@@ -87,6 +94,7 @@ class _ExamplesManager:
         self._path_to_metadata = self._home / '.metadata'
         self._examples = self._home / 'projects'
         self._branch = branch or _DEFAULT_BRANCH
+        self._explicit_branch = branch is not None
 
     @property
     def home(self):
@@ -164,10 +172,11 @@ class _ExamplesManager:
             if is_more_than_one_day_old:
                 click.echo('Examples copy is more than 1 day old...')
 
-            if is_different_branch:
+            if is_different_branch and self._explicit_branch:
                 click.echo('Different branch requested...')
 
-            return is_more_than_one_day_old or is_different_branch
+            return is_more_than_one_day_old or (is_different_branch
+                                                and self._explicit_branch)
         else:
             click.echo('Cloning...')
             return True
@@ -178,27 +187,76 @@ class _ExamplesManager:
     def path_to_readme(self):
         return self.examples / 'README.md'
 
+    def list(self):
+        with open(self.examples / '_index.csv',
+                  newline='',
+                  encoding='utf-8-sig') as f:
+            rows = list(csv.DictReader(f))
+
+        categories = json.loads((self.examples / '_category.json').read_text())
+
+        by_category = defaultdict(lambda: [])
+
+        for row in rows:
+            category = row.pop('category')
+            del row['idx']
+            by_category[category].append(row)
+
+        tw = TerminalWriter()
+
+        click.echo(f'Branch: {self.branch}')
+        tw.sep('=', 'Ploomber examples', blue=True)
+        click.echo()
+
+        for category in sorted(by_category):
+            title = category.capitalize()
+            description = categories.get(category)
+
+            if description:
+                title = f'{title} ({description})'
+
+            tw.sep(' ', title, green=True)
+            click.echo()
+            click.echo(
+                Table.from_dicts(by_category[category]).to_format('simple'))
+            click.echo()
+
+        tw.sep('=', blue=True)
+
+        tw.write('\nTo run these examples in free, hosted '
+                 f'environment, see instructions at: {_URL}')
+        tw.write('\nTo download: ploomber examples -n name -o path\n')
+        tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n')
+
 
 def main(name, force=False, branch=None, output=None):
+    """
+    Entry point for examples
+    """
     manager = _ExamplesManager(home=_home, branch=branch)
     tw = TerminalWriter()
 
     if not manager.examples.exists() or manager.outdated() or force:
+        if not manager.examples.exists():
+            click.echo('Local copy does not exist...')
+        elif force:
+            click.echo('Forcing download...')
+
         manager.clone()
 
     if not name:
-        _list_examples(manager.examples)
+        manager.list()
     else:
         selected = manager.path_to(name)
 
         if not selected.exists():
-            click.echo(f'\n\nThere is no example named {name!r}.\n'
+            click.echo(f'There is no example named {name!r}.\n'
                        'To list examples: ploomber examples\n'
                        'To update local copy: ploomber examples -f')
         else:
             output = output or name
 
-            click.echo(f'Copying example to {output}/')
+            tw.sep('=', f'Copying example {name!r} to {output}/', green=True)
 
             if Path(output).exists():
                 raise click.ClickException(
@@ -209,18 +267,15 @@ def main(name, force=False, branch=None, output=None):
             shutil.copytree(selected, output)
 
             path_to_readme = Path(output, 'README.md')
-            path_to_req = Path(output, 'requirements.txt')
-            path_to_env = Path(output, 'environment.yml')
             out_dir = output + ('\\'
                                 if platform.system() == 'Windows' else '/')
 
             tw.sep('=', str(path_to_readme), blue=True)
-            _display_markdown(path_to_readme)
+            _display_markdown(tw, path_to_readme)
             tw.sep('=', blue=True)
-            tw.write(
-                f'Done.\n\nTo install dependencies, use any of the following: '
-                f'\n  1. Move to {out_dir} and run "ploomber install"'
-                f'\n  2. conda env create -f {path_to_env}'
-                f'\n  3. pip install -r {path_to_req}'
-                f'\n\nCheck out {path_to_readme} for more details.\n',
-                green=True)
+            tw.sep('=', 'Installation', blue=True)
+            tw.write(f'Move to {out_dir} and run one of:'
+                     f'\n* ploomber install'
+                     f'\n* conda env create -f environment.yml'
+                     f'\n* pip install -r requirements.txt\n')
+            tw.sep('=', blue=True)
