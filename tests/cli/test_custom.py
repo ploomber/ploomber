@@ -177,8 +177,8 @@ def test_interact_command_starts_full_ipython_session(monkeypatch, tmp_nbs):
     mock_start_ipython = Mock()
     monkeypatch.setattr(sys, 'argv', ['interact'])
     monkeypatch.setattr(interact, 'start_ipython', mock_start_ipython)
-    monkeypatch.setattr(interact, 'load_from_entry_point_arg', lambda _:
-                        (mock_dag, None))
+    monkeypatch.setattr(interact.CustomParser, 'load_from_entry_point_arg',
+                        lambda _: (mock_dag, None))
 
     interact.main(catch_exception=False)
 
@@ -403,20 +403,18 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
     args = ['task', 'load', '--force']
     monkeypatch.setattr(sys, 'argv', args)
 
-    class CustomCommandWrapper:
-        def __call__(self, parser):
-            parser = CustomParser()
-            dag, args = parser.load_from_entry_point_arg()
-            self.dag_mock = MagicMock(wraps=dag)
-            return self.dag_mock, args
+    class CustomParserWrapper(CustomParser):
+        def load_from_entry_point_arg(self):
+            dag, args = super().load_from_entry_point_arg()
+            dag_mock = MagicMock(wraps=dag)
+            type(self).dag_mock = dag_mock
+            return dag_mock, args
 
-    wrapper = CustomCommandWrapper()
-
-    monkeypatch.setattr(task, 'load_from_entry_point_arg', wrapper)
+    monkeypatch.setattr(task, 'CustomParser', CustomParserWrapper)
 
     task.main(catch_exception=False)
 
-    wrapper.dag_mock.render.assert_called_once_with()
+    CustomParserWrapper.dag_mock.render.assert_called_once_with()
 
 
 def test_build_with_replaced_env_value(tmp_nbs, monkeypatch):
