@@ -559,3 +559,16 @@ def fn():
         lazy_import=True)
 
     assert spec.to_task(dag=DAG())
+
+
+def test_constructor_deep_copies_spec_and_meta(tmp_directory, tmp_imports):
+    meta = Meta.default_meta({'extract_product': False})
+    spec = {
+        'source': 'sample.sql',
+        'product': 'some_file.txt',
+    }
+    task_spec = TaskSpec(data=spec, meta=meta, project_root='.')
+
+    # test they are different objects
+    assert spec is not task_spec.data
+    assert meta is not task_spec.meta
