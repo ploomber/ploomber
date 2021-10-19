@@ -102,7 +102,7 @@ For a full reference on ``pipeline.yaml`` files see: :doc:`../api/spec`.
 .. note::
    
    Writing a ``pipeline.yaml`` file is optional; you can create
-   pipelines by pointing to a directory. `Click here <https://github.com/ploomber/projects/tree/master/spec-api-directory>`_
+   pipelines by pointing to a directory. `Click here <https://github.com/ploomber/projects/tree/master/templates/spec-api-directory>`_
    to see an example. However, this is only recommended for simple projects
    (i.e., pipelines with just a couple of tasks).
 
@@ -224,7 +224,7 @@ dictionary under ``product``:
 Examples
 ********
 
-1. `Click here <https://github.com/ploomber/projects/tree/master/ml-basic>`_ to see an example pipeline that contains a script-based task that trains a model.
+1. `Click here <https://github.com/ploomber/projects/tree/master/templates/ml-basic>`_ to see an example pipeline that contains a script-based task that trains a model.
 
 
 Tasks: functions
@@ -267,9 +267,9 @@ When resolving dependencies, Ploomber will look for references such as
 Examples
 ********
 
-1. `Click here <https://github.com/ploomber/projects/tree/master/ml-basic>`_ to see an example pipeline that includes some function-based tasks to generate features and then trains a model.
-2. `Click here <https://github.com/ploomber/projects/tree/master/ml-intermediate>`_ to see a more elaborate ML pipeline example, which shows how to create a training and batch serving pipeline.
-3. `Click here <https://github.com/ploomber/projects/tree/master/ml-online>`_ to see our most complete example: an end-to-end ML pipeline that can be trained locally, in Kubernetes or Airflow and can be deployed as a microservice using Flask.
+1. `Click here <https://github.com/ploomber/projects/tree/master/templates/ml-basic>`_ to see an example pipeline that includes some function-based tasks to generate features and then trains a model.
+2. `Click here <https://github.com/ploomber/projects/tree/master/templates/ml-intermediate>`_ to see a more elaborate ML pipeline example, which shows how to create a training and batch serving pipeline.
+3. `Click here <https://github.com/ploomber/projects/tree/master/templates/ml-online>`_ to see our most complete example: an end-to-end ML pipeline that can be trained locally, in Kubernetes or Airflow and can be deployed as a microservice using Flask.
 
 Tasks: SQL
 ----------
@@ -330,16 +330,16 @@ Snowflake or Apache Hive. For details see :doc:`../api/spec`.
 Examples
 ********
 
-1. `Click here <https://github.com/ploomber/projects/tree/master/spec-api-sql>`_ to see an example pipeline that processes data in a database, dumps it, and generates some charts with Python.
-2. `Click here <https://github.com/ploomber/projects/tree/master/etl>`_ to see a pipeline that downloads data, uploads it to a database, process it, dumps it, and generates charts with Python.
+1. `Click here <https://github.com/ploomber/projects/tree/master/templates/spec-api-sql>`_ to see an example pipeline that processes data in a database, dumps it, and generates some charts with Python.
+2. `Click here <https://github.com/ploomber/projects/tree/master/templates/etl>`_ to see a pipeline that downloads data, uploads it to a database, process it, dumps it, and generates charts with Python.
 
 Using the Python API
 --------------------
 
 The ``pipeline.yaml`` API offers a concise and powerful way to declare
 pipelines, but if you want complete flexibility, you can use the underlying Python
-API directly, `here's a basic example <https://github.com/ploomber/projects/tree/master/python-api>`_.
-And here's a more `ellaborated Machine Learning example <https://github.com/ploomber/projects/tree/master/ml-advanced>`_.
+API directly, `here's a basic example <https://github.com/ploomber/projects/tree/master/templates/python-api>`_.
+And here's a more `ellaborated Machine Learning example <https://github.com/ploomber/projects/tree/master/templates/ml-advanced>`_.
 
 
 Where to go from here

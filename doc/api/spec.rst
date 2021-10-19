@@ -166,7 +166,7 @@ Keys must be valid :py:mod:`ploomber.tasks` or :py:mod:`ploomber.products`
 names, values must be dotted paths to functions that return a
 :py:mod:`ploomber.clients` instance.
 
-`Here's an example <https://github.com/ploomber/projects/tree/master/spec-api-sql>`_
+`Here's an example <https://github.com/ploomber/projects/tree/master/templates/spec-api-sql>`_
 that uses ``clients`` to configure Task and Product clients.
 
 Other scenarios are :py:mod:`ploomber.products.File` clients, which Ploomber can use
@@ -277,7 +277,7 @@ all operations in memory (e.g., to do online serving).
 into an in-memory one without code changes, allowing you to re-use your
 feature engineering code for training and serving. The only requisite is for
 tasks to configure a ``serializer`` and ``unserializer``.
-`Click here <https://github.com/ploomber/projects/tree/master/ml-online>`_ to
+`Click here <https://github.com/ploomber/projects/tree/master/templates/ml-online>`_ to
 see an example.
 
 Normally, a task whose source is a function looks like this:
@@ -382,7 +382,7 @@ from ``path/to/my_package/my_sources/script.sql``.
 paths and absolute paths are not affected.
 
 For details, see :py:mod:`ploomber.SourceLoader`, which is the underlying Python
-implementation. `Here's an example that uses source_loader <https://github.com/ploomber/projects/blob/master/ml-online/src/ml_online/pipeline.yaml>`_.
+implementation. `Here's an example that uses source_loader <https://github.com/ploomber/projects/blob/master/templates/ml-online/src/ml_online/pipeline.yaml>`_.
 
 SQLScript product class
 ***********************
@@ -392,7 +392,7 @@ product class. Such product doesn't save product's metadata; required for
 incremental builds (:ref:`incremental-builds`). If you want to use them, you
 need to change the default value and configure the product's client.
 
-`Here's an example <https://github.com/ploomber/projects/tree/master/spec-api-sql>`_
+`Here's an example <https://github.com/ploomber/projects/tree/master/templates/spec-api-sql>`_
 that uses ``product_default_class`` to configure a SQLite pipeline with
 incremental builds.
 
@@ -412,9 +412,9 @@ For example, you may define all your feature engineering code in a
 ``import_tasks_from``) in a training pipeline (``pipeline.yaml``)
 and a serving pipeline (``pipeline-serving.yaml``).
 
-`Click here <https://github.com/ploomber/projects/tree/master/ml-online/src/ml_online>`_ to see a batch serving example. 
+`Click here <https://github.com/ploomber/projects/tree/master/templates/ml-online/src/ml_online>`_ to see a batch serving example. 
 
-`Click here <https://github.com/ploomber/projects/tree/master/ml-intermediate>`_ to see an online serving example.
+`Click here <https://github.com/ploomber/projects/tree/master/templates/ml-intermediate>`_ to see an online serving example.
 
 
 Loading from a factory
