@@ -24,4 +24,4 @@ Click here to see the complete `example <https://github.com/ploomber/projects/tr
 
 Click here to go to the ``grid`` API  :ref:`documentation <tasks-grid>`.
 
-An in-depth tutorial showing how to use ``grid`` and MLflow for experiment tracking is `available here <https://github.com/ploomber/projects/blob/master/mlflow/README.ipynb>`_.
+An in-depth tutorial showing how to use ``grid`` and MLflow for experiment tracking is `available here <https://github.com/ploomber/projects/blob/master/templates/mlflow/README.ipynb>`_.

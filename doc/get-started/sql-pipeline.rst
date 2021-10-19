@@ -17,7 +17,7 @@ Quick Start
 
 If you want to take a look at the sample pipeline, you have a few options:
 
-- `Source code on Github <https://github.com/ploomber/projects/tree/master/spec-api-sql>`_
+- `Source code on Github <https://github.com/ploomber/projects/tree/master/templates/spec-api-sql>`_
 - `Interactive demo <https://mybinder.org/v2/gh/ploomber/projects/master?filepath=spec-api-sql%2FREADME.md>`_
 
 Or run it locally:
@@ -360,4 +360,4 @@ Where to go from here
 ---------------------
 
 - :doc:`../user-guide/sql-templating` shows how to use jinja to write succinct SQL scripts
-- `Advanced SQL pipeline example <https://github.com/ploomber/projects/tree/master/etl>`_
+- `Advanced SQL pipeline example <https://github.com/ploomber/projects/tree/master/templates/etl>`_
