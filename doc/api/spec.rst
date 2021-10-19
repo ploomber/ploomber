@@ -961,7 +961,7 @@ arguments you can pass to override the parameters defined in ``env.yaml``.
 Note that these parameters are constant (they must be changed explicitly by you
 either by updating the ``env.yaml`` file or via the command line), if you want
 to define dynamic parameters, you can do so with the Python API,
-`check out this example <https://github.com/ploomber/projects/tree/layout/cookbook/dynamic-params>`_ for an
+`check out this example <https://github.com/ploomber/projects/tree/master/cookbook/dynamic-params>`_ for an
 example.
 
 
