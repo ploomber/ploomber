@@ -9,6 +9,7 @@ from ploomber import DAG
 from ploomber.cli.parsers import CustomParser
 from ploomber.env.envdict import EnvDict
 from ploomber.cli import parsers
+from ploomber.env import expand
 
 
 def test_custom_parser_static_args():
@@ -100,6 +101,11 @@ def test_dagspec_initialization_from_yaml_and_env(tmp_nbs, monkeypatch):
     monkeypatch.setattr(parsers.default, 'path_to_env_from_spec',
                         mock_default_path_to_env)
     monkeypatch.setattr(parsers, 'EnvDict', mock_EnvDict)
+
+    # ensure current timestamp does not change
+    mock = Mock()
+    mock.datetime.now().isoformat.return_value = 'current-timestamp'
+    monkeypatch.setattr(expand, "datetime", mock)
 
     parser = CustomParser()
 

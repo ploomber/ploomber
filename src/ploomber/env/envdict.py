@@ -128,6 +128,7 @@ class EnvDict(Mapping):
         placeholders = {
             'user': '{{user}}',
             'cwd': '{{cwd}}',
+            'now': '{{now}}',
         }
 
         if default.try_to_find_root_recursively() is not None:

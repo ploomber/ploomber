@@ -994,7 +994,7 @@ even if not defined in the ``env.yaml`` (or if you don't have a ``env.yaml`` alt
 * ``{{cwd}}``: Absolute path to the current working directory
 * ``{{root}}``: Absolute path to project's root folder. It is usually the same as ``{{here}}``, except when the project is a package (i.e., it has ``setup.py`` file), in such a case, it points to the parent directory of the ``setup.py`` file.
 * ``{{user}}``: Current username
-
+* ``{{now}}``: Current timestamp in ISO 8601 format (*Added in Ploomber 0.13.4*)
 
 A common use case for this is when passing paths to files to scripts/notebooks. For example, let's say your script has to read a file from a specific location. Using ``{{here}}`` turns path into absolute so you can ready it when using Jupyter, even if the script is in a different location than your ``pipeline.yaml``.
 
@@ -1013,7 +1013,7 @@ to override this behavior:
             data: product/data.csv
           params:
             # make this an absolute file so you can read it when opening
-            # scripts/my-script.py in tJupyter
+            # scripts/my-script.py in Jupyter
             input_path: '{{here}}/some/path/file.json'
 
 For more on parametrized pipelines, check out the guide: :doc:`../user-guide/parametrized`.

@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.13.4dev
+* Adds `{{now}}` (current timestamp in ISO 8601 format) to default placeholders
 
 ## 0.13.3 (2021-10-15)
 * Adds `--log-file/-F` option to CLI to log to a file
