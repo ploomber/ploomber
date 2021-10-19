@@ -99,10 +99,21 @@ We use [flake8](https://flake8.pycqa.org/en/latest/) for linting. *Please check 
 # note: this takes a few seconds to finish
 flake8
 ```
+*Note:* If you created a virtual env in a child directory, exclude it from `flake8` using the `--exclude` argument (e.g., `flake8 --exclude my-venv`), `ploomber-venv` is excluded by default.
 
 If you don't see any output after running `flake8`, you're good to go!
 
-*Note:* If you created a virtual env in a child directory, exclude it from `flake8` using the `--exclude` argument (e.g., `flake8 --exclude my-venv`), `ploomber-venv` is excluded by default.
+If you want git to automatically check your code with `flake8` before you push to your fork, you can install a pre-push hook locally:
+
+```sh
+# to install pre-push git hook
+invoke install-git-hook
+
+# to uninstall pre-push git hook
+invoke uninstall-git-hook
+```
+
+The installed hook only takes effect in your current repository.
 
 ## Tips for writing tests
 

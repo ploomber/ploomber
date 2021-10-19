@@ -121,11 +121,32 @@ def test(c, report=False):
 
 
 @task
-def install_git_hook(c):
-    """Install a pre-push git hook to local repo
+def install_git_hook(c, force=False):
+    """Installs pre-push git hook
     """
-    path = Path('.git/hooks/pre-push.sample')
-    if path.is_file():
+    path = Path('.git/hooks/pre-push')
+    hook_exists = path.is_file()
+
+    if hook_exists:
+        if force:
+            path.unlink()
+        else:
+            sys.exit('Error: pre-push hook already exists. '
+                     'Run: "invoke install-git-hook -f" to force overwrite.')
+
+    shutil.copy('.githooks/pre-push', '.git/hooks')
+    print(f'pre-push hook installed at {str(path)}')
+
+
+@task
+def uninstall_git_hook(c):
+    """Uninstalls pre-push git hook
+    """
+    path = Path('.git/hooks/pre-push')
+    hook_exists = path.is_file()
+
+    if hook_exists:
         path.unlink()
-    shutil.copy('githooks/pre-push', '.git/hooks/')
-    print('pre-push hook installed')
+        print(f'Deleted {str(path)}.')
+    else:
+        print('Hook doesn\'t exist, nothing to delete.')

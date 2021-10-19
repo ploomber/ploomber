@@ -12,12 +12,16 @@ import sys
 
 
 def main():
-    print("Running flake8")
+    print("Running flake8, this will take a few seconds...")
+
     out = subprocess.run(["flake8"])
+
     if out.returncode == 1:
-        print("Please correct the linting errors")
-        sys.exit(1)
-    print("flake8 ran successfully")
+        sys.exit("Error: flake8 failed. Please correct the linting errors. "
+                 "Running yapf on the failed files can fix most of "
+                 "the issues: yapf -i path/to/file")
+
+    print("flake8 ran successfully, pushing...")
 
 
 if __name__ == '__main__':
