@@ -6,6 +6,7 @@ import platform
 from pathlib import Path
 import base64
 from invoke import task
+import shutil
 
 _IS_WINDOWS = platform.system() == 'Windows'
 _PY_DEFAULT_VERSION = '3.9'
@@ -117,3 +118,14 @@ def test(c, report=False):
     c.run('pytest --cov ploomber ' + ('--cov-report html' if report else ''),
           pty=True)
     c.run('flake8')
+
+
+@task
+def install_git_hook(c):
+    """Install a pre-push git hook to local repo
+    """
+    path = Path('.git/hooks/pre-push.sample')
+    if path.is_file():
+        path.unlink()
+    shutil.copy('githooks/pre-push', '.git/hooks/')
+    print('pre-push hook installed')
