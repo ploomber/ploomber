@@ -1,6 +1,6 @@
 /* Based on https://codeeverywhere.ca/post.php?id=10 */
 
-/* Available code lexers in sphinx 
+/* Available code lexers in sphinx
 https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCodeExamplesInSphinx.html
 */
 
@@ -214,6 +214,34 @@ div.document .toctree-l2 {
     height: calc(100vh - 3.5rem);
 }
 
+@media (min-width: 768px) {
+    .third-column {
+        position: sticky !important;
+        top: 3.5rem;
+        z-index: 1000;
+        right: 0;
+        margin-right: 0;
+        padding-right: 0;
+        width: fit-content;
+        height: fit-content;
+        display: block !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .third-column {
+        position: fixed !important;
+        top: 3.5rem;
+        right: 0;
+        margin-right: 0;
+        padding-right: 0;
+        width: fit-content;
+        height: fit-content;
+        z-index: 99;
+        background-color: #fff;
+    }
+}
+
 div.sphinxsidebarwrapper {
     border-left: 2px solid #eee;
     padding-left: 0px;
@@ -229,7 +257,7 @@ div.sphinxsidebarwrapper {
  div.sphinxsidebarwrapper::-webkit-scrollbar {
     display: none;
 }
- 
+
 /* Hide scrollbar for IE, Edge and Firefox */
 div.sphinxsidebarwrapper {
     -ms-overflow-style: none;  /* IE and Edge */
