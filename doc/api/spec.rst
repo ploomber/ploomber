@@ -412,9 +412,9 @@ For example, you may define all your feature engineering code in a
 ``import_tasks_from``) in a training pipeline (``pipeline.yaml``)
 and a serving pipeline (``pipeline-serving.yaml``).
 
-`Click here <https://github.com/ploomber/projects/tree/master/templates/ml-online/src/ml_online>`_ to see a batch serving example. 
+`Click here <https://github.com/ploomber/projects/tree/master/templates/ml-intermediate>`_ to see a batch serving example.
 
-`Click here <https://github.com/ploomber/projects/tree/master/templates/ml-intermediate>`_ to see an online serving example.
+`Click here <https://github.com/ploomber/projects/tree/master/templates/ml-online>`_ to see an online serving example.
 
 
 Loading from a factory
@@ -892,9 +892,9 @@ Custom task parameters
 Parametrizing with ``env.yaml``
 -------------------------------
 
-In some situations, it's useful to parametrize a pipeline. For example, you
+In some situations, it's helpful to parametrize a pipeline. For example, you
 could run your pipeline with a sample of the data as a smoke test; to make
-sure it runs before triggering a run with the full dataset, which could take
+sure it runs before triggering a run with the entire dataset, which could take
 several hours to finish.
 
 
@@ -952,6 +952,18 @@ your ``pipeline.yaml`` values (not keys):
         - source: module.function
           # doesn't work
           '{{placeholder}}': value
+
+
+You can update your ``env.yaml`` file or switch them from the command-line to
+change the parameter values, run ``ploomber build --help`` to get a list of
+arguments you can pass to override the parameters defined in ``env.yaml``.
+
+Note that these parameters are constant (they must be changed explicitly by you
+either by updating the ``env.yaml`` file or via the command line), if you want
+to define dynamic parameters, you can do so with the Python API,
+`check out this example <https://github.com/ploomber/projects/tree/layout/cookbook/dynamic-params>`_ for an
+example.
+
 
 
 Setting parameters from the CLI

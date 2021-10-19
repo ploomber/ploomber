@@ -91,7 +91,7 @@ Or run an example locally:
 
 ```sh
 # ML pipeline example
-ploomber examples --name ml-basic
+ploomber examples -n templates/ml-basic -o ml-basic
 cd ml-basic
 
 # if using pip
