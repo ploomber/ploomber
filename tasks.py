@@ -107,6 +107,7 @@ def upload(c, tag, production=True):
     """
     from pkgmt import versioneer
     versioneer.upload(tag, production=production)
+    print('Remember to update binder-env!')
 
 
 @task
