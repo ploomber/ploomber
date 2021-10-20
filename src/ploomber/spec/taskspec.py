@@ -2,7 +2,7 @@
 Create Tasks from dictionaries
 """
 from functools import partial
-from copy import copy
+from copy import copy, deepcopy
 from pathlib import Path
 from collections.abc import MutableMapping, Mapping
 import platform
@@ -169,9 +169,8 @@ class TaskSpec(MutableMapping):
                  project_root,
                  lazy_import=False,
                  reload=False):
-        # FIXME: make sure data and meta are immutable structures
-        self.data = data
-        self.meta = meta
+        self.data = deepcopy(data)
+        self.meta = deepcopy(meta)
         self.project_root = project_root
         self.lazy_import = lazy_import
 
