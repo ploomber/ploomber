@@ -19,6 +19,8 @@ FAQ and Glossary
 
 .. include:: faq/jupyterlab-1-dot-x.rst
 
+.. include:: faq/multiprocessing.rst
+
 Glossary
 --------
 

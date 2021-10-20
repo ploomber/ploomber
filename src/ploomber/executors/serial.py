@@ -207,7 +207,15 @@ def build_in_current_process(task, build_kwargs, reports_all):
 
 def build_in_subprocess(task, build_kwargs, reports_all):
     if callable(task.source.primitive):
-        p = Pool(processes=1)
+
+        try:
+            p = Pool(processes=1)
+        except RuntimeError as e:
+            # this is most likely due to child processes created with
+            # spawn (mac/windows) outside if __name__ == '__main__'
+            raise RuntimeError('For help solving this, go to: '
+                               'https://ploomber.io/h/mp') from e
+
         res = p.apply_async(func=task._build, kwds=build_kwargs)
         # calling this make sure we catch the exception, from the docs:
         # Return the result when it arrives. If timeout is not None and
