@@ -336,10 +336,17 @@ def test_install_pip(tmp_directory):
     else:
         expected_command = f'source {name}/bin/activate'
 
+    counter = 0
+    with open('.gitignore') as f:
+        for line in f:
+            if name in line:
+                counter += 1
+
     assert Path('.gitignore').read_text() == f'\n{name}\n'
     assert expected_command in result.stdout
     assert Path('requirements.lock.txt').exists()
     assert result.exit_code == 0
+    assert counter == 1
 
 
 def test_non_package_with_pip(tmp_directory):

@@ -77,12 +77,18 @@ def main_pip(use_lock):
     cmdr = Commander()
 
     # TODO: modify readme to add how to activate env? probably also in conda
-    # TODO: add to gitignore, create if it doesn't exist
     name = Path('.').resolve().name
 
     venv_dir = f'venv-{name}'
     cmdr.run('python', '-m', 'venv', venv_dir, description='Creating venv')
-    cmdr.append_inline(venv_dir, '.gitignore')
+
+    # add venv_dir to .gitignore if it doesn't exist
+    if Path('.gitignore').exists():
+        with open('.gitignore') as f:
+            if venv_dir not in f.read():
+                cmdr.append_inline(venv_dir, '.gitignore')
+    else:
+        cmdr.append_inline(venv_dir, '.gitignore')
 
     folder, bin_name = _get_pip_folder_and_bin_name()
     pip = str(Path(venv_dir, folder, bin_name))
