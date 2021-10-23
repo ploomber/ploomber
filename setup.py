@@ -101,14 +101,14 @@ TESTING = [
 DEV = ['twine', 'invoke', 'pkgmt']
 
 DESCRIPTION = (
-    'A convention over configuration workflow orchestrator. Develop locally '
-    '(Jupyter or your favorite editor), deploy to Airflow or Kubernetes. ')
+    'Write maintainable, production-ready pipelines using Jupyter or your '
+    'favorite text editor. Develop locally, deploy to the cloud.')
 
 setup(
     name='ploomber',
     version=VERSION,
     description=DESCRIPTION,
-    long_description=read('README.md') + '\n' + read('CHANGELOG.md'),
+    long_description=read('README.md'),
     long_description_content_type='text/markdown',
     author='Eduardo Blancas',
     author_email='hello@ploomber.io',
@@ -139,6 +139,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
     keywords=[
         # eg: 'keyword1', 'keyword2', 'keyword3',
