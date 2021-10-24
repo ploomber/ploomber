@@ -102,9 +102,34 @@ def derive_class(base_class):
         """
         restart_msg = (' Fix the issue and and restart "jupyter notebook"')
 
+        def changes_in_directory(self, starting_dir):
+            """
+            Check if the files in the self.starting_dir directory has changed
+            since the last call to this function
+            """
+            has_changes = False
+
+            if self.starting_dir != starting_dir:
+                self.dir_files = {}
+                has_changes = True
+
+            with os.scandir(starting_dir) as it:
+                for entry in it:
+                    if entry.is_file():
+                        with open(entry) as f:
+                            content = f.readlines()
+                            if content != self.dir_files.get(entry.path):
+                                has_changes = True
+                            self.dir_files[entry.path] = content
+
+            return has_changes
+
         # TODO: we can cache this depending on the folder where it's called
         # all files in the same folder share the same dag
         def load_dag(self, starting_dir=None, log=True):
+            if not self.changes_in_directory(starting_dir):
+                return
+
             if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
                 msg = (
                     '[Ploomber] An error occured when trying to initialize '
@@ -207,6 +232,8 @@ def derive_class(base_class):
             self.path = None
             self.dag_mapping = None
             self.manager = None
+            self.starting_dir = None
+            self.dir_files = {}
 
         def __init__(self, *args, **kwargs):
             """
