@@ -1,21 +1,27 @@
 {% macro nav_bar(pathto, active=none) %}
 
-<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+<nav class="navbar navbar-expand-md navbar-dark fixed-top d-flex justify-content-sm-between">
+    <button class="navbar-toggler " type="button" data-toggle="collapse" data-target="#first-column"
         aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
         <span class="navbar-toggler-icon"></span>
     </button>
 
-    <a class="navbar-brand" href="{{ pathto('index') }}">Ploomber</a>
+    <a class="navbar-brand " href="{{ pathto('index') }}">Ploomber</a>
 
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
-        aria-expanded="false" aria-label="Toggle navigation">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
-            viewBox="0 0 16 16">
-            <path
-                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
-        </svg>
-    </button>
+    <div>
+        <button class="navbar-toggler " type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+            aria-expanded="false" aria-label="Toggle navigation">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+                viewBox="0 0 16 16">
+                <path
+                    d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+            </svg>
+        </button>
+        <button class="btn navbar-toggler nav-third-button "  type="button" data-toggle="collapse" data-target="#third-column"
+            aria-controls="third-column" aria-expanded="false" aria-label="Toggle TOC">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
 
     <div class="collapse navbar-collapse" id="top-bar">
         <ul class="navbar-nav mr-auto">
@@ -49,9 +55,6 @@
         </div>
 
     </div>
-    <button class="btn navbar-toggler nav-third-button"  type="button" data-toggle="collapse" data-target="#third-column"
-        aria-controls="third-column" aria-expanded="false" aria-label="Toggle TOC">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    
 </nav>
 {% endmacro %}
