@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+"""
+A hook script to verify what is about to be pushed.  Called by "git
+push" after it has checked the remote status, but before anything has been
+pushed.  If this script exits with a non-zero status nothing will be pushed.
+
+In its current implementation, this script runs flake8 on the code and will
+stop with exit code 1 if it finds any linting errors.
+"""
+import subprocess
+import sys
+
+
+def main():
+    print("Running flake8, this will take a few seconds...")
+
+    out = subprocess.run(["flake8"])
+
+    if out.returncode == 1:
+        sys.exit("Error: flake8 failed. Please correct the linting errors. "
+                 "Running yapf on the failed files can fix most of "
+                 "the issues: yapf -i path/to/file")
+
+    print("flake8 ran successfully, pushing...")
+
+
+if __name__ == '__main__':
+    main()

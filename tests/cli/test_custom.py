@@ -11,7 +11,7 @@ import pytest
 
 from ploomber.cli import plot, build, parsers, task, report, status, interact
 from ploomber.cli.cli import cmd_router
-from ploomber.cli.parsers import _custom_command
+from ploomber.cli.parsers import CustomParser
 from ploomber.tasks import notebook
 from ploomber import DAG
 import ploomber.dag.dag as dag_module
@@ -177,8 +177,8 @@ def test_interact_command_starts_full_ipython_session(monkeypatch, tmp_nbs):
     mock_start_ipython = Mock()
     monkeypatch.setattr(sys, 'argv', ['interact'])
     monkeypatch.setattr(interact, 'start_ipython', mock_start_ipython)
-    monkeypatch.setattr(interact, '_custom_command', lambda _:
-                        (mock_dag, None))
+    monkeypatch.setattr(interact.CustomParser, 'load_from_entry_point_arg',
+                        lambda _: (mock_dag, None))
 
     interact.main(catch_exception=False)
 
@@ -403,19 +403,18 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
     args = ['task', 'load', '--force']
     monkeypatch.setattr(sys, 'argv', args)
 
-    class CustomCommandWrapper:
-        def __call__(self, parser):
-            dag, args = _custom_command(parser)
-            self.dag_mock = MagicMock(wraps=dag)
-            return self.dag_mock, args
+    class CustomParserWrapper(CustomParser):
+        def load_from_entry_point_arg(self):
+            dag, args = super().load_from_entry_point_arg()
+            dag_mock = MagicMock(wraps=dag)
+            type(self).dag_mock = dag_mock
+            return dag_mock, args
 
-    wrapper = CustomCommandWrapper()
-
-    monkeypatch.setattr(task, '_custom_command', wrapper)
+    monkeypatch.setattr(task, 'CustomParser', CustomParserWrapper)
 
     task.main(catch_exception=False)
 
-    wrapper.dag_mock.render.assert_called_once_with()
+    CustomParserWrapper.dag_mock.render.assert_called_once_with()
 
 
 def test_build_with_replaced_env_value(tmp_nbs, monkeypatch):

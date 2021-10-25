@@ -190,8 +190,8 @@ def test_force_clone(clone_examples, monkeypatch):
 
 
 def test_copy_example(clone_examples, tmp_directory):
-    examples.main(name='ml-online', force=False)
-    assert Path(tmp_directory, 'ml-online').exists()
+    examples.main(name='templates/ml-online', force=False)
+    assert Path(tmp_directory, 'templates/ml-online').exists()
 
 
 def test_error_unknown_example(clone_examples, capsys):
@@ -201,12 +201,12 @@ def test_error_unknown_example(clone_examples, capsys):
 
 
 def test_error_if_already_exists(clone_examples, tmp_directory):
-    examples.main(name='ml-online', force=False)
+    examples.main(name='templates/ml-online', force=False)
 
     with pytest.raises(ClickException) as excinfo:
-        examples.main(name='ml-online', force=False)
+        examples.main(name='templates/ml-online', force=False)
 
-    expected = ("'ml-online' already exists in the current working "
+    expected = ("'templates/ml-online' already exists in the current working "
                 "directory, please rename it or move it to another "
                 "location and try again.")
     assert expected == str(excinfo.value)

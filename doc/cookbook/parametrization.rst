@@ -55,3 +55,12 @@ change their value, to see a list of available placeholders:
 .. code-block:: console
 
     ploomber build --help
+
+
+Dynamic parameters
+------------------
+
+Parameters declared in ``env.yaml`` are static (they can only change in value
+by editing the ``env.yaml`` file or via the command-line); however, you can use
+the Python API to create dynamic parameters whose values are determined at
+runtime, `check out this example <https://github.com/ploomber/projects/tree/master/cookbook/dynamic-params>`_ for an example.

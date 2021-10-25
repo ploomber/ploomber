@@ -6,9 +6,10 @@ from unittest.mock import Mock
 import pytest
 
 from ploomber import DAG
-from ploomber.cli.parsers import CustomParser, _custom_command
+from ploomber.cli.parsers import CustomParser
 from ploomber.env.envdict import EnvDict
 from ploomber.cli import parsers
+from ploomber.env import expand
 
 
 def test_custom_parser_static_args():
@@ -79,7 +80,7 @@ def test_dagspec_initialization_from_yaml(tmp_nbs_nested, monkeypatch):
     with parser:
         pass
 
-    dag, args = _custom_command(parser)
+    dag, args = parser.load_from_entry_point_arg()
 
     mock.assert_called_once_with('pipeline.yaml')
 
@@ -101,12 +102,17 @@ def test_dagspec_initialization_from_yaml_and_env(tmp_nbs, monkeypatch):
                         mock_default_path_to_env)
     monkeypatch.setattr(parsers, 'EnvDict', mock_EnvDict)
 
+    # ensure current timestamp does not change
+    mock = Mock()
+    mock.datetime.now().isoformat.return_value = 'current-timestamp'
+    monkeypatch.setattr(expand, "datetime", mock)
+
     parser = CustomParser()
 
     with parser:
         pass
 
-    dag, args = _custom_command(parser)
+    dag, args = parser.load_from_entry_point_arg()
 
     # ensure called using the path to the yaml spec
     mock_DAGSpec.assert_called_once_with('pipeline.yaml',
@@ -127,7 +133,7 @@ def test_entry_point_from_factory_in_environment_variable(
     with parser:
         pass
 
-    dag, _ = _custom_command(parser)
+    dag, _ = parser.load_from_entry_point_arg()
 
     assert isinstance(dag, DAG)
 
@@ -173,7 +179,7 @@ def test_log(tmp_nbs, monkeypatch):
     with parser:
         pass
 
-    parsers._custom_command(parser)
+    parser.load_from_entry_point_arg()
 
     mock.basicConfig.assert_called_with(level='INFO')
 
@@ -192,7 +198,7 @@ def test_log_file(tmp_nbs, monkeypatch, opt):
     with parser:
         pass
 
-    parsers._custom_command(parser)
+    parser.load_from_entry_point_arg()
 
     mock.basicConfig.assert_called_with(level='INFO')
     mock.FileHandler.assert_called_with('my.log')
@@ -213,7 +219,7 @@ def test_log_file_with_factory_entry_point(backup_test_pkg, monkeypatch, opt):
     with parser:
         pass
 
-    parsers._custom_command(parser)
+    parser.load_from_entry_point_arg()
 
     mock.basicConfig.assert_called_with(level='INFO')
     mock.FileHandler.assert_called_with('my.log')

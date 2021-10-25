@@ -19,7 +19,7 @@ class OnlineDAG(abc.ABC):
     Create a subclass and provide the required static methods.
 
     See here for a complete example:
-    https://github.com/ploomber/projects/blob/master/ml-online/src/ml_online/infer.py
+    https://github.com/ploomber/projects/blob/master/templates/ml-online/src/ml_online/infer.py
     """
 
     # FIXME: add a way to customize
@@ -134,7 +134,7 @@ class OnlineModel(OnlineDAG):
     should be named ``features``.
 
     See here for a complete example:
-    https://github.com/ploomber/projects/blob/master/ml-online/src/ml_online/infer.py
+    https://github.com/ploomber/projects/blob/master/templates/ml-online/src/ml_online/infer.py
 
     Parameters
     ----------

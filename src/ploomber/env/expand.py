@@ -7,6 +7,7 @@ from copy import deepcopy, copy
 from collections.abc import Mapping, Iterable
 from pathlib import Path
 from functools import reduce
+import datetime
 
 from jinja2 import Template, StrictUndefined
 
@@ -262,6 +263,11 @@ class EnvironmentExpander:
             raise KeyError('_module key is required to use git placeholder')
 
         return repo.get_git_info(module)['git_location']
+
+    def get_now(self):
+        """Returns current timestamp in ISO 8601 format
+        """
+        return datetime.datetime.now().isoformat()
 
 
 def iterate_nested_dict(d):

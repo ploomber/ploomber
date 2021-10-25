@@ -21,11 +21,11 @@ def config_init(app, config):
     # key: directory in the projects directory
     # value: directory in the documentation
     directories = {
-        'spec-api-python': 'get-started',
-        'parametrized': 'user-guide',
-        'sql-templating': 'user-guide',
-        'testing': 'user-guide',
-        'debugging': 'user-guide',
+        'guides/spec-api-python': 'get-started',
+        'guides/parametrized': 'user-guide',
+        'guides/sql-templating': 'user-guide',
+        'guides/testing': 'user-guide',
+        'guides/debugging': 'user-guide',
         'guides/serialization': 'user-guide',
         'guides/logging': 'user-guide',
     }

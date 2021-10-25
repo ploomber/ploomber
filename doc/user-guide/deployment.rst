@@ -153,7 +153,7 @@ Example
 *******
 
 `Here's an example
-<https://github.com/ploomber/projects/tree/master/ml-intermediate>`_ project
+<https://github.com/ploomber/projects/tree/master/templates/ml-intermediate>`_ project
 showing how to use ``import_tasks_from`` to create a training
 (``pipeline.yaml``) and serving (``pipeline-serve.yaml``) pipeline.
 
@@ -314,5 +314,5 @@ Examples
 `Click here <https://soopervisor.readthedocs.io/en/latest/tutorials/aws-lambda.html>`_ to
 see a deployment example using AWS Lambda.
 
-`Click here <https://github.com/ploomber/projects/tree/master/ml-online>`_ to
+`Click here <https://github.com/ploomber/projects/tree/master/templates/ml-online>`_ to
 see a complete sample project that trains a model and exposes an API via Flask.

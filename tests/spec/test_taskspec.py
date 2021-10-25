@@ -559,3 +559,23 @@ def fn():
         lazy_import=True)
 
     assert spec.to_task(dag=DAG())
+
+
+def test_constructor_deep_copies_spec_and_meta(tmp_directory, tmp_imports):
+    prod_default_class = {'SQLScript': 'SQLRelation'}
+    meta = Meta.default_meta({
+        'extract_product': False,
+        'product_default_class': prod_default_class
+    })
+    params = {'params': {'a': 1}}
+    spec = {
+        'source': 'sample.sql',
+        'product': 'some_file.txt',
+        'params': params
+    }
+    task_spec = TaskSpec(data=spec, meta=meta, project_root='.')
+
+    assert spec is not task_spec.data
+    assert meta is not task_spec.meta
+    assert params is not task_spec.data['params']
+    assert prod_default_class is not task_spec.meta['product_default_class']
