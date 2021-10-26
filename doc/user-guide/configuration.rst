@@ -82,10 +82,7 @@ file. For example, if you're on Linux or macOS:
 
 .. code-block:: console
 
-    # set environment variale
-    export PLOOMBER_ENV_FILENAME=env.train.yaml
-    # ploomber will use env.train.yaml to load parameters
-    ploomber build
+    export PLOOMBER_ENV_FILENAME=env.train.yaml && ploomber build
 
 
 .. important::
