@@ -24,7 +24,7 @@ class Params(abc.MutableMapping):
                                  'upon rendering')
 
             if 'product' in params:
-                raise ValueError('Task params cannot be initialized with an '
+                raise ValueError('Task params cannot be initialized with a '
                                  '"product" key as it automatically added '
                                  'upon rendering')
 
