@@ -736,7 +736,17 @@ If your hook takes arguments, you may call it like this:
         dotted_path: {dotted.path.to.hook}
         argument: value
 
-For example:
+For example, let's say your ``on_render`` hook looks like this:
+
+
+.. code-block:: python
+    :class: text-editor
+
+    def on_render(some_param):
+        print(f'some_param: {some_param}')
+
+
+You can pass a value from the ``pipeline.yaml`` file like this:
 
 .. code-block:: yaml
     :class: text-editor
@@ -748,6 +758,7 @@ For example:
         some_param: 42
 
 Calling with arguments is useful when you have :doc:`a parametrized pipeline <../user-guide/parametrized>`.
+
 
 If you need information from the task, you may add any of the following
 arguments to the hook:
