@@ -1,6 +1,6 @@
 Parameterizing Notebooks for py files
 --------------------------------------
-When performing a notebook task, you must first assign the tag ``parameters`` to a cell.
+When performing a notebook task, you must first parametize the notebook by assigning the tag ``parameters`` to a cell.
 For py files, include the ``# + tags["parameters]`` comment before declaring your variable.
 The ``# +`` marker denotes the beginning of a cell and ``# -`` indicates the end of the cell.
 
