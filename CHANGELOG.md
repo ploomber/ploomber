@@ -1,7 +1,10 @@
 # CHANGELOG
 
-## 0.13.4dev
+## 0.13.5dev
+
+## 0.13.4 (2021-10-25)
 * Adds `{{now}}` (current timestamp in ISO 8601 format) to default placeholders
+* Adds `--output/-o` to `ploomber examples` to change output directory
 
 ## 0.13.3 (2021-10-15)
 * Adds `--log-file/-F` option to CLI to log to a file

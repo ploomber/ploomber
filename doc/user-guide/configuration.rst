@@ -42,6 +42,13 @@ fraction of the data, say 20%, to iterate quickly. To
 you may run it with a smaller sample, say 1%. Finally, to train a model, you'll
 use 100% of the data.
 
+.. tip::
+
+    You can use placeholders (e.g., ``{{sample_pct}}``) anywhere in the
+    ``pipeline.yaml`` file. Another typical use case is to switch the product
+    location (e.g., ``product: '{{product_directory}}/some-data.csv'``.
+
+
 By default, Ploomber looks for an ``env.yaml``. To enable rapid local
 development with 20% of the data, you may create an ``env.yaml`` file like this:
 
@@ -68,23 +75,21 @@ To switch configurations, you can set the ``PLOOMBER_ENV_FILENAME`` environment 
 to ``env.test.yaml`` in the testing environment and to ``env.train.yaml`` in
 the training environment.
 
-.. note::
-
-    When setting the ``PLOOMBER_ENV_FILENAME`` environment variable, make sure
-    it's available to sub-processes. On Linux/macOS, use the
-    ``export`` command for this.
-    For example: ``export PLOOMBER_ENV_FILENAME=env.train.yaml``
-
 Whenever ``PLOOMBER_ENV_FILENAME`` has a value, Ploomber uses it and looks for a file
 with such a name. Note that this must be a filename, not a path since Ploomber
 expects ``env.yaml`` files to exist in the same folder as the ``pipeline.yaml``
-file.
+file. For example, if you're on Linux or macOS:
 
-.. tip::
+.. code-block:: console
 
-    You can use placeholders (e.g., ``{{sample_pct}}``) anywhere in the
-    ``pipeline.yaml`` file. Another typical use case is to switch the product
-    location (e.g., ``product: '{{product_directory}}/some-data.csv'``.
+    export PLOOMBER_ENV_FILENAME=env.train.yaml && ploomber build
+
+
+.. important::
+
+    If you're using the Jupyter integration and want to see the changes
+    reflected in the injected cell, you need to shut down Jupyter
+    set ``PLOOMBER_ENV_FILENAME``, and start Jupyter again.
 
 
 Managing multiple pipelines

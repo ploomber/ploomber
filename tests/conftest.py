@@ -20,6 +20,7 @@ import test_pkg
 from ploomber.clients import SQLAlchemyClient
 from ploomber import Env
 import pandas as pd
+from glob import iglob
 
 
 def _path_to_tests():
@@ -131,6 +132,20 @@ def backup_online():
     pass
 
 
+def _delete_dot_git_at(path):
+    for root, dirs, files in os.walk(path):
+        for dir_ in dirs:
+            os.chmod(Path(root, dir_), stat.S_IRWXU)
+        for file_ in files:
+            os.chmod(Path(root, file_), stat.S_IRWXU)
+
+
+def _delete_all_dot_git():
+    if os.name == 'nt':
+        for path in iglob('**/.git', recursive=True):
+            _delete_dot_git_at(path)
+
+
 @pytest.fixture()
 def tmp_directory():
     old = os.getcwd()
@@ -141,12 +156,7 @@ def tmp_directory():
 
     # some tests create sample git repos, if we are on windows, we need to
     # change permissions to be able to delete the files
-    if os.name == 'nt' and Path('.git').exists():
-        for root, dirs, files in os.walk('.git'):
-            for dir_ in dirs:
-                os.chmod(Path(root, dir_), stat.S_IRWXU)
-            for file_ in files:
-                os.chmod(Path(root, file_), stat.S_IRWXU)
+    _delete_all_dot_git()
 
     os.chdir(old)
 
