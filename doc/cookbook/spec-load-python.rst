@@ -1,8 +1,12 @@
 Load ``pipeline.yaml`` into Python
 ==================================
 
+.. note::
+
+    For a complete code example `click here <https://github.com/ploomber/projects/tree/master/cookbook/python-load>`_
+
 When writing a pipeline via a ``pipeline.yaml`` file, the most common way to
-interact with it is via the commad-line interface (e.g., calling ``ploomber build``).
+interact is via the command-line interface (e.g., calling ``ploomber build``).
 However, in some cases, we may want to add more logic to it, or embed it as part
 of a larger script.
 
