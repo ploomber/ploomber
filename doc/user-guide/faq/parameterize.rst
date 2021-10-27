@@ -10,8 +10,8 @@ The ``# +`` marker denotes the beginning of a cell and ``# -`` indicates the end
     :class: text-editor
 
     # + tags["parameters"]
-    a = 1
-    b = 5
+    upstream = None
+    product = None
     # -
 
 For more information on parameterizing notebooks, please refer to the papermill docs: `parameterize <https://papermill.readthedocs.io/en/stable/usage-parameterize.html>`_
