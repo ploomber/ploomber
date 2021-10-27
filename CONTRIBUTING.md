@@ -24,7 +24,7 @@ pip install invoke
 invoke setup
 ```
 
-*Note:* If you're using Linux, you may encounter issues running `invoke setup` regarding the `psycopg2` package. If that's the case, remove `psyopg2` from the `setup.py` file and try again.
+*Note:* If you're using Linux, you may encounter issues running `invoke setup` regarding the `psycopg2` package. If that's the case, remove `psycopg2` from the `setup.py` file and try again.
 
 Then activate the environment:
 
@@ -62,7 +62,7 @@ pip install invoke
 invoke setup-pip
 ```
 
-*Note:* If you're using Linux, you may encounter issues running `invoke setup` regarding the `psycopg2` package. If that's the case, remove `psyopg2` from the `setup.py` file and try again.
+*Note:* If you're using Linux, you may encounter issues running `invoke setup` regarding the `psycopg2` package. If that's the case, remove `psycopg2` from the `setup.py` file and try again.
 
 ### Caveats of installing with pip
 
