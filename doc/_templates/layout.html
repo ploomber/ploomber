@@ -25,6 +25,14 @@
     }
 </style>
 
+<script>
+    document.onclick = function (e) {
+        const third_column = document.getElementById('third-column');
+        const first_column = document.getElementById('first-column');
+        third_column.classList.remove('show');
+        first_column.classList.remove('show');
+    }
+</script>
 
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
