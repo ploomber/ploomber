@@ -736,7 +736,17 @@ If your hook takes arguments, you may call it like this:
         dotted_path: {dotted.path.to.hook}
         argument: value
 
-For example:
+For example, let's say your ``on_render`` hook looks like this:
+
+
+.. code-block:: python
+    :class: text-editor
+
+    def on_render(some_param):
+        print(f'some_param: {some_param}')
+
+
+You can pass a value from the ``pipeline.yaml`` file like this:
 
 .. code-block:: yaml
     :class: text-editor
@@ -748,6 +758,7 @@ For example:
         some_param: 42
 
 Calling with arguments is useful when you have :doc:`a parametrized pipeline <../user-guide/parametrized>`.
+
 
 If you need information from the task, you may add any of the following
 arguments to the hook:
@@ -961,7 +972,7 @@ arguments you can pass to override the parameters defined in ``env.yaml``.
 Note that these parameters are constant (they must be changed explicitly by you
 either by updating the ``env.yaml`` file or via the command line), if you want
 to define dynamic parameters, you can do so with the Python API,
-`check out this example <https://github.com/ploomber/projects/tree/layout/cookbook/dynamic-params>`_ for an
+`check out this example <https://github.com/ploomber/projects/tree/master/cookbook/dynamic-params>`_ for an
 example.
 
 
@@ -994,7 +1005,7 @@ even if not defined in the ``env.yaml`` (or if you don't have a ``env.yaml`` alt
 * ``{{cwd}}``: Absolute path to the current working directory
 * ``{{root}}``: Absolute path to project's root folder. It is usually the same as ``{{here}}``, except when the project is a package (i.e., it has ``setup.py`` file), in such a case, it points to the parent directory of the ``setup.py`` file.
 * ``{{user}}``: Current username
-
+* ``{{now}}``: Current timestamp in ISO 8601 format (*Added in Ploomber 0.13.4*)
 
 A common use case for this is when passing paths to files to scripts/notebooks. For example, let's say your script has to read a file from a specific location. Using ``{{here}}`` turns path into absolute so you can ready it when using Jupyter, even if the script is in a different location than your ``pipeline.yaml``.
 
@@ -1013,7 +1024,7 @@ to override this behavior:
             data: product/data.csv
           params:
             # make this an absolute file so you can read it when opening
-            # scripts/my-script.py in tJupyter
+            # scripts/my-script.py in Jupyter
             input_path: '{{here}}/some/path/file.json'
 
 For more on parametrized pipelines, check out the guide: :doc:`../user-guide/parametrized`.

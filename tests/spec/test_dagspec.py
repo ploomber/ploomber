@@ -286,7 +286,7 @@ def test_doesnt_load_env_in_default_location_if_loading_from_dict(tmp_nbs):
         d = yaml.safe_load(f)
 
     spec = DAGSpec(d)
-    assert set(spec.env) == {'user', 'cwd', 'root'}
+    assert set(spec.env) == {'user', 'cwd', 'root', 'now'}
 
 
 def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):
@@ -751,6 +751,9 @@ def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
         return 'username'
 
     monkeypatch.setattr(expand.getpass, "getuser", mockreturn)
+    mock = Mock()
+    mock.datetime.now().isoformat.return_value = 'current-timestamp'
+    monkeypatch.setattr(expand, "datetime", mock)
 
     spec_dict = {
         'meta': {
@@ -762,6 +765,9 @@ def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
                 'nb': str(Path('{{cwd}}', '{{user}}', 'nb.html')),
                 'data': str(Path('{{here}}', 'data.csv')),
             },
+            'params': {
+                'now': '{{now}}'
+            }
         }]
     }
 
@@ -770,11 +776,13 @@ def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
     os.chdir(Path('src', 'pkg'))
 
     spec = DAGSpec.find()
+    task = spec.data['tasks'][0]
 
-    assert spec.data['tasks'][0]['source'] == Path(tmp_directory, 'script.py')
-    assert spec.data['tasks'][0]['product']['nb'] == str(
+    assert task['params']['now'] == 'current-timestamp'
+    assert task['source'] == Path(tmp_directory, 'script.py')
+    assert task['product']['nb'] == str(
         Path(tmp_directory, 'src', 'pkg', 'username', 'nb.html'))
-    assert spec.data['tasks'][0]['product']['data'] == str(
+    assert task['product']['data'] == str(
         Path(tmp_directory, 'src', 'pkg', 'data.csv'))
 
 

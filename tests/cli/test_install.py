@@ -342,6 +342,24 @@ def test_install_pip(tmp_directory):
     assert result.exit_code == 0
 
 
+@pytest.mark.xfail(sys.platform == 'win32',
+                   reason='Test not working on Github Actions on Windows')
+def test_install_pip_does_not_duplicate_gitignore_entry(tmp_directory):
+    _write_sample_pip_req()
+
+    Path('setup.py').write_text(setup_py)
+    name = f'venv-{Path(tmp_directory).name}'
+
+    Path('.gitignore').write_text(f'{name}\n')
+
+    runner = CliRunner()
+    result = runner.invoke(install, catch_exceptions=False)
+
+    # the entry was already there, should not duplicate
+    assert Path('.gitignore').read_text() == f'{name}\n'
+    assert result.exit_code == 0
+
+
 def test_non_package_with_pip(tmp_directory):
     _write_sample_pip_req()
 

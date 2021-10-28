@@ -82,9 +82,12 @@ class SourceLoader:
             # if path is None, do not append anything
             self.path_full = str(Path(module_path, path or ''))
 
+        self.env = self.__init_env()
+
+    def __init_env(self):
         # NOTE: we do not use jinja2.PackageLoader since it does not provide
         # the abilty to pass a list of paths
-        self.env = Environment(
+        return Environment(
             loader=FileSystemLoader(self.path_full),
             # this will cause jinja2 to raise an exception if a variable
             # declared in the template is not passed in the render parameters
@@ -151,3 +154,12 @@ class SourceLoader:
 
     def _ipython_key_completions_(self):
         return self.env.list_templates()
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['env']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.env = self.__init_env()

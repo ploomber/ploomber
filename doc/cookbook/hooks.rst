@@ -35,7 +35,12 @@ And your ``hooks.py`` file looks like this:
         print('this runs when my_task raise an exception during execution!')
 
 
-Hooks can take parameters; for example, you may add the ``product`` parameter to the hook, and Ploomber will call the hook with the ``product`` for the corresponding task. Adding arguments is useful when your hook needs information from the task.
+Hooks can take parameters; for example, you may add the ``product`` parameter
+to the hook, and Ploomber will call the hook with the ``product`` for the
+corresponding task. Adding arguments is useful when your hook needs information
+from the task. Furthermore, you can pass arbitrary parameters loaded
+from the ``pipeline.yaml``. To learn more about hook parameters
+:ref:`click here <tasks-on-render-finish-failure>`.
 
 Tip: Developing hooks interactively
 -----------------------------------
@@ -68,4 +73,19 @@ Resources
 DAG-level hooks
 ---------------
 
-There is DAG-level equivalent to task-level, hooks. :ref:`Click here <on-render-finish-failure>` to learn more.
+There are also DAG-level hooks, which work similarly. Declare them at the top section of your ``pipeline.yaml`` file:
+
+
+.. code-block:: yaml
+    :class: text-editor
+
+    # dag-level hooks
+    on_render: hooks.on_render
+    on_finish: hooks.on_finish
+    on_failure: hooks.on_failure
+
+    tasks:
+        - source: tasks.my_task
+          product: products/output.csv
+
+:ref:`Click here <on-render-finish-failure>` to learn more.
