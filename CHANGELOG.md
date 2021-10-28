@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.13.5dev
+* Fixes an error that caused `copy.deepcopy` to fail on `SourceLoader`
 
 ## 0.13.4 (2021-10-25)
 * Adds `{{now}}` (current timestamp in ISO 8601 format) to default placeholders
