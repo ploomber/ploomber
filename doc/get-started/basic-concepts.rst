@@ -145,15 +145,15 @@ R scripts/notebooks are supported as well. See this: :doc:`../user-guide/r-suppo
 
 To specify dependencies, include a special ``parameters`` cell in your
 script/notebook. Following our example pipeline, ``plot`` has ``clean``
-as an upstream dependency, we establish this by declaring an ``upstream``
-variable:
+as an upstream dependency as it is the product of **clean** task which acts as an 
+input to the **plot** task. We establish this relation by declaring an ``upstream`` variable:
 
 .. code-block:: python
     :class: text-editor
     :name: plot-py
 
     # + tags=["parameters"]
-    upstream = ['plot']
+    upstream = ['clean']
     # -
 
 We tagged the cell using ``tags=["parameters"]``. If the notebook doesn't
