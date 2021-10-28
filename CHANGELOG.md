@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.13.5dev
+## 0.13.5 (2021-10-27)
 * Fixes an error that caused `copy.deepcopy` to fail on `SourceLoader`
 
 ## 0.13.4 (2021-10-25)
