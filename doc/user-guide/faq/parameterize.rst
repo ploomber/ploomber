@@ -19,4 +19,4 @@ Hit the "Add Tag" button, type in the word ``parameters``, and press "Enter".
 .. image:: /doc/_static/img/parameterize-ipynb-example.png
   :width: 800
 
-For more information on parameterizing notebooks in older verions, please refer to the papermill docs: `parameterize <https://papermill.readthedocs.io/en/stable/usage-parameterize.html>`_
+For more information on parameterizing notebooks in older versions, please refer to the papermill docs: `parameterize <https://papermill.readthedocs.io/en/stable/usage-parameterize.html>`_
