@@ -24,6 +24,8 @@
   <a href="https://ploomber.readthedocs.io/">Docs</a>
   |
   <a href="https://ploomber.io/">Blog</a>
+  |
+  <a href="https://www.youtube.com/channel/UCaIS5BMlmeNQE4-Gn0xTDXQ">YouTube</a>
 </p>
 
 **Notebooks are hard to maintain.** Teams often prototype projects in notebooks, but maintaining them is an error-prone process that slows progress down. Ploomber overcomes the challenges of working with `.ipynb` files allowing teams to develop collaborative, production-ready pipelines using JupyterLab or any text editor.
@@ -52,6 +54,7 @@
 
 * [Join us on Slack](http://community.ploomber.io)
 * [Newsletter](https://www.getrevue.co/profile/ploomber)
+* [YouTube](https://www.youtube.com/channel/UCaIS5BMlmeNQE4-Gn0xTDXQ)
 * [Contact the development team](mailto:contact@ploomber.io)
 
 ## Resources
