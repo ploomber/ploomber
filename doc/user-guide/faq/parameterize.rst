@@ -9,7 +9,7 @@ For py files, include the ``# + tags["parameters]`` comment before declaring you
 The ``# +`` marker denotes the beginning of a cell and ``# -`` marker indicates the end of the cell.
 
 .. image:: /doc/_static/img/parameterize-py-example.png
-  :width: 700
+  :width: 800
 
 JupterLab 3.0+
 --------------
