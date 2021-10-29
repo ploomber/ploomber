@@ -8,7 +8,7 @@ Python Files (.py)
 For py files, include the ``# + tags["parameters]`` comment before declaring your default variables or parameters.
 The ``# +`` marker denotes the beginning of a cell and ``# -`` marker indicates the end of the cell.
 
-.. image:: /_static/img/parameterize-py-example.png
+.. image:: /doc/_static/img/parameterize-py-example.png
   :width: 400
 
 JupterLab 3.0+
