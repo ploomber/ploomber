@@ -16,4 +16,7 @@ JupterLab 3.0+
 If you are using JupterLab version 3 or above, select the cell to parameterize. Then in the right sidebar, click to open the property inspector (double gear icon).
 Hit the "Add Tag" button, type in the word ``parameters``, and press "Enter".
 
+.. image:: /doc/_static/img/parameterize-ipynb-example.png
+  :width: 800
+
 For more information on parameterizing notebooks in older verions, please refer to the papermill docs: `parameterize <https://papermill.readthedocs.io/en/stable/usage-parameterize.html>`_
