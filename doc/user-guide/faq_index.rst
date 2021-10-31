@@ -13,6 +13,8 @@ FAQ and Glossary
 
 .. include:: faq/autoreload.rst
 
+.. include:: faq/parameterize.rst
+
 Glossary
 --------
 
