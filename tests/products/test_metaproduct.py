@@ -94,6 +94,17 @@ def test_upload():
 
     p1.upload.assert_called_once_with()
     p2.upload.assert_called_once_with()
+    
+def test_metaproduct():
+    
+    test_dictionary_fails = {'a': 'something'}
+    test_dictionary_passes = {'a': File('something')}
+    
+    PythonCallable(_do_stuff, test_dictionary_fails, dag=DAG())
+    PythonCallable(_do_stuff, test_dictionary_passes, dag=DAG())
+    
+    ## Need to add something here <> 
+
 
 
 @pytest.mark.parametrize(
