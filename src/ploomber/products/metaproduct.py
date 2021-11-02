@@ -112,7 +112,11 @@ class MetaProduct(Mapping):
     @task.setter
     def task(self, value):
         for p in self.products:
-            p.task = value
+            if hasattr(p, 'task'):
+                p.task = value
+                continue
+            else:
+                raise TypeError(f"It doesn't look like a Product instance, got object of type {type(p)}")
 
     def exists(self):
         return all([p.exists() for p in self.products])
