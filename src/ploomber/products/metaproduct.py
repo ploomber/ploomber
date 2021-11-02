@@ -112,7 +112,15 @@ class MetaProduct(Mapping):
     @task.setter
     def task(self, value):
         for p in self.products:
-            p.task = value
+            try:
+                p.task = value
+            except AttributeError as e:
+                raise AttributeError(
+                    "Expected MetaProduct to initialize with Product "
+                    "instancess (which have a 'task' attribute), but "
+                    f"got {p!r}, an object of type {type(p)}. Replace it "
+                    "with a valid Product object. If this is a file, use "
+                    f"File({p!r})") from e
 
     def exists(self):
         return all([p.exists() for p in self.products])
