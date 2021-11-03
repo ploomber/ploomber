@@ -1,22 +1,47 @@
 Parameterizing Notebooks
 ------------------------
-When performing a notebook task, you must first parametize the notebook by assigning the tag ``parameters`` to an initial cell. 
-These ``parameters`` are then used in the workflow when the notebook is executed.
 
-Python Files (.py)
-******************
-For py files, include the ``# + tags["parameters]`` comment before declaring your default variables or parameters.
-The ``# +`` marker denotes the beginning of a cell and ``# -`` marker indicates the end of the cell.
+You must first parametrize the notebook by assigning the tag ``parameters`` to an
+initial cell when performing a notebook task. Note that the parameters in 
+the ``parameters`` cell are placeholders; they indicate which parameters
+your script or notebook takes, and they are replaced by the information declared in
+your ``pipeline.yaml`` at runtime.
 
-.. image:: /_static/img/parameterize-py-example.png
-  :width: 800
+Parameterizing ``.py`` files
+*****************************
 
-JupterLab 3.0+
-**************
-If you are using JupterLab version 3 or above, select the cell to parameterize. Then in the right sidebar, click to open the property inspector (double gear icon).
-Hit the "Add Tag" button, type in the word ``parameters``, and press "Enter".
+For ``.py`` files, include the ``# + tags=["parameters]`` comment before declaring your default variables or parameters.
+The ``# +`` marker denotes the beginning of a cell, and ``# -`` marker indicates the end of the cell. Your cell should look like this:
+
+
+.. code-block:: python
+    :class: text-editor
+
+    # + tags=["parameters"]
+    upstream = None
+    product = None
+    # -
+
+
+Note that Ploomber is compatible with all ``.py`` formats supported by jupytext. Another common alternative is the percent format:
+
+
+.. code-block:: python
+    :class: text-editor
+
+    # %% tags=["parameters"]
+    upstream = None
+    product = None
+
+If you're using another format, check out `jupytext's documentation <https://jupytext.readthedocs.io/en/latest/formats.html>`_.
+
+Parameterizing ``.ipynb`` files in Jupyter
+******************************************
+
+.. note:: This applies to JupyterLab 3.0 and higher. For more information on parameterizing notebooks in older versions, please refer to `papermill docs <https://papermill.readthedocs.io/en/stable/usage-parameterize.html>`_
+
+To parametrize your notebooks, add a new cell at the top, then in the right sidebar, click to open the property
+inspector (double gear icon). Next, hit the "Add Tag" button, type in the word ``parameters``, and press "Enter".
 
 .. image:: /_static/img/parameterize-ipynb-example.png
   :width: 800
-
-For more information on parameterizing notebooks in older versions, please refer to the papermill docs: `parameterize <https://papermill.readthedocs.io/en/stable/usage-parameterize.html>`_
