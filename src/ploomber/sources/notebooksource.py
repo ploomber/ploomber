@@ -232,14 +232,16 @@ class NotebookSource(Source):
 Add a cell at the top like this:
 
 # + tags=["parameters"]
-# your code here...
+upstream = None
+product = None
 # -
+
+Go to: https://ploomber.io/s/params for more information
 """
             if self.loc and Path(self.loc).suffix == '.ipynb':
-                url = ('https://papermill.readthedocs.io/'
-                       'en/stable/usage-parameterize.html')
                 msg += ('. Add a cell at the top and tag it as "parameters". '
-                        f'Click here for instructions: {url}')
+                        'Go to the next URL for '
+                        'details: https://ploomber.io/s/params')
 
             raise SourceInitializationError(msg)
 
