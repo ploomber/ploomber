@@ -1,25 +1,32 @@
-def find_cell_with_tag(nb, *tag):
+def find_cell_with_tags(nb, tags):
     """
-    The input will be a series of tags. Returns a dictionary which 
-    has "tag":index pairs. If no cells are found, then empty dict 
-    will be returned.
+    Find the first cell with any of the given tags, returns a dictionary
+    with 'cell' (cell object) and 'index', the cell index.
     """
-    # take any number of tags in input and convert it to a list
-    all_tags = list(tag)
-
-    #find all the tags in the given nb and add to dict with index
+    tags_to_find = list(tags)
     tags_found = {}
+
     for index, cell in enumerate(nb['cells']):
-        temp = {}
-        cell_tags = cell['metadata'].get('tags')
-        temp[cell_tags] = index
-        tags_found.update(temp)
+        for tag in cell['metadata'].get('tags', []):
+            if tag in tags_to_find:
+                tags_found[tag] = dict(cell=cell, index=index)
+                tags_to_find.remove(tag)
 
-    #dict for storing "tag":index pairs
-    result = {}
-    for tag_ in all_tags:
-        if tag_ in tags_found:
-            # if a cell is found with required tag, add the "tag":index to result
-            result[tag_] = tags_found[tag_]
+                if not tags_to_find:
+                    break
 
-    return result
+    return tags_found
+
+
+def find_cell_with_tag(nb, tag):
+    """
+    Find a cell with a given tag, returns a cell, index tuple. Otherwise
+    (None, None)
+    """
+    out = find_cell_with_tags(nb, [tag])
+
+    if out:
+        located = out[tag]
+        return located['cell'], located['index']
+    else:
+        return None, None
