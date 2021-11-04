@@ -25,7 +25,7 @@ Or run it locally:
 
 .. code-block:: console
 
-    ploomber examples --name spec-api-sql
+    ploomber examples --name templates/spec-api-sql
 
 
 Connecting to databases

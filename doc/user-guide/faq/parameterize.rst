@@ -3,9 +3,10 @@ Parameterizing Notebooks
 
 You must first parametrize the notebook by assigning the tag ``parameters`` to an
 initial cell when performing a notebook task. Note that the parameters in 
-the ``parameters`` cell are placeholders; they indicate which parameters
-your script or notebook takes, and they are replaced by the information declared in
-your ``pipeline.yaml`` at runtime.
+the ``parameters`` cell are placeholders; they indicate the parameter names that
+your script or notebook takes, but they are replaced values declared in
+your ``pipeline.yaml`` file at runtime. The only exception is
+the ``upstream`` parameter, which contains a list of task dependencies.
 
 Parameterizing ``.py`` files
 *****************************
