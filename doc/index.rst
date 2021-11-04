@@ -4,7 +4,7 @@ Ploomber documentation
 .. list-table::
    :stub-columns: 1
    :name: description-table
-
+  
    * - :doc:`get-started/index`
      - High-level tutorials covering the basics of Ploomber.
    * - :doc:`user-guide/index`
@@ -19,8 +19,20 @@ New to Ploomber? Start here:
 
 .. raw:: html
 
-  <a href="get-started/spec-api-python.html"> <img src="_static/img/get-started.svg" alt="Get Started"> </a>
-  <a href="https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/spec-api-python%252FREADME.ipynb%26branch%3Dmaster" target="_blank" rel="noopener noreferrer"> <img src="_static/img/open-jupyterlab.svg" alt="Open JupyerLab"> </a>
+
+  <div class="container">
+  <div class="row d-flex justify-content-center">
+    <div class="col-m">
+      <a href="get-started/what-is.html"> <img class="index-button" src="_static/img/what-is.svg" alt="What is Ploomber?"> </a>
+    </div>
+    <div class="col-m">
+      <a href="get-started/spec-api-python.html"> <img class="index-button" src="_static/img/get-started.svg" alt="Get Started"> </a>
+    </div>
+    <div class="col-m">
+      <a href="https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/spec-api-python%252FREADME.ipynb%26branch%3Dmaster" target="_blank" rel="noopener noreferrer"> <img class="index-button" src="_static/img/open-jupyterlab.svg" alt="Open JupyerLab"> </a>
+    </div>
+  </div>
+  </div>
 
 
 Contents

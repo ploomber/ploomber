@@ -546,3 +546,12 @@ span.highlighted {
     margin-bottom: 1rem;
     margin-left: 2rem;
 }
+
+/* for call to action buttons in the docs index */
+
+.index-button {
+    padding-left: 2px;
+    padding-right: 2px;
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
+}
