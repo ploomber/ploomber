@@ -350,8 +350,10 @@ Snowflake or Apache Hive. :doc:`Click here <sql-pipeline>` to see the SQL guide.
 Where to go from here
 ---------------------
 
-We've created dozens of example to help you explore Ploomber:
- 
+We've created dozens of runnable examples to help you explore Ploomber:
+
+* Exploratory Data Analysis
+    1. `Exploratory pipeline <https://github.com/ploomber/projects/tree/master/templates/exploratory-analysis>`_: Load, and clean data. Then create HTML reports with visualizations.
 * Machine Learning
     1. `Basic example <https://github.com/ploomber/projects/tree/master/templates/ml-basic>`_: Get data, clean it, and train a model.
     2. `Intermediate example <https://github.com/ploomber/projects/tree/master/templates/ml-intermediate>`_: Create a training and batch serving pipeline.
@@ -362,7 +364,7 @@ We've created dozens of example to help you explore Ploomber:
     2. `ETL <https://github.com/ploomber/projects/tree/master/templates/etl>`_ dump data from remote storage, uploads it to a database, process it, and visualize with Python.
 
 
-If you want to learn **advanced features**, check out out :doc:`User Guide <../user-guide/index>`.
+If you want to read about **advanced features**, check out out :doc:`User Guide <../user-guide/index>`.
 
 The ``pipeline.yaml`` API offers a concise way to declare
 pipelines, but if you want complete flexibility, **you can use the underlying Python
