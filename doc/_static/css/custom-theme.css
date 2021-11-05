@@ -196,6 +196,7 @@ div.document .toctree-l2 {
     padding-left: 1.5rem;
 }
 
+
 /* independent scrolling in table of contents */
 
 .global-toc {
@@ -212,6 +213,25 @@ div.document .toctree-l2 {
 .global-toc {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
+}
+
+/* help toltip (bottom left) */
+
+.help-tooltip {
+    position: sticky;
+    bottom: 0px;
+    background-color: #fff;
+    border-top: 2px solid #eee;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+.help-tooltip p {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
 }
 
 /* navigation bar (right) */

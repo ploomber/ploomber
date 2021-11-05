@@ -70,6 +70,14 @@ titles_only=false) %}
     <div class="row">
         <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
             {{ sidebar1() }}
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body={{ ('Documentation page: ' + pagename) | quote_plus }}"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="http://community.ploomber.io" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
         </div>
         <div class="col-md-9 col-xl-8">
             <div class="document">
