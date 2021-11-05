@@ -33,5 +33,5 @@ I have questions
 I'm ready to start building!
 ----------------------------
 
-* Head over to our :doc:`first tutorial </get-started/spec-api-python>` to run your first Ploomber pipeline.
-* Check out our `examples repository <https://github.com/ploomber/projects>`_ to see what Ploomber can do for you.
+* Head over to our :doc:`first tutorial </get-started/spec-api-python>` for a short walkthrough to run your first Ploomber pipeline.
+* Check out our :doc:`/user-guide/templates` guide to run some pre-configured examples.
