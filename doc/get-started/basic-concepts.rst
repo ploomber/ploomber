@@ -17,7 +17,7 @@ everything in a single file, we'll break down logic in three steps, which will
 make our code more maintainable and easier to test:
 
 .. raw:: html
-
+   
     <div class="mermaid">
     graph LR
         raw --> clean --> plot
@@ -350,19 +350,7 @@ Snowflake or Apache Hive. :doc:`Click here <sql-pipeline>` to see the SQL guide.
 Where to go from here
 ---------------------
 
-We've created dozens of runnable examples to help you explore Ploomber:
-
-* Exploratory Data Analysis
-    1. `Exploratory pipeline <https://github.com/ploomber/projects/tree/master/templates/exploratory-analysis>`_: Load, and clean data. Then create HTML reports with visualizations.
-* Machine Learning
-    1. `Basic example <https://github.com/ploomber/projects/tree/master/templates/ml-basic>`_: Get data, clean it, and train a model.
-    2. `Intermediate example <https://github.com/ploomber/projects/tree/master/templates/ml-intermediate>`_: Create a training and batch serving pipeline.
-    3. `Online API <https://github.com/ploomber/projects/tree/master/templates/ml-online>`_: Deploy pipeline as an API using Flask.
-    4. `Experiment grid + MLflow <https://github.com/ploomber/projects/tree/master/templates/mlflow>`_: Create a grid of experiments and track them with MLflow.
-* SQL databases
-    1. `Basic SQL example <https://github.com/ploomber/projects/tree/master/templates/spec-api-sql>`_ Process data, dump it, and visualize with Python.
-    2. `ETL <https://github.com/ploomber/projects/tree/master/templates/etl>`_ dump data from remote storage, uploads it to a database, process it, and visualize with Python.
-
+We've created many **runnable templates** to help you get up and running, check out our :doc:`/user-guide/templates` guide.
 
 If you want to read about **advanced features**, check out out :doc:`User Guide <../user-guide/index>`.
 
