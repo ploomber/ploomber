@@ -15,6 +15,8 @@ FAQ and Glossary
 
 .. include:: faq/parameterize.rst
 
+.. include:: faq/plot.rst
+
 Glossary
 --------
 

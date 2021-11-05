@@ -9,9 +9,10 @@ User Guide
 .. toctree::
     :maxdepth: 2
 
-    scaffold
+    templates
     cli
     jupyter
+    scaffold
     parametrized
     configuration
     sql-templating
