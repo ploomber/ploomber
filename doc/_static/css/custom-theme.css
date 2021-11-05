@@ -219,8 +219,17 @@ div.document .toctree-l2 {
 .third-column {
     position: sticky !important;
     top: 3.5rem;
-    z-index: 1000;
+    /* change z-index to make the readthedocs injected widget clickable */
+    z-index: 0;
     height: calc(100vh - 3.5rem);
+}
+
+/* readthedocs injected widget */
+
+.rst-versions.rst-badge {
+    bottom: 15px !important;
+    /* put a higher z-index than .third-column so this works */
+    z-index: 1 !important;
 }
 
 div.sphinxsidebarwrapper {
