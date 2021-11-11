@@ -51,7 +51,7 @@
 
 {%- macro sidebar1() %}
 {% set global_toc = toctree(maxdepth=2,
-collapse=false,
+collapse=true,
 includehidden=false,
 titles_only=false) %}
 <div class="global-toc">{{ global_toc }}</div>
