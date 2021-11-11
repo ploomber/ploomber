@@ -218,7 +218,7 @@ div.document .toctree-l2 {
 /* help toltip (bottom left) */
 
 .help-tooltip {
-    position: sticky;
+    position: absolute;
     bottom: 0px;
     background-color: #fff;
     border-top: 2px solid #eee;
