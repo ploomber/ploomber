@@ -1,27 +1,7 @@
 Ploomber documentation
 ======================
 
-.. list-table::
-   :stub-columns: 1
-   :name: description-table
-  
-   * - :doc:`get-started/index`
-     - High-level tutorials covering the basics of Ploomber.
-   * - :doc:`use-cases/index`
-     - High-level descriptions of what you can build with Ploomber.
-   * - :doc:`user-guide/index`
-     - In-depth tutorials for developing Ploomber pipelines.
-   * - :doc:`deployment/index`
-     - In-depth tutorials for deployment.
-   * - :doc:`cookbook/index`
-     - Quick reference for common patterns.
-   * - :doc:`api/index`
-     - Technical documentation.
-   * - :doc:`community/index`
-     - General information about our community and the project. 
-
-New to Ploomber? Start here:
-----------------------------
+*New to Ploomber? Start here:*
 
 .. raw:: html
 
@@ -41,8 +21,31 @@ New to Ploomber? Start here:
   </div>
 
 
-Contents
+Sections
 --------
+
+.. list-table::
+   :stub-columns: 1
+   :name: description-table
+  
+   * - :doc:`get-started/index`
+     - High-level tutorials covering the basics of Ploomber.
+   * - :doc:`use-cases/index`
+     - High-level descriptions of what you can build with Ploomber.
+   * - :doc:`user-guide/index`
+     - In-depth tutorials for developing Ploomber pipelines.
+   * - :doc:`deployment/index`
+     - In-depth tutorials for deployment.
+   * - :doc:`cookbook/index`
+     - Quick reference for common patterns.
+   * - :doc:`api/index`
+     - Technical documentation.
+   * - :doc:`community/index`
+     - General information about our community and the project.
+
+
+Index
+-----
 
 .. toctree::
    :maxdepth: 2

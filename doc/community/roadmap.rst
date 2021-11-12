@@ -16,6 +16,7 @@ These are some ideas we have if you want us to work on it, `open an issue <https
 - A frontend Jupyter plug-in (e.g., to visualize execution status in real-time).
 - Autocompletion and linting in Jupyter when editing ``pipeline.yaml``.
 - Automated pipeline testing.
+- Integration with data versioning tools such as LakeFS.
 - Expand integration with Google Cloud (we only support uploading to Cloud Storage).
 - Expand integration with AWS (we only support S3 and AWS Batch).
 - Integration with Azure Machine Learning services.
