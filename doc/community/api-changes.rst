@@ -11,11 +11,11 @@ Deprecation policy
 ******************
 
 Whenever we introduce an API incompatible change, we add a
-`DeprecationWarning` and keep it for two minor releases before rolling out
+``DeprecationWarning`` and keep it for two minor releases before rolling out
 the major release.
+
 
 Changelog
 *********
-
 
 We keep a detailed log of changes in our `CHANGELOG <https://github.com/ploomber/ploomber/blob/master/CHANGELOG.md>`_ on GitHub.

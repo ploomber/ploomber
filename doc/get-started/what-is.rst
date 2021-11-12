@@ -21,6 +21,7 @@ Tell me more
 ------------
 
 * Watch this `6-minute video <https://youtu.be/homtENcUd14>`_ to see how the experience looks like.
+* Read about :doc:`common use cases <../use-cases/index>`.
 * Check out the `Videos <../videos.html>`_ section to watch some of our presentations.
 * Read our guest blog post in the `official Jupyter blog <https://blog.jupyter.org/ploomber-maintainable-and-collaborative-pipelines-in-jupyter-acb3ad2101a7>`_ to learn more about our mission.
 

@@ -2,10 +2,19 @@ Machine Learning
 ================
 
 Ploomber has many features specifically tailored to accelerate Machine Learning
-workflows. For instance, it makes the cleaning and the feature engineering
-development process more manageable since it allows you to break down logic
-in small steps. Furthermore, you can quickly deploy models in batch or
-online mode.
+workflows.
+
+.. raw:: html
+
+    <div class="mermaid">
+    graph LR
+        la[Load dataset A] --> ca[Clean] --> fa[Features] --> merge[Merge]
+        lb[Load dataset B] --> cb[Clean] --> fb[Features] --> merge
+        merge --> train1[NN] --> eval[Evaluate]
+        merge --> train2[Random Forest] --> eval
+        merge --> train3[SVM] --> eval
+
+    </div>
 
 
 Data cleaning and feature engineering
