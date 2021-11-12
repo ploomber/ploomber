@@ -3,7 +3,7 @@ User Guide
 
 .. raw:: html
 
-    <p class="lead">In-depth tutorials covering Ploomber features.</p>
+    <p class="lead">In-depth tutorials for developing Ploomber pipelines.</p>
 
 
 .. toctree::
@@ -15,11 +15,11 @@ User Guide
     scaffold
     parametrized
     configuration
+    ../get-started/sql-pipeline
     sql-templating
     testing
     debugging
     logging
-    deployment
     serialization
     r-support
     faq_index

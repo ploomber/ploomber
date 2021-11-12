@@ -12,4 +12,3 @@ Get Started
     install
     spec-api-python
     basic-concepts
-    sql-pipeline

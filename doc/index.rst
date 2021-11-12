@@ -7,12 +7,18 @@ Ploomber documentation
   
    * - :doc:`get-started/index`
      - High-level tutorials covering the basics of Ploomber.
+   * - :doc:`use-cases/index`
+     - High-level descriptions of what you can build with Ploomber.
    * - :doc:`user-guide/index`
-     - In-depth tutorials covering Ploomber features.
+     - In-depth tutorials for developing Ploomber pipelines.
+   * - :doc:`deployment/index`
+     - In-depth tutorials for deployment.
    * - :doc:`cookbook/index`
-     - Quick reference for common use cases.
+     - Quick reference for common patterns.
    * - :doc:`api/index`
      - Technical documentation.
+   * - :doc:`community/index`
+     - General information about our community and the project. 
 
 New to Ploomber? Start here:
 ----------------------------
@@ -43,6 +49,9 @@ Contents
    :includehidden:
 
    get-started/index
+   use-cases/index
    user-guide/index
+   deployment/index
    cookbook/index
    api/index
+   community/index
