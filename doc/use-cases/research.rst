@@ -4,7 +4,7 @@ Research Projects
 Ploomber can help you manage your research project to enhance reproducibility
 and to run more experiments faster.
 
-Check out our `Exploratory Data Analysis template <https://github.com/ploomber/projects/tree/master/templates/exploratory-analysis>`_ to get started.
+Check out our `this template <https://github.com/ploomber/projects/tree/master/templates/exploratory-analysis>`_ to get started.
 
 Faster iterations
 ******************

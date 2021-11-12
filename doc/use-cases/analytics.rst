@@ -23,4 +23,4 @@ automatically convert the output for you.
         product: output/report.html
 
 
-Check out our `Exploratory Data Analysis template <https://github.com/ploomber/projects/tree/master/templates/exploratory-analysis>`_ to get started.
+Check out our `this template <https://github.com/ploomber/projects/tree/master/templates/exploratory-analysis>`_ to get started.
