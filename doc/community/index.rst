@@ -6,11 +6,10 @@ Community
     <p class="lead">General information about our community and the project. </p>
 
 
-Some intro here.
-
 .. toctree::
     :maxdepth: 2
 
+    contact
     coc
     api-changes
     contributing
