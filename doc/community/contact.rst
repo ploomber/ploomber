@@ -4,7 +4,7 @@ Contact Us
 Do you have any questions or feedback? Reach out to us:
 
 - E-mail us at `contact@ploomber.io <mailto:contact@ploomber.io>`_.
-- Send us a message on `Slack <http://community.ploomber.io>`_.
+- Send us a message on `Slack <https://ploomber.io/community>`_.
 - `Open an issue <https://github.com/ploomber/ploomber/issues/new>`_ on GitHub.
 
 Stay up-to-date

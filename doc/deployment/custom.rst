@@ -9,4 +9,4 @@ which contains all the information you need to orchestrate the pipeline in
 any platform, that's how we export to other platforms: we load the user's
 pipeline as a DAG object and then convert it.
 
-If you need help or have questions, `open an issue <https://github.com/ploomber/ploomber/issues/new?title=Custom%20deployment>`_ or send us a message on `Slack <http://community.ploomber.io>`_.
+If you need help or have questions, `open an issue <https://github.com/ploomber/ploomber/issues/new?title=Custom%20deployment>`_ or send us a message on `Slack <https://ploomber.io/community>`_.

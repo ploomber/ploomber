@@ -10,7 +10,7 @@ These are some of the features that we have in the pipeline, sorted by priority.
 5. Building online APIs from pipelines with scripts/notebooks (we only support exporting online APIs from pipelines with Python functions). (`#418 <https://github.com/ploomber/ploomber/issues/418>`_)
 
 
-To send general feedback, `open an issue <https://github.com/ploomber/ploomber/issues/new?title=Roadmap>`_ or send us a message on `Slack <http://community.ploomber.io>`_.
+To send general feedback, `open an issue <https://github.com/ploomber/ploomber/issues/new?title=Roadmap>`_ or send us a message on `Slack <https://ploomber.io/community>`_.
 
 Ideas
 *****
@@ -26,4 +26,4 @@ These are some ideas we have that we haven't prioritized yet.
 - Integration with Azure Machine Learning services.
 - Support for Julia.
 
-To send general feedback, `open an issue <https://github.com/ploomber/ploomber/issues/new?title=Roadmap>`_ or send us a message on `Slack <http://community.ploomber.io>`_.
+To send general feedback, `open an issue <https://github.com/ploomber/ploomber/issues/new?title=Roadmap>`_ or send us a message on `Slack <https://ploomber.io/community>`_.

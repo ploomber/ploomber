@@ -13,4 +13,4 @@ Click on the appropriate link in the list below to learn more.
 3. `Examples repository. <https://github.com/ploomber/projects/blob/master/CONTRIBUTING.md>`_
 
 
-If you have any questions, `open an issue <https://github.com/ploomber/ploomber/issues/new?title=Contributing>`_ or send us a message on `Slack <http://community.ploomber.io>`_.
+If you have any questions, `open an issue <https://github.com/ploomber/ploomber/issues/new?title=Contributing>`_ or send us a message on `Slack <https://ploomber.io/community>`_.

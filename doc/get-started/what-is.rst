@@ -28,7 +28,7 @@ Tell me more
 I have questions
 ----------------
 
-* `Join our community <http://community.ploomber.io>`_.
+* `Join our community <https://ploomber.io/community>`_.
 * Send us an `email (contact@ploomber.io) <mailto:contact@ploomber.io>`_.
 * Open an `issue on GitHub <https://github.com/ploomber/ploomber/issues/new>`_.
 

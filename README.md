@@ -16,7 +16,7 @@
 [![Downloads](https://pepy.tech/badge/ploomber/month)](https://pepy.tech/project/ploomber)
 
 <p align="center">
-  <a href="http://community.ploomber.io">Join our community</a>
+  <a href="https://ploomber.io/community">Join our community</a>
   |
   <a href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
   |
@@ -89,7 +89,7 @@ Click here to go to our [examples](https://github.com/ploomber/projects) reposit
 
 ## Community
 
-* [Join us on Slack](http://community.ploomber.io)
+* [Join us on Slack](https://ploomber.io/community)
 * [Newsletter](https://www.getrevue.co/profile/ploomber)
 * [YouTube](https://www.youtube.com/channel/UCaIS5BMlmeNQE4-Gn0xTDXQ)
 * [Contact the development team](mailto:contact@ploomber.io)
