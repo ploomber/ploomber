@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.13.6dev
+## 0.13.6 (2021-11-17)
 * `GenericSource` supports extracting upstream
 
 ## 0.13.5 (2021-10-27)
