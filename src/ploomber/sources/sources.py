@@ -238,6 +238,9 @@ class GenericSource(PlaceholderSource):
     def _post_init_validation(self, value):
         pass
 
+    def extract_upstream(self):
+        return StringExtractor(self._placeholder._raw).extract_upstream()
+
 
 class FileSource(GenericSource):
     """

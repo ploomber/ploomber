@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.13.6dev
+* `GenericSource` supports extracting upstream
 
 ## 0.13.5 (2021-10-27)
 * Fixes an error that caused `copy.deepcopy` to fail on `SourceLoader`
