@@ -544,10 +544,10 @@ def find_root_recursively(starting_dir=None,
                                   'those files exist')
 
 
-def try_to_find_root_recursively():
+def try_to_find_root_recursively(starting_dir=None):
     # TODO: display warning
     try:
-        return find_root_recursively()
+        return find_root_recursively(starting_dir=starting_dir)
     except Exception:
         pass
 

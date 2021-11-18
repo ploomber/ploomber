@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 0.13.7dev
+* Fixes `{{root}}` expansion when path_to_here is different than the current working directory
+
 
 ## 0.13.6 (2021-11-17)
 * `GenericSource` supports extracting upstream
