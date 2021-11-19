@@ -1,5 +1,5 @@
 <p align="center" width="100%">
-  <img src="https://ploomber.io/ploomber-logo.png" height="250">
+  <img src="_static/logo.png" height="250">
 </p>
 
 [![CI Linux](https://github.com/ploomber/ploomber/workflows/CI%20Linux/badge.svg)](https://github.com/ploomber/ploomber/workflows/CI%20Linux/badge.svg)
