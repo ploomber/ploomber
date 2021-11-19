@@ -37,7 +37,7 @@ from ploomber.exceptions import SourceInitializationError
 from ploomber.placeholders.placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources.abc import Source
-from ploomber.sources.nb_utils import find_cell_with_tag
+from ploomber.sources.nb_utils import find_cell_with_tag, find_cell_with_tags
 from ploomber.static_analysis.extractors import extractor_class_for_language
 from ploomber.static_analysis.pyflakes import check_notebook
 from ploomber.sources import docstring
@@ -232,14 +232,16 @@ class NotebookSource(Source):
 Add a cell at the top like this:
 
 # + tags=["parameters"]
-# your code here...
+upstream = None
+product = None
 # -
+
+Go to: https://ploomber.io/s/params for more information
 """
             if self.loc and Path(self.loc).suffix == '.ipynb':
-                url = ('https://papermill.readthedocs.io/'
-                       'en/stable/usage-parameterize.html')
                 msg += ('. Add a cell at the top and tag it as "parameters". '
-                        f'Click here for instructions: {url}')
+                        'Go to the next URL for '
+                        'details: https://ploomber.io/s/params')
 
             raise SourceInitializationError(msg)
 
@@ -551,20 +553,23 @@ def inject_cell(model, params):
                                              comment=comment)
 
 
-# FIXME: this is used in the task itself in the .develop() feature, maybe
-# move there?
 def _cleanup_rendered_nb(nb):
-    cell, i = find_cell_with_tag(nb, 'injected-parameters')
+    """
+    Cleans up a rendered notebook object. Removes cells with tags:
+    injected-parameters, debugging-settings, and metadata injected by
+    papermill
+    """
+    out = find_cell_with_tags(nb,
+                              ['injected-parameters', 'debugging-settings'])
 
-    if i is not None:
-        print('Removing injected-parameters cell...')
-        nb['cells'].pop(i)
+    for key in out.keys():
+        print(f'Removing {key} cell...')
 
-    cell, i = find_cell_with_tag(nb, 'debugging-settings')
+    idxs = set(cell['index'] for cell in out.values())
 
-    if i is not None:
-        print('Removing debugging-settings cell...')
-        nb['cells'].pop(i)
+    nb['cells'] = [
+        cell for idx, cell in enumerate(nb['cells']) if idx not in idxs
+    ]
 
     # papermill adds "tags" to all cells that don't have them, remove them
     # if they are empty to avoid cluttering the script

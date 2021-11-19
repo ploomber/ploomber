@@ -12,10 +12,11 @@
 [![Coverage](https://coveralls.io/repos/github/ploomber/ploomber/badge.svg?branch=master)](https://coveralls.io/github/ploomber/ploomber?branch=master)
 [![Twitter](https://img.shields.io/twitter/follow/ploomber?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=ploomber)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/spec-api-python%252FREADME.ipynb%26branch%3Dmaster)
-
+[![Downloads](https://pepy.tech/badge/ploomber)](https://pepy.tech/project/ploomber)
+[![Downloads](https://pepy.tech/badge/ploomber/month)](https://pepy.tech/project/ploomber)
 
 <p align="center">
-  <a href="http://community.ploomber.io">Join our community</a>
+  <a href="https://ploomber.io/community">Join our community</a>
   |
   <a href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
   |
@@ -24,6 +25,10 @@
   <a href="https://ploomber.readthedocs.io/">Docs</a>
   |
   <a href="https://ploomber.io/">Blog</a>
+  |  
+  <a href="https://www.ploomber.io">Website</a>
+  |
+  <a href="https://www.youtube.com/channel/UCaIS5BMlmeNQE4-Gn0xTDXQ">YouTube</a>
 </p>
 
 **Notebooks are hard to maintain.** Teams often prototype projects in notebooks, but maintaining them is an error-prone process that slows progress down. Ploomber overcomes the challenges of working with `.ipynb` files allowing teams to develop collaborative, production-ready pipelines using JupyterLab or any text editor.
@@ -34,36 +39,6 @@
   <a href="https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/spec-api-python%252FREADME.ipynb%26branch%3Dmaster"> <img src="_static/open-jupyterlab.svg" alt="Open JupyerLab"> </a>
 </p>
 
-
-
-## Main Features
-
-1. **Scripts as notebooks.** Open `.py` files as notebooks, then execute them from the terminal and generate an output notebook to review results.
-2. **Dependency resolution.** Quickly build a DAG by referring to previous tasks in your code; Ploomber infers execution order and orchestrates execution.
-3. **Incremental builds.** Speed up iterations by skipping tasks whose source code hasn't changed since the last execution.
-4. **Production-ready.** Deploy to [Kubernetes](https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html) (via Argo Workflows), [Airflow](https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html), and [AWS Batch](https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html) without code changes.
-5. **Parallelization.** Run independent tasks in parallel.
-6. **Testing.** Import pipelines in any testing frameworks and test them with any CI service (e.g. GitHub Actions).
-7. **Flexible.** Use Jupyter notebooks, Python scripts, R scripts, SQL scripts, Python functions, or a combination of them as pipeline tasks. Write pipelines using a `pipeline.yaml` file or with Python.
-
-![repo-lab-example](https://ploomber.io/repo-lab-example.png)
-
-## Community
-
-* [Join us on Slack](http://community.ploomber.io)
-* [Newsletter](https://www.getrevue.co/profile/ploomber)
-* [Contact the development team](mailto:contact@ploomber.io)
-
-## Resources
-
-* [Documentation](https://ploomber.readthedocs.io/)
-* [Develop and deploy an ML pipeline in 30 minutes (EuroPython 2021)](https://youtu.be/O8tqiCkIWPs)
-* [Guest blog post on the official Jupyter blog](https://blog.jupyter.org/ploomber-maintainable-and-collaborative-pipelines-in-jupyter-acb3ad2101a7)
-* [PyData Chicago talk (covers motivation and demo)](https://youtu.be/qUL7QabcKcw)
-* [Examples (Machine Learning pipeline, ETL, among others)](https://github.com/ploomber/projects)
-* [Blog](https://ploomber.io/)
-* [Comparison with other tools](https://ploomber.io/posts/survey)
-* [More videos](https://ploomber.readthedocs.io/en/latest/videos.html)
 
 ## Installation
 
@@ -111,3 +86,34 @@ in the `pipeline.yaml` file.
 To get a list of examples, run `ploomber examples`.
 
 Click here to go to our [examples](https://github.com/ploomber/projects) repository.
+
+## Community
+
+* [Join us on Slack](https://ploomber.io/community)
+* [Newsletter](https://www.getrevue.co/profile/ploomber)
+* [YouTube](https://www.youtube.com/channel/UCaIS5BMlmeNQE4-Gn0xTDXQ)
+* [Contact the development team](mailto:contact@ploomber.io)
+
+## Main Features
+
+1. **Scripts as notebooks.** Open `.py` files as notebooks, then execute them from the terminal and generate an output notebook to review results.
+2. **Dependency resolution.** Quickly build a DAG by referring to previous tasks in your code; Ploomber infers execution order and orchestrates execution.
+3. **Incremental builds.** Speed up iterations by skipping tasks whose source code hasn't changed since the last execution.
+4. **Production-ready.** Deploy to [Kubernetes](https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html) (via Argo Workflows), [Airflow](https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html), and [AWS Batch](https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html) without code changes.
+5. **Parallelization.** Run independent tasks in parallel.
+6. **Testing.** Import pipelines in any testing frameworks and test them with any CI service (e.g. GitHub Actions).
+7. **Flexible.** Use Jupyter notebooks, Python scripts, R scripts, SQL scripts, Python functions, or a combination of them as pipeline tasks. Write pipelines using a `pipeline.yaml` file or with Python.
+
+![repo-lab-example](https://ploomber.io/repo-lab-example.png)
+
+
+## Resources
+
+* [Documentation](https://ploomber.readthedocs.io/)
+* [Develop and deploy an ML pipeline in 30 minutes (EuroPython 2021)](https://youtu.be/O8tqiCkIWPs)
+* [Guest blog post on the official Jupyter blog](https://blog.jupyter.org/ploomber-maintainable-and-collaborative-pipelines-in-jupyter-acb3ad2101a7)
+* [PyData Chicago talk (covers motivation and demo)](https://youtu.be/qUL7QabcKcw)
+* [Examples (Machine Learning pipeline, ETL, among others)](https://github.com/ploomber/projects)
+* [Blog](https://ploomber.io/)
+* [Comparison with other tools](https://ploomber.io/posts/survey)
+* [More videos](https://ploomber.readthedocs.io/en/latest/videos.html)

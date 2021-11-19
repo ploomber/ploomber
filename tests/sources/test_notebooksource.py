@@ -8,7 +8,8 @@ from jupyter_client.kernelspec import NoSuchKernel
 from ploomber.tasks._params import Params
 from ploomber.sources.notebooksource import (NotebookSource, is_python,
                                              inject_cell,
-                                             determine_kernel_name)
+                                             determine_kernel_name,
+                                             _cleanup_rendered_nb)
 from ploomber.products import File
 from ploomber.exceptions import RenderError, SourceInitializationError
 
@@ -508,3 +509,40 @@ def test_determine_kernel_name_from_ext(tmp_directory):
                                  kernelspec_name=None,
                                  ext='py',
                                  language=None) == 'python3'
+
+
+remove_one = """# %% tags=["parameters"]
+x = 1
+
+# %% tags=["injected-parameters"]
+x = 2
+"""
+
+remove_two = """# %% tags=["parameters"]
+x = 100
+
+# %% tags=["injected-parameters"]
+x = 2
+
+# %% tags=["debugging-settings"]
+x = 3
+"""
+
+remove_all = """# %% tags=["injected-parameters"]
+x = 2
+
+# %% tags=["debugging-settings"]
+x = 3
+"""
+
+
+@pytest.mark.parametrize('nb, expected_n, expected_source', [
+    [remove_one, 1, ['x = 1']],
+    [remove_two, 1, ['x = 100']],
+    [remove_all, 0, []],
+])
+def test_cleanup_rendered_nb(nb, expected_n, expected_source):
+    out = _cleanup_rendered_nb(jupytext.reads(nb))
+
+    assert len(out['cells']) == expected_n
+    assert [c['source'] for c in out['cells']] == expected_source

@@ -241,7 +241,8 @@ environment variable. For example, to load a ``pipeline.serve.yaml``:
 
 .. code-block:: console
 
-    export ENTRY_POINT=pipeline.serve.yaml && jupyter lab
+    export ENTRY_POINT=pipeline.serve.yaml
+    jupyter lab
 
 
 Note that ``ENTRY_POINT`` must be a file name and not a path. When you start

@@ -26,11 +26,13 @@
 </style>
 
 <script>
-    document.onclick = function (e) {
+    window.onclick = function (e) {
         const third_column = document.getElementById('third-column');
         const first_column = document.getElementById('first-column');
+        const top_bar = document.getElementById('top-bar');
         third_column.classList.remove('show');
         first_column.classList.remove('show');
+        top_bar.classList.remove('show');
     }
 </script>
 
@@ -59,7 +61,7 @@
 
 {%- macro sidebar1() %}
 {% set global_toc = toctree(maxdepth=2,
-collapse=false,
+collapse=true,
 includehidden=false,
 titles_only=false) %}
 <div class="global-toc">{{ global_toc }}</div>
@@ -78,6 +80,14 @@ titles_only=false) %}
     <div class="row">
         <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
             {{ sidebar1() }}
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body={{ ('Documentation page: ' + pagename) | quote_plus }}"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
         </div>
         <div class="col-md-7 col-xl-8">
             <div class="document">

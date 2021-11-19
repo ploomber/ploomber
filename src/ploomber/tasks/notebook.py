@@ -480,7 +480,7 @@ class NotebookRunner(FileLoaderMixin, Task):
                 try:
                     # this seems to only work in a Terminal
                     debugger = TerminalPdb()
-                except AttributeError:
+                except Exception:
                     # this works in a Jupyter notebook
                     debugger = Pdb()
 
