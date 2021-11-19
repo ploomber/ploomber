@@ -1,5 +1,5 @@
 <p align="center" width="100%">
-  <img src="https://ploomber.io/ploomber-logo.png" height="250">
+  <img src="_static/logo.png" height="250">
 </p>
 
 [![CI Linux](https://github.com/ploomber/ploomber/workflows/CI%20Linux/badge.svg)](https://github.com/ploomber/ploomber/workflows/CI%20Linux/badge.svg)
@@ -104,7 +104,7 @@ Click here to go to our [examples](https://github.com/ploomber/projects) reposit
 6. **Testing.** Import pipelines in any testing frameworks and test them with any CI service (e.g. GitHub Actions).
 7. **Flexible.** Use Jupyter notebooks, Python scripts, R scripts, SQL scripts, Python functions, or a combination of them as pipeline tasks. Write pipelines using a `pipeline.yaml` file or with Python.
 
-![repo-lab-example](https://ploomber.io/repo-lab-example.png)
+![repo-lab-example](https://ploomber.io/images/blog/repo-lab-example.png)
 
 
 ## Resources
