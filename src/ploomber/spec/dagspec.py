@@ -474,7 +474,8 @@ class DAGSpec(MutableMapping):
                     dotted_path.DottedPath(self[attr],
                                            lazy_load=self._lazy_import))
 
-        process_tasks(dag, self, root_path=self._parent_path)
+        if self._lazy_import != 'skip':
+            process_tasks(dag, self, root_path=self._parent_path)
 
         return dag
 
