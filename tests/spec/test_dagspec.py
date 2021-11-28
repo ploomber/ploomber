@@ -917,14 +917,35 @@ def get_client():
     assert str(dag['create-table'].source) == expected
 
 
-@pytest.mark.parametrize('lazy_import', [False, True])
-def test_spec_with_functions(lazy_import, backup_spec_with_functions,
-                             add_current_to_sys_path):
+def test_spec_with_sourceless_functions(backup_spec_with_functions_no_sources,
+                                        add_current_to_sys_path):
     """
     Check we can create pipeline where the task is a function defined in a
     local file
     """
-    spec = DAGSpec('pipeline.yaml', lazy_import=lazy_import)
+    spec = DAGSpec('pipeline.yaml', lazy_import='skip')
+    spec.to_dag().build()
+
+
+@pytest.mark.parametrize('lazy_import', [False, True])
+def test_spec_with_sourceless_functions_fails(
+        lazy_import, backup_spec_with_functions_no_sources,
+        add_current_to_sys_path):
+    """
+    Check we can create pipeline where the task is a function defined in a
+    local file
+    """
+    with pytest.raises(ValueError):
+        DAGSpec('pipeline.yaml', lazy_import=lazy_import)
+
+
+def test_spec_with_sourceless_functions(backup_spec_with_functions_no_sources,
+                                        add_current_to_sys_path):
+    """
+    Check we can create pipeline where the task is a function defined in a
+    deep hierarchical structure where the source does not exists
+    """
+    spec = DAGSpec('pipeline.yaml', lazy_import='skip')
     spec.to_dag().build()
 
 
