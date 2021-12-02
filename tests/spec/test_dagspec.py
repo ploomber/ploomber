@@ -917,23 +917,25 @@ def get_client():
     assert str(dag['create-table'].source) == expected
 
 
-def test_spec_with_sourceless_functions(backup_spec_with_functions_no_sources,
-                                        add_current_to_sys_path):
+@pytest.mark.parametrize('lazy_import', [False, True])
+def test_spec_with_functions(lazy_import, backup_spec_with_functions,
+                             add_current_to_sys_path):
     """
     Check we can create pipeline where the task is a function defined in a
     local file
     """
-    spec = DAGSpec('pipeline.yaml', lazy_import='skip')
+    spec = DAGSpec('pipeline.yaml', lazy_import=lazy_import)
     spec.to_dag().build()
 
 
 @pytest.mark.parametrize('lazy_import', [False, True])
-def test_spec_with_sourceless_functions_fails(
-        lazy_import, backup_spec_with_functions_no_sources,
-        add_current_to_sys_path):
+def test_spec_with_functions_fails(lazy_import,
+                                   backup_spec_with_functions_no_sources,
+                                   add_current_to_sys_path):
     """
     Check we can create pipeline where the task is a function defined in a
-    local file
+    local file but the sources do not exist. Since it is trying to load the
+    source scripts thanks to lazy_import being bool, it should fail
     """
     with pytest.raises(ValueError):
         DAGSpec('pipeline.yaml', lazy_import=lazy_import)
