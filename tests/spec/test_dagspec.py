@@ -936,7 +936,8 @@ def test_spec_with_functions_fails(lazy_import,
     """
     Check we can create pipeline where the task is a function defined in a
     local file but the sources do not exist. Since it is trying to load the
-    source scripts thanks to lazy_import being bool, it should fail
+    source scripts thanks to lazy_import being bool, it should fail (True
+    imports the function, while False does not but it checks that it exists)
     """
     with pytest.raises(ValueError):
         DAGSpec('pipeline.yaml', lazy_import=lazy_import)
@@ -949,8 +950,7 @@ def test_spec_with_sourceless_functions(backup_spec_with_functions_no_sources,
     Check we can create pipeline where the task is a function defined in a
     deep hierarchical structure where the source does not exists
     """
-    spec = DAGSpec('pipeline.yaml', lazy_import='skip')
-    spec.to_dag().build()
+    assert DAGSpec('pipeline.yaml', lazy_import='skip')
 
 
 def test_spec_with_location(tmp_directory):
