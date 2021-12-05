@@ -1,6 +1,11 @@
 # CHANGELOG
 
-## 0.13.6dev
+## 0.13.7dev
+* Fixes `{{root}}` expansion when path_to_here is different than the current working directory
+
+
+## 0.13.6 (2021-11-17)
+* `GenericSource` supports extracting upstream
 
 ## 0.13.5 (2021-10-27)
 * Fixes an error that caused `copy.deepcopy` to fail on `SourceLoader`
