@@ -365,7 +365,8 @@ def some_function():
 
 @pytest.mark.parametrize('task_name', ['raw', 'clean'])
 def test_develop_spec_with_local_functions(task_name,
-                                           backup_spec_with_functions):
+                                           backup_spec_with_functions,
+                                           no_sys_modules_cache):
     """
     Check we can develop functions defined locally, the sample project includes
     relative imports, which should work when generating the temporary notebook
@@ -462,7 +463,8 @@ def test_extract_imports_top(source, imports_top_expected, line_expected):
     assert line == line_expected
 
 
-def test_add_upstream_modifies_signature(backup_spec_with_functions):
+def test_add_upstream_modifies_signature(backup_spec_with_functions,
+                                         no_sys_modules_cache):
     dag = DAGSpec('pipeline.yaml').to_dag()
     dag.render()
 
