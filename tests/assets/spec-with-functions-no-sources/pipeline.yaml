@@ -1,8 +1,3 @@
-meta:
-  extract_product: False
-  extract_upstream: True
-  jupyter_functions_as_notebooks: True
-
 tasks:
   - source: my_tasks.raw.functions.function
     product: some_file.txt
