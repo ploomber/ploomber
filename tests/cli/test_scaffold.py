@@ -1,3 +1,4 @@
+import ast
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -210,6 +211,72 @@ tasks:
 
     assert not result.exit_code
     assert Path('script.py').is_file()
+
+
+@pytest.mark.parametrize("create_module", [True, False])
+def test_scaffold_in_custom_entry_point_with_module(create_module,
+                                                    tmp_directory,
+                                                    add_current_to_sys_path,
+                                                    no_sys_modules_cache):
+    module_file = Path("my_module.py")
+    if create_module:
+        module_file.write_text("")
+    assert module_file.exists() == create_module
+    Path('pipeline.serve.yaml').write_text("""
+tasks:
+    - source: my_module.my_function
+      product: out.ipynb
+""")
+
+    runner = CliRunner()
+    result = runner.invoke(scaffold,
+                           args=['-e', 'pipeline.serve.yaml'],
+                           catch_exceptions=False)
+
+    assert not result.exit_code
+
+    code = module_file.read_text()
+    module = ast.parse(code)
+
+    names = {
+        element.name
+        for element in module.body if hasattr(element, 'name')
+    }
+    assert "my_function" in names
+
+
+def test_scaffold_in_custom_entry_point_with_inner_module(
+        tmp_directory, add_current_to_sys_path, no_sys_modules_cache):
+
+    modules = ["module1", "module2", "module3"]
+    function_name = "my_function"
+    module_file = Path(*modules[:-1], f"{modules[-1]}.py")
+
+    assert not module_file.exists()
+
+    Path('pipeline.serve.yaml').write_text(f"""
+tasks:
+    - source: {'.'.join(modules)}.{function_name}
+      product: out.ipynb
+""")
+
+    runner = CliRunner()
+    result = runner.invoke(scaffold,
+                           args=['-e', 'pipeline.serve.yaml'],
+                           catch_exceptions=False)
+
+    assert not result.exit_code
+    for idx in range(len(modules) - 1):
+        init_file = Path(*modules[:idx + 1], "__init__.py")
+        assert init_file.exists()
+
+    code = module_file.read_text()
+    module = ast.parse(code)
+    names = {
+        element.name
+        for element in module.body if hasattr(element, 'name')
+    }
+    assert function_name in names
 
 
 @pytest.mark.parametrize('flag', ['--conda', '--package', '--empty'])
