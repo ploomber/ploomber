@@ -10,7 +10,8 @@ except ImportError:
     import importlib_resources as resources
 
 from ploomber import tasks
-from ploomber.util.dotted_path import locate_dotted_path, create_intermediate_modules
+from ploomber.util.dotted_path import (locate_dotted_path,
+                                       create_intermediate_modules)
 
 
 class ScaffoldLoader:
