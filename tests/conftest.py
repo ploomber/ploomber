@@ -122,6 +122,11 @@ def backup_spec_with_functions_flat():
     pass
 
 
+@fixture_backup('spec-with-functions-no-sources')
+def backup_spec_with_functions_no_sources():
+    pass
+
+
 @fixture_backup('simple')
 def backup_simple():
     pass

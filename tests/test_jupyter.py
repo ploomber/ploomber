@@ -665,7 +665,7 @@ def get_client():
     assert 'Traceback' not in err
 
 
-def test_dag_manager(backup_spec_with_functions):
+def test_dag_manager(backup_spec_with_functions, no_sys_modules_cache):
     dag = DAGSpec('pipeline.yaml').to_dag().render()
     m = JupyterDAGManager(dag)
 
@@ -711,7 +711,8 @@ def test_dag_manager_root_folder(backup_simple):
     assert content[0]['type'] == 'directory'
 
 
-def test_jupyter_workflow_with_functions(backup_spec_with_functions):
+def test_jupyter_workflow_with_functions(backup_spec_with_functions,
+                                         no_sys_modules_cache):
     """
     Tests a typical workflow with a pieline where some tasks are functions
     """
@@ -759,7 +760,8 @@ def test_jupyter_workflow_with_functions(backup_spec_with_functions):
     assert '1 + 1' in clean_source
 
 
-def test_hot_reload_when_adding_function_task(backup_spec_with_functions_flat):
+def test_hot_reload_when_adding_function_task(backup_spec_with_functions_flat,
+                                              no_sys_modules_cache):
     # setup: configure jupyter settings and save spec
     with open('pipeline.yaml') as f:
         spec = yaml.safe_load(f)
@@ -797,7 +799,7 @@ def new_task(product):
 
 @pytest.mark.xfail
 def test_hot_reload_when_adding_function_task_in_existing_module(
-        backup_spec_with_functions_flat):
+        backup_spec_with_functions_flat, no_sys_modules_cache):
     # setup: configure jupyter settings and save spec
     with open('pipeline.yaml') as f:
         spec = yaml.safe_load(f)
