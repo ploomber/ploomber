@@ -60,7 +60,7 @@ def scaffold(conda, package, entry_point, empty):
         loaded = _scaffold.load_dag()
     else:
         try:
-            loaded = DAGSpec(entry_point, lazy_import=True), Path(entry_point)
+            loaded = DAGSpec(entry_point, lazy_import='skip'), Path(entry_point)
         except Exception as e:
             raise click.ClickException(e) from e
 
