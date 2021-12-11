@@ -9,6 +9,7 @@ import pytest
 from ploomber.util import dotted_path
 from ploomber.exceptions import SpecValidationError
 from ploomber.sources.inspect import getfile
+from ploomber.util.dotted_path import create_intermediate_modules
 
 
 @pytest.mark.parametrize('spec', [
@@ -402,3 +403,24 @@ def fn(some_arg):
     expected = ("Got duplicated arguments ('some_arg') when calling "
                 "dotted path 'some_module.fn'. Overriding values...")
     assert record[0].message.args[0] == expected
+
+
+def test_create_intermediate_modules(tmp_directory):
+
+    modules_and_function = ["sweet", "home", "alabama"]
+
+    create_intermediate_modules(modules_and_function)
+
+    assert Path(tmp_directory, "sweet").exists()
+    assert Path(tmp_directory, "sweet", "__init__.py").exists()
+    assert Path(tmp_directory, "sweet", "home").exists()
+    assert Path(tmp_directory, "sweet", "home", "__init__.py").exists()
+    assert Path(tmp_directory, "sweet", "home", "alabama.py").exists()
+
+
+def test_create_intermediate_modules_single(tmp_directory):
+    modules_and_function = ["ploomber"]
+
+    create_intermediate_modules(modules_and_function)
+
+    assert Path(tmp_directory, "ploomber.py").exists()
