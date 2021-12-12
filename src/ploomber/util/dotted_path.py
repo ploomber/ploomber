@@ -404,7 +404,8 @@ class DottedPathSpecModel(BaseModel):
 
 def create_intermediate_modules(source_parts):
     """
-    Creates the folder structure needed for a module specified by the parts of its name
+    Creates the folder structure needed for a module specified
+    by the parts of its name
     """
     [*inner, last] = source_parts
     if inner:
