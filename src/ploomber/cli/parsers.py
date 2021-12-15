@@ -172,8 +172,8 @@ class CustomParser(argparse.ArgumentParser):
         Returns a dag and the parsed args
         """
         entry_point = EntryPoint(self.parse_entry_point_value())
-        dag, args = load_dag_from_entry_point_and_parser(entry_point, self,
-                                                         sys.argv)
+        dag, args = load_dag_from_entry_point_and_parser(
+            entry_point, self, sys.argv)
         return dag, args
 
 

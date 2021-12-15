@@ -1,9 +1,12 @@
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
+from ploomber.telemetry import telemetry
+import datetime
 
 
 @cli_endpoint
 def main():
+    start_time = datetime.datetime.now()
     parser = CustomParser(description='Make a pipeline report')
     with parser:
         parser.add_argument(
@@ -13,4 +16,8 @@ def main():
             default='pipeline.html')
     dag, args = parser.load_from_entry_point_arg()
     dag.to_markup(path=args.output)
+    end_time = datetime.datetime.now()
+    telemetry.log_api("ploomber_report",
+                      total_runtime=str(end_time - start_time),
+                      metadata={'build_args': args})
     print('Report saved at:', args.output)

@@ -13,6 +13,7 @@ User Guide
     cli
     jupyter
     scaffold
+    refactoring
     parametrized
     configuration
     ../get-started/sql-pipeline
@@ -21,6 +22,7 @@ User Guide
     debugging
     logging
     serialization
+    shell
     r-support
     faq_index
     spec-vs-python

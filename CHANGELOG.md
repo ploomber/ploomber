@@ -1,8 +1,13 @@
 # CHANGELOG
 
-## 0.13.7dev
-* Fixes `{{root}}` expansion when path_to_here is different than the current working directory
+## 0.13.8dev
 
+## 0.13.7 (2021-12-18)
+* Fixes `{{root}}` expansion when path_to_here is different than the current working directory
+* Better error message when initializing `MetaProduct` with non-products
+* Adds refactoring section (`soorgeon`) to the user guide
+* Adds shell scripts user guide
+* `Commander` allows `jinja2.Environment` customization
 
 ## 0.13.6 (2021-11-17)
 * `GenericSource` supports extracting upstream

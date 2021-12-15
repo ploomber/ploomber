@@ -9,6 +9,7 @@ from ploomber import __version__
 from ploomber import cli as cli_module
 from ploomber import scaffold as _scaffold
 from ploomber_scaffold import scaffold as scaffold_project
+from ploomber.telemetry import telemetry
 
 
 @click.group()
@@ -134,11 +135,12 @@ def cmd_router():
         fn = custom[cmd_name]
         fn()
     else:
+        telemetry.log_api("unsupported-api-call", metadata={'argv': sys.argv})
         cli()
 
 
-# the commands below are handled by the router, thy are just here so they
-# show up when doing ploomber --help
+# the commands below are handled by the router,
+# those are a place holder to show up in ploomber --help
 @cli.command()
 def build():
     """Build pipeline

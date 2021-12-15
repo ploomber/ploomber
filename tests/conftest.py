@@ -21,6 +21,25 @@ from ploomber.clients import SQLAlchemyClient
 from ploomber import Env
 import pandas as pd
 from glob import iglob
+from ploomber.cli import install
+import posthog
+from unittest.mock import Mock, MagicMock
+
+
+@pytest.fixture(scope='class')
+def monkeypatch_session():
+    from _pytest.monkeypatch import MonkeyPatch
+    m = MonkeyPatch()
+    yield m
+    m.undo()
+
+
+@pytest.fixture(scope='class', autouse=True)
+def external_access(monkeypatch_session):
+    external_access = MagicMock()
+    external_access.get_something = MagicMock(return_value='Mock was used.')
+    monkeypatch_session.setattr(posthog, 'capture',
+                                external_access.get_something)
 
 
 def _path_to_tests():
@@ -257,6 +276,47 @@ def path_to_env():
 @pytest.fixture(scope='session')
 def path_to_assets():
     return _path_to_tests() / 'assets'
+
+
+def _write_sample_conda_env(name='environment.yml', env_name='my_tmp_env'):
+    Path(name).write_text(f'name: {env_name}\ndependencies:\n- pip')
+
+
+def _write_sample_conda_env_lock():
+    _write_sample_conda_env(name='environment.lock.yml')
+
+
+def _write_sample_pip_req(name='requirements.txt'):
+    Path(name).touch()
+
+
+def _write_sample_pip_req_lock(name='requirements.lock.txt'):
+    Path(name).touch()
+
+
+def _prepare_files(
+    has_conda,
+    use_lock,
+    env,
+    env_lock,
+    reqs,
+    reqs_lock,
+    monkeypatch,
+):
+    mock = Mock(return_value=has_conda)
+    monkeypatch.setattr(install.shutil, 'which', mock)
+
+    if env:
+        _write_sample_conda_env()
+
+    if env_lock:
+        _write_sample_conda_env_lock()
+
+    if reqs:
+        _write_sample_pip_req()
+
+    if reqs_lock:
+        _write_sample_pip_req_lock()
 
 
 def _load_db_credentials():
