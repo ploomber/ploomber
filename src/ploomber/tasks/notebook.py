@@ -535,11 +535,11 @@ class NotebookRunner(FileLoaderMixin, Task):
         """
         Inject cell and overwrite the source file
         """
-
+        # TODO: test does not change format
         # TODO: test when initialized from str
         # what's the second returned obj?
-        # try multiple times, ensure paramerter cell isnt duplicated
-        fmt, cfg = jupytext.guess_format(self.source.nb_str_rendered,
+        # try multiple times, ensure parameter cell isnt duplicated
+        fmt, cfg = jupytext.guess_format(self.source._primitive,
                                          self.source._ext_in)
         fmt_ = f'{self.source._ext_in}:{fmt}'
 
@@ -552,16 +552,21 @@ class NotebookRunner(FileLoaderMixin, Task):
         """
         Delete injected cell (if any)
         """
+        # TODO: test does not change format
         nb_clean = _cleanup_rendered_nb(self.source._nb_obj_unrendered)
 
         # TODO: test when initialized from str
         # what's the second returned obj?
-        fmt, cfg = jupytext.guess_format(self.source._nb_str_unrendered,
+        fmt, cfg = jupytext.guess_format(self.source._primitive,
                                          self.source._ext_in)
         fmt_ = f'{self.source._ext_in}:{fmt}'
 
         # overwrite
         jupytext.write(nb_clean, self.source._path, fmt=fmt_)
+
+    def reformat(self, fmt):
+        nb_clean = _cleanup_rendered_nb(self.source._nb_obj_unrendered)
+        jupytext.write(nb_clean, self.source._path, fmt=fmt)
 
 
 def _read_rendered_notebook(nb_str):
