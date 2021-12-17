@@ -95,7 +95,7 @@ Click here to go to our [examples](https://github.com/ploomber/projects) reposit
 
 ## Main Features
 
-1. **Automated notebook refactoring** (coming soon). Automatically convert a legacy notebook into a maintainable, modular pipeline ([see demo](https://www.youtube.com/watch?v=EJecqsZBr3Q)). [Contact us](https://ploomber.io/community) if you'd like to join the private beta.
+1. [**Automated notebook refactoring**](https://github.com/ploomber/soorgeon). Automatically convert a legacy notebook into a maintainable, modular pipeline ([see demo](https://www.youtube.com/watch?v=EJecqsZBr3Q)).
 2. **Scripts as notebooks.** Open `.py` files as notebooks, then execute them from the terminal and generate an output notebook to review results.
 3. **Dependency resolution.** Quickly build a DAG by referring to previous tasks in your code; Ploomber infers execution order and orchestrates execution.
 4. **Incremental builds.** Speed up iterations by skipping tasks whose source code hasn't changed since the last execution.
