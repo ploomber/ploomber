@@ -22,6 +22,7 @@ User Guide
     debugging
     logging
     serialization
+    shell
     r-support
     faq_index
     spec-vs-python
