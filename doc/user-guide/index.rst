@@ -13,6 +13,7 @@ User Guide
     cli
     jupyter
     scaffold
+    refactoring
     parametrized
     configuration
     ../get-started/sql-pipeline
