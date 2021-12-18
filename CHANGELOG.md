@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.13.7dev
+## 0.13.7 (2021-12-18)
 * Fixes `{{root}}` expansion when path_to_here is different than the current working directory
 * Better error message when initializing `MetaProduct` with non-products
 * Adds refactoring section (`soorgeon`) to the user guide
