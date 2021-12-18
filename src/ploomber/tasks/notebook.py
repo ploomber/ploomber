@@ -6,7 +6,6 @@ import subprocess
 from pathlib import Path
 from nbconvert import ExporterNameError
 import warnings
-from jupytext import cli as jupytext_cli
 
 try:
     # papermill is importing a deprecated module from pyarrow
@@ -531,56 +530,6 @@ class NotebookRunner(FileLoaderMixin, Task):
 
         path_to_out_ipynb.rename(path_to_out)
         self._converter.convert()
-
-    def save_injected_cell(self):
-        """
-        Inject cell and overwrite the source file
-        """
-        # TODO: test does not change format
-        # TODO: test when initialized from str
-        # what's the second returned obj?
-        # try multiple times, ensure parameter cell isnt duplicated
-        fmt, cfg = jupytext.guess_format(self.source._primitive,
-                                         self.source._ext_in)
-        fmt_ = f'{self.source._ext_in}:{fmt}'
-
-        # overwrite
-        jupytext.write(self.source.nb_obj_rendered,
-                       self.source._path,
-                       fmt=fmt_)
-
-    def remove_injected_cell(self):
-        """
-        Delete injected cell (if any)
-        """
-        # TODO: test does not change format
-        nb_clean = _cleanup_rendered_nb(self.source._nb_obj_unrendered)
-
-        # TODO: test when initialized from str
-        # what's the second returned obj?
-        fmt, cfg = jupytext.guess_format(self.source._primitive,
-                                         self.source._ext_in)
-        fmt_ = f'{self.source._ext_in}:{fmt}'
-
-        # overwrite
-        jupytext.write(nb_clean, self.source._path, fmt=fmt_)
-
-    def reformat(self, fmt):
-        nb_clean = _cleanup_rendered_nb(self.source._nb_obj_unrendered)
-        jupytext.write(nb_clean, self.source._path, fmt=fmt)
-
-    def pair(self, base_path):
-        """Pairs with an ipynb file
-        """
-        jupytext_cli.jupytext(args=[
-            '--set-formats', f'{base_path}//ipynb,py:percent',
-            str(self.source._path)
-        ])
-
-    def sync(self):
-        """Pairs wit and ipynb file
-        """
-        jupytext_cli.jupytext(args=['--sync', str(self.source._path)])
 
 
 def _read_rendered_notebook(nb_str):

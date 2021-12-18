@@ -15,12 +15,7 @@ def test_interface(concrete_class):
         'Link': {'_false'},
         'PythonCallable': {'load', '_interactive_developer'},
         'SQLScript': {'load'},
-        'NotebookRunner': {
-            'static_analysis',
-            'remove_injected_cell',
-            'reformat',
-            'save_injected_cell',
-        }
+        'NotebookRunner': {'static_analysis'}
     }
 
     allowed = allowed_mapping.get(concrete_class.__name__, {})

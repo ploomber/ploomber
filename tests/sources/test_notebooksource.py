@@ -5,6 +5,7 @@ import jupytext
 import nbformat
 from jupyter_client.kernelspec import NoSuchKernel
 
+from ploomber.spec import DAGSpec
 from ploomber.tasks._params import Params
 from ploomber.sources.notebooksource import (NotebookSource, is_python,
                                              inject_cell,
@@ -509,6 +510,65 @@ def test_determine_kernel_name_from_ext(tmp_directory):
                                  kernelspec_name=None,
                                  ext='py',
                                  language=None) == 'python3'
+
+
+def test_save_injected_cell(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    expected = '# + tags=["injected-parameters"]'
+
+    assert expected not in Path('load.py').read_text()
+
+    dag['load'].source.save_injected_cell()
+
+    assert expected in Path('load.py').read_text()
+
+
+def test_remove_injected_cell(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.save_injected_cell()
+    expected = '# + tags=["injected-parameters"]'
+
+    assert expected in Path('load.py').read_text()
+
+    dag['load'].source.remove_injected_cell()
+
+    assert expected not in Path('load.py').read_text()
+
+
+def test_format(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+
+    assert '# + tags=["parameters"]' in Path('load.py').read_text()
+
+    dag['load'].source.format(fmt='py:percent')
+
+    assert '# %% tags=["parameters"]' in Path('load.py').read_text()
+
+
+def test_pair(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+
+    dag['load'].source.pair(base_path='nbs')
+    nb = jupytext.reads(Path('load.py').read_text(), fmt='py:light')
+
+    assert Path('nbs', 'load.ipynb').is_file()
+    assert nb.metadata.jupytext.formats == 'nbs//ipynb,py:light'
+
+
+def test_sync(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.pair(base_path='nbs')
+
+    nb = jupytext.reads(Path('load.py').read_text(), fmt='py:light')
+    nb.cells.append(nbformat.v4.new_code_cell(source='x = 42'))
+    jupytext.write(nb, 'load.py', fmt='py:light')
+
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.sync()
+
+    nb = jupytext.reads(Path('nbs', 'load.ipynb').read_text(), fmt='ipynb')
+
+    assert nb.cells[-1]['source'] == 'x = 42'
 
 
 remove_one = """# %% tags=["parameters"]

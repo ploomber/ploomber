@@ -31,7 +31,10 @@ import warnings
 with warnings.catch_warnings():
     warnings.simplefilter('ignore', FutureWarning)
     from papermill.parameterize import parameterize_notebook
+
 import nbformat
+import jupytext
+from jupytext import cli as jupytext_cli
 
 from ploomber.exceptions import SourceInitializationError
 from ploomber.placeholders.placeholder import Placeholder
@@ -359,6 +362,57 @@ Go to: https://ploomber.io/s/params for more information
     def extract_product(self):
         extractor_class = extractor_class_for_language(self.language)
         return extractor_class(self._get_parameters_cell()).extract_product()
+
+    def save_injected_cell(self):
+        """
+        Inject cell and overwrite the source file
+        """
+        # TODO: test does not change format
+        # TODO: test when initialized from str
+        # what's the second returned obj?
+        # try multiple times, ensure parameter cell isnt duplicated
+        fmt, cfg = jupytext.guess_format(self._primitive, self._ext_in)
+        fmt_ = f'{self._ext_in}:{fmt}'
+
+        # overwrite
+        jupytext.write(self.nb_obj_rendered, self._path, fmt=fmt_)
+
+    def remove_injected_cell(self):
+        """
+        Delete injected cell (if any)
+        """
+        # TODO: test does not change format
+        nb_clean = _cleanup_rendered_nb(self._nb_obj_unrendered)
+
+        # TODO: test when initialized from str
+        # what's the second returned obj?
+        fmt, cfg = jupytext.guess_format(self._primitive, self._ext_in)
+        fmt_ = f'{self._ext_in}:{fmt}'
+
+        # overwrite
+        jupytext.write(nb_clean, self._path, fmt=fmt_)
+
+    def format(self, fmt):
+        nb_clean = _cleanup_rendered_nb(self._nb_obj_unrendered)
+        jupytext.write(nb_clean, self._path, fmt=fmt)
+
+    def pair(self, base_path):
+        """Pairs with an ipynb file
+        """
+        # TODO: test when initialized from str
+        # what's the second returned obj?
+        fmt, cfg = jupytext.guess_format(self._primitive, self._ext_in)
+        fmt_ = f'{self._ext_in}:{fmt}'
+
+        jupytext_cli.jupytext(args=[
+            '--set-formats', f'{base_path}//ipynb,{fmt_}',
+            str(self._path)
+        ])
+
+    def sync(self):
+        """Pairs wit and ipynb file
+        """
+        jupytext_cli.jupytext(args=['--sync', str(self._path)])
 
 
 def json_serializable_params(params):
