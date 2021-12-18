@@ -9,6 +9,9 @@ from ploomber.cli.io import cli_endpoint
 
 
 def _call_in_source(dag, method_name, kwargs=None):
+    """
+    Execute method on each task.source in dag, passing kwargs
+    """
     kwargs = kwargs or {}
 
     for task in dag.values():
@@ -22,6 +25,9 @@ def _call_in_source(dag, method_name, kwargs=None):
 
 
 def _install_hook(path_to_hook, content):
+    """
+    Install a git hook script at the given path
+    """
     if path_to_hook.exists():
         raise RuntimeError(
             'hook already exists '
@@ -34,6 +40,8 @@ def _install_hook(path_to_hook, content):
 
 
 def _delete_hook(path):
+    """Delete a git hook at the given path
+    """
     if path.exists():
         if path.is_file():
             path.unlink()

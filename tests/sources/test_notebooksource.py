@@ -480,6 +480,19 @@ def test_str():
     assert str(source) == ('\na = 1\nb = 2\nproduct = None\na + b')
 
 
+def test_str_ignores_injected_cell(tmp_directory):
+    path = Path('nb.py')
+    path.write_text(notebook_ab)
+    source = NotebookSource(path)
+    source.render(Params._from_dict(dict(a=42, product=File('file.txt'))))
+    source.save_injected_cell()
+
+    source = NotebookSource(path)
+
+    # injected cell should not be considered part of the source code
+    assert 'a = 42' not in str(source)
+
+
 def test_repr_from_path(tmp_directory):
     path = Path(tmp_directory, 'nb.py')
     Path('nb.py').write_text(notebook_ab)

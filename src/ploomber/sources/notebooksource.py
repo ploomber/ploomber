@@ -195,7 +195,7 @@ class NotebookSource(Source):
         # hot_reload causes to always re-evalaute the notebook representation
         if self._nb_str_unrendered is None or self._hot_reload:
             # this is the notebook node representation
-            self._nb_obj_unrendered = _to_nb_obj(
+            nb = _to_nb_obj(
                 self.primitive,
                 ext=self._ext_in,
                 # passing the underscored version
@@ -204,6 +204,11 @@ class NotebookSource(Source):
                 language=self._language,
                 kernelspec_name=self._kernelspec_name,
                 check_if_kernel_installed=self._check_if_kernel_installed)
+
+            # if the user injected cells manually (with plomber nb --inject)
+            # the source will contain the injected cell, remove it because
+            # it should not be considered part of the source code
+            self._nb_obj_unrendered = _cleanup_rendered_nb(nb, print_=False)
 
             # get the str representation. always write from nb_obj, even if
             # this was initialized with a ipynb file, nb_obj contains
@@ -607,7 +612,7 @@ def inject_cell(model, params):
                                              comment=comment)
 
 
-def _cleanup_rendered_nb(nb):
+def _cleanup_rendered_nb(nb, print_=True):
     """
     Cleans up a rendered notebook object. Removes cells with tags:
     injected-parameters, debugging-settings, and metadata injected by
@@ -616,8 +621,9 @@ def _cleanup_rendered_nb(nb):
     out = find_cell_with_tags(nb,
                               ['injected-parameters', 'debugging-settings'])
 
-    for key in out.keys():
-        print(f'Removing {key} cell...')
+    if print_:
+        for key in out.keys():
+            print(f'Removing {key} cell...')
 
     idxs = set(cell['index'] for cell in out.values())
 
