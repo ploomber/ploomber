@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 from nbconvert import ExporterNameError
 import warnings
+from jupytext import cli as jupytext_cli
 
 try:
     # papermill is importing a deprecated module from pyarrow
@@ -567,6 +568,19 @@ class NotebookRunner(FileLoaderMixin, Task):
     def reformat(self, fmt):
         nb_clean = _cleanup_rendered_nb(self.source._nb_obj_unrendered)
         jupytext.write(nb_clean, self.source._path, fmt=fmt)
+
+    def pair(self, base_path):
+        """Pairs with an ipynb file
+        """
+        jupytext_cli.jupytext(args=[
+            '--set-formats', f'{base_path}//ipynb,py:percent',
+            str(self.source._path)
+        ])
+
+    def sync(self):
+        """Pairs wit and ipynb file
+        """
+        jupytext_cli.jupytext(args=['--sync', str(self.source._path)])
 
 
 def _read_rendered_notebook(nb_str):
