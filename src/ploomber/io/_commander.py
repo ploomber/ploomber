@@ -44,7 +44,10 @@ class CommanderStop(Exception):
 class Commander:
     """Manage script workflows
     """
-    def __init__(self, workspace=None, templates_path=None):
+    def __init__(self,
+                 workspace=None,
+                 templates_path=None,
+                 environment_kwargs=None):
         self.tw = TerminalWriter()
         self.workspace = None if not workspace else Path(workspace).resolve()
         self._to_delete = []
@@ -54,7 +57,8 @@ class Commander:
 
         if templates_path:
             self._env = Environment(loader=PackageLoader(*templates_path),
-                                    undefined=StrictUndefined)
+                                    undefined=StrictUndefined,
+                                    **(environment_kwargs or {}))
             self._env.filters['to_pascal_case'] = to_pascal_case
         else:
             self._env = None
