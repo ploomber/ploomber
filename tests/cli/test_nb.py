@@ -61,6 +61,13 @@ def test_format(monkeypatch, tmp_nbs):
     assert expected in Path('plot.py').read_text()
 
 
+def test_format_skips_non_notebooks(monkeypatch, backup_simple,
+                                    no_sys_modules_cache):
+    monkeypatch.setattr(sys, 'argv',
+                        ['ploomber', 'nb', '--format', 'py:percent'])
+    cli.cmd_router()
+
+
 def test_pair_sync(monkeypatch, tmp_nbs):
     monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--pair', 'nbs'])
 

@@ -15,13 +15,12 @@ def _call_in_source(dag, method_name, kwargs=None):
     kwargs = kwargs or {}
 
     for task in dag.values():
-
         try:
             method = getattr(task.source, method_name)
         except AttributeError:
             pass
-
-        method(**kwargs)
+        else:
+            method(**kwargs)
 
 
 def _install_hook(path_to_hook, content):
