@@ -5,7 +5,7 @@ import stat
 import click
 
 from ploomber.cli.parsers import CustomParser
-from ploomber.cli.io import cli_endpoint
+from ploomber.cli.io import command_endpoint
 
 
 def _call_in_source(dag, method_name, kwargs=None):
@@ -74,8 +74,7 @@ ploomber nb --inject
 """
 
 
-# TODO: add unit tests
-@cli_endpoint
+@command_endpoint
 def main():
     parser = CustomParser(description='Manage scripts and notebooks')
 
@@ -113,7 +112,11 @@ def main():
     except Exception as e:
         loading_error = e
     else:
-        dag.render()
+        dag.render(show_progress=False)
+
+    if loading_error:
+        raise RuntimeError('Could not run nb command: the DAG '
+                           'failed to load') from loading_error
 
     # NOTE: what if the pipeline.yaml isn't in the same folder as .git,
     # what if the project has multiple pipeline.yaml? - in such case, we may
@@ -148,12 +151,8 @@ def main():
 
         if not Path('.git').is_dir():
             raise NotADirectoryError(
-                'Failed to install git hook: '
-                'expected a .git/ directory in the current working directory')
-
-        if loading_error:
-            raise RuntimeError('Could not install git hook: the DAG '
-                               'failed to load') from loading_error
+                'Expected a .git/ directory in the current working '
+                'directory. Run this from the repository root directory.')
 
         parent = Path('.git', 'hooks')
         parent.mkdir(exist_ok=True)
