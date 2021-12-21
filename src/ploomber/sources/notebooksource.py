@@ -372,11 +372,10 @@ Go to: https://ploomber.io/s/params for more information
         """
         Inject cell and overwrite the source file
         """
-        # TODO: test does not change format
         # TODO: test when initialized from str
         # what's the second returned obj?
         # try multiple times, ensure parameter cell isnt duplicated
-        fmt, cfg = jupytext.guess_format(self._primitive, self._ext_in)
+        fmt, cfg = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
         fmt_ = f'{self._ext_in}:{fmt}'
 
         # overwrite
@@ -386,12 +385,11 @@ Go to: https://ploomber.io/s/params for more information
         """
         Delete injected cell (if any)
         """
-        # TODO: test does not change format
         nb_clean = _cleanup_rendered_nb(self._nb_obj_unrendered)
 
         # TODO: test when initialized from str
         # what's the second returned obj?
-        fmt, cfg = jupytext.guess_format(self._primitive, self._ext_in)
+        fmt, cfg = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
         fmt_ = f'{self._ext_in}:{fmt}'
 
         # overwrite
@@ -406,7 +404,7 @@ Go to: https://ploomber.io/s/params for more information
         """
         # TODO: test when initialized from str
         # what's the second returned obj?
-        fmt, cfg = jupytext.guess_format(self._primitive, self._ext_in)
+        fmt, cfg = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
         fmt_ = f'{self._ext_in}:{fmt}'
 
         jupytext_cli.jupytext(args=[
