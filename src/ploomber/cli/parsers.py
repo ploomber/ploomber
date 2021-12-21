@@ -33,6 +33,25 @@ def process_arg(s):
     return clean.replace('-', '_')
 
 
+class CustomMutuallyExclusiveGroup(argparse._MutuallyExclusiveGroup):
+    """
+    A subclass of argparse._MutuallyExclusiveGroup that determines whether
+    the added args should go into the static of dynamic API
+    """
+    def add_argument(self, *args, **kwargs):
+        if not self._container.finished_static_api:
+            if not self._container.in_context and self._container.finished_init:
+                raise RuntimeError('Cannot add arguments until the static '
+                                   'API has been declared')
+            else:
+                # running inside the context manager
+                self._container.static_args.extend(
+                    [process_arg(arg) for arg in args])
+
+        # outside context manager
+        return super().add_argument(*args, **kwargs)
+
+
 class CustomParser(argparse.ArgumentParser):
     """
     Most of our CLI commands operate on entry points, the CLI signature is
@@ -119,13 +138,32 @@ class CustomParser(argparse.ArgumentParser):
             self.error(f'argument {options}: expected one argument')
 
     def add_argument(self, *args, **kwargs):
+        """
+        Add a CLI argument. If called after the context manager, it is
+        considered part of the dynamic API, if called within the context
+        manager, the arg is considered part of the static API. If it's
+        called outside a context manager, and no static API has been set,
+        it raises an error
+        """
         if not self.finished_static_api:
             if not self.in_context and self.finished_init:
                 raise RuntimeError('Cannot add arguments until the static '
                                    'API has been declared')
             else:
+                # running inside the context manager
                 self.static_args.extend([process_arg(arg) for arg in args])
+
+        # outside context manager
         return super().add_argument(*args, **kwargs)
+
+    def add_mutually_exclusive_group(self, **kwargs):
+        """
+        Add a mutually exclusive group. It returns a custom class that
+        correctly stores the arguments in the static or dynamic API
+        """
+        group = CustomMutuallyExclusiveGroup(self, **kwargs)
+        self._mutually_exclusive_groups.append(group)
+        return group
 
     def __enter__(self):
         self.in_context = True
@@ -172,8 +210,8 @@ class CustomParser(argparse.ArgumentParser):
         Returns a dag and the parsed args
         """
         entry_point = EntryPoint(self.parse_entry_point_value())
-        dag, args = load_dag_from_entry_point_and_parser(entry_point, self,
-                                                         sys.argv)
+        dag, args = load_dag_from_entry_point_and_parser(
+            entry_point, self, sys.argv)
         return dag, args
 
 

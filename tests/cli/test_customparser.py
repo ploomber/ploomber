@@ -38,6 +38,40 @@ def test_add_static_arguments():
     assert set(parser.static_args) & added == added
 
 
+def test_add_static_mutually_exclusive_group(capsys):
+
+    parser = CustomParser()
+
+    with parser:
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument('--one', '-o', action='store_true')
+        group.add_argument('--two', '-t', action='store_true')
+
+    with pytest.raises(SystemExit) as excinfo:
+        parser.parse_args(args=['-o', '-t'])
+
+    captured = capsys.readouterr()
+    assert 'not allowed with argument' in captured.err
+
+
+def test_add_dynamic_mutually_exclusive_group(capsys):
+
+    parser = CustomParser()
+
+    with parser:
+        pass
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--one', '-o', action='store_true')
+    group.add_argument('--two', '-t', action='store_true')
+
+    with pytest.raises(SystemExit) as excinfo:
+        parser.parse_args(args=['-o', '-t'])
+
+    captured = capsys.readouterr()
+    assert 'not allowed with argument' in captured.err
+
+
 def test_add_dynamic_arguments():
     parser = CustomParser()
 
