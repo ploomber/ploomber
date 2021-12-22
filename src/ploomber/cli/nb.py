@@ -8,11 +8,12 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import command_endpoint
 
 
-def _call_in_source(dag, method_name, kwargs=None):
+def _call_in_source(dag, method_name, message, kwargs=None):
     """
     Execute method on each task.source in dag, passing kwargs
     """
     kwargs = kwargs or {}
+    files = []
 
     for task in dag.values():
         try:
@@ -21,6 +22,10 @@ def _call_in_source(dag, method_name, kwargs=None):
             pass
         else:
             method(**kwargs)
+            files.append(str(task.source._path))
+
+    files_ = '\n'.join((f'    {f}' for f in files))
+    click.echo(f'{message}:\n{files_}')
 
 
 def _install_hook(path_to_hook, content, entry_point):
@@ -118,27 +123,43 @@ def main():
         raise RuntimeError('Could not run nb command: the DAG '
                            'failed to load') from loading_error
 
-    # NOTE: maybe inject/remove should edit some project's metadata (not sure
-    # if pipeline.yaml) or another file. so the Jupyter plug-in does not remove
-    # the injected cell upon exiting
-
     if args.format:
-        _call_in_source(dag, 'format', dict(fmt=args.format))
+        _call_in_source(
+            dag,
+            'format',
+            'Formatted notebooks',
+            dict(fmt=args.format),
+        )
 
     if args.inject:
         # TODO: if paired notebooks, also inject in those files
-        _call_in_source(dag, 'save_injected_cell', dict())
+        _call_in_source(
+            dag,
+            'save_injected_cell',
+            'Injected celll',
+            dict(),
+        )
 
     if args.remove:
-        _call_in_source(dag, 'remove_injected_cell', dict())
+        _call_in_source(
+            dag,
+            'remove_injected_cell',
+            'Removed injected cell',
+            dict(),
+        )
 
     if args.sync:
         # maybe its more efficient to pass all notebook paths at once?
-        _call_in_source(dag, 'sync')
+        _call_in_source(dag, 'sync', 'Synced notebooks')
 
     # can pair give trouble if we're reformatting?
     if args.pair:
-        _call_in_source(dag, 'pair', dict(base_path=args.pair))
+        _call_in_source(
+            dag,
+            'pair',
+            'Paired notebooks',
+            dict(base_path=args.pair),
+        )
         click.echo(f'Finshed pairing notebooks. Tip: add {args.pair!r} to '
                    'your .gitignore to keep your repository clean')
 
