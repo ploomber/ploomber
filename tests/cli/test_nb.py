@@ -8,7 +8,6 @@ import jupytext
 import pytest
 
 from ploomber.cli import cli
-from ploomber.spec import DAGSpec
 
 
 def git_init():

@@ -1,4 +1,3 @@
-import yaml
 import shutil
 from pathlib import Path
 import stat

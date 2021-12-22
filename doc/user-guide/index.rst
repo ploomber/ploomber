@@ -23,6 +23,7 @@ User Guide
     logging
     serialization
     shell
+    editors
     r-support
     faq_index
     spec-vs-python
