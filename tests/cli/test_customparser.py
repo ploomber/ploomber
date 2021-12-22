@@ -47,7 +47,7 @@ def test_add_static_mutually_exclusive_group(capsys):
         group.add_argument('--one', '-o', action='store_true')
         group.add_argument('--two', '-t', action='store_true')
 
-    with pytest.raises(SystemExit) as excinfo:
+    with pytest.raises(SystemExit):
         parser.parse_args(args=['-o', '-t'])
 
     captured = capsys.readouterr()
@@ -65,7 +65,7 @@ def test_add_dynamic_mutually_exclusive_group(capsys):
     group.add_argument('--one', '-o', action='store_true')
     group.add_argument('--two', '-t', action='store_true')
 
-    with pytest.raises(SystemExit) as excinfo:
+    with pytest.raises(SystemExit):
         parser.parse_args(args=['-o', '-t'])
 
     captured = capsys.readouterr()

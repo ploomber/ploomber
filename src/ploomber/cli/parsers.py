@@ -40,7 +40,8 @@ class CustomMutuallyExclusiveGroup(argparse._MutuallyExclusiveGroup):
     """
     def add_argument(self, *args, **kwargs):
         if not self._container.finished_static_api:
-            if not self._container.in_context and self._container.finished_init:
+            if (not self._container.in_context
+                    and self._container.finished_init):
                 raise RuntimeError('Cannot add arguments until the static '
                                    'API has been declared')
             else:

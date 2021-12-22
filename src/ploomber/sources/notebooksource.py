@@ -179,6 +179,11 @@ class NotebookSource(Source):
         # will have an empty "papermill" metadata dictionary)
         nb = parameterize_notebook(nb, self._params)
 
+        # delete empty tags to prevent cluttering the notebooks
+        for cell in nb.cells:
+            if not len(cell.metadata['tags']):
+                cell.metadata.pop('tags')
+
         self._nb_str_rendered = nbformat.writes(nb)
         self._post_render_validation(self._params, self._nb_str_rendered)
 

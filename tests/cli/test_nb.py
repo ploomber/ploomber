@@ -7,7 +7,6 @@ import jupytext
 import pytest
 
 from ploomber.cli import cli
-from ploomber.cli import nb
 
 
 def git_init():
@@ -105,7 +104,7 @@ def test_pair_sync(monkeypatch, tmp_nbs):
 def test_install_hook_error_if_missing_git(monkeypatch, tmp_nbs, capsys):
     monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--install-hook'])
 
-    with pytest.raises(SystemExit) as excinfo:
+    with pytest.raises(SystemExit):
         cli.cmd_router()
 
     captured = capsys.readouterr()
