@@ -527,13 +527,17 @@ def test_determine_kernel_name_from_ext(tmp_directory):
 
 def test_save_injected_cell(tmp_nbs):
     dag = DAGSpec('pipeline.yaml').to_dag().render()
+    nb = jupytext.read('load.py')
     expected = '# + tags=["injected-parameters"]'
 
     assert expected not in Path('load.py').read_text()
+    assert nb.metadata.get('ploomber') is None
 
     dag['load'].source.save_injected_cell()
+    nb = jupytext.read('load.py')
 
     assert expected in Path('load.py').read_text()
+    assert nb.metadata.ploomber.injected_manually
 
 
 def test_remove_injected_cell(tmp_nbs):

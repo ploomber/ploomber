@@ -383,6 +383,22 @@ Go to: https://ploomber.io/s/params for more information
         fmt, cfg = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
         fmt_ = f'{self._ext_in}:{fmt}'
 
+        # add metadata to flag that the cell was injected manually
+        recursive_update(
+            self.nb_obj_rendered,
+            dict(metadata=dict(ploomber=dict(injected_manually=True))))
+
+        # Are we updating a text file that has a metadata filter? If so,
+        # add ploomber as a section that must be stored
+        if (self.nb_obj_rendered.metadata.get(
+                'jupytext', {}).get('notebook_metadata_filter') == '-all'):
+            recursive_update(
+                self.nb_obj_rendered,
+                dict(metadata=dict(jupytext=dict(
+                    notebook_metadata_filter='ploomber,-all'))))
+
+        # TODO: remove metadata in remove_injected_cell
+
         # overwrite
         jupytext.write(self.nb_obj_rendered, self._path, fmt=fmt_)
 
@@ -697,3 +713,17 @@ def determine_language(extension):
 
     # ipynb can be many languages, it must return None
     return mapping.get(extension)
+
+
+def recursive_update(target, update):
+    """Recursively update a dictionary. Taken from jupytext.header
+    """
+    for key in update:
+        value = update[key]
+        if value is None:
+            del target[key]
+        elif isinstance(value, dict):
+            target[key] = recursive_update(target.get(key, {}), value)
+        else:
+            target[key] = value
+    return target
