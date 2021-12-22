@@ -35,6 +35,7 @@ with warnings.catch_warnings():
 import nbformat
 import jupytext
 from jupytext import cli as jupytext_cli
+from jupytext.formats import long_form_one_format, short_form_one_format
 
 from ploomber.exceptions import SourceInitializationError
 from ploomber.placeholders.placeholder import Placeholder
@@ -375,7 +376,7 @@ Go to: https://ploomber.io/s/params for more information
 
     def save_injected_cell(self):
         """
-        Inject cell and overwrite the source file
+        Inject cell, overwrite the source file (and any paired files)
         """
         # TODO: test when initialized from str
         # what's the second returned obj?
@@ -402,9 +403,14 @@ Go to: https://ploomber.io/s/params for more information
         # overwrite
         jupytext.write(self.nb_obj_rendered, self._path, fmt=fmt_)
 
+        # overwrite all paired files
+        for path, fmt_ in iter_paired_notebooks(self.nb_obj_rendered, fmt_,
+                                                self._path.stem):
+            jupytext.write(self.nb_obj_rendered, fp=path, fmt=fmt_)
+
     def remove_injected_cell(self):
         """
-        Delete injected cell (if any)
+        Delete injected cell, overwrite the source file (and any paired files)
         """
         nb_clean = _cleanup_rendered_nb(self._nb_obj_unrendered)
 
@@ -416,9 +422,34 @@ Go to: https://ploomber.io/s/params for more information
         # overwrite
         jupytext.write(nb_clean, self._path, fmt=fmt_)
 
+        # overwrite all paired files
+        for path, fmt_ in iter_paired_notebooks(self._nb_obj_unrendered, fmt_,
+                                                self._path.stem):
+            jupytext.write(nb_clean, fp=path, fmt=fmt_)
+
     def format(self, fmt):
+        """Change source format
+
+        Returns
+        -------
+        str
+            The path if the extension changed, None otherwise
+        """
         nb_clean = _cleanup_rendered_nb(self._nb_obj_unrendered)
-        jupytext.write(nb_clean, self._path, fmt=fmt)
+
+        ext_file = self._path.suffix
+        ext_format = long_form_one_format(fmt)['extension']
+        extension_changed = ext_file != ext_format
+
+        if extension_changed:
+            path = self._path.with_suffix(ext_format)
+            Path(self._path).unlink()
+        else:
+            path = self._path
+
+        jupytext.write(nb_clean, path, fmt=fmt)
+
+        return path if extension_changed else None
 
     def pair(self, base_path):
         """Pairs with an ipynb file
@@ -727,3 +758,24 @@ def recursive_update(target, update):
         else:
             target[key] = value
     return target
+
+
+def parse_jupytext_format(fmt, name):
+    """
+    Parse a jupytext format string (such as notebooks//ipynb) and return the
+    path to the file and the extension
+    """
+    fmt_parsed = long_form_one_format(fmt)
+    path = Path(fmt_parsed['prefix'], f'{name}{fmt_parsed["extension"]}')
+    del fmt_parsed['prefix']
+    return path, short_form_one_format(fmt_parsed)
+
+
+def iter_paired_notebooks(nb, fmt_, name):
+    formats = (nb.metadata.get('jupytext', {}).get('formats', '').split(','))
+    formats.remove(fmt_)
+
+    # overwrite all paired files
+    for path, fmt_current in (parse_jupytext_format(fmt, name)
+                              for fmt in formats):
+        yield path, fmt_current

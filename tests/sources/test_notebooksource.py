@@ -82,6 +82,16 @@ def nb_R_meta():
     return nb
 
 
+def get_injected_cell(nb):
+    injected = None
+
+    for cell in nb['cells']:
+        if 'injected-parameters' in cell['metadata'].get('tags', []):
+            injected = cell
+
+    return injected
+
+
 notebook_ab = """
 # + tags=['parameters']
 a = 1
@@ -540,6 +550,21 @@ def test_save_injected_cell(tmp_nbs):
     assert nb.metadata.ploomber.injected_manually
 
 
+@pytest.mark.parametrize('prefix', [
+    'nbs',
+    'some/notebooks',
+])
+def test_save_injected_cell_in_paired_notebooks(tmp_nbs, prefix):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.pair(prefix)
+
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.save_injected_cell()
+
+    assert get_injected_cell(jupytext.read(Path(prefix, 'load.ipynb')))
+    assert get_injected_cell(jupytext.read(Path('load.py')))
+
+
 def test_remove_injected_cell(tmp_nbs):
     dag = DAGSpec('pipeline.yaml').to_dag().render()
     dag['load'].source.save_injected_cell()
@@ -552,6 +577,27 @@ def test_remove_injected_cell(tmp_nbs):
     assert expected not in Path('load.py').read_text()
 
 
+@pytest.mark.parametrize('prefix', [
+    'nbs',
+    'some/notebooks',
+])
+def test_remove_injected_cell_in_paired_notebooks(tmp_nbs, prefix):
+    # pair notebooks
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.pair(prefix)
+
+    # inject cell
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.save_injected_cell()
+
+    # remove cell
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.remove_injected_cell()
+
+    assert not get_injected_cell(jupytext.read(Path(prefix, 'load.ipynb')))
+    assert not get_injected_cell(jupytext.read(Path('load.py')))
+
+
 def test_format(tmp_nbs):
     dag = DAGSpec('pipeline.yaml').to_dag().render()
 
@@ -560,6 +606,14 @@ def test_format(tmp_nbs):
     dag['load'].source.format(fmt='py:percent')
 
     assert '# %% tags=["parameters"]' in Path('load.py').read_text()
+
+
+def test_format_with_extension_change(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.format(fmt='ipynb')
+
+    assert not Path('load.py').exists()
+    assert jupytext.read('load.ipynb')
 
 
 def test_pair(tmp_nbs):
