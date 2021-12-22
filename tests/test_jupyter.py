@@ -477,6 +477,18 @@ def test_save(tmp_nbs):
     assert '# modification' in code
 
 
+def test_does_not_delete_injected_cell_on_save_if_manually_injected(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.save_injected_cell()
+
+    cm = PloomberContentsManager()
+    model = cm.get('load.py')
+    cm.save(model, path='/load.py')
+
+    nb = jupytext.read('load.py')
+    assert get_injected_cell(nb)
+
+
 def test_deletes_metadata_on_save(tmp_nbs):
     Path('output').mkdir()
     metadata = Path('output/.plot.ipynb.metadata')
