@@ -1,4 +1,3 @@
-import ast
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -8,6 +7,7 @@ from click.testing import CliRunner
 
 from ploomber.cli.cli import scaffold
 from ploomber.cli import cli
+from tests_util import assert_function_in_module, write_simple_pipeline
 
 
 @pytest.mark.parametrize('args, conda, package, empty', [
@@ -214,39 +214,35 @@ tasks:
 
 
 @pytest.mark.parametrize("create_module", [True, False])
-def test_scaffold_in_custom_entry_point_with_module(create_module,
-                                                    tmp_directory,
-                                                    add_current_to_sys_path,
-                                                    no_sys_modules_cache):
+@pytest.mark.parametrize("custom_entry_point", [True, False])
+def test_scaffold_with_module(custom_entry_point, create_module, tmp_directory,
+                              add_current_to_sys_path, no_sys_modules_cache):
     module_file = Path("my_module.py")
     if create_module:
         module_file.write_text("")
+
+    file_name = "not-default.yaml" if custom_entry_point else "pipeline.yaml"
+
     assert module_file.exists() == create_module
-    Path('pipeline.serve.yaml').write_text("""
-tasks:
-    - source: my_module.my_function
-      product: out.ipynb
-""")
+    write_simple_pipeline(file_name,
+                          modules=["my_module"],
+                          function_name="my_function")
 
     runner = CliRunner()
-    result = runner.invoke(scaffold,
-                           args=['-e', 'pipeline.serve.yaml'],
-                           catch_exceptions=False)
+    result = runner.invoke(
+        scaffold,
+        args=['-e', 'not-default.yaml'] if custom_entry_point else [],
+        catch_exceptions=False)
 
     assert not result.exit_code
 
-    code = module_file.read_text()
-    module = ast.parse(code)
-
-    names = {
-        element.name
-        for element in module.body if hasattr(element, 'name')
-    }
-    assert "my_function" in names
+    assert_function_in_module("my_function", module_file)
 
 
-def test_scaffold_in_custom_entry_point_with_inner_module(
-        tmp_directory, add_current_to_sys_path, no_sys_modules_cache):
+@pytest.mark.parametrize("custom_entry_point", [True, False])
+def test_scaffold_with_inner_module(custom_entry_point, tmp_directory,
+                                    add_current_to_sys_path,
+                                    no_sys_modules_cache):
 
     modules = ["module1", "module2", "module3"]
     function_name = "my_function"
@@ -254,29 +250,22 @@ def test_scaffold_in_custom_entry_point_with_inner_module(
 
     assert not module_file.exists()
 
-    Path('pipeline.serve.yaml').write_text(f"""
-tasks:
-    - source: {'.'.join(modules)}.{function_name}
-      product: out.ipynb
-""")
+    file_name = "not-default.yaml" if custom_entry_point else "pipeline.yaml"
+    write_simple_pipeline(file_name, modules, function_name)
 
     runner = CliRunner()
-    result = runner.invoke(scaffold,
-                           args=['-e', 'pipeline.serve.yaml'],
-                           catch_exceptions=False)
+
+    result = runner.invoke(
+        scaffold,
+        args=['-e', 'not-default.yaml'] if custom_entry_point else [],
+        catch_exceptions=False)
 
     assert not result.exit_code
     for idx in range(len(modules) - 1):
         init_file = Path(*modules[:idx + 1], "__init__.py")
         assert init_file.exists()
 
-    code = module_file.read_text()
-    module = ast.parse(code)
-    names = {
-        element.name
-        for element in module.body if hasattr(element, 'name')
-    }
-    assert function_name in names
+    assert_function_in_module(function_name, module_file)
 
 
 @pytest.mark.parametrize('flag', ['--conda', '--package', '--empty'])
