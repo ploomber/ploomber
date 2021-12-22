@@ -1,3 +1,4 @@
+import yaml
 import shutil
 from pathlib import Path
 import stat
@@ -14,6 +15,7 @@ def _call_in_source(dag, method_name, message, kwargs=None):
     """
     kwargs = kwargs or {}
     files = []
+    results = []
 
     for task in dag.values():
         try:
@@ -21,11 +23,13 @@ def _call_in_source(dag, method_name, message, kwargs=None):
         except AttributeError:
             pass
         else:
-            method(**kwargs)
+            results.append(method(**kwargs))
             files.append(str(task.source._path))
 
     files_ = '\n'.join((f'    {f}' for f in files))
     click.echo(f'{message}:\n{files_}')
+
+    return results
 
 
 def _install_hook(path_to_hook, content, entry_point):
@@ -124,15 +128,21 @@ def main():
                            'failed to load') from loading_error
 
     if args.format:
-        _call_in_source(
-            dag,
-            'format',
-            'Formatted notebooks',
-            dict(fmt=args.format),
-        )
+        new_paths = [
+            str(p) for p in _call_in_source(
+                dag,
+                'format',
+                'Formatted notebooks',
+                dict(fmt=args.format),
+            ) if p is not None
+        ]
+
+        if len(new_paths):
+            click.echo('Extension changed for the following '
+                       f'tasks: {", ".join(new_paths)}. Update your '
+                       'pipeline declaration.')
 
     if args.inject:
-        # TODO: if paired notebooks, also inject in those files
         _call_in_source(
             dag,
             'save_injected_cell',

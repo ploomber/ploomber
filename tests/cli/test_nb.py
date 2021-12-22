@@ -8,6 +8,7 @@ import jupytext
 import pytest
 
 from ploomber.cli import cli
+from ploomber.spec import DAGSpec
 
 
 def git_init():
@@ -59,6 +60,18 @@ def test_format(monkeypatch, tmp_nbs):
     assert expected in Path('load.py').read_text()
     assert expected in Path('clean.py').read_text()
     assert expected in Path('plot.py').read_text()
+
+
+def test_format_with_extension_change(monkeypatch, tmp_nbs):
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--format', 'ipynb'])
+    cli.cmd_router()
+
+    assert not Path('load.py').exists()
+    assert not Path('clean.py').exists()
+    assert not Path('plot.py').exists()
+    assert jupytext.read('load.ipynb')
+    assert jupytext.read('clean.ipynb')
+    assert jupytext.read('plot.ipynb')
 
 
 def test_format_skips_non_notebooks(monkeypatch, backup_simple,
