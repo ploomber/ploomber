@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 from pathlib import Path
 import sys
@@ -134,6 +135,37 @@ def test_install_hook(monkeypatch, tmp_nbs):
     subprocess.check_call(['git', 'stash'])
 
     assert injected_tag not in Path('load.py').read_text()
+
+    assert ('ploomber nb --entry-point pipeline.yaml --remove'
+            in Path('.git', 'hooks', 'pre-commit').read_text())
+    assert ('ploomber nb --entry-point pipeline.yaml --inject'
+            in Path('.git', 'hooks', 'post-commit').read_text())
+
+
+def test_install_hook_custom_entry_point(monkeypatch, tmp_nbs):
+    shutil.copy('pipeline.yaml', 'pipeline.another.yaml')
+
+    # inject cells
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])
+    cli.cmd_router()
+
+    # init repo
+    git_init()
+
+    # install hook
+    monkeypatch.setattr(sys, 'argv', [
+        'ploomber',
+        'nb',
+        '--install-hook',
+        '--entry-point',
+        'pipeline.another.yaml',
+    ])
+    cli.cmd_router()
+
+    assert ('ploomber nb --entry-point pipeline.another.yaml --remove'
+            in Path('.git', 'hooks', 'pre-commit').read_text())
+    assert ('ploomber nb --entry-point pipeline.another.yaml --inject'
+            in Path('.git', 'hooks', 'post-commit').read_text())
 
 
 def test_uninstall_hook(monkeypatch, tmp_nbs):

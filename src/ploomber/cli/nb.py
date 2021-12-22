@@ -23,7 +23,7 @@ def _call_in_source(dag, method_name, kwargs=None):
             method(**kwargs)
 
 
-def _install_hook(path_to_hook, content):
+def _install_hook(path_to_hook, content, entry_point):
     """
     Install a git hook script at the given path
     """
@@ -33,7 +33,7 @@ def _install_hook(path_to_hook, content):
             f'at {path_to_hook}. Run: "ploomber nb -u" to uninstall the '
             'existing hook and try again')
 
-    path_to_hook.write_text(content)
+    path_to_hook.write_text(content.format(entry_point=entry_point))
     # make the file executable
     path_to_hook.chmod(path_to_hook.stat().st_mode | stat.S_IEXEC)
 
@@ -57,7 +57,7 @@ pre_commit_hook = """
 # scripts and notebook tasks
 
 # remove injected cells
-ploomber nb --remove
+ploomber nb --entry-point {entry_point} --remove
 
 # re-add files
 git add $(git diff --name-only --cached)
@@ -69,10 +69,11 @@ post_commit_hook = """
 # scripts and notebook tasks
 
 # inject cells
-ploomber nb --inject
+ploomber nb --entry-point {entry_point} --inject
 """
 
 
+# TODO: --log, --log-file should not appear as options
 @command_endpoint
 def main():
     parser = CustomParser(description='Manage scripts and notebooks')
@@ -117,10 +118,6 @@ def main():
         raise RuntimeError('Could not run nb command: the DAG '
                            'failed to load') from loading_error
 
-    # NOTE: what if the pipeline.yaml isn't in the same folder as .git,
-    # what if the project has multiple pipeline.yaml? - in such case, we may
-    # provide a feature to discover all of them, or the user could
-    # write the script
     # NOTE: maybe inject/remove should edit some project's metadata (not sure
     # if pipeline.yaml) or another file. so the Jupyter plug-in does not remove
     # the injected cell upon exiting
@@ -129,7 +126,7 @@ def main():
         _call_in_source(dag, 'format', dict(fmt=args.format))
 
     if args.inject:
-        # TODO: if paired notebooks, also inject there
+        # TODO: if paired notebooks, also inject in those files
         _call_in_source(dag, 'save_injected_cell', dict())
 
     if args.remove:
@@ -141,13 +138,11 @@ def main():
 
     # can pair give trouble if we're reformatting?
     if args.pair:
-        # TODO: print a message suggesting to add the folder to .gitignore
         _call_in_source(dag, 'pair', dict(base_path=args.pair))
+        click.echo(f'Finshed pairing notebooks. Tip: add {args.pair!r} to '
+                   'your .gitignore to keep your repository clean')
 
     if args.install_hook:
-        # the generated hook should take into account the --entry-point arg
-        # check .git is in this folder
-
         if not Path('.git').is_dir():
             raise NotADirectoryError(
                 'Expected a .git/ directory in the current working '
@@ -157,11 +152,12 @@ def main():
         parent.mkdir(exist_ok=True)
 
         # pre-commit: remove injected cells
-        _install_hook(parent / 'pre-commit', pre_commit_hook)
+        _install_hook(parent / 'pre-commit', pre_commit_hook, args.entry_point)
         click.echo('Successfully installed pre-commit git hook')
 
         # post-commit: inject cells
-        _install_hook(parent / 'post-commit', post_commit_hook)
+        _install_hook(parent / 'post-commit', post_commit_hook,
+                      args.entry_point)
         click.echo('Successfully installed post-commit git hook')
 
     if args.uninstall_hook:
