@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 0.13.8dev
+* Adds `ploomber nb` command for integration with VSCode, PyCharm, Spyder, etc.
+* Adds methods for saving and removing injected cells to `NotebookSource`
+* Adds methods for pairing and syncing to `NotebookSource`
+* Fixes #448: `SQLUpload` ignoring `io_handler`
+* Fixes #447: `pipeline.yaml` supports passing custom init parameters to `executor`
+* Adds optional [anonymous user statistics](https://docs.ploomber.io/en/latest/community/user-stats.html)
 
 ## 0.13.7 (2021-12-18)
 * Fixes `{{root}}` expansion when path_to_here is different than the current working directory
