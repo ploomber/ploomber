@@ -60,7 +60,7 @@ def _delete_hook(path):
 
 
 pre_commit_hook = """
-# !/usr/bin/env bash
+#!/usr/bin/env bash
 # Automatically generated pre-commit hook to remove the injected cell in
 # scripts and notebook tasks
 
@@ -72,7 +72,7 @@ git add $(git diff --name-only --cached)
 """
 
 post_commit_hook = """
-# !/usr/bin/env bash
+#!/usr/bin/env bash
 # Automatically generated post-commit hook to add the injected cell in
 # scripts and notebook tasks
 

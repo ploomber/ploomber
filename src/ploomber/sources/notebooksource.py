@@ -27,6 +27,8 @@ from functools import wraps
 import ast
 from pathlib import Path
 import warnings
+from contextlib import redirect_stdout
+from io import StringIO
 
 # papermill is importing a deprecated module from pyarrow
 with warnings.catch_warnings():
@@ -477,16 +479,20 @@ Go to: https://ploomber.io/s/params for more information
         fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
         fmt_ = f'{self._ext_in}:{fmt}'
 
-        jupytext_cli.jupytext(args=[
-            '--set-formats', f'{base_path}//ipynb,{fmt_}',
-            str(self._path)
-        ])
+        # mute jupytext's output
+        with redirect_stdout(StringIO()):
+            jupytext_cli.jupytext(args=[
+                '--set-formats', f'{base_path}//ipynb,{fmt_}',
+                str(self._path)
+            ])
 
     @requires_path
     def sync(self):
-        """Pairs wit and ipynb file
+        """Pairs with and ipynb file
         """
-        jupytext_cli.jupytext(args=['--sync', str(self._path)])
+        # mute jupytext's output
+        with redirect_stdout(StringIO()):
+            jupytext_cli.jupytext(args=['--sync', str(self._path)])
 
 
 def json_serializable_params(params):
