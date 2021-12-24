@@ -1,6 +1,8 @@
 Other editors (VSCode, PyCharm, etc.)
 =====================================
 
+.. note:: This feature requires Ploomber ``0.14`` or higher.
+
 Although Ploomber can be entirely operated from the command-line, thus,
 independent of your text editor or IDE of choice. However, Ploomber comes with a
 Jupyter plugin that streamlines development. Whenever you open a script or
@@ -14,6 +16,12 @@ options:
 1. Use the ``percent`` format in ``.py`` files (recommended)
 2. Pair ``.py`` files with ``.ipynb`` files (recommended if your editor does not support the ``percent`` format)
 3. Use ``.ipynb`` files as sources
+
+.. tip::
+
+    Test this feature by downloading a sample pipeline with:
+    ``ploomber examples -n templates/ml-basic -o sample``, then move to the
+    ``sample/`` directory (the pipeline contains one script task, ``fit.py``).
 
 Using the ``percent`` format
 ----------------------------

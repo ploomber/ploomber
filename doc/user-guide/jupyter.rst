@@ -1,11 +1,15 @@
 Jupyter integration
 ===================
 
-.. note::
+.. tip::
     
     If you're new to Ploomber, check out the
-    :doc:`../get-started/basic-concepts` guide, this tutorial assumes you're
-    already familiar with Ploomber's core concepts.
+    :doc:`../get-started/basic-concepts` guide first.
+
+
+.. note::
+
+    If using other editors, check out the :doc:`../user-guide/editors` guide.
 
 Ploomber integrates with Jupyter to make it easy to create multi-stage
 pipelines composed of small notebooks. Breaking down logic in multiple
