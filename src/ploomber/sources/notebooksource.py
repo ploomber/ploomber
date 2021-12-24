@@ -23,6 +23,7 @@ Given that there are many places where this information might be stored, we
 have a few rules to automatically determine language and kernel given a
 script/notebook.
 """
+from functools import wraps
 import ast
 from pathlib import Path
 import warnings
@@ -45,6 +46,23 @@ from ploomber.sources.nb_utils import find_cell_with_tag, find_cell_with_tags
 from ploomber.static_analysis.extractors import extractor_class_for_language
 from ploomber.static_analysis.pyflakes import check_notebook
 from ploomber.sources import docstring
+
+
+def requires_path(func):
+    """
+    Checks if NotebookSource instance was initialized from a file, raises
+    an error if not
+    """
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+
+        if self._path is None:
+            raise ValueError(f'Cannot use {func.__name__!r} if notebook was '
+                             'not initialized from a file')
+
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class NotebookSource(Source):
@@ -374,14 +392,12 @@ Go to: https://ploomber.io/s/params for more information
         extractor_class = extractor_class_for_language(self.language)
         return extractor_class(self._get_parameters_cell()).extract_product()
 
+    @requires_path
     def save_injected_cell(self):
         """
         Inject cell, overwrite the source file (and any paired files)
         """
-        # TODO: test when initialized from str
-        # what's the second returned obj?
-        # try multiple times, ensure parameter cell isnt duplicated
-        fmt, cfg = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
+        fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
         fmt_ = f'{self._ext_in}:{fmt}'
 
         # add metadata to flag that the cell was injected manually
@@ -398,8 +414,6 @@ Go to: https://ploomber.io/s/params for more information
                 dict(metadata=dict(jupytext=dict(
                     notebook_metadata_filter='ploomber,-all'))))
 
-        # TODO: remove metadata in remove_injected_cell
-
         # overwrite
         jupytext.write(self.nb_obj_rendered, self._path, fmt=fmt_)
 
@@ -408,15 +422,16 @@ Go to: https://ploomber.io/s/params for more information
                                                 self._path.stem):
             jupytext.write(self.nb_obj_rendered, fp=path, fmt=fmt_)
 
+    @requires_path
     def remove_injected_cell(self):
         """
         Delete injected cell, overwrite the source file (and any paired files)
         """
+        # TODO: remove metadata
+
         nb_clean = _cleanup_rendered_nb(self._nb_obj_unrendered)
 
-        # TODO: test when initialized from str
-        # what's the second returned obj?
-        fmt, cfg = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
+        fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
         fmt_ = f'{self._ext_in}:{fmt}'
 
         # overwrite
@@ -427,6 +442,7 @@ Go to: https://ploomber.io/s/params for more information
                                                 self._path.stem):
             jupytext.write(nb_clean, fp=path, fmt=fmt_)
 
+    @requires_path
     def format(self, fmt):
         """Change source format
 
@@ -451,12 +467,11 @@ Go to: https://ploomber.io/s/params for more information
 
         return path if extension_changed else None
 
+    @requires_path
     def pair(self, base_path):
         """Pairs with an ipynb file
         """
-        # TODO: test when initialized from str
-        # what's the second returned obj?
-        fmt, cfg = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
+        fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
         fmt_ = f'{self._ext_in}:{fmt}'
 
         jupytext_cli.jupytext(args=[
@@ -464,6 +479,7 @@ Go to: https://ploomber.io/s/params for more information
             str(self._path)
         ])
 
+    @requires_path
     def sync(self):
         """Pairs wit and ipynb file
         """

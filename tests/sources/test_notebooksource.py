@@ -642,6 +642,32 @@ def test_sync(tmp_nbs):
     assert nb.cells[-1]['source'] == 'x = 42'
 
 
+@pytest.mark.parametrize('method, kwargs', [
+    ['save_injected_cell', {}],
+    ['remove_injected_cell', {}],
+    ['format', {
+        'fmt': 'py:light'
+    }],
+    ['pair', {
+        'base_path': 'nbs'
+    }],
+    ['sync', {}],
+])
+def test_error_message_when_initialized_from_str(tmp_nbs, method, kwargs):
+    source = NotebookSource("""
+# + tags=["parameters"]
+""", ext_in='py')
+
+    source.render(Params._from_dict({'product': File('file.ipynb')}))
+
+    with pytest.raises(ValueError) as excinfo:
+        getattr(source, method)(**kwargs)
+
+    expected = (f"Cannot use '{method}' if notebook was not "
+                "initialized from a file")
+    assert str(excinfo.value) == expected
+
+
 remove_one = """# %% tags=["parameters"]
 x = 1
 
