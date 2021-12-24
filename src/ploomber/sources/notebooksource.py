@@ -427,9 +427,12 @@ Go to: https://ploomber.io/s/params for more information
         """
         Delete injected cell, overwrite the source file (and any paired files)
         """
-        # TODO: remove metadata
-
         nb_clean = _cleanup_rendered_nb(self._nb_obj_unrendered)
+
+        # remove metadata
+        recursive_update(
+            nb_clean,
+            dict(metadata=dict(ploomber=dict(injected_manually=None))))
 
         fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
         fmt_ = f'{self._ext_in}:{fmt}'
@@ -768,7 +771,8 @@ def recursive_update(target, update):
     for key in update:
         value = update[key]
         if value is None:
-            del target[key]
+            # remove if it exists
+            target.pop(key, None)
         elif isinstance(value, dict):
             target[key] = recursive_update(target.get(key, {}), value)
         else:
@@ -788,7 +792,13 @@ def parse_jupytext_format(fmt, name):
 
 
 def iter_paired_notebooks(nb, fmt_, name):
-    formats = (nb.metadata.get('jupytext', {}).get('formats', '').split(','))
+    formats = nb.metadata.get('jupytext', {}).get('formats', '')
+
+    if not formats:
+        return
+
+    formats = formats.split(',')
+
     formats.remove(fmt_)
 
     # overwrite all paired files

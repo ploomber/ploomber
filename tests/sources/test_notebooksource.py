@@ -572,9 +572,13 @@ def test_remove_injected_cell(tmp_nbs):
 
     assert expected in Path('load.py').read_text()
 
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
     dag['load'].source.remove_injected_cell()
 
+    nb = jupytext.read('load.py')
+
     assert expected not in Path('load.py').read_text()
+    assert nb.metadata.ploomber == {}
 
 
 @pytest.mark.parametrize('prefix', [
