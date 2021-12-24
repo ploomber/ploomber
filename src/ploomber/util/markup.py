@@ -11,7 +11,6 @@ class HighlightRenderer(mistune.Renderer):
     -----
     Source: https://github.com/lepture/mistune#renderer
     """
-
     def block_code(self, code, lang):
         if not lang:
             return '\n<pre><code>%s</code></pre>\n' % \

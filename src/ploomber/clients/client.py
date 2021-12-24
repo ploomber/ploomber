@@ -31,7 +31,6 @@ class Client(abc.ABC):
     2.0 (PEP 249)
 
     """
-
     def __init__(self):
         self._set_logger()
 
@@ -68,5 +67,6 @@ class Client(abc.ABC):
         self._set_logger()
 
     def _set_logger(self):
-        self._logger = logging.getLogger('{}.{}'.format(__name__,
-                                                        type(self).__name__))
+        self._logger = logging.getLogger('{}.{}'.format(
+            __name__,
+            type(self).__name__))

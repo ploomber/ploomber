@@ -13,6 +13,7 @@ Community
     coc
     api-changes
     contributing
+    user-stats
     roadmap
     
     
