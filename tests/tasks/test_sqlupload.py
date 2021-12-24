@@ -157,4 +157,6 @@ def test_custom_io_handler(tmp_directory):
 
     other = pd.read_sql('SELECT * FROM "my-table"', con=client)
 
+    client.close()
+
     assert other.equals(df)
