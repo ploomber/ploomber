@@ -67,6 +67,11 @@ def fixture_tmp_dir(source):
             shutil.copytree(str(source), str(tmp))
             os.chdir(str(tmp))
             yield tmp
+
+            # some tests create sample git repos, if we are on windows, we
+            # need to change permissions to be able to delete the files
+            _delete_all_dot_git()
+
             os.chdir(old)
             shutil.rmtree(tmp_dir)
 

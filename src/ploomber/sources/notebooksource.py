@@ -23,15 +23,22 @@ Given that there are many places where this information might be stored, we
 have a few rules to automatically determine language and kernel given a
 script/notebook.
 """
+from functools import wraps
 import ast
 from pathlib import Path
 import warnings
+from contextlib import redirect_stdout
+from io import StringIO
 
 # papermill is importing a deprecated module from pyarrow
 with warnings.catch_warnings():
     warnings.simplefilter('ignore', FutureWarning)
     from papermill.parameterize import parameterize_notebook
+
 import nbformat
+import jupytext
+from jupytext import cli as jupytext_cli
+from jupytext.formats import long_form_one_format, short_form_one_format
 
 from ploomber.exceptions import SourceInitializationError
 from ploomber.placeholders.placeholder import Placeholder
@@ -41,6 +48,23 @@ from ploomber.sources.nb_utils import find_cell_with_tag, find_cell_with_tags
 from ploomber.static_analysis.extractors import extractor_class_for_language
 from ploomber.static_analysis.pyflakes import check_notebook
 from ploomber.sources import docstring
+
+
+def requires_path(func):
+    """
+    Checks if NotebookSource instance was initialized from a file, raises
+    an error if not
+    """
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+
+        if self._path is None:
+            raise ValueError(f'Cannot use {func.__name__!r} if notebook was '
+                             'not initialized from a file')
+
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class NotebookSource(Source):
@@ -176,6 +200,11 @@ class NotebookSource(Source):
         # will have an empty "papermill" metadata dictionary)
         nb = parameterize_notebook(nb, self._params)
 
+        # delete empty tags to prevent cluttering the notebooks
+        for cell in nb.cells:
+            if not len(cell.metadata['tags']):
+                cell.metadata.pop('tags')
+
         self._nb_str_rendered = nbformat.writes(nb)
         self._post_render_validation(self._params, self._nb_str_rendered)
 
@@ -192,7 +221,7 @@ class NotebookSource(Source):
         # hot_reload causes to always re-evalaute the notebook representation
         if self._nb_str_unrendered is None or self._hot_reload:
             # this is the notebook node representation
-            self._nb_obj_unrendered = _to_nb_obj(
+            nb = _to_nb_obj(
                 self.primitive,
                 ext=self._ext_in,
                 # passing the underscored version
@@ -201,6 +230,11 @@ class NotebookSource(Source):
                 language=self._language,
                 kernelspec_name=self._kernelspec_name,
                 check_if_kernel_installed=self._check_if_kernel_installed)
+
+            # if the user injected cells manually (with plomber nb --inject)
+            # the source will contain the injected cell, remove it because
+            # it should not be considered part of the source code
+            self._nb_obj_unrendered = _cleanup_rendered_nb(nb, print_=False)
 
             # get the str representation. always write from nb_obj, even if
             # this was initialized with a ipynb file, nb_obj contains
@@ -359,6 +393,106 @@ Go to: https://ploomber.io/s/params for more information
     def extract_product(self):
         extractor_class = extractor_class_for_language(self.language)
         return extractor_class(self._get_parameters_cell()).extract_product()
+
+    @requires_path
+    def save_injected_cell(self):
+        """
+        Inject cell, overwrite the source file (and any paired files)
+        """
+        fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
+        fmt_ = f'{self._ext_in}:{fmt}'
+
+        # add metadata to flag that the cell was injected manually
+        recursive_update(
+            self.nb_obj_rendered,
+            dict(metadata=dict(ploomber=dict(injected_manually=True))))
+
+        # Are we updating a text file that has a metadata filter? If so,
+        # add ploomber as a section that must be stored
+        if (self.nb_obj_rendered.metadata.get(
+                'jupytext', {}).get('notebook_metadata_filter') == '-all'):
+            recursive_update(
+                self.nb_obj_rendered,
+                dict(metadata=dict(jupytext=dict(
+                    notebook_metadata_filter='ploomber,-all'))))
+
+        # overwrite
+        jupytext.write(self.nb_obj_rendered, self._path, fmt=fmt_)
+
+        # overwrite all paired files
+        for path, fmt_ in iter_paired_notebooks(self.nb_obj_rendered, fmt_,
+                                                self._path.stem):
+            jupytext.write(self.nb_obj_rendered, fp=path, fmt=fmt_)
+
+    @requires_path
+    def remove_injected_cell(self):
+        """
+        Delete injected cell, overwrite the source file (and any paired files)
+        """
+        nb_clean = _cleanup_rendered_nb(self._nb_obj_unrendered)
+
+        # remove metadata
+        recursive_update(
+            nb_clean,
+            dict(metadata=dict(ploomber=dict(injected_manually=None))))
+
+        fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
+        fmt_ = f'{self._ext_in}:{fmt}'
+
+        # overwrite
+        jupytext.write(nb_clean, self._path, fmt=fmt_)
+
+        # overwrite all paired files
+        for path, fmt_ in iter_paired_notebooks(self._nb_obj_unrendered, fmt_,
+                                                self._path.stem):
+            jupytext.write(nb_clean, fp=path, fmt=fmt_)
+
+    @requires_path
+    def format(self, fmt):
+        """Change source format
+
+        Returns
+        -------
+        str
+            The path if the extension changed, None otherwise
+        """
+        nb_clean = _cleanup_rendered_nb(self._nb_obj_unrendered)
+
+        ext_file = self._path.suffix
+        ext_format = long_form_one_format(fmt)['extension']
+        extension_changed = ext_file != ext_format
+
+        if extension_changed:
+            path = self._path.with_suffix(ext_format)
+            Path(self._path).unlink()
+        else:
+            path = self._path
+
+        jupytext.write(nb_clean, path, fmt=fmt)
+
+        return path if extension_changed else None
+
+    @requires_path
+    def pair(self, base_path):
+        """Pairs with an ipynb file
+        """
+        fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
+        fmt_ = f'{self._ext_in}:{fmt}'
+
+        # mute jupytext's output
+        with redirect_stdout(StringIO()):
+            jupytext_cli.jupytext(args=[
+                '--set-formats', f'{base_path}//ipynb,{fmt_}',
+                str(self._path)
+            ])
+
+    @requires_path
+    def sync(self):
+        """Pairs with and ipynb file
+        """
+        # mute jupytext's output
+        with redirect_stdout(StringIO()):
+            jupytext_cli.jupytext(args=['--sync', str(self._path)])
 
 
 def json_serializable_params(params):
@@ -553,7 +687,7 @@ def inject_cell(model, params):
                                              comment=comment)
 
 
-def _cleanup_rendered_nb(nb):
+def _cleanup_rendered_nb(nb, print_=True):
     """
     Cleans up a rendered notebook object. Removes cells with tags:
     injected-parameters, debugging-settings, and metadata injected by
@@ -562,8 +696,9 @@ def _cleanup_rendered_nb(nb):
     out = find_cell_with_tags(nb,
                               ['injected-parameters', 'debugging-settings'])
 
-    for key in out.keys():
-        print(f'Removing {key} cell...')
+    if print_:
+        for key in out.keys():
+            print(f'Removing {key} cell...')
 
     idxs = set(cell['index'] for cell in out.values())
 
@@ -634,3 +769,45 @@ def determine_language(extension):
 
     # ipynb can be many languages, it must return None
     return mapping.get(extension)
+
+
+def recursive_update(target, update):
+    """Recursively update a dictionary. Taken from jupytext.header
+    """
+    for key in update:
+        value = update[key]
+        if value is None:
+            # remove if it exists
+            target.pop(key, None)
+        elif isinstance(value, dict):
+            target[key] = recursive_update(target.get(key, {}), value)
+        else:
+            target[key] = value
+    return target
+
+
+def parse_jupytext_format(fmt, name):
+    """
+    Parse a jupytext format string (such as notebooks//ipynb) and return the
+    path to the file and the extension
+    """
+    fmt_parsed = long_form_one_format(fmt)
+    path = Path(fmt_parsed['prefix'], f'{name}{fmt_parsed["extension"]}')
+    del fmt_parsed['prefix']
+    return path, short_form_one_format(fmt_parsed)
+
+
+def iter_paired_notebooks(nb, fmt_, name):
+    formats = nb.metadata.get('jupytext', {}).get('formats', '')
+
+    if not formats:
+        return
+
+    formats = formats.split(',')
+
+    formats.remove(fmt_)
+
+    # overwrite all paired files
+    for path, fmt_current in (parse_jupytext_format(fmt, name)
+                              for fmt in formats):
+        yield path, fmt_current

@@ -99,7 +99,8 @@ sections are shown first:
         product_relative_to_source: False
 
     # execute tasks serially or in parallel (defaults to "serial")
-    executor: serial # or parallel
+    # for details, scroll down to the "executor" section
+    executor: serial # parallel, or dotted path
 
     # DAG configuration (optional section)
     config:
@@ -154,6 +155,45 @@ sections are shown first:
           # below for details
           grid:
             some_param: some_value
+
+
+``executor``
+************
+
+Determines which executor to use:
+
+1. ``serial``: Runs one task at a time (Note: By default, function tasks run in a subprocess)
+2. ``parallel``: Run independent tasks in parallel (Note: this runs all tasks in a subprocess)
+3. Dotted path: This allows you to customize the initialization parameters
+
+For example, say you want to use the :class:`ploomber.executors.Serial` executor
+but do not want to run functions in a subprocess, you can pass a dotted path
+and custom parameters like this:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    executor:
+      dotted_path: ploomber.executors.Serial
+      build_in_subprocess: false # do not run function tasks in a subprocess
+
+
+Another common use case is to limit the number of subprocesses when using the
+:class:`ploomber.executors.Parallel` executor:
+
+
+.. code-block:: yaml
+    :class: text-editor
+
+    executor:
+      dotted_path: ploomber.executors.Parallel
+      processes: 2 # limit to a max of 2 processes
+
+
+To learn more about the executors:
+
+* :class:`ploomber.executors.Serial`
+* :class:`ploomber.executors.Parallel`
 
 ``clients``
 ***********

@@ -123,6 +123,7 @@ def cmd_router():
         'report': cli_module.report.main,
         'interact': cli_module.interact.main,
         'status': cli_module.status.main,
+        'nb': cli_module.nb.main,
     }
 
     if cmd_name in custom:
@@ -179,5 +180,12 @@ def report():
 @cli.command()
 def interact():
     """Start an interactive session (use the "dag" variable)
+    """
+    pass  # pragma: no cover
+
+
+@cli.command()
+def nb():
+    """Manage scripts and notebooks
     """
     pass  # pragma: no cover

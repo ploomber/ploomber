@@ -231,6 +231,22 @@ def test_custom_serializer(executor, expected):
     assert isinstance(dag.executor, expected)
 
 
+def test_custom_serializer_dotted_path():
+    dag = DAGSpec({
+        'tasks': [{
+            'source': 'test_pkg.callables.root',
+            'product': 'root.csv'
+        }],
+        'executor': {
+            'dotted_path': 'ploomber.executors.Serial',
+            'build_in_subprocess': False
+        },
+    }).to_dag()
+
+    assert isinstance(dag.executor, Serial)
+    assert not dag.executor._build_in_subprocess
+
+
 @pytest.mark.parametrize('processor', [
     to_ipynb, tasks_list, remove_task_class, extract_upstream, extract_product
 ])
