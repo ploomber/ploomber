@@ -382,6 +382,8 @@ class SQLUpload(ClientMixin, Task):
                     'file with extension: {}'.format(extension),
                     'pass the function directly in the '
                     'io_handler argument')
+        else:
+            read_fn = self.io_handler
 
         self._logger.info('Reading data...')
         df = read_fn(path)
