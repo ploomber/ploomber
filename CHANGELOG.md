@@ -4,8 +4,8 @@
 * Adds `ploomber nb` command for integration with VSCode, PyCharm, Spyder, etc.
 * Adds methods for saving and removing injected cells to `NotebookSource`
 * Adds methods for pairing and syncing to `NotebookSource`
-* Fixes #448: `SQLUpload` ignoring `io_handler`
-* Fixes #447: `pipeline.yaml` supports passing custom init parameters to `executor`
+* Fixes [#448](https://github.com/ploomber/ploomber/issues/448): `SQLUpload` ignoring `io_handler`
+* Fixes [#447](https://github.com/ploomber/ploomber/issues/447): `pipeline.yaml` supports passing custom init parameters to `executor`
 * Adds optional [anonymous user statistics](https://docs.ploomber.io/en/latest/community/user-stats.html)
 
 ## 0.13.7 (2021-12-18)
@@ -38,7 +38,7 @@
 * Adds support for using `grid` and task-level hooks in spec API
 
 ## 0.13.1 (2021-10-08)
-* Allow serialization of a subset of params (#338)
+* Allow serialization of a subset of params ([#338](https://github.com/ploomber/ploomber/issues/338))
 * NotebookRunner `static_analysis` turned on by default
 * NotebookRunner `static_analysis` ignores IPython magics
 * Improved error message when NotebookRunner `static_analysis` fails
@@ -87,7 +87,7 @@
 ## 0.12.3 (2021-08-03)
 
 * Fixes cell injection when using the `--notebook-dir` during Jupyter initialization
-* Reduces verbosity in Jupyter logs (#314)
+* Reduces verbosity in Jupyter logs ([#314](https://github.com/ploomber/ploomber/issues/314))
 * Adds `tasks[*].params.resources_` to track changes in external files
 * Minor bug fixes
 
@@ -338,7 +338,7 @@
     NotebookSource
 - Improved output layout for tables
 - Support for nbconvert>=6
-- Docstrings are parsed from notebooks and displayed in DAG status table (#242)
+- Docstrings are parsed from notebooks and displayed in DAG status table ([#242](https://github.com/ploomber/ploomber/issues/242))
 - Jupyter extension now works for DAGs defined via directories (via
     `ENTRY_POINT` env variable)
 - Adds Jupyter integration guide to documentation
@@ -455,7 +455,7 @@
 
 ## 0.3.5 (2020-05-03)
 
-- Bug fixes #88, #89, #90, #84, #91
+- Bug fixes [#88](https://github.com/ploomber/ploomber/issues/88), [#89](https://github.com/ploomber/ploomber/issues/89), [#90](https://github.com/ploomber/ploomber/issues/90), [#84](https://github.com/ploomber/ploomber/issues/84), [#91](https://github.com/ploomber/ploomber/issues/91)
 - Modifies Env API: Env() is now Env.load(), Env.start() is now Env()
 - New advanced Env guide added to docs
 - Env can now be used with a context manager
@@ -467,7 +467,7 @@
 
 - Dependencies cleanup
 - Removed (numpydoc) as dependency, now optional
-- A few bug fixes: #79, #71
+- A few bug fixes: [#79](https://github.com/ploomber/ploomber/issues/79), [#71](https://github.com/ploomber/ploomber/issues/71)
 - All warnings are captured and shown at the end (Serial executor)
 - Moves differ parameter from DAG constructor to DAGConfigurator
 
@@ -541,7 +541,7 @@
 - Improved documentation
 - Renamed PostgresCopy to PostgresCopyFrom
 - SQLUpload and PostgresCopy have now the same API
-- A few fixes to PostgresCopy (#1, #2)
+- A few fixes to PostgresCopy ([#1](https://github.com/ploomber/ploomber/issues/1), [#2](https://github.com/ploomber/ploomber/issues/2))
 
 ## 0.1
 

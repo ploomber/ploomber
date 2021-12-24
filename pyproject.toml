@@ -1,2 +1,5 @@
 [tool.pytest.ini_options]
 addopts = "--pdbcls=IPython.terminal.debugger:Pdb"
+
+[tool.pkgmt]
+github = "ploomber/ploomber"
