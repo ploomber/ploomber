@@ -88,7 +88,7 @@ import os
 import yaml
 import logging
 from pathlib import Path
-from collections.abc import MutableMapping
+from collections.abc import MutableMapping, Mapping
 from glob import iglob
 from itertools import chain
 import pprint
@@ -439,15 +439,19 @@ class DAGSpec(MutableMapping):
             dag._params = DAGConfiguration.from_dict(self['config'])
 
         if 'executor' in self:
-            valid = {'serial', 'parallel'}
             executor = self['executor']
 
-            if executor not in valid:
-                raise ValueError('executor must be one '
-                                 f'of {valid}, got: {executor}')
-
-            if executor == 'parallel':
-                dag.executor = Parallel()
+            if isinstance(executor,
+                          str) and executor in {'serial', 'parallel'}:
+                if executor == 'parallel':
+                    dag.executor = Parallel()
+            elif isinstance(executor, Mapping):
+                dag.executor = dotted_path.DottedPath(
+                    executor, lazy_load=False, allow_return_none=False)()
+            else:
+                raise ValueError('executor must be '
+                                 '"serial", "parallel", or a dotted path'
+                                 f', got: {executor}')
 
         clients = self.get('clients')
 
