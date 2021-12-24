@@ -124,6 +124,8 @@ def test_install_hook_error_if_missing_git(monkeypatch, tmp_nbs, capsys):
     assert 'Error: Expected a .git/ directory' in captured.err
 
 
+@pytest.mark.xfail(sys.platform == "win32",
+                   reason="Windows can't run git hook")
 def test_install_hook(monkeypatch, tmp_nbs):
     # inject cells
     monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])

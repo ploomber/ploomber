@@ -151,6 +151,10 @@ If you wish to remove the injected cell from all scripts/notebooks:
 Using ``git`` hooks
 -------------------
 
+.. important::
+
+    ``ploomber nb --install-hook`` does not work on Windows
+
 To keep your scripts/notebooks clean, it's a good idea to keep the injected
 cell out of version control.
 
