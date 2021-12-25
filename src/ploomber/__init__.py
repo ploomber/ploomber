@@ -9,7 +9,7 @@ from ploomber.placeholders.sourceloader import SourceLoader
 from ploomber.jupyter.manager import _load_jupyter_server_extension
 from ploomber.util.loader import lazily_load_entry_point
 
-__version__ = '0.14'
+__version__ = '0.14.1dev'
 
 # Set default logging handler to avoid "No handler found" warnings.
 
