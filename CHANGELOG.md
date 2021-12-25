@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.13.8dev
+## 0.14 (2021-12-25)
 * Adds `ploomber nb` command for integration with VSCode, PyCharm, Spyder, etc.
 * Adds methods for saving and removing injected cells to `NotebookSource`
 * Adds methods for pairing and syncing to `NotebookSource`
