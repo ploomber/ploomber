@@ -18,6 +18,5 @@ def main():
     dag.to_markup(path=args.output)
     end_time = datetime.datetime.now()
     telemetry.log_api("ploomber_report",
-                      total_runtime=str(end_time - start_time),
-                      metadata={'build_args': args})
+                      total_runtime=str(end_time - start_time))
     print('Report saved at:', args.output)

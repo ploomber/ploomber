@@ -57,5 +57,4 @@ def main():
 
     end_time = datetime.datetime.now()
     telemetry.log_api("ploomber_task",
-                      total_runtime=str(end_time - start_time),
-                      metadata={'build_args': args})
+                      total_runtime=str(end_time - start_time))
