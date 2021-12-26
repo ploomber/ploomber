@@ -150,7 +150,7 @@ class DAGSpec(MutableMapping):
         A :py:mod:`ploomber.Env` object is initialized, see documentation for
         details.
 
-    lazy_import : bool, optional
+    lazy_import : bool or str, optional
         Whether to import dotted paths to initialize PythonCallables with the
         actual function. If False, PythonCallables are initialized directly
         with the dotted path, which means some verifications such as import
@@ -163,20 +163,39 @@ class DAGSpec(MutableMapping):
         from it (e.g., which are the declared tasks) but the process running
         it may not have all the required dependencies to do so (e.g., an
         imported library in a PythonCallable task).
+        If "warn", the value of ``import_mode`` will be used instead
 
     reload : bool, optional
         Reloads modules before importing dotted paths to detect code changes
         if the module has already been imported. Has no effect if
-        lazy_import=True.
+        import_mode != 'eager' or lazy_import=True.
+
+    import_mode : str, optional
+        Whether to import dotted paths to initialize PythonCallables with the
+        actual function. If ``eager``, PythonCallables are initialized directly
+        with the dotted path, which means some verifications such as import
+        statements in that function's module are delayed until the pipeline
+        is executed. This also applies to placeholders loaded using a
+        SourceLoader, if a template exists, it will return the path
+        to it, instead of initializing it, if it doesn't, it will return None
+        instead of raising an error. This setting is useful when we require to
+        load YAML spec and instantiate the DAG object to extract information
+        from it (e.g., which are the declared tasks) but the process running
+        it may not have all the required dependencies to do so (e.g., an
+        imported library in a PythonCallable task).
 
     Attributes
     ----------
     path : str or None
         Returns the path used to load the data. None if loaded from a
         dictionary
+
+    .. deprecated:: 0.14
+        ``lazy_import`` was replaced by ``import_mode`` in version 0.14 and
+        will be removed in 0.16.
     """
 
-    # NOTE: lazy_import is used where we need to initialized a a spec but don't
+    # NOTE: import_mode is used where we need to initialized a a spec but don't
     # plan on running it. One use case is when exporting to Argo or Airflow:
     # we don't want to raise errors if some dependency is missing because
     # it can happen that the environment exporting the dag does not have
@@ -189,19 +208,33 @@ class DAGSpec(MutableMapping):
     def __init__(self,
                  data,
                  env=None,
-                 lazy_import=False,
+                 lazy_import='warn',
                  reload=False,
-                 parent_path=None):
+                 parent_path=None,
+                 import_mode='eager'):
+
+        if lazy_import != 'warn':
+            warnings.warn(
+                "The argument lazy_import will be replaced by "
+                "import_mode in 0.16", FutureWarning)
+
+            if lazy_import is False:
+                import_mode = 'eager'
+            elif lazy_import is True:
+                import_mode = 'lazy'
+            elif lazy_import == 'skip':
+                import_mode = 'skip'
+
         self._init(data=data,
                    env=env,
-                   lazy_import=lazy_import,
+                   import_mode=import_mode,
                    reload=reload,
                    parent_path=parent_path,
                    look_up_project_root_recursively=True)
 
-    def _init(self, data, env, lazy_import, reload, parent_path,
+    def _init(self, data, env, import_mode, reload, parent_path,
               look_up_project_root_recursively):
-        self._lazy_import = lazy_import
+        self._import_mode = import_mode
 
         # initialized with a path to a yaml file...
         if isinstance(data, (str, Path)):
@@ -360,7 +393,7 @@ class DAGSpec(MutableMapping):
                     TaskSpec(t,
                              self.data['meta'],
                              project_root=project_root,
-                             lazy_import=lazy_import,
+                             import_mode=import_mode,
                              reload=reload) for t in self.data['tasks']
                 ]
         else:
@@ -453,11 +486,12 @@ class DAGSpec(MutableMapping):
 
         if clients:
             for class_name, dotted_path_spec in clients.items():
-                dps = dotted_path.DottedPath(dotted_path_spec,
-                                             lazy_load=self._lazy_import,
-                                             allow_return_none=False)
+                dps = dotted_path.DottedPath(
+                    dotted_path_spec,
+                    lazy_load=self._import_mode != 'eager',
+                    allow_return_none=False)
 
-                if self._lazy_import:
+                if self._import_mode != 'eager':
                     dag.clients[class_name] = dps
                 else:
                     dag.clients[class_name] = dps()
@@ -467,8 +501,8 @@ class DAGSpec(MutableMapping):
             if attr in self:
                 setattr(
                     dag, attr,
-                    dotted_path.DottedPath(self[attr],
-                                           lazy_load=self._lazy_import))
+                    dotted_path.DottedPath(
+                        self[attr], lazy_load=self._import_mode != 'eager'))
 
         process_tasks(dag, self, root_path=self._parent_path)
 
@@ -500,7 +534,8 @@ class DAGSpec(MutableMapping):
              reload=False,
              lazy_import=False,
              starting_dir=None,
-             name=None):
+             name=None,
+             import_mode='eager'):
         """
         Automatically find pipeline.yaml and return a DAGSpec object, which
         can be converted to a DAG using .to_dag()
@@ -522,7 +557,8 @@ class DAGSpec(MutableMapping):
             return cls(path_to_entry_point,
                        env=env,
                        lazy_import=lazy_import,
-                       reload=reload)
+                       reload=reload,
+                       import_mode=import_mode)
         except Exception as e:
             exc = DAGSpecInitializationError('Error initializing DAG from '
                                              f'{path_to_entry_point!s}')
@@ -616,7 +652,7 @@ class DAGSpecPartial(DAGSpec):
 
         self._init(data=data,
                    env=env,
-                   lazy_import=False,
+                   import_mode='eager',
                    reload=False,
                    parent_path=Path(path_to_partial).parent,
                    look_up_project_root_recursively=False)

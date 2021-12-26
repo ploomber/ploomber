@@ -1,6 +1,7 @@
 """
 Create Tasks from dictionaries
 """
+import warnings
 from functools import partial
 from copy import copy, deepcopy
 from pathlib import Path
@@ -42,7 +43,7 @@ def _looks_like_path(s):
         return '/' in s
 
 
-def task_class_from_source_str(source_str, lazy_import, reload, product):
+def task_class_from_source_str(source_str, import_mode, reload, product):
     """
     The source field in a DAG spec is a string. The actual value needed to
     instantiate the task depends on the task class, but to make task class
@@ -57,7 +58,7 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
     # if lazy load is set to true, just locate the module without importing it
 
     fn_checker = (
-        dotted_path.locate_dotted_path_root if lazy_import is True else
+        dotted_path.locate_dotted_path_root if import_mode != 'eager' else
         partial(dotted_path.load_dotted_path, raise_=True, reload=reload))
 
     if extension and extension in suffix2taskclass:
@@ -72,7 +73,7 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
                          f'source {source_str!r} (invalid '
                          f'extension {extension!r}). Valid extensions '
                          f'are: {pretty_print.iterable(suffix2taskclass)}')
-    elif lazy_import == 'skip':
+    elif import_mode == 'skip':
         # Anything that has not been caught before is treated as a
         # Python function, thus we return a PythonCallable
         return tasks.PythonCallable
@@ -94,7 +95,7 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
             return tasks.PythonCallable
 
 
-def task_class_from_spec(task_spec, lazy_import, reload):
+def task_class_from_spec(task_spec, import_mode, reload):
     """
     Returns the class for the TaskSpec, if the spec already has the class
     name (str), it just returns the actual class object with such name,
@@ -112,7 +113,7 @@ def task_class_from_spec(task_spec, lazy_import, reload):
     else:
         class_ = task_class_from_source_str(
             task_spec['source'],
-            lazy_import,
+            import_mode,
             reload,
             task_spec.get('product'),
         )
@@ -158,32 +159,54 @@ class TaskSpec(MutableMapping):
     project_root : str or pathlib.Path
         The project root folder. Relative paths in "product" are so to this
         folder
-    lazy_import : bool, default=False
+    lazy_import : bool or str, default="warn"
         If False, sources are loaded when initializing the spec (e.g.
         a dotted path is imported, a source loaded using a SourceLoader
         is converted to a Placeholder object)
+        If "warn", the value of ``import_mode`` will be used instead
     reload : bool, default=False
         Reloads modules before importing dotted paths to detect code changes
         if the module has already been imported. Has no effect if
-        lazy_import=True.
+        import_mode is not set to "eager".
+    import_mode : str, default="eager"
+        If "eager", sources are loaded when initializing the spec (e.g.
+        a dotted path is imported, a source loaded using a SourceLoader
+        is converted to a Placeholder object)
+
+    .. deprecated:: 0.14
+        ``lazy_import`` was replaced by ``import_mode`` in version 0.14 and
+        will be removed in 0.16.
     """
     def __init__(self,
                  data,
                  meta,
                  project_root,
-                 lazy_import=False,
-                 reload=False):
+                 lazy_import='warn',
+                 reload=False,
+                 import_mode='eager'):
+
+        if lazy_import != 'warn':
+            warnings.warn(
+                "The argument lazy_import will be replaced by "
+                "import_mode in 0.16", FutureWarning)
+
+            if lazy_import is False:
+                import_mode = 'eager'
+            elif lazy_import is True:
+                import_mode = 'lazy'
+            elif lazy_import == 'skip':
+                import_mode = 'skip'
+
         self.data = deepcopy(data)
         self.meta = deepcopy(meta)
         self.project_root = project_root
-        self.lazy_import = lazy_import
+        self.import_mode = import_mode
 
         self.validate()
 
         source_loader = meta['source_loader']
-
         # initialize required elements
-        self.data['class'] = task_class_from_spec(self.data, lazy_import,
+        self.data['class'] = task_class_from_spec(self.data, import_mode,
                                                   reload)
         # preprocess source obj, at this point it will either be a Path if the
         # task requires a file or a callable if it's a PythonCallable task
@@ -191,7 +214,7 @@ class TaskSpec(MutableMapping):
             self.data['source'],
             self.data['class'],
             self.project_root,
-            lazy_import,
+            lazy_import=import_mode != 'eager',
             # only make sources absolute paths when not using a source loader
             # otherwise keep them relative
             make_absolute=source_loader is None)
@@ -203,7 +226,7 @@ class TaskSpec(MutableMapping):
         # this gives the user the ability to load some files that might
         # not be part of the source loader
         if source_loader and is_path and not self.data['source'].is_absolute():
-            if lazy_import:
+            if import_mode != 'eager':
                 self.data['source'] = source_loader.path_to(
                     self.data['source'])
             else:
@@ -275,16 +298,16 @@ class TaskSpec(MutableMapping):
             on_failure = data.pop('on_failure', None)
 
             if on_render:
-                on_render = dotted_path.DottedPath(on_render,
-                                                   lazy_load=self.lazy_import)
+                on_render = dotted_path.DottedPath(
+                    on_render, lazy_load=self.import_mode != 'eager')
 
             if on_finish:
-                on_finish = dotted_path.DottedPath(on_finish,
-                                                   lazy_load=self.lazy_import)
+                on_finish = dotted_path.DottedPath(
+                    on_finish, lazy_load=self.import_mode != 'eager')
 
             if on_failure:
-                on_failure = dotted_path.DottedPath(on_failure,
-                                                    lazy_load=self.lazy_import)
+                on_failure = dotted_path.DottedPath(
+                    on_failure, lazy_load=self.import_mode != 'eager')
 
             return TaskGroup.from_grid(task_class=task_class,
                                        product_class=product_class,
@@ -301,7 +324,7 @@ class TaskSpec(MutableMapping):
             return _init_task(data=data,
                               meta=self.meta,
                               project_root=self.project_root,
-                              lazy_import=self.lazy_import,
+                              lazy_import=self.import_mode != 'eager',
                               dag=dag), upstream
 
     def __getitem__(self, key):

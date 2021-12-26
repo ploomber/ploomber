@@ -21,7 +21,7 @@ from ploomber import DAG
 ])
 def test_task_class_from_script(tmp_directory, source_str, expected):
     assert task_class_from_source_str(
-        source_str, lazy_import=False, reload=False, product=None) is expected
+        source_str, import_mode='lazy', reload=False, product=None) is expected
 
 
 @pytest.mark.parametrize('source_str', [
@@ -31,7 +31,7 @@ def test_task_class_from_script(tmp_directory, source_str, expected):
 def test_task_class_from_script_unknown_extension(tmp_directory, source_str):
     with pytest.raises(ValueError) as excinfo:
         task_class_from_source_str(source_str,
-                                   lazy_import=False,
+                                   import_mode='lazy',
                                    reload=False,
                                    product=None)
 
@@ -46,14 +46,14 @@ def fn():
 """)
     dotted_path = 'test_task_class_from_dotted_path.fn'
     assert task_class_from_source_str(
-        dotted_path, lazy_import=False, reload=False,
+        dotted_path, import_mode='lazy', reload=False,
         product=None) is PythonCallable
 
 
 def test_task_class_from_source_str_error():
     with pytest.raises(ValueError):
         task_class_from_source_str('not_a_module.not_a_function',
-                                   lazy_import=False,
+                                   import_mode='lazy',
                                    reload=False,
                                    product=None)
 
@@ -500,7 +500,7 @@ def test_grid_with_hook_lazy_import(backup_spec_with_functions_flat,
     dag = DAG()
 
     TaskSpec(grid_spec, meta, project_root='.',
-             lazy_import=True).to_task(dag=dag)
+             import_mode='lazy').to_task(dag=dag)
 
     assert all(t.on_render.callable is None for t in dag.values())
     assert all(t.on_finish.callable is None for t in dag.values())
@@ -556,7 +556,7 @@ def fn():
         },
         meta,
         '.',
-        lazy_import=True)
+        import_mode='lazy')
 
     assert spec.to_task(dag=DAG())
 
