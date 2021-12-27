@@ -3,12 +3,12 @@ Other editors (VSCode, PyCharm, etc.)
 
 .. note:: This feature requires Ploomber ``0.14`` or higher.
 
-Although Ploomber can be entirely operated from the command-line, thus,
+Ploomber can be entirely operated from the command-line, thus,
 independent of your text editor or IDE of choice. However, Ploomber comes with a
 Jupyter plugin that streamlines development. Whenever you open a script or
 notebook, Ploomber extracts the upstream information from your
 ``pipeline.yaml`` file and creates a new cell with the input paths for the
-current task (to learn mode about cell injection, :doc:`click here <jupyter>`).
+current task (to learn more about cell injection, :doc:`click here <jupyter>`).
 
 Depending on your text editor/IDE capabilities, you may choose one of three
 options:
@@ -82,6 +82,10 @@ your injected cell will look like this:
 
     Remember to run ``ploomber nb --inject`` whenever you change
     your ``pipeline.yaml``.
+    You can setup file watcher for changes in the  ``pipeline.yaml``
+    similar to `this example
+     <https://www.jetbrains.com/help/pycharm/using-file-watchers.html>`_.
+
 
 
 .. note::
