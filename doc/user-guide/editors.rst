@@ -81,11 +81,9 @@ your injected cell will look like this:
 .. important::
 
     Remember to run ``ploomber nb --inject`` whenever you change
-    your ``pipeline.yaml``.
-    You can setup file watcher for changes in the  ``pipeline.yaml``
-    similar to `this example
-     <https://www.jetbrains.com/help/pycharm/using-file-watchers.html>`_.
-
+    your ``pipeline.yaml``. You can set up a file watcher for ``pipeline.yaml``,
+    `click here for a VSCode extension <https://marketplace.visualstudio.com/items?itemName=appulate.filewatcher>`_,
+    or `here for a PyCharm example <https://www.jetbrains.com/help/pycharm/using-file-watchers.html>`_.
 
 
 .. note::
