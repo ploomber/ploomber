@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.14.1dev
+* `ploomber scaffold` creates missing modules when adding functions (#332, @fferegrino)
 
 ## 0.14 (2021-12-25)
 * Adds `ploomber nb` command for integration with VSCode, PyCharm, Spyder, etc.
