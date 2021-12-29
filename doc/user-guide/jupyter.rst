@@ -61,8 +61,8 @@ you to develop pipelines interactively.
     notebooks. If using ``jupyter lab``: ``Right-click`` -> ``Open With``
     -> ``Notebook`` as depicted below:
 
-.. image:: https://ploomber.io/doc/lab-open-with-notebook.png
-   :target: https://ploomber.io/doc/lab-open-with-notebook.png
+.. image:: https://ploomber.io/images/doc/lab-open-with-notebook.png
+   :target: https://ploomber.io/images/doc/lab-open-with-notebook.png
    :alt: lab-open-with-notebook
 
 
@@ -129,8 +129,8 @@ execution dependency.
 
 To inject the cell, reload the file from disk:
 
-.. image:: https://ploomber.io/doc/lab-reload-file.png
-   :target: https://ploomber.io/doc/lab-reload-file.png
+.. image:: https://ploomber.io/images/doc/lab-reload-file.png
+   :target: https://ploomber.io/images/doc/lab-reload-file.png
    :alt: lab-reload-file
 
 
