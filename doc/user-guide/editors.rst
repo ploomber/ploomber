@@ -3,25 +3,29 @@ Other editors (VSCode, PyCharm, etc.)
 
 .. note:: This feature requires Ploomber ``0.14`` or higher.
 
+
 Ploomber can be entirely operated from the command-line, thus,
 independent of your text editor or IDE of choice. However, Ploomber comes with a
-Jupyter plugin that streamlines development. Whenever you open a script or
-notebook, Ploomber extracts the upstream information from your
-``pipeline.yaml`` file and creates a new cell with the input paths for the
-current task (to learn more about cell injection, :doc:`click here <jupyter>`).
+Jupyter plugin that streamlines development via the cell injection process
+(to learn more about cell injection, :doc:`click here <jupyter>`).
 
-Depending on your text editor/IDE capabilities, you may choose one of three
-options:
+If you're not using Jupyter, you can still leverage the cell injection
+feature. Depending on your text editor/IDE capabilities, you may choose one of
+these options:
 
-1. Use the ``percent`` format in ``.py`` files (recommended)
-2. Pair ``.py`` files with ``.ipynb`` files (recommended if your editor does not support the ``percent`` format)
-3. Use ``.ipynb`` files as sources
+1. :ref:`Use the percent format in .py files <percent-format>` (recommended)
+2. :ref:`Pair .py files with .ipynb files <pairing-ipynb>` (recommended if your editor does not support the ``percent`` format or if you're running an old ``JupyterLab 1.x`` version)
+3. :ref:`Use .ipynb files as sources <ipynb-as-sources>`
 
-.. tip::
+To try out this feature, download our ``ml-basic`` example:
 
-    Test this feature by downloading a sample pipeline with:
-    ``ploomber examples -n templates/ml-basic -o sample``, then move to the
-    ``sample/`` directory (the pipeline contains one script task, ``fit.py``).
+.. code-block:: console
+
+    ploomber examples -n templates/ml-basic -o ml-basic
+
+Then move to the ``ml-basic/`` directory.
+
+.. _percent-format:
 
 Using the ``percent`` format
 ----------------------------
@@ -45,12 +49,17 @@ separating cells using ``# %%``:
     # second cell
     y = 2
 
-The first step is to ensure that your scripts are in the percent format. You
-can re-format all of them with the following command:
+The first step is to ensure that your scripts are in the percent
+format. You can re-format all of them with the following command:
 
 .. code-block:: console
 
     ploomber nb --format py:percent
+
+
+If you're following this using our ``ml-basic`` example, you can run
+such command, then open ``fit.py`` and see that the cells are delimited by
+``# %%``.
 
 
 .. _manual-cell-injection:
@@ -62,27 +71,44 @@ Now, let's inject the cell into each script manually:
     ploomber nb --inject
 
 
-If you open any of your pipeline scripts, you'll see the injected cell. For
-example, say you have a ``clean.py`` file that depends on a ``load.py`` file,
-your injected cell will look like this:
+If you open any of your pipeline scripts, you'll see the injected cell. If
+you're following this with our ``ml-basic`` example; you'll notice that
+after running ``ploomber nb --inject``, the ``fit.py`` file has a few new
+lines:
 
 .. code-block:: python
     :class: text-editor
 
     # %% tags=["injected-parameters"]
-    upstream = {"raw": "data/raw.csv"}
+    upstream = {"join": "output/join.parquet"}
 
     product = {
-        "nb": "data/clean.html",
-        "data": "data/clean.csv",
+        "nb": "output/nb.ipynb",
+        "model": "output/model.pickle",
     }
 
+
+In our ``ml-basic`` example, ``fit.py`` depends on the ``join`` task, which implies that
+``fit.py`` will use the output of ``join`` as input. Once you inject the cell,
+you'll see that Ploomber extracted the outputs of ``join`` and added them to
+``fit.py``, now ``fit.py`` is complete, and you can run it interactively
+without hardcoding paths.
+
+To test this, run ``ploomber build`` in a terminal to
+generate all the outputs, then open ``fit.py`` and start running the script
+(if you're on VSCode, you can click on the ``Run Cell`` button at the beginning
+of each cell). The following image shows the ``fit.py`` (left)
+and the interactive output (right) on VSCode:
+
+.. image:: https://ploomber.io/images/doc/editors-vscode-executed.png
+   :target: https://ploomber.io/images/doc/editors-vscode-executed.png
+   :alt: editors-vscode-executed
 
 .. important::
 
     Remember to run ``ploomber nb --inject`` whenever you change
-    your ``pipeline.yaml``. You can set up a file watcher for ``pipeline.yaml``,
-    `click here for a VSCode extension <https://marketplace.visualstudio.com/items?itemName=appulate.filewatcher>`_,
+    your ``pipeline.yaml``. You can set up a file watcher for ``pipeline.yaml``.
+    `Click here for a VSCode extension <https://marketplace.visualstudio.com/items?itemName=appulate.filewatcher>`_,
     or `here for a PyCharm example <https://www.jetbrains.com/help/pycharm/using-file-watchers.html>`_.
 
 
@@ -93,13 +119,15 @@ your injected cell will look like this:
     ``ploomber nb --inject`` command, this is disabled, and saving the
     script/notebook will not remove the injected cell.
 
+.. _pairing-ipynb:
+
 Pairing ``.ipynb`` files
 ------------------------
 
-**If your editor does not support the percent format**,
-you can pair ``.py`` and ``.ipynb`` files: this creates a ``.ipynb``
-copy of each ``.py`` task, and whenever you modify the ``.ipynb`` one, the
-``.py`` syncs.
+If your editor does not support the percent format, or if running and old
+``JupyterLab 1.x`` version (e.g., if using **Amazon Sagemaker**),
+you can pair ``.py`` and ``.ipynb`` files: this creates a synced ``.ipynb``
+copy of each ``.py`` task.
 
 Say you have a pipeline with ``.py`` files, to create the ``.ipynb`` ones:
 
@@ -109,10 +137,10 @@ Say you have a pipeline with ``.py`` files, to create the ``.ipynb`` ones:
 
 
 The command above will generate ``.ipynb`` files in a ``notebooks/`` directory,
-one per ``.py`` in your pipeline.
-
-To add the injected cell, follow the instructions from the
-:ref:`previous section <manual-cell-injection>`.
+one per ``.py`` in your pipeline. If you're following the ``ml-basic`` example,
+you'll see that a new ``notebooks/fit.ipynb`` file will appear after running
+the previous command. Now, add the injected cell: ``ploomber nb --inject`` (more details in the the
+:ref:`previous section <manual-cell-injection>`).
 
 .. tip::
 
@@ -120,12 +148,32 @@ To add the injected cell, follow the instructions from the
     ``.gitignore`` file.
 
 
-Once you modify the  ``.ipynb``, you can sync their  ``.py`` counterparts with:
+Once you modify the  ``.ipynb``, you can sync their  ``.py`` pairs with:
 
 .. code-block:: console
 
     ploomber nb --sync
 
+The following image shows the ``.ipynb`` / ``.py`` pair after running the sync
+command:
+
+.. image:: https://ploomber.io/images/doc/editors-paired.png
+   :target: https://ploomber.io/images/doc/editors-paired.png
+   :alt: editors-paired
+
+
+If you're following this using the ``ml-basic`` command, modify
+``notebooks/fit.ipynb`` (e.g., add a comment in the first cell), run
+``ploomber nb --sync``, and then open ``fit.py``, you'll see that the change
+made to the ``.ipynb`` file is now visible in the ``fit.py`` file.
+
+.. tip::
+
+    If you want the ``ploomber nb --sync`` command to run automatically before
+    you run ``git push``, check out the :ref:`git hooks <git-hooks>` section.
+
+
+.. _ipynb-as-sources:
 
 Using ``.ipynb`` as sources
 ---------------------------
@@ -157,6 +205,8 @@ If you wish to remove the injected cell from all scripts/notebooks:
 
     ploomber nb --remove
 
+
+.. _git-hooks:
 
 Using ``git`` hooks
 -------------------
