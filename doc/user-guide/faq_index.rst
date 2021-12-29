@@ -17,6 +17,8 @@ FAQ and Glossary
 
 .. include:: faq/plot.rst
 
+.. include:: faq/jupyterlab-1-dot-x.rst
+
 Glossary
 --------
 
