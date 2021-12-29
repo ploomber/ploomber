@@ -17,6 +17,9 @@ The easiest way to setup the development environment is via the setup command; y
 Once you have conda:
 
 ```sh
+# get the code
+git clone https://github.com/ploomber/ploomber
+
 # invoke is a library we use to manage one-off commands
 pip install invoke
 
@@ -79,9 +82,15 @@ Make sure everything is working correctly:
 
 ```sh
 # import ploomber
-python -c 'import ploomber'
+python -c 'import ploomber; print(ploomber)'
+```
 
-# run some tests
+*Note:* the output of the previous command should be the directory where you ran `git clone`; if it's not, try re-activating your conda environment (i.e., if using conda: `conda activate base`, then `conda activate ploomber`) If this doesn't work, [open an issue](https://github.com/ploomber/ploomber/issues/new?title=CONTRIBUTING.md%20issue) or reach out to us on [Slack](https://ploomber.io/community/).
+
+
+Run some tests:
+
+```
 pytest tests/util
 ```
 
