@@ -24,7 +24,7 @@ class SQLScript(ClientMixin, Task):
         A DAG to add this task to
     name: str
         A str to indentify this task. Should not already exist in the dag
-    client: ploomber.clients.DBAPIClient or SQLAlchemyClient, optional
+    client: ploomber.clients.{SQLAlchemyClient, DBAPIClient}, optional
         The client used to connect to the database. Only required
         if no dag-level client has been declared using dag.clients[class]
     params: dict, optional
@@ -192,10 +192,6 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
 
 # FIXME: this can be a lot faster for clients that transfer chunksize
 # rows over the network
-# FIXME: this should really have two clients because "client" is where
-# to pull the data from and product.client is to save metadata, and we should
-# require the target database to be the place to save metadata, this restrics
-# this to sqlite and postgres
 class SQLTransfer(ClientMixin, Task):
     """
     Transfers data from a SQL database to another (Note: this relies on
