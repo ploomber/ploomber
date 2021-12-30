@@ -115,6 +115,36 @@ def test_can_dump_sqlite_to_csv(tmp_directory):
     assert dump.equals(db)
 
 
+def test_sqldump_with_dbapiclient(tmp_directory):
+    client = DBAPIClient(connect, dict(database='my_db.db'))
+
+    # make some data and save it in the db
+    con_raw = connect(database='my_db.db')
+    df = pd.DataFrame({'a': np.arange(0, 100), 'b': np.arange(100, 200)})
+    df.to_sql('numbers', con_raw)
+
+    # create the task and run it
+    dag = DAG()
+    SQLDump('SELECT * FROM numbers',
+            File('dump.csv'),
+            dag,
+            name='dump',
+            client=client,
+            chunksize=None,
+            io_handler=io.CSVIO)
+
+    dag.build()
+
+    # load dumped data and data from the db
+    dump = pd.read_csv('dump.csv')
+    db = pd.read_sql_query('SELECT * FROM numbers', con_raw)
+
+    client.close()
+    con_raw.close()
+
+    assert dump.equals(db)
+
+
 def test_can_dump_sqlite_to_parquet(tmp_directory):
     tmp = Path(tmp_directory)
 
