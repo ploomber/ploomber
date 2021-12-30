@@ -96,6 +96,7 @@ pytest tests/util
 
 ## Submitting code
 
+
 We receive contributions via Pull Requests (PRs). [We recommend you check out this guide.](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests)
 
 
@@ -145,11 +146,26 @@ The installed hook only takes effect in your current repository.
 
 The first feedstock corresponds to the core package, and the second is a complimentary package that implements the scaffolding logic (i.e., `ploomber scaffold`). When uploading a new version to PyPI, the conda-forge bot automatically opens a PR to the feedstocks; upon approval, the new versions are available to install via `conda install ploomber --channel conda-forge`.
 
-Note that conda-forge implements a CI pipeline that checks that the recipe works. Thus, under most circumstances, the PR will pass. One exception is when adding new dependencies to `setup.py`; in such a case, we must manually edit the recipe (`meta.yml`) and open a PR to the feedstock.
+Note that conda-forge implements a CI pipeline that checks that the recipe works. Thus, under most circumstances, the PR will pass. One exception is when adding new dependencies to `setup.py`; in such a case, we must manually edit the recipe (`meta.yml`) and open a PR to the feedstock. See the next section for details.
 
 Note that [it takes some time](https://conda-forge.org/docs/maintainer/maintainer_faq.html#mfaq-anaconda-delay) for packages to be available for download. You can verify successful upload by opening Anaconda.org ([ploomber](https://anaconda.org/conda-forge/ploomber), [ploomber-scaffold](https://anaconda.org/conda-forge/ploomber-scaffold)); such website is updated immediately.
 
 To check if packages are available: `conda search ploomber --channel cf-staging`. Pending packages will appear in channel [`cf-staging`](https://conda-forge.org/docs/maintainer/infrastructure.html#output-validation-and-feedstock-tokens) while available packages in `conda-forge`. It usually takes less than one hour for packages to move from one to the other.
+
+### Manually updating the conda recipe
+
+If `conda-forge`'s bot PR fails (usually because a new dependency was added), we must submit a PR ourselves.
+
+1. [Fork feedstock repository](https://github.com/conda-forge/ploomber-feedstock)
+2. Clone it: `git clone https://github.com/{your-user}/ploomber-feedstock` (change `your-user`)
+3. Create a new branch: `git checkout -b branch-name`
+4. Update recipe:
+    * Update the `{% set version = "version" %}` line
+    * Update `source.sha256`, you can get that from `https://pypi.org/project/ploomber/{version}/#files`, just change the `version` and copy the SHA256 hash from the `.tar.gz` file
+    * If there are dependencies, add them to `requirements.run`
+5. You may need to run `conda smithy rerender -c auto` ([click here for details](https://conda-forge.org/docs/maintainer/updating_pkgs.html#rerendering-feedstocks))
+
+[More details here](https://conda-forge.org/docs/maintainer/updating_pkgs.html)
 
 ## Maintaining backwards compatibility
 
