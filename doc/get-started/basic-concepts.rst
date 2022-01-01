@@ -1,97 +1,91 @@
 Basic concepts
 ==============
 
-In the previous tutorial, we showed how to run a simple pipeline, this guide
-explains Ploomber's core concepts in detail and the overall design rationale.
+This guide explains Ploomber's core concepts.
 
-Ploomber is based on a simple principle: It is easier to understand (and
-solve) a problem when structured as small, isolated tasks. By adopting
-a *convention over configuration* philosophy, Ploomber allows you to quickly
-turn a collection functions, scripts, or notebooks into a data pipeline by
-following three simple conventions:
+Ploomber allows you to quickly turn a collection of scripts, notebooks, or functions into a data pipeline by following three conventions:
 
-1. Each task is a Python function, (Python/R/SQL) script or Jupyter notebook
-2. Scripts declare their dependencies using an ``upstream`` variable
-3. Scripts declare their outputs using a ``product`` variable
-
+1. Each task is a function, script or notebook.
+2. Tasks declare their dependencies using an ``upstream`` variable.
+3. Tasks declare their outputs using a ``product`` variable.
 
 A simple pipeline
 -----------------
 
-Let's say we want to build a pipeline to plot some data. We can organize it
-in three tasks: get raw data, clean it, and generate a plot:
+Let's say we want to build a pipeline to plot some data. Instead of coding
+everything in a single file, we'll break down logic in three steps, which will
+make our code more maintainable and easier to test:
 
 .. raw:: html
-
+   
     <div class="mermaid">
     graph LR
         raw --> clean --> plot
     </div>
 
-Given its structure, a pipeline is also referred as a directed acyclic graph
-(or DAG), we use both terms interchangeably.
 
-In a Ploomber pipeline, output(s) (also known as **products**) from one
-task become input(s) to "downstream" tasks. "upstream" dependencies read in
-the opposite direction. For example, ``raw`` is an "upstream" dependency of ``clean``.
+.. note:: A pipeline is also known as a directed acyclic graph (or DAG). We use both terms interchangeably.
 
-An "upstream" dependency implies that a given task uses its upstream
-dependencies products as inputs. Following our pipeline example,
-``clean`` uses ``raw``'s product, and ``plot`` uses ``clean``'s product.
+In a Ploomber pipeline, outputs (also known as **products**) from one
+task become inputs of "downstream" tasks. Hence, "upstream" dependencies read
+from left to right. For example, ``raw`` is an "upstream" dependency of ``clean``.
+
+An "upstream" dependency implies that a given task uses its upstream products
+as inputs. Following our pipeline example, ``clean`` uses ``raw``'s products, and ``plot`` uses ``clean``'s products.
 
 Ploomber supports three types of tasks:
 
 1. Python functions (also known as callables)
-2. Python/R scripts/notebooks
+2. Python scripts/notebooks (and their R equivalents)
 3. SQL scripts
 
-You can develop pipelines where all tasks are functions, scripts, notebooks,
-SQL scripts, or any combination of them. They all have the same interface, but
-details vary. We describe the nuances in upcoming sections.
-
-Sections are independent; you can skip to whatever task type you want to know
-more.
+You can mix any combination of tasks in your pipeline (e.g., dump data with a
+SQL query, then plot it with Python).
 
 Defining a pipeline
 -------------------
 
-To execute your pipeline, Ploomber needs to know where the task's source code
-is and what the products are. This is done via a ``pipeline.yaml`` file:
+To execute your pipeline, Ploomber needs to know the location of the
+task's source code (``source`` key), and the location of the task's products
+(``product`` key), we do this via a ``pipeline.yaml`` file:
 
 .. code-block:: yaml
     :class: text-editor
     :name: pipeline-yaml
 
     tasks:
-      # sql script task
+      # this is a sql script task
       - source: raw.sql
         product: [schema, name, table]
-        # task definition continues...
+        # ...
 
-      # function task (equivalent to: from my_functions import clean)
+      # this is a function task
+      # "my_functions.clean" is equivalent to: from my_functions import clean
       - source: my_functions.clean
         product: output/clean.csv
 
-      # script task (notebooks work the same)
+      # this is a script task (notebooks work the same)
       - source: plot.py
         product:
-          # generates a notebook (more on this in the next section)
+          # scripts always generate a notebook (more on this in the next section)
           nb: output/plots.ipynb
+         
 
 
-You can set a specific name using ``name``. If not present, Ploomber infers it
-from the ``source`` value.
+.. note:: You can set a task name using ``name``. If not present, Ploomber infers it from the ``source`` value by removing the extension to the file's name.
 
-Once you have a ``pipeline.yaml`` file, run it with:
+Once you have a ``pipeline.yaml`` file, you can run it with:
 
 .. code-block:: console
 
    ploomber build
 
-Ploomber keeps track of source changes to skip up-to-date tasks if you run
-that command again, only tasks whose source code has changed are executed.
+Ploomber keeps track of source changes to skip up-to-date tasks; if you
+``ploomber build`` that command again, only tasks whose source code has changed
+are executed. This helps iterate faster, as changes to the pipeline only
+trigger the least amount of tasks.
 
-.. note::
+.. tip::
    
    You can use the ``resources_`` section in a task definition to tell
    Ploomber to track the content of other
@@ -99,95 +93,123 @@ that command again, only tasks whose source code has changed are executed.
 
 For a full reference on ``pipeline.yaml`` files see: :doc:`../api/spec`.
 
-.. note::
-   
-   Writing a ``pipeline.yaml`` file is optional; you can create
-   pipelines by pointing to a directory. `Click here <https://github.com/ploomber/projects/tree/master/templates/spec-api-directory>`_
-   to see an example. However, this is only recommended for simple projects
-   (i.e., pipelines with just a couple of tasks).
-
+Let's now see how to use scripts and notebooks as pipeline tasks.
 
 Tasks: scripts/notebooks
 ------------------------
 
-The Jupyter notebook format (``.ipynb``) is prevalent for developing Data
-Science projects. One of its main features is code and rich outputs storage
-in a standalone file. While this is great for exploratory analysis, it
-makes code version control harder (i.e., it isn't trivial to get the
-code diff between version A and B).
+Jupyter notebooks files (``.ipynb``) contain both code and output; while convenient, keeping code and outputs in the
+same file makes version control (i.e., ``git``) difficult.
 
-Our recommended approach is to use scripts but to keep the benefits of the
-``.ipynb`` format, Ploomber creates a copy of your scripts and converts it to
-``.ipynb`` at runtime. *This is a crucial concept: scripts are part of your
-project's source code, but output notebooks are not. They're pipeline
-products*.
+Our recommended approach is to use scripts as sources. However, thanks to the
+integration with Jupyter, **you can open scripts as notebooks**. The
+following image shows a side-by-side comparison of the same source code
+as ``.py`` (script) and as a ``.ipynb`` (notebook) file:
 
-The following image shows a side-by-side comparison of the same source code
-as script (what you write) and as a notebook (what executes):
-
-.. image:: https://ploomber.io/doc/script-and-notebook.png
-   :target: https://ploomber.io/doc/script-and-notebook.png
-   :alt: script-and-nb
+.. image:: /_static/img/basics/py-and-ipynb.png
+   :target: /_static/img/basics/py-and-ipynb.png
+   :alt: py-and-ipynb
 
 Note that the ``.py`` script has some ``# +`` comments. Such markers allow us
-to delimit code cells and render the ``.py`` file as a notebook. Thanks to the
-integration with Jupyter, you can open scripts as if they were notebooks.
-However, you can still use regular ``.ipynb``
-files if you prefer so.
+to delimit code cells and render the ``.py`` file as a notebook. 
 
-To know more about integration with Jupyter and how to
-choose the best source format for your project; see the :doc:`../user-guide/jupyter` guide.
+.. note::
+   
+   The ``# +`` is just one way of representing ``.py`` as notebooks. Ploomber
+   uses jupytext to perform the conversion, so other popular formats such as the
+   "percent" (``# %%``) format work. Editors such as VS Code, Spyder, and
+   PyCharm support the "percent" format.
 
-R scripts/notebooks are supported as well. See this: :doc:`../user-guide/r-support`.
+
+To keep the benefits of the ``.ipynb`` format, **Ploomber creates a
+copy of your scripts, converts them to .ipynb at runtime and executes them.** This is a
+crucial concept: scripts are part of your project's source code, but executed
+notebooks are pipeline products.
+
+.. note:: Even though we recommend the use of ``.py`` files, you you can still use regular ``.ipynb`` files as sources if you prefer so.
+
+To know more about integration with Jupyter notebooks, see the :doc:`../user-guide/jupyter` guide.
+
+:doc:`R scripts/notebooks <../user-guide/r-support>` are supported as well.
 
 ``upstream`` and ``product``
 ****************************
 
-To specify dependencies, include a special ``parameters`` cell in your
-script/notebook. Following our example pipeline, ``plot`` has ``clean``
-as an upstream dependency, we establish this by declaring an ``upstream``
-variable:
+To specify task dependencies, include a special ``parameters`` cell in your
+script/notebook. Following our example pipeline, ``clean`` has ``raw``
+as an upstream dependency as the **raw** task is an input to
+the **clean** task. We establish this relation by declaring an ``upstream``
+variable with a list of task names that should execute **before** the file we're
+editing. If a script/notebook has no dependencies, set ``upstream = None``.
 
 .. code-block:: python
     :class: text-editor
-    :name: plot-py
+    :name: clean-py
 
     # + tags=["parameters"]
-    upstream = ['plot']
+    upstream = ['raw'] # this means: execute raw.py, then clean.py
+    product = None
     # -
 
-We tagged the cell using ``tags=["parameters"]``. If the notebook doesn't
-have dependencies, set ``upstream = None``.
+
+.. important::
+
+   ``product = None`` is a placeholder. It states that our script takes an input
+   parameter called ``product``, but the actual value is automatically replaced
+   at runtime, we explain this in the upcoming section.
 
 .. note::
    
    the ``# +`` and ``# -`` markers only apply to scripts.
-   `Click here <https://papermill.readthedocs.io/en/stable/usage-parameterize.html>`_
+   `Click here <https://ploomber.readthedocs.io/en/latest/user-guide/faq_index.html#parameterizing-notebooks>`_
    for information on adding tags to ``.ipynb`` files.
 
-The previous code won't run as it is. It only contains upstream tasks, but we
-don't know where its related products are. Furthermore, we don't
-know where we should save the output of the current task since it's declared
-in the ``pipeline.yaml`` file.
 
-When executing your pipeline, Ploomber injects a new cell to each
-script/notebooks, with new ``product`` and ``upstream`` variables.
+The cell injection process
+**************************
 
-.. image:: https://ploomber.io/doc/injected-cell.png
-   :target: https://ploomber.io/doc/injected-cell.png
+Let's review the contents a sample ``clean.py`` file:
+
+.. code-block:: python
+   :class: text-editor
+
+   import pandas as pd
+
+   # + tags=["parameters"]
+   upstream = ["raw"]
+   product = None
+   # -
+
+   df = pd.read_csv(upstream['get']['data'])
+   # some data cleaning code...
+
+   # store clean data
+   df.to_csv(str(product['data']), index=False)
+
+
+This code will break if we run it: We declared ``raw`` as
+an upstream dependency, but we don't know where to load our inputs from, or
+where to save our outputs.
+
+**When executing your pipeline, Ploomber injects a new cell** into each
+script/notebooks, with new ``product`` and ``upstream`` variables that
+replace the original ones by extracting information from the
+``pipeline.yaml.yaml``:
+
+.. image:: /_static/img/basics/injected.png
+   :target: /_static/img/basics/injected.png
    :alt: injected-cell
 
 
 As you can see in the image, the task in the picture has an upstream
-dependency called ``raw``. Thus, the cell injected is a dictionary that gives
-you the outputs of ``raw``, which we use as input. The value in ``product``
-is also passed. We then use the ``upstream`` variable to read
-inputs for our task and ``product`` as the output location in our code.
+dependency called ``raw``. Thus, the injected cell has a dictionary that gives
+you the products of ``raw``, which we use as input, and a new ``product``
+variable that we use to store our outputs.
 
-To enable interactive development, the cell injection process also
-happens when opening the notebook/script in Jupyter.
+The cell injection process also happens when opening the notebook/script in Jupyter.
 :ref:`Click here <modifying-the-upstream-variable>` to learn more about
 cell injection and the integration with Jupyter.
+
 
 .. note::
    
@@ -221,21 +243,19 @@ dictionary under ``product``:
           data: output/data.csv
 
 
-Examples
-********
-
-1. `Click here <https://github.com/ploomber/projects/tree/master/templates/ml-basic>`_ to see an example pipeline that contains a script-based task that trains a model.
+This covers scripts and notebooks as tasks, if you want to learn how to use
+functions as tasks, keep scrolling, otherwise, :ref:`skip to the end. <where-to-go-from-here>`
 
 
 Tasks: functions
 ----------------
 
-You can also use functions as tasks.
+You can also use functions as tasks, the following section explains how.
 
 ``upstream`` and ``product``
 ****************************
 
-The only requirement for the function is to have a ``product`` parameter.
+The only requirement for a function to be a valid task is to have a ``product`` parameter.
 
 .. code-block:: python
    :class: text-editor
@@ -244,10 +264,11 @@ The only requirement for the function is to have a ``product`` parameter.
    import pandas as pd
 
    def clean(product):
-      # your code here...
-      # save output using the product argument, e.g.,
+      # save output using the product argument
       df.to_csv(product)
 
+
+.. note:: If the function generates many products, this becomes a dictionary, for example: ``product['one']``, and ``product['another']``.
 
 If the task has upstream dependencies, add an ``upstream`` parameter:
 
@@ -261,22 +282,19 @@ If the task has upstream dependencies, add an ``upstream`` parameter:
       df.to_csv(product)
 
 When resolving dependencies, Ploomber will look for references such as
-``upstream['task_name']``. At runtime, the function executed with:
-``upstream={'task_name': 'path/to/product/from/upstream.csv'}``
+``upstream['task_name']``, then, during execution, Ploomber will pass the
+requested inputs. For example, ``upstream={'task_name': 'path/to/product/from/upstream.csv'}``
 
-Examples
-********
 
-1. `Click here <https://github.com/ploomber/projects/tree/master/templates/ml-basic>`_ to see an example pipeline that includes some function-based tasks to generate features and then trains a model.
-2. `Click here <https://github.com/ploomber/projects/tree/master/templates/ml-intermediate>`_ to see a more elaborate ML pipeline example, which shows how to create a training and batch serving pipeline.
-3. `Click here <https://github.com/ploomber/projects/tree/master/templates/ml-online>`_ to see our most complete example: an end-to-end ML pipeline that can be trained locally, in Kubernetes or Airflow and can be deployed as a microservice using Flask.
+This covers scripts and functions as tasks, if you want to learn how to use
+SQL scripts as tasks, keep scrolling, otherwise, :ref:`skip to the end. <where-to-go-from-here>`
 
 Tasks: SQL
 ----------
 
 SQL tasks require more setup because you have to configure a ``client`` to
 connect to the database. We explain the ``product`` and ``upstream`` mechanism
-here; the following guide describes how clients work.
+here; an :doc:`upcoming guide <sql-pipeline>` describes how to configure database clients.
 
 ``upstream`` and ``product``
 ****************************
@@ -288,16 +306,15 @@ that has no upstream dependencies looks like this:
    :class: text-editor
    :name: raw-sql
 
-   -- {{product}} is a placeholder
-   CREATE TABLE {{product}} AS
+   CREATE TABLE {{product}} AS -- {{product}} is a placeholder
    SELECT * FROM my_table WHERE my_column > 10
 
 In your ``pipeline.yaml`` file, specify ``product`` with a list of 3
 or 2 elements: ``[schema, name, table]`` or ``[name, table]``. If using a
-view, use ``[schema, name, view]``
+view, use ``[schema, name, view]``. For example:
 
 Say you have ``product: [schema, name, table]`` in your ``pipeline.yaml`` file.
-The script renders to:
+The ``{{product}}`` placeholder is replaced by ``schema.name``:
 
 .. code-block:: postgresql
    :class: text-editor
@@ -317,7 +334,7 @@ placeholder:
    SELECT * FROM {{upstream['task_name']}} WHERE my_column > 10
 
 ``{{upstream['task_name']}}`` tells Ploomber to run the task with the name
-``'task_name'`` first and to replace ``{{upstream['task_name']}}`` with the
+``'task_name'`` and to replace ``{{upstream['task_name']}}`` with the
 product of such task.
 
 Clients
@@ -325,29 +342,19 @@ Clients
 
 To establish a connection with a database, you have to configure a ``client``.
 All databases that have a Python driver are supported, including systems like
-Snowflake or Apache Hive. For details see :doc:`../api/spec`.
+Snowflake or Apache Hive. :doc:`Click here <sql-pipeline>` to see the SQL guide.
 
-Examples
-********
 
-1. `Click here <https://github.com/ploomber/projects/tree/master/templates/spec-api-sql>`_ to see an example pipeline that processes data in a database, dumps it, and generates some charts with Python.
-2. `Click here <https://github.com/ploomber/projects/tree/master/templates/etl>`_ to see a pipeline that downloads data, uploads it to a database, process it, dumps it, and generates charts with Python.
-
-Using the Python API
---------------------
-
-The ``pipeline.yaml`` API offers a concise and powerful way to declare
-pipelines, but if you want complete flexibility, you can use the underlying Python
-API directly, `here's a basic example <https://github.com/ploomber/projects/tree/master/templates/python-api>`_.
-And here's a more `ellaborated Machine Learning example <https://github.com/ploomber/projects/tree/master/templates/ml-advanced>`_.
-
+.. _where-to-go-from-here:
 
 Where to go from here
 ---------------------
 
-This guide covered Ploomber's core concepts. You are ready to create
-pipelines! If you want to learn what other features there are, check out the
-API documentation: :doc:`../api/spec`.
+We've created many **runnable templates** to help you get up and running, check out our :doc:`/user-guide/templates` guide.
 
-If you want to learn how to build pipelines that interact with SQL database, go
-to the next tutorial: :doc:`../get-started/sql-pipeline`.
+If you want to read about **advanced features**, check out out :doc:`User Guide <../user-guide/index>`.
+
+The ``pipeline.yaml`` API offers a concise way to declare
+pipelines, but if you want complete flexibility, **you can use the underlying Python
+API**, :doc:`Click here to learn more <../user-guide/spec-vs-python>`, or `click here to see an example <https://github.com/ploomber/projects/blob/master/templates/python-api/src/ploomber_basic/pipeline.py>`_.
+

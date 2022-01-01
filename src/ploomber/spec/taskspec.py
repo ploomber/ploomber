@@ -54,11 +54,11 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
     extension = Path(source_str).suffix
 
     # we verify if this is a valid dotted path
-    # if lazy load, just locate the module without importing it
+    # if lazy load is set to true, just locate the module without importing it
 
     fn_checker = (
-        dotted_path.locate_dotted_path_root if lazy_import else partial(
-            dotted_path.load_dotted_path, raise_=True, reload=reload))
+        dotted_path.locate_dotted_path_root if lazy_import is True else
+        partial(dotted_path.load_dotted_path, raise_=True, reload=reload))
 
     if extension and extension in suffix2taskclass:
         if extension == '.sql' and _safe_suffix(product) in {
@@ -72,6 +72,10 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
                          f'source {source_str!r} (invalid '
                          f'extension {extension!r}). Valid extensions '
                          f'are: {pretty_print.iterable(suffix2taskclass)}')
+    elif lazy_import == 'skip':
+        # Anything that has not been caught before is treated as a
+        # Python function, thus we return a PythonCallable
+        return tasks.PythonCallable
     else:
         try:
             imported = fn_checker(source_str)

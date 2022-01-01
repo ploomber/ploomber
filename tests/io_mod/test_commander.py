@@ -102,3 +102,17 @@ def test_show_hint():
     assert 'returned non-zero exit status 1.' in lines[1]
     assert lines[2] == 'Hint: Try this.'
     assert len(lines) == 3
+
+
+def test_commander_custom_environment(tmp_directory):
+    Path('workspace').mkdir()
+
+    cmdr = Commander(workspace='workspace',
+                     templates_path=('test_pkg', 'templates'),
+                     environment_kwargs=dict(variable_start_string='[[',
+                                             variable_end_string=']]'))
+
+    cmdr.copy_template('square-brackets.sql', placeholder='value')
+
+    assert Path('workspace',
+                'square-brackets.sql').read_text() == 'value {{another}}'

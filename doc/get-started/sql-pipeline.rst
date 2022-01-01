@@ -25,7 +25,7 @@ Or run it locally:
 
 .. code-block:: console
 
-    ploomber examples --name spec-api-sql
+    ploomber examples --name templates/spec-api-sql
 
 
 Connecting to databases
@@ -274,8 +274,8 @@ the terminal:
 The following diagram shows our example pipeline along with some sample
 source code for each task and the rendered version.
 
-.. image:: https://ploomber.io/doc/sql/diag.png
-   :target: https://ploomber.io/doc/sql/diag.png
+.. image:: https://ploomber.io/images/doc/sql/diag.png
+   :target: https://ploomber.io/images/doc/sql/diag.png
    :alt: sql-diag
 
 Dumping data with ``SQLDump``

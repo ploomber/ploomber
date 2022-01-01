@@ -15,9 +15,9 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.tasks import notebook
 from ploomber import DAG
 import ploomber.dag.dag as dag_module
-
 # TODO: optimize some of the tests that build dags by mocking and checking
 # that the build function is called with the appropriate args
+from ploomber.telemetry import telemetry
 
 
 def test_no_options(monkeypatch):
@@ -41,7 +41,7 @@ def test_no_options(monkeypatch):
     'task',
     'interact',
 ])
-def test_help(cmd, monkeypatch, tmp_directory):
+def test_help(cmd, monkeypatch_session, tmp_directory):
     Path('pipeline.yaml').touch()
 
     elements = ['ploomber']
@@ -49,7 +49,7 @@ def test_help(cmd, monkeypatch, tmp_directory):
     if cmd:
         elements.append(cmd)
 
-    monkeypatch.setattr(sys, 'argv', elements + ['--help'])
+    monkeypatch_session.setattr(sys, 'argv', elements + ['--help'])
 
     with pytest.raises(SystemExit) as excinfo:
         cmd_router()
@@ -59,8 +59,8 @@ def test_help(cmd, monkeypatch, tmp_directory):
 
 @pytest.mark.parametrize(
     'cmd', ['build', 'plot', 'report', 'status', 'task', 'interact'])
-def test_help_shows_env_keys(cmd, monkeypatch, tmp_nbs, capsys):
-    monkeypatch.setattr(sys, 'argv', ['ploomber', cmd, '--help'])
+def test_help_shows_env_keys(cmd, monkeypatch_session, tmp_nbs, capsys):
+    monkeypatch_session.setattr(sys, 'argv', ['ploomber', cmd, '--help'])
 
     with pytest.raises(SystemExit) as excinfo:
         cmd_router()
@@ -74,9 +74,9 @@ def test_help_shows_env_keys(cmd, monkeypatch, tmp_nbs, capsys):
     'cmd', ['build', 'plot', 'report', 'status', 'task', 'interact'])
 def test_help_shows_env_keys_w_entry_point(cmd, tmp_nbs,
                                            add_current_to_sys_path,
-                                           monkeypatch, capsys):
-    monkeypatch.setattr(sys, 'argv',
-                        ['ploomber', cmd, '-e', 'factory.make', '--help'])
+                                           monkeypatch_session, capsys):
+    monkeypatch_session.setattr(
+        sys, 'argv', ['ploomber', cmd, '-e', 'factory.make', '--help'])
 
     with pytest.raises(SystemExit) as excinfo:
         cmd_router()
@@ -86,14 +86,14 @@ def test_help_shows_env_keys_w_entry_point(cmd, tmp_nbs,
     assert not excinfo.value.code
 
 
-def test_build(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv',
-                        ['python', '--entry-point', 'test_pkg.entry.with_doc'])
+def test_build(monkeypatch_session, tmp_sample_dir):
+    monkeypatch_session.setattr(
+        sys, 'argv', ['python', '--entry-point', 'test_pkg.entry.with_doc'])
     build.main(catch_exception=False)
 
 
-def test_build_help_shows_docstring(capsys, monkeypatch):
-    monkeypatch.setattr(
+def test_build_help_shows_docstring(capsys, monkeypatch_session):
+    monkeypatch_session.setattr(
         sys, 'argv',
         ['python', '--entry-point', 'test_pkg.entry.with_doc', '--help'])
 
@@ -107,15 +107,15 @@ def test_build_help_shows_docstring(capsys, monkeypatch):
 
 
 @pytest.mark.parametrize('arg', ['.', '*.py'])
-def test_build_from_directory(arg, monkeypatch, tmp_nbs_no_yaml):
+def test_build_from_directory(arg, monkeypatch_session, tmp_nbs_no_yaml):
     Path('output').mkdir()
-    monkeypatch.setattr(sys, 'argv', ['python', '--entry-point', arg])
+    monkeypatch_session.setattr(sys, 'argv', ['python', '--entry-point', arg])
     build.main(catch_exception=False)
 
 
-def test_status(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv',
-                        ['python', '--entry-point', 'test_pkg.entry.with_doc'])
+def test_status(monkeypatch_session, tmp_sample_dir):
+    monkeypatch_session.setattr(
+        sys, 'argv', ['python', '--entry-point', 'test_pkg.entry.with_doc'])
     status.main(catch_exception=False)
 
 
@@ -123,47 +123,50 @@ def test_status(monkeypatch, tmp_sample_dir):
     'custom_args',
     [[], ['--output', 'custom.png'], ['-o', 'custom.png'], ['--log', 'DEBUG'],
      ['-o', 'custom.png', '--log', 'DEBUG']])
-def test_plot(custom_args, monkeypatch, tmp_sample_dir):
+def test_plot(custom_args, monkeypatch_session, tmp_sample_dir):
     args_defaults = ['python', '--entry-point', 'test_pkg.entry.with_doc']
-    monkeypatch.setattr(sys, 'argv', args_defaults + custom_args)
+    monkeypatch_session.setattr(sys, 'argv', args_defaults + custom_args)
     mock = Mock()
-    monkeypatch.setattr(dag_module.DAG, 'plot', mock)
+    monkeypatch_session.setattr(dag_module.DAG, 'plot', mock)
     plot.main(catch_exception=False)
 
     mock.assert_called_once()
 
 
-def test_plot_uses_name_if_any(tmp_nbs, monkeypatch):
+def test_plot_uses_name_if_any(tmp_nbs, monkeypatch_session):
     os.rename('pipeline.yaml', 'pipeline.train.yaml')
 
     args_defaults = ['ploomber', '--entry-point', 'pipeline.train.yaml']
-    monkeypatch.setattr(sys, 'argv', args_defaults)
+    monkeypatch_session.setattr(sys, 'argv', args_defaults)
     mock = Mock()
-    monkeypatch.setattr(dag_module.DAG, 'plot', mock)
+    monkeypatch_session.setattr(dag_module.DAG, 'plot', mock)
     plot.main(catch_exception=False)
 
     mock.assert_called_once_with(output='pipeline.train.png')
 
 
-def test_report_includes_plot(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv',
-                        ['python', '--entry-point', 'test_pkg.entry.with_doc'])
+def test_report_includes_plot(monkeypatch_session, tmp_sample_dir):
+    monkeypatch_session.setattr(
+        sys, 'argv', ['python', '--entry-point', 'test_pkg.entry.with_doc'])
 
     mock_plot = Mock()
-    monkeypatch.setattr(dag_module.DAG, 'plot', mock_plot)
+    monkeypatch_session.setattr(dag_module.DAG, 'plot', mock_plot)
     report.main(catch_exception=False)
 
     mock_plot.assert_called_once()
 
 
-def test_log_enabled(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv', [
+def test_log_enabled(monkeypatch_session, tmp_sample_dir):
+    monkeypatch_session.setattr(sys, 'argv', [
         'python', '--entry-point', 'test_pkg.entry.with_doc', '--log', 'INFO'
     ])
     build.main(catch_exception=False)
 
 
-def test_interactive_session(tmp_sample_dir):
+@pytest.mark.skip(reason="Skipping test so it won't call log_api")
+def test_interactive_session(tmp_sample_dir, monkeypatch_session):
+    mock_log = Mock()
+    monkeypatch_session.setattr(telemetry, 'log_api', mock_log)
     res = subprocess.run(
         ['ploomber', 'interact', '--entry-point', 'test_pkg.entry.with_doc'],
         input=b'type(dag)',
@@ -174,9 +177,11 @@ def test_interactive_session(tmp_sample_dir):
 
 def test_interact_command_starts_full_ipython_session(monkeypatch, tmp_nbs):
     mock_dag = Mock()
+    mock_log = Mock()
     mock_start_ipython = Mock()
     monkeypatch.setattr(sys, 'argv', ['interact'])
     monkeypatch.setattr(interact, 'start_ipython', mock_start_ipython)
+    monkeypatch.setattr(telemetry, 'log_api', mock_log)
     monkeypatch.setattr(interact.CustomParser, 'load_from_entry_point_arg',
                         lambda _: (mock_dag, None))
 
@@ -186,8 +191,8 @@ def test_interact_command_starts_full_ipython_session(monkeypatch, tmp_nbs):
                                                user_ns={'dag': mock_dag})
 
 
-def test_interactive_session_develop(monkeypatch, tmp_nbs):
-    monkeypatch.setattr(sys, 'argv', ['python'])
+def test_interactive_session_develop(monkeypatch_session, tmp_nbs):
+    monkeypatch_session.setattr(sys, 'argv', ['python'])
 
     mock = Mock(side_effect=['dag["plot"].develop()', 'quit'])
 
@@ -196,7 +201,7 @@ def test_interactive_session_develop(monkeypatch, tmp_nbs):
         # args: jupyter {app} {path} {other args,...}
         nbformat.write(nb, args[2])
 
-    with monkeypatch.context() as m:
+    with monkeypatch_session.context() as m:
         # NOTE: I tried patching
         # (IPython.terminal.interactiveshell.TerminalInteractiveShell
         # .prompt_for_code)
@@ -210,58 +215,58 @@ def test_interactive_session_develop(monkeypatch, tmp_nbs):
     assert Path('plot.py').read_text().strip() == '2 + 2'
 
 
-def test_interactive_session_render_fails(monkeypatch, tmp_nbs):
-    monkeypatch.setattr(sys, 'argv', ['python'])
+def test_interactive_session_render_fails(monkeypatch_session, tmp_nbs):
+    monkeypatch_session.setattr(sys, 'argv', ['python'])
 
     mock = Mock(side_effect=['quit'])
 
     def fail(self):
         raise Exception
 
-    with monkeypatch.context() as m:
+    with monkeypatch_session.context() as m:
         m.setattr('builtins.input', mock)
         m.setattr(DAG, 'render', fail)
         interact.main(catch_exception=False)
 
 
-def test_replace_env_value(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv', [
+def test_replace_env_value(monkeypatch_session, tmp_sample_dir):
+    monkeypatch_session.setattr(sys, 'argv', [
         'python', '--entry-point', 'test_pkg.entry.with_doc',
         '--env--path--data', '/another/path'
     ])
     build.main(catch_exception=False)
 
 
-def test_w_param(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv', [
+def test_w_param(monkeypatch_session, tmp_sample_dir):
+    monkeypatch_session.setattr(sys, 'argv', [
         'python', '--entry-point', 'test_pkg.entry.with_param',
         'some_value_for_param'
     ])
     build.main(catch_exception=False)
 
 
-def test_no_doc(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv',
-                        ['python', '--entry-point', 'test_pkg.entry.no_doc'])
+def test_no_doc(monkeypatch_session, tmp_sample_dir):
+    monkeypatch_session.setattr(
+        sys, 'argv', ['python', '--entry-point', 'test_pkg.entry.no_doc'])
     build.main(catch_exception=False)
 
 
-def test_incomplete_doc(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(
+def test_incomplete_doc(monkeypatch_session, tmp_sample_dir):
+    monkeypatch_session.setattr(
         sys, 'argv',
         ['python', '--entry-point', 'test_pkg.entry.incomplete_doc'])
     build.main(catch_exception=False)
 
 
-def test_invalid_doc(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(
+def test_invalid_doc(monkeypatch_session, tmp_sample_dir):
+    monkeypatch_session.setattr(
         sys, 'argv', ['python', '--entry-point', 'test_pkg.entry.invalid_doc'])
     build.main(catch_exception=False)
 
 
-def test_invalid_entry_point_value(monkeypatch):
-    monkeypatch.setattr(sys, 'argv',
-                        ['python', '--entry-point', 'invalid_entry_point'])
+def test_invalid_entry_point_value(monkeypatch_session):
+    monkeypatch_session.setattr(
+        sys, 'argv', ['python', '--entry-point', 'invalid_entry_point'])
 
     with pytest.raises(ValueError) as excinfo:
         build.main(catch_exception=False)
@@ -273,8 +278,8 @@ def test_invalid_entry_point_value(monkeypatch):
     ['--entry-point', 'pipeline.yaml'],
     ['--entry-point', 'pipeline.yml'],
 ])
-def test_invalid_spec_entry_point(args, monkeypatch):
-    monkeypatch.setattr(sys, 'argv', ['python'] + args)
+def test_invalid_spec_entry_point(args, monkeypatch_session):
+    monkeypatch_session.setattr(sys, 'argv', ['python'] + args)
 
     with pytest.raises(ValueError) as excinfo:
         build.main(catch_exception=False)
@@ -282,16 +287,16 @@ def test_invalid_spec_entry_point(args, monkeypatch):
     assert 'Could not determine the entry point type' in str(excinfo.value)
 
 
-def test_nonexisting_module(monkeypatch):
-    monkeypatch.setattr(
+def test_nonexisting_module(monkeypatch_session):
+    monkeypatch_session.setattr(
         sys, 'argv', ['python', '--entry-point', 'some_module.some_function'])
 
     with pytest.raises(ImportError):
         build.main(catch_exception=False)
 
 
-def test_invalid_function(monkeypatch):
-    monkeypatch.setattr(
+def test_invalid_function(monkeypatch_session):
+    monkeypatch_session.setattr(
         sys, 'argv',
         ['python', '--entry-point', 'test_pkg.entry.invalid_function'])
 
@@ -299,16 +304,16 @@ def test_invalid_function(monkeypatch):
         build.main(catch_exception=False)
 
 
-def test_undecorated_function(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(
+def test_undecorated_function(monkeypatch_session, tmp_sample_dir):
+    monkeypatch_session.setattr(
         sys, 'argv',
         ['python', '--entry-point', 'test_pkg.entry.plain_function'])
 
     build.main(catch_exception=False)
 
 
-def test_undecorated_function_w_param(monkeypatch, tmp_sample_dir):
-    monkeypatch.setattr(sys, 'argv', [
+def test_undecorated_function_w_param(monkeypatch_session, tmp_sample_dir):
+    monkeypatch_session.setattr(sys, 'argv', [
         'python', '--entry-point', 'test_pkg.entry.plain_function_w_param',
         'some_value_for_param'
     ])
@@ -373,9 +378,9 @@ def test_parse_doc_if_missing_numpydoc(docstring, expected_summary,
 
 
 @pytest.mark.parametrize('args', [[], ['--partially', 'plot']])
-def test_build_command(args, tmp_nbs, monkeypatch):
+def test_build_command(args, tmp_nbs, monkeypatch_session):
     args = ['python', '--entry-point', 'pipeline.yaml'] + args
-    monkeypatch.setattr(sys, 'argv', args)
+    monkeypatch_session.setattr(sys, 'argv', args)
     build.main(catch_exception=False)
 
 
@@ -389,19 +394,19 @@ def test_build_command(args, tmp_nbs, monkeypatch):
     ['--status', '--build'],
     ['--on-finish'],
 ])
-def test_task_command(args, tmp_nbs, monkeypatch):
+def test_task_command(args, tmp_nbs, monkeypatch_session):
     args = ['task', '--entry-point', 'pipeline.yaml', 'load'] + args
-    monkeypatch.setattr(sys, 'argv', args)
+    monkeypatch_session.setattr(sys, 'argv', args)
     task.main(catch_exception=False)
 
 
-def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
+def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch_session):
     """
     Make sure the force flag is only used in task.render and not dag.render
     because we don't want to override the status of other tasks
     """
     args = ['task', 'load', '--force']
-    monkeypatch.setattr(sys, 'argv', args)
+    monkeypatch_session.setattr(sys, 'argv', args)
 
     class CustomParserWrapper(CustomParser):
         def load_from_entry_point_arg(self):
@@ -410,15 +415,15 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
             type(self).dag_mock = dag_mock
             return dag_mock, args
 
-    monkeypatch.setattr(task, 'CustomParser', CustomParserWrapper)
+    monkeypatch_session.setattr(task, 'CustomParser', CustomParserWrapper)
 
     task.main(catch_exception=False)
 
     CustomParserWrapper.dag_mock.render.assert_called_once_with()
 
 
-def test_build_with_replaced_env_value(tmp_nbs, monkeypatch):
-    monkeypatch.setattr(
+def test_build_with_replaced_env_value(tmp_nbs, monkeypatch_session):
+    monkeypatch_session.setattr(
         sys, 'argv',
         ['python', '--entry-point', 'pipeline.yaml', '--env--sample', 'True'])
     build.main(catch_exception=False)

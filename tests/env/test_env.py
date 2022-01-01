@@ -452,6 +452,18 @@ def test_error_if_no_project_root(tmp_directory):
     assert 'Failed to expand {{root}}' in str(excinfo.value)
 
 
+def test_root_expands_relative_to_path_to_here(tmp_directory):
+    path = Path('some', 'nested', 'dir').resolve()
+    path.mkdir(parents=True)
+    (path / 'pipeline.yaml').touch()
+
+    raw = {'root': '{{root}}'}
+    expander = EnvironmentExpander(preprocessed={}, path_to_here=path)
+    out = expander.expand_raw_dictionary(raw)
+
+    assert out['root'] == str(path.resolve())
+
+
 def test_here_placeholder(tmp_directory, cleanup_env):
     Path('env.yaml').write_text(yaml.dump({'here': '{{here}}'}))
     env = Env()

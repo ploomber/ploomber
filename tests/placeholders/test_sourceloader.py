@@ -1,3 +1,4 @@
+import copy
 from unittest.mock import Mock
 import tempfile
 from pathlib import Path
@@ -147,3 +148,17 @@ def test_get_template_nested_with_path(tmp_directory):
     loader = SourceLoader(path='.')
 
     assert str(loader[path]) == 'something'
+
+
+def test_deepcopy(tmp_directory):
+    Path('template.sql').write_text('SELECT * FROM table')
+    loader = SourceLoader('.')
+
+    # once we load a template, the jinja Environment caches it, and it will
+    # fail if we dont correctly implement the deepcopy method
+    loader.get_template('template.sql')
+
+    loader_copy = copy.deepcopy(loader)
+
+    # ensure the copy works
+    assert loader_copy.get_template('template.sql')

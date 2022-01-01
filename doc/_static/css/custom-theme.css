@@ -12,7 +12,10 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
     background-color: black;
 }
 
-.highlight * { margin: 0; padding: 0; }
+.highlight * {
+    margin: 0;
+    padding: 0;
+}
 
 .highlight {
     background-color: black;
@@ -25,14 +28,13 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
 }
 
 .terminal-top {
-    background: #E8E6E8;
+    background: #e8e6e8;
     color: black;
     padding: 5px;
     border-radius: 5px 5px 0 0;
     text-align: center;
     font-size: 12px;
 }
-
 
 .btns {
     padding-top: 3px;
@@ -75,21 +77,33 @@ div.output_area [class*="highlight-"] {
 
 /* Terminal window buttons colors */
 
-.red { background: #EC6A5F; border-color: #D04E42; }
-.green { background: #64CC57; border-color: #4EA73B; }
-.yellow{ background: #F5C04F; border-color: #D6A13D; }
-
+.red {
+    background: #ec6a5f;
+    border-color: #d04e42;
+}
+.green {
+    background: #64cc57;
+    border-color: #4ea73b;
+}
+.yellow {
+    background: #f5c04f;
+    border-color: #d6a13d;
+}
 
 /* Prompts to differentiate shell vs ipython */
 
-.highlight-console .highlight pre::before {
-  content: "$ ";
-  color: RGB(255, 255, 255);
+.ipynb-lexed::before {
+    content: "In []: ";
+    color: RGB(0, 200, 0);
 }
 
-.ipython pre::before {
-  content: "In []: ";
-  color: RGB(0, 200, 0);
+pre > :not(:first-child).ipynb-lexed * {
+    margin-top: 1rem !important;
+}
+
+.shell-lexed::before {
+    content: "$ ";
+    color: RGB(0, 200, 0);
 }
 
 .toctree-wrapper ul {
@@ -118,7 +132,6 @@ div.output_area [class*="highlight-"] {
     font-weight: 600;
 }
 
-
 .first-column ul {
     list-style-type: none;
     padding-left: 0px;
@@ -129,11 +142,9 @@ div.output_area [class*="highlight-"] {
     padding-left: 5px;
 }
 
-
 .first-column {
     border-right: 2px solid #eee;
 }
-
 
 /* sticky table of contents on 768px and larger */
 
@@ -170,7 +181,6 @@ div.output_area [class*="highlight-"] {
     padding-left: 5px;
 }
 
-
 div.document {
     padding-left: 40px;
 }
@@ -194,15 +204,34 @@ div.document .toctree-l2 {
     overflow-y: auto;
 }
 
- /* Hide scrollbar for Chrome, Safari and Opera */
+/* Hide scrollbar for Chrome, Safari and Opera */
 .global-toc::-webkit-scrollbar {
     display: none;
 }
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .global-toc {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+/* help toltip (bottom left) */
+
+.help-tooltip {
+    position: absolute;
+    bottom: 0px;
+    background-color: #fff;
+    border-top: 2px solid #eee;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+.help-tooltip p {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
 }
 
 /* navigation bar (right) */
@@ -210,8 +239,17 @@ div.document .toctree-l2 {
 .third-column {
     position: sticky !important;
     top: 3.5rem;
-    z-index: 1000;
+    /* change z-index to make the readthedocs injected widget clickable */
+    z-index: 0;
     height: calc(100vh - 3.5rem);
+}
+
+/* readthedocs injected widget */
+
+.rst-versions.rst-badge {
+    bottom: 15px !important;
+    /* put a higher z-index than .third-column so this works */
+    z-index: 1 !important;
 }
 
 div.sphinxsidebarwrapper {
@@ -225,15 +263,15 @@ div.sphinxsidebarwrapper {
     overflow-y: auto;
 }
 
- /* Hide scrollbar for Chrome, Safari and Opera */
- div.sphinxsidebarwrapper::-webkit-scrollbar {
+/* Hide scrollbar for Chrome, Safari and Opera */
+div.sphinxsidebarwrapper::-webkit-scrollbar {
     display: none;
 }
- 
+
 /* Hide scrollbar for IE, Edge and Firefox */
 div.sphinxsidebarwrapper {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
 }
 
 div.sphinxsidebarwrapper > ul > li > a {
@@ -252,7 +290,6 @@ div.sphinxsidebarwrapper li li li a {
     font-size: 90%;
 }
 
-
 div.sphinxsidebarwrapper li li {
     padding-left: 10px;
 }
@@ -266,9 +303,9 @@ a.headerlink {
 }
 
 :target::before {
-    content: '';
+    content: "";
     display: block;
-    height:      48px;
+    height: 48px;
     margin-top: -48px;
 }
 
@@ -314,14 +351,14 @@ div.document .section {
 }
 
 /* code (no links) or code with links but in toctree */
-code, div.document div.toctree-wrapper a.reference code {
-    color: #7d7d7d !important
+code,
+div.document div.toctree-wrapper a.reference code {
+    color: #7d7d7d !important;
 }
-
 
 /* links to Python API docs */
 div.document a.reference code {
-    color: #007bff !important
+    color: #007bff !important;
 }
 
 table.longtable {
@@ -333,7 +370,7 @@ table.longtable td {
 }
 
 table.longtable tr {
-    border-bottom: 2px solid #eee
+    border-bottom: 2px solid #eee;
 }
 
 table.longtable p {
@@ -367,11 +404,9 @@ div.body img {
     color: white !important;
 }
 
-
 .prompt {
     margin-top: 10px !important;
 }
-
 
 /* python documentation */
 
@@ -392,7 +427,7 @@ dl.py dd dt {
 }
 
 dl.py dd {
-     padding-left: 1.2em;
+    padding-left: 1.2em;
 }
 
 /* sections (notes, examples, etc) */
@@ -417,19 +452,18 @@ p.rubric {
     margin-left: 2rem;
 }
 
-
 /* class signature */
-.py.class > .sig.sig-object.py, .py.function > .sig.sig-object.py {
+.py.class > .sig.sig-object.py,
+.py.function > .sig.sig-object.py {
     margin-bottom: 2rem;
     font-size: 1.3rem;
-  }
+}
 
 /* attributes */
 .py.attribute dd {
     margin-top: 0rem;
     margin-left: 1.5rem;
-  }
-
+}
 
 .py.attribute dd dl dd {
     padding: 0;
@@ -454,13 +488,17 @@ p.rubric {
 }
 
 /* monospace name of attributes, init args, names of classes/functions */
-.py.attribute .sig-name.descname, .field-list.simple strong, .sig.py {
+.py.attribute .sig-name.descname,
+.field-list.simple strong,
+.sig.py {
     font-family: monospace;
-  }
+}
 
 /* top table in contents.html */
 
-#description-table, #description-table th, #description-table td {
+#description-table,
+#description-table th,
+#description-table td {
     border: 1px solid gray;
     padding-top: 10px;
     padding-left: 10px;
@@ -476,14 +514,14 @@ span.highlighted {
 
 .admonition {
     position: relative;
-    padding: .2rem .75rem;
+    padding: 0.2rem 0.75rem;
     padding-right: 1.25rem;
     border: 2px solid transparent;
-    border-radius: .3rem;
+    border-radius: 0.3rem;
     max-width: 80%;
     margin: auto;
-    margin-top: .75rem;
-    margin-bottom: .75rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
 }
 
 .admonition.note {
@@ -497,7 +535,6 @@ span.highlighted {
     background-color: #d4edda;
     border-color: #c3e6cb;
 }
-
 
 .admonition.warning {
     color: #856404;
@@ -517,7 +554,7 @@ span.highlighted {
 
 .admonition p {
     margin: 0;
-    font-size: .95em;
+    font-size: 0.95em;
 }
 
 /* search results list */
@@ -537,4 +574,13 @@ span.highlighted {
     margin-top: 1rem;
     margin-bottom: 1rem;
     margin-left: 2rem;
+}
+
+/* for call to action buttons in the docs index */
+
+.index-button {
+    padding-left: 2px;
+    padding-right: 2px;
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
 }

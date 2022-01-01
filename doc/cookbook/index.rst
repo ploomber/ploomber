@@ -3,7 +3,7 @@ Cookbook
 
 .. raw:: html
 
-    <p class="lead">Quick reference for common use cases.</p>
+    <p class="lead">Quick reference for common patterns.</p>
 
 
 .. toctree::

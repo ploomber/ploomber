@@ -1,0 +1,8 @@
+tasks:
+  - source: my_tasks2.raw.functions.function
+    product: some_file.txt
+    name: raw
+  
+  - source: my_tasks2.clean.functions.function
+    product: another.txt
+    name: clean

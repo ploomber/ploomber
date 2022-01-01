@@ -8,7 +8,7 @@ def load_dag():
     # setting lazy_import to true causes sources to be returned as paths,
     # instead of placeholders
     try:
-        return loader._default_spec_load(lazy_import=True)
+        return loader._default_spec_load(lazy_import='skip')
     except DAGSpecInvalidError:
         return None
 

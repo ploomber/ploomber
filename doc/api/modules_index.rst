@@ -10,4 +10,5 @@ Modules
     modules/env
     modules/clients
     modules/io
+    modules/executors
     modules/source_loader

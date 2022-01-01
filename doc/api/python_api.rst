@@ -116,6 +116,18 @@ Serialization
     unserializer_pickle
 
 
+Executors
+---------
+
+.. currentmodule:: ploomber.executors
+
+.. autosummary::
+    :toctree: _modules/executors
+
+    Serial
+    Parallel
+
+
 SourceLoader
 ------------
 

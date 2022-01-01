@@ -1,5 +1,5 @@
-API
-===
+API Reference
+=============
 
 .. raw:: html
 

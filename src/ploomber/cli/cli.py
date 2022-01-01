@@ -9,6 +9,7 @@ from ploomber import __version__
 from ploomber import cli as cli_module
 from ploomber import scaffold as _scaffold
 from ploomber_scaffold import scaffold as scaffold_project
+from ploomber.telemetry import telemetry
 
 
 @click.group()
@@ -60,7 +61,8 @@ def scaffold(conda, package, entry_point, empty):
         loaded = _scaffold.load_dag()
     else:
         try:
-            loaded = DAGSpec(entry_point, lazy_import=True), Path(entry_point)
+            loaded = DAGSpec(entry_point,
+                             lazy_import='skip'), Path(entry_point)
         except Exception as e:
             raise click.ClickException(e) from e
 
@@ -122,6 +124,7 @@ def cmd_router():
         'report': cli_module.report.main,
         'interact': cli_module.interact.main,
         'status': cli_module.status.main,
+        'nb': cli_module.nb.main,
     }
 
     if cmd_name in custom:
@@ -134,11 +137,12 @@ def cmd_router():
         fn = custom[cmd_name]
         fn()
     else:
+        telemetry.log_api("unsupported-api-call", metadata={'argv': sys.argv})
         cli()
 
 
-# the commands below are handled by the router, thy are just here so they
-# show up when doing ploomber --help
+# the commands below are handled by the router,
+# those are a place holder to show up in ploomber --help
 @cli.command()
 def build():
     """Build pipeline
@@ -177,5 +181,12 @@ def report():
 @cli.command()
 def interact():
     """Start an interactive session (use the "dag" variable)
+    """
+    pass  # pragma: no cover
+
+
+@cli.command()
+def nb():
+    """Manage scripts and notebooks
     """
     pass  # pragma: no cover

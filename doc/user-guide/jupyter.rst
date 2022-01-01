@@ -1,11 +1,15 @@
 Jupyter integration
 ===================
 
-.. note::
+.. tip::
     
     If you're new to Ploomber, check out the
-    :doc:`../get-started/basic-concepts` guide, this tutorial assumes you're
-    already familiar with Ploomber's core concepts.
+    :doc:`../get-started/basic-concepts` guide first.
+
+
+.. note::
+
+    If using other editors, check out the :doc:`../user-guide/editors` guide.
 
 Ploomber integrates with Jupyter to make it easy to create multi-stage
 pipelines composed of small notebooks. Breaking down logic in multiple
@@ -57,8 +61,8 @@ you to develop pipelines interactively.
     notebooks. If using ``jupyter lab``: ``Right-click`` -> ``Open With``
     -> ``Notebook`` as depicted below:
 
-.. image:: https://ploomber.io/doc/lab-open-with-notebook.png
-   :target: https://ploomber.io/doc/lab-open-with-notebook.png
+.. image:: https://ploomber.io/images/doc/lab-open-with-notebook.png
+   :target: https://ploomber.io/images/doc/lab-open-with-notebook.png
    :alt: lab-open-with-notebook
 
 
@@ -125,8 +129,8 @@ execution dependency.
 
 To inject the cell, reload the file from disk:
 
-.. image:: https://ploomber.io/doc/lab-reload-file.png
-   :target: https://ploomber.io/doc/lab-reload-file.png
+.. image:: https://ploomber.io/images/doc/lab-reload-file.png
+   :target: https://ploomber.io/images/doc/lab-reload-file.png
    :alt: lab-reload-file
 
 
@@ -241,7 +245,8 @@ environment variable. For example, to load a ``pipeline.serve.yaml``:
 
 .. code-block:: console
 
-    export ENTRY_POINT=pipeline.serve.yaml && jupyter lab
+    export ENTRY_POINT=pipeline.serve.yaml
+    jupyter lab
 
 
 Note that ``ENTRY_POINT`` must be a file name and not a path. When you start

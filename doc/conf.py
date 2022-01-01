@@ -101,3 +101,4 @@ html_show_copyright = False
 
 def setup(app):
     app.connect('config-inited', hooks.config_init)
+    app.connect("builder-inited", hooks.jinja_filters)

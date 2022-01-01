@@ -223,7 +223,7 @@ class PythonCallable(Task):
             try:
                 # this seems to only work in a Terminal
                 ipdb = TerminalPdb()
-            except AttributeError:
+            except Exception:
                 # this works in a Jupyter notebook
                 ipdb = Pdb()
 

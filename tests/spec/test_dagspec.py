@@ -231,6 +231,22 @@ def test_custom_serializer(executor, expected):
     assert isinstance(dag.executor, expected)
 
 
+def test_custom_serializer_dotted_path():
+    dag = DAGSpec({
+        'tasks': [{
+            'source': 'test_pkg.callables.root',
+            'product': 'root.csv'
+        }],
+        'executor': {
+            'dotted_path': 'ploomber.executors.Serial',
+            'build_in_subprocess': False
+        },
+    }).to_dag()
+
+    assert isinstance(dag.executor, Serial)
+    assert not dag.executor._build_in_subprocess
+
+
 @pytest.mark.parametrize('processor', [
     to_ipynb, tasks_list, remove_task_class, extract_upstream, extract_product
 ])
@@ -919,13 +935,38 @@ def get_client():
 
 @pytest.mark.parametrize('lazy_import', [False, True])
 def test_spec_with_functions(lazy_import, backup_spec_with_functions,
-                             add_current_to_sys_path):
+                             add_current_to_sys_path, no_sys_modules_cache):
     """
     Check we can create pipeline where the task is a function defined in a
     local file
     """
     spec = DAGSpec('pipeline.yaml', lazy_import=lazy_import)
     spec.to_dag().build()
+
+
+@pytest.mark.parametrize('lazy_import', [False, True])
+def test_spec_with_functions_fails(lazy_import,
+                                   backup_spec_with_functions_no_sources,
+                                   add_current_to_sys_path,
+                                   no_sys_modules_cache):
+    """
+    Check we can create pipeline where the task is a function defined in a
+    local file but the sources do not exist. Since it is trying to load the
+    source scripts thanks to lazy_import being bool, it should fail (True
+    imports the function, while False does not but it checks that it exists)
+    """
+    with pytest.raises(ValueError):
+        DAGSpec('pipeline.yaml', lazy_import=lazy_import)
+
+
+def test_spec_with_sourceless_functions(backup_spec_with_functions_no_sources,
+                                        add_current_to_sys_path,
+                                        no_sys_modules_cache):
+    """
+    Check we can create pipeline where the task is a function defined in a
+    deep hierarchical structure where the source does not exists
+    """
+    assert DAGSpec('pipeline.yaml', lazy_import='skip')
 
 
 def test_spec_with_location(tmp_directory):
