@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.14.1dev
+## 0.14.1 (2022-01-02)
 * `ploomber scaffold` creates missing modules when adding functions (#332, @fferegrino)
 * `NotebookRunner` creates product's parent directories before running (#460)
 
