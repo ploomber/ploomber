@@ -102,6 +102,15 @@ def check_uid():
 
 
 def check_stats_enabled():
+    """
+    Check if the user allows us to use telemetry. In order of precedence:
+
+    1. If PLOOMBER_STATS_ENABLED defined, check its value
+    2. Otherwise use the value in stats_enabled in the config.yaml file
+    """
+    if 'PLOOMBER_STATS_ENABLED' in os.environ:
+        return os.environ['PLOOMBER_STATS_ENABLED'].lower() == 'true'
+
     # Check if local config exists
     config_path = os.path.join(check_dir_file_exist(CONF_DIR), 'config.yaml')
     if not os.path.exists(config_path):
