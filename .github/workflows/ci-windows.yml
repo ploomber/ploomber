@@ -76,6 +76,8 @@ jobs:
         pip install --editable tests/assets/test_pkg
 
     - name: Run tests
+      env:
+        PLOOMBER_STATS_ENABLED: false
       shell: bash -l {0}
       run: |
         eval "$(conda shell.bash hook)"
