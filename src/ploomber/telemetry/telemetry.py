@@ -38,6 +38,7 @@ import uuid
 from ploomber.telemetry import validate_inputs
 from ploomber import __version__
 import urllib.request
+import platform
 
 TELEMETRY_VERSION = '0.1'
 DEFAULT_HOME_DIR = '~/.ploomber'
@@ -60,6 +61,50 @@ def is_online(host='http://ploomber.io'):
         return False
     except urllib.error.URLError:
         return False
+
+
+# Will output if the code is within a container
+def is_docker():
+    path = '/proc/self/cgroup'
+    return (os.path.exists('/.dockerenv')
+            or os.path.isfile(path) and any('docker' in line
+                                            for line in open(path)))
+
+
+# The function will output the client platform
+def get_os():
+    os = platform.system()
+    if os == "Darwin":
+        return 'MacOS'
+    else:  # Windows/Linux are contained
+        return os
+
+
+# The function will tell if the code is running in a conda env
+def is_conda():
+    return os.path.exists(os.path.join(sys.prefix, 'conda-meta')) or \
+            bool(os.environ.get("CONDA_PREFIX")) or \
+            bool(os.environ.get("CONDA_DEFAULT_ENV"))
+
+
+# These 2 functions will tell if the code is running in a pip env
+def get_base_prefix_compat():
+    """Get base/real prefix, or sys.prefix if there is none."""
+    return getattr(sys, "base_prefix", None) or sys.prefix or \
+        getattr(sys, "real_prefix", None)
+
+
+def in_virtualenv():
+    return get_base_prefix_compat() != sys.prefix
+
+
+def get_env():
+    if in_virtualenv():
+        return 'pip'
+    elif is_conda():
+        return 'conda'
+    else:
+        return 'local'
 
 
 # Checks if a specific directory/file exists, creates if not
@@ -129,16 +174,26 @@ def check_stats_enabled():
             return f"Error: Can't read config file {e}"
 
 
+def check_first_time_usage():
+    config_path = os.path.join(check_dir_file_exist(CONF_DIR), 'config.yaml')
+    uid_path = os.path.join(check_dir_file_exist(CONF_DIR), 'uid.yaml')
+    return not os.path.exists(uid_path) and os.path.exists(config_path)
+
+
 def _get_telemetry_info():
     # Check if telemetry is enabled, if not skip, else check for uid
     telemetry_enabled = check_stats_enabled()
+
+    # Check first time install
+    is_install = check_first_time_usage()
+
     if telemetry_enabled:
 
         # if not uid, create
         uid = check_uid()
-        return telemetry_enabled, uid
+        return telemetry_enabled, uid, is_install
     else:
-        return False, ''
+        return False, '', is_install
 
 
 def validate_entries(event_id, uid, action, client_time, total_runtime):
@@ -157,10 +212,14 @@ def log_api(action, client_time=None, total_runtime=None, metadata=None):
     if client_time is None:
         client_time = datetime.datetime.now()
 
-    (telemetry_enabled, uid) = _get_telemetry_info()
+    (telemetry_enabled, uid, is_install) = _get_telemetry_info()
     py_version = python_version()
+    docker_container = is_docker()
+    operating_system = get_os()
     product_version = __version__
     online = is_online()
+    environment = get_env()
+
     if telemetry_enabled and online:
         event_id, uid, action, client_time, elapsed_time \
             = validate_entries(event_id,
@@ -180,6 +239,10 @@ def log_api(action, client_time=None, total_runtime=None, metadata=None):
                             'total_runtime': total_runtime,
                             'python_version': py_version,
                             'ploomber_version': product_version,
+                            'docker_container': docker_container,
+                            'operating_system': operating_system,
+                            'environment': environment,
+                            'is_install': is_install,
                             'metadata': metadata,
                             'telemetry_version': TELEMETRY_VERSION
                         })
