@@ -1,12 +1,12 @@
 # CHANGELOG
 
-## 0.14.2dev
+## 0.14.2 (2022-01-03)
 * `PLOOMBER_STATS_ENABLED` environment variable can be used to disable stats
-* Improved error message when a dotted path fails to load (#410)
+* Improved error message when a dotted path fails to load ([#410](https://github.com/ploomber/ploomber/issues/410))
 
 ## 0.14.1 (2022-01-02)
-* `ploomber scaffold` creates missing modules when adding functions (#332, @fferegrino)
-* `NotebookRunner` creates product's parent directories before running (#460)
+* `ploomber scaffold` creates missing modules when adding functions ([#332](https://github.com/ploomber/ploomber/issues/332), @fferegrino)
+* `NotebookRunner` creates product's parent directories before running ([#460](https://github.com/ploomber/ploomber/issues/460))
 
 ## 0.14 (2021-12-25)
 * Adds `ploomber nb` command for integration with VSCode, PyCharm, Spyder, etc.
