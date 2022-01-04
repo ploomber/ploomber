@@ -12,6 +12,31 @@ import ploomber.dag.dag as dag_module
 from conftest import _write_sample_conda_env, _prepare_files
 
 
+# The below fixtures are to mock the different virtual environments
+# Ref: https://stackoverflow.com/questions/51266880/detect-if-
+# python-is-running-in-a-conda-environment
+@pytest.fixture()
+def inside_conda_env(monkeypatch):
+    monkeypatch.setenv('CONDA_PREFIX', True)
+
+
+# Ref: https://stackoverflow.com/questions/1871549/
+# determine-if-python-is-running-inside-virtualenv
+@pytest.fixture()
+def inside_pip_env(monkeypatch):
+    monkeypatch.setattr(telemetry.sys, 'prefix', 'sys.prefix')
+    monkeypatch.setattr(telemetry.sys, 'base_prefix', 'base_prefix')
+
+
+# Ref: https://stackoverflow.com/questions/43878953/how-does-one-detect-if-
+# one-is-running-within-a-docker-container-within-python
+@pytest.fixture()
+def inside_docker(monkeypatch, tmp_directory):
+    mock = Mock()
+    mock.return_value = True
+    monkeypatch.setattr(telemetry.os.path, 'exists', mock)
+
+
 @pytest.fixture
 def ignore_ploomber_stats_enabled_env_var(monkeypatch):
     """
@@ -91,15 +116,61 @@ stats_enabled: {yaml_value}
     assert telemetry.check_stats_enabled() is expected_second
 
 
+def test_first_usage(monkeypatch, tmp_directory):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+
+    stats = Path('stats')
+    stats.mkdir()
+
+    # This isn't a first time usage since the config file doesn't exist yet.
+    assert not telemetry.check_first_time_usage()
+    (stats / 'config.yaml').write_text("stats_enabled: True")
+
+    assert telemetry.check_first_time_usage()
+
+
+def test_conda_env(monkeypatch, inside_conda_env, tmp_directory):
+    # Set a conda parameterized env
+    env = telemetry.is_conda()
+    assert env is True
+    env = telemetry.get_env()
+    assert env == 'conda'
+
+
+def test_pip_env(monkeypatch, inside_pip_env):
+    # Set a pip parameterized env
+    env = telemetry.in_virtualenv()
+    assert env is True
+    env = telemetry.get_env()
+    assert env == 'pip'
+
+
+def test_docker_env(monkeypatch, inside_docker):
+    docker = telemetry.is_docker()
+    assert docker is True
+
+
+# Ref https://stackoverflow.com/questions/110362/how-can-i-find-
+# the-current-os-in-python
+@pytest.mark.parametrize('os_param', ['Windows', 'Linux', 'MacOS', 'Ubuntu'])
+def test_os_type(monkeypatch, os_param):
+    mock = Mock()
+    mock.return_value = os_param
+    monkeypatch.setattr(telemetry.platform, 'system', mock)
+    os_type = telemetry.get_os()
+    assert os_type == os_param
+
+
 def test_uid_file():
     uid = telemetry.check_uid()
     assert isinstance(uid, str)
 
 
 def test_full_telemetry_info(ignore_env_var_and_set_tmp_default_home_dir):
-    (stats_enabled, uid) = telemetry._get_telemetry_info()
+    (stats_enabled, uid, is_install) = telemetry._get_telemetry_info()
     assert stats_enabled is True
     assert isinstance(uid, str)
+    assert is_install is True
 
 
 def test_basedir_creation():
@@ -151,7 +222,6 @@ setup(
                          ])
 def test_install_lock_exception(tmp_directory, has_conda, use_lock, env,
                                 env_lock, reqs, reqs_lock, monkeypatch):
-
     _prepare_files(has_conda, use_lock, env, env_lock, reqs, reqs_lock,
                    monkeypatch)
     Path('setup.py').write_text(setup_py)
