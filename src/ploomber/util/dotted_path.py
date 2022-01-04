@@ -410,3 +410,21 @@ class DottedPathSpecModel(BaseModel):
 
     def get_kwargs(self):
         return self.dict(exclude={'dotted_path'})
+
+
+def create_intermediate_modules(source_parts):
+    """
+    Creates the folder structure needed for a module specified
+    by the parts of its name
+    """
+    [*inner, last] = source_parts
+    if inner:
+        parent = Path(*inner)
+        parent.mkdir(parents=True)
+        for idx in range(len(inner)):
+            init_file = Path(*inner[:idx + 1], "__init__.py")
+            if not init_file.exists():
+                init_file.touch()
+    else:
+        parent = Path(".")
+    Path(parent, f"{last}.py").touch()

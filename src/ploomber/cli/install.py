@@ -8,6 +8,9 @@ from click import exceptions
 
 from ploomber.io._commander import Commander
 
+from ploomber.telemetry import telemetry
+import datetime
+
 _SETUP_PY = 'setup.py'
 
 _REQS_LOCK_TXT = 'requirements.lock.txt'
@@ -30,43 +33,58 @@ def main(use_lock):
         it uses regular files and creates the lock ones after installing
         dependencies
     """
-    if Path(_ENV_YML).exists() or Path(_ENV_LOCK_YML).exists():
+    start_time = datetime.datetime.now()
+    telemetry.log_api("install-started")
+    HAS_CONDA = shutil.which('conda')
+    HAS_ENV_YML = Path(_ENV_YML).exists()
+    HAS_ENV_LOCK_YML = Path(_ENV_LOCK_YML).exists()
+    HAS_REQS_TXT = Path(_REQS_TXT).exists()
+    HAS_REQS_LOCK_TXT = Path(_REQS_LOCK_TXT).exists()
 
-        if not shutil.which('conda'):
-            raise exceptions.ClickException('Found environment.yml file but '
-                                            'conda is not installed. Install '
-                                            'it and try again')
-
-        if use_lock and not Path(_ENV_LOCK_YML).exists():
-            raise exceptions.ClickException(
-                'Expected an environment.lock.yml due to the '
-                '--use-lock/-l option. Run "ploomber install" to create '
-                'an environment.lock.yml from an environment.yml')
-
-        main_conda(use_lock)
-    elif Path(_REQS_TXT).exists() or Path(_REQS_LOCK_TXT).exists():
-
-        if use_lock and not Path(_REQS_LOCK_TXT).exists():
-            raise exceptions.ClickException(
-                'Expected a requirements.lock.txt due to the '
-                '--use-lock/-l option. Run "ploomber install" to create '
-                'a requirements.lock.txt from a requirements.txt')
-
-        main_pip(use_lock)
+    if use_lock and not HAS_ENV_LOCK_YML and not HAS_REQS_LOCK_TXT:
+        err = ("Expected and environment.lock.yaml "
+               "(conda) or requirements.lock.txt (pip) in the current "
+               "directory. Add one of them and try again.")
+        telemetry.log_api("install-exception-lock",
+                          metadata={'Exception': err})
+        raise exceptions.ClickException(err)
+    elif not use_lock and not HAS_ENV_YML and not HAS_REQS_TXT:
+        err = ("Expected an environment.yaml (conda)"
+               " or requirements.txt (pip) in the current directory."
+               " Add one of them and try again.")
+        telemetry.log_api("install-exception-requirements",
+                          metadata={'Exception': err})
+        raise exceptions.ClickException(err)
+    elif (not HAS_CONDA and use_lock and HAS_ENV_LOCK_YML
+          and not HAS_REQS_LOCK_TXT):
+        err = ("Found env environment.lock.yaml "
+               "but conda is not installed. Install conda or add a "
+               "requirements.lock.txt to use pip instead")
+        telemetry.log_api("install-exception-conda",
+                          metadata={'Exception': err})
+        raise exceptions.ClickException(err)
+    elif not HAS_CONDA and not use_lock and HAS_ENV_YML and not HAS_REQS_TXT:
+        err = ("Found environment.yaml but conda is not installed."
+               " Install conda or add a requirements.txt to use pip instead")
+        telemetry.log_api("install-exception-conda2",
+                          metadata={'Exception': err})
+        raise exceptions.ClickException(err)
+    elif HAS_CONDA and use_lock and HAS_ENV_LOCK_YML:
+        main_conda(start_time, use_lock=True)
+    elif HAS_CONDA and not use_lock and HAS_ENV_YML:
+        main_conda(start_time, use_lock=False)
     else:
-        raise exceptions.ClickException(
-            'Expected a conda environment.yml or '
-            'pip requirements.txt file, but none of those exist. '
-            'Add one and try again. You can generate a sample project using '
-            'the "ploomber scaffold" command')
+        main_pip(start_time, use_lock=use_lock)
 
 
-def main_pip(use_lock):
+def main_pip(start_time, use_lock):
     """
     Install pip-based project (uses venv), looks for requirements.txt files
 
     Parameters
     ----------
+    start_time : datetime
+        The initial runtime of the function.
     use_lock : bool
         If True Uses requirements.txt and requirements.dev.lock.txt files
     """
@@ -108,15 +126,17 @@ def main_pip(use_lock):
     else:
         cmd_activate = f'source {venv_dir}/bin/activate'
 
-    _next_steps(cmdr, cmd_activate)
+    _next_steps(cmdr, cmd_activate, start_time)
 
 
-def main_conda(use_lock):
+def main_conda(start_time, use_lock):
     """
     Install conda-based project, looks for environment.yml files
 
     Parameters
     ----------
+    start_time : datetime
+        The initial runtime of the function.
     use_lock : bool
         If True Uses environment.lock.yml and environment.dev.lock.yml files
     """
@@ -144,7 +164,7 @@ def main_conda(use_lock):
     mamba = shutil.which('mamba')
 
     # if already installed and running on windows, ask to delete first,
-    # otherwise it might lead to an intermitent error (permission denied
+    # otherwise it might lead to an intermittent error (permission denied
     # on vcruntime140.dll)
     if os.name == 'nt':
         envs = cmdr.run(conda, 'env', 'list', '--json', capture_output=True)
@@ -188,7 +208,7 @@ def main_conda(use_lock):
                                     use_lock=use_lock)
 
     cmd_activate = f'conda activate {env_name}'
-    _next_steps(cmdr, cmd_activate)
+    _next_steps(cmdr, cmd_activate, start_time)
 
 
 def _get_pip_folder_and_bin_name():
@@ -202,8 +222,8 @@ def _find_conda_root(conda_bin):
 
     for parent in conda_bin.parents:
         # I've seen variations of this. on windows: Miniconda3 and miniconda3
-        # on linux miniconda3 and miniconda
-        if parent.name.lower() in {'miniconda3', 'miniconda'}:
+        # on linux miniconda3, anaconda and miniconda
+        if parent.name.lower() in {'miniconda3', 'miniconda', 'anaconda3'}:
             return parent
 
     raise RuntimeError(
@@ -273,7 +293,11 @@ def _try_conda_install_and_lock_dev(cmdr, pkg_manager, env_name, use_lock):
             Path('environment.dev.lock.yml').write_text(env_lock)
 
 
-def _next_steps(cmdr, cmd_activate):
+def _next_steps(cmdr, cmd_activate, start_time):
+    end_time = datetime.datetime.now()
+    telemetry.log_api("install-success",
+                      total_runtime=str(end_time - start_time))
+
     cmdr.success('Done')
     cmdr.print((f'Next steps:\n1. Activate environment: {cmd_activate}\n'
                 '2. Run pipeline: ploomber build'))

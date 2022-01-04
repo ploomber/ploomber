@@ -4,12 +4,13 @@ import sys
 from pathlib import Path
 from unittest.mock import Mock, call
 import shutil
-
+import datetime
 import pytest
 from click.testing import CliRunner
-
 from ploomber.cli import install as install_module
 from ploomber.cli.cli import install
+from conftest import _write_sample_conda_env, _prepare_files,\
+     _write_sample_pip_req
 
 setup_py = """
 from setuptools import setup, find_packages
@@ -52,14 +53,6 @@ def cleanup_conda_tmp_env():
         subprocess.run([conda, 'env', 'remove', '--name', 'my_tmp_env'])
 
 
-def _write_sample_conda_env(name='environment.yml'):
-    Path(name).write_text('name: my_tmp_env\ndependencies:\n- pip')
-
-
-def _write_sample_pip_req(name='requirements.txt'):
-    Path(name).touch()
-
-
 def _get_venv_and_pip():
     name = Path().resolve().name
     venv = f'venv-{name}'
@@ -69,48 +62,215 @@ def _get_venv_and_pip():
     return venv, pip
 
 
-def test_error_missing_env_yml_and_reqs_txt(tmp_directory):
-    runner = CliRunner()
+@pytest.mark.parametrize('has_conda, use_lock, env, env_lock, reqs, reqs_lock',
+                         [
+                             [0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 1, 0, 0],
+                             [0, 0, 0, 0, 0, 1],
+                             [0, 0, 0, 1, 0, 1],
+                             [1, 0, 0, 0, 0, 0],
+                             [1, 0, 0, 1, 0, 0],
+                             [1, 0, 0, 0, 0, 1],
+                             [1, 0, 0, 1, 0, 1],
+                         ])
+def test_missing_both_files(tmp_directory, has_conda, use_lock, env, env_lock,
+                            reqs, reqs_lock, monkeypatch):
 
-    result = runner.invoke(install, catch_exceptions=False)
-    assert 'Expected a conda environment.yml or' in result.stdout
-
-
-def test_error_if_env_yml_but_conda_not_installed(tmp_directory, monkeypatch):
-    _write_sample_conda_env()
-    runner = CliRunner()
-    mock = Mock(return_value=False)
-    monkeypatch.setattr(install_module.shutil, 'which', mock)
-
-    result = runner.invoke(install, catch_exceptions=False)
-    assert 'Found environment.yml file' in result.stdout
-
-
-@pytest.mark.parametrize('args', ['--use-lock', '-l'])
-def test_error_if_use_lock_but_env_file_missing(tmp_directory, args):
-    _write_sample_conda_env()
+    _prepare_files(has_conda, use_lock, env, env_lock, reqs, reqs_lock,
+                   monkeypatch)
 
     runner = CliRunner()
-    result = runner.invoke(install, args=args, catch_exceptions=False)
-    assert 'Expected an environment.lock.yml' in result.stdout
+    result = runner.invoke(install,
+                           args=['--use-lock'] if use_lock else [],
+                           catch_exceptions=False)
+    expected = ('Expected an environment.yaml (conda)'
+                ' or requirements.txt (pip) in the current directory.'
+                ' Add one of them and try again.')
+
+    assert f'Error: {expected}\n' == result.stdout
 
 
-@pytest.mark.parametrize('args', ['--use-lock', '-l'])
-def test_error_if_use_lock_but_reqs_file_missing(tmp_directory, args):
-    _write_sample_pip_req()
+@pytest.mark.parametrize('has_conda, use_lock, env, env_lock, reqs, reqs_lock',
+                         [
+                             [0, 1, 1, 0, 1, 0],
+                             [1, 1, 1, 0, 1, 0],
+                             [0, 1, 0, 0, 1, 0],
+                             [1, 1, 0, 0, 1, 0],
+                             [0, 1, 1, 0, 0, 0],
+                             [1, 1, 1, 0, 0, 0],
+                             [0, 1, 0, 0, 0, 0],
+                             [1, 1, 0, 0, 0, 0],
+                         ])
+def test_missing_both_lock_files(tmp_directory, has_conda, use_lock, env,
+                                 env_lock, reqs, reqs_lock, monkeypatch):
+
+    _prepare_files(has_conda, use_lock, env, env_lock, reqs, reqs_lock,
+                   monkeypatch)
 
     runner = CliRunner()
-    result = runner.invoke(install, args=args, catch_exceptions=False)
-    assert 'Expected a requirements.lock.txt' in result.stdout
+    result = runner.invoke(install,
+                           args=['--use-lock'] if use_lock else [],
+                           catch_exceptions=False)
+    expected = (
+        'Expected and environment.lock.yaml '
+        '(conda) or requirements.lock.txt (pip) in the current directory. '
+        'Add one of them and try again.')
+
+    assert f'Error: {expected}\n' == result.stdout
 
 
-@pytest.mark.parametrize('conda_bin, conda_root', [
-    [('something', 'Miniconda3', 'conda'), ('something', 'Miniconda3')],
-    [('something', 'miniconda3', 'conda'), ('something', 'miniconda3')],
-    [('one', 'miniconda3', 'dir', 'conda'), ('one', 'miniconda3')],
-    [('one', 'another', 'Miniconda3', 'conda'),
-     ('one', 'another', 'Miniconda3')],
-])
+@pytest.mark.parametrize('has_conda, use_lock, env, env_lock, reqs, reqs_lock',
+                         [
+                             [0, 1, 1, 1, 1, 0],
+                             [0, 1, 0, 1, 1, 0],
+                             [0, 1, 1, 1, 0, 0],
+                             [0, 1, 0, 1, 0, 0],
+                         ])
+def test_missing_env_lock(tmp_directory, has_conda, use_lock, env, env_lock,
+                          reqs, reqs_lock, monkeypatch):
+
+    _prepare_files(has_conda, use_lock, env, env_lock, reqs, reqs_lock,
+                   monkeypatch)
+
+    runner = CliRunner()
+    result = runner.invoke(install,
+                           args=['--use-lock'] if use_lock else [],
+                           catch_exceptions=False)
+    expected = ('Found env environment.lock.yaml '
+                'but conda is not installed. Install conda or add a '
+                'requirements.lock.txt to use pip instead')
+
+    assert f'Error: {expected}\n' == result.stdout
+
+
+@pytest.mark.parametrize('has_conda, use_lock, env, env_lock, reqs, '
+                         'reqs_lock', [
+                             [0, 0, 1, 0, 0, 1],
+                             [0, 0, 1, 1, 0, 1],
+                             [0, 0, 1, 0, 0, 0],
+                             [0, 0, 1, 1, 0, 0],
+                         ])
+def test_missing_env(tmp_directory, has_conda, use_lock, env, env_lock, reqs,
+                     reqs_lock, monkeypatch):
+
+    _prepare_files(has_conda, use_lock, env, env_lock, reqs, reqs_lock,
+                   monkeypatch)
+
+    runner = CliRunner()
+    result = runner.invoke(install,
+                           args=['--use-lock'] if use_lock else [],
+                           catch_exceptions=False)
+    expected = ('Found environment.yaml but conda '
+                'is not installed. Install conda or add a '
+                'requirements.txt to use pip instead')
+
+    assert f'Error: {expected}\n' == result.stdout
+
+
+def mocked_get_now():
+    dt = datetime.datetime(2021, 1, 1, 10, 10, 10)
+    return dt
+
+
+@pytest.mark.parametrize('has_conda, use_lock, env, env_lock, reqs, reqs_lock',
+                         [
+                             [1, 1, 1, 1, 1, 0],
+                             [1, 1, 1, 1, 1, 1],
+                             [1, 1, 1, 1, 0, 0],
+                             [1, 1, 1, 1, 0, 1],
+                             [1, 1, 0, 1, 1, 0],
+                             [1, 1, 0, 1, 1, 1],
+                             [1, 1, 0, 1, 0, 0],
+                             [1, 1, 0, 1, 0, 1],
+                             [1, 0, 1, 0, 1, 0],
+                             [1, 0, 1, 1, 1, 0],
+                             [1, 0, 1, 0, 1, 1],
+                             [1, 0, 1, 1, 1, 1],
+                             [1, 0, 1, 0, 0, 0],
+                             [1, 0, 1, 1, 0, 0],
+                             [1, 0, 1, 0, 0, 1],
+                             [1, 0, 1, 1, 0, 1],
+                         ])
+def test_install_with_conda(tmp_directory, has_conda, use_lock, env, env_lock,
+                            reqs, reqs_lock, monkeypatch):
+
+    _prepare_files(has_conda, use_lock, env, env_lock, reqs, reqs_lock,
+                   monkeypatch)
+
+    mock = Mock()
+    mock.patch(install_module, 'datetime', side_effect=mocked_get_now)
+    monkeypatch.setattr(install_module, 'main_conda', mock)
+    start = mocked_get_now()
+    install_module.main_conda(start, True if use_lock else False)
+    inputs_args, kwargs = mock.call_args
+
+    assert inputs_args[0] == start
+    assert inputs_args[1] == bool(use_lock)
+
+
+@pytest.mark.parametrize('has_conda, use_lock, env, env_lock, reqs, reqs_lock',
+                         [
+                             [1, 1, 1, 0, 1, 1],
+                             [1, 1, 0, 0, 1, 1],
+                             [1, 1, 1, 0, 0, 1],
+                             [1, 1, 0, 0, 0, 1],
+                             [0, 1, 1, 0, 1, 1],
+                             [0, 1, 1, 1, 1, 1],
+                             [0, 1, 0, 0, 1, 1],
+                             [0, 1, 0, 1, 1, 1],
+                             [0, 1, 1, 0, 0, 1],
+                             [0, 1, 1, 1, 0, 1],
+                             [0, 1, 0, 0, 0, 1],
+                             [0, 1, 0, 1, 0, 1],
+                             [1, 0, 0, 0, 1, 0],
+                             [1, 0, 0, 1, 1, 0],
+                             [1, 0, 0, 0, 1, 1],
+                             [1, 0, 0, 1, 1, 1],
+                             [0, 0, 1, 0, 1, 0],
+                             [0, 0, 1, 1, 1, 0],
+                             [0, 0, 1, 0, 1, 1],
+                             [0, 0, 1, 1, 1, 1],
+                             [0, 0, 0, 0, 1, 0],
+                             [0, 0, 0, 1, 1, 0],
+                             [0, 0, 0, 0, 1, 1],
+                             [0, 0, 0, 1, 1, 1],
+                         ])
+def test_install_with_pip(tmp_directory, has_conda, use_lock, env, env_lock,
+                          reqs, reqs_lock, monkeypatch):
+
+    _prepare_files(has_conda, use_lock, env, env_lock, reqs, reqs_lock,
+                   monkeypatch)
+
+    mock = Mock()
+    monkeypatch.setattr(install_module, 'main_pip', mock)
+    mock.patch(install_module, 'datetime', side_effect=mocked_get_now)
+    start = mocked_get_now()
+    install_module.main_pip(start, True if use_lock else False)
+    inputs_args, kwargs = mock.call_args
+
+    assert inputs_args[0] == start
+    assert inputs_args[1] == bool(use_lock)
+
+
+@pytest.mark.parametrize('conda_bin, conda_root',
+                         [
+                             [('something', 'Miniconda3', 'conda'),
+                              ('something', 'Miniconda3')],
+                             [('something', 'miniconda3', 'conda'),
+                              ('something', 'miniconda3')],
+                             [('something', 'Anaconda3', 'conda'),
+                              ('something', 'Anaconda3')],
+                             [('something', 'anaconda3', 'conda'),
+                              ('something', 'anaconda3')],
+                             [('one', 'miniconda3', 'dir', 'conda'),
+                              ('one', 'miniconda3')],
+                             [('one', 'anaconda3', 'dir', 'conda'),
+                              ('one', 'anaconda3')],
+                             [('one', 'another', 'Miniconda3', 'conda'),
+                              ('one', 'another', 'Miniconda3')],
+                             [('one', 'another', 'Anaconda3', 'conda'),
+                              ('one', 'another', 'Anaconda3')],
+                         ])
 def test_find_conda_root(conda_bin, conda_root):
     assert install_module._find_conda_root(
         Path(*conda_bin)).parts == conda_root
@@ -195,10 +355,7 @@ def test_install_non_package_with_conda(tmp_directory, monkeypatch,
     assert all(
         [Path(c[0][0]).is_file() for c in mock_cmdr_wrapped.call_args_list])
 
-    assert set(os.listdir()) == {
-        'environment.yml',
-        'environment.lock.yml',
-    }
+    assert set(os.listdir()) == {'environment.yml', 'environment.lock.yml'}
 
 
 @pytest.mark.xfail(sys.platform == 'win32',
@@ -211,10 +368,8 @@ def test_non_package_with_conda_with_dev_deps(tmp_directory):
     runner.invoke(install, catch_exceptions=False)
 
     assert set(os.listdir()) == {
-        'environment.yml',
-        'environment.lock.yml',
-        'environment.dev.yml',
-        'environment.dev.lock.yml',
+        'environment.yml', 'environment.lock.yml', 'environment.dev.yml',
+        'environment.dev.lock.yml'
     }
 
 

@@ -10,7 +10,8 @@ except ImportError:
     import importlib_resources as resources
 
 from ploomber import tasks
-from ploomber.util.dotted_path import locate_dotted_path
+from ploomber.util.dotted_path import (locate_dotted_path,
+                                       create_intermediate_modules)
 
 
 class ScaffoldLoader:
@@ -55,9 +56,17 @@ class ScaffoldLoader:
 
     def create(self, source, params, class_):
         if class_ is tasks.PythonCallable:
-            fn_name = source.split('.')[-1]
+            source_parts = source.split('.')
+            [*module_parts, fn_name] = source_parts
             params['function_name'] = fn_name
-            source = Path(locate_dotted_path(source).origin)
+
+            try:
+                spec = locate_dotted_path(source)
+            except ModuleNotFoundError:
+                create_intermediate_modules(module_parts)
+                spec = locate_dotted_path(source)
+
+            source = Path(spec.origin)
             source.parent.mkdir(parents=True, exist_ok=True)
             original = source.read_text()
 

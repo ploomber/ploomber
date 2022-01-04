@@ -12,6 +12,7 @@ ploomber-venv
 doc/**/*.ipynb
 .pytest_cache/
 .vscode/
+.idea/
 
 #### joe made this: https://goel.io/joe
 

@@ -69,7 +69,7 @@ TESTING = [
     'paramiko',
     # Upload to S3
     'boto3',
-    # testing uplaod to S3 task
+    # testing upload to S3 task
     'moto',
     # Upload to google cloud storage
     'google-cloud-storage',
@@ -110,8 +110,8 @@ setup(
     description=DESCRIPTION,
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
-    author='Eduardo Blancas',
-    author_email='hello@ploomber.io',
+    author='Ploomber',
+    author_email='contact@ploomber.io',
     url='https://github.com/ploomber/ploomber',
     packages=find_packages('src'),
     package_dir={'': 'src'},
@@ -152,6 +152,7 @@ setup(
         'tabulate',
         'humanize',
         'tqdm',
+        'posthog',
         'importlib_resources;python_version<"3.7"',
         # for code normalization, parso is also needed for inferring upstream
         # dependencies in jupyter notebooks

@@ -140,6 +140,12 @@ Plot
 
 Create a pipeline plot and save it in a ``pipeline.png`` file.
 
+.. warning::
+
+    To plot the pipeline (``ploomber plot`` command), you must
+    :ref:`install pygraphviz <faq-plotting-a-pipeline>`.
+
+
 Status
 ******
 

@@ -1,5 +1,13 @@
 """
 Module for the jupyter extension
+
+
+For debugging:
+>>> from ploomber.jupyter.dag import JupyterDAGManager
+>>> from ploomber.jupyter.manager import derive_class
+>>> from jupytext.contentsmanager import TextFileContentsManager
+>>> PloomberContentsManager = derive_class(TextFileContentsManager)
+>>> cm = PloomberContentsManager()
 """
 import sys
 import datetime
@@ -280,10 +288,14 @@ def derive_class(base_class):
                 key = self._model_in_dag(model, path)
 
                 if key:
-                    self.log.info(
-                        '[Ploomber] Cleaning up injected cell in {}...'.format(
-                            model.get('name') or ''))
-                    model['content'] = _cleanup_rendered_nb(model['content'])
+                    content = model['content']
+                    metadata = content.get('metadata', {}).get('ploomber', {})
+
+                    if not metadata.get('injected_manually'):
+                        self.log.info(
+                            '[Ploomber] Cleaning up injected cell in {}...'.
+                            format(model.get('name') or ''))
+                        model['content'] = _cleanup_rendered_nb(content)
 
                     self.log.info("[Ploomber] Deleting product's metadata...")
                     self.dag_mapping.delete_metadata(key)

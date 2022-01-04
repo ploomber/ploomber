@@ -21,6 +21,25 @@ from ploomber.clients import SQLAlchemyClient
 from ploomber import Env
 import pandas as pd
 from glob import iglob
+from ploomber.cli import install
+import posthog
+from unittest.mock import Mock, MagicMock
+
+
+@pytest.fixture(scope='class')
+def monkeypatch_session():
+    from _pytest.monkeypatch import MonkeyPatch
+    m = MonkeyPatch()
+    yield m
+    m.undo()
+
+
+@pytest.fixture(scope='class', autouse=True)
+def external_access(monkeypatch_session):
+    external_access = MagicMock()
+    external_access.get_something = MagicMock(return_value='Mock was used.')
+    monkeypatch_session.setattr(posthog, 'capture',
+                                external_access.get_something)
 
 
 def _path_to_tests():
@@ -48,6 +67,11 @@ def fixture_tmp_dir(source):
             shutil.copytree(str(source), str(tmp))
             os.chdir(str(tmp))
             yield tmp
+
+            # some tests create sample git repos, if we are on windows, we
+            # need to change permissions to be able to delete the files
+            _delete_all_dot_git()
+
             os.chdir(old)
             shutil.rmtree(tmp_dir)
 
@@ -119,6 +143,11 @@ def backup_spec_with_functions():
 
 @fixture_backup('spec-with-functions-flat')
 def backup_spec_with_functions_flat():
+    pass
+
+
+@fixture_backup('spec-with-functions-no-sources')
+def backup_spec_with_functions_no_sources():
     pass
 
 
@@ -257,6 +286,47 @@ def path_to_env():
 @pytest.fixture(scope='session')
 def path_to_assets():
     return _path_to_tests() / 'assets'
+
+
+def _write_sample_conda_env(name='environment.yml', env_name='my_tmp_env'):
+    Path(name).write_text(f'name: {env_name}\ndependencies:\n- pip')
+
+
+def _write_sample_conda_env_lock():
+    _write_sample_conda_env(name='environment.lock.yml')
+
+
+def _write_sample_pip_req(name='requirements.txt'):
+    Path(name).touch()
+
+
+def _write_sample_pip_req_lock(name='requirements.lock.txt'):
+    Path(name).touch()
+
+
+def _prepare_files(
+    has_conda,
+    use_lock,
+    env,
+    env_lock,
+    reqs,
+    reqs_lock,
+    monkeypatch,
+):
+    mock = Mock(return_value=has_conda)
+    monkeypatch.setattr(install.shutil, 'which', mock)
+
+    if env:
+        _write_sample_conda_env()
+
+    if env_lock:
+        _write_sample_conda_env_lock()
+
+    if reqs:
+        _write_sample_pip_req()
+
+    if reqs_lock:
+        _write_sample_pip_req_lock()
 
 
 def _load_db_credentials():

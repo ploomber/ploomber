@@ -1,6 +1,7 @@
 from pathlib import Path
 import shutil
 from urllib import request
+from urllib.parse import quote_plus
 import zipfile
 
 
@@ -45,6 +46,15 @@ def git_clone():
 
     with zipfile.ZipFile('../../master.zip', 'r') as f:
         f.extractall('../../')
+
+
+def jinja_filters(app):
+    try:
+        app.builder.templates.environment.filters['quote_plus'] = quote_plus
+    except AttributeError:
+        # .templates only valid for the HTML builder, rtd also converts to
+        # other formats
+        pass
 
 
 if __name__ == '__main__':

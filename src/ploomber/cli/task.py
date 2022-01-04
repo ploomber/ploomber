@@ -1,5 +1,7 @@
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
+from ploomber.telemetry import telemetry
+import datetime
 
 # TODO: we are just smoke testing this, we need to improve the tests
 # (check the appropriate functions are called)
@@ -7,6 +9,7 @@ from ploomber.cli.io import cli_endpoint
 
 @cli_endpoint
 def main():
+    start_time = datetime.datetime.now()
     parser = CustomParser(description='Get task information')
     with parser:
         parser.add_argument('task_name')
@@ -51,3 +54,7 @@ def main():
 
     if no_flags or args.build:
         task.build(force=args.force)
+
+    end_time = datetime.datetime.now()
+    telemetry.log_api("ploomber_task",
+                      total_runtime=str(end_time - start_time))

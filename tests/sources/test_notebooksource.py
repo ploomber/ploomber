@@ -5,10 +5,12 @@ import jupytext
 import nbformat
 from jupyter_client.kernelspec import NoSuchKernel
 
+from ploomber.spec import DAGSpec
 from ploomber.tasks._params import Params
 from ploomber.sources.notebooksource import (NotebookSource, is_python,
                                              inject_cell,
-                                             determine_kernel_name)
+                                             determine_kernel_name,
+                                             _cleanup_rendered_nb)
 from ploomber.products import File
 from ploomber.exceptions import RenderError, SourceInitializationError
 
@@ -78,6 +80,16 @@ def nb_R_meta():
     nb = nbformat.v4.new_notebook()
     nb.metadata = {'kernelspec': {'language': 'R'}}
     return nb
+
+
+def get_injected_cell(nb):
+    injected = None
+
+    for cell in nb['cells']:
+        if 'injected-parameters' in cell['metadata'].get('tags', []):
+            injected = cell
+
+    return injected
 
 
 notebook_ab = """
@@ -478,6 +490,19 @@ def test_str():
     assert str(source) == ('\na = 1\nb = 2\nproduct = None\na + b')
 
 
+def test_str_ignores_injected_cell(tmp_directory):
+    path = Path('nb.py')
+    path.write_text(notebook_ab)
+    source = NotebookSource(path)
+    source.render(Params._from_dict(dict(a=42, product=File('file.txt'))))
+    source.save_injected_cell()
+
+    source = NotebookSource(path)
+
+    # injected cell should not be considered part of the source code
+    assert 'a = 42' not in str(source)
+
+
 def test_repr_from_path(tmp_directory):
     path = Path(tmp_directory, 'nb.py')
     Path('nb.py').write_text(notebook_ab)
@@ -508,3 +533,177 @@ def test_determine_kernel_name_from_ext(tmp_directory):
                                  kernelspec_name=None,
                                  ext='py',
                                  language=None) == 'python3'
+
+
+def test_save_injected_cell(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    nb = jupytext.read('load.py')
+    expected = '# + tags=["injected-parameters"]'
+
+    assert expected not in Path('load.py').read_text()
+    assert nb.metadata.get('ploomber') is None
+
+    dag['load'].source.save_injected_cell()
+    nb = jupytext.read('load.py')
+
+    assert expected in Path('load.py').read_text()
+    assert nb.metadata.ploomber.injected_manually
+
+
+@pytest.mark.parametrize('prefix', [
+    'nbs',
+    'some/notebooks',
+])
+def test_save_injected_cell_in_paired_notebooks(tmp_nbs, prefix):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.pair(prefix)
+
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.save_injected_cell()
+
+    assert get_injected_cell(jupytext.read(Path(prefix, 'load.ipynb')))
+    assert get_injected_cell(jupytext.read(Path('load.py')))
+
+
+def test_remove_injected_cell(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.save_injected_cell()
+    expected = '# + tags=["injected-parameters"]'
+
+    assert expected in Path('load.py').read_text()
+
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.remove_injected_cell()
+
+    nb = jupytext.read('load.py')
+
+    assert expected not in Path('load.py').read_text()
+    assert nb.metadata.ploomber == {}
+
+
+@pytest.mark.parametrize('prefix', [
+    'nbs',
+    'some/notebooks',
+])
+def test_remove_injected_cell_in_paired_notebooks(tmp_nbs, prefix):
+    # pair notebooks
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.pair(prefix)
+
+    # inject cell
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.save_injected_cell()
+
+    # remove cell
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.remove_injected_cell()
+
+    assert not get_injected_cell(jupytext.read(Path(prefix, 'load.ipynb')))
+    assert not get_injected_cell(jupytext.read(Path('load.py')))
+
+
+def test_format(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+
+    assert '# + tags=["parameters"]' in Path('load.py').read_text()
+
+    dag['load'].source.format(fmt='py:percent')
+
+    assert '# %% tags=["parameters"]' in Path('load.py').read_text()
+
+
+def test_format_with_extension_change(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.format(fmt='ipynb')
+
+    assert not Path('load.py').exists()
+    assert jupytext.read('load.ipynb')
+
+
+def test_pair(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+
+    dag['load'].source.pair(base_path='nbs')
+    nb = jupytext.reads(Path('load.py').read_text(), fmt='py:light')
+
+    assert Path('nbs', 'load.ipynb').is_file()
+    assert nb.metadata.jupytext.formats == 'nbs//ipynb,py:light'
+
+
+def test_sync(tmp_nbs):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.pair(base_path='nbs')
+
+    nb = jupytext.reads(Path('load.py').read_text(), fmt='py:light')
+    nb.cells.append(nbformat.v4.new_code_cell(source='x = 42'))
+    jupytext.write(nb, 'load.py', fmt='py:light')
+
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.sync()
+
+    nb = jupytext.reads(Path('nbs', 'load.ipynb').read_text(), fmt='ipynb')
+
+    assert nb.cells[-1]['source'] == 'x = 42'
+
+
+@pytest.mark.parametrize('method, kwargs', [
+    ['save_injected_cell', {}],
+    ['remove_injected_cell', {}],
+    ['format', {
+        'fmt': 'py:light'
+    }],
+    ['pair', {
+        'base_path': 'nbs'
+    }],
+    ['sync', {}],
+])
+def test_error_message_when_initialized_from_str(tmp_nbs, method, kwargs):
+    source = NotebookSource("""
+# + tags=["parameters"]
+""", ext_in='py')
+
+    source.render(Params._from_dict({'product': File('file.ipynb')}))
+
+    with pytest.raises(ValueError) as excinfo:
+        getattr(source, method)(**kwargs)
+
+    expected = (f"Cannot use '{method}' if notebook was not "
+                "initialized from a file")
+    assert str(excinfo.value) == expected
+
+
+remove_one = """# %% tags=["parameters"]
+x = 1
+
+# %% tags=["injected-parameters"]
+x = 2
+"""
+
+remove_two = """# %% tags=["parameters"]
+x = 100
+
+# %% tags=["injected-parameters"]
+x = 2
+
+# %% tags=["debugging-settings"]
+x = 3
+"""
+
+remove_all = """# %% tags=["injected-parameters"]
+x = 2
+
+# %% tags=["debugging-settings"]
+x = 3
+"""
+
+
+@pytest.mark.parametrize('nb, expected_n, expected_source', [
+    [remove_one, 1, ['x = 1']],
+    [remove_two, 1, ['x = 100']],
+    [remove_all, 0, []],
+])
+def test_cleanup_rendered_nb(nb, expected_n, expected_source):
+    out = _cleanup_rendered_nb(jupytext.reads(nb))
+
+    assert len(out['cells']) == expected_n
+    assert [c['source'] for c in out['cells']] == expected_source

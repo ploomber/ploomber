@@ -1,2 +1,9 @@
 [tool.pytest.ini_options]
 addopts = "--pdbcls=IPython.terminal.debugger:Pdb"
+
+[tool.pkgmt]
+github = "ploomber/ploomber"
+
+[tool.pkgmt.check_links]
+extensions = ["rst"]
+ignore_substrings = ["snowflakecomputing.com"]

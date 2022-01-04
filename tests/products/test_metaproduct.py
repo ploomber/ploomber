@@ -96,6 +96,19 @@ def test_upload():
     p2.upload.assert_called_once_with()
 
 
+def test_error_if_metaproduct_initialized_with_non_products():
+    def do_stuff():
+        pass
+
+    with pytest.raises(AttributeError) as excinfo:
+        PythonCallable(do_stuff, {'a': 'not-a-product'}, dag=DAG())
+
+    assert 'Expected MetaProduct to initialize' in str(excinfo.value)
+    assert "'not-a-product'" in str(excinfo.value)
+    assert "<class 'str'>" in str(excinfo.value)
+    assert "File('not-a-product')" in str(excinfo.value)
+
+
 @pytest.mark.parametrize(
     'arg, expected',
     [

@@ -38,6 +38,12 @@ Generate pipeline plot:
     ploomber plot
 
 
+.. warning::
+    
+    To plot the pipeline (``ploomber plot`` command), you must
+    :ref:`install pygraphviz <faq-plotting-a-pipeline>`.
+
+
 .. _user-guide-cli-interactive-sessions:
 
 Interactive sessions
