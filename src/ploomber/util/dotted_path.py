@@ -128,9 +128,6 @@ def load_dotted_path(dotted_path, raise_=True, reload=False):
             module = importlib.import_module(mod)
         except ImportError as e:
             if raise_:
-                import sys
-                sys.tracebacklimit = 0
-
                 exists = importlib.util.find_spec(main_mod) is not None
 
                 if exists:
@@ -156,7 +153,6 @@ def load_dotted_path(dotted_path, raise_=True, reload=False):
                 obj = getattr(module, name)
             except AttributeError as e:
                 if raise_:
-                    # same as in the comment above
                     e.args = (
                         'Could not get "{}" from module "{}" : '
                         '(loaded \'{}\' module  from: \'{}\'), make sure '
