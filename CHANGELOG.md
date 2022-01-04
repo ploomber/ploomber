@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 0.14.2dev
+* `PLOOMBER_STATS_ENABLED` environment variable can be used to disable stats
+* Improved error message when a dotted path fails to load (#410)
 
 ## 0.14.1 (2022-01-02)
 * `ploomber scaffold` creates missing modules when adding functions (#332, @fferegrino)
