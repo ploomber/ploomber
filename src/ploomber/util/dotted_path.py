@@ -123,19 +123,29 @@ def load_dotted_path(dotted_path, raise_=True, reload=False):
 
     if parsed:
         mod, name = parsed
-
+        main_mod = str(mod.split('.')[0])
         try:
             module = importlib.import_module(mod)
         except ImportError as e:
             if raise_:
-                # we want to raise ethe same error type but chaining exceptions
-                # produces a long verbose output, so we just modify the
-                # original message to add more context, it's ok to hide the
-                # original traceback since it will just point to lines
-                # in the importlib module, which isn't useful for the user
-                e.msg = ('An error happened when trying to '
-                         'import dotted path "{}": {}'.format(
-                             dotted_path, str(e)))
+                import sys
+                sys.tracebacklimit = 0
+
+                exists = importlib.util.find_spec(main_mod) is not None
+
+                if exists:
+                    main_mod_origin = importlib.util.find_spec(main_mod).origin
+
+                    e.args = ('An error occured when trying to import '
+                              'dotted path "{}": No module named \'{}\' : '
+                              '(loaded \'{}\' module from \'{}\')'.format(
+                                  dotted_path, mod, main_mod,
+                                  main_mod_origin), )
+                else:
+
+                    e.args = ('An error occured when trying to import dotted '
+                              'path "{}": {}'.format(dotted_path, str(e)), )
+
                 raise
 
         if module:
@@ -148,10 +158,10 @@ def load_dotted_path(dotted_path, raise_=True, reload=False):
                 if raise_:
                     # same as in the comment above
                     e.args = (
-                        'Could not get "{}" from module '
-                        '"{}" (loaded from: {}), make sure it is a valid '
-                        'callable defined in such module'.format(
-                            name, mod, module.__file__), )
+                        'Could not get "{}" from module "{}" : '
+                        '(loaded \'{}\' module  from: \'{}\'), make sure '
+                        'it is a valid callable defined in such module'.format(
+                            name, mod, main_mod, module.__file__), )
                     raise
         return obj
     else:
