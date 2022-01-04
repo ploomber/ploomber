@@ -101,7 +101,16 @@ def check_uid():
             return f"Error: Can't read UID file: {e}"
 
 
-def check_stats_file():
+def check_stats_enabled():
+    """
+    Check if the user allows us to use telemetry. In order of precedence:
+
+    1. If PLOOMBER_STATS_ENABLED defined, check its value
+    2. Otherwise use the value in stats_enabled in the config.yaml file
+    """
+    if 'PLOOMBER_STATS_ENABLED' in os.environ:
+        return os.environ['PLOOMBER_STATS_ENABLED'].lower() == 'true'
+
     # Check if local config exists
     config_path = os.path.join(check_dir_file_exist(CONF_DIR), 'config.yaml')
     if not os.path.exists(config_path):
@@ -122,7 +131,7 @@ def check_stats_file():
 
 def _get_telemetry_info():
     # Check if telemetry is enabled, if not skip, else check for uid
-    telemetry_enabled = check_stats_file()
+    telemetry_enabled = check_stats_enabled()
     if telemetry_enabled:
 
         # if not uid, create

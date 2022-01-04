@@ -41,10 +41,35 @@ def test_opt_str_validation():
 
 
 # Test class functions
-def test_stats_file():
-    stats_enabled = telemetry.check_stats_file()
+def test_check_stats_enabled():
+    stats_enabled = telemetry.check_stats_enabled()
     assert isinstance(stats_enabled, bool)
     assert stats_enabled
+
+
+@pytest.mark.parametrize(
+    'yaml_value, expected_first, env_value, expected_second', [
+        ['true', True, 'false', False],
+        ['TRUE', True, 'FALSE', False],
+        ['false', False, 'true', True],
+        ['FALSE', False, 'TRUE', True],
+    ])
+def test_env_var_takes_precedence(monkeypatch, tmp_directory, yaml_value,
+                                  expected_first, env_value, expected_second):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+
+    stats = Path('stats')
+    stats.mkdir()
+
+    (stats / 'config.yaml').write_text(f"""
+stats_enabled: {yaml_value}
+""")
+
+    assert telemetry.check_stats_enabled() is expected_first
+
+    monkeypatch.setenv('PLOOMBER_STATS_ENABLED', env_value, prepend=False)
+
+    assert telemetry.check_stats_enabled() is expected_second
 
 
 def test_uid_file():
