@@ -1,8 +1,11 @@
 Custom deployment
 =================
 
-If don't use one of our supported platforms (Kubernetes, AWS Batch, and
-Airflow), you can deploy using the Python API.
+If don't use one of the supported platforms (`Kubernetes <https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html>`_,
+`AWS Batch <https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html>`_,
+`Airflow <https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html>`_,
+and `SLURM <https://soopervisor.readthedocs.io/en/latest/tutorials/slurm.html>`_.
+), you can deploy using the Python API.
 
 Every Ploomber pipeline is represented as a :class:`ploomber.DAG` object,
 which contains all the information you need to orchestrate the pipeline in
