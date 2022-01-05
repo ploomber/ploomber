@@ -1,14 +1,15 @@
 Batch processing
 ================
 
-Ploomber pipelines can export to production-grade schedulers for batch
+You can export Ploomber pipelines to production schedulers for batch
 processing. Check out our package
-`Soopervisor <https://soopervisor.readthedocs.io/en/latest/>`_, which
+`Soopervisor <https://soopervisor.readthedocs.io>`_, which
 allows you to export to
 `Kubernetes <https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html>`_
 (via `Argo workflows <https://argoproj.github.io/>`_),
 `AWS Batch <https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html>`_,
-and `Airflow <https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html>`_.
+`Airflow <https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html>`_,
+and `SLURM <https://soopervisor.readthedocs.io/en/latest/tutorials/slurm.html>`_.
 
 Composing batch pipelines
 *************************

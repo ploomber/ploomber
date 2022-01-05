@@ -463,6 +463,27 @@ def test_skip_kernel_install_check(tmp_directory):
     dag.render()
 
 
+def test_creates_parents(tmp_directory):
+    dag = DAG()
+
+    code = """
+# + tags=["parameters"]
+product = None
+
+# +
+from pathlib import Path
+Path(product['file']).touch()
+    """
+
+    product = {
+        'nb': File(Path(tmp_directory, 'another', 'nb', 'out.ipynb')),
+        'file': File(Path(tmp_directory, 'another', 'data', 'file.txt')),
+    }
+
+    NotebookRunner(code, product=product, dag=dag, ext_in='py', name='nb')
+    dag.build()
+
+
 # TODO: we are not testing output, we have to make sure params are inserted
 # correctly
 @pytest.fixture

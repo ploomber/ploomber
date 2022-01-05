@@ -12,6 +12,26 @@ import ploomber.dag.dag as dag_module
 from conftest import _write_sample_conda_env, _prepare_files
 
 
+@pytest.fixture
+def ignore_ploomber_stats_enabled_env_var(monkeypatch):
+    """
+    GitHub Actions configuration scripts set the PLOOMBER_STATS_ENABLED
+    environment variable to prevent CI events from going to posthog, this
+    inferes with some tests. This fixture removes its value temporarily
+    """
+    monkeypatch.delenv('PLOOMBER_STATS_ENABLED', raising=True)
+
+
+@pytest.fixture
+def ignore_env_var_and_set_tmp_default_home_dir(
+        tmp_directory, ignore_ploomber_stats_enabled_env_var, monkeypatch):
+    """
+    ignore_ploomber_stats_enabled_env_var + overrides DEFAULT_HOME_DIR
+    to prevent the local configuration to interfere with tests
+    """
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+
+
 # Validations tests
 def test_str_validation():
     res = str_param("Test", "")
@@ -40,11 +60,35 @@ def test_opt_str_validation():
     assert type(exception_raised) == TypeError
 
 
-# Test class functions
-def test_stats_file():
-    stats_enabled = telemetry.check_stats_file()
-    assert isinstance(stats_enabled, bool)
-    assert stats_enabled
+def test_check_stats_enabled(ignore_env_var_and_set_tmp_default_home_dir):
+    stats_enabled = telemetry.check_stats_enabled()
+    assert stats_enabled is True
+
+
+@pytest.mark.parametrize(
+    'yaml_value, expected_first, env_value, expected_second', [
+        ['true', True, 'false', False],
+        ['TRUE', True, 'FALSE', False],
+        ['false', False, 'true', True],
+        ['FALSE', False, 'TRUE', True],
+    ])
+def test_env_var_takes_precedence(monkeypatch,
+                                  ignore_env_var_and_set_tmp_default_home_dir,
+                                  yaml_value, expected_first, env_value,
+                                  expected_second):
+
+    stats = Path('stats')
+    stats.mkdir()
+
+    (stats / 'config.yaml').write_text(f"""
+stats_enabled: {yaml_value}
+""")
+
+    assert telemetry.check_stats_enabled() is expected_first
+
+    monkeypatch.setenv('PLOOMBER_STATS_ENABLED', env_value, prepend=False)
+
+    assert telemetry.check_stats_enabled() is expected_second
 
 
 def test_uid_file():
@@ -52,10 +96,9 @@ def test_uid_file():
     assert isinstance(uid, str)
 
 
-def test_full_telemetry_info():
+def test_full_telemetry_info(ignore_env_var_and_set_tmp_default_home_dir):
     (stats_enabled, uid) = telemetry._get_telemetry_info()
-    assert isinstance(stats_enabled, bool)
-    assert stats_enabled
+    assert stats_enabled is True
     assert isinstance(uid, str)
 
 
@@ -250,7 +293,8 @@ def test_python_major_version():
     assert int(major) == 3
 
 
-def test_creates_config_directory(monkeypatch, tmp_nbs):
+def test_creates_config_directory(monkeypatch, tmp_nbs,
+                                  ignore_ploomber_stats_enabled_env_var):
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
     monkeypatch.setattr(sys, 'argv', ['status'])
 

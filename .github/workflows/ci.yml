@@ -69,6 +69,7 @@ jobs:
     - name: Run tests
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PLOOMBER_STATS_ENABLED: false
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env

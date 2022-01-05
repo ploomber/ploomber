@@ -53,8 +53,9 @@ import abc
 import logging
 from datetime import datetime
 from collections import defaultdict
+from pathlib import Path
 
-from ploomber.products import Product, MetaProduct, EmptyProduct
+from ploomber.products import Product, MetaProduct, EmptyProduct, File
 from ploomber.exceptions import (TaskBuildError, DAGBuildEarlyStop,
                                  CallbackCheckAborted)
 from ploomber.tasks.taskgroup import TaskGroup
@@ -518,7 +519,7 @@ class Task(abc.ABC):
                     f'Cannot build task {self.name!r} because '
                     'the following upstream dependencies are '
                     f'missing: {[t.name for t in not_ok]!r}. Execute upstream '
-                    'tasks first. If upstream tasks generate File(s) and you'
+                    'tasks first. If upstream tasks generate File(s) and you '
                     'configured a File.client, you may also upload '
                     'up-to-date copies to remote storage and they will be '
                     'automatically downloaded')
@@ -653,6 +654,8 @@ class Task(abc.ABC):
         self._logger.info('Starting execution: %s', repr(self))
 
         then = datetime.now()
+
+        _ensure_parents_exist(self.product)
 
         if self.exec_status == TaskStatus.WaitingDownload:
             try:
@@ -1036,3 +1039,16 @@ class ProductEvaluator:
                 outdated_by_code=self.outdated_by_code))
 
         return self._is_outdated
+
+
+def _ensure_parents_exist(product):
+    if isinstance(product, MetaProduct):
+        for prod in product:
+            _ensure_file_parents_exist(prod)
+    else:
+        _ensure_file_parents_exist(product)
+
+
+def _ensure_file_parents_exist(product):
+    if isinstance(product, File):
+        Path(product).parent.mkdir(parents=True, exist_ok=True)

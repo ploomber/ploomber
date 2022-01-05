@@ -1,4 +1,5 @@
 import inspect
+import importlib
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -403,6 +404,48 @@ def fn(some_arg):
     expected = ("Got duplicated arguments ('some_arg') when calling "
                 "dotted path 'some_module.fn'. Overriding values...")
     assert record[0].message.args[0] == expected
+
+
+@pytest.mark.parametrize(("path", "err_msg"), [
+    [
+        'tests.quality.fn',
+        ('An error occured when trying to import '
+         'dotted path "tests.quality.fn": No module named '
+         '\'tests.quality\' : (loaded \'tests\' module from \'{}\')'.format(
+             importlib.util.find_spec('tests').origin))
+    ],
+    [
+        'A.c',
+        ('An error occured when trying to import '
+         'dotted path "A.c": No module named \'A\'')
+    ],
+])
+def test_load_dotted_path_if_import_fails(path, err_msg):
+    with pytest.raises(ImportError) as excinfo:
+        dotted_path.load_dotted_path(path)
+    assert excinfo.value.args[0] == err_msg
+
+
+@pytest.mark.parametrize(
+    ("path", "err_msg"),
+    [[
+        'ploomber.func',
+        ('Could not get "func" from module "ploomber" : '
+         '(loaded \'ploomber\' module  from: \'{}\'), make sure it is a '
+         'valid callable defined in such module'.format(
+             importlib.util.find_spec('ploomber').origin))
+    ],
+     [
+         'ploomber.cli.not_existing_func',
+         ('Could not get "not_existing_func" from module "ploomber.cli" : '
+          '(loaded \'ploomber\' module  from: \'{}\'), make sure it is a '
+          'valid callable defined in such module'.format(
+              importlib.util.find_spec('ploomber.cli').origin))
+     ]])
+def test_load_dotted_path_if_attribute_not_found(path, err_msg):
+    with pytest.raises(AttributeError) as excinfo:
+        dotted_path.load_dotted_path(path)
+    assert excinfo.value.args[0] == err_msg
 
 
 def test_create_intermediate_modules(tmp_directory):
