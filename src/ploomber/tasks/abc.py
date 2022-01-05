@@ -519,7 +519,7 @@ class Task(abc.ABC):
                     f'Cannot build task {self.name!r} because '
                     'the following upstream dependencies are '
                     f'missing: {[t.name for t in not_ok]!r}. Execute upstream '
-                    'tasks first. If upstream tasks generate File(s) and you'
+                    'tasks first. If upstream tasks generate File(s) and you '
                     'configured a File.client, you may also upload '
                     'up-to-date copies to remote storage and they will be '
                     'automatically downloaded')
