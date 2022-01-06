@@ -171,7 +171,7 @@ def test_full_telemetry_info(ignore_env_var_and_set_tmp_default_home_dir):
 
 
 def test_basedir_creation():
-    base_dir = Path(telemetry.check_dir_exist())
+    base_dir = telemetry.check_dir_exist()
     assert base_dir.exists()
 
 
