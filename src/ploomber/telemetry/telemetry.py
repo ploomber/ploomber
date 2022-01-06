@@ -114,7 +114,7 @@ def get_env():
         return 'local'
 
 
-def check_dir_exist(name=None):
+def check_dir_exist(input_location=None):
     """
     Checks if a specific directory exists, creates if not.
     In case the user didn't set a custom dir, will turn to the default home
@@ -124,33 +124,35 @@ def check_dir_exist(name=None):
     else:
         final_location = DEFAULT_HOME_DIR
 
-    if name:
-        p = Path(final_location, name).expanduser()
+    if input_location:
+        p = Path(final_location, input_location)
     else:
-        p = Path(final_location).expanduser()
+        p = Path(final_location)
+
+    p.expanduser()
 
     if not p.exists():
         p.mkdir(parents=True)
 
-    return final_location
+    return p
 
 
 def check_uid():
     """
     Checks if local user id exists as a uid file, creates if not.
     """
-    uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
+    uid_path = Path.joinpath(check_dir_exist(CONF_DIR), 'uid.yaml')
     if not uid_path.exists():  # Create - doesn't exist
         uid = str(uuid.uuid4())
         try:  # Create for future runs
-            with uid_path.write_text("w") as file:
+            with uid_path.open("w") as file:
                 yaml.dump({"uid": uid}, file)
             return uid
         except FileNotFoundError as e:
             return f"ERROR: Can't read UID file: {e}"
     else:  # read and return uid
         try:
-            with uid_path.read_text("r") as file:
+            with uid_path.open("r") as file:
                 uid_dict = yaml.safe_load(file)
             return uid_dict['uid']
         except FileNotFoundError as e:
@@ -168,17 +170,17 @@ def check_stats_enabled():
         return os.environ['PLOOMBER_STATS_ENABLED'].lower() == 'true'
 
     # Check if local config exists
-    config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
+    config_path = Path.joinpath(check_dir_exist(CONF_DIR), 'config.yaml')
     if not config_path.exists():
         try:  # Create for future runs
-            with config_path.write_text("w") as file:
+            with config_path.open("w") as file:
                 yaml.dump({"stats_enabled": True}, file)
             return True
         except FileNotFoundError as e:
             return f"ERROR: Can't read file: {e}"
     else:  # read and return config
         try:
-            with config_path.read_text("r") as file:
+            with config_path.open("r") as file:
                 conf = yaml.safe_load(file)
             return conf['stats_enabled']
         except FileNotFoundError as e:
@@ -190,8 +192,8 @@ def check_first_time_usage():
     The function checks for first time usage if the conf file exists and the
     uid file doesn't exist.
     """
-    config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
-    uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
+    config_path = Path.joinpath(check_dir_exist(CONF_DIR), 'config.yaml')
+    uid_path = Path.joinpath(check_dir_exist(CONF_DIR), 'uid.yaml')
     return not uid_path.exists() and config_path.exists()
 
 
