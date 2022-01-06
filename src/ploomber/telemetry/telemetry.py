@@ -41,7 +41,7 @@ from ploomber import __version__
 import urllib.request
 import platform
 
-TELEMETRY_VERSION = '0.1'
+TELEMETRY_VERSION = '0.2'
 DEFAULT_HOME_DIR = '~/.ploomber'
 CONF_DIR = "stats"
 posthog.project_api_key = 'phc_P9SpSeypyPwxrMdFn2edOOEooQioF2axppyEeDwtMSP'
