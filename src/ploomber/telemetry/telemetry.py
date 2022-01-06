@@ -129,7 +129,7 @@ def check_dir_exist(input_location=None):
     else:
         p = Path(final_location)
 
-    p.expanduser()
+    p = p.expanduser()
 
     if not p.exists():
         p.mkdir(parents=True)
@@ -141,7 +141,7 @@ def check_uid():
     """
     Checks if local user id exists as a uid file, creates if not.
     """
-    uid_path = Path.joinpath(check_dir_exist(CONF_DIR), 'uid.yaml')
+    uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
     if not uid_path.exists():  # Create - doesn't exist
         uid = str(uuid.uuid4())
         try:  # Create for future runs
@@ -170,7 +170,7 @@ def check_stats_enabled():
         return os.environ['PLOOMBER_STATS_ENABLED'].lower() == 'true'
 
     # Check if local config exists
-    config_path = Path.joinpath(check_dir_exist(CONF_DIR), 'config.yaml')
+    config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
     if not config_path.exists():
         try:  # Create for future runs
             with config_path.open("w") as file:
@@ -192,8 +192,8 @@ def check_first_time_usage():
     The function checks for first time usage if the conf file exists and the
     uid file doesn't exist.
     """
-    config_path = Path.joinpath(check_dir_exist(CONF_DIR), 'config.yaml')
-    uid_path = Path.joinpath(check_dir_exist(CONF_DIR), 'uid.yaml')
+    config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
+    uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
     return not uid_path.exists() and config_path.exists()
 
 
