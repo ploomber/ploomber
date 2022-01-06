@@ -202,16 +202,15 @@ def _get_telemetry_info():
     # Check if telemetry is enabled, if not skip, else check for uid
     telemetry_enabled = check_stats_enabled()
 
-    # Check first time install
-    is_install = check_first_time_usage()
-
     if telemetry_enabled:
+        # Check first time install
+        is_install = check_first_time_usage()
 
         # if not uid, create
         uid = check_uid()
         return telemetry_enabled, uid, is_install
     else:
-        return False, '', is_install
+        return False, '', False
 
 
 def validate_entries(event_id, uid, action, client_time, total_runtime):
@@ -248,6 +247,24 @@ def log_api(action, client_time=None, total_runtime=None, metadata=None):
                                action,
                                client_time,
                                total_runtime)
+        if is_install:
+            posthog.capture(distinct_id=uid,
+                            event='install_success_indirect',
+                            properties={
+                                'event_id': event_id,
+                                'user_id': uid,
+                                'action': action,
+                                'client_time': str(client_time),
+                                'metadata': metadata,
+                                'total_runtime': total_runtime,
+                                'python_version': py_version,
+                                'ploomber_version': product_version,
+                                'docker_container': docker_container,
+                                'operating_system': operating_system,
+                                'environment': environment,
+                                'metadata': metadata,
+                                'telemetry_version': TELEMETRY_VERSION
+                            })
 
         posthog.capture(distinct_id=uid,
                         event=action,
@@ -263,7 +280,6 @@ def log_api(action, client_time=None, total_runtime=None, metadata=None):
                             'docker_container': docker_container,
                             'operating_system': operating_system,
                             'environment': environment,
-                            'is_install': is_install,
                             'metadata': metadata,
                             'telemetry_version': TELEMETRY_VERSION
                         })
