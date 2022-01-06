@@ -140,7 +140,6 @@ def test_pip_env(monkeypatch, inside_pip_env):
 # one-is-running-within-a-docker-container-within-python
 def test_docker_env(monkeypatch):
     def mock(input_path):
-        print(input_path)
         return 'dockerenv' in str(input_path)
 
     monkeypatch.setattr(pathlib.Path, 'exists', mock)
