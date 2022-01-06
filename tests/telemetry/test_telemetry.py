@@ -138,8 +138,10 @@ def test_pip_env(monkeypatch, inside_pip_env):
 
 # Ref: https://stackoverflow.com/questions/43878953/how-does-one-detect-if-
 # one-is-running-within-a-docker-container-within-python
+@pytest.mark.skipif(sys.platform == "win32", reason="win32 has no native ansi")
 def test_docker_env(monkeypatch):
     def mock(input_path):
+        print(input_path)
         return '/.dockerenv' in str(input_path)
 
     monkeypatch.setattr(pathlib.Path, 'exists', mock)
