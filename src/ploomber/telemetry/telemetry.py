@@ -33,6 +33,7 @@ import datetime
 import posthog
 import yaml
 import os
+from pathlib import Path
 import sys
 import uuid
 from ploomber.telemetry import validate_inputs
@@ -65,14 +66,17 @@ def is_online(host='http://ploomber.io'):
 
 # Will output if the code is within a container
 def is_docker():
-    path = '/proc/self/cgroup'
-    return (os.path.exists('/.dockerenv')
-            or os.path.isfile(path) and any('docker' in line
-                                            for line in open(path)))
+    cgroup = Path('/proc/self/cgroup')
+    docker_env = Path('/.dockerenv')
+    return (docker_env.exists() or cgroup.exists()
+            and any('docker' in line
+                    for line in cgroup.read_text().splitlines()))
 
 
-# The function will output the client platform
 def get_os():
+    """
+    The function will output the client platform
+    """
     os = platform.system()
     if os == "Darwin":
         return 'MacOS'
@@ -80,16 +84,19 @@ def get_os():
         return os
 
 
-# The function will tell if the code is running in a conda env
 def is_conda():
-    return os.path.exists(os.path.join(sys.prefix, 'conda-meta')) or \
-            bool(os.environ.get("CONDA_PREFIX")) or \
-            bool(os.environ.get("CONDA_DEFAULT_ENV"))
+    """
+    The function will tell if the code is running in a conda env
+    """
+    conda_path = Path(sys.prefix, 'conda-meta')
+    return conda_path.exists() or os.environ.get(
+        "CONDA_PREFIX", False) or os.environ.get("CONDA_DEFAULT_ENV", False)
 
 
-# These 2 functions will tell if the code is running in a pip env
 def get_base_prefix_compat():
-    """Get base/real prefix, or sys.prefix if there is none."""
+    """
+    This function will find the pip virtualenv with different python versions.
+    Get base/real prefix, or sys.prefix if there is none."""
     return getattr(sys, "base_prefix", None) or sys.prefix or \
         getattr(sys, "real_prefix", None)
 
@@ -107,39 +114,41 @@ def get_env():
         return 'local'
 
 
-# Checks if a specific directory/file exists, creates if not
-# In case the user didn't set a custom dir, will turn to the default home
-def check_dir_file_exist(name=None, is_file=None):
+def check_dir_exist(name=None):
+    """
+    Checks if a specific directory exists, creates if not.
+    In case the user didn't set a custom dir, will turn to the default home
+    """
     if PLOOMBER_HOME_DIR:
-        final_location = os.path.expanduser(PLOOMBER_HOME_DIR)
+        final_location = PLOOMBER_HOME_DIR
     else:
-        final_location = os.path.expanduser(DEFAULT_HOME_DIR)
+        final_location = DEFAULT_HOME_DIR
 
     if name:
-        final_location = os.path.join(final_location, name)
+        final_location = f"{final_location}/{name}"
+    p = Path(final_location)
+    if not p.exists():
+        p.mkdir(parents=True)
 
-    if not os.path.exists(final_location):
-        if is_file:
-            os.mknod(final_location)
-        else:
-            os.makedirs(final_location)
     return final_location
 
 
 def check_uid():
-    # Check if local telemetry exists as a uid
-    uid_path = os.path.join(check_dir_file_exist(CONF_DIR), 'uid.yaml')
-    if not os.path.exists(uid_path):  # Create - doesn't exist
+    """
+    Checks if local user id exists as a uid file, creates if not.
+    """
+    uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
+    if not uid_path.exists():  # Create - doesn't exist
         uid = str(uuid.uuid4())
         try:  # Create for future runs
-            with open(uid_path, "w") as file:
+            with uid_path.open("w", encoding="utf-8") as file:
                 yaml.dump({"uid": uid}, file)
             return uid
-        except FileNotFoundError as e:  # uid
+        except FileNotFoundError as e:
             return f"ERROR: Can't read UID file: {e}"
     else:  # read and return uid
         try:
-            with open(uid_path, "r") as file:
+            with uid_path.open("r") as file:
                 uid_dict = yaml.safe_load(file)
             return uid_dict['uid']
         except FileNotFoundError as e:
@@ -157,17 +166,17 @@ def check_stats_enabled():
         return os.environ['PLOOMBER_STATS_ENABLED'].lower() == 'true'
 
     # Check if local config exists
-    config_path = os.path.join(check_dir_file_exist(CONF_DIR), 'config.yaml')
-    if not os.path.exists(config_path):
+    config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
+    if not config_path.exists():
         try:  # Create for future runs
-            with open(config_path, "w") as file:
+            with config_path.open("w", encoding="utf-8") as file:
                 yaml.dump({"stats_enabled": True}, file)
             return True
         except FileNotFoundError as e:
             return f"ERROR: Can't read file: {e}"
     else:  # read and return config
         try:
-            with open(config_path, "r") as file:
+            with config_path.open("r") as file:
                 conf = yaml.safe_load(file)
             return conf['stats_enabled']
         except FileNotFoundError as e:
@@ -175,12 +184,21 @@ def check_stats_enabled():
 
 
 def check_first_time_usage():
-    config_path = os.path.join(check_dir_file_exist(CONF_DIR), 'config.yaml')
-    uid_path = os.path.join(check_dir_file_exist(CONF_DIR), 'uid.yaml')
-    return not os.path.exists(uid_path) and os.path.exists(config_path)
+    """
+    The function checks for first time usage if the conf file exists and the
+    uid file doesn't exist.
+    """
+    config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
+    uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
+    return not uid_path.exists() and config_path.exists()
 
 
 def _get_telemetry_info():
+    """
+    The function checks for the local config and uid files, returns the right
+    values according to the config file (True/False). In addition it checks
+    for first time installation.
+    """
     # Check if telemetry is enabled, if not skip, else check for uid
     telemetry_enabled = check_stats_enabled()
 
@@ -206,8 +224,11 @@ def validate_entries(event_id, uid, action, client_time, total_runtime):
     return event_id, uid, action, client_time, elapsed_time
 
 
-# API Call
 def log_api(action, client_time=None, total_runtime=None, metadata=None):
+    """
+    This function logs through an API call, assigns parameters if missing like
+    timestamp, event id and stats information.
+    """
     event_id = uuid.uuid4()
     if client_time is None:
         client_time = datetime.datetime.now()
