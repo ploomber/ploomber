@@ -125,8 +125,10 @@ def check_dir_exist(name=None):
         final_location = DEFAULT_HOME_DIR
 
     if name:
-        final_location = f"{final_location}/{name}"
-    p = Path(final_location)
+        p = Path(final_location, name).expanduser()
+    else:
+        p = Path(final_location).expanduser()
+
     if not p.exists():
         p.mkdir(parents=True)
 
@@ -141,14 +143,14 @@ def check_uid():
     if not uid_path.exists():  # Create - doesn't exist
         uid = str(uuid.uuid4())
         try:  # Create for future runs
-            with uid_path.open("w", encoding="utf-8") as file:
+            with uid_path.write_text("w") as file:
                 yaml.dump({"uid": uid}, file)
             return uid
         except FileNotFoundError as e:
             return f"ERROR: Can't read UID file: {e}"
     else:  # read and return uid
         try:
-            with uid_path.open("r") as file:
+            with uid_path.read_text("r") as file:
                 uid_dict = yaml.safe_load(file)
             return uid_dict['uid']
         except FileNotFoundError as e:
@@ -169,14 +171,14 @@ def check_stats_enabled():
     config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
     if not config_path.exists():
         try:  # Create for future runs
-            with config_path.open("w", encoding="utf-8") as file:
+            with config_path.write_text("w") as file:
                 yaml.dump({"stats_enabled": True}, file)
             return True
         except FileNotFoundError as e:
             return f"ERROR: Can't read file: {e}"
     else:  # read and return config
         try:
-            with config_path.open("r") as file:
+            with config_path.read_text("r") as file:
                 conf = yaml.safe_load(file)
             return conf['stats_enabled']
         except FileNotFoundError as e:
