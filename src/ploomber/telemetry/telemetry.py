@@ -34,11 +34,12 @@ import posthog
 import yaml
 import os
 from pathlib import Path
+from socket import gaierror
 import sys
 import uuid
 from ploomber.telemetry import validate_inputs
 from ploomber import __version__
-import requests
+import http.client as httplib
 import platform
 
 TELEMETRY_VERSION = '0.2'
@@ -55,14 +56,18 @@ def python_version():
 
 # Check if host is online
 def is_online(url='http://www.google.com/'):
+    conn = httplib.HTTPSConnection(url, timeout=5)
     try:
-        _ = requests.head(url, timeout=5)
+        conn.request("HEAD", "/")
         return True
-    except requests.ConnectionError:
+    except gaierror:
         print("No internet connection available.")
-    except requests.exceptions.MissingSchema:
-        print("The input url is malformed")
-    return False
+        return False
+    except httplib.error:
+        print("URL Error.")
+        return False
+    finally:
+        conn.close()
 
 
 # Will output if the code is within a container
