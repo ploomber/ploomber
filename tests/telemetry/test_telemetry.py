@@ -331,11 +331,8 @@ def test_offline_stats(monkeypatch):
 
 
 def test_online_input(monkeypatch):
-    with pytest.raises(ValueError) as exc_info:
-        telemetry.is_online("test_action")
-
-    exception_raised = exc_info.value
-    assert type(exception_raised) == ValueError
+    is_online = telemetry.is_online("test_action")
+    assert is_online is False
 
 
 def test_online_func(monkeypatch):

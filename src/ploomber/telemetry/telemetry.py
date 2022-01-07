@@ -38,7 +38,7 @@ import sys
 import uuid
 from ploomber.telemetry import validate_inputs
 from ploomber import __version__
-import urllib.request
+import requests
 import platform
 
 TELEMETRY_VERSION = '0.2'
@@ -54,14 +54,15 @@ def python_version():
 
 
 # Check if host is online
-def is_online(host='http://ploomber.io'):
+def is_online(url='http://www.google.com/'):
     try:
-        urllib.request.urlopen(host)
+        _ = requests.head(url, timeout=5)
         return True
-    except urllib.error.HTTPError:
-        return False
-    except urllib.error.URLError:
-        return False
+    except requests.ConnectionError:
+        print("No internet connection available.")
+    except requests.exceptions.MissingSchema:
+        print("The input url is malformed")
+    return False
 
 
 # Will output if the code is within a container
