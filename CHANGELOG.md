@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.14.4dev
+* Fixes an error in the telemetry module
 
 ## 0.14.3 (2022-01-06)
 * Improved [anonymous user statistics](https://docs.ploomber.io/en/latest/community/user-stats.html)

@@ -30,13 +30,11 @@ The data we collect is limited to:
 """
 
 import datetime
-import http
 import http.client as httplib
 import posthog
 import yaml
 import os
 from pathlib import Path
-from socket import gaierror
 import sys
 import uuid
 from ploomber.telemetry import validate_inputs
