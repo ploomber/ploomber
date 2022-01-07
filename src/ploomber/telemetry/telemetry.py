@@ -58,7 +58,7 @@ def python_version():
 # Check if host is online
 def is_online(url='www.google.com'):
     try:
-        conn = httplib.HTTPSConnection(url, timeout=5)
+        conn = httplib.HTTPSConnection(url, timeout=1)
         conn.request("HEAD", "/")
         conn.close()
         return True
