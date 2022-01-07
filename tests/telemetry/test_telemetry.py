@@ -329,16 +329,16 @@ def test_offline_stats(monkeypatch):
     assert posthog_mock.call_count == 0
 
 
-@pytest.mark.parametrize(
-    'url', ["test_action", "/", "//google.com", "https://google.com", "¢§©"])
-def test_online_input(monkeypatch, url):
-    is_online = telemetry.is_online(url)
-    assert is_online is False
+def test_is_online():
+    assert telemetry.is_online()
 
 
-def test_online_func(monkeypatch):
-    online = telemetry.is_online()
-    assert online
+def test_is_not_online(monkeypatch):
+    mock_httplib = Mock()
+    mock_httplib.HTTPSConnection().request.side_effect = Exception
+    monkeypatch.setattr(telemetry, 'httplib', mock_httplib)
+
+    assert not telemetry.is_online()
 
 
 def test_validate_entries(monkeypatch):

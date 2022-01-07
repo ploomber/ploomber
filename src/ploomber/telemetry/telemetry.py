@@ -55,21 +55,18 @@ def python_version():
     return f"{py_version.major}.{py_version.minor}.{py_version.micro}"
 
 
-# Check if host is online
-def is_online(url='www.google.com'):
+def is_online():
+    """Check if host is online
+    """
+    conn = httplib.HTTPSConnection('www.google.com', timeout=1)
+
     try:
-        conn = httplib.HTTPSConnection(url, timeout=1)
         conn.request("HEAD", "/")
-        conn.close()
         return True
-    except gaierror:
+    except Exception:
         return False
-    except httplib.error:
-        return False
-    except ValueError:
-        return False
-    except http.client.InvalidURL:
-        return False
+    finally:
+        conn.close()
 
 
 # Will output if the code is within a container
