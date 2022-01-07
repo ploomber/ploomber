@@ -1,5 +1,4 @@
 import pathlib
-
 import click
 import sys
 from unittest.mock import Mock
@@ -330,8 +329,10 @@ def test_offline_stats(monkeypatch):
     assert posthog_mock.call_count == 0
 
 
-def test_online_input(monkeypatch):
-    is_online = telemetry.is_online("test_action")
+@pytest.mark.parametrize(
+    'url', ["test_action", "/", "//google.com", "https://google.com", "¢§©"])
+def test_online_input(monkeypatch, url):
+    is_online = telemetry.is_online(url)
     assert is_online is False
 
 
