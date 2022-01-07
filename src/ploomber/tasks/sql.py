@@ -1,6 +1,8 @@
 from pathlib import Path
 from io import StringIO
 
+from jinja2 import Template
+
 from ploomber.tasks.abc import Task
 from ploomber.tasks.mixins import ClientMixin
 from ploomber.sources import (SQLScriptSource, SQLQuerySource, FileSource)
@@ -8,6 +10,7 @@ from ploomber.products import (File, PostgresRelation, SQLiteRelation,
                                GenericSQLRelation, GenericProduct, SQLRelation)
 from ploomber import io
 from ploomber.util import requires
+from ploomber.placeholders.placeholder import _add_globals
 
 
 class SQLScript(ClientMixin, Task):
@@ -154,7 +157,14 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
         return SQLQuerySource(source, **kwargs)
 
     def run(self):
-        source_code = str(self.source)
+
+        # render runtime parameters
+        template = Template(str(self.source),
+                            variable_start_string='[[',
+                            variable_end_string=']]')
+        _add_globals(template.environment)
+        source_code = template.render(upstream=self.params.get('upstream'))
+
         path = Path(str(self.params['product']))
         handler = self.io_handler(path, chunked=bool(self.chunksize))
 

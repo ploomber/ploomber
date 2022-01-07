@@ -1,11 +1,14 @@
+import string
+import json
 from sqlite3 import connect
 from pathlib import Path
 from unittest.mock import Mock
 
 from ploomber import DAG
-from ploomber.tasks import SQLDump, SQLTransfer, SQLScript
+from ploomber.tasks import SQLDump, SQLTransfer, SQLScript, PythonCallable
 from ploomber.products import File, SQLiteRelation
 from ploomber.clients import SQLAlchemyClient, DBAPIClient
+from ploomber.executors import Serial
 from ploomber import io
 
 import pytest
@@ -180,6 +183,79 @@ def test_can_dump_sqlite_to_parquet(tmp_directory):
 
     # make sure they are the same
     assert dump.equals(db)
+
+
+# FIXME: add tests to check that Placeholders init from raw str, or a loader
+# have the custom globals
+def test_custom_jinja_env_globals(tmp_directory):
+    tmp = Path(tmp_directory)
+
+    # create a db
+    conn = connect(str(tmp / "database.db"))
+    client = SQLAlchemyClient('sqlite:///{}'.format(tmp / "database.db"))
+
+    # make some data and save it in the db
+    df = pd.DataFrame({
+        'number': range(10),
+        'char': list(string.ascii_letters[:10])
+    })
+    df.to_sql('data', conn)
+
+    # create the task and run it
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+
+    t1 = SQLDump('SELECT * FROM data',
+                 File('data.parquet'),
+                 dag,
+                 name='data',
+                 client=client,
+                 chunksize=None,
+                 io_handler=io.ParquetIO)
+
+    def select(product, upstream):
+        numbers = list(pd.read_parquet(upstream['data']).number)
+        numbers_selected = [n for n in numbers if n % 2 == 0]
+
+        chars = list(pd.read_parquet(upstream['data']).char)
+        chars_selected = [repr(c) for i, c in enumerate(chars) if i % 2 == 0]
+
+        Path(product).write_text(
+            json.dumps(dict(numbers=numbers_selected, chars=chars_selected)))
+
+    t2 = PythonCallable(select, File('selected.json'), dag, name='selected')
+
+    t3 = SQLDump("""
+    -- {{upstream}}
+    SELECT * FROM data WHERE number
+    NOT IN ([[get_key(upstream["selected"], "numbers") | join(", ") ]])
+""",
+                 File('numbers.parquet'),
+                 dag,
+                 name='numbers',
+                 client=client,
+                 chunksize=None,
+                 io_handler=io.ParquetIO)
+
+    t4 = SQLDump("""
+    -- {{upstream}}
+    SELECT * FROM data WHERE char
+    NOT IN ([[get_key(upstream["selected"], "chars") | join(", ") ]])
+""",
+                 File('chars.parquet'),
+                 dag,
+                 name='chars',
+                 client=client,
+                 chunksize=None,
+                 io_handler=io.ParquetIO)
+
+    t1 >> t2 >> t3
+    t2 >> t4
+
+    dag.build()
+
+    assert list(pd.read_parquet('numbers.parquet').number) == [1, 3, 5, 7, 9]
+    assert list(
+        pd.read_parquet('chars.parquet').char) == ['b', 'd', 'f', 'h', 'j']
 
 
 def test_can_dump_postgres(tmp_directory, pg_client_and_schema):
