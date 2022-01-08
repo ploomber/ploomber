@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.14.4dev
+## 0.14.4 (2022-01-07)
 * Fixes an error in the telemetry module
 
 ## 0.14.3 (2022-01-06)
