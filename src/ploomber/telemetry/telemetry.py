@@ -30,16 +30,15 @@ The data we collect is limited to:
 """
 
 import datetime
+import http.client as httplib
 import posthog
 import yaml
 import os
 from pathlib import Path
-from socket import gaierror
 import sys
 import uuid
 from ploomber.telemetry import validate_inputs
 from ploomber import __version__
-import http.client as httplib
 import platform
 
 TELEMETRY_VERSION = '0.2'
@@ -54,17 +53,15 @@ def python_version():
     return f"{py_version.major}.{py_version.minor}.{py_version.micro}"
 
 
-# Check if host is online
-def is_online(url='http://www.google.com/'):
-    conn = httplib.HTTPSConnection(url, timeout=5)
+def is_online():
+    """Check if host is online
+    """
+    conn = httplib.HTTPSConnection('www.google.com', timeout=1)
+
     try:
         conn.request("HEAD", "/")
         return True
-    except gaierror:
-        print("No internet connection available.")
-        return False
-    except httplib.error:
-        print("URL Error.")
+    except Exception:
         return False
     finally:
         conn.close()
