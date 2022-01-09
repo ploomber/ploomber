@@ -1,5 +1,4 @@
-import os
-
+import pathlib
 import click
 import sys
 from unittest.mock import Mock
@@ -10,6 +9,17 @@ from ploomber.telemetry.validate_inputs import str_param, opt_str_param
 from ploomber.cli import plot, install, build, interact, task, report, status
 import ploomber.dag.dag as dag_module
 from conftest import _write_sample_conda_env, _prepare_files
+
+
+@pytest.fixture()
+def inside_conda_env(monkeypatch):
+    monkeypatch.setenv('CONDA_PREFIX', True)
+
+
+@pytest.fixture()
+def inside_pip_env(monkeypatch):
+    monkeypatch.setattr(telemetry.sys, 'prefix', 'sys.prefix')
+    monkeypatch.setattr(telemetry.sys, 'base_prefix', 'base_prefix')
 
 
 @pytest.fixture
@@ -81,8 +91,8 @@ def test_env_var_takes_precedence(monkeypatch,
     stats.mkdir()
 
     (stats / 'config.yaml').write_text(f"""
-stats_enabled: {yaml_value}
-""")
+                                        stats_enabled: {yaml_value}
+                                        """)
 
     assert telemetry.check_stats_enabled() is expected_first
 
@@ -91,20 +101,77 @@ stats_enabled: {yaml_value}
     assert telemetry.check_stats_enabled() is expected_second
 
 
+def test_first_usage(monkeypatch, tmp_directory):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+
+    stats = Path('stats')
+    stats.mkdir()
+
+    # This isn't a first time usage since the config file doesn't exist yet.
+    assert not telemetry.check_first_time_usage()
+    (stats / 'config.yaml').write_text("stats_enabled: True")
+
+    assert telemetry.check_first_time_usage()
+
+
+# The below fixtures are to mock the different virtual environments
+# Ref: https://stackoverflow.com/questions/51266880/detect-if-
+# python-is-running-in-a-conda-environment
+def test_conda_env(monkeypatch, inside_conda_env, tmp_directory):
+    # Set a conda parameterized env
+    env = telemetry.is_conda()
+    assert env is True
+    env = telemetry.get_env()
+    assert env == 'conda'
+
+
+# Ref: https://stackoverflow.com/questions/1871549/
+# determine-if-python-is-running-inside-virtualenv
+def test_pip_env(monkeypatch, inside_pip_env):
+    # Set a pip parameterized env
+    env = telemetry.in_virtualenv()
+    assert env is True
+    env = telemetry.get_env()
+    assert env == 'pip'
+
+
+# Ref: https://stackoverflow.com/questions/43878953/how-does-one-detect-if-
+# one-is-running-within-a-docker-container-within-python
+def test_docker_env(monkeypatch):
+    def mock(input_path):
+        return 'dockerenv' in str(input_path)
+
+    monkeypatch.setattr(pathlib.Path, 'exists', mock)
+    docker = telemetry.is_docker()
+    assert docker is True
+
+
+# Ref https://stackoverflow.com/questions/110362/how-can-i-find-
+# the-current-os-in-python
+@pytest.mark.parametrize('os_param', ['Windows', 'Linux', 'MacOS', 'Ubuntu'])
+def test_os_type(monkeypatch, os_param):
+    mock = Mock()
+    mock.return_value = os_param
+    monkeypatch.setattr(telemetry.platform, 'system', mock)
+    os_type = telemetry.get_os()
+    assert os_type == os_param
+
+
 def test_uid_file():
     uid = telemetry.check_uid()
     assert isinstance(uid, str)
 
 
 def test_full_telemetry_info(ignore_env_var_and_set_tmp_default_home_dir):
-    (stats_enabled, uid) = telemetry._get_telemetry_info()
+    (stats_enabled, uid, is_install) = telemetry._get_telemetry_info()
     assert stats_enabled is True
     assert isinstance(uid, str)
+    assert is_install is True
 
 
 def test_basedir_creation():
-    base_dir = telemetry.check_dir_file_exist()
-    assert os.path.exists(base_dir)
+    base_dir = telemetry.check_dir_exist()
+    assert base_dir.exists()
 
 
 def test_python_version():
@@ -151,7 +218,6 @@ setup(
                          ])
 def test_install_lock_exception(tmp_directory, has_conda, use_lock, env,
                                 env_lock, reqs, reqs_lock, monkeypatch):
-
     _prepare_files(has_conda, use_lock, env, env_lock, reqs, reqs_lock,
                    monkeypatch)
     Path('setup.py').write_text(setup_py)
@@ -263,17 +329,16 @@ def test_offline_stats(monkeypatch):
     assert posthog_mock.call_count == 0
 
 
-def test_online_input(monkeypatch):
-    with pytest.raises(ValueError) as exc_info:
-        telemetry.is_online("test_action")
-
-    exception_raised = exc_info.value
-    assert type(exception_raised) == ValueError
+def test_is_online():
+    assert telemetry.is_online()
 
 
-def test_online_func(monkeypatch):
-    online = telemetry.is_online()
-    assert online
+def test_is_not_online(monkeypatch):
+    mock_httplib = Mock()
+    mock_httplib.HTTPSConnection().request.side_effect = Exception
+    monkeypatch.setattr(telemetry, 'httplib', mock_httplib)
+
+    assert not telemetry.is_online()
 
 
 def test_validate_entries(monkeypatch):
