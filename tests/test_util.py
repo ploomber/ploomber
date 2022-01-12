@@ -51,14 +51,6 @@ def test_add_to_sys_path_with_exception():
     assert path not in sys.path
 
 
-def test_load_dotted_path_custom_error_message():
-    with pytest.raises(AttributeError) as excinfo:
-        dotted_path.load_dotted_path('test_pkg.not_a_function')
-
-    assert ('Could not get "not_a_function" from module "test_pkg"'
-            in str(excinfo.value))
-
-
 def test_load_dotted_path_with_reload(tmp_directory, add_current_to_sys_path):
     # write a sample module
     Path('dotted_path_with_reload.py').write_text("""
@@ -121,6 +113,7 @@ def test_chdir_code(tmp_directory):
         ],
     ])
 def test_requires(params, expected):
+
     @requires(**params)
     def fn():
         pass

@@ -38,6 +38,7 @@ class DottedPath:
         If True, it allows calling the dotted path to return None, otherwise
         it raises an exception
     """
+
     def __init__(self, dotted_path, lazy_load=False, allow_return_none=True):
         self._spec = DottedPathSpecModel.from_spec(dotted_path)
         self._callable = None
@@ -126,22 +127,18 @@ def load_dotted_path(dotted_path, raise_=True, reload=False):
         main_mod = str(mod.split('.')[0])
         try:
             module = importlib.import_module(mod)
-        except ImportError as e:
+        except ModuleNotFoundError as e:
             if raise_:
-                exists = importlib.util.find_spec(main_mod) is not None
+                spec = importlib.util.find_spec(main_mod)
 
-                if exists:
-                    main_mod_origin = importlib.util.find_spec(main_mod).origin
+                msg = ('An error occured when trying to import dotted '
+                       f'path {dotted_path!r}: {e}')
 
-                    e.args = ('An error occured when trying to import '
-                              'dotted path "{}": No module named \'{}\' : '
-                              '(loaded \'{}\' module from \'{}\')'.format(
-                                  dotted_path, mod, main_mod,
-                                  main_mod_origin), )
-                else:
+                if spec is not None:
+                    msg = (msg +
+                           f' (loaded {main_mod!r} from {spec.origin!r})')
 
-                    e.args = ('An error occured when trying to import dotted '
-                              'path "{}": {}'.format(dotted_path, str(e)), )
+                e.msg = msg
 
                 raise
 
@@ -153,11 +150,9 @@ def load_dotted_path(dotted_path, raise_=True, reload=False):
                 obj = getattr(module, name)
             except AttributeError as e:
                 if raise_:
-                    e.args = (
-                        'Could not get "{}" from module "{}" : '
-                        '(loaded \'{}\' module  from: \'{}\'), make sure '
-                        'it is a valid callable defined in such module'.format(
-                            name, mod, main_mod, module.__file__), )
+                    e.args = ((f'Could not get {name!r} from module {mod!r} '
+                               f'(loaded {mod!r} from {module.__file__!r}). '
+                               'Ensure it is defined in such module'), )
                     raise
         return obj
     else:
@@ -371,6 +366,7 @@ def lazily_locate_dotted_path(dotted_path):
 class BaseModel(pydantic.BaseModel):
     """Base model for specs
     """
+
     def __init__(self, **kwargs):
         # customize ValidationError message
         try:

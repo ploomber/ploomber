@@ -406,46 +406,77 @@ def fn(some_arg):
     assert record[0].message.args[0] == expected
 
 
-@pytest.mark.parametrize(("path", "err_msg"), [
+@pytest.mark.parametrize('path, err_msg', [
     [
-        'tests.quality.fn',
-        ('An error occured when trying to import '
-         'dotted path "tests.quality.fn": No module named '
-         '\'tests.quality\' : (loaded \'tests\' module from \'{}\')'.format(
-             importlib.util.find_spec('tests').origin))
+        'ast.another.fn',
+        ("An error occured when trying to import "
+         "dotted path 'ast.another.fn': No module named "
+         "'ast.another'; 'ast' is not a package"),
     ],
     [
-        'A.c',
-        ('An error occured when trying to import '
-         'dotted path "A.c": No module named \'A\'')
+        'something.another',
+        ("An error occured when trying to import "
+         "dotted path 'something.another': No module named 'something'"),
     ],
-])
-def test_load_dotted_path_if_import_fails(path, err_msg):
-    with pytest.raises(ImportError) as excinfo:
+    [
+        'my_module.my_function',
+        ("An error occured when trying to import "
+         "dotted path 'my_module.my_function': No module named 'something'"),
+    ],
+],
+                         ids=[
+                             'module-sub-not-found',
+                             'module-root-not-found',
+                             'indirect-module-due-import-not-found',
+                         ])
+def test_load_dotted_path_if_import_fails(path, err_msg, tmp_directory,
+                                          tmp_imports):
+
+    Path('my_module.py').write_text('import something')
+
+    mod_name = path.split('.')[0]
+    spec = importlib.util.find_spec(mod_name)
+
+    if spec:
+        err_msg = err_msg + f' (loaded {mod_name!r} from {spec.origin!r})'
+
+    with pytest.raises(ModuleNotFoundError) as excinfo:
         dotted_path.load_dotted_path(path)
-    assert excinfo.value.args[0] == err_msg
+
+    assert str(excinfo.value) == err_msg
 
 
-@pytest.mark.parametrize(
-    ("path", "err_msg"),
-    [[
-        'ploomber.func',
-        ('Could not get "func" from module "ploomber" : '
-         '(loaded \'ploomber\' module  from: \'{}\'), make sure it is a '
-         'valid callable defined in such module'.format(
-             importlib.util.find_spec('ploomber').origin))
+@pytest.mark.parametrize('path, err_msg, root', [
+    [
+        'my_module.func',
+        ("Could not get 'func' from module 'my_module' "
+         "(loaded 'my_module' from {}). Ensure it is defined in such module"),
+        'my_module.py',
     ],
-     [
-         'ploomber.cli.not_existing_func',
-         ('Could not get "not_existing_func" from module "ploomber.cli" : '
-          '(loaded \'ploomber\' module  from: \'{}\'), make sure it is a '
-          'valid callable defined in such module'.format(
-              importlib.util.find_spec('ploomber.cli').origin))
-     ]])
-def test_load_dotted_path_if_attribute_not_found(path, err_msg):
+    [
+        'another.sub.func',
+        ("Could not get 'func' from module 'another.sub' "
+         "(loaded 'another.sub' from {}). Ensure it is defined in such module"
+         ),
+        Path('another', 'sub.py'),
+    ],
+],
+                         ids=[
+                             'simple',
+                             'with-submodule',
+                         ])
+def test_load_dotted_path_if_attribute_not_found(path, err_msg, root,
+                                                 tmp_directory, tmp_imports):
+    Path('my_module.py').write_text('')
+
+    Path('another').mkdir()
+    Path('another', 'sub.py').touch()
+
     with pytest.raises(AttributeError) as excinfo:
         dotted_path.load_dotted_path(path)
-    assert excinfo.value.args[0] == err_msg
+
+    expected = err_msg.format(repr(str(Path(root).resolve())))
+    assert str(excinfo.value) == expected
 
 
 def test_create_intermediate_modules(tmp_directory):

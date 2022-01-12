@@ -25,6 +25,7 @@ def main():
     end_time = datetime.datetime.now()
     telemetry.log_api("ploomber_interact",
                       total_runtime=str(end_time - start_time))
-    # NOTE: do not use embed here, we must use start_ipytho, see here:
+
+    # NOTE: do not use embed here, we must use start_ipython, see here:
     # https://github.com/ipython/ipython/issues/8918
     start_ipython(argv=[], user_ns={'dag': dag})
