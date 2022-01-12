@@ -27,6 +27,8 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v2
     - name: Setup
       run: |
         conda create -q -n conda-env python=${{ matrix.python-version }}
@@ -37,6 +39,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+
         eval "$(conda shell.bash hook)"
         conda activate conda-env
 
@@ -60,9 +63,8 @@ jobs:
         # install dev requirements
         pip install .[dev]
 
-        # install R and IR kernel
-        conda install -y r-base=4.0.3 r-irkernel -c conda-forge
-        echo "IRkernel::installspec()" | Rscript -
+        # install IR kernel
+        echo "install.packages('IRkernel', repos='http://cran.us.r-project.org'); IRkernel::installspec()" | Rscript -
 
         # install sample package for tests
         pip install --editable tests/assets/test_pkg
