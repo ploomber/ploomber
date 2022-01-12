@@ -4,7 +4,7 @@ R support
 Ploomber officially supports R. The same concepts that apply to Python
 scripts apply to R scripts; this implies that R scripts can render as notebooks
 in Jupyter and the cell injection works. The only difference is how
-to declare ``upstream`` dependencies and ``product``.
+to declare ``upstream`` dependencies:
 
 For the R Markdown format (``.Rmd``):
 
@@ -14,7 +14,6 @@ For the R Markdown format (``.Rmd``):
 
     ```{r, tags=c("parameters")}
     upstream = list('one_task', 'another_task')
-    product = list(nb='path/to/task.ipynb', some_output='path/to/output.csv')
     ```
 
 
@@ -26,8 +25,10 @@ If you prefer, you can also use plain R scripts:
 
     # + tags=["parameters"]
     upstream = list('one_task', 'another_task')
-    product = list(nb='path/to/task.ipynb', some_output='path/to/output.csv')
     # -
+
+
+If your script doesn't have dependencies: ``upstream = NULL``
 
 To read more about how Ploomber executes scripts and integrates with Jupyter,
 check the :doc:`Jupyter Integration guide <../user-guide/jupyter>`.
