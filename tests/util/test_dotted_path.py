@@ -1,3 +1,4 @@
+import os
 import inspect
 import importlib
 from pathlib import Path
@@ -475,7 +476,7 @@ def test_load_dotted_path_if_attribute_not_found(path, err_msg, root,
     with pytest.raises(AttributeError) as excinfo:
         dotted_path.load_dotted_path(path)
 
-    expected = err_msg.format(repr(str(Path(root).resolve())))
+    expected = err_msg.format(repr(os.path.abspath(root)))
     assert str(excinfo.value) == expected
 
 

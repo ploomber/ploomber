@@ -27,21 +27,28 @@ jobs:
             echo "PostgreSQL service not ready, wait 10 more sec, attempts left: $i"
             sleep 10
         done
+
     - name: Create PostgreSQL user
       run: psql --command="CREATE USER postgres PASSWORD 'postgres'" postgres
+
     - name: Update PostgreSQL permissions
       run: psql --command="ALTER DATABASE postgres OWNER TO postgres" postgres
+
     - name: Check PostgreSQL authentication
       run: PGPASSWORD=postgres pg_isready --dbname postgres --username postgres
+
     - uses: actions/checkout@v2
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: conda-incubator/setup-miniconda@v2
       with:
         miniconda-version: "latest"
         activate-environment: conda-env
         python-version: ${{ matrix.python-version }}
+
     - name: Set up R
       uses: r-lib/actions/setup-r@v2
+
     - name: Install dependencies
       run: |
 
