@@ -23,6 +23,7 @@ class LocalStorageClient(AbstractStorageClient):
         up automatically and assigns it to the parent folder of the root YAML
         spec ot setup.py (if your project is a package).
     """
+
     def __init__(self, path_to_backup_dir, path_to_project_root=None):
         self._path_to_backup_dir = Path(path_to_backup_dir)
         self._path_to_backup_dir.mkdir(exist_ok=True, parents=True)
@@ -53,7 +54,10 @@ class LocalStorageClient(AbstractStorageClient):
         Path(destination).parent.mkdir(exist_ok=True, parents=True)
 
         if remote.is_file():
-            shutil.copy(remote, destination)
+            # shutil.copy tries to preserve metadata, we found a race
+            # condition on macOS (our CI would fail from time to time)
+            # so we are now using copyfile since it doesn't copy metadata
+            shutil.copyfile(remote, destination)
         elif remote.is_dir():
             shutil.copytree(remote, destination)
         else:

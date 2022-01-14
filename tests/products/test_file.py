@@ -558,6 +558,7 @@ def test_upload_after_task_build(tmp_directory):
 
 
 class FileWithUploadCounter(File):
+
     def upload(self):
         if not Path('.file.txt.metadata').exists():
             # we have to ensure File.upload is called after saving metadata
@@ -578,11 +579,13 @@ class FileWithUploadCounter(File):
 
 
 class FileWithUploadError(File):
+
     def upload(self):
         raise ValueError('upload failed!')
 
 
 class FileWithDownloadError(File):
+
     def download(self):
         raise ValueError('download failed!')
 
@@ -628,6 +631,7 @@ def test_upload_error(executor, tmp_directory):
 
 
 class MyFakeClient:
+
     def _remote_exists(self, path):
         return True
 
