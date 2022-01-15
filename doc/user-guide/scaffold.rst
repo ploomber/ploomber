@@ -9,6 +9,22 @@ You can quickly create new projects using the ``scaffold`` command:
 
 After running it, type a name for your project and press enter. The command will create a pre-configured project with a sample pipeline.
 
+By adding the ``--empty`` flag to scaffold you can create an empty pipeline - this will scaffold an empty pipeline.yaml:
+
+.. code-block:: console
+
+    ploomber scaffold --empty
+
+Similar to the command above without the ``--empty`` flag, you'll need to type your project name and press enter.
+
+By adding the ``-e`` or ``--entry-point`` you can specific a custom name to your pipeline.yaml (redirect to a different .yaml or location).
+This will create a pipeline from the specified entry point:
+
+.. code-block:: console
+
+    ploomber scaffold --entry-point
+
+
 By default, ``scaffold`` adds a ``requirements.txt`` file to use with pip. If you want to use conda:
 
 .. code-block:: console
