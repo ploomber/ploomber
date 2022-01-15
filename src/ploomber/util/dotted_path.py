@@ -336,7 +336,8 @@ def lazily_locate_dotted_path(dotted_path):
                                   f'path {dotted_path!r}, '
                                   f'no module named {first!r}')
 
-    if spec.origin is None:
+    # python 3.6 returns 'namespace', python 3.7 an up returns None
+    if spec.origin is None or spec.origin == 'namespace':
         raise ModuleNotFoundError('Error processing dotted '
                                   f'path {dotted_path!r}: '
                                   f'{first!r} appears to be a namespace '
@@ -432,7 +433,8 @@ def create_intermediate_modules(source_parts):
     spec = importlib.util.find_spec(inner[0])
 
     # .origin will be None for namespace packages
-    if spec and spec.origin:
+    # on Python 3.6, spec.origin is 'namespace' instead of None
+    if spec and spec.origin is not None and spec.origin != 'namespace':
         inner[0] = Path(spec.origin).parent
 
     parent = Path(*inner)

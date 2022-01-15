@@ -114,6 +114,11 @@ def examples(name, force, branch, output):
             'Update [conda]: conda update ploomber -c conda-forge') from e
 
 
+def _exit_with_error_message(msg):
+    click.echo(msg, err=True)
+    sys.exit(2)
+
+
 def cmd_router():
     cmd_name = None if len(sys.argv) < 2 else sys.argv[1]
 
@@ -127,6 +132,9 @@ def cmd_router():
         'nb': cli_module.nb.main,
     }
 
+    # users may attempt to run execute/run, suggest to use build instead
+    alias = {'execute': 'build', 'run': 'build'}
+
     if cmd_name in custom:
         # NOTE: we don't use the argument here, it is parsed by _main
         # pop the second element ('entry') to make the CLI behave as expected
@@ -136,6 +144,11 @@ def cmd_router():
         sys.path.insert(0, os.path.abspath('.'))
         fn = custom[cmd_name]
         fn()
+    elif cmd_name in alias:
+        suggestion = alias[cmd_name]
+        _exit_with_error_message("Try 'ploomber --help' for help.\n\n"
+                                 f"Error: {cmd_name!r} is not a valid command."
+                                 f" Did you mean {suggestion!r}?")
     else:
         telemetry.log_api("unsupported-api-call", metadata={'argv': sys.argv})
         cli()

@@ -30,6 +30,33 @@ def test_no_options(monkeypatch):
     assert excinfo.value.code == 0
 
 
+@pytest.mark.parametrize('cmd, suggestion', [
+    ['execute', 'build'],
+    ['run', 'build'],
+])
+def test_suggestions(monkeypatch, capsys, cmd, suggestion):
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'execute'])
+
+    with pytest.raises(SystemExit) as excinfo:
+        cmd_router()
+
+    captured = capsys.readouterr()
+    assert f"Did you mean '{suggestion}'?" in captured.err
+    assert excinfo.value.code == 2
+
+
+def test_build_suggestion(monkeypatch, capsys):
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'build', 'task'])
+
+    with pytest.raises(SystemExit) as excinfo:
+        cmd_router()
+
+    captured = capsys.readouterr()
+    suggestion = "To build a single task, try: 'ploomber task {task-name}'"
+    assert suggestion in captured.err
+    assert excinfo.value.code == 2
+
+
 @pytest.mark.parametrize('cmd', [
     None,
     'scaffold',
