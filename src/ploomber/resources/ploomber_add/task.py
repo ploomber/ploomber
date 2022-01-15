@@ -38,7 +38,7 @@ upstream = None
 # path to save the executed version of this task, other keys can be used
 # to reference other output files. A cell must be injected below this one,
 # if you don't see it, check the Jupyter logs
-product = {'nb': 'products/notebook.ipynb', 'data': 'products/output.csv'}
+product = {'nb': 'products/notebook.ipynb'}
 [% else -%]
 # extract_product=False in your pipeline.yaml file, leave this as None, the
 # value in the YAML spec will be injected in a cell below. If you don't see it,

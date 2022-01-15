@@ -22,19 +22,26 @@ from ploomber.static_analysis.parser.tokens import (Integer, BinaryOperator,
 
 @pytest.mark.parametrize(
     'code, tokens',
-    [('1+1', [Integer(1), BinaryOperator('+'),
-              Integer(1)]),
-     ('number <- 42', [Name('number'),
-                       Assignment('<-'),
-                       Integer(42)]),
-     ('c(1,2)',
-      [Operator('c('),
-       Integer(1),
-       Operator(','),
-       Integer(2),
-       Operator(')')]),
-     ('list()', [Operator('list'),
-                 Operator('('), Operator(')')]),
+    [('1+1', [
+        Integer(1),
+        BinaryOperator('+'),
+        Integer(1),
+    ]), ('number <- 42', [
+        Name('number'),
+        Assignment('<-'),
+        Integer(42),
+    ]),
+     ('c(1,2)', [
+         Operator('c('),
+         Integer(1),
+         Operator(','),
+         Integer(2),
+         Operator(')'),
+     ]), ('list()', [
+         Operator('list'),
+         Operator('('),
+         Operator(')'),
+     ]),
      ('list(5  , 6)', [
          Operator('list'),
          Operator('('),
@@ -50,8 +57,14 @@ from ploomber.static_analysis.parser.tokens import (Integer, BinaryOperator,
          Assignment('='),
          Integer(100),
          Operator(')')
-     ]), ('"hello"', [String('hello')]),
-     ('x <- NULL', [Name('x'), Assignment('<-'),
-                    Null()])])
+     ]), (
+         '"hello"',
+         [String('hello')],
+     ), ('x <- NULL', [
+         Name('x'),
+         Assignment('<-'),
+         Null(),
+     ])],
+)
 def test_lexer(code, tokens):
     assert list(RLexer(code)) == tokens

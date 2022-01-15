@@ -2,29 +2,58 @@ from pathlib import Path
 import ast
 
 import pytest
+from jinja2 import Template
 
 from ploomber import tasks
 from ploomber import scaffold
+from ploomber.spec import DAGSpec
+
+template = """
+meta:
+    extract_product: {{extract_product}}
+    extract_upstream: {{extract_upstream}}
+
+tasks:
+    - source: {{name}}
+      {% if not extract_product %}
+      product: nb.ipynb
+      {% endif %}
+"""
 
 
-@pytest.mark.parametrize('name', ['task.py', 'task.ipynb'])
+@pytest.mark.parametrize('name', [
+    'task.py',
+    'task.ipynb',
+    'task.R',
+    'task.Rmd',
+    'task.sql',
+])
 @pytest.mark.parametrize('extract_upstream', [False, True])
 @pytest.mark.parametrize('extract_product', [False, True])
-def test_renders_valid_script(name, extract_product, extract_upstream):
-    loader = scaffold.ScaffoldLoader('ploomber_add')
+def test_renders_valid_script(name, extract_product, extract_upstream,
+                              tmp_directory):
+    loader = scaffold.ScaffoldLoader()
     out = loader.render(name,
                         params=dict(extract_product=extract_product,
                                     extract_upstream=extract_upstream))
 
-    # make sure it generates valid python code, except for the sql template
-    if not name.endswith('.sql'):
-        ast.parse(out)
+    # test it generates a valid pipelines
+    if Path(name).suffix != '.sql':
+
+        Path(name).write_text(out)
+
+        Path('pipeline.yaml').write_text(
+            Template(template).render(name=name,
+                                      extract_product=extract_product,
+                                      extract_upstream=extract_upstream))
+
+        DAGSpec('pipeline.yaml').to_dag().build()
 
 
 @pytest.mark.parametrize('extract_upstream', [False, True])
 @pytest.mark.parametrize('extract_product', [False, True])
 def test_renders_valid_function(extract_product, extract_upstream):
-    loader = scaffold.ScaffoldLoader('ploomber_add')
+    loader = scaffold.ScaffoldLoader()
     out = loader.render('function.py',
                         params=dict(function_name='some_function',
                                     extract_product=extract_product,
@@ -35,7 +64,7 @@ def test_renders_valid_function(extract_product, extract_upstream):
 
 
 def test_create_function(backup_test_pkg, tmp_directory):
-    loader = scaffold.ScaffoldLoader('ploomber_add')
+    loader = scaffold.ScaffoldLoader()
 
     loader.create('test_pkg.functions.new_function',
                   dict(extract_product=False, extract_upstream=True),

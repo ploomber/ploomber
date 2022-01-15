@@ -4,27 +4,23 @@ from pathlib import Path
 import jupytext
 from jinja2 import Environment, PackageLoader, StrictUndefined
 
-try:
-    import importlib.resources as resources
-except ImportError:
-    import importlib_resources as resources
-
 from ploomber import tasks
 from ploomber.util.dotted_path import (locate_dotted_path,
                                        create_intermediate_modules)
 
 
 class ScaffoldLoader:
-    def __init__(self, directory, project_name=None):
+    """Scaffold task files
+    """
+
+    def __init__(self):
         self.env = Environment(loader=PackageLoader(
-            'ploomber', str(Path('resources', directory))),
+            'ploomber', str(Path('resources', 'ploomber_add'))),
                                variable_start_string='[[',
                                variable_end_string=']]',
                                block_start_string='[%',
                                block_end_string='%]',
                                undefined=StrictUndefined)
-        self.directory = directory
-        self.project_name = project_name
 
     def get_template(self, name):
         return self.env.get_template(name)
@@ -48,11 +44,6 @@ class ScaffoldLoader:
             out = jupytext.writes(nb, fmt=convert_to)
 
         return out
-
-    def copy(self, name):
-        module = '.'.join(['ploomber', 'resources', self.directory])
-        content = resources.read_text(module, name)
-        Path(self.project_name, name).write_text(content)
 
     def create(self, source, params, class_):
         if class_ is tasks.PythonCallable:
@@ -81,15 +72,19 @@ class ScaffoldLoader:
                 print(f'Adding {fn_name!r} to module {source!s}...')
                 fn_str = self.render('function.py', params=params)
                 source.write_text(original + fn_str)
+
+        #  script task...
         else:
             path = Path(source)
 
             if not path.exists():
-                if path.suffix in {'.py', '.sql', '.ipynb'}:
+                if path.suffix in {'.py', '.sql', '.ipynb', '.R', '.Rmd'}:
                     # create parent folders if needed
                     source.parent.mkdir(parents=True, exist_ok=True)
+
                     content = self.render('task' + source.suffix,
                                           params=params)
+
                     print('Adding {}...'.format(source))
                     source.write_text(content)
                 else:

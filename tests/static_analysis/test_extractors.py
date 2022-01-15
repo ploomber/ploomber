@@ -103,6 +103,8 @@ def test_error_when_sql_product_is_invalid(code, class_):
         "upstream <- list('a', 'b', 'c')\n\nproduct <- list(d='path/d.csv')"),
     RNotebookExtractor(
         "upstream = list('a', 'b', 'c')\n\nproduct = list(d='path/d.csv')"),
+    RNotebookExtractor("# a comment\n\nupstream = list('a', 'b', 'c')"
+                       "\n\nproduct = list(d='path/d.csv')"),
     RNotebookExtractor(
         "\nproduct <- list(d='path/d.csv')\n\nupstream <- list('a', 'b', 'c')"
     ),

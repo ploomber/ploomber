@@ -1,0 +1,37 @@
+# Add description here
+
+*Note:* You can open this file as a notebook (JupyterLab: right-click on it in the side bar -> Open With -> Notebook)
+
+```{r tags=c("parameters")}
+[% if extract_upstream -%]
+# if this task has dependencies, list them them here
+# (e.g. upstream = list('some_task')), otherwise leave as NULL. Once you modify
+# the variable, reload it for Ploomber to inject the cell (On JupyterLab:
+# File -> Reload File from Disk)
+upstream = NULL
+[% else -%]
+# extract_upstream=False in your pipeline.yaml file, if this task has
+# dependencies, declare them in the YAML spec and leave this as NULL. Once you
+# add the dependencies, reload the file for Ploomber to inject the cell
+# (On JupyterLab: File -> Reload File from Disk)
+upstream = NULL
+[% endif %]
+[% if extract_product -%]
+# extract_product=True in your pipeline.yaml file, 'nb' must be the
+# path to save the executed version of this task, other keys can be used
+# to reference other output files. A cell must be injected below this one,
+# if you don't see it, check the Jupyter logs
+product = list(nb='products/notebook.ipynb')
+[% else -%]
+# extract_product=False in your pipeline.yaml file, leave this as NULL, the
+# value in the YAML spec will be injected in a cell below. If you don't see it,
+# check the Jupyter logs
+product = NULL
+[% endif %]
+```
+
+```{r}
+# your code here...
+```
+
+

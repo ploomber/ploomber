@@ -16,7 +16,7 @@ def load_dag():
 def add(spec, path_to_spec):
     """Add scaffold templates for tasks whose source does not exist
     """
-    loader = ScaffoldLoader('ploomber_add')
+    loader = ScaffoldLoader()
 
     # TODO: when the dag has a source loader, the argument passed to
     # ploomber_add should take that into account to place the new file
