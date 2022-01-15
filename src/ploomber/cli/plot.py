@@ -9,7 +9,7 @@ from ploomber.telemetry import telemetry
 @cli_endpoint
 def main():
     start_time = datetime.datetime.now()
-    parser = CustomParser(description='Plot a pipeline')
+    parser = CustomParser(description='Plot a pipeline', prog='ploomber plot')
     with parser:
         parser.add_argument(
             '--output',

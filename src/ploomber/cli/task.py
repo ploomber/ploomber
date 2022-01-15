@@ -10,7 +10,7 @@ import datetime
 @cli_endpoint
 def main():
     start_time = datetime.datetime.now()
-    parser = CustomParser(description='Get task information')
+    parser = CustomParser(description='Build tasks', prog='ploomber task')
     with parser:
         parser.add_argument('task_name')
         parser.add_argument('--source',

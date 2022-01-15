@@ -7,7 +7,8 @@ import datetime
 @cli_endpoint
 def main():
     start_time = datetime.datetime.now()
-    parser = CustomParser(description='Show pipeline status')
+    parser = CustomParser(description='Show pipeline status',
+                          prog='ploomber status')
     with parser:
         # this command has no static args
         pass

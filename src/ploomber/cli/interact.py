@@ -9,7 +9,8 @@ import datetime
 def main():
     start_time = datetime.datetime.now()
     parser = CustomParser(description='Call an entry point '
-                          '(pipeline.yaml or dotted path to factory)')
+                          '(pipeline.yaml or dotted path to factory)',
+                          prog='ploomber interact')
     with parser:
         # this command has no static args
         pass

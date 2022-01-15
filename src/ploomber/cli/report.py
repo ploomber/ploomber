@@ -7,7 +7,8 @@ import datetime
 @cli_endpoint
 def main():
     start_time = datetime.datetime.now()
-    parser = CustomParser(description='Make a pipeline report')
+    parser = CustomParser(description='Make a pipeline report',
+                          prog='ploomber report')
     with parser:
         parser.add_argument(
             '--output',

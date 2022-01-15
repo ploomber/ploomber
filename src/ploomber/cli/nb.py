@@ -84,7 +84,8 @@ ploomber nb --entry-point {entry_point} --inject
 # TODO: --log, --log-file should not appear as options
 @command_endpoint
 def main():
-    parser = CustomParser(description='Manage scripts and notebooks')
+    parser = CustomParser(description='Manage scripts and notebooks',
+                          prog='ploomber nb')
 
     with parser:
         cell = parser.add_mutually_exclusive_group()
