@@ -99,7 +99,7 @@ def test_add_task_from_scaffold(backup_test_pkg, tmp_directory):
     # dotted path actually exists. I think the cleanest solution
     # is to add a special class method for DAGSpec that allows the lazy
     # load to skip validating the last attribute...
-    spec, path_to_spec = scaffold.load_dag()
+    spec, _, path_to_spec = scaffold.load_dag()
     scaffold.add(spec, path_to_spec)
 
     code = Path(backup_test_pkg, 'functions.py').read_text()
@@ -134,7 +134,7 @@ def test_add_task_when_using_import_tasks_from(tmp_directory):
 
     (subdir / 'tasks.yaml').write_text(tasks)
 
-    spec, path_to_spec = scaffold.load_dag()
+    spec, _, path_to_spec = scaffold.load_dag()
     scaffold.add(spec, path_to_spec)
 
     assert (subdir / 'notebook.py').exists()

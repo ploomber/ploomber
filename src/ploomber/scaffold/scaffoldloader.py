@@ -46,6 +46,15 @@ class ScaffoldLoader:
         return out
 
     def create(self, source, params, class_):
+        """Scaffold a task if they don't exist
+
+        Returns
+        -------
+        bool
+            True if it created a task, False if it didn't
+        """
+        did_create = False
+
         if class_ is tasks.PythonCallable:
             source_parts = source.split('.')
             (*module_parts, fn_name) = source_parts
@@ -73,6 +82,8 @@ class ScaffoldLoader:
                 fn_str = self.render('function.py', params=params)
                 source.write_text(original + fn_str)
 
+                did_create = True
+
         #  script task...
         else:
             path = Path(source)
@@ -87,8 +98,12 @@ class ScaffoldLoader:
 
                     print('Adding {}...'.format(source))
                     source.write_text(content)
+
+                    did_create = True
                 else:
                     print('Error: This command does not support adding '
                           'tasks with extension "{}", valid ones are '
                           '.py and .sql. Skipping {}'.format(
                               path.suffix, path))
+
+        return did_create

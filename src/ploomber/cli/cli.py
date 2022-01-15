@@ -57,20 +57,24 @@ def scaffold(conda, package, entry_point, empty):
         raise click.ClickException(template.format(flag='--empty'))
 
     # try to load a dag by looking in default places
-    if not entry_point:
+    if entry_point is None:
         loaded = _scaffold.load_dag()
     else:
         try:
-            loaded = DAGSpec(entry_point,
-                             lazy_import='skip'), Path(entry_point)
+            loaded = (
+                DAGSpec(entry_point, lazy_import='skip'),
+                Path(entry_point).parent,
+                Path(entry_point),
+            )
         except Exception as e:
             raise click.ClickException(e) from e
 
     if loaded:
-        # add scaffold tasks
-        spec, path_to_spec = loaded
+        # existing pipeline, add tasks
+        spec, _, path_to_spec = loaded
         _scaffold.add(spec, path_to_spec)
     else:
+        # no pipeline, create base project
         scaffold_project.cli(project_path=None,
                              conda=conda,
                              package=package,

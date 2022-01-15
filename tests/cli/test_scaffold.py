@@ -71,6 +71,8 @@ def test_ploomber_scaffold_task_template(file_, extract_flag, tmp_directory):
 
     content = Path(file_).read_text()
 
+    assert "Found spec at 'pipeline.yaml'" in result.output
+    assert 'Created 1 new task sources.' in result.output
     assert result.exit_code == 0
     assert 'Add description here' in content
     assert ('extract_upstream={} '
@@ -165,7 +167,7 @@ def test_ploomber_scaffold_unknown_extension(tmp_directory):
     assert out in result.output
 
 
-def test_ploomber_scaffold_skip_if_file_exists(tmp_directory, capsys):
+def test_ploomber_scaffold_skip_if_file_exists(tmp_directory):
     sample_spec = {
         'meta': {
             'extract_upstream': False,
@@ -182,6 +184,9 @@ def test_ploomber_scaffold_skip_if_file_exists(tmp_directory, capsys):
     runner = CliRunner()
     result = runner.invoke(scaffold)
 
+    expected = ("Found spec at 'pipeline.yaml'\nAll tasks sources "
+                "declared in 'pipeline.yaml' exist, nothing was created.\n")
+    assert result.output == expected
     assert result.exit_code == 0
     assert Path('task.py').read_text() == ''
 
@@ -209,6 +214,8 @@ tasks:
                            args=['-e', 'pipeline.serve.yaml'],
                            catch_exceptions=False)
 
+    assert "Found spec at 'pipeline.serve.yaml'" in result.output
+    assert 'Created 1 new task sources.' in result.output
     assert not result.exit_code
     assert Path('script.py').is_file()
 

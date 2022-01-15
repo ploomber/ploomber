@@ -34,9 +34,9 @@ def lazily_load_entry_point(starting_dir=None, reload=False):
         path = Path().resolve()
         return spec, dag, path
     else:
-        spec, path = _default_spec_load(starting_dir=starting_dir,
-                                        reload=reload,
-                                        lazy_import=True)
+        spec, path, _ = _default_spec_load(starting_dir=starting_dir,
+                                           reload=reload,
+                                           lazy_import=True)
 
     # chain exception to provide more context
     dag = spec.to_dag()
@@ -84,7 +84,8 @@ def _default_spec_load(starting_dir=None, lazy_import=False, reload=False):
                        lazy_import=lazy_import,
                        reload=reload)
 
-        return spec, Path(path_to_entry_point).parent
+        path_to_spec = Path(path_to_entry_point)
+        return spec, path_to_spec.parent, path_to_spec
 
     except Exception as e:
         exc = DAGSpecInitializationError('Error initializing DAG from '
