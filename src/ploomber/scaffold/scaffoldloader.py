@@ -48,7 +48,7 @@ class ScaffoldLoader:
     def create(self, source, params, class_):
         if class_ is tasks.PythonCallable:
             source_parts = source.split('.')
-            [*module_parts, fn_name] = source_parts
+            (*module_parts, fn_name) = source_parts
             params['function_name'] = fn_name
 
             try:

@@ -336,6 +336,12 @@ def lazily_locate_dotted_path(dotted_path):
                                   f'path {dotted_path!r}, '
                                   f'no module named {first!r}')
 
+    if spec.origin is None:
+        raise ModuleNotFoundError('Error processing dotted '
+                                  f'path {dotted_path!r}: '
+                                  f'{first!r} appears to be a namespace '
+                                  'package, which are not supported')
+
     origin = Path(spec.origin)
     location = origin.parent
 
@@ -361,6 +367,13 @@ def lazily_locate_dotted_path(dotted_path):
         raise ModuleNotFoundError(f'No module named {module_name!r}. '
                                   f'Expected to find one of {str(init)!r} or '
                                   f'{str(file_)!r}, but none of those exist')
+
+
+def dotted_path_exists(dotted_path):
+    try:
+        return lazily_locate_dotted_path(dotted_path)
+    except (ModuleNotFoundError, AttributeError):
+        return False
 
 
 class BaseModel(pydantic.BaseModel):
@@ -409,14 +422,26 @@ def create_intermediate_modules(source_parts):
     Creates the folder structure needed for a module specified
     by the parts of its name
     """
-    [*inner, last] = source_parts
-    if inner:
-        parent = Path(*inner)
-        parent.mkdir(parents=True)
-        for idx in range(len(inner)):
-            init_file = Path(*inner[:idx + 1], "__init__.py")
-            if not init_file.exists():
-                init_file.touch()
-    else:
-        parent = Path(".")
+    dotted_path = '.'.join(source_parts)
+
+    if dotted_path_exists(dotted_path):
+        raise ValueError(f'Dotted path {dotted_path!r} already exists')
+
+    *inner, last = source_parts
+
+    spec = importlib.util.find_spec(inner[0])
+
+    # .origin will be None for namespace packages
+    if spec and spec.origin:
+        inner[0] = Path(spec.origin).parent
+
+    parent = Path(*inner)
+    parent.mkdir(parents=True, exist_ok=True)
+
+    for idx in range(len(inner)):
+        init_file = Path(*inner[:idx + 1], "__init__.py")
+
+        if not init_file.exists():
+            init_file.touch()
+
     Path(parent, f"{last}.py").touch()

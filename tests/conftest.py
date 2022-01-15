@@ -57,6 +57,7 @@ def fixture_tmp_dir(source):
     # some_fixture = factory('some/path')
     # but didn't work
     def decorator(function):
+
         @wraps(function)
         def wrapper():
             old = os.getcwd()
@@ -84,7 +85,9 @@ def fixture_backup(source):
     """
     Similar to fixture_tmp_dir but backups the content instead
     """
+
     def decorator(function):
+
         @wraps(function)
         def wrapper():
             old = os.getcwd()

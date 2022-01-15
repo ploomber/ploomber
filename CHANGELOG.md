@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## 0.14.5dev
+* Fixes error message when failing to load dotted paths
+* `ploomber scaffold` now supports `.R and .Rmd` files (#476)
+* Fixes an error that caused `ploomber scaffold` to ignore the location of existing packages (#459)
 
 ## 0.14.4 (2022-01-07)
 * Fixes an error in the telemetry module

@@ -213,36 +213,9 @@ tasks:
     assert Path('script.py').is_file()
 
 
-@pytest.mark.parametrize("create_module", [True, False])
 @pytest.mark.parametrize("custom_entry_point", [True, False])
-def test_scaffold_with_module(custom_entry_point, create_module, tmp_directory,
+def test_scaffold_with_module(custom_entry_point, tmp_directory,
                               add_current_to_sys_path, no_sys_modules_cache):
-    module_file = Path("my_module.py")
-    if create_module:
-        module_file.write_text("")
-
-    file_name = "not-default.yaml" if custom_entry_point else "pipeline.yaml"
-
-    assert module_file.exists() == create_module
-    write_simple_pipeline(file_name,
-                          modules=["my_module"],
-                          function_name="my_function")
-
-    runner = CliRunner()
-    result = runner.invoke(
-        scaffold,
-        args=['-e', 'not-default.yaml'] if custom_entry_point else [],
-        catch_exceptions=False)
-
-    assert not result.exit_code
-
-    assert_function_in_module("my_function", module_file)
-
-
-@pytest.mark.parametrize("custom_entry_point", [True, False])
-def test_scaffold_with_inner_module(custom_entry_point, tmp_directory,
-                                    add_current_to_sys_path,
-                                    no_sys_modules_cache):
 
     modules = ["module1", "module2", "module3"]
     function_name = "my_function"
