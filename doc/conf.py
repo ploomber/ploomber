@@ -20,7 +20,7 @@ import hooks  # noqa
 # -- Project information -----------------------------------------------------
 
 project = 'ploomber'
-copyright = '2021, ploomber'
+copyright = '2022, ploomber'
 author = 'ploomber'
 version = __version__
 release = version
