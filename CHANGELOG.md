@@ -1,9 +1,9 @@
 # CHANGELOG
 
-## 0.14.5dev
+## 0.14.5 (2022-01-15)
 * Fixes error message when failing to load dotted paths
-* `ploomber scaffold` now supports `.R and .Rmd` files (#476)
-* Fixes an error that caused `ploomber scaffold` to ignore the location of existing packages (#459)
+* `ploomber scaffold` now supports `.R and .Rmd` files ([#476](https://github.com/ploomber/ploomber/issues/476))
+* Fixes an error that caused `ploomber scaffold` to ignore the location of existing packages ([#459](https://github.com/ploomber/ploomber/issues/459))
 * Better error message when running `ploomber execute/run` (suggests `ploomber build`)
 * Better error message when passing positional arguments to `ploomber build` (suggests `ploomber task`)
 
