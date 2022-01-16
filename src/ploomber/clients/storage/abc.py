@@ -6,6 +6,7 @@ from ploomber.clients.storage.util import _resolve
 
 
 class AbstractStorageClient(abc.ABC):
+
     @abc.abstractmethod
     def __init__(self):
         pass
@@ -66,6 +67,16 @@ class AbstractStorageClient(abc.ABC):
         pass
 
     def _remote_path(self, local):
+        """
+        Given a local path, compute the remote path where the file will be
+        stored.
+
+        1. Obtain the absolute project root (``/path/to/project``)
+        2. Get the local absolute path (``/path/to/project/out/data.csv``)
+        3. Compute the relative path (``out/data.csv``)
+        4. Prefix the relative path with the ``parent`` argument
+        (passed to the Client constructor) (``path/to/parent/out/data.csv``)
+        """
         relative = _resolve(local).relative_to(self._path_to_project_root)
         return str(PurePosixPath(self._parent, *relative.parts))
 

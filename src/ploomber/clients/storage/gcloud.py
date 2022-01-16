@@ -12,7 +12,7 @@ from ploomber.exceptions import RemoteFileNotFound, DAGSpecInvalidError
 
 
 class GCloudStorageClient(AbstractStorageClient):
-    """Client for Google Cloud Storage
+    """Client for uploading File products to Google Cloud Storage
 
     Parameters
     ----------
@@ -20,28 +20,35 @@ class GCloudStorageClient(AbstractStorageClient):
         Bucket to use
 
     parent : str
-        Parent folder in the bucket to save files
+        Parent folder in the bucket to store files. For example, if
+        ``parent='path/to'``, and a product in your pipeline is
+        ``out/data.csv``, your file will appea in the bucket at
+        ``path/to/out/data.csv``.
 
     json_credentials_path : str, default=None
         Use the given JSON file to authenticate the client
-        (uses  Client.from_service_account_json(**kwargs)), if None,
-        initializes the client using Client(**kwargs)
+        (uses  ``Client.from_service_account_json(**kwargs)``), if ``None``,
+        initializes the client using ``Client(**kwargs)``
 
     path_to_project_root : str, default=None
-        Path to project root. Product locations are stored in a path relative
-        to this folder. e.g. If project root is ``/my-project``, backup is
-        ``/backup`` and you save a file in ``/my-project/reports/report.html``,
-        it will be saved at ``/backup/reports/report.html``. If None, looks it
-        up automatically and assigns it to the parent folder of the root YAML
-        spec ot setup.py (if your project is a package).
+        Path to project root. If None, looks it
+        up automatically and assigns it to the parent folder of your
+        ``pipeline.yaml`` spec or ``setup.py`` (if your project is a package).
+        This determines the path in remote storage. For example, if
+        ``path_to_project_root`` is ``/my-project``, you're storing a
+        product at ``/my-project/out/data.csv``, and ``parent='some-dir'``,
+        the file will be stored in the bucket at ``some-dir/out/data.csv``
+        (we first compute the path of your product relative to the project
+        root, then prefix it with ``parent``).
 
     credentials_relative_to_project_root : bool, default=True
-        If True, relative paths in json_credentials_path are so to the
-        path_to_project_root, instead of the current working directory
+        If ``True``, relative paths in ``json_credentials_path`` are so to the
+        ``path_to_project_root``, instead of the current working directory
 
     **kwargs
         Keyword arguments for the client constructor
     """
+
     @requires(['google.cloud.storage'],
               name='GCloudStorageClient',
               pip_names=['google-cloud-storage'])

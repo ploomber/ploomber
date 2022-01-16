@@ -76,6 +76,8 @@ Clients
     DBAPIClient
     SQLAlchemyClient
     ShellClient
+    S3Client
+    GCloudStorageClient
 
 
 Spec
