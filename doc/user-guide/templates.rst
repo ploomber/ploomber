@@ -96,7 +96,7 @@ Starting projects from scratch
 ------------------------------
 
 If no template suits your needs, use the ``ploomber scaffold`` command
-to create a barebones project. :doc:`Click here to learn how to scaffold projects </user-guide/scaffold>`.
+to create a clean slate project. :doc:`Click here to learn how to scaffold projects </user-guide/scaffold>`.
 
 ``ploomber scaffold`` also comes with utilities to modify existing pipelines,
 so can use it to modify any of the templates.

@@ -9,6 +9,15 @@ You can quickly create new projects using the ``scaffold`` command:
 
 After running it, type a name for your project and press enter. The command will create a pre-configured project with a sample pipeline.
 
+By adding the ``--empty`` flag to scaffold, you can create a project with an empty ``pipeline.yaml``:
+
+.. code-block:: console
+
+    ploomber scaffold --empty
+
+Then, type your project name and press enter.
+
+
 By default, ``scaffold`` adds a ``requirements.txt`` file to use with pip. If you want to use conda:
 
 .. code-block:: console
@@ -35,14 +44,28 @@ you add the following task to your YAML file:
         - source: tasks/my-new-task.py
           product: output/my-new-task.ipynb
 
-Executing ``ploomber scaffold`` will create a base task at
-``tasks/my-new-task.py``. This command also works with Python functions and SQL
-scripts.
+Executing:
+
+.. code-block:: console
+
+    ploomber scaffold
+
+Will create a base task at ``tasks/my-new-task.py``. This command works with
+Python scripts, functions, Jupyter notebooks, R Markdown files, R scripts, and
+SQL scripts.
 
 ``ploomber scaffold`` works as long as your ``pipeline.yaml`` file
 is in a standard location (:ref:`api-cli-default-locations`); hence, you can
 use it even if you didn't create your project with an initial call to
 ``ploomber scaffold``.
+
+
+By adding the ``--entry-point``/ ``-e``, you can specify a custom entry point.
+For example, if your spec is named ``pipeline.serve.yaml``:
+
+.. code-block:: console
+
+    ploomber scaffold --entry-point pipeline.serve.yaml
 
 
 Packaging projects
