@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.14.6dev
+
 ## 0.14.5 (2022-01-15)
 * Fixes error message when failing to load dotted paths
 * `ploomber scaffold` now supports `.R and .Rmd` files ([#476](https://github.com/ploomber/ploomber/issues/476))
