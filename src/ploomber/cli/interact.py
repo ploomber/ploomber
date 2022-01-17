@@ -20,12 +20,20 @@ def main():
     try:
         dag.render()
     except Exception:
-        print('Your dag failed to render, but you can still inspect the '
-              'object to debug it.\n')
+        err = ('Your dag failed to render, but you can still inspect the '
+               'object to debug it.\n')
+        telemetry.log_api("interact_error",
+                          dag=dag,
+                          metadata={
+                              'type': 'dag_render_failed',
+                              'exception': err
+                          })
+        print(err)
 
     end_time = datetime.datetime.now()
     telemetry.log_api("ploomber_interact",
-                      total_runtime=str(end_time - start_time))
+                      total_runtime=str(end_time - start_time),
+                      dag=dag)
 
     # NOTE: do not use embed here, we must use start_ipython, see here:
     # https://github.com/ipython/ipython/issues/8918

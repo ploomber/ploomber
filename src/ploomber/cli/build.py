@@ -40,7 +40,14 @@ def main(render_only=False):
     # users may try to run "ploomber build {name}" to build a single task
     if len(sys.argv) > 1 and not sys.argv[1].startswith('-'):
         suggestion = 'ploomber task {task-name}'
-        parser.error(f'{parser.prog!r} does not take positional arguments.\n'
+        cmd_name = parser.prog
+        telemetry.log_api("unsupported_build_cmd",
+                          metadata={
+                              'cmd_name': cmd_name,
+                              'suggestion': suggestion,
+                              'argv': sys.argv
+                          })
+        parser.error(f'{cmd_name!r} does not take positional arguments.\n'
                      f'To build a single task, try: {suggestion!r}')
 
     dag, args = parser.load_from_entry_point_arg()
@@ -65,5 +72,7 @@ def main(render_only=False):
             print(report)
     end_time = datetime.datetime.now()
     telemetry.log_api("ploomber_build",
-                      total_runtime=str(end_time - start_time))
+                      total_runtime=str(end_time - start_time),
+                      dag=dag,
+                      metadata={'argv': sys.argv})
     return dag

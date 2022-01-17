@@ -1,3 +1,5 @@
+import sys
+
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.telemetry import telemetry
@@ -19,5 +21,7 @@ def main():
     dag.to_markup(path=args.output)
     end_time = datetime.datetime.now()
     telemetry.log_api("ploomber_report",
-                      total_runtime=str(end_time - start_time))
+                      total_runtime=str(end_time - start_time),
+                      dag=dag,
+                      metadata={'argv': sys.argv})
     print('Report saved at:', args.output)

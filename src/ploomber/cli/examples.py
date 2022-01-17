@@ -2,6 +2,7 @@ import platform
 import stat
 import os
 import csv
+import sys
 from datetime import datetime
 import json
 import shutil
@@ -13,6 +14,7 @@ import click
 
 from ploomber.io.terminalwriter import TerminalWriter
 from ploomber.table import Table
+from ploomber.telemetry import telemetry
 
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer
@@ -250,6 +252,11 @@ def main(name, force=False, branch=None, output=None):
         selected = manager.path_to(name)
 
         if not selected.exists():
+            telemetry.log_api("examples_error",
+                              metadata={
+                                  'type': 'wrong_example_name',
+                                  'example_name': name
+                              })
             click.echo(f'There is no example named {name!r}.\n'
                        'To list examples: ploomber examples\n'
                        'To update local copy: ploomber examples -f')
@@ -259,6 +266,11 @@ def main(name, force=False, branch=None, output=None):
             tw.sep('=', f'Copying example {name!r} to {output}/', green=True)
 
             if Path(output).exists():
+                telemetry.log_api("examples_error",
+                                  metadata={
+                                      'type': 'duplicated_output',
+                                      'output_name': output
+                                  })
                 raise click.ClickException(
                     f"{output!r} already exists in the current working "
                     "directory, please rename it or move it "
@@ -279,3 +291,8 @@ def main(name, force=False, branch=None, output=None):
                      f'\n* conda env create -f environment.yml'
                      f'\n* pip install -r requirements.txt\n')
             tw.sep('=', blue=True)
+            telemetry.log_api("ploomber_examples",
+                              metadata={
+                                  'argv': sys.argv,
+                                  'example_name': name
+                              })

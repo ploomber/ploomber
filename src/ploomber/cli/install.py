@@ -45,29 +45,41 @@ def main(use_lock):
         err = ("Expected and environment.lock.yaml "
                "(conda) or requirements.lock.txt (pip) in the current "
                "directory. Add one of them and try again.")
-        telemetry.log_api("install-exception-lock",
-                          metadata={'Exception': err})
+        telemetry.log_api("install-error",
+                          metadata={
+                              'type': 'no_lock',
+                              'exception': err
+                          })
         raise exceptions.ClickException(err)
     elif not use_lock and not HAS_ENV_YML and not HAS_REQS_TXT:
         err = ("Expected an environment.yaml (conda)"
                " or requirements.txt (pip) in the current directory."
                " Add one of them and try again.")
-        telemetry.log_api("install-exception-requirements",
-                          metadata={'Exception': err})
+        telemetry.log_api("install-error",
+                          metadata={
+                              'type': 'no_env_requirements',
+                              'exception': err
+                          })
         raise exceptions.ClickException(err)
     elif (not HAS_CONDA and use_lock and HAS_ENV_LOCK_YML
           and not HAS_REQS_LOCK_TXT):
         err = ("Found env environment.lock.yaml "
                "but conda is not installed. Install conda or add a "
                "requirements.lock.txt to use pip instead")
-        telemetry.log_api("install-exception-conda",
-                          metadata={'Exception': err})
+        telemetry.log_api("install-error",
+                          metadata={
+                              'type': 'no_conda',
+                              'exception': err
+                          })
         raise exceptions.ClickException(err)
     elif not HAS_CONDA and not use_lock and HAS_ENV_YML and not HAS_REQS_TXT:
         err = ("Found environment.yaml but conda is not installed."
                " Install conda or add a requirements.txt to use pip instead")
-        telemetry.log_api("install-exception-conda2",
-                          metadata={'Exception': err})
+        telemetry.log_api("install-error",
+                          metadata={
+                              'type': 'no_conda2',
+                              'exception': err
+                          })
         raise exceptions.ClickException(err)
     elif HAS_CONDA and use_lock and HAS_ENV_LOCK_YML:
         main_conda(start_time, use_lock=True)
@@ -154,10 +166,16 @@ def main_conda(start_time, use_lock):
     current_env = Path(shutil.which('python')).parents[1].name
 
     if env_name == current_env:
-        raise RuntimeError(f'{env_yml} will create an environment '
-                           f'named {env_name!r}, which is the current active '
-                           'environment. Move to a different one and try '
-                           'again (e.g., "conda activate base")')
+        err = (f'{env_yml} will create an environment '
+               f'named {env_name!r}, which is the current active '
+               'environment. Move to a different one and try '
+               'again (e.g., "conda activate base")')
+        telemetry.log_api("install-error",
+                          metadata={
+                              'type': 'env_running_conflict',
+                              'exception': err
+                          })
+        raise RuntimeError(err)
 
     # get current installed envs
     conda = shutil.which('conda')
@@ -175,9 +193,15 @@ def main_conda(start_time, use_lock):
         ])
 
         if already_installed:
-            raise ValueError(f'Environment {env_name!r} already exists, '
-                             f'delete it and try again '
-                             f'(conda env remove --name {env_name})')
+            err = (f'Environment {env_name!r} already exists, '
+                   f'delete it and try again '
+                   f'(conda env remove --name {env_name})')
+            telemetry.log_api("install-error",
+                              metadata={
+                                  'type': 'duplicate_env',
+                                  'exception': err
+                              })
+            raise ValueError(err)
 
     pkg_manager = mamba if mamba else conda
     cmdr.run(pkg_manager,
@@ -225,11 +249,15 @@ def _find_conda_root(conda_bin):
         # on linux miniconda3, anaconda and miniconda
         if parent.name.lower() in {'miniconda3', 'miniconda', 'anaconda3'}:
             return parent
-
-    raise RuntimeError(
-        'Failed to locate conda root from '
-        f'directory: {str(conda_bin)!r}. Please submit an issue: '
-        'https://github.com/ploomber/ploomber/issues/new')
+    err = ('Failed to locate conda root from '
+           f'directory: {str(conda_bin)!r}. Please submit an issue: '
+           'https://github.com/ploomber/ploomber/issues/new')
+    telemetry.log_api("install-error",
+                      metadata={
+                          'type': 'no_conda_root',
+                          'exception': err
+                      })
+    raise RuntimeError(err)
 
 
 def _path_to_pip_in_env_with_name(conda_bin, env_name):
@@ -246,9 +274,14 @@ def _locate_pip_inside_conda(env_name):
 
     # this might happen if the environment does not contain python/pip
     if not Path(pip).exists():
-        raise FileNotFoundError(
-            f'Could not locate pip in environment {env_name!r}, make sure '
-            'it is included in your environment.yml and try again')
+        err = (f'Could not locate pip in environment {env_name!r}, make sure '
+               'it is included in your environment.yml and try again')
+        telemetry.log_api("install-error",
+                          metadata={
+                              'type': 'no_pip_env',
+                              'exception': err
+                          })
+        raise FileNotFoundError(err)
 
     return pip
 
