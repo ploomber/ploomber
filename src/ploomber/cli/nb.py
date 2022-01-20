@@ -1,11 +1,13 @@
 import shutil
 from pathlib import Path
 import stat
+import sys
 
 import click
 
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import command_endpoint
+from ploomber.telemetry import telemetry
 
 
 def _call_in_source(dag, method_name, message, kwargs=None):
@@ -124,8 +126,14 @@ def main():
         dag.render(show_progress=False)
 
     if loading_error:
-        raise RuntimeError('Could not run nb command: the DAG '
-                           'failed to load') from loading_error
+        err = ('Could not run nb command: the DAG ' 'failed to load')
+        telemetry.log_api("nb_error",
+                          metadata={
+                              'type': 'dag_load_failed',
+                              'exception': err + f' {loading_error}',
+                              'argv': sys.argv
+                          })
+        raise RuntimeError(err) from loading_error
 
     if args.format:
         new_paths = [
@@ -170,14 +178,20 @@ def main():
             'Paired notebooks',
             dict(base_path=args.pair),
         )
-        click.echo(f'Finshed pairing notebooks. Tip: add {args.pair!r} to '
+        click.echo(f'Finished pairing notebooks. Tip: add {args.pair!r} to '
                    'your .gitignore to keep your repository clean')
 
     if args.install_hook:
         if not Path('.git').is_dir():
-            raise NotADirectoryError(
-                'Expected a .git/ directory in the current working '
-                'directory. Run this from the repository root directory.')
+            err = ('Expected a .git/ directory in the current working '
+                   'directory. Run this from the repository root directory.')
+            telemetry.log_api("nb_error",
+                              metadata={
+                                  'type': 'no_git_config',
+                                  'exception': err,
+                                  'argv': sys.argv
+                              })
+            raise NotADirectoryError(err)
 
         parent = Path('.git', 'hooks')
         parent.mkdir(exist_ok=True)
@@ -194,3 +208,5 @@ def main():
     if args.uninstall_hook:
         _delete_hook(Path('.git', 'hooks', 'pre-commit'))
         _delete_hook(Path('.git', 'hooks', 'post-commit'))
+
+    telemetry.log_api("ploomber_nb", dag=dag, metadata={'argv': sys.argv})

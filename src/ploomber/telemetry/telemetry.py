@@ -31,17 +31,21 @@ The data we collect is limited to:
 
 import datetime
 import http.client as httplib
+import warnings
+
 import posthog
 import yaml
 import os
 from pathlib import Path
 import sys
 import uuid
+
 from ploomber.telemetry import validate_inputs
 from ploomber import __version__
 import platform
+import distro
 
-TELEMETRY_VERSION = '0.2'
+TELEMETRY_VERSION = '0.3'
 DEFAULT_HOME_DIR = '~/.ploomber'
 CONF_DIR = "stats"
 posthog.project_api_key = 'phc_P9SpSeypyPwxrMdFn2edOOEooQioF2axppyEeDwtMSP'
@@ -69,11 +73,14 @@ def is_online():
 
 # Will output if the code is within a container
 def is_docker():
-    cgroup = Path('/proc/self/cgroup')
-    docker_env = Path('/.dockerenv')
-    return (docker_env.exists() or cgroup.exists()
-            and any('docker' in line
-                    for line in cgroup.read_text().splitlines()))
+    try:
+        cgroup = Path('/proc/self/cgroup')
+        docker_env = Path('/.dockerenv')
+        return (docker_env.exists() or cgroup.exists()
+                and any('docker' in line
+                        for line in cgroup.read_text().splitlines()))
+    except OSError:
+        return False
 
 
 def get_os():
@@ -85,6 +92,36 @@ def get_os():
         return 'MacOS'
     else:  # Windows/Linux are contained
         return os
+
+
+def test():
+    """
+    Returns:
+        A dict of system information.
+    """
+    os = platform.system()
+    if os == "Darwin":
+        return {"os": "mac", "mac_version": platform.mac_ver()[0]}
+
+    if os == "Windows":
+        release, version, csd, platform_type = platform.win32_ver()
+        return {
+            "os": "windows",
+            "windows_version_release": release,
+            "windows_version": version,
+            "windows_version_service_pack": csd,
+            "windows_version_os_type": platform_type,
+        }
+
+    if os == "Linux":
+        return {
+            "os": "linux",
+            "linux_distro": distro.id(),
+            "linux_distro_like": distro.like(),
+            "linux_distro_version": distro.version(),
+        }
+
+    return {"os": os}
 
 
 def is_conda():
@@ -100,8 +137,8 @@ def get_base_prefix_compat():
     """
     This function will find the pip virtualenv with different python versions.
     Get base/real prefix, or sys.prefix if there is none."""
-    return getattr(sys, "base_prefix", None) or sys.prefix or \
-        getattr(sys, "real_prefix", None)
+    return getattr(sys, "base_prefix", None) or sys.prefix or getattr(
+        sys, "real_prefix", None)
 
 
 def in_virtualenv():
@@ -109,6 +146,7 @@ def in_virtualenv():
 
 
 def get_env():
+    """Returns: The name of the virtual env if exists as str"""
     if in_virtualenv():
         return 'pip'
     elif is_conda():
@@ -117,20 +155,88 @@ def get_env():
         return 'local'
 
 
+def is_colab():
+    """Returns: True for Google Colab env"""
+    return "COLAB_GPU" in os.environ
+
+
+def is_paperspace():
+    """Returns: True for Paperspace env"""
+    return "PS_API_KEY" in os.environ or\
+           "PAPERSPACE_API_KEY" in os.environ or\
+           "PAPERSPACE_NOTEBOOK_REPO_ID" in os.environ
+
+
+def is_slurm():
+    """Returns: True for Slurm env"""
+    return "SLURM_JOB_ID" in os.environ
+
+
+def is_airflow():
+    """Returns: True for Airflow env"""
+    return "AIRFLOW_CONFIG" in os.environ or "AIRFLOW_HOME" in os.environ
+
+
+def is_argo():
+    """Returns: True for Airflow env"""
+    return "ARGO_AGENT_TASK_WORKERS" in os.environ or \
+           "ARGO_KUBELET_PORT" in os.environ
+
+
+def clean_tasks_upstream_products(input):
+    clean_input = {}
+    try:
+        product_items = input.items()
+        for product_item_name, product_item in product_items:
+            clean_input[product_item_name] = str(product_item).split("/")[-1]
+    except AttributeError:  # Single product
+        return str(input.split("/")[-1])
+
+    return clean_input
+
+
+def parse_dag(dag):
+    try:
+        dag_dict = {}
+        dag_dict["dag_size"] = len(dag)
+        tasks_list = list(dag)
+        if tasks_list:
+            dag_dict["tasks"] = {}
+            for task in tasks_list:
+                task_dict = {}
+                task_dict["status"] = dag[task]._exec_status.name
+                task_dict["type"] = str(type(
+                    dag[task])).split(".")[-1].split("'")[0]
+                task_dict["upstream"] = clean_tasks_upstream_products(
+                    dag[task].upstream)
+                task_dict["products"] = clean_tasks_upstream_products(
+                    dag[task].product.to_json_serializable())
+                dag_dict['tasks'][task] = task_dict
+
+        return dag_dict
+    except Exception:
+        return None
+
+
+def get_home_dir():
+    """
+    Checks if ploomber home was set through the env variable.
+    returns the actual home_dir path.
+    """
+    return PLOOMBER_HOME_DIR if PLOOMBER_HOME_DIR else DEFAULT_HOME_DIR
+
+
 def check_dir_exist(input_location=None):
     """
     Checks if a specific directory exists, creates if not.
     In case the user didn't set a custom dir, will turn to the default home
     """
-    if PLOOMBER_HOME_DIR:
-        final_location = PLOOMBER_HOME_DIR
-    else:
-        final_location = DEFAULT_HOME_DIR
+    home_dir = get_home_dir()
 
     if input_location:
-        p = Path(final_location, input_location)
+        p = Path(home_dir, input_location)
     else:
-        p = Path(final_location)
+        p = Path(home_dir)
 
     p = p.expanduser()
 
@@ -151,15 +257,17 @@ def check_uid():
             with uid_path.open("w") as file:
                 yaml.dump({"uid": uid}, file)
             return uid
-        except FileNotFoundError as e:
-            return f"ERROR: Can't read UID file: {e}"
+        except Exception as e:
+            warnings.warn(f"ERROR: Can't write UID file: {e}")
+            return f"NO_UID {e}"
     else:  # read and return uid
         try:
             with uid_path.open("r") as file:
                 uid_dict = yaml.safe_load(file)
             return uid_dict['uid']
-        except FileNotFoundError as e:
-            return f"Error: Can't read UID file: {e}"
+        except Exception as e:
+            warnings.warn(f"Error: Can't read UID file: {e}")
+            return f"NO_UID {e}"
 
 
 def check_stats_enabled():
@@ -179,15 +287,17 @@ def check_stats_enabled():
             with config_path.open("w") as file:
                 yaml.dump({"stats_enabled": True}, file)
             return True
-        except FileNotFoundError as e:
-            return f"ERROR: Can't read file: {e}"
+        except Exception as e:
+            warnings.warn(f"ERROR: Can't write to config file: {e}")
+            return True
     else:  # read and return config
         try:
             with config_path.open("r") as file:
                 conf = yaml.safe_load(file)
             return conf['stats_enabled']
-        except FileNotFoundError as e:
-            return f"Error: Can't read config file {e}"
+        except Exception as e:
+            warnings.warn(f"Error: Can't read config file {e}")
+            return True
 
 
 def check_first_time_usage():
@@ -230,19 +340,50 @@ def validate_entries(event_id, uid, action, client_time, total_runtime):
     return event_id, uid, action, client_time, elapsed_time
 
 
-def log_api(action, client_time=None, total_runtime=None, metadata=None):
+def log_api(action,
+            client_time=None,
+            total_runtime=None,
+            dag=None,
+            metadata=None):
     """
     This function logs through an API call, assigns parameters if missing like
     timestamp, event id and stats information.
     """
+    metadata = metadata or {}
+
     event_id = uuid.uuid4()
     if client_time is None:
         client_time = datetime.datetime.now()
 
     (telemetry_enabled, uid, is_install) = _get_telemetry_info()
+    if 'NO_UID' in uid:
+        metadata['uid_issue'] = uid
+        uid = None
+
     py_version = python_version()
     docker_container = is_docker()
-    operating_system = get_os()
+    colab = is_colab()
+    if colab:
+        metadata['colab'] = colab
+
+    paperspace = is_paperspace()
+    if paperspace:
+        metadata['paperspace'] = paperspace
+
+    slurm = is_slurm()
+    if slurm:
+        metadata['slurm'] = slurm
+
+    airflow = is_airflow()
+    if airflow:
+        metadata['airflow'] = airflow
+
+    argo = is_argo()
+    if argo:
+        metadata['argo'] = argo
+    if dag:
+        metadata['dag'] = parse_dag(dag)
+    os = get_os()
     product_version = __version__
     online = is_online()
     environment = get_env()
@@ -254,39 +395,25 @@ def log_api(action, client_time=None, total_runtime=None, metadata=None):
                                action,
                                client_time,
                                total_runtime)
+        props = {
+            'event_id': event_id,
+            'user_id': uid,
+            'action': action,
+            'client_time': str(client_time),
+            'metadata': metadata,
+            'total_runtime': total_runtime,
+            'python_version': py_version,
+            'ploomber_version': product_version,
+            'docker_container': docker_container,
+            'os': os,
+            'environment': environment,
+            'metadata': metadata,
+            'telemetry_version': TELEMETRY_VERSION
+        }
+
         if is_install:
             posthog.capture(distinct_id=uid,
                             event='install_success_indirect',
-                            properties={
-                                'event_id': event_id,
-                                'user_id': uid,
-                                'action': action,
-                                'client_time': str(client_time),
-                                'metadata': metadata,
-                                'total_runtime': total_runtime,
-                                'python_version': py_version,
-                                'ploomber_version': product_version,
-                                'docker_container': docker_container,
-                                'operating_system': operating_system,
-                                'environment': environment,
-                                'metadata': metadata,
-                                'telemetry_version': TELEMETRY_VERSION
-                            })
+                            properties=props)
 
-        posthog.capture(distinct_id=uid,
-                        event=action,
-                        properties={
-                            'event_id': event_id,
-                            'user_id': uid,
-                            'action': action,
-                            'client_time': str(client_time),
-                            'metadata': metadata,
-                            'total_runtime': total_runtime,
-                            'python_version': py_version,
-                            'ploomber_version': product_version,
-                            'docker_container': docker_container,
-                            'operating_system': operating_system,
-                            'environment': environment,
-                            'metadata': metadata,
-                            'telemetry_version': TELEMETRY_VERSION
-                        })
+        posthog.capture(distinct_id=uid, event=action, properties=props)

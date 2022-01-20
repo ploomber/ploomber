@@ -16,4 +16,5 @@ def main():
     print(dag.status())
     end_time = datetime.datetime.now()
     telemetry.log_api("ploomber_status",
-                      total_runtime=str(end_time - start_time))
+                      total_runtime=str(end_time - start_time),
+                      dag=dag)

@@ -8,6 +8,8 @@ from ploomber.telemetry import telemetry
 from ploomber.telemetry.validate_inputs import str_param, opt_str_param
 from ploomber.cli import plot, install, build, interact, task, report, status
 import ploomber.dag.dag as dag_module
+from ploomber.tasks.tasks import PythonCallable
+from ploomber.products.file import File
 from conftest import _write_sample_conda_env, _prepare_files
 
 
@@ -144,6 +146,41 @@ def test_docker_env(monkeypatch):
     monkeypatch.setattr(pathlib.Path, 'exists', mock)
     docker = telemetry.is_docker()
     assert docker is True
+
+
+# Ref https://stackoverflow.com/questions/53581278/test-if-
+# notebook-is-running-on-google-colab
+def test_colab_env(monkeypatch):
+    monkeypatch.setenv('COLAB_GPU', True)
+    colab = telemetry.is_colab()
+    assert colab is True
+
+
+# Ref https://learn.paperspace.com/video/creating-a-jupyter-notebook
+@pytest.mark.parametrize(
+    'env_variable',
+    ['PS_API_KEY', 'PAPERSPACE_API_KEY', 'PAPERSPACE_NOTEBOOK_REPO_ID'])
+def test_paperspace_env(monkeypatch, env_variable):
+    monkeypatch.setenv(env_variable, True)
+    pspace = telemetry.is_paperspace()
+    assert pspace is True
+
+
+# Ref https://stackoverflow.com/questions/63298054/how-to-check-if-my-code
+# -runs-inside-a-slurm-environment
+def test_slurm_env(monkeypatch):
+    monkeypatch.setenv('SLURM_JOB_ID', True)
+    slurm = telemetry.is_slurm()
+    assert slurm is True
+
+
+# Ref https://airflow.apache.org/docs/apache-airflow/stable/
+# cli-and-env-variables-ref.html?highlight=airflow_home#envvar-AIRFLOW_HOME
+@pytest.mark.parametrize('env_variable', ['AIRFLOW_CONFIG', 'AIRFLOW_HOME'])
+def test_airflow_env(monkeypatch, env_variable):
+    monkeypatch.setenv(env_variable, True)
+    airflow = telemetry.is_airflow()
+    assert airflow is True
 
 
 # Ref https://stackoverflow.com/questions/110362/how-can-i-find-
@@ -331,6 +368,75 @@ def test_offline_stats(monkeypatch):
 
 def test_is_online():
     assert telemetry.is_online()
+
+
+def test_parse_dag_products(monkeypatch):
+    product = '/ml-basic/output/get.parquet'
+    dag = telemetry.clean_tasks_upstream_products(product)
+    assert dag == 'get.parquet'
+
+    products = {
+        'nb': '/spec-api-python/output/get.ipynb',
+        'data': '//spec-api-python/output/data.csv'
+    }
+    dag = telemetry.clean_tasks_upstream_products(products)
+    assert dag == {'nb': 'get.ipynb', 'data': 'data.csv'}
+
+    dag = telemetry.clean_tasks_upstream_products({})
+    assert dag == {}
+
+
+def test_parse_dag(monkeypatch, tmp_directory):
+    def fn1(product):
+        pass
+
+    def fn2(upstream, product):
+        pass
+
+    dag = dag_module.DAG()
+    t1 = PythonCallable(fn1,
+                        File('/home/ido/filepath/file1.txt'),
+                        dag,
+                        name='first')
+    t2 = PythonCallable(fn2,
+                        File('/home/ido/filepath/file2.txt'),
+                        dag,
+                        name='second')
+    t3 = PythonCallable(fn2,
+                        File('/home/ido/filepath/file3.parquet'),
+                        dag,
+                        name='third')
+    t1 >> t2
+    t3 >> t2
+
+    res = telemetry.parse_dag(dag)
+    assert res['dag_size'] == 3
+    assert res == {
+        'dag_size': 3,
+        'tasks': {
+            'first': {
+                'status': 'WaitingRender',
+                'type': 'PythonCallable',
+                'upstream': {},
+                'products': 'file1.txt'
+            },
+            'third': {
+                'status': 'WaitingRender',
+                'type': 'PythonCallable',
+                'upstream': {},
+                'products': 'file3.parquet'
+            },
+            'second': {
+                'status': 'WaitingRender',
+                'type': 'PythonCallable',
+                'upstream': {
+                    'first': 'file1.txt',
+                    'third': 'file3.parquet'
+                },
+                'products': 'file2.txt'
+            }
+        }
+    }
 
 
 def test_is_not_online(monkeypatch):

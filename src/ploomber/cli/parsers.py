@@ -38,7 +38,6 @@ class CustomMutuallyExclusiveGroup(argparse._MutuallyExclusiveGroup):
     A subclass of argparse._MutuallyExclusiveGroup that determines whether
     the added args should go into the static of dynamic API
     """
-
     def add_argument(self, *args, **kwargs):
         if not self._container.finished_static_api:
             if (not self._container.in_context
@@ -66,7 +65,6 @@ class CustomParser(argparse.ArgumentParser):
     manager, only after this has happened, other arguments can be added using
     parser.add_argument.
     """
-
     def __init__(self, *args, **kwargs):
         self.DEFAULT_ENTRY_POINT = default.try_to_find_entry_point()
 

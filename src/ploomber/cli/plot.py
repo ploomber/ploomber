@@ -1,3 +1,5 @@
+import sys
+
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.util.default import extract_name
@@ -27,5 +29,7 @@ def main():
     dag.plot(output=output)
     end_time = datetime.datetime.now()
     telemetry.log_api("ploomber_plot",
-                      total_runtime=str(end_time - start_time))
+                      total_runtime=str(end_time - start_time),
+                      dag=dag,
+                      metadata={'argv': sys.argv})
     print('Plot saved at:', output)

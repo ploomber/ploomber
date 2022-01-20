@@ -1,3 +1,5 @@
+import sys
+
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.telemetry import telemetry
@@ -57,4 +59,6 @@ def main():
 
     end_time = datetime.datetime.now()
     telemetry.log_api("ploomber_task",
-                      total_runtime=str(end_time - start_time))
+                      total_runtime=str(end_time - start_time),
+                      dag=dag,
+                      metadata={'argv': sys.argv})

@@ -48,13 +48,34 @@ def scaffold(conda, package, entry_point, empty):
     template = '-e/--entry-point is not compatible with the {flag} flag'
 
     if entry_point and conda:
-        raise click.ClickException(template.format(flag='--conda'))
+        err = template.format(flag='--conda')
+        telemetry.log_api("scaffold_error",
+                          metadata={
+                              'type': 'entry_and_conda_flag',
+                              'exception': err,
+                              'argv': sys.argv
+                          })
+        raise click.ClickException(err)
 
     if entry_point and package:
-        raise click.ClickException(template.format(flag='--package'))
+        err = template.format(flag='--package')
+        telemetry.log_api("scaffold_error",
+                          metadata={
+                              'type': 'entry_and_package_flag',
+                              'exception': err,
+                              'argv': sys.argv
+                          })
+        raise click.ClickException(err)
 
     if entry_point and empty:
-        raise click.ClickException(template.format(flag='--empty'))
+        err = template.format(flag='--empty')
+        telemetry.log_api("scaffold_error",
+                          metadata={
+                              'type': 'entry_and_empty_flag',
+                              'exception': err,
+                              'argv': sys.argv
+                          })
+        raise click.ClickException(err)
 
     # try to load a dag by looking in default places
     if entry_point is None:
@@ -67,14 +88,31 @@ def scaffold(conda, package, entry_point, empty):
                 Path(entry_point),
             )
         except Exception as e:
+            telemetry.log_api("scaffold_error",
+                              metadata={
+                                  'type': 'dag_load_failed',
+                                  'exception': e,
+                                  'argv': sys.argv
+                              })
             raise click.ClickException(e) from e
 
     if loaded:
         # existing pipeline, add tasks
         spec, _, path_to_spec = loaded
         _scaffold.add(spec, path_to_spec)
+        telemetry.log_api("ploomber_scaffold",
+                          dag=loaded,
+                          metadata={
+                              'type': 'add_task',
+                              'argv': sys.argv
+                          })
     else:
         # no pipeline, create base project
+        telemetry.log_api("ploomber_scaffold",
+                          metadata={
+                              'type': 'base_project',
+                              'argv': sys.argv
+                          })
         scaffold_project.cli(project_path=None,
                              conda=conda,
                              package=package,
@@ -109,6 +147,12 @@ def examples(name, force, branch, output):
     except click.ClickException:
         raise
     except Exception as e:
+        telemetry.log_api("examples_error",
+                          metadata={
+                              'type': 'runtime_error',
+                              'exception': e,
+                              'argv': sys.argv
+                          })
         raise RuntimeError(
             'An error happened when executing the examples command. Check out '
             'the full error message for details. Downloading the examples '
@@ -150,11 +194,19 @@ def cmd_router():
         fn()
     elif cmd_name in alias:
         suggestion = alias[cmd_name]
+        telemetry.log_api("unsupported_build_cmd",
+                          metadata={
+                              'cmd_name': cmd_name,
+                              'suggestion': suggestion,
+                              'argv': sys.argv
+                          })
         _exit_with_error_message("Try 'ploomber --help' for help.\n\n"
                                  f"Error: {cmd_name!r} is not a valid command."
                                  f" Did you mean {suggestion!r}?")
     else:
-        telemetry.log_api("unsupported-api-call", metadata={'argv': sys.argv})
+        if cmd_name not in ['examples', 'scaffold']:
+            telemetry.log_api("unsupported-api-call",
+                              metadata={'argv': sys.argv})
         cli()
 
 
