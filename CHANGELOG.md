@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 0.14.6dev
+* Documents `S3Client` and `GCloudStorageClient`
+* Updates to the telemetry module
 
 ## 0.14.5 (2022-01-15)
 * Fixes error message when failing to load dotted paths
