@@ -155,18 +155,27 @@ To check if packages are available: `conda search ploomber --channel cf-staging`
 
 ### Manually updating the conda recipe
 
-If `conda-forge`'s bot PR fails (usually because a new dependency was added), we must submit a PR ourselves.
+If `conda-forge`'s bot PR fails (usually because a new dependency was added), we must submit a PR ourselves:
 
 1. [Fork feedstock repository](https://github.com/conda-forge/ploomber-feedstock)
 2. Clone it: `git clone https://github.com/{your-user}/ploomber-feedstock` (change `your-user`)
 3. Create a new branch: `git checkout -b branch-name`
-4. Update recipe:
-    * Update the `{% set version = "version" %}` line
+4. Update recipe (`meta.yaml`):
+    * Update the version in the `{% set version = "version" %}` line
     * Update `source.sha256`, you can get that from `https://pypi.org/project/ploomber/{version}/#files`, just change the `version` and copy the SHA256 hash from the `.tar.gz` file
-    * If there are dependencies, add them to `requirements.run`
+    * If there are new dependencies (or new constraints), add them to `requirements.run`
 5. You may need to run `conda smithy rerender -c auto` ([click here for details](https://conda-forge.org/docs/maintainer/updating_pkgs.html#rerendering-feedstocks))
 
 [More details here](https://conda-forge.org/docs/maintainer/updating_pkgs.html)
+
+If you already forked the repository, you can sync with the original repository like this:
+
+```sh
+git remote add upstream https://github.com/conda-forge/ploomber-feedstock
+git fetch upstream
+git checkout master
+git merge upstream/master
+```
 
 ## Maintaining backwards compatibility
 
