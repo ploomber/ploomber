@@ -344,11 +344,13 @@ def log_api(action,
             client_time=None,
             total_runtime=None,
             dag=None,
-            metadata={}):
+            metadata=None):
     """
     This function logs through an API call, assigns parameters if missing like
     timestamp, event id and stats information.
     """
+    metadata = metadata or {}
+
     event_id = uuid.uuid4()
     if client_time is None:
         client_time = datetime.datetime.now()
