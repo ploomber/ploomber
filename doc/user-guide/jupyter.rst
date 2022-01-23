@@ -449,7 +449,13 @@ the following settings in the ``Document Manager`` section:"
 
     {
       "defaultViewers": {
+        "markdown": "Jupytext Notebook",
+        "myst": "Jupytext Notebook",
+        "r-markdown": "Jupytext Notebook",
+        "quarto": "Jupytext Notebook",
+        "julia": "Jupytext Notebook",
         "python": "Jupytext Notebook",
+        "r": "Jupytext Notebook"
       }
     }
 
