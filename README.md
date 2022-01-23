@@ -30,7 +30,8 @@
   <a href="https://www.youtube.com/channel/UCaIS5BMlmeNQE4-Gn0xTDXQ">YouTube</a>
 </p>
 
-**Notebooks are hard to maintain.** Teams often prototype projects in notebooks, but maintaining them is an error-prone process that slows progress down. Ploomber overcomes the challenges of working with `.ipynb` files allowing teams to develop collaborative, production-ready pipelines using JupyterLab or any text editor.
+
+Ploomber is the fastest way to build data pipelines. Use your favorite editor (Jupyter, VSCode, PyCharm) to develop interactively and deploy without code changes (Kubernetes, Airflow, AWS Batch, and SLURM). Do you have legacy notebooks? Refactor them into modular pipelines with a single command.
 
 
 <p align="center">
@@ -95,16 +96,25 @@ Click here to go to our [examples](https://github.com/ploomber/projects) reposit
 
 ## Main Features
 
-1. [**Automated notebook refactoring**](https://github.com/ploomber/soorgeon). Automatically convert a legacy notebook into a maintainable, modular pipeline ([see demo](https://www.youtube.com/watch?v=EJecqsZBr3Q)).
-2. **Scripts as notebooks.** Open `.py` files as notebooks, then execute them from the terminal and generate an output notebook to review results.
-3. **Dependency resolution.** Quickly build a DAG by referring to previous tasks in your code; Ploomber infers execution order and orchestrates execution.
-4. **Incremental builds.** Speed up iterations by skipping tasks whose source code hasn't changed since the last execution.
-5. **Production-ready.** Deploy to [Kubernetes](https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html) (via Argo Workflows), [Airflow](https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html), and [AWS Batch](https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html) without code changes.
-6. **Parallelization.** Run independent tasks in parallel.
-7. **Testing.** Import pipelines in any testing frameworks and test them with any CI service (e.g. GitHub Actions).
-8. **Flexible.** Use Jupyter notebooks, Python scripts, R scripts, SQL scripts, Python functions, or a combination of them as pipeline tasks. Write pipelines using a `pipeline.yaml` file or with Python.
+### ⚡️ Get started quickly
 
-![repo-lab-example](https://ploomber.io/images/blog/repo-lab-example.png)
+A simple YAML API to get started quickly, a powerful Python API for total flexibility.
+
+### ⏱ Shorter development cycles
+
+Automatically cache your pipeline’s previous results and only re-compute tasks that have changed since your last execution.
+
+
+### ☁️ Deploy anywhere
+
+Run as a shell script in a single machine or distributively in [Kubernetes](https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html), [Airflow](https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html), [AWS Batch](https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html), or [SLURM](https://soopervisor.readthedocs.io/en/latest/tutorials/slurm.html).
+
+
+### 📙 Automated migration from legacy notebooks
+
+Bring your old monolithic notebooks, and we’ll automatically convert them into maintainable, modular pipelines.
+
+[Tell me more.](https://github.com/ploomber/soorgeon) [Show me a demo.](https://www.youtube.com/watch?v=EJecqsZBr3Q)
 
 
 ## Resources
