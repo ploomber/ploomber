@@ -168,11 +168,12 @@ def main():
         cell.add_argument('--inject',
                           '-i',
                           action='store_true',
-                          help='Inject cell')
-        cell.add_argument('--remove',
-                          '-r',
-                          action='store_true',
-                          help='Remove injected cell')
+                          help='Inject cell to all script/notebook tasks')
+        cell.add_argument(
+            '--remove',
+            '-r',
+            action='store_true',
+            help='Remove injected cell in all script/notebook tasks')
 
         # hook
         hook = parser.add_mutually_exclusive_group()
@@ -185,12 +186,16 @@ def main():
                           action='store_true',
                           help='Uninstall git pre-commit hook')
 
-        parser.add_argument('--format', '-f', help='Change format')
-        parser.add_argument('--pair', '-p', help='Pair with ipynb files')
+        parser.add_argument('--format',
+                            '-f',
+                            help='Re-format all script/notebook tasks')
+        parser.add_argument('--pair',
+                            '-p',
+                            help='Pair scripts with ipynb files')
         parser.add_argument('--sync',
                             '-s',
                             action='store_true',
-                            help='Sync ipynb files')
+                            help='Sync scripts with ipynb files')
 
         # opening .py files as notebooks in JupyterLab with a single click
         single_click = parser.add_mutually_exclusive_group()
