@@ -1,3 +1,4 @@
+import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -8,6 +9,7 @@ import jupytext
 import pytest
 
 from ploomber.cli import cli
+from ploomber.cli import nb
 
 
 def git_init():
@@ -196,3 +198,99 @@ def test_uninstall_hook(monkeypatch, tmp_nbs):
 
     assert not Path('.git', 'hooks', 'pre-commit').exists()
     assert not Path('.git', 'hooks', 'post-commit').exists()
+
+
+@pytest.fixture
+def mock_nb_single_click(monkeypatch):
+    parent = Path('.jupyter', 'labconfig')
+    path = parent / 'default_setting_overrides.json'
+
+    def MockPath(*args):
+        return (parent if args == ('~/.jupyter', 'labconfig') else Path(*args))
+
+    monkeypatch.setattr(nb, 'Path', MockPath)
+
+    return path
+
+
+@pytest.fixture
+def mock_nb_single_click_enable(monkeypatch, mock_nb_single_click):
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--single-click'])
+    return mock_nb_single_click
+
+
+@pytest.fixture
+def mock_nb_single_click_disable(monkeypatch, mock_nb_single_click):
+    monkeypatch.setattr(sys, 'argv',
+                        ['ploomber', 'nb', '--single-click-disable'])
+    return mock_nb_single_click
+
+
+def test_single_click(mock_nb_single_click_enable, tmp_nbs):
+    cli.cmd_router()
+
+    current = json.loads(mock_nb_single_click_enable.read_text())
+    expected = json.loads(nb._jupyterlab_default_settings_overrides)
+    assert current == expected
+
+
+def test_single_click_updates_existing(mock_nb_single_click_enable, tmp_nbs):
+    parent = mock_nb_single_click_enable.parent
+    parent.mkdir(parents=True)
+    mock_nb_single_click_enable.write_text(json.dumps(dict(key='value')))
+
+    cli.cmd_router()
+
+    expected = json.loads(nb._jupyterlab_default_settings_overrides)
+    expected['key'] = 'value'
+
+    current = json.loads(mock_nb_single_click_enable.read_text())
+    assert current == expected
+
+
+def test_single_click_disable(mock_nb_single_click_disable, tmp_nbs):
+    cli.cmd_router()
+
+
+@pytest.mark.parametrize('existing, expected', [
+    [
+        {
+            'key': 'value',
+            '@jupyterlab/docmanager-extension:plugin': {
+                'defaultViewers': {
+                    "python": "Jupytext Notebook",
+                }
+            }
+        },
+        {
+            'key': 'value'
+        },
+    ],
+    [
+        {
+            'key': 'value',
+            '@jupyterlab/docmanager-extension:plugin': {
+                'defaultViewers': {
+                    "python": "Jupytext Notebook",
+                },
+                'another': 'key'
+            }
+        },
+        {
+            'key': 'value',
+            '@jupyterlab/docmanager-extension:plugin': {
+                'another': 'key'
+            }
+        },
+    ],
+])
+def test_single_click_disable_updates_existing(mock_nb_single_click_disable,
+                                               tmp_nbs, existing, expected):
+    parent = mock_nb_single_click_disable.parent
+    parent.mkdir(parents=True)
+    mock_nb_single_click_disable.write_text(json.dumps(existing))
+
+    cli.cmd_router()
+
+    current = json.loads(mock_nb_single_click_disable.read_text())
+    assert current == expected

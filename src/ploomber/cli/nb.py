@@ -1,3 +1,4 @@
+import json
 import shutil
 from pathlib import Path
 import stat
@@ -8,6 +9,7 @@ import click
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import command_endpoint
 from ploomber.telemetry import telemetry
+from ploomber.sources.notebooksource import recursive_update
 
 
 def _call_in_source(dag, method_name, message, kwargs=None):
@@ -82,6 +84,77 @@ post_commit_hook = """
 ploomber nb --entry-point {entry_point} --inject
 """
 
+# taken from https://github.com/mwouts/jupytext/blob/main/README.md#install
+_jupyterlab_default_settings_overrides = """
+{
+  "@jupyterlab/docmanager-extension:plugin": {
+    "defaultViewers": {
+      "markdown": "Jupytext Notebook",
+      "myst": "Jupytext Notebook",
+      "r-markdown": "Jupytext Notebook",
+      "quarto": "Jupytext Notebook",
+      "julia": "Jupytext Notebook",
+      "python": "Jupytext Notebook",
+      "r": "Jupytext Notebook"
+    }
+  }
+}
+"""
+
+
+def _py_with_single_click_enable():
+    """
+    Writes ~/.jupyterlab/labconfig/default_setting_overrides.json to enable
+    opening .py files as notebooks with a single click. If the secion already
+    exists, it overrides its value
+    """
+    parent = Path('~/.jupyter', 'labconfig').expanduser()
+    path = parent / 'default_setting_overrides.json'
+
+    if path.exists():
+        target = json.loads(path.read_text())
+    else:
+        target = {}
+
+    recursive_update(target,
+                     json.loads(_jupyterlab_default_settings_overrides))
+
+    click.echo(f'Overriding JupyterLab defaults at: {str(target)}')
+    parent.mkdir(exist_ok=True, parents=True)
+    path.write_text(json.dumps(target))
+    click.secho(
+        'Done. You can now open .py and other formats in JupyterLab '
+        'with a single click. You may need to reload JupyterLab',
+        fg='green')
+
+
+def _py_with_single_click_disable():
+    """
+    Opens ~/.jupyterlab/labconfig/default_setting_overrides.json and deletes
+    the value in
+    ['@jupyterlab/docmanager-extension:plugin'][''defaultViewers'], if any
+    """
+    parent = Path('~/.jupyter', 'labconfig')
+    target = (parent / 'default_setting_overrides.json').expanduser()
+
+    if target.exists():
+        content = json.loads(target.read_text())
+        key1 = '@jupyterlab/docmanager-extension:plugin'
+        key2 = 'defaultViewers'
+
+        if content.get(key1, {}).get(key2):
+            del content[key1][key2]
+
+            if key1 in content and not content.get(key1):
+                del content[key1]
+
+            Path(target).write_text(json.dumps(content))
+
+    click.secho(
+        'Done. Disabled opening .py files and other formats in JupyterLab '
+        'with a single click. You may need to reload JupyterLab',
+        fg='yellow')
+
 
 # TODO: --log, --log-file should not appear as options
 @command_endpoint
@@ -90,6 +163,7 @@ def main():
                           prog='ploomber nb')
 
     with parser:
+        # hook
         cell = parser.add_mutually_exclusive_group()
         cell.add_argument('--inject',
                           '-i',
@@ -99,13 +173,8 @@ def main():
                           '-r',
                           action='store_true',
                           help='Remove injected cell')
-        parser.add_argument('--format', '-f', help='Change format')
-        parser.add_argument('--pair', '-p', help='Pair with ipynb files')
-        parser.add_argument('--sync',
-                            '-s',
-                            action='store_true',
-                            help='Sync ipynb files')
 
+        # hook
         hook = parser.add_mutually_exclusive_group()
         hook.add_argument('--install-hook',
                           '-I',
@@ -115,6 +184,28 @@ def main():
                           '-u',
                           action='store_true',
                           help='Uninstall git pre-commit hook')
+
+        parser.add_argument('--format', '-f', help='Change format')
+        parser.add_argument('--pair', '-p', help='Pair with ipynb files')
+        parser.add_argument('--sync',
+                            '-s',
+                            action='store_true',
+                            help='Sync ipynb files')
+
+        # opening .py files as notebooks in JupyterLab with a single click
+        single_click = parser.add_mutually_exclusive_group()
+        single_click.add_argument(
+            '--single-click',
+            '-S',
+            action='store_true',
+            help=('Override JupyterLab defaults to open '
+                  'scripts as notebook with a single click'))
+        single_click.add_argument(
+            '--single-click-disable',
+            '-d',
+            action='store_true',
+            help=('Disables opening scripts as notebook with a single '
+                  'click in JupyterLab'))
 
     loading_error = None
 
@@ -126,7 +217,8 @@ def main():
         dag.render(show_progress=False)
 
     if loading_error:
-        err = ('Could not run nb command: the DAG ' 'failed to load')
+        err = ('Could not run nb command: the DAG '
+               'failed to load')
         telemetry.log_api("nb_error",
                           metadata={
                               'type': 'dag_load_failed',
@@ -134,6 +226,12 @@ def main():
                               'argv': sys.argv
                           })
         raise RuntimeError(err) from loading_error
+
+    if args.single_click:
+        _py_with_single_click_enable()
+
+    if args.single_click_disable:
+        _py_with_single_click_disable()
 
     if args.format:
         new_paths = [
