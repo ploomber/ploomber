@@ -226,7 +226,7 @@ def mock_nb_single_click_disable(monkeypatch, mock_nb_single_click):
     return mock_nb_single_click
 
 
-def test_single_click(mock_nb_single_click_enable, tmp_nbs):
+def test_single_click(mock_nb_single_click_enable, tmp_directory):
     cli.cmd_router()
 
     current = json.loads(mock_nb_single_click_enable.read_text())
@@ -234,7 +234,8 @@ def test_single_click(mock_nb_single_click_enable, tmp_nbs):
     assert current == expected
 
 
-def test_single_click_updates_existing(mock_nb_single_click_enable, tmp_nbs):
+def test_single_click_updates_existing(mock_nb_single_click_enable,
+                                       tmp_directory):
     parent = mock_nb_single_click_enable.parent
     parent.mkdir(parents=True)
     mock_nb_single_click_enable.write_text(json.dumps(dict(key='value')))
@@ -248,7 +249,7 @@ def test_single_click_updates_existing(mock_nb_single_click_enable, tmp_nbs):
     assert current == expected
 
 
-def test_single_click_disable(mock_nb_single_click_disable, tmp_nbs):
+def test_single_click_disable(mock_nb_single_click_disable, tmp_directory):
     cli.cmd_router()
 
 
@@ -285,7 +286,8 @@ def test_single_click_disable(mock_nb_single_click_disable, tmp_nbs):
     ],
 ])
 def test_single_click_disable_updates_existing(mock_nb_single_click_disable,
-                                               tmp_nbs, existing, expected):
+                                               tmp_directory, existing,
+                                               expected):
     parent = mock_nb_single_click_disable.parent
     parent.mkdir(parents=True)
     mock_nb_single_click_disable.write_text(json.dumps(existing))
