@@ -65,6 +65,10 @@ you to develop pipelines interactively.
    :target: https://ploomber.io/images/doc/lab-open-with-notebook.png
    :alt: lab-open-with-notebook
 
+.. note::
+
+   If you want to configure jupyterlab to open .py files as notebooks with a single click, see the :ref:`Opening files as notebooks with a single click <opening-files-as-notebooks-with-a-single-click>` section
+
 
 .. important::
 
