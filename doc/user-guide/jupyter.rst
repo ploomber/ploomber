@@ -438,11 +438,11 @@ If you want to take a quick look at your pipeline, you may use
 Opening `.py` files as notebooks with a single click
 ----------------------------------------------------
 
-It is now possible to open `.py` files as notebooks in `JuptyerLab` with a single
-click (with  `jupytext>=1.13.2`).
+It is now possible to open ``.py`` files as notebooks in ``JuptyerLab`` with a single
+click (with  ``jupytext>=1.13.2``).
 
 In order to do this "change the default viewer for text notebooks by copy-pasting
-the following settings in the `Document Manager` section:"
+the following settings in the ``Document Manager`` section:"
 
 .. code-block:: JSON
     :class: text-editor
