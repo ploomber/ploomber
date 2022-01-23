@@ -67,7 +67,9 @@ you to develop pipelines interactively.
 
 .. note::
 
-   If you want to configure jupyterlab to open .py files as notebooks with a single click, see the :ref:`Opening files as notebooks with a single click <opening-files-as-notebooks-with-a-single-click>` section
+   If you want to configure JuptyerLab to open ``.py`` files as notebooks with a
+   single click, see the
+   :ref:`corresponding section <opening-files-as-notebooks-with-a-single-click>`.
 
 
 .. important::
@@ -439,14 +441,16 @@ build next and understand dependencies among tasks.
 If you want to take a quick look at your pipeline, you may use
 ``ploomber interact`` from a terminal to get the ``dag`` object.
 
-Opening files as notebooks with a single click
-----------------------------------------------------
+.. _opening-files-as-notebooks-with-a-single-click:
+
+Opening ``.py`` files as notebooks with a single click
+-------------------------------------------------------
 
 It is now possible to open ``.py`` files as notebooks in ``JuptyerLab`` with a single
 click (with  ``jupytext>=1.13.2``).
 
-In order to do this "change the default viewer for text notebooks by copy-pasting
-the following settings in the ``Document Manager`` section:"
+To do this, change the default viewer for text notebooks by copy-pasting
+the following settings in the ``Document Manager`` section:
 
 .. code-block:: JSON
     :class: text-editor
@@ -463,4 +467,4 @@ the following settings in the ``Document Manager`` section:"
       }
     }
 
-For more information see the official docs `here <https://github.com/mwouts/jupytext#install>`_
+For more detailed instructions, see the official docs `here <https://github.com/mwouts/jupytext#install>`_
