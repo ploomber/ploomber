@@ -218,7 +218,6 @@ Activating the Jupyter extension
 
 In most cases, the extension configures when you install Ploomber; you can verify this by running:
 
-
 .. code-block:: console
 
     jupyter serverextension list
@@ -238,6 +237,18 @@ To disable it:
     jupyter serverextension disable ploomber
 
 
+.. important::
+
+    If you want to use the extension in a hosted environment
+    (JupyterHub, Domino, SageMaker, etc.), ensure Ploomber is installed
+    **before** JupyterLab spins up. Usually, hosted platforms allow you to write
+    a custom start script: add a ``pip install ploomber`` line, and you'll be
+    ready to go. If you cannot get the extension to work, post a question
+    in the ``#ask-anything`` channel on
+    `Slack <https://ploomber.io/community>`_. Alternatively, you may replicate
+    the extension's functionality using the command line, check out the
+    :doc:`this guide <editors>` to learn more.
+
 Custom Jupyter pipeline loading
 -------------------------------
 
@@ -255,9 +266,16 @@ environment variable. For example, to load a ``pipeline.serve.yaml``:
     jupyter lab
 
 
+.. important::
+    
+    ``export ENTRY_POINT`` must be executed in the same process that spins up
+    JupyterLab. If you change it, you'll need to start JupyterLab again
+
+
 Note that ``ENTRY_POINT`` must be a file name and not a path. When you start
 Jupyter, Ploomber will look for that file in the current and parent directories
 until it finds one.
+
 
 .. _troubleshooting-pipeline-loading:
 
@@ -317,8 +335,8 @@ the same conditions when initializing your pipeline for cell injection.
 Detecting changes
 -----------------
 
-To detect changes to your pipeline, Ploomber has to parse it whenever you open
-a file. The parsing runtime depends on the number of tasks, and although it is
+Ploomber parses your pipeline whenever you open a file to detect changes.
+The parsing runtime depends on the number of tasks, and although it is
 fast, it may slow down file loading in pipelines with lots of tasks. You can
 turn off continuous parsing by setting ``jupyter_hot_reload`` (in the ``meta``
 section) option to ``False``. You'll have to restart Jupyter if you turn this
