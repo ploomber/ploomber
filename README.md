@@ -100,22 +100,29 @@ Click here to go to our [examples](https://github.com/ploomber/projects) reposit
 
 A simple YAML API to get started quickly, a powerful Python API for total flexibility.
 
+https://user-images.githubusercontent.com/989250/150660813-fc289c6c-0ed5-432d-b6df-063ce98c0093.mp4
+
 ### ⏱ Shorter development cycles
 
 Automatically cache your pipeline’s previous results and only re-compute tasks that have changed since your last execution.
 
+https://user-images.githubusercontent.com/989250/150660820-9a3a0abd-5904-492b-97ff-5494285dfebf.mp4
 
 ### ☁️ Deploy anywhere
 
 Run as a shell script in a single machine or distributively in [Kubernetes](https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html), [Airflow](https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html), [AWS Batch](https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html), or [SLURM](https://soopervisor.readthedocs.io/en/latest/tutorials/slurm.html).
+
+https://user-images.githubusercontent.com/989250/150660830-3f81c9a2-5392-49e5-976d-cb8a38441ecb.mp4
 
 
 ### 📙 Automated migration from legacy notebooks
 
 Bring your old monolithic notebooks, and we’ll automatically convert them into maintainable, modular pipelines.
 
-[Tell me more.](https://github.com/ploomber/soorgeon) [Show me a demo.](https://www.youtube.com/watch?v=EJecqsZBr3Q)
+https://user-images.githubusercontent.com/989250/150660840-b0c12f85-504c-4233-8c3d-6724d291f1aa.mp4
 
+
+[Tell me more.](https://github.com/ploomber/soorgeon) [Show me a demo.](https://www.youtube.com/watch?v=EJecqsZBr3Q)
 
 ## Resources
 
