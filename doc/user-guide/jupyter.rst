@@ -19,7 +19,7 @@ and deploy.
 Before executing scripts or notebooks, Ploomber injects a new cell that
 replaces the ``upstream`` variable at the top of the notebook (which only
 contains dependency names) with a dictionary that maps these names to their
-corresponding output files so you can use them as inputs in the current task.
+corresponding output files to use as inputs in the current task.
 
 For example if a Python script (``task.py``) declares the following dependency:
 
@@ -322,7 +322,7 @@ a file. The parsing runtime depends on the number of tasks, and although it is
 fast, it may slow down file loading in pipelines with lots of tasks. You can
 turn off continuous parsing by setting ``jupyter_hot_reload`` (in the ``meta``
 section) option to ``False``. You'll have to restart Jupyter if you turn this
-option off for changes to be detected.
+option off to detect changes.
 
 Managing multiple pipelines
 ---------------------------
@@ -350,7 +350,7 @@ as tasks in their corresponding ``pipeline.yaml``.
 
 .. important::
     
-    If you're using Python functions as tasks, you must use different module
+    If using Python functions as tasks, you must use different module
     names for each pipeline. Otherwise, the module imports first will be cached
     and used for the other pipeline. See the following example.
 
@@ -388,7 +388,7 @@ There are two ways to use Ploomber in Jupyter. The first one is by opening a
 task file in Jupyter (i.e., the source file is listed in your ``pipeline.yaml``
 file.
 
-A second way is to load your pipeline in Jupyter to interact with it. This second
+Another way is to load your pipeline in Jupyter to interact with it. This second
 approach is best when you already have some tasks, and you want to explore their
 outputs to decide how to proceed with further analysis.
 
@@ -446,25 +446,24 @@ If you want to take a quick look at your pipeline, you may use
 Opening ``.py`` files as notebooks with a single click
 -------------------------------------------------------
 
-It is now possible to open ``.py`` files as notebooks in ``JuptyerLab`` with a single
-click (with  ``jupytext>=1.13.2``).
+It is now possible to open ``.py`` files as notebooks in ``JuptyerLab`` with a
+single click (this requires ``jupytext>=1.13.2``).
 
-To do this, change the default viewer for text notebooks by copy-pasting
-the following settings in the ``Document Manager`` section:
+If using ``ploomber>=0.14.7``, you can enable this with the following command:
 
-.. code-block:: JSON
-    :class: text-editor
+.. code-block:: console
 
-    {
-      "defaultViewers": {
-        "markdown": "Jupytext Notebook",
-        "myst": "Jupytext Notebook",
-        "r-markdown": "Jupytext Notebook",
-        "quarto": "Jupytext Notebook",
-        "julia": "Jupytext Notebook",
-        "python": "Jupytext Notebook",
-        "r": "Jupytext Notebook"
-      }
-    }
+    ploomber nb --single-click
 
-For more detailed instructions, see the official docs `here <https://github.com/mwouts/jupytext#install>`_
+
+To disable:
+
+.. code-block:: console
+
+    ploomber nb --single-click-disable
+
+
+If running earlier versions of Ploomber, you can enable this by changing the
+default viewer for text notebooks. For instructions,
+`see jupytext's documentation <https://jupytext.readthedocs.io/en/latest/index.html#install>`_
+(click on the triangle right before the ``With a click on the text file in JupyterLab`` section).
