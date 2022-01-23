@@ -463,4 +463,4 @@ the following settings in the ``Document Manager`` section:"
       }
     }
 
-For more information see the official docs here `here <https://github.com/mwouts/jupytext#install>`_
+For more information see the official docs `here <https://github.com/mwouts/jupytext#install>`_
