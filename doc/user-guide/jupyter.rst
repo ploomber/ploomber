@@ -434,3 +434,23 @@ build next and understand dependencies among tasks.
 
 If you want to take a quick look at your pipeline, you may use
 ``ploomber interact`` from a terminal to get the ``dag`` object.
+
+Opening `.py` files as notebooks with a single click
+----------------------------------------------------
+
+It is now possible to open `.py` files as notebooks in `JuptyerLab` with a single
+click (with  `jupytext>=1.13.2`).
+
+In order to do this "change the default viewer for text notebooks by copy-pasting
+the following settings in the `Document Manager` section:"
+
+.. code-block:: JSON
+    :class: text-editor
+
+    {
+      "defaultViewers": {
+        "python": "Jupytext Notebook",
+      }
+    }
+
+For more information see the official docs here `here <https://github.com/mwouts/jupytext#:~:text=With%20a%20click%20on%20the%20text%20file%20in%20JupyterLab,)>`_
