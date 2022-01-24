@@ -21,7 +21,7 @@ here = Path(__file__).parent.resolve()
 
 
 def read(name):
-    return Path(here, name).read_text()
+    return Path(here, name).read_text(encoding='utf-8')
 
 
 # NOTE: most users just do "pip install jupyter" but
