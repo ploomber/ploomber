@@ -40,6 +40,7 @@ class Serial(Executor):
         shown before raising the collected exceptions.
 
     """
+
     def __init__(self,
                  build_in_subprocess=True,
                  catch_exceptions=True,
@@ -150,6 +151,7 @@ class Serial(Executor):
 
 
 class LazyFunction:
+
     def __init__(self, fn, kwargs, task):
         self.fn = fn
         self.kwargs = kwargs
@@ -211,10 +213,14 @@ def build_in_subprocess(task, build_kwargs, reports_all):
         try:
             p = Pool(processes=1)
         except RuntimeError as e:
-            # this is most likely due to child processes created with
-            # spawn (mac/windows) outside if __name__ == '__main__'
-            raise RuntimeError('For help solving this, go to: '
-                               'https://ploomber.io/h/mp') from e
+            if 'An attempt has been made to start a new process' in str(e):
+                # this is most likely due to child processes created with
+                # spawn (mac/windows) outside if __name__ == '__main__'
+                raise RuntimeError('Press ctrl + c to exit. '
+                                   'For help solving this, go to: '
+                                   'https://ploomber.io/h/mp') from e
+            else:
+                raise
 
         res = p.apply_async(func=task._build, kwds=build_kwargs)
         # calling this make sure we catch the exception, from the docs:
