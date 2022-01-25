@@ -218,7 +218,7 @@ def build_in_subprocess(task, build_kwargs, reports_all):
                 # spawn (mac/windows) outside if __name__ == '__main__'
                 raise RuntimeError('Press ctrl + c to exit. '
                                    'For help solving this, go to: '
-                                   'https://ploomber.io/h/mp') from e
+                                   'https://ploomber.io/s/mp') from e
             else:
                 raise
 
