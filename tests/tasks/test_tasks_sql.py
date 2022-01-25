@@ -9,6 +9,7 @@ from ploomber.tasks import SQLDump, SQLTransfer, SQLScript, PythonCallable
 from ploomber.products import File, SQLiteRelation
 from ploomber.clients import SQLAlchemyClient, DBAPIClient
 from ploomber.executors import Serial
+from ploomber.exceptions import DAGBuildError
 from ploomber import io
 
 import pytest
@@ -256,6 +257,46 @@ def test_custom_jinja_env_globals(tmp_directory):
     assert list(pd.read_parquet('numbers.parquet').number) == [1, 3, 5, 7, 9]
     assert list(
         pd.read_parquet('chars.parquet').char) == ['b', 'd', 'f', 'h', 'j']
+
+
+def test_sql_dump_shows_executed_code_if_fails(tmp_directory):
+    tmp = Path(tmp_directory)
+
+    client = SQLAlchemyClient('sqlite:///{}'.format(tmp / "database.db"))
+
+    dag = DAG()
+
+    SQLDump('SOME INVALID SQL',
+            File('data.parquet'),
+            dag,
+            name='data',
+            client=client)
+
+    with pytest.raises(DAGBuildError) as excinfo:
+        dag.build()
+
+    assert 'SOME INVALID SQL' in str(excinfo.value)
+    assert 'near "SOME": syntax error' in str(excinfo.value)
+
+
+def test_sql_script_shows_executed_code_if_fails(tmp_directory, sample_data):
+
+    dag = DAG()
+
+    client = SQLAlchemyClient('sqlite:///database.db')
+    dag.clients[SQLScript] = client
+    dag.clients[SQLiteRelation] = client
+
+    SQLScript('SOME INVALID SQL {{product}}',
+              SQLiteRelation((None, 'another', 'table')),
+              dag=dag,
+              name='task')
+
+    with pytest.raises(DAGBuildError) as excinfo:
+        dag.build()
+
+    assert 'SOME INVALID SQL' in str(excinfo.value)
+    assert 'near "SOME": syntax error' in str(excinfo.value)
 
 
 def test_can_dump_postgres(tmp_directory, pg_client_and_schema):
