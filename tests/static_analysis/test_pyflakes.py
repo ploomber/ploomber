@@ -109,41 +109,58 @@ def test_check_source_ignores_ipython_magics(code):
     pyflakes.check_source(jupytext.reads(code))
 
 
-@pytest.mark.parametrize('code, expected', [
+@pytest.mark.parametrize(
+    'code, expected',
     [
-        """%%html
+        [
+            """%%html
 some html""",
-        """# %%html
+            """# %%html
 # some html""",
-    ],
-    [
-        """%%html
+        ],
+        [
+            """%%html
 some html
 more html""",
-        """# %%html
+            """# %%html
 # some html
 # more html""",
-    ],
-    [
-        """# some comment
+        ],
+        # cell magics cannot have comments
+        # so we shouldn't change the content
+        [
+            """# some comment
 %%html
 some html""", """# some comment
 %%html
 some html"""
-    ],
-    [
-        """
+        ],
+        [
+            """
 # some comment
 %%html
 some html""", """
 # some comment
 %%html
 some html"""
-    ],
-    ['%cd', '# %cd'],
-    ['%cd\n%cd', '# %cd\n# %cd'],
-    ['\n%cd', '\n# %cd'],
-])
+        ],
+        ["""\
+   %%html
+some html\
+""", """\
+#    %%html
+# some html\
+"""],
+        ['%cd', '# %cd'],
+        ['   %cd', '#    %cd'],
+        ['%cd\n%cd', '# %cd\n# %cd'],
+        ['\n%cd', '\n# %cd'],
+        ['1 + 1\n%cd', '1 + 1\n# %cd'],
+        ['1 + 1\n   %cd', '1 + 1\n#    %cd'],
+        ['! mkdir stuff', '# ! mkdir stuff'],
+        ['   ! mkdir stuff', '#    ! mkdir stuff'],
+    ])
+# TODO: test with leading spaces
 def test_comment_if_ipython_magic(code, expected):
     assert pyflakes._comment_if_ipython_magic(code) == expected
 
@@ -165,6 +182,8 @@ def test_is_ipython_line_magic(code, expected):
     [
         ['%debug', False],
         ['%%sh', True],
+        # space after the %% is not allowed
+        ['%% sh', False],
         ['%%sh --no-raise-error', True],
         ['# %debug', False],
         ['% debug', False],
@@ -173,6 +192,7 @@ def test_is_ipython_line_magic(code, expected):
         ['# comment\n%%html\nhello', False],
         # cell magics may contain whitespace
         ['\n\n%%html\nhello', True],
+        ['\n\n   %%html\nhello', True],
         ['  %%html\nhello', True],
     ])
 def test_is_ipython_cell_magic(code, expected):

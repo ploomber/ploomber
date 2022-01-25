@@ -25,8 +25,9 @@ _ERRORS = (
     BreakOutsideLoop,
 )
 
-_CELL_IS_IPYTHON_CELL_MAGIC_REGEX = r'^%{2}[a-zA-Z]+'
-_LINE_IS_IPYTHON_LINE_MAGIC_REGEX = r'^%{1}[a-zA-Z]+'
+_IS_IPYTHON_CELL_MAGIC = r'^\s*%{2}[a-zA-Z]+'
+_IS_IPYTHON_LINE_MAGIC = r'^\s*%{1}[a-zA-Z]+'
+_IS_INLINE_SHELL = r'^\s*!{1}.+'
 
 
 def _process_messages(mesages):
@@ -61,6 +62,7 @@ def process_errors_and_warnings(messages):
 
 # https://github.com/PyCQA/pyflakes/blob/master/pyflakes/reporter.py
 class MyReporter(Reporter):
+
     def __init__(self):
         self._stdout = StringIO()
         self._stderr = StringIO()
@@ -173,26 +175,40 @@ def check_source(nb):
 def _comment_if_ipython_magic(source):
     """Comments lines into comments if they're IPython magics
     """
+    # if it's a cell magic, comment all lines
     if _is_ipython_cell_magic(source):
-        # comment all lines
         return '\n'.join(f'# {line}' for line in source.splitlines())
+
+    # otherwise, go line by line and comment if it's a line magic or inline
+    # shell
     else:
-        return '\n'.join(
-            (line if not _is_ipython_line_magic(line) else f'# {line}')
-            for line in source.splitlines())
+        return '\n'.join((line if not _is_ipython_line_magic(line)
+                          and not _is_inline_shell(line) else f'# {line}')
+                         for line in source.splitlines())
 
 
 def _is_ipython_line_magic(line):
-    """Determines if the source line is an IPython magic
     """
-    return re.match(_LINE_IS_IPYTHON_LINE_MAGIC_REGEX, line) is not None
+    Determines if the source line is an IPython magic. e.g.,
+
+    %%bash
+    for i in 1 2 3; do
+      echo $i
+    done
+    """
+    return re.match(_IS_IPYTHON_LINE_MAGIC, line) is not None
+
+
+def _is_inline_shell(line):
+    return re.match(_IS_INLINE_SHELL, line) is not None
 
 
 def _is_ipython_cell_magic(source):
-    """Determines if the source is an IPython cell magic
+    """Determines if the source is an IPython cell magic. e.g.,
+
+    %cd some-directory
     """
-    return re.match(_CELL_IS_IPYTHON_CELL_MAGIC_REGEX,
-                    source.lstrip()) is not None
+    return re.match(_IS_IPYTHON_CELL_MAGIC, source.lstrip()) is not None
 
 
 def check_params(passed, params_source, filename, warn=False):
