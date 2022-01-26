@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 0.14.7dev
+* Adds `ploomber nb --single-click/--single-click-disable` to enable/disable opening `.py` as notebooks with a click on Jupyter
+* `ploomber nb` no longer requires a valid entry point if the selected option doesn't need one
+* Better error message when `Pool` in the `Serial` executor raises `RuntimeError`
+* Notebook static analysis: Better support for IPython magics, support for inline shell (`! echo hi`). closes #478
 
 ## 0.14.6 (2022-01-20)
 * Documents `S3Client` and `GCloudStorageClient`
