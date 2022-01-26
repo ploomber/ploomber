@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.14.8dev
+
 ## 0.14.7 (2022-01-25)
 * Adds `ploomber nb --single-click/--single-click-disable` to enable/disable opening `.py` as notebooks with a click on Jupyter
 * `ploomber nb` no longer requires a valid entry point if the selected option doesn't need one
