@@ -31,7 +31,7 @@
 </p>
 
 
-Ploomber is the fastest way to build data pipelines. Use your favorite editor (Jupyter, VSCode, PyCharm) to develop interactively and deploy without code changes (Kubernetes, Airflow, AWS Batch, and SLURM). Do you have legacy notebooks? Refactor them into modular pipelines with a single command.
+Ploomber is the fastest way to build data pipelines ⚡️. Use your favorite editor (**Jupyter, VSCode, PyCharm**) to develop interactively and deploy ☁️ without code changes (**Kubernetes, Airflow, AWS Batch, and SLURM**). Do you have legacy notebooks? Refactor them into modular pipelines with a single command.
 
 
 <p align="center">
@@ -64,6 +64,9 @@ Use Binder to try out Ploomber without setting up an environment:
 Or run an example locally:
 
 ```sh
+# list examples
+ploomber examples
+
 # ML pipeline example
 ploomber examples -n templates/ml-basic -o ml-basic
 cd ml-basic
@@ -75,16 +78,13 @@ pip install -r requirements.txt
 conda env create --file environment.yml
 conda activate ml-basic
 
-# run pipeline
+# run pipeline (output will be available in the output directory)
 ploomber build
 ```
 
-Pipeline output saved in the `output/` folder. Check out the pipeline definition
-in the `pipeline.yaml` file.
+Ready to **migrate your project?** [Click here.](https://docs.ploomber.io/en/latest/user-guide/refactoring.html)
 
-To get a list of examples, run `ploomber examples`.
-
-Click here to go to our [examples](https://github.com/ploomber/projects) repository.
+Do you want to **learn more?** [Check out the introductory tutorial.](https://docs.ploomber.io/en/latest/get-started/spec-api-python.html)
 
 ## Community
 
@@ -121,14 +121,16 @@ Bring your old monolithic notebooks, and we’ll automatically convert them into
 https://user-images.githubusercontent.com/989250/150660840-b0c12f85-504c-4233-8c3d-6724d291f1aa.mp4
 
 
-[Tell me more.](https://github.com/ploomber/soorgeon) [Show me a demo.](https://www.youtube.com/watch?v=EJecqsZBr3Q)
+[I want to migrate my notebook.](https://docs.ploomber.io/en/latest/user-guide/refactoring.html)
+
+[Show me a demo.](https://www.youtube.com/watch?v=EJecqsZBr3Q)
 
 ## Resources
 
 * [Documentation](https://ploomber.readthedocs.io/)
+* [PyData Chicago talk (covers motivation and demo)](https://youtu.be/qUL7QabcKcw)
 * [Develop and deploy an ML pipeline in 30 minutes (EuroPython 2021)](https://youtu.be/O8tqiCkIWPs)
 * [Guest blog post on the official Jupyter blog](https://blog.jupyter.org/ploomber-maintainable-and-collaborative-pipelines-in-jupyter-acb3ad2101a7)
-* [PyData Chicago talk (covers motivation and demo)](https://youtu.be/qUL7QabcKcw)
 * [Examples (Machine Learning pipeline, ETL, among others)](https://github.com/ploomber/projects)
 * [Blog](https://ploomber.io/)
 * [Comparison with other tools](https://ploomber.io/posts/survey)
