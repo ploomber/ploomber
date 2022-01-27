@@ -1,53 +1,81 @@
 Refactoring legacy notebooks
 ============================
 
-If you already have notebooks that you wish to convert into maintainable Ploomber pipelines,
-we developed Soorgeon, a command-line tool that takes a Jupyter notebook as input
-and outputs a Ploomber pipeline, that is, a ``pipeline.yaml`` and one ``.py`` file per section
-in the notebook.
+This tutorial shows how to convert legacy notebooks into Ploomber pipelines.
 
-Here's an example:
+.. note::
+
+    If you don't have a sample notebook, download one from
+    `here <https://github.com/ploomber/soorgeon/blob/main/examples/machine-learning/nb.ipynb>`_.
+
+
+    or execute:
+
+    .. code-block:: console
+
+        curl -O https://raw.githubusercontent.com/ploomber/soorgeon/main/examples/machine-learning/nb.ipynb
+
+
+The only requirement for your notebook is to separate
+sections with H2 headings:
+
+.. image:: https://ploomber.io/images/doc/h2-heading.png
+   :target: https://ploomber.io/images/doc/h2-heading.png
+   :alt: h2-heading
+
+
+Here's an example notebook with three sections separated by H2 headings:
+
+
+.. image:: https://ploomber.io/images/doc/nb-with-h2-headings.png
+   :target: https://ploomber.io/images/doc/nb-with-h2-headings.png
+   :alt: nb-with-h2-headings
+
+
+Once your notebook is ready, you can refactor it with:
 
 .. code-block:: bash
 
-    # install packages
-    pip install soorgeon ploomber
+    # install soorgeon
+    pip install soorgeon 
 
-    # get the example's code
-    git clone https://github.com/ploomber/soorgeon
-
-    # refactor the sample ML notebook
-    cd examples/machine-learning
+    # refactor the nb.ipynb notebook
     soorgeon refactor nb.ipynb
 
-    # run the auto-generated Ploomber pipeline
+
+.. tip::
+    
+    Sometimes, ``soorgeon`` may not be able to split your
+    notebook sections, if so, run ``soorgeon refactor nb.ipynb --single-task``
+    to generate a pipeline with one task. If you have questions, send us a
+    `message on Slack <https://ploomber.io/community>`_.
+
+The command above will generate a ``pipeline.yaml`` with your pipeline
+declaration and ``.py`` tasks (one per section). Note that due to the
+:doc:`Jupyter integration <jupyter>`, **you can open .py files as notebooks in Jupyter**
+
+.. image:: https://ploomber.io/images/doc/lab-open-with-notebook.png
+   :target: https://ploomber.io/images/doc/lab-open-with-notebook.png
+   :alt: lab-open-with-notebook
+
+To run the pipeline:
+
+.. code-block:: bash
+
+    # install dependencies
+    pip install -r requirements.txt
+
+    # run Ploomber pipeline
     ploomber build
 
 
-Soorgeon
---------
+That's it! Now that you have a Ploomber pipeline, you can benefit from all
+our features! If you want to learn more about the framework, check out the :doc:`basic concepts tutorial <../get-started/basic-concepts>`.
 
-To install Soorgeon:
+Resources
+---------
 
-.. code-block:: console
-
-    pip install soorgeon
-
-Running Soorgeon is as simple as:
-
-.. code-block:: console
-
-    soorgeon refactor nb.ipynb
-
-* `Click here <https://github.com/ploomber/soorgeon/blob/main/doc/guide.md>`_ to go to Soorgeon's user guide
-* `Soorgeon is available on GitHub <https://github.com/ploomber/soorgeon>`_
-* `An interactive example is available here <https://github.com/ploomber/projects/tree/master/guides/refactor>`_
-
-
-Refactoring guide
------------------
-
-We've published in our blog a detailed guide to refactoring notebooks:
-
-1. `Part I <https://ploomber.io/blog/refactor-nb-i/>`_
-2. `Part II <https://ploomber.io/blog/refactor-nb-ii/>`_
+* `Soorgeon's user guide <https://github.com/ploomber/soorgeon/blob/main/doc/guide.md>`_
+* `GitHub <https://github.com/ploomber/soorgeon>`_
+* `Interactive example <https://github.com/ploomber/projects/tree/master/guides/refactor>`_
+* Blog post series on notebook refactoring: `Part I <https://ploomber.io/blog/refactor-nb-i/>`_, and `Part II <https://ploomber.io/blog/refactor-nb-ii/>`_
