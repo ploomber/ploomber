@@ -55,6 +55,7 @@ def requires_path(func):
     Checks if NotebookSource instance was initialized from a file, raises
     an error if not
     """
+
     @wraps(func)
     def wrapper(self, *args, **kwargs):
 
@@ -91,6 +92,7 @@ class NotebookSource(Source):
     The render method prepares the notebook for execution: it adds the
     parameters and it makes sure kernelspec is defined
     """
+
     @requires([
         'parso', 'pyflakes', 'jupytext', 'nbformat', 'papermill',
         'jupyter_client'
@@ -399,8 +401,11 @@ Go to: https://ploomber.io/s/params for more information
         """
         Inject cell, overwrite the source file (and any paired files)
         """
-        fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
-        fmt_ = f'{self._ext_in}:{fmt}'
+        if self._ext_in != 'ipynb':
+            fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
+            fmt_ = f'{self._ext_in}:{fmt}'
+        else:
+            fmt_ = '.ipynb'
 
         # add metadata to flag that the cell was injected manually
         recursive_update(

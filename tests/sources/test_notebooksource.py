@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import yaml
 import pytest
 import jupytext
 import nbformat
@@ -547,6 +548,31 @@ def test_save_injected_cell(tmp_nbs):
     nb = jupytext.read('load.py')
 
     assert expected in Path('load.py').read_text()
+    assert nb.metadata.ploomber.injected_manually
+
+
+def test_save_injected_cell_ipynb(tmp_nbs):
+    # modify the spec so it has one ipynb task
+    with open('pipeline.yaml') as f:
+        spec = yaml.safe_load(f)
+
+    spec['tasks'][0]['source'] = 'load.ipynb'
+    Path('pipeline.yaml').write_text(yaml.dump(spec))
+
+    # generate notebook in ipynb format
+    jupytext.write(jupytext.read('load.py'), 'load.ipynb')
+
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    nb = jupytext.read('load.py')
+    expected = '"injected-parameters"'
+
+    assert expected not in Path('load.ipynb').read_text()
+    assert nb.metadata.get('ploomber') is None
+
+    dag['load'].source.save_injected_cell()
+    nb = jupytext.read('load.ipynb')
+
+    assert expected in Path('load.ipynb').read_text()
     assert nb.metadata.ploomber.injected_manually
 
 
