@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 0.14.8dev
+* Better user feedback after running `ploomber nb --inject`
+* Fixed `ploomber nb --inject` when `pipeline.yaml` has `.ipynb` files
 
 ## 0.14.7 (2022-01-25)
 * Adds `ploomber nb --single-click/--single-click-disable` to enable/disable opening `.py` as notebooks with a click on Jupyter

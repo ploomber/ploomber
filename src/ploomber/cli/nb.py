@@ -311,6 +311,11 @@ def main():
             dict(),
         )
 
+        click.secho(
+            'Finished cell injection. Re-run this command if your '
+            'pipeline.yaml changes.',
+            fg='green')
+
     if args.remove:
         _call_in_source(
             dag,
