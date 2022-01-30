@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.14.8dev
+## 0.14.8 (2022-01-29)
 * Better user feedback after running `ploomber nb --inject`
 * Fixed `ploomber nb --inject` when `pipeline.yaml` has `.ipynb` files
 
