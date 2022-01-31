@@ -384,8 +384,10 @@ def _get_telemetry_info():
     """
     # Check if telemetry is enabled, if not skip, else check for uid
     telemetry_enabled = check_stats_enabled()
-    check_version()
     if telemetry_enabled:
+        # Check latest version
+        check_version()
+
         # Check first time install
         is_install = check_first_time_usage()
 
