@@ -71,12 +71,8 @@ ploomber examples
 ploomber examples -n templates/ml-basic -o ml-basic
 cd ml-basic
 
-# if using pip
+# install dependencies
 pip install -r requirements.txt
-
-# if using conda
-conda env create --file environment.yml
-conda activate ml-basic
 
 # run pipeline (output will be available in the output directory)
 ploomber build
