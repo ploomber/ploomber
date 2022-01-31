@@ -14,7 +14,13 @@ The easiest way to setup the development environment is via the setup command; y
 
 [Click here for miniconda installation details](https://docs.conda.io/en/latest/miniconda.html).
 
-Once you have conda:
+Make sure conda has conda-forge as channel, running the following:
+
+```sh
+conda config --add channels conda-forge
+```
+
+Once you have conda ready:
 
 ```sh
 # get the code
@@ -22,6 +28,9 @@ git clone https://github.com/ploomber/ploomber
 
 # invoke is a library we use to manage one-off commands
 pip install invoke
+
+# move into ploomber directory
+cd ploomber
 
 # setup development environment
 invoke setup
