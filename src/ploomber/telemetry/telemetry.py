@@ -31,6 +31,7 @@ The data we collect is limited to:
 
 import datetime
 import http.client as httplib
+import json
 import warnings
 
 import posthog
@@ -310,6 +311,71 @@ def check_first_time_usage():
     return not uid_path.exists() and config_path.exists()
 
 
+def get_latest_version():
+    """
+    The function checks for the latest available ploomber version
+    uid file doesn't exist.
+    """
+    conn = httplib.HTTPSConnection('pypi.org', timeout=1)
+    try:
+        conn.request("GET", "/pypi/ploomber/json")
+        content = conn.getresponse().read()
+        data = json.loads(content)
+        latest = data['info']['version']
+        return latest
+    except Exception:
+        return __version__
+    finally:
+        conn.close()
+
+
+def check_version():
+    """
+    The function checks if the user runs the latest version
+    If it's not the latest, notifies the user and saves the metadata to conf
+    Alerting every 2 days on stale versions
+    """
+    # Read conf file
+    config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
+    try:
+        with config_path.open("r") as file:
+            conf = yaml.safe_load(file)
+    except Exception as e:
+        warnings.warn(f"Error: Can't read config file {e}")
+
+    # If the version is updated continue
+    if 'latest_ploomber_version' not in conf.keys():
+        latest = get_latest_version()
+        conf['latest_ploomber_version'] = latest
+    else:
+        latest = conf['latest_ploomber_version']
+
+    # If latest version, do nothing
+    if __version__ == latest:
+        return
+
+    today = datetime.datetime.now()
+
+    # If first time the version is checked
+    if 'last_version_check' in conf.keys():
+        # Check if we already notified in the last 2 days
+        last_message = conf['last_version_check']
+        diff = (today - last_message).days
+        if diff < 2:
+            return
+
+    warnings.warn("****Please update the ploomber version, run:\n"
+                  "pip install ploomber --upgrade\n")
+
+    # Update conf
+    conf['last_version_check'] = today
+    try:  # Create for future runs
+        with config_path.open("w") as file:
+            yaml.dump(conf, file)
+    except Exception as e:
+        warnings.warn(f"ERROR: Can't write to config file: {e}")
+
+
 def _get_telemetry_info():
     """
     The function checks for the local config and uid files, returns the right
@@ -318,7 +384,7 @@ def _get_telemetry_info():
     """
     # Check if telemetry is enabled, if not skip, else check for uid
     telemetry_enabled = check_stats_enabled()
-
+    check_version()
     if telemetry_enabled:
         # Check first time install
         is_install = check_first_time_usage()

@@ -1,9 +1,15 @@
+import datetime
 import pathlib
 import click
 import sys
 from unittest.mock import Mock
 from pathlib import Path
 import pytest
+import warnings
+
+import yaml
+
+import ploomber
 from ploomber.telemetry import telemetry
 from ploomber.telemetry.validate_inputs import str_param, opt_str_param
 from ploomber.cli import plot, install, build, interact, task, report, status
@@ -456,6 +462,72 @@ def test_validate_entries(monkeypatch):
     res = telemetry.validate_entries(event_id, uid, action, client_time,
                                      elapsed_time)
     assert res == (event_id, uid, action, client_time, elapsed_time)
+
+
+def test_get_latest_version(monkeypatch):
+    is_latest = telemetry.get_latest_version()
+    assert isinstance(is_latest, str)
+    version_index = [i for i, ltr in enumerate(is_latest) if ltr == '.']
+    assert len(version_index) == 2
+
+    mock_httplib = Mock()
+    mock_httplib.HTTPSConnection().request.side_effect = Exception
+    monkeypatch.setattr(telemetry, 'httplib', mock_httplib)
+    is_latest = telemetry.get_latest_version()
+    assert is_latest == ploomber.__version__
+
+    # Mock version and the conf, check it produces the same version
+
+
+def write_to_conf_file(path, version, last_check):
+    (path).write_text("stats_enabled: True\n"
+                      f"last_version_check: {last_check}\n"
+                      f"latest_ploomber_version: {version}\n")
+
+
+def test_check_version(tmp_directory, monkeypatch):
+    # Path conf file
+    stats = Path('stats')
+    stats.mkdir()
+    path = stats / 'config.yaml'
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+    monkeypatch.setattr(ploomber, '__version__', '0.14.8')
+    # (path).write_text("stats_enabled: True\n"
+    #                   f"last_version_check: 2022-01-20 10:51:41.082376\n"
+    #                   f"latest_ploomber_version: 0.14.8\n")
+    write_to_conf_file(path=path,
+                       version='0.14.8',
+                       last_check='2022-01-20 10:51:41.082376')
+
+    # Test no warning when same version encountered
+    # with warnings.catch_warnings():
+    #     warnings.filterwarnings("error")
+    #     telemetry.check_version()
+
+    write_to_conf_file(path=path,
+                       version='0.14.0',
+                       last_check='2022-01-20 10:51:41.082376')
+    # Check now that the date is different there is an upgrade warning
+    with pytest.warns(UserWarning, match=r'ploomber --upgrade'):
+        telemetry.check_version()
+
+    # The file's date is today now, no error should be raised
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error")
+        telemetry.check_version()
+
+    # Warning should be caught since the date and version are off
+    write_to_conf_file(path=path,
+                       version='0.14.0',
+                       last_check='2022-01-20 10:51:41.082376')
+    with pytest.warns(UserWarning, match=r'ploomber --upgrade'):
+        telemetry.check_version()
+
+    # Check the conf file was updated
+    with path.open("r") as file:
+        conf = yaml.safe_load(file)
+    diff = (datetime.datetime.now() - conf['last_version_check']).days
+    assert diff == 0
 
 
 def test_python_major_version():
