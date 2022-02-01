@@ -62,13 +62,16 @@ def find_entry_point_type(entry_point):
     if type_:
         return type_
     else:
-        raise ValueError(
-            'Could not determine the entry point type from value: '
-            f'{entry_point!r}. Expected '
-            'an existing file with extension .yaml or .yml, '
-            'existing directory, glob-like pattern '
-            '(i.e., *.py) or dotted path '
-            '(i.e., module.sub_module.factory_function). Verify your input.')
+        if Path('my_file.yaml').suffix == '.yaml':
+            raise Exception("Path does'nt exist")
+        else:
+            raise ValueError(
+                'Could not determine the entry point type from value: '
+                f'{entry_point!r}. Expected '
+                'an existing file with extension .yaml or .yml, '
+                'existing directory, glob-like pattern '
+                '(i.e., *.py) or dotted path '
+                '(i.e., module.sub_module.factory_function). Verify your input.')
 
 
 def try_to_find_entry_point_type(entry_point):
