@@ -204,7 +204,7 @@ def cmd_router():
                                  f"Error: {cmd_name!r} is not a valid command."
                                  f" Did you mean {suggestion!r}?")
     else:
-        if cmd_name not in ['examples', 'scaffold']:
+        if cmd_name not in ['examples', 'scaffold', 'install']:
             telemetry.log_api("unsupported-api-call",
                               metadata={'argv': sys.argv})
         cli()
