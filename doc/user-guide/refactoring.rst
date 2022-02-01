@@ -51,7 +51,17 @@ Once your notebook is ready, you can refactor it with:
     `message on Slack <https://ploomber.io/community>`_.
 
 The command above will generate a ``pipeline.yaml`` with your pipeline
-declaration and ``.py`` tasks (one per section). Note that due to the
+declaration and ``.ipynb`` tasks (one per section).
+
+You can also tell Soorgeon to generate tasks in ``.py`` format:
+
+.. code-block:: bash
+
+    # generate tasks in .py format (requires soorgeon>=0.0.13)
+    soorgeon refactor nb.ipynb --file-format py
+
+
+Note that due to the
 :doc:`Jupyter integration <jupyter>`, **you can open .py files as notebooks in Jupyter**
 
 .. image:: https://ploomber.io/images/doc/lab-open-with-notebook.png
