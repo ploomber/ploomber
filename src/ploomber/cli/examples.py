@@ -76,21 +76,24 @@ def _cleanup_markdown(source):
 
 
 def _display_markdown(tw, path):
+    LINES = 10
+
     source = _cleanup_markdown(path.read_text())
 
     lines = source.splitlines()
 
-    top_lines = '\n'.join(lines[:25])
+    top_lines = '\n'.join(lines[:LINES])
 
     tw.write(highlight(top_lines, _lexer, _formatter))
 
-    if len(lines) > 25:
-        tw.write(f'\n[...{str(path)} continues]\n', yellow=True)
+    if len(lines) > LINES:
+        tw.write(f'\n[{str(path)} continues]\n', yellow=True)
 
 
 class _ExamplesManager:
     """Class for managing examples data
     """
+
     def __init__(self, home, branch=None):
         self._home = Path(home).expanduser()
         self._path_to_metadata = self._home / '.metadata'
@@ -284,12 +287,10 @@ def main(name, force=False, branch=None, output=None):
 
             tw.sep('=', str(path_to_readme), blue=True)
             _display_markdown(tw, path_to_readme)
-            tw.sep('=', blue=True)
-            tw.sep('=', 'Installation', blue=True)
-            tw.write(f'Move to {out_dir} and run one of:'
-                     f'\n* ploomber install'
-                     f'\n* conda env create -f environment.yml'
-                     f'\n* pip install -r requirements.txt\n')
+            tw.sep('=', 'Next steps', blue=True)
+            tw.write(f'$ cd {out_dir}'
+                     f'\n$ ploomber install'
+                     f'\n$ ploomber build\n')
             tw.sep('=', blue=True)
             telemetry.log_api("ploomber_examples",
                               metadata={
