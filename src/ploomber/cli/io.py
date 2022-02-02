@@ -2,7 +2,7 @@ from functools import wraps
 import sys
 import traceback
 from ploomber.io import TerminalWriter
-from ploomber.exceptions import DAGBuildError, DAGRenderError
+from ploomber.exceptions import DAGBuildError, DAGRenderError, BaseException
 
 # TODO: there are two types of cli commands: the ones that execute user's
 # code (ploomber build/task) and the ones that parse a dag/task but do not
@@ -27,6 +27,7 @@ def cli_endpoint(fn):
     Call some_endpoint(catch_exception=False) to disable this behavior (e.g.
     for testing)
     """
+
     @wraps(fn)
     def wrapper(catch_exception=True, **kwargs):
         if catch_exception:
@@ -36,6 +37,9 @@ def cli_endpoint(fn):
             except (DAGBuildError, DAGRenderError):
                 error = traceback.format_exc()
                 color = False
+            except BaseException as e:
+                e.show()
+                sys.exit(1)
             except Exception:
                 error = traceback.format_exc()
                 color = True
@@ -64,6 +68,7 @@ def command_endpoint(fn):
     not execute them. If it tails, it prints error message to stderror, then
     calls with exit code 1.
     """
+
     @wraps(fn)
     def wrapper(**kwargs):
         try:
