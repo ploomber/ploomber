@@ -62,8 +62,9 @@ def find_entry_point_type(entry_point):
     if type_:
         return type_
     else:
-        if Path('my_file.yaml').suffix == '.yaml':
-            raise Exception("Path does'nt exist")
+        if Path(entry_point).suffix == '.yaml':
+            raise Exception('Could not determine the entry point type from value: ' 
+            f'{entry_point!r}. The file does not exist.')
         else:
             raise ValueError(
                 'Could not determine the entry point type from value: '
