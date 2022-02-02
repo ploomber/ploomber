@@ -30,7 +30,7 @@ try:
 except ImportError:
     nbconvert = None
 
-from ploomber.exceptions import TaskBuildError
+from ploomber.exceptions import TaskBuildError, TaskInitializationError
 from ploomber.sources import NotebookSource
 from ploomber.sources.notebooksource import _cleanup_rendered_nb
 from ploomber.products import File, MetaProduct
@@ -57,6 +57,7 @@ class NotebookConverter:
     Handles cases where the output representation is text (e.g. HTML) or bytes
     (e.g. PDF)
     """
+
     def __init__(self,
                  path_to_output,
                  exporter_name=None,
@@ -294,12 +295,11 @@ class NotebookRunner(FileLoaderMixin, Task):
 
         if isinstance(self.product, MetaProduct):
             if self.product.get(nb_product_key) is None:
-                raise KeyError("Key '{}' does not exist in product: {}. "
-                               "Either add it to specify the output notebook "
-                               "location or pass a 'nb_product_key' to the "
-                               "task constructor with the key that contains "
-                               " the output location".format(
-                                   nb_product_key, str(self.product)))
+                raise TaskInitializationError(
+                    f"Missing key '{nb_product_key}' in "
+                    f"product: {(str(self.product))!r}. "
+                    f"{nb_product_key!r} must contain "
+                    "the path to the output notebook.")
 
         if isinstance(self.product, MetaProduct):
             product_nb = (

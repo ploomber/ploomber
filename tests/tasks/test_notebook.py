@@ -10,7 +10,8 @@ import nbconvert
 from ploomber import DAG, DAGConfigurator
 from ploomber.tasks import NotebookRunner
 from ploomber.products import File
-from ploomber.exceptions import DAGBuildError, DAGRenderError
+from ploomber.exceptions import (DAGBuildError, DAGRenderError,
+                                 TaskInitializationError)
 from ploomber.tasks import notebook
 from ploomber.executors import Serial
 
@@ -380,7 +381,7 @@ var = None
 # +
     """
 
-    with pytest.raises(KeyError) as excinfo:
+    with pytest.raises(TaskInitializationError) as excinfo:
         NotebookRunner(code,
                        product=product,
                        dag=dag,
@@ -390,7 +391,7 @@ var = None
                        nb_product_key='nb',
                        name='nb')
 
-    assert "Key 'nb' does not exist in product" in str(excinfo.value)
+    assert "Missing key 'nb' in product" in str(excinfo.value)
 
 
 def test_failing_notebook_saves_partial_result(tmp_directory):
@@ -514,6 +515,7 @@ var = None
 
 
 def test_develop_saves_changes(tmp_dag, monkeypatch):
+
     def mock_jupyter_notebook(args, check):
         nb = jupytext.reads('2 + 2', fmt='py')
         # args: "jupyter" {app} {path} {other args, ...}
