@@ -1,13 +1,16 @@
 # TODO: these tests need clean up, is a merge from two files since
 # StringPlaceholder was removed and its interface was implemented directly
 # in Placeholder
+import yaml
+import json
 import tempfile
 from copy import copy, deepcopy
 from pathlib import Path
 
 import pytest
 from ploomber.placeholders.placeholder import (Placeholder,
-                                               SQLRelationPlaceholder)
+                                               SQLRelationPlaceholder,
+                                               _get_key)
 from ploomber.placeholders.util import get_tags_in_str, get_defined_variables
 from ploomber.tasks._upstream import Upstream
 from ploomber import SourceLoader
@@ -308,3 +311,35 @@ def test_raise(tmp_directory):
         p.render({})
 
     assert str(excinfo.value) == 'some error message'
+
+
+def test_globals():
+    p = Placeholder('something')
+
+    assert {'get_key'} <= set(p._template.environment.globals)
+
+
+def test_source_loader_globals(tmp_directory):
+    Path('template').touch()
+
+    sl = SourceLoader(path='.')
+
+    assert {'get_key'} <= set(sl['template']._template.environment.globals)
+
+
+@pytest.mark.parametrize('filename, fn', [
+    ['file.json', json.dumps],
+    ['file.yaml', yaml.dump],
+])
+def test_get_key(tmp_directory, filename, fn):
+    Path(filename).write_text(fn(dict(key='value')))
+
+    assert _get_key(filename, 'key') == 'value'
+
+
+def test_get_key_error_if_unsupported_extension():
+    with pytest.raises(ValueError) as excinfo:
+        _get_key('something.csv', 'key')
+
+    expected = "get_key must be used with .json or .yaml files. Got: '.csv'"
+    assert str(excinfo.value) == expected

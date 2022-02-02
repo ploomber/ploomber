@@ -186,9 +186,7 @@ def test_can_dump_sqlite_to_parquet(tmp_directory):
     assert dump.equals(db)
 
 
-# FIXME: add tests to check that Placeholders init from raw str, or a loader
-# have the custom globals
-def test_custom_jinja_env_globals(tmp_directory):
+def test_sql_runtime_params(tmp_directory):
     tmp = Path(tmp_directory)
 
     # create a db

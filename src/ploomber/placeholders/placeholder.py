@@ -4,10 +4,12 @@ import logging
 from pathlib import Path
 from reprlib import Repr
 
-from ploomber.exceptions import RenderError, SourceInitializationError
-from ploomber.placeholders import util, extensions, abc
+import yaml
 from jinja2 import (Environment, Template, UndefinedError, FileSystemLoader,
                     PackageLoader, StrictUndefined)
+
+from ploomber.exceptions import RenderError, SourceInitializationError
+from ploomber.placeholders import util, extensions, abc
 
 
 class Placeholder(abc.AbstractPlaceholder):
@@ -317,7 +319,17 @@ def _add_globals(env):
 
 
 def _get_key(path, key):
-    return json.loads(Path(path).read_text())[key]
+    path = Path(path)
+
+    suffix2fn = {'.json': json.loads, '.yaml': yaml.safe_load}
+
+    fn = suffix2fn.get(path.suffix)
+
+    if not fn:
+        raise ValueError('get_key must be used with .json or .yaml files. '
+                         f'Got: {path.suffix!r}')
+
+    return fn(path.read_text())[key]
 
 
 def _get_package_name(loader):
