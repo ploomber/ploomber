@@ -449,9 +449,10 @@ class DAGSpec(MutableMapping):
                 dag.executor = dotted_path.DottedPath(
                     executor, lazy_load=False, allow_return_none=False)()
             else:
-                raise ValueError('executor must be '
-                                 '"serial", "parallel", or a dotted path'
-                                 f', got: {executor}')
+                raise DAGSpecInitializationError(
+                    '"executor" must be '
+                    '"serial", "parallel", or a dotted path'
+                    f', got: {executor!r}')
 
         clients = self.get('clients')
 
@@ -603,6 +604,7 @@ class DAGSpecPartial(DAGSpec):
     A DAGSpec subclass that initializes from a list of tasks (used in the
     onlinedag.py) module
     """
+
     def __init__(self, path_to_partial, env=None):
         with open(path_to_partial) as f:
             tasks = yaml.safe_load(f)
