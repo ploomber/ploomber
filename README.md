@@ -64,9 +64,6 @@ Use Binder to try out Ploomber without setting up an environment:
 Or run an example locally:
 
 ```sh
-# list examples
-ploomber examples
-
 # ML pipeline example
 ploomber examples -n templates/ml-basic -o ml-basic
 cd ml-basic
