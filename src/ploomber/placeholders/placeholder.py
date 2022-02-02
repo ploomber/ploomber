@@ -52,6 +52,7 @@ class Placeholder(abc.AbstractPlaceholder):
     You can use "raise" in a placeholder to raise exceptions, useful for
     validating input parameters: "{% raise 'some error message' %}"
     """
+
     def __init__(self, primitive, hot_reload=False, required=None):
         self._logger = logging.getLogger('{}.{}'.format(
             __name__,

@@ -226,7 +226,6 @@ def test_custom_jinja_env_globals(tmp_directory):
     t2 = PythonCallable(select, File('selected.json'), dag, name='selected')
 
     t3 = SQLDump("""
-    -- {{upstream}}
     SELECT * FROM data WHERE number
     NOT IN ([[get_key(upstream["selected"], "numbers") | join(", ") ]])
 """,
@@ -238,7 +237,6 @@ def test_custom_jinja_env_globals(tmp_directory):
                  io_handler=io.ParquetIO)
 
     t4 = SQLDump("""
-    -- {{upstream}}
     SELECT * FROM data WHERE char
     NOT IN ([[get_key(upstream["selected"], "chars") | join(", ") ]])
 """,
