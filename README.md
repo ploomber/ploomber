@@ -35,7 +35,7 @@ Ploomber is the fastest way to build data pipelines ⚡️. Use your favorite ed
 
 
 <p align="center">
-  <a href="https://ploomber.readthedocs.io/en/latest/get-started/spec-api-python.html"> <img src="_static/get-started.svg" alt="Get Started"> </a>
+  <a href="https://ploomber.readthedocs.io/en/latest/get-started/spec-api-python.html"> <img src="_static/quick-start.svg" alt="Get Started"> </a>
 </p>
 
 
