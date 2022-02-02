@@ -1,10 +1,3 @@
-Quick start
------------
-We'll cover:
-* Installation
-* Get the ML-basic example
-* Run Ploomber
-
 Installation
 ------------
 
@@ -38,7 +31,7 @@ Get an example
     pip install -r requirements.txt
 
 What we're doing in this section is getting a preconfigured workflow. You can
-review the code in your `local`.
+review the code in your ``local``.
 
 Run ploomber
 ------------
@@ -47,13 +40,13 @@ Run ploomber
     ploomber build
 
 We just ran the ploomber pipeline, you can change parts of the code and see how it affects *execution time*.
-You should go to the `outputs folder` that was created and open the HTML report to see the execution results.
+You should go to the ``outputs`` folder that was created and open the HTML report to see the execution results.
 
 What's next?
 ************
 
 Depends what you want to achieve:
-* **Bring your own code!** Check out the tutorial to [migrate your code to Ploomber](https://docs.ploomber.io/en/latest/user-guide/refactoring.html).
-* You can go deeper on the [build your first python pipeline guide](https://docs.ploomber.io/en/latest/get-started/spec-api-python.html).
+* **Bring your own code!** Check out the tutorial to migrate your code to Ploomber :doc:`../user-guide/refactoring`.
+* You can go deeper and build your first python pipeline guide: :doc:`../get-started/spec-api-python`.
 
 You can run **another example** as well
