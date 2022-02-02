@@ -167,6 +167,7 @@ class TaskSpec(MutableMapping):
         if the module has already been imported. Has no effect if
         lazy_import=True.
     """
+
     def __init__(self,
                  data,
                  meta,
@@ -375,10 +376,9 @@ def _init_task(data, meta, project_root, lazy_import, dag):
                       dag=dag,
                       **task_dict)
     except Exception as e:
-        msg = (f'Error initializing {class_.__name__} from {data!r}. '
-               f'Error: {e.args[0]}')
-        e.args = (msg, )
-        raise
+        msg = (f'Failed to initialize {class_.__name__} task with '
+               f'source {str(source)!r}.')
+        raise DAGSpecInitializationError(msg) from e
 
     if on_finish:
         task.on_finish = dotted_path.DottedPath(on_finish,
