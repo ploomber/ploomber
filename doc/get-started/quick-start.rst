@@ -46,7 +46,8 @@ What's next?
 ************
 
 Depends what you want to achieve:
-* **Bring your own code!** Check out the tutorial to migrate your code to Ploomber :doc:`../user-guide/refactoring`.
+
+* **Bring your own code!** Check out the tutorial to migrate your code into Ploomber: :doc:`../user-guide/refactoring`.
 
 * You can go deeper and build your first python pipeline guide: :doc:`../get-started/spec-api-python`.
 
