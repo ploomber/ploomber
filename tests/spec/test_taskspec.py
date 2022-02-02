@@ -29,7 +29,7 @@ def test_task_class_from_script(tmp_directory, source_str, expected):
     str(Path('something', 'another', 'script.json')),
 ])
 def test_task_class_from_script_unknown_extension(tmp_directory, source_str):
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
         task_class_from_source_str(source_str,
                                    lazy_import=False,
                                    reload=False,
@@ -51,7 +51,7 @@ def fn():
 
 
 def test_task_class_from_source_str_error():
-    with pytest.raises(ValueError):
+    with pytest.raises(DAGSpecInitializationError):
         task_class_from_source_str('not_a_module.not_a_function',
                                    lazy_import=False,
                                    reload=False,
@@ -195,7 +195,7 @@ def test_validate_missing_source(key):
     }),
 ])
 def test_error_if_extract_but_keys_declared(task, meta):
-    with pytest.raises(ValueError):
+    with pytest.raises(DAGSpecInitializationError):
         TaskSpec(task, meta, project_root='.')
 
 
@@ -518,18 +518,18 @@ def test_grid_with_missing_name(backup_spec_with_functions_flat, tmp_imports,
                                 grid_spec):
     del grid_spec['name']
 
-    with pytest.raises(KeyError) as excinfo:
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
         TaskSpec(grid_spec, Meta.default_meta(),
                  project_root='.').to_task(dag=DAG())
 
-    assert 'Error initializing task with spec' in str(excinfo.value)
+    assert 'Error initializing task with source' in str(excinfo.value)
 
 
 def test_grid_and_params(backup_spec_with_functions_flat, tmp_imports,
                          grid_spec):
     grid_spec['params'] = {'a': 1}
 
-    with pytest.raises(KeyError) as excinfo:
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
         TaskSpec(grid_spec, Meta.default_meta(),
                  project_root='.').to_task(dag=DAG())
 

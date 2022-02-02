@@ -68,10 +68,11 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
 
         return suffix2taskclass[extension]
     elif _looks_like_path(source_str):
-        raise ValueError('Failed to determine task class for '
-                         f'source {source_str!r} (invalid '
-                         f'extension {extension!r}). Valid extensions '
-                         f'are: {pretty_print.iterable(suffix2taskclass)}')
+        raise DAGSpecInitializationError(
+            'Failed to determine task class for '
+            f'source {source_str!r} (invalid '
+            f'extension {extension!r}). Valid extensions '
+            f'are: {pretty_print.iterable(suffix2taskclass)}')
     elif lazy_import == 'skip':
         # Anything that has not been caught before is treated as a
         # Python function, thus we return a PythonCallable
@@ -85,11 +86,9 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
             error = e
 
         if imported is None:
-            raise ValueError(
-                'Could not determine task class for '
-                f'source {source_str!r} due to error: {error!s}. '
-                'This looks like a dotted path but it failed to import. '
-                'You can also set the task class using the "class" key.')
+            raise DAGSpecInitializationError(
+                'Failed to determine task class for '
+                f'source {source_str!r}: {error!s}. ')
         else:
             return tasks.PythonCallable
 
@@ -228,16 +227,16 @@ class TaskSpec(MutableMapping):
                       name=repr(self))
 
         if self.meta['extract_upstream'] and self.data.get('upstream'):
-            raise ValueError('Error validating task "{}", if '
-                             'meta.extract_upstream is set to True, tasks '
-                             'should not have an "upstream" key'.format(
-                                 self.data))
+            raise DAGSpecInitializationError(
+                'Error validating task "{}", if '
+                'meta.extract_upstream is set to True, tasks '
+                'should not have an "upstream" key'.format(self.data))
 
         if self.meta['extract_product'] and self.data.get('product'):
-            raise ValueError('Error validating task "{}", if '
-                             'meta.extract_product is set to True, tasks '
-                             'should not have a "product" key'.format(
-                                 self.data))
+            raise DAGSpecInitializationError(
+                'Error validating task "{}", if '
+                'meta.extract_product is set to True, tasks '
+                'should not have a "product" key'.format(self.data))
 
     def to_task(self, dag):
         """
@@ -256,13 +255,21 @@ class TaskSpec(MutableMapping):
         upstream = _make_iterable(data.pop('upstream'))
 
         if 'grid' in data:
+            data_source_ = data["source"]
+            data_source = str(data_source_ if not hasattr(
+                data_source_, '__name__') else data_source_.__name__)
+
             if 'params' in data:
-                raise KeyError(f'Error initializing task with spec {data!r}: '
-                               '\'params\' is not allowed when using \'grid\'')
+                raise DAGSpecInitializationError(
+                    'Error initializing task with '
+                    f'source {data_source!r}: '
+                    '\'params\' is not allowed when using \'grid\'')
 
             if 'name' not in data:
-                raise KeyError(f'Error initializing task with spec {data!r}: '
-                               'tasks with \'grid\' must have a \'name\'')
+                raise DAGSpecInitializationError(
+                    f'Error initializing task with '
+                    f'source {data_source!r}: '
+                    'tasks with \'grid\' must have a \'name\'')
 
             task_class = data.pop('class')
             product_class = _find_product_class(task_class, data, self.meta)

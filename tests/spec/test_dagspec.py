@@ -31,6 +31,7 @@ from ploomber.products import MetaProduct
 
 
 def create_engine_with_schema(schema):
+
     def fake_create_engine(*args, **kwargs):
         if 'sqlite' in args[0]:
             return create_engine(*args, **kwargs)
@@ -955,7 +956,7 @@ def test_spec_with_functions_fails(lazy_import,
     source scripts thanks to lazy_import being bool, it should fail (True
     imports the function, while False does not but it checks that it exists)
     """
-    with pytest.raises(ValueError):
+    with pytest.raises(exceptions.DAGSpecInitializationError):
         DAGSpec('pipeline.yaml', lazy_import=lazy_import)
 
 
