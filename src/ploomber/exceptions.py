@@ -56,6 +56,12 @@ class DAGBuildEarlyStop(Exception):
     pass
 
 
+class TaskInitializationError(BaseException):
+    """Raised when a task fails to initialize
+    """
+    pass
+
+
 class TaskBuildError(Exception):
     """Raise when a task fails to build
     """
