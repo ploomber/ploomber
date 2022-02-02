@@ -132,9 +132,7 @@ def main_pip(start_time, use_lock):
         _pip_install(cmdr, pip, lock=not use_lock, requirements=reqs_dev_txt)
 
     if os.name == 'nt':
-        cmd_activate = (
-            f'\nIf using cmd.exe: {venv_dir}\\Scripts\\activate.bat'
-            f'\nIf using PowerShell: {venv_dir}\\Scripts\\Activate.ps1')
+        cmd_activate = f'{venv_dir}\\Scripts\\Activate.ps1'
     else:
         cmd_activate = f'source {venv_dir}/bin/activate'
 
@@ -331,9 +329,9 @@ def _next_steps(cmdr, cmd_activate, start_time):
     telemetry.log_api("install-success",
                       total_runtime=str(end_time - start_time))
 
-    cmdr.success('Done')
-    cmdr.print((f'Next steps:\n1. Activate environment: {cmd_activate}\n'
-                '2. Run pipeline: ploomber build'))
+    cmdr.success('Next steps')
+    cmdr.print((f'$ {cmd_activate}\n'
+                '$ ploomber build'))
     cmdr.success()
 
 

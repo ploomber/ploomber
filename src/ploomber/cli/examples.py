@@ -87,7 +87,7 @@ def _display_markdown(tw, path):
     tw.write(highlight(top_lines, _lexer, _formatter))
 
     if len(lines) > LINES:
-        tw.write(f'\n[{str(path)} continues]\n', yellow=True)
+        tw.write(f'\n[...{str(path)} continues]\n', yellow=True)
 
 
 class _ExamplesManager:
@@ -266,7 +266,7 @@ def main(name, force=False, branch=None, output=None):
         else:
             output = output or name
 
-            tw.sep('=', f'Copying example {name!r} to {output}/', green=True)
+            tw.sep('=', f'Copying example {name} to {output}/', blue=True)
 
             if Path(output).exists():
                 telemetry.log_api("examples_error",
@@ -285,13 +285,11 @@ def main(name, force=False, branch=None, output=None):
             out_dir = output + ('\\'
                                 if platform.system() == 'Windows' else '/')
 
-            tw.sep('=', str(path_to_readme), blue=True)
-            _display_markdown(tw, path_to_readme)
-            tw.sep('=', 'Next steps', blue=True)
-            tw.write(f'$ cd {out_dir}'
-                     f'\n$ ploomber install'
-                     f'\n$ ploomber build\n')
-            tw.sep('=', blue=True)
+            tw.write('Next steps:\n\n'
+                     f'$ cd {out_dir}'
+                     f'\n$ ploomber install')
+            tw.write(f'\n\nOpen {str(path_to_readme)} for details.\n',
+                     blue=True)
             telemetry.log_api("ploomber_examples",
                               metadata={
                                   'argv': sys.argv,
