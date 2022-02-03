@@ -147,7 +147,7 @@ setup(
     install_requires=[
         'ploomber-scaffold',
         'pyyaml',
-        'networkx',
+        'networkx>=2.5',
         'jinja2',
         'tabulate',
         'humanize',
