@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 0.14.9dev
+* Adds SQL runtime parameters
+* `SQLScript` and `SQLDump` display source code when `client.execute` fails
+* Clearer error message when `NotebookRunner` fails to initialize
+* `cli_endpoint` decorator hides traceback when raising `BaseException` errors
+* `DAGSpec` and `TaskSpec` errors raised as `DAGSpecInitializationError`
+* Less verbose `ploomber examples` output
 
 ## 0.14.8 (2022-01-29)
 * Better user feedback after running `ploomber nb --inject`
