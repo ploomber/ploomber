@@ -1,56 +1,55 @@
-Installation
-------------
+Quickstart
+----------
 
-Using ``pip``
-*************
+``pip``
+*******
 
 .. code-block:: console
 
     pip install ploomber
 
 
-Using ``conda``
-***************
+``conda``
+*********
 
 .. code-block:: console
 
     conda install ploomber -c conda-forge
 
 
+Run an example
+**************
 
-Get an example
---------------
-
-What we're doing in this section is getting a preconfigured workflow (example).
-You can review the code in your ``local``.
-
-Then we install the dependencies.
+Download example:
 
 .. code-block:: console
 
     ploomber examples -n templates/ml-basic -o ml-basic
     cd ml-basic
 
+Install the dependencies:
+
 .. code-block:: console
 
     pip install -r requirements.txt
 
-Run ploomber
-------------
+
+Run it:
+
 .. code-block:: console
 
     ploomber build
 
-We just ran the ploomber pipeline, you can change parts of the code and see how it affects *execution time*.
-You should go to the ``outputs`` folder that was created and open the HTML report to see the execution results.
+
+You just ran a Ploomber pipeline! 🎉
+
+Check out the ``output`` folder, you'll see an HTML report with model results!
+
+Also, check out the ``pipeline.yaml``, which contains the pipeline declaration.
 
 What's next?
 ************
 
-Depends what you want to achieve:
-
 * **Bring your own code!** Check out the tutorial to migrate your code into Ploomber: :doc:`../user-guide/refactoring`.
-
-* You can go deeper and build your first python pipeline guide: :doc:`../get-started/spec-api-python`.
-
-You can run **another example** as well
+* Check the **introductory tutorial**: :doc:`../get-started/spec-api-python`.
+* Run more :doc:`examples <../user-guide/templates>`.

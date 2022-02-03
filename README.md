@@ -35,7 +35,7 @@ Ploomber is the fastest way to build data pipelines ⚡️. Use your favorite ed
 
 
 <p align="center">
-  <a href="https://docs.ploomber.io/en/latest/get-started/quick-start.html"> <img src="_static/quick-start.svg" alt="Get Started"> </a>
+  <a href="https://docs.ploomber.io/en/latest/get-started/quick-start.html"> <img src="_static/get-started.svg" alt="Get Started"> </a>
 </p>
 
 
@@ -71,13 +71,23 @@ cd ml-basic
 # install dependencies
 pip install -r requirements.txt
 
-# run pipeline (output will be available in the output directory)
+# run pipeline
 ploomber build
 ```
+
+You just ran a Ploomber pipeline! 🎉
+
+Check out the ``output`` folder, you'll see an HTML report with model results!
+
+Also, check out the ``pipeline.yaml``, which contains the pipeline declaration.
+
+**What's next?**
 
 Ready to **migrate your project?** [Click here.](https://docs.ploomber.io/en/latest/user-guide/refactoring.html)
 
 Do you want to **learn more?** [Check out the introductory tutorial.](https://docs.ploomber.io/en/latest/get-started/spec-api-python.html)
+
+Run more [examples.](https://docs.ploomber.io/en/latest/user-guide/templates.html)
 
 ## Community
 

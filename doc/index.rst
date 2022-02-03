@@ -9,7 +9,7 @@ Ploomber documentation
   <div class="container">
   <div class="row d-flex justify-content-center">
     <div class="col-m">
-      <a href="get-started/quick-start.html"> <img class="index-button" src="_static/img/quick-start.svg" alt="Quick Start"> </a>
+      <a href="get-started/quick-start.html"> <img class="index-button" src="_static/img/get-started.svg" alt="Get Started"> </a>
     </div>
   </div>
   </div>
