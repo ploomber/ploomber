@@ -111,6 +111,7 @@ from ploomber.tasks.taskgroup import TaskGroup
 from ploomber.validators.string import (validate_product_class_name,
                                         validate_task_class_name)
 from ploomber.executors import Parallel
+from ploomber.io import pretty_print
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4)
@@ -261,10 +262,11 @@ class DAGSpec(MutableMapping):
             self.data = {'tasks': self.data}
 
         if self.data.get('tasks') and not isinstance(self.data['tasks'], list):
-            raise TypeError(
-                'Expected \'tasks\' to contain a list, but got: '
-                f'{self.data["tasks"]!r} '
-                f'(an object of type {type(self.data["tasks"]).__name__!r})')
+            raise DAGSpecInitializationError(
+                'Expected \'tasks\' in the dag spec to contain a '
+                f'list, but got: {self.data["tasks"]!r} '
+                '(an object with '
+                f'type: {type(self.data["tasks"]).__name__!r})')
 
         # validate keys defined at the top (nested keys are not validated here)
         self._validate_top_keys(self.data, self._path)
@@ -369,15 +371,19 @@ class DAGSpec(MutableMapping):
     def _validate_top_keys(self, spec, path):
         """Validate keys at the top of the spec
         """
+        path_ = f'(file: "{path}")' if self._parent_path else ''
+
         if 'tasks' not in spec and 'location' not in spec:
-            path_ = f'(file: "{path}")' if self._parent_path else ''
-            raise KeyError('Invalid data to initialize DAGSpec, missing '
-                           f'key "tasks" {path_}')
+            raise DAGSpecInitializationError(
+                f'Failed to initialize spec {path_}. Missing "tasks" key')
 
         if 'location' in spec:
             if len(spec) > 1:
-                raise KeyError('If specifying dag through a "location" key '
-                               'it must be the unique key in the spec')
+                raise DAGSpecInitializationError(
+                    f'Failed to initialize spec {path_}. If '
+                    'using the "location" key there should not '
+                    'be other keys')
+
         else:
             valid = {
                 'meta',
@@ -780,14 +786,17 @@ def process_tasks(dag, dag_spec, root_path=None):
     for task in tasks:
         if upstream[task]:
             for task_name, group_name in upstream[task].items():
-                try:
-                    up = dag[task_name]
-                except KeyError:
+
+                up = dag.get(task_name)
+
+                if up is None:
                     names = [t.name for t in tasks]
-                    raise KeyError('Error processing spec. Extracted '
-                                   'a reference to a task with name '
-                                   f'{task_name!r}, but a task with such name '
-                                   f'doesn\'t exist. Loaded tasks: {names}')
+                    raise DAGSpecInitializationError(
+                        f'Task {task.name!r} '
+                        'has an upstream dependency '
+                        f'{task_name!r}, but such task '
+                        'doesn\'t exist. Available tasks: '
+                        f'{pretty_print.iterable(names)}')
 
                 task.set_upstream(up, group_name=group_name)
 

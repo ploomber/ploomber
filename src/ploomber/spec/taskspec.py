@@ -1,5 +1,9 @@
 """
 Create Tasks from dictionaries
+
+Note: All validation errors should raise DAGSpecInitializationError, this
+allows the CLI to signal that this is a user's input error and hides the
+traceback and only displays the error message
 """
 from functools import partial
 from copy import copy, deepcopy
