@@ -57,11 +57,11 @@ conda install ploomber -c conda-forge
 
 ## Getting started
 
-Use Binder to try out Ploomber without setting up an environment:
+**Open a hosted JupyterLab instance:**
 
 [![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/spec-api-python%252FREADME.ipynb%26branch%3Dmaster)
 
-Or run an example locally:
+**Run an example locally:**
 
 ```sh
 # ML pipeline example
@@ -79,7 +79,7 @@ You just ran a Ploomber pipeline! 🎉
 
 Check out the ``output`` folder, you'll see an HTML report with model results!
 
-Also, check out the ``pipeline.yaml``, which contains the pipeline declaration.
+The ``pipeline.yaml`` contains the pipeline declaration. Feel free to modify any of the tasks, then call `ploomber build` again to update the results (Note: if using VSCode or PyCharm, execute `ploomber nb -i` before editing the files).
 
 **What's next?**
 
