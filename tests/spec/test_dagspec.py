@@ -28,6 +28,7 @@ from ploomber.tasks import SQLScript
 from ploomber import exceptions
 from ploomber.executors import Serial, Parallel
 from ploomber.products import MetaProduct
+from ploomber.exceptions import DAGSpecInitializationError
 
 
 def create_engine_with_schema(schema):
@@ -145,9 +146,21 @@ def test_init_with_missing_file(tmp_directory):
     assert 'Expected it to be a path to a YAML file' in str(excinfo.value)
 
 
+def test_error_if_tasks_is_none():
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        DAGSpec({'tasks': None})
+
+    expected = 'Failed to initialize spec, "tasks" section is empty'
+    assert str(excinfo.value) == expected
+
+
 def test_error_if_missing_tasks_key():
-    with pytest.raises(KeyError):
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
         DAGSpec({'some_key': None})
+
+    expected = 'Failed to initialize spec. Missing "tasks" key'
+    assert str(excinfo.value) == expected
 
 
 def test_validate_top_level_keys():
@@ -980,11 +993,12 @@ def test_spec_with_location_error_if_meta(tmp_directory):
     Path('pipeline.yaml').write_text(
         'location: some.factory.function\nmeta: {some: key}')
 
-    with pytest.raises(KeyError) as excinfo:
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
         DAGSpec('pipeline.yaml')
 
-    assert ('If specifying dag through a "location" key it must be '
-            'the unique key in the spec') in str(excinfo.value)
+    expected = ('Failed to initialize spec. If using the "location" key '
+                'there should not be other keys')
+    assert expected == str(excinfo.value)
 
 
 def test_to_dag_does_not_mutate_spec(tmp_nbs):
@@ -1758,11 +1772,12 @@ tasks:
     not_a_list: value
 """)
 
-    with pytest.raises(TypeError) as excinfo:
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
         DAGSpec('pipeline.yaml')
 
-    expected = ("Expected 'tasks' to contain a list, but got: "
-                "{'not_a_list': 'value'} (an object of type 'dict')")
+    expected = (
+        "Expected 'tasks' in the dag spec to contain a "
+        "list, but got: {'not_a_list': 'value'} (an object with type: 'dict')")
     assert str(excinfo.value) == expected
 
 

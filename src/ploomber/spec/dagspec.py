@@ -264,7 +264,7 @@ class DAGSpec(MutableMapping):
         if self.data.get('tasks') and not isinstance(self.data['tasks'], list):
             raise DAGSpecInitializationError(
                 'Expected \'tasks\' in the dag spec to contain a '
-                f'list, but got: {self.data["tasks"]!r} '
+                f'list, but got: {self.data["tasks"]} '
                 '(an object with '
                 f'type: {type(self.data["tasks"]).__name__!r})')
 
@@ -339,6 +339,10 @@ class DAGSpec(MutableMapping):
                               'environment but '
                               f'unused in the spec: {extra}')
 
+            if self.data['tasks'] is None:
+                raise DAGSpecInitializationError(
+                    'Failed to initialize spec, "tasks" section is empty')
+
             self.data['tasks'] = [
                 normalize_task(task) for task in self.data['tasks']
             ]
@@ -371,16 +375,14 @@ class DAGSpec(MutableMapping):
     def _validate_top_keys(self, spec, path):
         """Validate keys at the top of the spec
         """
-        path_ = f'(file: "{path}")' if self._parent_path else ''
-
         if 'tasks' not in spec and 'location' not in spec:
             raise DAGSpecInitializationError(
-                f'Failed to initialize spec {path_}. Missing "tasks" key')
+                'Failed to initialize spec. Missing "tasks" key')
 
         if 'location' in spec:
             if len(spec) > 1:
                 raise DAGSpecInitializationError(
-                    f'Failed to initialize spec {path_}. If '
+                    'Failed to initialize spec. If '
                     'using the "location" key there should not '
                     'be other keys')
 
