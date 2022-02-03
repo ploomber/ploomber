@@ -9,6 +9,6 @@ Get Started
     :maxdepth: 2
 
     what-is
-    install
+    quick-start
     spec-api-python
     basic-concepts
