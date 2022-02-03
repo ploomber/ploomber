@@ -454,11 +454,10 @@ def _find_product_class(task_class, task_dict, meta):
     elif meta_product_default_class:
         return validate_product_class_name(meta_product_default_class)
     else:
-        raise ValueError('Could not determine a product class for task: '
-                         '"{}". Add an explicit value in the '
-                         '"product_class" key or provide a default value in '
-                         'meta.product_default_class by setting the '
-                         'key to the applicable task class'.format(task_dict))
+        raise DAGSpecInitializationError(
+            f'Could not determine a product class for task: '
+            f'{task_dict!r}. Add an explicit value in the '
+            '"product_class"')
 
 
 def try_product_init(class_, product_raw, relative_to, kwargs):
