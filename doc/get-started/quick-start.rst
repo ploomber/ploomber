@@ -21,22 +21,24 @@ Using ``conda``
 Get an example
 --------------
 
+What we're doing in this section is getting a preconfigured workflow (example).
+You can review the code in your ``local``.
+
+Then we install the dependencies.
+
 .. code-block:: console
-    # ML pipeline example
+
     ploomber examples -n templates/ml-basic -o ml-basic
     cd ml-basic
 
 .. code-block:: console
-    # install dependencies
-    pip install -r requirements.txt
 
-What we're doing in this section is getting a preconfigured workflow. You can
-review the code in your ``local``.
+    pip install -r requirements.txt
 
 Run ploomber
 ------------
 .. code-block:: console
-    # run pipeline (output will be available in the output directory)
+
     ploomber build
 
 We just ran the ploomber pipeline, you can change parts of the code and see how it affects *execution time*.
