@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.14.9dev
+## 0.15 (2022-02-03)
 * Adds SQL runtime parameters
 * `SQLScript` and `SQLDump` display source code when `client.execute` fails
 * Clearer error message when `NotebookRunner` fails to initialize
