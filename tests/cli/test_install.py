@@ -2,15 +2,16 @@ import subprocess
 import os
 import sys
 from pathlib import Path
-from unittest.mock import Mock, call
+from unittest.mock import Mock, call, ANY
 import shutil
 import datetime
 import pytest
 from click.testing import CliRunner
 from ploomber.cli import install as install_module
 from ploomber.cli.cli import install
-from conftest import _write_sample_conda_env, _prepare_files,\
-     _write_sample_pip_req
+from conftest import (_write_sample_conda_env, _prepare_files,
+                      _write_sample_pip_req, _write_sample_conda_files,
+                      _write_sample_pip_files)
 
 setup_py = """
 from setuptools import setup, find_packages
@@ -252,6 +253,263 @@ def test_install_with_pip(tmp_directory, has_conda, use_lock, env, env_lock,
     assert inputs_args[1] == bool(use_lock)
 
 
+@pytest.mark.parametrize('is_conda, env_name, use_lock, create_env', [
+    [True, 'some-env', True, False],
+    [True, 'some-env', False, False],
+    [True, 'base', True, True],
+    [True, 'base', False, True],
+    [False, 'some-env', False, True],
+    [False, 'some-env', True, True],
+])
+def test_installs_inline_if_inside_venv(tmp_directory, monkeypatch, is_conda,
+                                        env_name, use_lock, create_env):
+    _write_sample_conda_files()
+
+    main = Mock()
+    monkeypatch.setattr(install_module.shutil, 'which', Mock())
+    monkeypatch.setattr(install_module, 'main_conda', main)
+    monkeypatch.setattr(install_module.telemetry, 'is_conda', lambda: is_conda)
+    monkeypatch.setattr(install_module, '_current_conda_env_name',
+                        lambda: env_name)
+
+    runner = CliRunner()
+    result = runner.invoke(install,
+                           args=['--use-lock'] if use_lock else [],
+                           catch_exceptions=False)
+
+    main.assert_called_once_with(ANY, use_lock=use_lock, create_env=create_env)
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize('in_venv, use_lock, create_env', [
+    [False, False, True],
+    [False, True, True],
+    [True, False, False],
+    [True, True, False],
+])
+def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch,
+                                            in_venv, use_lock, create_env):
+    _write_sample_pip_files()
+
+    main = Mock()
+    # simulate no conda
+    monkeypatch.setattr(install_module.shutil, 'which', lambda _: None)
+    monkeypatch.setattr(install_module, 'main_pip', main)
+    monkeypatch.setattr(install_module.telemetry, 'in_virtualenv',
+                        lambda: in_venv)
+
+    runner = CliRunner()
+    result = runner.invoke(install,
+                           args=['--use-lock'] if use_lock else [],
+                           catch_exceptions=False)
+
+    main.assert_called_once_with(ANY, use_lock=use_lock, create_env=create_env)
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize('dev_create, use_lock, expected_call', [
+    [
+        False, False,
+        [
+            call('pip',
+                 'install',
+                 '--requirement',
+                 'requirements.txt',
+                 description=ANY),
+            call('pip',
+                 'freeze',
+                 '--exclude-editable',
+                 description=ANY,
+                 capture_output=True)
+        ]
+    ],
+    [
+        False, True,
+        [
+            call('pip',
+                 'install',
+                 '--requirement',
+                 'requirements.lock.txt',
+                 description=ANY)
+        ]
+    ],
+    [
+        True, False,
+        [
+            call('pip',
+                 'install',
+                 '--requirement',
+                 'requirements.txt',
+                 description=ANY),
+            call('pip',
+                 'freeze',
+                 '--exclude-editable',
+                 description=ANY,
+                 capture_output=True),
+            call('pip',
+                 'install',
+                 '--requirement',
+                 'requirements.dev.txt',
+                 description=ANY),
+            call('pip',
+                 'freeze',
+                 '--exclude-editable',
+                 description=ANY,
+                 capture_output=True)
+        ]
+    ],
+    [
+        True, True,
+        [
+            call('pip',
+                 'install',
+                 '--requirement',
+                 'requirements.lock.txt',
+                 description=ANY),
+            call('pip',
+                 'install',
+                 '--requirement',
+                 'requirements.dev.lock.txt',
+                 description=ANY)
+        ]
+    ],
+])
+def test_main_pip_install_inline(tmp_directory, monkeypatch, capsys,
+                                 dev_create, use_lock, expected_call):
+    _write_sample_pip_files(dev=False)
+    _write_sample_pip_files(dev=dev_create)
+
+    mock = Mock(return_value='something')
+    monkeypatch.setattr(install_module.Commander, 'run', mock)
+
+    install_module.main_pip(datetime.datetime.now(),
+                            use_lock=use_lock,
+                            create_env=False)
+
+    assert mock.call_args_list == expected_call
+
+    captured = capsys.readouterr()
+    assert "=\n\n$ ploomber build\n=" in captured.out
+
+
+@pytest.mark.parametrize('dev_create, use_lock, expected_calls', [
+    [
+        False, False,
+        [
+            call('conda',
+                 'env',
+                 'update',
+                 '--file',
+                 'environment.yml',
+                 '--name',
+                 'some-env',
+                 description=ANY),
+            call('conda',
+                 'env',
+                 'export',
+                 '--no-build',
+                 '--name',
+                 'some-env',
+                 description=ANY,
+                 capture_output=True)
+        ]
+    ],
+    [
+        False, True,
+        [
+            call('conda',
+                 'env',
+                 'update',
+                 '--file',
+                 'environment.lock.yml',
+                 '--name',
+                 'some-env',
+                 description=ANY),
+        ]
+    ],
+    [
+        True, True,
+        [
+            call('conda',
+                 'env',
+                 'update',
+                 '--file',
+                 'environment.lock.yml',
+                 '--name',
+                 'some-env',
+                 description=ANY),
+            call('conda',
+                 'env',
+                 'update',
+                 '--file',
+                 'environment.dev.lock.yml',
+                 '--name',
+                 'some-env',
+                 description=ANY)
+        ]
+    ],
+    [
+        True, False,
+        [
+            call('conda',
+                 'env',
+                 'update',
+                 '--file',
+                 'environment.yml',
+                 '--name',
+                 'some-env',
+                 description=ANY),
+            call('conda',
+                 'env',
+                 'export',
+                 '--no-build',
+                 '--name',
+                 'some-env',
+                 description=ANY,
+                 capture_output=True),
+            call('conda',
+                 'env',
+                 'update',
+                 '--file',
+                 'environment.dev.yml',
+                 '--name',
+                 'some-env',
+                 description=ANY),
+            call('conda',
+                 'env',
+                 'export',
+                 '--no-build',
+                 '--name',
+                 'some-env',
+                 description=ANY,
+                 capture_output=True)
+        ]
+    ],
+])
+def test_main_conda_install_inline(monkeypatch, capsys, tmp_directory,
+                                   dev_create, use_lock, expected_calls):
+    _write_sample_conda_files()
+    _write_sample_conda_files(dev=dev_create)
+
+    def which(arg):
+        return arg if arg == 'conda' else None
+
+    mock = Mock(return_value='something')
+    monkeypatch.setattr(install_module.Commander, 'run', mock)
+    monkeypatch.setattr(install_module.shutil, 'which', which)
+    monkeypatch.setattr(install_module, '_current_conda_env_name',
+                        lambda: 'some-env')
+
+    install_module.main_conda(datetime.datetime.now(),
+                              use_lock=use_lock,
+                              create_env=False)
+
+    assert mock.call_args_list == expected_calls
+
+    captured = capsys.readouterr()
+    assert "=\n\n$ ploomber build\n=" in captured.out
+
+
 @pytest.mark.parametrize('conda_bin, conda_root',
                          [
                              [('something', 'Miniconda3', 'conda'),
@@ -378,6 +636,9 @@ def test_install_lock_non_package_with_conda(
         tmp_directory, monkeypatch, mock_cmdr_wrapped, pkg_manager,
         error_if_calling_locate_pip_inside_conda, cleanup_conda_tmp_env,
         create_dev_lock):
+    # force to create envirionment
+    monkeypatch.setattr(install_module.telemetry, 'is_conda', lambda: False)
+
     _write_sample_conda_env('environment.lock.yml')
 
     if create_dev_lock:
@@ -399,13 +660,17 @@ def test_install_lock_non_package_with_conda(
              'update',
              '--file',
              'environment.dev.lock.yml',
+             '--name',
+             'my_tmp_env',
              description='Installing dev dependencies')
     ]
 
+    # on windows, we expect this call to check if the env exists already
     if os.name == 'nt':
         expected.insert(
             0, call(pkg_manager, 'env', 'list', '--json', capture_output=True))
 
+    # pop the last entry if we dont have dev dependencies
     if not create_dev_lock:
         expected.pop(-1)
 
@@ -419,6 +684,9 @@ def test_install_lock_package_with_conda(tmp_directory, monkeypatch,
                                          mock_cmdr_wrapped, pkg_manager,
                                          cleanup_conda_tmp_env,
                                          create_dev_lock):
+    # force to create envirionment
+    monkeypatch.setattr(install_module.telemetry, 'is_conda', lambda: False)
+
     _write_sample_conda_env('environment.lock.yml')
 
     if create_dev_lock:
@@ -450,6 +718,8 @@ def test_install_lock_package_with_conda(tmp_directory, monkeypatch,
              'update',
              '--file',
              'environment.dev.lock.yml',
+             '--name',
+             'my_tmp_env',
              description='Installing dev dependencies')
     ]
 

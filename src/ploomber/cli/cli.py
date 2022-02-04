@@ -126,7 +126,8 @@ def scaffold(conda, package, entry_point, empty):
               default=False,
               is_flag=True)
 def install(use_lock):
-    """Install dependencies and package
+    """
+    Install dependencies. Creates a new virtual env if needed.
     """
     cli_module.install.main(use_lock=use_lock)
 
