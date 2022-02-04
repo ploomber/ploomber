@@ -20,9 +20,6 @@ A typical ``pipeline.yaml`` looks like this:
 .. code-block:: yaml
     :class: text-editor
 
-    meta:
-        extract_product: False
-
     tasks:
         - source: functions.get_raw_data
           product: output/raw.csv
