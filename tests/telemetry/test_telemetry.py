@@ -5,7 +5,6 @@ import sys
 from unittest.mock import Mock
 from pathlib import Path
 import pytest
-import warnings
 
 import yaml
 
@@ -479,24 +478,25 @@ def test_get_latest_version(monkeypatch):
     # Mock version and the conf, check it produces the same version
 
 
-def write_to_conf_file(path, last_check):
-    (path).write_text("stats_enabled: True\n"
-                      f"version_check_enabled: {last_check}\n")
-
-
-def test_check_version(tmp_directory, capsys, monkeypatch):
-    # Path conf file
+def write_to_conf_file(tmp_directory, monkeypatch, last_check):
     stats = Path('stats')
     stats.mkdir()
     path = stats / 'config.yaml'
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+    (path).write_text("stats_enabled: True\n"
+                      f"version_check_enabled: {last_check}\n")
+
+
+def test_version_skips_when_updated(tmp_directory, capsys, monkeypatch):
+    # Path conf file
     monkeypatch.setattr(ploomber, '__version__', '0.14.8')
     mock_version = Mock()
     mock_version.return_value = '0.14.8'
     monkeypatch.setattr(telemetry, 'get_latest_version', mock_version)
 
     write_to_conf_file(
-        path=path,
+        tmp_directory=tmp_directory,
+        monkeypatch=monkeypatch,
         last_check='2022-01-20 10:51:41.082376')  # version='0.14.8',
 
     # Test no warning when same version encountered
@@ -504,7 +504,13 @@ def test_check_version(tmp_directory, capsys, monkeypatch):
     # captured = capsys.readouterr()
     # assert "ploomber version" not in captured.out
 
-    write_to_conf_file(path=path, last_check='2022-01-20 10:51:41.082376')
+
+def test_version_skips_when_updated(tmp_directory, capsys, monkeypatch):
+    mock_version = Mock()
+    monkeypatch.setattr(telemetry, 'get_latest_version', mock_version)
+    write_to_conf_file(tmp_directory=tmp_directory,
+                       monkeypatch=monkeypatch,
+                       last_check='2022-01-20 10:51:41.082376')
     mock_version.return_value = '0.14.0'
 
     # Check now that the date is different there is an upgrade warning
@@ -512,14 +518,23 @@ def test_check_version(tmp_directory, capsys, monkeypatch):
     captured = capsys.readouterr()
     assert "ploomber version" in captured.out
 
+
+def test_output_on_date_diff(tmp_directory, capsys, monkeypatch):
     # The file's date is today now, no error should be raised
+    write_to_conf_file(tmp_directory=tmp_directory,
+                       monkeypatch=monkeypatch,
+                       last_check=datetime.datetime.now())
     telemetry.check_version()
     captured = capsys.readouterr()
     assert "ploomber version" not in captured.out
 
-    # Warning should be caught since the date and version are off
-    write_to_conf_file(path=path, last_check='2022-01-20 10:51:41.082376')
 
+def test_output_on_date_diff(tmp_directory, capsys, monkeypatch):
+    # Warning should be caught since the date and version are off
+    write_to_conf_file(tmp_directory=tmp_directory,
+                       monkeypatch=monkeypatch,
+                       last_check='2022-01-20 10:51:41.082376')
+    path = Path('stats') / 'config.yaml'
     telemetry.check_version()
     captured = capsys.readouterr()
     assert "ploomber version" in captured.out
