@@ -505,7 +505,7 @@ def test_version_skips_when_updated(tmp_directory, capsys, monkeypatch):
     # assert "ploomber version" not in captured.out
 
 
-def test_version_skips_when_updated(tmp_directory, capsys, monkeypatch):
+def test_user_output_on_different_versions(tmp_directory, capsys, monkeypatch):
     mock_version = Mock()
     monkeypatch.setattr(telemetry, 'get_latest_version', mock_version)
     write_to_conf_file(tmp_directory=tmp_directory,
@@ -519,7 +519,7 @@ def test_version_skips_when_updated(tmp_directory, capsys, monkeypatch):
     assert "ploomber version" in captured.out
 
 
-def test_output_on_date_diff(tmp_directory, capsys, monkeypatch):
+def test_no_output_latest_version(tmp_directory, capsys, monkeypatch):
     # The file's date is today now, no error should be raised
     write_to_conf_file(tmp_directory=tmp_directory,
                        monkeypatch=monkeypatch,
