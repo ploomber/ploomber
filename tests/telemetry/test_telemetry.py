@@ -5,7 +5,6 @@ import sys
 from unittest.mock import Mock
 from pathlib import Path
 import pytest
-import warnings
 
 import yaml
 
@@ -468,7 +467,7 @@ def test_get_latest_version(monkeypatch):
     is_latest = telemetry.get_latest_version()
     assert isinstance(is_latest, str)
     version_index = [i for i, ltr in enumerate(is_latest) if ltr == '.']
-    assert len(version_index) == 2
+    assert len(version_index) >= 1
 
     mock_httplib = Mock()
     mock_httplib.HTTPSConnection().request.side_effect = Exception
@@ -479,54 +478,71 @@ def test_get_latest_version(monkeypatch):
     # Mock version and the conf, check it produces the same version
 
 
-def write_to_conf_file(path, version, last_check):
-    (path).write_text("stats_enabled: True\n"
-                      f"last_version_check: {last_check}\n"
-                      f"latest_ploomber_version: {version}\n")
-
-
-def test_check_version(tmp_directory, monkeypatch):
-    # Path conf file
+def write_to_conf_file(tmp_directory, monkeypatch, last_check):
     stats = Path('stats')
     stats.mkdir()
     path = stats / 'config.yaml'
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+    (path).write_text("stats_enabled: True\n"
+                      f"version_check_enabled: {last_check}\n")
+
+
+def test_version_skips_when_updated(tmp_directory, capsys, monkeypatch):
+    # Path conf file
     monkeypatch.setattr(ploomber, '__version__', '0.14.8')
-    # (path).write_text("stats_enabled: True\n"
-    #                   f"last_version_check: 2022-01-20 10:51:41.082376\n"
-    #                   f"latest_ploomber_version: 0.14.8\n")
-    write_to_conf_file(path=path,
-                       version='0.14.8',
-                       last_check='2022-01-20 10:51:41.082376')
+    mock_version = Mock()
+    mock_version.return_value = '0.14.8'
+    monkeypatch.setattr(telemetry, 'get_latest_version', mock_version)
+
+    write_to_conf_file(
+        tmp_directory=tmp_directory,
+        monkeypatch=monkeypatch,
+        last_check='2022-01-20 10:51:41.082376')  # version='0.14.8',
 
     # Test no warning when same version encountered
-    # with warnings.catch_warnings():
-    #     warnings.filterwarnings("error")
-    #     telemetry.check_version()
+    # telemetry.check_version()
+    # captured = capsys.readouterr()
+    # assert "ploomber version" not in captured.out
 
-    write_to_conf_file(path=path,
-                       version='0.14.0',
+
+def test_version_skips_when_updated(tmp_directory, capsys, monkeypatch):
+    mock_version = Mock()
+    monkeypatch.setattr(telemetry, 'get_latest_version', mock_version)
+    write_to_conf_file(tmp_directory=tmp_directory,
+                       monkeypatch=monkeypatch,
                        last_check='2022-01-20 10:51:41.082376')
+    mock_version.return_value = '0.14.0'
+
     # Check now that the date is different there is an upgrade warning
-    with pytest.warns(UserWarning, match=r'ploomber --upgrade'):
-        telemetry.check_version()
+    telemetry.check_version()
+    captured = capsys.readouterr()
+    assert "ploomber version" in captured.out
 
+
+def test_output_on_date_diff(tmp_directory, capsys, monkeypatch):
     # The file's date is today now, no error should be raised
-    with warnings.catch_warnings():
-        warnings.filterwarnings("error")
-        telemetry.check_version()
+    write_to_conf_file(tmp_directory=tmp_directory,
+                       monkeypatch=monkeypatch,
+                       last_check=datetime.datetime.now())
+    telemetry.check_version()
+    captured = capsys.readouterr()
+    assert "ploomber version" not in captured.out
 
+
+def test_output_on_date_diff(tmp_directory, capsys, monkeypatch):
     # Warning should be caught since the date and version are off
-    write_to_conf_file(path=path,
-                       version='0.14.0',
+    write_to_conf_file(tmp_directory=tmp_directory,
+                       monkeypatch=monkeypatch,
                        last_check='2022-01-20 10:51:41.082376')
-    with pytest.warns(UserWarning, match=r'ploomber --upgrade'):
-        telemetry.check_version()
+    path = Path('stats') / 'config.yaml'
+    telemetry.check_version()
+    captured = capsys.readouterr()
+    assert "ploomber version" in captured.out
 
     # Check the conf file was updated
     with path.open("r") as file:
         conf = yaml.safe_load(file)
-    diff = (datetime.datetime.now() - conf['last_version_check']).days
+    diff = (datetime.datetime.now() - conf['version_check_enabled']).days
     assert diff == 0
 
 
