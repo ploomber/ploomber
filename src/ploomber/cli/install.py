@@ -7,7 +7,7 @@ This command runs a bunch of pip/conda commands (depending on what's available)
 and it does the *right thing*: creating a new environment if needed, and
 locking dependencies.
 """
-
+import sys
 import json
 import os
 import shutil
@@ -27,6 +27,17 @@ _REQS_TXT = 'requirements.txt'
 
 _ENV_YML = 'environment.yml'
 _ENV_LOCK_YML = 'environment.lock.yml'
+
+
+def _python_bin():
+    """
+    Get the path to the Python executable, return 'python' if unable to get it
+    """
+    executable = sys.executable
+    return executable if executable else 'python'
+
+
+_PYTHON_BIN_NAME = _python_bin()
 
 
 @telemetry.log_call('install')
@@ -87,9 +98,13 @@ def main(use_lock, create_env=None):
             " Install conda or add a requirements.txt to use pip instead",
             type_='no_conda2')
     elif CONDA_INSTALLED and use_lock and HAS_ENV_LOCK_YML:
-        main_conda(use_lock=True, create_env=_create_conda_env())
+        main_conda(use_lock=True,
+                   create_env=create_env
+                   if create_env is not None else _should_create_conda_env())
     elif CONDA_INSTALLED and not use_lock and HAS_ENV_YML:
-        main_conda(use_lock=False, create_env=_create_conda_env())
+        main_conda(use_lock=False,
+                   create_env=create_env
+                   if create_env is not None else _should_create_conda_env())
     else:
         main_pip(use_lock=use_lock, create_env=not telemetry.in_virtualenv())
 
@@ -123,9 +138,7 @@ def main_pip(use_lock, create_env=True):
     if create_env:
         venv_dir = f'venv-{name}'
         cmdr.print('Creating venv...')
-        # NOTE: explicitly call 'python3'. in some systems 'python' is
-        # Python 2, which doesn't have the venv module
-        cmdr.run('python3',
+        cmdr.run(_PYTHON_BIN_NAME,
                  '-m',
                  'venv',
                  venv_dir,
@@ -281,15 +294,15 @@ def main_conda(use_lock, create_env=True):
     _next_steps(cmdr, cmd_activate)
 
 
-def _create_conda_env():
+def _should_create_conda_env():
     # not in conda env or running in base conda env
     return (not telemetry.is_conda()
             or (telemetry.is_conda() and _current_conda_env_name() == 'base'))
 
 
 def _current_conda_env_name():
-    # NOTE: we can also use env variable: 'CONDA_DEFAULT_ENV'
-    return Path(shutil.which('python3')).parents[1].name
+    return (os.environ.get('CONDA_DEFAULT_ENV')
+            or Path(sys.executable).parents[1].name)
 
 
 def _get_pip_folder_and_bin_name():

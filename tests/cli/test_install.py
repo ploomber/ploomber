@@ -889,7 +889,9 @@ def test_non_package_with_pip(tmp_directory):
     name = f'venv-{Path(tmp_directory).name}'
 
     runner = CliRunner()
-    result = runner.invoke(install, catch_exceptions=False)
+    result = runner.invoke(install,
+                           args=['--create-env'],
+                           catch_exceptions=False)
 
     assert Path('.gitignore').read_text() == f'\n{name}\n'
     assert Path('requirements.lock.txt').exists()
@@ -929,12 +931,14 @@ def test_install_lock_pip(tmp_directory, mock_cmdr_wrapped, create_setup_py,
         Path('setup.py').write_text(setup_py)
 
     runner = CliRunner()
-    result = runner.invoke(install, args='--use-lock', catch_exceptions=False)
+    result = runner.invoke(install,
+                           args=['--use-lock', '--create-env'],
+                           catch_exceptions=False)
 
     venv, pip = _get_venv_and_pip()
 
     expected = [
-        call('python3', '-m', 'venv', venv, description='Creating venv'),
+        call(sys.executable, '-m', 'venv', venv, description='Creating venv'),
         call(pip,
              'install',
              '--editable',
