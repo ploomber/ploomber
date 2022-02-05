@@ -1024,6 +1024,7 @@ class ProductEvaluator:
     A class to temporarily keep the outdated status of a product (when products
     are remote this operation is expensive)
     """
+
     def __init__(self, product, outdated_by_code, remote):
         self.product = product
         self.outdated_by_code = outdated_by_code

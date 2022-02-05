@@ -520,11 +520,11 @@ class NotebookRunner(FileLoaderMixin, Task):
             pm.execute_notebook(str(tmp), str(path_to_out_ipynb),
                                 **self.papermill_params)
         except Exception as e:
-            raise TaskBuildError('An error occurred when calling'
-                                 ' papermil.execute_notebook, partially'
-                                 ' executed notebook with traceback '
-                                 'available at {}'.format(
-                                     str(path_to_out_ipynb))) from e
+            raise TaskBuildError(
+                'Error when executing task'
+                f' {self.name!r}. Partially'
+                f' executed notebook available at {str(path_to_out_ipynb)}'
+            ) from e
         finally:
             tmp.unlink()
 
