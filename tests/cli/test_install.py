@@ -837,7 +837,7 @@ def test_install_lock_pip(tmp_directory, mock_cmdr_wrapped, create_setup_py,
     venv, pip = _get_venv_and_pip()
 
     expected = [
-        call('python', '-m', 'venv', venv, description='Creating venv'),
+        call('python3', '-m', 'venv', venv, description='Creating venv'),
         call(pip,
              'install',
              '--editable',
