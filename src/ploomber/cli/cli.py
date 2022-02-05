@@ -120,16 +120,22 @@ def scaffold(conda, package, entry_point, empty):
 
 
 @cli.command()
-@click.option('-l',
-              '--use-lock',
-              help='Use lock files',
-              default=False,
-              is_flag=True)
-def install(use_lock):
+@click.option('--use-lock/--no-use-lock',
+              '-l/-L',
+              default=None,
+              help=('Use lock/regular files. If not present, uses any '
+                    'of them, prioritizing lock files'))
+@click.option('--create-env/--no-create-env',
+              '-e/-E',
+              default=None,
+              help=('Create a new environment or install in the '
+                    'current one. If not present, creates an '
+                    'environment if there isn\'t one already active'))
+def install(use_lock, create_env):
     """
     Install dependencies. Creates a new virtual env if needed.
     """
-    cli_module.install.main(use_lock=use_lock)
+    cli_module.install.main(use_lock=use_lock, create_env=create_env)
 
 
 @cli.command()

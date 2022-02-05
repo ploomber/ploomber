@@ -81,9 +81,10 @@ def test_missing_both_files(tmp_directory, has_conda, use_lock, env, env_lock,
                    monkeypatch)
 
     runner = CliRunner()
-    result = runner.invoke(install,
-                           args=['--use-lock'] if use_lock else [],
-                           catch_exceptions=False)
+    result = runner.invoke(
+        install,
+        args=['--use-lock'] if use_lock else ['--no-use-lock'],
+        catch_exceptions=False)
     expected = ('Expected an environment.yaml (conda)'
                 ' or requirements.txt (pip) in the current directory.'
                 ' Add one of them and try again.')
@@ -134,9 +135,10 @@ def test_missing_env_lock(tmp_directory, has_conda, use_lock, env, env_lock,
                    monkeypatch)
 
     runner = CliRunner()
-    result = runner.invoke(install,
-                           args=['--use-lock'] if use_lock else [],
-                           catch_exceptions=False)
+    result = runner.invoke(
+        install,
+        args=['--use-lock'] if use_lock else ['--no-use-lock'],
+        catch_exceptions=False)
     expected = ('Found env environment.lock.yaml '
                 'but conda is not installed. Install conda or add a '
                 'requirements.lock.txt to use pip instead')
@@ -158,14 +160,109 @@ def test_missing_env(tmp_directory, has_conda, use_lock, env, env_lock, reqs,
                    monkeypatch)
 
     runner = CliRunner()
-    result = runner.invoke(install,
-                           args=['--use-lock'] if use_lock else [],
-                           catch_exceptions=False)
+    result = runner.invoke(
+        install,
+        args=['--use-lock'] if use_lock else ['--no-use-lock'],
+        catch_exceptions=False)
     expected = ('Found environment.yaml but conda '
                 'is not installed. Install conda or add a '
                 'requirements.txt to use pip instead')
 
     assert f'Error: {expected}\n' == result.stdout
+
+
+@pytest.fixture
+def mock_main(monkeypatch):
+    main_pip, main_conda = Mock(), Mock()
+    monkeypatch.setattr(install_module, 'main_pip', main_pip)
+    monkeypatch.setattr(install_module, 'main_conda', main_conda)
+    return main_pip, main_conda
+
+
+def test_use_lock_none_with_pip_lock_exists(tmp_directory, monkeypatch,
+                                            mock_main):
+    main_pip, main_conda = mock_main
+    # simulate no conda
+    monkeypatch.setattr(install_module.shutil, 'which', lambda _: None)
+
+    Path('requirements.lock.txt').touch()
+
+    runner = CliRunner()
+    result = runner.invoke(install, catch_exceptions=False)
+
+    assert result.exit_code == 0
+    main_pip.assert_called_once_with(ANY, use_lock=True, create_env=ANY)
+    main_conda.assert_not_called()
+
+
+def test_use_lock_none_with_pip_regular_exists(tmp_directory, monkeypatch,
+                                               mock_main):
+    main_pip, main_conda = mock_main
+    # simulate no conda
+    monkeypatch.setattr(install_module.shutil, 'which', lambda _: None)
+
+    Path('requirements.txt').touch()
+
+    runner = CliRunner()
+    result = runner.invoke(install, catch_exceptions=False)
+
+    assert result.exit_code == 0
+    main_pip.assert_called_once_with(ANY, use_lock=False, create_env=ANY)
+    main_conda.assert_not_called()
+
+
+def test_use_lock_none_with_conda_lock_exists(tmp_directory, mock_main):
+    main_pip, main_conda = mock_main
+
+    Path('environment.lock.yml').touch()
+
+    runner = CliRunner()
+    result = runner.invoke(install, catch_exceptions=False)
+
+    assert result.exit_code == 0
+    main_conda.assert_called_once_with(ANY, use_lock=True, create_env=ANY)
+    main_pip.assert_not_called()
+
+
+def test_use_lock_none_with_conda_regular_exists(tmp_directory, mock_main):
+    main_pip, main_conda = mock_main
+    Path('environment.yml').touch()
+
+    runner = CliRunner()
+    result = runner.invoke(install, catch_exceptions=False)
+
+    assert result.exit_code == 0
+    main_conda.assert_called_once_with(ANY, use_lock=False, create_env=ANY)
+    main_pip.assert_not_called()
+
+
+def test_use_lock_none_with_conda_wrong_lock_exists(tmp_directory, monkeypatch,
+                                                    mock_main):
+    main_pip, main_conda = mock_main
+    # simulate no conda
+    monkeypatch.setattr(install_module.shutil, 'which', lambda _: None)
+
+    Path('environment.lock.yml').touch()
+
+    runner = CliRunner()
+    result = runner.invoke(install, catch_exceptions=False)
+
+    assert result.exit_code == 1
+    expected = 'Expected an environment.yaml (conda) or requirements.txt (pip)'
+    assert expected in result.output
+
+
+def test_use_lock_none_with_pip_wrong_lock_exists(tmp_directory, mock_main):
+    main_pip, main_conda = mock_main
+
+    Path('requirements.lock.txt').touch()
+
+    runner = CliRunner()
+    result = runner.invoke(install, catch_exceptions=False)
+
+    assert result.exit_code == 1
+    expected = 'Expected an environment.yaml (conda) or requirements.txt (pip)'
+    assert expected in result.output
 
 
 def mocked_get_now():
@@ -253,16 +350,18 @@ def test_install_with_pip(tmp_directory, has_conda, use_lock, env, env_lock,
     assert inputs_args[1] == bool(use_lock)
 
 
-@pytest.mark.parametrize('is_conda, env_name, use_lock, create_env', [
-    [True, 'some-env', True, False],
-    [True, 'some-env', False, False],
-    [True, 'base', True, True],
-    [True, 'base', False, True],
-    [False, 'some-env', False, True],
-    [False, 'some-env', True, True],
+@pytest.mark.parametrize('args, is_conda, env_name, create_env', [
+    [[], True, 'some-env', False],
+    [[], True, 'some-env', False],
+    [[], True, 'base', True],
+    [[], True, 'base', True],
+    [[], False, 'some-env', True],
+    [[], False, 'some-env', True],
+    [['--no-create-env'], False, 'some-env', False],
+    [['--create-env'], True, 'some-env', True],
 ])
-def test_installs_inline_if_inside_venv(tmp_directory, monkeypatch, is_conda,
-                                        env_name, use_lock, create_env):
+def test_installs_inline_if_inside_venv(tmp_directory, monkeypatch, args,
+                                        is_conda, env_name, create_env):
     _write_sample_conda_files()
 
     main = Mock()
@@ -273,22 +372,22 @@ def test_installs_inline_if_inside_venv(tmp_directory, monkeypatch, is_conda,
                         lambda: env_name)
 
     runner = CliRunner()
-    result = runner.invoke(install,
-                           args=['--use-lock'] if use_lock else [],
-                           catch_exceptions=False)
+    result = runner.invoke(install, args=args, catch_exceptions=False)
 
-    main.assert_called_once_with(ANY, use_lock=use_lock, create_env=create_env)
+    main.assert_called_once_with(ANY, use_lock=ANY, create_env=create_env)
     assert result.exit_code == 0
 
 
-@pytest.mark.parametrize('in_venv, use_lock, create_env', [
-    [False, False, True],
-    [False, True, True],
-    [True, False, False],
-    [True, True, False],
+@pytest.mark.parametrize('args, in_venv, create_env', [
+    [[], False, True],
+    [[], False, True],
+    [[], True, False],
+    [[], True, False],
+    [['--no-create-env'], False, False],
+    [['--create-env'], True, True],
 ])
-def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch,
-                                            in_venv, use_lock, create_env):
+def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
+                                            in_venv, create_env):
     _write_sample_pip_files()
 
     main = Mock()
@@ -299,11 +398,9 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch,
                         lambda: in_venv)
 
     runner = CliRunner()
-    result = runner.invoke(install,
-                           args=['--use-lock'] if use_lock else [],
-                           catch_exceptions=False)
+    result = runner.invoke(install, args=args, catch_exceptions=False)
 
-    main.assert_called_once_with(ANY, use_lock=use_lock, create_env=create_env)
+    main.assert_called_once_with(ANY, use_lock=ANY, create_env=create_env)
     assert result.exit_code == 0
 
 
