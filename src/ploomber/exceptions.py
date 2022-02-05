@@ -28,6 +28,10 @@ class BaseException(ClickException):
     from chained exceptions
     """
 
+    def __init__(self, message, type_=None):
+        super().__init__(message)
+        self.type_ = type_
+
     def show(self, file: t.Optional[t.IO] = None) -> None:
         if file is None:
             file = get_text_stderr()

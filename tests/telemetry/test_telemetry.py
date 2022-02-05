@@ -1,15 +1,19 @@
 import pathlib
-import click
 import sys
 from unittest.mock import Mock
 from pathlib import Path
+
+import click
 import pytest
+
 from ploomber.telemetry import telemetry
 from ploomber.telemetry.validate_inputs import str_param, opt_str_param
 from ploomber.cli import plot, install, build, interact, task, report, status
 import ploomber.dag.dag as dag_module
 from ploomber.tasks.tasks import PythonCallable
 from ploomber.products.file import File
+from ploomber.exceptions import BaseException
+
 from conftest import _write_sample_conda_env, _prepare_files
 
 
@@ -140,6 +144,7 @@ def test_pip_env(monkeypatch, inside_pip_env):
 # Ref: https://stackoverflow.com/questions/43878953/how-does-one-detect-if-
 # one-is-running-within-a-docker-container-within-python
 def test_docker_env(monkeypatch):
+
     def mock(input_path):
         return 'dockerenv' in str(input_path)
 
@@ -387,6 +392,7 @@ def test_parse_dag_products(monkeypatch):
 
 
 def test_parse_dag(monkeypatch, tmp_directory):
+
     def fn1(product):
         pass
 
@@ -474,3 +480,47 @@ def test_creates_config_directory(monkeypatch, tmp_nbs,
     assert Path('stats').is_dir()
     assert Path('stats', 'uid.yaml').is_file()
     assert Path('stats', 'config.yaml').is_file()
+
+
+def test_log_exception(monkeypatch):
+    mock = Mock()
+    mock_dt = Mock()
+    mock_dt.now.side_effect = [1, 2]
+    monkeypatch.setattr(telemetry, 'log_api', mock)
+    monkeypatch.setattr(telemetry.datetime, 'datetime', mock_dt)
+
+    @telemetry.log_exception('some-action')
+    def my_function():
+        raise ValueError('some error')
+
+    with pytest.raises(ValueError):
+        my_function()
+
+    mock.assert_called_once_with(action='some-action',
+                                 total_runtime='1',
+                                 metadata={
+                                     'type': '',
+                                     'exception': 'some error'
+                                 })
+
+
+def test_log_exception_logs_type(monkeypatch):
+    mock = Mock()
+    mock_dt = Mock()
+    mock_dt.now.side_effect = [1, 2]
+    monkeypatch.setattr(telemetry, 'log_api', mock)
+    monkeypatch.setattr(telemetry.datetime, 'datetime', mock_dt)
+
+    @telemetry.log_exception('some-action')
+    def my_function():
+        raise BaseException('some error', type_='some-type')
+
+    with pytest.raises(BaseException):
+        my_function()
+
+    mock.assert_called_once_with(action='some-action',
+                                 total_runtime='1',
+                                 metadata={
+                                     'type': 'some-type',
+                                     'exception': 'some error'
+                                 })
