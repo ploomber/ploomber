@@ -39,6 +39,7 @@ import os
 from pathlib import Path
 import sys
 import uuid
+from functools import wraps
 
 from ploomber.telemetry import validate_inputs
 from ploomber import __version__
@@ -417,3 +418,30 @@ def log_api(action,
                             properties=props)
 
         posthog.capture(distinct_id=uid, event=action, properties=props)
+
+
+def log_exception(action):
+    """Runs a function and logs exceptions, if any
+    """
+
+    def _log_exceptions(func):
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                start = datetime.datetime.now()
+                return func(*args, **kwargs)
+            except Exception as e:
+                log_api(
+                    action=action,
+                    total_runtime=str(datetime.datetime.now() - start),
+                    metadata={
+                        # can we log None to posthog?
+                        'type': getattr(e, 'type_', ''),
+                        'exception': str(e),
+                    })
+                raise e
+
+        return wrapper
+
+    return _log_exceptions
