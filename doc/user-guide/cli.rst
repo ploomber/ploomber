@@ -1,12 +1,12 @@
-Command line interface
+Command-line interface
 ======================
 
-.. note::  This is an introductory tutorial to the command line interface, for a full API description, see: :doc:`../api/cli`.
+.. note::  This is an introductory tutorial to the command line interface; for a complete API description, see: :doc:`../api/cli`.
 
 Entry points
 ------------
 
-By default, the CLi looks for an ``pipeline.yaml`` file in certain standard
+By default, the CLI looks for an ``pipeline.yaml`` file in certain standard
 locations (:ref:`api-cli-default-locations`). If your pipeline exists in a
 non-standard location, pass the ``--entry-point`` argument.
 
@@ -37,7 +37,6 @@ Generate pipeline plot:
 
     ploomber plot
 
-
 .. warning::
     
     To plot the pipeline (``ploomber plot`` command), you must
@@ -49,11 +48,8 @@ Generate pipeline plot:
 Interactive sessions
 --------------------
 
-Interactive sessions are a great way to develop your pipeline. Everything you
-can do with the commands above (and more), you can do it with an interactive
-session.
-
-To start an interactive session:
+Interactive sessions allow you to access the structure of your pipeline to
+help you test and debug:
 
 .. code-block:: console
 
@@ -155,12 +151,14 @@ Get downstream tasks:
 Other commands
 --------------
 
-Here's a list of commands that this introductory guide didn't cover:
+Some commands didn't cover here:
 
-* ``examples``: Locally copy Ploomber examples from (link to repo)
+* ``examples``: :doc:`Download examples <templates>`
+* ``install``: Install dependencies
+* ``nb`` (short for notebook): Manage notebooks and scripts
 * ``report``: Generate a pipeline report
-* ``scaffold``: Create base project layout
+* ``scaffold``: :doc:`Create a new project <scaffold>`
 * ``status``: Pipeline status summary
 * ``task``: Execute a single task
 
-To learn more, see the CLI API documentation: :doc:`../api/cli`.
+See the CLI API documentation :doc:`../api/cli` for a detailed overview of each command.
