@@ -34,5 +34,8 @@ def test_dotted_path_that_ends_with_yaml():
 def test_try_to_find_entry_point_type_with_none():
     assert try_to_find_entry_point_type(None) is None
 
-def test_find_entry_point_type_with_none():
-    assert find_entry_point_type(None) is None
+def test_find_entry_point_type_with_yaml():
+    with pytest.raises(ValueError) as excinfo:
+        EntryPoint('some.yaml')
+
+    assert 'Could not determine the entry point type' in str(excinfo.value)
