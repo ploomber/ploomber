@@ -213,11 +213,10 @@ Task source code
 
 If you also want to build the task, you must explicitly pass ``--build``.
 
-.. _api-cli-create-new-project:
+.. _api-cli-ploomber-scaffold:
 
 Create new project
 ******************
-
 
 The ``scaffold`` command allows you to start a new project:
 
@@ -225,15 +224,43 @@ The ``scaffold`` command allows you to start a new project:
 
     ploomber scaffold
 
+
+The command above generates a project with sample pipeline. To create an empty
+project:
+
+.. code-block:: console
+
+    ploomber scaffold --empty
+
+
+**New in 0.16:** You can pass a positional argument ``ploomber scaffold myproject``.
+
 Note that if you run this command in a folder that already has a
 ``pipeline.yaml`` in a :ref:`api-cli-default-locations`, it will parse your
 pipeline declaration looking for declared tasks whose source code file does
 not exist and proceed to create them.
 
+
+If you're using ``conda``, pass the ``--conda`` flag:
+
+.. code-block:: console
+
+    ploomber scaffold --conda
+
+
+If you'd like to package your project:
+
+.. code-block:: console
+
+    ploomber scaffold --package
+
+
 After creating a project, you can configure the development environment
-with the ``ploomber install`` command.
+with the ``ploomber install`` command (to learn more: :ref:`api-cli-ploomber-install`).
 
 For a tutorial on the ``ploomber scaffold`` command: :doc:`../user-guide/scaffold`.
+
+.. _api-cli-ploomber-install:
 
 ``install``
 ***********

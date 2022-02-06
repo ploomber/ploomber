@@ -1,6 +1,11 @@
 Scaffolding projects
 ====================
 
+.. note::
+
+    This is a guide on ``ploomber scaffold``. For API docs
+    see :ref:`api-cli-ploomber-scaffold`.
+
 You can quickly create new projects using the ``scaffold`` command:
 
 .. code-block:: console
@@ -9,7 +14,6 @@ You can quickly create new projects using the ``scaffold`` command:
 
 After running it, type a name for your project and press enter. The command will create a pre-configured project with a sample pipeline.
 
-Alternatively, you may run: ``ploomber scaffold myproject`` to do it in a single step.
 
 By adding the ``--empty`` flag to scaffold, you can create a project with an empty ``pipeline.yaml``:
 
@@ -19,14 +23,6 @@ By adding the ``--empty`` flag to scaffold, you can create a project with an emp
 
 Then, type your project name and press enter.
 
-
-By default, ``scaffold`` adds a ``requirements.txt`` file to use with pip. If you want to use conda:
-
-.. code-block:: console
-
-    ploomber scaffold --conda
-
-Such command adds a conda ``environment.yml`` file instead.
 
 Scaffolding tasks
 -----------------
@@ -152,15 +148,14 @@ with ``ploomber scaffold --package``).
 During deployment, only install production dependencies and ignore development ones.
 
 If you want to learn more about the ``ploomber install`` command, check out
-the documentation: :ref:`api-cli-create-new-project`.
+the CLI documentation: :ref:`api-cli-ploomber-install`.
 
 .. note::
     
     If using ``pip``. ``ploomber install`` creates a virtual environment
     in your project root using the
     `venv <https://docs.python.org/3/tutorial/venv.html>`_ module in a
-    ``venv-project-name`` directory. If you prefer to use another virtual
-    environment manager, you must install dependencies directly.
+    ``venv-project-name`` directory.
 
 If you want to know more about dependency management, check out
 `this post in our blog <https://ploomber.io/posts/python-envs/>`_.
