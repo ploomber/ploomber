@@ -5,7 +5,7 @@ This is optional and may be turned off by changing the configuration file:
  inside ~/.ploomber/config/config.yaml
  Change stats_enabled to False.
 See the user stats page for more information:
-https://ploomber.readthedocs.io/en/latest/community/user-stats.html
+https://docs.ploomber.io/en/latest/community/user-stats.html
 
 The data we collect is limited to:
 1. The Ploomber version currently running.

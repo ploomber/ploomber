@@ -5,7 +5,7 @@
 [![CI Linux](https://github.com/ploomber/ploomber/workflows/CI%20Linux/badge.svg)](https://github.com/ploomber/ploomber/workflows/CI%20Linux/badge.svg)
 [![CI macOS](https://github.com/ploomber/ploomber/workflows/CI%20macOS/badge.svg)](https://github.com/ploomber/ploomber/workflows/CI%20macOS/badge.svg)
 [![CI Windows](https://github.com/ploomber/ploomber/workflows/CI%20Windows/badge.svg)](https://github.com/ploomber/ploomber/workflows/CI%20Windows/badge.svg)
-[![Documentation Status](https://readthedocs.org/projects/ploomber/badge/?version=latest)](https://ploomber.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/ploomber/badge/?version=latest)](https://docs.ploomber.io/en/latest/?badge=latest)
 [![PyPI](https://badge.fury.io/py/ploomber.svg)](https://badge.fury.io/py/ploomber)
 [![Conda (channel only)](https://img.shields.io/conda/vn/conda-forge/ploomber)](https://anaconda.org/conda-forge/ploomber)
 [![Conda](https://img.shields.io/conda/pn/conda-forge/ploomber)](https://anaconda.org/conda-forge/ploomber)
@@ -21,7 +21,7 @@
   |
   <a href="mailto:contact@ploomber.io">Contact us</a>
   |
-  <a href="https://ploomber.readthedocs.io/">Docs</a>
+  <a href="https://docs.ploomber.io/">Docs</a>
   |
   <a href="https://ploomber.io/">Blog</a>
   |  
@@ -130,11 +130,11 @@ https://user-images.githubusercontent.com/989250/150660840-b0c12f85-504c-4233-8c
 
 ## Resources
 
-* [Documentation](https://ploomber.readthedocs.io/)
+* [Documentation](https://docs.ploomber.io/)
 * [PyData Chicago talk (covers motivation and demo)](https://youtu.be/qUL7QabcKcw)
 * [Develop and deploy an ML pipeline in 30 minutes (EuroPython 2021)](https://youtu.be/O8tqiCkIWPs)
 * [Guest blog post on the official Jupyter blog](https://blog.jupyter.org/ploomber-maintainable-and-collaborative-pipelines-in-jupyter-acb3ad2101a7)
 * [Examples (Machine Learning pipeline, ETL, among others)](https://github.com/ploomber/projects)
 * [Blog](https://ploomber.io/)
 * [Comparison with other tools](https://ploomber.io/posts/survey)
-* [More videos](https://ploomber.readthedocs.io/en/latest/videos.html)
+* [More videos](https://docs.ploomber.io/en/latest/videos.html)

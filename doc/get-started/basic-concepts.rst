@@ -161,7 +161,7 @@ editing. If a script/notebook has no dependencies, set ``upstream = None``.
 .. note::
    
    the ``# +`` and ``# -`` markers only apply to scripts.
-   `Click here <https://ploomber.readthedocs.io/en/latest/user-guide/faq_index.html#parameterizing-notebooks>`_
+   `Click here <https://docs.ploomber.io/en/latest/user-guide/faq_index.html#parameterizing-notebooks>`_
    for information on adding tags to ``.ipynb`` files.
 
 
