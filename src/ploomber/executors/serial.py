@@ -1,10 +1,10 @@
 import warnings
 from multiprocessing import Pool
-import traceback
 import logging
 
 from tqdm.auto import tqdm
 from ploomber.executors.abc import Executor
+from ploomber.executors import _format
 from ploomber.exceptions import DAGBuildError, DAGBuildEarlyStop
 from ploomber.messagecollector import (BuildExceptionsCollector,
                                        BuildWarningsCollector)
@@ -40,7 +40,6 @@ class Serial(Executor):
         shown before raising the collected exceptions.
 
     """
-
     def __init__(self,
                  build_in_subprocess=True,
                  catch_exceptions=True,
@@ -151,7 +150,6 @@ class Serial(Executor):
 
 
 class LazyFunction:
-
     def __init__(self, fn, kwargs, task):
         self.fn = fn
         self.kwargs = kwargs
@@ -174,25 +172,6 @@ def catch_warnings(fn, warnings_all):
     return result
 
 
-def _format_exception(e):
-    import sys
-    exceptions = [e]
-
-    while e.__cause__:
-        exceptions.append(e.__cause__)
-        e = e.__cause__
-
-    # from IPython import embed
-    # embed()
-
-    e = exceptions[-1]
-    _, _, tb = sys.exc_info()
-    tr = '\n'.join(traceback.format_exception(type(e), e, tb, limit=0))
-    tr = tr + '\n'.join(f'{type(e).__name__}: {str(e)}'
-                        for e in exceptions[:-1][::-1])
-    return tr
-
-
 def catch_exceptions(fn, exceptions_all):
     logger = logging.getLogger(__name__)
     # NOTE: we are individually catching exceptions
@@ -211,7 +190,7 @@ def catch_exceptions(fn, exceptions_all):
         # FIXME: this is going to cause duplicates if not running in a
         # subprocess
         logger.exception(str(e))
-        tr = _format_exception(e)
+        tr = _format.exception(e)
         exceptions_all.append(task=fn.task, message=tr, obj=e)
 
 

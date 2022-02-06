@@ -27,7 +27,6 @@ class BaseException(ClickException):
     A subclass of ClickException that adds support for printing error messages
     from chained exceptions
     """
-
     def __init__(self, message, type_=None):
         super().__init__(message)
         self.type_ = type_
@@ -133,7 +132,6 @@ class DAGCycle(Exception):
     """
     Raised when a DAG is defined with cycles.
     """
-
     def __init__(self):
         error_message = """
         Failed to process DAG because it contains cycles.
@@ -145,7 +143,6 @@ class SpecValidationError(Exception):
     """
     Raised when failing to validate a spec
     """
-
     def __init__(self, errors, model, kwargs):
         self.errors = errors
         self.model = model
@@ -166,15 +163,13 @@ class SQLTaskBuildError(TaskBuildError):
     """
     Raised by SQLScript and SQLDump when the .execute method fails
     """
-
     def __init__(self, type_, source_code, original):
         self.type_ = type_
         self.source_code = source_code
         self.original = original
         error_message = ('An error occurred when executing '
                          f'{type_.__name__} task with '
-                         f'source code:\n\n{source_code}\n\n'
-                         f'Reason: {str(original)}')
+                         f'source code:\n\n{source_code!r}\n')
         super().__init__(error_message)
 
 

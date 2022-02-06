@@ -27,15 +27,14 @@ def cli_endpoint(fn):
     Call some_endpoint(catch_exception=False) to disable this behavior (e.g.
     for testing)
     """
-
     @wraps(fn)
     def wrapper(catch_exception=True, **kwargs):
         if catch_exception:
             try:
                 fn(**kwargs)
             # these already color output
-            except (DAGBuildError, DAGRenderError):
-                error = traceback.format_exc()
+            except (DAGBuildError, DAGRenderError) as e:
+                error = str(e)
                 color = False
             except BaseException as e:
                 e.show()
@@ -68,7 +67,6 @@ def command_endpoint(fn):
     not execute them. If it tails, it prints error message to stderror, then
     calls with exit code 1.
     """
-
     @wraps(fn)
     def wrapper(**kwargs):
         try:
