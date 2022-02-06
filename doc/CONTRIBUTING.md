@@ -65,7 +65,7 @@ If nothing applies, don't add any lexer.
 
 ## Pages generated from notebooks
 
-Some pages in the documentation are pulled from a separate repository, you can identify them because they're Jupyter notebooks ([here's an example](https://ploomber.readthedocs.io/en/latest/get-started/spec-api-python.html)), if you want to contribute to one of those, you open your Pull Request in the [projects repository](https://github.com/ploomber/projects).
+Some pages in the documentation are pulled from a separate repository, you can identify them because they're Jupyter notebooks ([here's an example](https://docs.ploomber.io/en/latest/get-started/spec-api-python.html)), if you want to contribute to one of those, you open your Pull Request in the [projects repository](https://github.com/ploomber/projects).
 
 If such notebooks link to other documents, use relative paths, so they work locally as well:
 

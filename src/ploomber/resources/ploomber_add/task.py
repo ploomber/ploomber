@@ -17,7 +17,7 @@
 # # %load_ext autoreload
 # # %autoreload 2
 # For more info, see:
-# https://ploomber.readthedocs.io/en/latest/user-guide/faq_index.html#auto-reloading-code-in-jupyter
+# https://docs.ploomber.io/en/latest/user-guide/faq_index.html#auto-reloading-code-in-jupyter
 
 # + tags=["parameters"]
 [% if extract_upstream -%]
