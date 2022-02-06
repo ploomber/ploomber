@@ -41,7 +41,7 @@ _PYTHON_BIN_NAME = _python_bin()
 
 
 @telemetry.log_call('install')
-def main(use_lock, create_env=None):
+def main(use_lock, create_env=None, use_venv=False):
     """
     Install project, automatically detecting if it's a conda-based or pip-based
     project.
@@ -59,6 +59,9 @@ def main(use_lock, create_env=None):
         If True, creates a new environment, if False, it installs in the
         current environment. If None, it creates a new environment if there
         isn't one already active
+
+    use_venv : bool, default=False
+        Force to use Python's venv module, ignoring conda if installed
     """
     CONDA_INSTALLED = shutil.which('conda')
     HAS_ENV_YML = Path(_ENV_YML).exists()

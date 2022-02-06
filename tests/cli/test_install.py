@@ -265,6 +265,21 @@ def test_use_lock_none_with_pip_wrong_lock_exists(tmp_directory, mock_main):
     assert expected in result.output
 
 
+def test_use_venv_even_if_conda_installed(tmp_directory, mock_main):
+    main_pip, main_conda = mock_main
+
+    Path('requirements.lock.txt').touch()
+
+    runner = CliRunner()
+    result = runner.invoke(install,
+                           args=['--use-venv'],
+                           catch_exceptions=False)
+
+    assert result.exit_code == 0
+    main_pip.assert_called_once()
+    main_conda.assert_not_called()
+
+
 def mocked_get_now():
     dt = datetime.datetime(2021, 1, 1, 10, 10, 10)
     return dt

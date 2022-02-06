@@ -131,11 +131,19 @@ def scaffold(conda, package, entry_point, empty):
               help=('Create a new environment or install in the '
                     'current one. If not present, creates an '
                     'environment if there isn\'t one already active'))
-def install(use_lock, create_env):
+@click.option(
+    '--use-venv',
+    '-v',
+    is_flag=True,
+    help='Use Python\'s venv module (ignoring conda if installed)',
+)
+def install(use_lock, create_env, use_venv):
     """
     Install dependencies. Creates a new virtual env if needed.
     """
-    cli_module.install.main(use_lock=use_lock, create_env=create_env)
+    cli_module.install.main(use_lock=use_lock,
+                            create_env=create_env,
+                            use_venv=use_venv)
 
 
 @cli.command()
