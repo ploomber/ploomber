@@ -149,4 +149,6 @@ Configuring the client in ``pipeline.yaml``
 -------------------------------------------
 
 Check out the :doc:`../get-started/sql-pipeline` to learn how to configure
-the database client in your ``pipeline.yaml`` file.
+the database client in your ``pipeline.yaml`` file. 
+
+You can see a complete 'example <https://github.com/ploomber/projects/tree/master/cookbook/sql-dump>'_.
