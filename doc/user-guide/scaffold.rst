@@ -9,6 +9,8 @@ You can quickly create new projects using the ``scaffold`` command:
 
 After running it, type a name for your project and press enter. The command will create a pre-configured project with a sample pipeline.
 
+Alternatively, you may run: ``ploomber scaffold myproject`` to do it in a single step.
+
 By adding the ``--empty`` flag to scaffold, you can create a project with an empty ``pipeline.yaml``:
 
 .. code-block:: console

@@ -11,6 +11,19 @@ from ploomber import scaffold as scaffold_module
 from tests_util import assert_function_in_module, write_simple_pipeline
 
 
+@pytest.mark.parametrize('arg', [
+    'myproject',
+    'some/path/to/project',
+])
+def test_scaffold_pass_name_as_arg(tmp_directory, arg):
+    runner = CliRunner()
+    result = runner.invoke(scaffold, args=arg, catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert Path(arg).is_dir()
+    assert Path(arg, 'pipeline.yaml').is_file()
+
+
 @pytest.mark.parametrize('args, conda, package, empty', [
     [[], False, False, False],
     [['--conda'], True, False, False],
@@ -294,3 +307,15 @@ tasks:
     assert result.exit_code == 0
     mock.assert_called_once_with(str(Path(tmp_directory).resolve()),
                                  chdir=False)
+
+
+def test_error_if_entry_point_and_name():
+    runner = CliRunner()
+    result = runner.invoke(scaffold,
+                           args=['some-name', '-e', 'pipeline.serve.yaml'],
+                           catch_exceptions=False)
+
+    assert result.exit_code
+    expected = ('Error: -e/--entry-point is not compatible with '
+                'the "name" argument\n')
+    assert expected == result.output

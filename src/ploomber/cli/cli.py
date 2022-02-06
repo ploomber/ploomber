@@ -42,10 +42,30 @@ def cli():
     default=None,
     help='Entry point to add tasks. Invalid if other flags present',
 )
-def scaffold(conda, package, entry_point, empty):
-    """Create new projects (if no pipeline.yaml exists) or add missings tasks
+@click.argument('name', required=False)
+def scaffold(name, conda, package, entry_point, empty):
     """
-    template = '-e/--entry-point is not compatible with the {flag} flag'
+    Create a new project:
+
+    $ ploomber scaffold myproject
+
+    $ cd myproject
+
+    Add tasks to pipeline.yaml. Then, to create the source files:
+
+    $ ploomber scaffold
+    """
+    template = '-e/--entry-point is not compatible with {flag}'
+
+    if entry_point and name:
+        err = '-e/--entry-point is not compatible with the "name" argument'
+        telemetry.log_api("scaffold_error",
+                          metadata={
+                              'type': 'entry_and_name',
+                              'exception': err,
+                              'argv': sys.argv
+                          })
+        raise click.ClickException(err)
 
     if entry_point and conda:
         err = template.format(flag='--conda')
@@ -113,7 +133,7 @@ def scaffold(conda, package, entry_point, empty):
                               'type': 'base_project',
                               'argv': sys.argv
                           })
-        scaffold_project.cli(project_path=None,
+        scaffold_project.cli(project_path=name,
                              conda=conda,
                              package=package,
                              empty=empty)
