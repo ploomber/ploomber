@@ -45,9 +45,9 @@ For example, if you want to copy the *Basic EDA example* to the ``eda`` director
     Once you download an example, you can explore it with Jupyter. Check out
     the :doc:`/user-guide/jupyter` guide to learn more.
 
-Once the download finishes, you'll need to install dependencies before you can
-run the template; you can use the ``ploomber install`` command, which automatically
-figures out if it should use ``conda`` or ``pip``. If you prefer so, you may
+Once the download finishes, you'll need to install dependencies before running
+the template; you can use the ``ploomber install`` command, which automatically
+determines whether it should use ``conda`` or ``pip``. If you prefer so, you may
 call ``conda`` or ``pip`` directly.
 
 
@@ -99,4 +99,4 @@ If no template suits your needs, use the ``ploomber scaffold`` command
 to create a clean slate project. :doc:`Click here to learn how to scaffold projects </user-guide/scaffold>`.
 
 ``ploomber scaffold`` also comes with utilities to modify existing pipelines,
-so can use it to modify any of the templates.
+so can use it to change any of the templates.

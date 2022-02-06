@@ -218,6 +218,7 @@ If you also want to build the task, you must explicitly pass ``--build``.
 Create new project
 ******************
 
+
 The ``scaffold`` command allows you to start a new project:
 
 .. code-block:: console
@@ -289,7 +290,7 @@ Inject cell to scripts and notebooks in your pipeline:
     ploomber nb --inject
 
 
-There are other commands available, run ``ploomber nb --help`` to learn more.
+Other commands are available, run ``ploomber nb --help`` to learn more.
 
 
 Interactive sessions
@@ -336,6 +337,9 @@ To download in a specific location:
 .. code-block:: console
 
     ploomber examples --name {name} --output path/to/dir
+
+
+For a tutorial on the ``ploomber examples`` command: :doc:`../user-guide/templates`.
 
 
 .. _api-cli-default-locations:
