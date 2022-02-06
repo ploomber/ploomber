@@ -162,7 +162,7 @@ class SpecValidationError(Exception):
         return msg
 
 
-class SQLExecuteError(Exception):
+class SQLTaskBuildError(TaskBuildError):
     """
     Raised by SQLScript and SQLDump when the .execute method fails
     """
