@@ -8,6 +8,7 @@ projects-tmp/
 *.parquet
 examples/pipeline/results/
 ploomber-venv
+ploomb_env
 
 doc/**/*.ipynb
 .pytest_cache/
