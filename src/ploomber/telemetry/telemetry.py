@@ -489,9 +489,7 @@ def log_api(action,
 def log_exception(action):
     """Runs a function and logs exceptions, if any
     """
-
     def _log_exceptions(func):
-
         @wraps(func)
         def wrapper(*args, **kwargs):
             try:
