@@ -23,18 +23,21 @@ def cli():
 @cli.command()
 @click.option(
     '--conda',
+    '-c',
     is_flag=True,
-    help='Use conda (environemnt.yml)',
+    help='Use conda (creates environemnt.yml)',
 )
 @click.option(
     '--package',
+    '-p',
     is_flag=True,
-    help='Use package template (setup.py)',
+    help='Use package template (creates setup.py)',
 )
 @click.option(
     '--empty',
+    '-E',
     is_flag=True,
-    help='Create a sample pipeline.yaml with no tasks',
+    help='Create a pipeline.yaml with no tasks',
 )
 @click.option(
     '--entry-point',
