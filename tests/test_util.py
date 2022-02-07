@@ -85,35 +85,40 @@ def test_chdir_code(tmp_directory):
     [
         [
             dict(pkgs=['p1']),
-            'p1 is required to use fn. Install it by running "pip install p1"'
+            "'p1' is required to use 'fn'. Install with: pip install 'p1'"
         ],
         [
             dict(pkgs=['p1'], name='name'),
-            ('p1 is required to use name. Install it by running '
-             '"pip install p1"')
+            ("'p1' is required to use 'name'. Install with: "
+             "pip install 'p1'")
         ],
         [
-            dict(pkgs=['p1'], extra_msg='extra'),
-            ('p1 is required to use fn. Install it by running '
-             '"pip install p1". extra')
+            dict(pkgs=['p1'], extra_msg='Some extra message'),
+            ("'p1' is required to use 'fn'. Install with: "
+             "pip install 'p1'\nSome extra message")
         ],
         [
             dict(pkgs=['p1', 'p2']),
-            ('p1 p2 are required to use fn. Install them by running '
-             '"pip install p1 p2"')
+            ("'p1' 'p2' are required to use 'fn'. Install with: "
+             "pip install 'p1' 'p2'")
         ],
         [
             dict(pkgs=['p1'], pip_names=['n1']),
-            'n1 is required to use fn. Install it by running "pip install n1"'
+            "'n1' is required to use 'fn'. Install with: pip install 'n1'"
+        ],
+        [
+            # pinning some specific version (this may happen if user is
+            # running and old python version)
+            dict(pkgs=['p1'], pip_names=['n1<2']),
+            "'n1<2' is required to use 'fn'. Install with: pip install 'n1<2'"
         ],
         [
             # the first package is installed, it shouldn't appear in the error
             dict(pkgs=['ploomber', 'p1']),
-            'p1 is required to use fn. Install it by running "pip install p1"'
+            "'p1' is required to use 'fn'. Install with: pip install 'p1'"
         ],
     ])
 def test_requires(params, expected):
-
     @requires(**params)
     def fn():
         pass

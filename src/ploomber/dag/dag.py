@@ -52,6 +52,7 @@ client to fetch upstream dependencies and execute a given task.
 """
 from functools import reduce
 import fnmatch
+import sys
 import os
 from collections.abc import Iterable
 import traceback
@@ -93,6 +94,18 @@ from ploomber.dag.abstractdag import AbstractDAG
 from ploomber.dag.util import (check_duplicated_products,
                                fetch_remote_metadata_in_parallel)
 from ploomber.tasks.abc import Task
+
+if sys.version_info < (3, 8):
+    # pygraphviz dropped support for python 3.7
+    _conda_cmd = "conda install 'pygraphviz<1.8' -c conda-forge"
+else:
+    _conda_cmd = "conda install pygraphviz -c conda-forge"
+
+_pygraphviz_message = (
+    f"Note that 'pygraphviz' requires 'graphviz' (which is not "
+    "pip-installable). To install both: "
+    f"{_conda_cmd}\nFor alternatives, see: "
+    "https://ploomber.io/s/plot")
 
 
 class DAG(AbstractDAG):
@@ -767,13 +780,10 @@ class DAG(AbstractDAG):
 
         return out
 
-    @requires(
-        ['pygraphviz'],
-        extra_msg=(
-            'Beware that "graphviz" (which is not pip-installable) is a '
-            'dependency of "pygraphviz", the easiest way to install both is '
-            'through conda "conda install pygraphviz", for more options see: '
-            'https://graphviz.org/'))
+    @requires(['pygraphviz'],
+              extra_msg=_pygraphviz_message,
+              pip_names=['pypgrahviz<1.8'] if sys.version_info <
+              (3, 8) else ['pypgrahviz'])
     def plot(self, output='embed'):
         """Plot the DAG
 
