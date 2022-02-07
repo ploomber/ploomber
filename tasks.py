@@ -50,7 +50,15 @@ def setup(c, doc=False, version=None):
         cmds.pop(0)
 
     c.run(f'conda create --name {env_name} python={version} --yes')
-    c.run(' && '.join(cmds))
+    
+    try:
+        c.run(' && '.join(cmds))
+    except Exception as e:
+        print(
+            "Failed to run the command 'invoke setup'. Have issues installing the psycopg2 package? Remove it from setup.py then try again."
+        )
+        raise
+
 
     if doc:
         cmds = [
@@ -73,7 +81,13 @@ def setup_pip(c, doc=False):
     """[pip] Setup dev environment
     """
     # install ploomber in editable mode and include development dependencies
-    c.run('pip install --editable ".[dev]"')
+    try:
+        c.run('pip install --editable ".[dev]"')
+    except Exception as e:
+        print(
+            "Failed to run the command'invoke setup-pip'. Have issues installing the psycopg2 package? Remove it from setup.py then try again."
+        )
+        raise 
 
     # install sample package required in some tests
     c.run('pip install --editable tests/assets/test_pkg')
