@@ -149,4 +149,11 @@ Configuring the client in ``pipeline.yaml``
 -------------------------------------------
 
 Check out the :doc:`../get-started/sql-pipeline` to learn how to configure
-the database client in your ``pipeline.yaml`` file.
+the database client in your ``pipeline.yaml`` file. 
+
+SQL Examples
+---------------
+To see some examples using SQL connections, see this:
+1. A short example that dumps data `<https://github.com/ploomber/projects/tree/master/cookbook/sql-dump>`_.
+2. A complete ETL pipeline `https://github.com/ploomber/projects/tree/master/templates/etl`_.
+3. A SQL pipeline `https://github.com/ploomber/projects/tree/master/templates/spec-api-sql`_.
