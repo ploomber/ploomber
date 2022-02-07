@@ -153,4 +153,7 @@ the database client in your ``pipeline.yaml`` file.
 
 SQL Examples
 ---------------
-To see some examples using SQL connections, 'see this: <https://github.com/ploomber/projects/tree/master/cookbook/sql-dump>'_.
+To see some examples using SQL connections, see this:
+1. A complete `example: <https://github.com/ploomber/projects/tree/master/cookbook/sql-dump>`_.
+2. `https://github.com/ploomber/projects/tree/master/templates/etl`_.
+3. `https://github.com/ploomber/projects/tree/master/templates/spec-api-sql`_.
