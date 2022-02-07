@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from pathlib import Path
 
 import pytest
+import yaml
 
 import ploomber
 from ploomber.telemetry import telemetry
