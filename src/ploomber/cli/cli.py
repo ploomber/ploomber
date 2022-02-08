@@ -98,8 +98,8 @@ def scaffold(conda, package, entry_point, empty):
 
     if loaded:
         # existing pipeline, add tasks
-        spec, _, path_to_spec = loaded
-        _scaffold.add(spec, path_to_spec)
+        spec, path_to_parent, _ = loaded
+        _scaffold.add(spec, path_to_parent)
         telemetry.log_api("ploomber_scaffold",
                           dag=loaded,
                           metadata={

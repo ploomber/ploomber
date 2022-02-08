@@ -258,3 +258,16 @@ def test_error_if_conflicting_options(flag):
     assert result.exit_code
     assert (f'Error: -e/--entry-point is not compatible with the {flag} flag\n'
             == result.output)
+
+
+def test_scaffold_adds_current_directory_to_sys_path(tmp_directory):
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: my_module.another.function
+      product: data.csv
+""")
+
+    runner = CliRunner()
+    result = runner.invoke(scaffold, catch_exceptions=False)
+
+    assert result.exit_code == 0
