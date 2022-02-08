@@ -7,6 +7,7 @@ from click.testing import CliRunner
 
 from ploomber.cli.cli import scaffold
 from ploomber.cli import cli
+from ploomber import scaffold as scaffold_module
 from tests_util import assert_function_in_module, write_simple_pipeline
 
 
@@ -220,6 +221,21 @@ tasks:
     assert Path('script.py').is_file()
 
 
+def test_scaffold_two_part_dotted_path(no_sys_modules_cache, tmp_directory):
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: my_module.function
+      product: data.csv
+""")
+
+    runner = CliRunner()
+    result = runner.invoke(scaffold, catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert Path('my_module.py').is_file()
+
+
 @pytest.mark.parametrize("custom_entry_point", [True, False])
 def test_scaffold_with_module(custom_entry_point, tmp_directory,
                               add_current_to_sys_path, no_sys_modules_cache):
@@ -260,7 +276,12 @@ def test_error_if_conflicting_options(flag):
             == result.output)
 
 
-def test_scaffold_adds_current_directory_to_sys_path(tmp_directory):
+def test_scaffold_adds_current_directory_to_sys_path(no_sys_modules_cache,
+                                                     tmp_directory,
+                                                     monkeypatch):
+    mock = Mock(wraps=scaffold_module.add_to_sys_path)
+    monkeypatch.setattr(scaffold_module, 'add_to_sys_path', mock)
+
     Path('pipeline.yaml').write_text("""
 tasks:
     - source: my_module.another.function
@@ -271,3 +292,5 @@ tasks:
     result = runner.invoke(scaffold, catch_exceptions=False)
 
     assert result.exit_code == 0
+    mock.assert_called_once_with(str(Path(tmp_directory).resolve()),
+                                 chdir=False)
