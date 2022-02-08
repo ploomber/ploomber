@@ -366,8 +366,10 @@ def check_version():
         if diff < 2:
             return
 
-    click.echo("****Please update the ploomber version, run:\n"
-               "pip install ploomber --upgrade\n")
+    click.secho(
+        "Please update the ploomber version, run:\n"
+        "pip install ploomber --upgrade\n",
+        fg='yellow')
 
     # Update conf
     conf['version_check_enabled'] = today

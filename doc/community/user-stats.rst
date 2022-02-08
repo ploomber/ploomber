@@ -14,7 +14,7 @@ The data we collect is limited to:
 - Information about the different product phases: installation, API calls and errors.
 
 Version updates
-***************
+---------------
 If there's an outdated version, ploomber will alert it through the console every second day in a non-invasive way.
 You can stop this checks for instance if you're running in production and you've locked versions.
 The check can be turned off by changing the configuration file:

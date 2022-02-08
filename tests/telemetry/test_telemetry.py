@@ -147,7 +147,6 @@ def test_pip_env(monkeypatch, inside_pip_env):
 # Ref: https://stackoverflow.com/questions/43878953/how-does-one-detect-if-
 # one-is-running-within-a-docker-container-within-python
 def test_docker_env(monkeypatch):
-
     def mock(input_path):
         return 'dockerenv' in str(input_path)
 
@@ -395,7 +394,6 @@ def test_parse_dag_products(monkeypatch):
 
 
 def test_parse_dag(monkeypatch, tmp_directory):
-
     def fn1(product):
         pass
 
