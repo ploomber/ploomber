@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 0.15.1dev
+* Sets minimum networkx version (#536)
+* Updates documentation links to the new domain (#549)
+* Suggests adding the appropriate `pygraphviz` version depending on the Python version (#539)
+* Improved error message when `pipeline.yaml` does not exist (#517)
+* Fixes error when scaffolding functions
 
 ## 0.15 (2022-02-03)
 * Adds SQL runtime parameters
