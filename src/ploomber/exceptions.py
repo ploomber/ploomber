@@ -31,12 +31,14 @@ class BaseException(ClickException):
         super().__init__(message)
         self.type_ = type_
 
+    def get_message(self):
+        return f'Error: {_build_message(self)}'
+
     def show(self, file: t.Optional[t.IO] = None) -> None:
         if file is None:
             file = get_text_stderr()
 
-        message = _build_message(self)
-        echo(_("Error: {message}").format(message=message), file=file)
+        echo(_(self.get_message()), file=file)
 
 
 class DAGRenderError(Exception):

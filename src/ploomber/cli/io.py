@@ -1,3 +1,5 @@
+import click
+
 from functools import wraps
 import sys
 import traceback
@@ -37,7 +39,7 @@ def cli_endpoint(fn):
                 error = str(e)
                 color = False
             except BaseException as e:
-                e.show()
+                click.secho(e.get_message(), file=sys.stderr, fg='red')
                 sys.exit(1)
             except Exception:
                 error = traceback.format_exc()
