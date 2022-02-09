@@ -57,7 +57,6 @@ class NotebookConverter:
     Handles cases where the output representation is text (e.g. HTML) or bytes
     (e.g. PDF)
     """
-
     def __init__(self,
                  path_to_output,
                  exporter_name=None,
@@ -210,12 +209,14 @@ class NotebookRunner(FileLoaderMixin, Task):
         to identify the output notebook (i.e. if product is a list with 3
         ploomber.File, pass the index pointing to the notebook path). If the
         only output is the notebook itself, this parameter is not needed
-    static_analysis : bool
-        Run static analysis after rendering. This compares the "params"
-        argument with the declared arguments in the "parameters" cell (they
-        make notebooks behave more like "functions"), pyflakes is also run to
-        detect errors before executing the notebook. Has no effect if it's not
-        a Python file.
+    static_analysis : ('disabled', 'regular', 'strict'), default='regular'
+        Check for various errors in the notebook. In 'regular' mode, it aborts
+        execution if the notebook has syntax issues, or similar problems that
+        would cause the code to break if executed. In 'strict' mode, it
+        performs the same checks but raises an isse before starting execution
+        of any task, furthermore, it verifies that the parameters cell and
+        the params passed to the notebook match, thus, making the notebook
+        behave like a function with a signature.
     nbconvert_export_kwargs : dict
         Keyword arguments to pass to the ``nbconvert.export`` function (this is
         only used if exporting the output ipynb notebook to another format).
@@ -268,7 +269,7 @@ class NotebookRunner(FileLoaderMixin, Task):
                  nbconvert_exporter_name=None,
                  ext_in=None,
                  nb_product_key='nb',
-                 static_analysis=True,
+                 static_analysis='regular',
                  nbconvert_export_kwargs=None,
                  local_execution=False,
                  check_if_kernel_installed=True):
@@ -328,7 +329,7 @@ class NotebookRunner(FileLoaderMixin, Task):
                      kwargs,
                      ext_in=None,
                      kernelspec_name=None,
-                     static_analysis=False,
+                     static_analysis='regular',
                      check_if_kernel_installed=False):
         return NotebookSource(
             source,
@@ -493,6 +494,11 @@ class NotebookRunner(FileLoaderMixin, Task):
                 Path(tmp_path).unlink()
 
     def run(self):
+        # regular mode: raise but not check signature
+        # strict mode: called at render time
+        if self.static_analysis == 'regular':
+            self.source._check_notebook(raise_=True, check_signature=False)
+
         if isinstance(self.product, MetaProduct):
             path_to_out = Path(str(self.product[self.nb_product_key]))
         else:

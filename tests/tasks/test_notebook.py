@@ -94,7 +94,7 @@ def test_execute_sample_nb(name, out_dir, tmp_sample_tasks):
     dag.build()
 
 
-def _dag_simple(nb_params=True, params=None):
+def _dag_simple(nb_params=True, params=None, static_analysis='regular'):
     path = Path('sample.py')
 
     if nb_params:
@@ -110,11 +110,15 @@ c = 'hello'
 """)
 
     dag = DAG()
-    NotebookRunner(path, product=File('out.ipynb'), dag=dag, params=params)
+    NotebookRunner(path,
+                   product=File('out.ipynb'),
+                   dag=dag,
+                   params=params,
+                   static_analysis=static_analysis)
     return dag
 
 
-def _dag_two_tasks(nb_params=True, params=None):
+def _dag_two_tasks(nb_params=True, params=None, static_analysis='regular'):
     root = Path('root.py')
     root.write_text("""
 # + tags=["parameters"]
@@ -134,11 +138,15 @@ c = 'hello'
 """)
 
     dag = DAG()
-    root = NotebookRunner(root, product=File('root.ipynb'), dag=dag)
+    root = NotebookRunner(root,
+                          product=File('root.ipynb'),
+                          dag=dag,
+                          static_analysis=static_analysis)
     task = NotebookRunner(path,
                           product=File('out.ipynb'),
                           dag=dag,
-                          params=params)
+                          params=params,
+                          static_analysis=static_analysis)
     root >> task
     return dag
 
@@ -160,7 +168,11 @@ c <- c(1, 2, 3)
     dag.render()
 
 
-def test_render_error_on_syntax_error(tmp_directory):
+@pytest.mark.parametrize('error_class, static_analysis', [
+    [DAGRenderError, 'strict'],
+    [DAGBuildError, 'regular'],
+])
+def test_error_on_syntax_error(tmp_directory, error_class, static_analysis):
     path = Path('sample.py')
 
     path.write_text("""
@@ -169,15 +181,23 @@ if
 """)
 
     dag = DAG()
-    NotebookRunner(path, product=File('out.ipynb'), dag=dag)
+    NotebookRunner(path,
+                   product=File('out.ipynb'),
+                   dag=dag,
+                   static_analysis=static_analysis)
 
-    with pytest.raises(DAGRenderError) as excinfo:
-        dag.render()
+    with pytest.raises(error_class) as excinfo:
+        dag.build()
 
     assert 'invalid syntax\n\nif\n\n  ^\n' in str(excinfo.value)
 
 
-def test_render_error_on_undefined_name_error(tmp_directory):
+@pytest.mark.parametrize('error_class, static_analysis', [
+    [DAGRenderError, 'strict'],
+    [DAGBuildError, 'regular'],
+])
+def test_error_on_undefined_name_error(tmp_directory, error_class,
+                                       static_analysis):
     path = Path('sample.py')
 
     path.write_text("""
@@ -188,10 +208,13 @@ df.head()
 """)
 
     dag = DAG()
-    NotebookRunner(path, product=File('out.ipynb'), dag=dag)
+    NotebookRunner(path,
+                   product=File('out.ipynb'),
+                   dag=dag,
+                   static_analysis=static_analysis)
 
-    with pytest.raises(DAGRenderError) as excinfo:
-        dag.render()
+    with pytest.raises(error_class) as excinfo:
+        dag.build()
 
     assert "undefined name 'df'" in str(excinfo.value)
 
@@ -236,16 +259,27 @@ import pandas as pd
 df = pd.read_csv(upstream['root'])
 """,
 ],
-                         ids=['simple', 'multiple-undefined'])
-def test_render_error_on_missing_upstream(tmp_directory, code):
+                         ids=[
+                             'simple',
+                             'multiple-undefined',
+                         ])
+@pytest.mark.parametrize('error_class, static_analysis', [
+    [DAGRenderError, 'strict'],
+    [DAGBuildError, 'regular'],
+])
+def test_render_error_on_missing_upstream(tmp_directory, code, error_class,
+                                          static_analysis):
     path = Path('sample.py')
     path.write_text(code)
 
     dag = DAG()
-    NotebookRunner(path, product=File('out.ipynb'), dag=dag)
+    NotebookRunner(path,
+                   product=File('out.ipynb'),
+                   dag=dag,
+                   static_analysis=static_analysis)
 
-    with pytest.raises(DAGRenderError) as excinfo:
-        dag.render()
+    with pytest.raises(error_class) as excinfo:
+        dag.build()
 
     expected = ("undefined name 'upstream'. Did you forget"
                 " to declare upstream dependencies?")
@@ -254,7 +288,7 @@ def test_render_error_on_missing_upstream(tmp_directory, code):
 
 @pytest.mark.parametrize('factory', [_dag_simple, _dag_two_tasks])
 def test_render_error_on_missing_params(tmp_directory, factory):
-    dag = factory()
+    dag = factory(static_analysis='strict')
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
@@ -264,7 +298,9 @@ def test_render_error_on_missing_params(tmp_directory, factory):
 
 @pytest.mark.parametrize('factory', [_dag_simple, _dag_two_tasks])
 def test_render_error_on_unexpected_params(tmp_directory, factory):
-    dag = factory(nb_params=False, params=dict(a=1, b=2, c=3))
+    dag = factory(nb_params=False,
+                  params=dict(a=1, b=2, c=3),
+                  static_analysis='strict')
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
@@ -274,7 +310,9 @@ def test_render_error_on_unexpected_params(tmp_directory, factory):
 
 @pytest.mark.parametrize('factory', [_dag_simple, _dag_two_tasks])
 def test_render_error_on_missing_and_unexpected_params(tmp_directory, factory):
-    dag = factory(nb_params=True, params=dict(d=1, e=2, f=3))
+    dag = factory(nb_params=True,
+                  params=dict(d=1, e=2, f=3),
+                  static_analysis='strict')
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.render()
@@ -515,7 +553,6 @@ var = None
 
 
 def test_develop_saves_changes(tmp_dag, monkeypatch):
-
     def mock_jupyter_notebook(args, check):
         nb = jupytext.reads('2 + 2', fmt='py')
         # args: "jupyter" {app} {path} {other args, ...}
@@ -719,3 +756,127 @@ def test_change_static_analysis(tmp_sample_tasks):
 
     # this should work
     dag.render()
+
+
+def test_validates_static_analysis_value(tmp_sample_tasks):
+    with pytest.raises(ValueError) as excinfo:
+        NotebookRunner(Path('sample.ipynb'),
+                       File('out.ipynb'),
+                       dag=DAG(),
+                       static_analysis='unknown')
+
+    expected = ("'unknown' is not a valid 'static_analysis' value, "
+                "choose one from: 'disable', 'regular', and 'strict'")
+    assert expected == str(excinfo.value)
+
+
+@pytest.mark.parametrize('value, replacement, message', [
+    [False, 'disable', "from False to 'disable'"],
+    [True, 'regular', "from True to 'regular'"],
+])
+def test_compatibility_with_static_analysis_bool(tmp_sample_tasks, value,
+                                                 replacement, message):
+
+    with pytest.warns(FutureWarning) as records:
+        task = NotebookRunner(Path('sample.ipynb'),
+                              File('out.ipynb'),
+                              dag=DAG(),
+                              static_analysis=value)
+
+    assert task.static_analysis == replacement
+    assert message in records[0].message.args[0]
+
+
+def test_warns_on_unused_parameters(tmp_sample_tasks):
+    dag = DAG()
+    NotebookRunner(Path('sample.ipynb'),
+                   File('out.ipynb'),
+                   dag=dag,
+                   params=dict(a=1))
+
+    with pytest.warns(UserWarning) as records:
+        dag.render()
+
+    expected = "These parameters are not used in the task's source code: 'a'"
+    assert expected in records[0].message.args[0]
+
+
+def test_static_analysis_regular_raises_error_at_runtime_if_errors(
+        tmp_directory):
+    path = Path('nb.py')
+    path.write_text("""
+# + tags=["parameters"]
+# some code
+
+# +
+if
+    """)
+
+    dag = DAG()
+    NotebookRunner(Path('nb.py'),
+                   File('out.ipynb'),
+                   dag=dag,
+                   static_analysis='regular')
+
+    # render should work ok
+    dag.render()
+
+    # this should prevent notebook execution
+    with pytest.raises(DAGBuildError) as excinfo:
+        dag.build()
+
+    expected = 'SyntaxError: An error happened when checking the source code.'
+    assert expected in str(excinfo.value)
+
+
+def test_static_analysis_strict_raises_error_at_rendertime_if_errors(
+        tmp_directory):
+    path = Path('nb.py')
+    path.write_text("""
+# + tags=["parameters"]
+# some code
+
+# +
+if
+    """)
+
+    dag = DAG()
+    NotebookRunner(Path('nb.py'),
+                   File('out.ipynb'),
+                   dag=dag,
+                   static_analysis='strict')
+
+    with pytest.raises(DAGRenderError) as excinfo:
+        dag.render()
+
+    expected = 'SyntaxError: An error happened when checking the source code.'
+    assert expected in str(excinfo.value)
+
+
+def test_static_analysis_strict_raises_error_at_rendertime_if_signature_error(
+        tmp_directory):
+    path = Path('nb.py')
+    path.write_text("""
+# + tags=["parameters"]
+# some code
+
+# +
+1 + 1
+    """)
+
+    dag = DAG()
+    NotebookRunner(Path('nb.py'),
+                   File('out.ipynb'),
+                   dag=dag,
+                   static_analysis='strict',
+                   params=dict(some_param='value'))
+
+    with pytest.raises(DAGRenderError) as excinfo:
+        with pytest.warns(UserWarning) as records:
+            dag.render()
+
+    expected = ("Error rendering notebook 'nb.py'. Parameters "
+                "declared in the 'parameters' cell do not match task params.")
+    assert expected in str(excinfo.value)
+    # it should not warn, since we raise the error
+    assert len(records) == 0

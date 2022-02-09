@@ -162,7 +162,8 @@ class LazyFunction:
 def catch_warnings(fn, warnings_all):
     # TODO: we need a try catch in case fn() raises an exception
     with warnings.catch_warnings(record=True) as warnings_current:
-        # do we need: warnings.simplefilter("always")?
+        warnings.simplefilter("ignore", DeprecationWarning)
+
         result = fn()
 
     if warnings_current:

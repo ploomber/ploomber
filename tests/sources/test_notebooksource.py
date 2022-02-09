@@ -267,11 +267,11 @@ def test_static_analysis(hot_reload, tmp_directory):
     source.render(params)
 
 
-def test_error_if_missing_params():
+def test_error_if_strict_and_missing_params():
     source = NotebookSource(notebook_ab,
                             ext_in='py',
                             kernelspec_name='python3',
-                            static_analysis=True)
+                            static_analysis='strict')
 
     params = Params._from_dict({'product': File('output.ipynb'), 'a': 1})
 
@@ -281,11 +281,11 @@ def test_error_if_missing_params():
     assert "Missing params: 'b'" in str(excinfo.value)
 
 
-def test_error_if_passing_undeclared_parameter():
+def test_error_if_strict_and_passing_undeclared_parameter():
     source = NotebookSource(notebook_ab,
                             ext_in='py',
                             kernelspec_name='python3',
-                            static_analysis=True)
+                            static_analysis='strict')
 
     params = Params._from_dict({
         'product': File('output.ipynb'),
@@ -300,7 +300,7 @@ def test_error_if_passing_undeclared_parameter():
     assert "Unexpected params: 'c'" in str(excinfo.value)
 
 
-def test_error_if_using_undeclared_variable():
+def test_error_if_strict_and_using_undeclared_variable():
     notebook_w_warning = """
 # + tags=['parameters']
 a = 1
@@ -313,7 +313,7 @@ a + b + c
     source = NotebookSource(notebook_w_warning,
                             ext_in='py',
                             kernelspec_name='python3',
-                            static_analysis=True)
+                            static_analysis='strict')
 
     params = Params._from_dict({
         'product': File('output.ipynb'),
@@ -327,7 +327,7 @@ a + b + c
     assert "undefined name 'c'" in str(excinfo.value)
 
 
-def test_error_if_syntax_error():
+def test_error_if_strict_and_syntax_error():
     notebook_w_error = """
 # + tags=['parameters']
 a = 1
@@ -339,7 +339,7 @@ if
     source = NotebookSource(notebook_w_error,
                             ext_in='py',
                             kernelspec_name='python3',
-                            static_analysis=True)
+                            static_analysis='strict')
 
     params = Params._from_dict({
         'product': File('output.ipynb'),
@@ -353,7 +353,7 @@ if
     assert 'invalid syntax\n\nif\n\n  ^\n' in str(excinfo.value)
 
 
-def test_error_if_undefined_name():
+def test_error_if_strict_and_undefined_name():
     notebook_w_error = """
 # + tags=['parameters']
 
@@ -363,7 +363,7 @@ df.head()
     source = NotebookSource(notebook_w_error,
                             ext_in='py',
                             kernelspec_name='python3',
-                            static_analysis=True)
+                            static_analysis='strict')
 
     params = Params._from_dict({'product': File('output.ipynb')})
 

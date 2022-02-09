@@ -283,3 +283,95 @@ def x():
 ])
 def test_check_params_ignores_non_variable_assignment(passed, params_source):
     pyflakes.check_params(passed, params_source, 'script.py')
+
+
+syntax_error = """
+# + tags=["parameters"]
+a = 1
+
+# +
+if
+"""
+
+undefined_name = """
+# + tags=["parameters"]
+a = 1
+
+# +
+c = a + b
+"""
+
+
+@pytest.mark.parametrize('code, error, msg', [
+    [syntax_error, SyntaxError, 'invalid syntax'],
+    [undefined_name, RenderError, 'undefined name'],
+],
+                         ids=[
+                             'syntax-error',
+                             'undefined-name',
+                         ])
+def test_check_notebook_raises_if_pyflakes_error(code, error, msg):
+    nb = jupytext.reads(code)
+
+    with pytest.raises(error) as excinfo:
+        pyflakes.check_notebook(nb, {}, 'file.py', raise_=True)
+
+    assert 'An error happened' in str(excinfo.value)
+    assert msg in str(excinfo.value)
+
+
+@pytest.mark.parametrize('code, msg', [
+    [syntax_error, 'invalid syntax'],
+    [undefined_name, 'undefined name'],
+])
+def test_check_notebook_warns_if_pyflakes_error(code, msg):
+    nb = jupytext.reads(code)
+
+    with pytest.warns(UserWarning) as record:
+        pyflakes.check_notebook(nb, {},
+                                'file.py',
+                                raise_=False,
+                                check_signature=True)
+
+    assert len(record) == 2
+    first = record[0].message.args[0]
+    assert 'An error happened' in first
+    assert msg in first
+    second = record[1].message.args[0]
+    assert "Parameters declared in the 'parameters' cell" in second
+
+
+@pytest.mark.parametrize('code, msg', [
+    [syntax_error, 'invalid syntax'],
+    [undefined_name, 'undefined name'],
+])
+def test_check_notebook_warns_with_check_signature_disabled(code, msg):
+    nb = jupytext.reads(code)
+
+    with pytest.warns(UserWarning) as record:
+        pyflakes.check_notebook(nb, {},
+                                'file.py',
+                                raise_=False,
+                                check_signature=False)
+
+    assert len(record) == 1
+    first = record[0].message.args[0]
+    assert 'An error happened' in first
+    assert msg in first
+
+
+def test_check_notebook_raises_if_signature_mismatch():
+    code = """
+# + tags=["parameters"]
+a = 1
+"""
+
+    nb = jupytext.reads(code)
+
+    with pytest.raises(TypeError) as excinfo:
+        pyflakes.check_notebook(nb, {}, 'file.py', raise_=True)
+
+    expected = (
+        "Parameters declared in the 'parameters' cell do not match task "
+        "params. Missing params: 'a'")
+    assert expected in str(excinfo.value)

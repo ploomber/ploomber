@@ -1,8 +1,9 @@
-import click
-
 from functools import wraps
 import sys
 import traceback
+
+import click
+
 from ploomber.io import TerminalWriter
 from ploomber.exceptions import DAGBuildError, DAGRenderError, BaseException
 

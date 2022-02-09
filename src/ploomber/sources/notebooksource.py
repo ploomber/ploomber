@@ -29,6 +29,7 @@ from pathlib import Path
 import warnings
 from contextlib import redirect_stdout
 from io import StringIO
+from copy import deepcopy
 
 # papermill is importing a deprecated module from pyarrow
 with warnings.catch_warnings():
@@ -39,6 +40,7 @@ import nbformat
 import jupytext
 from jupytext import cli as jupytext_cli
 from jupytext.formats import long_form_one_format, short_form_one_format
+import parso
 
 from ploomber.exceptions import SourceInitializationError
 from ploomber.placeholders.placeholder import Placeholder
@@ -48,6 +50,7 @@ from ploomber.sources.nb_utils import find_cell_with_tag, find_cell_with_tags
 from ploomber.static_analysis.extractors import extractor_class_for_language
 from ploomber.static_analysis.pyflakes import check_notebook
 from ploomber.sources import docstring
+from ploomber.io import pretty_print
 
 
 def requires_path(func):
@@ -55,7 +58,6 @@ def requires_path(func):
     Checks if NotebookSource instance was initialized from a file, raises
     an error if not
     """
-
     @wraps(func)
     def wrapper(self, *args, **kwargs):
 
@@ -92,7 +94,6 @@ class NotebookSource(Source):
     The render method prepares the notebook for execution: it adds the
     parameters and it makes sure kernelspec is defined
     """
-
     @requires([
         'parso', 'pyflakes', 'jupytext', 'nbformat', 'papermill',
         'jupyter_client'
@@ -102,7 +103,7 @@ class NotebookSource(Source):
                  hot_reload=False,
                  ext_in=None,
                  kernelspec_name=None,
-                 static_analysis=False,
+                 static_analysis='regular',
                  check_if_kernel_installed=True):
         # any non-py file must first be converted using jupytext, we need
         # that representation for validation, if input is already a .py file
@@ -126,6 +127,33 @@ class NotebookSource(Source):
             raise TypeError('Notebooks must be initialized from strings, '
                             'Placeholder or pathlib.Path, got {}'.format(
                                 type(primitive)))
+
+        if static_analysis is False:
+            warnings.warn(
+                "In Ploomber 0.16, static_analysis "
+                "changed from a boolean to a string. "
+                "Change the value from False"
+                f" to 'disable' in {str(self._path)!r} "
+                "to remove this warning. "
+                "This will raise an error in Ploomber 0.18", FutureWarning)
+            static_analysis = 'disable'
+
+        if static_analysis is True:
+            warnings.warn(
+                "In Ploomber 0.16, static_analysis "
+                "changed from a boolean to a string. "
+                "Change the value from True"
+                f" to 'regular' in {str(self._path)!r} "
+                "to remove this warning. "
+                "This will raise an error in Ploomber 0.18", FutureWarning)
+            static_analysis = 'regular'
+
+        static_analysis_vals = {'disable', 'regular', 'strict'}
+
+        if static_analysis not in static_analysis_vals:
+            raise ValueError(f'{static_analysis!r} is not a '
+                             "valid 'static_analysis' value, choose one from: "
+                             f'{pretty_print.iterable(static_analysis_vals)}')
 
         self.static_analysis = static_analysis
         self._kernelspec_name = kernelspec_name
@@ -208,7 +236,7 @@ class NotebookSource(Source):
                 cell.metadata.pop('tags')
 
         self._nb_str_rendered = nbformat.writes(nb)
-        self._post_render_validation(self._params, self._nb_str_rendered)
+        self._post_render_validation()
 
     def _read_nb_str_unrendered(self):
         """
@@ -279,17 +307,32 @@ Go to: https://ploomber.io/s/params for more information
                         'Go to the next URL for '
                         'details: https://ploomber.io/s/params')
 
+            # FIXME: this should be a warning, not an error
             raise SourceInitializationError(msg)
 
-    def _post_render_validation(self, params, nb_str):
+    def _post_render_validation(self):
         """
         Validate params passed against parameters in the notebook
         """
-        if self.static_analysis:
-            if self.language == 'python':
-                # check for errors (e.g., undeclared variables, syntax errors)
-                nb = self._nb_str_to_obj(nb_str)
-                check_notebook(nb, params, filename=self._path or 'notebook')
+        # NOTE: maybe static_analysis = off should not turn off everything
+        # but only warn
+
+        # strict mode: raise and check signature
+        # regular mode: _check_notebook called in NotebookRunner.run
+        if self.static_analysis == 'strict':
+            self._check_notebook(raise_=True, check_signature=True)
+        else:
+            # otherwise, only warn on unused parameters
+            _warn_on_unused_params(self._nb_obj_unrendered, self._params)
+
+    def _check_notebook(self, raise_, check_signature):
+        if self.static_analysis and self.language == 'python':
+            # warn if errors (e.g., undeclared variables, syntax errors)
+            check_notebook(self._nb_str_to_obj(self._nb_str_rendered),
+                           self._params,
+                           filename=self._path or 'notebook',
+                           raise_=raise_,
+                           check_signature=check_signature)
 
     @property
     def doc(self):
@@ -340,6 +383,7 @@ Go to: https://ploomber.io/s/params for more information
         # reload if empty or hot_reload=True
         self._read_nb_str_unrendered()
 
+        # FIXME: this should ignore changes to the markdown cells
         return '\n'.join([c.source for c in self._nb_obj_unrendered.cells])
 
     def __repr__(self):
@@ -816,3 +860,27 @@ def iter_paired_notebooks(nb, fmt_, name):
     for path, fmt_current in (parse_jupytext_format(fmt, name)
                               for fmt in formats):
         yield path, fmt_current
+
+
+def _nb2codestr(nb):
+    return '\n'.join([c.source for c in nb.cells if c.cell_type == 'code'])
+
+
+def _warn_on_unused_params(nb, params):
+    nb = deepcopy(nb)
+    _, idx = find_cell_with_tag(nb, 'parameters')
+    del nb.cells[idx]
+
+    code = _nb2codestr(nb)
+
+    # NOTE: if there a syntax error we cannot accurately check this
+    m = parso.parse(code)
+    names = set(m.get_used_names())
+
+    # remove product since it may not be required
+    # FIXME: maybe only remove it if it's a dictionary with >2 keys
+    unused = set(params) - names - {'product'}
+
+    if unused:
+        warnings.warn('These parameters are not used in the '
+                      f'task\'s source code: {pretty_print.iterable(unused)}')

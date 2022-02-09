@@ -94,7 +94,7 @@ def test_debug_and_develop_in_abstract_class(method):
         dict(source='# + tags = ["parameters"]\n1 + 1',
              ext_in='py',
              kernelspec_name=None,
-             static_analysis=False,
+             static_analysis='regular',
              kwargs={})
     ],
     [

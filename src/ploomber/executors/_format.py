@@ -1,6 +1,6 @@
 import traceback
 
-from ploomber.exceptions import TaskBuildError
+from ploomber.exceptions import TaskBuildError, RenderError
 from papermill.exceptions import PapermillExecutionError
 
 
@@ -45,7 +45,7 @@ def _get_exc_name(exc):
 
 
 def _format_exception(exc):
-    if isinstance(exc, PapermillExecutionError):
+    if isinstance(exc, (PapermillExecutionError, RenderError)):
         tr = str(exc)
     else:
         tr = ''.join(
