@@ -1,10 +1,10 @@
 # CHANGELOG
 
-## 0.15.1dev
-* Sets minimum networkx version (#536)
-* Updates documentation links to the new domain (#549)
-* Suggests adding the appropriate `pygraphviz` version depending on the Python version (#539)
-* Improved error message when `pipeline.yaml` does not exist (#517)
+## 0.15.1 (2022-02-08)
+* Sets minimum networkx version ([#536](https://github.com/ploomber/ploomber/issues/536))
+* Updates documentation links to the new domain ([#549](https://github.com/ploomber/ploomber/issues/549))
+* Suggests adding the appropriate `pygraphviz` version depending on the Python version ([#539](https://github.com/ploomber/ploomber/issues/539))
+* Improved error message when `pipeline.yaml` does not exist ([#517](https://github.com/ploomber/ploomber/issues/517))
 * Fixes error when scaffolding functions
 
 ## 0.15 (2022-02-03)
