@@ -504,7 +504,7 @@ def test_version_skips_when_updated(tmp_directory, capsys, monkeypatch):
     # Test no warning when same version encountered
     telemetry.check_version()
     captured = capsys.readouterr()
-    assert "ploomber version" not in captured.out
+    assert "Ploomber version" not in captured.out
 
 
 def test_user_output_on_different_versions(tmp_directory, capsys, monkeypatch):
@@ -518,7 +518,7 @@ def test_user_output_on_different_versions(tmp_directory, capsys, monkeypatch):
     # Check now that the date is different there is an upgrade warning
     telemetry.check_version()
     captured = capsys.readouterr()
-    assert "ploomber version" in captured.out
+    assert "Ploomber version" in captured.out
 
 
 def test_no_output_latest_version(tmp_directory, capsys, monkeypatch):
@@ -528,7 +528,7 @@ def test_no_output_latest_version(tmp_directory, capsys, monkeypatch):
                        last_check=datetime.datetime.now())
     telemetry.check_version()
     captured = capsys.readouterr()
-    assert "ploomber version" not in captured.out
+    assert "Ploomber version" not in captured.out
 
 
 def test_output_on_date_diff(tmp_directory, capsys, monkeypatch):
@@ -539,7 +539,7 @@ def test_output_on_date_diff(tmp_directory, capsys, monkeypatch):
     path = Path('stats') / 'config.yaml'
     telemetry.check_version()
     captured = capsys.readouterr()
-    assert "ploomber version" in captured.out
+    assert "Ploomber version" in captured.out
 
     # Check the conf file was updated
     with path.open("r") as file:

@@ -366,8 +366,9 @@ def check_version():
             return
 
     click.secho(
-        "Please update the ploomber version, run:\n"
-        "pip install ploomber --upgrade\n",
+        f"There's a new Ploomber version available ({latest}), "
+        f"you're running {__version__}. To upgrade: "
+        "pip install ploomber --upgrade",
         fg='yellow')
 
     # Update conf
@@ -384,9 +385,10 @@ def _get_telemetry_info():
     # Check if telemetry is enabled, if not skip, else check for uid
     telemetry_enabled = check_stats_enabled()
 
+    # Check latest version
+    check_version()
+
     if telemetry_enabled:
-        # Check latest version
-        check_version()
 
         # Check first time install
         is_install = check_first_time_usage()
