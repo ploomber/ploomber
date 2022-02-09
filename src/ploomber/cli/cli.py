@@ -181,7 +181,8 @@ def cmd_router():
     }
 
     # users may attempt to run execute/run, suggest to use build instead
-    # users may make typos when running one of the commands, suggest correct spelling on obvious typos
+    # users may make typos when running one of the commands
+    # suggest correct spelling on obvious typos
     alias = {
         'execute': 'build',
         'run': 'build',
