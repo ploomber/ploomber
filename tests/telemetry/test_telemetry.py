@@ -491,7 +491,7 @@ def write_to_conf_file(tmp_directory, monkeypatch, last_check):
 
 def test_version_skips_when_updated(tmp_directory, capsys, monkeypatch):
     # Path conf file
-    monkeypatch.setattr(ploomber, '__version__', '0.14.8')
+    monkeypatch.setattr(telemetry, '__version__', '0.14.8')
     mock_version = Mock()
     mock_version.return_value = '0.14.8'
     monkeypatch.setattr(telemetry, 'get_latest_version', mock_version)
@@ -502,9 +502,9 @@ def test_version_skips_when_updated(tmp_directory, capsys, monkeypatch):
         last_check='2022-01-20 10:51:41.082376')  # version='0.14.8',
 
     # Test no warning when same version encountered
-    # telemetry.check_version()
-    # captured = capsys.readouterr()
-    # assert "ploomber version" not in captured.out
+    telemetry.check_version()
+    captured = capsys.readouterr()
+    assert "ploomber version" not in captured.out
 
 
 def test_user_output_on_different_versions(tmp_directory, capsys, monkeypatch):
