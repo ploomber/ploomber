@@ -181,7 +181,30 @@ def cmd_router():
     }
 
     # users may attempt to run execute/run, suggest to use build instead
-    alias = {'execute': 'build', 'run': 'build'}
+    # users may make typos when running one of the commands, suggest correct spelling on obvious typos
+    alias = {
+        'execute': 'build',
+        'run': 'build',
+        'bulid': 'build',
+        'buld': 'build',
+        'bild': 'build',
+        'uild': 'build',
+        'buil': 'build',
+        'example': 'examples',
+        'exemples': 'examples',
+        'exmples': 'examples',
+        'exampes': 'examples',
+        'tsk': 'task',
+        'tas': 'task',
+        'rport': 'report',
+        'reprt': 'report',
+        'repor': 'report',
+        'stat': 'status',
+        'stats': 'status',
+        'satus': 'status',
+        'inteact': 'interact',
+        'interat': 'interact'
+    }
 
     if cmd_name in custom:
         # NOTE: we don't use the argument here, it is parsed by _main
