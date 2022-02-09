@@ -1,6 +1,6 @@
 import pathlib
 import sys
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 from pathlib import Path
 
 import click
@@ -144,7 +144,6 @@ def test_pip_env(monkeypatch, inside_pip_env):
 # Ref: https://stackoverflow.com/questions/43878953/how-does-one-detect-if-
 # one-is-running-within-a-docker-container-within-python
 def test_docker_env(monkeypatch):
-
     def mock(input_path):
         return 'dockerenv' in str(input_path)
 
@@ -294,7 +293,7 @@ def test_build_uses_telemetry(monkeypatch, tmp_directory):
     monkeypatch.setattr(build.telemetry, "log_api", mock)
 
     build.main(catch_exception=False)
-    assert mock.call_count == 1
+    assert mock.call_count == 2
 
 
 @pytest.mark.parametrize('args', [
@@ -315,7 +314,7 @@ def test_task_command(args, tmp_nbs, monkeypatch):
     monkeypatch.setattr(task.telemetry, "log_api", mock)
     task.main(catch_exception=False)
 
-    assert mock.call_count == 1
+    assert mock.call_count == 2
 
 
 def test_report_command(monkeypatch, tmp_directory):
@@ -340,13 +339,13 @@ def test_status_command(monkeypatch):
     monkeypatch.setattr(status.telemetry, "log_api", mock)
     status.main(catch_exception=False)
 
-    assert mock.call_count == 1
+    assert mock.call_count == 2
 
 
 def test_interact_uses_telemetry(monkeypatch, tmp_nbs):
     mock_start_ipython = Mock()
     monkeypatch.setattr(sys, 'argv', ['interact'])
-    monkeypatch.setattr(interact, 'start_ipython', mock_start_ipython)
+    monkeypatch.setattr(interact, 'start_ipython', Mock())
     monkeypatch.setattr(interact.telemetry, 'log_api', mock_start_ipython)
     interact.main(catch_exception=False)
 
@@ -392,7 +391,6 @@ def test_parse_dag_products(monkeypatch):
 
 
 def test_parse_dag(monkeypatch, tmp_directory):
-
     def fn1(product):
         pass
 
@@ -482,45 +480,74 @@ def test_creates_config_directory(monkeypatch, tmp_nbs,
     assert Path('stats', 'config.yaml').is_file()
 
 
-def test_log_exception(monkeypatch):
+def test_log_call_success(monkeypatch):
     mock = Mock()
     mock_dt = Mock()
     mock_dt.now.side_effect = [1, 2]
     monkeypatch.setattr(telemetry, 'log_api', mock)
     monkeypatch.setattr(telemetry.datetime, 'datetime', mock_dt)
 
-    @telemetry.log_exception('some-action')
+    @telemetry.log_call('some-action')
+    def my_function():
+        pass
+
+    my_function()
+
+    mock.assert_has_calls([
+        call('some-action-started', metadata=dict(argv=sys.argv)),
+        call('some-action-success',
+             total_runtime='1',
+             metadata=dict(argv=sys.argv)),
+    ])
+
+
+def test_log_call_exception(monkeypatch):
+    mock = Mock()
+    mock_dt = Mock()
+    mock_dt.now.side_effect = [1, 2]
+    monkeypatch.setattr(telemetry, 'log_api', mock)
+    monkeypatch.setattr(telemetry.datetime, 'datetime', mock_dt)
+
+    @telemetry.log_call('some-action')
     def my_function():
         raise ValueError('some error')
 
     with pytest.raises(ValueError):
         my_function()
 
-    mock.assert_called_once_with(action='some-action',
-                                 total_runtime='1',
-                                 metadata={
-                                     'type': '',
-                                     'exception': 'some error'
-                                 })
+    mock.assert_has_calls([
+        call('some-action-started', metadata=dict(argv=sys.argv)),
+        call(action='some-action-error',
+             total_runtime='1',
+             metadata={
+                 'type': None,
+                 'exception': 'some error',
+                 'argv': sys.argv,
+             })
+    ])
 
 
-def test_log_exception_logs_type(monkeypatch):
+def test_log_call_logs_type(monkeypatch):
     mock = Mock()
     mock_dt = Mock()
     mock_dt.now.side_effect = [1, 2]
     monkeypatch.setattr(telemetry, 'log_api', mock)
     monkeypatch.setattr(telemetry.datetime, 'datetime', mock_dt)
 
-    @telemetry.log_exception('some-action')
+    @telemetry.log_call('some-action')
     def my_function():
         raise BaseException('some error', type_='some-type')
 
     with pytest.raises(BaseException):
         my_function()
 
-    mock.assert_called_once_with(action='some-action',
-                                 total_runtime='1',
-                                 metadata={
-                                     'type': 'some-type',
-                                     'exception': 'some error'
-                                 })
+    mock.assert_has_calls([
+        call('some-action-started', metadata=dict(argv=sys.argv)),
+        call(action='some-action-error',
+             total_runtime='1',
+             metadata={
+                 'type': 'some-type',
+                 'exception': 'some error',
+                 'argv': sys.argv,
+             })
+    ])

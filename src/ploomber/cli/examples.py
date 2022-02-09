@@ -2,7 +2,6 @@ import platform
 import stat
 import os
 import csv
-import sys
 from datetime import datetime
 import json
 import shutil
@@ -15,6 +14,7 @@ import click
 from ploomber.io.terminalwriter import TerminalWriter
 from ploomber.table import Table
 from ploomber.telemetry import telemetry
+from ploomber.exceptions import BaseException
 
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer
@@ -93,7 +93,6 @@ def _display_markdown(tw, path):
 class _ExamplesManager:
     """Class for managing examples data
     """
-
     def __init__(self, home, branch=None):
         self._home = Path(home).expanduser()
         self._path_to_metadata = self._home / '.metadata'
@@ -234,6 +233,7 @@ class _ExamplesManager:
         tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n')
 
 
+@telemetry.log_call('examples')
 def main(name, force=False, branch=None, output=None):
     """
     Entry point for examples
@@ -255,29 +255,22 @@ def main(name, force=False, branch=None, output=None):
         selected = manager.path_to(name)
 
         if not selected.exists():
-            telemetry.log_api("examples_error",
-                              metadata={
-                                  'type': 'wrong_example_name',
-                                  'example_name': name
-                              })
-            click.echo(f'There is no example named {name!r}.\n'
-                       'To list examples: ploomber examples\n'
-                       'To update local copy: ploomber examples -f')
+            raise BaseException(
+                f'There is no example named {name!r}.\n'
+                'To list examples: ploomber examples\n'
+                'To update local copy: ploomber examples -f',
+                type_='no-example-with-name')
         else:
             output = output or name
 
             tw.sep('=', f'Copying example {name} to {output}/', blue=True)
 
             if Path(output).exists():
-                telemetry.log_api("examples_error",
-                                  metadata={
-                                      'type': 'duplicated_output',
-                                      'output_name': output
-                                  })
-                raise click.ClickException(
+                raise BaseException(
                     f"{output!r} already exists in the current working "
                     "directory, please rename it or move it "
-                    "to another location and try again.")
+                    "to another location and try again.",
+                    type_='directory-exists')
 
             shutil.copytree(selected, output)
 
@@ -290,8 +283,3 @@ def main(name, force=False, branch=None, output=None):
                      f'\n$ ploomber install')
             tw.write(f'\n\nOpen {str(path_to_readme)} for details.\n',
                      blue=True)
-            telemetry.log_api("ploomber_examples",
-                              metadata={
-                                  'argv': sys.argv,
-                                  'example_name': name
-                              })

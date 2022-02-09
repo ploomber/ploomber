@@ -420,28 +420,37 @@ def log_api(action,
         posthog.capture(distinct_id=uid, event=action, properties=props)
 
 
-def log_exception(action):
-    """Runs a function and logs exceptions, if any
+# NOTE: should we log differently depending on the error type?
+# NOTE: how should we handle chained exceptions?
+def log_call(action):
+    """Runs a function and logs it
     """
-
-    def _log_exceptions(func):
-
+    def _log_call(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            log_api(f'{action}-started', metadata={'argv': sys.argv})
+            start = datetime.datetime.now()
+
             try:
-                start = datetime.datetime.now()
-                return func(*args, **kwargs)
+                result = func(*args, **kwargs)
             except Exception as e:
                 log_api(
-                    action=action,
+                    action=f'{action}-error',
                     total_runtime=str(datetime.datetime.now() - start),
                     metadata={
                         # can we log None to posthog?
-                        'type': getattr(e, 'type_', ''),
+                        'type': getattr(e, 'type_', None),
                         'exception': str(e),
+                        'argv': sys.argv,
                     })
                 raise e
+            else:
+                log_api(f'{action}-success',
+                        total_runtime=str(datetime.datetime.now() - start),
+                        metadata={'argv': sys.argv})
+
+            return result
 
         return wrapper
 
-    return _log_exceptions
+    return _log_call

@@ -290,22 +290,28 @@ def test_copy_to_custom_directory(clone_examples, tmp_directory, target):
     assert Path(tmp_directory, target, 'src', 'ml_online').is_dir()
 
 
-def test_error_unknown_example(clone_examples, capsys):
-    examples.main(name='not-an-example', force=False)
-    captured = capsys.readouterr()
-    assert "There is no example named 'not-an-example'" in captured.out
+def test_error_unknown_example(tmp_directory, clone_examples):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli.cli,
+        ['examples', '--name', 'not-an-example', '--output', 'some-directory'])
+
+    assert result.exit_code == 1
+    assert "There is no example named 'not-an-example'" in result.output
 
 
 def test_error_if_already_exists(clone_examples, tmp_directory):
     examples.main(name='templates/ml-online', force=False)
 
-    with pytest.raises(ClickException) as excinfo:
-        examples.main(name='templates/ml-online', force=False)
+    runner = CliRunner()
+    result = runner.invoke(cli.cli,
+                           ['examples', '--name', 'templates/ml-online'])
 
     expected = ("'templates/ml-online' already exists in the current working "
                 "directory, please rename it or move it to another "
                 "location and try again.")
-    assert expected == str(excinfo.value)
+    assert result.exit_code == 1
+    assert expected in result.output
 
 
 def test_error_if_git_clone_fails(monkeypatch):

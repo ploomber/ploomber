@@ -4,13 +4,12 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.executors import Parallel
 from ploomber.telemetry import telemetry
-import datetime
 
 
 # this parameter is only set to True when calling "ploomber interactive"
 @cli_endpoint
+@telemetry.log_call('build')
 def main(render_only=False):
-    start_time = datetime.datetime.now()
     parser = CustomParser(description='Build pipeline', prog='ploomber build')
 
     with parser:
@@ -70,9 +69,5 @@ def main(render_only=False):
 
         if report:
             print(report)
-    end_time = datetime.datetime.now()
-    telemetry.log_api("ploomber_build",
-                      total_runtime=str(end_time - start_time),
-                      dag=dag,
-                      metadata={'argv': sys.argv})
+
     return dag
