@@ -350,8 +350,7 @@ def check_version():
 
     # If latest version, do nothing
     latest = get_latest_version()
-    version = __version__
-    print(version)
+
     if __version__ == latest:
         return
 
