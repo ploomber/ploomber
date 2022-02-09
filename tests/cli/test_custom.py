@@ -33,9 +33,28 @@ def test_no_options(monkeypatch):
 @pytest.mark.parametrize('cmd, suggestion', [
     ['execute', 'build'],
     ['run', 'build'],
+    ['bulid', 'build'],
+    ['buld', 'build'],
+    ['bild', 'build'],
+    ['uild', 'build'],
+    ['buil', 'build'],
+    ['example', 'examples'],
+    ['exemples', 'examples'],
+    ['exmples', 'examples'],
+    ['exampes', 'examples'],
+    ['tsk', 'task'],
+    ['tas', 'task'],
+    ['rport', 'report'],
+    ['reprt', 'report'],
+    ['repor', 'report'],
+    ['stat', 'status'],
+    ['stats', 'status'],
+    ['satus', 'status'],
+    ['inteact', 'interact'],
+    ['interat', 'interact'],
 ])
 def test_suggestions(monkeypatch, capsys, cmd, suggestion):
-    monkeypatch.setattr(sys, 'argv', ['ploomber', 'execute'])
+    monkeypatch.setattr(sys, 'argv', ['ploomber', cmd])
 
     with pytest.raises(SystemExit) as excinfo:
         cmd_router()
