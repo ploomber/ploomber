@@ -40,13 +40,33 @@ class BaseException(ClickException):
 
 
 class DAGRenderError(Exception):
-    """Raise when a dag fails to build
+    """Raise when a dag fails to render
+
+    Notes
+    -----
+    This is a special exception that should only be raised under specific
+    circumstances in the DAG implementation. Review carefully since this
+    exceptions signals special output formatting in the CLI (via the
+    @cli_endpoint decorator)
     """
     pass
 
 
 class DAGBuildError(Exception):
     """Raise when a dag fails to build
+
+    Notes
+    -----
+    This is a special exception that should only be raised under specific
+    circumstances in the DAG implementation. Review carefully since this
+    exceptions signals special output formatting in the CLI (via the
+    @cli_endpoint decorator)
+    """
+    pass
+
+
+class DAGWithDuplicatedProducts(BaseException):
+    """Raised when more than one task has the same product
     """
     pass
 
