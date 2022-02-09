@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.15.2dev
+
 ## 0.15.1 (2022-02-08)
 * Sets minimum networkx version ([#536](https://github.com/ploomber/ploomber/issues/536))
 * Updates documentation links to the new domain ([#549](https://github.com/ploomber/ploomber/issues/549))
