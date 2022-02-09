@@ -71,6 +71,9 @@ def command_endpoint(fn):
     def wrapper(**kwargs):
         try:
             fn(**kwargs)
+        except BaseException as e:
+            e.show()
+            sys.exit(1)
         except Exception as e:
             print(f'Error: {e}', file=sys.stderr)
             sys.exit(1)
