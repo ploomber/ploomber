@@ -23,9 +23,9 @@ If you prefer, you can also use plain R scripts:
     :class: text-editor
     :name: task-R
 
-    # + tags=["parameters"]
+    # %% tags=["parameters"]
     upstream = list('one_task', 'another_task')
-    # -
+    #   
 
 
 If your script doesn't have dependencies: ``upstream = NULL``

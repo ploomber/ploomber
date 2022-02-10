@@ -635,10 +635,10 @@ Python/R scripts/notebooks receive a ``product`` variable in the
 .. code-block:: py
     :class: text-editor
 
-    # + tags=["parameters"]
+    # %% tags=["parameters"]
     product = None
 
-    # + tags=["injected-parameters"]
+    # %% tags=["injected-parameters"]
     product = '/path/to/output/data.csv'
 
     # your code...
@@ -696,10 +696,10 @@ Python/R scripts/notebooks receive them in the "injected-parameters" cell:
 .. code-block:: py
     :class: text-editor
 
-    # + tags=["parameters"]
+    # %% tags=["parameters"]
     my_param = None
 
-    # + tags=["injected-parameters"]
+    # %% tags=["injected-parameters"]
     my_param = 42
 
     # your code...

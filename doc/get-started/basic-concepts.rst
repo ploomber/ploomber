@@ -110,14 +110,14 @@ as ``.py`` (script) and as a ``.ipynb`` (notebook) file:
    :target: /_static/img/basics/py-and-ipynb.png
    :alt: py-and-ipynb
 
-Note that the ``.py`` script has some ``# +`` comments. Such markers allow us
+Note that the ``.py`` script has some ``# %%`` comments. Such markers allow us
 to delimit code cells and render the ``.py`` file as a notebook. 
 
 .. note::
    
-   The ``# +`` is just one way of representing ``.py`` as notebooks. Ploomber
-   uses jupytext to perform the conversion, so other popular formats such as the
-   "percent" (``# %%``) format work. Editors such as VS Code, Spyder, and
+   The ``# %%`` is one way of representing ``.py`` as notebooks. Ploomber
+   uses jupytext to perform the conversion, other formats such as the
+   "light" (``# +``) format work too. Editors such as VS Code, Spyder, and
    PyCharm support the "percent" format.
 
 
@@ -146,10 +146,9 @@ editing. If a script/notebook has no dependencies, set ``upstream = None``.
     :class: text-editor
     :name: clean-py
 
-    # + tags=["parameters"]
+    # %% tags=["parameters"]
     upstream = ['raw'] # this means: execute raw.py, then clean.py
     product = None
-    # -
 
 
 .. important::
@@ -160,7 +159,7 @@ editing. If a script/notebook has no dependencies, set ``upstream = None``.
 
 .. note::
    
-   the ``# +`` and ``# -`` markers only apply to scripts.
+   the ``# %%`` markers only apply to scripts.
    `Click here <https://docs.ploomber.io/en/latest/user-guide/faq_index.html#parameterizing-notebooks>`_
    for information on adding tags to ``.ipynb`` files.
 
@@ -175,14 +174,15 @@ Let's review the contents a sample ``clean.py`` file:
 
    import pandas as pd
 
-   # + tags=["parameters"]
+   # %% tags=["parameters"]
    upstream = ["raw"]
    product = None
-   # -
 
+   # %%
    df = pd.read_csv(upstream['get']['data'])
    # some data cleaning code...
 
+   # %%
    # store clean data
    df.to_csv(str(product['data']), index=False)
 

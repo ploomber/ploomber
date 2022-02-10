@@ -11,7 +11,17 @@ the ``upstream`` parameter, which contains a list of task dependencies.
 Parameterizing ``.py`` files
 *****************************
 
-For ``.py`` files, include the ``# + tags=["parameters]`` comment before declaring your default variables or parameters.
+For ``.py`` files, include the ``# %% tags=["parameters]`` comment before declaring your default variables or parameters.
+
+
+.. code-block:: python
+    :class: text-editor
+
+    # %% tags=["parameters"]
+    upstream = None
+    product = None
+
+Note that Ploomber is compatible with all ``.py`` formats supported by jupytext. Another common alternative is the light format.
 The ``# +`` marker denotes the beginning of a cell, and ``# -`` marker indicates the end of the cell. Your cell should look like this:
 
 
@@ -22,17 +32,6 @@ The ``# +`` marker denotes the beginning of a cell, and ``# -`` marker indicates
     upstream = None
     product = None
     # -
-
-
-Note that Ploomber is compatible with all ``.py`` formats supported by jupytext. Another common alternative is the percent format:
-
-
-.. code-block:: python
-    :class: text-editor
-
-    # %% tags=["parameters"]
-    upstream = None
-    product = None
 
 If you're using another format, check out `jupytext's documentation <https://jupytext.readthedocs.io/en/latest/formats.html>`_.
 
