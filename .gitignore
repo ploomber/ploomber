@@ -8,7 +8,6 @@ projects-tmp/
 *.parquet
 examples/pipeline/results/
 ploomber-venv
-ploomb-env
 
 doc/**/*.ipynb
 .pytest_cache/
@@ -105,7 +104,3 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-$HOME/.pyenv/.version
-$HOME/.pyenv/pyenv-win/.versions_cache.xml
-$HOME/.pyenv/pyenv-win/__init__.py
-$HOME/.pyenv/pyenv-win/bin/pyenv
