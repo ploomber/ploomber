@@ -782,8 +782,8 @@ class DAG(AbstractDAG):
 
     @requires(['pygraphviz'],
               extra_msg=_pygraphviz_message,
-              pip_names=['pypgrahviz<1.8'] if sys.version_info <
-              (3, 8) else ['pypgrahviz'])
+              pip_names=['pygraphviz<1.8'] if sys.version_info <
+              (3, 8) else ['pygraphviz'])
     def plot(self, output='embed'):
         """Plot the DAG
 

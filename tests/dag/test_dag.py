@@ -1137,12 +1137,12 @@ def test_error_if_missing_pypgraphviz(monkeypatch, dag):
         dag.plot()
 
     if sys.version_info < (3, 8):
-        assert ("'pypgrahviz<1.8' is required to use 'plot'. Install "
-                "with: pip install 'pypgrahviz<1.8'" in str(excinfo.value))
+        assert ("'pygraphviz<1.8' is required to use 'plot'. Install "
+                "with: pip install 'pygraphviz<1.8'" in str(excinfo.value))
         assert ("conda install 'pygraphviz<1.8' -c conda-forge"
                 in str(excinfo.value))
     else:
-        assert ("'pypgrahviz' is required to use 'plot'. "
-                "Install with: pip install 'pypgrahviz'" in str(excinfo.value))
+        assert ("'pygraphviz' is required to use 'plot'. "
+                "Install with: pip install 'pygraphviz'" in str(excinfo.value))
         assert ("conda install pygraphviz -c conda-forge"
                 in str(excinfo.value))

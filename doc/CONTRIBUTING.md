@@ -76,3 +76,46 @@ e.g.:
 ```
 
 [Reference](https://nbsphinx.readthedocs.io/en/0.7.1/markdown-cells.html#Links-to-*.rst-Files-(and-Other-Sphinx-Source-Files)).
+
+## Working with .rst files
+
+Pages in the documentation are built using `.rst` files and built using `Sphinx`. Here are a few suggestions to make
+contributing `.rst` files easier. 
+
+#### Hyperlinks (external)
+
+Within an `.rst` file, you can use the following format 
+
+    `Link text <https://domain.invalid/>`_ 
+    
+for inline web links. Note: If you want the text to display the full link, the parser will find and links along with 
+mail addresses. Ensure there is a space between the word to be embedded and the link.
+
+Read more [here](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#hyperlinks).
+
+#### Adding images
+
+You can use the following notation to embed an image `.. image:: gnu.png`.  Where `gnu.png` is relative to the source file, 
+or relative to the top source directory. 
+
+To learn more about setting image size, or for information on Sphinx version changes, visit [this link](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#images).
+
+#### Python code blocks
+
+To embed a Python code block within an `.rst` file, refer to the following sample
+
+```
+.. code-block:: python
+   :emphasize-lines: 3,5
+
+   def some_function():
+       interesting = False
+       print 'This line is highlighted.'
+       print 'This one is not...'
+       print '...but this one is.'
+```
+
+Read more about additional options to embed code blocks in `.rst` files by visiting [this link](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#showing-code-examples).
+
+
+
