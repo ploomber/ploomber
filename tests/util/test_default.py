@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 import pytest
-import subprocess
 
 from ploomber.util import util
 from ploomber.util import default
