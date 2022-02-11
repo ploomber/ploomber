@@ -133,8 +133,8 @@ class CondaPipMixedEnvError(Exception):
     Raised when trying to pip install in a conda env
     """
     def __init__(self, dependencies):
-        error_message = f"""
-        You're working in a conda env, but used a pip install on the dependencies below: {dependencies}.
+        error_message = f""" You're working in a conda env, but used a pip 
+        install on the dependencies below: {dependencies}. 
         """
 
         super().__init__(error_message)
