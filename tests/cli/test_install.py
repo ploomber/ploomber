@@ -114,7 +114,7 @@ def test_missing_both_lock_files(tmp_directory, has_conda, use_lock, env,
                            args=['--use-lock'] if use_lock else [],
                            catch_exceptions=False)
     expected = (
-        'Expected and environment.lock.yaml '
+        'Expected an environment.lock.yaml '
         '(conda) or requirements.lock.txt (pip) in the current directory. '
         'Add one of them and try again.')
 
@@ -191,7 +191,7 @@ def test_use_lock_none_with_pip_lock_exists(tmp_directory, monkeypatch,
     result = runner.invoke(install, catch_exceptions=False)
 
     assert result.exit_code == 0
-    main_pip.assert_called_once_with(ANY, use_lock=True, create_env=ANY)
+    main_pip.assert_called_once_with(use_lock=True, create_env=ANY)
     main_conda.assert_not_called()
 
 
@@ -207,7 +207,7 @@ def test_use_lock_none_with_pip_regular_exists(tmp_directory, monkeypatch,
     result = runner.invoke(install, catch_exceptions=False)
 
     assert result.exit_code == 0
-    main_pip.assert_called_once_with(ANY, use_lock=False, create_env=ANY)
+    main_pip.assert_called_once_with(use_lock=False, create_env=ANY)
     main_conda.assert_not_called()
 
 
@@ -220,7 +220,7 @@ def test_use_lock_none_with_conda_lock_exists(tmp_directory, mock_main):
     result = runner.invoke(install, catch_exceptions=False)
 
     assert result.exit_code == 0
-    main_conda.assert_called_once_with(ANY, use_lock=True, create_env=ANY)
+    main_conda.assert_called_once_with(use_lock=True, create_env=ANY)
     main_pip.assert_not_called()
 
 
@@ -232,7 +232,7 @@ def test_use_lock_none_with_conda_regular_exists(tmp_directory, mock_main):
     result = runner.invoke(install, catch_exceptions=False)
 
     assert result.exit_code == 0
-    main_conda.assert_called_once_with(ANY, use_lock=False, create_env=ANY)
+    main_conda.assert_called_once_with(use_lock=False, create_env=ANY)
     main_pip.assert_not_called()
 
 
@@ -389,7 +389,7 @@ def test_installs_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     runner = CliRunner()
     result = runner.invoke(install, args=args, catch_exceptions=False)
 
-    main.assert_called_once_with(ANY, use_lock=ANY, create_env=create_env)
+    main.assert_called_once_with(use_lock=ANY, create_env=create_env)
     assert result.exit_code == 0
 
 
@@ -415,7 +415,7 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     runner = CliRunner()
     result = runner.invoke(install, args=args, catch_exceptions=False)
 
-    main.assert_called_once_with(ANY, use_lock=ANY, create_env=create_env)
+    main.assert_called_once_with(use_lock=ANY, create_env=create_env)
     assert result.exit_code == 0
 
 
@@ -494,8 +494,7 @@ def test_main_pip_install_inline(tmp_directory, monkeypatch, capsys,
     mock = Mock(return_value='something')
     monkeypatch.setattr(install_module.Commander, 'run', mock)
 
-    install_module.main_pip(datetime.datetime.now(),
-                            use_lock=use_lock,
+    install_module.main_pip(use_lock=use_lock,
                             create_env=False)
 
     assert mock.call_args_list == expected_call
@@ -612,8 +611,7 @@ def test_main_conda_install_inline(monkeypatch, capsys, tmp_directory,
     monkeypatch.setattr(install_module, '_current_conda_env_name',
                         lambda: 'some-env')
 
-    install_module.main_conda(datetime.datetime.now(),
-                              use_lock=use_lock,
+    install_module.main_conda(use_lock=use_lock,
                               create_env=False)
 
     assert mock.call_args_list == expected_calls

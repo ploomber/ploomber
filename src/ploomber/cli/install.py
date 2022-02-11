@@ -63,53 +63,58 @@ def main(use_lock, create_env=None, use_venv=False):
     use_venv : bool, default=False
         Force to use Python's venv module, ignoring conda if installed
     """
-    CONDA_INSTALLED = shutil.which('conda')
-    HAS_ENV_YML = Path(_ENV_YML).exists()
-    HAS_ENV_LOCK_YML = Path(_ENV_LOCK_YML).exists()
-    HAS_REQS_TXT = Path(_REQS_TXT).exists()
-    HAS_REQS_LOCK_TXT = Path(_REQS_LOCK_TXT).exists()
+    USE_CONDA = shutil.which('conda') and not use_venv
+    ENV_YML_EXISTS = Path(_ENV_YML).exists()
+    ENV_LOCK_YML_EXISTS = Path(_ENV_LOCK_YML).exists()
+    REQS_TXT_EXISTS = Path(_REQS_TXT).exists()
+    REQS_LOCK_TXT_EXISTS = Path(_REQS_LOCK_TXT).exists()
 
     if use_lock is None:
-        if CONDA_INSTALLED:
-            use_lock = HAS_ENV_LOCK_YML
+        if USE_CONDA:
+            use_lock = ENV_LOCK_YML_EXISTS
         else:
-            use_lock = HAS_REQS_LOCK_TXT
+            use_lock = REQS_LOCK_TXT_EXISTS
 
-    if use_lock and not HAS_ENV_LOCK_YML and not HAS_REQS_LOCK_TXT:
+    if use_lock and not ENV_LOCK_YML_EXISTS and not REQS_LOCK_TXT_EXISTS:
         raise BaseException(
-            "Expected and environment.lock.yaml "
+            "Expected an environment.lock.yaml "
             "(conda) or requirements.lock.txt (pip) in the current "
             "directory. Add one of them and try again.",
             type_='no_lock')
-    elif not use_lock and not HAS_ENV_YML and not HAS_REQS_TXT:
+    elif not use_lock and not ENV_YML_EXISTS and not REQS_TXT_EXISTS:
         raise BaseException(
             "Expected an environment.yaml (conda)"
             " or requirements.txt (pip) in the current directory."
             " Add one of them and try again.",
             type_='no_env_requirements')
-    elif (not CONDA_INSTALLED and use_lock and HAS_ENV_LOCK_YML
-          and not HAS_REQS_LOCK_TXT):
+    elif (not USE_CONDA and use_lock and ENV_LOCK_YML_EXISTS
+          and not REQS_LOCK_TXT_EXISTS):
         raise BaseException(
             "Found env environment.lock.yaml "
             "but conda is not installed. Install conda or add a "
             "requirements.lock.txt to use pip instead",
             type_='no_conda')
-    elif (not CONDA_INSTALLED and not use_lock and HAS_ENV_YML
-          and not HAS_REQS_TXT):
+    elif (not USE_CONDA and not use_lock and ENV_YML_EXISTS
+          and not REQS_TXT_EXISTS):
         raise BaseException(
             "Found environment.yaml but conda is not installed."
             " Install conda or add a requirements.txt to use pip instead",
             type_='no_conda2')
-    elif CONDA_INSTALLED and use_lock and HAS_ENV_LOCK_YML:
+    elif USE_CONDA and use_lock and ENV_LOCK_YML_EXISTS:
+        # TODO: emit warnings if unused requirements.txt?
         main_conda(use_lock=True,
                    create_env=create_env
                    if create_env is not None else _should_create_conda_env())
-    elif CONDA_INSTALLED and not use_lock and HAS_ENV_YML:
+    elif USE_CONDA and not use_lock and ENV_YML_EXISTS:
+        # TODO: emit warnings if unused requirements.txt?
         main_conda(use_lock=False,
                    create_env=create_env
                    if create_env is not None else _should_create_conda_env())
     else:
-        main_pip(use_lock=use_lock, create_env=not telemetry.in_virtualenv())
+        # TODO: emit warnings if unused environment.yml?
+        main_pip(use_lock=use_lock,
+                 create_env=create_env
+                 if create_env is not None else not telemetry.in_virtualenv())
 
 
 def main_pip(use_lock, create_env=True):
@@ -174,11 +179,6 @@ def main_pip(use_lock, create_env=True):
 
     if Path(reqs_dev_txt).exists():
         _pip_install(cmdr, pip, lock=not use_lock, requirements=reqs_dev_txt)
-
-    if os.name == 'nt':
-        cmd_activate = f'{venv_dir}\\Scripts\\Activate.ps1'
-    else:
-        cmd_activate = f'source {venv_dir}/bin/activate'
 
     _next_steps(cmdr, cmd_activate)
 

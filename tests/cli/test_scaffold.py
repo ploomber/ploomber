@@ -285,8 +285,8 @@ def test_error_if_conflicting_options(flag):
                            catch_exceptions=False)
 
     assert result.exit_code
-    assert (f'Error: -e/--entry-point is not compatible with the {flag} flag\n'
-            == result.output)
+    assert (f'Error: -e/--entry-point is not compatible with {flag}\n' ==
+            result.output)
 
 
 def test_scaffold_adds_current_directory_to_sys_path(no_sys_modules_cache,
