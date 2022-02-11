@@ -527,12 +527,12 @@ def test_extract_name(arg, expected):
 
 
 def test_mixed_envs(tmp_directory):
+
     # Set a conda env with an install
     _write_sample_conda_env()
-    process = subprocess.Popen(
-        "conda install pygraphviz -c conda-forge -y".split(),
-        stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    util.check_mixed_envs()
+    f = open('environment.yml', 'a')
+    f.write("\n- python=3.10.2=hea1dfa3_3_cpython\n")
+    f.close()
+
     with pytest.raises(CondaPipMixedEnvError):
         util.check_mixed_envs()

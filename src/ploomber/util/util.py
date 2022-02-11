@@ -88,9 +88,12 @@ def check_mixed_envs():
     except ImportError:
         from pip.operations import freeze
     reqs = freeze.freeze()
+    problematic_dependencies = []
     for dep in reqs:
         if ' @ file://' in dep:
-            raise CondaPipMixedEnvError(dep)
+            problematic_dependencies.append(dep)
+    if problematic_dependencies:
+        raise CondaPipMixedEnvError(problematic_dependencies)
 
 
 def safe_remove(path):
