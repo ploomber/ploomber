@@ -134,8 +134,7 @@ class CondaPipMixedEnvError(Exception):
     """
     def __init__(self, dep):
         error_message = f"""
-        You're working in a conda env, 
-        but used a pip install on the dependency below: {dep}.
+        You're working in a conda env, but used a pip install on the dependency below: {dep}.
         """
 
         super().__init__(error_message)
