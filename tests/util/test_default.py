@@ -2,9 +2,12 @@ import os
 from pathlib import Path
 
 import pytest
+import subprocess
 
+from ploomber.util import util
 from ploomber.util import default
-from ploomber.exceptions import DAGSpecInvalidError
+from ploomber.exceptions import DAGSpecInvalidError, CondaPipMixedEnvError
+from conftest import _write_sample_conda_env
 
 
 def create_package_with_name(name, base='.'):
@@ -521,3 +524,15 @@ def test_entry_point_relative_error_if_doesnt_exist(tmp_directory):
 ])
 def test_extract_name(arg, expected):
     assert default.extract_name(arg) == expected
+
+
+def test_mixed_envs(tmp_directory):
+    # Set a conda env with an install
+    _write_sample_conda_env()
+    process = subprocess.Popen(
+        "conda install pygraphviz -c conda-forge -y".split(),
+        stdout=subprocess.PIPE)
+    output, error = process.communicate()
+    util.check_mixed_envs()
+    with pytest.raises(CondaPipMixedEnvError):
+        util.check_mixed_envs()

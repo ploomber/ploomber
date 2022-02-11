@@ -10,7 +10,7 @@ from collections.abc import Iterable
 from contextlib import contextmanager
 
 from ploomber.exceptions import (CallbackSignatureError, CallbackCheckAborted,
-                                 TaskRenderError)
+                                 TaskRenderError, CondaPipMixedEnvError)
 from ploomber.util.dotted_path import DottedPath
 
 
@@ -80,6 +80,17 @@ def _make_requires_error_message(missing_pkgs, fn_name, extra_msg):
         error_msg += ('\n' + extra_msg)
 
     return error_msg
+
+
+def check_mixed_envs():
+    try:
+        from pip._internal.operations import freeze
+    except ImportError:
+        from pip.operations import freeze
+    reqs = freeze.freeze()
+    for dep in reqs:
+        if ' @ file://' in dep:
+            raise CondaPipMixedEnvError(dep)
 
 
 def safe_remove(path):

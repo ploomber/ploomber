@@ -27,7 +27,6 @@ class BaseException(ClickException):
     A subclass of ClickException that adds support for printing error messages
     from chained exceptions
     """
-
     def __init__(self, message, type_=None):
         super().__init__(message)
         self.type_ = type_
@@ -129,11 +128,23 @@ class DAGSpecInvalidError(Exception):
     pass
 
 
+class CondaPipMixedEnvError(Exception):
+    """
+    Raised when trying to pip install in a conda env
+    """
+    def __init__(self, dep):
+        error_message = f"""
+        You're working in a conda env, 
+        but used a pip install on the dependency below: {dep}.
+        """
+
+        super().__init__(error_message)
+
+
 class DAGCycle(Exception):
     """
     Raised when a DAG is defined with cycles.
     """
-
     def __init__(self):
         error_message = """
         Failed to process DAG because it contains cycles.
@@ -145,7 +156,6 @@ class SpecValidationError(Exception):
     """
     Raised when failing to validate a spec
     """
-
     def __init__(self, errors, model, kwargs):
         self.errors = errors
         self.model = model
@@ -166,7 +176,6 @@ class SQLExecuteError(Exception):
     """
     Raised by SQLScript and SQLDump when the .execute method fails
     """
-
     def __init__(self, type_, source_code, original):
         self.type_ = type_
         self.source_code = source_code
