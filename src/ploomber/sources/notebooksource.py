@@ -40,9 +40,11 @@ import nbformat
 import jupytext
 from jupytext import cli as jupytext_cli
 from jupytext.formats import long_form_one_format, short_form_one_format
+from jupytext.config import JupytextConfiguration
 import parso
 
-from ploomber.exceptions import SourceInitializationError
+from ploomber.exceptions import (SourceInitializationError,
+                                 MissingParametersCellError)
 from ploomber.placeholders.placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources.abc import Source
@@ -270,7 +272,8 @@ class NotebookSource(Source):
                 # when this is initialized
                 language=self._language,
                 kernelspec_name=self._kernelspec_name,
-                check_if_kernel_installed=self._check_if_kernel_installed)
+                check_if_kernel_installed=self._check_if_kernel_installed,
+                path=self._path)
 
             # if the user injected cells manually (with plomber nb --inject)
             # the source will contain the injected cell, remove it because
@@ -318,8 +321,7 @@ Go to: https://ploomber.io/s/params for more information
                         'Go to the next URL for '
                         'details: https://ploomber.io/s/params')
 
-            # FIXME: this should be a warning, not an error
-            raise SourceInitializationError(msg)
+            raise MissingParametersCellError(msg)
 
     def _post_render_validation(self):
         """
@@ -571,7 +573,8 @@ def _to_nb_obj(source,
                language,
                ext=None,
                kernelspec_name=None,
-               check_if_kernel_installed=True):
+               check_if_kernel_installed=True,
+               path=None):
     """
     Convert to jupyter notebook via jupytext, if the notebook does not contain
     kernel information and the user did not pass a kernelspec_name explicitly,
@@ -591,6 +594,10 @@ def _to_nb_obj(source,
     language : str
         Programming language
 
+    path : str, default=None
+        Script/notebook path. If not None, it's used to throw an informative
+        error if the notebook fails to load
+
     Returns
     -------
     nb
@@ -608,7 +615,19 @@ def _to_nb_obj(source,
     import jupytext
 
     # let jupytext figure out the format
-    nb = jupytext.reads(source, fmt=ext)
+    try:
+        nb = jupytext.reads(source, fmt=ext)
+    except Exception as e:
+        what = 'notebook' if ext == 'ipynb' else 'script'
+        err = f'Failed to read {what}'
+
+        if path is not None:
+            err += f' from {str(path)!r}'
+
+        raise SourceInitializationError(err) from e
+
+    # NOTE: I can add the cell with parameters here, but what happens if
+    # extract_upstream is false? would that be a problem?
 
     check_nb_kernelspec_info(nb,
                              kernelspec_name,
@@ -895,3 +914,33 @@ def _warn_on_unused_params(nb, params):
     if unused:
         warnings.warn('These parameters are not used in the '
                       f'task\'s source code: {pretty_print.iterable(unused)}')
+
+
+def add_parameters_cell(path, extract_upstream, extract_product):
+    """
+    Add parameters cell to a script/notebook in the given path, overwrites the
+    original file
+    """
+    source = ''
+
+    if extract_upstream:
+        source += """\
+# declare a list tasks whose products you want to use as inputs
+upstream = None
+"""
+    if extract_product:
+        source += """\
+# declare a dictionary with the outputs of this task
+product = None
+"""
+
+    c = JupytextConfiguration()
+    c.notebook_metadata_filter
+    c.notebook_metadata_filter = 'all'
+    c.cell_metadata_filter = 'all'
+
+    nb = jupytext.read(path)
+    new_cell = nbformat.v4.new_code_cell(source,
+                                         metadata={'tags': ['parameters']})
+    nb.cells.insert(0, new_cell)
+    jupytext.write(nb, path, config=c)

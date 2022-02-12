@@ -111,6 +111,12 @@ class SourceInitializationError(BaseException):
     pass
 
 
+class MissingParametersCellError(SourceInitializationError):
+    """Raise when a script or notebook is missing the parameters cell
+    """
+    pass
+
+
 class CallbackSignatureError(Exception):
     """When a callback function does not have the right signature
     """
