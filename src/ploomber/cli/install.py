@@ -222,7 +222,7 @@ def main_conda(use_lock, create_env=True):
                                   'type': 'env_running_conflict',
                                   'exception': err
                               })
-            raise RuntimeError(err)
+            raise BaseException(err)
     else:
         env_name = _current_conda_env_name()
 
@@ -250,7 +250,7 @@ def main_conda(use_lock, create_env=True):
                                   'type': 'duplicate_env',
                                   'exception': err
                               })
-            raise ValueError(err)
+            raise BaseException(err)
 
     pkg_manager = mamba if mamba else conda
 
@@ -330,7 +330,7 @@ def _find_conda_root(conda_bin):
                           'type': 'no_conda_root',
                           'exception': err
                       })
-    raise RuntimeError(err)
+    raise BaseException(err)
 
 
 def _path_to_pip_in_env_with_name(conda_bin, env_name):
@@ -354,7 +354,7 @@ def _locate_pip_inside_conda(env_name):
                               'type': 'no_pip_env',
                               'exception': err
                           })
-        raise FileNotFoundError(err)
+        raise BaseException(err)
 
     return pip
 
