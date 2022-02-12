@@ -145,7 +145,7 @@ setup(
         # eg: 'keyword1', 'keyword2', 'keyword3',
     ],
     install_requires=[
-        'ploomber-scaffold>0.3',
+        'ploomber-scaffold>=0.3',
         'pyyaml',
         'networkx>=2.5',
         'jinja2',
