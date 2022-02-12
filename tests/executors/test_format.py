@@ -3,7 +3,7 @@ from functools import partial
 from papermill.exceptions import PapermillExecutionError
 
 from ploomber.executors import _format
-from ploomber.exceptions import TaskBuildError, RenderError
+from ploomber.exceptions import TaskBuildError, RenderError, TaskRenderError
 
 # TODO: test with SQLTaskBuildError
 
@@ -14,6 +14,10 @@ def fn():
 
 def fn_pm():
     raise PapermillExecutionError(0, 0, 'source', 'ename', 'evalue', 't')
+
+
+def fn_task_render():
+    raise TaskRenderError('some error')
 
 
 def fn_render():
@@ -84,6 +88,17 @@ def test_exception_papermill_error():
 
 def test_exception_render_error():
     fn_ = partial(chain, fn=fn_render, exc=TaskBuildError('more info'))
+
+    try:
+        chain(fn_, TaskBuildError('even more info'))
+    except Exception as exc:
+        res = _format.exception(exc)
+
+    assert 'Traceback (most recent call last):' not in res
+
+
+def test_exception_task_render_error():
+    fn_ = partial(chain, fn=fn_task_render, exc=TaskBuildError('more info'))
 
     try:
         chain(fn_, TaskBuildError('even more info'))
