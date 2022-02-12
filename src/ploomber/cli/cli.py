@@ -59,6 +59,7 @@ def scaffold(name, conda, package, entry_point, empty):
     $ ploomber scaffold
     """
     template = '-e/--entry-point is not compatible with {flag}'
+    user_passed_name = name is not None
 
     if entry_point and name:
         err = '-e/--entry-point is not compatible with the "name" argument'
@@ -120,9 +121,16 @@ def scaffold(name, conda, package, entry_point, empty):
             raise click.ClickException(e) from e
 
     if loaded:
+        if user_passed_name:
+            click.secho(
+                "The 'name' positional argument is "
+                "only valid for creating new projects, ignoring...",
+                fg='yellow')
+
         # existing pipeline, add tasks
         spec, _, path_to_spec = loaded
         _scaffold.add(spec, path_to_spec)
+
         telemetry.log_api("ploomber_scaffold",
                           metadata={
                               'type': 'add_task',
