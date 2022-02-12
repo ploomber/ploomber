@@ -58,6 +58,19 @@ def test_task_class_from_source_str_error():
                                    product=None)
 
 
+def test_task_class_from_source_str_invalid_path():
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        task_class_from_source_str([],
+                                   lazy_import=None,
+                                   reload=None,
+                                   product=None)
+
+    error = "Failed to initialize task from source []"
+    assert error in str(excinfo.value)
+    repr_ = str(excinfo.getrepr())
+    assert 'expected str' in repr_
+
+
 @pytest.mark.parametrize(
     'spec, expected',
     [
