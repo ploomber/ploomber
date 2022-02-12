@@ -32,7 +32,6 @@ from ploomber.exceptions import DAGSpecInitializationError
 
 
 def create_engine_with_schema(schema):
-
     def fake_create_engine(*args, **kwargs):
         if 'sqlite' in args[0]:
             return create_engine(*args, **kwargs)
@@ -1840,3 +1839,23 @@ tasks:
 
     assert spec['tasks'][0]['params']['a_param'] == literal
     assert dag['function'].params['a_param'] == literal
+
+
+def test_error_when_missing_upstream_in_notebook(tmp_directory):
+    Path('script.py').write_text("""
+# + tags=["parameters"]
+something = None
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: output.ipynb
+""")
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        DAGSpec('pipeline.yaml').to_dag()
+
+    repr_ = str(excinfo.getrepr())
+    assert "Failed to initialize task 'script'" in repr_
+    assert "Could not parse a valid 'upstream' variable" in repr_

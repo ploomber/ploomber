@@ -612,7 +612,6 @@ class DAGSpecPartial(DAGSpec):
     A DAGSpec subclass that initializes from a list of tasks (used in the
     onlinedag.py) module
     """
-
     def __init__(self, path_to_partial, env=None):
         with open(path_to_partial) as f:
             tasks = yaml.safe_load(f)
@@ -776,8 +775,13 @@ def process_tasks(dag, dag_spec, root_path=None):
     # expand upstream dependencies (in case there are any wildcards)
     for task in tasks:
         if extract_up:
-            upstream[task] = _expand_upstream(task.source.extract_upstream(),
-                                              task_names)
+            try:
+                extracted = task.source.extract_upstream()
+            except Exception as e:
+                raise DAGSpecInitializationError(
+                    f'Failed to initialize task {task.name!r}') from e
+
+            upstream[task] = _expand_upstream(extracted, task_names)
         else:
             upstream[task] = _expand_upstream(upstream_raw[task], task_names)
 
