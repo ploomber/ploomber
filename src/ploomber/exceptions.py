@@ -105,7 +105,7 @@ class RenderError(Exception):
     pass
 
 
-class SourceInitializationError(Exception):
+class SourceInitializationError(BaseException):
     """Raise when a source fails to initialize due to wrong parameters
     """
     pass

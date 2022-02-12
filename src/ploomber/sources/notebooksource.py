@@ -122,6 +122,17 @@ class NotebookSource(Source):
             self._primitive = primitive
         elif isinstance(primitive, Path):
             self._path = primitive
+
+            if primitive.is_dir():
+                raise SourceInitializationError(
+                    f'Failed to initialize {str(primitive)!r}. '
+                    'Expected a file, got a directory.')
+
+            if not primitive.exists():
+                raise SourceInitializationError(
+                    f'Failed to initialize {str(primitive)!r}. '
+                    'File does not exist.')
+
             self._primitive = primitive.read_text()
         else:
             raise TypeError('Notebooks must be initialized from strings, '
