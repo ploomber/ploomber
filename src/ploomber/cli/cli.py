@@ -22,14 +22,15 @@ def cli():
 
 @cli.command()
 @click.option(
-    '--conda',
-    '-c',
+    '--conda/--pip',
+    '-c/-p',
     is_flag=True,
-    help='Use conda (creates environemnt.yml)',
+    default=None,
+    help='Use environment.yaml/requirements.txt for dependencies',
 )
 @click.option(
     '--package',
-    '-p',
+    '-P',
     is_flag=True,
     help='Use package template (creates setup.py)',
 )

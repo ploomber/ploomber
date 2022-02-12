@@ -9,6 +9,7 @@ import pytest
 from click.testing import CliRunner
 from ploomber.cli import install as install_module
 from ploomber.cli.cli import install
+from ploomber.exceptions import BaseException
 from conftest import (_write_sample_conda_env, _prepare_files,
                       _write_sample_pip_req, _write_sample_conda_files,
                       _write_sample_pip_files)
@@ -494,8 +495,7 @@ def test_main_pip_install_inline(tmp_directory, monkeypatch, capsys,
     mock = Mock(return_value='something')
     monkeypatch.setattr(install_module.Commander, 'run', mock)
 
-    install_module.main_pip(use_lock=use_lock,
-                            create_env=False)
+    install_module.main_pip(use_lock=use_lock, create_env=False)
 
     assert mock.call_args_list == expected_call
 
@@ -611,8 +611,7 @@ def test_main_conda_install_inline(monkeypatch, capsys, tmp_directory,
     monkeypatch.setattr(install_module, '_current_conda_env_name',
                         lambda: 'some-env')
 
-    install_module.main_conda(use_lock=use_lock,
-                              create_env=False)
+    install_module.main_conda(use_lock=use_lock, create_env=False)
 
     assert mock.call_args_list == expected_calls
 
@@ -645,7 +644,7 @@ def test_find_conda_root(conda_bin, conda_root):
 
 
 def test_error_if_unknown_conda_layout():
-    with pytest.raises(RuntimeError):
+    with pytest.raises(BaseException):
         install_module._find_conda_root(Path('a', 'b'))
 
 

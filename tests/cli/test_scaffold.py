@@ -25,17 +25,20 @@ def test_scaffold_pass_name_as_arg(tmp_directory, arg):
 
 
 @pytest.mark.parametrize('args, conda, package, empty', [
-    [[], False, False, False],
+    [[], None, False, False],
     [['--conda'], True, False, False],
-    [['--package'], False, True, False],
-    [['--empty'], False, False, True],
+    [['--pip'], False, False, False],
+    [['--package'], None, True, False],
+    [['--empty'], None, False, True],
     [['--conda', '--package'], True, True, False],
     [['--conda', '--package', '--empty'], True, True, True],
+    [['--pip', '--package'], False, True, False],
+    [['--pip', '--package', '--empty'], False, True, True],
 ])
 def test_ploomber_scaffold(tmp_directory, monkeypatch, args, conda, package,
                            empty):
     """
-    Testing scaffold for creating a new project
+    Testing cli args are correctly routed to the function
     """
     mock = Mock()
     monkeypatch.setattr(cli.scaffold_project, 'cli', mock)

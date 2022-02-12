@@ -241,11 +241,9 @@ pipeline declaration looking for declared tasks whose source code file does
 not exist and proceed to create them.
 
 
-If you're using ``conda``, pass the ``--conda`` flag:
-
 .. code-block:: console
 
-    ploomber scaffold --conda
+    ploomber scaffold
 
 
 If you'd like to package your project:
