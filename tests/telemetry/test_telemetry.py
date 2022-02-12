@@ -480,34 +480,32 @@ def test_creates_config_directory(monkeypatch, tmp_nbs,
     assert Path('stats', 'config.yaml').is_file()
 
 
-def test_log_call_success(monkeypatch):
+@pytest.fixture
+def mock_telemetry(monkeypatch):
     mock = Mock()
     mock_dt = Mock()
     mock_dt.now.side_effect = [1, 2]
     monkeypatch.setattr(telemetry, 'log_api', mock)
     monkeypatch.setattr(telemetry.datetime, 'datetime', mock_dt)
+    yield mock
 
+
+def test_log_call_success(mock_telemetry):
     @telemetry.log_call('some-action')
     def my_function():
         pass
 
     my_function()
 
-    mock.assert_has_calls([
-        call('some-action-started', metadata=dict(argv=sys.argv)),
-        call('some-action-success',
+    mock_telemetry.assert_has_calls([
+        call(action='some-action-started', metadata=dict(argv=sys.argv)),
+        call(action='some-action-success',
              total_runtime='1',
              metadata=dict(argv=sys.argv)),
     ])
 
 
-def test_log_call_exception(monkeypatch):
-    mock = Mock()
-    mock_dt = Mock()
-    mock_dt.now.side_effect = [1, 2]
-    monkeypatch.setattr(telemetry, 'log_api', mock)
-    monkeypatch.setattr(telemetry.datetime, 'datetime', mock_dt)
-
+def test_log_call_exception(mock_telemetry):
     @telemetry.log_call('some-action')
     def my_function():
         raise ValueError('some error')
@@ -515,8 +513,8 @@ def test_log_call_exception(monkeypatch):
     with pytest.raises(ValueError):
         my_function()
 
-    mock.assert_has_calls([
-        call('some-action-started', metadata=dict(argv=sys.argv)),
+    mock_telemetry.assert_has_calls([
+        call(action='some-action-started', metadata=dict(argv=sys.argv)),
         call(action='some-action-error',
              total_runtime='1',
              metadata={
@@ -527,13 +525,7 @@ def test_log_call_exception(monkeypatch):
     ])
 
 
-def test_log_call_logs_type(monkeypatch):
-    mock = Mock()
-    mock_dt = Mock()
-    mock_dt.now.side_effect = [1, 2]
-    monkeypatch.setattr(telemetry, 'log_api', mock)
-    monkeypatch.setattr(telemetry.datetime, 'datetime', mock_dt)
-
+def test_log_call_logs_type(mock_telemetry):
     @telemetry.log_call('some-action')
     def my_function():
         raise BaseException('some error', type_='some-type')
@@ -541,13 +533,53 @@ def test_log_call_logs_type(monkeypatch):
     with pytest.raises(BaseException):
         my_function()
 
-    mock.assert_has_calls([
-        call('some-action-started', metadata=dict(argv=sys.argv)),
+    mock_telemetry.assert_has_calls([
+        call(action='some-action-started', metadata=dict(argv=sys.argv)),
         call(action='some-action-error',
              total_runtime='1',
              metadata={
                  'type': 'some-type',
                  'exception': 'some error',
                  'argv': sys.argv,
+             })
+    ])
+
+
+def test_log_call_add_payload_error(mock_telemetry):
+    @telemetry.log_call('some-action', payload=True)
+    def my_function(payload):
+        payload['dag'] = 'value'
+        raise BaseException('some error', type_='some-type')
+
+    with pytest.raises(BaseException):
+        my_function()
+
+    mock_telemetry.assert_has_calls([
+        call(action='some-action-started', metadata=dict(argv=sys.argv)),
+        call(action='some-action-error',
+             total_runtime='1',
+             metadata={
+                 'type': 'some-type',
+                 'exception': 'some error',
+                 'argv': sys.argv,
+                 'dag': 'value',
+             })
+    ])
+
+
+def test_log_call_add_payload_success(mock_telemetry):
+    @telemetry.log_call('some-action', payload=True)
+    def my_function(payload):
+        payload['dag'] = 'value'
+
+    my_function()
+
+    mock_telemetry.assert_has_calls([
+        call(action='some-action-started', metadata=dict(argv=sys.argv)),
+        call(action='some-action-success',
+             total_runtime='1',
+             metadata={
+                 'argv': sys.argv,
+                 'dag': 'value',
              })
     ])

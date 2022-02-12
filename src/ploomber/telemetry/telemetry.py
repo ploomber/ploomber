@@ -422,17 +422,22 @@ def log_api(action,
 
 # NOTE: should we log differently depending on the error type?
 # NOTE: how should we handle chained exceptions?
-def log_call(action):
+def log_call(action, payload=False):
     """Runs a function and logs it
     """
     def _log_call(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            log_api(f'{action}-started', metadata={'argv': sys.argv})
+            _payload = dict()
+            log_api(action=f'{action}-started', metadata={'argv': sys.argv})
+
             start = datetime.datetime.now()
 
             try:
-                result = func(*args, **kwargs)
+                if payload:
+                    result = func(_payload, *args, **kwargs)
+                else:
+                    result = func(*args, **kwargs)
             except Exception as e:
                 log_api(
                     action=f'{action}-error',
@@ -442,12 +447,16 @@ def log_call(action):
                         'type': getattr(e, 'type_', None),
                         'exception': str(e),
                         'argv': sys.argv,
+                        **_payload
                     })
                 raise e
             else:
-                log_api(f'{action}-success',
+                log_api(action=f'{action}-success',
                         total_runtime=str(datetime.datetime.now() - start),
-                        metadata={'argv': sys.argv})
+                        metadata={
+                            'argv': sys.argv,
+                            **_payload
+                        })
 
             return result
 
