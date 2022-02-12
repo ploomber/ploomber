@@ -1,7 +1,7 @@
 # CHANGELOG
 
-## 0.15.2dev
-* Fixed misspelling in `pygraphviz` error message
+## 0.15.2 (2022-02-11)
+* Fixed misspelling in `pygraphviz` error message ([#575](https://github.com/ploomber/ploomber/issues/575))
 
 ## 0.15.1 (2022-02-08)
 * Sets minimum networkx version ([#536](https://github.com/ploomber/ploomber/issues/536))
