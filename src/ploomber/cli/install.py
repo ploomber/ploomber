@@ -215,8 +215,8 @@ def main_conda(use_lock, create_env=True):
         if env_name == current_env:
             err = (f'{env_yml} will create an environment '
                    f'named {env_name!r}, which is the current active '
-                   'environment. Move to a different one and try '
-                   'again (e.g., "conda activate base")')
+                   'environment. Activate a different one and try '
+                   'again: conda activate base')
             telemetry.log_api("install-error",
                               metadata={
                                   'type': 'env_running_conflict',
