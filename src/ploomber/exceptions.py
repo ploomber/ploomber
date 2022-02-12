@@ -210,6 +210,12 @@ class MissingClientError(Exception):
     pass
 
 
+class ValidationError(BaseException):
+    """Raised when failed to validate input data
+    """
+    pass
+
+
 def display_errors(errors):
     return '\n'.join(f'{_display_error_loc(e)} ({e["msg"]})' for e in errors)
 
