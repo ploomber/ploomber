@@ -83,6 +83,7 @@ is implemented by OnlineDAG, which takes a partial definition
 predictions using ``OnlineDAG().predict()``. See ``OnlineDAG`` documentation
 for details.
 """
+import click
 import fnmatch
 import os
 import yaml
@@ -102,7 +103,8 @@ from ploomber.spec.taskspec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
 from ploomber.util import default
 from ploomber.dag.dagconfiguration import DAGConfiguration
-from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.exceptions import (DAGSpecInitializationError,
+                                 MissingParametersCellError)
 from ploomber.env.envdict import EnvDict
 from ploomber.env.expand import (expand_raw_dictionary_and_extract_tags,
                                  expand_raw_dictionaries_and_extract_tags)
@@ -112,6 +114,7 @@ from ploomber.validators.string import (validate_product_class_name,
                                         validate_task_class_name)
 from ploomber.executors import Parallel
 from ploomber.io import pretty_print
+from ploomber.sources import notebooksource
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4)
@@ -226,8 +229,11 @@ class DAGSpec(MutableMapping):
 
             try:
                 data = yaml.safe_load(content)
-            except (yaml.parser.ParserError,
-                    yaml.constructor.ConstructorError) as e:
+            except (
+                    yaml.parser.ParserError,
+                    yaml.constructor.ConstructorError,
+                    yaml.scanner.ScannerError,
+            ) as e:
                 error = e
             else:
                 error = None
@@ -243,7 +249,7 @@ class DAGSpec(MutableMapping):
                         f'{error}')
                 else:
                     raise DAGSpecInitializationError(
-                        'Failed to initialized spec. Got invalid YAML'
+                        'Failed to initialize spec. Got invalid YAML'
                     ) from error
 
         # initialized with a dictionary...
@@ -751,7 +757,22 @@ def process_tasks(dag, dag_spec, root_path=None):
         # init source to extract product
         fn = task_dict['class']._init_source
         kwargs = {'kwargs': {}, **task_dict}
-        source = call_with_dictionary(fn, kwargs=kwargs)
+
+        try:
+            source = call_with_dictionary(fn, kwargs=kwargs)
+        except MissingParametersCellError:
+            missing_params = True
+        else:
+            missing_params = False
+
+        if missing_params:
+            click.secho(
+                f'{kwargs["source"]} is missing the parameters cell, '
+                'adding it at the top of the file...',
+                fg='yellow')
+            notebooksource.add_parameters_cell(kwargs['source'], extract_up,
+                                               extract_prod)
+            source = call_with_dictionary(fn, kwargs=kwargs)
 
         if extract_prod:
             task_dict['product'] = source.extract_product()

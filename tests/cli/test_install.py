@@ -500,7 +500,7 @@ def test_main_pip_install_inline(tmp_directory, monkeypatch, capsys,
     assert mock.call_args_list == expected_call
 
     captured = capsys.readouterr()
-    assert "=\n\n$ ploomber build\n=" in captured.out
+    assert "=\n$ ploomber build\n=" in captured.out
 
 
 @pytest.mark.parametrize('dev_create, use_lock, expected_calls', [
@@ -616,7 +616,7 @@ def test_main_conda_install_inline(monkeypatch, capsys, tmp_directory,
     assert mock.call_args_list == expected_calls
 
     captured = capsys.readouterr()
-    assert "=\n\n$ ploomber build\n=" in captured.out
+    assert "=\n$ ploomber build\n=" in captured.out
 
 
 @pytest.mark.parametrize('conda_bin, conda_root',
