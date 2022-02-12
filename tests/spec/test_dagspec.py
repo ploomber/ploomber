@@ -1859,3 +1859,17 @@ tasks:
     repr_ = str(excinfo.getrepr())
     assert "Failed to initialize task 'script'" in repr_
     assert "Could not parse a valid 'upstream' variable" in repr_
+
+
+def test_error_when_invalid_yaml(tmp_directory):
+    Path('pipeline.yaml').write_text("""
+tasks: []
+-
+""")
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        DAGSpec('pipeline.yaml').to_dag()
+
+    repr_ = str(excinfo.getrepr())
+    assert "Failed to initialized spec. Got invalid YAML" in repr_
+    assert "while parsing a block mapping" in repr_

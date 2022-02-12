@@ -242,7 +242,9 @@ class DAGSpec(MutableMapping):
                         'parser error:\n\n'
                         f'{error}')
                 else:
-                    raise error
+                    raise DAGSpecInitializationError(
+                        'Failed to initialized spec. Got invalid YAML'
+                    ) from error
 
         # initialized with a dictionary...
         else:
