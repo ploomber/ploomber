@@ -47,8 +47,7 @@ def cli():
 )
 @click.argument('name', required=False)
 def scaffold(name, conda, package, entry_point, empty):
-    """
-    Create a new project:
+    """Create a new project / Create task source files
 
     $ ploomber scaffold myproject
 
@@ -162,7 +161,7 @@ def scaffold(name, conda, package, entry_point, empty):
 )
 def install(use_lock, create_env, use_venv):
     """
-    Install dependencies. Creates a new virtual env if needed.
+    Install dependencies
     """
     cli_module.install.main(use_lock=use_lock,
                             create_env=create_env,
@@ -175,7 +174,19 @@ def install(use_lock, create_env, use_venv):
 @click.option('-o', '--output', help='Target directory', default=None)
 @click.option('-b', '--branch', help='Git branch to use.', default=None)
 def examples(name, force, branch, output):
-    """Get sample projects. Run "ploomber examples" to list them
+    """Download examples
+
+    List:
+
+    $ ploomber examples
+
+    Download:
+
+    $ ploomber examples -n type/example -o directory
+
+    Download ml-basic example:
+
+    $ ploomber examples -n templates/ml-basic -o my-pipeline
     """
     try:
         cli_module.examples.main(name=name,
@@ -304,14 +315,14 @@ def task():
 
 @cli.command()
 def report():
-    """Make a pipeline report
+    """Generate pipeline report
     """
     pass  # pragma: no cover
 
 
 @cli.command()
 def interact():
-    """Start an interactive session (use the "dag" variable)
+    """Start an interactive session
     """
     pass  # pragma: no cover
 
