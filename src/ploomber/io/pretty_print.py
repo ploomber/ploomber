@@ -19,6 +19,9 @@ def trailing_dot(obj):
 
 
 def try_relative_path(path):
+    if not isinstance(path, (str, Path)):
+        return path
+
     path_ = Path(path)
 
     if path_.is_absolute():
