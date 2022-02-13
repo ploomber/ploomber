@@ -12,6 +12,7 @@ from collections import defaultdict
 import click
 
 from ploomber.io.terminalwriter import TerminalWriter
+from ploomber.cli.io import command_endpoint
 from ploomber.table import Table
 from ploomber.telemetry import telemetry
 from ploomber.exceptions import BaseException
@@ -233,6 +234,7 @@ class _ExamplesManager:
         tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n')
 
 
+@command_endpoint
 @telemetry.log_call('examples')
 def main(name, force=False, branch=None, output=None):
     """
@@ -257,8 +259,10 @@ def main(name, force=False, branch=None, output=None):
         if not selected.exists():
             raise BaseException(
                 f'There is no example named {name!r}.\n'
-                'To list examples: ploomber examples\n'
-                'To update local copy: ploomber examples -f',
+                'List examples: ploomber examples\n'
+                'Update local copy: ploomber examples -f\n'
+                'Get ML example: ploomber examples -n '
+                'templates/ml-basic -o ml-example',
                 type_='no-example-with-name')
         else:
             output = output or name

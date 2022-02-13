@@ -75,7 +75,7 @@ def command_endpoint(fn):
         try:
             fn(**kwargs)
         except BaseException as e:
-            e.show()
+            click.secho(e.get_message(), file=sys.stderr, fg='red')
             sys.exit(1)
         except Exception as e:
             print(f'Error: {e}', file=sys.stderr)
