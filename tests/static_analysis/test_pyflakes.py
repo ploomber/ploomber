@@ -103,6 +103,13 @@ y = 2
 
 # +
 %%sh
+""", """
+# +
+%%time
+df = 1
+
+# +
+df
 """
 ])
 def test_check_source_ignores_ipython_magics(code):
@@ -132,8 +139,8 @@ more html""",
             """# some comment
 %%html
 some html""", """# some comment
-%%html
-some html"""
+# %%html
+# some html"""
         ],
         [
             """
@@ -141,8 +148,8 @@ some html"""
 %%html
 some html""", """
 # some comment
-%%html
-some html"""
+# %%html
+# some html"""
         ],
         ["""\
    %%html
@@ -159,6 +166,10 @@ some html\
         ['1 + 1\n   %cd', '1 + 1\n#    %cd'],
         ['! mkdir stuff', '# ! mkdir stuff'],
         ['   ! mkdir stuff', '#    ! mkdir stuff'],
+        # this contains inline python, only the magic should be commented
+        ['%%time\n1+1', '# %%time\n1+1'],
+        ['%%timeit\n1+1', '# %%timeit\n1+1'],
+        ['%%capture\n1+1', '# %%capture\n1+1'],
     ])
 # TODO: test with leading spaces
 def test_comment_if_ipython_magic(code, expected):
@@ -181,22 +192,22 @@ def test_is_ipython_line_magic(code, expected):
     'code, expected',
     [
         ['%debug', False],
-        ['%%sh', True],
+        ['%%sh', '%%sh'],
         # space after the %% is not allowed
         ['%% sh', False],
-        ['%%sh --no-raise-error', True],
+        ['%%sh --no-raise-error', '%%sh'],
         ['# %debug', False],
         ['% debug', False],
         ['%%%debug', False],
         # cell magics cannot contain comments
         ['# comment\n%%html\nhello', False],
         # cell magics may contain whitespace
-        ['\n\n%%html\nhello', True],
-        ['\n\n   %%html\nhello', True],
-        ['  %%html\nhello', True],
+        ['\n\n%%html\nhello', '%%html'],
+        ['\n\n   %%html\nhello', '%%html'],
+        ['  %%html\nhello', '%%html'],
     ])
 def test_is_ipython_cell_magic(code, expected):
-    assert pyflakes._is_ipython_cell_magic(code) is expected
+    assert pyflakes._is_ipython_cell_magic(code) == expected
 
 
 @pytest.mark.parametrize('params, source, first, second', [

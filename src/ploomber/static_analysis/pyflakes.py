@@ -29,6 +29,8 @@ _IS_IPYTHON_CELL_MAGIC = r'^\s*%{2}[a-zA-Z]+'
 _IS_IPYTHON_LINE_MAGIC = r'^\s*%{1}[a-zA-Z]+'
 _IS_INLINE_SHELL = r'^\s*!{1}.+'
 
+HAS_INLINE_PYTHON = {'%%capture', '%%timeit', '%%time', '%time', '%timeit'}
+
 
 def _process_messages(mesages):
     return '\n'.join(str(msg) for msg in mesages)
@@ -62,7 +64,6 @@ def process_errors_and_warnings(messages):
 
 # https://github.com/PyCQA/pyflakes/blob/master/pyflakes/reporter.py
 class MyReporter(Reporter):
-
     def __init__(self):
         self._stdout = StringIO()
         self._stderr = StringIO()
@@ -172,19 +173,64 @@ def check_source(nb):
     reporter._check()
 
 
-def _comment_if_ipython_magic(source):
-    """Comments lines into comments if they're IPython magics
+def _comment(line):
+    """Comments a line
     """
-    # if it's a cell magic, comment all lines
-    if _is_ipython_cell_magic(source):
-        return '\n'.join(f'# {line}' for line in source.splitlines())
+    return f'# {line}'
 
-    # otherwise, go line by line and comment if it's a line magic or inline
-    # shell
-    else:
-        return '\n'.join((line if not _is_ipython_line_magic(line)
-                          and not _is_inline_shell(line) else f'# {line}')
-                         for line in source.splitlines())
+
+def _comment_if_ipython_magic(source):
+    """Comments lines into comments if they're IPython magics (cell level)
+    """
+    # TODO: support for nested cell magics. e.g.,
+    # %%timeit
+    # %%timeit
+    # something()
+    lines_out = []
+    comment_rest = False
+
+    # TODO: inline magics should add a comment at the end of the line, because
+    # the python code may change the dependency structure. e.g.,
+    # %timeit z = x + y -> z = x + y # [magic] %timeit
+    # note that this only applies to inline magics that take Python code as arg
+
+    # NOTE: magics can take inputs but their outputs ARE NOT saved. e.g.,
+    # %timeit x = y + 1
+    # running such magic requires having y but after running it, x IS NOT
+    # declared. But this is magic dependent %time x = y + 1 will add x to the
+    # scope
+
+    for line in source.splitlines():
+        cell_magic = _is_ipython_cell_magic(line)
+
+        if comment_rest:
+            lines_out.append(_comment(line))
+        else:
+            line_magic = _is_ipython_line_magic(line)
+
+            # if line magic, comment line
+            if line_magic:
+                lines_out.append(_comment(line))
+
+            # if inline shell, comment line
+            elif _is_inline_shell(line):
+                lines_out.append(_comment(line))
+
+            # if cell magic, comment line
+            elif cell_magic in HAS_INLINE_PYTHON:
+                lines_out.append(_comment(line))
+
+            # if cell magic whose content *is not* Python, comment line and
+            # all the remaining lines in the cell
+            elif cell_magic:
+                lines_out.append(_comment(line))
+                comment_rest = True
+
+            # otherwise, don't do anything
+            else:
+                lines_out.append(line)
+
+    return '\n'.join(lines_out)
 
 
 def _is_ipython_line_magic(line):
@@ -208,7 +254,12 @@ def _is_ipython_cell_magic(source):
 
     %cd some-directory
     """
-    return re.match(_IS_IPYTHON_CELL_MAGIC, source.lstrip()) is not None
+    m = re.match(_IS_IPYTHON_CELL_MAGIC, source.lstrip())
+
+    if not m:
+        return False
+
+    return m.group()
 
 
 def check_params(passed, params_source, filename, warn=False):
