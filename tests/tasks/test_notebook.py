@@ -21,33 +21,35 @@ def fake_from_notebook_node(self, nb, resources):
 
 
 def test_error_when_path_has_no_extension():
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(TaskInitializationError) as excinfo:
         notebook.NotebookConverter('a')
 
-    msg = 'Could not determine output format for product: "a"'
+    msg = "Could not determine format for product 'a'"
     assert msg in str(excinfo.value)
 
 
-@pytest.mark.parametrize(
-    'path, exporter',
-    [('file.ipynb', None), ('file.pdf', nbconvert.exporters.pdf.PDFExporter),
-     ('file.html', nbconvert.exporters.html.HTMLExporter),
-     ('file.md', nbconvert.exporters.markdown.MarkdownExporter)])
+@pytest.mark.parametrize('path, exporter', [
+    ('file.ipynb', None),
+    ('file.pdf', nbconvert.exporters.pdf.PDFExporter),
+    ('file.html', nbconvert.exporters.html.HTMLExporter),
+    ('file.md', nbconvert.exporters.markdown.MarkdownExporter),
+])
 def test_notebook_converter_get_exporter_from_path(path, exporter):
     converter = notebook.NotebookConverter(path)
-    assert converter.exporter == exporter
+    assert converter._exporter == exporter
 
 
-@pytest.mark.parametrize(
-    'exporter_name, exporter',
-    [('ipynb', None), ('pdf', nbconvert.exporters.pdf.PDFExporter),
-     ('html', nbconvert.exporters.html.HTMLExporter),
-     ('md', nbconvert.exporters.markdown.MarkdownExporter),
-     ('markdown', nbconvert.exporters.markdown.MarkdownExporter),
-     ('slides', nbconvert.exporters.slides.SlidesExporter)])
+@pytest.mark.parametrize('exporter_name, exporter', [
+    ('ipynb', None),
+    ('pdf', nbconvert.exporters.pdf.PDFExporter),
+    ('html', nbconvert.exporters.html.HTMLExporter),
+    ('md', nbconvert.exporters.markdown.MarkdownExporter),
+    ('markdown', nbconvert.exporters.markdown.MarkdownExporter),
+    ('slides', nbconvert.exporters.slides.SlidesExporter),
+])
 def test_notebook_converter_get_exporter_from_name(exporter_name, exporter):
     converter = notebook.NotebookConverter('file.ext', exporter_name)
-    assert converter.exporter == exporter
+    assert converter._exporter == exporter
 
 
 @pytest.mark.parametrize('output', [
@@ -462,26 +464,27 @@ raise Exception('failing notebook')
 def test_error_if_wrong_exporter_name(tmp_sample_tasks):
     dag = DAG()
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(TaskInitializationError) as excinfo:
         NotebookRunner(Path('sample.ipynb'),
                        product=File(Path('out.ipynb')),
                        dag=dag,
                        nbconvert_exporter_name='wrong_name')
 
-    assert ('Could not find nbconvert exporter with name "wrong_name"'
+    assert ("'wrong_name' is not a valid 'nbconvert_exporter_name' value"
             in str(excinfo.value))
 
 
 def test_error_if_cant_find_exporter_name(tmp_sample_tasks):
     dag = DAG()
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(TaskInitializationError) as excinfo:
         NotebookRunner(Path('sample.ipynb'),
                        product=File(Path('out.wrong_ext')),
                        dag=dag,
                        nbconvert_exporter_name=None)
 
-    assert 'Could not find nbconvert exporter' in str(excinfo.value)
+    assert ("Could not determine format for product 'out.wrong_ext'"
+            in str(excinfo.value))
 
 
 def test_skip_kernel_install_check(tmp_directory):

@@ -17,6 +17,7 @@ import yaml
 
 from ploomber.io._commander import Commander
 from ploomber.exceptions import BaseException
+from ploomber.cli.io import command_endpoint
 
 from ploomber.telemetry import telemetry
 
@@ -40,6 +41,7 @@ def _python_bin():
 _PYTHON_BIN_NAME = _python_bin()
 
 
+@command_endpoint
 @telemetry.log_call('install')
 def main(use_lock, create_env=None, use_venv=False):
     """
@@ -143,6 +145,17 @@ def main_pip(use_lock, create_env=True):
     # TODO: modify readme to add how to activate env? probably also in conda
     name = Path('.').resolve().name
 
+    try:
+        _run_pip_commands(cmdr, create_env, name, reqs_dev_txt, reqs_txt,
+                          use_lock)
+    except Exception as e:
+        cmd = f'pip install --requirement {reqs_txt}'
+        raise BaseException('Failed to setup your environment. '
+                            f'Invoke pip manually.\n{cmd}\n\n') from e
+
+
+def _run_pip_commands(cmdr, create_env, name, reqs_dev_txt, reqs_txt,
+                      use_lock):
     if create_env:
         venv_dir = f'venv-{name}'
         cmdr.print('Creating venv...')
@@ -254,6 +267,27 @@ def main_conda(use_lock, create_env=True):
 
     pkg_manager = mamba if mamba else conda
 
+    try:
+        _run_conda_commands(cmdr, pkg_manager, create_env, env_yml, env_name,
+                            use_lock, conda)
+    except Exception as e:
+        if create_env:
+            cmd = f'conda env create --file {env_yml} --force'
+        else:
+            cmd = f'conda env update --file {env_yml} --name {env_name}'
+        raise BaseException('Failed to setup your environment. '
+                            f'Invoke conda manually.\n{cmd}\n\n') from e
+
+
+def _run_conda_commands(
+    cmdr,
+    pkg_manager,
+    create_env,
+    env_yml,
+    env_name,
+    use_lock,
+    conda,
+):
     if create_env:
         cmdr.print('Creating conda env...')
         cmdr.run(pkg_manager,

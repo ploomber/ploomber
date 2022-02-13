@@ -977,3 +977,60 @@ def test_install_lock_pip(tmp_directory, mock_cmdr_wrapped, create_setup_py,
     assert mock_cmdr_wrapped.call_args_list == expected
     assert Path('.gitignore').read_text() == f'\n{venv}\n'
     assert result.exit_code == 0
+
+
+@pytest.mark.parametrize('file', ['requirements.lock.txt', 'requirements.txt'])
+def test_suggests_use_pip_if_cmd_fails(tmp_directory, monkeypatch, file):
+    # simulate no conda
+    monkeypatch.setattr(install_module.shutil, 'which', lambda _: None)
+    monkeypatch.setattr(install_module, '_run_pip_commands',
+                        Mock(side_effect=Exception('some-error')))
+
+    Path(file).touch()
+
+    runner = CliRunner()
+    result = runner.invoke(install, catch_exceptions=False)
+
+    assert result.exit_code == 1
+    assert f'pip install --requirement {file}' in result.output
+    assert 'some-error' in result.output
+
+
+@pytest.mark.parametrize('file', ['environment.yml', 'environment.lock.yml'])
+def test_suggests_use_conda_if_cmd_fails(tmp_directory, monkeypatch, file):
+    monkeypatch.setattr(install_module, '_run_conda_commands',
+                        Mock(side_effect=Exception('some-error')))
+    monkeypatch.setattr(install_module, '_current_conda_env_name',
+                        lambda: 'current-env')
+
+    Path(file).write_text('name: some-env')
+
+    runner = CliRunner()
+    result = runner.invoke(install,
+                           args=['--no-create-env'],
+                           catch_exceptions=False)
+
+    assert result.exit_code == 1
+    assert (f'conda env update --file {file} --name current-env'
+            in result.output)
+    assert 'some-error' in result.output
+
+
+@pytest.mark.parametrize('file', ['environment.yml', 'environment.lock.yml'])
+def test_suggests_use_conda_create_if_cmd_fails(tmp_directory, monkeypatch,
+                                                file):
+    monkeypatch.setattr(install_module, '_run_conda_commands',
+                        Mock(side_effect=Exception('some-error')))
+    monkeypatch.setattr(install_module, '_current_conda_env_name',
+                        lambda: 'current-env')
+
+    Path(file).write_text('name: some-env')
+
+    runner = CliRunner()
+    result = runner.invoke(install,
+                           args=['--create-env'],
+                           catch_exceptions=False)
+
+    assert result.exit_code == 1
+    assert f'conda env create --file {file} --force' in result.output
+    assert 'some-error' in result.output

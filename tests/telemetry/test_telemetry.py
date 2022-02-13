@@ -3,7 +3,6 @@ import sys
 from unittest.mock import Mock, call
 from pathlib import Path
 
-import click
 import pytest
 
 from ploomber.telemetry import telemetry
@@ -258,8 +257,8 @@ setup(
                              [1, 0, 0, 0, 0, 1],
                              [1, 0, 0, 1, 0, 1],
                          ])
-def test_install_lock_exception(tmp_directory, has_conda, use_lock, env,
-                                env_lock, reqs, reqs_lock, monkeypatch):
+def test_install_lock_uses_telemetry(tmp_directory, has_conda, use_lock, env,
+                                     env_lock, reqs, reqs_lock, monkeypatch):
     _prepare_files(has_conda, use_lock, env, env_lock, reqs, reqs_lock,
                    monkeypatch)
     Path('setup.py').write_text(setup_py)
@@ -267,8 +266,8 @@ def test_install_lock_exception(tmp_directory, has_conda, use_lock, env,
     mock = Mock()
     monkeypatch.setattr(install.telemetry, "log_api", mock)
 
-    with pytest.raises(click.ClickException):
-        install.main(True if use_lock else False)
+    with pytest.raises(SystemExit):
+        install.main(use_lock=True if use_lock else False)
 
     assert mock.call_count == 2
 
@@ -280,7 +279,7 @@ def test_install_uses_telemetry(monkeypatch, tmp_directory):
     mock = Mock()
     monkeypatch.setattr(install.telemetry, "log_api", mock)
 
-    install.main(False)
+    install.main(use_lock=False)
     assert mock.call_count == 2
 
 
