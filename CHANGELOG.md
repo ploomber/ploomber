@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.15.4dev
+
 ## 0.15.3 (2022-02-13)
 * Fixed error when parsing cell magics with inline python
 
