@@ -1,6 +1,7 @@
 # CHANGELOG
 
-## 0.15.3dev
+## 0.15.3 (2022-02-13)
+* Fixed error when parsing cell magics with inline python
 
 ## 0.15.2 (2022-02-11)
 * Fixed misspelling in `pygraphviz` error message ([#575](https://github.com/ploomber/ploomber/issues/575))
