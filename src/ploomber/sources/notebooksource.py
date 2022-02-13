@@ -938,7 +938,6 @@ product = None
 
     c = JupytextConfiguration()
     c.notebook_metadata_filter
-    c.notebook_metadata_filter = 'all'
     c.cell_metadata_filter = 'all'
 
     nb = jupytext.read(path)
