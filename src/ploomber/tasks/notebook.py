@@ -85,7 +85,8 @@ class NotebookConverter:
         '.html': 'html',
         '.tex': 'latex',
         '.pdf': 'pdf',
-        '.rst': 'rst'
+        '.rst': 'rst',
+        '.ipynb': 'ipynb',
     }
 
     def __init__(self,
@@ -95,6 +96,7 @@ class NotebookConverter:
         self._suffix = Path(path_to_output).suffix
 
         if exporter_name is None:
+
             # try to infer exporter name from the extension
             if not self._suffix:
                 raise TaskInitializationError(

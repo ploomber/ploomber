@@ -390,8 +390,9 @@ def _init_task(data, meta, project_root, lazy_import, dag):
                       dag=dag,
                       **task_dict)
     except Exception as e:
+        source_ = pretty_print.try_relative_path(source)
         msg = (f'Failed to initialize {class_.__name__} task with '
-               f'source {str(source)!r}.')
+               f'source {source_!r}.')
         raise DAGSpecInitializationError(msg) from e
 
     if on_finish:

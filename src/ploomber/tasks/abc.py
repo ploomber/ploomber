@@ -367,13 +367,13 @@ class Task(abc.ABC):
                     f'Error building task {self.name!r}: '
                     'the task ran successfully but the product is '
                     'missing. Ensure the task is generating the '
-                    'declared product')
+                    'declared products')
             else:
                 raise TaskBuildError(
                     f'Error building task {self.name!r}: '
                     'the task ran successfully but some products is '
-                    'missing. Ensure the task is generating all the '
-                    'declared products')
+                    'missing. Ensure the task is generating the '
+                    'declared product')
 
         if self.exec_status != TaskStatus.WaitingDownload:
             self.product.upload()
