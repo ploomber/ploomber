@@ -341,11 +341,7 @@ def validate_entries(event_id, uid, action, client_time, total_runtime):
     return event_id, uid, action, client_time, elapsed_time
 
 
-def log_api(action,
-            client_time=None,
-            total_runtime=None,
-            dag=None,
-            metadata=None):
+def log_api(action, client_time=None, total_runtime=None, metadata=None):
     """
     This function logs through an API call, assigns parameters if missing like
     timestamp, event id and stats information.
@@ -382,20 +378,19 @@ def log_api(action,
     argo = is_argo()
     if argo:
         metadata['argo'] = argo
-    if dag:
-        metadata['dag'] = parse_dag(dag)
+
+    if 'dag' in metadata:
+        metadata['dag'] = parse_dag(metadata['dag'])
+
     os = get_os()
     product_version = __version__
     online = is_online()
     environment = get_env()
 
     if telemetry_enabled and online:
-        event_id, uid, action, client_time, elapsed_time \
-            = validate_entries(event_id,
-                               uid,
-                               action,
-                               client_time,
-                               total_runtime)
+        (event_id, uid, action, client_time,
+         elapsed_time) = validate_entries(event_id, uid, action, client_time,
+                                          total_runtime)
         props = {
             'event_id': event_id,
             'user_id': uid,

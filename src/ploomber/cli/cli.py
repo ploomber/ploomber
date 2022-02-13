@@ -101,10 +101,10 @@ def scaffold(conda, package, entry_point, empty):
         spec, _, path_to_spec = loaded
         _scaffold.add(spec, path_to_spec)
         telemetry.log_api("ploomber_scaffold",
-                          dag=loaded,
                           metadata={
                               'type': 'add_task',
-                              'argv': sys.argv
+                              'argv': sys.argv,
+                              'dag': loaded,
                           })
     else:
         # no pipeline, create base project

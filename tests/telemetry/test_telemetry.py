@@ -13,6 +13,7 @@ import ploomber.dag.dag as dag_module
 from ploomber.tasks.tasks import PythonCallable
 from ploomber.products.file import File
 from ploomber.exceptions import BaseException
+from ploomber.spec import DAGSpec
 
 from conftest import _write_sample_conda_env, _prepare_files
 
@@ -583,3 +584,75 @@ def test_log_call_add_payload_success(mock_telemetry):
                  'dag': 'value',
              })
     ])
+
+
+expected_dag_dict = {
+    'dag_size': 3,
+    'tasks': {
+        'load': {
+            'status': 'WaitingRender',
+            'type': 'NotebookRunner',
+            'upstream': {},
+            'products': {
+                'nb': 'load.ipynb',
+                'data': 'data.csv'
+            }
+        },
+        'clean': {
+            'status': 'WaitingRender',
+            'type': 'NotebookRunner',
+            'upstream': {
+                'load': "data.csv')}"
+            },
+            'products': {
+                'nb': 'clean.ipynb',
+                'data': 'clean.csv'
+            }
+        },
+        'plot': {
+            'status': 'WaitingRender',
+            'type': 'NotebookRunner',
+            'upstream': {
+                'clean': "clean.csv')}"
+            },
+            'products': 'plot.ipynb'
+        }
+    }
+}
+
+
+@pytest.fixture
+def mock_posthog_capture(monkeypatch):
+    mock = Mock()
+    mock_dt = Mock()
+    mock_dt.now.side_effect = [1, 2, 3]
+    monkeypatch.setattr(telemetry.posthog, 'capture', mock)
+    monkeypatch.setattr(telemetry, '_get_telemetry_info', lambda:
+                        (True, 'UID', False))
+    return mock
+
+
+@pytest.mark.xfail(sys.platform == "win32", reason="bug in parse_dag")
+def test_parses_dag(mock_posthog_capture, tmp_nbs):
+    @telemetry.log_call('some-action', payload=True)
+    def my_function(payload):
+        payload['dag'] = DAGSpec('pipeline.yaml').to_dag()
+
+    my_function()
+
+    call2_kwargs = mock_posthog_capture.call_args_list[1][1]
+    assert call2_kwargs['properties']['metadata']['dag'] == expected_dag_dict
+
+
+@pytest.mark.xfail(sys.platform == "win32", reason="bug in parse_dag")
+def test_parses_dag_on_exception(mock_posthog_capture, tmp_nbs):
+    @telemetry.log_call('some-action', payload=True)
+    def my_function(payload):
+        payload['dag'] = DAGSpec('pipeline.yaml').to_dag()
+        raise BaseException('some error', type_='some-type')
+
+    with pytest.raises(BaseException):
+        my_function()
+
+    call2_kwargs = mock_posthog_capture.call_args_list[1][1]
+    assert call2_kwargs['properties']['metadata']['dag'] == expected_dag_dict
