@@ -204,6 +204,16 @@ def test_error_if_missing_source_file():
     assert 'File does not exist' in str(excinfo.value)
 
 
+def test_error_if_missing_source_file_suggest_scaffold(tmp_directory):
+    Path('pipeline.yaml').touch()
+
+    with pytest.raises(SourceInitializationError) as excinfo:
+        NotebookSource(Path('some.py'))
+
+    assert 'File does not exist' in str(excinfo.value)
+    assert 'ploomber scaffold' in str(excinfo.value)
+
+
 def test_error_if_source_is_dir(tmp_directory):
     Path('some.py').mkdir()
 
@@ -211,6 +221,17 @@ def test_error_if_source_is_dir(tmp_directory):
         NotebookSource(Path('some.py'))
 
     assert 'Expected a file, got a directory' in str(excinfo.value)
+
+
+def test_error_if_source_is_dir_suggest_scaffold(tmp_directory):
+    Path('some.py').mkdir()
+    Path('pipeline.yaml').touch()
+
+    with pytest.raises(SourceInitializationError) as excinfo:
+        NotebookSource(Path('some.py'))
+
+    assert 'Expected a file, got a directory' in str(excinfo.value)
+    assert 'ploomber scaffold' in str(excinfo.value)
 
 
 def test_error_if_parameters_cell_doesnt_exist():

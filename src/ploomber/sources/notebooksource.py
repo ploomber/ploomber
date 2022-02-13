@@ -128,12 +128,14 @@ class NotebookSource(Source):
             if primitive.is_dir():
                 raise SourceInitializationError(
                     f'Failed to initialize {str(primitive)!r}. '
-                    'Expected a file, got a directory.')
+                    'Expected a file, got a directory.' +
+                    _suggest_ploomber_scaffold_is_dir())
 
             if not primitive.exists():
                 raise SourceInitializationError(
                     f'Failed to initialize {str(primitive)!r}. '
-                    'File does not exist.')
+                    'File does not exist.' +
+                    _suggest_ploomber_scaffold_missing_file())
 
             self._primitive = primitive.read_text()
         else:
@@ -944,3 +946,18 @@ product = None
                                          metadata={'tags': ['parameters']})
     nb.cells.insert(0, new_cell)
     jupytext.write(nb, path, config=c)
+
+
+def _suggest_ploomber_scaffold_missing_file():
+    if Path('pipeline.yaml').is_file():
+        return '\nTo create it, run: ploomber scaffold'
+    else:
+        return ''
+
+
+def _suggest_ploomber_scaffold_is_dir():
+    if Path('pipeline.yaml').is_file():
+        return ('\nTo create it, delete the directory, '
+                'then run: ploomber scaffold')
+    else:
+        return ''
