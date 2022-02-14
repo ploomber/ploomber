@@ -485,8 +485,8 @@ def write_to_conf_file(tmp_directory, monkeypatch, last_check):
     stats.mkdir()
     path = stats / 'config.yaml'
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
-    (path).write_text("stats_enabled: True\n"
-                      f"version_check_enabled: {last_check}\n")
+    (path).write_text("version_check_enabled: True\n"
+                      f"last_version_check: {last_check}\n")
 
 
 def test_version_skips_when_updated(tmp_directory, capsys, monkeypatch):
@@ -544,7 +544,7 @@ def test_output_on_date_diff(tmp_directory, capsys, monkeypatch):
     # Check the conf file was updated
     with path.open("r") as file:
         conf = yaml.safe_load(file)
-    diff = (datetime.datetime.now() - conf['version_check_enabled']).days
+    diff = (datetime.datetime.now() - conf['last_version_check']).days
     assert diff == 0
 
 

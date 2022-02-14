@@ -357,10 +357,10 @@ def check_version():
     today = datetime.datetime.now()
 
     # First time the version is checked
-    if 'version_check_enabled' in conf.keys():
+    if 'last_version_check' in conf.keys():
 
         # Check if we already notified in the last 2 days
-        last_message = conf['version_check_enabled']
+        last_message = conf['last_version_check']
         diff = (today - last_message).days
         if diff < 2:
             return
@@ -372,7 +372,7 @@ def check_version():
         fg='yellow')
 
     # Update conf
-    conf['version_check_enabled'] = today
+    conf['last_version_check'] = today
     write_conf_file(config_path, conf)
 
 
