@@ -318,9 +318,10 @@ def read_conf_file(conf_path):
     try:
         with conf_path.open("r") as file:
             conf = yaml.safe_load(file)
+            return conf
     except Exception as e:
         warnings.warn(f"Error: Can't read config file {e}")
-    return conf
+        return {}
 
 
 def write_conf_file(conf_path, to_write, error=None):
