@@ -342,8 +342,18 @@ def check_version():
     Alerting every 2 days on stale versions
     """
     # Read conf file
+    today = datetime.datetime.now()
     config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
     conf = read_conf_file(config_path)
+
+    version_path = Path(check_dir_exist(CONF_DIR), 'version.yaml')
+    # Update version conf if not there
+    if not version_path.exists():
+        version = {'last_version_check': today}
+        write_conf_file(version_path, version)
+    else:
+        version = read_conf_file(version_path)
+
     # Check if the flag was disabled
     if conf and 'version_check_enabled' in conf.keys() \
             and not conf['version_check_enabled']:
@@ -355,16 +365,11 @@ def check_version():
     if __version__ == latest:
         return
 
-    today = datetime.datetime.now()
-
-    # First time the version is checked
-    if 'last_version_check' in conf.keys():
-
-        # Check if we already notified in the last 2 days
-        last_message = conf['last_version_check']
-        diff = (today - last_message).days
-        if diff < 2:
-            return
+    # Check if we already notified in the last 2 days
+    last_message = version['last_version_check']
+    diff = (today - last_message).days
+    if diff < 2:
+        return
 
     click.secho(
         f"There's a new Ploomber version available ({latest}), "
@@ -372,9 +377,9 @@ def check_version():
         "pip install ploomber --upgrade",
         fg='yellow')
 
-    # Update conf
-    conf['last_version_check'] = today
-    write_conf_file(config_path, conf)
+    # Update version conf
+    version['last_version_check'] = today
+    write_conf_file(version_path, version)
 
 
 def _get_telemetry_info():
