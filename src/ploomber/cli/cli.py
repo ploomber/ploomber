@@ -115,7 +115,7 @@ def scaffold(name, conda, package, entry_point, empty):
             telemetry.log_api("scaffold_error",
                               metadata={
                                   'type': 'dag_load_failed',
-                                  'exception': e,
+                                  'exception': str(e),
                                   'argv': sys.argv
                               })
             raise click.ClickException(e) from e
@@ -208,7 +208,7 @@ def examples(name, force, branch, output):
         telemetry.log_api("examples_error",
                           metadata={
                               'type': 'runtime_error',
-                              'exception': e,
+                              'exception': str(e),
                               'argv': sys.argv
                           })
         raise RuntimeError(
