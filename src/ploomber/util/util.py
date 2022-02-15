@@ -82,16 +82,11 @@ def _make_requires_error_message(missing_pkgs, fn_name, extra_msg):
     return error_msg
 
 
-def check_mixed_envs():
-    try:
-        from pip._internal.operations import freeze
-    except ImportError:
-        from pip.operations import freeze
-    reqs = freeze.freeze()
-    problematic_dependencies = []
-    for dep in reqs:
-        if ' @ file://' in dep:
-            problematic_dependencies.append(dep)
+def check_mixed_envs(env_dependencies):
+    env_dependencies = env_dependencies.split("\n")
+    problematic_dependencies = [
+        dep for dep in env_dependencies if ' @ file://' in dep
+    ]
     if problematic_dependencies:
         raise CondaPipMixedEnvError(problematic_dependencies)
 

@@ -527,11 +527,10 @@ def test_extract_name(arg, expected):
 
 def test_mixed_envs(tmp_directory):
 
-    # Set a conda env with an install
-    _write_sample_conda_env()
-    f = open('environment.yml', 'a')
-    f.write("\n- python=3.10.2=hea1dfa3_3_cpython\n")
-    f.close()
+    # Set a pip dep string
+    reqs = """pyflakes==2.4.0\nPygments==2.11.2\n
+    pygraphviz @ file:///Users/runner/miniforge3/pygraphviz_1644545996627\n
+    PyNaCl==1.5.0\npyparsing==3.0.7"""
 
     with pytest.raises(CondaPipMixedEnvError):
-        util.check_mixed_envs()
+        util.check_mixed_envs(reqs)
