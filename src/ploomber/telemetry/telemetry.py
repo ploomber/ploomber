@@ -346,7 +346,7 @@ def check_version():
     config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
     conf = read_conf_file(config_path)
 
-    version_path = Path(check_dir_exist(CONF_DIR), 'version.yaml')
+    version_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
     # Update version conf if not there
     if not version_path.exists():
         version = {'last_version_check': today}

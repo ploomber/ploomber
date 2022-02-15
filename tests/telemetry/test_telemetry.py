@@ -501,7 +501,7 @@ def write_to_conf_file(tmp_directory, monkeypatch, last_check):
     stats = Path('stats')
     stats.mkdir()
     conf_path = stats / 'config.yaml'
-    version_path = stats / 'version.yaml'
+    version_path = stats / 'uid.yaml'
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
     conf_path.write_text("version_check_enabled: True\n")
     version_path.write_text(f"last_version_check: {last_check}\n")
@@ -554,7 +554,7 @@ def test_output_on_date_diff(tmp_directory, capsys, monkeypatch):
     write_to_conf_file(tmp_directory=tmp_directory,
                        monkeypatch=monkeypatch,
                        last_check='2022-01-20 10:51:41.082376')
-    version_path = Path('stats') / 'version.yaml'
+    version_path = Path('stats') / 'uid.yaml'
     telemetry.check_version()
     captured = capsys.readouterr()
     assert "Ploomber version" in captured.out
