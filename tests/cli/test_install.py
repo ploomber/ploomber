@@ -372,15 +372,14 @@ def test_install_with_pip(tmp_directory, has_conda, use_lock, env, env_lock,
 @pytest.mark.parametrize('args, is_conda, env_name, create_env', [
     [[], True, 'some-env', False],
     [[], True, 'some-env', False],
-    [[], True, 'base', True],
-    [[], True, 'base', True],
-    [[], False, 'some-env', True],
-    [[], False, 'some-env', True],
-    [['--no-create-env'], False, 'some-env', False],
+    [[], True, 'base', False],
+    [[], True, 'base', False],
+    [[], False, 'some-env', False],
+    [[], False, 'some-env', False],
     [['--create-env'], True, 'some-env', True],
 ])
-def test_installs_inline_if_inside_venv(tmp_directory, monkeypatch, args,
-                                        is_conda, env_name, create_env):
+def test_installs_conda_inline_if_inside_venv(tmp_directory, monkeypatch, args,
+                                              is_conda, env_name, create_env):
     _write_sample_conda_files()
 
     main = Mock()
@@ -398,11 +397,10 @@ def test_installs_inline_if_inside_venv(tmp_directory, monkeypatch, args,
 
 
 @pytest.mark.parametrize('args, in_venv, create_env', [
-    [[], False, True],
-    [[], False, True],
+    [[], False, False],
+    [[], False, False],
     [[], True, False],
     [[], True, False],
-    [['--no-create-env'], False, False],
     [['--create-env'], True, True],
 ])
 def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
@@ -748,16 +746,15 @@ def test_install_lock_non_package_with_conda(
         tmp_directory, monkeypatch, mock_cmdr_wrapped, pkg_manager,
         error_if_calling_locate_pip_inside_conda, cleanup_conda_tmp_env,
         create_dev_lock):
-    # force to create envirionment
-    monkeypatch.setattr(install_module.telemetry, 'is_conda', lambda: False)
-
     _write_sample_conda_env('environment.lock.yml')
 
     if create_dev_lock:
         _write_sample_conda_env('environment.dev.lock.yml')
 
     runner = CliRunner()
-    runner.invoke(install, args='--use-lock', catch_exceptions=False)
+    runner.invoke(install,
+                  args=['--use-lock', '--create-env'],
+                  catch_exceptions=False)
 
     expected = [
         call(pkg_manager,
@@ -796,9 +793,6 @@ def test_install_lock_package_with_conda(tmp_directory, monkeypatch,
                                          mock_cmdr_wrapped, pkg_manager,
                                          cleanup_conda_tmp_env,
                                          create_dev_lock):
-    # force to create envirionment
-    monkeypatch.setattr(install_module.telemetry, 'is_conda', lambda: False)
-
     _write_sample_conda_env('environment.lock.yml')
 
     if create_dev_lock:
@@ -807,7 +801,9 @@ def test_install_lock_package_with_conda(tmp_directory, monkeypatch,
     Path('setup.py').write_text(setup_py)
 
     runner = CliRunner()
-    runner.invoke(install, args='--use-lock', catch_exceptions=False)
+    runner.invoke(install,
+                  args=['--use-lock', '--create-env'],
+                  catch_exceptions=False)
 
     pip = install_module._path_to_pip_in_env_with_name(shutil.which('conda'),
                                                        'my_tmp_env')
@@ -864,7 +860,9 @@ def test_install_pip(tmp_directory):
     name = f'venv-{Path(tmp_directory).name}'
 
     runner = CliRunner()
-    result = runner.invoke(install, catch_exceptions=False)
+    result = runner.invoke(install,
+                           args='--create-env',
+                           catch_exceptions=False)
 
     if os.name == 'nt':
         expected_command = (
@@ -921,7 +919,9 @@ def test_non_package_with_pip_with_dev_deps(tmp_directory):
     name = f'venv-{Path(tmp_directory).name}'
 
     runner = CliRunner()
-    result = runner.invoke(install, catch_exceptions=False)
+    result = runner.invoke(install,
+                           args='--create-env',
+                           catch_exceptions=False)
 
     assert Path('.gitignore').read_text() == f'\n{name}\n'
     assert Path('requirements.lock.txt').exists()
@@ -1005,9 +1005,7 @@ def test_suggests_use_conda_if_cmd_fails(tmp_directory, monkeypatch, file):
     Path(file).write_text('name: some-env')
 
     runner = CliRunner()
-    result = runner.invoke(install,
-                           args=['--no-create-env'],
-                           catch_exceptions=False)
+    result = runner.invoke(install, catch_exceptions=False)
 
     assert result.exit_code == 1
     assert (f'conda env update --file {file} --name current-env'

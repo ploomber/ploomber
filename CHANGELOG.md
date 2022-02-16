@@ -5,7 +5,7 @@
 * Automatically adding a parameters cell to scripts and notebooks if it's missing
 * `NotebookRunner` `static_analysis` behaves differently: it's less picky now, the old behavior default behavior can be turned on if passing `strict` , and can be turned off if passing `disable` (#566)
 * Improves many error messages for clarity
-* `ploomber install` installs dependencies in the current virtual environment if it detects one
+* `ploomber install` installs dependencies in the current virtual environment by default
 * `ploomber install` works in systems where `python` links to Python 2.7 (#435)
 * `ploomber install` uses lock files by default if they exist
 * `ploomber install` has options to customize its behavior

@@ -45,10 +45,9 @@ For example, if you want to copy the *Basic EDA example* to the ``eda`` director
     Once you download an example, you can explore it with Jupyter. Check out
     the :doc:`/user-guide/jupyter` guide to learn more.
 
-Once the download finishes, you'll need to install dependencies before running
-the template; you can use the ``ploomber install`` command, which automatically
-determines whether it should use ``conda`` or ``pip``. If you prefer so, you may
-call ``conda`` or ``pip`` directly.
+Once the download finishes, you'll need to install dependencies; you can use
+the ``ploomber install`` command to do so. You may call ``conda`` or ``pip`` directly
+if you prefer.
 
 
 .. warning::

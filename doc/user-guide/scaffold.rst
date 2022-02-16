@@ -14,14 +14,13 @@ You can quickly create new projects using the ``scaffold`` command:
 
 After running it, type a name for your project and press enter. The command will create a pre-configured project with a sample pipeline.
 
+**New in 0.16:** ``ploomber scaffold`` now takes a positional argument. For example, ``ploomber example my-project``.
 
 By adding the ``--empty`` flag to scaffold, you can create a project with an empty ``pipeline.yaml``:
 
 .. code-block:: console
 
     ploomber scaffold --empty
-
-Then, type your project name and press enter.
 
 
 Scaffolding tasks
@@ -70,7 +69,7 @@ Packaging projects
 ------------------
 
 When working on larger projects, it's a good idea to configure them as a Python
-package. Packaged projects have more structure and require a bit more configuration, but
+package. Packaged projects have more structure and require more configuration, but
 they allow you to organize your work better.
 
 For example, if you have Python functions that you re-use in several files,
@@ -134,28 +133,20 @@ install, but more importantly, it reduces dependency resolution errors. The
 more dependencies you have, the higher the chance of running into installation
 issues.
 
-After executing ``ploomber scaffold`` command, you can run:
+After executing ``ploomber scaffold`` command, and editing your dependency
+files, you can run:
 
 .. code-block:: console
 
     ploomber install
 
-To configure your development environment. Such command detects whether to use pip
-or conda and takes care of installing dependencies from both files.
-Furthermore, it configures your project if it's a package (i.e., you created it
-with ``ploomber scaffold --package``).
+To install dependencies. Furthermore, it configures your project if it's a
+package (i.e., you created it with ``ploomber scaffold --package``).
 
 During deployment, only install production dependencies and ignore development ones.
 
 If you want to learn more about the ``ploomber install`` command, check out
 the CLI documentation: :ref:`api-cli-ploomber-install`.
-
-.. note::
-    
-    If using ``pip``. ``ploomber install`` creates a virtual environment
-    in your project root using the
-    `venv <https://docs.python.org/3/tutorial/venv.html>`_ module in a
-    ``venv-project-name`` directory.
 
 If you want to know more about dependency management, check out
 `this post in our blog <https://ploomber.io/posts/python-envs/>`_.
@@ -178,32 +169,4 @@ You can do so with:
 
 Such command detects whether to use pip/conda and creates lock
 files for development and production dependencies; lock files contain an
-exhaustive list of dependencies with a specific version. Alternatively, you can use
-your package manager. For pip:
-
-.. code-block:: console
-
-    pip freeze > requirements.lock.txt
-
-For conda:
-
-.. code-block:: console
-
-    conda env export --no-build --file environment.lock.yml
-
-
-.. note::
-    
-    If you're using separate files for development and production dependencies
-    and you use ``pip``/``conda`` directly, make sure you generate separate
-    lock files.
-
-
-
-.. note::
-    
-    If you create your project with ``ploomber scaffold``,
-    ``ploomber install`` will work. But if you didn't, it will do the right thing
-    as long as you have the two dependency files for pip (``requirements.txt``
-    and ``requirements.dev.txt``) or conda (``environment.yml`` and
-    ``environment.dev.yml``)
+exhaustive list of dependencies with a specific version.
