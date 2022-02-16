@@ -423,14 +423,13 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     assert result.exit_code == 0
 
 
-_PIP_UPGRADE = call('pip', 'install', 'pip', '--upgrade', description=ANY)
 
 
 @pytest.mark.parametrize('dev_create, use_lock, expected_call', [
     [
         False, False,
         [
-            _PIP_UPGRADE,
+
             call('pip',
                  'install',
                  '--requirement',
@@ -446,7 +445,7 @@ _PIP_UPGRADE = call('pip', 'install', 'pip', '--upgrade', description=ANY)
     [
         False, True,
         [
-            _PIP_UPGRADE,
+
             call('pip',
                  'install',
                  '--requirement',
@@ -457,7 +456,7 @@ _PIP_UPGRADE = call('pip', 'install', 'pip', '--upgrade', description=ANY)
     [
         True, False,
         [
-            _PIP_UPGRADE,
+
             call('pip',
                  'install',
                  '--requirement',
@@ -483,7 +482,7 @@ _PIP_UPGRADE = call('pip', 'install', 'pip', '--upgrade', description=ANY)
     [
         True, True,
         [
-            _PIP_UPGRADE,
+
             call('pip',
                  'install',
                  '--requirement',
@@ -961,7 +960,6 @@ def test_install_lock_pip(tmp_directory, mock_cmdr_wrapped, create_setup_py,
 
     expected = [
         call(sys.executable, '-m', 'venv', venv, description='Creating venv'),
-        call(pip, 'install', 'pip', '--upgrade', description=ANY),
         call(pip, 'install', '--editable', '.', description=ANY),
         call(pip,
              'install',

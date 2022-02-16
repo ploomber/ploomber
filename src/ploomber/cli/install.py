@@ -187,9 +187,8 @@ def _run_pip_commands(cmdr, create_env, name, reqs_dev_txt, reqs_txt,
         pip = 'pip'
         cmd_activate = None
 
-    # using an old version of pip may lead to broken environments, so we need
-    # to ensure we upgrade before installing dependencies.
-    cmdr.run(pip, 'install', 'pip', '--upgrade', description='Upgrading pip')
+    # FIXME: using an old version of pip may lead to broken environments, so
+    # we need to ensure we upgrade before installing dependencies.
 
     if Path(_SETUP_PY).exists():
         _pip_install_setup_py_pip(cmdr, pip)
