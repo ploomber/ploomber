@@ -91,8 +91,8 @@ def check_mixed_envs(env_dependencies):
     if problematic_dependencies:
         warnings.warn(
             "A mix of conda and pip dependencies detected!\n"
-            f"Please fix these dependencies or you'll experience future issues:\n"
-            f"{problematic_dependencies}")
+            f"Please fix these dependencies or you'll experience"
+            f" future issues:\n{problematic_dependencies}")
 
 
 def safe_remove(path):
