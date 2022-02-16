@@ -156,12 +156,11 @@ def scaffold(name, conda, package, entry_point, empty):
               default=None,
               help=('Use lock/regular files. If not present, uses any '
                     'of them, prioritizing lock files'))
-@click.option('--create-env/--no-create-env',
-              '-e/-E',
-              default=None,
-              help=('Create a new environment or install in the '
-                    'current one. If not present, creates an '
-                    'environment if there isn\'t one already active'))
+@click.option('--create-env',
+              '-e',
+              is_flag=True,
+              help=('Create a new environment, otherwise install in the '
+                    'current environment'))
 @click.option(
     '--use-venv',
     '-v',
