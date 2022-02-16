@@ -253,7 +253,7 @@ If you'd like to package your project:
     ploomber scaffold --package
 
 
-After creating a project, you can configure the development environment
+After creating a project, you can install dependencies
 with the ``ploomber install`` command (to learn more: :ref:`api-cli-ploomber-install`).
 
 For a tutorial on the ``ploomber scaffold`` command: :doc:`../user-guide/scaffold`.
@@ -269,15 +269,16 @@ For a tutorial on the ``ploomber scaffold`` command: :doc:`../user-guide/scaffol
 
     ploomber install
 
-**New in 0.16:** ``ploomber install`` has a few options to customize set up, run ``ploomber install --help`` to learn more.
 
 ``ploomber install`` installs dependencies using ``pip`` if a
 ``requirements.txt`` file exists or  ``conda``, if
 an ``environment.yml`` file exists.
 
-**New in 0.16:** If not running in a virtual
-environment, ``ploomber install`` will create one using
-`venv <https://docs.python.org/3/library/venv.html>`_ or ``conda``. Previously, it always created a new environment
+**New in 0.16:** ``ploomber install`` has a few options to customize set up, run ``ploomber install --help`` to learn more.
+
+**New in 0.16:** ``ploomber install`` will install dependencies in the current
+environment, you can request creating a virtual environment with the ``--create-env`` option,
+which will use `venv <https://docs.python.org/3/library/venv.html>`_ or ``conda`` (if installed). Previously, it always created a new environment
 
 Upon installation, ``ploomber install`` generates lock files that contain
 specific versions for all required packages. Lock files are useful for ensuring
