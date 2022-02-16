@@ -860,7 +860,9 @@ def test_install_pip(tmp_directory):
     name = f'venv-{Path(tmp_directory).name}'
 
     runner = CliRunner()
-    result = runner.invoke(install, args='--create-env', catch_exceptions=False)
+    result = runner.invoke(install,
+                           args='--create-env',
+                           catch_exceptions=False)
 
     if os.name == 'nt':
         expected_command = (
