@@ -1,11 +1,11 @@
 import os
+import warnings
 from pathlib import Path
 
 import pytest
 
 from ploomber.util import util
 from ploomber.util import default
-from ploomber.exceptions import DAGSpecInvalidError, CondaPipMixedEnvError
 from conftest import _write_sample_conda_env
 
 
@@ -525,12 +525,20 @@ def test_extract_name(arg, expected):
     assert default.extract_name(arg) == expected
 
 
-def test_mixed_envs(tmp_directory):
+def test_mixed_envs():
 
     # Set a pip dep string
     reqs = """pyflakes==2.4.0\nPygments==2.11.2\n
     pygraphviz @ file:///Users/runner/miniforge3/pygraphviz_1644545996627\n
     PyNaCl==1.5.0\npyparsing==3.0.7"""
 
-    with pytest.raises(CondaPipMixedEnvError):
+    with pytest.warns(UserWarning):
         util.check_mixed_envs(reqs)
+
+
+# Check no warning when an empty string is passed
+def test_empty_reqs_mixed_envs():
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        util.check_mixed_envs("")
+        util.check_mixed_envs("nlnlyo2h3fnoun29hf2nu39ub")  # No \n in str

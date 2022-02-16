@@ -1,5 +1,6 @@
 import sys
 import os
+import warnings
 from pathlib import Path, WindowsPath
 import importlib
 from functools import wraps
@@ -10,7 +11,7 @@ from collections.abc import Iterable
 from contextlib import contextmanager
 
 from ploomber.exceptions import (CallbackSignatureError, CallbackCheckAborted,
-                                 TaskRenderError, CondaPipMixedEnvError)
+                                 TaskRenderError)
 from ploomber.util.dotted_path import DottedPath
 
 
@@ -88,7 +89,10 @@ def check_mixed_envs(env_dependencies):
         dep for dep in env_dependencies if ' @ file://' in dep
     ]
     if problematic_dependencies:
-        raise CondaPipMixedEnvError(problematic_dependencies)
+        warnings.warn(
+            "A mix of conda and pip dependencies detected!\n"
+            f"Please fix these dependencies or you'll experience future issues:\n"
+            f"{problematic_dependencies}")
 
 
 def safe_remove(path):

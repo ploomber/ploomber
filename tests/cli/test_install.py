@@ -9,6 +9,7 @@ import pytest
 from click.testing import CliRunner
 from ploomber.cli import install as install_module
 from ploomber.cli.cli import install
+from ploomber.cli.install import _pip_install
 from conftest import _write_sample_conda_env, _prepare_files,\
      _write_sample_pip_req
 
@@ -594,3 +595,13 @@ def test_install_lock_pip(tmp_directory, mock_cmdr_wrapped, create_setup_py,
     assert mock_cmdr_wrapped.call_args_list == expected
     assert Path('.gitignore').read_text() == f'\n{venv}\n'
     assert result.exit_code == 0
+
+
+def test_pip_mixed_versions(monkeypatch):
+    mock = Mock()
+    mock.return_value = """pyflakes==2.4.0\nPygments==2.11.2\n
+    pygraphviz @ file:///Users/runner/miniforge3/pygraphviz_1644545996627"""
+
+    monkeypatch.setattr(install_module.Commander, 'run', mock)
+    with pytest.warns(UserWarning):
+        _pip_install(install_module.Commander, {}, True)
