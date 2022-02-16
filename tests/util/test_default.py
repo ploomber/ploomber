@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
+from ploomber.exceptions import DAGSpecInvalidError
 from ploomber.util import util
 from ploomber.util import default
-from conftest import _write_sample_conda_env
 
 
 def create_package_with_name(name, base='.'):
