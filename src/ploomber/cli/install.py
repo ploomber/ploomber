@@ -499,12 +499,11 @@ def _environment_yml_has_python(path):
     if has_python:
         env_yml['dependencies'].pop(idx)
 
-    return has_python
+    return has_python, env_yml
 
 
 @contextmanager
 def check_environment_yaml(path, enable=True):
-    enable = False
     has_python, env_yml = _environment_yml_has_python(path)
     TMP_FILENAME = '.ploomber-conda-tmp.yml'
 

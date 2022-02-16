@@ -423,10 +423,14 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     assert result.exit_code == 0
 
 
+_PIP_UPGRADE = call('pip', 'install', 'pip', '--upgrade', description=ANY)
+
+
 @pytest.mark.parametrize('dev_create, use_lock, expected_call', [
     [
         False, False,
         [
+            _PIP_UPGRADE,
             call('pip',
                  'install',
                  '--requirement',
@@ -442,6 +446,7 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     [
         False, True,
         [
+            _PIP_UPGRADE,
             call('pip',
                  'install',
                  '--requirement',
@@ -452,6 +457,7 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     [
         True, False,
         [
+            _PIP_UPGRADE,
             call('pip',
                  'install',
                  '--requirement',
@@ -477,6 +483,7 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     [
         True, True,
         [
+            _PIP_UPGRADE,
             call('pip',
                  'install',
                  '--requirement',
@@ -954,25 +961,22 @@ def test_install_lock_pip(tmp_directory, mock_cmdr_wrapped, create_setup_py,
 
     expected = [
         call(sys.executable, '-m', 'venv', venv, description='Creating venv'),
-        call(pip,
-             'install',
-             '--editable',
-             '.',
-             description='Installing project'),
+        call(pip, 'install', 'pip', '--upgrade', description=ANY),
+        call(pip, 'install', '--editable', '.', description=ANY),
         call(pip,
              'install',
              '--requirement',
              'requirements.lock.txt',
-             description='Installing dependencies'),
+             description=ANY),
         call(pip,
              'install',
              '--requirement',
              'requirements.dev.lock.txt',
-             description='Installing dependencies')
+             description=ANY)
     ]
 
     if not create_setup_py:
-        expected.pop(1)
+        expected.pop(2)
 
     if not create_dev_lock:
         expected.pop(-1)
@@ -1103,7 +1107,7 @@ def test_conda_install_ignores_python(
 def test_check_environment_yaml(content, filename, d_to_use, tmp_directory):
     Path('environment.yml').write_text(content)
     with install_module.check_environment_yaml('environment.yml') as path:
-        assert Path(filename).exists()
+        assert Path(path).exists()
         assert path == filename
 
         with open(path) as f:
