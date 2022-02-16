@@ -423,13 +423,10 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     assert result.exit_code == 0
 
 
-
-
 @pytest.mark.parametrize('dev_create, use_lock, expected_call', [
     [
         False, False,
         [
-
             call('pip',
                  'install',
                  '--requirement',
@@ -445,7 +442,6 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     [
         False, True,
         [
-
             call('pip',
                  'install',
                  '--requirement',
@@ -456,7 +452,6 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     [
         True, False,
         [
-
             call('pip',
                  'install',
                  '--requirement',
@@ -482,7 +477,6 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     [
         True, True,
         [
-
             call('pip',
                  'install',
                  '--requirement',
@@ -974,7 +968,7 @@ def test_install_lock_pip(tmp_directory, mock_cmdr_wrapped, create_setup_py,
     ]
 
     if not create_setup_py:
-        expected.pop(2)
+        expected.pop(1)
 
     if not create_dev_lock:
         expected.pop(-1)
