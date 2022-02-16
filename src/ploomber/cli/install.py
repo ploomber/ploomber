@@ -330,8 +330,7 @@ def _next_steps(cmdr, cmd_activate, start_time):
                       total_runtime=str(end_time - start_time))
 
     cmdr.success('Next steps')
-    cmdr.print((f'$ {cmd_activate}\n'
-                '$ ploomber build'))
+    cmdr.print((f'$ {cmd_activate}\n' '$ ploomber build'))
     cmdr.success()
 
 

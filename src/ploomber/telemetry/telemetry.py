@@ -350,9 +350,10 @@ def check_version():
     # Update version conf if not there
     if not version_path.exists():
         version = {'last_version_check': today}
-        write_conf_file(version_path, version)
     else:
         version = read_conf_file(version_path)
+        if 'last_version_check' not in version.keys():
+            version = {'last_version_check': today}
 
     # Check if the flag was disabled
     if conf and 'version_check_enabled' in conf.keys() \
