@@ -12,7 +12,9 @@ import json
 import os
 import shutil
 from pathlib import Path
+from contextlib import contextmanager
 
+import click
 import yaml
 
 from ploomber.io._commander import Commander
@@ -185,6 +187,10 @@ def _run_pip_commands(cmdr, create_env, name, reqs_dev_txt, reqs_txt,
         pip = 'pip'
         cmd_activate = None
 
+    # using an old version of pip may lead to broken environments, so we need
+    # to ensure we upgrade before installing dependencies.
+    cmdr.run(pip, 'install', 'pip', '--upgrade', description='Upgrading pip')
+
     if Path(_SETUP_PY).exists():
         _pip_install_setup_py_pip(cmdr, pip)
 
@@ -299,6 +305,7 @@ def _run_conda_commands(
                  description='Creating env')
     else:
         cmdr.print('Installing in current conda env...')
+
         cmdr.run(pkg_manager,
                  'env',
                  'update',
@@ -472,3 +479,48 @@ def _pip_install(cmdr, pip, lock, requirements=_REQS_TXT):
 
         name = Path(requirements).stem
         Path(f'{name}.lock.txt').write_text(pip_lock)
+
+
+def _environment_yml_has_python(path):
+    with open(path) as f:
+        env_yml = yaml.safe_load(f)
+
+    deps = env_yml.get('dependencies', [])
+
+    has_python = False
+    idx = None
+
+    for i, line in enumerate(deps):
+        if isinstance(line, str) and line.startswith('python'):
+            has_python = True
+            idx = i
+            break
+
+    if has_python:
+        env_yml['dependencies'].pop(idx)
+
+    return has_python
+
+
+@contextmanager
+def check_environment_yaml(path, enable=True):
+    enable = False
+    has_python, env_yml = _environment_yml_has_python(path)
+    TMP_FILENAME = '.ploomber-conda-tmp.yml'
+
+    if has_python and enable:
+        path_to_use = Path(TMP_FILENAME)
+        path_to_use.write_text(yaml.dump(env_yml))
+        click.secho(
+            f'WARNING: {path!r} contains Python as '
+            'dependency, ignoring it as it may break '
+            'the current environment',
+            fg='yellow')
+    else:
+        path_to_use = Path(path)
+
+    try:
+        yield str(path_to_use)
+    finally:
+        if Path(TMP_FILENAME).exists():
+            path_to_use.unlink()

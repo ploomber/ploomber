@@ -4,9 +4,12 @@ import sys
 from pathlib import Path
 from unittest.mock import Mock, call, ANY
 import shutil
+
+import yaml
 import datetime
 import pytest
 from click.testing import CliRunner
+
 from ploomber.cli import install as install_module
 from ploomber.cli.cli import install
 from ploomber.exceptions import BaseException
@@ -1034,3 +1037,77 @@ def test_suggests_use_conda_create_if_cmd_fails(tmp_directory, monkeypatch,
     assert result.exit_code == 1
     assert f'conda env create --file {file} --force' in result.output
     assert 'some-error' in result.output
+
+
+empty = """
+key: value
+"""
+
+no_python = """
+dependencies:
+ - a
+ - b
+ - pip:
+     - c
+"""
+
+with_python = """
+dependencies:
+ - a
+ -  python=3.9
+"""
+
+
+@pytest.mark.parametrize('content, has_python, env_fixed', [
+    [empty, False, {
+        'key': 'value'
+    }],
+    [no_python, False, {
+        'dependencies': ['a', 'b', {
+            'pip': ['c']
+        }]
+    }],
+    [with_python, True, {
+        'dependencies': ['a']
+    }],
+])
+def test_conda_install_ignores_python(
+    tmp_directory,
+    content,
+    has_python,
+    env_fixed,
+):
+    Path('environment.yml').write_text(content)
+    (has_python_out, env_yml_out
+     ) = install_module._environment_yml_has_python('environment.yml')
+
+    assert has_python == has_python_out
+    assert env_fixed == env_yml_out
+
+
+@pytest.mark.parametrize('content, filename, d_to_use', [
+    [empty, 'environment.yml', {
+        'key': 'value'
+    }],
+    [
+        no_python, 'environment.yml', {
+            'dependencies': ['a', 'b', {
+                'pip': ['c']
+            }]
+        }
+    ],
+    [with_python, '.ploomber-conda-tmp.yml', {
+        'dependencies': ['a']
+    }],
+])
+def test_check_environment_yaml(content, filename, d_to_use, tmp_directory):
+    Path('environment.yml').write_text(content)
+    with install_module.check_environment_yaml('environment.yml') as path:
+        assert Path(filename).exists()
+        assert path == filename
+
+        with open(path) as f:
+            d = yaml.safe_load(f)
+
+    assert d_to_use == d
+    assert not Path('.ploomber-conda-tmp.yml').exists()
