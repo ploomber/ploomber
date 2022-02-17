@@ -292,7 +292,7 @@ def check_first_time_usage():
     """
     config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
     uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
-    uid_conf = read_conf_file(config_path)
+    uid_conf = read_conf_file(uid_path)
     return config_path.exists() and 'uid' not in uid_conf.keys()
 
 
