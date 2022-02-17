@@ -254,16 +254,15 @@ def check_uid():
     Checks if local user id exists as a uid file, creates if not.
     """
     uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
-    if not uid_path.exists():  # Create - doesn't exist
+    conf = read_conf_file(uid_path)  # file already exist due to version check
+    if 'uid' not in conf.keys():
         uid = str(uuid.uuid4())
         res = write_conf_file(uid_path, {"uid": uid}, error=True)
         if res:
             return f"NO_UID {res}"
         else:
             return uid
-    else:  # read and return uid
-        conf = read_conf_file(uid_path)
-        return conf.get('uid', "NO_UID")
+    return conf.get('uid', "NO_UID")
 
 
 def check_stats_enabled():
@@ -293,7 +292,8 @@ def check_first_time_usage():
     """
     config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
     uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
-    return not uid_path.exists() and config_path.exists()
+    uid_conf = read_conf_file(config_path)
+    return config_path.exists() and 'uid' not in uid_conf.keys()
 
 
 def get_latest_version():
@@ -353,7 +353,9 @@ def check_version():
     else:
         version = read_conf_file(version_path)
         if 'last_version_check' not in version.keys():
-            version = {'last_version_check': today}
+            version['last_version_check'] = today
+
+    write_conf_file(version_path, version)
 
     # Check if the flag was disabled
     if conf and 'version_check_enabled' in conf.keys() \
@@ -378,7 +380,7 @@ def check_version():
         "pip install ploomber --upgrade",
         fg='yellow')
 
-    # Update version conf
+    # Update latest check date
     version['last_version_check'] = today
     write_conf_file(version_path, version)
 

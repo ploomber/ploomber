@@ -474,6 +474,23 @@ def test_validate_entries(monkeypatch):
     assert res == (event_id, uid, action, client_time, elapsed_time)
 
 
+def test_conf_file_after_version_check(tmp_directory, monkeypatch):
+    version_path = Path('stats') / 'uid.yaml'
+    write_to_conf_file(tmp_directory=tmp_directory,
+                       monkeypatch=monkeypatch,
+                       last_check='2022-01-20 10:51:41.082376')
+    uid_content = version_path.read_text()
+    uid_content += 'uid: some_user_id\n'
+    version_path.write_text(uid_content)
+
+    # Test that conf file has all required fields
+    telemetry.check_version()
+    with version_path.open("r") as file:
+        conf = yaml.safe_load(file)
+    assert 'uid' in conf.keys()
+    assert len(conf.keys()) == 2
+
+
 def test_get_version_timeout():
     # Check the total run time is less than 1.5 secs
     start_time = datetime.datetime.now()
