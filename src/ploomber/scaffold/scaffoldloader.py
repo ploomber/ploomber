@@ -12,7 +12,6 @@ from ploomber.util.dotted_path import (locate_dotted_path,
 class ScaffoldLoader:
     """Scaffold task files
     """
-
     def __init__(self):
         self.env = Environment(loader=PackageLoader(
             'ploomber', str(Path('resources', 'ploomber_add'))),
@@ -40,7 +39,7 @@ class ScaffoldLoader:
         out = t.render(**params, is_ipynb=is_ipynb)
 
         if convert_to:
-            nb = jupytext.reads(out, fmt='py:light')
+            nb = jupytext.reads(out, fmt='py:percent')
             out = jupytext.writes(nb, fmt=convert_to)
 
         return out

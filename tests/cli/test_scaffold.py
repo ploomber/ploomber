@@ -86,19 +86,10 @@ def test_ploomber_scaffold_task_template(file_, extract_flag, tmp_directory):
     runner = CliRunner()
     result = runner.invoke(scaffold)
 
-    content = Path(file_).read_text()
-
     assert "Found spec at 'pipeline.yaml'" in result.output
     assert 'Created 1 new task sources.' in result.output
     assert result.exit_code == 0
-    assert 'Add description here' in content
-    assert ('extract_upstream={} '
-            'in your pipeline.yaml'.format(extract_flag) in content)
-
-    # task.sql does not output this part
-    if not file_.endswith('.sql'):
-        assert ('extract_product={} '
-                'in your pipeline.yaml'.format(extract_flag) in content)
+    assert Path(file_).exists()
 
 
 @pytest.mark.parametrize(
