@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.16.1dev
+
 ## 0.16 (2022-02-17)
 * Cleaner tracebacks when DAG fails to build or render
 * Automatically adding a parameters cell to scripts and notebooks if it's missing
