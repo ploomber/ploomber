@@ -22,19 +22,23 @@ def cli():
 
 @cli.command()
 @click.option(
-    '--conda',
+    '--conda/--pip',
+    '-c/-p',
     is_flag=True,
-    help='Use conda (environemnt.yml)',
+    default=None,
+    help='Use environment.yaml/requirements.txt for dependencies',
 )
 @click.option(
     '--package',
+    '-P',
     is_flag=True,
-    help='Use package template (setup.py)',
+    help='Use package template (creates setup.py)',
 )
 @click.option(
     '--empty',
+    '-E',
     is_flag=True,
-    help='Create a sample pipeline.yaml with no tasks',
+    help='Create a pipeline.yaml with no tasks',
 )
 @click.option(
     '--entry-point',
@@ -42,10 +46,30 @@ def cli():
     default=None,
     help='Entry point to add tasks. Invalid if other flags present',
 )
-def scaffold(conda, package, entry_point, empty):
-    """Create new projects (if no pipeline.yaml exists) or add missings tasks
+@click.argument('name', required=False)
+def scaffold(name, conda, package, entry_point, empty):
+    """Create a new project / Create task source files
+
+    $ ploomber scaffold myproject
+
+    $ cd myproject
+
+    Add tasks to pipeline.yaml. Then, to create the source files:
+
+    $ ploomber scaffold
     """
-    template = '-e/--entry-point is not compatible with the {flag} flag'
+    template = '-e/--entry-point is not compatible with {flag}'
+    user_passed_name = name is not None
+
+    if entry_point and name:
+        err = '-e/--entry-point is not compatible with the "name" argument'
+        telemetry.log_api("scaffold_error",
+                          metadata={
+                              'type': 'entry_and_name',
+                              'exception': err,
+                              'argv': sys.argv
+                          })
+        raise click.ClickException(err)
 
     if entry_point and conda:
         err = template.format(flag='--conda')
@@ -91,20 +115,27 @@ def scaffold(conda, package, entry_point, empty):
             telemetry.log_api("scaffold_error",
                               metadata={
                                   'type': 'dag_load_failed',
-                                  'exception': e,
+                                  'exception': str(e),
                                   'argv': sys.argv
                               })
             raise click.ClickException(e) from e
 
     if loaded:
+        if user_passed_name:
+            click.secho(
+                "The 'name' positional argument is "
+                "only valid for creating new projects, ignoring...",
+                fg='yellow')
+
         # existing pipeline, add tasks
         spec, _, path_to_spec = loaded
         _scaffold.add(spec, path_to_spec)
+
         telemetry.log_api("ploomber_scaffold",
-                          dag=loaded,
                           metadata={
                               'type': 'add_task',
-                              'argv': sys.argv
+                              'argv': sys.argv,
+                              'dag': loaded,
                           })
     else:
         # no pipeline, create base project
@@ -113,22 +144,36 @@ def scaffold(conda, package, entry_point, empty):
                               'type': 'base_project',
                               'argv': sys.argv
                           })
-        scaffold_project.cli(project_path=None,
+        scaffold_project.cli(project_path=name,
                              conda=conda,
                              package=package,
                              empty=empty)
 
 
 @cli.command()
-@click.option('-l',
-              '--use-lock',
-              help='Use lock files',
-              default=False,
-              is_flag=True)
-def install(use_lock):
-    """Install dependencies and package
+@click.option('--use-lock/--no-use-lock',
+              '-l/-L',
+              default=None,
+              help=('Use lock/regular files. If not present, uses any '
+                    'of them, prioritizing lock files'))
+@click.option('--create-env',
+              '-e',
+              is_flag=True,
+              help=('Create a new environment, otherwise install in the '
+                    'current environment'))
+@click.option(
+    '--use-venv',
+    '-v',
+    is_flag=True,
+    help='Use Python\'s venv module (ignoring conda if installed)',
+)
+def install(use_lock, create_env, use_venv):
     """
-    cli_module.install.main(use_lock=use_lock)
+    Install dependencies
+    """
+    cli_module.install.main(use_lock=use_lock,
+                            create_env=create_env,
+                            use_venv=use_venv)
 
 
 @cli.command()
@@ -137,7 +182,19 @@ def install(use_lock):
 @click.option('-o', '--output', help='Target directory', default=None)
 @click.option('-b', '--branch', help='Git branch to use.', default=None)
 def examples(name, force, branch, output):
-    """Get sample projects. Run "ploomber examples" to list them
+    """Download examples
+
+    List:
+
+    $ ploomber examples
+
+    Download:
+
+    $ ploomber examples -n type/example -o directory
+
+    Download ml-basic example:
+
+    $ ploomber examples -n templates/ml-basic -o my-pipeline
     """
     try:
         cli_module.examples.main(name=name,
@@ -150,7 +207,7 @@ def examples(name, force, branch, output):
         telemetry.log_api("examples_error",
                           metadata={
                               'type': 'runtime_error',
-                              'exception': e,
+                              'exception': str(e),
                               'argv': sys.argv
                           })
         raise RuntimeError(
@@ -266,14 +323,14 @@ def task():
 
 @cli.command()
 def report():
-    """Make a pipeline report
+    """Generate pipeline report
     """
     pass  # pragma: no cover
 
 
 @cli.command()
 def interact():
-    """Start an interactive session (use the "dag" variable)
+    """Start an interactive session
     """
     pass  # pragma: no cover
 

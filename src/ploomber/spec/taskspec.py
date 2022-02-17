@@ -55,7 +55,11 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
     happens here. If product is not None, it's also used to determine if
     a task is a SQLScript or SQLDump
     """
-    extension = Path(source_str).suffix
+    try:
+        extension = Path(source_str).suffix
+    except Exception as e:
+        raise DAGSpecInitializationError('Failed to initialize task '
+                                         f'from source {source_str!r}') from e
 
     # we verify if this is a valid dotted path
     # if lazy load is set to true, just locate the module without importing it
@@ -170,7 +174,6 @@ class TaskSpec(MutableMapping):
         if the module has already been imported. Has no effect if
         lazy_import=True.
     """
-
     def __init__(self,
                  data,
                  meta,
@@ -387,8 +390,9 @@ def _init_task(data, meta, project_root, lazy_import, dag):
                       dag=dag,
                       **task_dict)
     except Exception as e:
+        source_ = pretty_print.try_relative_path(source)
         msg = (f'Failed to initialize {class_.__name__} task with '
-               f'source {str(source)!r}.')
+               f'source {source_!r}.')
         raise DAGSpecInitializationError(msg) from e
 
     if on_finish:

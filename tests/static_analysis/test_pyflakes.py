@@ -103,6 +103,13 @@ y = 2
 
 # +
 %%sh
+""", """
+# +
+%%time
+df = 1
+
+# +
+df
 """
 ])
 def test_check_source_ignores_ipython_magics(code):
@@ -132,8 +139,8 @@ more html""",
             """# some comment
 %%html
 some html""", """# some comment
-%%html
-some html"""
+# %%html
+# some html"""
         ],
         [
             """
@@ -141,8 +148,8 @@ some html"""
 %%html
 some html""", """
 # some comment
-%%html
-some html"""
+# %%html
+# some html"""
         ],
         ["""\
    %%html
@@ -159,6 +166,10 @@ some html\
         ['1 + 1\n   %cd', '1 + 1\n#    %cd'],
         ['! mkdir stuff', '# ! mkdir stuff'],
         ['   ! mkdir stuff', '#    ! mkdir stuff'],
+        # this contains inline python, only the magic should be commented
+        ['%%time\n1+1', '# %%time\n1+1'],
+        ['%%timeit\n1+1', '# %%timeit\n1+1'],
+        ['%%capture\n1+1', '# %%capture\n1+1'],
     ])
 # TODO: test with leading spaces
 def test_comment_if_ipython_magic(code, expected):
@@ -181,22 +192,22 @@ def test_is_ipython_line_magic(code, expected):
     'code, expected',
     [
         ['%debug', False],
-        ['%%sh', True],
+        ['%%sh', '%%sh'],
         # space after the %% is not allowed
         ['%% sh', False],
-        ['%%sh --no-raise-error', True],
+        ['%%sh --no-raise-error', '%%sh'],
         ['# %debug', False],
         ['% debug', False],
         ['%%%debug', False],
         # cell magics cannot contain comments
         ['# comment\n%%html\nhello', False],
         # cell magics may contain whitespace
-        ['\n\n%%html\nhello', True],
-        ['\n\n   %%html\nhello', True],
-        ['  %%html\nhello', True],
+        ['\n\n%%html\nhello', '%%html'],
+        ['\n\n   %%html\nhello', '%%html'],
+        ['  %%html\nhello', '%%html'],
     ])
 def test_is_ipython_cell_magic(code, expected):
-    assert pyflakes._is_ipython_cell_magic(code) is expected
+    assert pyflakes._is_ipython_cell_magic(code) == expected
 
 
 @pytest.mark.parametrize('params, source, first, second', [
@@ -272,3 +283,95 @@ def x():
 ])
 def test_check_params_ignores_non_variable_assignment(passed, params_source):
     pyflakes.check_params(passed, params_source, 'script.py')
+
+
+syntax_error = """
+# + tags=["parameters"]
+a = 1
+
+# +
+if
+"""
+
+undefined_name = """
+# + tags=["parameters"]
+a = 1
+
+# +
+c = a + b
+"""
+
+
+@pytest.mark.parametrize('code, error, msg', [
+    [syntax_error, SyntaxError, 'invalid syntax'],
+    [undefined_name, RenderError, 'undefined name'],
+],
+                         ids=[
+                             'syntax-error',
+                             'undefined-name',
+                         ])
+def test_check_notebook_raises_if_pyflakes_error(code, error, msg):
+    nb = jupytext.reads(code)
+
+    with pytest.raises(error) as excinfo:
+        pyflakes.check_notebook(nb, {}, 'file.py', raise_=True)
+
+    assert 'An error happened' in str(excinfo.value)
+    assert msg in str(excinfo.value)
+
+
+@pytest.mark.parametrize('code, msg', [
+    [syntax_error, 'invalid syntax'],
+    [undefined_name, 'undefined name'],
+])
+def test_check_notebook_warns_if_pyflakes_error(code, msg):
+    nb = jupytext.reads(code)
+
+    with pytest.warns(UserWarning) as record:
+        pyflakes.check_notebook(nb, {},
+                                'file.py',
+                                raise_=False,
+                                check_signature=True)
+
+    assert len(record) == 2
+    first = record[0].message.args[0]
+    assert 'An error happened' in first
+    assert msg in first
+    second = record[1].message.args[0]
+    assert "Parameters declared in the 'parameters' cell" in second
+
+
+@pytest.mark.parametrize('code, msg', [
+    [syntax_error, 'invalid syntax'],
+    [undefined_name, 'undefined name'],
+])
+def test_check_notebook_warns_with_check_signature_disabled(code, msg):
+    nb = jupytext.reads(code)
+
+    with pytest.warns(UserWarning) as record:
+        pyflakes.check_notebook(nb, {},
+                                'file.py',
+                                raise_=False,
+                                check_signature=False)
+
+    assert len(record) == 1
+    first = record[0].message.args[0]
+    assert 'An error happened' in first
+    assert msg in first
+
+
+def test_check_notebook_raises_if_signature_mismatch():
+    code = """
+# + tags=["parameters"]
+a = 1
+"""
+
+    nb = jupytext.reads(code)
+
+    with pytest.raises(TypeError) as excinfo:
+        pyflakes.check_notebook(nb, {}, 'file.py', raise_=True)
+
+    expected = (
+        "Parameters declared in the 'parameters' cell do not match task "
+        "params. Missing params: 'a'")
+    assert expected in str(excinfo.value)

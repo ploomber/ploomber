@@ -13,8 +13,7 @@ from ploomber.constants import TaskStatus
 from ploomber.executors.abc import Executor
 from ploomber.exceptions import DAGBuildError
 from ploomber.messagecollector import (BuildExceptionsCollector, Message)
-
-import traceback
+from ploomber.executors import _format
 
 # TODO: support for show_progress, we can use a progress bar but we have
 # to modify the label since at any point more than one task might be
@@ -39,9 +38,7 @@ class TaskBuildWrapper:
             output = self.task._build(**kwargs)
             return output
         except Exception as e:
-            return Message(task=self.task,
-                           message=traceback.format_exc(),
-                           obj=e)
+            return Message(task=self.task, message=_format.exception(e), obj=e)
 
 
 def _log(msg, logger, print_progress):

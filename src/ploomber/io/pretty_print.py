@@ -1,3 +1,6 @@
+from pathlib import Path
+
+
 def iterable(obj):
     sorted_ = sorted(f"'{element}'" for element in obj)
 
@@ -13,3 +16,18 @@ def them_or_name(obj):
 
 def trailing_dot(obj):
     return ' '.join(f'{e}.' for e in obj)
+
+
+def try_relative_path(path):
+    if not isinstance(path, (str, Path)):
+        return path
+
+    path_ = Path(path)
+
+    if path_.is_absolute():
+        try:
+            return str(path_.relative_to(Path().resolve()))
+        except ValueError:
+            return str(path)
+    else:
+        return str(path)

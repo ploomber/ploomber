@@ -1,10 +1,10 @@
 import warnings
 from multiprocessing import Pool
-import traceback
 import logging
 
 from tqdm.auto import tqdm
 from ploomber.executors.abc import Executor
+from ploomber.executors import _format
 from ploomber.exceptions import DAGBuildError, DAGBuildEarlyStop
 from ploomber.messagecollector import (BuildExceptionsCollector,
                                        BuildWarningsCollector)
@@ -40,7 +40,6 @@ class Serial(Executor):
         shown before raising the collected exceptions.
 
     """
-
     def __init__(self,
                  build_in_subprocess=True,
                  catch_exceptions=True,
@@ -151,7 +150,6 @@ class Serial(Executor):
 
 
 class LazyFunction:
-
     def __init__(self, fn, kwargs, task):
         self.fn = fn
         self.kwargs = kwargs
@@ -164,7 +162,8 @@ class LazyFunction:
 def catch_warnings(fn, warnings_all):
     # TODO: we need a try catch in case fn() raises an exception
     with warnings.catch_warnings(record=True) as warnings_current:
-        # do we need: warnings.simplefilter("always")?
+        warnings.simplefilter("ignore", DeprecationWarning)
+
         result = fn()
 
     if warnings_current:
@@ -192,7 +191,7 @@ def catch_exceptions(fn, exceptions_all):
         # FIXME: this is going to cause duplicates if not running in a
         # subprocess
         logger.exception(str(e))
-        tr = traceback.format_exc()
+        tr = _format.exception(e)
         exceptions_all.append(task=fn.task, message=tr, obj=e)
 
 

@@ -201,7 +201,7 @@ Get task status
     ploomber task task_name --status
 
 
-If you also want to build the task, you need to explicitly pass ``--build``.
+If you also want to build the task, you must explicitly pass ``--build``.
 
 Task source code
 ****************
@@ -213,7 +213,7 @@ Task source code
 
 If you also want to build the task, you must explicitly pass ``--build``.
 
-.. _api-cli-create-new-project:
+.. _api-cli-ploomber-scaffold:
 
 Create new project
 ******************
@@ -224,33 +224,99 @@ The ``scaffold`` command allows you to start a new project:
 
     ploomber scaffold
 
+
+The command above generates a project with sample pipeline. To create an empty
+project:
+
+.. code-block:: console
+
+    ploomber scaffold --empty
+
+
+**New in 0.16:** You can pass a positional argument ``ploomber scaffold myproject``.
+
 Note that if you run this command in a folder that already has a
 ``pipeline.yaml`` in a :ref:`api-cli-default-locations`, it will parse your
 pipeline declaration looking for declared tasks whose source code file does
 not exist and proceed to create them.
 
-After creating a project, you can configure the development environment with:
+
+.. code-block:: console
+
+    ploomber scaffold
+
+
+If you'd like to package your project:
+
+.. code-block:: console
+
+    ploomber scaffold --package
+
+
+After creating a project, you can install dependencies
+with the ``ploomber install`` command (to learn more: :ref:`api-cli-ploomber-install`).
+
+For a tutorial on the ``ploomber scaffold`` command: :doc:`../user-guide/scaffold`.
+
+.. _api-cli-ploomber-install:
+
+``install``
+***********
+
+``ploomber install`` installs dependencies:
 
 .. code-block:: console
 
     ploomber install
 
-The command above configures a virtual environment using ``conda``, if
-you declared dependencies in an ``environment.yml``, or using
-`venv <https://docs.python.org/3/library/venv.html>`_ and ``pip`` if you
-declared dependencies in a ``requirements.txt`` file. Note that
-``ploomber install`` may not work if you didn't create your project with
-``ploomber scaffold``. For a tutorial on the ``ploomber scaffold``
-command: :doc:`../user-guide/scaffold`.
+
+``ploomber install`` installs dependencies using ``pip`` if a
+``requirements.txt`` file exists or  ``conda``, if
+an ``environment.yml`` file exists.
+
+**New in 0.16:** ``ploomber install`` has a few options to customize set up, run ``ploomber install --help`` to learn more.
+
+**New in 0.16:** ``ploomber install`` will install dependencies in the current
+environment, you can request creating a virtual environment with the ``--create-env`` option,
+which will use `venv <https://docs.python.org/3/library/venv.html>`_ or ``conda`` (if installed). Previously, it always created a new environment
 
 Upon installation, ``ploomber install`` generates lock files that contain
-specific versions for all required packages. If you already have such files
-and want to install using lock files (e.g., ``environment.lock.yml``) instead
-of regular files (e.g., ``environment.yml``):
+specific versions for all required packages. Lock files are useful for ensuring
+the stability of your project since upgrades to your dependencies may break
+your code. To install from lock files:
 
 .. code-block:: console
 
     ploomber install --use-lock
+
+**New in 0.16:** ``ploomber install`` (without arguments) will use lock files if they exist. Otherwise, it'll use regular files.
+
+``nb``
+******
+
+``nb`` is short for *notebook*. This command manages notebooks and scripts in your pipeline.
+
+Enable opening ``.py`` as notebooks in JupyterLab with one click on the file:
+
+.. code-block:: console
+
+    ploomber nb --single-click
+
+
+The rest of the options are useful when using editors such
+as :doc:`VSCode or PyCharm <../user-guide/editors>` or when running old
+JupyterLab versions (``<2.x``). When using recent JupyterLab versions,
+script/notebooks management is automatically performed by
+the :doc:`Jupyter plug-in <../user-guide/jupyter>`. 
+
+Inject cell to scripts and notebooks in your pipeline:
+
+.. code-block:: console
+
+    ploomber nb --inject
+
+
+Other commands are available, run ``ploomber nb --help`` to learn more.
 
 
 Interactive sessions
@@ -297,6 +363,9 @@ To download in a specific location:
 .. code-block:: console
 
     ploomber examples --name {name} --output path/to/dir
+
+
+For a tutorial on the ``ploomber examples`` command: :doc:`../user-guide/templates`.
 
 
 .. _api-cli-default-locations:

@@ -11,7 +11,7 @@ Deprecation policy
 ******************
 
 Whenever we introduce an API incompatible change, we add a
-``DeprecationWarning`` and keep it for two minor releases before rolling out
+``FutureWarning`` and keep it for two minor releases before rolling out
 the major release.
 
 

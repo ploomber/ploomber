@@ -364,18 +364,16 @@ class Task(abc.ABC):
         if not self.product.exists():
             if isinstance(self.product, MetaProduct):
                 raise TaskBuildError(
-                    'Error building task "{}": '
-                    'the task ran successfully but product '
-                    '"{}" does not exist yet '
-                    '(task.product.exists() returned False). '.format(
-                        self.name, self.product))
+                    f'Error building task {self.name!r}: '
+                    'the task ran successfully but the product is '
+                    'missing. Ensure the task is generating the '
+                    'declared products')
             else:
                 raise TaskBuildError(
-                    'Error building task "{}": '
-                    'the task ran successfully but at least one of the '
-                    'products in "{}" does not exist yet '
-                    '(task.product.exists() returned False). '.format(
-                        self.name, self.product))
+                    f'Error building task {self.name!r}: '
+                    'the task ran successfully but some products is '
+                    'missing. Ensure the task is generating the '
+                    'declared product')
 
         if self.exec_status != TaskStatus.WaitingDownload:
             self.product.upload()
@@ -428,7 +426,7 @@ class Task(abc.ABC):
                 self.on_render(**kwargs)
             except Exception as e:
                 msg = ('Exception when running on_render '
-                       'for task "{}": {}'.format(self.name, e))
+                       f'for task {self.name!r}')
                 self._logger.exception(msg)
                 self.exec_status = TaskStatus.ErroredRender
                 raise type(e)(msg) from e
@@ -593,7 +591,7 @@ class Task(abc.ABC):
                 except Exception as e:
                     self.exec_status = TaskStatus.Errored
                     msg = ('Exception when running on_finish '
-                           'for task "{}": {}'.format(self.name, e))
+                           f'for task {self.name!r}')
                     self._logger.exception(msg)
 
                     if isinstance(e, DAGBuildEarlyStop):
@@ -614,7 +612,7 @@ class Task(abc.ABC):
                     self._run_on_failure()
                 except Exception as e:
                     msg = ('Exception when running on_failure '
-                           'for task "{}": {}'.format(self.name, e))
+                           f'for task {self.name!r}')
                     self._logger.exception(msg)
                     raise TaskBuildError(msg) from e
 

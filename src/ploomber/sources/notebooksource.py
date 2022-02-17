@@ -29,6 +29,7 @@ from pathlib import Path
 import warnings
 from contextlib import redirect_stdout
 from io import StringIO
+from copy import deepcopy
 
 # papermill is importing a deprecated module from pyarrow
 with warnings.catch_warnings():
@@ -39,8 +40,11 @@ import nbformat
 import jupytext
 from jupytext import cli as jupytext_cli
 from jupytext.formats import long_form_one_format, short_form_one_format
+from jupytext.config import JupytextConfiguration
+import parso
 
-from ploomber.exceptions import SourceInitializationError
+from ploomber.exceptions import (SourceInitializationError,
+                                 MissingParametersCellError)
 from ploomber.placeholders.placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources.abc import Source
@@ -48,6 +52,7 @@ from ploomber.sources.nb_utils import find_cell_with_tag, find_cell_with_tags
 from ploomber.static_analysis.extractors import extractor_class_for_language
 from ploomber.static_analysis.pyflakes import check_notebook
 from ploomber.sources import docstring
+from ploomber.io import pretty_print
 
 
 def requires_path(func):
@@ -55,7 +60,6 @@ def requires_path(func):
     Checks if NotebookSource instance was initialized from a file, raises
     an error if not
     """
-
     @wraps(func)
     def wrapper(self, *args, **kwargs):
 
@@ -92,7 +96,6 @@ class NotebookSource(Source):
     The render method prepares the notebook for execution: it adds the
     parameters and it makes sure kernelspec is defined
     """
-
     @requires([
         'parso', 'pyflakes', 'jupytext', 'nbformat', 'papermill',
         'jupyter_client'
@@ -102,7 +105,7 @@ class NotebookSource(Source):
                  hot_reload=False,
                  ext_in=None,
                  kernelspec_name=None,
-                 static_analysis=False,
+                 static_analysis='regular',
                  check_if_kernel_installed=True):
         # any non-py file must first be converted using jupytext, we need
         # that representation for validation, if input is already a .py file
@@ -121,11 +124,51 @@ class NotebookSource(Source):
             self._primitive = primitive
         elif isinstance(primitive, Path):
             self._path = primitive
+
+            if primitive.is_dir():
+                raise SourceInitializationError(
+                    f'Failed to initialize {str(primitive)!r}. '
+                    'Expected a file, got a directory.' +
+                    _suggest_ploomber_scaffold_is_dir())
+
+            if not primitive.exists():
+                raise SourceInitializationError(
+                    f'Failed to initialize {str(primitive)!r}. '
+                    'File does not exist.' +
+                    _suggest_ploomber_scaffold_missing_file())
+
             self._primitive = primitive.read_text()
         else:
             raise TypeError('Notebooks must be initialized from strings, '
                             'Placeholder or pathlib.Path, got {}'.format(
                                 type(primitive)))
+
+        if static_analysis is False:
+            warnings.warn(
+                "In Ploomber 0.16, static_analysis "
+                "changed from a boolean to a string. "
+                "Change the value from False"
+                f" to 'disable' in {str(self._path)!r} "
+                "to remove this warning. "
+                "This will raise an error in Ploomber 0.18", FutureWarning)
+            static_analysis = 'disable'
+
+        if static_analysis is True:
+            warnings.warn(
+                "In Ploomber 0.16, static_analysis "
+                "changed from a boolean to a string. "
+                "Change the value from True"
+                f" to 'regular' in {str(self._path)!r} "
+                "to remove this warning. "
+                "This will raise an error in Ploomber 0.18", FutureWarning)
+            static_analysis = 'regular'
+
+        static_analysis_vals = {'disable', 'regular', 'strict'}
+
+        if static_analysis not in static_analysis_vals:
+            raise ValueError(f'{static_analysis!r} is not a '
+                             "valid 'static_analysis' value, choose one from: "
+                             f'{pretty_print.iterable(static_analysis_vals)}')
 
         self.static_analysis = static_analysis
         self._kernelspec_name = kernelspec_name
@@ -208,7 +251,7 @@ class NotebookSource(Source):
                 cell.metadata.pop('tags')
 
         self._nb_str_rendered = nbformat.writes(nb)
-        self._post_render_validation(self._params, self._nb_str_rendered)
+        self._post_render_validation()
 
     def _read_nb_str_unrendered(self):
         """
@@ -231,7 +274,8 @@ class NotebookSource(Source):
                 # when this is initialized
                 language=self._language,
                 kernelspec_name=self._kernelspec_name,
-                check_if_kernel_installed=self._check_if_kernel_installed)
+                check_if_kernel_installed=self._check_if_kernel_installed,
+                path=self._path)
 
             # if the user injected cells manually (with plomber nb --inject)
             # the source will contain the injected cell, remove it because
@@ -279,17 +323,31 @@ Go to: https://ploomber.io/s/params for more information
                         'Go to the next URL for '
                         'details: https://ploomber.io/s/params')
 
-            raise SourceInitializationError(msg)
+            raise MissingParametersCellError(msg)
 
-    def _post_render_validation(self, params, nb_str):
+    def _post_render_validation(self):
         """
         Validate params passed against parameters in the notebook
         """
-        if self.static_analysis:
-            if self.language == 'python':
-                # check for errors (e.g., undeclared variables, syntax errors)
-                nb = self._nb_str_to_obj(nb_str)
-                check_notebook(nb, params, filename=self._path or 'notebook')
+        # NOTE: maybe static_analysis = off should not turn off everything
+        # but only warn
+
+        # strict mode: raise and check signature
+        # regular mode: _check_notebook called in NotebookRunner.run
+        if self.static_analysis == 'strict':
+            self._check_notebook(raise_=True, check_signature=True)
+        else:
+            # otherwise, only warn on unused parameters
+            _warn_on_unused_params(self._nb_obj_unrendered, self._params)
+
+    def _check_notebook(self, raise_, check_signature):
+        if self.static_analysis and self.language == 'python':
+            # warn if errors (e.g., undeclared variables, syntax errors)
+            check_notebook(self._nb_str_to_obj(self._nb_str_rendered),
+                           self._params,
+                           filename=self._path or 'notebook',
+                           raise_=raise_,
+                           check_signature=check_signature)
 
     @property
     def doc(self):
@@ -340,6 +398,7 @@ Go to: https://ploomber.io/s/params for more information
         # reload if empty or hot_reload=True
         self._read_nb_str_unrendered()
 
+        # FIXME: this should ignore changes to the markdown cells
         return '\n'.join([c.source for c in self._nb_obj_unrendered.cells])
 
     def __repr__(self):
@@ -516,7 +575,8 @@ def _to_nb_obj(source,
                language,
                ext=None,
                kernelspec_name=None,
-               check_if_kernel_installed=True):
+               check_if_kernel_installed=True,
+               path=None):
     """
     Convert to jupyter notebook via jupytext, if the notebook does not contain
     kernel information and the user did not pass a kernelspec_name explicitly,
@@ -536,6 +596,10 @@ def _to_nb_obj(source,
     language : str
         Programming language
 
+    path : str, default=None
+        Script/notebook path. If not None, it's used to throw an informative
+        error if the notebook fails to load
+
     Returns
     -------
     nb
@@ -553,7 +617,19 @@ def _to_nb_obj(source,
     import jupytext
 
     # let jupytext figure out the format
-    nb = jupytext.reads(source, fmt=ext)
+    try:
+        nb = jupytext.reads(source, fmt=ext)
+    except Exception as e:
+        what = 'notebook' if ext == 'ipynb' else 'script'
+        err = f'Failed to read {what}'
+
+        if path is not None:
+            err += f' from {str(path)!r}'
+
+        raise SourceInitializationError(err) from e
+
+    # NOTE: I can add the cell with parameters here, but what happens if
+    # extract_upstream is false? would that be a problem?
 
     check_nb_kernelspec_info(nb,
                              kernelspec_name,
@@ -816,3 +892,71 @@ def iter_paired_notebooks(nb, fmt_, name):
     for path, fmt_current in (parse_jupytext_format(fmt, name)
                               for fmt in formats):
         yield path, fmt_current
+
+
+def _nb2codestr(nb):
+    return '\n'.join([c.source for c in nb.cells if c.cell_type == 'code'])
+
+
+def _warn_on_unused_params(nb, params):
+    nb = deepcopy(nb)
+    _, idx = find_cell_with_tag(nb, 'parameters')
+    del nb.cells[idx]
+
+    code = _nb2codestr(nb)
+
+    # NOTE: if there a syntax error we cannot accurately check this
+    m = parso.parse(code)
+    names = set(m.get_used_names())
+
+    # remove product since it may not be required
+    # FIXME: maybe only remove it if it's a dictionary with >2 keys
+    unused = set(params) - names - {'product'}
+
+    if unused:
+        warnings.warn('These parameters are not used in the '
+                      f'task\'s source code: {pretty_print.iterable(unused)}')
+
+
+def add_parameters_cell(path, extract_upstream, extract_product):
+    """
+    Add parameters cell to a script/notebook in the given path, overwrites the
+    original file
+    """
+    source = ''
+
+    if extract_upstream:
+        source += """\
+# declare a list tasks whose products you want to use as inputs
+upstream = None
+"""
+    if extract_product:
+        source += """\
+# declare a dictionary with the outputs of this task
+product = None
+"""
+
+    c = JupytextConfiguration()
+    c.notebook_metadata_filter
+    c.cell_metadata_filter = 'all'
+
+    nb = jupytext.read(path)
+    new_cell = nbformat.v4.new_code_cell(source,
+                                         metadata={'tags': ['parameters']})
+    nb.cells.insert(0, new_cell)
+    jupytext.write(nb, path, config=c)
+
+
+def _suggest_ploomber_scaffold_missing_file():
+    if Path('pipeline.yaml').is_file():
+        return '\nTo create it, run: ploomber scaffold'
+    else:
+        return ''
+
+
+def _suggest_ploomber_scaffold_is_dir():
+    if Path('pipeline.yaml').is_file():
+        return ('\nTo create it, delete the directory, '
+                'then run: ploomber scaffold')
+    else:
+        return ''

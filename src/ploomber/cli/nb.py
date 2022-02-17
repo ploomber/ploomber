@@ -9,6 +9,7 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import command_endpoint
 from ploomber.telemetry import telemetry
 from ploomber.sources.notebooksource import recursive_update
+from ploomber.exceptions import BaseException
 
 
 def _call_in_source(dag, method_name, message, kwargs=None):
@@ -237,8 +238,8 @@ def main():
             dag.render(show_progress=False)
 
         if loading_error:
-            raise RuntimeError('Could not run nb command: the DAG '
-                               'failed to load') from loading_error
+            raise BaseException('Could not run nb command: the DAG '
+                                'failed to load') from loading_error
     else:
         dag = None
         args = args_

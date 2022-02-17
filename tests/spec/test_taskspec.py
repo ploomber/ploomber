@@ -6,7 +6,7 @@ from ploomber.spec.taskspec import TaskSpec, task_class_from_source_str
 from ploomber.spec.dagspec import Meta
 from ploomber.tasks import (NotebookRunner, SQLScript, SQLDump, ShellScript,
                             PythonCallable)
-from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.exceptions import DAGSpecInitializationError, ValidationError
 from ploomber import DAG
 
 
@@ -56,6 +56,19 @@ def test_task_class_from_source_str_error():
                                    lazy_import=False,
                                    reload=False,
                                    product=None)
+
+
+def test_task_class_from_source_str_invalid_path():
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        task_class_from_source_str([],
+                                   lazy_import=None,
+                                   reload=None,
+                                   product=None)
+
+    error = "Failed to initialize task from source []"
+    assert error in str(excinfo.value)
+    repr_ = str(excinfo.getrepr())
+    assert 'expected str' in repr_
 
 
 @pytest.mark.parametrize(
@@ -169,7 +182,7 @@ def test_initialization(spec, expected, tmp_sample_tasks, tmp_imports):
 
 @pytest.mark.parametrize('key', ['source', 'product'])
 def test_validate_missing_source(key):
-    with pytest.raises(KeyError):
+    with pytest.raises(ValidationError):
         TaskSpec({key: None}, {
             'extract_product': False,
             'extract_upstream': False

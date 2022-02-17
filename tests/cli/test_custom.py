@@ -404,7 +404,6 @@ def test_parse_doc():
 ])
 def test_parse_doc_if_missing_numpydoc(docstring, expected_summary,
                                        monkeypatch):
-
     def _module_not_found(arg):
         raise ModuleNotFoundError
 
@@ -429,6 +428,21 @@ def test_build_command(args, tmp_nbs, monkeypatch_session):
     args = ['python', '--entry-point', 'pipeline.yaml'] + args
     monkeypatch_session.setattr(sys, 'argv', args)
     build.main(catch_exception=False)
+
+
+def test_build_crash_hides_internal_traceback(tmp_nbs, monkeypatch, capsys):
+    monkeypatch.setattr(sys, 'argv', ['build'])
+
+    # crash pipeline
+    path = Path('load.py')
+    path.write_text(path.read_text() + '\nraise Exception')
+
+    with pytest.raises(SystemExit):
+        build.main()
+
+    captured = capsys.readouterr()
+
+    assert 'ploomber.exceptions.DAGBuildError' not in captured.err
 
 
 @pytest.mark.parametrize('args', [
@@ -456,7 +470,6 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch_session):
     monkeypatch_session.setattr(sys, 'argv', args)
 
     class CustomParserWrapper(CustomParser):
-
         def load_from_entry_point_arg(self):
             dag, args = super().load_from_entry_point_arg()
             dag_mock = MagicMock(wraps=dag)

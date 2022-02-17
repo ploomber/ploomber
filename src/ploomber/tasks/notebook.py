@@ -36,7 +36,29 @@ from ploomber.sources.notebooksource import _cleanup_rendered_nb
 from ploomber.products import File, MetaProduct
 from ploomber.tasks.abc import Task
 from ploomber.util import requires, chdir_code
-from ploomber.io import FileLoaderMixin
+from ploomber.io import FileLoaderMixin, pretty_print
+
+
+def _suggest_passing_product_dictionary():
+    if Path('pipeline.yaml').is_file():
+        return """
+
+If you want to generate multiple products, pass a dictionary to \
+product in your pipeline.yaml:
+
+product:
+  # nb must contain the path to the output notebook
+  nb: products/output-notebook.ipynb
+  # other outputs (optional)
+  data: products/some-data.csv
+  more-data: products/more-data.csv
+"""
+    else:
+        return ('\nIf you want this task '
+                'to generate multiple products, pass a dictionary '
+                'to "product", with the path to the '
+                'output notebook in the "nb" key (e.g. "output.ipynb") '
+                'and any other output paths in other keys)')
 
 
 class NotebookConverter:
@@ -57,43 +79,65 @@ class NotebookConverter:
     Handles cases where the output representation is text (e.g. HTML) or bytes
     (e.g. PDF)
     """
+    # mapping of extensions to the corresponding nbconvert exporter
+    EXTENSION2EXPORTER = {
+        '.md': 'markdown',
+        '.html': 'html',
+        '.tex': 'latex',
+        '.pdf': 'pdf',
+        '.rst': 'rst',
+        '.ipynb': 'ipynb',
+    }
 
     def __init__(self,
                  path_to_output,
                  exporter_name=None,
                  nbconvert_export_kwargs=None):
+        self._suffix = Path(path_to_output).suffix
+
         if exporter_name is None:
-            #  try to infer it from the extension
-            suffix = Path(path_to_output).suffix
 
-            if not suffix:
-                raise ValueError('Could not determine output format for '
-                                 'product: "{}" because it has no extension. '
-                                 'Either add an extension '
-                                 'or explicitly pass a '
-                                 '"nbconvert_exporter_name" to the task '
-                                 'constructor'.format(path_to_output))
+            # try to infer exporter name from the extension
+            if not self._suffix:
+                raise TaskInitializationError(
+                    'Could not determine format for product '
+                    f'{pretty_print.try_relative_path(path_to_output)!r} '
+                    'because it has no extension. '
+                    'Add a valid one '
+                    f'({pretty_print.iterable(self.EXTENSION2EXPORTER)}) '
+                    'or pass "nbconvert_exporter_name".' +
+                    _suggest_passing_product_dictionary())
 
-            exporter_name = suffix[1:]
+            if self._suffix in self.EXTENSION2EXPORTER:
+                exporter_name = self.EXTENSION2EXPORTER[self._suffix]
+            else:
+                raise TaskInitializationError(
+                    'Could not determine '
+                    'format for product '
+                    f'{pretty_print.try_relative_path(path_to_output)!r}. '
+                    'Pass a valid extension '
+                    f'({pretty_print.iterable(self.EXTENSION2EXPORTER)}) or '
+                    'pass "nbconvert_exporter_name".' +
+                    _suggest_passing_product_dictionary())
 
-        self.exporter = self._get_exporter(exporter_name, path_to_output)
-        self.path_to_output = path_to_output
-        self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
+        self._exporter = self._get_exporter(exporter_name, path_to_output)
+        self._path_to_output = path_to_output
+        self._nbconvert_export_kwargs = nbconvert_export_kwargs or {}
 
     def convert(self):
-        if self.exporter is None and self.nbconvert_export_kwargs:
+        if self._exporter is None and self._nbconvert_export_kwargs:
             warnings.warn(
-                f'Output {self.path_to_output!r} is a '
+                f'Output {self._path_to_output!r} is a '
                 'notebook file. nbconvert_export_kwargs '
-                f'{self.nbconvert_export_kwargs!r} will be '
+                f'{self._nbconvert_export_kwargs!r} will be '
                 'ignored since they only apply '
                 'when exporting the notebook to other formats '
                 'such as html. You may change the extension to apply '
                 'the conversion parameters')
 
-        if self.exporter is not None:
-            self._from_ipynb(self.path_to_output, self.exporter,
-                             self.nbconvert_export_kwargs)
+        if self._exporter is not None:
+            self._from_ipynb(self._path_to_output, self._exporter,
+                             self._nbconvert_export_kwargs)
 
     @staticmethod
     def _get_exporter(exporter_name, path_to_output):
@@ -122,27 +166,17 @@ class NotebookConverter:
             # it raises ExporterNameError. However the exception is defined
             # since 5.6.1 so we can safely import it
             except (ValueError, ExporterNameError):
-                example_dict = {
-                    'source': 'script.ipynb',
-                    'product': {
-                        'nb': 'output.ipynb',
-                        'other': path_to_output
-                    }
-                }
-                raise ValueError(
-                    'Could not find nbconvert exporter '
-                    'with name "{}". '
-                    'Change the extension '
-                    'or pass a valid "nbconvert_exporter_name" '
-                    'value. Valid exporters are: {}.\n\nIf "{}" '
-                    'is not intended to be the output noteboook, '
-                    'register multiple products and identify the '
-                    'output notebooks with "nb". Example: {}'.format(
-                        exporter_name,
-                        nbconvert.get_export_names(),
-                        path_to_output,
-                        example_dict,
-                    ))
+                error = True
+            else:
+                error = False
+
+            if error:
+                names = nbconvert.get_export_names()
+                raise TaskInitializationError(
+                    f"{exporter_name!r} is not a "
+                    "valid 'nbconvert_exporter_name' value. "
+                    "Choose one from: "
+                    f'{pretty_print.iterable(names)}')
 
         return exporter
 
@@ -210,12 +244,14 @@ class NotebookRunner(FileLoaderMixin, Task):
         to identify the output notebook (i.e. if product is a list with 3
         ploomber.File, pass the index pointing to the notebook path). If the
         only output is the notebook itself, this parameter is not needed
-    static_analysis : bool
-        Run static analysis after rendering. This compares the "params"
-        argument with the declared arguments in the "parameters" cell (they
-        make notebooks behave more like "functions"), pyflakes is also run to
-        detect errors before executing the notebook. Has no effect if it's not
-        a Python file.
+    static_analysis : ('disabled', 'regular', 'strict'), default='regular'
+        Check for various errors in the notebook. In 'regular' mode, it aborts
+        execution if the notebook has syntax issues, or similar problems that
+        would cause the code to break if executed. In 'strict' mode, it
+        performs the same checks but raises an isse before starting execution
+        of any task, furthermore, it verifies that the parameters cell and
+        the params passed to the notebook match, thus, making the notebook
+        behave like a function with a signature.
     nbconvert_export_kwargs : dict
         Keyword arguments to pass to the ``nbconvert.export`` function (this is
         only used if exporting the output ipynb notebook to another format).
@@ -268,7 +304,7 @@ class NotebookRunner(FileLoaderMixin, Task):
                  nbconvert_exporter_name=None,
                  ext_in=None,
                  nb_product_key='nb',
-                 static_analysis=True,
+                 static_analysis='regular',
                  nbconvert_export_kwargs=None,
                  local_execution=False,
                  check_if_kernel_installed=True):
@@ -328,7 +364,7 @@ class NotebookRunner(FileLoaderMixin, Task):
                      kwargs,
                      ext_in=None,
                      kernelspec_name=None,
-                     static_analysis=False,
+                     static_analysis='regular',
                      check_if_kernel_installed=False):
         return NotebookSource(
             source,
@@ -493,6 +529,11 @@ class NotebookRunner(FileLoaderMixin, Task):
                 Path(tmp_path).unlink()
 
     def run(self):
+        # regular mode: raise but not check signature
+        # strict mode: called at render time
+        if self.static_analysis == 'regular':
+            self.source._check_notebook(raise_=True, check_signature=False)
+
         if isinstance(self.product, MetaProduct):
             path_to_out = Path(str(self.product[self.nb_product_key]))
         else:
@@ -520,11 +561,11 @@ class NotebookRunner(FileLoaderMixin, Task):
             pm.execute_notebook(str(tmp), str(path_to_out_ipynb),
                                 **self.papermill_params)
         except Exception as e:
-            raise TaskBuildError('An error occurred when calling'
-                                 ' papermil.execute_notebook, partially'
-                                 ' executed notebook with traceback '
-                                 'available at {}'.format(
-                                     str(path_to_out_ipynb))) from e
+            raise TaskBuildError(
+                'Error when executing task'
+                f' {self.name!r}. Partially'
+                f' executed notebook available at {str(path_to_out_ipynb)}'
+            ) from e
         finally:
             tmp.unlink()
 

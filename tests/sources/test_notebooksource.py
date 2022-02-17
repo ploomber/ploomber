@@ -11,7 +11,9 @@ from ploomber.tasks._params import Params
 from ploomber.sources.notebooksource import (NotebookSource, is_python,
                                              inject_cell,
                                              determine_kernel_name,
-                                             _cleanup_rendered_nb)
+                                             _cleanup_rendered_nb,
+                                             add_parameters_cell, _to_nb_obj)
+from ploomber.sources.nb_utils import find_cell_with_tag
 from ploomber.products import File
 from ploomber.exceptions import RenderError, SourceInitializationError
 
@@ -195,6 +197,43 @@ def test_skip_kernelspec_install_check():
                    check_if_kernel_installed=False)
 
 
+def test_error_if_missing_source_file():
+    with pytest.raises(SourceInitializationError) as excinfo:
+        NotebookSource(Path('some.py'))
+
+    assert 'File does not exist' in str(excinfo.value)
+
+
+def test_error_if_missing_source_file_suggest_scaffold(tmp_directory):
+    Path('pipeline.yaml').touch()
+
+    with pytest.raises(SourceInitializationError) as excinfo:
+        NotebookSource(Path('some.py'))
+
+    assert 'File does not exist' in str(excinfo.value)
+    assert 'ploomber scaffold' in str(excinfo.value)
+
+
+def test_error_if_source_is_dir(tmp_directory):
+    Path('some.py').mkdir()
+
+    with pytest.raises(SourceInitializationError) as excinfo:
+        NotebookSource(Path('some.py'))
+
+    assert 'Expected a file, got a directory' in str(excinfo.value)
+
+
+def test_error_if_source_is_dir_suggest_scaffold(tmp_directory):
+    Path('some.py').mkdir()
+    Path('pipeline.yaml').touch()
+
+    with pytest.raises(SourceInitializationError) as excinfo:
+        NotebookSource(Path('some.py'))
+
+    assert 'Expected a file, got a directory' in str(excinfo.value)
+    assert 'ploomber scaffold' in str(excinfo.value)
+
+
 def test_error_if_parameters_cell_doesnt_exist():
     with pytest.raises(SourceInitializationError) as excinfo:
         NotebookSource(new_nb(fmt='ipynb', add_tag=False), ext_in='ipynb')
@@ -267,11 +306,11 @@ def test_static_analysis(hot_reload, tmp_directory):
     source.render(params)
 
 
-def test_error_if_missing_params():
+def test_error_if_strict_and_missing_params():
     source = NotebookSource(notebook_ab,
                             ext_in='py',
                             kernelspec_name='python3',
-                            static_analysis=True)
+                            static_analysis='strict')
 
     params = Params._from_dict({'product': File('output.ipynb'), 'a': 1})
 
@@ -281,11 +320,11 @@ def test_error_if_missing_params():
     assert "Missing params: 'b'" in str(excinfo.value)
 
 
-def test_error_if_passing_undeclared_parameter():
+def test_error_if_strict_and_passing_undeclared_parameter():
     source = NotebookSource(notebook_ab,
                             ext_in='py',
                             kernelspec_name='python3',
-                            static_analysis=True)
+                            static_analysis='strict')
 
     params = Params._from_dict({
         'product': File('output.ipynb'),
@@ -300,7 +339,7 @@ def test_error_if_passing_undeclared_parameter():
     assert "Unexpected params: 'c'" in str(excinfo.value)
 
 
-def test_error_if_using_undeclared_variable():
+def test_error_if_strict_and_using_undeclared_variable():
     notebook_w_warning = """
 # + tags=['parameters']
 a = 1
@@ -313,7 +352,7 @@ a + b + c
     source = NotebookSource(notebook_w_warning,
                             ext_in='py',
                             kernelspec_name='python3',
-                            static_analysis=True)
+                            static_analysis='strict')
 
     params = Params._from_dict({
         'product': File('output.ipynb'),
@@ -327,7 +366,7 @@ a + b + c
     assert "undefined name 'c'" in str(excinfo.value)
 
 
-def test_error_if_syntax_error():
+def test_error_if_strict_and_syntax_error():
     notebook_w_error = """
 # + tags=['parameters']
 a = 1
@@ -339,7 +378,7 @@ if
     source = NotebookSource(notebook_w_error,
                             ext_in='py',
                             kernelspec_name='python3',
-                            static_analysis=True)
+                            static_analysis='strict')
 
     params = Params._from_dict({
         'product': File('output.ipynb'),
@@ -353,7 +392,7 @@ if
     assert 'invalid syntax\n\nif\n\n  ^\n' in str(excinfo.value)
 
 
-def test_error_if_undefined_name():
+def test_error_if_strict_and_undefined_name():
     notebook_w_error = """
 # + tags=['parameters']
 
@@ -363,7 +402,7 @@ df.head()
     source = NotebookSource(notebook_w_error,
                             ext_in='py',
                             kernelspec_name='python3',
-                            static_analysis=True)
+                            static_analysis='strict')
 
     params = Params._from_dict({'product': File('output.ipynb')})
 
@@ -733,3 +772,77 @@ def test_cleanup_rendered_nb(nb, expected_n, expected_source):
 
     assert len(out['cells']) == expected_n
     assert [c['source'] for c in out['cells']] == expected_source
+
+
+@pytest.mark.parametrize(
+    'code, name, extract_product, extract_upstream, expected, expected_fmt', [
+        ['', 'file.py', False, False, '', 'light'],
+        ['', 'file.py', True, False, 'product = None', 'light'],
+        ['', 'file.py', False, True, 'upstream = None', 'light'],
+        [
+            nbformat.writes(nbformat.v4.new_notebook()),
+            'file.ipynb',
+            False,
+            False,
+            '',
+            'ipynb',
+        ],
+        [
+            nbformat.writes(nbformat.v4.new_notebook()),
+            'file.ipynb',
+            False,
+            True,
+            'upstream = None',
+            'ipynb',
+        ],
+        [
+            '# %%\n1+1\n\n# %%\n2+2',
+            'file.py',
+            False,
+            True,
+            'upstream = None',
+            'percent',
+        ],
+    ])
+def test_add_parameters_cell(tmp_directory, code, name, extract_product,
+                             extract_upstream, expected, expected_fmt):
+    path = Path(name)
+    path.write_text(code)
+    nb_old = jupytext.read(path)
+
+    add_parameters_cell(name,
+                        extract_product=extract_product,
+                        extract_upstream=extract_upstream)
+
+    nb_new = jupytext.read(path)
+    cell, idx = find_cell_with_tag(nb_new, 'parameters')
+
+    # adds the cell at the top
+    assert idx == 0
+
+    # only adds one cell
+    assert len(nb_old.cells) + 1 == len(nb_new.cells)
+
+    # expected source content
+    assert expected in cell['source']
+
+    # keeps the same format
+    fmt, _ = (('ipynb', None) if path.suffix == '.ipynb' else
+              jupytext.guess_format(path.read_text(), ext=path.suffix))
+    assert fmt == expected_fmt
+
+
+@pytest.mark.parametrize('error, kwargs', [
+    ['Failed to read notebook', dict()],
+    ["Failed to read notebook from 'nb.ipynb'",
+     dict(path='nb.ipynb')],
+])
+def test_to_nb_obj_error_if_corrupted_json(error, kwargs):
+
+    with pytest.raises(SourceInitializationError) as excinfo:
+        _to_nb_obj('', language='python', ext='ipynb', **kwargs)
+
+    assert error in str(excinfo.value)
+    repr_ = str(excinfo.getrepr())
+    assert 'Notebook does not appear to be JSON' in repr_
+    assert 'Expecting value: line 1 column 1 (char 0)' in repr_

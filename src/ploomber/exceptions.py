@@ -31,22 +31,44 @@ class BaseException(ClickException):
         super().__init__(message)
         self.type_ = type_
 
+    def get_message(self):
+        return f'Error: {_build_message(self)}'
+
     def show(self, file: t.Optional[t.IO] = None) -> None:
         if file is None:
             file = get_text_stderr()
 
-        message = _build_message(self)
-        echo(_("Error: {message}").format(message=message), file=file)
+        echo(_(self.get_message()), file=file)
 
 
 class DAGRenderError(Exception):
-    """Raise when a dag fails to build
+    """Raise when a dag fails to render
+
+    Notes
+    -----
+    This is a special exception that should only be raised under specific
+    circumstances in the DAG implementation. Review carefully since this
+    exceptions signals special output formatting in the CLI (via the
+    @cli_endpoint decorator)
     """
     pass
 
 
 class DAGBuildError(Exception):
     """Raise when a dag fails to build
+
+    Notes
+    -----
+    This is a special exception that should only be raised under specific
+    circumstances in the DAG implementation. Review carefully since this
+    exceptions signals special output formatting in the CLI (via the
+    @cli_endpoint decorator)
+    """
+    pass
+
+
+class DAGWithDuplicatedProducts(BaseException):
+    """Raised when more than one task has the same product
     """
     pass
 
@@ -83,8 +105,14 @@ class RenderError(Exception):
     pass
 
 
-class SourceInitializationError(Exception):
+class SourceInitializationError(BaseException):
     """Raise when a source fails to initialize due to wrong parameters
+    """
+    pass
+
+
+class MissingParametersCellError(SourceInitializationError):
+    """Raise when a script or notebook is missing the parameters cell
     """
     pass
 
@@ -159,7 +187,7 @@ class SpecValidationError(Exception):
         return msg
 
 
-class SQLExecuteError(Exception):
+class SQLTaskBuildError(TaskBuildError):
     """
     Raised by SQLScript and SQLDump when the .execute method fails
     """
@@ -169,8 +197,7 @@ class SQLExecuteError(Exception):
         self.original = original
         error_message = ('An error occurred when executing '
                          f'{type_.__name__} task with '
-                         f'source code:\n\n{source_code}\n\n'
-                         f'Reason: {str(original)}')
+                         f'source code:\n\n{source_code!r}\n')
         super().__init__(error_message)
 
 
@@ -185,6 +212,12 @@ class MissingClientError(Exception):
     """
     Raised when failing to get a valid task-level or dag-level client
     for a Task or Product
+    """
+    pass
+
+
+class ValidationError(BaseException):
+    """Raised when failed to validate input data
     """
     pass
 

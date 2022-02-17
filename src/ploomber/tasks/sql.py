@@ -11,7 +11,7 @@ from ploomber.products import (File, PostgresRelation, SQLiteRelation,
 from ploomber import io
 from ploomber.util import requires
 from ploomber.placeholders.placeholder import _add_globals
-from ploomber.exceptions import SQLExecuteError
+from ploomber.exceptions import SQLTaskBuildError
 
 
 class SQLScript(ClientMixin, Task):
@@ -70,7 +70,7 @@ class SQLScript(ClientMixin, Task):
         try:
             return self.client.execute(source_code)
         except Exception as e:
-            raise SQLExecuteError(type(self), source_code, e) from e
+            raise SQLTaskBuildError(type(self), source_code, e) from e
 
     def load(self, limit=10):
         """Load this task's product in a pandas.DataFrame
@@ -181,7 +181,7 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
         try:
             cursor.execute(source_code)
         except Exception as e:
-            raise SQLExecuteError(type(self), source_code, e) from e
+            raise SQLTaskBuildError(type(self), source_code, e) from e
 
         if self.chunksize:
             i = 1

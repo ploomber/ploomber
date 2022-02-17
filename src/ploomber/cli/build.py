@@ -8,8 +8,8 @@ from ploomber.telemetry import telemetry
 
 # this parameter is only set to True when calling "ploomber interactive"
 @cli_endpoint
-@telemetry.log_call('build')
-def main(render_only=False):
+@telemetry.log_call('build', payload=True)
+def main(payload, render_only=False):
     parser = CustomParser(description='Build pipeline', prog='ploomber build')
 
     with parser:
@@ -69,5 +69,7 @@ def main(render_only=False):
 
         if report:
             print(report)
+
+    payload['dag'] = dag
 
     return dag

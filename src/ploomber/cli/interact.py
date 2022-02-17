@@ -22,10 +22,10 @@ def main():
         err = ('Your dag failed to render, but you can still inspect the '
                'object to debug it.\n')
         telemetry.log_api("interact-error-render",
-                          dag=dag,
                           metadata={
                               'type': 'dag_render_failed',
-                              'exception': err
+                              'exception': err,
+                              'dag': dag,
                           })
         print(err)
 

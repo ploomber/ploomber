@@ -1,6 +1,23 @@
 # CHANGELOG
 
-## 0.15.2dev
+## 0.15.4dev
+* Cleaner tracebacks when DAG fails to build or render
+* Automatically adding a parameters cell to scripts and notebooks if it's missing
+* `NotebookRunner` `static_analysis` behaves differently: it's less picky now, the old behavior default behavior can be turned on if passing `strict` , and can be turned off if passing `disable` (#566)
+* Improves many error messages for clarity
+* `ploomber install` installs dependencies in the current virtual environment by default
+* `ploomber install` works in systems where `python` links to Python 2.7 (#435)
+* `ploomber install` uses lock files by default if they exist
+* `ploomber install` has options to customize its behavior
+* `ploomber scaffold` accepts one positional argument (#484)
+* Fixes an issue that caused `ploomber nb` to hide traceback when failed to load pipeline (#468)
+
+
+## 0.15.3 (2022-02-13)
+* Fixed error when parsing cell magics with inline python
+
+## 0.15.2 (2022-02-11)
+* Fixed misspelling in `pygraphviz` error message ([#575](https://github.com/ploomber/ploomber/issues/575))
 
 ## 0.15.1 (2022-02-08)
 * Sets minimum networkx version ([#536](https://github.com/ploomber/ploomber/issues/536))

@@ -189,7 +189,7 @@ def test_on_render_exceptions_are_logged(executor, caplog):
         with pytest.raises(DAGRenderError):
             dag.render()
 
-    assert 'Exception when running on_render for task "t"' in caplog.text
+    assert "Exception when running on_render for task 't'" in caplog.text
 
 
 @pytest.mark.parametrize('executor', executors_w_exception_logging)
@@ -202,7 +202,7 @@ def test_on_finish_exceptions_are_logged(executor, tmp_directory, caplog):
         with pytest.raises(DAGBuildError):
             dag.build()
 
-    assert 'Exception when running on_finish for task "t"' in caplog.text
+    assert "Exception when running on_finish for task 't'" in caplog.text
 
 
 @pytest.mark.parametrize('executor', executors_w_exception_logging)
@@ -215,7 +215,7 @@ def test_on_failure_exceptions_are_logged(executor, caplog):
         with pytest.raises(DAGBuildError):
             dag.build()
 
-    assert 'Exception when running on_failure for task "t"' in caplog.text
+    assert "Exception when running on_failure for task 't'" in caplog.text
 
 
 # TODO: parametrize by executor since reported status depends on it

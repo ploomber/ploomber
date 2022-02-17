@@ -81,6 +81,7 @@ from ploomber.util import (image_bytes2html, isiterable, requires)
 from ploomber.util.debug import debug_if_exception
 from ploomber import resources
 from ploomber import executors
+from ploomber.executors import _format
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop, DAGCycle)
@@ -382,21 +383,20 @@ class DAG(AbstractDAG):
                         if self.name != 'No name' else 'Rendering DAG')
 
                 with warnings.catch_warnings(record=True) as warnings_current:
+                    warnings.simplefilter("ignore", DeprecationWarning)
+
                     try:
                         t.render(
                             force=force,
                             outdated_by_code=self._params.outdated_by_code,
                             remote=remote)
-                    except Exception:
-                        tr = traceback.format_exc()
+                    except Exception as e:
+                        tr = _format.exception(e)
                         exceptions.append(task=t, message=tr)
 
                 if warnings_current:
-                    w = [
-                        str(a_warning.message)
-                        for a_warning in warnings_current
-                    ]
-                    warnings_.append(task=t, message='\n'.join(w))
+                    warnings_str = [str(w.message) for w in warnings_current]
+                    warnings_.append(task=t, message='\n'.join(warnings_str))
 
             if warnings_:
                 # FIXME: maybe raise one by one to keep the warning type
