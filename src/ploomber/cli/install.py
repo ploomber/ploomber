@@ -19,8 +19,8 @@ import yaml
 
 from ploomber.io._commander import Commander
 from ploomber.exceptions import BaseException
+from ploomber.util.util import check_mixed_envs
 from ploomber.cli.io import command_endpoint
-
 from ploomber.telemetry import telemetry
 
 _SETUP_PY = 'setup.py'
@@ -475,7 +475,7 @@ def _pip_install(cmdr, pip, lock, requirements=_REQS_TXT):
                             '--exclude-editable',
                             description='Locking dependencies',
                             capture_output=True)
-
+        check_mixed_envs(pip_lock)
         name = Path(requirements).stem
         Path(f'{name}.lock.txt').write_text(pip_lock)
 

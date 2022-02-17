@@ -12,6 +12,7 @@ from click.testing import CliRunner
 
 from ploomber.cli import install as install_module
 from ploomber.cli.cli import install
+from ploomber.cli.install import _pip_install
 from ploomber.exceptions import BaseException
 from conftest import (_write_sample_conda_env, _prepare_files,
                       _write_sample_pip_req, _write_sample_conda_files,
@@ -1105,3 +1106,13 @@ def test_check_environment_yaml(content, filename, d_to_use, tmp_directory):
 
     assert d_to_use == d
     assert not Path('.ploomber-conda-tmp.yml').exists()
+
+
+def test_pip_mixed_versions(monkeypatch):
+    mock = Mock()
+    mock.return_value = """pyflakes==2.4.0\nPygments==2.11.2\n
+    pygraphviz @ file:///Users/runner/miniforge3/pygraphviz_1644545996627"""
+
+    monkeypatch.setattr(install_module.Commander, 'run', mock)
+    with pytest.warns(UserWarning):
+        _pip_install(install_module.Commander, {}, True)

@@ -1,10 +1,12 @@
 import os
+import warnings
 from pathlib import Path
 
 import pytest
 
-from ploomber.util import default
 from ploomber.exceptions import DAGSpecInvalidError
+from ploomber.util import util
+from ploomber.util import default
 
 
 def create_package_with_name(name, base='.'):
@@ -521,3 +523,11 @@ def test_entry_point_relative_error_if_doesnt_exist(tmp_directory):
 ])
 def test_extract_name(arg, expected):
     assert default.extract_name(arg) == expected
+
+
+# Check no warning when an empty string is passed
+def test_empty_reqs_mixed_envs():
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        util.check_mixed_envs("")
+        util.check_mixed_envs("nlnlyo2h3fnoun29hf2nu39ub")  # No \n in str

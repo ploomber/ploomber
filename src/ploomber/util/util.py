@@ -1,5 +1,6 @@
 import sys
 import os
+import warnings
 from pathlib import Path, WindowsPath
 import importlib
 from functools import wraps
@@ -80,6 +81,21 @@ def _make_requires_error_message(missing_pkgs, fn_name, extra_msg):
         error_msg += ('\n' + extra_msg)
 
     return error_msg
+
+
+def check_mixed_envs(env_dependencies):
+    # see: https://github.com/ploomber/soopervisor/issues/67
+    env_dependencies = env_dependencies.split("\n")
+    problematic_dependencies = [
+        dep for dep in env_dependencies if ' @ file://' in dep
+    ]
+    if problematic_dependencies:
+        warnings.warn("Found pip dependencies installed from local files.\n"
+                      "This usually happens when using conda and pip"
+                      " in the same environment, this will break "
+                      "installation of new environments from the lock file."
+                      " Problematic "
+                      f"dependencies:\n{problematic_dependencies}")
 
 
 def safe_remove(path):
