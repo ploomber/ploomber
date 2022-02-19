@@ -12,9 +12,9 @@ around, and slows down progress.
 
 **With Ploomber, you can develop maintainable, collaborative, and production-ready pipelines from day one.**
 
-.. image:: /_static/img/what-is.png
-   :target: /_static/img/what-is.png
-   :alt: what-is
+.. image:: https://ploomber.io/images/doc/what-is-ploomber.png
+   :target: https://ploomber.io/images/doc/what-is-ploomber.png
+   :alt: what-is-ploomber
 
 
 Tell me more

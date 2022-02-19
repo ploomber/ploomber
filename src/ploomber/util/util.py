@@ -1,8 +1,9 @@
 import sys
 import os
+import warnings
 from pathlib import Path, WindowsPath
 import importlib
-from functools import wraps, reduce
+from functools import wraps
 import base64
 import shutil
 import inspect
@@ -24,7 +25,7 @@ def requires(pkgs, name=None, extra_msg=None, pip_names=None):
 
     Parameters
     ----------
-    pkgs
+    pkgs : list
         The names of the packages required
 
     name
@@ -34,7 +35,7 @@ def requires(pkgs, name=None, extra_msg=None, pip_names=None):
     extra_msg
         Append this extra message to the end
 
-    pip_names
+    pip_names : list
         Pip package names to show in the suggested "pip install {name}"
         command, use it if different to the package name itself
 
@@ -51,28 +52,50 @@ def requires(pkgs, name=None, extra_msg=None, pip_names=None):
                     name for name, is_missing in zip(
                         pip_names or pkgs, is_pkg_missing) if is_missing
                 ]
-                names_str = reduce(lambda x, y: x + ' ' + y, missing_pkgs)
 
                 fn_name = name or f.__name__
-                error_msg = ('{} {} required to use {}. Install {} by '
-                             'running "pip install {}"'.format(
-                                 names_str,
-                                 'is' if len(missing_pkgs) == 1 else 'are',
-                                 fn_name,
-                                 'it' if len(missing_pkgs) == 1 else 'them',
-                                 names_str,
-                             ))
 
-                if extra_msg:
-                    error_msg += ('. ' + extra_msg)
-
-                raise ImportError(error_msg)
+                raise ImportError(
+                    _make_requires_error_message(missing_pkgs, fn_name,
+                                                 extra_msg))
 
             return f(*args, **kwargs)
 
         return wrapper
 
     return decorator
+
+
+def _make_requires_error_message(missing_pkgs, fn_name, extra_msg):
+    names_str = ' '.join(repr(pkg) for pkg in missing_pkgs)
+
+    error_msg = ('{} {} required to use {}. Install with: '
+                 'pip install {}'.format(
+                     names_str,
+                     'is' if len(missing_pkgs) == 1 else 'are',
+                     repr(fn_name),
+                     names_str,
+                 ))
+
+    if extra_msg:
+        error_msg += ('\n' + extra_msg)
+
+    return error_msg
+
+
+def check_mixed_envs(env_dependencies):
+    # see: https://github.com/ploomber/soopervisor/issues/67
+    env_dependencies = env_dependencies.split("\n")
+    problematic_dependencies = [
+        dep for dep in env_dependencies if ' @ file://' in dep
+    ]
+    if problematic_dependencies:
+        warnings.warn("Found pip dependencies installed from local files.\n"
+                      "This usually happens when using conda and pip"
+                      " in the same environment, this will break "
+                      "installation of new environments from the lock file."
+                      " Problematic "
+                      f"dependencies:\n{problematic_dependencies}")
 
 
 def safe_remove(path):

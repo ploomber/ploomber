@@ -52,6 +52,7 @@ client to fetch upstream dependencies and execute a given task.
 """
 from functools import reduce
 import fnmatch
+import sys
 import os
 from collections.abc import Iterable
 import traceback
@@ -80,6 +81,7 @@ from ploomber.util import (image_bytes2html, isiterable, requires)
 from ploomber.util.debug import debug_if_exception
 from ploomber import resources
 from ploomber import executors
+from ploomber.executors import _format
 from ploomber.constants import TaskStatus, DAGStatus
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop, DAGCycle)
@@ -93,6 +95,18 @@ from ploomber.dag.abstractdag import AbstractDAG
 from ploomber.dag.util import (check_duplicated_products,
                                fetch_remote_metadata_in_parallel)
 from ploomber.tasks.abc import Task
+
+if sys.version_info < (3, 8):
+    # pygraphviz dropped support for python 3.7
+    _conda_cmd = "conda install 'pygraphviz<1.8' -c conda-forge"
+else:
+    _conda_cmd = "conda install pygraphviz -c conda-forge"
+
+_pygraphviz_message = (
+    f"Note that 'pygraphviz' requires 'graphviz' (which is not "
+    "pip-installable). To install both: "
+    f"{_conda_cmd}\nFor alternatives, see: "
+    "https://ploomber.io/s/plot")
 
 
 class DAG(AbstractDAG):
@@ -369,21 +383,20 @@ class DAG(AbstractDAG):
                         if self.name != 'No name' else 'Rendering DAG')
 
                 with warnings.catch_warnings(record=True) as warnings_current:
+                    warnings.simplefilter("ignore", DeprecationWarning)
+
                     try:
                         t.render(
                             force=force,
                             outdated_by_code=self._params.outdated_by_code,
                             remote=remote)
-                    except Exception:
-                        tr = traceback.format_exc()
+                    except Exception as e:
+                        tr = _format.exception(e)
                         exceptions.append(task=t, message=tr)
 
                 if warnings_current:
-                    w = [
-                        str(a_warning.message)
-                        for a_warning in warnings_current
-                    ]
-                    warnings_.append(task=t, message='\n'.join(w))
+                    warnings_str = [str(w.message) for w in warnings_current]
+                    warnings_.append(task=t, message='\n'.join(warnings_str))
 
             if warnings_:
                 # FIXME: maybe raise one by one to keep the warning type
@@ -767,13 +780,10 @@ class DAG(AbstractDAG):
 
         return out
 
-    @requires(
-        ['pygraphviz'],
-        extra_msg=(
-            'Beware that "graphviz" (which is not pip-installable) is a '
-            'dependency of "pygraphviz", the easiest way to install both is '
-            'through conda "conda install pygraphviz", for more options see: '
-            'https://graphviz.org/'))
+    @requires(['pygraphviz'],
+              extra_msg=_pygraphviz_message,
+              pip_names=['pygraphviz<1.8'] if sys.version_info <
+              (3, 8) else ['pygraphviz'])
     def plot(self, output='embed'):
         """Plot the DAG
 

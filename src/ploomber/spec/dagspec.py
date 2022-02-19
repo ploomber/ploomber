@@ -83,6 +83,7 @@ is implemented by OnlineDAG, which takes a partial definition
 predictions using ``OnlineDAG().predict()``. See ``OnlineDAG`` documentation
 for details.
 """
+import click
 import fnmatch
 import os
 import yaml
@@ -102,7 +103,8 @@ from ploomber.spec.taskspec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
 from ploomber.util import default
 from ploomber.dag.dagconfiguration import DAGConfiguration
-from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.exceptions import (DAGSpecInitializationError,
+                                 MissingParametersCellError)
 from ploomber.env.envdict import EnvDict
 from ploomber.env.expand import (expand_raw_dictionary_and_extract_tags,
                                  expand_raw_dictionaries_and_extract_tags)
@@ -112,6 +114,7 @@ from ploomber.validators.string import (validate_product_class_name,
                                         validate_task_class_name)
 from ploomber.executors import Parallel
 from ploomber.io import pretty_print
+from ploomber.sources import notebooksource
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4)
@@ -226,8 +229,11 @@ class DAGSpec(MutableMapping):
 
             try:
                 data = yaml.safe_load(content)
-            except (yaml.parser.ParserError,
-                    yaml.constructor.ConstructorError) as e:
+            except (
+                    yaml.parser.ParserError,
+                    yaml.constructor.ConstructorError,
+                    yaml.scanner.ScannerError,
+            ) as e:
                 error = e
             else:
                 error = None
@@ -242,7 +248,9 @@ class DAGSpec(MutableMapping):
                         'parser error:\n\n'
                         f'{error}')
                 else:
-                    raise error
+                    raise DAGSpecInitializationError(
+                        'Failed to initialize spec. Got invalid YAML'
+                    ) from error
 
         # initialized with a dictionary...
         else:
@@ -612,7 +620,6 @@ class DAGSpecPartial(DAGSpec):
     A DAGSpec subclass that initializes from a list of tasks (used in the
     onlinedag.py) module
     """
-
     def __init__(self, path_to_partial, env=None):
         with open(path_to_partial) as f:
             tasks = yaml.safe_load(f)
@@ -750,7 +757,22 @@ def process_tasks(dag, dag_spec, root_path=None):
         # init source to extract product
         fn = task_dict['class']._init_source
         kwargs = {'kwargs': {}, **task_dict}
-        source = call_with_dictionary(fn, kwargs=kwargs)
+
+        try:
+            source = call_with_dictionary(fn, kwargs=kwargs)
+        except MissingParametersCellError:
+            missing_params = True
+        else:
+            missing_params = False
+
+        if missing_params:
+            click.secho(
+                f'{kwargs["source"]} is missing the parameters cell, '
+                'adding it at the top of the file...',
+                fg='yellow')
+            notebooksource.add_parameters_cell(kwargs['source'], extract_up,
+                                               extract_prod)
+            source = call_with_dictionary(fn, kwargs=kwargs)
 
         if extract_prod:
             task_dict['product'] = source.extract_product()
@@ -776,8 +798,13 @@ def process_tasks(dag, dag_spec, root_path=None):
     # expand upstream dependencies (in case there are any wildcards)
     for task in tasks:
         if extract_up:
-            upstream[task] = _expand_upstream(task.source.extract_upstream(),
-                                              task_names)
+            try:
+                extracted = task.source.extract_upstream()
+            except Exception as e:
+                raise DAGSpecInitializationError(
+                    f'Failed to initialize task {task.name!r}') from e
+
+            upstream[task] = _expand_upstream(extracted, task_names)
         else:
             upstream[task] = _expand_upstream(upstream_raw[task], task_names)
 

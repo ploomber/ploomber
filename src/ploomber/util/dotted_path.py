@@ -38,7 +38,6 @@ class DottedPath:
         If True, it allows calling the dotted path to return None, otherwise
         it raises an exception
     """
-
     def __init__(self, dotted_path, lazy_load=False, allow_return_none=True):
         self._spec = DottedPathSpecModel.from_spec(dotted_path)
         self._callable = None
@@ -222,6 +221,9 @@ def locate_dotted_path(dotted_path):
     """
     tokens = dotted_path.split('.')
     module = '.'.join(tokens[:-1])
+    # NOTE: if importing a sub-module (e.g., something.another), this will
+    # import some modules (rather than just locating them) - I think we
+    # should remove them to pervent import clashes
     spec = importlib.util.find_spec(module)
 
     if spec is None:
@@ -380,7 +382,6 @@ def dotted_path_exists(dotted_path):
 class BaseModel(pydantic.BaseModel):
     """Base model for specs
     """
-
     def __init__(self, **kwargs):
         # customize ValidationError message
         try:
@@ -418,19 +419,37 @@ class DottedPathSpecModel(BaseModel):
         return self.dict(exclude={'dotted_path'})
 
 
-def create_intermediate_modules(source_parts):
+def create_intermediate_modules(module_parts):
     """
     Creates the folder structure needed for a module specified
     by the parts of its name
+
+    Parameters
+    ----------
+    module_parts : list
+        A list of strings with the module elements.
+        Example: ['module', 'sub_module']
+
+    Raises
+    ------
+    ValueError
+        If the module already exists
     """
-    dotted_path = '.'.join(source_parts)
+    dotted_path_to_module = '.'.join(module_parts)
+    *inner, last = module_parts
 
-    if dotted_path_exists(dotted_path):
-        raise ValueError(f'Dotted path {dotted_path!r} already exists')
+    # check if it already exists
+    if len(module_parts) >= 2:
+        fn_check = dotted_path_exists
+    else:
+        fn_check = importlib.util.find_spec
 
-    *inner, last = source_parts
+    if fn_check(dotted_path_to_module):
+        raise ValueError(f'Module {dotted_path_to_module!r} already exists')
 
-    spec = importlib.util.find_spec(inner[0])
+    # if the root module already exists, we should create the missing files
+    # in the existing location
+    spec = importlib.util.find_spec(module_parts[0])
 
     # .origin will be None for namespace packages
     # on Python 3.6, spec.origin is 'namespace' instead of None

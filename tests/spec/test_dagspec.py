@@ -28,11 +28,11 @@ from ploomber.tasks import SQLScript
 from ploomber import exceptions
 from ploomber.executors import Serial, Parallel
 from ploomber.products import MetaProduct
-from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.exceptions import DAGSpecInitializationError, ValidationError
+from ploomber.sources.nb_utils import find_cell_with_tag
 
 
 def create_engine_with_schema(schema):
-
     def fake_create_engine(*args, **kwargs):
         if 'sqlite' in args[0]:
             return create_engine(*args, **kwargs)
@@ -164,12 +164,12 @@ def test_error_if_missing_tasks_key():
 
 
 def test_validate_top_level_keys():
-    with pytest.raises(KeyError):
+    with pytest.raises(ValidationError):
         DAGSpec({'tasks': [], 'invalid_key': None})
 
 
 def test_validate_meta_keys():
-    with pytest.raises(KeyError):
+    with pytest.raises(ValidationError):
         DAGSpec({'tasks': [], 'meta': {'invalid_key': None}})
 
 
@@ -1207,10 +1207,11 @@ def test_find_searches_in_default_locations(monkeypatch, tmp_nbs, root_path):
 def test_error_invalid_yaml_displays_error_line(tmp_directory):
     Path('pipeline.yaml').write_text('key: [')
 
-    with pytest.raises(yaml.parser.ParserError) as excinfo:
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
         DAGSpec('pipeline.yaml')
 
-    assert 'key: [' in str(excinfo.value)
+    assert 'Failed to initialize spec. Got invalid YAML' in str(excinfo.value)
+    assert 'key: [' in str(excinfo.getrepr())
 
 
 @pytest.mark.parametrize('content', [
@@ -1840,3 +1841,57 @@ tasks:
 
     assert spec['tasks'][0]['params']['a_param'] == literal
     assert dag['function'].params['a_param'] == literal
+
+
+def test_error_when_missing_upstream_in_notebook(tmp_directory):
+    Path('script.py').write_text("""
+# + tags=["parameters"]
+something = None
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: output.ipynb
+""")
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        DAGSpec('pipeline.yaml').to_dag()
+
+    repr_ = str(excinfo.getrepr())
+    assert "Failed to initialize task 'script'" in repr_
+    assert "Could not parse a valid 'upstream' variable" in repr_
+
+
+def test_error_when_invalid_yaml(tmp_directory):
+    Path('pipeline.yaml').write_text("""
+tasks: []
+-
+""")
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        DAGSpec('pipeline.yaml').to_dag()
+
+    repr_ = str(excinfo.getrepr())
+    assert "Failed to initialize spec. Got invalid YAML" in repr_
+    assert "while parsing a block mapping" in repr_
+
+
+def test_adds_parameters_cell_if_missing(tmp_directory, capsys):
+    path = Path('script.py')
+    path.touch()
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: output.ipynb
+""")
+
+    DAGSpec('pipeline.yaml').to_dag()
+
+    cell, idx = find_cell_with_tag(jupytext.read(path), 'parameters')
+
+    captured = capsys.readouterr()
+    assert "script.py is missing the parameters cell" in captured.out
+    assert cell
+    assert idx == 0

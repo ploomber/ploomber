@@ -2,7 +2,7 @@ import datetime
 import pathlib
 import click
 import sys
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 from pathlib import Path
 
 import pytest
@@ -16,6 +16,7 @@ import ploomber.dag.dag as dag_module
 from ploomber.tasks.tasks import PythonCallable
 from ploomber.products.file import File
 from ploomber.exceptions import BaseException
+from ploomber.spec import DAGSpec
 
 from conftest import _write_sample_conda_env, _prepare_files
 
@@ -260,8 +261,8 @@ setup(
                              [1, 0, 0, 0, 0, 1],
                              [1, 0, 0, 1, 0, 1],
                          ])
-def test_install_lock_exception(tmp_directory, has_conda, use_lock, env,
-                                env_lock, reqs, reqs_lock, monkeypatch):
+def test_install_lock_uses_telemetry(tmp_directory, has_conda, use_lock, env,
+                                     env_lock, reqs, reqs_lock, monkeypatch):
     _prepare_files(has_conda, use_lock, env, env_lock, reqs, reqs_lock,
                    monkeypatch)
     Path('setup.py').write_text(setup_py)
@@ -269,8 +270,8 @@ def test_install_lock_exception(tmp_directory, has_conda, use_lock, env,
     mock = Mock()
     monkeypatch.setattr(install.telemetry, "log_api", mock)
 
-    with pytest.raises(click.ClickException):
-        install.main(True if use_lock else False)
+    with pytest.raises(SystemExit):
+        install.main(use_lock=True if use_lock else False)
 
     assert mock.call_count == 2
 
@@ -282,7 +283,7 @@ def test_install_uses_telemetry(monkeypatch, tmp_directory):
     mock = Mock()
     monkeypatch.setattr(install.telemetry, "log_api", mock)
 
-    install.main(False)
+    install.main(use_lock=False)
     assert mock.call_count == 2
 
 
@@ -296,7 +297,7 @@ def test_build_uses_telemetry(monkeypatch, tmp_directory):
     monkeypatch.setattr(build.telemetry, "log_api", mock)
 
     build.main(catch_exception=False)
-    assert mock.call_count == 1
+    assert mock.call_count == 2
 
 
 @pytest.mark.parametrize('args', [
@@ -317,7 +318,7 @@ def test_task_command(args, tmp_nbs, monkeypatch):
     monkeypatch.setattr(task.telemetry, "log_api", mock)
     task.main(catch_exception=False)
 
-    assert mock.call_count == 1
+    assert mock.call_count == 2
 
 
 def test_report_command(monkeypatch, tmp_directory):
@@ -342,13 +343,13 @@ def test_status_command(monkeypatch):
     monkeypatch.setattr(status.telemetry, "log_api", mock)
     status.main(catch_exception=False)
 
-    assert mock.call_count == 1
+    assert mock.call_count == 2
 
 
 def test_interact_uses_telemetry(monkeypatch, tmp_nbs):
     mock_start_ipython = Mock()
     monkeypatch.setattr(sys, 'argv', ['interact'])
-    monkeypatch.setattr(interact, 'start_ipython', mock_start_ipython)
+    monkeypatch.setattr(interact, 'start_ipython', Mock())
     monkeypatch.setattr(interact.telemetry, 'log_api', mock_start_ipython)
     interact.main(catch_exception=False)
 
@@ -601,45 +602,178 @@ def test_creates_config_directory(monkeypatch, tmp_nbs,
     assert Path('stats', 'config.yaml').is_file()
 
 
-def test_log_exception(monkeypatch):
+@pytest.fixture
+def mock_telemetry(monkeypatch):
     mock = Mock()
     mock_dt = Mock()
     mock_dt.now.side_effect = [1, 2]
     monkeypatch.setattr(telemetry, 'log_api', mock)
     monkeypatch.setattr(telemetry.datetime, 'datetime', mock_dt)
+    yield mock
 
-    @telemetry.log_exception('some-action')
+
+def test_log_call_success(mock_telemetry):
+    @telemetry.log_call('some-action')
+    def my_function():
+        pass
+
+    my_function()
+
+    mock_telemetry.assert_has_calls([
+        call(action='some-action-started', metadata=dict(argv=sys.argv)),
+        call(action='some-action-success',
+             total_runtime='1',
+             metadata=dict(argv=sys.argv)),
+    ])
+
+
+def test_log_call_exception(mock_telemetry):
+    @telemetry.log_call('some-action')
     def my_function():
         raise ValueError('some error')
 
     with pytest.raises(ValueError):
         my_function()
 
-    mock.assert_called_once_with(action='some-action',
-                                 total_runtime='1',
-                                 metadata={
-                                     'type': '',
-                                     'exception': 'some error'
-                                 })
+    mock_telemetry.assert_has_calls([
+        call(action='some-action-started', metadata=dict(argv=sys.argv)),
+        call(action='some-action-error',
+             total_runtime='1',
+             metadata={
+                 'type': None,
+                 'exception': 'some error',
+                 'argv': sys.argv,
+             })
+    ])
 
 
-def test_log_exception_logs_type(monkeypatch):
-    mock = Mock()
-    mock_dt = Mock()
-    mock_dt.now.side_effect = [1, 2]
-    monkeypatch.setattr(telemetry, 'log_api', mock)
-    monkeypatch.setattr(telemetry.datetime, 'datetime', mock_dt)
-
-    @telemetry.log_exception('some-action')
+def test_log_call_logs_type(mock_telemetry):
+    @telemetry.log_call('some-action')
     def my_function():
         raise BaseException('some error', type_='some-type')
 
     with pytest.raises(BaseException):
         my_function()
 
-    mock.assert_called_once_with(action='some-action',
-                                 total_runtime='1',
-                                 metadata={
-                                     'type': 'some-type',
-                                     'exception': 'some error'
-                                 })
+    mock_telemetry.assert_has_calls([
+        call(action='some-action-started', metadata=dict(argv=sys.argv)),
+        call(action='some-action-error',
+             total_runtime='1',
+             metadata={
+                 'type': 'some-type',
+                 'exception': 'some error',
+                 'argv': sys.argv,
+             })
+    ])
+
+
+def test_log_call_add_payload_error(mock_telemetry):
+    @telemetry.log_call('some-action', payload=True)
+    def my_function(payload):
+        payload['dag'] = 'value'
+        raise BaseException('some error', type_='some-type')
+
+    with pytest.raises(BaseException):
+        my_function()
+
+    mock_telemetry.assert_has_calls([
+        call(action='some-action-started', metadata=dict(argv=sys.argv)),
+        call(action='some-action-error',
+             total_runtime='1',
+             metadata={
+                 'type': 'some-type',
+                 'exception': 'some error',
+                 'argv': sys.argv,
+                 'dag': 'value',
+             })
+    ])
+
+
+def test_log_call_add_payload_success(mock_telemetry):
+    @telemetry.log_call('some-action', payload=True)
+    def my_function(payload):
+        payload['dag'] = 'value'
+
+    my_function()
+
+    mock_telemetry.assert_has_calls([
+        call(action='some-action-started', metadata=dict(argv=sys.argv)),
+        call(action='some-action-success',
+             total_runtime='1',
+             metadata={
+                 'argv': sys.argv,
+                 'dag': 'value',
+             })
+    ])
+
+
+expected_dag_dict = {
+    'dag_size': 3,
+    'tasks': {
+        'load': {
+            'status': 'WaitingRender',
+            'type': 'NotebookRunner',
+            'upstream': {},
+            'products': {
+                'nb': 'load.ipynb',
+                'data': 'data.csv'
+            }
+        },
+        'clean': {
+            'status': 'WaitingRender',
+            'type': 'NotebookRunner',
+            'upstream': {
+                'load': "data.csv')}"
+            },
+            'products': {
+                'nb': 'clean.ipynb',
+                'data': 'clean.csv'
+            }
+        },
+        'plot': {
+            'status': 'WaitingRender',
+            'type': 'NotebookRunner',
+            'upstream': {
+                'clean': "clean.csv')}"
+            },
+            'products': 'plot.ipynb'
+        }
+    }
+}
+
+
+@pytest.fixture
+def mock_posthog_capture(monkeypatch):
+    mock = Mock()
+    mock_dt = Mock()
+    mock_dt.now.side_effect = [1, 2, 3]
+    monkeypatch.setattr(telemetry.posthog, 'capture', mock)
+    monkeypatch.setattr(telemetry, '_get_telemetry_info', lambda:
+                        (True, 'UID', False))
+    return mock
+
+
+@pytest.mark.xfail(sys.platform == "win32", reason="bug in parse_dag")
+def test_parses_dag(mock_posthog_capture, tmp_nbs):
+    @telemetry.log_call('some-action', payload=True)
+    def my_function(payload):
+        payload['dag'] = DAGSpec('pipeline.yaml').to_dag()
+
+    my_function()
+
+    call2_kwargs = mock_posthog_capture.call_args_list[1][1]
+    assert call2_kwargs['properties']['metadata']['dag'] == expected_dag_dict
+
+
+@pytest.mark.xfail(sys.platform == "win32", reason="bug in parse_dag")
+def test_parses_dag_on_exception(mock_posthog_capture, tmp_nbs):
+    @telemetry.log_call('some-action', payload=True)
+    def my_function(payload):
+        payload['dag'] = DAGSpec('pipeline.yaml').to_dag()
+        raise BaseException('some error', type_='some-type')
+
+    with pytest.raises(BaseException):
+        my_function()
+
+    call2_kwargs = mock_posthog_capture.call_args_list[1][1]
+    assert call2_kwargs['properties']['metadata']['dag'] == expected_dag_dict

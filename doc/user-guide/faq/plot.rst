@@ -16,6 +16,9 @@ The simplest way to do so is using ``conda``, but you can get it working with ``
     conda install pygraphviz -c conda-forge
 
 
+.. important::
+    If you're running Python ``3.7.x`` or lower, run: ``conda install 'pygraphviz<1.8' -c conda-forge``
+
 ``pip``
 *******
 
@@ -36,3 +39,6 @@ Once you have ``graphviz``, you can install ``pygraphviz`` with ``pip``:
 
     pip install pygraphviz
 
+
+.. important::
+    If you're running Python ``3.7.x`` or lower, run: ``pip install 'pygraphviz<1.8'``

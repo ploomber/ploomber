@@ -10,6 +10,7 @@ import pytest
 from ploomber.dag import onlinedag
 from ploomber.dag.onlinedag import OnlineDAG, OnlineModel
 from ploomber.spec import DAGSpec
+from ploomber.exceptions import ValidationError
 
 
 class FakePredictor:
@@ -82,7 +83,7 @@ def test_error_if_invalid_predict_kwargs(backup_online,
                                          add_current_to_sys_path):
     model = ModelFromSpec()
 
-    with pytest.raises(KeyError):
+    with pytest.raises(ValidationError):
         model.predict(invalid=42)
 
 

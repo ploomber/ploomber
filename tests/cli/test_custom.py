@@ -33,9 +33,28 @@ def test_no_options(monkeypatch):
 @pytest.mark.parametrize('cmd, suggestion', [
     ['execute', 'build'],
     ['run', 'build'],
+    ['bulid', 'build'],
+    ['buld', 'build'],
+    ['bild', 'build'],
+    ['uild', 'build'],
+    ['buil', 'build'],
+    ['example', 'examples'],
+    ['exemples', 'examples'],
+    ['exmples', 'examples'],
+    ['exampes', 'examples'],
+    ['tsk', 'task'],
+    ['tas', 'task'],
+    ['rport', 'report'],
+    ['reprt', 'report'],
+    ['repor', 'report'],
+    ['stat', 'status'],
+    ['stats', 'status'],
+    ['satus', 'status'],
+    ['inteact', 'interact'],
+    ['interat', 'interact'],
 ])
 def test_suggestions(monkeypatch, capsys, cmd, suggestion):
-    monkeypatch.setattr(sys, 'argv', ['ploomber', 'execute'])
+    monkeypatch.setattr(sys, 'argv', ['ploomber', cmd])
 
     with pytest.raises(SystemExit) as excinfo:
         cmd_router()
@@ -385,7 +404,6 @@ def test_parse_doc():
 ])
 def test_parse_doc_if_missing_numpydoc(docstring, expected_summary,
                                        monkeypatch):
-
     def _module_not_found(arg):
         raise ModuleNotFoundError
 
@@ -410,6 +428,21 @@ def test_build_command(args, tmp_nbs, monkeypatch_session):
     args = ['python', '--entry-point', 'pipeline.yaml'] + args
     monkeypatch_session.setattr(sys, 'argv', args)
     build.main(catch_exception=False)
+
+
+def test_build_crash_hides_internal_traceback(tmp_nbs, monkeypatch, capsys):
+    monkeypatch.setattr(sys, 'argv', ['build'])
+
+    # crash pipeline
+    path = Path('load.py')
+    path.write_text(path.read_text() + '\nraise Exception')
+
+    with pytest.raises(SystemExit):
+        build.main()
+
+    captured = capsys.readouterr()
+
+    assert 'ploomber.exceptions.DAGBuildError' not in captured.err
 
 
 @pytest.mark.parametrize('args', [
@@ -437,7 +470,6 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch_session):
     monkeypatch_session.setattr(sys, 'argv', args)
 
     class CustomParserWrapper(CustomParser):
-
         def load_from_entry_point_arg(self):
             dag, args = super().load_from_entry_point_arg()
             dag_mock = MagicMock(wraps=dag)

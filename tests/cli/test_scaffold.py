@@ -7,21 +7,38 @@ from click.testing import CliRunner
 
 from ploomber.cli.cli import scaffold
 from ploomber.cli import cli
+from ploomber import scaffold as scaffold_module
 from tests_util import assert_function_in_module, write_simple_pipeline
 
 
+@pytest.mark.parametrize('arg', [
+    'myproject',
+    'some/path/to/project',
+])
+def test_scaffold_pass_name_as_arg(tmp_directory, arg):
+    runner = CliRunner()
+    result = runner.invoke(scaffold, args=arg, catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert Path(arg).is_dir()
+    assert Path(arg, 'pipeline.yaml').is_file()
+
+
 @pytest.mark.parametrize('args, conda, package, empty', [
-    [[], False, False, False],
+    [[], None, False, False],
     [['--conda'], True, False, False],
-    [['--package'], False, True, False],
-    [['--empty'], False, False, True],
+    [['--pip'], False, False, False],
+    [['--package'], None, True, False],
+    [['--empty'], None, False, True],
     [['--conda', '--package'], True, True, False],
     [['--conda', '--package', '--empty'], True, True, True],
+    [['--pip', '--package'], False, True, False],
+    [['--pip', '--package', '--empty'], False, True, True],
 ])
 def test_ploomber_scaffold(tmp_directory, monkeypatch, args, conda, package,
                            empty):
     """
-    Testing scaffold for creating a new project
+    Testing cli args are correctly routed to the function
     """
     mock = Mock()
     monkeypatch.setattr(cli.scaffold_project, 'cli', mock)
@@ -69,19 +86,10 @@ def test_ploomber_scaffold_task_template(file_, extract_flag, tmp_directory):
     runner = CliRunner()
     result = runner.invoke(scaffold)
 
-    content = Path(file_).read_text()
-
     assert "Found spec at 'pipeline.yaml'" in result.output
     assert 'Created 1 new task sources.' in result.output
     assert result.exit_code == 0
-    assert 'Add description here' in content
-    assert ('extract_upstream={} '
-            'in your pipeline.yaml'.format(extract_flag) in content)
-
-    # task.sql does not output this part
-    if not file_.endswith('.sql'):
-        assert ('extract_product={} '
-                'in your pipeline.yaml'.format(extract_flag) in content)
+    assert Path(file_).exists()
 
 
 @pytest.mark.parametrize(
@@ -220,6 +228,21 @@ tasks:
     assert Path('script.py').is_file()
 
 
+def test_scaffold_two_part_dotted_path(no_sys_modules_cache, tmp_directory):
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: my_module.function
+      product: data.csv
+""")
+
+    runner = CliRunner()
+    result = runner.invoke(scaffold, catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert Path('my_module.py').is_file()
+
+
 @pytest.mark.parametrize("custom_entry_point", [True, False])
 def test_scaffold_with_module(custom_entry_point, tmp_directory,
                               add_current_to_sys_path, no_sys_modules_cache):
@@ -256,5 +279,37 @@ def test_error_if_conflicting_options(flag):
                            catch_exceptions=False)
 
     assert result.exit_code
-    assert (f'Error: -e/--entry-point is not compatible with the {flag} flag\n'
-            == result.output)
+    assert (f'Error: -e/--entry-point is not compatible with {flag}\n' ==
+            result.output)
+
+
+def test_scaffold_adds_current_directory_to_sys_path(no_sys_modules_cache,
+                                                     tmp_directory,
+                                                     monkeypatch):
+    mock = Mock(wraps=scaffold_module.add_to_sys_path)
+    monkeypatch.setattr(scaffold_module, 'add_to_sys_path', mock)
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: my_module.another.function
+      product: data.csv
+""")
+
+    runner = CliRunner()
+    result = runner.invoke(scaffold, catch_exceptions=False)
+
+    assert result.exit_code == 0
+    mock.assert_called_once_with(str(Path(tmp_directory).resolve()),
+                                 chdir=False)
+
+
+def test_error_if_entry_point_and_name():
+    runner = CliRunner()
+    result = runner.invoke(scaffold,
+                           args=['some-name', '-e', 'pipeline.serve.yaml'],
+                           catch_exceptions=False)
+
+    assert result.exit_code
+    expected = ('Error: -e/--entry-point is not compatible with '
+                'the "name" argument\n')
+    assert expected == result.output

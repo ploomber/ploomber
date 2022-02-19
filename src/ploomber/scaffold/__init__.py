@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import click
 
 from ploomber.scaffold.scaffoldloader import ScaffoldLoader
@@ -49,7 +51,9 @@ def add(spec, path_to_spec):
         # make sure current working dir is in the path, otherwise we might not
         # be able to import the PythonCallable functions, which we need to do
         # to locate the modules
-        with add_to_sys_path(path_to_spec, chdir=False):
+        path_to_parent = str(Path(path_to_spec).resolve().parent)
+
+        with add_to_sys_path(path_to_parent, chdir=False):
             for task in spec['tasks']:
                 did_create = loader.create(source=task['source'],
                                            params=spec['meta'],

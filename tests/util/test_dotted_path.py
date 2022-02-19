@@ -491,7 +491,7 @@ def my_function():
     with pytest.raises(ValueError) as excinfo:
         create_intermediate_modules(['my_functions', 'my_function'])
 
-    expected = "Dotted path 'my_functions.my_function' already exists"
+    expected = "Module 'my_functions.my_function' already exists"
     assert str(excinfo.value) == expected
 
 
@@ -529,8 +529,9 @@ def test_create_intermediate_modules_single_namespace(tmp_directory):
 
 
 def test_create_intermediate_modules_single(tmp_directory):
-    with pytest.raises(ValueError):
-        create_intermediate_modules(['something'])
+    create_intermediate_modules(['something'])
+
+    assert Path('something.py').exists()
 
 
 @pytest.mark.parametrize('dotted_path, expected', [

@@ -5,6 +5,7 @@ from ploomber import DAG, InMemoryDAG
 from ploomber.tasks import PythonCallable, ShellScript
 from ploomber.products import File
 from ploomber.tasks import input_data_passer, in_memory_callable
+from ploomber.exceptions import ValidationError
 
 
 def _root(input_data):
@@ -181,5 +182,5 @@ def test_in_memory_callable():
 def test_error_input_data(input_data, dag):
     dag_ = InMemoryDAG(dag)
 
-    with pytest.raises(KeyError):
+    with pytest.raises(ValidationError):
         dag_.build(input_data)

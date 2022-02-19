@@ -1,3 +1,4 @@
+import sys
 import logging
 from itertools import product
 import warnings
@@ -21,6 +22,7 @@ from ploomber.exceptions import (DAGBuildError, DAGRenderError,
 from ploomber.executors import Serial, Parallel, serial
 from ploomber.clients import SQLAlchemyClient
 from ploomber.dag.dagclients import DAGClients
+from ploomber.util import util
 
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
@@ -1126,3 +1128,21 @@ def test_cycle_exception():
     ta >> tb >> ta
     with pytest.raises(DAGCycle):
         dag.build()
+
+
+def test_error_if_missing_pypgraphviz(monkeypatch, dag):
+    monkeypatch.setattr(util.importlib.util, 'find_spec', lambda _: None)
+
+    with pytest.raises(ImportError) as excinfo:
+        dag.plot()
+
+    if sys.version_info < (3, 8):
+        assert ("'pygraphviz<1.8' is required to use 'plot'. Install "
+                "with: pip install 'pygraphviz<1.8'" in str(excinfo.value))
+        assert ("conda install 'pygraphviz<1.8' -c conda-forge"
+                in str(excinfo.value))
+    else:
+        assert ("'pygraphviz' is required to use 'plot'. "
+                "Install with: pip install 'pygraphviz'" in str(excinfo.value))
+        assert ("conda install pygraphviz -c conda-forge"
+                in str(excinfo.value))

@@ -284,31 +284,37 @@ def test_copy_example(clone_examples, tmp_directory):
 
 @pytest.mark.parametrize('target', ['custom-dir', 'custom/dir'])
 def test_copy_to_custom_directory(clone_examples, tmp_directory, target):
-    examples.main('templates/ml-online', output=target)
+    examples.main(name='templates/ml-online', output=target)
 
     assert Path(tmp_directory, target).is_dir()
     assert Path(tmp_directory, target, 'src', 'ml_online').is_dir()
 
 
-def test_error_unknown_example(clone_examples, capsys):
-    examples.main(name='not-an-example', force=False)
-    captured = capsys.readouterr()
-    assert "There is no example named 'not-an-example'" in captured.out
+def test_error_unknown_example(tmp_directory, clone_examples):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli.cli,
+        ['examples', '--name', 'not-an-example', '--output', 'some-directory'])
+
+    assert result.exit_code == 1
+    assert "There is no example named 'not-an-example'" in result.output
 
 
 def test_error_if_already_exists(clone_examples, tmp_directory):
     examples.main(name='templates/ml-online', force=False)
 
-    with pytest.raises(ClickException) as excinfo:
-        examples.main(name='templates/ml-online', force=False)
+    runner = CliRunner()
+    result = runner.invoke(cli.cli,
+                           ['examples', '--name', 'templates/ml-online'])
 
     expected = ("'templates/ml-online' already exists in the current working "
                 "directory, please rename it or move it to another "
                 "location and try again.")
-    assert expected == str(excinfo.value)
+    assert result.exit_code == 1
+    assert expected in result.output
 
 
-def test_error_if_git_clone_fails(monkeypatch):
+def test_error_if_git_clone_fails(monkeypatch, capsys):
     # mock metadata to make it look recent
     metadata = dict(timestamp=datetime.now().timestamp())
     monkeypatch.setattr(examples._ExamplesManager, 'load_metadata',
@@ -317,13 +323,14 @@ def test_error_if_git_clone_fails(monkeypatch):
     mock_run = Mock(side_effect=Exception('message'))
     monkeypatch.setattr(examples.subprocess, 'run', mock_run)
 
-    with pytest.raises(RuntimeError) as excinfo:
+    with pytest.raises(SystemExit):
         examples.main(name=None, force=True)
 
-    assert str(excinfo.value) == (
-        'An error occurred when downloading '
+    captured = capsys.readouterr()
+    assert captured.err == (
+        'Error: An error occurred when downloading '
         'examples. Verify git is installed and your internet connection. '
-        "(Error message: 'message')")
+        "(Error message: 'message')\n")
 
 
 @pytest.mark.parametrize('md, expected', [

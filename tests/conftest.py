@@ -299,6 +299,19 @@ def _write_sample_conda_env_lock():
     _write_sample_conda_env(name='environment.lock.yml')
 
 
+def _write_sample_conda_files(dev=False):
+    _write_sample_conda_env(
+        'environment.yml' if not dev else 'environment.dev.yml')
+    _write_sample_conda_env(
+        'environment.lock.yml' if not dev else 'environment.dev.lock.yml')
+
+
+def _write_sample_pip_files(dev=False):
+    Path('requirements.txt' if not dev else 'requirements.dev.txt').touch()
+    Path('requirements.lock.txt' if not dev else 'requirements.dev.lock.txt'
+         ).touch()
+
+
 def _write_sample_pip_req(name='requirements.txt'):
     Path(name).touch()
 

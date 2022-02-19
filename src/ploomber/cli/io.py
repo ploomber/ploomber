@@ -1,6 +1,9 @@
 from functools import wraps
 import sys
 import traceback
+
+import click
+
 from ploomber.io import TerminalWriter
 from ploomber.exceptions import DAGBuildError, DAGRenderError, BaseException
 
@@ -27,18 +30,17 @@ def cli_endpoint(fn):
     Call some_endpoint(catch_exception=False) to disable this behavior (e.g.
     for testing)
     """
-
     @wraps(fn)
     def wrapper(catch_exception=True, **kwargs):
         if catch_exception:
             try:
                 fn(**kwargs)
             # these already color output
-            except (DAGBuildError, DAGRenderError):
-                error = traceback.format_exc()
+            except (DAGBuildError, DAGRenderError) as e:
+                error = str(e)
                 color = False
             except BaseException as e:
-                e.show()
+                click.secho(e.get_message(), file=sys.stderr, fg='red')
                 sys.exit(1)
             except Exception:
                 error = traceback.format_exc()
@@ -68,11 +70,13 @@ def command_endpoint(fn):
     not execute them. If it tails, it prints error message to stderror, then
     calls with exit code 1.
     """
-
     @wraps(fn)
     def wrapper(**kwargs):
         try:
             fn(**kwargs)
+        except BaseException as e:
+            click.secho(e.get_message(), file=sys.stderr, fg='red')
+            sys.exit(1)
         except Exception as e:
             print(f'Error: {e}', file=sys.stderr)
             sys.exit(1)
