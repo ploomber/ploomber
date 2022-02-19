@@ -1,6 +1,5 @@
 import datetime
 import pathlib
-import click
 import sys
 from unittest.mock import Mock, call
 from pathlib import Path
