@@ -443,7 +443,6 @@ def _try_conda_install_and_lock_dev(cmdr, pkg_manager, env_name, use_lock):
 
 def _next_steps(cmdr, cmd_activate):
     cmdr.success('Next steps')
-
     message = f'$ {cmd_activate}\n' if cmd_activate else ''
     cmdr.print((f'{message}$ ploomber build'))
     cmdr.success()

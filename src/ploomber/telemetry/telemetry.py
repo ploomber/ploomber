@@ -31,8 +31,10 @@ The data we collect is limited to:
 
 import datetime
 import http.client as httplib
+import json
 import warnings
 
+import click
 import posthog
 import yaml
 import os
@@ -252,23 +254,15 @@ def check_uid():
     Checks if local user id exists as a uid file, creates if not.
     """
     uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
-    if not uid_path.exists():  # Create - doesn't exist
+    conf = read_conf_file(uid_path)  # file already exist due to version check
+    if 'uid' not in conf.keys():
         uid = str(uuid.uuid4())
-        try:  # Create for future runs
-            with uid_path.open("w") as file:
-                yaml.dump({"uid": uid}, file)
+        res = write_conf_file(uid_path, {"uid": uid}, error=True)
+        if res:
+            return f"NO_UID {res}"
+        else:
             return uid
-        except Exception as e:
-            warnings.warn(f"ERROR: Can't write UID file: {e}")
-            return f"NO_UID {e}"
-    else:  # read and return uid
-        try:
-            with uid_path.open("r") as file:
-                uid_dict = yaml.safe_load(file)
-            return uid_dict['uid']
-        except Exception as e:
-            warnings.warn(f"Error: Can't read UID file: {e}")
-            return f"NO_UID {e}"
+    return conf.get('uid', "NO_UID")
 
 
 def check_stats_enabled():
@@ -284,21 +278,11 @@ def check_stats_enabled():
     # Check if local config exists
     config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
     if not config_path.exists():
-        try:  # Create for future runs
-            with config_path.open("w") as file:
-                yaml.dump({"stats_enabled": True}, file)
-            return True
-        except Exception as e:
-            warnings.warn(f"ERROR: Can't write to config file: {e}")
-            return True
+        write_conf_file(config_path, {"stats_enabled": True})
+        return True
     else:  # read and return config
-        try:
-            with config_path.open("r") as file:
-                conf = yaml.safe_load(file)
-            return conf['stats_enabled']
-        except Exception as e:
-            warnings.warn(f"Error: Can't read config file {e}")
-            return True
+        conf = read_conf_file(config_path)
+        return conf.get('stats_enabled', True)
 
 
 def check_first_time_usage():
@@ -308,7 +292,97 @@ def check_first_time_usage():
     """
     config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
     uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
-    return not uid_path.exists() and config_path.exists()
+    uid_conf = read_conf_file(uid_path)
+    return config_path.exists() and 'uid' not in uid_conf.keys()
+
+
+def get_latest_version():
+    """
+    The function checks for the latest available ploomber version
+    uid file doesn't exist.
+    """
+    conn = httplib.HTTPSConnection('pypi.org', timeout=1)
+    try:
+        conn.request("GET", "/pypi/ploomber/json")
+        content = conn.getresponse().read()
+        data = json.loads(content)
+        latest = data['info']['version']
+        return latest
+    except Exception:
+        return __version__
+    finally:
+        conn.close()
+
+
+def read_conf_file(conf_path):
+    try:
+        with conf_path.open("r") as file:
+            conf = yaml.safe_load(file)
+            return conf
+    except Exception as e:
+        warnings.warn(f"Error: Can't read config file {e}")
+        return {}
+
+
+def write_conf_file(conf_path, to_write, error=None):
+    try:  # Create for future runs
+        with conf_path.open("w") as file:
+            yaml.dump(to_write, file)
+    except Exception as e:
+        warnings.warn(f"ERROR: Can't write to config file: {e}")
+        if error:
+            return e
+
+
+def check_version():
+    """
+    The function checks if the user runs the latest version
+    This check will be skipped if the version_check_enabled is set to False
+    If it's not the latest, notifies the user and saves the metadata to conf
+    Alerting every 2 days on stale versions
+    """
+    # Read conf file
+    today = datetime.datetime.now()
+    config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
+    conf = read_conf_file(config_path)
+
+    version_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
+    # Update version conf if not there
+    if not version_path.exists():
+        version = {'last_version_check': today}
+    else:
+        version = read_conf_file(version_path)
+        if 'last_version_check' not in version.keys():
+            version['last_version_check'] = today
+
+    write_conf_file(version_path, version)
+
+    # Check if the flag was disabled
+    if conf and 'version_check_enabled' in conf.keys() \
+            and not conf['version_check_enabled']:
+        return
+
+    # If latest version, do nothing
+    latest = get_latest_version()
+
+    if __version__ == latest:
+        return
+
+    # Check if we already notified in the last 2 days
+    last_message = version['last_version_check']
+    diff = (today - last_message).days
+    if diff < 2:
+        return
+
+    click.secho(
+        f"There's a new Ploomber version available ({latest}), "
+        f"you're running {__version__}. To upgrade: "
+        "pip install ploomber --upgrade",
+        fg='yellow')
+
+    # Update latest check date
+    version['last_version_check'] = today
+    write_conf_file(version_path, version)
 
 
 def _get_telemetry_info():
@@ -320,7 +394,11 @@ def _get_telemetry_info():
     # Check if telemetry is enabled, if not skip, else check for uid
     telemetry_enabled = check_stats_enabled()
 
+    # Check latest version
+    check_version()
+
     if telemetry_enabled:
+
         # Check first time install
         is_install = check_first_time_usage()
 
@@ -420,6 +498,7 @@ def log_api(action, client_time=None, total_runtime=None, metadata=None):
 def log_call(action, payload=False):
     """Runs a function and logs it
     """
+
     def _log_call(func):
         @wraps(func)
         def wrapper(*args, **kwargs):

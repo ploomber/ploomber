@@ -1,10 +1,13 @@
+import datetime
 import pathlib
 import sys
 from unittest.mock import Mock, call
 from pathlib import Path
 
 import pytest
+import yaml
 
+import ploomber
 from ploomber.telemetry import telemetry
 from ploomber.telemetry.validate_inputs import str_param, opt_str_param
 from ploomber.cli import plot, install, build, interact, task, report, status
@@ -374,6 +377,15 @@ def test_is_online():
     assert telemetry.is_online()
 
 
+def test_is_online_timeout():
+    # Check the total run time is less than 1.5 secs
+    start_time = datetime.datetime.now()
+    telemetry.is_online()
+    end_time = datetime.datetime.now()
+    total_runtime = end_time - start_time
+    assert total_runtime < datetime.timedelta(milliseconds=1500)
+
+
 def test_parse_dag_products(monkeypatch):
     product = '/ml-basic/output/get.parquet'
     dag = telemetry.clean_tasks_upstream_products(product)
@@ -460,6 +472,115 @@ def test_validate_entries(monkeypatch):
     res = telemetry.validate_entries(event_id, uid, action, client_time,
                                      elapsed_time)
     assert res == (event_id, uid, action, client_time, elapsed_time)
+
+
+def test_conf_file_after_version_check(tmp_directory, monkeypatch):
+    version_path = Path('stats') / 'uid.yaml'
+    write_to_conf_file(tmp_directory=tmp_directory,
+                       monkeypatch=monkeypatch,
+                       last_check='2022-01-20 10:51:41.082376')
+    uid_content = version_path.read_text()
+    uid_content += 'uid: some_user_id\n'
+    version_path.write_text(uid_content)
+
+    # Test that conf file has all required fields
+    telemetry.check_version()
+    with version_path.open("r") as file:
+        conf = yaml.safe_load(file)
+    assert 'uid' in conf.keys()
+    assert len(conf.keys()) == 2
+
+
+def test_get_version_timeout():
+    # Check the total run time is less than 1.5 secs
+    start_time = datetime.datetime.now()
+    telemetry.get_latest_version()
+    end_time = datetime.datetime.now()
+    total_runtime = end_time - start_time
+    assert total_runtime < datetime.timedelta(milliseconds=1500)
+
+
+def test_get_latest_version(monkeypatch):
+    is_latest = telemetry.get_latest_version()
+    assert isinstance(is_latest, str)
+    version_index = [i for i, ltr in enumerate(is_latest) if ltr == '.']
+    assert len(version_index) >= 1
+
+    # Mock version and the conf, check it produces the same version
+    mock_httplib = Mock()
+    mock_httplib.HTTPSConnection().request.side_effect = Exception
+    monkeypatch.setattr(telemetry, 'httplib', mock_httplib)
+    is_latest = telemetry.get_latest_version()
+    assert is_latest == ploomber.__version__
+
+
+def write_to_conf_file(tmp_directory, monkeypatch, last_check):
+    stats = Path('stats')
+    stats.mkdir()
+    conf_path = stats / 'config.yaml'
+    version_path = stats / 'uid.yaml'
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+    conf_path.write_text("version_check_enabled: True\n")
+    version_path.write_text(f"last_version_check: {last_check}\n")
+
+
+def test_version_skips_when_updated(tmp_directory, capsys, monkeypatch):
+    # Path conf file
+    monkeypatch.setattr(telemetry, '__version__', '0.14.8')
+    mock_version = Mock()
+    mock_version.return_value = '0.14.8'
+    monkeypatch.setattr(telemetry, 'get_latest_version', mock_version)
+
+    write_to_conf_file(
+        tmp_directory=tmp_directory,
+        monkeypatch=monkeypatch,
+        last_check='2022-01-20 10:51:41.082376')  # version='0.14.8',
+
+    # Test no warning when same version encountered
+    telemetry.check_version()
+    captured = capsys.readouterr()
+    assert "Ploomber version" not in captured.out
+
+
+def test_user_output_on_different_versions(tmp_directory, capsys, monkeypatch):
+    mock_version = Mock()
+    monkeypatch.setattr(telemetry, 'get_latest_version', mock_version)
+    write_to_conf_file(tmp_directory=tmp_directory,
+                       monkeypatch=monkeypatch,
+                       last_check='2022-01-20 10:51:41.082376')
+    mock_version.return_value = '0.14.0'
+
+    # Check now that the date is different there is an upgrade warning
+    telemetry.check_version()
+    captured = capsys.readouterr()
+    assert "Ploomber version" in captured.out
+
+
+def test_no_output_latest_version(tmp_directory, capsys, monkeypatch):
+    # The file's date is today now, no error should be raised
+    write_to_conf_file(tmp_directory=tmp_directory,
+                       monkeypatch=monkeypatch,
+                       last_check=datetime.datetime.now())
+    telemetry.check_version()
+    captured = capsys.readouterr()
+    assert "Ploomber version" not in captured.out
+
+
+def test_output_on_date_diff(tmp_directory, capsys, monkeypatch):
+    # Warning should be caught since the date and version are off
+    write_to_conf_file(tmp_directory=tmp_directory,
+                       monkeypatch=monkeypatch,
+                       last_check='2022-01-20 10:51:41.082376')
+    version_path = Path('stats') / 'uid.yaml'
+    telemetry.check_version()
+    captured = capsys.readouterr()
+    assert "Ploomber version" in captured.out
+
+    # Check the conf file was updated
+    with version_path.open("r") as file:
+        version = yaml.safe_load(file)
+    diff = (datetime.datetime.now() - version['last_version_check']).days
+    assert diff == 0
 
 
 def test_python_major_version():
