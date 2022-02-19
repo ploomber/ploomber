@@ -177,6 +177,32 @@ def install(use_lock, create_env, use_venv):
 
 
 @cli.command()
+@click.option('--key', default=None, help='Specify your cloud API Key')
+def set_api_key(key):
+    """
+    Set the cloud api key, use -k
+    """
+    print(key)
+
+    # try:  # Create for future runs
+    #     import yaml
+    #     import warnings.warn
+    #     home_path = telemetry.PLOOMBER_HOME_DIR
+    #     config_path = Path(telemetry.check_dir_exist(telemetry.CONF_DIR),
+    #                        'config.yaml')
+    #     # Read conf and add field
+    #     with config_path.open("r") as file:
+    #         conf = yaml.safe_load(file)
+    #     conf['cloud_api_key'] = key
+    #     with config_path.open("w") as file:
+    #         yaml.dump(
+    #             conf,
+    #             file)  #TODO: Make sure it also appends stats as cloud users
+    # except Exception as e:
+    #     warnings.warn(f"ERROR: Can't write to config file: {e}")
+
+
+@cli.command()
 @click.option('-n', '--name', help='Example to download', default=None)
 @click.option('-f', '--force', help='Force examples download', is_flag=True)
 @click.option('-o', '--output', help='Target directory', default=None)
@@ -338,5 +364,12 @@ def interact():
 @cli.command()
 def nb():
     """Manage scripts and notebooks
+    """
+    pass  # pragma: no cover
+
+
+@cli.command()
+def set_api_key():
+    """Set your cloud api key
     """
     pass  # pragma: no cover
