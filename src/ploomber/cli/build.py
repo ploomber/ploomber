@@ -1,13 +1,15 @@
 import sys
 
 from ploomber.cli.parsers import CustomParser
-from ploomber.cli.io import cli_endpoint
+from ploomber.cli.ploomber_io import cli_endpoint
 from ploomber.executors import Parallel
 from ploomber.telemetry import telemetry
+from ploomber.cli.cloud import cloud_wrapper
 
 
 # this parameter is only set to True when calling "ploomber interactive"
 @cli_endpoint
+@cloud_wrapper(payload=True)
 @telemetry.log_call('build', payload=True)
 def main(payload, render_only=False):
     parser = CustomParser(description='Build pipeline', prog='ploomber build')

@@ -426,9 +426,9 @@ def test_parse_dag(monkeypatch, tmp_directory):
     t3 >> t2
 
     res = telemetry.parse_dag(dag)
-    assert res['dag_size'] == 3
+    assert int(res['dag_size']) == 3
     assert res == {
-        'dag_size': 3,
+        'dag_size': '3',
         'tasks': {
             'first': {
                 'status': 'WaitingRender',
@@ -707,7 +707,7 @@ def test_log_call_add_payload_success(mock_telemetry):
 
 
 expected_dag_dict = {
-    'dag_size': 3,
+    'dag_size': '3',
     'tasks': {
         'load': {
             'status': 'WaitingRender',

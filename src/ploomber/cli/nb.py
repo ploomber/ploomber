@@ -6,7 +6,7 @@ import stat
 import click
 
 from ploomber.cli.parsers import CustomParser
-from ploomber.cli.io import command_endpoint
+from ploomber.cli.ploomber_io import command_endpoint
 from ploomber.telemetry import telemetry
 from ploomber.sources.notebooksource import recursive_update
 from ploomber.exceptions import BaseException

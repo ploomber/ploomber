@@ -1,5 +1,5 @@
 from ploomber.cli.parsers import CustomParser
-from ploomber.cli.io import cli_endpoint
+from ploomber.cli.ploomber_io import cli_endpoint
 from ploomber.util.default import extract_name
 
 from ploomber.telemetry import telemetry

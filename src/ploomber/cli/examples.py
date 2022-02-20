@@ -12,7 +12,7 @@ from collections import defaultdict
 import click
 
 from ploomber.io.terminalwriter import TerminalWriter
-from ploomber.cli.io import command_endpoint
+from ploomber.cli.ploomber_io import command_endpoint
 from ploomber.table import Table
 from ploomber.telemetry import telemetry
 from ploomber.exceptions import BaseException

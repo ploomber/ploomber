@@ -20,7 +20,7 @@ import yaml
 from ploomber.io._commander import Commander
 from ploomber.exceptions import BaseException
 from ploomber.util.util import check_mixed_envs
-from ploomber.cli.io import command_endpoint
+from ploomber.cli.ploomber_io import command_endpoint
 from ploomber.telemetry import telemetry
 
 _SETUP_PY = 'setup.py'

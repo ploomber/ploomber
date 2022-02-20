@@ -1,4 +1,5 @@
 from ploomber.cli import (
+    cloud,
     build,
     plot,
     task,
@@ -11,6 +12,7 @@ from ploomber.cli import (
 )
 
 __all__ = [
+    'cloud',
     'task',
     'plot',
     'build',

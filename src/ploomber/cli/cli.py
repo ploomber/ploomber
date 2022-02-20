@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import os
 import sys
@@ -177,32 +178,6 @@ def install(use_lock, create_env, use_venv):
 
 
 @cli.command()
-@click.option('--key', default=None, help='Specify your cloud API Key')
-def set_api_key(key):
-    """
-    Set the cloud api key, use -k
-    """
-    print(key)
-
-    # try:  # Create for future runs
-    #     import yaml
-    #     import warnings.warn
-    #     home_path = telemetry.PLOOMBER_HOME_DIR
-    #     config_path = Path(telemetry.check_dir_exist(telemetry.CONF_DIR),
-    #                        'config.yaml')
-    #     # Read conf and add field
-    #     with config_path.open("r") as file:
-    #         conf = yaml.safe_load(file)
-    #     conf['cloud_api_key'] = key
-    #     with config_path.open("w") as file:
-    #         yaml.dump(
-    #             conf,
-    #             file)  #TODO: Make sure it also appends stats as cloud users
-    # except Exception as e:
-    #     warnings.warn(f"ERROR: Can't write to config file: {e}")
-
-
-@cli.command()
 @click.option('-n', '--name', help='Example to download', default=None)
 @click.option('-f', '--force', help='Force examples download', is_flag=True)
 @click.option('-o', '--output', help='Target directory', default=None)
@@ -253,6 +228,7 @@ def _exit_with_error_message(msg):
 def cmd_router():
     cmd_name = None if len(sys.argv) < 2 else sys.argv[1]
 
+    # These are parsing dynamic parameters and that's why we're isolating it.
     custom = {
         'build': cli_module.build.main,
         'plot': cli_module.plot.main,
@@ -368,8 +344,72 @@ def nb():
     pass  # pragma: no cover
 
 
-@cli.command()
-def set_api_key():
-    """Set your cloud api key
+@cli.group()
+def cloud():
+    """Ploomber cloud command line interface.
     """
     pass  # pragma: no cover
+
+
+@cloud.command()
+@click.argument('user_key', required=True)
+def set_key(user_key):
+    """
+    This function sets the cloud API Key. It validates it's a valid key.
+    If the key is valid, it stores it in the user config.yaml file.
+    """
+    cli_module.cloud.set_key(user_key)
+
+
+@cloud.command()
+def get_key():
+    """
+    This function gets the cloud API Key. It retrieves it from the user
+    config.yaml file. Returns the key if exist, returns None if doesn't exist.
+    """
+    key = cli_module.cloud.get_key()
+    if key:
+        print('This is your cloud API key: {}'.format(key))
+
+
+@cloud.command()
+@click.argument('pipeline_id', default=None, required=False)
+@click.option('-d', '--dag', default=False, is_flag=True, required=False)
+def get_pipelines(pipeline_id, dag):
+    """
+    Use this to get the state of your pipelines, specify a single pipeline_id
+    to get it's state, when not specified, pulls all of the pipelines.
+    You can pass the `latest` tag, instead of pipeline_id to get the latest.
+    Returns a list of pipelines is succeeds, an Error string if fails.
+    """
+    print(
+        json.dumps(cli_module.cloud.get_pipeline(pipeline_id, dag),
+                   indent=4,
+                   sort_keys=True))
+
+
+@cloud.command()
+@click.argument('pipeline_id', required=True)
+@click.argument('status', required=True)
+@click.argument('log', default=None, required=False)
+@click.argument('dag', default=None, required=False)
+@click.argument('pipeline_name', default=None, required=False)
+def write_pipeline(pipeline_id, status, log, pipeline_name, dag):
+    """
+    This function writes a  pipeline, pipeline_id & status are required.
+    You can also add logs and a pipeline name.
+    Returns a string with pipeline id if succeeds, an Error string if fails.
+    """
+    print(
+        cli_module.cloud.write_pipeline(pipeline_id, status, log,
+                                        pipeline_name, dag))
+
+
+@cloud.command()
+@click.argument('pipeline_id', required=True)
+def delete_pipeline(pipeline_id):
+    """
+    This function deletes a pipeline, pipeline_id is required.
+    Returns a string with pipeline id if succeeds, an Error string if fails.
+    """
+    print(cli_module.cloud.delete_pipeline(pipeline_id))

@@ -82,6 +82,7 @@ jobs:
     - name: Run tests
       env:
         PLOOMBER_STATS_ENABLED: false
+        CI_CLOUD_API_KEY: ${{ secrets.CI_CLOUD_API_KEY }}
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env

@@ -62,7 +62,7 @@ def cli_endpoint(fn):
     return wrapper
 
 
-# FIXME: capture only certain types of exceptions. If it's something we dind't
+# FIXME: capture only certain types of exceptions. If it's something we didn't
 # raise, we'd like to see the full traceback
 def command_endpoint(fn):
     """
