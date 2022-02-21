@@ -362,16 +362,18 @@ def check_version():
             and not conf['version_check_enabled']:
         return
 
-    # If latest version, do nothing
-    latest = get_latest_version()
-
-    if __version__ == latest:
-        return
-
     # Check if we already notified in the last 2 days
     last_message = version['last_version_check']
     diff = (today - last_message).days
     if diff < 2:
+        return
+
+    # check latest version (this is an expensive call since it hits pypi.org)
+    # so we only ping the server when it's been 2 days
+    latest = get_latest_version()
+
+    # If latest version, do nothing
+    if __version__ == latest:
         return
 
     click.secho(
@@ -498,7 +500,6 @@ def log_api(action, client_time=None, total_runtime=None, metadata=None):
 def log_call(action, payload=False):
     """Runs a function and logs it
     """
-
     def _log_call(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
