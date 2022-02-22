@@ -1,4 +1,3 @@
-import datetime
 import pathlib
 import sys
 from unittest.mock import Mock, call
@@ -6,7 +5,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-
+import datetime
 import ploomber
 from ploomber.telemetry import telemetry
 from ploomber.telemetry.validate_inputs import str_param, opt_str_param
@@ -286,17 +285,32 @@ def test_install_uses_telemetry(monkeypatch, tmp_directory):
     assert mock.call_count == 2
 
 
-def test_build_uses_telemetry(monkeypatch, tmp_directory):
+@pytest.mark.parametrize('expected', [[
+    call(action='build-started',
+         metadata={
+             'argv': ['python', '--entry-point', 'test_pkg.entry.with_doc']
+         }),
+    call(action='build-success',
+         total_runtime='0:00:00',
+         metadata={
+             'argv': ['python', '--entry-point', 'test_pkg.entry.with_doc'],
+             'dag': dag_module.DAG("No name")
+         })
+]])
+def test_build_uses_telemetry(monkeypatch, tmp_directory, expected):
     _write_sample_conda_env()
     Path('setup.py').write_text(setup_py)
 
     mock = Mock()
+    mock_dt = Mock()
+    mock_dt.now.return_value = datetime.datetime(2022, 2, 24, 8, 16, 29)
     monkeypatch.setattr(sys, 'argv',
                         ['python', '--entry-point', 'test_pkg.entry.with_doc'])
     monkeypatch.setattr(build.telemetry, "log_api", mock)
+    monkeypatch.setattr(telemetry.datetime, 'datetime', mock_dt)
 
     build.main(catch_exception=False)
-    assert mock.call_count == 2
+    assert mock.call_args_list == expected
 
 
 @pytest.mark.parametrize('args', [

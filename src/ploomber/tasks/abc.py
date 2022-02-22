@@ -831,7 +831,7 @@ class Task(abc.ABC):
         if 'last_run' in sections:
             if p.metadata.timestamp is not None:
                 dt = datetime.fromtimestamp(p.metadata.timestamp)
-                date_h = dt.strftime('%b %d, %y at %H:%M')
+                date_h = dt.strftime('%b %d, %Y at %H:%M')
                 time_h = humanize.naturaltime(dt)
                 data['Last run'] = '{} ({})'.format(time_h, date_h)
             else:

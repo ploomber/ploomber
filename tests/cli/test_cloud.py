@@ -1,4 +1,3 @@
-import json
 import os
 import uuid
 from unittest.mock import Mock
@@ -7,11 +6,12 @@ import pytest
 import yaml
 from click.testing import CliRunner
 
-from ploomber.cli import cloud
+from ploomber.cli import cloud, cli
 from ploomber.cli.cli import get_key, set_key, write_pipeline, get_pipelines,\
                             delete_pipeline
 from ploomber.telemetry import telemetry
 from ploomber.telemetry.telemetry import DEFAULT_USER_CONF
+from ploomber.table import Table
 
 
 @pytest.fixture()
@@ -20,7 +20,7 @@ def write_sample_conf(tmp_directory, monkeypatch):
     stats = Path('stats')
     stats.mkdir()
     full_path = (stats / DEFAULT_USER_CONF)
-    full_path.write_text("stats_enabled: True")
+    full_path.write_text("stats_enabled: False")
 
 
 @pytest.fixture()
@@ -31,8 +31,8 @@ def mock_api_key(monkeypatch):
 
 
 def get_ci_api_key():
-    if 'CI_CLOUD_API_KEY' in os.environ:
-        return os.environ['CI_CLOUD_API_KEY']
+    if 'PLOOMBER_CLOUD_API_KEY' in os.environ:
+        return os.environ['PLOOMBER_CLOUD_API_KEY']
     else:
         return cloud.get_key()
 
@@ -52,16 +52,16 @@ def delete_sample_pipeline(pipeline_id=None):
     return res.stdout
 
 
-def get_json_pipeline(pipeline_id=None, dag=None):
+def get_tabular_pipeline(pipeline_id=None, verbose=None):
     runner = CliRunner()
     if pipeline_id:
         args = [pipeline_id]
     else:
         args = []
-    if dag:
-        args.append(dag)
-    res = runner.invoke(get_pipelines, args=args)
-    return json.loads(res.stdout)
+    if verbose:
+        args.append(verbose)
+    res = runner.invoke(get_pipelines, args=args, catch_exceptions=False)
+    return res.stdout
 
 
 def test_write_api_key(write_sample_conf):
@@ -87,7 +87,7 @@ def test_write_key_no_conf_file(tmp_directory, monkeypatch):
     full_path = (Path('stats') / DEFAULT_USER_CONF)
 
     # Write cloud key to existing file, assert on key/val
-    cloud.set_key(key_val)
+    cloud._set_key(key_val)
     with full_path.open("r") as file:
         conf = yaml.safe_load(file)
 
@@ -189,7 +189,7 @@ def test_get_pipeline_no_key(tmp_directory, monkeypatch):
     sample_pipeline_id = str(uuid.uuid4())
     cloud_mock = Mock(return_value=key)
     monkeypatch.setattr(cloud, 'get_key', cloud_mock)
-    pipeline = get_json_pipeline(sample_pipeline_id)
+    pipeline = get_tabular_pipeline(sample_pipeline_id)
     assert isinstance(pipeline, str)
     assert 'API_Key not valid' in pipeline
 
@@ -237,7 +237,7 @@ def test_write_delete_pipeline(mock_api_key):
 
 def test_delete_non_exist_pipeline(mock_api_key):
     pid = 'TEST_PIPELINE'
-    res = get_json_pipeline(pid)
+    res = get_tabular_pipeline(pid)
     assert f'{pid} was not' in res
 
     res = delete_sample_pipeline(pid)
@@ -253,9 +253,9 @@ def test_update_existing_pipeline(mock_api_key):
     res = write_sample_pipeline(pipeline_id=pid, status=end_status)
     assert pid in res
 
-    pipeline = get_json_pipeline(pid)
-    assert isinstance(pipeline, list)
-    assert end_status in pipeline[0]['status']
+    pipeline = get_tabular_pipeline(pid)
+    assert isinstance(pipeline, str)
+    assert end_status in pipeline
 
     res = delete_sample_pipeline(pid)
     assert pid in res
@@ -271,16 +271,29 @@ def test_pipeline_write_error(mock_api_key):
                            catch_exceptions=False)
     assert pid in result.stdout
 
-    pipeline = get_json_pipeline(pid)
-    assert isinstance(pipeline, list)
-    assert end_status in pipeline[0]['status']
+    pipeline = get_tabular_pipeline(pid)
+    assert isinstance(pipeline, str)
+    assert end_status in pipeline
 
     res = delete_sample_pipeline(pid)
     assert pid in res
 
 
 # Get all pipelines, minimum of 3 should exist.
-def test_get_multiple_pipelines(mock_api_key):
+def test_get_multiple_pipelines(monkeypatch, mock_api_key):
+    class CustomTableWrapper(Table):
+        @classmethod
+        def from_dicts(cls, dicts, complete_keys):
+            # call the super class
+            table = super().from_dicts(dicts, complete_keys)
+
+            # store the result in the class
+            cls.table = table
+            return table
+
+    # monkeypatch CustomParser to use our wrapper
+    monkeypatch.setattr(cli, 'Table', CustomTableWrapper)
+
     pid = str(uuid.uuid4())
     pid2 = str(uuid.uuid4())
     pid3 = str(uuid.uuid4())
@@ -292,9 +305,9 @@ def test_get_multiple_pipelines(mock_api_key):
     res = write_sample_pipeline(pipeline_id=pid3, status=status)
     assert pid3 in res
 
-    pipelines = get_json_pipeline()
-    assert isinstance(pipelines, list)
-    assert len(pipelines) >= 3
+    get_tabular_pipeline()
+    table = CustomTableWrapper.table
+    assert len(table['pipeline_id']) >= 3
 
     res = delete_sample_pipeline(pid)
     assert pid in res
@@ -304,15 +317,30 @@ def test_get_multiple_pipelines(mock_api_key):
     assert pid3 in res
 
 
-def test_get_latest_pipeline(mock_api_key):
+def test_get_latest_pipeline(monkeypatch, mock_api_key):
     pid = str(uuid.uuid4())
     status = 'started'
+    api_mock = Mock(return_value=[{"pipeline_id": pid}])
+    monkeypatch.setattr(cloud, 'write_pipeline', api_mock)
+    monkeypatch.setattr(cloud, 'get_pipeline', api_mock)
+
     res = write_sample_pipeline(pid, status)
+    assert pid in str(res)
+
+    pipeline = get_tabular_pipeline('latest')
+    assert isinstance(pipeline, str)
+    assert pid in pipeline
+
+
+def test_get_active_pipeline(monkeypatch, mock_api_key):
+    pid = str(uuid.uuid4())
+    res = write_sample_pipeline(pipeline_id=pid, status='started')
     assert pid in res
 
-    pipeline = get_json_pipeline('latest')
-    assert isinstance(pipeline, list)
-    assert pid == pipeline[0]['pipeline_id']
+    # Cutting the pipelineID for the tabular print
+    pipeline = get_tabular_pipeline('active')
+    prefix = pid.split("-")[0]
+    assert prefix in pipeline
 
     res = delete_sample_pipeline(pid)
     assert pid in res
@@ -347,17 +375,17 @@ def test_get_pipeline_with_dag(monkeypatch, mock_api_key):
     res = cloud.write_pipeline(pipeline_id=pid, status=status, dag=dag)
     assert pid in str(res)
 
-    res = get_json_pipeline(pipeline_id=pid, dag='-d')
-    assert 'dag' in res[0].keys()
+    res = get_tabular_pipeline(pipeline_id=pid, verbose='-v')
+    assert 'dag' in res
 
-    res = get_json_pipeline(pipeline_id=pid)
-    assert 'dag' not in res[0].keys()
+    res = get_tabular_pipeline(pipeline_id=pid)
+    assert 'dag' not in res
 
     res = delete_sample_pipeline(pid)
     assert pid in res
 
 
-# def test_get_multiple_pipelines(mock_api_key):
+# def test_delete_testkey_pipelines(mock_api_key):
 #     res = cloud.get_pipeline()
 #     print(len(res))
 #     for p in res:

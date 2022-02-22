@@ -1895,3 +1895,41 @@ tasks:
     assert "script.py is missing the parameters cell" in captured.out
     assert cell
     assert idx == 0
+
+
+@pytest.mark.parametrize('home', [
+    'dir',
+    'some/nested/dir',
+])
+def test_dagspec_infers_name(tmp_directory, home):
+    home = Path(home)
+    home.mkdir(parents=True)
+
+    path = home / 'script.py'
+    path.touch()
+
+    (home / 'pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: output.ipynb
+""")
+
+    dag = DAGSpec(home / 'pipeline.yaml').to_dag()
+
+    assert dag.name == 'dir'
+
+
+def test_dagspec_from_dir_doesnt_assign_name(tmp_directory):
+    home = Path('dir')
+    home.mkdir()
+    path = home / 'script.py'
+    path.touch()
+
+    dag = DAGSpec({
+        'tasks': [{
+            'source': 'dir/script.py',
+            'product': 'output.ipynb'
+        }]
+    }).to_dag()
+
+    assert dag.name == 'No name'

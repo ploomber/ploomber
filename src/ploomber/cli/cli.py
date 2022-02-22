@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 import os
 import sys
@@ -10,6 +9,8 @@ from ploomber import __version__
 from ploomber import cli as cli_module
 from ploomber import scaffold as _scaffold
 from ploomber_scaffold import scaffold as scaffold_project
+
+from ploomber.table import Table
 from ploomber.telemetry import telemetry
 
 
@@ -374,18 +375,19 @@ def get_key():
 
 @cloud.command()
 @click.argument('pipeline_id', default=None, required=False)
-@click.option('-d', '--dag', default=False, is_flag=True, required=False)
-def get_pipelines(pipeline_id, dag):
+@click.option('-v', '--verbose', default=False, is_flag=True, required=False)
+def get_pipelines(pipeline_id, verbose):
     """
     Use this to get the state of your pipelines, specify a single pipeline_id
     to get it's state, when not specified, pulls all of the pipelines.
     You can pass the `latest` tag, instead of pipeline_id to get the latest.
+    To get a detailed view pass the verbose flag.
     Returns a list of pipelines is succeeds, an Error string if fails.
     """
-    print(
-        json.dumps(cli_module.cloud.get_pipeline(pipeline_id, dag),
-                   indent=4,
-                   sort_keys=True))
+    pipeline = cli_module.cloud.get_pipeline(pipeline_id, verbose)
+    if isinstance(pipeline, list) and pipeline:
+        pipeline = Table.from_dicts(pipeline, complete_keys=True)
+    print(pipeline)
 
 
 @cloud.command()
