@@ -162,3 +162,17 @@ Some commands didn't cover here:
 * ``task``: Execute a single task
 
 See the CLI API documentation :doc:`../api/cli` for a detailed overview of each command.
+
+Enabling Completion
+------------------
+
+In order to setup autocompletion for the CLI, you need to configure your shell.
+
+If using bash, add this to ~/bashrc:
+eval "$(_PLOOMBER_COMPLETE=zsh_source ploomber)"
+
+If using zshrc, add this to ~/.zshrc:
+eval "$(_PLOOMBER_COMPLETE=zsh_source ploomber)"
+
+If using fish, add this to ~/.config/fish/completions/ploomber.fish:
+eval (env _PLOOMBER_COMPLETE=fish_source ploomber)
