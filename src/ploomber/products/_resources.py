@@ -25,13 +25,14 @@ def _check_is_file(path, key):
 
 
 def _check_file_size(path):
-    __resource_file_stat = os.stat(path)
-    __resource_file_size = __resource_file_stat.st_size / 1E+6
-    if __resource_file_size > 1:
+    resource_stat = os.stat(path)
+    resource_file_size = resource_stat.st_size / 1E+6
+    if resource_file_size > 1:
         warnings.warn(
-            "File too large. "
-            "Resource {path}[{__resource_file_size:.2f}MB] > 1MB".format(
-                path=path, __resource_file_size=__resource_file_size))
+            f"resource_ {path!r} is {resource_file_size:.1f} MB. "
+            "It is not recommended to use large files in "
+            "resources_ since it increases task initialization time".format(
+                path=path, resource_file_size=resource_file_size))
 
 
 def _validate(params):
