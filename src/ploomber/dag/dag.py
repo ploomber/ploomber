@@ -358,7 +358,9 @@ class DAG(AbstractDAG):
         Render tasks, and update exec_status
         """
         if not self._params.cache_rendered_status:
-            fetch_remote_metadata_in_parallel(self)
+            # if forcing rendering, there is no need to download metadata
+            if not force:
+                fetch_remote_metadata_in_parallel(self)
 
             if show_progress:
                 tasks = tqdm(self.values(), total=len(self))

@@ -927,3 +927,31 @@ tasks:
 
     model = cm.get(str('load.py'))
     assert get_injected_cell(model['content'])
+
+
+def test_does_not_initialize_clients(tmp_nbs, tmp_imports):
+    # initializing cients is an expensive operation, we shouldn't do it
+    # when loading the DAG in the Jupyter plugin
+
+    Path('clients.py').write_text("""
+def get():
+    raise Exception
+""")
+
+    Path('pipeline.yaml').write_text("""
+clients:
+    File: clients.get
+
+tasks:
+  - source: load.py
+    product:
+      nb: output/load.ipynb
+      data: output/data.csv
+    params:
+      some_param: some_value
+""")
+
+    cm = PloomberContentsManager()
+
+    model = cm.get(str('load.py'))
+    assert get_injected_cell(model['content'])
