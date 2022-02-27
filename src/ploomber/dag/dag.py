@@ -649,8 +649,7 @@ class DAG(AbstractDAG):
         try:
             return deepcopy(self)
         except Exception:
-            print("An error occurred while copying DAG object")
-            raise
+            raise Exception("An error occurred while copying DAG object")
 
     def build_partially(self,
                         target,
