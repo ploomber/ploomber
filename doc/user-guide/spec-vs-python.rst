@@ -60,10 +60,10 @@ scripts support this, for example:
     :class: text-editor
     :name: task-py
 
-    # + tags=["parameters"]
+    # %% tags=["parameters"]
     product = {'nb': 'output.ipynb', 'data': 'output.csv'}
     upstream = ['a_task']
-    # -
+    # 
 
     # continues...
 
