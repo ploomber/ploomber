@@ -163,6 +163,7 @@ class DAG(AbstractDAG):
         task has no serializer. See ``ploombe.tasks.PythonCallable``
         documentation for details.
     """
+
     def __init__(self, name=None, clients=None, executor='serial'):
         self._G = nx.DiGraph()
 
@@ -644,6 +645,12 @@ class DAG(AbstractDAG):
             self._logger.debug('No on_render hook for dag '
                                '"%s", skipping', self.name)
 
+    def _deepcopy_safe(self):
+        try:
+            return deepcopy(self)
+        except Exception:
+            print("An error occurred while copying DAG object")
+
     def build_partially(self,
                         target,
                         force=False,
@@ -677,7 +684,7 @@ class DAG(AbstractDAG):
             it's not possible to build a given task (e.g., missing upstream
             products), this will fail
         """
-        dag_copy = deepcopy(self)
+        dag_copy = self._deepcopy_safe()
 
         # task names are usually str, although this isn't strictly enforced
         if isinstance(target, str) and '*' in target:
@@ -1042,6 +1049,7 @@ def _product_short_repr(product):
 
 
 def _task_short_repr(task):
+
     def short(s):
         max_l = 30
         return s if len(s) <= max_l else s[:max_l - 3] + '...'
