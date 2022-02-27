@@ -77,7 +77,7 @@ ploomber build
 
 You just ran a Ploomber pipeline! 🎉
 
-Check out the ``output`` folder, you'll see an HTML report with model results!
+Check out the ``output`` folder, you'll see a `nb.ipynb` report with model results!
 
 The ``pipeline.yaml`` contains the pipeline declaration. Feel free to modify any of the tasks, then call `ploomber build` again to update the results (Note: if using VSCode or PyCharm, execute `ploomber nb -i` before editing the files).
 
