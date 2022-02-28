@@ -1,6 +1,13 @@
 # CHANGELOG
 
 ## 0.16.1dev
+* Improves error message when `source` in a task spec is a string without an extension (#619)
+* Fixes error that caused `dag.render(force=True)` to download remote metadata
+* Simplify traceback when calling Ploomber task (#605)
+* Emitting warning when `resources_` points to large files (#609)
+* Adds auto-completion steps to documentation (#612)
+* Updates documentation to reflect new default format (`py:percent`) (#564)
+* Showing a mesage when a new version of Ploomber is available (#558)
 
 ## 0.16 (2022-02-17)
 * Cleaner tracebacks when DAG fails to build or render
