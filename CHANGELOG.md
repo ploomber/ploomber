@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.16.2dev
+
 ## 0.16.1 (2022-02-27)
 * Improves error message when `source` in a task spec is a string without an extension ([#619](https://github.com/ploomber/ploomber/issues/619))
 * Fixes error that caused `dag.render(force=True)` to download remote metadata
