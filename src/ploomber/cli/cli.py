@@ -252,8 +252,8 @@ def cmd_router():
         fn = custom[cmd_name]
         fn()
     else:
-        suggestion = dl.get_close_matches(cmd_name, ['build', 'interact', 'status', 'task', 'examples'], cutoff=0.1, n=1)
-        if suggestion in ['build', 'interact', 'status', 'task', 'examples']:
+        suggestion = dl.get_close_matches(cmd_name, ['build', 'interact', 'report', 'status', 'task', 'examples'], cutoff=0.1, n=1)
+        if suggestion in ['build', 'interact', 'report', 'status', 'task', 'examples']:
             telemetry.log_api("unsupported_build_cmd",
                             metadata={
                                 'cmd_name': cmd_name,
