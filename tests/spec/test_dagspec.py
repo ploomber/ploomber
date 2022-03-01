@@ -1064,6 +1064,9 @@ def test_import_tasks_from_with_non_empty_env(tmp_nbs):
 # + tags=["parameters"]
 some_param = None
 # -
+
+# +
+1 + 1
 """)
     spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
     spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
@@ -1457,11 +1460,17 @@ def test_grid_and_upstream_wildcard_scripts(spec, tmp_directory):
 # + tags=['parameters']
 upstream = None
 param = None
+
+# +
+1 + 1
 """)
 
     Path('downstream.py').write_text("""
 # + tags=['parameters']
 upstream = ['upstream-*']
+
+# +
+1 + 1
 """)
 
     spec = DAGSpec(spec)
@@ -1550,11 +1559,17 @@ def test_spec_from_yaml_resolves_paths_from_wildcard(tmp_directory, spec):
 # + tags=['parameters']
 upstream = None
 param = None
+
+# +
+1 + 1
 """)
 
     Path('downstream.py').write_text("""
 # + tags=['parameters']
 upstream = ['upstream-*']
+
+# +
+1 + 1
 """)
 
     spec = DAGSpec(spec)
