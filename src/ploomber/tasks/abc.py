@@ -67,6 +67,7 @@ from ploomber.table import TaskReport, Row
 from ploomber.util import isiterable
 from ploomber.util.util import callback_check
 from ploomber.dag.abstractdag import AbstractDAG
+from ploomber.io import pretty_print
 
 import humanize
 
@@ -361,19 +362,21 @@ class Task(abc.ABC):
         # saving metadata, but not for GenericProduct, since the way
         # exists() works is by checking metadata, so we have to do it
         # here, after saving metadata
-        if not self.product.exists():
-            if isinstance(self.product, MetaProduct):
+        if isinstance(self.product, MetaProduct):
+            missing = self.product.missing()
+
+            if missing:
                 raise TaskBuildError(
                     f'Error building task {self.name!r}: '
-                    'the task ran successfully but the product is '
-                    'missing. Ensure the task is generating the '
-                    'declared products')
-            else:
-                raise TaskBuildError(
-                    f'Error building task {self.name!r}: '
-                    'the task ran successfully but some products is '
-                    'missing. Ensure the task is generating the '
-                    'declared product')
+                    'the task ran successfully but the following '
+                    'products are '
+                    f'missing: {pretty_print.iterable(missing, repr_=True)}')
+
+        elif not self.product.exists():
+            raise TaskBuildError(f'Error building task {self.name!r}: '
+                                 'the task ran successfully but the '
+                                 f'product {self.product!r} is missing. '
+                                 'Ensure your code is generating it.')
 
         if self.exec_status != TaskStatus.WaitingDownload:
             self.product.upload()

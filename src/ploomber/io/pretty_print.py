@@ -1,8 +1,11 @@
 from pathlib import Path
 
 
-def iterable(obj):
-    sorted_ = sorted(f"'{element}'" for element in obj)
+def iterable(obj, repr_=False):
+    if repr_:
+        sorted_ = sorted(repr(element) for element in obj)
+    else:
+        sorted_ = sorted(f"'{element}'" for element in obj)
 
     if len(sorted_) > 1:
         sorted_[-1] = f'and {sorted_[-1]}'

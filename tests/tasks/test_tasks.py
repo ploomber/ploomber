@@ -443,3 +443,33 @@ def test_forced_build_overrides_waiting_download(tmp_directory):
 
     # should download 1.txt then generate 2.txt
     dag[2].build(force=True)
+
+
+def test_error_message_when_some_products_are_missing(tmp_directory):
+    def my_task(product):
+        Path(product['three']).touch()
+
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+    t = PythonCallable(my_task, {
+        'one': File('one'),
+        'two': File('two'),
+        'three': File('three')
+    }, dag)
+
+    with pytest.raises(TaskBuildError) as excinfo:
+        t.build()
+
+    assert "missing: File('one'), and File('two')" in str(excinfo.getrepr())
+
+
+def test_error_message_when_product_is_missing(tmp_directory):
+    def my_task(product):
+        pass
+
+    dag = DAG(executor=Serial(build_in_subprocess=False))
+    t = PythonCallable(my_task, File('one'), dag)
+
+    with pytest.raises(TaskBuildError) as excinfo:
+        t.build()
+
+    assert "but the product File('one') is missing." in str(excinfo.getrepr())
