@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 0.16.2dev
+* Improved documentation in "ploomber nb --help" (#623)
+* Fixed a few errors in the basic concepts tutorial
+* More informative error when task does not generate some products
+* Better error when all the code is in the parameters cell
 
 ## 0.16.1 (2022-02-27)
 * Improves error message when `source` in a task spec is a string without an extension ([#619](https://github.com/ploomber/ploomber/issues/619))
