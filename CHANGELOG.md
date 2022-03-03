@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.16.3dev
+
 ## 0.16.2 (2022-03-03)
 * Improved documentation in "ploomber nb --help" ([#623](https://github.com/ploomber/ploomber/issues/623))
 * Fixed a few errors in the basic concepts tutorial
