@@ -11,7 +11,7 @@
 [![Conda](https://img.shields.io/conda/pn/conda-forge/ploomber)](https://anaconda.org/conda-forge/ploomber)
 [![Coverage](https://coveralls.io/repos/github/ploomber/ploomber/badge.svg?branch=master)](https://coveralls.io/github/ploomber/ploomber?branch=master)
 [![Twitter](https://img.shields.io/twitter/follow/ploomber?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=ploomber)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/spec-api-python%252FREADME.ipynb%26branch%3Dmaster)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster)
 [![Downloads](https://pepy.tech/badge/ploomber)](https://pepy.tech/project/ploomber)
 
 <p align="center">
@@ -59,7 +59,7 @@ conda install ploomber -c conda-forge
 
 **Open a hosted JupyterLab instance:**
 
-[![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/spec-api-python%252FREADME.ipynb%26branch%3Dmaster)
+[![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster)
 
 **Run an example locally:**
 
@@ -85,7 +85,7 @@ The ``pipeline.yaml`` contains the pipeline declaration. Feel free to modify any
 
 Ready to **migrate your project?** [Click here.](https://docs.ploomber.io/en/latest/user-guide/refactoring.html)
 
-Do you want to **learn more?** [Check out the introductory tutorial.](https://docs.ploomber.io/en/latest/get-started/spec-api-python.html)
+Do you want to **learn more?** [Check out the introductory tutorial.](https://docs.ploomber.io/en/latest/get-started/first-pipeline.html)
 
 Run more [examples.](https://docs.ploomber.io/en/latest/user-guide/templates.html)
 
