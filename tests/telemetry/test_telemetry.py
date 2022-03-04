@@ -392,8 +392,8 @@ def test_parse_dag_products(monkeypatch):
     assert dag == 'get.parquet'
 
     products = {
-        'nb': '/spec-api-python/output/get.ipynb',
-        'data': '//spec-api-python/output/data.csv'
+        'nb': '/first-pipeline/output/get.ipynb',
+        'data': '//first-pipeline/output/data.csv'
     }
     dag = telemetry.clean_tasks_upstream_products(products)
     assert dag == {'nb': 'get.ipynb', 'data': 'data.csv'}
