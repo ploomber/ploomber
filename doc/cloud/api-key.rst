@@ -42,6 +42,9 @@ You can simply run this command (make sure to set your key):
 
     ploomber cloud set-key <YOUR_API_KEY>
 
+
+You may also set the key but storing it in the ``PLOOMBER_CLOUD_API_KEY`` environment variable.
+
 You can validate that the key was set correctly by running the get command:
 
 .. code-block:: console
