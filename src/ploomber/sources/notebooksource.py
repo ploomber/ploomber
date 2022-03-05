@@ -55,6 +55,54 @@ from ploomber.sources import docstring
 from ploomber.io import pretty_print
 
 
+def _get_last_cell(nb):
+    """
+    Get last cell, ignores cells with empty source (unless the notebook only
+    has one cell and it's empty)
+    """
+    # iterate in reverse order
+    for idx in range(-1, -len(nb.cells) - 1, -1):
+        cell = nb.cells[idx]
+
+        # only return it if it has some code
+        if cell['source'].strip():
+            return cell
+
+    # otherwise return the first cell
+    return nb.cells[0]
+
+
+def _get_cell_suggestion(nb):
+    format_name = nb.metadata.get('jupytext', {}).get('text_representation',
+                                                      {}).get('format_name')
+
+    preamble = 'Add a new cell with your code'
+
+    if format_name == 'light':
+        message = f'{preamble}:\n' + """
+# + tags=["parameters"]
+# your parameters here...
+# -
+
+# +
+# your code here...
+# -
+"""
+
+    elif format_name == 'percent':
+        message = f'{preamble}:\n' + """
+# %% tags=["parameters"]
+# your parameters here...
+
+# %%
+# your code here...
+"""
+    else:
+        message = preamble + '.'
+
+    return message
+
+
 def requires_path(func):
     """
     Checks if NotebookSource instance was initialized from a file, raises
@@ -231,6 +279,13 @@ class NotebookSource(Source):
         # _read_nb_str_unrendered uses hot_reload, this ensures we always get
         # the latest version
         _, nb = self._read_nb_str_unrendered()
+
+        if 'parameters' in _get_last_cell(nb).metadata.get('tags', []):
+            cell_suggestion = _get_cell_suggestion(nb)
+            kind = 'notebook' if self._ext_in == 'ipynb' else 'script'
+            raise SourceInitializationError(
+                f'Error processing {str(self._path)!r}: the last cell '
+                f'in the {kind} is the parameters cell. {cell_suggestion}')
 
         # this is needed for parameterize_notebook to work
         for cell in nb.cells:

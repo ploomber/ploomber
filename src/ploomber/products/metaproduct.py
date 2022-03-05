@@ -125,6 +125,11 @@ class MetaProduct(Mapping):
     def exists(self):
         return all([p.exists() for p in self.products])
 
+    def missing(self):
+        # used to throw a meaninful error message when some products do not
+        # exist after executing the user's code
+        return [p for p in self.products if not p.exists()]
+
     def delete(self, force=False):
         for product in self.products:
             product.delete(force)

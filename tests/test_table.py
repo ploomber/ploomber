@@ -243,3 +243,12 @@ def test_warns_if_not_enough_space(width_total):
     expected = ("Not enough space to display 2 columns with a width "
                 f"of {width_total}. Using a column width of 1")
     assert record[0].message.args[0] == expected
+
+
+def test_complete_keys():
+    a = dict(i=1, k=2)
+    b = dict(z=3)
+
+    table = Table.from_dicts([a, b], complete_keys=True)
+
+    assert table.to_dict() == {'k': [2, ''], 'z': ['', 3], 'i': [1, '']}

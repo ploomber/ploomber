@@ -9,6 +9,8 @@ from ploomber import __version__
 from ploomber import cli as cli_module
 from ploomber import scaffold as _scaffold
 from ploomber_scaffold import scaffold as scaffold_project
+
+from ploomber.table import Table
 from ploomber.telemetry import telemetry
 
 
@@ -227,6 +229,7 @@ def _exit_with_error_message(msg):
 def cmd_router():
     cmd_name = None if len(sys.argv) < 2 else sys.argv[1]
 
+    # These are parsing dynamic parameters and that's why we're isolating it.
     custom = {
         'build': cli_module.build.main,
         'plot': cli_module.plot.main,
@@ -340,3 +343,75 @@ def nb():
     """Manage scripts and notebooks
     """
     pass  # pragma: no cover
+
+
+@cli.group()
+def cloud():
+    """Ploomber cloud command line interface.
+    """
+    pass  # pragma: no cover
+
+
+@cloud.command()
+@click.argument('user_key', required=True)
+def set_key(user_key):
+    """
+    This function sets the cloud API Key. It validates it's a valid key.
+    If the key is valid, it stores it in the user config.yaml file.
+    """
+    cli_module.cloud.set_key(user_key)
+
+
+@cloud.command()
+def get_key():
+    """
+    This function gets the cloud API Key. It retrieves it from the user
+    config.yaml file. Returns the key if exist, returns None if doesn't exist.
+    """
+    key = cli_module.cloud.get_key()
+    if key:
+        print('This is your cloud API key: {}'.format(key))
+
+
+@cloud.command()
+@click.argument('pipeline_id', default=None, required=False)
+@click.option('-v', '--verbose', default=False, is_flag=True, required=False)
+def get_pipelines(pipeline_id, verbose):
+    """
+    Use this to get the state of your pipelines, specify a single pipeline_id
+    to get it's state, when not specified, pulls all of the pipelines.
+    You can pass the `latest` tag, instead of pipeline_id to get the latest.
+    To get a detailed view pass the verbose flag.
+    Returns a list of pipelines is succeeds, an Error string if fails.
+    """
+    pipeline = cli_module.cloud.get_pipeline(pipeline_id, verbose)
+    if isinstance(pipeline, list) and pipeline:
+        pipeline = Table.from_dicts(pipeline, complete_keys=True)
+    print(pipeline)
+
+
+@cloud.command()
+@click.argument('pipeline_id', required=True)
+@click.argument('status', required=True)
+@click.argument('log', default=None, required=False)
+@click.argument('dag', default=None, required=False)
+@click.argument('pipeline_name', default=None, required=False)
+def write_pipeline(pipeline_id, status, log, pipeline_name, dag):
+    """
+    This function writes a  pipeline, pipeline_id & status are required.
+    You can also add logs and a pipeline name.
+    Returns a string with pipeline id if succeeds, an Error string if fails.
+    """
+    print(
+        cli_module.cloud.write_pipeline(pipeline_id, status, log,
+                                        pipeline_name, dag))
+
+
+@cloud.command()
+@click.argument('pipeline_id', required=True)
+def delete_pipeline(pipeline_id):
+    """
+    This function deletes a pipeline, pipeline_id is required.
+    Returns a string with pipeline id if succeeds, an Error string if fails.
+    """
+    print(cli_module.cloud.delete_pipeline(pipeline_id))

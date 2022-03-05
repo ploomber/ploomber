@@ -17,7 +17,7 @@ def test_interface(concrete_class):
         'PostgresRelation': {'schema', 'name', 'kind', 'client'},
         'GenericProduct': {'client', 'name'},
         # these come from collections.abc.Mapping
-        'MetaProduct': {'get', 'keys', 'items', 'values'},
+        'MetaProduct': {'get', 'keys', 'items', 'values', 'missing'},
     }
 
     allowed = allowed_mapping.get(concrete_class.__name__, {})

@@ -85,7 +85,7 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
         # Anything that has not been caught before is treated as a
         # Python function, thus we return a PythonCallable
         return tasks.PythonCallable
-    else:
+    elif '.' in source_str:
         try:
             imported = fn_checker(source_str)
             error = None
@@ -99,6 +99,11 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
                 f'source {source_str!r}: {error!s}. ')
         else:
             return tasks.PythonCallable
+    else:
+        raise DAGSpecInitializationError(
+            f'Failed to determine task source {source_str!r}\nValid extensions'
+            f' are: {pretty_print.iterable(suffix2taskclass)}\n'
+            'You can also define functions as [module_name].[function_name]')
 
 
 def task_class_from_spec(task_spec, lazy_import, reload):

@@ -488,3 +488,27 @@ def test_build_with_replaced_env_value(tmp_nbs, monkeypatch_session):
         sys, 'argv',
         ['python', '--entry-point', 'pipeline.yaml', '--env--sample', 'True'])
     build.main(catch_exception=False)
+
+
+def test_task_command_formats_exception(tmp_directory, monkeypatch,
+                                        tmp_imports, capsys):
+    Path('functions.py').write_text("""
+def load(product):
+    raise ValueError
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: functions.load
+      product: output.txt
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'task', 'load'])
+
+    with pytest.raises(SystemExit):
+        cmd_router()
+
+    captured = capsys.readouterr()
+    expected = ('raise ValueError\nValueError\n\nploomber.exceptions.'
+                'TaskBuildError: Error building task "load"')
+    assert expected in captured.err

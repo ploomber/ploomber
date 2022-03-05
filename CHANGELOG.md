@@ -1,6 +1,21 @@
 # CHANGELOG
 
-## 0.16.1dev
+## 0.16.3dev
+
+## 0.16.2 (2022-03-03)
+* Improved documentation in "ploomber nb --help" ([#623](https://github.com/ploomber/ploomber/issues/623))
+* Fixed a few errors in the basic concepts tutorial
+* More informative error when task does not generate some products
+* Better error when all the code is in the parameters cell
+
+## 0.16.1 (2022-02-27)
+* Improves error message when `source` in a task spec is a string without an extension ([#619](https://github.com/ploomber/ploomber/issues/619))
+* Fixes error that caused `dag.render(force=True)` to download remote metadata
+* Simplify traceback when calling Ploomber task ([#605](https://github.com/ploomber/ploomber/issues/605))
+* Emitting warning when `resources_` points to large files ([#609](https://github.com/ploomber/ploomber/issues/609))
+* Adds auto-completion steps to documentation ([#612](https://github.com/ploomber/ploomber/issues/612))
+* Updates documentation to reflect new default format (`py:percent`) ([#564](https://github.com/ploomber/ploomber/issues/564))
+* Showing a mesage when a new version of Ploomber is available ([#558](https://github.com/ploomber/ploomber/issues/558))
 
 ## 0.16 (2022-02-17)
 * Cleaner tracebacks when DAG fails to build or render

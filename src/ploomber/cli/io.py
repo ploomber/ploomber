@@ -1,11 +1,11 @@
 from functools import wraps
 import sys
-import traceback
 
 import click
 
 from ploomber.io import TerminalWriter
 from ploomber.exceptions import DAGBuildError, DAGRenderError, BaseException
+from ploomber.executors import _format
 
 # TODO: there are two types of cli commands: the ones that execute user's
 # code (ploomber build/task) and the ones that parse a dag/task but do not
@@ -42,8 +42,8 @@ def cli_endpoint(fn):
             except BaseException as e:
                 click.secho(e.get_message(), file=sys.stderr, fg='red')
                 sys.exit(1)
-            except Exception:
-                error = traceback.format_exc()
+            except Exception as e:
+                error = _format.exception(e)
                 color = True
             else:
                 error = None
@@ -62,7 +62,7 @@ def cli_endpoint(fn):
     return wrapper
 
 
-# FIXME: capture only certain types of exceptions. If it's something we dind't
+# FIXME: capture only certain types of exceptions. If it's something we didn't
 # raise, we'd like to see the full traceback
 def command_endpoint(fn):
     """

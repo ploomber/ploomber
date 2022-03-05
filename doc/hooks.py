@@ -22,7 +22,7 @@ def config_init(app, config):
     # key: directory in the projects directory
     # value: directory in the documentation
     directories = {
-        'guides/spec-api-python': 'get-started',
+        'guides/first-pipeline': 'get-started',
         'guides/parametrized': 'user-guide',
         'guides/sql-templating': 'user-guide',
         'guides/testing': 'user-guide',
