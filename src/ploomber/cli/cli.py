@@ -252,24 +252,28 @@ def cmd_router():
         fn = custom[cmd_name]
         fn()
     else:
-        suggestion = dl.get_close_matches(cmd_name,
-         ['build', 'interact', 'report', 
-         'status', 'task', 'examples'], 
-         cutoff=0.1, n=1)
-        if suggestion in ['build', 'interact', 'report', 'status', 'task', 'examples']:
+        suggestion = dl.get_close_matches(
+            cmd_name,
+            ['build', 'interact', 'report', 'status', 'task', 'examples'],
+            cutoff=0.1,
+            n=1)
+        if suggestion in [
+                'build', 'interact', 'report', 'status', 'task', 'examples'
+        ]:
             telemetry.log_api("unsupported_build_cmd",
-                            metadata={
-                                'cmd_name': cmd_name,
-                                'suggestion': suggestion,
-                                'argv': sys.argv
-                            })
-            _exit_with_error_message("Try 'ploomber --help' for help.\n\n"
-                                    f"Error: {cmd_name!r} is not a valid command."
-                                    f" Did you mean {suggestion!r}?")
+                              metadata={
+                                  'cmd_name': cmd_name,
+                                  'suggestion': suggestion,
+                                  'argv': sys.argv
+                              })
+            _exit_with_error_message(
+                "Try 'ploomber --help' for help.\n\n"
+                f"Error: {cmd_name!r} is not a valid command."
+                f" Did you mean {suggestion!r}?")
         else:
             if cmd_name not in ['examples', 'scaffold', 'install']:
                 telemetry.log_api("unsupported-api-call",
-                                metadata={'argv': sys.argv})
+                                  metadata={'argv': sys.argv})
             cli()
 
 
