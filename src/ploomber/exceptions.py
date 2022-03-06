@@ -51,7 +51,9 @@ class DAGRenderError(Exception):
     exceptions signals special output formatting in the CLI (via the
     @cli_endpoint decorator)
     """
-    pass
+    def __init__(self, message):
+        message = message + '\nNeed help? https://ploomber.io/community'
+        super().__init__(message)
 
 
 class DAGBuildError(Exception):
@@ -64,7 +66,9 @@ class DAGBuildError(Exception):
     exceptions signals special output formatting in the CLI (via the
     @cli_endpoint decorator)
     """
-    pass
+    def __init__(self, message):
+        message = message + '\nNeed help? https://ploomber.io/community'
+        super().__init__(message)
 
 
 class DAGWithDuplicatedProducts(BaseException):

@@ -910,7 +910,8 @@ def test_on_render_crashes(tmp_directory):
     with pytest.raises(DAGRenderError) as excinfo:
         dag.build()
 
-    msg = 'Exception when running on_render for DAG "No name": crash!'
+    msg = ('Exception when running on_render for DAG "No name": crash!'
+           '\nNeed help? https://ploomber.io/community')
     assert str(excinfo.value) == msg
     assert 'crash!' in str(excinfo.getrepr())
     assert dag._exec_status == DAGStatus.ErroredRender
@@ -936,7 +937,8 @@ def test_on_finish_crashes(tmp_directory):
     with pytest.raises(DAGBuildError) as excinfo:
         dag.build()
 
-    msg = 'Exception when running on_finish for DAG "No name": crash!'
+    msg = ('Exception when running on_finish for DAG "No name": crash!'
+           '\nNeed help? https://ploomber.io/community')
     assert str(excinfo.value) == msg
     assert 'crash!' in str(excinfo.getrepr())
     assert dag._exec_status == DAGStatus.Errored
@@ -976,7 +978,8 @@ def test_on_failure_crashes(caplog):
             dag.build()
 
     assert hook_crashing.count == 1
-    msg = 'Exception when running on_failure for DAG "dag": crash!'
+    msg = ('Exception when running on_failure for DAG "dag": crash!'
+           '\nNeed help? https://ploomber.io/community')
     assert str(excinfo.value) == msg
     assert 'crash!' in str(excinfo.getrepr())
     assert dag._exec_status == DAGStatus.Errored
