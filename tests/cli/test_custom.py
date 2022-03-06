@@ -10,7 +10,7 @@ import nbformat
 import pytest
 
 from ploomber.cli import plot, build, parsers, task, report, status, interact
-from ploomber.cli.cli import cmd_router
+from ploomber_cli.cli import cmd_router
 from ploomber.cli.parsers import CustomParser
 from ploomber.tasks import notebook
 from ploomber import DAG

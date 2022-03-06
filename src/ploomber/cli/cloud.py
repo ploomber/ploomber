@@ -36,9 +36,7 @@ def get_key():
     user_conf_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
     conf = read_conf_file(user_conf_path)
     key = conf.get('cloud_key', None)
-    if not key:
-        click.secho('No cloud API key was found')
-        key = None
+
     return key
 
 

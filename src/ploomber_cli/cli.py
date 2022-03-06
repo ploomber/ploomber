@@ -3,6 +3,8 @@ import os
 from difflib import get_close_matches
 import sys
 
+from ploomber_scaffold import scaffold as scaffold_project
+
 import click
 
 
@@ -94,7 +96,6 @@ def scaffold(name, conda, package, entry_point, empty):
     Need help? https://ploomber.io/community
     """
     from ploomber import scaffold as _scaffold
-    from ploomber_scaffold import scaffold as scaffold_project
     from ploomber.telemetry import telemetry
 
     template = '-e/--entry-point is not compatible with {flag}'
@@ -403,7 +404,9 @@ def get_key():
     key = cli_module.cloud.get_key()
 
     if key:
-        print('This is your cloud API key: {}'.format(key))
+        click.echo(f'This is your cloud API key: {key}')
+    else:
+        click.echo('No cloud API key was found.')
 
 
 @cloud.command()

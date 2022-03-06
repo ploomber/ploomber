@@ -8,7 +8,7 @@ import nbformat
 import jupytext
 import pytest
 
-from ploomber.cli import cli
+from ploomber_cli import cli
 from ploomber.cli import nb
 
 

@@ -1,6 +1,6 @@
 import pytest
 
-from ploomber.cli.cli import _suggest_command
+from ploomber_cli.cli import _suggest_command
 
 
 @pytest.mark.parametrize('name, expected', [
