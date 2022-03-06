@@ -31,7 +31,19 @@ def _suggest_command(name: str, options):
 @click.group()
 @click.version_option(package_name='ploomber')
 def cli():
-    """Ploomber command line interface.
+    """
+    Ploomber
+
+    Need help? https://ploomber.io/community
+
+    Download an example to the mypipeline/ directory:
+
+    $ ploomber examples -n templates/ml-basic -o mypipeline
+
+    Create a new project in a myproject/ directory:
+
+    $ ploomber scaffold myproject
+
     """
     pass  # pragma: no cover
 
@@ -64,15 +76,22 @@ def cli():
 )
 @click.argument('name', required=False)
 def scaffold(name, conda, package, entry_point, empty):
-    """Create a new project / Create task source files
+    """
+    Create a new project and task source files
 
-    $ ploomber scaffold myproject
+    Step 1. Create new project
 
-    $ cd myproject
+      $ ploomber scaffold myproject
 
-    Add tasks to pipeline.yaml. Then, to create the source files:
+      $ cd myproject
 
-    $ ploomber scaffold
+    Step 2. Add tasks to the pipeline.yaml file
+
+    Step 3. Create source files
+
+      $ ploomber scaffold
+
+    Need help? https://ploomber.io/community
     """
     from ploomber import scaffold as _scaffold
     from ploomber_scaffold import scaffold as scaffold_project
@@ -206,19 +225,20 @@ def install(use_lock, create_env, use_venv):
 @click.option('-o', '--output', help='Target directory', default=None)
 @click.option('-b', '--branch', help='Git branch to use.', default=None)
 def examples(name, force, branch, output):
-    """Download examples
+    """
+    Download examples
 
-    List:
+    Step 1. List examples
 
-    $ ploomber examples
+      $ ploomber examples
 
-    Download:
 
-    $ ploomber examples -n type/example -o directory
+    Step 2. Download an example
 
-    Download ml-basic example:
+      $ ploomber examples -n templates/ml-basic -o my-pipeline
 
-    $ ploomber examples -n templates/ml-basic -o my-pipeline
+
+    Need help? https://ploomber.io/community
     """
     from ploomber.telemetry import telemetry
     from ploomber import cli as cli_module
@@ -342,7 +362,7 @@ def report():
 
 @cli.command()
 def interact():
-    """Start an interactive session
+    """Interact with your pipeline (REPL)
     """
     pass  # pragma: no cover
 
@@ -356,7 +376,7 @@ def nb():
 
 @cli.group()
 def cloud():
-    """Ploomber cloud command line interface.
+    """Manage Ploomber Cloud
     """
     pass  # pragma: no cover
 
