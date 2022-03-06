@@ -1,6 +1,6 @@
 from pathlib import Path
 import os
-import difflib as dl
+from difflib import get_close_matches
 import sys
 
 import click
@@ -13,6 +13,28 @@ from ploomber_scaffold import scaffold as scaffold_project
 
 from ploomber.table import Table
 from ploomber.telemetry import telemetry
+
+
+def _suggest_command(name: str, options):
+    if not name or name in options:
+        return None
+
+    name = name.lower()
+
+    mapping = {
+        'run': 'build',
+        'execute': 'build',
+    }
+
+    if name in mapping:
+        return mapping[name]
+
+    close_commands = get_close_matches(name, options)
+
+    if close_commands:
+        return close_commands[0]
+    else:
+        return None
 
 
 @click.group()
@@ -255,14 +277,9 @@ def cmd_router():
         fn = custom[cmd_name]
         fn()
     else:
-        suggestion = dl.get_close_matches(
-            cmd_name,
-            ['build', 'interact', 'report', 'status', 'task', 'examples'],
-            cutoff=0.1,
-            n=1)
-        if suggestion in [
-                'build', 'interact', 'report', 'status', 'task', 'examples'
-        ]:
+        suggestion = _suggest_command(cmd_name, cli.commands.keys())
+
+        if suggestion:
             telemetry.log_api("unsupported_build_cmd",
                               metadata={
                                   'cmd_name': cmd_name,
