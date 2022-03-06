@@ -177,6 +177,6 @@ setup(
         'dev': OPTIONAL + TESTING + DEV,
     },
     entry_points={
-        'console_scripts': ['ploomber=ploomber.cli.cli:cmd_router'],
+        'console_scripts': ['ploomber=ploomber_cli.cli:cmd_router'],
     },
 )
