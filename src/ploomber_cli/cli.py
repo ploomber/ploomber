@@ -240,6 +240,8 @@ def examples(name, force, branch, output):
 
     Need help? https://ploomber.io/community
     """
+    click.echo('Loading examples...')
+
     from ploomber.telemetry import telemetry
     from ploomber import cli as cli_module
 
@@ -284,6 +286,8 @@ def cmd_router():
     # suggest correct spelling on obvious typos
 
     if cmd_name in custom:
+        click.echo('Loading pipeline...')
+
         from ploomber import cli as cli_module
 
         # NOTE: we don't use the argument here, it is parsed by _main
