@@ -272,6 +272,8 @@ def _exit_with_error_message(msg):
 
 
 def cmd_router():
+    """CLI entry point
+    """
     cmd_name = None if len(sys.argv) < 2 else sys.argv[1]
 
     # These are parsing dynamic parameters and that's why we're isolating it.
@@ -282,6 +284,8 @@ def cmd_router():
     # suggest correct spelling on obvious typos
 
     if cmd_name in custom:
+        from ploomber import cli as cli_module
+
         # NOTE: we don't use the argument here, it is parsed by _main
         # pop the second element ('entry') to make the CLI behave as expected
         sys.argv.pop(1)
@@ -289,7 +293,6 @@ def cmd_router():
         # calling "python -m ploomber.build" but not here ("ploomber build")
         sys.path.insert(0, os.path.abspath('.'))
 
-        from ploomber import cli as cli_module
         custom = {
             'build': cli_module.build.main,
             'plot': cli_module.plot.main,
@@ -306,20 +309,11 @@ def cmd_router():
         suggestion = _suggest_command(cmd_name, cli.commands.keys())
 
         if suggestion:
-            # telemetry.log_api("unsupported_build_cmd",
-            #                   metadata={
-            #                       'cmd_name': cmd_name,
-            #                       'suggestion': suggestion,
-            #                       'argv': sys.argv
-            #                   })
             _exit_with_error_message(
                 "Try 'ploomber --help' for help.\n\n"
                 f"Error: {cmd_name!r} is not a valid command."
                 f" Did you mean {suggestion!r}?")
         else:
-            # if cmd_name not in ['examples', 'scaffold', 'install']:
-            #     telemetry.log_api("unsupported-api-call",
-            #                       metadata={'argv': sys.argv})
             cli()
 
 
