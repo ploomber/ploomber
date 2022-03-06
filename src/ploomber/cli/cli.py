@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import difflib as dl
 import sys
 
 import click
@@ -243,29 +244,6 @@ def cmd_router():
     # users may attempt to run execute/run, suggest to use build instead
     # users may make typos when running one of the commands
     # suggest correct spelling on obvious typos
-    alias = {
-        'execute': 'build',
-        'run': 'build',
-        'bulid': 'build',
-        'buld': 'build',
-        'bild': 'build',
-        'uild': 'build',
-        'buil': 'build',
-        'example': 'examples',
-        'exemples': 'examples',
-        'exmples': 'examples',
-        'exampes': 'examples',
-        'tsk': 'task',
-        'tas': 'task',
-        'rport': 'report',
-        'reprt': 'report',
-        'repor': 'report',
-        'stat': 'status',
-        'stats': 'status',
-        'satus': 'status',
-        'inteact': 'interact',
-        'interat': 'interact'
-    }
 
     if cmd_name in custom:
         # NOTE: we don't use the argument here, it is parsed by _main
@@ -276,22 +254,30 @@ def cmd_router():
         sys.path.insert(0, os.path.abspath('.'))
         fn = custom[cmd_name]
         fn()
-    elif cmd_name in alias:
-        suggestion = alias[cmd_name]
-        telemetry.log_api("unsupported_build_cmd",
-                          metadata={
-                              'cmd_name': cmd_name,
-                              'suggestion': suggestion,
-                              'argv': sys.argv
-                          })
-        _exit_with_error_message("Try 'ploomber --help' for help.\n\n"
-                                 f"Error: {cmd_name!r} is not a valid command."
-                                 f" Did you mean {suggestion!r}?")
     else:
-        if cmd_name not in ['examples', 'scaffold', 'install']:
-            telemetry.log_api("unsupported-api-call",
-                              metadata={'argv': sys.argv})
-        cli()
+        suggestion = dl.get_close_matches(
+            cmd_name,
+            ['build', 'interact', 'report', 'status', 'task', 'examples'],
+            cutoff=0.1,
+            n=1)
+        if suggestion in [
+                'build', 'interact', 'report', 'status', 'task', 'examples'
+        ]:
+            telemetry.log_api("unsupported_build_cmd",
+                              metadata={
+                                  'cmd_name': cmd_name,
+                                  'suggestion': suggestion,
+                                  'argv': sys.argv
+                              })
+            _exit_with_error_message(
+                "Try 'ploomber --help' for help.\n\n"
+                f"Error: {cmd_name!r} is not a valid command."
+                f" Did you mean {suggestion!r}?")
+        else:
+            if cmd_name not in ['examples', 'scaffold', 'install']:
+                telemetry.log_api("unsupported-api-call",
+                                  metadata={'argv': sys.argv})
+            cli()
 
 
 # the commands below are handled by the router,
