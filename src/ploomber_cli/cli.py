@@ -378,9 +378,10 @@ def cloud():
 @cloud.command()
 @click.argument('user_key', required=True)
 def set_key(user_key):
-    """
-    This function sets the cloud API Key. It validates it's a valid key.
-    If the key is valid, it stores it in the user config.yaml file.
+    """Set API key
+
+    It validates it's a valid key. If the key is valid, it stores it in the
+    user config.yaml file.
     """
     from ploomber import cli as cli_module
     cli_module.cloud.set_key(user_key)
@@ -388,9 +389,10 @@ def set_key(user_key):
 
 @cloud.command()
 def get_key():
-    """
-    This function gets the cloud API Key. It retrieves it from the user
-    config.yaml file. Returns the key if exist, returns None if doesn't exist.
+    """Return API key
+
+    It retrieves it from the user config.yaml file. Returns the key if it
+    exists
     """
     from ploomber import cli as cli_module
 
@@ -404,11 +406,11 @@ def get_key():
 @click.argument('pipeline_id', default=None, required=False)
 @click.option('-v', '--verbose', default=False, is_flag=True, required=False)
 def get_pipelines(pipeline_id, verbose):
-    """
-    Use this to get the state of your pipelines, specify a single pipeline_id
-    to get it's state, when not specified, pulls all of the pipelines.
-    You can pass the `latest` tag, instead of pipeline_id to get the latest.
-    To get a detailed view pass the verbose flag.
+    """Get pipeline status
+
+    Specify a pipeline_id to get it's state, when not specified, pulls all of
+    the pipelines. You can pass "latest", instead of pipeline_id to get the
+    latest. To get a detailed view pass the verbose flag.
     Returns a list of pipelines is succeeds, an Error string if fails.
     """
     from ploomber.table import Table
@@ -427,10 +429,11 @@ def get_pipelines(pipeline_id, verbose):
 @click.argument('dag', default=None, required=False)
 @click.argument('pipeline_name', default=None, required=False)
 def write_pipeline(pipeline_id, status, log, pipeline_name, dag):
-    """
-    This function writes a  pipeline, pipeline_id & status are required.
-    You can also add logs and a pipeline name.
-    Returns a string with pipeline id if succeeds, an Error string if fails.
+    """Write a pipeline
+
+    Pipeline_id & status are required. You can also add logs and a pipeline
+    name. Returns a string with pipeline id if succeeds, an Error string if
+    fails.
     """
     from ploomber import cli as cli_module
 
@@ -442,9 +445,10 @@ def write_pipeline(pipeline_id, status, log, pipeline_name, dag):
 @cloud.command()
 @click.argument('pipeline_id', required=True)
 def delete_pipeline(pipeline_id):
-    """
-    This function deletes a pipeline, pipeline_id is required.
-    Returns a string with pipeline id if succeeds, an Error string if fails.
+    """Delete a pipeline
+
+    pipeline_id is required. Returns a string with pipeline id if succeeds, an
+    Error string if fails.
     """
     from ploomber import cli as cli_module
     print(cli_module.cloud.delete_pipeline(pipeline_id))
