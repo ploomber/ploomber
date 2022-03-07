@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 0.16.3dev
+* Clearer error message when DAG deepcopy fails
+* Beta release of cloud pipeline monitoring
+* More robust suggestions when invoking a non-existing command
+* CLI loading performance improvements
+* Prints message before starting to load the pipeline for better user feedback
+* Displaying community link when DAG fails to render or build
 
 ## 0.16.2 (2022-03-03)
 * Improved documentation in "ploomber nb --help" ([#623](https://github.com/ploomber/ploomber/issues/623))
