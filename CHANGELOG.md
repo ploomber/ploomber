@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.16.3dev
+## 0.16.3 (2022-03-06)
 * Clearer error message when DAG deepcopy fails
 * Beta release of cloud pipeline monitoring
 * More robust suggestions when invoking a non-existing command
