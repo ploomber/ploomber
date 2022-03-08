@@ -1,5 +1,5 @@
 import sys
-from unittest.mock import Mock
+from unittest.mock import Mock, ANY
 from pathlib import Path
 
 import pytest
@@ -76,6 +76,23 @@ def test_notebook_conversion(monkeypatch, output, tmp_directory):
 
     conv = notebook.NotebookConverter(output)
     conv.convert()
+
+
+def test_notebook_conversion_stores_as_unicode(tmp_directory, monkeypatch):
+    nb = nbformat.v4.new_notebook()
+    cell = nbformat.v4.new_code_cell('1 + 1')
+    nb.cells.append(cell)
+
+    with open('nb.ipynb', 'w', encoding='utf-8') as f:
+        nbformat.write(nb, f)
+
+    conv = notebook.NotebookConverter('nb.ipynb', exporter_name='html')
+
+    mock = Mock()
+    monkeypatch.setattr(notebook.Path, 'write_text', mock)
+    conv.convert()
+
+    mock.assert_called_once_with(ANY, encoding='utf-8')
 
 
 @pytest.mark.parametrize(

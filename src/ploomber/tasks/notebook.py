@@ -39,6 +39,31 @@ from ploomber.util import requires, chdir_code
 from ploomber.io import FileLoaderMixin, pretty_print
 
 
+# TODO: ensure that all places where we call this function are unit tested
+def _write_text_utf_8(path, text):
+    """Write text using UTF-8 encoding
+
+    Notes
+    -----
+    In some systems, UTF-8 is not the default encoding (this happens on some
+    Windows configurations, which have CP-1252 as default). This can break
+    storing some files if the str to write contains characters that do not
+    exist in the default encoding
+    (https://github.com/ploomber/ploomber/issues/334)
+
+    Under normal circumstances, it's better to use the default encoding since
+    it provides better system compatibility, however, notebooks are always
+    stored as UTF-8 so it's ok to store them as such.
+
+    nbconvert always stores as UTF-8:
+    https://github.com/jupyter/nbconvert/blob/5d57c16b655602f4705f9147f671f2cbaadaebca/nbconvert/writers/files.py#L126
+
+    nbformat always reads as UTF-8:
+    https://github.com/jupyter/nbformat/blob/df63593b64a15ee1c37b522973c39e8674f93c5b/nbformat/__init__.py#L125
+    """
+    Path(path).write_text(text, encoding='utf-8')
+
+
 def _suggest_passing_product_dictionary():
     if Path('pipeline.yaml').is_file():
         return """
@@ -192,7 +217,7 @@ class NotebookConverter:
         content, _ = nbconvert.export(exporter, nb, **nbconvert_export_kwargs)
 
         if isinstance(content, str):
-            path.write_text(content)
+            _write_text_utf_8(path, content)
         elif isinstance(content, bytes):
             path.write_bytes(content)
         else:
@@ -430,7 +455,7 @@ class NotebookRunner(FileLoaderMixin, Task):
         name_new = name.replace(suffix, '-tmp.ipynb')
         tmp = self.source.loc.with_name(name_new)
         content = nbformat.writes(nb, version=nbformat.NO_CONVERT)
-        tmp.write_text(content)
+        _write_text_utf_8(tmp, content)
 
         # open notebook with injected debugging cell
         try:
@@ -500,7 +525,7 @@ class NotebookRunner(FileLoaderMixin, Task):
         fd, tmp_path = tempfile.mkstemp(suffix='.py')
         os.close(fd)
         code = jupytext.writes(nb, version=nbformat.NO_CONVERT, fmt='py')
-        Path(tmp_path).write_text(code)
+        _write_text_utf_8(tmp_path, code)
 
         if kind == 'pm':
             # post-mortem debugging
@@ -548,7 +573,7 @@ class NotebookRunner(FileLoaderMixin, Task):
         os.close(fd)
 
         tmp = Path(tmp)
-        tmp.write_text(self.source.nb_str_rendered)
+        _write_text_utf_8(tmp, self.source.nb_str_rendered)
 
         if self.local_execution:
             self.papermill_params['cwd'] = str(self.source.loc.parent)
