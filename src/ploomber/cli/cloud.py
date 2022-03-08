@@ -232,6 +232,3 @@ def cloud_wrapper(payload=False):
         return wrapper
 
     return _cloud_call
-
-
-get_pipeline('9f9e18e0-d027-4827-bd4d-1908f294bca2', False)
