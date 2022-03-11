@@ -163,7 +163,6 @@ class DAG(AbstractDAG):
         task has no serializer. See ``ploombe.tasks.PythonCallable``
         documentation for details.
     """
-
     def __init__(self, name=None, clients=None, executor='serial'):
         self._G = nx.DiGraph()
 
@@ -794,7 +793,7 @@ class DAG(AbstractDAG):
               extra_msg=_pygraphviz_message,
               pip_names=['pygraphviz<1.8'] if sys.version_info <
               (3, 8) else ['pygraphviz'])
-    def plot(self, output='embed'):
+    def plot(self, output='embed', include_products=False):
         """Plot the DAG
 
         Parameters
@@ -802,6 +801,12 @@ class DAG(AbstractDAG):
         output : str, default='embed'
             Where to save the output (e.g., pipeline.png). If 'embed', it
             returns an IPython image instead.
+
+        Parameters
+        ----------
+        include_products : bool, default=False
+            If False, each node only contains the task name, if True
+            if contains the task name and products.
         """
         if output == 'embed':
             fd, path = tempfile.mkstemp(suffix='.png')
@@ -815,7 +820,8 @@ class DAG(AbstractDAG):
         # FIXME: add tests for this
         self.render()
 
-        G = self._to_graph(return_graphviz=True)
+        G = self._to_graph(return_graphviz=True,
+                           include_products=include_products)
         G.draw(path, prog='dot', args='-Grankdir=LR')
 
         if output == 'embed':
@@ -837,12 +843,21 @@ class DAG(AbstractDAG):
         else:
             raise ValueError('Tasks must have a name, got None')
 
-    def _to_graph(self, only_current_dag=False, return_graphviz=False):
+    def _to_graph(self,
+                  only_current_dag=False,
+                  return_graphviz=False,
+                  include_products=False):
         """
         Converts the DAG to a Networkx DiGraph object. Since upstream
         dependencies are not required to come from the same DAG,
         this object might include tasks that are not included in the current
         object
+
+        Parameters
+        ----------
+        include_products : bool, default=False
+            If False, each node only contains the task name, if True
+            if contains the task name and products.
         """
         # https://networkx.github.io/documentation/networkx-1.10/reference/drawing.html
         # http://graphviz.org/doc/info/attrs.html
@@ -854,9 +869,12 @@ class DAG(AbstractDAG):
             if return_graphviz:
                 # add parameters for graphviz plotting
                 attr = {
-                    'color': 'red' if task.product._is_outdated() else 'green',
-                    'id': task.name,
-                    'label': _task_short_repr(task)
+                    'color':
+                    'red' if task.product._is_outdated() else 'green',
+                    'id':
+                    task.name,
+                    'label':
+                    _task_short_repr(task) if include_products else task.name
                 }
                 # graphviz uses the str representation of the node object to
                 # distinguish them - by default str(task) returns
@@ -1052,7 +1070,6 @@ def _product_short_repr(product):
 
 
 def _task_short_repr(task):
-
     def short(s):
         max_l = 30
         return s if len(s) <= max_l else s[:max_l - 3] + '...'

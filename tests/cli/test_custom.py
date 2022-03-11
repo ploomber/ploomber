@@ -155,18 +155,25 @@ def test_status(monkeypatch_session, tmp_sample_dir):
     status.main(catch_exception=False)
 
 
-@pytest.mark.parametrize(
-    'custom_args',
-    [[], ['--output', 'custom.png'], ['-o', 'custom.png'], ['--log', 'DEBUG'],
-     ['-o', 'custom.png', '--log', 'DEBUG']])
-def test_plot(custom_args, monkeypatch_session, tmp_sample_dir):
+@pytest.mark.parametrize('custom_args, output, include_products', [
+    [[], 'pipeline.entry.png', False],
+    [['--output', 'custom.png'], 'custom.png', False],
+    [['-o', 'custom.png'], 'custom.png', False],
+    [['--log', 'DEBUG'], 'pipeline.entry.png', False],
+    [['-o', 'custom.png', '--log', 'DEBUG'], 'custom.png', False],
+    [['--include-products'], 'pipeline.entry.png', True],
+    [['-i'], 'pipeline.entry.png', True],
+])
+def test_plot(custom_args, monkeypatch_session, tmp_sample_dir, output,
+              include_products):
     args_defaults = ['python', '--entry-point', 'test_pkg.entry.with_doc']
     monkeypatch_session.setattr(sys, 'argv', args_defaults + custom_args)
     mock = Mock()
     monkeypatch_session.setattr(dag_module.DAG, 'plot', mock)
     plot.main(catch_exception=False)
 
-    mock.assert_called_once()
+    mock.assert_called_once_with(output=output,
+                                 include_products=include_products)
 
 
 def test_plot_uses_name_if_any(tmp_nbs, monkeypatch_session):
@@ -178,7 +185,8 @@ def test_plot_uses_name_if_any(tmp_nbs, monkeypatch_session):
     monkeypatch_session.setattr(dag_module.DAG, 'plot', mock)
     plot.main(catch_exception=False)
 
-    mock.assert_called_once_with(output='pipeline.train.png')
+    mock.assert_called_once_with(output='pipeline.train.png',
+                                 include_products=False)
 
 
 def test_report_includes_plot(monkeypatch_session, tmp_sample_dir):
