@@ -594,6 +594,10 @@ class NotebookRunner(FileLoaderMixin, Task):
         finally:
             tmp.unlink()
 
+        # on windows, Path.rename will throw an error if the file exists
+        if path_to_out_ipynb != path_to_out and path_to_out.is_file():
+            path_to_out.unlink()
+
         path_to_out_ipynb.rename(path_to_out)
         self._converter.convert()
 

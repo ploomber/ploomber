@@ -939,3 +939,22 @@ def test_static_analysis_strict_raises_error_at_rendertime_if_signature_error(
     assert expected in str(excinfo.value)
     # it should not warn, since we raise the error
     assert len(records) == 0
+
+
+def test_replaces_existing_product(tmp_directory):
+    Path('out.html').touch()
+
+    path = Path('nb.py')
+    path.write_text("""
+# + tags=["parameters"]
+# some code
+
+# +
+1 + 1
+    """)
+
+    dag = DAG()
+    NotebookRunner(Path('nb.py'), File('out.html'), dag=dag)
+
+    # this will fail on windows if we don't remove the existing file first
+    dag.build()
