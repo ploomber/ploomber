@@ -166,6 +166,7 @@ def test_plot_embed(dag, monkeypatch_plot):
 def test_plot_include_products(dag, monkeypatch):
     mock = Mock(wraps=dag._to_graph)
     monkeypatch.setattr(DAG, '_to_graph', mock)
+    monkeypatch.setattr(dag_module.nx.nx_agraph, 'to_agraph', Mock())
 
     dag.plot(include_products=True)
 
