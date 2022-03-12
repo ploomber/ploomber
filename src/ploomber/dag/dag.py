@@ -868,13 +868,19 @@ class DAG(AbstractDAG):
         for task in self.values():
             if return_graphviz:
                 # add parameters for graphviz plotting
+                color = ('lightcoral'
+                         if task.product._is_outdated() else 'lightgreen')
+
+                label = (_task_short_repr(task)
+                         if include_products else task.name)
+
                 attr = {
-                    'color':
-                    'red' if task.product._is_outdated() else 'green',
-                    'id':
-                    task.name,
-                    'label':
-                    _task_short_repr(task) if include_products else task.name
+                    'fillcolor': color,
+                    'style': 'filled',
+                    'fontname': 'Helvetica',
+                    'fontsize': '16pt',
+                    'id': task.name,
+                    'label': label
                 }
                 # graphviz uses the str representation of the node object to
                 # distinguish them - by default str(task) returns
