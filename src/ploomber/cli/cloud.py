@@ -59,7 +59,7 @@ def _set_key(user_key):
     user_key_dict = {'cloud_key': user_key}
     user_conf_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
     update_conf_file(user_conf_path, user_key_dict)
-    click.secho("Key was stored {}".format(user_key))
+    click.secho("Key was stored")
 
 
 def get_last_run(timestamp):
@@ -156,10 +156,16 @@ def _write_pipeline(pipeline_id,
                      PIPELINES_RESOURCE,
                      body=json.dumps(body),
                      headers=headers)
-        content = conn.getresponse().read()
+        res = conn.getresponse()
+
+        content = res.read().decode('utf-8')
+        if res.status < 200 or res.status > 300:
+            content = f'Issue: {content}'
+            warnings.warn(content)
+
         return content
     except Exception as e:
-        return "Error fetching pipeline {}".format(e)
+        return "Issue on fetching pipeline {}".format(e)
     finally:
         conn.close()
 
@@ -184,7 +190,12 @@ def delete_pipeline(pipeline_id):
         headers['api_key'] = key
         headers['pipeline_id'] = pipeline_id
         conn.request("DELETE", PIPELINES_RESOURCE, headers=headers)
-        content = conn.getresponse().read()
+        res = conn.getresponse()
+        content = ''
+        if res.status < 200 or res.status > 300:
+            content += 'Issue: '
+
+        content += res.read().decode('utf-8')
         return content
     except Exception as e:
         return "Issue deleting pipeline {}".format(e)

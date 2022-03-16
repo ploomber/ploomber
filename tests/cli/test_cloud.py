@@ -130,7 +130,7 @@ def test_get_api_key(write_sample_conf, capsys):
     key_val = "TEST_KEY12345678987654"
     runner = CliRunner()
     result = runner.invoke(set_key, args=[key_val], catch_exceptions=False)
-    assert f'Key was stored {key_val}\n' == result.stdout
+    assert 'Key was stored\n' == result.stdout
 
     result = runner.invoke(get_key, catch_exceptions=False)
     assert key_val in result.stdout
