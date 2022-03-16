@@ -1,6 +1,5 @@
 import sys
 import uuid
-import warnings
 
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
