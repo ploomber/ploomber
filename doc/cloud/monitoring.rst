@@ -11,6 +11,8 @@ You will also get notifications to the email you registered with for each pipeli
 execution status (other than started, i.e. error and finished).
 If you'd like to subscribe teammates to these notifications please let us know.
 
+`Here's an example <https://github.com/ploomber/projects/tree/master/guides/monitoring>`_ showing how to work with pipeline monitoring.
+
 Getting your pipeline status
 ****************************
 You can get your pipeline's status in a few ways, this becomes helpful when running long executions,
