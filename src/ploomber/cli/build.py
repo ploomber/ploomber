@@ -1,6 +1,5 @@
 import sys
 import uuid
-import warnings
 
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
@@ -54,12 +53,8 @@ def main(payload, render_only=False):
 
     dag, args = parser.load_from_entry_point_arg()
     pid = str(uuid.uuid4())
-    res = str(
-        _write_pipeline(pipeline_id=pid,
-                        status='started',
-                        pipeline_name=dag.name))
-    if 'Error' in res:
-        warnings.warn(res)
+    _write_pipeline(pipeline_id=pid, status='started', pipeline_name=dag.name)
+
     # when using the parallel executor from the CLI, ensure we print progress
     # to stdout
     if isinstance(dag.executor, Parallel):
@@ -76,24 +71,20 @@ def main(payload, render_only=False):
             else:
                 report = dag.build(force=args.force, debug=args.debug)
     except Exception as e:
-        res = str(
-            _write_pipeline(pipeline_id=pid,
-                            status='error',
-                            pipeline_name=dag.name,
-                            log=str(e.args)))
-        if 'Error' in res:
-            warnings.warn(res)
+        _write_pipeline(pipeline_id=pid,
+                        status='error',
+                        pipeline_name=dag.name,
+                        log=str(e.args))
+
         raise
 
     if report:
         print(report)
 
     payload['dag'] = dag
-    res = str(
-        _write_pipeline(pipeline_id=pid,
-                        status='finished',
-                        pipeline_name=dag.name,
-                        dag=telemetry.parse_dag(dag)))
-    if 'Error' in res:
-        warnings.warn(res)
+    _write_pipeline(pipeline_id=pid,
+                    status='finished',
+                    pipeline_name=dag.name,
+                    dag=telemetry.parse_dag(dag))
+
     return dag
