@@ -5,10 +5,9 @@ These are some of the features we have in the pipeline, sorted by priority. Plea
 
 1. Grid improvements (#522, #647)
 2. Plot color changes (#650)
-3. Better tracking of execution Metadata - notebooks, models and artifacts.
-4. Improve documentation of git collaboration {{git}} (`#615 <https://github.com/ploomber/ploomber/issues/615>`_).
+3. Better tracking of execution products (notebooks, models and artifacts).
+4. Improve documentation of git collaboration ``{{git}}`` (`#615 <https://github.com/ploomber/ploomber/issues/615>`_).
 5. Improve cloud login page and the user journey.
-
 
 Done
 ****
@@ -28,13 +27,12 @@ Ideas
 *****
 
 These are some ideas we have that we haven't prioritized yet.
+
 - Deploying your model as an endpoint.
 
 - Artifacts reproducibility.
 
-- Blog Databricks vs Ploomber.
-
-- Blog Airflow vs Ploomber.
+- Integration with Databricks.
 
 - Integration with Great Expectations.
 
