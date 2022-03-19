@@ -33,7 +33,6 @@ def with_d3(json_dag, output):
     template_html = jinja2.Template(
         importlib_resources.read_text(resources, 'dag_template.html'))
 
-    # template = jinja2.Template(open("../resources/d3_dag/dag_template.html").read())
     updated = template_html.render(
         {"json_data": json_dag_parser(graph_dict=json_dag)})
     with open(output, "w") as f:

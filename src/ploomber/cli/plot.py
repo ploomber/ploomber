@@ -16,12 +16,11 @@ def main():
             help='Where to save the plot, defaults to pipeline.png',
             default=None)
 
-        parser.add_argument(
-            '--backend',
-            '-b',
-            help=
-            'Which backend to use pygraphviz or d3, defaults to pygraphviz',
-            default=None)
+        parser.add_argument('--backend',
+                            '-b',
+                            help='Which backend to use pygraphviz or d3,\
+                defaults to pygraphviz',
+                            default=None)
 
         parser.add_argument('--include-products',
                             '-i',

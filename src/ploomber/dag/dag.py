@@ -79,7 +79,7 @@ from IPython.display import Image
 
 from ploomber.table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
-from ploomber.util import (image_bytes2html, isiterable, requires)
+from ploomber.util import (image_bytes2html, isiterable)
 from ploomber.util.debug import debug_if_exception
 from ploomber import resources
 from ploomber import executors
