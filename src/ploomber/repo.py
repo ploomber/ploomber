@@ -32,7 +32,9 @@ def is_repo(path):
     if not shutil.which('git'):
         return False
 
-    out = subprocess.run(['git', '-C', path, 'rev-parse'], capture_output=True)
+    out = subprocess.run(['git', '-C', path, 'rev-parse'],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
     return out.returncode == 0
 
 
