@@ -5,6 +5,9 @@
 * DAG plot only includes task names by default (#393)
 * `ploomber plot --include-products/-p` generates plots with task names and products
 * `DAG.plot(include_products=True)` generates plots with task names and products
+* Fixes error when replacing file on Windows (#333)
+* Fixes error message when config file does not exist (#652)
+* Fixes typo in nb command (#665)
 
 ## 0.16.4 (2022-03-11)
 * Using UTF-8 for reading and writing in notebook tasks ([#334](https://github.com/ploomber/ploomber/issues/334))
