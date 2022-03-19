@@ -163,6 +163,16 @@ def test_plot_embed(dag, monkeypatch_plot):
     mock_to_agraph.draw.assert_called_once()
 
 
+def test_plot_include_products(dag, monkeypatch):
+    mock = Mock(wraps=dag._to_graph)
+    monkeypatch.setattr(DAG, '_to_graph', mock)
+    monkeypatch.setattr(dag_module.nx.nx_agraph, 'to_agraph', Mock())
+
+    dag.plot(include_products=True)
+
+    mock.assert_called_with(return_graphviz=True, include_products=True)
+
+
 def test_plot_path(dag, tmp_directory, monkeypatch_plot):
     mock_Image, mock_to_agraph, image_out = monkeypatch_plot
 
@@ -202,6 +212,15 @@ def test_to_graph_prepare_for_graphviz(dag):
     graph = dag._to_graph(return_graphviz=True)
 
     assert set(n.attr['id'] for n in graph) == {'first', 'second'}
+    assert set(n.attr['label'] for n in graph) == {"first", "second"}
+
+    assert len(graph) == 2
+
+
+def test_to_graph_prepare_for_graphviz_include_products(dag):
+    graph = dag._to_graph(return_graphviz=True, include_products=True)
+
+    assert set(n.attr['id'] for n in graph) == {'first', 'second'}
     assert set(n.attr['label'] for n in graph) == {
         "first -> \nFile('file1.txt')", "second -> \nFile('file2.txt')"
     }
@@ -224,7 +243,7 @@ def test_graphviz_graph_with_clashing_task_str(dag):
     t2 = PythonCallable(fn2, File('file1.txt'), dag, name='second')
     t1 >> t2
 
-    graph = dag._to_graph(return_graphviz=True)
+    graph = dag._to_graph(return_graphviz=True, include_products=True)
 
     # check the representation of the graph still looks fine
     assert set(n.attr['id'] for n in graph) == {'first', 'second'}
@@ -910,7 +929,8 @@ def test_on_render_crashes(tmp_directory):
     with pytest.raises(DAGRenderError) as excinfo:
         dag.build()
 
-    msg = 'Exception when running on_render for DAG "No name": crash!'
+    msg = ('Exception when running on_render for DAG "No name": crash!'
+           '\nNeed help? https://ploomber.io/community')
     assert str(excinfo.value) == msg
     assert 'crash!' in str(excinfo.getrepr())
     assert dag._exec_status == DAGStatus.ErroredRender
@@ -936,7 +956,8 @@ def test_on_finish_crashes(tmp_directory):
     with pytest.raises(DAGBuildError) as excinfo:
         dag.build()
 
-    msg = 'Exception when running on_finish for DAG "No name": crash!'
+    msg = ('Exception when running on_finish for DAG "No name": crash!'
+           '\nNeed help? https://ploomber.io/community')
     assert str(excinfo.value) == msg
     assert 'crash!' in str(excinfo.getrepr())
     assert dag._exec_status == DAGStatus.Errored
@@ -976,7 +997,8 @@ def test_on_failure_crashes(caplog):
             dag.build()
 
     assert hook_crashing.count == 1
-    msg = 'Exception when running on_failure for DAG "dag": crash!'
+    msg = ('Exception when running on_failure for DAG "dag": crash!'
+           '\nNeed help? https://ploomber.io/community')
     assert str(excinfo.value) == msg
     assert 'crash!' in str(excinfo.getrepr())
     assert dag._exec_status == DAGStatus.Errored

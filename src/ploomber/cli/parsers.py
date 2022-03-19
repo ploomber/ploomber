@@ -121,10 +121,11 @@ class CustomParser(argparse.ArgumentParser):
         # no --entry-point/-e arg passed, use default
         if index is None:
             if self.DEFAULT_ENTRY_POINT is None:
-                self.error('Unable to find a pipeline entry point. '
+                self.error('Unable to find a pipeline. '
                            'Use --entry-point/-e to pass a '
-                           'entry point\'s location directly or '
-                           'place it in a standard location.')
+                           'entry point\'s location or '
+                           'place it in a standard location.\n\n'
+                           'Need help? https://ploomber.io/community')
 
             return self.DEFAULT_ENTRY_POINT
         else:

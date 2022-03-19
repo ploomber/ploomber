@@ -55,6 +55,27 @@ from ploomber.sources import docstring
 from ploomber.io import pretty_print
 
 
+# TODO: we should unit test that this function is called, as opposed to vanilla
+# .read_text
+def _read_primitive(path):
+    """
+    We read using the UTF-8 instead of the default encoding since notebooks are
+    always stored in UTF-8.
+
+    We can see this in nbformat, which always reads as UTF-8:
+    https://github.com/jupyter/nbformat/blob/df63593b64a15ee1c37b522973c39e8674f93c5b/nbformat/__init__.py#L125
+
+    Scripts are a different story since they may have other encodings, however,
+    modern editors have UTF-8 as default (example: VSCode
+    https://docs.microsoft.com/en-us/powershell/scripting/dev-cross-plat/vscode/understanding-file-encoding?view=powershell-7.2#configuring-vs-code)
+    so it's safer to use UTF-8 than the default encoding.
+
+    jupytext already does this:
+    https://github.com/mwouts/jupytext/issues/896
+    """
+    return Path(path).read_text(encoding='utf-8')
+
+
 def _get_last_cell(nb):
     """
     Get last cell, ignores cells with empty source (unless the notebook only
@@ -185,7 +206,7 @@ class NotebookSource(Source):
                     'File does not exist.' +
                     _suggest_ploomber_scaffold_missing_file())
 
-            self._primitive = primitive.read_text()
+            self._primitive = _read_primitive(primitive)
         else:
             raise TypeError('Notebooks must be initialized from strings, '
                             'Placeholder or pathlib.Path, got {}'.format(
@@ -265,7 +286,7 @@ class NotebookSource(Source):
     @property
     def primitive(self):
         if self._hot_reload:
-            self._primitive = self._path.read_text()
+            self._primitive = _read_primitive(self._path)
 
         return self._primitive
 

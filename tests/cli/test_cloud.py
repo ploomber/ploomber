@@ -6,12 +6,12 @@ import pytest
 import yaml
 from click.testing import CliRunner
 
-from ploomber.cli import cloud, cli
-from ploomber.cli.cli import get_key, set_key, write_pipeline, get_pipelines,\
+from ploomber.cli import cloud
+from ploomber_cli.cli import get_key, set_key, write_pipeline, get_pipelines,\
                             delete_pipeline
 from ploomber.telemetry import telemetry
 from ploomber.telemetry.telemetry import DEFAULT_USER_CONF
-from ploomber.table import Table
+from ploomber import table
 
 
 @pytest.fixture()
@@ -130,7 +130,7 @@ def test_get_api_key(write_sample_conf, capsys):
     key_val = "TEST_KEY12345678987654"
     runner = CliRunner()
     result = runner.invoke(set_key, args=[key_val], catch_exceptions=False)
-    assert f'Key was stored {key_val}\n' == result.stdout
+    assert 'Key was stored\n' == result.stdout
 
     result = runner.invoke(get_key, catch_exceptions=False)
     assert key_val in result.stdout
@@ -140,7 +140,7 @@ def test_get_no_key(write_sample_conf, capsys):
     runner = CliRunner()
     result = runner.invoke(get_key, catch_exceptions=False)
 
-    assert 'No cloud API key was found\n' == result.stdout
+    assert 'No cloud API key was found.\n' == result.stdout
 
 
 def test_two_keys_not_supported(write_sample_conf, capsys):
@@ -281,7 +281,7 @@ def test_pipeline_write_error(mock_api_key):
 
 # Get all pipelines, minimum of 3 should exist.
 def test_get_multiple_pipelines(monkeypatch, mock_api_key):
-    class CustomTableWrapper(Table):
+    class CustomTableWrapper(table.Table):
         @classmethod
         def from_dicts(cls, dicts, complete_keys):
             # call the super class
@@ -292,7 +292,10 @@ def test_get_multiple_pipelines(monkeypatch, mock_api_key):
             return table
 
     # monkeypatch CustomParser to use our wrapper
-    monkeypatch.setattr(cli, 'Table', CustomTableWrapper)
+    # FIXME: we should be fixing the local module, not the global one
+    # but when we refactored the CLI to load fast, we moved the import in
+    # the cli module inside the cli function so we can no longer patch it
+    monkeypatch.setattr(table, 'Table', CustomTableWrapper)
 
     pid = str(uuid.uuid4())
     pid2 = str(uuid.uuid4())
@@ -306,8 +309,7 @@ def test_get_multiple_pipelines(monkeypatch, mock_api_key):
     assert pid3 in res
 
     get_tabular_pipeline()
-    table = CustomTableWrapper.table
-    assert len(table['pipeline_id']) >= 3
+    assert len(CustomTableWrapper.table['pipeline_id']) >= 3
 
     res = delete_sample_pipeline(pid)
     assert pid in res

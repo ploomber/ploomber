@@ -1,5 +1,5 @@
 import sys
-from unittest.mock import Mock
+from unittest.mock import Mock, ANY
 from pathlib import Path
 
 import pytest
@@ -76,6 +76,23 @@ def test_notebook_conversion(monkeypatch, output, tmp_directory):
 
     conv = notebook.NotebookConverter(output)
     conv.convert()
+
+
+def test_notebook_conversion_stores_as_unicode(tmp_directory, monkeypatch):
+    nb = nbformat.v4.new_notebook()
+    cell = nbformat.v4.new_code_cell('1 + 1')
+    nb.cells.append(cell)
+
+    with open('nb.ipynb', 'w', encoding='utf-8') as f:
+        nbformat.write(nb, f)
+
+    conv = notebook.NotebookConverter('nb.ipynb', exporter_name='html')
+
+    mock = Mock()
+    monkeypatch.setattr(notebook.Path, 'write_text', mock)
+    conv.convert()
+
+    mock.assert_called_once_with(ANY, encoding='utf-8')
 
 
 @pytest.mark.parametrize(
@@ -922,3 +939,22 @@ def test_static_analysis_strict_raises_error_at_rendertime_if_signature_error(
     assert expected in str(excinfo.value)
     # it should not warn, since we raise the error
     assert len(records) == 0
+
+
+def test_replaces_existing_product(tmp_directory):
+    Path('out.html').touch()
+
+    path = Path('nb.py')
+    path.write_text("""
+# + tags=["parameters"]
+# some code
+
+# +
+1 + 1
+    """)
+
+    dag = DAG()
+    NotebookRunner(Path('nb.py'), File('out.html'), dag=dag)
+
+    # this will fail on windows if we don't remove the existing file first
+    dag.build()

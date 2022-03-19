@@ -8,7 +8,7 @@ from click.testing import CliRunner
 import pytest
 
 from ploomber.cli import examples
-from ploomber.cli import cli
+from ploomber_cli import cli
 
 
 def _mock_metadata(**kwargs):
@@ -70,7 +70,10 @@ def test_cli(monkeypatch, argv, kwargs):
 
 
 def test_error_if_exception_during_execution(monkeypatch):
-    monkeypatch.setattr(cli.cli_module.examples, 'main',
+    # FIXME: we should be fixing the local module, not the global one
+    # but when we refactored the CLI to load fast, we moved the import in
+    # the cli module inside the cli function so we can no longer patch it
+    monkeypatch.setattr(examples, 'main',
                         Mock(side_effect=ValueError('some error')))
 
     runner = CliRunner()
@@ -83,8 +86,11 @@ def test_error_if_exception_during_execution(monkeypatch):
 
 
 def test_click_exception_isnt_shadowed_by_runtime_error(monkeypatch):
+    # FIXME: we should be fixing the local module, not the global one
+    # but when we refactored the CLI to load fast, we moved the import in
+    # the cli module inside the cli function so we can no longer patch it
     monkeypatch.setattr(
-        cli.cli_module.examples, 'main',
+        examples, 'main',
         Mock(side_effect=ClickException('some click exception')))
 
     runner = CliRunner()
@@ -92,7 +98,7 @@ def test_click_exception_isnt_shadowed_by_runtime_error(monkeypatch):
     result = runner.invoke(cli.cli, ['examples'])
 
     assert result.exit_code == 1
-    assert result.output == 'Error: some click exception\n'
+    assert 'Error: some click exception\n' in result.output
 
 
 def test_clones_in_home_directory(monkeypatch, tmp_directory):

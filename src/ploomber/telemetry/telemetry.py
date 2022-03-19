@@ -326,7 +326,7 @@ def read_conf_file(conf_path):
             conf = yaml.safe_load(file)
             return conf
     except Exception as e:
-        warnings.warn(f"Error: Can't read config file {e}")
+        warnings.warn(f"Can't read config file {e}")
         return {}
 
 
@@ -335,7 +335,7 @@ def write_conf_file(conf_path, to_write, error=None):
         with conf_path.open("w") as file:
             yaml.dump(to_write, file)
     except Exception as e:
-        warnings.warn(f"ERROR: Can't write to config file: {e}")
+        warnings.warn(f"Can't write to config file: {e}")
         if error:
             return e
 

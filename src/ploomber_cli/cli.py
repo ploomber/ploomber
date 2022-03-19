@@ -1,23 +1,51 @@
 from pathlib import Path
 import os
+from difflib import get_close_matches
 import sys
+
+from ploomber_scaffold import scaffold as scaffold_project
 
 import click
 
-from ploomber.spec import DAGSpec
-from ploomber import __version__
-from ploomber import cli as cli_module
-from ploomber import scaffold as _scaffold
-from ploomber_scaffold import scaffold as scaffold_project
 
-from ploomber.table import Table
-from ploomber.telemetry import telemetry
+def _suggest_command(name: str, options):
+    if not name or name in options:
+        return None
+
+    name = name.lower()
+
+    mapping = {
+        'run': 'build',
+        'execute': 'build',
+    }
+
+    if name in mapping:
+        return mapping[name]
+
+    close_commands = get_close_matches(name, options)
+
+    if close_commands:
+        return close_commands[0]
+    else:
+        return None
 
 
 @click.group()
-@click.version_option(version=__version__)
+@click.version_option(package_name='ploomber')
 def cli():
-    """Ploomber command line interface.
+    """
+    Ploomber
+
+    Need help? https://ploomber.io/community
+
+    Download an example to the mypipeline/ directory:
+
+    $ ploomber examples -n templates/ml-basic -o mypipeline
+
+    Create a new project in a myproject/ directory:
+
+    $ ploomber scaffold myproject
+
     """
     pass  # pragma: no cover
 
@@ -50,16 +78,26 @@ def cli():
 )
 @click.argument('name', required=False)
 def scaffold(name, conda, package, entry_point, empty):
-    """Create a new project / Create task source files
-
-    $ ploomber scaffold myproject
-
-    $ cd myproject
-
-    Add tasks to pipeline.yaml. Then, to create the source files:
-
-    $ ploomber scaffold
     """
+    Create a new project and task source files
+
+    Step 1. Create new project
+
+      $ ploomber scaffold myproject
+
+      $ cd myproject
+
+    Step 2. Add tasks to the pipeline.yaml file
+
+    Step 3. Create source files
+
+      $ ploomber scaffold
+
+    Need help? https://ploomber.io/community
+    """
+    from ploomber import scaffold as _scaffold
+    from ploomber.telemetry import telemetry
+
     template = '-e/--entry-point is not compatible with {flag}'
     user_passed_name = name is not None
 
@@ -107,6 +145,8 @@ def scaffold(name, conda, package, entry_point, empty):
     if entry_point is None:
         loaded = _scaffold.load_dag()
     else:
+        from ploomber.spec import DAGSpec
+
         try:
             loaded = (
                 DAGSpec(entry_point, lazy_import='skip'),
@@ -173,6 +213,8 @@ def install(use_lock, create_env, use_venv):
     """
     Install dependencies
     """
+    from ploomber import cli as cli_module
+
     cli_module.install.main(use_lock=use_lock,
                             create_env=create_env,
                             use_venv=use_venv)
@@ -184,20 +226,26 @@ def install(use_lock, create_env, use_venv):
 @click.option('-o', '--output', help='Target directory', default=None)
 @click.option('-b', '--branch', help='Git branch to use.', default=None)
 def examples(name, force, branch, output):
-    """Download examples
-
-    List:
-
-    $ ploomber examples
-
-    Download:
-
-    $ ploomber examples -n type/example -o directory
-
-    Download ml-basic example:
-
-    $ ploomber examples -n templates/ml-basic -o my-pipeline
     """
+    Download examples
+
+    Step 1. List examples
+
+      $ ploomber examples
+
+
+    Step 2. Download an example
+
+      $ ploomber examples -n templates/ml-basic -o my-pipeline
+
+
+    Need help? https://ploomber.io/community
+    """
+    click.echo('Loading examples...')
+
+    from ploomber.telemetry import telemetry
+    from ploomber import cli as cli_module
+
     try:
         cli_module.examples.main(name=name,
                                  force=force,
@@ -227,71 +275,51 @@ def _exit_with_error_message(msg):
 
 
 def cmd_router():
+    """CLI entry point
+    """
     cmd_name = None if len(sys.argv) < 2 else sys.argv[1]
 
     # These are parsing dynamic parameters and that's why we're isolating it.
-    custom = {
-        'build': cli_module.build.main,
-        'plot': cli_module.plot.main,
-        'task': cli_module.task.main,
-        'report': cli_module.report.main,
-        'interact': cli_module.interact.main,
-        'status': cli_module.status.main,
-        'nb': cli_module.nb.main,
-    }
+    custom = ['build', 'plot', 'task', 'report', 'interact', 'status', 'nb']
 
     # users may attempt to run execute/run, suggest to use build instead
     # users may make typos when running one of the commands
     # suggest correct spelling on obvious typos
-    alias = {
-        'execute': 'build',
-        'run': 'build',
-        'bulid': 'build',
-        'buld': 'build',
-        'bild': 'build',
-        'uild': 'build',
-        'buil': 'build',
-        'example': 'examples',
-        'exemples': 'examples',
-        'exmples': 'examples',
-        'exampes': 'examples',
-        'tsk': 'task',
-        'tas': 'task',
-        'rport': 'report',
-        'reprt': 'report',
-        'repor': 'report',
-        'stat': 'status',
-        'stats': 'status',
-        'satus': 'status',
-        'inteact': 'interact',
-        'interat': 'interact'
-    }
 
     if cmd_name in custom:
+        click.echo('Loading pipeline...')
+
+        from ploomber import cli as cli_module
+
         # NOTE: we don't use the argument here, it is parsed by _main
         # pop the second element ('entry') to make the CLI behave as expected
         sys.argv.pop(1)
         # Add the current working directory, this is done automatically when
         # calling "python -m ploomber.build" but not here ("ploomber build")
         sys.path.insert(0, os.path.abspath('.'))
+
+        custom = {
+            'build': cli_module.build.main,
+            'plot': cli_module.plot.main,
+            'task': cli_module.task.main,
+            'report': cli_module.report.main,
+            'interact': cli_module.interact.main,
+            'status': cli_module.status.main,
+            'nb': cli_module.nb.main,
+        }
+
         fn = custom[cmd_name]
         fn()
-    elif cmd_name in alias:
-        suggestion = alias[cmd_name]
-        telemetry.log_api("unsupported_build_cmd",
-                          metadata={
-                              'cmd_name': cmd_name,
-                              'suggestion': suggestion,
-                              'argv': sys.argv
-                          })
-        _exit_with_error_message("Try 'ploomber --help' for help.\n\n"
-                                 f"Error: {cmd_name!r} is not a valid command."
-                                 f" Did you mean {suggestion!r}?")
     else:
-        if cmd_name not in ['examples', 'scaffold', 'install']:
-            telemetry.log_api("unsupported-api-call",
-                              metadata={'argv': sys.argv})
-        cli()
+        suggestion = _suggest_command(cmd_name, cli.commands.keys())
+
+        if suggestion:
+            _exit_with_error_message(
+                "Try 'ploomber --help' for help.\n\n"
+                f"Error: {cmd_name!r} is not a valid command."
+                f" Did you mean {suggestion!r}?")
+        else:
+            cli()
 
 
 # the commands below are handled by the router,
@@ -333,7 +361,7 @@ def report():
 
 @cli.command()
 def interact():
-    """Start an interactive session
+    """Interact with your pipeline (REPL)
     """
     pass  # pragma: no cover
 
@@ -347,7 +375,7 @@ def nb():
 
 @cli.group()
 def cloud():
-    """Ploomber cloud command line interface.
+    """Manage Ploomber Cloud
     """
     pass  # pragma: no cover
 
@@ -355,35 +383,46 @@ def cloud():
 @cloud.command()
 @click.argument('user_key', required=True)
 def set_key(user_key):
+    """Set API key
+
+    It validates it's a valid key. If the key is valid, it stores it in the
+    user config.yaml file.
     """
-    This function sets the cloud API Key. It validates it's a valid key.
-    If the key is valid, it stores it in the user config.yaml file.
-    """
+    from ploomber import cli as cli_module
     cli_module.cloud.set_key(user_key)
 
 
 @cloud.command()
 def get_key():
+    """Return API key
+
+    It retrieves it from the user config.yaml file. Returns the key if it
+    exists
     """
-    This function gets the cloud API Key. It retrieves it from the user
-    config.yaml file. Returns the key if exist, returns None if doesn't exist.
-    """
+    from ploomber import cli as cli_module
+
     key = cli_module.cloud.get_key()
+
     if key:
-        print('This is your cloud API key: {}'.format(key))
+        click.echo(f'This is your cloud API key: {key}')
+    else:
+        click.echo('No cloud API key was found.')
 
 
 @cloud.command()
 @click.argument('pipeline_id', default=None, required=False)
 @click.option('-v', '--verbose', default=False, is_flag=True, required=False)
 def get_pipelines(pipeline_id, verbose):
-    """
-    Use this to get the state of your pipelines, specify a single pipeline_id
-    to get it's state, when not specified, pulls all of the pipelines.
-    You can pass the `latest` tag, instead of pipeline_id to get the latest.
-    To get a detailed view pass the verbose flag.
+    """Get pipeline status
+
+    Specify a pipeline_id to get it's state, when not specified, pulls all of
+    the pipelines. You can pass "latest", instead of pipeline_id to get the
+    latest. To get a detailed view pass the verbose flag.
     Returns a list of pipelines is succeeds, an Error string if fails.
     """
+    from ploomber.table import Table
+    from ploomber import cli as cli_module
+
     pipeline = cli_module.cloud.get_pipeline(pipeline_id, verbose)
     if isinstance(pipeline, list) and pipeline:
         pipeline = Table.from_dicts(pipeline, complete_keys=True)
@@ -397,11 +436,14 @@ def get_pipelines(pipeline_id, verbose):
 @click.argument('dag', default=None, required=False)
 @click.argument('pipeline_name', default=None, required=False)
 def write_pipeline(pipeline_id, status, log, pipeline_name, dag):
+    """Write a pipeline
+
+    Pipeline_id & status are required. You can also add logs and a pipeline
+    name. Returns a string with pipeline id if succeeds, an Error string if
+    fails.
     """
-    This function writes a  pipeline, pipeline_id & status are required.
-    You can also add logs and a pipeline name.
-    Returns a string with pipeline id if succeeds, an Error string if fails.
-    """
+    from ploomber import cli as cli_module
+
     print(
         cli_module.cloud.write_pipeline(pipeline_id, status, log,
                                         pipeline_name, dag))
@@ -410,8 +452,10 @@ def write_pipeline(pipeline_id, status, log, pipeline_name, dag):
 @cloud.command()
 @click.argument('pipeline_id', required=True)
 def delete_pipeline(pipeline_id):
+    """Delete a pipeline
+
+    pipeline_id is required. Returns a string with pipeline id if succeeds, an
+    Error string if fails.
     """
-    This function deletes a pipeline, pipeline_id is required.
-    Returns a string with pipeline id if succeeds, an Error string if fails.
-    """
+    from ploomber import cli as cli_module
     print(cli_module.cloud.delete_pipeline(pipeline_id))
