@@ -914,7 +914,6 @@ def test_git_placeholder_and_not_in_git_repository(tmp_directory,
     assert 'could not locate a git repository' in str(excinfo.value)
 
 
-
 @pytest.mark.parametrize('method, kwargs', [
     [None, dict(data='pipeline.yaml')],
     ['find', dict()],
