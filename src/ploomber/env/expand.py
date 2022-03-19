@@ -1,3 +1,4 @@
+import shutil
 import os
 import re
 import ast
@@ -14,6 +15,7 @@ from jinja2 import Template, StrictUndefined
 from ploomber.placeholders import util
 from ploomber import repo
 from ploomber.util import default
+from ploomber.exceptions import BaseException
 
 
 def expand_raw_dictionary_and_extract_tags(raw, mapping):
@@ -160,6 +162,18 @@ class EnvironmentExpander:
         if not placeholders:
             value = raw_value
         else:
+            if 'git' in placeholders:
+                if not shutil.which('git'):
+                    raise BaseException('Found placeholder {{git}}, but '
+                                        'git is not installed. Please install '
+                                        'it and try again.')
+
+                if not repo.is_repo(self._path_to_here):
+                    raise BaseException(
+                        'Found placeholder {{git}}, but could not '
+                        'locate a git repository. Create a repository '
+                        'or remove the {{git}} placeholder.')
+
             # get all required placeholders
             params = {k: self.load_placeholder(k) for k in placeholders}
             value = Template(raw_value).render(**params)
@@ -258,12 +272,15 @@ class EnvironmentExpander:
                                'when directly passing path to use')
 
     def get_git(self):
-        module = self._preprocessed.get('_module')
+        module_path = self._preprocessed.get('_module')
 
-        if not module:
+        if self._path_to_here:
+            module_path = self._path_to_here
+
+        if not module_path:
             raise KeyError('_module key is required to use git placeholder')
 
-        return repo.get_git_info(module)['git_location']
+        return repo.get_git_info(module_path)['git_location']
 
     def get_now(self):
         """Returns current timestamp in ISO 8601 format

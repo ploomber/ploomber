@@ -9,6 +9,7 @@ import yaml
 from ploomber.env import validate
 from ploomber.env.expand import EnvironmentExpander
 from ploomber.env.frozenjson import FrozenJSON
+from ploomber import repo
 from ploomber.util import default
 
 
@@ -71,7 +72,7 @@ class EnvDict(Mapping):
 
             # add default placeholders but override them if they are defined
             # in the raw data
-            default = self._default_dict(include_here=path_to_here is not None)
+            default = self._default_dict(path_to_here=path_to_here)
             self._default_keys = set(default) - set(raw_data)
             raw_data = {**default, **raw_data}
 
@@ -124,7 +125,8 @@ class EnvDict(Mapping):
         return self._default_keys
 
     @staticmethod
-    def _default_dict(include_here):
+    def _default_dict(path_to_here):
+
         placeholders = {
             'user': '{{user}}',
             'cwd': '{{cwd}}',
@@ -134,8 +136,11 @@ class EnvDict(Mapping):
         if default.try_to_find_root_recursively() is not None:
             placeholders['root'] = '{{root}}'
 
-        if include_here:
+        if path_to_here is not None:
             placeholders['here'] = '{{here}}'
+
+        if path_to_here is not None and repo.is_repo(path_to_here):
+            placeholders['git'] = '{{git}}'
 
         return placeholders
 
@@ -262,7 +267,7 @@ def load_from_source(source):
     Returns
     -------
     dict
-        Raw dictioanry
+        Raw dictionary
     pathlib.Path
         Path to the loaded file, None if source is a dict
     str

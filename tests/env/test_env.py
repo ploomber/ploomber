@@ -588,6 +588,12 @@ def test_expand_raw_dict_nested():
     })
 
 
+def test_envdict_git_ignored_if_git_command_fails_and_no_git_placeholder(
+        tmp_directory):
+    env = EnvDict({'tag': 'value'}, path_to_here='.')
+    assert set(env) == {'cwd', 'here', 'now', 'tag', 'user'}
+
+
 def test_expand_raw_dict_error_if_missing_key():
     mapping = {'another_key': 'value'}
     d = {'some_settting': '{{key}}'}

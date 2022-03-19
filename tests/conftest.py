@@ -2,6 +2,7 @@
 Note: tests organized in folders must contain an init file:
 https://github.com/pytest-dev/pytest/issues/3151#issuecomment-360493948
 """
+import subprocess
 import stat
 import base64
 from copy import copy
@@ -24,6 +25,15 @@ from glob import iglob
 from ploomber.cli import install
 import posthog
 from unittest.mock import Mock, MagicMock
+
+
+def git_init():
+    if Path('CHANGELOG.md').exists():
+        raise ValueError('call git_init in a temporary directory')
+
+    subprocess.run(['git', 'init', '-b', 'mybranch'])
+    subprocess.run(['git', 'add', '--all'])
+    subprocess.run(['git', 'commit', '-m', 'message'])
 
 
 @pytest.fixture(scope='class')
@@ -57,7 +67,6 @@ def fixture_tmp_dir(source):
     # some_fixture = factory('some/path')
     # but didn't work
     def decorator(function):
-
         @wraps(function)
         def wrapper():
             old = os.getcwd()
@@ -85,9 +94,7 @@ def fixture_backup(source):
     """
     Similar to fixture_tmp_dir but backups the content instead
     """
-
     def decorator(function):
-
         @wraps(function)
         def wrapper():
             old = os.getcwd()

@@ -6,6 +6,7 @@ import subprocess
 import shlex
 import sys
 from pathlib import Path
+import shutil
 
 
 def _run_command(path, command):
@@ -22,6 +23,17 @@ def _run_command(path, command):
         s = s[:-1]
 
     return s
+
+
+def is_repo(path):
+    if path is None:
+        return False
+
+    if not shutil.which('git'):
+        return False
+
+    out = subprocess.run(['git', '-C', path, 'rev-parse'], capture_output=True)
+    return out.returncode == 0
 
 
 def get_git_summary(path):
