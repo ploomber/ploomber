@@ -320,7 +320,7 @@ def main():
         _call_in_source(
             dag,
             'save_injected_cell',
-            'Injected celll',
+            'Injected cell',
             dict(),
         )
 
