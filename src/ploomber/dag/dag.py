@@ -63,6 +63,8 @@ import logging
 import tempfile
 from math import ceil
 from functools import partial
+from importlib.util import find_spec
+from ploomber.dag import plot
 
 try:
     import importlib.resources as importlib_resources
@@ -163,6 +165,7 @@ class DAG(AbstractDAG):
         task has no serializer. See ``ploombe.tasks.PythonCallable``
         documentation for details.
     """
+
     def __init__(self, name=None, clients=None, executor='serial'):
         self._G = nx.DiGraph()
 
@@ -789,11 +792,7 @@ class DAG(AbstractDAG):
 
         return out
 
-    @requires(['pygraphviz'],
-              extra_msg=_pygraphviz_message,
-              pip_names=['pygraphviz<1.8'] if sys.version_info <
-              (3, 8) else ['pygraphviz'])
-    def plot(self, output='embed', include_products=False):
+    def plot(self, backend=None, output='embed', include_products=False):
         """Plot the DAG
 
         Parameters
@@ -808,6 +807,24 @@ class DAG(AbstractDAG):
             If False, each node only contains the task name, if True
             if contains the task name and products.
         """
+
+        is_pygraphviz_installed = True if find_spec("pygraphviz") else False
+        if ((not is_pygraphviz_installed and backend is None)
+                or (backend == 'd3')):
+            # FIXME: add tests for this
+            self.render()
+            G = self._to_graph(return_graphviz=False,
+                               return_json_dag=True,
+                               include_products=include_products)
+            json_dag = nx.readwrite.json_graph.node_link_data(G)
+            output = output.rsplit(".")[0] + '.html'
+            backend = "d3"
+            return plot.with_d3(json_dag, output=output)
+        elif not is_pygraphviz_installed and backend == "pygraphviz":
+            raise RuntimeError(
+                "pygraphviz is not installed to generate dag plot\n" +
+                _pygraphviz_message)
+
         if output == 'embed':
             fd, path = tempfile.mkstemp(suffix='.png')
             os.close(fd)
@@ -816,9 +833,6 @@ class DAG(AbstractDAG):
 
         # attributes docs:
         # https://graphviz.gitlab.io/_pages/doc/info/attrs.html
-
-        # FIXME: add tests for this
-        self.render()
 
         G = self._to_graph(return_graphviz=True,
                            include_products=include_products)
@@ -846,6 +860,7 @@ class DAG(AbstractDAG):
     def _to_graph(self,
                   only_current_dag=False,
                   return_graphviz=False,
+                  return_json_dag=False,
                   include_products=False):
         """
         Converts the DAG to a Networkx DiGraph object. Since upstream
@@ -864,9 +879,8 @@ class DAG(AbstractDAG):
 
         # NOTE: delete this, use existing DiGraph object
         G = nx.DiGraph()
-
         for task in self.values():
-            if return_graphviz:
+            if return_graphviz or return_json_dag:
                 # add parameters for graphviz plotting
                 color = ('lightcoral'
                          if task.product._is_outdated() else 'lightgreen')
@@ -896,7 +910,8 @@ class DAG(AbstractDAG):
             # function to determine what to use as node depending on the
             # return_graphviz
             def get(task):
-                return task if not return_graphviz else task.name
+                return task if not (return_graphviz
+                                    or return_json_dag) else task.name
 
             # add edges
             if only_current_dag:
@@ -906,8 +921,9 @@ class DAG(AbstractDAG):
             else:
                 G.add_edges_from([(get(up), get(task))
                                   for up in task.upstream.values()])
-
-        return G if not return_graphviz else nx.nx_agraph.to_agraph(G)
+        if return_json_dag or not return_graphviz:
+            return G
+        return nx.nx_agraph.to_agraph(G)
 
     def _add_edge(self, task_from, task_to, group_name=None):
         """Add an edge between two tasks
@@ -1076,6 +1092,7 @@ def _product_short_repr(product):
 
 
 def _task_short_repr(task):
+
     def short(s):
         max_l = 30
         return s if len(s) <= max_l else s[:max_l - 3] + '...'
