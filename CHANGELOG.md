@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.17.1dev
+
 ## 0.17 (2022-03-19)
 * Style improvements to DAG plot ([#650](https://github.com/ploomber/ploomber/issues/650))
 * DAG plot only includes task names by default ([#393](https://github.com/ploomber/ploomber/issues/393))
