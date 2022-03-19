@@ -867,16 +867,17 @@ class DAG(AbstractDAG):
 
         for task in self.values():
             if return_graphviz:
+                outdated = task.product._is_outdated()
+
                 # add parameters for graphviz plotting
-                color = ('lightcoral'
-                         if task.product._is_outdated() else 'lightgreen')
+                color = ('lightcoral' if outdated else 'lightgreen')
 
                 label = (_task_short_repr(task)
                          if include_products else task.name)
 
                 attr = {
                     'fillcolor': color,
-                    'style': 'filled',
+                    'style': 'dashed, filled' if outdated else 'filled',
                     'fontname': 'Helvetica',
                     'fontsize': '16pt',
                     'id': task.name,

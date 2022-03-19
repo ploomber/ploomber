@@ -1,7 +1,7 @@
 # CHANGELOG
 
 ## 0.16.5dev
-* Style improvements to DAG plot
+* Style improvements to DAG plot (#650)
 * DAG plot only includes task names by default (#393)
 * `ploomber plot --include-products/-p` generates plots with task names and products
 * `DAG.plot(include_products=True)` generates plots with task names and products
