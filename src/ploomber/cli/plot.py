@@ -15,6 +15,12 @@ def main():
             '-o',
             help='Where to save the plot, defaults to pipeline.png',
             default=None)
+
+        parser.add_argument('--include-products',
+                            '-i',
+                            help='Include task products',
+                            action='store_true')
+
     dag, args = parser.load_from_entry_point_arg()
 
     if args.output is not None:
@@ -23,6 +29,6 @@ def main():
         name = extract_name(args.entry_point)
         output = 'pipeline.png' if name is None else f'pipeline.{name}.png'
 
-    dag.plot(output=output)
+    dag.plot(output=output, include_products=args.include_products)
 
     print('Plot saved at:', output)

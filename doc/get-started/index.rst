@@ -10,5 +10,5 @@ Get Started
 
     what-is
     quick-start
-    spec-api-python
+    first-pipeline
     basic-concepts

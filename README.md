@@ -11,7 +11,7 @@
 [![Conda](https://img.shields.io/conda/pn/conda-forge/ploomber)](https://anaconda.org/conda-forge/ploomber)
 [![Coverage](https://coveralls.io/repos/github/ploomber/ploomber/badge.svg?branch=master)](https://coveralls.io/github/ploomber/ploomber?branch=master)
 [![Twitter](https://img.shields.io/twitter/follow/ploomber?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=ploomber)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/spec-api-python%252FREADME.ipynb%26branch%3Dmaster)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster)
 [![Downloads](https://pepy.tech/badge/ploomber)](https://pepy.tech/project/ploomber)
 
 <p align="center">
@@ -32,8 +32,9 @@
 
 
 Ploomber is the fastest way to build data pipelines ⚡️. Use your favorite editor (**[Jupyter](https://docs.ploomber.io/en/latest/user-guide/jupyter.html), [VSCode](https://docs.ploomber.io/en/latest/user-guide/editors.html), [PyCharm](https://docs.ploomber.io/en/latest/user-guide/editors.html)**) to develop interactively and deploy ☁️ without code changes (**[Kubernetes](https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html), [Airflow](https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html), [AWS Batch](https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html), and [SLURM](https://soopervisor.readthedocs.io/en/latest/tutorials/slurm.html)**). Do you have legacy notebooks? Refactor them into modular pipelines with a single command.
-
-
+<p align="center">
+    <a href="https://colab.research.google.com/github/ploomber/projects/blob/master/guides/first-pipeline/colab.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+</p>
 <p align="center">
   <a href="https://docs.ploomber.io/en/latest/get-started/quick-start.html"> <img src="_static/get-started.svg" alt="Get Started"> </a>
 </p>
@@ -59,7 +60,7 @@ conda install ploomber -c conda-forge
 
 **Open a hosted JupyterLab instance:**
 
-[![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/spec-api-python%252FREADME.ipynb%26branch%3Dmaster)
+[![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster)
 
 **Run an example locally:**
 
@@ -77,15 +78,15 @@ ploomber build
 
 You just ran a Ploomber pipeline! 🎉
 
-Check out the ``output`` folder, you'll see an HTML report with model results!
+Check out the `output/nb.html` report with model results!
 
-The ``pipeline.yaml`` contains the pipeline declaration. Feel free to modify any of the tasks, then call `ploomber build` again to update the results (Note: if using VSCode or PyCharm, execute `ploomber nb -i` before editing the files).
+The `pipeline.yaml` contains the pipeline declaration. Feel free to modify any of the tasks, then call `ploomber build` again to update the results (Note: if using VSCode or PyCharm, execute `ploomber nb -i` before editing the files).
 
 **What's next?**
 
 Ready to **migrate your project?** [Click here.](https://docs.ploomber.io/en/latest/user-guide/refactoring.html)
 
-Do you want to **learn more?** [Check out the introductory tutorial.](https://docs.ploomber.io/en/latest/get-started/spec-api-python.html)
+Do you want to **learn more?** [Check out the introductory tutorial.](https://docs.ploomber.io/en/latest/get-started/first-pipeline.html)
 
 Run more [examples.](https://docs.ploomber.io/en/latest/user-guide/templates.html)
 

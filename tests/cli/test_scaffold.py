@@ -5,8 +5,8 @@ import pytest
 import yaml
 from click.testing import CliRunner
 
-from ploomber.cli.cli import scaffold
-from ploomber.cli import cli
+from ploomber_cli.cli import scaffold
+from ploomber_cli import cli
 from ploomber import scaffold as scaffold_module
 from tests_util import assert_function_in_module, write_simple_pipeline
 

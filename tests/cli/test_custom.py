@@ -10,7 +10,7 @@ import nbformat
 import pytest
 
 from ploomber.cli import plot, build, parsers, task, report, status, interact
-from ploomber.cli.cli import cmd_router
+from ploomber_cli.cli import cmd_router
 from ploomber.cli.parsers import CustomParser
 from ploomber.tasks import notebook
 from ploomber import DAG
@@ -34,24 +34,14 @@ def test_no_options(monkeypatch):
     ['execute', 'build'],
     ['run', 'build'],
     ['bulid', 'build'],
-    ['buld', 'build'],
-    ['bild', 'build'],
-    ['uild', 'build'],
-    ['buil', 'build'],
     ['example', 'examples'],
-    ['exemples', 'examples'],
-    ['exmples', 'examples'],
-    ['exampes', 'examples'],
     ['tsk', 'task'],
-    ['tas', 'task'],
     ['rport', 'report'],
-    ['reprt', 'report'],
-    ['repor', 'report'],
-    ['stat', 'status'],
     ['stats', 'status'],
-    ['satus', 'status'],
     ['inteact', 'interact'],
-    ['interat', 'interact'],
+    ['scafold', 'scaffold'],
+    ['instal', 'install'],
+    ['plo', 'plot'],
 ])
 def test_suggestions(monkeypatch, capsys, cmd, suggestion):
     monkeypatch.setattr(sys, 'argv', ['ploomber', cmd])
@@ -165,18 +155,25 @@ def test_status(monkeypatch_session, tmp_sample_dir):
     status.main(catch_exception=False)
 
 
-@pytest.mark.parametrize(
-    'custom_args',
-    [[], ['--output', 'custom.png'], ['-o', 'custom.png'], ['--log', 'DEBUG'],
-     ['-o', 'custom.png', '--log', 'DEBUG']])
-def test_plot(custom_args, monkeypatch_session, tmp_sample_dir):
+@pytest.mark.parametrize('custom_args, output, include_products', [
+    [[], 'pipeline.entry.png', False],
+    [['--output', 'custom.png'], 'custom.png', False],
+    [['-o', 'custom.png'], 'custom.png', False],
+    [['--log', 'DEBUG'], 'pipeline.entry.png', False],
+    [['-o', 'custom.png', '--log', 'DEBUG'], 'custom.png', False],
+    [['--include-products'], 'pipeline.entry.png', True],
+    [['-i'], 'pipeline.entry.png', True],
+])
+def test_plot(custom_args, monkeypatch_session, tmp_sample_dir, output,
+              include_products):
     args_defaults = ['python', '--entry-point', 'test_pkg.entry.with_doc']
     monkeypatch_session.setattr(sys, 'argv', args_defaults + custom_args)
     mock = Mock()
     monkeypatch_session.setattr(dag_module.DAG, 'plot', mock)
     plot.main(catch_exception=False)
 
-    mock.assert_called_once()
+    mock.assert_called_once_with(output=output,
+                                 include_products=include_products)
 
 
 def test_plot_uses_name_if_any(tmp_nbs, monkeypatch_session):
@@ -188,7 +185,8 @@ def test_plot_uses_name_if_any(tmp_nbs, monkeypatch_session):
     monkeypatch_session.setattr(dag_module.DAG, 'plot', mock)
     plot.main(catch_exception=False)
 
-    mock.assert_called_once_with(output='pipeline.train.png')
+    mock.assert_called_once_with(output='pipeline.train.png',
+                                 include_products=False)
 
 
 def test_report_includes_plot(monkeypatch_session, tmp_sample_dir):
@@ -488,3 +486,27 @@ def test_build_with_replaced_env_value(tmp_nbs, monkeypatch_session):
         sys, 'argv',
         ['python', '--entry-point', 'pipeline.yaml', '--env--sample', 'True'])
     build.main(catch_exception=False)
+
+
+def test_task_command_formats_exception(tmp_directory, monkeypatch,
+                                        tmp_imports, capsys):
+    Path('functions.py').write_text("""
+def load(product):
+    raise ValueError
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: functions.load
+      product: output.txt
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'task', 'load'])
+
+    with pytest.raises(SystemExit):
+        cmd_router()
+
+    captured = capsys.readouterr()
+    expected = ('raise ValueError\nValueError\n\nploomber.exceptions.'
+                'TaskBuildError: Error building task "load"')
+    assert expected in captured.err

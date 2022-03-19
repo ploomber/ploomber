@@ -437,6 +437,21 @@ def test_error_on_invalid_product_class(backup_spec_with_functions_flat,
     assert str(excinfo.value) == expected
 
 
+def test_error_on_invalid_source(backup_spec_with_functions_flat, tmp_imports):
+    meta = Meta.default_meta({'extract_product': False})
+
+    spec = {'source': 'someinvalidstring', 'product': 'output_product'}
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        TaskSpec(spec, meta=meta, project_root='.').to_task(dag=DAG())
+
+    expected = ("Failed to determine task source 'someinvalidstring'\n"
+                "Valid extensions are: '.R', '.Rmd', '.ipynb', '.py', '.r', "
+                "'.sh', and '.sql'\nYou can also define functions as "
+                "[module_name].[function_name]")
+    assert str(excinfo.value) == expected
+
+
 @pytest.fixture
 def grid_spec():
     return {

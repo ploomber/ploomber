@@ -2,7 +2,7 @@
 As an open source project, we collect anonymous usage statistics to
 prioritize and find product gaps.
 This is optional and may be turned off by changing the configuration file:
- inside ~/.ploomber/config/config.yaml
+ inside ~/.ploomber/stats/config.yaml
  Change stats_enabled to False.
 See the user stats page for more information:
 https://docs.ploomber.io/en/latest/community/user-stats.html
@@ -50,6 +50,8 @@ import distro
 
 TELEMETRY_VERSION = '0.3'
 DEFAULT_HOME_DIR = '~/.ploomber'
+DEFAULT_USER_CONF = 'config.yaml'
+DEFAULT_PLOOMBER_CONF = 'uid.yaml'
 CONF_DIR = "stats"
 posthog.project_api_key = 'phc_P9SpSeypyPwxrMdFn2edOOEooQioF2axppyEeDwtMSP'
 PLOOMBER_HOME_DIR = os.getenv("PLOOMBER_HOME_DIR")
@@ -201,7 +203,7 @@ def clean_tasks_upstream_products(input):
 def parse_dag(dag):
     try:
         dag_dict = {}
-        dag_dict["dag_size"] = len(dag)
+        dag_dict["dag_size"] = str(len(dag))
         tasks_list = list(dag)
         if tasks_list:
             dag_dict["tasks"] = {}
@@ -253,7 +255,7 @@ def check_uid():
     """
     Checks if local user id exists as a uid file, creates if not.
     """
-    uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
+    uid_path = Path(check_dir_exist(CONF_DIR), DEFAULT_PLOOMBER_CONF)
     conf = read_conf_file(uid_path)  # file already exist due to version check
     if 'uid' not in conf.keys():
         uid = str(uuid.uuid4())
@@ -276,7 +278,7 @@ def check_stats_enabled():
         return os.environ['PLOOMBER_STATS_ENABLED'].lower() == 'true'
 
     # Check if local config exists
-    config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
+    config_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
     if not config_path.exists():
         write_conf_file(config_path, {"stats_enabled": True})
         return True
@@ -285,13 +287,17 @@ def check_stats_enabled():
         return conf.get('stats_enabled', True)
 
 
+def set_api_key(api_key):
+    print()
+
+
 def check_first_time_usage():
     """
     The function checks for first time usage if the conf file exists and the
     uid file doesn't exist.
     """
-    config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
-    uid_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
+    config_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
+    uid_path = Path(check_dir_exist(CONF_DIR), DEFAULT_PLOOMBER_CONF)
     uid_conf = read_conf_file(uid_path)
     return config_path.exists() and 'uid' not in uid_conf.keys()
 
@@ -320,7 +326,7 @@ def read_conf_file(conf_path):
             conf = yaml.safe_load(file)
             return conf
     except Exception as e:
-        warnings.warn(f"Error: Can't read config file {e}")
+        warnings.warn(f"Can't read config file {e}")
         return {}
 
 
@@ -329,9 +335,26 @@ def write_conf_file(conf_path, to_write, error=None):
         with conf_path.open("w") as file:
             yaml.dump(to_write, file)
     except Exception as e:
-        warnings.warn(f"ERROR: Can't write to config file: {e}")
+        warnings.warn(f"Can't write to config file: {e}")
         if error:
             return e
+
+
+def update_conf_file(conf_path, to_write, error=None):
+    conf = read_conf_file(conf_path)
+    new_conf = dict(conf, **to_write)
+    write_conf_file(conf_path, new_conf, error)
+
+
+def is_cloud_user():
+    """
+        The function checks if the cloud api key is set for the user.
+        Checks if the cloud_key is set in the User conf file (config.yaml).
+        returns True/False accordingly.
+        """
+    user_conf_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
+    conf = read_conf_file(user_conf_path)
+    return conf.get('cloud_key', False)
 
 
 def check_version():
@@ -343,10 +366,10 @@ def check_version():
     """
     # Read conf file
     today = datetime.datetime.now()
-    config_path = Path(check_dir_exist(CONF_DIR), 'config.yaml')
+    config_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
     conf = read_conf_file(config_path)
 
-    version_path = Path(check_dir_exist(CONF_DIR), 'uid.yaml')
+    version_path = Path(check_dir_exist(CONF_DIR), DEFAULT_PLOOMBER_CONF)
     # Update version conf if not there
     if not version_path.exists():
         version = {'last_version_check': today}
@@ -439,6 +462,7 @@ def log_api(action, client_time=None, total_runtime=None, metadata=None):
 
     py_version = python_version()
     docker_container = is_docker()
+    cloud = is_cloud_user()
     colab = is_colab()
     if colab:
         metadata['colab'] = colab
@@ -481,6 +505,7 @@ def log_api(action, client_time=None, total_runtime=None, metadata=None):
             'python_version': py_version,
             'ploomber_version': product_version,
             'docker_container': docker_container,
+            'cloud': cloud,
             'os': os,
             'environment': environment,
             'metadata': metadata,
@@ -505,7 +530,6 @@ def log_call(action, payload=False):
         def wrapper(*args, **kwargs):
             _payload = dict()
             log_api(action=f'{action}-started', metadata={'argv': sys.argv})
-
             start = datetime.datetime.now()
 
             try:

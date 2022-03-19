@@ -20,7 +20,7 @@ make our code more maintainable and easier to test:
    
     <div class="mermaid">
     graph LR
-        raw --> clean --> plot
+        1-raw --> 2-clean --> 3-plot
     </div>
 
 
@@ -175,11 +175,11 @@ Let's review the contents a sample ``clean.py`` file:
    import pandas as pd
 
    # %% tags=["parameters"]
-   upstream = ["raw"]
+   upstream = ['raw']
    product = None
 
    # %%
-   df = pd.read_csv(upstream['get']['data'])
+   df = pd.read_csv(upstream['raw']['data'])
    # some data cleaning code...
 
    # %%

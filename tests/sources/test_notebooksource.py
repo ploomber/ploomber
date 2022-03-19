@@ -24,10 +24,11 @@ def new_nb(fmt=None,
            kname=None,
            klang=None,
            kdisplay=None,
-           code=None,
+           code='default',
            add_tag=True):
 
-    code = ['1', '2']
+    if code == 'default':
+        code = ['1', '2']
 
     nb = nbformat.v4.new_notebook()
 
@@ -416,11 +417,11 @@ df.head()
 
 
 @pytest.mark.parametrize('nb_str, ext', [
-    (new_nb(fmt='py:light', code='# some code'), 'py'),
-    (new_nb(fmt='py:percent', code='# some code'), 'py'),
-    (new_nb(fmt='ipynb', code='# some code'), 'ipynb'),
-    (new_nb(fmt='r:light', code='# some code'), 'R'),
-    (new_nb(fmt='r:percent', code='# some code'), 'r'),
+    (new_nb(fmt='py:light'), 'py'),
+    (new_nb(fmt='py:percent'), 'py'),
+    (new_nb(fmt='ipynb'), 'ipynb'),
+    (new_nb(fmt='r:light'), 'R'),
+    (new_nb(fmt='r:percent'), 'r'),
 ])
 def test_injects_parameters_on_render(nb_str, ext):
     s = NotebookSource(nb_str, ext_in=ext)
@@ -725,7 +726,12 @@ def test_sync(tmp_nbs):
 def test_error_message_when_initialized_from_str(tmp_nbs, method, kwargs):
     source = NotebookSource("""
 # + tags=["parameters"]
-""", ext_in='py')
+# -
+
+# +
+# -
+""",
+                            ext_in='py')
 
     source.render(Params._from_dict({'product': File('file.ipynb')}))
 
@@ -846,3 +852,64 @@ def test_to_nb_obj_error_if_corrupted_json(error, kwargs):
     repr_ = str(excinfo.getrepr())
     assert 'Notebook does not appear to be JSON' in repr_
     assert 'Expecting value: line 1 column 1 (char 0)' in repr_
+
+
+@pytest.mark.parametrize('content, error', [
+    [
+        """
+# + tags=["parameters"]
+x = 1
+
+y = 2
+""",
+        '# +',
+    ],
+    [
+        """
+# %% tags=["parameters"]
+x = 1
+
+y = 2
+""",
+        '# %%',
+    ],
+    [
+        """
+# %% tags=["parameters"]
+x = 1
+
+# %%
+
+# %%
+""",
+        '# %%',
+    ],
+],
+                         ids=[
+                             'light',
+                             'percent',
+                             'empty-cells',
+                         ])
+def test_error_if_last_cell_in_script_is_the_parameters_cell(
+        tmp_directory, content, error):
+    Path('script.py').write_text(content)
+
+    source = NotebookSource(Path('script.py'))
+
+    with pytest.raises(SourceInitializationError) as excinfo:
+        source.render(Params._from_dict({'product': File('stuff')}))
+
+    assert 'script.py' in str(excinfo.value)
+    assert error in str(excinfo.value)
+
+
+def test_error_if_last_cell_in_nb_is_the_parameters_cell(tmp_directory):
+    Path('nb.ipynb').write_text(new_nb(fmt='ipynb', code='# some code'))
+
+    source = NotebookSource(Path('nb.ipynb'))
+
+    with pytest.raises(SourceInitializationError) as excinfo:
+        source.render(Params._from_dict({'product': File('stuff')}))
+
+    assert 'nb.ipynb' in str(excinfo.value)
+    assert 'Add a new cell with your code.' in str(excinfo.value)

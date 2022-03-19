@@ -1,6 +1,36 @@
 # CHANGELOG
 
-## 0.16.1dev
+## 0.16.5dev
+* Style improvements to DAG plot
+* DAG plot only includes task names by default (#393)
+* `ploomber plot --include-products/-p` generates plots with task names and products
+* `DAG.plot(include_products=True)` generates plots with task names and products
+
+## 0.16.4 (2022-03-11)
+* Using UTF-8 for reading and writing in notebook tasks ([#334](https://github.com/ploomber/ploomber/issues/334))
+
+## 0.16.3 (2022-03-06)
+* Clearer error message when DAG deepcopy fails
+* Beta release of cloud pipeline monitoring
+* More robust suggestions when invoking a non-existing command
+* CLI loading performance improvements
+* Prints message before starting to load the pipeline for better user feedback
+* Displaying community link when DAG fails to render or build
+
+## 0.16.2 (2022-03-03)
+* Improved documentation in "ploomber nb --help" ([#623](https://github.com/ploomber/ploomber/issues/623))
+* Fixed a few errors in the basic concepts tutorial
+* More informative error when task does not generate some products
+* Better error when all the code is in the parameters cell
+
+## 0.16.1 (2022-02-27)
+* Improves error message when `source` in a task spec is a string without an extension ([#619](https://github.com/ploomber/ploomber/issues/619))
+* Fixes error that caused `dag.render(force=True)` to download remote metadata
+* Simplify traceback when calling Ploomber task ([#605](https://github.com/ploomber/ploomber/issues/605))
+* Emitting warning when `resources_` points to large files ([#609](https://github.com/ploomber/ploomber/issues/609))
+* Adds auto-completion steps to documentation ([#612](https://github.com/ploomber/ploomber/issues/612))
+* Updates documentation to reflect new default format (`py:percent`) ([#564](https://github.com/ploomber/ploomber/issues/564))
+* Showing a mesage when a new version of Ploomber is available ([#558](https://github.com/ploomber/ploomber/issues/558))
 
 ## 0.16 (2022-02-17)
 * Cleaner tracebacks when DAG fails to build or render

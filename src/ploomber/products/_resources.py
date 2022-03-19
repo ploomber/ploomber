@@ -2,6 +2,8 @@ from copy import deepcopy
 import hashlib
 from pathlib import Path
 from collections.abc import Mapping
+import os
+import warnings
 
 _KEY = 'resources_'
 
@@ -20,6 +22,17 @@ def _check_is_file(path, key):
         raise FileNotFoundError(
             f'Error reading params.resources_ with key {key!r}. '
             f'Expected value {str(path)!r} to be an existing file.')
+
+
+def _check_file_size(path):
+    resource_stat = os.stat(path)
+    resource_file_size = resource_stat.st_size / 1E+6
+    if resource_file_size > 1:
+        warnings.warn(
+            f"resource_ {path!r} is {resource_file_size:.1f} MB. "
+            "It is not recommended to use large files in "
+            "resources_ since it increases task initialization time".format(
+                path=path, resource_file_size=resource_file_size))
 
 
 def _validate(params):
@@ -79,6 +92,7 @@ def process_resources(params):
     for key, value in params[_KEY].items():
         path = _cast_to_path(value, key)
         _check_is_file(path, key)
+        _check_file_size(path)
         digest = hashlib.md5(path.read_bytes()).hexdigest()
         resources[key] = digest
 

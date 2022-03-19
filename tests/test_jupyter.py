@@ -151,11 +151,17 @@ def test_logs_if_spec_keys_change(tmp_directory):
     Path('one.py').write_text("""
 # + tags=["parameters"]
 upstream = None
+
+# +
+1 + 1
 """)
 
     Path('another.py').write_text("""
 # + tags=["parameters"]
 upstream = None
+
+# +
+1 + 1
 """)
 
     Path('pipeline.yaml').write_text("""
@@ -199,16 +205,25 @@ def test_logs_if_spec_location_changes(tmp_directory):
     Path('script.py').write_text("""
 # + tags=["parameters"]
 upstream = None
+
+# +
+1 + 1
 """)
 
     Path('one', 'one.py').write_text("""
 # + tags=["parameters"]
 upstream = None
+
+# +
+1 + 1
 """)
 
     Path('another', 'another.py').write_text("""
 # + tags=["parameters"]
 upstream = None
+
+# +
+1 + 1
 """)
 
     Path('pipeline.yaml').write_text("""
@@ -370,6 +385,9 @@ def test_switch_env_file(tmp_directory, monkeypatch):
 # + tags=['parameters']
 upstream = None
 some_param = None
+
+# +
+1 + 1
 """)
 
     Path('env.yaml').write_text("""
@@ -506,6 +524,9 @@ def test_deletes_metadata_on_save_for_file_used_multiple_times(tmp_directory):
 # + tags=['parameters']
 upstream = None
 param = None
+
+# +
+1 + 1
 """)
 
     # generate two tasks with the same script (but different params)
@@ -914,6 +935,34 @@ tasks:
 
 def test_ignores_static_analysis_failure(tmp_nbs):
     Path('pipeline.yaml').write_text("""
+tasks:
+  - source: load.py
+    product:
+      nb: output/load.ipynb
+      data: output/data.csv
+    params:
+      some_param: some_value
+""")
+
+    cm = PloomberContentsManager()
+
+    model = cm.get(str('load.py'))
+    assert get_injected_cell(model['content'])
+
+
+def test_does_not_initialize_clients(tmp_nbs, tmp_imports):
+    # initializing cients is an expensive operation, we shouldn't do it
+    # when loading the DAG in the Jupyter plugin
+
+    Path('clients.py').write_text("""
+def get():
+    raise Exception
+""")
+
+    Path('pipeline.yaml').write_text("""
+clients:
+    File: clients.get
+
 tasks:
   - source: load.py
     product:

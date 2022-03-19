@@ -1,5 +1,5 @@
 import sys
-from unittest.mock import Mock
+from unittest.mock import Mock, ANY
 from pathlib import Path
 
 import pytest
@@ -78,6 +78,23 @@ def test_notebook_conversion(monkeypatch, output, tmp_directory):
     conv.convert()
 
 
+def test_notebook_conversion_stores_as_unicode(tmp_directory, monkeypatch):
+    nb = nbformat.v4.new_notebook()
+    cell = nbformat.v4.new_code_cell('1 + 1')
+    nb.cells.append(cell)
+
+    with open('nb.ipynb', 'w', encoding='utf-8') as f:
+        nbformat.write(nb, f)
+
+    conv = notebook.NotebookConverter('nb.ipynb', exporter_name='html')
+
+    mock = Mock()
+    monkeypatch.setattr(notebook.Path, 'write_text', mock)
+    conv.convert()
+
+    mock.assert_called_once_with(ANY, encoding='utf-8')
+
+
 @pytest.mark.parametrize(
     'name, out_dir',
     [
@@ -105,10 +122,16 @@ def _dag_simple(nb_params=True, params=None, static_analysis='regular'):
 a = None
 b = 1
 c = 'hello'
+
+# +
+d = 42
 """)
     else:
         path.write_text("""
 # + tags=["parameters"]
+
+# +
+d = 42
 """)
 
     dag = DAG()
@@ -124,6 +147,9 @@ def _dag_two_tasks(nb_params=True, params=None, static_analysis='regular'):
     root = Path('root.py')
     root.write_text("""
 # + tags=["parameters"]
+
+# +
+42
 """)
 
     path = Path('sample.py')
@@ -133,10 +159,16 @@ def _dag_two_tasks(nb_params=True, params=None, static_analysis='regular'):
 a = None
 b = 1
 c = 'hello'
+
+# +
+42
 """)
     else:
         path.write_text("""
 # + tags=["parameters"]
+
+# +
+42
 """)
 
     dag = DAG()
@@ -161,6 +193,9 @@ def test_dag_r(tmp_directory):
 a <- NULL
 b <- 1
 c <- c(1, 2, 3)
+
+# +
+42
 """)
 
     dag = DAG()
@@ -180,6 +215,9 @@ def test_error_on_syntax_error(tmp_directory, error_class, static_analysis):
     path.write_text("""
 # + tags=["parameters"]
 if
+
+# +
+42
 """)
 
     dag = DAG()
@@ -328,12 +366,21 @@ def test_render_error_on_missing_and_unexpected_params(tmp_directory, factory):
 # + tags=["parameters"]
 upstream = None
 product = None
+
+# +
+42
 """, """
 # + tags=["parameters"]
 upstream = None
+
+# +
+42
 """, """
 # + tags=["parameters"]
 product = None
+
+# +
+42
 """
 ])
 def test_ignores_declared_product_and_upstream(tmp_directory, code):
@@ -365,6 +412,9 @@ def test_can_execute_with_parameters(tmp_directory):
     code = """
 # + tags=["parameters"]
 var = None
+
+# +
+42
     """
 
     NotebookRunner(code,
@@ -442,6 +492,9 @@ def test_failing_notebook_saves_partial_result(tmp_directory):
 var = None
 
 raise Exception('failing notebook')
+
+# +
+42
     """
 
     # attempting to generate an HTML report
@@ -493,6 +546,9 @@ def test_skip_kernel_install_check(tmp_directory):
     code = """
 # + tags=["parameters"]
 1 + 1
+
+# +
+42
     """
 
     NotebookRunner(code,
@@ -883,3 +939,22 @@ def test_static_analysis_strict_raises_error_at_rendertime_if_signature_error(
     assert expected in str(excinfo.value)
     # it should not warn, since we raise the error
     assert len(records) == 0
+
+
+def test_replaces_existing_product(tmp_directory):
+    Path('out.html').touch()
+
+    path = Path('nb.py')
+    path.write_text("""
+# + tags=["parameters"]
+# some code
+
+# +
+1 + 1
+    """)
+
+    dag = DAG()
+    NotebookRunner(Path('nb.py'), File('out.html'), dag=dag)
+
+    # this will fail on windows if we don't remove the existing file first
+    dag.build()

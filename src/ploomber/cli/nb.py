@@ -1,3 +1,4 @@
+import argparse
 import json
 import shutil
 from pathlib import Path
@@ -156,12 +157,36 @@ def _py_with_single_click_disable():
         fg='yellow')
 
 
+_description = """Manage scripts and notebooks
+
+
+Inject cell in all scripts and notebooks:
+
+$ ploomber nb -i
+
+Enable one-click to open .py as notebooks in JupyterLab:
+
+$ ploomber nb -S
+
+Re-format .ipynb notebooks as .py files with the percent format:
+
+$ plomber nb -f py:percent
+
+Re-format .py files as .ipynb notebooks:
+
+$ plomber nb -f ipynb
+"""
+
+
 # TODO: --log, --log-file should not appear as options
 @command_endpoint
 @telemetry.log_call('nb')
 def main():
-    parser = CustomParser(description='Manage scripts and notebooks',
-                          prog='ploomber nb')
+    parser = CustomParser(
+        description=_description,
+        prog='ploomber nb',
+        # required for the --help text to keep line breaks
+        formatter_class=argparse.RawTextHelpFormatter)
 
     with parser:
         # The next options do not require a valid entry point
@@ -295,7 +320,7 @@ def main():
         _call_in_source(
             dag,
             'save_injected_cell',
-            'Injected celll',
+            'Injected cell',
             dict(),
         )
 

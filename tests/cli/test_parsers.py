@@ -235,7 +235,7 @@ def test_custom_parser_error_if_unable_to_automatically_locate_entry_point(
     captured = capsys.readouterr()
 
     assert excinfo.value.code == 2
-    assert 'Unable to find a pipeline entry point' in captured.err
+    assert 'Unable to find a pipeline' in captured.err
 
 
 def test_error_if_missing_entry_point_value(monkeypatch, capsys):

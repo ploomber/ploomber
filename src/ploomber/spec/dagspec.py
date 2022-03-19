@@ -206,6 +206,7 @@ class DAGSpec(MutableMapping):
     def _init(self, data, env, lazy_import, reload, parent_path,
               look_up_project_root_recursively):
         self._lazy_import = lazy_import
+        self._name = None
 
         # initialized with a path to a yaml file...
         if isinstance(data, (str, Path)):
@@ -218,6 +219,9 @@ class DAGSpec(MutableMapping):
             # even if the current working directory changes
             self._path = Path(data).resolve()
             self._parent_path = str(self._path.parent)
+
+            # assign the name of the parent directory
+            self._name = self._path.parent.name
 
             if not Path(data).is_file():
                 raise FileNotFoundError(
@@ -449,7 +453,7 @@ class DAGSpec(MutableMapping):
         if 'location' in self:
             return dotted_path.call_dotted_path(self['location'])
 
-        dag = DAG()
+        dag = DAG(name=self._name)
 
         if 'config' in self:
             dag._params = DAGConfiguration.from_dict(self['config'])

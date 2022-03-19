@@ -1,6 +1,7 @@
 """
 A mapping object with text and HTML representations
 """
+from functools import reduce
 from warnings import warn
 from textwrap import TextWrapper
 from copy import deepcopy
@@ -152,8 +153,13 @@ class Table:
         return self._values
 
     @classmethod
-    def from_dicts(cls, dicts):
-        return cls([Row(d) for d in dicts])
+    def from_dicts(cls, dicts, complete_keys=False):
+        if complete_keys:
+            keys_all = reduce(lambda a, b: set(a) | set(b), dicts)
+            default = {k: '' for k in keys_all}
+            return cls([Row({**default, **d}) for d in dicts])
+        else:
+            return cls([Row(d) for d in dicts])
 
 
 class TaskReport(Row):

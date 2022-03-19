@@ -55,6 +55,75 @@ from ploomber.sources import docstring
 from ploomber.io import pretty_print
 
 
+# TODO: we should unit test that this function is called, as opposed to vanilla
+# .read_text
+def _read_primitive(path):
+    """
+    We read using the UTF-8 instead of the default encoding since notebooks are
+    always stored in UTF-8.
+
+    We can see this in nbformat, which always reads as UTF-8:
+    https://github.com/jupyter/nbformat/blob/df63593b64a15ee1c37b522973c39e8674f93c5b/nbformat/__init__.py#L125
+
+    Scripts are a different story since they may have other encodings, however,
+    modern editors have UTF-8 as default (example: VSCode
+    https://docs.microsoft.com/en-us/powershell/scripting/dev-cross-plat/vscode/understanding-file-encoding?view=powershell-7.2#configuring-vs-code)
+    so it's safer to use UTF-8 than the default encoding.
+
+    jupytext already does this:
+    https://github.com/mwouts/jupytext/issues/896
+    """
+    return Path(path).read_text(encoding='utf-8')
+
+
+def _get_last_cell(nb):
+    """
+    Get last cell, ignores cells with empty source (unless the notebook only
+    has one cell and it's empty)
+    """
+    # iterate in reverse order
+    for idx in range(-1, -len(nb.cells) - 1, -1):
+        cell = nb.cells[idx]
+
+        # only return it if it has some code
+        if cell['source'].strip():
+            return cell
+
+    # otherwise return the first cell
+    return nb.cells[0]
+
+
+def _get_cell_suggestion(nb):
+    format_name = nb.metadata.get('jupytext', {}).get('text_representation',
+                                                      {}).get('format_name')
+
+    preamble = 'Add a new cell with your code'
+
+    if format_name == 'light':
+        message = f'{preamble}:\n' + """
+# + tags=["parameters"]
+# your parameters here...
+# -
+
+# +
+# your code here...
+# -
+"""
+
+    elif format_name == 'percent':
+        message = f'{preamble}:\n' + """
+# %% tags=["parameters"]
+# your parameters here...
+
+# %%
+# your code here...
+"""
+    else:
+        message = preamble + '.'
+
+    return message
+
+
 def requires_path(func):
     """
     Checks if NotebookSource instance was initialized from a file, raises
@@ -137,7 +206,7 @@ class NotebookSource(Source):
                     'File does not exist.' +
                     _suggest_ploomber_scaffold_missing_file())
 
-            self._primitive = primitive.read_text()
+            self._primitive = _read_primitive(primitive)
         else:
             raise TypeError('Notebooks must be initialized from strings, '
                             'Placeholder or pathlib.Path, got {}'.format(
@@ -217,7 +286,7 @@ class NotebookSource(Source):
     @property
     def primitive(self):
         if self._hot_reload:
-            self._primitive = self._path.read_text()
+            self._primitive = _read_primitive(self._path)
 
         return self._primitive
 
@@ -231,6 +300,13 @@ class NotebookSource(Source):
         # _read_nb_str_unrendered uses hot_reload, this ensures we always get
         # the latest version
         _, nb = self._read_nb_str_unrendered()
+
+        if 'parameters' in _get_last_cell(nb).metadata.get('tags', []):
+            cell_suggestion = _get_cell_suggestion(nb)
+            kind = 'notebook' if self._ext_in == 'ipynb' else 'script'
+            raise SourceInitializationError(
+                f'Error processing {str(self._path)!r}: the last cell '
+                f'in the {kind} is the parameters cell. {cell_suggestion}')
 
         # this is needed for parameterize_notebook to work
         for cell in nb.cells:

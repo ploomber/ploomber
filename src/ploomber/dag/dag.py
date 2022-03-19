@@ -358,7 +358,9 @@ class DAG(AbstractDAG):
         Render tasks, and update exec_status
         """
         if not self._params.cache_rendered_status:
-            fetch_remote_metadata_in_parallel(self)
+            # if forcing rendering, there is no need to download metadata
+            if not force:
+                fetch_remote_metadata_in_parallel(self)
 
             if show_progress:
                 tasks = tqdm(self.values(), total=len(self))
@@ -644,6 +646,13 @@ class DAG(AbstractDAG):
             self._logger.debug('No on_render hook for dag '
                                '"%s", skipping', self.name)
 
+    def _deepcopy_safe(self):
+        try:
+            return deepcopy(self)
+        except Exception as e:
+            raise RuntimeError(
+                "An error occurred while copying DAG object") from e
+
     def build_partially(self,
                         target,
                         force=False,
@@ -677,7 +686,7 @@ class DAG(AbstractDAG):
             it's not possible to build a given task (e.g., missing upstream
             products), this will fail
         """
-        dag_copy = deepcopy(self)
+        dag_copy = self._deepcopy_safe()
 
         # task names are usually str, although this isn't strictly enforced
         if isinstance(target, str) and '*' in target:
@@ -784,7 +793,7 @@ class DAG(AbstractDAG):
               extra_msg=_pygraphviz_message,
               pip_names=['pygraphviz<1.8'] if sys.version_info <
               (3, 8) else ['pygraphviz'])
-    def plot(self, output='embed'):
+    def plot(self, output='embed', include_products=False):
         """Plot the DAG
 
         Parameters
@@ -792,6 +801,12 @@ class DAG(AbstractDAG):
         output : str, default='embed'
             Where to save the output (e.g., pipeline.png). If 'embed', it
             returns an IPython image instead.
+
+        Parameters
+        ----------
+        include_products : bool, default=False
+            If False, each node only contains the task name, if True
+            if contains the task name and products.
         """
         if output == 'embed':
             fd, path = tempfile.mkstemp(suffix='.png')
@@ -805,7 +820,8 @@ class DAG(AbstractDAG):
         # FIXME: add tests for this
         self.render()
 
-        G = self._to_graph(return_graphviz=True)
+        G = self._to_graph(return_graphviz=True,
+                           include_products=include_products)
         G.draw(path, prog='dot', args='-Grankdir=LR')
 
         if output == 'embed':
@@ -827,12 +843,21 @@ class DAG(AbstractDAG):
         else:
             raise ValueError('Tasks must have a name, got None')
 
-    def _to_graph(self, only_current_dag=False, return_graphviz=False):
+    def _to_graph(self,
+                  only_current_dag=False,
+                  return_graphviz=False,
+                  include_products=False):
         """
         Converts the DAG to a Networkx DiGraph object. Since upstream
         dependencies are not required to come from the same DAG,
         this object might include tasks that are not included in the current
         object
+
+        Parameters
+        ----------
+        include_products : bool, default=False
+            If False, each node only contains the task name, if True
+            if contains the task name and products.
         """
         # https://networkx.github.io/documentation/networkx-1.10/reference/drawing.html
         # http://graphviz.org/doc/info/attrs.html
@@ -843,10 +868,19 @@ class DAG(AbstractDAG):
         for task in self.values():
             if return_graphviz:
                 # add parameters for graphviz plotting
+                color = ('lightcoral'
+                         if task.product._is_outdated() else 'lightgreen')
+
+                label = (_task_short_repr(task)
+                         if include_products else task.name)
+
                 attr = {
-                    'color': 'red' if task.product._is_outdated() else 'green',
+                    'fillcolor': color,
+                    'style': 'filled',
+                    'fontname': 'Helvetica',
+                    'fontsize': '16pt',
                     'id': task.name,
-                    'label': _task_short_repr(task)
+                    'label': label
                 }
                 # graphviz uses the str representation of the node object to
                 # distinguish them - by default str(task) returns

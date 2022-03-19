@@ -146,6 +146,13 @@ Create a pipeline plot and save it in a ``pipeline.png`` file.
     :ref:`install pygraphviz <faq-plotting-a-pipeline>`.
 
 
+To include the task's products in the plot:
+
+.. code-block:: console
+
+    ploomber plot --include-products
+
+
 Status
 ******
 
