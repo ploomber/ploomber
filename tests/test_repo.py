@@ -20,6 +20,7 @@ def test_is_repo_no_commits(tmp_directory):
 
 
 def test_is_repo(tmp_directory):
+    Path('file').touch()
     git_init()
     assert repo.is_repo('.')
 
