@@ -33,7 +33,7 @@ def is_repo(path):
     if not shutil.which('git'):
         return False
 
-    out = subprocess.run(['git', '-C', path, 'rev-parse'],
+    out = subprocess.run(['git', '-C', str(path), 'rev-parse'],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     repo_exists = out.returncode == 0

@@ -235,24 +235,27 @@ def test_interact_command_starts_full_ipython_session(monkeypatch, tmp_nbs):
                                                user_ns={'dag': mock_dag})
 
 
-def test_interactive_session_develop(monkeypatch_session, tmp_nbs):
-    monkeypatch_session.setattr(sys, 'argv', ['python'])
+def test_interactive_session_develop(monkeypatch, tmp_nbs):
+    monkeypatch.setattr(sys, 'argv', ['python'])
 
     mock = Mock(side_effect=['dag["plot"].develop()', 'quit'])
 
-    def mock_jupyter_notebook(args, check):
+    def mock_jupyter_notebook(args, **kwargs):
         nb = jupytext.reads('2 + 2', fmt='py')
         # args: jupyter {app} {path} {other args,...}
         nbformat.write(nb, args[2])
 
-    with monkeypatch_session.context() as m:
+    mock_sub = Mock()
+    mock_sub.run = mock_jupyter_notebook
+
+    with monkeypatch.context() as m:
         # NOTE: I tried patching
         # (IPython.terminal.interactiveshell.TerminalInteractiveShell
         # .prompt_for_code)
         # but didn't work, patching builtins input works
         m.setattr('builtins.input', mock)
 
-        m.setattr(notebook.subprocess, 'run', mock_jupyter_notebook)
+        m.setattr(notebook, 'subprocess', mock_sub)
         m.setattr(notebook, '_save', lambda: True)
         interact.main(catch_exception=False)
 
