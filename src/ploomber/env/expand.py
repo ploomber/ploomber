@@ -10,7 +10,7 @@ from pathlib import Path
 from functools import reduce
 import datetime
 
-from jinja2 import Template, StrictUndefined
+from jinja2 import Template
 
 from ploomber.placeholders import util
 from ploomber import repo
@@ -54,24 +54,7 @@ def expand_raw_dictionaries_and_extract_tags(raw, mapping):
 
 
 def expand_if_needed(raw_value, mapping):
-    placeholders = util.get_tags_in_str(raw_value)
-
-    if not placeholders:
-        value = raw_value
-    else:
-        try:
-            value = Template(raw_value,
-                             undefined=StrictUndefined).render(**mapping)
-        except Exception as e:
-            exception = e
-        else:
-            exception = None
-
-        if exception:
-            raise KeyError(
-                f'Error replacing placeholder: {exception}. Loaded env: '
-                f'{mapping!r}')
-
+    value, placeholders = mapping._render(raw_value)
     return cast_if_possible(value), placeholders
 
 
@@ -168,7 +151,8 @@ class EnvironmentExpander:
                                         'git is not installed. Please install '
                                         'it and try again.')
 
-                if not repo.is_repo(self._path_to_here):
+                if not repo.is_repo(
+                        self._preprocessed.get('_module', self._path_to_here)):
                     raise BaseException(
                         'Found placeholder {{git}}, but could not '
                         'locate a git repository. Create a repository '
@@ -202,7 +186,14 @@ class EnvironmentExpander:
     def load_placeholder(self, key):
         if key not in self._placeholders:
             if hasattr(self, 'get_' + key):
-                self._placeholders[key] = getattr(self, 'get_' + key)()
+                try:
+                    value = getattr(self, 'get_' + key)()
+                except Exception as e:
+                    raise BaseException('An error happened while '
+                                        'expanding placeholder {{' + key +
+                                        '}}') from e
+
+                self._placeholders[key] = value
             else:
                 raise RuntimeError('Unknown placeholder "{}"'.format(key))
 
@@ -280,7 +271,19 @@ class EnvironmentExpander:
         if not module_path:
             raise KeyError('_module key is required to use git placeholder')
 
-        return repo.get_git_info(module_path)['git_location']
+        return repo.git_location(module_path)
+
+    def get_git_hash(self):
+        module_path = self._preprocessed.get('_module')
+
+        if self._path_to_here:
+            module_path = self._path_to_here
+
+        if not module_path:
+            raise KeyError(
+                '_module key is required to use git_hash placeholder')
+
+        return repo.git_hash(module_path)
 
     def get_now(self):
         """Returns current timestamp in ISO 8601 format

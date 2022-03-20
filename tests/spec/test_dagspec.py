@@ -883,7 +883,9 @@ def test_git_placeholder_and_git_not_installed(monkeypatch, tmp_directory,
     with pytest.raises(BaseException) as excinfo:
         DAGSpec('pipeline.yaml')
 
-    assert 'git is not installed' in str(excinfo.value)
+    expected = ('git is not installed'
+                if save_env_yaml else 'Ensure git is installed')
+    assert expected in str(excinfo.value)
 
 
 @pytest.mark.parametrize('save_env_yaml', [True, False])
@@ -911,7 +913,9 @@ def test_git_placeholder_and_not_in_git_repository(tmp_directory,
     with pytest.raises(BaseException) as excinfo:
         DAGSpec('pipeline.yaml')
 
-    assert 'could not locate a git repository' in str(excinfo.value)
+    expected = ('could not locate a git repository'
+                if save_env_yaml else 'Ensure git is installed')
+    assert expected in str(excinfo.value)
 
 
 @pytest.mark.parametrize('method, kwargs', [

@@ -33,7 +33,13 @@ def git_init():
 
     subprocess.run(['git', 'init', '-b', 'mybranch'])
     subprocess.run(['git', 'add', '--all'])
-    subprocess.run(['git', 'commit', '-m', 'message'])
+    subprocess.run(['git', 'commit', '-m', 'some-commit-message'])
+
+
+@pytest.fixture
+def tmp_git(tmp_directory):
+    Path('file').touch()
+    git_init()
 
 
 @pytest.fixture(scope='class')
