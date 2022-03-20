@@ -42,6 +42,7 @@ def tmp_git(tmp_directory):
     git_init()
 
 
+# FIXME: do we need this?
 @pytest.fixture(scope='class')
 def monkeypatch_session():
     from _pytest.monkeypatch import MonkeyPatch
