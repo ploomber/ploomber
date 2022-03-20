@@ -41,8 +41,7 @@ def test_error_on_unknown_placeholder():
 def test_error_on_git_placeholder_if_missing_underscore_module():
     expander = EnvironmentExpander({})
 
-    with pytest.raises(KeyError) as excinfo:
+    with pytest.raises(BaseException) as excinfo:
         expander.expand_raw_value('{{git}}', parents=[])
 
-    assert ("'_module key is required to use git placeholder'" == str(
-        excinfo.value))
+    assert ("could not locate a git repository" in str(excinfo.value))

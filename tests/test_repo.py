@@ -7,16 +7,21 @@ from conftest import git_init
 
 
 def test_is_repo_false(tmp_directory):
-    assert not repo.is_repo('')
+    assert not repo.is_repo('.')
 
 
 def test_is_repo_none(tmp_directory):
     assert not repo.is_repo(None)
 
 
+def test_is_repo_no_commits(tmp_directory):
+    subprocess.run(['git', 'init', '-b', 'mybranch'])
+    assert not repo.is_repo('.')
+
+
 def test_is_repo(tmp_directory):
     git_init()
-    assert repo.is_repo('')
+    assert repo.is_repo('.')
 
 
 def test_git_summary(tmp_git):

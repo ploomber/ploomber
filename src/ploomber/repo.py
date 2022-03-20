@@ -36,7 +36,17 @@ def is_repo(path):
     out = subprocess.run(['git', '-C', path, 'rev-parse'],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
-    return out.returncode == 0
+    repo_exists = out.returncode == 0
+
+    if repo_exists:
+        try:
+            # edge case: if the repo doesn't have any commits, the following will
+            # fail. we require a repo with at least one commit for git to work
+            git_hash(path)
+        except subprocess.CalledProcessError:
+            return False
+        else:
+            return True
 
 
 def get_git_summary(path):

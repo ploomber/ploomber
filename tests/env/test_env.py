@@ -621,22 +621,22 @@ def test_envdict_git_ignored_if_git_command_fails_and_no_git_placeholder(
 
 
 def test_expand_raw_dict_error_if_missing_key():
-    mapping = {'another_key': 'value'}
+    mapping = EnvDict({'another_key': 'value'})
     d = {'some_stuff': '{{key}}'}
 
-    with pytest.raises(KeyError) as excinfo:
+    with pytest.raises(BaseException) as excinfo:
         expand_raw_dictionary(d, mapping)
 
-    expected = ('"Error replacing placeholder: \'key\' is undefined.'
-                ' Loaded env: {\'another_key\': \'value\'}"')
-    assert expected in str(excinfo.value)
+    assert "Error replacing placeholders:" in str(excinfo.value)
+    assert "* {{key}}: Ensure the placeholder is defined" in str(excinfo.value)
 
 
 def test_expand_raw_dictionary_parses_literals():
-    raw = {'a': '{{a}}', 'b': '{{b}}', 'c': '{{c}}'}
-    mapping = {'a': {1, 2, 3}, 'b': [1, 2, 3], 'c': {'z': 1}}
+    raw = {'a': '{{a}}', 'b': '{{b}}'}
+    mapping = EnvDict({'a': [1, 2, 3], 'b': {'z': 1}})
     out = expand_raw_dictionary(raw, mapping)
-    assert out == mapping
+    assert out['a'] == [1, 2, 3]
+    assert out['b'] == {'z': 1}
 
 
 @pytest.mark.parametrize('constructor', [list, tuple, np.array])
