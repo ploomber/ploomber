@@ -40,8 +40,9 @@ def is_repo(path):
 
     if repo_exists:
         try:
-            # edge case: if the repo doesn't have any commits, the following will
-            # fail. we require a repo with at least one commit for git to work
+            # edge case: if the repo doesn't have any commits, the following
+            # will fail. we require a repo with at least one commit for git
+            # to work
             git_hash(path)
         except subprocess.CalledProcessError:
             return False
