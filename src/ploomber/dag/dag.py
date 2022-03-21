@@ -687,7 +687,8 @@ class DAG(AbstractDAG):
             it's not possible to build a given task (e.g., missing upstream
             products), this will fail
         """
-        # we have to use a deep copy since using a soft one will corrupt task status in subsequent runs
+        # we have to use a deep copy since using a soft one will corrupt
+        # task status in subsequent runs
         dag_copy = self._deepcopy_safe()
 
         # task names are usually str, although this isn't strictly enforced
