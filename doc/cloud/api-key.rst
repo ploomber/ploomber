@@ -30,7 +30,7 @@ To generate an API key please these steps:
    :target: https://ploomber.io/images/doc/cloud-key.png
    :alt: cloud-key-link-example
 
-   You'll see a pop up where you can copy your key.
+You'll see a pop up where you can copy your key.
 
 .. image:: https://ploomber.io/images/doc/cloud-key-modal.png
    :target: https://ploomber.io/images/doc/cloud-key-modal.png
