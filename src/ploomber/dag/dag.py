@@ -163,7 +163,6 @@ class DAG(AbstractDAG):
         task has no serializer. See ``ploombe.tasks.PythonCallable``
         documentation for details.
     """
-
     def __init__(self, name=None, clients=None, executor='serial'):
         self._G = nx.DiGraph()
 
@@ -875,7 +874,7 @@ class DAG(AbstractDAG):
                 outdated = task.product._is_outdated()
 
                 # add parameters for graphviz plotting
-                color = ('lightcoral' if outdated else 'lightgreen')
+                color = ('#F08080' if outdated else '#90EE90')
 
                 label = (_task_short_repr(task)
                          if include_products else task.name)
@@ -1082,7 +1081,6 @@ def _product_short_repr(product):
 
 
 def _task_short_repr(task):
-
     def short(s):
         max_l = 30
         return s if len(s) <= max_l else s[:max_l - 3] + '...'
