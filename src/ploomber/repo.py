@@ -6,6 +6,7 @@ import subprocess
 import shlex
 import sys
 from pathlib import Path
+import shutil
 
 
 def _run_command(path, command):
@@ -24,14 +25,58 @@ def _run_command(path, command):
     return s
 
 
+def is_repo(path):
+    """Check if the path is in a git repo"""
+    if path is None:
+        return False
+
+    if not shutil.which('git'):
+        return False
+
+    out = subprocess.run(['git', '-C', str(path), 'rev-parse'],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+    repo_exists = out.returncode == 0
+
+    if repo_exists:
+        try:
+            # edge case: if the repo doesn't have any commits, the following
+            # will fail. we require a repo with at least one commit for git
+            # to work
+            git_hash(path)
+        except subprocess.CalledProcessError:
+            return False
+        else:
+            return True
+
+
 def get_git_summary(path):
-    """Get one line git summary"""
+    """Get one line git summary: {hash} {commit-message}
+    """
     return _run_command(path, 'git show --oneline -s')
 
 
 def git_hash(path):
-    """Get git hash"""
+    """Get git hash
+
+    If tag: {tag-name}
+    If clean commit: {hash}
+    If dirty: {hash}-dirty
+
+    dirty: "A working tree is said to be "dirty" if it contains modifications
+    which have not been committed to the current branch."
+    https://mirrors.edge.kernel.org/pub/software/scm/git/docs/gitglossary.html#def_dirty
+    """
     return _run_command(path, 'git describe --tags --always --dirty=-dirty')
+
+
+def git_location(path):
+    """
+    Returns branch name if at the latest commit, otherwise the hash
+    """
+    hash_ = git_hash(path)
+    git_branch = current_branch(path)
+    return git_branch or hash_
 
 
 def get_git_timestamp(path):
@@ -72,16 +117,12 @@ def get_diff(path):
 
 
 def get_git_info(path):
-    hash_ = git_hash(path)
-    git_branch = current_branch(path)
-    git_location = git_branch or hash_
-
     return dict(git_summary=get_git_summary(path),
-                git_hash=hash_,
+                git_hash=git_hash(path),
                 git_diff=get_diff(path),
                 git_timestamp=get_git_timestamp(path),
-                git_branch=git_branch,
-                git_location=git_location)
+                git_branch=current_branch(path),
+                git_location=git_location(path))
 
 
 def save_env_metadata(env, path_to_output):

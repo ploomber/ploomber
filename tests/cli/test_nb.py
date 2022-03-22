@@ -14,11 +14,11 @@ from ploomber.cli import nb
 
 def git_init():
     subprocess.check_call(['git', 'init'])
+    subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
+    subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
 
 
 def git_commit():
-    subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
-    subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
     subprocess.check_call(['git', 'add', '--all'])
     subprocess.check_call(['git', 'commit', '-m', 'commit'])
 
@@ -142,14 +142,16 @@ def test_install_hook(monkeypatch, tmp_nbs):
 
     # commit (should remove injected cells before committing and re-add them
     # after committing)
+    Path('another').touch()
     git_commit()
 
     injected_tag = '# + tags=["injected-parameters"]'
     assert injected_tag in Path('load.py').read_text()
 
-    # check last commit files
+    # check out last committed files
     subprocess.check_call(['git', 'stash'])
 
+    # committed version should not have the injected cell
     assert injected_tag not in Path('load.py').read_text()
 
     assert ('ploomber nb --entry-point pipeline.yaml --remove'

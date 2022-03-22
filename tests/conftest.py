@@ -2,6 +2,7 @@
 Note: tests organized in folders must contain an init file:
 https://github.com/pytest-dev/pytest/issues/3151#issuecomment-360493948
 """
+import subprocess
 import stat
 import base64
 from copy import copy
@@ -26,6 +27,25 @@ import posthog
 from unittest.mock import Mock, MagicMock
 
 
+def git_init():
+    if Path('CHANGELOG.md').exists():
+        raise ValueError('call git_init in a temporary directory')
+
+    subprocess.run(['git', 'init', '-b', 'mybranch'])
+    subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
+    subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
+
+    subprocess.run(['git', 'add', '--all'])
+    subprocess.run(['git', 'commit', '-m', 'some-commit-message'])
+
+
+@pytest.fixture
+def tmp_git(tmp_directory):
+    Path('file').touch()
+    git_init()
+
+
+# FIXME: do we need this?
 @pytest.fixture(scope='class')
 def monkeypatch_session():
     from _pytest.monkeypatch import MonkeyPatch
@@ -57,7 +77,6 @@ def fixture_tmp_dir(source):
     # some_fixture = factory('some/path')
     # but didn't work
     def decorator(function):
-
         @wraps(function)
         def wrapper():
             old = os.getcwd()
@@ -71,7 +90,7 @@ def fixture_tmp_dir(source):
 
             # some tests create sample git repos, if we are on windows, we
             # need to change permissions to be able to delete the files
-            _delete_all_dot_git()
+            _fix_all_dot_git_permissions(tmp)
 
             os.chdir(old)
             shutil.rmtree(tmp_dir)
@@ -85,9 +104,7 @@ def fixture_backup(source):
     """
     Similar to fixture_tmp_dir but backups the content instead
     """
-
     def decorator(function):
-
         @wraps(function)
         def wrapper():
             old = os.getcwd()
@@ -164,7 +181,7 @@ def backup_online():
     pass
 
 
-def _delete_dot_git_at(path):
+def _fix_dot_git_permissions(path):
     for root, dirs, files in os.walk(path):
         for dir_ in dirs:
             os.chmod(Path(root, dir_), stat.S_IRWXU)
@@ -172,10 +189,10 @@ def _delete_dot_git_at(path):
             os.chmod(Path(root, file_), stat.S_IRWXU)
 
 
-def _delete_all_dot_git():
+def _fix_all_dot_git_permissions(tmp):
     if os.name == 'nt':
-        for path in iglob('**/.git', recursive=True):
-            _delete_dot_git_at(path)
+        for path in iglob(f'{tmp}/**/.git', recursive=True):
+            _fix_dot_git_permissions(path)
 
 
 @pytest.fixture()
@@ -188,7 +205,7 @@ def tmp_directory():
 
     # some tests create sample git repos, if we are on windows, we need to
     # change permissions to be able to delete the files
-    _delete_all_dot_git()
+    _fix_all_dot_git_permissions(tmp)
 
     os.chdir(old)
 

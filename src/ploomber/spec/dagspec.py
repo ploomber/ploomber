@@ -289,11 +289,14 @@ class DAGSpec(MutableMapping):
         path_to_defaults = default.path_to_env_from_spec(
             path_to_spec=self._path)
 
+        # there is an env.yaml we can use
         if path_to_defaults:
             defaults = yaml.safe_load(Path(path_to_defaults).read_text())
             self.env = EnvDict(env,
                                path_to_here=self._parent_path,
                                defaults=defaults)
+
+        # there is no env.yaml
         else:
             self.env = EnvDict(env, path_to_here=self._parent_path)
 

@@ -5,11 +5,15 @@ from collections.abc import Mapping
 from reprlib import Repr
 
 import yaml
+from jinja2 import Template, StrictUndefined
 
 from ploomber.env import validate
 from ploomber.env.expand import EnvironmentExpander
 from ploomber.env.frozenjson import FrozenJSON
+from ploomber import repo
 from ploomber.util import default
+from ploomber.placeholders import util
+from ploomber.exceptions import BaseException
 
 
 # TODO: custom expanders, this could be done trough another special directive
@@ -71,7 +75,7 @@ class EnvDict(Mapping):
 
             # add default placeholders but override them if they are defined
             # in the raw data
-            default = self._default_dict(include_here=path_to_here is not None)
+            default = self._default_dict(path_to_here=path_to_here)
             self._default_keys = set(default) - set(raw_data)
             raw_data = {**default, **raw_data}
 
@@ -124,7 +128,8 @@ class EnvDict(Mapping):
         return self._default_keys
 
     @staticmethod
-    def _default_dict(include_here):
+    def _default_dict(path_to_here):
+
         placeholders = {
             'user': '{{user}}',
             'cwd': '{{cwd}}',
@@ -134,8 +139,12 @@ class EnvDict(Mapping):
         if default.try_to_find_root_recursively() is not None:
             placeholders['root'] = '{{root}}'
 
-        if include_here:
+        if path_to_here is not None:
             placeholders['here'] = '{{here}}'
+
+        if path_to_here is not None and repo.is_repo(path_to_here):
+            placeholders['git'] = '{{git}}'
+            placeholders['git_hash'] = '{{git_hash}}'
 
         return placeholders
 
@@ -253,6 +262,45 @@ class EnvDict(Mapping):
         obj._inplace_replace_flatten_keys(to_replace)
         return obj
 
+    def _render(self, raw_value):
+        placeholders = util.get_tags_in_str(raw_value)
+
+        if not placeholders:
+            return raw_value, placeholders
+
+        undefined = placeholders - set(self)
+
+        if undefined:
+            msg = _error_message_for_undefined_list(undefined)
+            raise BaseException(
+                f'Error replacing placeholders:\n{msg}\n\nLoaded env: '
+                f'{self!r}')
+
+        value = Template(raw_value, undefined=StrictUndefined).render(**self)
+
+        return value, placeholders
+
+
+def _error_message_for_undefined_list(undefined):
+    return '\n'.join(_error_message_for_undefined(u) for u in undefined)
+
+
+def _error_message_for_undefined(u):
+    git_ = 'Ensure git is installed and git repository exists'
+    reasons = {
+        'git':
+        git_,
+        'git_hash':
+        git_,
+        'here':
+        'Ensure the spec was initialized from a file',
+        'root': ('Ensure a pipeline.yaml or setup.py exist in the '
+                 'current directory or a parent directory')
+    }
+    howto = reasons.get(u, 'Ensure the placeholder is defined in the env')
+
+    return '  * {{' + u + '}}: ' + howto
+
 
 def load_from_source(source):
     """
@@ -262,7 +310,7 @@ def load_from_source(source):
     Returns
     -------
     dict
-        Raw dictioanry
+        Raw dictionary
     pathlib.Path
         Path to the loaded file, None if source is a dict
     str

@@ -9,7 +9,7 @@ import pandas as pd
 from pathlib import Path
 import pytest
 import yaml
-from conftest import _path_to_tests, fixture_tmp_dir
+from conftest import _path_to_tests, fixture_tmp_dir, git_init
 import getpass
 from copy import deepcopy
 
@@ -28,7 +28,8 @@ from ploomber.tasks import SQLScript
 from ploomber import exceptions
 from ploomber.executors import Serial, Parallel
 from ploomber.products import MetaProduct
-from ploomber.exceptions import DAGSpecInitializationError, ValidationError
+from ploomber.exceptions import (DAGSpecInitializationError, ValidationError,
+                                 BaseException)
 from ploomber.sources.nb_utils import find_cell_with_tag
 
 
@@ -761,7 +762,7 @@ def test_expand_env(save, tmp_directory):
                 'product': 'output.ipynb',
                 'params': {
                     'sample': '{{sample}}',
-                    'user': '{{user}}'
+                    'user': '{{user}}',
                 }
             }]
         },
@@ -769,6 +770,38 @@ def test_expand_env(save, tmp_directory):
 
     assert spec['tasks'][0]['params']['sample'] is True
     assert spec['tasks'][0]['params']['user'] == getpass.getuser()
+
+
+@pytest.mark.parametrize('save', [True, False])
+def test_expand_env_from_file(save, tmp_directory):
+    env = {'sample': True, 'user': '{{user}}', 'git': '{{git}}'}
+
+    if save:
+        with open('env.yaml', 'w') as f:
+            yaml.dump(env, f)
+        env = 'env.yaml'
+
+    spec_ = {
+        'tasks': [{
+            'source': 'plot.py',
+            'product': 'output.ipynb',
+            'params': {
+                'sample': '{{sample}}',
+                'user': '{{user}}',
+                'git': '{{git}}',
+            }
+        }]
+    }
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec_))
+
+    git_init()
+
+    spec = DAGSpec('pipeline.yaml', env=env)
+
+    assert spec['tasks'][0]['params']['sample'] is True
+    assert spec['tasks'][0]['params']['user'] == getpass.getuser()
+    assert spec['tasks'][0]['params']['git'] == 'mybranch'
 
 
 def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
@@ -796,12 +829,15 @@ def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
                 'data': str(Path('{{here}}', 'data.csv')),
             },
             'params': {
-                'now': '{{now}}'
+                'now': '{{now}}',
+                'git': '{{git}}',
             }
         }]
     }
 
     Path('src', 'pkg', 'pipeline.yaml').write_text(yaml.dump(spec_dict))
+
+    git_init()
 
     os.chdir(Path('src', 'pkg'))
 
@@ -809,11 +845,77 @@ def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
     task = spec.data['tasks'][0]
 
     assert task['params']['now'] == 'current-timestamp'
+    assert task['params']['git'] == 'mybranch'
     assert task['source'] == Path(tmp_directory, 'script.py')
     assert task['product']['nb'] == str(
         Path(tmp_directory, 'src', 'pkg', 'username', 'nb.html'))
     assert task['product']['data'] == str(
         Path(tmp_directory, 'src', 'pkg', 'data.csv'))
+
+
+@pytest.mark.parametrize('save_env_yaml', [True, False])
+def test_git_placeholder_and_git_not_installed(monkeypatch, tmp_directory,
+                                               save_env_yaml):
+    if save_env_yaml:
+        with open('env.yaml', 'w') as f:
+            yaml.dump({'some_tag': '{{git}}'}, f)
+
+    # simulate git not installed
+    monkeypatch.setattr(expand.shutil, "which", lambda _: None)
+
+    spec_dict = {
+        'tasks': [{
+            'source': str(Path('tasks', 'script.py')),
+            'product': {
+                'nb': str(Path('out', 'nb.html')),
+                'data': str(Path('out', 'data.csv')),
+            },
+            'params': {
+                'git': '{{git}}' if not save_env_yaml else '{{some_tag}}',
+            }
+        }]
+    }
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec_dict))
+
+    git_init()
+
+    with pytest.raises(BaseException) as excinfo:
+        DAGSpec('pipeline.yaml')
+
+    expected = ('git is not installed'
+                if save_env_yaml else 'Ensure git is installed')
+    assert expected in str(excinfo.value)
+
+
+@pytest.mark.parametrize('save_env_yaml', [True, False])
+def test_git_placeholder_and_not_in_git_repository(tmp_directory,
+                                                   save_env_yaml):
+    if save_env_yaml:
+        with open('env.yaml', 'w') as f:
+            yaml.dump({'some_tag': '{{git}}'}, f)
+
+    spec_dict = {
+        'tasks': [{
+            'source': str(Path('tasks', 'script.py')),
+            'product': {
+                'nb': str(Path('out', 'nb.html')),
+                'data': str(Path('out', 'data.csv')),
+            },
+            'params': {
+                'git': '{{git}}' if not save_env_yaml else '{{some_tag}}',
+            }
+        }]
+    }
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec_dict))
+
+    with pytest.raises(BaseException) as excinfo:
+        DAGSpec('pipeline.yaml')
+
+    expected = ('could not locate a git repository'
+                if save_env_yaml else 'Ensure git is installed')
+    assert expected in str(excinfo.value)
 
 
 @pytest.mark.parametrize('method, kwargs', [

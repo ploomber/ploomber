@@ -20,6 +20,7 @@ from ploomber.env.expand import (EnvironmentExpander, expand_raw_dictionary,
                                  expand_raw_dictionaries_and_extract_tags)
 from ploomber.util import default
 from ploomber import repo
+from ploomber.exceptions import BaseException
 
 
 def test_env_repr_and_str(cleanup_env, monkeypatch):
@@ -198,14 +199,35 @@ def test_expand_version(cleanup_env):
     assert env.version == 'VERSION'
 
 
-def test_expand_git(monkeypatch, cleanup_env):
-    def mockreturn(module_path):
-        return {'git_location': 'some_version_string'}
+def test_expand_git_with_underscode_module(monkeypatch, cleanup_env):
+    monkeypatch.setattr(repo, 'git_location', lambda _: 'git-location')
+    monkeypatch.setattr(repo, 'git_hash', lambda _: 'git-hash')
 
-    monkeypatch.setattr(repo, 'get_git_info', mockreturn)
+    env = Env({
+        '_module': 'test_pkg',
+        'git': '{{git}}',
+        'git_hash': '{{git_hash}}',
+    })
 
-    env = Env({'_module': 'test_pkg', 'git': '{{git}}'})
-    assert env.git == 'some_version_string'
+    assert env.git == 'git-location'
+    assert env.git_hash == 'git-hash'
+
+
+def test_expand_git(monkeypatch, cleanup_env, tmp_git):
+    monkeypatch.setattr(repo, 'git_location', lambda _: 'git-location')
+    monkeypatch.setattr(repo, 'git_hash', lambda _: 'git-hash')
+
+    Path('env.yaml').write_text(
+        yaml.dump({
+            'git': '{{git}}',
+            'git_hash': '{{git_hash}}',
+        }))
+
+    # need to initialize from a file for this to work, since Env will use
+    # the env.yaml location to run the git command
+    env = Env('env.yaml')
+    assert env.git == 'git-location'
+    assert env.git_hash == 'git-hash'
 
 
 def test_can_create_env_from_dict(cleanup_env):
@@ -446,10 +468,14 @@ def test_error_if_no_project_root(tmp_directory):
     raw = {'root': '{{root}}'}
     expander = EnvironmentExpander(preprocessed={})
 
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(BaseException) as excinfo:
         expander.expand_raw_dictionary(raw)
 
-    assert 'Failed to expand {{root}}' in str(excinfo.value)
+    assert ('An error happened while expanding placeholder {{root}}'
+            in str(excinfo.getrepr()))
+
+    assert ('could not find a setup.py in a parent folder'
+            in str(excinfo.getrepr()))
 
 
 def test_root_expands_relative_to_path_to_here(tmp_directory):
@@ -588,23 +614,29 @@ def test_expand_raw_dict_nested():
     })
 
 
-def test_expand_raw_dict_error_if_missing_key():
-    mapping = {'another_key': 'value'}
-    d = {'some_settting': '{{key}}'}
+def test_envdict_git_ignored_if_git_command_fails_and_no_git_placeholder(
+        tmp_directory):
+    env = EnvDict({'tag': 'value'}, path_to_here='.')
+    assert set(env) == {'cwd', 'here', 'now', 'tag', 'user'}
 
-    with pytest.raises(KeyError) as excinfo:
+
+def test_expand_raw_dict_error_if_missing_key():
+    mapping = EnvDict({'another_key': 'value'})
+    d = {'some_stuff': '{{key}}'}
+
+    with pytest.raises(BaseException) as excinfo:
         expand_raw_dictionary(d, mapping)
 
-    expected = ('"Error replacing placeholder: \'key\' is undefined.'
-                ' Loaded env: {\'another_key\': \'value\'}"')
-    assert expected in str(excinfo.value)
+    assert "Error replacing placeholders:" in str(excinfo.value)
+    assert "* {{key}}: Ensure the placeholder is defined" in str(excinfo.value)
 
 
 def test_expand_raw_dictionary_parses_literals():
-    raw = {'a': '{{a}}', 'b': '{{b}}', 'c': '{{c}}'}
-    mapping = {'a': {1, 2, 3}, 'b': [1, 2, 3], 'c': {'z': 1}}
+    raw = {'a': '{{a}}', 'b': '{{b}}'}
+    mapping = EnvDict({'a': [1, 2, 3], 'b': {'z': 1}})
     out = expand_raw_dictionary(raw, mapping)
-    assert out == mapping
+    assert out['a'] == [1, 2, 3]
+    assert out['b'] == {'z': 1}
 
 
 @pytest.mark.parametrize('constructor', [list, tuple, np.array])
@@ -766,3 +798,24 @@ def test_find(tmp_directory):
 
     assert env.cwd == str(Path('.').resolve())
     assert env.here == expected_here
+
+
+@pytest.mark.parametrize('value, error', [
+    ['{{git}}', 'Ensure git is installed and git repository exists'],
+    ['{{git_hash}}', 'Ensure git is installed and git repository exists'],
+    ['{{here}}', 'Ensure the spec was initialized from a file'],
+    ['{{root}}', 'Ensure a pipeline.yaml or setup.py exist'],
+    ['{{another}}', 'Ensure the placeholder is defined'],
+])
+def test_error_message_if_missing_default_placeholder(tmp_directory, value,
+                                                      error):
+    Path('env.yaml').write_text(yaml.dump({'key': 'value'}))
+
+    env = EnvDict('env.yaml')
+
+    with pytest.raises(BaseException) as excinfo:
+        expand_raw_dictionary({
+            'a': value,
+        }, env)
+
+    assert error in str(excinfo.value)
