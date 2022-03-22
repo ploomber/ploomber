@@ -32,6 +32,9 @@ def git_init():
         raise ValueError('call git_init in a temporary directory')
 
     subprocess.run(['git', 'init', '-b', 'mybranch'])
+    subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
+    subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
+
     subprocess.run(['git', 'add', '--all'])
     subprocess.run(['git', 'commit', '-m', 'some-commit-message'])
 
