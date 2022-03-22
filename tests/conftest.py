@@ -181,7 +181,7 @@ def backup_online():
     pass
 
 
-def _delete_dot_git_at(path):
+def _fix_dot_git_permissions(path):
     for root, dirs, files in os.walk(path):
         for dir_ in dirs:
             os.chmod(Path(root, dir_), stat.S_IRWXU)
@@ -189,10 +189,10 @@ def _delete_dot_git_at(path):
             os.chmod(Path(root, file_), stat.S_IRWXU)
 
 
-def _delete_all_dot_git():
+def _fix_all_dot_git_permissions():
     if os.name == 'nt':
-        for path in iglob('**/.git', recursive=True):
-            _delete_dot_git_at(path)
+        for path in iglob(f'{tmp}/.git', recursive=True):
+            _fix_dot_git_permissions(path)
 
 
 @pytest.fixture()
@@ -205,7 +205,7 @@ def tmp_directory():
 
     # some tests create sample git repos, if we are on windows, we need to
     # change permissions to be able to delete the files
-    _delete_all_dot_git()
+    _fix_all_dot_git_permissions(tmp)
 
     os.chdir(old)
 
