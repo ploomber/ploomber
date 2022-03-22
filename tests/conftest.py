@@ -90,7 +90,7 @@ def fixture_tmp_dir(source):
 
             # some tests create sample git repos, if we are on windows, we
             # need to change permissions to be able to delete the files
-            _delete_all_dot_git()
+            _fix_all_dot_git_permissions(tmp)
 
             os.chdir(old)
             shutil.rmtree(tmp_dir)
@@ -189,7 +189,7 @@ def _fix_dot_git_permissions(path):
             os.chmod(Path(root, file_), stat.S_IRWXU)
 
 
-def _fix_all_dot_git_permissions():
+def _fix_all_dot_git_permissions(tmp):
     if os.name == 'nt':
         for path in iglob(f'{tmp}/.git', recursive=True):
             _fix_dot_git_permissions(path)
