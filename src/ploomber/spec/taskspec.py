@@ -10,6 +10,7 @@ from copy import copy, deepcopy
 from pathlib import Path
 from collections.abc import MutableMapping, Mapping
 import platform
+from difflib import get_close_matches
 
 from ploomber import tasks, products
 from ploomber.util.util import _make_iterable
@@ -179,6 +180,7 @@ class TaskSpec(MutableMapping):
         if the module has already been imported. Has no effect if
         lazy_import=True.
     """
+
     def __init__(self,
                  data,
                  meta,
@@ -415,6 +417,22 @@ def _init_task(data, meta, project_root, lazy_import, dag):
     return task
 
 
+def _validate_product_extension(product_raw):
+
+    # check if product extension is valid for SQL tasks
+    if isinstance(product_raw, str):
+        valid_extensions = ['parquet', 'csv']
+        product_extension = product_raw.split('.')[-1]
+        possibilities = get_close_matches(product_extension,
+                                          valid_extensions)
+        if product_extension not in valid_extensions and len(
+                possibilities) > 0:
+            raise DAGSpecInitializationError(
+                f'Invalid product extension in: '
+                f'{product_raw}. Did you mean: '
+                f'{", ".join(sorted(possibilities))}')
+
+
 # FIXME: how do we make a default product client? use the task's client?
 def _init_product(task_dict, meta, task_class, root_path, lazy_import):
     """
@@ -428,6 +446,8 @@ def _init_product(task_dict, meta, task_class, root_path, lazy_import):
     be from the same class.
     """
     product_raw = task_dict.pop('product')
+
+    _validate_product_extension(product_raw)
 
     # return if we already have a product
     if isinstance(product_raw, products.product.Product):
