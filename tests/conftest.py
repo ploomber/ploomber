@@ -191,7 +191,7 @@ def _fix_dot_git_permissions(path):
 
 def _fix_all_dot_git_permissions(tmp):
     if os.name == 'nt':
-        for path in iglob(f'{tmp}/.git', recursive=True):
+        for path in iglob(f'{tmp}/**/.git', recursive=True):
             _fix_dot_git_permissions(path)
 
 
