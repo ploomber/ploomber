@@ -47,6 +47,13 @@ def _looks_like_path(s):
         return '/' in s
 
 
+def _extension_typo(extension, valid_extensions):
+    try:
+        return get_close_matches(extension, valid_extensions)
+    except Exception:
+        return None
+
+
 def task_class_from_source_str(source_str, lazy_import, reload, product):
     """
     The source field in a DAG spec is a string. The actual value needed to
@@ -70,10 +77,17 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
         partial(dotted_path.load_dotted_path, raise_=True, reload=reload))
 
     if extension and extension in suffix2taskclass:
-        if extension == '.sql' and _safe_suffix(product) in {
-                '.csv', '.parquet'
-        }:
-            return tasks.SQLDump
+        if extension == '.sql':
+            if _safe_suffix(product) in {'.csv', '.parquet'}:
+                return tasks.SQLDump
+            else:
+                possibilities = _extension_typo(_safe_suffix(product),
+                                                ['.csv', '.parquet'])
+                if possibilities:
+                    raise DAGSpecInitializationError(
+                        f'{_safe_suffix(product)!r} is not a valid extension. '
+                        f'Did you mean: '
+                        f'{", ".join(sorted(possibilities))}')
 
         return suffix2taskclass[extension]
     elif _looks_like_path(source_str):
@@ -417,22 +431,6 @@ def _init_task(data, meta, project_root, lazy_import, dag):
     return task
 
 
-def _validate_product_extension(product_raw):
-
-    # check if product extension is valid for SQL tasks
-    if isinstance(product_raw, str):
-        valid_extensions = ['parquet', 'csv']
-        product_extension = product_raw.split('.')[-1]
-        possibilities = get_close_matches(product_extension,
-                                          valid_extensions)
-        if product_extension not in valid_extensions and len(
-                possibilities) > 0:
-            raise DAGSpecInitializationError(
-                f'Invalid product extension in: '
-                f'{product_raw}. Did you mean: '
-                f'{", ".join(sorted(possibilities))}')
-
-
 # FIXME: how do we make a default product client? use the task's client?
 def _init_product(task_dict, meta, task_class, root_path, lazy_import):
     """
@@ -446,8 +444,6 @@ def _init_product(task_dict, meta, task_class, root_path, lazy_import):
     be from the same class.
     """
     product_raw = task_dict.pop('product')
-
-    _validate_product_extension(product_raw)
 
     # return if we already have a product
     if isinstance(product_raw, products.product.Product):
