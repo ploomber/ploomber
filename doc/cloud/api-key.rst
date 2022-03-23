@@ -24,7 +24,18 @@ To generate an API key please these steps:
 2. Click on Start Now, and follow the registration flow, add your email and password.
 3. Verify your email, you should receive a code to put into the portal along with your email.
 4. Sign in with your credentials (if not directed to sign-in, follow the note below).
-5. Now that you're inside, on the top left corner please click on Account and Get API Key.
+5. Now that you're inside, on the top left corner please click on the text box blue link - API Key.
+
+.. image:: https://ploomber.io/images/doc/cloud-key.png
+   :target: https://ploomber.io/images/doc/cloud-key.png
+   :alt: cloud-key-link-example
+
+You'll see a pop up where you can copy your key.
+
+.. image:: https://ploomber.io/images/doc/cloud-key-modal.png
+   :target: https://ploomber.io/images/doc/cloud-key-modal.png
+   :alt: cloud-key-popup
+
 6. The next step is setting this key in the Ploomber CLI, copy your key, and move to the next step.
 
 *Note:  You can always go back to the login page and get your key from this page.
