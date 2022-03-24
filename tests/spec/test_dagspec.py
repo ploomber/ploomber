@@ -1902,7 +1902,7 @@ CREATE TABLE {{product}} AS SELECT * FROM my_table
          'client': 'my_testing_module.get_db_client',
          'product_client': 'my_testing_module.get_db_client'
      }], "'.parquets' is not a valid extension. Did you mean: .parquet")])
-def test_extension_typo(tasks, expected, tmp_directory, client_spec):
+def test_product_extension_typo(tasks, expected, tmp_directory, client_spec):
     Path('script.sql').write_text("""
     SELECT * FROM my_table
     """)
