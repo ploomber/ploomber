@@ -1888,28 +1888,35 @@ CREATE TABLE {{product}} AS SELECT * FROM my_table
 @pytest.mark.parametrize('client_spec', [
     'my_testing_module.get_db_client',
 ])
-def test_extension_typo(tmp_directory, tmp_imports, client_spec):
+@pytest.mark.parametrize(
+    'tasks, expected',
+    [([{
+        'source': 'script.sql',
+        'product': 'another.csb',
+        'client': 'my_testing_module.get_db_client',
+        'product_client': 'my_testing_module.get_db_client'
+    }], "'.csb' is not a valid extension. Did you mean: .csv"),
+     ([{
+         'source': 'script.sql',
+         'product': 'another.parquets',
+         'client': 'my_testing_module.get_db_client',
+         'product_client': 'my_testing_module.get_db_client'
+     }], "'.parquets' is not a valid extension. Did you mean: .parquet")])
+def test_extension_typo(tasks, expected, tmp_directory, client_spec):
     Path('script.sql').write_text("""
     SELECT * FROM my_table
-""")
+    """)
 
     with sqlite3.connect('my.db') as conn:
         pd.DataFrame({'x': range(5)}).to_sql('my_table', conn)
 
-    tasks = [
-        {
-            'source': 'script.sql',
-            'product': 'another.csb',
-            'client': client_spec,
-            'product_client': client_spec
-        },
-    ]
     data = {'tasks': tasks}
 
     with pytest.raises(DAGSpecInitializationError) as excinfo:
-        DAGSpec(data)
+        spec = DAGSpec(data)
+        dag = spec.to_dag()
+        dag.build()
 
-    expected = ("'.csb' is not a valid extension. Did you mean: .csv")
     assert expected == str(excinfo.value)
 
 
