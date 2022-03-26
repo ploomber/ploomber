@@ -473,6 +473,9 @@ def delete_pipeline(pipeline_id):
 @click.option('--raw', is_flag=True)
 def cloud_build(force, github_number, github_owner, github_repo, raw):
     """Build pipeline in the cloud
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
     """
     from ploomber.cloud import api
     runid = api.upload_project(force,
@@ -487,6 +490,9 @@ def cloud_build(force, github_number, github_owner, github_repo, raw):
 @cloud.command(name="list")
 def cloud_list():
     """List cloud executions
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
     """
     from ploomber.cloud import api
     api.runs()
@@ -498,6 +504,10 @@ def cloud_list():
 def cloud_status(run_id, watch):
     """Get details on a cloud execution
     $ ploomber cloud status {some-id}
+
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
     """
     from ploomber.cloud import api
 
@@ -526,6 +536,9 @@ def cloud_status(run_id, watch):
 @cloud.command(name="products")
 def cloud_products():
     """List products in cloud workspace
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
     """
     from ploomber.cloud import api
     api.products_list()
@@ -537,6 +550,10 @@ def cloud_download(pattern):
     """Download products from cloud workspace
     Download all .csv files:
     $ ploomber cloud download '*.csv'
+
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
     """
     from ploomber.cloud import api
     api.products_download(pattern)
@@ -547,6 +564,10 @@ def cloud_download(pattern):
 def cloud_logs(run_id):
     """Get logs on a cloud execution
     $ ploomber cloud logs {some-id}
+
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
     """
     from ploomber.cloud import api
     api.run_logs(run_id)
@@ -557,6 +578,10 @@ def cloud_logs(run_id):
 def cloud_abort(run_id):
     """Abort a cloud execution
     $ ploomber cloud abort {some-id}
+
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
     """
     from ploomber.cloud import api
     api.run_abort(run_id)
