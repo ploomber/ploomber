@@ -1,8 +1,8 @@
 # CHANGELOG
 
-## 0.17.1dev
-* Better error message when failing to deepcopy a DAG (#670)
-* Improvements to the `{{git}}` placeholder feature (#667)
+## 0.17.1 (2022-03-26)
+* Better error message when failing to deepcopy a DAG ([#670](https://github.com/ploomber/ploomber/issues/670))
+* Improvements to the `{{git}}` placeholder feature ([#667](https://github.com/ploomber/ploomber/issues/667))
 * Replaces DAG colors in `ploomber plot` with their RGB values for better compatibility
 * Pinning `jinja2` to prevent `nbconvert` from failing
 
