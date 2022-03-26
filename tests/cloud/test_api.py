@@ -35,5 +35,6 @@ def test_zip_project(tmp_directory, sample_project):
     }
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_runs_new():
     api.runs_new(metadata=dict(a=1))
