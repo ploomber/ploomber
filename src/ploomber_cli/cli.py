@@ -590,3 +590,18 @@ def cloud_abort(run_id):
     """
     from ploomber.cloud import api
     api.run_abort(run_id)
+
+
+@cloud.command(name="upload")
+@click.argument('path')
+def cloud_upload(path):
+    """
+    Upload a file to your workspace
+
+    $ ploomber cloud upload path/to/data.parquet
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
+    """
+    from ploomber.cloud import api
+    api.upload_data(path)
