@@ -11,6 +11,7 @@ Cloud
     :maxdepth: 2
 
     api-key
+    cloud-execution
     monitoring
 
     
