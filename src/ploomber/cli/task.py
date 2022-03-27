@@ -1,15 +1,15 @@
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.telemetry import telemetry
+from ploomber.cloud import api
 
 # TODO: we are just smoke testing this, we need to improve the tests
 # (check the appropriate functions are called)
 
 
-@cli_endpoint
-@telemetry.log_call('task')
-def main():
+def _task_cli(accept_task_id=False):
     parser = CustomParser(description='Build tasks', prog='ploomber task')
+
     with parser:
         parser.add_argument('task_name')
         parser.add_argument('--source',
@@ -33,6 +33,10 @@ def main():
                             '-of',
                             help='Only execute on_finish hook',
                             action='store_true')
+
+        if accept_task_id:
+            parser.add_argument('--task-id')
+
     dag, args = parser.load_from_entry_point_arg()
 
     dag.render()
@@ -52,4 +56,23 @@ def main():
     no_flags = not any((args.build, args.status, args.source, args.on_finish))
 
     if no_flags or args.build:
-        task.build(force=args.force)
+        try:
+            task.build(force=args.force)
+        except Exception:
+            if getattr(args, 'task_id', None):
+                api.tasks_update(getattr(args, 'task_id'), 'failed')
+            raise
+        else:
+            if getattr(args, 'task_id', None):
+                api.tasks_update(getattr(args, 'task_id'), 'finished')
+
+
+@cli_endpoint
+@telemetry.log_call('task')
+def main():
+    _task_cli()
+
+
+# TODO: test this
+if __name__ == '__main__':
+    _task_cli(accept_task_id=True)
