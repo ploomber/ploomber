@@ -30,6 +30,7 @@ def config_init(app, config):
         'guides/serialization': 'user-guide',
         'guides/logging': 'user-guide',
         'guides/versioning': 'user-guide',
+        'guides/cloud-execution': 'cloud',
     }
 
     # move README.ipynb files to their corresponding location in the docs
