@@ -329,6 +329,15 @@ class DAGSpec(MutableMapping):
                 imported = yaml.safe_load(
                     Path(self.data['meta']['import_tasks_from']).read_text())
 
+                if imported is None:
+                    imported = []
+
+                if not isinstance(imported, list):
+                    raise TypeError(
+                        'Expected list when loading YAML file from '
+                        'import_tasks_from: file.yaml, '
+                        f'but got {type(imported)}')
+
                 if self.env is not None:
                     (imported,
                      tags_other) = expand_raw_dictionaries_and_extract_tags(
@@ -627,6 +636,7 @@ class DAGSpecPartial(DAGSpec):
     A DAGSpec subclass that initializes from a list of tasks (used in the
     onlinedag.py) module
     """
+
     def __init__(self, path_to_partial, env=None):
         with open(path_to_partial) as f:
             tasks = yaml.safe_load(f)
