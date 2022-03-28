@@ -636,7 +636,6 @@ class DAGSpecPartial(DAGSpec):
     A DAGSpec subclass that initializes from a list of tasks (used in the
     onlinedag.py) module
     """
-
     def __init__(self, path_to_partial, env=None):
         with open(path_to_partial) as f:
             tasks = yaml.safe_load(f)
