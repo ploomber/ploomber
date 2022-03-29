@@ -1907,15 +1907,11 @@ def test_product_extension_typo(tasks, expected, tmp_directory, client_spec):
     SELECT * FROM my_table
     """)
 
-    with sqlite3.connect('my.db') as conn:
-        pd.DataFrame({'x': range(5)}).to_sql('my_table', conn)
-
     data = {'tasks': tasks}
 
     with pytest.raises(DAGSpecInitializationError) as excinfo:
         spec = DAGSpec(data)
-        dag = spec.to_dag()
-        dag.build()
+        spec.to_dag()
 
     assert expected == str(excinfo.value)
 

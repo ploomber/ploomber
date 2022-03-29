@@ -48,9 +48,9 @@ def _looks_like_path(s):
 
 
 def _extension_typo(extension, valid_extensions):
-    try:
+    if extension and valid_extensions:
         return get_close_matches(extension, valid_extensions)
-    except Exception:
+    else:
         return None
 
 
