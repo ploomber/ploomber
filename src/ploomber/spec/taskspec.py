@@ -271,12 +271,6 @@ class TaskSpec(MutableMapping):
             data_source = str(data_source_ if not hasattr(
                 data_source_, '__name__') else data_source_.__name__)
 
-            if 'params' in data:
-                raise DAGSpecInitializationError(
-                    'Error initializing task with '
-                    f'source {data_source!r}: '
-                    '\'params\' is not allowed when using \'grid\'')
-
             if 'name' not in data:
                 raise DAGSpecInitializationError(
                     f'Error initializing task with '
@@ -306,6 +300,8 @@ class TaskSpec(MutableMapping):
                 on_failure = dotted_path.DottedPath(on_failure,
                                                     lazy_load=self.lazy_import)
 
+            params = data.pop('params', None)
+
             return TaskGroup.from_grid(task_class=task_class,
                                        product_class=product_class,
                                        product_primitive=product,
@@ -316,7 +312,8 @@ class TaskSpec(MutableMapping):
                                        resolve_relative_to=self.project_root,
                                        on_render=on_render,
                                        on_finish=on_finish,
-                                       on_failure=on_failure), upstream
+                                       on_failure=on_failure,
+                                       params=params), upstream
         else:
             return _init_task(data=data,
                               meta=self.meta,

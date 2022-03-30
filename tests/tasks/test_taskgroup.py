@@ -165,6 +165,30 @@ def test_from_grid():
     assert len(group) == 4
 
 
+def test_from_grid_with_params():
+    dag = DAG()
+    TaskGroup.from_grid(PythonCallable,
+                        File,
+                        'file.txt', {
+                            'source': touch_a_b,
+                        },
+                        dag,
+                        name='task_group',
+                        grid={
+                            'a': [1, 2],
+                            'b': [3, 4]
+                        },
+                        params={
+                            'c': 100,
+                            'd': 200
+                        })
+
+    assert dag['task_group0'].params == {'a': 1, 'b': 3, 'c': 100, 'd': 200}
+    assert dag['task_group1'].params == {'a': 1, 'b': 4, 'c': 100, 'd': 200}
+    assert dag['task_group2'].params == {'a': 2, 'b': 3, 'c': 100, 'd': 200}
+    assert dag['task_group3'].params == {'a': 2, 'b': 4, 'c': 100, 'd': 200}
+
+
 @pytest.mark.parametrize('hook_name', ['on_render', 'on_finish', 'on_failure'])
 def test_from_grid_with_hook(hook_name):
     def my_hook():
