@@ -55,6 +55,20 @@ from ploomber.sources import docstring
 from ploomber.io import pretty_print
 
 
+def _jupytext_fmt(primitive, extension):
+    """
+    Determine the jupytext fmt string to use based on the content and extension
+    """
+
+    if extension != 'ipynb':
+        fmt, _ = jupytext.guess_format(primitive, f'.{extension}')
+        fmt_final = f'{extension}:{fmt}'
+    else:
+        fmt_final = '.ipynb'
+
+    return fmt_final
+
+
 # TODO: we should unit test that this function is called, as opposed to vanilla
 # .read_text
 def _read_primitive(path):
@@ -536,11 +550,7 @@ Go to: https://ploomber.io/s/params for more information
         """
         Inject cell, overwrite the source file (and any paired files)
         """
-        if self._ext_in != 'ipynb':
-            fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
-            fmt_ = f'{self._ext_in}:{fmt}'
-        else:
-            fmt_ = '.ipynb'
+        fmt_ = _jupytext_fmt(self._primitive, self._ext_in)
 
         # add metadata to flag that the cell was injected manually
         recursive_update(
@@ -576,8 +586,7 @@ Go to: https://ploomber.io/s/params for more information
             nb_clean,
             dict(metadata=dict(ploomber=dict(injected_manually=None))))
 
-        fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
-        fmt_ = f'{self._ext_in}:{fmt}'
+        fmt_ = _jupytext_fmt(self._primitive, self._ext_in)
 
         # overwrite
         jupytext.write(nb_clean, self._path, fmt=fmt_)
@@ -616,6 +625,12 @@ Go to: https://ploomber.io/s/params for more information
     def pair(self, base_path):
         """Pairs with an ipynb file
         """
+        # TODO: add unit test
+        if self._ext_in == 'ipynb':
+            raise ValueError(
+                'pairing only works with .py files, got .ipynb. '
+                'Yoy may convert the .ipynb to .py and try again.')
+
         fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
         fmt_ = f'{self._ext_in}:{fmt}'
 

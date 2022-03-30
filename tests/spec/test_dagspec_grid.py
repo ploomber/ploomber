@@ -50,5 +50,5 @@ upstream = ['upstream-*']
 def test_grid_with_params_placeholders(sample_dagspec):
     dag = DAGSpec('pipeline.yaml').to_dag()
 
-    assert '/param=1-0.ipynb' in str(dag['upstream-0'].product)
-    assert '/param=2-1.ipynb' in str(dag['upstream-1'].product)
+    assert 'param=1-0.ipynb' in str(dag['upstream-0'].product)
+    assert 'param=2-1.ipynb' in str(dag['upstream-1'].product)
