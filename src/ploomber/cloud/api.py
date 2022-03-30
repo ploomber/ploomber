@@ -1,3 +1,4 @@
+from urllib import parse
 import cgi
 import sys
 from pathlib import Path
@@ -24,8 +25,13 @@ HOST = os.environ.get(
 
 def _download_file(url, skip_if_exists=False):
     remotefile = urlopen(url)
-    _, params = cgi.parse_header(remotefile.info()['Content-Disposition'])
-    path = params["filename"]
+    content_disposition = remotefile.info()['Content-Disposition']
+
+    if content_disposition:
+        _, params = cgi.parse_header(content_disposition)
+        path = params["filename"]
+    else:
+        path = Path(parse.urlparse(url).path[1:])
 
     if skip_if_exists and Path(path).exists():
         print(f'{path} exists, skipping...')
@@ -58,7 +64,7 @@ _put = _request_factory(requests.put)
 def download_from_presigned(presigned):
     with ThreadPoolExecutor(max_workers=64) as executor:
         future2url = {
-            executor.submit(_download_file, url=url)
+            executor.submit(_download_file, url=url): url
             for url in presigned
         }
 
@@ -69,7 +75,7 @@ def download_from_presigned(presigned):
                 task = future2url[future]
                 raise RuntimeError(
                     'An error occurred when downloading product from '
-                    f'task: {task!r}') from exception
+                    f'url: {task!r}') from exception
 
 
 def auth_header(func):
