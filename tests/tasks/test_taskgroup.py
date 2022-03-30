@@ -38,6 +38,28 @@ def test_from_params():
     assert str(dag['task_group1'].product) == str(Path('dir', 'file-1.txt'))
 
 
+def test_from_params_with_product_placeholders():
+    dag = DAG()
+    group = TaskGroup.from_params(PythonCallable,
+                                  File,
+                                  'dir/param=[[param]].txt', {'source': touch},
+                                  dag,
+                                  name='task_group',
+                                  params_array=[{
+                                      'param': 1
+                                  }, {
+                                      'param': 2
+                                  }])
+
+    dag.render()
+
+    assert len(group) == 2
+    assert dag['task_group0'].source.primitive is touch
+    assert dag['task_group1'].source.primitive is touch
+    assert str(dag['task_group0'].product) == str(Path('dir', 'param=1-0.txt'))
+    assert str(dag['task_group1'].product) == str(Path('dir', 'param=2-1.txt'))
+
+
 @pytest.mark.parametrize('hook_name', ['on_render', 'on_finish', 'on_failure'])
 def test_from_params_with_hook(hook_name):
     def my_hook():
@@ -209,6 +231,28 @@ def test_metaproduct():
     assert len(group) == 2
 
 
+def test_metaproduct_with_product_placeholders():
+    dag = DAG()
+    group = TaskGroup.from_params(PythonCallable,
+                                  File, {
+                                      'one': 'param=[[param]].txt',
+                                      'another': 'another.txt'
+                                  }, {'source': touch},
+                                  dag,
+                                  name='task_group',
+                                  params_array=[{
+                                      'param': 1
+                                  }, {
+                                      'param': 2
+                                  }])
+
+    assert str(dag['task_group0'].product['one']) == 'param=1-0.txt'
+    assert str(dag['task_group0'].product['another']) == 'another-0.txt'
+    assert str(dag['task_group1'].product['one']) == 'param=2-1.txt'
+    assert str(dag['task_group1'].product['another']) == 'another-1.txt'
+    assert len(group) == 2
+
+
 def test_from_params_resolves_paths_in_metaproduct(tmp_directory):
     def touch(product, param):
         Path(product['one']).touch()
@@ -260,6 +304,25 @@ def test_sql_product():
     assert (id_.schema, id_.name, id_.kind) == ('schema', 'one-0', 'table')
     id_ = dag['task_group1'].product
     assert (id_.schema, id_.name, id_.kind) == ('schema', 'one-1', 'table')
+
+
+def test_sql_product_with_product_placeholders():
+    dag = DAG()
+    TaskGroup.from_params(PythonCallable,
+                          SQLRelation, ['schema', 'param=[[param]]', 'table'],
+                          {'source': touch},
+                          dag=dag,
+                          name='task_group',
+                          params_array=[{
+                              'param': 1
+                          }, {
+                              'param': 2
+                          }])
+
+    id_ = dag['task_group0'].product
+    assert (id_.schema, id_.name, id_.kind) == ('schema', 'param=1-0', 'table')
+    id_ = dag['task_group1'].product
+    assert (id_.schema, id_.name, id_.kind) == ('schema', 'param=2-1', 'table')
 
 
 def test_sql_meta_product():
