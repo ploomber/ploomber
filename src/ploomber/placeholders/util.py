@@ -10,16 +10,25 @@ env_runtime = Environment(extensions=extensions,
                           variable_end_string=']]')
 
 
-def get_tags_in_str(s):
+def get_tags_in_str(s, require_runtime_placeholders=True):
     """
     Returns tags (e.g. {{variable}}) in a given string as a set, returns an
     empty set for None
+
+    Parameters
+    ----------
+    require_runtime_placeholders : bool, default=True
+        Also check runtime tags - the ones in square brackets
+        (e.g. [[placeholder]])
     """
     # render placeholders
     vars_render = meta.find_undeclared_variables(env_render.parse(s))
 
     # runtime placeholders
-    vars_runtime = meta.find_undeclared_variables(env_runtime.parse(s))
+    if require_runtime_placeholders:
+        vars_runtime = meta.find_undeclared_variables(env_runtime.parse(s))
+    else:
+        vars_runtime = set()
 
     return vars_render | vars_runtime
 

@@ -263,7 +263,8 @@ class EnvDict(Mapping):
         return obj
 
     def _render(self, raw_value):
-        placeholders = util.get_tags_in_str(raw_value)
+        placeholders = util.get_tags_in_str(raw_value,
+                                            require_runtime_placeholders=False)
 
         if not placeholders:
             return raw_value, placeholders
