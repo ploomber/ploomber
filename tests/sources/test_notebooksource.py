@@ -17,6 +17,22 @@ from ploomber.sources.nb_utils import find_cell_with_tag
 from ploomber.products import File
 from ploomber.exceptions import RenderError, SourceInitializationError
 
+
+@pytest.fixture
+def tmp_nbs_ipynb(tmp_nbs):
+    """Modigies the nbs example to have one task with ipynb format
+    """
+    # modify the spec so it has one ipynb task
+    with open('pipeline.yaml') as f:
+        spec = yaml.safe_load(f)
+
+    spec['tasks'][0]['source'] = 'load.ipynb'
+    Path('pipeline.yaml').write_text(yaml.dump(spec))
+
+    # generate notebook in ipynb format
+    jupytext.write(jupytext.read('load.py'), 'load.ipynb')
+
+
 # Functions for generating notebooks with different characteristics for testing
 
 
@@ -591,17 +607,7 @@ def test_save_injected_cell(tmp_nbs):
     assert nb.metadata.ploomber.injected_manually
 
 
-def test_save_injected_cell_ipynb(tmp_nbs):
-    # modify the spec so it has one ipynb task
-    with open('pipeline.yaml') as f:
-        spec = yaml.safe_load(f)
-
-    spec['tasks'][0]['source'] = 'load.ipynb'
-    Path('pipeline.yaml').write_text(yaml.dump(spec))
-
-    # generate notebook in ipynb format
-    jupytext.write(jupytext.read('load.py'), 'load.ipynb')
-
+def test_save_injected_cell_ipynb(tmp_nbs_ipynb):
     dag = DAGSpec('pipeline.yaml').to_dag().render()
     nb = jupytext.read('load.py')
     expected = '"injected-parameters"'
@@ -645,6 +651,20 @@ def test_remove_injected_cell(tmp_nbs):
 
     assert expected not in Path('load.py').read_text()
     assert nb.metadata.ploomber == {}
+
+
+def test_remove_injected_cell_from_ipynb(tmp_nbs_ipynb):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.save_injected_cell()
+
+    source = jupytext.read(dag['load'].source.loc)
+    assert find_cell_with_tag(source, 'injected-parameters')
+
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.remove_injected_cell()
+
+    source = jupytext.read(dag['load'].source.loc)
+    assert find_cell_with_tag(source, 'injected-parameters')
 
 
 @pytest.mark.parametrize('prefix', [
