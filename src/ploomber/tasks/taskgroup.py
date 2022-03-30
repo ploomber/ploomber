@@ -138,6 +138,7 @@ class TaskGroup:
         resolve_relative_to : str or pathlib.Path, default=None
             If not None, paths in File products are resolved to be absolute
             paths
+
         """
         if name is None and namer is None:
             raise ValueError(
@@ -236,7 +237,8 @@ class TaskGroup:
                   resolve_relative_to=None,
                   on_render=None,
                   on_finish=None,
-                  on_failure=None):
+                  on_failure=None,
+                  params=None):
         """
         Build a group of tasks of the same class from an grid of parameters
         using the same source.
@@ -248,11 +250,14 @@ class TaskGroup:
             If list of dicts, each dict is processed individually, then
             concatenated to generate the final set.
 
+        params : dict
+            Values that will remain constant
+
         Notes
         -----
         All parameters, except for grid are the same as in .from_params
         """
-        params_array = ParamGrid(grid).product()
+        params_array = ParamGrid(grid, params=params).product()
         return cls.from_params(task_class=task_class,
                                product_class=product_class,
                                product_primitive=product_primitive,
