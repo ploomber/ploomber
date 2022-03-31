@@ -1,3 +1,5 @@
+from difflib import get_close_matches
+
 from ploomber import tasks
 from ploomber import products
 
@@ -12,6 +14,15 @@ _KEY2CLASS_PRODUCTS = {
 }
 _KEY2CLASS = {**_KEY2CLASS_TASKS, **_KEY2CLASS_PRODUCTS}
 
+def _suggest_class_name(name: str, options):
+    name = name.upper()
+
+    close_commands = get_close_matches(name, options)
+
+    if close_commands:
+        return options[close_commands[0]]
+    else:
+        return None
 
 def _normalize_input(name):
     return name.upper().replace('-', '').replace('_', '').replace(' ', '')
@@ -20,7 +31,7 @@ def _normalize_input(name):
 def get_suggestion(key_str, mapping=None):
     key_str_normalized = _normalize_input(key_str)
     mapping = mapping or _NORMALIZED
-    return mapping.get(key_str_normalized, None)
+    return _suggest_class_name(key_str_normalized, mapping)
 
 
 def str_to_class(key_str):
