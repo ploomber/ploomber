@@ -306,11 +306,10 @@ def test_finds_setup_py(tmp_directory):
     assert expected == default.find_root_recursively().resolve()
 
 
-@pytest.mark.parametrize('return_data', [
-    [(None, None), (default._filesystem_root(), None)],
-    [(default._filesystem_root(), 3), (default._filesystem_root(), 1)]
-
-])
+@pytest.mark.parametrize('return_data', [[(None, None),
+                                          (default._filesystem_root(), None)],
+                                         [(default._filesystem_root(), 3),
+                                          (default._filesystem_root(), 1)]])
 def test_pipeline_yaml_in_root_directory(return_data, monkeypatch):
     mock = Mock(side_effect=return_data)
     monkeypatch.setattr(default, 'find_parent_of_file_recursively', mock)
@@ -319,8 +318,7 @@ def test_pipeline_yaml_in_root_directory(return_data, monkeypatch):
 
     assert ('pipeline.yaml cannot be in the filesystem root. '
             'Please add it inside a directory like '
-            'project-name/pipeline.yaml. '
-            ) in str(excinfo.value)
+            'project-name/pipeline.yaml. ') in str(excinfo.value)
     assert mock.call_count == len(return_data)
 
 

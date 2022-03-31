@@ -67,6 +67,7 @@ from os.path import relpath
 from ploomber.exceptions import DAGSpecInvalidError
 from ploomber.entrypoint import try_to_find_entry_point_type, EntryPoint
 
+
 def _filesystem_root():
     return Path(os.path.abspath(os.sep))
 
@@ -463,8 +464,7 @@ def find_root_recursively(starting_dir=None,
         raise DAGSpecInvalidError(
             'pipeline.yaml cannot be in the filesystem root. '
             'Please add it inside a directory like '
-            'project-name/pipeline.yaml. '
-            )
+            'project-name/pipeline.yaml. ')
 
     root_found = None
 
