@@ -307,8 +307,8 @@ def test_finds_setup_py(tmp_directory):
 
 
 @pytest.mark.parametrize('return_data', [
-    [(None, None), (Path(os.path.abspath(os.sep)), None)],
-    [((Path(os.path.abspath(os.sep))), 3), (Path(os.path.abspath(os.sep)), 1)]
+    [(None, None), (default._filesystem_root(), None)],
+    [(default._filesystem_root(), 3), (default._filesystem_root(), 1)]
 
 ])
 def test_pipeline_yaml_in_root_directory(return_data, monkeypatch):
