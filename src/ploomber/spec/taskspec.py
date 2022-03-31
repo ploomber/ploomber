@@ -179,6 +179,7 @@ class TaskSpec(MutableMapping):
         if the module has already been imported. Has no effect if
         lazy_import=True.
     """
+
     def __init__(self,
                  data,
                  meta,
