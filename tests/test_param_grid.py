@@ -148,3 +148,61 @@ def test_param_grid_product_with_single_value(val):
 def test_param_grid_zip_with_single_value(val):
     pg = ParamGrid({'a': val, 'b': ['more']})
     assert len(list(pg.zip())) == 1
+
+
+def test_param_grid_product_with_params():
+    grid = ParamGrid({'a': [1, 2], 'b': [3, 4]}, params={'c': [1, 2]})
+
+    assert list(grid.product()) == [
+        {
+            'a': 1,
+            'b': 3,
+            'c': [1, 2]
+        },
+        {
+            'a': 1,
+            'b': 4,
+            'c': [1, 2]
+        },
+        {
+            'a': 2,
+            'b': 3,
+            'c': [1, 2]
+        },
+        {
+            'a': 2,
+            'b': 4,
+            'c': [1, 2]
+        },
+    ]
+
+
+def test_param_grid_zip_with_params():
+    grid = ParamGrid({'a': [1, 2], 'b': [3, 4]}, params={'c': [1, 2]})
+
+    assert list(grid.zip()) == [{
+        'a': 1,
+        'b': 3,
+        'c': [1, 2]
+    }, {
+        'a': 2,
+        'b': 4,
+        'c': [1, 2]
+    }]
+
+
+@pytest.mark.parametrize('method', [
+    'product',
+    'zip',
+])
+def test_error_if_grid_overlaps_with_params(method):
+    pg = ParamGrid({'a': [1, 2], 'b': [3, 4]}, params={'a': [100]})
+    callable_ = getattr(pg, method)
+
+    with pytest.raises(ValueError) as excinfo:
+        list(callable_())
+
+    expected = ("Error generating grid: 'grid' and 'params' have"
+                " overlapping keys: 'a'")
+
+    assert expected == str(excinfo.value)

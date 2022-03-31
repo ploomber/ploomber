@@ -234,7 +234,8 @@ def main():
         # re-format
         parser.add_argument('--format',
                             '-f',
-                            help='Re-format all script/notebook tasks')
+                            help='Re-format script/notebook tasks '
+                            '(values: "py:percent" and "ipynb")')
 
         # pair scripts and nbs
         parser.add_argument('--pair',

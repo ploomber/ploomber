@@ -3,7 +3,7 @@ from ploomber.tasks.tasks import (PythonCallable, ShellScript, DownloadFromURL,
 from ploomber.tasks.taskfactory import TaskFactory
 from ploomber.tasks.sql import (SQLScript, SQLDump, SQLTransfer, SQLUpload,
                                 PostgresCopyFrom)
-from ploomber.tasks.notebook import NotebookRunner
+from ploomber.tasks.notebook import NotebookRunner, ScriptRunner
 from ploomber.tasks.aws import UploadToS3
 from ploomber.tasks.param_forward import input_data_passer, in_memory_callable
 from ploomber.tasks.taskgroup import TaskGroup
@@ -20,6 +20,7 @@ __all__ = [
     'SQLUpload',
     'PostgresCopyFrom',
     'NotebookRunner',
+    'ScriptRunner',
     'DownloadFromURL',
     'Link',
     'Input',

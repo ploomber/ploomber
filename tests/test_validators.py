@@ -159,6 +159,8 @@ def test_error_on_invalid_task_class_name():
     ['sql-script', 'SQLScript'],
     ['sql script', 'SQLScript'],
     ['sqldump', 'SQLDump'],
+    ['aslscript', 'SQLScript'],
+    ['sqLscrip', 'SQLScript'],
 ])
 def test_error_on_invalid_task_class_name_with_typo(name, expected):
 
@@ -176,6 +178,8 @@ def test_error_on_invalid_task_class_name_with_typo(name, expected):
     ['fi_le', 'File'],
     ['fi-le', 'File'],
     ['fi le', 'File'],
+    ['filee', 'File'],
+    ['FiL', 'File'],
     ['sqlrelation', 'SQLRelation'],
 ])
 def test_error_on_invalid_product_class_name_with_typo(name, expected):
