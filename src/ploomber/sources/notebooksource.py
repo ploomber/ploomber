@@ -401,10 +401,9 @@ class NotebookSource(Source):
                 msg += """.
 Add a cell at the top like this:
 
-# + tags=["parameters"]
+# %% tags=["parameters"]
 upstream = None
 product = None
-# -
 
 Go to: https://ploomber.io/s/params for more information
 """

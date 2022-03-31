@@ -36,6 +36,7 @@ Tasks
     Task
     PythonCallable
     NotebookRunner
+    ScriptRunner
     SQLScript
     SQLDump
     SQLTransfer

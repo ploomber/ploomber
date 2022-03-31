@@ -714,6 +714,7 @@ class Meta:
         defaults = {
             'SQLDump': 'File',
             'NotebookRunner': 'File',
+            'ScriptRunner': 'File',
             'SQLScript': 'SQLRelation',
             'PythonCallable': 'File',
             'ShellScript': 'File',
