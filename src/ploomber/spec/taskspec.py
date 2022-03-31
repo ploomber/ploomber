@@ -579,3 +579,4 @@ def get_value_at(d, dotted_path):
             return None
 
     return current
+

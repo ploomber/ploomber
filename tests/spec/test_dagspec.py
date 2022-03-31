@@ -2051,3 +2051,5 @@ def test_dagspec_from_dir_doesnt_assign_name(tmp_directory):
     }).to_dag()
 
     assert dag.name == 'No name'
+
+    
