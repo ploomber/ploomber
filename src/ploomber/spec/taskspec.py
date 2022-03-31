@@ -70,7 +70,7 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
 
     if extension and extension in suffix2taskclass:
         if extension == '.sql' and _safe_suffix(product) in {
-                '.csv', '.parquet'
+            '.csv', '.parquet'
         }:
             return tasks.SQLDump
 
@@ -119,7 +119,7 @@ def task_class_from_spec(task_spec, lazy_import, reload):
             class_ = validators.string.validate_task_class_name(class_name)
         except Exception as e:
             msg = f'Error validating Task spec (class field): {e.args[0]}'
-            e.args = (msg, )
+            e.args = (msg,)
             raise
     else:
         class_ = task_class_from_source_str(
@@ -522,7 +522,7 @@ def validate_product_class_name(product_class_name):
     except Exception as e:
         msg = ('Error validating Task spec (product_class field): '
                f'{e.args[0]}')
-        e.args = (msg, )
+        e.args = (msg,)
         raise
 
 
@@ -533,7 +533,7 @@ def resolve_if_file(product_raw, relative_to, class_):
         return _resolve_if_file(product_raw, relative_to, class_)
     except Exception as e:
         e.args = ('Error initializing File with argument '
-                  f'{product_raw!r} ({e})', )
+                  f'{product_raw!r} ({e})',)
         raise
 
 
@@ -579,4 +579,3 @@ def get_value_at(d, dotted_path):
             return None
 
     return current
-

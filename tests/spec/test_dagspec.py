@@ -34,7 +34,6 @@ from ploomber.sources.nb_utils import find_cell_with_tag
 
 
 def create_engine_with_schema(schema):
-
     def fake_create_engine(*args, **kwargs):
         if 'sqlite' in args[0]:
             return create_engine(*args, **kwargs)
@@ -149,7 +148,6 @@ def test_init_with_missing_file(tmp_directory):
 
 
 def test_error_if_tasks_is_none():
-
     with pytest.raises(DAGSpecInitializationError) as excinfo:
         DAGSpec({'tasks': None})
 
@@ -241,7 +239,7 @@ def test_custom_serializer(executor, expected):
             'product': 'root.csv'
         }],
         'executor':
-        executor,
+            executor,
     }).to_dag()
 
     assert isinstance(dag.executor, expected)
@@ -924,7 +922,6 @@ def test_git_placeholder_and_not_in_git_repository(tmp_directory,
     ['find', dict()],
 ])
 def test_passing_env_in_class_methods(method, kwargs, tmp_directory):
-
     spec_dict = {
         'tasks': [{
             'source': 'plot.py',
@@ -1269,7 +1266,6 @@ def test_import_tasks_from_paths_are_relative_to_the_yaml_spec(
 
 def test_loads_serializer_and_unserializer(backup_online,
                                            add_current_to_sys_path):
-
     spec = DAGSpec({
         'tasks': [{
             'source': 'online_tasks.get',
@@ -1282,9 +1278,9 @@ def test_loads_serializer_and_unserializer(backup_online,
             'extract_product': False
         },
         'serializer':
-        'online_io.serialize',
+            'online_io.serialize',
         'unserializer':
-        'online_io.unserialize',
+            'online_io.unserialize',
     })
 
     dag = spec.to_dag()
@@ -1337,17 +1333,17 @@ def test_error_invalid_yaml_with_placeholders_without_parentheses(
 @pytest.mark.parametrize(
     'code, expected_error', [[
         'get = 1', "Error loading dotted path 'dag_level_client_dotted_path"
-        ".get'. Expected a callable object (i.e., some kind of function). "
-        "Got 1 (an object of type: int)"
+                   ".get'. Expected a callable object (i.e., some kind of function). "
+                   "Got 1 (an object of type: int)"
     ],
-                             [
-                                 """
+        [
+            """
 def get():
     return None
 """, "Error calling dotted path "
-                                 "'dag_level_client_dotted_path.get'. "
-                                 "Expected a value but got None"
-                             ]],
+     "'dag_level_client_dotted_path.get'. "
+     "Expected a value but got None"
+        ]],
     ids=['not-a-callable', 'returns-none'])
 def test_error_invalid_dag_level_client_dotted_path(tmp_sample_tasks,
                                                     add_current_to_sys_path,
@@ -1458,7 +1454,6 @@ def test_validate_product_default_class_values():
 
 
 def test_warn_if_param_declared_in_env_but_unused_in_spec():
-
     with pytest.warns(UserWarning) as record:
         DAGSpec(
             {
@@ -1478,7 +1473,6 @@ def test_warn_if_param_declared_in_env_but_unused_in_spec():
 
 
 def test_doesnt_warn_if_param_declared_in_env_is_used_in_spec():
-
     with pytest.warns(None) as record:
         DAGSpec(
             {
@@ -1603,7 +1597,7 @@ _spec_callables = {
 
 _spec_callables_unserializer = {
     'unserializer':
-    'sample_source_callables.unserializer',
+        'sample_source_callables.unserializer',
     'tasks': [{
         'source': 'sample_source_callables.upstream',
         'name': 'upstream-',
@@ -1811,7 +1805,6 @@ def get_db_client(param=1):
 ])
 def test_lazy_load_dag_level_client(tmp_directory, tmp_imports,
                                     my_testing_module, client_spec):
-
     tasks = [
         {
             'source': 'my_testing_module.task',
@@ -2051,5 +2044,3 @@ def test_dagspec_from_dir_doesnt_assign_name(tmp_directory):
     }).to_dag()
 
     assert dag.name == 'No name'
-
-    
