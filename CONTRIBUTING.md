@@ -182,8 +182,8 @@ If you already forked the repository, you can sync with the original repository 
 ```sh
 git remote add upstream https://github.com/conda-forge/ploomber-feedstock
 git fetch upstream
-git checkout master
-git merge upstream/master
+git checkout main
+git merge upstream/main
 ```
 
 ## Maintaining backwards compatibility
