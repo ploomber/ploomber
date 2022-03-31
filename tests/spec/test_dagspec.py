@@ -1442,7 +1442,7 @@ def test_validate_product_default_class_values():
     spec = {
         'meta': {
             'product_default_class': {
-                'SQLDump': 'unknown_product',
+                'SQLDump': 'some-unknown-thing',
             }
         },
         'tasks': [],
@@ -1452,7 +1452,7 @@ def test_validate_product_default_class_values():
         DAGSpec(spec)
 
     expected = ("Error validating product_default_class: "
-                "'unknown_product' is not a valid Product class name")
+                "'some-unknown-thing' is not a valid Product class name")
     assert str(excinfo.value) == expected
 
 

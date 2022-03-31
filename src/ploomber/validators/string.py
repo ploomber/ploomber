@@ -14,6 +14,7 @@ _KEY2CLASS_PRODUCTS = {
 }
 _KEY2CLASS = {**_KEY2CLASS_TASKS, **_KEY2CLASS_PRODUCTS}
 
+
 def _suggest_class_name(name: str, options):
     name = name.upper()
 
@@ -23,6 +24,7 @@ def _suggest_class_name(name: str, options):
         return options[close_commands[0]]
     else:
         return None
+
 
 def _normalize_input(name):
     return name.upper().replace('-', '').replace('_', '').replace(' ', '')
