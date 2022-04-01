@@ -34,7 +34,6 @@ from ploomber.sources.nb_utils import find_cell_with_tag
 
 
 def create_engine_with_schema(schema):
-
     def fake_create_engine(*args, **kwargs):
         if 'sqlite' in args[0]:
             return create_engine(*args, **kwargs)
@@ -1885,35 +1884,30 @@ CREATE TABLE {{product}} AS SELECT * FROM my_table
     assert 'my_testing_module' in sys.modules
 
 
-@pytest.mark.parametrize('client_spec', [
-    'my_testing_module.get_db_client',
-])
-@pytest.mark.parametrize(
-    'tasks, expected',
-    [([{
+@pytest.mark.parametrize('tasks, expected', [
+    ([{
         'source': 'script.sql',
         'product': 'another.csb',
         'client': 'my_testing_module.get_db_client',
         'product_client': 'my_testing_module.get_db_client'
-    }], "'.csb' is not a valid extension. Did you mean: .csv"),
-     ([{
-         'source': 'script.sql',
-         'product': 'another.parquets',
-         'client': 'my_testing_module.get_db_client',
-         'product_client': 'my_testing_module.get_db_client'
-     }], "'.parquets' is not a valid extension. Did you mean: .parquet")])
-def test_product_extension_typo(tasks, expected, tmp_directory, client_spec):
+    }], "'.csb' is not a valid product extension. Did you mean: '.csv'?"),
+    ([{
+        'source': 'script.sql',
+        'product': 'another.parquets',
+        'client': 'my_testing_module.get_db_client',
+        'product_client': 'my_testing_module.get_db_client'
+    }],
+     "'.parquets' is not a valid product extension. Did you mean: '.parquet'?")
+])
+def test_product_extension_typo(tasks, expected, tmp_directory):
     Path('script.sql').write_text("""
     SELECT * FROM my_table
     """)
 
-    data = {'tasks': tasks}
-
     with pytest.raises(DAGSpecInitializationError) as excinfo:
-        spec = DAGSpec(data)
-        spec.to_dag()
+        DAGSpec({'tasks': tasks})
 
-    assert expected == str(excinfo.value)
+    assert expected in str(excinfo.value)
 
 
 def test_error_when_tasks_is_not_a_list(tmp_directory, tmp_imports):
