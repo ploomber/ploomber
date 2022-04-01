@@ -1884,6 +1884,32 @@ CREATE TABLE {{product}} AS SELECT * FROM my_table
     assert 'my_testing_module' in sys.modules
 
 
+@pytest.mark.parametrize('tasks, expected', [
+    ([{
+        'source': 'script.sql',
+        'product': 'another.csb',
+        'client': 'my_testing_module.get_db_client',
+        'product_client': 'my_testing_module.get_db_client'
+    }], "'.csb' is not a valid product extension. Did you mean: '.csv'?"),
+    ([{
+        'source': 'script.sql',
+        'product': 'another.parquets',
+        'client': 'my_testing_module.get_db_client',
+        'product_client': 'my_testing_module.get_db_client'
+    }],
+     "'.parquets' is not a valid product extension. Did you mean: '.parquet'?")
+])
+def test_product_extension_typo(tasks, expected, tmp_directory):
+    Path('script.sql').write_text("""
+    SELECT * FROM my_table
+    """)
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        DAGSpec({'tasks': tasks})
+
+    assert expected in str(excinfo.value)
+
+
 def test_error_when_tasks_is_not_a_list(tmp_directory, tmp_imports):
     Path('pipeline.yaml').write_text("""
 tasks:
