@@ -34,6 +34,7 @@ from ploomber.sources.nb_utils import find_cell_with_tag
 
 
 def create_engine_with_schema(schema):
+
     def fake_create_engine(*args, **kwargs):
         if 'sqlite' in args[0]:
             return create_engine(*args, **kwargs)
@@ -1128,24 +1129,10 @@ def test_import_tasks_from(tmp_nbs):
         str(t['source']) for t in spec['tasks']
     ]
 
+
 def test_import_tasks_from_empty_yaml_file(tmp_nbs):
-    Path('some_tasks.yaml').write_text('')
-
-    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
-    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
-
-    Path('pipeline.yaml').write_text(yaml.dump(spec_d))
-
-    spec = DAGSpec('pipeline.yaml')
-
-def test_import_tasks_from_non_list_yaml_file(tmp_nbs):
-    with pytest.raises(TypeError):
-        some_tasks = {'source': 'extra_task.py', 'product': 'extra.ipynb'}
-        Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
-        Path('extra_task.py').write_text("""
-    # + tags=["parameters"]
-    # -
-    """)
+    with pytest.raises(ValueError) as excinfo:
+        Path('some_tasks.yaml').write_text('')
 
         spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
         spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
@@ -1153,9 +1140,22 @@ def test_import_tasks_from_non_list_yaml_file(tmp_nbs):
         spec = DAGSpec(spec_d)
 
         spec.to_dag().render()
-        assert str(Path('extra_task.py').resolve()) in [
-            str(t['source']) for t in spec['tasks']
-        ]
+    assert 'expected import_tasks_from' in str(excinfo.value)
+
+
+def test_import_tasks_from_non_list_yaml_file(tmp_nbs):
+    with pytest.raises(TypeError) as excinfo:
+        some_tasks = {'source': 'extra_task.py', 'product': 'extra.ipynb'}
+        Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
+
+        spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+        spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+        spec = DAGSpec(spec_d)
+
+        spec.to_dag().render()
+    assert 'Expected list when loading YAML file' in str(excinfo.value)
+
 
 def test_import_tasks_from_does_not_resolve_dotted_paths(tmp_nbs):
     """
