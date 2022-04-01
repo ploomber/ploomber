@@ -84,10 +84,11 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
                 possibilities = _extension_typo(_safe_suffix(product),
                                                 ['.csv', '.parquet'])
                 if possibilities:
+                    ext = possibilities[0]
                     raise DAGSpecInitializationError(
-                        f'{_safe_suffix(product)!r} is not a valid extension. '
-                        f'Did you mean: '
-                        f'{", ".join(sorted(possibilities))}')
+                        f'Error parsing task with source {source_str!r}: '
+                        f'{_safe_suffix(product)!r} is not a valid product '
+                        f'extension. Did you mean: {ext!r}?')
 
         return suffix2taskclass[extension]
     elif _looks_like_path(source_str):
@@ -194,7 +195,6 @@ class TaskSpec(MutableMapping):
         if the module has already been imported. Has no effect if
         lazy_import=True.
     """
-
     def __init__(self,
                  data,
                  meta,
