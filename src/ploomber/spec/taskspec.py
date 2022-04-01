@@ -10,6 +10,7 @@ from copy import copy, deepcopy
 from pathlib import Path
 from collections.abc import MutableMapping, Mapping
 import platform
+from difflib import get_close_matches
 
 from ploomber import tasks, products
 from ploomber.util.util import _make_iterable
@@ -46,6 +47,13 @@ def _looks_like_path(s):
         return '/' in s
 
 
+def _extension_typo(extension, valid_extensions):
+    if extension and valid_extensions:
+        return get_close_matches(extension, valid_extensions)
+    else:
+        return None
+
+
 def task_class_from_source_str(source_str, lazy_import, reload, product):
     """
     The source field in a DAG spec is a string. The actual value needed to
@@ -69,10 +77,17 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
         partial(dotted_path.load_dotted_path, raise_=True, reload=reload))
 
     if extension and extension in suffix2taskclass:
-        if extension == '.sql' and _safe_suffix(product) in {
-                '.csv', '.parquet'
-        }:
-            return tasks.SQLDump
+        if extension == '.sql':
+            if _safe_suffix(product) in {'.csv', '.parquet'}:
+                return tasks.SQLDump
+            else:
+                possibilities = _extension_typo(_safe_suffix(product),
+                                                ['.csv', '.parquet'])
+                if possibilities:
+                    raise DAGSpecInitializationError(
+                        f'{_safe_suffix(product)!r} is not a valid extension. '
+                        f'Did you mean: '
+                        f'{", ".join(sorted(possibilities))}')
 
         return suffix2taskclass[extension]
     elif _looks_like_path(source_str):
@@ -179,6 +194,7 @@ class TaskSpec(MutableMapping):
         if the module has already been imported. Has no effect if
         lazy_import=True.
     """
+
     def __init__(self,
                  data,
                  meta,
