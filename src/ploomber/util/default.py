@@ -462,9 +462,9 @@ def find_root_recursively(starting_dir=None,
 
     if root_by_pipeline == _filesystem_root():
         raise DAGSpecInvalidError(
-            'pipeline.yaml cannot be in the filesystem root. '
+            f'{filename} cannot be in the filesystem root. '
             'Please add it inside a directory like '
-            'project-name/pipeline.yaml. ')
+            f'project-name/{filename}. ')
 
     root_found = None
 
