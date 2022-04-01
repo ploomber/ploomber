@@ -34,7 +34,6 @@ from ploomber.sources.nb_utils import find_cell_with_tag
 
 
 def create_engine_with_schema(schema):
-
     def fake_create_engine(*args, **kwargs):
         if 'sqlite' in args[0]:
             return create_engine(*args, **kwargs)
