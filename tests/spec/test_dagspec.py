@@ -1129,6 +1129,29 @@ def test_import_tasks_from(tmp_nbs):
     ]
 
 
+def test_import_tasks_from_empty_yaml_file(tmp_nbs):
+    Path('some_tasks.yaml').write_text('')
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+    with pytest.raises(ValueError) as excinfo:
+        DAGSpec(spec_d)
+    assert 'expected import_tasks_from' in str(excinfo.value)
+
+
+def test_import_tasks_from_non_list_yaml_file(tmp_nbs):
+    some_tasks = {'source': 'extra_task.py', 'product': 'extra.ipynb'}
+    Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+    with pytest.raises(TypeError) as excinfo:
+        DAGSpec(spec_d)
+    assert 'Expected list when loading YAML file' in str(excinfo.value)
+
+
 def test_import_tasks_from_does_not_resolve_dotted_paths(tmp_nbs):
     """
     Sources defined in a file used in "import_tasks_from" are resolved

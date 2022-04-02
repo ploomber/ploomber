@@ -329,6 +329,18 @@ class DAGSpec(MutableMapping):
                 imported = yaml.safe_load(
                     Path(self.data['meta']['import_tasks_from']).read_text())
 
+                if not imported:
+                    path = str(self.data['meta']['import_tasks_from'])
+                    raise ValueError('expected import_tasks_from file '
+                                     f'({path!r}) to return a list of tasks, '
+                                     f'got: {imported}')
+
+                if not isinstance(imported, list):
+                    raise TypeError(
+                        'Expected list when loading YAML file from '
+                        'import_tasks_from: file.yaml, '
+                        f'but got {type(imported)}')
+
                 if self.env is not None:
                     (imported,
                      tags_other) = expand_raw_dictionaries_and_extract_tags(
