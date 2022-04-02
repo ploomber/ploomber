@@ -566,16 +566,26 @@ def cloud_download(pattern):
 
 @cloud.command(name="logs")
 @click.argument('run_id')
-def cloud_logs(run_id):
+@click.option('--image', '-i', is_flag=True)
+def cloud_logs(run_id, image):
     """Get logs on a cloud execution
-    $ ploomber cloud logs {some-id}
 
+    Get task logs:
+        $ ploomber cloud logs {some-id}
+
+
+    Get Docker image building logs:
+        $ ploomber cloud logs {some-id} --image
 
     Currently in private alpha, ask us for an invite:
     https://ploomber.io/community
     """
     from ploomber.cloud import api
-    api.run_logs(run_id)
+
+    if image:
+        api.run_logs_image(run_id)
+    else:
+        api.run_logs(run_id)
 
 
 @cloud.command(name="abort")

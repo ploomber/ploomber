@@ -1,8 +1,10 @@
+from pathlib import PurePosixPath
 from urllib import parse
 import cgi
 import sys
 from pathlib import Path
 from urllib.request import urlretrieve, urlopen
+from urllib.error import HTTPError
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
 from glob import glob
@@ -17,14 +19,29 @@ import humanize
 
 from ploomber.table import Table
 from ploomber.cloud import io
+from ploomber.exceptions import BaseException
 
 HOST = os.environ.get(
     'PLOOMBER_CLOUD_HOST',
     'https://8lfxtyhlx2.execute-api.us-east-1.amazonaws.com/api/')
 
 
+def _remove_prefix(path):
+    parts = PurePosixPath(path).parts[2:]
+    return str(PurePosixPath(*parts))
+
+
 def _download_file(url, skip_if_exists=False):
-    remotefile = urlopen(url)
+    try:
+        remotefile = urlopen(url)
+    except HTTPError as e:
+        if e.code == 404:
+            path = _remove_prefix(parse.urlparse(url).path[1:])
+            click.echo(f'File not found: {path}')
+            return
+        else:
+            raise
+
     content_disposition = remotefile.info()['Content-Disposition']
 
     if content_disposition:
@@ -48,8 +65,14 @@ def _request_factory(method):
         response = method(*args, **kwargs)
 
         if response.status_code >= 300:
-            raise ValueError(
-                f'Error (status: {response.status_code}): {response.json()}')
+            json_ = response.json()
+            message = json_.get("Message")
+
+            if message:
+                raise BaseException(
+                    f'{message} (status: {response.status_code})')
+            else:
+                raise BaseException(f'Error: {json_}')
 
         return response
 
@@ -62,6 +85,11 @@ _put = _request_factory(requests.put)
 
 
 def download_from_presigned(presigned):
+    if not presigned:
+        click.echo('No files matched the criteria.\n'
+                   'To list files: ploomber cloud products')
+        return
+
     with ThreadPoolExecutor(max_workers=64) as executor:
         future2url = {
             executor.submit(_download_file, url=url): url
@@ -167,6 +195,12 @@ def run_logs(headers, run_id):
 
 
 @auth_header
+def run_logs_image(headers, run_id):
+    res = _get(f"{HOST}/runs/{run_id}/logs/image", headers=headers)
+    print(res.text)
+
+
+@auth_header
 def run_abort(headers, run_id):
     _get(f"{HOST}/runs/{run_id}/abort", headers=headers).json()
     print("Aborted.")
@@ -184,7 +218,9 @@ def products_list(headers):
 
 @auth_header
 def products_download(headers, pattern):
-    res = _get(f"{HOST}/products/{pattern}", headers=headers).json()
+    res = _post(f"{HOST}/products",
+                headers=headers,
+                json=dict(pattern=pattern)).json()
     download_from_presigned(res)
 
 
@@ -210,6 +246,13 @@ def zip_project(force, runid, github_number, verbose):
                 'runid': runid,
                 'github_number': github_number
             }))
+
+    MAX = 5 * 1024 * 1024
+
+    if Path('project.zip').stat().st_size > MAX:
+        raise BaseException("Error: Your project's source code is over "
+                            "5MB, which isn't supported. Tip: Ensure there "
+                            "aren't any large data files and try again")
 
 
 @auth_header
@@ -242,8 +285,10 @@ def upload_project(force, github_number, github_owner, github_repo, verbose):
     # check pipeline is working before submitting
     # DAGSpec('pipeline.yaml').to_dag().render(show_progress=verbose)
 
+    # TODO: test
     if not Path("requirements.lock.txt").exists():
-        raise ValueError("missing requirements.lock.txt")
+        raise BaseException("Missing requirements.lock.txt file, add one "
+                            "with the dependencies to install")
 
     runid = runs_new(
         dict(force=force,
@@ -253,9 +298,9 @@ def upload_project(force, github_number, github_owner, github_repo, verbose):
 
     # TODO: ignore relative paths in products
     if verbose:
-        click.echo("Zipping project...")
+        click.echo("Zipping project -> project.zip")
 
-    # TODO: raise an error if zip file is too large
+    # TODO: test
     zip_project(force, runid, github_number, verbose)
 
     if verbose:
@@ -271,6 +316,7 @@ def upload_project(force, github_number, github_owner, github_repo, verbose):
     trigger()
 
     # TODO: if anything fails after runs_new, update the status to error
+    # convert runs_new into a context manager
 
     return runid
 
