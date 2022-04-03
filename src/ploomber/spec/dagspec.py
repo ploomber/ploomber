@@ -519,7 +519,7 @@ class DAGSpec(MutableMapping):
         return self._path
 
     @classmethod
-    def _find_relative(cls, name=None):
+    def _find_relative(cls, name=None, lazy_import=False):
         """
         Searches for a spec in default locations relative to the current
         working directory
@@ -532,7 +532,7 @@ class DAGSpec(MutableMapping):
         in "ploomber task --entry-point {relative-path}" when executing tasks
         """
         relative_path = default.entry_point_relative(name=name)
-        return cls(relative_path), relative_path
+        return cls(relative_path, lazy_import=lazy_import), relative_path
 
     @classmethod
     def find(cls,
