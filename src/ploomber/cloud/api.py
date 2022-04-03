@@ -210,6 +210,12 @@ def run_abort(headers, run_id):
 
 
 @auth_header
+def run_finished(headers, runid):
+    response = _get(f"{HOST}/runs/{runid}/finished", headers=headers)
+    return response
+
+
+@auth_header
 def products_list(headers):
     res = _get(f"{HOST}/products", headers=headers).json()
 
@@ -217,6 +223,16 @@ def products_list(headers):
         print(Table.from_dicts([{'path': r} for r in res]))
     else:
         print("No products found.")
+
+
+@auth_header
+def data_list(headers):
+    res = _get(f"{HOST}/data", headers=headers).json()
+
+    if res:
+        print(Table.from_dicts([{'path': r} for r in res]))
+    else:
+        print("No data found.")
 
 
 @auth_header
