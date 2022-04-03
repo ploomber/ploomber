@@ -539,14 +539,19 @@ def cloud_status(run_id, watch):
 
 
 @cloud.command(name="products")
-def cloud_products():
+@click.option('-d', '--delete', default=None)
+def cloud_products(delete):
     """List products in cloud workspace
 
     Currently in private alpha, ask us for an invite:
     https://ploomber.io/community
     """
     from ploomber.cloud import api
-    api.products_list()
+
+    if delete:
+        api.delete_products(delete)
+    else:
+        api.products_list()
 
 
 @cloud.command(name="download")
@@ -602,16 +607,29 @@ def cloud_abort(run_id):
     api.run_abort(run_id)
 
 
-@cloud.command(name="upload")
-@click.argument('path')
-def cloud_upload(path):
+# TODO: data list
+@cloud.command(name="data")
+@click.option('-u', '--upload', default=None)
+@click.option('-d', '--delete', default=None)
+def cloud_data(upload, delete):
     """
-    Upload a file to your workspace
+    Manage raw data workspace
 
-    $ ploomber cloud upload path/to/data.parquet
+    Upload data:
+        $ ploomber cloud data --upload path/to/data.parquet
+
+    Delete data:
+        $ ploomber cloud data --delete '*.parquet'
 
     Currently in private alpha, ask us for an invite:
     https://ploomber.io/community
     """
     from ploomber.cloud import api
-    api.upload_data(path)
+
+    # validate only one arg
+
+    if upload:
+        api.upload_data(upload)
+
+    if delete:
+        api.delete_data(delete)
