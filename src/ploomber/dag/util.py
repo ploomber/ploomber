@@ -54,13 +54,15 @@ def check_duplicated_products(dag):
             f'one task:\n{_generate_error_message(duplicated)}')
 
 
-def flatten_products(elements):
+def flatten_products(elements, require_file_client=True):
     flat = []
 
     for prod in elements:
         if isinstance(prod, MetaProduct):
             flat.extend([p for p in prod if isinstance(p, File) and p.client])
-        elif isinstance(prod, File) and prod.client:
+        elif (isinstance(prod, File) and prod.client
+              and require_file_client) or (isinstance(prod, File)
+                                           and not require_file_client):
             flat.append(prod)
 
     return flat
@@ -112,3 +114,37 @@ def _path_for_plot(path_to_plot, fmt):
     finally:
         if path_to_plot == 'embed':
             Path(path).unlink()
+
+
+def iter_file_products(dag):
+    for t in dag._iter():
+        product = dag[t].product
+
+        if isinstance(product, File):
+            yield product
+        elif isinstance(product, MetaProduct):
+            for prod in product:
+                if isinstance(prod, File):
+                    yield prod
+
+
+def _get_parent_from_product(product):
+    path = Path(str(product._identifier))
+    current = Path().resolve()
+
+    if path.is_absolute():
+        try:
+            # products loaded from pipeline.yaml are always absolute, so try
+            # to see if they're relative to the current directory
+            path = path.relative_to(current)
+        except ValueError as e:
+            raise ValueError('Absolute product paths '
+                             f'are not supported: {str(path)!r}') from e
+
+    return str(path.parent)
+
+
+def extract_product_prefixes(dag):
+    files = set(_get_parent_from_product(p) for p in iter_file_products(dag))
+
+    return sorted(files)

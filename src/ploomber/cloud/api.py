@@ -18,8 +18,10 @@ import requests
 import humanize
 
 from ploomber.table import Table
-from ploomber.cloud import io
+from ploomber.cloud import io, config
 from ploomber.exceptions import BaseException
+from ploomber.spec import DAGSpec
+from ploomber.dag import util
 
 HOST = os.environ.get(
     'PLOOMBER_CLOUD_HOST',
@@ -82,6 +84,7 @@ def _request_factory(method):
 _get = _request_factory(requests.get)
 _post = _request_factory(requests.post)
 _put = _request_factory(requests.put)
+_delete = _request_factory(requests.delete)
 
 
 def download_from_presigned(presigned):
@@ -224,7 +227,16 @@ def products_download(headers, pattern):
     download_from_presigned(res)
 
 
-def zip_project(force, runid, github_number, verbose):
+def _has_prefix(path, prefixes):
+    if not prefixes:
+        return False
+
+    return any(str(path).startswith(prefix) for prefix in prefixes)
+
+
+def zip_project(force, runid, github_number, verbose, ignore_prefixes=None):
+    ignore_prefixes = ignore_prefixes or []
+
     if Path("project.zip").exists():
         if verbose:
             click.secho("Deleting existing project.zip...", fg="yellow")
@@ -235,7 +247,10 @@ def zip_project(force, runid, github_number, verbose):
     # TODO: ignore __pycache__, ignore .git directory
     with zipfile.ZipFile("project.zip", "w", zipfile.ZIP_DEFLATED) as zip:
         for path in files:
-            zip.write(path, arcname=path)
+            if not _has_prefix(path, ignore_prefixes):
+                zip.write(path, arcname=path)
+            else:
+                click.echo(f'Ignoring: {path}')
 
         # NOTE: it's weird that force is loaded from the buildspec but the
         # other two parameters are actually loaded from dynamodb
@@ -280,15 +295,19 @@ def trigger(headers):
     return res
 
 
-def upload_project(force, github_number, github_owner, github_repo, verbose):
-    # TODO: use soopervisor's logic to auto find the pipeline
-    # check pipeline is working before submitting
-    # DAGSpec('pipeline.yaml').to_dag().render(show_progress=verbose)
+def upload_project(force=False,
+                   github_number=None,
+                   github_owner=None,
+                   github_repo=None,
+                   verbose=False):
+    dag = DAGSpec('pipeline.yaml').to_dag().render(show_progress=False)
 
     # TODO: test
     if not Path("requirements.lock.txt").exists():
         raise BaseException("Missing requirements.lock.txt file, add one "
                             "with the dependencies to install")
+
+    config.validate()
 
     runid = runs_new(
         dict(force=force,
@@ -301,7 +320,11 @@ def upload_project(force, github_number, github_owner, github_repo, verbose):
         click.echo("Zipping project -> project.zip")
 
     # TODO: test
-    zip_project(force, runid, github_number, verbose)
+    zip_project(force,
+                runid,
+                github_number,
+                verbose,
+                ignore_prefixes=util.extract_product_prefixes(dag))
 
     if verbose:
         click.echo("Uploading project...")
@@ -351,3 +374,19 @@ def download_data(headers, key):
                      headers=headers,
                      json=dict(key=key))
     return response
+
+
+@auth_header
+def delete_data(headers, pattern):
+    response = _delete(f"{HOST}/data",
+                       headers=headers,
+                       json=dict(pattern=pattern))
+    print(response.json())
+
+
+@auth_header
+def delete_products(headers, pattern):
+    response = _delete(f"{HOST}/products",
+                       headers=headers,
+                       json=dict(pattern=pattern))
+    print(response.json())
