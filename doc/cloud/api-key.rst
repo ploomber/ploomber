@@ -20,7 +20,7 @@ Getting API Key
 
 To generate an API key please these steps:
 
-1. Go to the `cloud app <https://main.d3mpv0f3dqco4e.amplifyapp.com/>`_.
+1. Go to the `cloud app <https://main.d3mpv0f3dqco4e.amplifyapp.com/register.html>`_.
 2. Click on Start Now, and follow the registration flow, add your email and password.
 3. Verify your email, you should receive a code to put into the portal along with your email.
 4. Sign in with your credentials (if not directed to sign-in, follow the note below).
