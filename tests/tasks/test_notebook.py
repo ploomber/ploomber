@@ -52,6 +52,14 @@ def test_notebook_converter_get_exporter_from_name(exporter_name, exporter):
     assert converter._exporter == exporter
 
 
+def test_notebook_convertor_get_exporter_webpdf():
+    exporter_name = 'webpdf'
+    exporter = nbconvert.exporters.webpdf.WebPDFExporter
+    converter = notebook.NotebookConverter('file.ext', exporter_name)
+    assert isinstance(converter._exporter, exporter)
+    assert converter._exporter.allow_chromium_download is True
+
+
 @pytest.mark.parametrize('output', [
     'file.ipynb', 'file.pdf',
     pytest.param(
@@ -612,6 +620,7 @@ var = None
 
 
 def test_develop_saves_changes(tmp_dag, monkeypatch):
+
     def mock_jupyter_notebook(args, check):
         nb = jupytext.reads('2 + 2', fmt='py')
         # args: "jupyter" {app} {path} {other args, ...}
