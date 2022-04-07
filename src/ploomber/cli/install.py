@@ -13,6 +13,7 @@ import os
 import shutil
 from pathlib import Path
 from contextlib import contextmanager
+import http.client as httplib
 
 import click
 import yaml
@@ -22,6 +23,9 @@ from ploomber.exceptions import BaseException
 from ploomber.util.util import check_mixed_envs
 from ploomber.cli.io import command_endpoint
 from ploomber.telemetry import telemetry
+from ploomber.telemetry.telemetry import check_dir_exist, CONF_DIR, \
+    DEFAULT_USER_CONF, update_conf_file
+from ploomber.cli.cloud import CLOUD_APP_URL, EMAIL_RESOURCE
 from ploomber.util._sys import _python_bin
 
 _SETUP_PY = 'setup.py'
@@ -111,6 +115,7 @@ def main(use_lock, create_env=None, use_venv=False):
         main_pip(use_lock=use_lock,
                  create_env=create_env
                  if create_env is not None else not telemetry.in_virtualenv())
+    print("Done installing, welcome!")
 
 
 def main_pip(use_lock, create_env=True):
@@ -469,6 +474,30 @@ def _pip_install(cmdr, pip, lock, requirements=_REQS_TXT):
         check_mixed_envs(pip_lock)
         name = Path(requirements).stem
         Path(f'{name}.lock.txt').write_text(pip_lock)
+
+
+def _email_validation(email):
+    if email and '@' in email and len(email) > 3:
+
+        # Save in conf file
+        user_key_dict = {'user_email': email}
+        user_conf_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
+        update_conf_file(user_conf_path, user_key_dict)
+
+        # Call API
+        _email_registry(email)
+
+
+def _email_registry(email):
+    conn = httplib.HTTPSConnection(CLOUD_APP_URL, timeout=3)
+    try:
+        headers = {'email': email}
+        conn.request("GET", EMAIL_RESOURCE, headers=headers)
+        print("Thanks for signing up!")
+    except httplib.HTTPException:
+        pass
+    finally:
+        conn.close()
 
 
 def _environment_yml_has_python(path):

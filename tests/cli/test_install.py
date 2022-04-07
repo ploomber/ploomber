@@ -1116,3 +1116,45 @@ def test_pip_mixed_versions(monkeypatch):
     monkeypatch.setattr(install_module.Commander, 'run', mock)
     with pytest.warns(UserWarning):
         _pip_install(install_module.Commander, {}, True)
+
+
+# Test empty string/emails without a @
+@pytest.mark.parametrize('user_email', ['', 'test', '@', 'a@c'])
+def test_malformed_email_signup(monkeypatch, user_email):
+    mock = Mock()
+    monkeypatch.setattr(install_module, 'update_conf_file', mock)
+
+    install_module._email_validation(user_email)
+    mock.assert_not_called()
+
+
+# Testing valid api calls when the email is correct
+def test_correct_email_signup(monkeypatch):
+    mock = Mock()
+    registry_mock = Mock()
+    monkeypatch.setattr(install_module, 'update_conf_file', mock)
+    monkeypatch.setattr(install_module, '_email_registry', registry_mock)
+
+    sample_email = 'test@example.com'
+    install_module._email_validation(sample_email)
+    mock.assert_called_once()
+    registry_mock.assert_called_once()
+
+
+# Test valid emails are stored in the user conf
+def test_email_conf_file(tmp_directory, monkeypatch):
+    registry_mock = Mock()
+    monkeypatch.setattr(install_module, '_email_registry', registry_mock)
+
+    stats = Path('stats')
+    stats.mkdir()
+    conf_path = stats / install_module.DEFAULT_USER_CONF
+
+    monkeypatch.setattr(install_module.telemetry, 'DEFAULT_HOME_DIR', '.')
+    conf_path.write_text("sample_conf_key: True\n")
+
+    sample_email = 'test@example.com'
+    install_module._email_validation(sample_email)
+
+    conf = conf_path.read_text()
+    assert sample_email in conf

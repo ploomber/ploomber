@@ -25,6 +25,7 @@ from ploomber.telemetry.telemetry import check_dir_exist, CONF_DIR, \
 
 CLOUD_APP_URL = 'ggeheljnx2.execute-api.us-east-1.amazonaws.com'
 PIPELINES_RESOURCE = '/prod/pipelines'
+EMAIL_RESOURCE = '/prod/emailsignup'
 headers = {'Content-type': 'application/json'}
 
 
