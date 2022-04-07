@@ -1,7 +1,6 @@
 """Efficiently upload/download data
 """
 
-import boto3
 import requests
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -41,6 +40,7 @@ def n_parts(path, max_size=None):
 
 
 def generate_links(bucket_name, key, upload_id, n_parts):
+    import boto3
     s3 = boto3.client('s3')
     return [
         s3.generate_presigned_url(ClientMethod='upload_part',
@@ -87,6 +87,7 @@ class UploadJobGenerator:
 
     @classmethod
     def from_scratch(cls, path, max_size, bucket, key):
+        import boto3
         s3 = boto3.client('s3')
         res = s3.create_multipart_upload(Bucket=bucket, Key=key)
         upload_id = res['UploadId']
@@ -126,6 +127,7 @@ class UploadJobGenerator:
         return parts
 
     def complete(self, parts):
+        import boto3
         s3 = boto3.client('s3')
         return s3.complete_multipart_upload(Bucket=self._bucket,
                                             Key=self._key,
