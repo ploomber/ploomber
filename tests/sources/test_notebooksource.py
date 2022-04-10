@@ -933,3 +933,13 @@ def test_error_if_last_cell_in_nb_is_the_parameters_cell(tmp_directory):
 
     assert 'nb.ipynb' in str(excinfo.value)
     assert 'Add a new cell with your code.' in str(excinfo.value)
+
+
+def test_error_if_source_str_like_path(tmp_directory):
+    Path('script.py').touch()
+
+    with pytest.raises(ValueError) as excinfo:
+        NotebookSource('script.py')
+
+    assert 'Perhaps you meant passing a pathlib.Path object' in str(
+        excinfo.value)
