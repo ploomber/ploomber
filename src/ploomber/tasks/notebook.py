@@ -5,8 +5,11 @@ import tempfile
 import subprocess
 from subprocess import PIPE
 from pathlib import Path
-from nbconvert import ExporterNameError
+import importlib
 import warnings
+
+from nbconvert import ExporterNameError
+from nbconvert.exporters.webpdf import WebPDFExporter
 
 try:
     # papermill is importing a deprecated module from pyarrow
@@ -88,6 +91,23 @@ product:
                 'and any other output paths in other keys)')
 
 
+def _check_can_use_exporter(exporter):
+
+    if isinstance(exporter, WebPDFExporter):
+        pyppeteer_installed = importlib.util.find_spec('pyppeteer') is not None
+
+        if not pyppeteer_installed:
+            raise TaskInitializationError(
+                'pyppeteer is required to use '
+                'webpdf, install it '
+                'with:\npip install "nbconvert[webpdf]"')
+        else:
+            from pyppeteer import chromium_downloader
+
+            if not chromium_downloader.check_chromium():
+                chromium_downloader.download_chromium()
+
+
 class NotebookConverter:
     """
     Thin wrapper around nbconvert to provide a simple API to convert .ipynb
@@ -148,6 +168,9 @@ class NotebookConverter:
                     _suggest_passing_product_dictionary())
 
         self._exporter = self._get_exporter(exporter_name, path_to_output)
+
+        _check_can_use_exporter(self._exporter)
+
         self._path_to_output = path_to_output
         self._nbconvert_export_kwargs = nbconvert_export_kwargs or {}
 
@@ -617,7 +640,6 @@ class ScriptRunner(NotebookMixin, Task):
     it also works by injecting a cell into the source code. Source can be
     a .py script or an .ipynb notebook. Does not support magics.
     """
-
     @requires(['jupyter', 'jupytext'], 'ScriptRunner')
     def __init__(self,
                  source,
@@ -695,8 +717,7 @@ def _run_script_in_subprocess(interpreter, path, cwd):
                        'ScriptRunner, remove them or use the regular '
                        'NotebookRunner)')
 
-        raise RuntimeError('Error while executing ScriptRunner:\n'
-                           f'{stderr}')
+        raise RuntimeError('Error while executing ScriptRunner:\n' f'{stderr}')
 
 
 def _read_rendered_notebook(nb_str):
