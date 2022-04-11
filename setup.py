@@ -95,6 +95,9 @@ TESTING = [
     # optional dependencies for @serializer and @unserializer
     'joblib',
     'cloudpickle',
+
+    # for testing the webpdf converter
+    'nbconvert[webpdf]',
 ]
 
 # packages needed for development
