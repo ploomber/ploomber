@@ -178,6 +178,7 @@ class NotebookConverter:
         if an exporter can't be located
         """
         extension2exporter_name = {'md': 'markdown'}
+        exporter_params = {'webpdf': {'allow_chromium_download': True}}
 
         # sometimes extension does not match with the exporter name, fix
         # if needed
@@ -189,6 +190,9 @@ class NotebookConverter:
         else:
             try:
                 exporter = nbconvert.get_exporter(exporter_name)
+                params = exporter_params.get(exporter_name)
+                if params:
+                    exporter = exporter(**params)
             # nbconvert 5.6.1 raises ValueError, beginning in version 6,
             # it raises ExporterNameError. However the exception is defined
             # since 5.6.1 so we can safely import it
@@ -613,6 +617,7 @@ class ScriptRunner(NotebookMixin, Task):
     it also works by injecting a cell into the source code. Source can be
     a .py script or an .ipynb notebook. Does not support magics.
     """
+
     @requires(['jupyter', 'jupytext'], 'ScriptRunner')
     def __init__(self,
                  source,
@@ -690,7 +695,8 @@ def _run_script_in_subprocess(interpreter, path, cwd):
                        'ScriptRunner, remove them or use the regular '
                        'NotebookRunner)')
 
-        raise RuntimeError('Error while executing ScriptRunner:\n' f'{stderr}')
+        raise RuntimeError('Error while executing ScriptRunner:\n'
+                           f'{stderr}')
 
 
 def _read_rendered_notebook(nb_str):
