@@ -7,6 +7,7 @@ This command runs a bunch of pip/conda commands (depending on what's available)
 and it does the *right thing*: creating a new environment if needed, and
 locking dependencies.
 """
+import os
 import json
 import uuid
 import warnings
@@ -96,6 +97,7 @@ def get_pipeline(pipeline_id=None, verbose=None):
 
         content = conn.getresponse().read()
         pipeline = json.loads(content)
+
         for item in pipeline:
             item['updated'] = get_last_run(item['updated'])
         return pipeline
@@ -185,6 +187,7 @@ def delete_pipeline(pipeline_id):
         headers['api_key'] = key
         headers['pipeline_id'] = pipeline_id
         conn.request("DELETE", PIPELINES_RESOURCE, headers=headers)
+
         res = conn.getresponse()
         content = ''
         if res.status < 200 or res.status > 300:
