@@ -5,34 +5,25 @@ import tempfile
 import subprocess
 from subprocess import PIPE
 from pathlib import Path
-import importlib
+from importlib.util import find_spec
 import warnings
 
+import jupytext
+import nbformat
+import nbconvert
 from nbconvert import ExporterNameError
 from nbconvert.exporters.webpdf import WebPDFExporter
 
-try:
-    # papermill is importing a deprecated module from pyarrow
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore', FutureWarning)
-        import papermill as pm
-except ImportError:
-    pm = None
+# papermill is importing a deprecated module from pyarrow
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', FutureWarning)
+    import papermill as pm
 
 try:
-    import jupytext
+    # this is an optional dependency
+    from pyppeteer import chromium_downloader
 except ImportError:
-    jupytext = None
-
-try:
-    import nbformat
-except ImportError:
-    nbformat = None
-
-try:
-    import nbconvert
-except ImportError:
-    nbconvert = None
+    chromium_downloader = None
 
 from ploomber.exceptions import TaskBuildError, TaskInitializationError
 from ploomber.sources import NotebookSource
@@ -91,10 +82,12 @@ product:
                 'and any other output paths in other keys)')
 
 
-def _check_can_use_exporter(exporter):
-
-    if isinstance(exporter, WebPDFExporter):
-        pyppeteer_installed = importlib.util.find_spec('pyppeteer') is not None
+def _check_exporter(exporter, path_to_output):
+    """
+    Validate if the user can use the selected exporter
+    """
+    if exporter is WebPDFExporter:
+        pyppeteer_installed = find_spec('pyppeteer') is not None
 
         if not pyppeteer_installed:
             raise TaskInitializationError(
@@ -102,10 +95,15 @@ def _check_can_use_exporter(exporter):
                 'webpdf, install it '
                 'with:\npip install "nbconvert[webpdf]"')
         else:
-            from pyppeteer import chromium_downloader
-
             if not chromium_downloader.check_chromium():
                 chromium_downloader.download_chromium()
+
+        if Path(path_to_output).suffix != '.pdf':
+            raise TaskInitializationError(
+                'Expected output to have '
+                'extension .pdf when using the webpdf '
+                f'exporter, got: {path_to_output}. Change the extension '
+                'and try again')
 
 
 class NotebookConverter:
@@ -169,8 +167,6 @@ class NotebookConverter:
 
         self._exporter = self._get_exporter(exporter_name, path_to_output)
 
-        _check_can_use_exporter(self._exporter)
-
         self._path_to_output = path_to_output
         self._nbconvert_export_kwargs = nbconvert_export_kwargs or {}
 
@@ -201,7 +197,6 @@ class NotebookConverter:
         if an exporter can't be located
         """
         extension2exporter_name = {'md': 'markdown'}
-        exporter_params = {'webpdf': {'allow_chromium_download': True}}
 
         # sometimes extension does not match with the exporter name, fix
         # if needed
@@ -213,9 +208,7 @@ class NotebookConverter:
         else:
             try:
                 exporter = nbconvert.get_exporter(exporter_name)
-                params = exporter_params.get(exporter_name)
-                if params:
-                    exporter = exporter(**params)
+
             # nbconvert 5.6.1 raises ValueError, beginning in version 6,
             # it raises ExporterNameError. However the exception is defined
             # since 5.6.1 so we can safely import it
@@ -231,6 +224,8 @@ class NotebookConverter:
                     "valid 'nbconvert_exporter_name' value. "
                     "Choose one from: "
                     f'{pretty_print.iterable(names)}')
+
+        _check_exporter(exporter, path_to_output)
 
         return exporter
 
