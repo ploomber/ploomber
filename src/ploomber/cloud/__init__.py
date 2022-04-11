@@ -12,4 +12,4 @@ def download_data(key):
     # TODO: this should find the root directory and download relative to it
     # then return the absolute path
     url = api.download_data(key).text
-    return api._download_file(url, skip_if_exists=True)
+    return api._download_file(url, skip_if_exists=True, raise_on_missing=True)
