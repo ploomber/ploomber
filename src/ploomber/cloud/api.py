@@ -22,10 +22,11 @@ from ploomber.cloud import io, config
 from ploomber.exceptions import BaseException
 from ploomber.spec import DAGSpec
 from ploomber.dag import util
+from ploomber.cli.cloud import get_key
 
 HOST = os.environ.get(
     'PLOOMBER_CLOUD_HOST',
-    'https://t4nzmhelx3.execute-api.us-east-1.amazonaws.com/api/')
+    'https://pd02u265lj.execute-api.us-east-1.amazonaws.com/api/')
 
 
 def _remove_prefix(path):
@@ -33,14 +34,21 @@ def _remove_prefix(path):
     return str(PurePosixPath(*parts))
 
 
-def _download_file(url, skip_if_exists=False):
+def _download_file(url, skip_if_exists=False, raise_on_missing=False):
     try:
         remotefile = urlopen(url)
     except HTTPError as e:
         if e.code == 404:
             path = _remove_prefix(parse.urlparse(url).path[1:])
-            click.echo(f'File not found: {path}')
-            return
+
+            if raise_on_missing:
+                raise FileNotFoundError(
+                    'The requested file does not exist.'
+                    ' Upload it to cloud storage and try again.')
+            else:
+                click.echo(f'File not found: {path}')
+                return
+
         else:
             raise
 
@@ -112,7 +120,7 @@ def download_from_presigned(presigned):
 def auth_header(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        api_key = os.environ.get("PLOOMBER_CLOUD_KEY")
+        api_key = get_key()
 
         if api_key:
             headers = {
@@ -200,9 +208,17 @@ def run_logs(headers, run_id):
 
 
 @auth_header
-def run_logs_image(headers, run_id):
+def run_logs_image(headers, run_id, tail=None):
     res = _get(f"{HOST}/runs/{run_id}/logs/image", headers=headers)
-    print(res.text)
+
+    if not len(res.text):
+        out = "Image build hasn't started yet..."
+    elif tail:
+        out = '\n'.join(res.text.splitlines()[-tail:])
+    else:
+        out = res.text
+
+    click.echo(out)
 
 
 @auth_header
