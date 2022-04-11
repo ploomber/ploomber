@@ -184,8 +184,8 @@ def mock_main(monkeypatch):
     return main_pip, main_conda
 
 
-def test_use_lock_none_with_pip_lock_exists(tmp_directory, monkeypatch,
-                                            mock_main):
+def test_use_lock_none_with_pip_lock_exists(_mock_email, tmp_directory,
+                                            monkeypatch, mock_main):
     main_pip, main_conda = mock_main
     # simulate no conda
     monkeypatch.setattr(install_module.shutil, 'which', lambda _: None)
@@ -200,8 +200,8 @@ def test_use_lock_none_with_pip_lock_exists(tmp_directory, monkeypatch,
     main_conda.assert_not_called()
 
 
-def test_use_lock_none_with_pip_regular_exists(tmp_directory, monkeypatch,
-                                               mock_main):
+def test_use_lock_none_with_pip_regular_exists(_mock_email, tmp_directory,
+                                               monkeypatch, mock_main):
     main_pip, main_conda = mock_main
     # simulate no conda
     monkeypatch.setattr(install_module.shutil, 'which', lambda _: None)
@@ -216,7 +216,8 @@ def test_use_lock_none_with_pip_regular_exists(tmp_directory, monkeypatch,
     main_conda.assert_not_called()
 
 
-def test_use_lock_none_with_conda_lock_exists(tmp_directory, mock_main):
+def test_use_lock_none_with_conda_lock_exists(_mock_email, tmp_directory,
+                                              mock_main):
     main_pip, main_conda = mock_main
 
     Path('environment.lock.yml').touch()
@@ -884,7 +885,8 @@ def test_install_pip(_mock_email, tmp_directory):
 
 @pytest.mark.xfail(sys.platform == 'win32',
                    reason='Test not working on Github Actions on Windows')
-def test_install_pip_does_not_duplicate_gitignore_entry(tmp_directory):
+def test_install_pip_does_not_duplicate_gitignore_entry(
+        _mock_email, tmp_directory):
     _write_sample_pip_req()
 
     Path('setup.py').write_text(setup_py)

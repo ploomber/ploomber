@@ -12,6 +12,7 @@ from ploomber_cli.cli import get_key, set_key, write_pipeline, get_pipelines,\
 from ploomber.telemetry import telemetry
 from ploomber.telemetry.telemetry import DEFAULT_USER_CONF
 from ploomber import table
+from ploomber.cli import examples
 
 
 @pytest.fixture()
@@ -452,5 +453,20 @@ def test_email_write_only_once(tmp_directory, monkeypatch):
     assert not input_mock.called
 
 
-def test_email_input(monkeypatch):
-    print("Not implemented")
+def test_email_call_on_examples(tmp_directory, monkeypatch):
+    email_mock = Mock()
+    monkeypatch.setattr(examples, '_email_input', email_mock)
+    examples.main(name=None, force=True)
+    email_mock.assert_called_once()
+
+
+def test_email_called_once(tmp_directory, monkeypatch):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+    email_mock = Mock(return_value='email@ploomber.io')
+    api_mock = Mock()
+    monkeypatch.setattr(cloud, '_get_input', email_mock)
+    monkeypatch.setattr(cloud, '_email_registry', api_mock)
+
+    examples.main(name=None, force=True)
+    examples.main(name=None, force=True)
+    email_mock.assert_called_once()

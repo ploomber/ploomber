@@ -16,6 +16,7 @@ from ploomber.cli.io import command_endpoint
 from ploomber.table import Table
 from ploomber.telemetry import telemetry
 from ploomber.exceptions import BaseException
+from ploomber.cli.cloud import _email_input
 
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer
@@ -287,3 +288,5 @@ def main(name, force=False, branch=None, output=None):
                      f'\n$ ploomber install')
             tw.write(f'\n\nOpen {str(path_to_readme)} for details.\n',
                      blue=True)
+
+    _email_input()

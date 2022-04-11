@@ -23,9 +23,9 @@ from ploomber.telemetry import telemetry
 from ploomber.telemetry.telemetry import check_dir_exist, CONF_DIR, \
     DEFAULT_USER_CONF, read_conf_file, update_conf_file, parse_dag
 
-CLOUD_APP_URL = 'ggeheljnx2.execute-api.us-east-1.amazonaws.com'
-PIPELINES_RESOURCE = '/prod/pipelines'
-EMAIL_RESOURCE = '/prod/emailsignup'
+CLOUD_APP_URL = 'api.ploomber.io'
+PIPELINES_RESOURCE = '/pipelines'
+EMAIL_RESOURCE = '/emailSignup'
 headers = {'Content-type': 'application/json'}
 
 
@@ -257,8 +257,8 @@ def _email_input():
     email = conf.get('user_email', None)
     if not email:
         email = _get_input(
-            "Our users enjoy updates, support and funtivities "
-            "through email, please add your email would you like "
+            "Our users enjoy updates, support and unique content "
+            "through email, please add your email, if you'd like "
             "to register (type email): ")
         _email_validation(email)
 
@@ -278,8 +278,8 @@ def _email_validation(email):
 def _email_registry(email):
     conn = httplib.HTTPSConnection(CLOUD_APP_URL, timeout=3)
     try:
-        headers = {'email': email}
-        conn.request("GET", EMAIL_RESOURCE, headers=headers)
+        user_headers = {'email': email, 'source': 'OS'}
+        conn.request("POST", EMAIL_RESOURCE, headers=user_headers)
         print("Thanks for signing up!")
     except httplib.HTTPException:
         pass

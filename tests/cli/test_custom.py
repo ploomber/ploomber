@@ -359,7 +359,8 @@ def test_undecorated_function(_mock_email, monkeypatch, tmp_sample_dir):
     build.main(catch_exception=False)
 
 
-def test_undecorated_function_w_param(monkeypatch, tmp_sample_dir):
+def test_undecorated_function_w_param(_mock_email, monkeypatch,
+                                      tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
         'python', '--entry-point', 'test_pkg.entry.plain_function_w_param',
         'some_value_for_param'
