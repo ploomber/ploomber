@@ -394,3 +394,63 @@ def test_get_pipeline_with_dag(monkeypatch, mock_api_key):
 #         id = p['pipeline_id']
 #         res = cloud.delete_pipeline(id)
 #         assert id in str(res)
+
+
+# Test empty string/emails without a @
+@pytest.mark.parametrize('user_email', ['', 'test', '@', 'a@c'])
+def test_malformed_email_signup(monkeypatch, user_email):
+    mock = Mock()
+    monkeypatch.setattr(cloud, 'update_conf_file', mock)
+
+    cloud._email_validation(user_email)
+    mock.assert_not_called()
+
+
+# Testing valid api calls when the email is correct
+def test_correct_email_signup(monkeypatch):
+    mock = Mock()
+    registry_mock = Mock()
+    monkeypatch.setattr(cloud, 'update_conf_file', mock)
+    monkeypatch.setattr(cloud, '_email_registry', registry_mock)
+
+    sample_email = 'test@example.com'
+    cloud._email_validation(sample_email)
+    mock.assert_called_once()
+    registry_mock.assert_called_once()
+
+
+# Test valid emails are stored in the user conf
+def test_email_conf_file(tmp_directory, monkeypatch):
+    registry_mock = Mock()
+    monkeypatch.setattr(cloud, '_email_registry', registry_mock)
+
+    stats = Path('stats')
+    stats.mkdir()
+    conf_path = stats / telemetry.DEFAULT_USER_CONF
+
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+    conf_path.write_text("sample_conf_key: True\n")
+
+    sample_email = 'test@example.com'
+    cloud._email_validation(sample_email)
+
+    conf = conf_path.read_text()
+    assert sample_email in conf
+
+
+def test_email_write_only_once(tmp_directory, monkeypatch):
+    input_mock = Mock(return_value='some1@email.com')
+    monkeypatch.setattr(cloud, '_get_input', input_mock)
+
+    stats = Path('stats')
+    stats.mkdir()
+    conf_path = stats / telemetry.DEFAULT_USER_CONF
+
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+    conf_path.write_text("user_email: some@email.com\n")
+    cloud._email_input()
+    assert not input_mock.called
+
+
+def test_email_input(monkeypatch):
+    print("Not implemented")

@@ -16,7 +16,7 @@ from pathlib import Path
 import http.client as httplib
 import click
 from functools import wraps
-
+import re
 import humanize
 
 from ploomber.telemetry import telemetry
@@ -244,3 +244,44 @@ def cloud_wrapper(payload=False):
         return wrapper
 
     return _cloud_call
+
+
+def _get_input(text):
+    return input(text)
+
+
+def _email_input():
+    # Validate that's the first email registration
+    user_conf_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
+    conf = read_conf_file(user_conf_path)
+    email = conf.get('user_email', None)
+    if not email:
+        email = _get_input(
+            "Our users enjoy updates, support and funtivities "
+            "through email, please add your email would you like "
+            "to register (type email): ")
+        _email_validation(email)
+
+
+def _email_validation(email):
+    pattern = r"[^@]+@[^@]+\.[^@]+"
+    if re.match(pattern, email):
+        # Save in conf file
+        user_key_dict = {'user_email': email}
+        user_conf_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
+        update_conf_file(user_conf_path, user_key_dict)
+
+        # Call API
+        _email_registry(email)
+
+
+def _email_registry(email):
+    conn = httplib.HTTPSConnection(CLOUD_APP_URL, timeout=3)
+    try:
+        headers = {'email': email}
+        conn.request("GET", EMAIL_RESOURCE, headers=headers)
+        print("Thanks for signing up!")
+    except httplib.HTTPException:
+        pass
+    finally:
+        conn.close()

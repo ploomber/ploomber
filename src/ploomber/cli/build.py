@@ -5,7 +5,7 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.executors import Parallel
 from ploomber.telemetry import telemetry
-from ploomber.cli.cloud import _write_pipeline
+from ploomber.cli.cloud import _write_pipeline, _email_input
 
 
 # this parameter is only set to True when calling "ploomber interactive"
@@ -86,5 +86,6 @@ def main(payload, render_only=False):
                     status='finished',
                     pipeline_name=dag.name,
                     dag=telemetry.parse_dag(dag))
+    _email_input()
 
     return dag

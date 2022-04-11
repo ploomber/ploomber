@@ -85,7 +85,7 @@ TESTING = [
     # needed to run some test pipelines
     'matplotlib',
     'seaborn',
-    'psycopg2',
+    'psycopg2-binary',
     # requires for some Table tests where we parse the HTML repr
     'lxml',
 

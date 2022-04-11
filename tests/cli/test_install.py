@@ -229,7 +229,8 @@ def test_use_lock_none_with_conda_lock_exists(tmp_directory, mock_main):
     main_pip.assert_not_called()
 
 
-def test_use_lock_none_with_conda_regular_exists(tmp_directory, mock_main):
+def test_use_lock_none_with_conda_regular_exists(_mock_email, tmp_directory,
+                                                 mock_main):
     main_pip, main_conda = mock_main
     Path('environment.yml').touch()
 
@@ -270,7 +271,8 @@ def test_use_lock_none_with_pip_wrong_lock_exists(tmp_directory, mock_main):
     assert expected in result.output
 
 
-def test_use_venv_even_if_conda_installed(tmp_directory, mock_main):
+def test_use_venv_even_if_conda_installed(_mock_email, tmp_directory,
+                                          mock_main):
     main_pip, main_conda = mock_main
 
     Path('requirements.lock.txt').touch()
@@ -379,8 +381,9 @@ def test_install_with_pip(tmp_directory, has_conda, use_lock, env, env_lock,
     [[], False, 'some-env', False],
     [['--create-env'], True, 'some-env', True],
 ])
-def test_installs_conda_inline_if_inside_venv(tmp_directory, monkeypatch, args,
-                                              is_conda, env_name, create_env):
+def test_installs_conda_inline_if_inside_venv(_mock_email, tmp_directory,
+                                              monkeypatch, args, is_conda,
+                                              env_name, create_env):
     _write_sample_conda_files()
 
     main = Mock()
@@ -404,8 +407,9 @@ def test_installs_conda_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     [[], True, False],
     [['--create-env'], True, True],
 ])
-def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
-                                            in_venv, create_env):
+def test_installs_pip_inline_if_inside_venv(_mock_email, tmp_directory,
+                                            monkeypatch, args, in_venv,
+                                            create_env):
     _write_sample_pip_files()
 
     main = Mock()
@@ -854,7 +858,7 @@ def test_install_lock_package_with_conda(tmp_directory, monkeypatch,
 # creates symlinks
 @pytest.mark.xfail(sys.platform == 'win32',
                    reason='Test not working on Github Actions on Windows')
-def test_install_pip(tmp_directory):
+def test_install_pip(_mock_email, tmp_directory):
     _write_sample_pip_req()
 
     Path('setup.py').write_text(setup_py)
@@ -896,7 +900,7 @@ def test_install_pip_does_not_duplicate_gitignore_entry(tmp_directory):
     assert result.exit_code == 0
 
 
-def test_non_package_with_pip(tmp_directory):
+def test_non_package_with_pip(_mock_email, tmp_directory):
     _write_sample_pip_req()
 
     Path('setup.py').write_text(setup_py)
@@ -912,7 +916,7 @@ def test_non_package_with_pip(tmp_directory):
     assert result.exit_code == 0
 
 
-def test_non_package_with_pip_with_dev_deps(tmp_directory):
+def test_non_package_with_pip_with_dev_deps(_mock_email, tmp_directory):
     _write_sample_pip_req()
     _write_sample_pip_req('requirements.dev.txt')
 
@@ -936,8 +940,8 @@ def test_non_package_with_pip_with_dev_deps(tmp_directory):
 
 @pytest.mark.parametrize('create_setup_py', [True, False])
 @pytest.mark.parametrize('create_dev_lock', [True, False])
-def test_install_lock_pip(tmp_directory, mock_cmdr_wrapped, create_setup_py,
-                          create_dev_lock):
+def test_install_lock_pip(_mock_email, tmp_directory, mock_cmdr_wrapped,
+                          create_setup_py, create_dev_lock):
     _write_sample_pip_req('requirements.lock.txt')
 
     if create_dev_lock:
@@ -1118,43 +1122,15 @@ def test_pip_mixed_versions(monkeypatch):
         _pip_install(install_module.Commander, {}, True)
 
 
-# Test empty string/emails without a @
-@pytest.mark.parametrize('user_email', ['', 'test', '@', 'a@c'])
-def test_malformed_email_signup(monkeypatch, user_email):
-    mock = Mock()
-    monkeypatch.setattr(install_module, 'update_conf_file', mock)
+def test_user_email_called_on_install(tmp_directory, monkeypatch):
+    email_mock = Mock()
+    monkeypatch.setattr(install_module, '_email_input', email_mock)
+    _write_sample_pip_req()
 
-    install_module._email_validation(user_email)
-    mock.assert_not_called()
+    Path('setup.py').write_text(setup_py)
+    f'venv-{Path(tmp_directory).name}'
 
+    runner = CliRunner()
+    runner.invoke(install, args=['--create-env'], catch_exceptions=False)
 
-# Testing valid api calls when the email is correct
-def test_correct_email_signup(monkeypatch):
-    mock = Mock()
-    registry_mock = Mock()
-    monkeypatch.setattr(install_module, 'update_conf_file', mock)
-    monkeypatch.setattr(install_module, '_email_registry', registry_mock)
-
-    sample_email = 'test@example.com'
-    install_module._email_validation(sample_email)
-    mock.assert_called_once()
-    registry_mock.assert_called_once()
-
-
-# Test valid emails are stored in the user conf
-def test_email_conf_file(tmp_directory, monkeypatch):
-    registry_mock = Mock()
-    monkeypatch.setattr(install_module, '_email_registry', registry_mock)
-
-    stats = Path('stats')
-    stats.mkdir()
-    conf_path = stats / install_module.DEFAULT_USER_CONF
-
-    monkeypatch.setattr(install_module.telemetry, 'DEFAULT_HOME_DIR', '.')
-    conf_path.write_text("sample_conf_key: True\n")
-
-    sample_email = 'test@example.com'
-    install_module._email_validation(sample_email)
-
-    conf = conf_path.read_text()
-    assert sample_email in conf
+    email_mock.assert_called_once()

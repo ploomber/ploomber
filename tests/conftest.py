@@ -22,7 +22,7 @@ from ploomber.clients import SQLAlchemyClient
 from ploomber import Env
 import pandas as pd
 from glob import iglob
-from ploomber.cli import install
+from ploomber.cli import install, cloud
 import posthog
 from unittest.mock import Mock, MagicMock
 
@@ -43,6 +43,12 @@ def git_init():
 def tmp_git(tmp_directory):
     Path('file').touch()
     git_init()
+
+
+@pytest.fixture
+def _mock_email(monkeypatch):
+    email_mock = Mock()
+    monkeypatch.setattr(cloud, '_email_input', email_mock)
 
 
 # FIXME: do we need this?
