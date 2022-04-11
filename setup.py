@@ -42,7 +42,6 @@ NB = [
     'nbformat',
     # for notebook validation
     'pyflakes',
-    'nbconvert[webpdf]'
 ]
 
 # Optional dependencies are packages that are used in several modules but are
