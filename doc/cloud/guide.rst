@@ -13,6 +13,8 @@ If you wish to remove the daily limit and request custom resources, you
 may switch to the `Teams Plan. <https://ploomber.io/cloud/>`_
 
 
+.. _hosted-jupyterlab:
+
 Hosted JupyterLab
 *****************
 
