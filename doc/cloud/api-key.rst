@@ -1,16 +1,8 @@
 Setting Up
 ==========
 
-Ploomber Cloud is in beta, and the API might change in the future.
-To use it, you'll have to install Ploomber from git.
-
-.. code-block:: console
-
-    pip uninstall ploomber
-    pip install git+https://github.com/ploomber/ploomber@cloud-stable
-
-Getting API Key
-***************
+Getting an API Key
+******************
 
 To generate an API key, follow these steps:
 
@@ -36,10 +28,19 @@ You'll see a pop-up where you can copy your key.
 
 *Note:  Users who registered can log in directly by clicking on the top right corner menu & sign in.*
 
-Setting your API key
+Setting your API Key
 ********************
 
-You can run this command:
+Ploomber Cloud is in beta, and the API might change in the future.
+To use it, you'll have to install Ploomber from git.
+
+.. code-block:: console
+
+    pip uninstall ploomber
+    pip install git+https://github.com/ploomber/ploomber@cloud-stable
+
+
+Now, configure your API key:
 
 .. code-block:: console
 
@@ -51,6 +52,12 @@ You can validate that the key was set correctly by running the get command:
 
     ploomber cloud get-key
 
-From this point onwards, you can use the cloud features.
 
-**If you have any issues, please reach out to us!**
+You're now ready to use Ploomber Cloud! You use ``ploomber`` locally
+and submit pipelines to the Cloud, or you can use a
+hosted :ref:`JupyterLab <hosted-jupyterlab>` instance we provide for free,
+so you don't have to set up an environment.
+
+Check out the :doc:`following tutorial <guide>` to learn how to submit pipelines to the Cloud.
+
+Or check the user guide to learn more about Ploomber Cloud's features.
