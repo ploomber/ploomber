@@ -12,6 +12,7 @@ Cloud
 
     api-key
     cloud-execution
+    guide
     monitoring
 
     
