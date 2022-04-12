@@ -1,6 +1,58 @@
 Cloud User Guide
 ================
 
+Community Plan
+**************
+
+The free Community Plan has some limitations:
+
+1. Limited to 50 pipeline tasks daily
+2. No custom resources (all tasks executed with 2 vCPUs and 4 GiB of RAM)
+
+If you wish to remove the daily limit and request custom resources, you
+may switch to the `Teams Plan. <https://ploomber.io/cloud/>`_
+
+
+Hosted JupyterLab
+*****************
+
+You can submit pipelines from your laptop to Ploomber Cloud, or you may use
+the hosted `JupyterLab. <https://hub.ploomber.io/>`_:
+
+1. Click on Sign In
+2. In the username field enter your email address but replace ``@`` for ``-at-``. For example ``user@example.com`` becomes ``user-at-example.com``
+
+**Note:** To ensure you're running the latest Ploomber Cloud CLI, open a terminal in Jupyter and run:
+
+.. code-block:: console
+
+    pip uninstall ploomber
+    pip install git+https://github.com/ploomber/ploomber@cloud-stable
+
+
+Then set your key:
+
+.. code-block:: console
+
+    ploomber cloud set-key {your-key}
+
+Dependencies
+************
+
+To add dependencies required by your pipeline, create a
+``requirements.lock.txt`` file. For example:
+
+.. code-block:: txt
+    :class: text-editor
+
+    pandas
+    scikit-learn
+
+
+The first time you submit a pipeline to Ploomber Cloud it'll take a few minutes
+since it has to build a Docker image from scratch, subsequent Docker builds
+will be a lot faster since we'll cache your image.
+
 Custom task resources
 *********************
 
