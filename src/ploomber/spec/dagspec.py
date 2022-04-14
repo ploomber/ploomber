@@ -419,6 +419,7 @@ class DAGSpec(MutableMapping):
                 'config',
                 'clients',
                 'tasks',
+                'task_defaults',
                 'serializer',
                 'unserializer',
                 'executor',
