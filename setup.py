@@ -41,7 +41,7 @@ NB = [
     'notebook',
     'nbformat',
     # for notebook validation
-    'pyflakes'
+    'pyflakes',
 ]
 
 # Optional dependencies are packages that are used in several modules but are
