@@ -436,7 +436,6 @@ def test_can_convert_to_html(tmp_sample_tasks):
     dag.build()
 
 
-
 def test_can_execute_with_parameters(tmp_directory):
     dag = DAG()
 
