@@ -1,6 +1,7 @@
 import os
 import shlex
 import pdb
+import shutil
 import tempfile
 import subprocess
 from subprocess import PIPE
@@ -171,6 +172,7 @@ class NotebookConverter:
         self._nbconvert_export_kwargs = nbconvert_export_kwargs or {}
 
     def convert(self):
+
         if self._exporter is None and self._nbconvert_export_kwargs:
             warnings.warn(
                 f'Output {self._path_to_output!r} is a '
@@ -460,6 +462,12 @@ class NotebookRunner(NotebookMixin, Task):
         to identify the output notebook (i.e. if product is a list with 3
         ploomber.File, pass the index pointing to the notebook path). If the
         only output is the notebook itself, this parameter is not needed
+    nb_product_report_key: str, optional
+        If the notebook is expected to generate html report as product, pass
+        the key to identify the output html report.
+    nb_product_doc_key: str, optional
+        If the notebook is expected to generate pdf document as product, pass
+        the key to identify the output pdf.
     static_analysis : ('disabled', 'regular', 'strict'), default='regular'
         Check for various errors in the notebook. In 'regular' mode, it aborts
         execution if the notebook has syntax issues, or similar problems that
@@ -520,6 +528,8 @@ class NotebookRunner(NotebookMixin, Task):
                  nbconvert_exporter_name=None,
                  ext_in=None,
                  nb_product_key='nb',
+                 nb_product_report_key='nb_report',
+                 nb_product_doc_key='nb_doc',
                  static_analysis='regular',
                  nbconvert_export_kwargs=None,
                  local_execution=False,
@@ -530,6 +540,8 @@ class NotebookRunner(NotebookMixin, Task):
         self.nbconvert_exporter_name = nbconvert_exporter_name
         self.ext_in = ext_in
         self.nb_product_key = nb_product_key
+        self.nb_product_report_key = nb_product_report_key
+        self.nb_product_doc_key = nb_product_doc_key
         self.local_execution = local_execution
         self.check_if_kernel_installed = check_if_kernel_installed
 
@@ -553,16 +565,40 @@ class NotebookRunner(NotebookMixin, Task):
                     f"{nb_product_key!r} must contain "
                     "the path to the output notebook.")
 
+        product_nb_report = None
+        product_nb_doc = None
+
         if isinstance(self.product, MetaProduct):
             product_nb = (
                 self.product[self.nb_product_key]._identifier.best_repr(
                     shorten=False))
+
+            product_nb_report = None if self.product.get(
+                nb_product_report_key) is None else (self.product[
+                    self.nb_product_report_key]._identifier.best_repr(
+                        shorten=False))
+
+            product_nb_doc = None if self.product.get(
+                nb_product_doc_key) is None else (self.product[
+                    self.nb_product_doc_key]._identifier.best_repr(
+                        shorten=False))
+
         else:
             product_nb = self.product._identifier.best_repr(shorten=False)
 
         self._converter = NotebookConverter(product_nb,
                                             nbconvert_exporter_name,
                                             nbconvert_export_kwargs)
+
+        self._report_convertor = None if product_nb_report is None else \
+            NotebookConverter(product_nb_report,
+                              nbconvert_exporter_name,
+                              nbconvert_export_kwargs)
+
+        self._doc_convertor = None if product_nb_doc is None else \
+            NotebookConverter(product_nb_doc,
+                              nbconvert_exporter_name,
+                              nbconvert_export_kwargs)
 
     @staticmethod
     def _init_source(source,
@@ -585,8 +621,20 @@ class NotebookRunner(NotebookMixin, Task):
         if self.static_analysis == 'regular':
             self.source._check_notebook(raise_=True, check_signature=False)
 
+        multiple_nb_products = []
+
         if isinstance(self.product, MetaProduct):
+
             path_to_out = Path(str(self.product[self.nb_product_key]))
+
+            if self.nb_product_report_key in self.product:
+                multiple_nb_products.append(
+                    Path(str(self.product[self.nb_product_report_key])))
+
+            if self.nb_product_doc_key in self.product:
+                multiple_nb_products.append(
+                    Path(str(self.product[self.nb_product_doc_key])))
+
         else:
             path_to_out = Path(str(self.product))
 
@@ -624,8 +672,18 @@ class NotebookRunner(NotebookMixin, Task):
         if path_to_out_ipynb != path_to_out and path_to_out.is_file():
             path_to_out.unlink()
 
+        for product in multiple_nb_products:
+            shutil.copyfile(path_to_out_ipynb, product)
+
         path_to_out_ipynb.rename(path_to_out)
+
         self._converter.convert()
+
+        if self._report_convertor:
+            self._report_convertor.convert()
+
+        if self._doc_convertor:
+            self._doc_convertor.convert()
 
 
 class ScriptRunner(NotebookMixin, Task):
@@ -635,6 +693,7 @@ class ScriptRunner(NotebookMixin, Task):
     it also works by injecting a cell into the source code. Source can be
     a .py script or an .ipynb notebook. Does not support magics.
     """
+
     @requires(['jupyter', 'jupytext'], 'ScriptRunner')
     def __init__(self,
                  source,
@@ -712,7 +771,8 @@ def _run_script_in_subprocess(interpreter, path, cwd):
                        'ScriptRunner, remove them or use the regular '
                        'NotebookRunner)')
 
-        raise RuntimeError('Error while executing ScriptRunner:\n' f'{stderr}')
+        raise RuntimeError('Error while executing ScriptRunner:\n'
+                           f'{stderr}')
 
 
 def _read_rendered_notebook(nb_str):
