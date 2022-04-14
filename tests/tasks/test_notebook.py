@@ -20,6 +20,27 @@ def fake_from_notebook_node(self, nb, resources):
     return bytes(42), None
 
 
+def test_checks_exporter(monkeypatch):
+    # simulate pyppeteer not installed
+    monkeypatch.setattr(notebook, 'find_spec', lambda _: None)
+
+    with pytest.raises(TaskInitializationError) as excinfo:
+        notebook.NotebookConverter('out.pdf', 'webpdf')
+
+    expected = 'pip install "nbconvert[webpdf]"'
+    assert expected in str(excinfo.value)
+
+
+def test_downloads_chromium_if_needed(monkeypatch):
+    mock = Mock()
+    mock.check_chromium.return_value = False
+    monkeypatch.setattr(notebook, 'chromium_downloader', mock)
+
+    notebook.NotebookConverter('out.pdf', 'webpdf')
+
+    mock.download_chromium.assert_called_once_with()
+
+
 def test_error_when_path_has_no_extension():
     with pytest.raises(TaskInitializationError) as excinfo:
         notebook.NotebookConverter('a')
@@ -50,6 +71,15 @@ def test_notebook_converter_get_exporter_from_path(path, exporter):
 def test_notebook_converter_get_exporter_from_name(exporter_name, exporter):
     converter = notebook.NotebookConverter('file.ext', exporter_name)
     assert converter._exporter == exporter
+
+
+def test_notebook_converter_validates_extension():
+    with pytest.raises(TaskInitializationError) as excinfo:
+        notebook.NotebookConverter('file.not_a_pdf', 'webpdf')
+
+    expected = ('Expected output to have extension .pdf when using the '
+                'webpdf exporter, got: file.not_a_pdf')
+    assert expected in str(excinfo.value)
 
 
 @pytest.mark.parametrize('output', [

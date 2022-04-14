@@ -1129,6 +1129,29 @@ def test_import_tasks_from(tmp_nbs):
     ]
 
 
+def test_import_tasks_from_empty_yaml_file(tmp_nbs):
+    Path('some_tasks.yaml').write_text('')
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+    with pytest.raises(ValueError) as excinfo:
+        DAGSpec(spec_d)
+    assert 'expected import_tasks_from' in str(excinfo.value)
+
+
+def test_import_tasks_from_non_list_yaml_file(tmp_nbs):
+    some_tasks = {'source': 'extra_task.py', 'product': 'extra.ipynb'}
+    Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+    with pytest.raises(TypeError) as excinfo:
+        DAGSpec(spec_d)
+    assert 'Expected list when loading YAML file' in str(excinfo.value)
+
+
 def test_import_tasks_from_does_not_resolve_dotted_paths(tmp_nbs):
     """
     Sources defined in a file used in "import_tasks_from" are resolved
@@ -1442,7 +1465,7 @@ def test_validate_product_default_class_values():
     spec = {
         'meta': {
             'product_default_class': {
-                'SQLDump': 'unknown_product',
+                'SQLDump': 'some-unknown-thing',
             }
         },
         'tasks': [],
@@ -1452,7 +1475,7 @@ def test_validate_product_default_class_values():
         DAGSpec(spec)
 
     expected = ("Error validating product_default_class: "
-                "'unknown_product' is not a valid Product class name")
+                "'some-unknown-thing' is not a valid Product class name")
     assert str(excinfo.value) == expected
 
 
@@ -1882,6 +1905,32 @@ CREATE TABLE {{product}} AS SELECT * FROM my_table
 
     # should be imported now
     assert 'my_testing_module' in sys.modules
+
+
+@pytest.mark.parametrize('tasks, expected', [
+    ([{
+        'source': 'script.sql',
+        'product': 'another.csb',
+        'client': 'my_testing_module.get_db_client',
+        'product_client': 'my_testing_module.get_db_client'
+    }], "'.csb' is not a valid product extension. Did you mean: '.csv'?"),
+    ([{
+        'source': 'script.sql',
+        'product': 'another.parquets',
+        'client': 'my_testing_module.get_db_client',
+        'product_client': 'my_testing_module.get_db_client'
+    }],
+     "'.parquets' is not a valid product extension. Did you mean: '.parquet'?")
+])
+def test_product_extension_typo(tasks, expected, tmp_directory):
+    Path('script.sql').write_text("""
+    SELECT * FROM my_table
+    """)
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        DAGSpec({'tasks': tasks})
+
+    assert expected in str(excinfo.value)
 
 
 def test_error_when_tasks_is_not_a_list(tmp_directory, tmp_imports):

@@ -22,6 +22,7 @@ from ploomber.exceptions import BaseException
 from ploomber.util.util import check_mixed_envs
 from ploomber.cli.io import command_endpoint
 from ploomber.telemetry import telemetry
+from ploomber.util._sys import _python_bin
 
 _SETUP_PY = 'setup.py'
 
@@ -30,15 +31,6 @@ _REQS_TXT = 'requirements.txt'
 
 _ENV_YML = 'environment.yml'
 _ENV_LOCK_YML = 'environment.lock.yml'
-
-
-def _python_bin():
-    """
-    Get the path to the Python executable, return 'python' if unable to get it
-    """
-    executable = sys.executable
-    return executable if executable else 'python'
-
 
 _PYTHON_BIN_NAME = _python_bin()
 

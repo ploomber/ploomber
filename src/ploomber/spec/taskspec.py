@@ -10,6 +10,7 @@ from copy import copy, deepcopy
 from pathlib import Path
 from collections.abc import MutableMapping, Mapping
 import platform
+from difflib import get_close_matches
 
 from ploomber import tasks, products
 from ploomber.util.util import _make_iterable
@@ -46,6 +47,13 @@ def _looks_like_path(s):
         return '/' in s
 
 
+def _extension_typo(extension, valid_extensions):
+    if extension and valid_extensions:
+        return get_close_matches(extension, valid_extensions)
+    else:
+        return None
+
+
 def task_class_from_source_str(source_str, lazy_import, reload, product):
     """
     The source field in a DAG spec is a string. The actual value needed to
@@ -69,10 +77,18 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
         partial(dotted_path.load_dotted_path, raise_=True, reload=reload))
 
     if extension and extension in suffix2taskclass:
-        if extension == '.sql' and _safe_suffix(product) in {
-                '.csv', '.parquet'
-        }:
-            return tasks.SQLDump
+        if extension == '.sql':
+            if _safe_suffix(product) in {'.csv', '.parquet'}:
+                return tasks.SQLDump
+            else:
+                possibilities = _extension_typo(_safe_suffix(product),
+                                                ['.csv', '.parquet'])
+                if possibilities:
+                    ext = possibilities[0]
+                    raise DAGSpecInitializationError(
+                        f'Error parsing task with source {source_str!r}: '
+                        f'{_safe_suffix(product)!r} is not a valid product '
+                        f'extension. Did you mean: {ext!r}?')
 
         return suffix2taskclass[extension]
     elif _looks_like_path(source_str):
@@ -271,12 +287,6 @@ class TaskSpec(MutableMapping):
             data_source = str(data_source_ if not hasattr(
                 data_source_, '__name__') else data_source_.__name__)
 
-            if 'params' in data:
-                raise DAGSpecInitializationError(
-                    'Error initializing task with '
-                    f'source {data_source!r}: '
-                    '\'params\' is not allowed when using \'grid\'')
-
             if 'name' not in data:
                 raise DAGSpecInitializationError(
                     f'Error initializing task with '
@@ -306,6 +316,8 @@ class TaskSpec(MutableMapping):
                 on_failure = dotted_path.DottedPath(on_failure,
                                                     lazy_load=self.lazy_import)
 
+            params = data.pop('params', None)
+
             return TaskGroup.from_grid(task_class=task_class,
                                        product_class=product_class,
                                        product_primitive=product,
@@ -316,7 +328,8 @@ class TaskSpec(MutableMapping):
                                        resolve_relative_to=self.project_root,
                                        on_render=on_render,
                                        on_finish=on_finish,
-                                       on_failure=on_failure), upstream
+                                       on_failure=on_failure,
+                                       params=params), upstream
         else:
             return _init_task(data=data,
                               meta=self.meta,

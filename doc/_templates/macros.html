@@ -23,6 +23,10 @@
                 <a class="nav-link" href="{{ pathto('index') }}">Documentation
                 </a>
             </li>
+            <li class="nav-item {% if active == 'Cloud' %} active {% endif %}">
+                <a class="nav-link" href="{{ pathto('cloud/cloud-execution') }}">Cloud
+                </a>
+            </li>
             <li class="nav-item {% if active == 'Videos' %} active {% endif %}">
                 <a class="nav-link" href="{{ pathto('videos') }}">Videos</a>
             </li>
@@ -40,8 +44,9 @@
             </li>
         </ul>
 
-        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->                
-        <div class="flex-md-shrink-0">  <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
             <form class="search form-inline my-2 my-lg-0" action="{{ pathto('search') }}" method="get">
                 <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
                 <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
