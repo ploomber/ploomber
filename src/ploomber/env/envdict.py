@@ -46,7 +46,6 @@ class EnvDict(Mapping):
     (project's root folder, if any)
     """
     def __init__(self, source, path_to_here=None, defaults=None):
-
         # if initialized from another EnvDict, copy the attributes to
         # initialize
         # this happens in the  CLI parser, which instanttiates the env
@@ -277,7 +276,9 @@ class EnvDict(Mapping):
                 f'Error replacing placeholders:\n{msg}\n\nLoaded env: '
                 f'{self!r}')
 
-        value = Template(raw_value, undefined=StrictUndefined).render(**self)
+        # render using self._data since self contains FrozenJSON objects
+        value = Template(raw_value,
+                         undefined=StrictUndefined).render(**self._data)
 
         return value, placeholders
 
