@@ -819,3 +819,38 @@ def test_error_message_if_missing_default_placeholder(tmp_directory, value,
         }, env)
 
     assert error in str(excinfo.value)
+
+
+@pytest.mark.parametrize('value', [[{
+    'b': {
+        'c': 1
+    }
+}, {
+    'd': {
+        'e': 100
+    }
+}], {
+    'x': 1
+}, {
+    'a': {
+        'b': {
+            'c': 1
+        }
+    }
+}, [{
+    'a': 1
+}, {
+    'b': 1
+}, {
+    'c': {
+        'd': 42
+    }
+}]])
+@pytest.mark.parametrize('kwarg', ['source', 'defaults'])
+def test_render(kwarg, value):
+    kwargs = dict(source=dict(), defaults=None)
+    kwargs[kwarg] = {'key': value}
+    env = EnvDict(**kwargs)
+    value, _ = env._render('{{key}}')
+
+    assert value == str(value)

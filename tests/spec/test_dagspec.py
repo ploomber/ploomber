@@ -2099,3 +2099,31 @@ def test_dagspec_from_dir_doesnt_assign_name(tmp_directory):
     }).to_dag()
 
     assert dag.name == 'No name'
+
+
+def test_dagspec_with_complex_env(tmp_directory):
+    Path('script.py').write_text("""\
+# %% tags=['parameters']
+upstream = None
+product = None
+
+# %%
+1 + 1
+""")
+
+    Path('env.yaml').write_text("""
+param: [{'a': 1}, {'a': {'b': 2}}, 3]
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: output.ipynb
+      params:
+        param: '{{param}}'
+""")
+
+    dag = DAGSpec('pipeline.yaml').to_dag()
+    dag.render()
+
+    assert dag['script'].params['param'] == [{'a': 1}, {'a': {'b': 2}}, 3]
