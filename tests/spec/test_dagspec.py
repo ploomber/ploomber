@@ -656,7 +656,8 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
     # clients for this pipeline are initialized without custom create_engine
     # args but we need to set the default schema, mock the call so it
     # includes that info
-    monkeypatch.setattr(db, 'create_engine', create_engine_with_schema(schema))
+    monkeypatch.setattr(db.sqlalchemy, 'create_engine',
+                        create_engine_with_schema(schema))
 
     dates = _random_date_from(datetime(2016, 1, 1), 365, 100)
     df = pd.DataFrame({
