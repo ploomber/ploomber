@@ -132,6 +132,8 @@ put an ``env.yaml`` on each one:
 ``env.yaml`` composition (DRY)
 ------------------------------
 
+.. note:: New in version 0.18
+
 In many cases, your development and production environment configuration share
 many values in common. To keep them simple, you may create an ``env.yaml``
 (development configuration) and have your ``env.prod.yaml`` (production

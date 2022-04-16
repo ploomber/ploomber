@@ -13,6 +13,8 @@ FAQ and Glossary
 
 .. include:: faq/autoreload.rst
 
+.. include:: faq/tags.rst
+
 .. include:: faq/parameterize.rst
 
 .. include:: faq/plot.rst
