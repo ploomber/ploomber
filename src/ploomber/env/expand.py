@@ -169,7 +169,7 @@ class EnvironmentExpander:
                 # if it has an explicit trailing slash, interpret it as
                 # a directory and create it, we have to do it at this point,
                 # because once we cast to Path, we lose the trailing slash
-                if value.endswith('/'):
+                if str(value).endswith('/'):
                     self._try_create_dir(value)
 
                 return Path(value).expanduser()
