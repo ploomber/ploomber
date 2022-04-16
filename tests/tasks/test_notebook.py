@@ -988,3 +988,14 @@ def test_replaces_existing_product(tmp_directory):
 
     # this will fail on windows if we don't remove the existing file first
     dag.build()
+
+
+def test_initialize_with_str_like_path(tmp_directory):
+    Path('script.py').touch()
+    dag = DAG()
+
+    with pytest.raises(ValueError) as excinfo:
+        NotebookRunner('script.py', File('out.html'), dag=dag)
+
+    assert 'Perhaps you meant passing a pathlib.Path object' in str(
+        excinfo.value)
