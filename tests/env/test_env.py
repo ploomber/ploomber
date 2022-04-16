@@ -699,6 +699,35 @@ def test_replace_value_casts_if_possible():
     assert env.c == 2.2
 
 
+def test_includes_path_if_undeclared_placeholder(tmp_directory):
+    Path('myenv.yaml').write_text("""
+key: '{{something}}'
+""")
+
+    with pytest.raises(BaseException) as excinfo:
+        EnvDict('myenv.yaml')
+
+    assert 'myenv.yaml' in str(excinfo.value)
+    assert 'something' in str(excinfo.value)
+
+
+def test_includes_path_if_undeclared_placeholder_in_base_yaml(tmp_directory):
+    Path('base.yaml').write_text("""
+key: '{{something}}'
+""")
+
+    Path('myenv.yaml').write_text("""
+meta:
+  import_from: base.yaml
+""")
+
+    with pytest.raises(BaseException) as excinfo:
+        EnvDict('myenv.yaml')
+
+    assert 'base.yaml' in str(excinfo.value)
+    assert 'something' in str(excinfo.value)
+
+
 def test_attribute_error_message():
     env = EnvDict({'user': 'user', 'cwd': 'cwd', 'root': 'root'})
 

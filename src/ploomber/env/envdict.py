@@ -33,8 +33,8 @@ def _get_import_from(raw_data, path_to_here):
         if not isinstance(import_from, str):
             raise ValidationError(
                 "Expected 'import_from' to contain a "
-                f"string, but got: {import_from} ({type(import_from).__name__})"
-            )
+                "string, but "
+                f"got: {import_from} ({type(import_from).__name__})")
 
         path = Path(path_to_here, import_from)
 
@@ -134,7 +134,8 @@ class EnvDict(Mapping):
             self._preprocessed = raw_preprocess(raw_data, self._path_to_env)
 
             self._expander = EnvironmentExpander(self._preprocessed,
-                                                 path_to_here=path_to_here)
+                                                 path_to_here=path_to_here,
+                                                 path_to_env=self._path_to_env)
             # now expand all values
             data = self._expander.expand_raw_dictionary(raw_data)
             # this section is for config and should not be visible
