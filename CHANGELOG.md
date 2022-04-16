@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.18.1dev
+
 ## 0.18 (2022-04-16)
 * Support for `env.yaml` composition via `meta.import_from` ([#679](https://github.com/ploomber/ploomber/issues/679))
 * Support for `webpdf` for notebook conversion ([#675](https://github.com/ploomber/ploomber/issues/675))
