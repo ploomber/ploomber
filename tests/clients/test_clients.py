@@ -3,11 +3,11 @@ import sqlite3
 import pickle
 import copy
 from pathlib import Path
-from urllib.parse import urlparse
 from unittest.mock import MagicMock, Mock
 
 from subprocess import CalledProcessError
 
+import sqlalchemy
 import paramiko
 import pytest
 
@@ -17,6 +17,11 @@ from ploomber.products import File
 from ploomber.clients import (ShellClient, SQLAlchemyClient, DBAPIClient,
                               RemoteShellClient)
 from ploomber.clients import db, shell
+
+_SQLALCHEMY_ARGS = [
+    sqlalchemy.engine.url.URL.create(drivername='sqlite', database='my_db.db'),
+    'sqlite:///my_db.db',
+]
 
 
 def test_deepcopy_dbapiclient(tmp_directory):
@@ -49,14 +54,16 @@ def test_dbapiclient_split_source_custom_char(tmp_directory):
     assert pickle.dumps(client)
 
 
-def test_deepcopy_sqlalchemyclient(tmp_directory):
-    client = SQLAlchemyClient('sqlite:///my_db.db')
+@pytest.mark.parametrize('arg', _SQLALCHEMY_ARGS)
+def test_deepcopy_sqlalchemyclient(tmp_directory, arg):
+    client = SQLAlchemyClient(arg)
     client.execute('CREATE TABLE my_table (num INT)')
     assert copy.deepcopy(client)
 
 
-def test_pickle_sqlalchemyclient(tmp_directory):
-    client = SQLAlchemyClient('sqlite:///my_db.db')
+@pytest.mark.parametrize('arg', _SQLALCHEMY_ARGS)
+def test_pickle_sqlalchemyclient(tmp_directory, arg):
+    client = SQLAlchemyClient(arg)
     client.execute('CREATE TABLE my_table (num INT)')
     assert pickle.dumps(client)
 
@@ -85,7 +92,7 @@ def test_does_not_create_in_memory_sqlalchemyclient(tmp_directory):
 def test_custom_create_engine_kwargs(monkeypatch):
 
     mock = Mock()
-    monkeypatch.setattr(db, 'create_engine', mock)
+    monkeypatch.setattr(db.sqlalchemy, 'create_engine', mock)
     client = SQLAlchemyClient('sqlite:///my_db.db',
                               create_engine_kwargs=dict(key='value'))
 
@@ -93,6 +100,15 @@ def test_custom_create_engine_kwargs(monkeypatch):
     client.engine
 
     mock.assert_called_once_with('sqlite:///my_db.db', key='value')
+
+
+def test_init_sqlalhemy_with_url_object(tmp_directory):
+    client = SQLAlchemyClient(
+        sqlalchemy.engine.url.URL.create(drivername='sqlite',
+                                         database='my_db.db'))
+
+    client.execute('CREATE TABLE my_table (num INT)')
+    assert Path('my_db.db').is_file()
 
 
 @pytest.mark.parametrize(
@@ -106,14 +122,19 @@ def test_send_more_than_one_command_in_sqlite(code, split_source,
     client.execute(code)
 
 
-def test_safe_uri():
-    # with password
-    res = db.safe_uri(urlparse('postgresql://user:pass@localhost/db'))
-    assert res == 'postgresql://user:********@localhost/db'
+@pytest.mark.parametrize('arg', [
+    sqlalchemy.engine.url.URL.create(drivername='postgresql',
+                                     database='db',
+                                     password='password',
+                                     username='user',
+                                     host='ploomber.io'),
+    'postgresql://user:password@ploomber.io/db',
+])
+def test_sqlalchemy_client_repr_does_not_expose_password(arg):
+    client = SQLAlchemyClient(arg)
 
-    # no password
-    res = db.safe_uri(urlparse('postgresql://user@localhost/db'))
-    assert res == 'postgresql://user@localhost/db'
+    assert 'password' not in str(client)
+    assert 'password' not in repr(client)
 
 
 # TODO: some of the following tests no longer need tmp_directory because
