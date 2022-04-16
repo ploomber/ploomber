@@ -1,5 +1,12 @@
+import os
 from functools import wraps
 import sys
+
+try:
+    # optional dependency
+    import ipdb as pdb
+except ModuleNotFoundError:
+    import pdb
 
 import click
 
@@ -25,6 +32,11 @@ def cli_endpoint(fn):
 
     Notes
     -----
+    This will hide the traceback when raising subclasses of
+    ploomber.exeptions.BaseException. To display the traceback, set the
+    PLOOMBER_DEBUG variable to true. To start a post-mortem session, set
+    PLOOMBER_POST_MORTEM to true.
+
     Functions decorated with this must be called with keyword arguments
 
     Call some_endpoint(catch_exception=False) to disable this behavior (e.g.
@@ -32,6 +44,9 @@ def cli_endpoint(fn):
     """
     @wraps(fn)
     def wrapper(catch_exception=True, **kwargs):
+        if os.environ.get('PLOOMBER_DEBUG'):
+            catch_exception = False
+
         if catch_exception:
             try:
                 fn(**kwargs)
@@ -57,7 +72,14 @@ def cli_endpoint(fn):
 
                 sys.exit(1)
         else:
-            fn(**kwargs)
+            if os.environ.get('PLOOMBER_POST_MORTEM'):
+                try:
+                    fn(**kwargs)
+                except Exception:
+                    _, _, tb = sys.exc_info()
+                    pdb.post_mortem(tb)
+            else:
+                fn(**kwargs)
 
     return wrapper
 
