@@ -143,6 +143,7 @@ def requires_path(func):
     Checks if NotebookSource instance was initialized from a file, raises
     an error if not
     """
+
     @wraps(func)
     def wrapper(self, *args, **kwargs):
 
@@ -179,6 +180,7 @@ class NotebookSource(Source):
     The render method prepares the notebook for execution: it adds the
     parameters and it makes sure kernelspec is defined
     """
+
     @requires([
         'parso', 'pyflakes', 'jupytext', 'nbformat', 'papermill',
         'jupyter_client'
@@ -266,11 +268,22 @@ class NotebookSource(Source):
         if self._path is not None and ext_in is None:
             self._ext_in = self._path.suffix[1:]
         elif self._path is None and ext_in is None:
-            raise ValueError('"ext_in" cannot be None if the notebook is '
-                             'initialized from a string. Either pass '
-                             'a pathlib.Path object with the notebook file '
-                             'location or pass the source code as string '
-                             'and include the "ext_in" parameter')
+
+            if Path(self._primitive).exists():
+                raise ValueError(
+                    'The file {} you passed in looks like a path to a file.'
+                    'Perhaps you meant passing a pathlib.Path object '
+                    'like this:\n'
+                    'from pathlib import Path'
+                    'NotebookRunner(Path(\'{}\'))'.format(
+                        self._primitive, self._primitive))
+            else:
+                raise ValueError(
+                    '"ext_in" cannot be None if the notebook is '
+                    'initialized from a string. Either pass '
+                    'a pathlib.Path object with the notebook file '
+                    'location or pass the source code as string '
+                    'and include the "ext_in" parameter')
         elif self._path is not None and ext_in is not None:
             raise ValueError('"ext_in" must be None if notebook is '
                              'initialized from a pathlib.Path object')
