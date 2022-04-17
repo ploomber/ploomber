@@ -56,7 +56,7 @@ posthog.project_api_key = 'phc_P9SpSeypyPwxrMdFn2edOOEooQioF2axppyEeDwtMSP'
 PLOOMBER_HOME_DIR = os.getenv("PLOOMBER_HOME_DIR")
 
 
-class Storage:
+class Config:
     def read(self):
         return read_conf_file(self.path())
 
@@ -64,14 +64,14 @@ class Storage:
         write_conf_file(self.path(), data, error=error)
 
 
-class Settings(Storage):
+class UserSettings(Config):
     """User-customizable settings
     """
     def path(self):
         return Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
 
 
-class Internal(Storage):
+class Internal(Config):
     """
     Internal file to store settings (not intended to be modified by the
     user)
@@ -320,7 +320,7 @@ def check_stats_enabled():
     if 'PLOOMBER_STATS_ENABLED' in os.environ:
         return os.environ['PLOOMBER_STATS_ENABLED'].lower() == 'true'
 
-    settings = Settings()
+    settings = UserSettings()
     # Check if local config exists
     config_path = settings.path()
     if not config_path.exists():
@@ -336,7 +336,7 @@ def check_first_time_usage():
     The function checks for first time usage if the conf file exists and the
     uid file doesn't exist.
     """
-    config_path = Settings().path()
+    config_path = UserSettings().path()
     uid_conf = Internal().read()
     return config_path.exists() and 'uid' not in uid_conf.keys()
 
@@ -371,7 +371,7 @@ def is_cloud_user():
         Checks if the cloud_key is set in the User conf file (config.yaml).
         returns True/False accordingly.
         """
-    conf = Settings().read()
+    conf = UserSettings().read()
     return conf.get('cloud_key', False)
 
 
@@ -384,7 +384,7 @@ def check_version():
     """
     # Read conf file
     today = datetime.datetime.now()
-    conf = Settings().read()
+    conf = UserSettings().read()
 
     internal = Internal()
     version_path = internal.path()
