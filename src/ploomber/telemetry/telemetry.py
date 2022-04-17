@@ -56,6 +56,47 @@ posthog.project_api_key = 'phc_P9SpSeypyPwxrMdFn2edOOEooQioF2axppyEeDwtMSP'
 PLOOMBER_HOME_DIR = os.getenv("PLOOMBER_HOME_DIR")
 
 
+class Storage:
+    def read(self):
+        return read_conf_file(self.path())
+
+
+class Settings(Storage):
+    """User-customizable settings
+    """
+    def path(self):
+        return Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
+
+
+class Internal(Storage):
+    """
+    Internal file to store settings (not intended to be modified by the
+    user)
+    """
+    def path(self):
+        return Path(check_dir_exist(CONF_DIR), DEFAULT_PLOOMBER_CONF)
+
+
+def read_conf_file(conf_path):
+    try:
+        with conf_path.open("r") as file:
+            conf = yaml.safe_load(file)
+            return conf
+    except Exception as e:
+        warnings.warn(f"Can't read config file {e}")
+        return {}
+
+
+def write_conf_file(conf_path, to_write, error=None):
+    try:  # Create for future runs
+        with conf_path.open("w") as file:
+            yaml.dump(to_write, file)
+    except Exception as e:
+        warnings.warn(f"Can't write to config file: {e}")
+        if error:
+            return e
+
+
 def python_version():
     py_version = sys.version_info
     return f"{py_version.major}.{py_version.minor}.{py_version.micro}"
@@ -254,8 +295,9 @@ def check_uid():
     """
     Checks if local user id exists as a uid file, creates if not.
     """
-    uid_path = path_to_ploomber_config()
-    conf = read_ploomber_config()  # file already exist due to version check
+    internal = Internal()
+    uid_path = internal.path()
+    conf = internal.read()  # file already exist due to version check
     if 'uid' not in conf.keys():
         uid = str(uuid.uuid4())
         res = write_conf_file(uid_path, {"uid": uid}, error=True)
@@ -276,13 +318,14 @@ def check_stats_enabled():
     if 'PLOOMBER_STATS_ENABLED' in os.environ:
         return os.environ['PLOOMBER_STATS_ENABLED'].lower() == 'true'
 
+    settings = Settings()
     # Check if local config exists
-    config_path = path_to_user_config()
+    config_path = settings.path()
     if not config_path.exists():
         write_conf_file(config_path, {"stats_enabled": True})
         return True
     else:  # read and return config
-        conf = read_user_config()
+        conf = settings.read()
         return conf.get('stats_enabled', True)
 
 
@@ -291,8 +334,8 @@ def check_first_time_usage():
     The function checks for first time usage if the conf file exists and the
     uid file doesn't exist.
     """
-    config_path = path_to_user_config()
-    uid_conf = read_ploomber_config()
+    config_path = Settings().path()
+    uid_conf = Internal().read()
     return config_path.exists() and 'uid' not in uid_conf.keys()
 
 
@@ -314,42 +357,6 @@ def get_latest_version():
         conn.close()
 
 
-def read_conf_file(conf_path):
-    try:
-        with conf_path.open("r") as file:
-            conf = yaml.safe_load(file)
-            return conf
-    except Exception as e:
-        warnings.warn(f"Can't read config file {e}")
-        return {}
-
-
-def path_to_ploomber_config():
-    return Path(check_dir_exist(CONF_DIR), DEFAULT_PLOOMBER_CONF)
-
-
-def read_ploomber_config():
-    return read_conf_file(path_to_ploomber_config())
-
-
-def path_to_user_config():
-    return Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
-
-
-def read_user_config():
-    return read_conf_file(path_to_user_config())
-
-
-def write_conf_file(conf_path, to_write, error=None):
-    try:  # Create for future runs
-        with conf_path.open("w") as file:
-            yaml.dump(to_write, file)
-    except Exception as e:
-        warnings.warn(f"Can't write to config file: {e}")
-        if error:
-            return e
-
-
 def update_conf_file(conf_path, to_write, error=None):
     conf = read_conf_file(conf_path)
     new_conf = dict(conf, **to_write)
@@ -362,7 +369,7 @@ def is_cloud_user():
         Checks if the cloud_key is set in the User conf file (config.yaml).
         returns True/False accordingly.
         """
-    conf = read_user_config()
+    conf = Settings().read()
     return conf.get('cloud_key', False)
 
 
@@ -375,14 +382,15 @@ def check_version():
     """
     # Read conf file
     today = datetime.datetime.now()
-    conf = read_user_config()
+    conf = Settings().read()
 
-    version_path = path_to_ploomber_config()
+    internal = Internal()
+    version_path = internal.path()
     # Update version conf if not there
     if not version_path.exists():
         version = {'last_version_check': today}
     else:
-        version = read_ploomber_config()
+        version = internal.read()
         if 'last_version_check' not in version.keys():
             version['last_version_check'] = today
 
