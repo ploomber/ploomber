@@ -24,9 +24,7 @@ from ploomber.spec import DAGSpec
 from ploomber.dag import util
 from ploomber.cli.cloud import get_key
 
-HOST = os.environ.get(
-    'PLOOMBER_CLOUD_HOST',
-    'https://pd02u265lj.execute-api.us-east-1.amazonaws.com/api/')
+HOST = os.environ.get('PLOOMBER_CLOUD_HOST', 'https://api.ploomber.io')
 
 
 def _remove_prefix(path):

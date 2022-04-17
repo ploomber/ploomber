@@ -380,15 +380,6 @@ def test_get_pipeline_with_dag(monkeypatch, mock_api_key):
     assert pid in res
 
 
-# def test_delete_testkey_pipelines(mock_api_key):
-#     res = cloud.get_pipeline()
-#     print(len(res))
-#     for p in res:
-#         id = p['pipeline_id']
-#         res = cloud.delete_pipeline(id)
-#         assert id in str(res)
-
-
 # Test empty string/emails without a @
 @pytest.mark.parametrize('user_email', ['', 'test', '@', 'a@c'])
 def test_malformed_email_signup(monkeypatch, user_email):
