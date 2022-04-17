@@ -167,7 +167,7 @@ s    commit_hash_4 commit_message_4
 
 > [Squash and merge your pull request commits](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#squash-and-merge-your-pull-request-commits)
 
-![](https://raw.githubusercontent.com/ploomber/ploomber/master/doc/_static/img/squash-and-merge.png)
+![](_static/squash-and-merge.png)
 
 ## Tips for writing tests
 
