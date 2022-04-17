@@ -28,25 +28,24 @@ The data we collect is limited to:
     telemetry_version - Telemetry version
 
 """
-
 import datetime
 import http.client as httplib
 import json
 import warnings
-
-import click
-import posthog
-import yaml
 import os
 from pathlib import Path
 import sys
 import uuid
 from functools import wraps
+import platform
+
+import click
+import posthog
+import yaml
+import distro
 
 from ploomber.telemetry import validate_inputs
 from ploomber import __version__
-import platform
-import distro
 
 TELEMETRY_VERSION = '0.3'
 DEFAULT_HOME_DIR = '~/.ploomber'
