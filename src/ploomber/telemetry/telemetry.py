@@ -60,6 +60,9 @@ class Storage:
     def read(self):
         return read_conf_file(self.path())
 
+    def write(self, data, error=False):
+        write_conf_file(self.path(), data, error=error)
+
 
 class Settings(Storage):
     """User-customizable settings
@@ -296,11 +299,10 @@ def check_uid():
     Checks if local user id exists as a uid file, creates if not.
     """
     internal = Internal()
-    uid_path = internal.path()
     conf = internal.read()  # file already exist due to version check
     if 'uid' not in conf.keys():
         uid = str(uuid.uuid4())
-        res = write_conf_file(uid_path, {"uid": uid}, error=True)
+        res = internal.write({"uid": uid}, error=True)
         if res:
             return f"NO_UID {res}"
         else:
@@ -322,7 +324,7 @@ def check_stats_enabled():
     # Check if local config exists
     config_path = settings.path()
     if not config_path.exists():
-        write_conf_file(config_path, {"stats_enabled": True})
+        settings.write({"stats_enabled": True})
         return True
     else:  # read and return config
         conf = settings.read()
@@ -394,7 +396,7 @@ def check_version():
         if 'last_version_check' not in version.keys():
             version['last_version_check'] = today
 
-    write_conf_file(version_path, version)
+    internal.write(version)
 
     # Check if the flag was disabled
     if conf and 'version_check_enabled' in conf.keys() \
@@ -423,7 +425,7 @@ def check_version():
 
     # Update latest check date
     version['last_version_check'] = today
-    write_conf_file(version_path, version)
+    internal.write(version)
 
 
 def _get_telemetry_info():
