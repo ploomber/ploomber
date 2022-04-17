@@ -254,7 +254,7 @@ def check_uid():
     """
     Checks if local user id exists as a uid file, creates if not.
     """
-    uid_path = Path(check_dir_exist(CONF_DIR), DEFAULT_PLOOMBER_CONF)
+    uid_path = path_to_ploomber_config()
     conf = read_conf_file(uid_path)  # file already exist due to version check
     if 'uid' not in conf.keys():
         uid = str(uuid.uuid4())
@@ -277,7 +277,7 @@ def check_stats_enabled():
         return os.environ['PLOOMBER_STATS_ENABLED'].lower() == 'true'
 
     # Check if local config exists
-    config_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
+    config_path = path_to_user_config()
     if not config_path.exists():
         write_conf_file(config_path, {"stats_enabled": True})
         return True
@@ -291,8 +291,8 @@ def check_first_time_usage():
     The function checks for first time usage if the conf file exists and the
     uid file doesn't exist.
     """
-    config_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
-    uid_path = Path(check_dir_exist(CONF_DIR), DEFAULT_PLOOMBER_CONF)
+    config_path = path_to_user_config()
+    uid_path = path_to_ploomber_config()
     uid_conf = read_conf_file(uid_path)
     return config_path.exists() and 'uid' not in uid_conf.keys()
 
@@ -325,6 +325,14 @@ def read_conf_file(conf_path):
         return {}
 
 
+def path_to_ploomber_config():
+    return Path(check_dir_exist(CONF_DIR), DEFAULT_PLOOMBER_CONF)
+
+
+def path_to_user_config():
+    return Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
+
+
 def write_conf_file(conf_path, to_write, error=None):
     try:  # Create for future runs
         with conf_path.open("w") as file:
@@ -347,7 +355,7 @@ def is_cloud_user():
         Checks if the cloud_key is set in the User conf file (config.yaml).
         returns True/False accordingly.
         """
-    user_conf_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
+    user_conf_path = path_to_user_config()
     conf = read_conf_file(user_conf_path)
     return conf.get('cloud_key', False)
 
@@ -361,10 +369,10 @@ def check_version():
     """
     # Read conf file
     today = datetime.datetime.now()
-    config_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
+    config_path = path_to_user_config()
     conf = read_conf_file(config_path)
 
-    version_path = Path(check_dir_exist(CONF_DIR), DEFAULT_PLOOMBER_CONF)
+    version_path = path_to_ploomber_config()
     # Update version conf if not there
     if not version_path.exists():
         version = {'last_version_check': today}
