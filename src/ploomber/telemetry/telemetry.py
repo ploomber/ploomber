@@ -287,10 +287,6 @@ def check_stats_enabled():
         return conf.get('stats_enabled', True)
 
 
-def set_api_key(api_key):
-    print()
-
-
 def check_first_time_usage():
     """
     The function checks for first time usage if the conf file exists and the
