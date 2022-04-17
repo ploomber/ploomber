@@ -486,6 +486,36 @@ Path(product['model']).touch()
     dag.build()
 
 
+def test_multiple_nb_product(tmp_directory):
+    dag = DAG()
+
+    code = """
+# + tags=["parameters"]
+var = None
+
+# +
+from pathlib import Path
+Path(product['file']).touch()
+    """
+
+    product = {
+        'nb': File(Path(tmp_directory, 'out.ipynb')),
+        'nb_report': File(Path(tmp_directory, 'out.html')),
+        'nb_doc': File(Path(tmp_directory, 'out.pdf')),
+        'file': File(Path(tmp_directory, 'another', 'data', 'file.txt'))
+    }
+
+    NotebookRunner(code,
+                   product=product,
+                   dag=dag,
+                   ext_in='py',
+                   nb_product_key='nb',
+                   nb_product_report_key='nb_report',
+                   nb_product_doc_key='nb_doc',
+                   name='nb')
+    dag.build()
+
+
 def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory):
     dag = DAG()
 
@@ -642,6 +672,7 @@ var = None
 
 
 def test_develop_saves_changes(tmp_dag, monkeypatch):
+
     def mock_jupyter_notebook(args, check):
         nb = jupytext.reads('2 + 2', fmt='py')
         # args: "jupyter" {app} {path} {other args, ...}
