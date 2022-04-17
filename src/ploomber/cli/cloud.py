@@ -100,6 +100,7 @@ def get_pipeline(pipeline_id=None, verbose=None):
 
         for item in pipeline:
             item['updated'] = get_last_run(item['updated'])
+
         return pipeline
     except JSONDecodeError:
         return "Issue fetching pipeline {}".format(content)
