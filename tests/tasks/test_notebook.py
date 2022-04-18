@@ -944,14 +944,11 @@ def test_static_analysis_strict_raises_error_at_rendertime_if_signature_error(
                    params=dict(some_param='value'))
 
     with pytest.raises(DAGRenderError) as excinfo:
-        with pytest.warns(UserWarning) as records:
-            dag.render()
+        dag.render()
 
     expected = ("Error rendering notebook 'nb.py'. Parameters "
                 "declared in the 'parameters' cell do not match task params.")
     assert expected in str(excinfo.value)
-    # it should not warn, since we raise the error
-    assert len(records) == 0
 
 
 def test_replaces_existing_product(tmp_directory):
