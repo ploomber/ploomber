@@ -31,20 +31,19 @@ The data we collect is limited to:
 import datetime
 import http.client as httplib
 import json
-import warnings
 import os
 from pathlib import Path
 import sys
-import uuid
+from uuid import uuid4
 from functools import wraps
 import platform
 
 import click
 import posthog
-import yaml
 import distro
 
 from ploomber.telemetry import validate_inputs
+from ploomber.config import Config
 from ploomber import __version__
 
 TELEMETRY_VERSION = '0.3'
@@ -56,18 +55,15 @@ posthog.project_api_key = 'phc_P9SpSeypyPwxrMdFn2edOOEooQioF2axppyEeDwtMSP'
 PLOOMBER_HOME_DIR = os.getenv("PLOOMBER_HOME_DIR")
 
 
-class Config:
-    def read(self):
-        return read_conf_file(self.path())
-
-    def write(self, data, error=False):
-        write_conf_file(self.path(), data, error=error)
-
-
 class UserSettings(Config):
     """User-customizable settings
     """
-    def path(self):
+    version_check_enabled: bool = True
+    cloud_key: str = None
+    stats_enabled: bool = True
+
+    @classmethod
+    def path(cls):
         return Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
 
 
@@ -76,28 +72,16 @@ class Internal(Config):
     Internal file to store settings (not intended to be modified by the
     user)
     """
-    def path(self):
+    last_version_check: str = None
+    uid: str
+    first_time: bool = True
+
+    @classmethod
+    def path(cls):
         return Path(check_dir_exist(CONF_DIR), DEFAULT_PLOOMBER_CONF)
 
-
-def read_conf_file(conf_path):
-    try:
-        with conf_path.open("r") as file:
-            conf = yaml.safe_load(file)
-            return conf
-    except Exception as e:
-        warnings.warn(f"Can't read config file {e}")
-        return {}
-
-
-def write_conf_file(conf_path, to_write, error=None):
-    try:  # Create for future runs
-        with conf_path.open("w") as file:
-            yaml.dump(to_write, file)
-    except Exception as e:
-        warnings.warn(f"Can't write to config file: {e}")
-        if error:
-            return e
+    def uid_default(self):
+        return str(uuid4())
 
 
 def python_version():
@@ -119,8 +103,9 @@ def is_online():
         conn.close()
 
 
-# Will output if the code is within a container
 def is_docker():
+    """Will output if the code is within a container
+    """
     try:
         cgroup = Path('/proc/self/cgroup')
         docker_env = Path('/.dockerenv')
@@ -184,7 +169,8 @@ def is_conda():
 def get_base_prefix_compat():
     """
     This function will find the pip virtualenv with different python versions.
-    Get base/real prefix, or sys.prefix if there is none."""
+    Get base/real prefix, or sys.prefix if there is none.
+    """
     return getattr(sys, "base_prefix", None) or sys.prefix or getattr(
         sys, "real_prefix", None)
 
@@ -294,23 +280,7 @@ def check_dir_exist(input_location=None):
     return p
 
 
-def check_uid():
-    """
-    Checks if local user id exists as a uid file, creates if not.
-    """
-    internal = Internal()
-    conf = internal.read()  # file already exist due to version check
-    if 'uid' not in conf.keys():
-        uid = str(uuid.uuid4())
-        res = internal.write({"uid": uid}, error=True)
-        if res:
-            return f"NO_UID {res}"
-        else:
-            return uid
-    return conf.get('uid', "NO_UID")
-
-
-def check_stats_enabled():
+def check_telemetry_enabled():
     """
     Check if the user allows us to use telemetry. In order of precedence:
 
@@ -321,14 +291,7 @@ def check_stats_enabled():
         return os.environ['PLOOMBER_STATS_ENABLED'].lower() == 'true'
 
     settings = UserSettings()
-    # Check if local config exists
-    config_path = settings.path()
-    if not config_path.exists():
-        settings.write({"stats_enabled": True})
-        return True
-    else:  # read and return config
-        conf = settings.read()
-        return conf.get('stats_enabled', True)
+    return settings.stats_enabled
 
 
 def check_first_time_usage():
@@ -336,9 +299,10 @@ def check_first_time_usage():
     The function checks for first time usage if the conf file exists and the
     uid file doesn't exist.
     """
-    config_path = UserSettings().path()
-    uid_conf = Internal().read()
-    return config_path.exists() and 'uid' not in uid_conf.keys()
+    internal = Internal()
+    first_time = internal.first_time
+    internal.first_time = False
+    return first_time
 
 
 def get_latest_version():
@@ -359,20 +323,14 @@ def get_latest_version():
         conn.close()
 
 
-def update_conf_file(conf_path, to_write, error=None):
-    conf = read_conf_file(conf_path)
-    new_conf = dict(conf, **to_write)
-    write_conf_file(conf_path, new_conf, error)
-
-
 def is_cloud_user():
     """
         The function checks if the cloud api key is set for the user.
         Checks if the cloud_key is set in the User conf file (config.yaml).
         returns True/False accordingly.
         """
-    conf = UserSettings().read()
-    return conf.get('cloud_key', False)
+    settings = UserSettings()
+    return settings.cloud_key
 
 
 def check_version():
@@ -382,31 +340,17 @@ def check_version():
     If it's not the latest, notifies the user and saves the metadata to conf
     Alerting every 2 days on stale versions
     """
-    # Read conf file
-    today = datetime.datetime.now()
-    conf = UserSettings().read()
+    settings = UserSettings()
 
-    internal = Internal()
-    version_path = internal.path()
-    # Update version conf if not there
-    if not version_path.exists():
-        version = {'last_version_check': today}
-    else:
-        version = internal.read()
-        if 'last_version_check' not in version.keys():
-            version['last_version_check'] = today
-
-    internal.write(version)
-
-    # Check if the flag was disabled
-    if conf and 'version_check_enabled' in conf.keys() \
-            and not conf['version_check_enabled']:
+    if not settings.version_check_enabled:
         return
 
+    internal = Internal()
+    now = datetime.datetime.now()
+
     # Check if we already notified in the last 2 days
-    last_message = version['last_version_check']
-    diff = (today - last_message).days
-    if diff < 2:
+    if internal.last_version_check and (now -
+                                        internal.last_version_check).days < 2:
         return
 
     # check latest version (this is an expensive call since it hits pypi.org)
@@ -424,8 +368,7 @@ def check_version():
         fg='yellow')
 
     # Update latest check date
-    version['last_version_check'] = today
-    internal.write(version)
+    internal.last_version_check = now
 
 
 def _get_telemetry_info():
@@ -435,19 +378,18 @@ def _get_telemetry_info():
     for first time installation.
     """
     # Check if telemetry is enabled, if not skip, else check for uid
-    telemetry_enabled = check_stats_enabled()
+    telemetry_enabled = check_telemetry_enabled()
 
     # Check latest version
     check_version()
 
     if telemetry_enabled:
-
         # Check first time install
         is_install = check_first_time_usage()
 
         # if not uid, create
-        uid = check_uid()
-        return telemetry_enabled, uid, is_install
+        internal = Internal()
+        return telemetry_enabled, internal.uid, is_install
     else:
         return False, '', False
 
@@ -469,11 +411,14 @@ def log_api(action, client_time=None, total_runtime=None, metadata=None):
     """
     metadata = metadata or {}
 
-    event_id = uuid.uuid4()
+    event_id = uuid4()
+
     if client_time is None:
         client_time = datetime.datetime.now()
 
     (telemetry_enabled, uid, is_install) = _get_telemetry_info()
+
+    # NOTE: this should not happen anymore
     if 'NO_UID' in uid:
         metadata['uid_issue'] = uid
         uid = None
