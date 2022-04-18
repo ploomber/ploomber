@@ -72,7 +72,7 @@ class Internal(Config):
     Internal file to store settings (not intended to be modified by the
     user)
     """
-    last_version_check: str = None
+    last_version_check: datetime.datetime = None
     uid: str
     first_time: bool = True
 

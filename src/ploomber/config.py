@@ -24,23 +24,42 @@ class Config(abc.ABC):
             path.write_text(yaml.dump(defaults))
             self._set_data(defaults)
         else:
-            text = path.read_text()
-
             try:
-                content = yaml.safe_load(text)
+                content = self._load_from_file()
                 loaded = True
-            except Exception:
-                warnings.warn(f'Error loading {str(path)!r}, '
+            except Exception as e:
+                warnings.warn(f'Error loading {str(path)!r}: {e}\n\n'
                               'reverting to default values')
                 loaded = False
                 content = self._get_data()
 
             if loaded and not isinstance(content, Mapping):
-                warnings.warn(f'Error loading {str(path)!r}. Content is not'
-                              'a dictionary, reverting to default values')
+                warnings.warn(
+                    f'Error loading {str(path)!r}. Expected a dictionary '
+                    f'but got {type(content).__name__}, '
+                    'reverting to default values')
                 content = self._get_data()
 
             self._set_data(content)
+
+    def _load_from_file(self):
+        path = self.path()
+        text = path.read_text()
+        content = yaml.safe_load(text)
+
+        for key, type_ in self.__annotations__.items():
+            value = content.get(key, None)
+
+            if value is not None and not isinstance(value, type_):
+                default = getattr(self, key)
+                warnings.warn(f'Corrupted config file {str(path)!r}: '
+                              f'expected {key!r} to contain an object '
+                              f'with type {type_.__name__}, but got '
+                              f'{type(value).__name__}. Reverting to '
+                              f'default value {default}')
+                content[key] = default
+
+        return content
 
     def _get_data(self):
         """Extract values from the annotations and return a dictionary

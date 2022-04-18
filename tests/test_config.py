@@ -83,9 +83,13 @@ def test_uses_defaults_if_corrupted(tmp_directory, content):
     path = Path('myconfig.yaml')
     path.write_text(content)
 
-    cfg = MyConfig()
+    with pytest.warns(UserWarning) as records:
+        cfg = MyConfig()
+
     content = yaml.safe_load(Path('myconfig.yaml').read_text())
 
+    assert len(records) == 1
+    assert 'Error loading' in records[0].message.args[0]
     assert cfg.number == 42
     assert cfg.string == 'value'
     assert content == {'number': 42, 'string': 'value'}
@@ -109,3 +113,32 @@ def test_factory_keeps_existing_values(tmp_directory):
     assert cfg.uuid == 'my-uuid'
     assert cfg.another == 'some-value'
     assert content == values
+
+
+@pytest.mark.parametrize('content, number, string', [
+    [
+        {
+            'number': 'not-a-number'
+        },
+        42,
+        'value',
+    ],
+    [
+        {
+            'string': 1
+        },
+        42,
+        'value',
+    ],
+])
+def test_restores_values_if_wrong_type(tmp_directory, content, number, string):
+    path = Path('myconfig.yaml')
+    path.write_text(yaml.dump(content))
+
+    with pytest.warns(UserWarning) as records:
+        cfg = MyConfig()
+
+    assert len(records) == 1
+    assert 'Corrupted config' in records[0].message.args[0]
+    assert cfg.number == number
+    assert cfg.string == string
