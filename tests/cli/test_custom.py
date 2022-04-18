@@ -207,7 +207,6 @@ def test_log_enabled(monkeypatch, tmp_sample_dir):
     build.main(catch_exception=False)
 
 
-@pytest.mark.skip(reason="Skipping test so it won't call log_api")
 def test_interactive_session(tmp_sample_dir, monkeypatch):
     mock_log = Mock()
     monkeypatch.setattr(telemetry, 'log_api', mock_log)
