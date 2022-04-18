@@ -890,23 +890,6 @@ def test_validates_static_analysis_value(tmp_sample_tasks):
     assert expected == str(excinfo.value)
 
 
-@pytest.mark.parametrize('value, replacement, message', [
-    [False, 'disable', "from False to 'disable'"],
-    [True, 'regular', "from True to 'regular'"],
-])
-def test_compatibility_with_static_analysis_bool(tmp_sample_tasks, value,
-                                                 replacement, message):
-
-    with pytest.warns(FutureWarning) as records:
-        task = NotebookRunner(Path('sample.ipynb'),
-                              File('out.ipynb'),
-                              dag=DAG(),
-                              static_analysis=value)
-
-    assert task.static_analysis == replacement
-    assert message in records[0].message.args[0]
-
-
 def test_warns_on_unused_parameters(tmp_sample_tasks):
     dag = DAG()
     NotebookRunner(Path('sample.ipynb'),
