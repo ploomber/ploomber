@@ -1,3 +1,4 @@
+import warnings
 import abc
 from collections.abc import Mapping
 
@@ -6,6 +7,8 @@ import yaml
 
 class Config(abc.ABC):
     def __init__(self):
+        self._init_values()
+
         # resolve home directory
         path = self.path()
 
@@ -19,13 +22,13 @@ class Config(abc.ABC):
             try:
                 content = yaml.safe_load(text)
                 loaded = True
-            except Exception:
-                # NOTE: show warning?
+            except Exception as e:
+                warnings.warn(str(e))
                 loaded = False
                 content = self._get_data()
 
             if loaded and not isinstance(content, Mapping):
-                # NOTE: show warning?
+                warnings.warn('YAMl not a mapping')
                 content = self._get_data()
 
             self._set_data(content)
@@ -41,6 +44,16 @@ class Config(abc.ABC):
         for key in self.__annotations__:
             if key in data:
                 setattr(self, key, data[key])
+
+    def _init_values(self):
+        for key in self.__annotations__:
+            name = f'{key}_default'
+            if hasattr(self, name):
+                value = getattr(self, name)()
+                # call __setattr__ on the superclass so we skip the part
+                # where we overwrite the YAML file, here we only want to
+                # set the default values
+                super().__setattr__(key, value)
 
     def _write(self):
         path = self.path()

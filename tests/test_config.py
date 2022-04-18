@@ -14,6 +14,17 @@ class MyConfig(Config):
         return Path('myconfig.yaml')
 
 
+class AnotherConfig(Config):
+    uuid: str
+    another: str = 'default'
+
+    def path(self):
+        return Path('another.yaml')
+
+    def uuid_default(self):
+        return 'some-value'
+
+
 def test_stores_defaults(tmp_directory):
     MyConfig()
 
@@ -78,3 +89,23 @@ def test_uses_defaults_if_corrupted(tmp_directory, content):
     assert cfg.number == 42
     assert cfg.string == 'value'
     assert content == {'number': 42, 'string': 'value'}
+
+
+def test_config_with_factory(tmp_directory):
+    cfg = AnotherConfig()
+
+    assert cfg.uuid == 'some-value'
+    assert cfg.another == 'default'
+
+
+def test_factory_keeps_existing_values(tmp_directory):
+    path = Path('another.yaml')
+    values = {'uuid': 'my-uuid', 'another': 'some-value'}
+    path.write_text(yaml.dump(values))
+
+    cfg = AnotherConfig()
+    content = yaml.safe_load(Path('another.yaml').read_text())
+
+    assert cfg.uuid == 'my-uuid'
+    assert cfg.another == 'some-value'
+    assert content == values
