@@ -29,7 +29,7 @@ class Config(abc.ABC):
             try:
                 content = yaml.safe_load(text)
                 loaded = True
-            except Exception as e:
+            except Exception:
                 warnings.warn(f'Error loading {str(path)!r}, '
                               'reverting to default values')
                 loaded = False
