@@ -6,6 +6,13 @@ import yaml
 
 
 class Config(abc.ABC):
+    """And abstract class to create configuration files (stored as YAML)
+
+    Notes
+    -----
+    For examples, see test_config.py or the concrete classes
+    (UserSettings, Internal)
+    """
     def __init__(self):
         self._init_values()
 
@@ -33,21 +40,28 @@ class Config(abc.ABC):
 
             self._set_data(content)
 
-    # TODO: delete, only here for compatibility
-    def read(self):
-        return self._get_data()
-
     def _get_data(self):
+        """Extract values from the annotations and return a dictionary
+        """
         return {key: getattr(self, key) for key in self.__annotations__}
 
     def _set_data(self, data):
+        """Take a dictionary and store it in the annotations
+        """
         for key in self.__annotations__:
             if key in data:
                 setattr(self, key, data[key])
 
     def _init_values(self):
+        """
+        Iterate over annotations to initialize values. This is only relevant
+        when any of the annotations has a factory method to initialize the
+        values. If they value is a literal, no changes happen.
+        """
         for key in self.__annotations__:
             name = f'{key}_default'
+
+            # if there is a method with such name, call it and store the output
             if hasattr(self, name):
                 value = getattr(self, name)()
                 # call __setattr__ on the superclass so we skip the part
@@ -56,9 +70,10 @@ class Config(abc.ABC):
                 super().__setattr__(key, value)
 
     def _write(self):
-        path = self.path()
+        """Writes data to the YAML file
+        """
         data = self._get_data()
-        path.write_text(yaml.dump(data))
+        self.path().write_text(yaml.dump(data))
 
     def __setattr__(self, name, value):
         if name not in self.__annotations__:
@@ -69,4 +84,6 @@ class Config(abc.ABC):
 
     @abc.abstractclassmethod
     def path(cls):
+        """Returns the path to the YAML file
+        """
         pass
