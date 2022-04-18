@@ -30,12 +30,14 @@ class Config(abc.ABC):
                 content = yaml.safe_load(text)
                 loaded = True
             except Exception as e:
-                warnings.warn(str(e))
+                warnings.warn(f'Error loading {str(path)!r}, '
+                              'reverting to default values')
                 loaded = False
                 content = self._get_data()
 
             if loaded and not isinstance(content, Mapping):
-                warnings.warn('YAMl not a mapping')
+                warnings.warn(f'Error loading {str(path)!r}. Content is not'
+                              'a dictionary, reverting to default values')
                 content = self._get_data()
 
             self._set_data(content)
