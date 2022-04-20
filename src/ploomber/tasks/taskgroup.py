@@ -138,6 +138,7 @@ class TaskGroup:
         resolve_relative_to : str or pathlib.Path, default=None
             If not None, paths in File products are resolved to be absolute
             paths
+
         """
         if name is None and namer is None:
             raise ValueError(
@@ -197,6 +198,7 @@ class TaskGroup:
                     product_primitive_to_use,
                     index,
                     resolve_relative_to=resolve_relative_to,
+                    params=params,
                 )
             else:
                 raise NotImplementedError('TaskGroup only sypported for '
@@ -235,7 +237,8 @@ class TaskGroup:
                   resolve_relative_to=None,
                   on_render=None,
                   on_finish=None,
-                  on_failure=None):
+                  on_failure=None,
+                  params=None):
         """
         Build a group of tasks of the same class from an grid of parameters
         using the same source.
@@ -247,11 +250,14 @@ class TaskGroup:
             If list of dicts, each dict is processed individually, then
             concatenated to generate the final set.
 
+        params : dict
+            Values that will remain constant
+
         Notes
         -----
         All parameters, except for grid are the same as in .from_params
         """
-        params_array = ParamGrid(grid).product()
+        params_array = ParamGrid(grid, params=params).product()
         return cls.from_params(task_class=task_class,
                                product_class=product_class,
                                product_primitive=product_primitive,
@@ -266,21 +272,22 @@ class TaskGroup:
                                on_failure=on_failure)
 
 
-def _init_product(product_class, product_primitive, index,
-                  resolve_relative_to):
+def _init_product(product_class, product_primitive, index, resolve_relative_to,
+                  params):
     if isinstance(product_primitive, Mapping):
         return {
             key: _init_product(product_class, primitive, index,
-                               resolve_relative_to)
+                               resolve_relative_to, params)
             for key, primitive in product_primitive.items()
         }
     elif isinstance(product_primitive, str):
         return _init_product_with_str(product_class, product_primitive, index,
-                                      resolve_relative_to)
+                                      resolve_relative_to, params)
     # is there a better way to check this? Sequence also matches str/bytes
     elif isinstance(product_primitive, (list, tuple)):
         return _init_product_with_sql_elements(product_class,
-                                               product_primitive, index)
+                                               product_primitive, index,
+                                               params)
     else:
         raise NotImplementedError('TaskGroup only supported for task dict '
                                   'and str product primitives. Got '
@@ -289,7 +296,7 @@ def _init_product(product_class, product_primitive, index,
 
 
 def _init_product_with_str(product_class, product_primitive, index,
-                           resolve_relative_to):
+                           resolve_relative_to, params):
     if index is not None:
         path = (Path(product_primitive) if resolve_relative_to is None else
                 Path(resolve_relative_to, product_primitive).resolve())
@@ -297,14 +304,32 @@ def _init_product_with_str(product_class, product_primitive, index,
         suffix = ''.join(path.suffixes)
         filename = path.name.replace(suffix, '')
         filename_with_index = f'{filename}-{index}{suffix}'
-        return product_class(path.parent / filename_with_index)
+
+        path_final = Template(
+            str(path.parent / filename_with_index),
+            variable_start_string='[[',
+            variable_end_string=']]',
+        ).render(**params)
+
+        return product_class(path_final)
     else:
         return product_class(product_primitive)
 
 
-def _init_product_with_sql_elements(product_class, product_primitive, index):
+def _init_product_with_sql_elements(product_class, product_primitive, index,
+                                    params):
     # this could be [schema, name, type] or just [name, type]
     index_to_change = 1 if len(product_primitive) == 3 else 0
     updated = copy(product_primitive)
-    updated[index_to_change] = product_primitive[index_to_change] + f'-{index}'
+
+    table_name = product_primitive[index_to_change] + f'-{index}'
+
+    table_name_final = Template(
+        table_name,
+        variable_start_string='[[',
+        variable_end_string=']]',
+    ).render(**params)
+
+    updated[index_to_change] = table_name_final
+
     return product_class(updated)

@@ -1,3 +1,4 @@
+import shutil
 import os
 import re
 import ast
@@ -9,11 +10,12 @@ from pathlib import Path
 from functools import reduce
 import datetime
 
-from jinja2 import Template, StrictUndefined
+from jinja2 import Template
 
 from ploomber.placeholders import util
 from ploomber import repo
 from ploomber.util import default
+from ploomber.exceptions import BaseException
 
 
 def expand_raw_dictionary_and_extract_tags(raw, mapping):
@@ -52,24 +54,7 @@ def expand_raw_dictionaries_and_extract_tags(raw, mapping):
 
 
 def expand_if_needed(raw_value, mapping):
-    placeholders = util.get_tags_in_str(raw_value)
-
-    if not placeholders:
-        value = raw_value
-    else:
-        try:
-            value = Template(raw_value,
-                             undefined=StrictUndefined).render(**mapping)
-        except Exception as e:
-            exception = e
-        else:
-            exception = None
-
-        if exception:
-            raise KeyError(
-                f'Error replacing placeholder: {exception}. Loaded env: '
-                f'{mapping!r}')
-
+    value, placeholders = mapping._render(raw_value)
     return cast_if_possible(value), placeholders
 
 
@@ -113,12 +98,18 @@ class EnvironmentExpander:
         Whether determining package version requires import or not. If False,
         the root ``__init__.py`` file in the module must have
         a ``__version__ = 'LITERAL'`` variable. Literal is extracted.
+
+    path_to_env : str, default=None
+        Path to the env.yaml. If not None, it is used to hint the user which
+        file to fix if there are errors.
     """
     def __init__(self,
                  preprocessed,
                  path_to_here=None,
-                 version_requires_import=False):
+                 version_requires_import=False,
+                 path_to_env=None):
         self._preprocessed = preprocessed
+        self._path_to_env = path_to_env
 
         # {{here}} resolves to this value
         self._path_to_here = (None if path_to_here is None else str(
@@ -160,6 +151,19 @@ class EnvironmentExpander:
         if not placeholders:
             value = raw_value
         else:
+            if 'git' in placeholders:
+                if not shutil.which('git'):
+                    raise BaseException('Found placeholder {{git}}, but '
+                                        'git is not installed. Please install '
+                                        'it and try again.')
+
+                if not repo.is_repo(
+                        self._preprocessed.get('_module', self._path_to_here)):
+                    raise BaseException(
+                        'Found placeholder {{git}}, but could not '
+                        'locate a git repository. Create a repository '
+                        'or remove the {{git}} placeholder.')
+
             # get all required placeholders
             params = {k: self.load_placeholder(k) for k in placeholders}
             value = Template(raw_value).render(**params)
@@ -171,7 +175,7 @@ class EnvironmentExpander:
                 # if it has an explicit trailing slash, interpret it as
                 # a directory and create it, we have to do it at this point,
                 # because once we cast to Path, we lose the trailing slash
-                if value.endswith('/'):
+                if str(value).endswith('/'):
                     self._try_create_dir(value)
 
                 return Path(value).expanduser()
@@ -188,9 +192,24 @@ class EnvironmentExpander:
     def load_placeholder(self, key):
         if key not in self._placeholders:
             if hasattr(self, 'get_' + key):
-                self._placeholders[key] = getattr(self, 'get_' + key)()
+                try:
+                    value = getattr(self, 'get_' + key)()
+                except Exception as e:
+                    raise BaseException('An error happened while '
+                                        'expanding placeholder {{' + key +
+                                        '}}') from e
+
+                self._placeholders[key] = value
             else:
-                raise RuntimeError('Unknown placeholder "{}"'.format(key))
+                if self._path_to_env:
+                    msg = ('Error resolving env '
+                           f'at {str(self._path_to_env)!r}: '
+                           f'Undeclared value for placeholder {key!r}')
+                else:
+                    msg = ('Error resolving env: Undeclared '
+                           f'value for placeholder {key!r}')
+
+                raise BaseException(msg)
 
         return self._placeholders[key]
 
@@ -258,12 +277,27 @@ class EnvironmentExpander:
                                'when directly passing path to use')
 
     def get_git(self):
-        module = self._preprocessed.get('_module')
+        module_path = self._preprocessed.get('_module')
 
-        if not module:
+        if self._path_to_here:
+            module_path = self._path_to_here
+
+        if not module_path:
             raise KeyError('_module key is required to use git placeholder')
 
-        return repo.get_git_info(module)['git_location']
+        return repo.git_location(module_path)
+
+    def get_git_hash(self):
+        module_path = self._preprocessed.get('_module')
+
+        if self._path_to_here:
+            module_path = self._path_to_here
+
+        if not module_path:
+            raise KeyError(
+                '_module key is required to use git_hash placeholder')
+
+        return repo.git_hash(module_path)
 
     def get_now(self):
         """Returns current timestamp in ISO 8601 format

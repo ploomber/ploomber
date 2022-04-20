@@ -68,6 +68,10 @@ from ploomber.exceptions import DAGSpecInvalidError
 from ploomber.entrypoint import try_to_find_entry_point_type, EntryPoint
 
 
+def _filesystem_root():
+    return Path(os.path.abspath(os.sep))
+
+
 def _package_location(root_path, name='pipeline.yaml'):
     """
     Look for a src/{package-name}/pipeline.yaml relative to root_path
@@ -455,6 +459,12 @@ def find_root_recursively(starting_dir=None,
         max_levels_up=6,
         starting_dir=starting_dir,
     )
+
+    if root_by_pipeline == _filesystem_root():
+        raise DAGSpecInvalidError(
+            f'{filename} cannot be in the filesystem root. '
+            'Please add it inside a directory like '
+            f'project-name/{filename}. ')
 
     root_found = None
 

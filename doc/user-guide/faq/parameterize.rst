@@ -1,3 +1,5 @@
+.. _parametrizing-notebooks:
+
 Parameterizing Notebooks
 ------------------------
 
@@ -11,7 +13,7 @@ the ``upstream`` parameter, which contains a list of task dependencies.
 Parameterizing ``.py`` files
 *****************************
 
-For ``.py`` files, include the ``# %% tags=["parameters]`` comment before declaring your default variables or parameters.
+For ``.py`` files, include the ``# %% tags=["parameters"]`` comment before declaring your default variables or parameters.
 
 
 .. code-block:: python

@@ -689,6 +689,10 @@ class DAG(AbstractDAG):
             it's not possible to build a given task (e.g., missing upstream
             products), this will fail
         """
+
+        # we have to use a deep copy since using a soft one will corrupt
+        # task status in subsequent runs
+
         dag_copy = self._deepcopy_safe()
 
         # task names are usually str, although this isn't strictly enforced
@@ -881,16 +885,17 @@ class DAG(AbstractDAG):
         G = nx.DiGraph()
         for task in self.values():
             if return_graphviz or return_json_dag:
+                outdated = task.product._is_outdated()
+
                 # add parameters for graphviz plotting
-                color = ('lightcoral'
-                         if task.product._is_outdated() else 'lightgreen')
+                color = ('#F08080' if outdated else '#90EE90')
 
                 label = (_task_short_repr(task)
                          if include_products else task.name)
 
                 attr = {
                     'fillcolor': color,
-                    'style': 'filled',
+                    'style': 'dashed, filled' if outdated else 'filled',
                     'fontname': 'Helvetica',
                     'fontsize': '16pt',
                     'id': task.name,

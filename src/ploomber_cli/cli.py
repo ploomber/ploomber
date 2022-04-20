@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 import os
 from difflib import get_close_matches
@@ -6,6 +7,11 @@ import sys
 from ploomber_scaffold import scaffold as scaffold_project
 
 import click
+
+CLICK_VERSION = int(click.__version__[0])
+# NOTE: package_name was introduced in version 8
+VERSION_KWARGS = dict(
+    package_name='ploomber') if CLICK_VERSION >= 8 else dict()
 
 
 def _suggest_command(name: str, options):
@@ -31,7 +37,7 @@ def _suggest_command(name: str, options):
 
 
 @click.group()
-@click.version_option(package_name='ploomber')
+@click.version_option(**VERSION_KWARGS)
 def cli():
     """
     Ploomber
@@ -459,3 +465,128 @@ def delete_pipeline(pipeline_id):
     """
     from ploomber import cli as cli_module
     print(cli_module.cloud.delete_pipeline(pipeline_id))
+
+
+@cloud.command(name='build')
+@click.option('-f',
+              '--force',
+              help='Force execution by ignoring status',
+              is_flag=True)
+@click.option('--github-number', help="Github's PR number", default=None)
+@click.option('--github-owner', help="Github's owner", default=None)
+@click.option('--github-repo', help="Github's repo", default=None)
+@click.option('--raw', is_flag=True)
+def cloud_build(force, github_number, github_owner, github_repo, raw):
+    """Build pipeline in the cloud
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
+    """
+    from ploomber.cloud import api
+    runid = api.upload_project(force,
+                               github_number,
+                               github_owner,
+                               github_repo,
+                               verbose=not raw)
+    if raw:
+        click.echo(runid)
+
+
+@cloud.command(name="list")
+def cloud_list():
+    """List cloud executions
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
+    """
+    from ploomber.cloud import api
+    api.runs()
+
+
+@cloud.command(name="status")
+@click.argument('run_id')
+@click.option('--watch', is_flag=True)
+def cloud_status(run_id, watch):
+    """Get details on a cloud execution
+    $ ploomber cloud status {some-id}
+
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
+    """
+    from ploomber.cloud import api
+
+    if watch:
+        idle = 5
+        timeout = 10 * 60
+        cumsum = 0
+
+        while True:
+            click.clear()
+            out = api.run_detail_print(run_id)
+
+            status = set([t['status'] for t in out['tasks']])
+
+            if out['run'] != 'created' and (status == {'finished'}
+                                            or 'aborted' in status or 'failed'
+                                            in status) or cumsum >= timeout:
+                break
+
+            time.sleep(idle)
+            cumsum += idle
+    else:
+        api.run_detail_print(run_id)
+
+
+@cloud.command(name="products")
+def cloud_products():
+    """List products in cloud workspace
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
+    """
+    from ploomber.cloud import api
+    api.products_list()
+
+
+@cloud.command(name="download")
+@click.argument('pattern')
+def cloud_download(pattern):
+    """Download products from cloud workspace
+    Download all .csv files:
+    $ ploomber cloud download '*.csv'
+
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
+    """
+    from ploomber.cloud import api
+    api.products_download(pattern)
+
+
+@cloud.command(name="logs")
+@click.argument('run_id')
+def cloud_logs(run_id):
+    """Get logs on a cloud execution
+    $ ploomber cloud logs {some-id}
+
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
+    """
+    from ploomber.cloud import api
+    api.run_logs(run_id)
+
+
+@cloud.command(name="abort")
+@click.argument('run_id')
+def cloud_abort(run_id):
+    """Abort a cloud execution
+    $ ploomber cloud abort {some-id}
+
+
+    Currently in private alpha, ask us for an invite:
+    https://ploomber.io/community
+    """
+    from ploomber.cloud import api
+    api.run_abort(run_id)

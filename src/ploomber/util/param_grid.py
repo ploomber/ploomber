@@ -1,3 +1,5 @@
+from ploomber.io import pretty_print
+
 from collections.abc import Mapping, Iterable
 from itertools import product, chain
 
@@ -52,6 +54,9 @@ class ParamGrid:
         Grid to generate. Can generate multiple grids at once by passing
         a list of grids
 
+    params : dict
+        Parameters that should remain fixed
+
     Examples
     --------
     >>> pg = ParamGrid({'a': [1, 2, 3], 'b': [2, 4, 6]})
@@ -65,11 +70,12 @@ class ParamGrid:
     -----
     Parameters with a single element are converted to lists of length 1
     """
-    def __init__(self, grid):
+    def __init__(self, grid, params=None):
         if isinstance(grid, Mapping):
             grid = [grid]
 
         self._expanded = [_expand(d) for d in grid]
+        self._params = params or dict()
 
     def zip(self):
         for d in chain(self._expanded):
@@ -81,7 +87,9 @@ class ParamGrid:
             length = list(lengths)[0]
 
             for i in range(length):
-                yield {k: v[i] for k, v in d.items()}
+                out = {k: v[i] for k, v in d.items()}
+                _check_keys_overlap(out, self._params)
+                yield {**out, **self._params}
 
     def product(self):
         for d in chain(self._expanded):
@@ -94,7 +102,9 @@ class ParamGrid:
                 for k, v in zip(keys, elements):
                     d[k] = v
 
-                yield d
+                _check_keys_overlap(d, self._params)
+
+                yield {**d, **self._params}
 
 
 def _expand(d):
@@ -109,3 +119,13 @@ def _expand(d):
             expanded[k] = v
 
     return expanded
+
+
+def _check_keys_overlap(a, b):
+
+    overlap = set(a) & set(b)
+
+    if overlap:
+        overlap_ = pretty_print.iterable(overlap)
+        raise ValueError("Error generating grid: 'grid' and 'params' "
+                         f"have overlapping keys: {overlap_}")

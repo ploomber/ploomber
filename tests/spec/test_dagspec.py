@@ -9,7 +9,7 @@ import pandas as pd
 from pathlib import Path
 import pytest
 import yaml
-from conftest import _path_to_tests, fixture_tmp_dir
+from conftest import _path_to_tests, fixture_tmp_dir, git_init
 import getpass
 from copy import deepcopy
 
@@ -28,7 +28,8 @@ from ploomber.tasks import SQLScript
 from ploomber import exceptions
 from ploomber.executors import Serial, Parallel
 from ploomber.products import MetaProduct
-from ploomber.exceptions import DAGSpecInitializationError, ValidationError
+from ploomber.exceptions import (DAGSpecInitializationError, ValidationError,
+                                 BaseException)
 from ploomber.sources.nb_utils import find_cell_with_tag
 
 
@@ -574,7 +575,8 @@ def test_postgres_sql_spec(tmp_pipeline_sql, pg_client_and_schema,
     # clients for this pipeline are initialized without custom create_engine
     # args but we need to set the default schema, mock the call so it
     # includes that info
-    monkeypatch.setattr(db, 'create_engine', create_engine_with_schema(schema))
+    monkeypatch.setattr(db.sqlalchemy, 'create_engine',
+                        create_engine_with_schema(schema))
 
     dates = _random_date_from(datetime(2016, 1, 1), 365, 100)
     df = pd.DataFrame({
@@ -654,7 +656,8 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
     # clients for this pipeline are initialized without custom create_engine
     # args but we need to set the default schema, mock the call so it
     # includes that info
-    monkeypatch.setattr(db, 'create_engine', create_engine_with_schema(schema))
+    monkeypatch.setattr(db.sqlalchemy, 'create_engine',
+                        create_engine_with_schema(schema))
 
     dates = _random_date_from(datetime(2016, 1, 1), 365, 100)
     df = pd.DataFrame({
@@ -761,7 +764,7 @@ def test_expand_env(save, tmp_directory):
                 'product': 'output.ipynb',
                 'params': {
                     'sample': '{{sample}}',
-                    'user': '{{user}}'
+                    'user': '{{user}}',
                 }
             }]
         },
@@ -769,6 +772,38 @@ def test_expand_env(save, tmp_directory):
 
     assert spec['tasks'][0]['params']['sample'] is True
     assert spec['tasks'][0]['params']['user'] == getpass.getuser()
+
+
+@pytest.mark.parametrize('save', [True, False])
+def test_expand_env_from_file(save, tmp_directory):
+    env = {'sample': True, 'user': '{{user}}', 'git': '{{git}}'}
+
+    if save:
+        with open('env.yaml', 'w') as f:
+            yaml.dump(env, f)
+        env = 'env.yaml'
+
+    spec_ = {
+        'tasks': [{
+            'source': 'plot.py',
+            'product': 'output.ipynb',
+            'params': {
+                'sample': '{{sample}}',
+                'user': '{{user}}',
+                'git': '{{git}}',
+            }
+        }]
+    }
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec_))
+
+    git_init()
+
+    spec = DAGSpec('pipeline.yaml', env=env)
+
+    assert spec['tasks'][0]['params']['sample'] is True
+    assert spec['tasks'][0]['params']['user'] == getpass.getuser()
+    assert spec['tasks'][0]['params']['git'] == 'mybranch'
 
 
 def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
@@ -796,12 +831,15 @@ def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
                 'data': str(Path('{{here}}', 'data.csv')),
             },
             'params': {
-                'now': '{{now}}'
+                'now': '{{now}}',
+                'git': '{{git}}',
             }
         }]
     }
 
     Path('src', 'pkg', 'pipeline.yaml').write_text(yaml.dump(spec_dict))
+
+    git_init()
 
     os.chdir(Path('src', 'pkg'))
 
@@ -809,11 +847,77 @@ def test_expand_built_in_placeholders(tmp_directory, monkeypatch):
     task = spec.data['tasks'][0]
 
     assert task['params']['now'] == 'current-timestamp'
+    assert task['params']['git'] == 'mybranch'
     assert task['source'] == Path(tmp_directory, 'script.py')
     assert task['product']['nb'] == str(
         Path(tmp_directory, 'src', 'pkg', 'username', 'nb.html'))
     assert task['product']['data'] == str(
         Path(tmp_directory, 'src', 'pkg', 'data.csv'))
+
+
+@pytest.mark.parametrize('save_env_yaml', [True, False])
+def test_git_placeholder_and_git_not_installed(monkeypatch, tmp_directory,
+                                               save_env_yaml):
+    if save_env_yaml:
+        with open('env.yaml', 'w') as f:
+            yaml.dump({'some_tag': '{{git}}'}, f)
+
+    # simulate git not installed
+    monkeypatch.setattr(expand.shutil, "which", lambda _: None)
+
+    spec_dict = {
+        'tasks': [{
+            'source': str(Path('tasks', 'script.py')),
+            'product': {
+                'nb': str(Path('out', 'nb.html')),
+                'data': str(Path('out', 'data.csv')),
+            },
+            'params': {
+                'git': '{{git}}' if not save_env_yaml else '{{some_tag}}',
+            }
+        }]
+    }
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec_dict))
+
+    git_init()
+
+    with pytest.raises(BaseException) as excinfo:
+        DAGSpec('pipeline.yaml')
+
+    expected = ('git is not installed'
+                if save_env_yaml else 'Ensure git is installed')
+    assert expected in str(excinfo.value)
+
+
+@pytest.mark.parametrize('save_env_yaml', [True, False])
+def test_git_placeholder_and_not_in_git_repository(tmp_directory,
+                                                   save_env_yaml):
+    if save_env_yaml:
+        with open('env.yaml', 'w') as f:
+            yaml.dump({'some_tag': '{{git}}'}, f)
+
+    spec_dict = {
+        'tasks': [{
+            'source': str(Path('tasks', 'script.py')),
+            'product': {
+                'nb': str(Path('out', 'nb.html')),
+                'data': str(Path('out', 'data.csv')),
+            },
+            'params': {
+                'git': '{{git}}' if not save_env_yaml else '{{some_tag}}',
+            }
+        }]
+    }
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec_dict))
+
+    with pytest.raises(BaseException) as excinfo:
+        DAGSpec('pipeline.yaml')
+
+    expected = ('could not locate a git repository'
+                if save_env_yaml else 'Ensure git is installed')
+    assert expected in str(excinfo.value)
 
 
 @pytest.mark.parametrize('method, kwargs', [
@@ -1025,6 +1129,29 @@ def test_import_tasks_from(tmp_nbs):
     assert str(Path('extra_task.py').resolve()) in [
         str(t['source']) for t in spec['tasks']
     ]
+
+
+def test_import_tasks_from_empty_yaml_file(tmp_nbs):
+    Path('some_tasks.yaml').write_text('')
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+    with pytest.raises(ValueError) as excinfo:
+        DAGSpec(spec_d)
+    assert 'expected import_tasks_from' in str(excinfo.value)
+
+
+def test_import_tasks_from_non_list_yaml_file(tmp_nbs):
+    some_tasks = {'source': 'extra_task.py', 'product': 'extra.ipynb'}
+    Path('some_tasks.yaml').write_text(yaml.dump(some_tasks))
+
+    spec_d = yaml.safe_load(Path('pipeline.yaml').read_text())
+    spec_d['meta']['import_tasks_from'] = 'some_tasks.yaml'
+
+    with pytest.raises(TypeError) as excinfo:
+        DAGSpec(spec_d)
+    assert 'Expected list when loading YAML file' in str(excinfo.value)
 
 
 def test_import_tasks_from_does_not_resolve_dotted_paths(tmp_nbs):
@@ -1340,7 +1467,7 @@ def test_validate_product_default_class_values():
     spec = {
         'meta': {
             'product_default_class': {
-                'SQLDump': 'unknown_product',
+                'SQLDump': 'some-unknown-thing',
             }
         },
         'tasks': [],
@@ -1350,7 +1477,7 @@ def test_validate_product_default_class_values():
         DAGSpec(spec)
 
     expected = ("Error validating product_default_class: "
-                "'unknown_product' is not a valid Product class name")
+                "'some-unknown-thing' is not a valid Product class name")
     assert str(excinfo.value) == expected
 
 
@@ -1782,6 +1909,32 @@ CREATE TABLE {{product}} AS SELECT * FROM my_table
     assert 'my_testing_module' in sys.modules
 
 
+@pytest.mark.parametrize('tasks, expected', [
+    ([{
+        'source': 'script.sql',
+        'product': 'another.csb',
+        'client': 'my_testing_module.get_db_client',
+        'product_client': 'my_testing_module.get_db_client'
+    }], "'.csb' is not a valid product extension. Did you mean: '.csv'?"),
+    ([{
+        'source': 'script.sql',
+        'product': 'another.parquets',
+        'client': 'my_testing_module.get_db_client',
+        'product_client': 'my_testing_module.get_db_client'
+    }],
+     "'.parquets' is not a valid product extension. Did you mean: '.parquet'?")
+])
+def test_product_extension_typo(tasks, expected, tmp_directory):
+    Path('script.sql').write_text("""
+    SELECT * FROM my_table
+    """)
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        DAGSpec({'tasks': tasks})
+
+    assert expected in str(excinfo.value)
+
+
 def test_error_when_tasks_is_not_a_list(tmp_directory, tmp_imports):
     Path('pipeline.yaml').write_text("""
 tasks:
@@ -1948,3 +2101,31 @@ def test_dagspec_from_dir_doesnt_assign_name(tmp_directory):
     }).to_dag()
 
     assert dag.name == 'No name'
+
+
+def test_dagspec_with_complex_env(tmp_directory):
+    Path('script.py').write_text("""\
+# %% tags=['parameters']
+upstream = None
+product = None
+
+# %%
+1 + 1
+""")
+
+    Path('env.yaml').write_text("""
+param: [{'a': 1}, {'a': {'b': 2}}, 3]
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: output.ipynb
+      params:
+        param: '{{param}}'
+""")
+
+    dag = DAGSpec('pipeline.yaml').to_dag()
+    dag.render()
+
+    assert dag['script'].params['param'] == [{'a': 1}, {'a': {'b': 2}}, 3]

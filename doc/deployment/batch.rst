@@ -82,11 +82,13 @@ Your serving pipeline ``pipepline-serve.yaml`` would look like this:
           params:
             path_to_model: model.pickle
 
-
-Example
-*******
-
 `Here's an example
 <https://github.com/ploomber/projects/tree/master/templates/ml-intermediate>`_ project
 showing how to use ``import_tasks_from`` to create a training
 (``pipeline.yaml``) and serving (``pipeline-serve.yaml``) pipeline.
+
+
+Scheduling
+**********
+
+For an example showing how to schedule runs with cron and Ploomber, `click here. <https://github.com/ploomber/projects/tree/master/guides/cron>`_

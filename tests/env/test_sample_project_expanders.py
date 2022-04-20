@@ -32,17 +32,18 @@ def test_get_git(tmp_directory, cleanup_env):
 def test_error_on_unknown_placeholder():
     expander = EnvironmentExpander({})
 
-    with pytest.raises(RuntimeError) as excinfo:
+    with pytest.raises(BaseException) as excinfo:
         expander.expand_raw_value('{{unknown}}', parents=[])
 
-    assert 'Unknown placeholder "unknown"' == str(excinfo.value)
+    expected = ("Error resolving env: "
+                "Undeclared value for placeholder 'unknown'")
+    assert expected == str(excinfo.value)
 
 
 def test_error_on_git_placeholder_if_missing_underscore_module():
     expander = EnvironmentExpander({})
 
-    with pytest.raises(KeyError) as excinfo:
+    with pytest.raises(BaseException) as excinfo:
         expander.expand_raw_value('{{git}}', parents=[])
 
-    assert ("'_module key is required to use git placeholder'" == str(
-        excinfo.value))
+    assert ("could not locate a git repository" in str(excinfo.value))

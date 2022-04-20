@@ -17,6 +17,22 @@ from ploomber.sources.nb_utils import find_cell_with_tag
 from ploomber.products import File
 from ploomber.exceptions import RenderError, SourceInitializationError
 
+
+@pytest.fixture
+def tmp_nbs_ipynb(tmp_nbs):
+    """Modigies the nbs example to have one task with ipynb format
+    """
+    # modify the spec so it has one ipynb task
+    with open('pipeline.yaml') as f:
+        spec = yaml.safe_load(f)
+
+    spec['tasks'][0]['source'] = 'load.ipynb'
+    Path('pipeline.yaml').write_text(yaml.dump(spec))
+
+    # generate notebook in ipynb format
+    jupytext.write(jupytext.read('load.py'), 'load.ipynb')
+
+
 # Functions for generating notebooks with different characteristics for testing
 
 
@@ -266,9 +282,7 @@ def test_nb_str_contains_kernel_info():
 
 
 def test_ignores_static_analysis_if_non_python_file():
-    source = NotebookSource(new_nb(fmt='r:light'),
-                            ext_in='R',
-                            static_analysis=True)
+    source = NotebookSource(new_nb(fmt='r:light'), ext_in='R')
     params = Params._from_dict({'product': File('output.ipynb')})
 
     source.render(params)
@@ -280,10 +294,7 @@ def test_no_error_if_missing_product_or_upstream():
 
 # +
 """
-    source = NotebookSource(code,
-                            ext_in='py',
-                            kernelspec_name='python3',
-                            static_analysis=True)
+    source = NotebookSource(code, ext_in='py', kernelspec_name='python3')
 
     params = Params._from_dict({'product': File('output.ipynb')})
 
@@ -296,7 +307,7 @@ def test_static_analysis(hot_reload, tmp_directory):
     path = Path('nb.ipynb')
     path.write_text(jupytext.writes(nb, fmt='ipynb'))
 
-    source = NotebookSource(path, static_analysis=True, hot_reload=hot_reload)
+    source = NotebookSource(path, hot_reload=hot_reload)
 
     params = Params._from_dict({
         'product': File('output.ipynb'),
@@ -591,17 +602,7 @@ def test_save_injected_cell(tmp_nbs):
     assert nb.metadata.ploomber.injected_manually
 
 
-def test_save_injected_cell_ipynb(tmp_nbs):
-    # modify the spec so it has one ipynb task
-    with open('pipeline.yaml') as f:
-        spec = yaml.safe_load(f)
-
-    spec['tasks'][0]['source'] = 'load.ipynb'
-    Path('pipeline.yaml').write_text(yaml.dump(spec))
-
-    # generate notebook in ipynb format
-    jupytext.write(jupytext.read('load.py'), 'load.ipynb')
-
+def test_save_injected_cell_ipynb(tmp_nbs_ipynb):
     dag = DAGSpec('pipeline.yaml').to_dag().render()
     nb = jupytext.read('load.py')
     expected = '"injected-parameters"'
@@ -645,6 +646,20 @@ def test_remove_injected_cell(tmp_nbs):
 
     assert expected not in Path('load.py').read_text()
     assert nb.metadata.ploomber == {}
+
+
+def test_remove_injected_cell_from_ipynb(tmp_nbs_ipynb):
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.save_injected_cell()
+
+    source = jupytext.read(dag['load'].source.loc)
+    assert find_cell_with_tag(source, 'injected-parameters')
+
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['load'].source.remove_injected_cell()
+
+    source = jupytext.read(dag['load'].source.loc)
+    assert find_cell_with_tag(source, 'injected-parameters')
 
 
 @pytest.mark.parametrize('prefix', [
@@ -913,3 +928,13 @@ def test_error_if_last_cell_in_nb_is_the_parameters_cell(tmp_directory):
 
     assert 'nb.ipynb' in str(excinfo.value)
     assert 'Add a new cell with your code.' in str(excinfo.value)
+
+
+def test_error_if_source_str_like_path(tmp_directory):
+    Path('script.py').touch()
+
+    with pytest.raises(ValueError) as excinfo:
+        NotebookSource('script.py')
+
+    assert 'Perhaps you meant passing a pathlib.Path object' in str(
+        excinfo.value)

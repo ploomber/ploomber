@@ -289,11 +289,14 @@ class DAGSpec(MutableMapping):
         path_to_defaults = default.path_to_env_from_spec(
             path_to_spec=self._path)
 
+        # there is an env.yaml we can use
         if path_to_defaults:
             defaults = yaml.safe_load(Path(path_to_defaults).read_text())
             self.env = EnvDict(env,
                                path_to_here=self._parent_path,
                                defaults=defaults)
+
+        # there is no env.yaml
         else:
             self.env = EnvDict(env, path_to_here=self._parent_path)
 
@@ -325,6 +328,18 @@ class DAGSpec(MutableMapping):
 
                 imported = yaml.safe_load(
                     Path(self.data['meta']['import_tasks_from']).read_text())
+
+                if not imported:
+                    path = str(self.data['meta']['import_tasks_from'])
+                    raise ValueError('expected import_tasks_from file '
+                                     f'({path!r}) to return a list of tasks, '
+                                     f'got: {imported}')
+
+                if not isinstance(imported, list):
+                    raise TypeError(
+                        'Expected list when loading YAML file from '
+                        'import_tasks_from: file.yaml, '
+                        f'but got {type(imported)}')
 
                 if self.env is not None:
                     (imported,
@@ -711,6 +726,7 @@ class Meta:
         defaults = {
             'SQLDump': 'File',
             'NotebookRunner': 'File',
+            'ScriptRunner': 'File',
             'SQLScript': 'SQLRelation',
             'PythonCallable': 'File',
             'ShellScript': 'File',

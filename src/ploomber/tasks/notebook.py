@@ -3,32 +3,27 @@ import shlex
 import pdb
 import tempfile
 import subprocess
+from subprocess import PIPE
 from pathlib import Path
-from nbconvert import ExporterNameError
+from importlib.util import find_spec
 import warnings
 
-try:
-    # papermill is importing a deprecated module from pyarrow
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore', FutureWarning)
-        import papermill as pm
-except ImportError:
-    pm = None
+import jupytext
+import nbformat
+import nbconvert
+from nbconvert import ExporterNameError
+from nbconvert.exporters.webpdf import WebPDFExporter
+
+# papermill is importing a deprecated module from pyarrow
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', FutureWarning)
+    import papermill as pm
 
 try:
-    import jupytext
+    # this is an optional dependency
+    from pyppeteer import chromium_downloader
 except ImportError:
-    jupytext = None
-
-try:
-    import nbformat
-except ImportError:
-    nbformat = None
-
-try:
-    import nbconvert
-except ImportError:
-    nbconvert = None
+    chromium_downloader = None
 
 from ploomber.exceptions import TaskBuildError, TaskInitializationError
 from ploomber.sources import NotebookSource
@@ -37,6 +32,7 @@ from ploomber.products import File, MetaProduct
 from ploomber.tasks.abc import Task
 from ploomber.util import requires, chdir_code
 from ploomber.io import FileLoaderMixin, pretty_print
+from ploomber.util._sys import _python_bin
 
 
 # TODO: ensure that all places where we call this function are unit tested
@@ -84,6 +80,30 @@ product:
                 'to "product", with the path to the '
                 'output notebook in the "nb" key (e.g. "output.ipynb") '
                 'and any other output paths in other keys)')
+
+
+def _check_exporter(exporter, path_to_output):
+    """
+    Validate if the user can use the selected exporter
+    """
+    if exporter is WebPDFExporter:
+        pyppeteer_installed = find_spec('pyppeteer') is not None
+
+        if not pyppeteer_installed:
+            raise TaskInitializationError(
+                'pyppeteer is required to use '
+                'webpdf, install it '
+                'with:\npip install "nbconvert[webpdf]"')
+        else:
+            if not chromium_downloader.check_chromium():
+                chromium_downloader.download_chromium()
+
+        if Path(path_to_output).suffix != '.pdf':
+            raise TaskInitializationError(
+                'Expected output to have '
+                'extension .pdf when using the webpdf '
+                f'exporter, got: {path_to_output}. Change the extension '
+                'and try again')
 
 
 class NotebookConverter:
@@ -146,6 +166,7 @@ class NotebookConverter:
                     _suggest_passing_product_dictionary())
 
         self._exporter = self._get_exporter(exporter_name, path_to_output)
+
         self._path_to_output = path_to_output
         self._nbconvert_export_kwargs = nbconvert_export_kwargs or {}
 
@@ -187,6 +208,7 @@ class NotebookConverter:
         else:
             try:
                 exporter = nbconvert.get_exporter(exporter_name)
+
             # nbconvert 5.6.1 raises ValueError, beginning in version 6,
             # it raises ExporterNameError. However the exception is defined
             # since 5.6.1 so we can safely import it
@@ -202,6 +224,8 @@ class NotebookConverter:
                     "valid 'nbconvert_exporter_name' value. "
                     "Choose one from: "
                     f'{pretty_print.iterable(names)}')
+
+        _check_exporter(exporter, path_to_output)
 
         return exporter
 
@@ -228,151 +252,7 @@ class NotebookConverter:
         return content
 
 
-class NotebookRunner(FileLoaderMixin, Task):
-    """
-    Run a Jupyter notebook using papermill. Support several input formats
-    via jupytext and several output formats via nbconvert
-
-    Parameters
-    ----------
-    source: str or pathlib.Path
-        Notebook source, if str, the content is interpreted as the actual
-        notebook, if pathlib.Path, the content of the file is loaded. When
-        loading from a str, ext_in must be passed
-    product: ploomber.File
-        The output file
-    dag: ploomber.DAG
-        A DAG to add this task to
-    name: str, optional
-        A str to indentify this task. Should not already exist in the dag
-    params: dict, optional
-        Notebook parameters. This are passed as the "parameters" argument
-        to the papermill.execute_notebook function, by default, "product"
-        and "upstream" are included
-    papermill_params : dict, optional
-        Other parameters passed to papermill.execute_notebook, defaults to None
-    kernelspec_name: str, optional
-        Kernelspec name to use, if the file extension provides with enough
-        information to choose a kernel or the notebook already includes
-        kernelspec data (in metadata.kernelspec), this is ignored, otherwise,
-        the kernel is looked up using jupyter_client.kernelspec.get_kernel_spec
-    nbconvert_exporter_name: str, optional
-        Once the notebook is run, this parameter controls whether to export
-        the notebook to a different parameter using the nbconvert package,
-        it is not needed unless the extension cannot be used to infer the
-        final output format, in which case the nbconvert.get_exporter is used.
-    ext_in: str, optional
-        Source extension. Required if loading from a str. If source is a
-        ``pathlib.Path``, the extension from the file is used.
-    nb_product_key: str, optional
-        If the notebook is expected to generate other products, pass the key
-        to identify the output notebook (i.e. if product is a list with 3
-        ploomber.File, pass the index pointing to the notebook path). If the
-        only output is the notebook itself, this parameter is not needed
-    static_analysis : ('disabled', 'regular', 'strict'), default='regular'
-        Check for various errors in the notebook. In 'regular' mode, it aborts
-        execution if the notebook has syntax issues, or similar problems that
-        would cause the code to break if executed. In 'strict' mode, it
-        performs the same checks but raises an isse before starting execution
-        of any task, furthermore, it verifies that the parameters cell and
-        the params passed to the notebook match, thus, making the notebook
-        behave like a function with a signature.
-    nbconvert_export_kwargs : dict
-        Keyword arguments to pass to the ``nbconvert.export`` function (this is
-        only used if exporting the output ipynb notebook to another format).
-        You can use this, for example, to hide code cells using the
-        exclude_input parameter. See ``nbconvert`` documentation for details.
-        Ignored if the product is file with .ipynb extension.
-    local_execution : bool, optional
-        Change working directory to be the parent of the notebook's source.
-        Defaults to False. This resembles the default behavior when
-        running notebooks interactively via `jupyter notebook`
-
-
-    Examples
-    --------
-    >>> from pathlib import Path
-    >>> from ploomber import DAG
-    >>> from ploomber.tasks import NotebookRunner
-    >>> from ploomber.products import File
-    >>> dag = DAG()
-    >>> # do not include input code (only cell's output)
-    >>> NotebookRunner(Path('nb.ipynb'), File('out-1.html'), dag=dag,
-    ...                nbconvert_export_kwargs={'exclude_input': True},
-    ...                name=1)
-    >>> # Selectively remove cells with the tag "remove"
-    >>> config = {'TagRemovePreprocessor': {'remove_cell_tags': ('remove',)},
-    ...           'HTMLExporter':
-    ...             {'preprocessors':
-    ...             ['nbconvert.preprocessors.TagRemovePreprocessor']}}
-    >>> NotebookRunner(Path('nb.ipynb'), File('out-2.html'), dag=dag,
-    ...                nbconvert_export_kwargs={'config': config},
-    ...                name=2)
-    >>> dag.build()
-
-    Notes
-    -----
-    nbconvert's documentation:
-    https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options
-    """
-    PRODUCT_CLASSES_ALLOWED = (File, )
-
-    @requires(['jupyter', 'papermill', 'jupytext'], 'NotebookRunner')
-    def __init__(self,
-                 source,
-                 product,
-                 dag,
-                 name=None,
-                 params=None,
-                 papermill_params=None,
-                 kernelspec_name=None,
-                 nbconvert_exporter_name=None,
-                 ext_in=None,
-                 nb_product_key='nb',
-                 static_analysis='regular',
-                 nbconvert_export_kwargs=None,
-                 local_execution=False,
-                 check_if_kernel_installed=True):
-        self.papermill_params = papermill_params or {}
-        self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
-        self.kernelspec_name = kernelspec_name
-        self.nbconvert_exporter_name = nbconvert_exporter_name
-        self.ext_in = ext_in
-        self.nb_product_key = nb_product_key
-        self.local_execution = local_execution
-        self.check_if_kernel_installed = check_if_kernel_installed
-
-        if 'cwd' in self.papermill_params and self.local_execution:
-            raise KeyError('If local_execution is set to True, "cwd" should '
-                           'not appear in papermill_params, as such '
-                           'parameter will be set by the task itself')
-
-        kwargs = dict(hot_reload=dag._params.hot_reload)
-        self._source = NotebookRunner._init_source(source, kwargs, ext_in,
-                                                   kernelspec_name,
-                                                   static_analysis,
-                                                   check_if_kernel_installed)
-        super().__init__(product, dag, name, params)
-
-        if isinstance(self.product, MetaProduct):
-            if self.product.get(nb_product_key) is None:
-                raise TaskInitializationError(
-                    f"Missing key '{nb_product_key}' in "
-                    f"product: {(str(self.product))!r}. "
-                    f"{nb_product_key!r} must contain "
-                    "the path to the output notebook.")
-
-        if isinstance(self.product, MetaProduct):
-            product_nb = (
-                self.product[self.nb_product_key]._identifier.best_repr(
-                    shorten=False))
-        else:
-            product_nb = self.product._identifier.best_repr(shorten=False)
-
-        self._converter = NotebookConverter(product_nb,
-                                            nbconvert_exporter_name,
-                                            nbconvert_export_kwargs)
-
+class NotebookMixin(FileLoaderMixin):
     # expose the static_analysis attribute from the source, we need this
     # since we disable static_analysis when rendering the DAG in Jupyter
 
@@ -383,21 +263,6 @@ class NotebookRunner(FileLoaderMixin, Task):
     @static_analysis.setter
     def static_analysis(self, value):
         self._source.static_analysis = value
-
-    @staticmethod
-    def _init_source(source,
-                     kwargs,
-                     ext_in=None,
-                     kernelspec_name=None,
-                     static_analysis='regular',
-                     check_if_kernel_installed=False):
-        return NotebookSource(
-            source,
-            ext_in=ext_in,
-            kernelspec_name=kernelspec_name,
-            static_analysis=static_analysis,
-            check_if_kernel_installed=check_if_kernel_installed,
-            **kwargs)
 
     def develop(self, app='notebook', args=None):
         """
@@ -553,6 +418,167 @@ class NotebookRunner(FileLoaderMixin, Task):
             finally:
                 Path(tmp_path).unlink()
 
+
+class NotebookRunner(NotebookMixin, Task):
+    """
+    Run a Jupyter notebook using papermill. Support several input formats
+    via jupytext and several output formats via nbconvert
+
+    Parameters
+    ----------
+    source: str or pathlib.Path
+        Notebook source, if str, the content is interpreted as the actual
+        notebook, if pathlib.Path, the content of the file is loaded. When
+        loading from a str, ext_in must be passed
+    product: ploomber.File
+        The output file
+    dag: ploomber.DAG
+        A DAG to add this task to
+    name: str, optional
+        A str to indentify this task. Should not already exist in the dag
+    params: dict, optional
+        Notebook parameters. This are passed as the "parameters" argument
+        to the papermill.execute_notebook function, by default, "product"
+        and "upstream" are included
+    papermill_params : dict, optional
+        Other parameters passed to papermill.execute_notebook, defaults to None
+    kernelspec_name: str, optional
+        Kernelspec name to use, if the file extension provides with enough
+        information to choose a kernel or the notebook already includes
+        kernelspec data (in metadata.kernelspec), this is ignored, otherwise,
+        the kernel is looked up using jupyter_client.kernelspec.get_kernel_spec
+    nbconvert_exporter_name: str, optional
+        Once the notebook is run, this parameter controls whether to export
+        the notebook to a different parameter using the nbconvert package,
+        it is not needed unless the extension cannot be used to infer the
+        final output format, in which case the nbconvert.get_exporter is used.
+    ext_in: str, optional
+        Source extension. Required if loading from a str. If source is a
+        ``pathlib.Path``, the extension from the file is used.
+    nb_product_key: str, optional
+        If the notebook is expected to generate other products, pass the key
+        to identify the output notebook (i.e. if product is a list with 3
+        ploomber.File, pass the index pointing to the notebook path). If the
+        only output is the notebook itself, this parameter is not needed
+    static_analysis : ('disabled', 'regular', 'strict'), default='regular'
+        Check for various errors in the notebook. In 'regular' mode, it aborts
+        execution if the notebook has syntax issues, or similar problems that
+        would cause the code to break if executed. In 'strict' mode, it
+        performs the same checks but raises an isse before starting execution
+        of any task, furthermore, it verifies that the parameters cell and
+        the params passed to the notebook match, thus, making the notebook
+        behave like a function with a signature.
+    nbconvert_export_kwargs : dict
+        Keyword arguments to pass to the ``nbconvert.export`` function (this is
+        only used if exporting the output ipynb notebook to another format).
+        You can use this, for example, to hide code cells using the
+        exclude_input parameter. See ``nbconvert`` documentation for details.
+        Ignored if the product is file with .ipynb extension.
+    local_execution : bool, optional
+        Change working directory to be the parent of the notebook's source.
+        Defaults to False. This resembles the default behavior when
+        running notebooks interactively via `jupyter notebook`
+
+
+    Examples
+    --------
+    >>> from pathlib import Path
+    >>> from ploomber import DAG
+    >>> from ploomber.tasks import NotebookRunner
+    >>> from ploomber.products import File
+    >>> dag = DAG()
+    >>> # do not include input code (only cell's output)
+    >>> NotebookRunner(Path('nb.ipynb'), File('out-1.html'), dag=dag,
+    ...                nbconvert_export_kwargs={'exclude_input': True},
+    ...                name=1)
+    >>> # Selectively remove cells with the tag "remove"
+    >>> config = {'TagRemovePreprocessor': {'remove_cell_tags': ('remove',)},
+    ...           'HTMLExporter':
+    ...             {'preprocessors':
+    ...             ['nbconvert.preprocessors.TagRemovePreprocessor']}}
+    >>> NotebookRunner(Path('nb.ipynb'), File('out-2.html'), dag=dag,
+    ...                nbconvert_export_kwargs={'config': config},
+    ...                name=2)
+    >>> dag.build()
+
+    Notes
+    -----
+    nbconvert's documentation:
+    https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options
+    """
+    PRODUCT_CLASSES_ALLOWED = (File, )
+
+    @requires(['jupyter', 'papermill', 'jupytext'], 'NotebookRunner')
+    def __init__(self,
+                 source,
+                 product,
+                 dag,
+                 name=None,
+                 params=None,
+                 papermill_params=None,
+                 kernelspec_name=None,
+                 nbconvert_exporter_name=None,
+                 ext_in=None,
+                 nb_product_key='nb',
+                 static_analysis='regular',
+                 nbconvert_export_kwargs=None,
+                 local_execution=False,
+                 check_if_kernel_installed=True):
+        self.papermill_params = papermill_params or {}
+        self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
+        self.kernelspec_name = kernelspec_name
+        self.nbconvert_exporter_name = nbconvert_exporter_name
+        self.ext_in = ext_in
+        self.nb_product_key = nb_product_key
+        self.local_execution = local_execution
+        self.check_if_kernel_installed = check_if_kernel_installed
+
+        if 'cwd' in self.papermill_params and self.local_execution:
+            raise KeyError('If local_execution is set to True, "cwd" should '
+                           'not appear in papermill_params, as such '
+                           'parameter will be set by the task itself')
+
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = NotebookRunner._init_source(source, kwargs, ext_in,
+                                                   kernelspec_name,
+                                                   static_analysis,
+                                                   check_if_kernel_installed)
+        super().__init__(product, dag, name, params)
+
+        if isinstance(self.product, MetaProduct):
+            if self.product.get(nb_product_key) is None:
+                raise TaskInitializationError(
+                    f"Missing key '{nb_product_key}' in "
+                    f"product: {(str(self.product))!r}. "
+                    f"{nb_product_key!r} must contain "
+                    "the path to the output notebook.")
+
+        if isinstance(self.product, MetaProduct):
+            product_nb = (
+                self.product[self.nb_product_key]._identifier.best_repr(
+                    shorten=False))
+        else:
+            product_nb = self.product._identifier.best_repr(shorten=False)
+
+        self._converter = NotebookConverter(product_nb,
+                                            nbconvert_exporter_name,
+                                            nbconvert_export_kwargs)
+
+    @staticmethod
+    def _init_source(source,
+                     kwargs,
+                     ext_in=None,
+                     kernelspec_name=None,
+                     static_analysis='regular',
+                     check_if_kernel_installed=False):
+        return NotebookSource(
+            source,
+            ext_in=ext_in,
+            kernelspec_name=kernelspec_name,
+            static_analysis=static_analysis,
+            check_if_kernel_installed=check_if_kernel_installed,
+            **kwargs)
+
     def run(self):
         # regular mode: raise but not check signature
         # strict mode: called at render time
@@ -600,6 +626,93 @@ class NotebookRunner(FileLoaderMixin, Task):
 
         path_to_out_ipynb.rename(path_to_out)
         self._converter.convert()
+
+
+class ScriptRunner(NotebookMixin, Task):
+    """
+    Similar to NotebookRunner, except it uses python to run the code,
+    instead of papermill, hence, it doesn't generate an output notebook. But
+    it also works by injecting a cell into the source code. Source can be
+    a .py script or an .ipynb notebook. Does not support magics.
+    """
+    @requires(['jupyter', 'jupytext'], 'ScriptRunner')
+    def __init__(self,
+                 source,
+                 product,
+                 dag,
+                 name=None,
+                 params=None,
+                 ext_in=None,
+                 static_analysis='regular',
+                 local_execution=False):
+        self.ext_in = ext_in
+        self.local_execution = local_execution
+
+        kwargs = dict(hot_reload=dag._params.hot_reload)
+        self._source = ScriptRunner._init_source(source, kwargs, ext_in,
+                                                 static_analysis)
+        super().__init__(product, dag, name, params)
+
+    @staticmethod
+    def _init_source(source, kwargs, ext_in=None, static_analysis='regular'):
+        return NotebookSource(source,
+                              ext_in=ext_in,
+                              static_analysis=static_analysis,
+                              kernelspec_name=None,
+                              check_if_kernel_installed=False,
+                              **kwargs)
+
+    def run(self):
+        # regular mode: raise but not check signature
+        # strict mode: called at render time
+        if self.static_analysis == 'regular':
+            self.source._check_notebook(raise_=True, check_signature=False)
+
+        if self.local_execution:
+            cwd = str(self.source.loc.parent)
+        else:
+            cwd = None
+
+        fd, tmp = tempfile.mkstemp('.py')
+        os.close(fd)
+
+        code = '\n\n'.join([
+            c['source'] for c in self.source.nb_obj_rendered.cells
+            if c['cell_type'] == 'code'
+        ])
+
+        tmp = Path(tmp)
+        tmp.write_text(code)
+
+        if self.source.language == 'python':
+            interpreter = _python_bin()
+        elif self.source.language == 'r':
+            interpreter = 'Rscript'
+        else:
+            raise ValueError(
+                'ScriptRunner only works with Python and R scripts')
+
+        try:
+            _run_script_in_subprocess(interpreter, tmp, cwd)
+        except Exception as e:
+            raise TaskBuildError('Error when executing task'
+                                 f' {self.name!r}.') from e
+        finally:
+            tmp.unlink()
+
+
+def _run_script_in_subprocess(interpreter, path, cwd):
+    res = subprocess.run([interpreter, str(path)], cwd=cwd, stderr=PIPE)
+
+    if res.returncode:
+        stderr = res.stderr.decode()
+
+        if 'SyntaxError' in stderr:
+            stderr += ('(Note: IPython magics are not supported in '
+                       'ScriptRunner, remove them or use the regular '
+                       'NotebookRunner)')
+
+        raise RuntimeError('Error while executing ScriptRunner:\n' f'{stderr}')
 
 
 def _read_rendered_notebook(nb_str):

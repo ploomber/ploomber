@@ -20,6 +20,27 @@ def fake_from_notebook_node(self, nb, resources):
     return bytes(42), None
 
 
+def test_checks_exporter(monkeypatch):
+    # simulate pyppeteer not installed
+    monkeypatch.setattr(notebook, 'find_spec', lambda _: None)
+
+    with pytest.raises(TaskInitializationError) as excinfo:
+        notebook.NotebookConverter('out.pdf', 'webpdf')
+
+    expected = 'pip install "nbconvert[webpdf]"'
+    assert expected in str(excinfo.value)
+
+
+def test_downloads_chromium_if_needed(monkeypatch):
+    mock = Mock()
+    mock.check_chromium.return_value = False
+    monkeypatch.setattr(notebook, 'chromium_downloader', mock)
+
+    notebook.NotebookConverter('out.pdf', 'webpdf')
+
+    mock.download_chromium.assert_called_once_with()
+
+
 def test_error_when_path_has_no_extension():
     with pytest.raises(TaskInitializationError) as excinfo:
         notebook.NotebookConverter('a')
@@ -50,6 +71,15 @@ def test_notebook_converter_get_exporter_from_path(path, exporter):
 def test_notebook_converter_get_exporter_from_name(exporter_name, exporter):
     converter = notebook.NotebookConverter('file.ext', exporter_name)
     assert converter._exporter == exporter
+
+
+def test_notebook_converter_validates_extension():
+    with pytest.raises(TaskInitializationError) as excinfo:
+        notebook.NotebookConverter('file.not_a_pdf', 'webpdf')
+
+    expected = ('Expected output to have extension .pdf when using the '
+                'webpdf exporter, got: file.not_a_pdf')
+    assert expected in str(excinfo.value)
 
 
 @pytest.mark.parametrize('output', [
@@ -829,23 +859,6 @@ def test_validates_static_analysis_value(tmp_sample_tasks):
     assert expected == str(excinfo.value)
 
 
-@pytest.mark.parametrize('value, replacement, message', [
-    [False, 'disable', "from False to 'disable'"],
-    [True, 'regular', "from True to 'regular'"],
-])
-def test_compatibility_with_static_analysis_bool(tmp_sample_tasks, value,
-                                                 replacement, message):
-
-    with pytest.warns(FutureWarning) as records:
-        task = NotebookRunner(Path('sample.ipynb'),
-                              File('out.ipynb'),
-                              dag=DAG(),
-                              static_analysis=value)
-
-    assert task.static_analysis == replacement
-    assert message in records[0].message.args[0]
-
-
 def test_warns_on_unused_parameters(tmp_sample_tasks):
     dag = DAG()
     NotebookRunner(Path('sample.ipynb'),
@@ -931,14 +944,11 @@ def test_static_analysis_strict_raises_error_at_rendertime_if_signature_error(
                    params=dict(some_param='value'))
 
     with pytest.raises(DAGRenderError) as excinfo:
-        with pytest.warns(UserWarning) as records:
-            dag.render()
+        dag.render()
 
     expected = ("Error rendering notebook 'nb.py'. Parameters "
                 "declared in the 'parameters' cell do not match task params.")
     assert expected in str(excinfo.value)
-    # it should not warn, since we raise the error
-    assert len(records) == 0
 
 
 def test_replaces_existing_product(tmp_directory):
@@ -958,3 +968,14 @@ def test_replaces_existing_product(tmp_directory):
 
     # this will fail on windows if we don't remove the existing file first
     dag.build()
+
+
+def test_initialize_with_str_like_path(tmp_directory):
+    Path('script.py').touch()
+    dag = DAG()
+
+    with pytest.raises(ValueError) as excinfo:
+        NotebookRunner('script.py', File('out.html'), dag=dag)
+
+    assert 'Perhaps you meant passing a pathlib.Path object' in str(
+        excinfo.value)

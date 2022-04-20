@@ -20,6 +20,7 @@ User Guide
     sql-templating
     testing
     debugging
+    versioning
     logging
     serialization
     shell

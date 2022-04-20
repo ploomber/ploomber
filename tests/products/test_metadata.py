@@ -26,6 +26,9 @@ class FakeProduct(Product):
     def delete(self, force=False):
         pass
 
+    def _delete_metadata(self):
+        pass
+
 
 class ConcreteMetadata(AbstractMetadata):
     """
@@ -95,15 +98,14 @@ def test_clear():
     assert prod.fetch_metadata.call_count == 2
 
 
-@pytest.mark.xfail(reason='delete_metadata is not part of the abstract class')
 def test_delete():
     prod = Mock(wraps=FakeProduct(identifier='fake-product'))
     metadata = Metadata(prod)
-    assert not prod.delete_metadata.call_count
+    assert not prod._delete_metadata.call_count
 
     metadata.delete()
 
-    assert prod.delete_metadata.call_count == 1
+    assert prod._delete_metadata.call_count == 1
 
 
 def test_update():

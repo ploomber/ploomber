@@ -2,16 +2,15 @@
 Clients that communicate with databases
 """
 try:
-    from sqlalchemy import create_engine
+    import sqlalchemy
 except ImportError:
-    create_engine = None
+    sqlalchemy = None
 
 from ploomber.clients.client import Client
 from ploomber.util import requires
 
 import re
 from pathlib import Path
-from urllib.parse import urlparse, urlunparse
 
 
 def code_split(code, token=';'):
@@ -22,16 +21,15 @@ def code_split(code, token=';'):
             yield part
 
 
-def safe_uri(parsed):
-    password = parsed.password
-
-    if password:
-        parts = list(parsed)
-        # netloc
-        parts[1] = parts[1].replace(password, '********')
-        return urlunparse(parts)
+def _get_url_obj(uri):
+    if isinstance(uri, str):
+        return sqlalchemy.engine.make_url(uri)
+    elif isinstance(uri, sqlalchemy.engine.url.URL):
+        return uri
     else:
-        return urlunparse(parsed)
+        raise TypeError('SQLAlchemyClient must be initialized with a '
+                        'string or a sqlalchemy.engine.url.URL object, got '
+                        f'{type(uri).__name__}')
 
 
 class DBAPIClient(Client):
@@ -110,8 +108,9 @@ class SQLAlchemyClient(Client):
 
     Parameters
     ----------
-    uri: str
-        URI to pass to sqlalchemy.create_engine
+    uri: str or sqlalchemy.engine.url.URL
+        URI to pass to sqlalchemy.create_engine or URL object created using
+        sqlalchemy.engine.url.URL.create
 
     split_source : str, optional
         Some database drivers do not support multiple commands in a single
@@ -130,6 +129,15 @@ class SQLAlchemyClient(Client):
     SQLite client does not support sending more than one command at a time,
     if using such backend code will be split and several calls to the db
     will be performed.
+
+    Examples
+    --------
+    >>> from ploomber.clients import SQLAlchemyClient
+    >>> client = SQLAlchemyClient('sqlite:///my_db.db')
+    >>> import sqlalchemy
+    >>> url = sqlalchemy.engine.url.URL.create(drivername='sqlite',
+    ...                                        database='my_db.db')
+    >>> client = SQLAlchemyClient(url)
     """
     split_source_mapping = {'sqlite': ';'}
 
@@ -137,15 +145,17 @@ class SQLAlchemyClient(Client):
     def __init__(self, uri, split_source='default', create_engine_kwargs=None):
         super().__init__()
         self._uri = uri
-        self._uri_parsed = urlparse(uri)
-        self._uri_safe = safe_uri(self._uri_parsed)
+
+        self._url_obj = _get_url_obj(uri)
+        self._uri_safe = repr(self._url_obj)
+
         self._create_engine_kwargs = create_engine_kwargs or dict()
-        self.flavor = self._uri_parsed.scheme
+        self.flavor = self._url_obj.drivername
         self._engine = None
         self.split_source = split_source
 
-        if self.flavor == "sqlite":
-            parent_folder = Path(self._uri_parsed.path[1:]).parent
+        if self.flavor == "sqlite" and self._url_obj.database:
+            parent_folder = Path(self._url_obj.database).parent
             parent_folder.mkdir(exist_ok=True, parents=True)
 
         self._connection = None
@@ -207,8 +217,8 @@ class SQLAlchemyClient(Client):
         """Returns a SQLAlchemy engine
         """
         if self._engine is None:
-            self._engine = create_engine(self._uri,
-                                         **self._create_engine_kwargs)
+            self._engine = sqlalchemy.create_engine(
+                self._uri, **self._create_engine_kwargs)
 
         return self._engine
 
