@@ -16,6 +16,12 @@ def main():
             help='Where to save the plot, defaults to pipeline.png',
             default=None)
 
+        parser.add_argument('--backend',
+                            '-b',
+                            help='Which backend to use pygraphviz or d3,\
+                defaults to pygraphviz',
+                            default=None)
+
         parser.add_argument('--include-products',
                             '-i',
                             help='Include task products',
@@ -29,6 +35,11 @@ def main():
         name = extract_name(args.entry_point)
         output = 'pipeline.png' if name is None else f'pipeline.{name}.png'
 
-    dag.plot(output=output, include_products=args.include_products)
+    plot_output = dag.plot(output=output,
+                           backend=args.backend,
+                           include_products=args.include_products)
 
-    print('Plot saved at:', output)
+    if plot_output:
+        print('Plot saved at:', plot_output)
+    else:
+        print('Plot saved at:', output)
