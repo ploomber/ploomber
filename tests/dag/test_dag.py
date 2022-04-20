@@ -22,7 +22,6 @@ from ploomber.exceptions import (DAGBuildError, DAGRenderError,
 from ploomber.executors import Serial, Parallel, serial
 from ploomber.clients import SQLAlchemyClient
 from ploomber.dag.dagclients import DAGClients
-from ploomber.util import util
 
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
@@ -1153,10 +1152,10 @@ def test_cycle_exception():
 
 
 def test_error_if_missing_pypgraphviz(monkeypatch, dag):
-    monkeypatch.setattr(util.importlib.util, 'find_spec', lambda _: None)
+    monkeypatch.setattr(dag_module, 'find_spec', lambda _: None)
 
     with pytest.raises(ImportError) as excinfo:
-        dag.plot()
+        dag.plot(backend='pygraphviz')
 
     if sys.version_info < (3, 8):
         assert ("'pygraphviz<1.8' is required to use 'plot'. Install "

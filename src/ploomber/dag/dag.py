@@ -63,6 +63,8 @@ import logging
 import tempfile
 from math import ceil
 from functools import partial
+from importlib.util import find_spec
+from ploomber.dag import plot
 
 try:
     import importlib.resources as importlib_resources
@@ -77,7 +79,7 @@ from IPython.display import Image
 
 from ploomber.table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
-from ploomber.util import (image_bytes2html, isiterable, requires)
+from ploomber.util import (image_bytes2html, isiterable)
 from ploomber.util.debug import debug_if_exception
 from ploomber import resources
 from ploomber import executors
@@ -87,7 +89,7 @@ from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop, DAGCycle)
 from ploomber.messagecollector import (RenderExceptionsCollector,
                                        RenderWarningsCollector)
-from ploomber.util.util import callback_check
+from ploomber.util.util import callback_check, _make_requires_error_message
 from ploomber.dag.dagconfiguration import DAGConfiguration
 from ploomber.dag.daglogger import DAGLogger
 from ploomber.dag.dagclients import DAGClients
@@ -793,11 +795,7 @@ class DAG(AbstractDAG):
 
         return out
 
-    @requires(['pygraphviz'],
-              extra_msg=_pygraphviz_message,
-              pip_names=['pygraphviz<1.8'] if sys.version_info <
-              (3, 8) else ['pygraphviz'])
-    def plot(self, output='embed', include_products=False):
+    def plot(self, backend=None, output='embed', include_products=False):
         """Plot the DAG
 
         Parameters
@@ -812,6 +810,24 @@ class DAG(AbstractDAG):
             If False, each node only contains the task name, if True
             if contains the task name and products.
         """
+        is_pygraphviz_installed = find_spec("pygraphviz") is not None
+
+        if ((not is_pygraphviz_installed and backend is None)
+                or (backend == 'd3')):
+            # FIXME: add tests for this
+            self.render()
+            G = self._to_graph(return_graphviz=False,
+                               return_json_dag=True,
+                               include_products=include_products)
+            json_dag = nx.readwrite.json_graph.node_link_data(G)
+            output = output.rsplit(".")[0] + '.html'
+
+            return plot.with_d3(json_dag, output=output)
+        elif not is_pygraphviz_installed and backend == "pygraphviz":
+            raise ImportError(
+                _make_requires_error_message(['pygraphviz'], 'plot',
+                                             _pygraphviz_message))
+
         if output == 'embed':
             fd, path = tempfile.mkstemp(suffix='.png')
             os.close(fd)
@@ -820,9 +836,6 @@ class DAG(AbstractDAG):
 
         # attributes docs:
         # https://graphviz.gitlab.io/_pages/doc/info/attrs.html
-
-        # FIXME: add tests for this
-        self.render()
 
         G = self._to_graph(return_graphviz=True,
                            include_products=include_products)
@@ -850,6 +863,7 @@ class DAG(AbstractDAG):
     def _to_graph(self,
                   only_current_dag=False,
                   return_graphviz=False,
+                  return_json_dag=False,
                   include_products=False):
         """
         Converts the DAG to a Networkx DiGraph object. Since upstream
@@ -868,9 +882,8 @@ class DAG(AbstractDAG):
 
         # NOTE: delete this, use existing DiGraph object
         G = nx.DiGraph()
-
         for task in self.values():
-            if return_graphviz:
+            if return_graphviz or return_json_dag:
                 outdated = task.product._is_outdated()
 
                 # add parameters for graphviz plotting
@@ -901,7 +914,8 @@ class DAG(AbstractDAG):
             # function to determine what to use as node depending on the
             # return_graphviz
             def get(task):
-                return task if not return_graphviz else task.name
+                return task if not (return_graphviz
+                                    or return_json_dag) else task.name
 
             # add edges
             if only_current_dag:
@@ -911,8 +925,9 @@ class DAG(AbstractDAG):
             else:
                 G.add_edges_from([(get(up), get(task))
                                   for up in task.upstream.values()])
-
-        return G if not return_graphviz else nx.nx_agraph.to_agraph(G)
+        if return_json_dag or not return_graphviz:
+            return G
+        return nx.nx_agraph.to_agraph(G)
 
     def _add_edge(self, task_from, task_to, group_name=None):
         """Add an edge between two tasks

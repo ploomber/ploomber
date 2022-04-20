@@ -172,7 +172,8 @@ def test_plot(custom_args, monkeypatch, tmp_sample_dir, output,
     monkeypatch.setattr(dag_module.DAG, 'plot', mock)
     plot.main(catch_exception=False)
 
-    mock.assert_called_once_with(output=output,
+    mock.assert_called_once_with(backend=None,
+                                 output=output,
                                  include_products=include_products)
 
 
@@ -186,7 +187,8 @@ def test_plot_uses_name_if_any(tmp_nbs, monkeypatch):
     plot.main(catch_exception=False)
 
     mock.assert_called_once_with(output='pipeline.train.png',
-                                 include_products=False)
+                                 include_products=False,
+                                 backend=None)
 
 
 def test_report_includes_plot(monkeypatch, tmp_sample_dir):
