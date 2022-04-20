@@ -1,3 +1,4 @@
+import platform
 from unittest.mock import Mock
 from pathlib import Path
 
@@ -166,7 +167,8 @@ def test_iter_file_products():
 
 @pytest.mark.parametrize('fn, expected', [
     [dag_simple, ['output']],
-    [dag_another, ['output', 'output/something', 'products']],
+    [dag_another, ['output',
+                   str(Path('output', 'something')), 'products']],
 ])
 def test_extract_product_prefixes(fn, expected):
     dag = fn()
@@ -176,10 +178,14 @@ def test_extract_product_prefixes(fn, expected):
 def test_error_extract_product_prefixes_if_absolute_path():
     dag = DAG()
 
+    path = str(
+        Path('C:\\path\\to\\another' if platform.system() ==
+             'Windows' else '/absolute/path/to/another'))
+
     PythonCallable(touch_root, File('output/first'), dag, name='task')
     PythonCallable(touch_root, {
         'product': File('output/product'),
-        'another': File('/absolute/path/to/another')
+        'another': File(path)
     },
                    dag,
                    name='another')
@@ -187,7 +193,6 @@ def test_error_extract_product_prefixes_if_absolute_path():
     with pytest.raises(ValueError) as excinfo:
         util.extract_product_prefixes(dag)
 
-    expected = ("Absolute product paths are not "
-                "supported: '/absolute/path/to/another'")
+    expected = ("Absolute product paths are not " f"supported: {path!r}")
 
     assert str(excinfo.value) == expected
