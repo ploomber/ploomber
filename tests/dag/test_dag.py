@@ -209,8 +209,21 @@ def test_plot_with_d3_embed(dag, tmp_directory, monkeypatch, backend):
     monkeypatch.setattr(dag_plot_module, 'find_spec', lambda _: None)
     output = dag.plot(backend=backend)
 
-    # test the svg tag has the rendeered content
-    assert "<svg viewBox=" in output.data
+    # test the svg tag has the rendered content
+    assert '<svg id="dag" viewBox=' in output.data
+    # and the js message is hidden
+    assert '<div id="js-message" style="display: none;">' in output.data
+
+
+@pytest.mark.parametrize('backend', [None, 'd3'])
+def test_plot_with_d3_file(dag, tmp_directory, monkeypatch, backend):
+    # simulate pygraphviz isnt installed
+    monkeypatch.setattr(dag_plot_module, 'find_spec', lambda _: None)
+    dag.plot(backend=backend, output='some-pipeline.html')
+
+    html = Path('some-pipeline.html').read_text()
+    # check the js message appears
+    assert '<div id="js-message">' in html
 
 
 def test_plot_error_if_d3_and_include_products(dag):

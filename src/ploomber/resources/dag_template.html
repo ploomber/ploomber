@@ -10,9 +10,14 @@
     height: 100%;
   }
 
-  svg {
+  #dag {
     width: 100%;
     height: 100%;
+  }
+
+  #js-message {
+    padding-top: 10px;
+    padding-left: 20px;
   }
 </style>
 
@@ -22,10 +27,16 @@
 </head>
 
 <body>
-  <svg></svg>
+  <div id="js-message">
+    <h1>Javascript is disabled</h1>
+    <p>If using <b> JupyterLab</b>, click on <b>Trust HTML</b> in the upper left corner.</p>
+    <p>Otherwise, check your browser settings.</p>
+  </div>
+  <svg id="dag"></svg>
 </body>
 
 <script>
+  document.querySelector('#js-message').style.display = 'none';
 
   // starts here - custom util/ helper functions to generate dag
   function get_node_product_rectangle(align) {
@@ -106,7 +117,7 @@
   // --------------------------------
   // This code only handles rendering
   // --------------------------------
-  const svgSelection = d3.select("svg");
+  const svgSelection = d3.select("#dag");
   svgSelection.attr("viewBox", [0, 0, width, height].join(" "));
 
   // How to draw edges
