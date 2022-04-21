@@ -528,8 +528,6 @@ class NotebookRunner(NotebookMixin, Task):
                  nbconvert_exporter_name=None,
                  ext_in=None,
                  nb_product_key='nb',
-                 nb_product_report_key='nb_report',
-                 nb_product_doc_key='nb_doc',
                  static_analysis='regular',
                  nbconvert_export_kwargs=None,
                  local_execution=False,
@@ -540,10 +538,12 @@ class NotebookRunner(NotebookMixin, Task):
         self.nbconvert_exporter_name = nbconvert_exporter_name
         self.ext_in = ext_in
         self.nb_product_key = nb_product_key
-        self.nb_product_report_key = nb_product_report_key
-        self.nb_product_doc_key = nb_product_doc_key
         self.local_execution = local_execution
         self.check_if_kernel_installed = check_if_kernel_installed
+        self.multiple_nb_params = {
+            'valid_keys': ['nb_ipynb', 'nb_html', 'nb_pdf'],
+            'mandatory_key': 'nb_ipynb'
+        }
 
         if 'cwd' in self.papermill_params and self.local_execution:
             raise KeyError('If local_execution is set to True, "cwd" should '
@@ -558,47 +558,57 @@ class NotebookRunner(NotebookMixin, Task):
         super().__init__(product, dag, name, params)
 
         if isinstance(self.product, MetaProduct):
-            if self.product.get(nb_product_key) is None:
+            if isinstance(self.nb_product_key, list):
+                if self.multiple_nb_params.get('mandatory_key') not in self.nb_product_key:
+                    raise TaskInitializationError(
+                        f"Missing mandatory key '{self.mandatory_nb_product_key}' in "
+                        f"product: {(str(self.product))!r}. ")
+
+                for key in self.nb_product_key:
+                    if key not in self.multiple_nb_params.get('valid_keys'):
+                        raise TaskInitializationError(
+                            f"Invalid key '{key}' in "
+                            f"product: {(str(self.product))!r}. "
+                            f"Please select one from : )"
+                            f"{self.valid_nb_product_key!r}.")
+
+                    if self.product.get(key) is None:
+                        raise TaskInitializationError(
+                            f"Missing key '{key}' in "
+                            f"product: {(str(self.product))!r}. "
+                            f"All keys specified in "
+                            f"{nb_product_key!r} must contain the "
+                            f"corresponding product path.")
+
+            elif self.product.get(nb_product_key) is None:
                 raise TaskInitializationError(
                     f"Missing key '{nb_product_key}' in "
                     f"product: {(str(self.product))!r}. "
                     f"{nb_product_key!r} must contain "
                     "the path to the output notebook.")
 
-        product_nb_report = None
-        product_nb_doc = None
-
-        if isinstance(self.product, MetaProduct):
-            product_nb = (
-                self.product[self.nb_product_key]._identifier.best_repr(
-                    shorten=False))
-
-            product_nb_report = None if self.product.get(
-                nb_product_report_key) is None else (self.product[
-                    self.nb_product_report_key]._identifier.best_repr(
+        if isinstance(self.nb_product_key, str):
+            if isinstance(self.product, MetaProduct):
+                product_nb = (
+                    self.product[self.nb_product_key]._identifier.best_repr(
                         shorten=False))
 
-            product_nb_doc = None if self.product.get(
-                nb_product_doc_key) is None else (self.product[
-                    self.nb_product_doc_key]._identifier.best_repr(
-                        shorten=False))
+            else:
+                product_nb = self.product._identifier.best_repr(shorten=False)
 
         else:
-            product_nb = self.product._identifier.best_repr(shorten=False)
+            multiple_product_nb = [(self.product[key]._identifier.best_repr(
+                        shorten=False)) for key in self.nb_product_key]
 
-        self._converter = NotebookConverter(product_nb,
+        if isinstance(self.nb_product_key, str):
+            self._converter = NotebookConverter(product_nb,
                                             nbconvert_exporter_name,
                                             nbconvert_export_kwargs)
-
-        self._report_convertor = None if product_nb_report is None else \
-            NotebookConverter(product_nb_report,
+        else:
+            self._converter = [NotebookConverter(product_nb,
                               nbconvert_exporter_name,
-                              nbconvert_export_kwargs)
+                              nbconvert_export_kwargs) for product_nb in multiple_product_nb]
 
-        self._doc_convertor = None if product_nb_doc is None else \
-            NotebookConverter(product_nb_doc,
-                              nbconvert_exporter_name,
-                              nbconvert_export_kwargs)
 
     @staticmethod
     def _init_source(source,
@@ -625,15 +635,12 @@ class NotebookRunner(NotebookMixin, Task):
 
         if isinstance(self.product, MetaProduct):
 
-            path_to_out = Path(str(self.product[self.nb_product_key]))
-
-            if self.nb_product_report_key in self.product:
-                multiple_nb_products.append(
-                    Path(str(self.product[self.nb_product_report_key])))
-
-            if self.nb_product_doc_key in self.product:
-                multiple_nb_products.append(
-                    Path(str(self.product[self.nb_product_doc_key])))
+            if isinstance(self.nb_product_key, str):
+                path_to_out = Path(str(self.product[self.nb_product_key]))
+            else:
+                path_to_out = Path(str(self.product['nb_ipynb']))
+                for key in self.nb_product_key:
+                    multiple_nb_products.append(Path(str(self.product[key])))
 
         else:
             path_to_out = Path(str(self.product))
@@ -677,13 +684,12 @@ class NotebookRunner(NotebookMixin, Task):
 
         path_to_out_ipynb.rename(path_to_out)
 
-        self._converter.convert()
+        if isinstance(self._converter, list):
+            for _converter in self._converter:
+                _converter.convert()
+        else:
+            self._converter.convert()
 
-        if self._report_convertor:
-            self._report_convertor.convert()
-
-        if self._doc_convertor:
-            self._doc_convertor.convert()
 
 
 class ScriptRunner(NotebookMixin, Task):
