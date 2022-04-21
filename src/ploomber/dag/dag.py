@@ -850,8 +850,9 @@ class DAG(AbstractDAG):
 
         elif not plot.check_pygraphviz_installed() and backend == "pygraphviz":
             raise ImportError(
-                _make_requires_error_message(['pygraphviz'], 'plot',
-                                             _pygraphviz_message))
+                _make_requires_error_message(
+                    ['pygraphviz<1.8'] if sys.version_info <
+                    (3, 8) else ['pygraphviz'], 'plot', _pygraphviz_message))
 
         # use pygraphviz
         with _path_for_plot(path_to_plot=output, fmt='png') as path:
