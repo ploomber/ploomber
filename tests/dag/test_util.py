@@ -8,6 +8,7 @@ from ploomber.tasks import PythonCallable, SQLScript
 from ploomber.products import (File, SQLRelation, SQLiteRelation,
                                GenericSQLRelation, PostgresRelation)
 from ploomber.exceptions import DAGWithDuplicatedProducts
+from ploomber.dag import util
 
 
 def touch_root(product):
@@ -106,3 +107,20 @@ def test_duplicated_sql_product(class1, class2, return_value):
         dag.render()
 
     assert 'Tasks must generate unique products.' in str(excinfo.value)
+
+
+def test_path_for_plot_embed(tmp_directory):
+    with util._path_for_plot(path_to_plot='embed', fmt='ext') as path:
+        assert Path(path).exists()
+
+    assert 'tmp' in path
+    assert Path(path).suffix == '.ext'
+    assert not Path(path).exists()
+
+
+def test_path_for_plot(tmp_directory):
+    with util._path_for_plot(path_to_plot='output.png', fmt='png') as path:
+        Path(path).write_text('text')
+
+    assert path == 'output.png'
+    assert Path(path).read_text() == 'text'
