@@ -1,7 +1,9 @@
+import click
+
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.util.default import extract_name
-
+from ploomber.dag.plot import choose_backend
 from ploomber.telemetry import telemetry
 
 
@@ -18,8 +20,9 @@ def main():
 
         parser.add_argument('--backend',
                             '-b',
-                            help='Which backend to use pygraphviz or d3,\
-                defaults to pygraphviz',
+                            help=('How to generate the plot: d3 or '
+                                  'pygraphviz. Using whatever is '
+                                  'available by default'),
                             default=None)
 
         parser.add_argument('--include-products',
@@ -33,13 +36,12 @@ def main():
         output = args.output
     else:
         name = extract_name(args.entry_point)
-        output = 'pipeline.png' if name is None else f'pipeline.{name}.png'
+        ext = 'png' if choose_backend(args.backend) == 'pygraphviz' else 'html'
+        output = (f'pipeline.{ext}'
+                  if name is None else f'pipeline.{name}.{ext}')
 
-    plot_output = dag.plot(output=output,
-                           backend=args.backend,
-                           include_products=args.include_products)
+    dag.plot(output=output,
+             backend=args.backend,
+             include_products=args.include_products)
 
-    if plot_output:
-        print('Plot saved at:', plot_output)
-    else:
-        print('Plot saved at:', output)
+    click.echo(f'Plot saved at: {output}')
