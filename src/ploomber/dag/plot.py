@@ -1,40 +1,79 @@
 import json
+from pathlib import Path
+from importlib.util import find_spec
+
 import jinja2
-from ploomber import resources
+from IPython.display import HTML
+
 try:
     import importlib.resources as importlib_resources
 except ImportError:  # pragma: no cover
     # backported
     import importlib_resources
 
+from ploomber import resources
 
-def json_dag_parser(graph_dict: dict):
-    node_repr_json = {}
-    for each_node in graph_dict["nodes"]:
-        node_repr_json[each_node["id"]] = each_node
+
+def check_pygraphviz_installed():
+    return find_spec("pygraphviz") is not None
+
+
+def choose_backend(backend):
+    """Determine which backend to use for plotting
+    """
+    if ((not check_pygraphviz_installed() and backend is None)
+            or (backend == 'd3')):
+        return 'd3'
+    else:
+        return 'pygraphviz'
+
+
+def json_dag_parser(graph: dict):
+    """Format dag dict so d3 can understand it
+    """
+    nodes = {}
+
+    for task in graph["nodes"]:
+        nodes[task["id"]] = task
 
     # change name label to products for now
-    for each_node in node_repr_json:
-        node_repr_json[each_node]["products"] = (
-            node_repr_json[each_node]["label"].replace("\n", "").split(","))
+    for node in nodes:
+        nodes[node]["products"] = (nodes[node]["label"].replace("\n",
+                                                                "").split(","))
 
-    for each_link in graph_dict["links"]:
-        existing_nodeLinks = node_repr_json[each_link["target"]].get(
-            "parentIds", [])
-        existing_nodeLinks.append(each_link["source"])
-        node_repr_json[each_link["target"]]["parentIds"] = existing_nodeLinks
+    for link in graph["links"]:
+        node_links = nodes[link["target"]].get("parentIds", [])
+        node_links.append(link["source"])
+        nodes[link["target"]]["parentIds"] = node_links
 
-    return json.dumps(list(node_repr_json.values()))
+    return json.dumps(list(nodes.values()))
 
 
-def with_d3(json_dag, output):
+def with_d3(graph, output):
     """Generates D3 Dag html output and return output file name
     """
-    template_html = jinja2.Template(
+    template = jinja2.Template(
         importlib_resources.read_text(resources, 'dag_template.html'))
 
-    updated = template_html.render(
-        {"json_data": json_dag_parser(graph_dict=json_dag)})
-    with open(output, "w") as f:
-        f.write(updated)
-    return output
+    rendered = template.render(json_data=json_dag_parser(graph=graph))
+    Path(output).write_text(rendered)
+
+
+def embedded_html(path):
+    import asyncio
+    import nest_asyncio
+    nest_asyncio.apply()
+
+    return asyncio.get_event_loop().run_until_complete(
+        _embedded_html(path=path))
+
+
+async def _embedded_html(path):
+    # FIXME: raise an error if requests-html is not installed
+    from requests_html import HTML as HTML_, AsyncHTMLSession
+
+    session = AsyncHTMLSession()
+    html = HTML_(html=Path(path).read_text(), session=session)
+    await html.arender()
+
+    return HTML(data=html.html)
