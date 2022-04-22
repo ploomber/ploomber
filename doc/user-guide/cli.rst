@@ -37,11 +37,8 @@ Generate pipeline plot:
 
     ploomber plot
 
-.. warning::
-    
-    To plot the pipeline (``ploomber plot`` command), you must
-    :ref:`install pygraphviz <faq-plotting-a-pipeline>`.
-
+**New in Ploomber 0.18.2**: You can plot the pipeline without installing extra dependencies.
+``pygraphviz`` is still supported but optional. To learn more, :ref:`see this <faq-plotting-a-pipeline>`.
 
 .. _user-guide-cli-interactive-sessions:
 
