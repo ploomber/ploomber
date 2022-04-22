@@ -1,6 +1,8 @@
 Cloud User Guide
 ================
 
+*Note: Ploomber Cloud is in beta*
+
 Community Plan
 **************
 
@@ -22,15 +24,14 @@ You can submit pipelines from your laptop to Ploomber Cloud, or you may use
 the hosted `JupyterLab. <https://hub.ploomber.io/>`_:
 
 1. Click on Sign In
-2. In the username field enter your email address but replace ``@`` for ``-at-``. For example ``user@example.com`` becomes ``user-at-example.com``
+2. In the username field, enter your email address but replace ``@`` for ``-at-``. For example ``user@example.com`` becomes ``user-at-example.com``
 
-**Note:** To ensure you're running the latest Ploomber Cloud CLI, open a terminal in Jupyter and run:
+*Note:* We're constantly improving Ploomber Cloud; ensure you're running the latest
+version for the best experience: 
 
 .. code-block:: console
 
-    pip uninstall ploomber
-    pip install git+https://github.com/ploomber/ploomber@cloud-stable
-
+    pip install ploomber --upgrade
 
 Then set your key:
 
