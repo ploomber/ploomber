@@ -7,7 +7,6 @@ This command runs a bunch of pip/conda commands (depending on what's available)
 and it does the *right thing*: creating a new environment if needed, and
 locking dependencies.
 """
-import os
 import json
 import uuid
 import warnings

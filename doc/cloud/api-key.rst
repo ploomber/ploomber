@@ -1,6 +1,8 @@
 Setting Up
 ==========
 
+*Note: Ploomber Cloud is in beta*
+
 Getting an API Key
 ******************
 
@@ -31,13 +33,12 @@ You'll see a pop-up where you can copy your key.
 Setting your API Key
 ********************
 
-Ploomber Cloud is in beta, and the API might change in the future.
-To use it, you'll have to install Ploomber from git.
+We're constantly improving Ploomber Cloud; ensure you're running the latest
+version for the best experience: 
 
 .. code-block:: console
 
-    pip uninstall ploomber
-    pip install git+https://github.com/ploomber/ploomber@cloud-stable
+    pip install ploomber --upgrade
 
 
 Now, configure your API key:
