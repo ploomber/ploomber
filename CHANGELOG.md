@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 0.18.1dev
+* Compatibility with click `7.x` and `8.x` (#719)
+* Deprecates casting for boolean `static_analysis` flag (#586)
 
 ## 0.18 (2022-04-16)
 * Support for `env.yaml` composition via `meta.import_from` ([#679](https://github.com/ploomber/ploomber/issues/679))
