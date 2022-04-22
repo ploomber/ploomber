@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.18.2dev
+
 ## 0.18.1 (2022-04-22)
 * Compatibility with click `7.x` and `8.x` ([#719](https://github.com/ploomber/ploomber/issues/719))
 * Deprecates casting for boolean `static_analysis` flag ([#586](https://github.com/ploomber/ploomber/issues/586))
