@@ -58,6 +58,10 @@ OPTIONAL = [
     'pyarrow',
     # qa and entry modules
     'numpydoc',
+
+    # for embedded dag plots with d3 backend
+    'requests-html',
+    'nest_asyncio',
 ]
 
 TESTING = [
