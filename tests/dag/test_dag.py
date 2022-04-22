@@ -23,6 +23,7 @@ from ploomber.executors import Serial, Parallel, serial
 from ploomber.clients import SQLAlchemyClient
 from ploomber.dag.dagclients import DAGClients
 from ploomber.dag import plot as dag_plot_module
+from ploomber.util import util as ploomber_util
 
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
@@ -213,6 +214,20 @@ def test_plot_with_d3_embed(dag, tmp_directory, monkeypatch, backend):
     assert '<svg id="dag" viewBox=' in output.data
     # and the js message is hidden
     assert '<div id="js-message" style="display: none;">' in output.data
+
+
+def test_plot_with_d3_embed_error_if_missing_dependency(
+        dag, tmp_directory, monkeypatch):
+    monkeypatch.setattr(ploomber_util.importlib.util, 'find_spec',
+                        lambda _: None)
+
+    with pytest.raises(ImportError) as excinfo:
+        dag.plot(backend='d3')
+
+    expected = ("'requests-html' 'nest_asyncio' are "
+                "required to use 'embedded HTML with D3 backend'. "
+                "Install with: pip install 'requests-html' 'nest_asyncio'")
+    assert expected == str(excinfo.value)
 
 
 @pytest.mark.parametrize('backend', [None, 'd3'])

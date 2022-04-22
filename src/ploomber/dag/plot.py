@@ -12,6 +12,7 @@ except ImportError:  # pragma: no cover
     import importlib_resources
 
 from ploomber import resources
+from ploomber.util.util import requires
 
 
 def check_pygraphviz_installed():
@@ -59,6 +60,9 @@ def with_d3(graph, output):
     Path(output).write_text(rendered)
 
 
+@requires(['requests_html', 'nest_asyncio'],
+          name='embedded HTML with D3 backend',
+          pip_names=['requests-html', 'nest_asyncio'])
 def embedded_html(path):
     import asyncio
     import nest_asyncio
@@ -76,6 +80,6 @@ async def _embedded_html(path):
 
     session = AsyncHTMLSession()
     html = HTML_(html=Path(path).read_text(), session=session)
+    session.close()
     await html.arender()
-
     return HTML(data=html.html)
