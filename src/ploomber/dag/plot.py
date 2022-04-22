@@ -67,7 +67,6 @@ def embedded_html(path):
     import asyncio
     import nest_asyncio
     nest_asyncio.apply()
-
     return asyncio.get_event_loop().run_until_complete(
         _embedded_html(path=path))
 
@@ -75,11 +74,11 @@ def embedded_html(path):
 async def _embedded_html(path):
     # https://github.com/jupyter/nbclient/blob/1d629b2bed561fde521e6408e190a8159f117ddc/nbclient/util.py
     # https://github.com/jupyter/nbclient/blob/main/requirements.txt
-    # FIXME: raise an error if requests-html is not installed
     from requests_html import HTML as HTML_, AsyncHTMLSession
 
     session = AsyncHTMLSession()
     html = HTML_(html=Path(path).read_text(), session=session)
-    session.close()
     await html.arender()
+    # ensure we close the session, otherwise this will fail on windows
+    await session.close()
     return HTML(data=html.html)
