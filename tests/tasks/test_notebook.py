@@ -499,19 +499,23 @@ Path(product['file']).touch()
     """
 
     product = {
-        'nb': File(Path(tmp_directory, 'out.ipynb')),
-        'nb_report': File(Path(tmp_directory, 'out.html')),
-        'nb_doc': File(Path(tmp_directory, 'out.pdf')),
+        'nb_ipynb': File(Path(tmp_directory, 'out.ipynb')),
+        'nb_html': File(Path(tmp_directory, 'out.html')),
+        'nb_pdf': File(Path(tmp_directory, 'out.pdf')),
         'file': File(Path(tmp_directory, 'another', 'data', 'file.txt'))
+    }
+
+    nbconvert_exporter_name = {
+        'nb_pdf': 'webpdf'
     }
 
     NotebookRunner(code,
                    product=product,
                    dag=dag,
                    ext_in='py',
-                   nb_product_key='nb',
-                   nb_product_report_key='nb_report',
-                   nb_product_doc_key='nb_doc',
+                   nbconvert_exporter_name=nbconvert_exporter_name,
+                   nb_product_key=['nb_ipynb', 'nb_html', 'nb_pdf'],
+                   # nb_product_key='nb',
                    name='nb')
     dag.build()
 
