@@ -516,16 +516,14 @@ class NotebookRunner(NotebookMixin, Task):
             raise TaskInitializationError(
                 f"When specifying nb_product_key as a list, "
                 f"create a dictionary under nbconvert_exporter_name "
-                f"with each item in {self.nb_product_key!r}. "
-            )
+                f"with each item in {self.nb_product_key!r}. ")
 
         if isinstance(self.nb_product_key, str) and isinstance(
                 self.nbconvert_exporter_name, dict):
             raise TaskInitializationError(
-                f"Please specify a single nbconvert_exporter_name "
-                f"when generating a single notebook product. "
-                f"Example : 'nbconvert_exporter_name': '<exporter name'> "
-            )
+                "Please specify a single nbconvert_exporter_name "
+                "when generating a single notebook product. "
+                "Example : 'nbconvert_exporter_name': '<exporter name'> ")
 
         if isinstance(self.nb_product_key, list) and isinstance(
                 self.nbconvert_exporter_name, dict):
@@ -534,15 +532,14 @@ class NotebookRunner(NotebookMixin, Task):
                     raise TaskInitializationError(
                         f"Invalid nbconvert exporter : {exporter_name}. "
                         f"All exporter names in nbconvert_exporter_name "
-                        f"should be present in nb_product_key"
-                    )
+                        f"should be present in nb_product_key")
 
     def _validate_nb_product_key(self):
-        if self.multiple_nb_params.get(
-                'mandatory_key') not in self.nb_product_key:
+        if self.multiple_nb_params.get('nb_key') not in self.nb_product_key:
             raise TaskInitializationError(
-                f"Missing mandatory key '{self.mandatory_nb_product_key}' in "
-                f"product: {(str(self.product))!r}. ")
+                f"Missing mandatory key "
+                f"'{self.multiple_nb_params.get('nb_key')}' "
+                f"in product: {(str(self.product))!r}. ")
 
         for key in self.nb_product_key:
             if key not in self.multiple_nb_params.get('valid_keys'):
@@ -586,7 +583,7 @@ class NotebookRunner(NotebookMixin, Task):
         self.check_if_kernel_installed = check_if_kernel_installed
         self.multiple_nb_params = {
             'valid_keys': ['nb_ipynb', 'nb_html', 'nb_pdf'],
-            'mandatory_key': 'nb_ipynb'
+            'nb_key': 'nb_ipynb'
         }
 
         if 'cwd' in self.papermill_params and self.local_execution:
@@ -635,8 +632,7 @@ class NotebookRunner(NotebookMixin, Task):
                                                 nbconvert_export_kwargs)
         else:
             self._converter = [
-                NotebookConverter(product_nb,
-                                  nbconvert_exporter_name.get(key),
+                NotebookConverter(product_nb, nbconvert_exporter_name.get(key),
                                   nbconvert_export_kwargs)
                 for key, product_nb in multiple_product_nb.items()
             ]
@@ -669,9 +665,12 @@ class NotebookRunner(NotebookMixin, Task):
             if isinstance(self.nb_product_key, str):
                 path_to_out = Path(str(self.product[self.nb_product_key]))
             else:
-                path_to_out = Path(str(self.product['nb_ipynb']))
+                path_to_out = Path(
+                    str(self.product[self.multiple_nb_params.get('nb_key')]))
                 for key in self.nb_product_key:
-                    multiple_nb_products.append(Path(str(self.product[key])))
+                    if key != self.multiple_nb_params.get('nb_key'):
+                        multiple_nb_products.append(
+                            Path(str(self.product[key])))
 
         else:
             path_to_out = Path(str(self.product))

@@ -505,19 +505,48 @@ Path(product['file']).touch()
         'file': File(Path(tmp_directory, 'another', 'data', 'file.txt'))
     }
 
-    nbconvert_exporter_name = {
-        'nb_pdf': 'webpdf'
-    }
+    nbconvert_exporter_name = {'nb_pdf': 'webpdf'}
 
-    NotebookRunner(code,
-                   product=product,
-                   dag=dag,
-                   ext_in='py',
-                   nbconvert_exporter_name=nbconvert_exporter_name,
-                   nb_product_key=['nb_ipynb', 'nb_html', 'nb_pdf'],
-                   # nb_product_key='nb',
-                   name='nb')
+    NotebookRunner(
+        code,
+        product=product,
+        dag=dag,
+        ext_in='py',
+        nbconvert_exporter_name=nbconvert_exporter_name,
+        nb_product_key=['nb_ipynb', 'nb_html', 'nb_pdf'],
+        # nb_product_key='nb',
+        name='nb')
     dag.build()
+
+def test_multiple_nb_product_missing_keys(tmp_directory):
+    dag = DAG()
+
+    code = """
+# + tags=["parameters"]
+var = None
+
+# +
+from pathlib import Path
+Path(product['file']).touch()
+    """
+
+    product = {
+        'nb_ipynb': File(Path(tmp_directory, 'out.ipynb')),
+        'nb_html': File(Path(tmp_directory, 'out.html')),
+        'file': File(Path(tmp_directory, 'another', 'data', 'file.txt'))
+    }
+    with pytest.raises(TaskInitializationError) as excinfo:
+        NotebookRunner(
+            code,
+            product=product,
+            dag=dag,
+            ext_in='py',
+            nb_product_key=['nb_ipynb', 'nb_html', 'nb_pdf'],
+            name='nb')
+
+    assert "When specifying nb_product_key as a " \
+           "list, create a dictionary under " \
+           "nbconvert_exporter_name" in str(excinfo)
 
 
 def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory):
