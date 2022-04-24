@@ -6,7 +6,7 @@ import yaml
 
 
 class Config(abc.ABC):
-    """And abstract class to create configuration files (stored as YAML)
+    """An abstract class to create configuration files (stored as YAML)
 
     Notes
     -----
