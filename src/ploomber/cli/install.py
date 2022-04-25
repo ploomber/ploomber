@@ -23,7 +23,6 @@ from ploomber.util.util import check_mixed_envs
 from ploomber.cli.io import command_endpoint
 from ploomber.telemetry import telemetry
 from ploomber.util._sys import _python_bin
-from ploomber.cli.cloud import _email_input
 
 _SETUP_PY = 'setup.py'
 
@@ -112,7 +111,6 @@ def main(use_lock, create_env=None, use_venv=False):
         main_pip(use_lock=use_lock,
                  create_env=create_env
                  if create_env is not None else not telemetry.in_virtualenv())
-    _email_input()
 
 
 def main_pip(use_lock, create_env=True):
