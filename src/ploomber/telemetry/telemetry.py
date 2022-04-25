@@ -46,7 +46,6 @@ from functools import wraps
 from ploomber.telemetry import validate_inputs
 from ploomber import __version__
 import platform
-import distro
 
 TELEMETRY_VERSION = '0.3'
 DEFAULT_HOME_DIR = '~/.ploomber'
@@ -97,36 +96,6 @@ def get_os():
         return 'MacOS'
     else:  # Windows/Linux are contained
         return os
-
-
-def test():
-    """
-    Returns:
-        A dict of system information.
-    """
-    os = platform.system()
-    if os == "Darwin":
-        return {"os": "mac", "mac_version": platform.mac_ver()[0]}
-
-    if os == "Windows":
-        release, version, csd, platform_type = platform.win32_ver()
-        return {
-            "os": "windows",
-            "windows_version_release": release,
-            "windows_version": version,
-            "windows_version_service_pack": csd,
-            "windows_version_os_type": platform_type,
-        }
-
-    if os == "Linux":
-        return {
-            "os": "linux",
-            "linux_distro": distro.id(),
-            "linux_distro_like": distro.like(),
-            "linux_distro_version": distro.version(),
-        }
-
-    return {"os": os}
 
 
 def is_conda():
