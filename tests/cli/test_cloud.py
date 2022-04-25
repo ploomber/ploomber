@@ -91,7 +91,6 @@ def test_write_key_no_conf_file(tmp_directory, monkeypatch):
     with full_path.open("r") as file:
         conf = yaml.safe_load(file)
 
-    assert len(conf.keys()) == 1
     assert key_name in conf.keys()
     assert key_val in conf[key_name]
 
@@ -112,25 +111,19 @@ def test_overwrites_api_key(write_sample_conf):
     assert another_val in conf[key_name]
 
 
-def test_api_key_well_formatted(write_sample_conf):
-    with pytest.warns(Warning) as record:
-        cloud.set_key(None)
+@pytest.mark.parametrize('arg', [None, '12345'])
+def test_api_key_well_formatted(write_sample_conf, arg):
+    with pytest.raises(BaseException) as excinfo:
+        cloud.set_key(arg)
 
-    if not record:
-        pytest.fail("Expected a user warning!")
-
-    with pytest.warns(Warning) as record:
-        cloud.set_key("12345")
-
-    if not record:
-        pytest.fail("Expected a user warning!")
+    assert 'The API key is malformed' in str(excinfo.value)
 
 
 def test_get_api_key(write_sample_conf, capsys):
     key_val = "TEST_KEY12345678987654"
     runner = CliRunner()
     result = runner.invoke(set_key, args=[key_val], catch_exceptions=False)
-    assert 'Key was stored\n' == result.stdout
+    assert 'Key was stored\n' in result.stdout
 
     result = runner.invoke(get_key, catch_exceptions=False)
     assert key_val in result.stdout
