@@ -12,16 +12,15 @@ import uuid
 import warnings
 from datetime import datetime
 from json import JSONDecodeError
-from pathlib import Path
 import http.client as httplib
 import click
 from functools import wraps
 
 import humanize
 
+from ploomber.exceptions import BaseException
 from ploomber.telemetry import telemetry
-from ploomber.telemetry.telemetry import check_dir_exist, CONF_DIR, \
-    DEFAULT_USER_CONF, read_conf_file, update_conf_file, parse_dag
+from ploomber.telemetry.telemetry import parse_dag, UserSettings
 
 CLOUD_APP_URL = 'ggeheljnx2.execute-api.us-east-1.amazonaws.com'
 PIPELINES_RESOURCE = '/prod/pipelines'
@@ -33,11 +32,7 @@ def get_key():
     This gets the user cloud api key, returns None if doesn't exist.
     config.yaml is the default user conf file to fetch from.
     """
-    user_conf_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
-    conf = read_conf_file(user_conf_path)
-    key = conf.get('cloud_key', None)
-
-    return key
+    return UserSettings().cloud_key
 
 
 @telemetry.log_call('set-key')
@@ -52,13 +47,11 @@ def set_key(user_key):
 def _set_key(user_key):
     # Validate key
     if not user_key or len(user_key) != 22:
-        warnings.warn("The API key is malformed.\n"
-                      "Please validate your key or contact the admin\n")
-        return
+        raise BaseException("The API key is malformed.\n"
+                            "Please validate your key or contact the admin.")
 
-    user_key_dict = {'cloud_key': user_key}
-    user_conf_path = Path(check_dir_exist(CONF_DIR), DEFAULT_USER_CONF)
-    update_conf_file(user_conf_path, user_key_dict)
+    settings = UserSettings()
+    settings.cloud_key = user_key
     click.secho("Key was stored")
 
 
