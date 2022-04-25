@@ -155,24 +155,30 @@ def test_status(monkeypatch, tmp_sample_dir):
     status.main(catch_exception=False)
 
 
-@pytest.mark.parametrize('custom_args, output, include_products', [
-    [[], 'pipeline.entry.png', False],
-    [['--output', 'custom.png'], 'custom.png', False],
-    [['-o', 'custom.png'], 'custom.png', False],
-    [['--log', 'DEBUG'], 'pipeline.entry.png', False],
-    [['-o', 'custom.png', '--log', 'DEBUG'], 'custom.png', False],
-    [['--include-products'], 'pipeline.entry.png', True],
-    [['-i'], 'pipeline.entry.png', True],
+@pytest.mark.parametrize('custom_args, output, include_products, backend', [
+    [[], 'pipeline.entry.png', False, None],
+    [['--output', 'custom.png'], 'custom.png', False, None],
+    [['-o', 'custom.png'], 'custom.png', False, None],
+    [['--log', 'DEBUG'], 'pipeline.entry.png', False, None],
+    [['-o', 'custom.png', '--log', 'DEBUG'], 'custom.png', False, None],
+    [['--include-products'], 'pipeline.entry.png', True, None],
+    [['-i'], 'pipeline.entry.png', True, None],
+    [['-b', 'd3'], 'pipeline.entry.html', False, 'd3'],
+    [['--backend', 'pygraphviz'], 'pipeline.entry.png', False, 'pygraphviz'],
 ])
 def test_plot(custom_args, monkeypatch, tmp_sample_dir, output,
-              include_products):
+              include_products, backend, capsys):
     args_defaults = ['python', '--entry-point', 'test_pkg.entry.with_doc']
     monkeypatch.setattr(sys, 'argv', args_defaults + custom_args)
     mock = Mock()
     monkeypatch.setattr(dag_module.DAG, 'plot', mock)
-    plot.main(catch_exception=False)
 
-    mock.assert_called_once_with(output=output,
+    plot.main(catch_exception=False)
+    captured = capsys.readouterr()
+
+    assert output in captured.out
+    mock.assert_called_once_with(backend=backend,
+                                 output=output,
                                  include_products=include_products)
 
 
@@ -186,7 +192,8 @@ def test_plot_uses_name_if_any(tmp_nbs, monkeypatch):
     plot.main(catch_exception=False)
 
     mock.assert_called_once_with(output='pipeline.train.png',
-                                 include_products=False)
+                                 include_products=False,
+                                 backend=None)
 
 
 def test_report_includes_plot(monkeypatch, tmp_sample_dir):
@@ -207,7 +214,6 @@ def test_log_enabled(monkeypatch, tmp_sample_dir):
     build.main(catch_exception=False)
 
 
-@pytest.mark.skip(reason="Skipping test so it won't call log_api")
 def test_interactive_session(tmp_sample_dir, monkeypatch):
     mock_log = Mock()
     monkeypatch.setattr(telemetry, 'log_api', mock_log)

@@ -8,6 +8,11 @@ from ploomber_scaffold import scaffold as scaffold_project
 
 import click
 
+CLICK_VERSION = int(click.__version__[0])
+# NOTE: package_name was introduced in version 8
+VERSION_KWARGS = dict(
+    package_name='ploomber') if CLICK_VERSION >= 8 else dict()
+
 
 def _suggest_command(name: str, options):
     if not name or name in options:
@@ -32,7 +37,7 @@ def _suggest_command(name: str, options):
 
 
 @click.group()
-@click.version_option(package_name='ploomber')
+@click.version_option(**VERSION_KWARGS)
 def cli():
     """
     Ploomber

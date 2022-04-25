@@ -22,7 +22,8 @@ from ploomber.exceptions import (DAGBuildError, DAGRenderError,
 from ploomber.executors import Serial, Parallel, serial
 from ploomber.clients import SQLAlchemyClient
 from ploomber.dag.dagclients import DAGClients
-from ploomber.util import util
+from ploomber.dag import plot as dag_plot_module
+from ploomber.util import util as ploomber_util
 
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
@@ -170,7 +171,7 @@ def test_plot_include_products(dag, monkeypatch):
 
     dag.plot(include_products=True)
 
-    mock.assert_called_with(return_graphviz=True, include_products=True)
+    mock.assert_called_with(fmt='pygraphviz', include_products=True)
 
 
 def test_plot_path(dag, tmp_directory, monkeypatch_plot):
@@ -182,8 +183,70 @@ def test_plot_path(dag, tmp_directory, monkeypatch_plot):
     # IPython.display.image, hence, we should not call it
     mock_Image.assert_not_called()
     assert Path('pipeline.png').exists()
-    assert img is None
+    assert img == 'pipeline.png'
     mock_to_agraph.draw.assert_called_once()
+
+
+def test_plot_validates_backend(dag, tmp_directory):
+    with pytest.raises(ValueError) as excinfo:
+        dag.plot(backend='unknown')
+
+    expected = ("Expected backend to be: None, 'd3' or "
+                "'pygraphviz', but got: 'unknown'")
+    assert expected == str(excinfo.value)
+
+
+def test_plot_validates_html_extension_if_d3(dag, tmp_directory):
+    with pytest.raises(ValueError) as excinfo:
+        dag.plot(backend='d3', output='pipeline.png')
+
+    expected = "expected a path with extension .html"
+    assert expected in str(excinfo.value)
+
+
+@pytest.mark.parametrize('backend', [None, 'd3'])
+def test_plot_with_d3_embed(dag, tmp_directory, monkeypatch, backend):
+    # simulate pygraphviz isnt installed
+    monkeypatch.setattr(dag_plot_module, 'find_spec', lambda _: None)
+    output = dag.plot(backend=backend)
+
+    # test the svg tag has the rendered content
+    assert '<svg id="dag" viewBox=' in output.data
+    # and the js message is hidden
+    assert '<div id="js-message" style="display: none;">' in output.data
+
+
+def test_plot_with_d3_embed_error_if_missing_dependency(
+        dag, tmp_directory, monkeypatch):
+    monkeypatch.setattr(ploomber_util.importlib.util, 'find_spec',
+                        lambda _: None)
+
+    with pytest.raises(ImportError) as excinfo:
+        dag.plot(backend='d3')
+
+    expected = ("'requests-html' 'nest_asyncio' are "
+                "required to use 'embedded HTML with D3 backend'. "
+                "Install with: pip install 'requests-html' 'nest_asyncio'")
+    assert expected == str(excinfo.value)
+
+
+@pytest.mark.parametrize('backend', [None, 'd3'])
+def test_plot_with_d3_file(dag, tmp_directory, monkeypatch, backend):
+    # simulate pygraphviz isnt installed
+    monkeypatch.setattr(dag_plot_module, 'find_spec', lambda _: None)
+    dag.plot(backend=backend, output='some-pipeline.html')
+
+    html = Path('some-pipeline.html').read_text()
+    # check the js message appears
+    assert '<div id="js-message">' in html
+
+
+def test_plot_error_if_d3_and_include_products(dag):
+    with pytest.raises(ValueError) as excinfo:
+        dag.plot(backend='d3', include_products=True)
+
+    expected = "'include_products' is not supported when using the d3 backend."
+    assert expected in str(excinfo.value)
 
 
 @pytest.mark.parametrize('fmt', ['html', 'md'])
@@ -208,8 +271,29 @@ def test_error_when_adding_task_with_existing_name(dag):
     assert "DAG already has a task with name 'first'" in str(excinfo.value)
 
 
+def test_error_if_invalid_to_graph_fmt(dag):
+    with pytest.raises(ValueError) as excinfo:
+        dag._to_graph(fmt='unknown')
+
+    assert "Invalid format" in str(excinfo.value)
+
+
+def test_to_graph_networkx(dag):
+    graph = dag._to_graph(fmt='networkx')
+
+    assert set(graph.nodes) == {dag['first'], dag['second']}
+    assert list(graph.edges) == [(dag['first'], dag['second'])]
+
+
+def test_to_graph_d3(dag):
+    graph = dag._to_graph(fmt='d3')
+
+    assert set(graph.nodes) == {'first', 'second'}
+    assert list(graph.edges) == [('first', 'second')]
+
+
 def test_to_graph_prepare_for_graphviz(dag):
-    graph = dag._to_graph(return_graphviz=True)
+    graph = dag._to_graph(fmt='pygraphviz')
 
     assert set(n.attr['id'] for n in graph) == {'first', 'second'}
     assert set(n.attr['label'] for n in graph) == {"first", "second"}
@@ -218,7 +302,7 @@ def test_to_graph_prepare_for_graphviz(dag):
 
 
 def test_to_graph_prepare_for_graphviz_include_products(dag):
-    graph = dag._to_graph(return_graphviz=True, include_products=True)
+    graph = dag._to_graph(fmt='pygraphviz', include_products=True)
 
     assert set(n.attr['id'] for n in graph) == {'first', 'second'}
     assert set(n.attr['label'] for n in graph) == {
@@ -243,7 +327,7 @@ def test_graphviz_graph_with_clashing_task_str(dag):
     t2 = PythonCallable(fn2, File('file1.txt'), dag, name='second')
     t1 >> t2
 
-    graph = dag._to_graph(return_graphviz=True, include_products=True)
+    graph = dag._to_graph(fmt='pygraphviz', include_products=True)
 
     # check the representation of the graph still looks fine
     assert set(n.attr['id'] for n in graph) == {'first', 'second'}
@@ -1153,10 +1237,10 @@ def test_cycle_exception():
 
 
 def test_error_if_missing_pypgraphviz(monkeypatch, dag):
-    monkeypatch.setattr(util.importlib.util, 'find_spec', lambda _: None)
+    monkeypatch.setattr(dag_plot_module, 'find_spec', lambda _: None)
 
     with pytest.raises(ImportError) as excinfo:
-        dag.plot()
+        dag.plot(backend='pygraphviz')
 
     if sys.version_info < (3, 8):
         assert ("'pygraphviz<1.8' is required to use 'plot'. Install "

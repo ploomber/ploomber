@@ -63,6 +63,7 @@ import logging
 import tempfile
 from math import ceil
 from functools import partial
+from ploomber.dag import plot
 
 try:
     import importlib.resources as importlib_resources
@@ -77,7 +78,7 @@ from IPython.display import Image
 
 from ploomber.table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
-from ploomber.util import (image_bytes2html, isiterable, requires)
+from ploomber.util import (image_bytes2html, isiterable)
 from ploomber.util.debug import debug_if_exception
 from ploomber import resources
 from ploomber import executors
@@ -87,13 +88,14 @@ from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop, DAGCycle)
 from ploomber.messagecollector import (RenderExceptionsCollector,
                                        RenderWarningsCollector)
-from ploomber.util.util import callback_check
+from ploomber.util.util import callback_check, _make_requires_error_message
 from ploomber.dag.dagconfiguration import DAGConfiguration
 from ploomber.dag.daglogger import DAGLogger
 from ploomber.dag.dagclients import DAGClients
 from ploomber.dag.abstractdag import AbstractDAG
 from ploomber.dag.util import (check_duplicated_products,
-                               fetch_remote_metadata_in_parallel)
+                               fetch_remote_metadata_in_parallel,
+                               _path_for_plot)
 from ploomber.tasks.abc import Task
 
 if sys.version_info < (3, 8):
@@ -325,7 +327,7 @@ class DAG(AbstractDAG):
             you want this to be False, Ploomber uses this internally when
             exporting pipelines to other platforms (via Soopervisor).
         """
-        g = self._to_graph()
+        g = self._to_graph(fmt='networkx')
 
         def unique(elements):
             elements_unique = []
@@ -793,11 +795,7 @@ class DAG(AbstractDAG):
 
         return out
 
-    @requires(['pygraphviz'],
-              extra_msg=_pygraphviz_message,
-              pip_names=['pygraphviz<1.8'] if sys.version_info <
-              (3, 8) else ['pygraphviz'])
-    def plot(self, output='embed', include_products=False):
+    def plot(self, output='embed', include_products=False, backend=None):
         """Plot the DAG
 
         Parameters
@@ -806,32 +804,69 @@ class DAG(AbstractDAG):
             Where to save the output (e.g., pipeline.png). If 'embed', it
             returns an IPython image instead.
 
-        Parameters
-        ----------
         include_products : bool, default=False
             If False, each node only contains the task name, if True
-            if contains the task name and products.
+            if contains the task name and products. Only available when using
+            the pygraphviz backend
+
+        backend : str, default=None
+            How to generate the plot, if None it uses pygraphviz if installed,
+            otherwise it uses D3 (which doesn't require extra dependencies),
+            you can force to use a backend by passing 'pygraphviz' or 'd3'.
         """
-        if output == 'embed':
-            fd, path = tempfile.mkstemp(suffix='.png')
-            os.close(fd)
-        else:
-            path = str(output)
+        if backend not in {None, 'd3', 'pygraphviz'}:
+            raise ValueError("Expected backend to be: None, 'd3' "
+                             f"or 'pygraphviz', but got: {backend!r}")
 
-        # attributes docs:
-        # https://graphviz.gitlab.io/_pages/doc/info/attrs.html
+        if plot.choose_backend(backend) == 'd3':
+            if include_products:
+                raise ValueError("'include_products' is not supported "
+                                 "when using the d3 backend. Switch the "
+                                 "flag or change to the pypgrahviz backend")
 
-        # FIXME: add tests for this
-        self.render()
+            if output != 'embed':
+                suffix = Path(output).suffix
 
-        G = self._to_graph(return_graphviz=True,
-                           include_products=include_products)
-        G.draw(path, prog='dot', args='-Grankdir=LR')
+                if suffix != '.html':
+                    raise ValueError('Error when using d3 backend: '
+                                     'expected a path with '
+                                     f'extension .html, but got: {output!r}, '
+                                     'please change the extension')
 
-        if output == 'embed':
-            image = Image(filename=path)
-            Path(path).unlink()
-            return image
+            # FIXME: add tests for this
+            self.render()
+
+            G = self._to_graph(fmt='d3', include_products=include_products)
+
+            dag_json = nx.readwrite.json_graph.node_link_data(G)
+
+            with _path_for_plot(path_to_plot=output, fmt='html') as path:
+                plot.with_d3(dag_json, output=path)
+
+                if output == 'embed':
+                    return plot.embedded_html(path=path)
+                else:
+                    return path
+
+        elif not plot.check_pygraphviz_installed() and backend == "pygraphviz":
+            raise ImportError(
+                _make_requires_error_message(
+                    ['pygraphviz<1.8'] if sys.version_info <
+                    (3, 8) else ['pygraphviz'], 'plot', _pygraphviz_message))
+
+        # use pygraphviz
+        with _path_for_plot(path_to_plot=output, fmt='png') as path:
+            # attributes docs:
+            # https://graphviz.gitlab.io/_pages/doc/info/attrs.html
+
+            G = self._to_graph(fmt='pygraphviz',
+                               include_products=include_products)
+            G.draw(path, prog='dot', args='-Grankdir=LR')
+
+            if output == 'embed':
+                return Image(filename=path)
+            else:
+                return path
 
     def _add_task(self, task):
         """Adds a task to the DAG
@@ -847,10 +882,7 @@ class DAG(AbstractDAG):
         else:
             raise ValueError('Tasks must have a name, got None')
 
-    def _to_graph(self,
-                  only_current_dag=False,
-                  return_graphviz=False,
-                  include_products=False):
+    def _to_graph(self, fmt, only_current_dag=False, include_products=False):
         """
         Converts the DAG to a Networkx DiGraph object. Since upstream
         dependencies are not required to come from the same DAG,
@@ -859,10 +891,18 @@ class DAG(AbstractDAG):
 
         Parameters
         ----------
+        fmt : 'networkx', 'pygraphviz', or 'd3'
+            Output format
+
         include_products : bool, default=False
             If False, each node only contains the task name, if True
             if contains the task name and products.
         """
+        FMT = {'networkx', 'pygraphviz', 'd3'}
+
+        if fmt not in FMT:
+            raise ValueError(f'Invalid format, expected one of: {FMT}')
+
         # https://networkx.github.io/documentation/networkx-1.10/reference/drawing.html
         # http://graphviz.org/doc/info/attrs.html
 
@@ -870,7 +910,10 @@ class DAG(AbstractDAG):
         G = nx.DiGraph()
 
         for task in self.values():
-            if return_graphviz:
+
+            # these formats are used for plotting, so only pass certain task
+            # attributes
+            if fmt in {'pygraphviz', 'd3'}:
                 outdated = task.product._is_outdated()
 
                 # add parameters for graphviz plotting
@@ -894,25 +937,32 @@ class DAG(AbstractDAG):
                 # of the full task object, otherwise if two products have the
                 # same str representation, nodes will clash
                 G.add_node(task.name, **attr)
+
+            # when exporting to networkx, we want the task object
             else:
-                # otherwise add the actual task object as node
                 G.add_node(task)
 
-            # function to determine what to use as node depending on the
-            # return_graphviz
-            def get(task):
-                return task if not return_graphviz else task.name
+            def get_task_id(task):
+                """
+                Determine what to use to identify the edges the task object
+                or task name
+                """
+                return task if fmt == 'networkx' else task.name
 
             # add edges
             if only_current_dag:
-                G.add_edges_from([(get(up), get(task))
+                G.add_edges_from([(get_task_id(up), get_task_id(task))
                                   for up in task.upstream.values()
                                   if up.dag is self])
             else:
-                G.add_edges_from([(get(up), get(task))
+                G.add_edges_from([(get_task_id(up), get_task_id(task))
                                   for up in task.upstream.values()])
 
-        return G if not return_graphviz else nx.nx_agraph.to_agraph(G)
+        if fmt in {'networkx', 'd3'}:
+            return G
+        else:
+            # to_agraph converts to pygraphviz
+            return nx.nx_agraph.to_agraph(G)
 
     def _add_edge(self, task_from, task_to, group_name=None):
         """Add an edge between two tasks

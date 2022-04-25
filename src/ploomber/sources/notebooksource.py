@@ -226,26 +226,6 @@ class NotebookSource(Source):
                             'Placeholder or pathlib.Path, got {}'.format(
                                 type(primitive)))
 
-        if static_analysis is False:
-            warnings.warn(
-                "In Ploomber 0.16, static_analysis "
-                "changed from a boolean to a string. "
-                "Change the value from False"
-                f" to 'disable' in {str(self._path)!r} "
-                "to remove this warning. "
-                "This will raise an error in Ploomber 0.18", FutureWarning)
-            static_analysis = 'disable'
-
-        if static_analysis is True:
-            warnings.warn(
-                "In Ploomber 0.16, static_analysis "
-                "changed from a boolean to a string. "
-                "Change the value from True"
-                f" to 'regular' in {str(self._path)!r} "
-                "to remove this warning. "
-                "This will raise an error in Ploomber 0.18", FutureWarning)
-            static_analysis = 'regular'
-
         static_analysis_vals = {'disable', 'regular', 'strict'}
 
         if static_analysis not in static_analysis_vals:
