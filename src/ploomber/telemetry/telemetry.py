@@ -40,12 +40,10 @@ import platform
 
 import click
 import posthog
-import distro
 
 from ploomber.telemetry import validate_inputs
 from ploomber.config import Config
 from ploomber import __version__
-
 
 TELEMETRY_VERSION = '0.3'
 DEFAULT_HOME_DIR = '~/.ploomber'
