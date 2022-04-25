@@ -24,6 +24,12 @@
         height: auto;
     }
 </style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
 <!-- Below script for subscribe button in videos page-->
 <script src="https://apis.google.com/js/platform.js"></script>
 <!-- Optional JavaScript -->
@@ -35,6 +41,8 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
     integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
     crossorigin="anonymous"></script>
+
+
 
 {% endblock %}
 
@@ -103,6 +111,20 @@ titles_only=false) %}
         </div>
     </div>
 </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
 {%- endblock %}
 
 
