@@ -18,7 +18,7 @@ def _mock_metadata(**kwargs):
 
 
 @pytest.fixture(scope='session')
-def clone_examples():
+def clone_examples(_mock_email):
     examples.main(name=None, force=True)
 
 
@@ -101,7 +101,7 @@ def test_click_exception_isnt_shadowed_by_runtime_error(monkeypatch):
     assert 'Error: some click exception\n' in result.output
 
 
-def test_clones_in_home_directory(monkeypatch, tmp_directory):
+def test_clones_in_home_directory(monkeypatch, tmp_directory, _mock_email):
     # patch home directory
     monkeypatch.setattr(examples, '_home', str(tmp_directory))
 
@@ -123,7 +123,7 @@ def test_clones_in_home_directory(monkeypatch, tmp_directory):
                                      check=True)
 
 
-def test_change_default_branch(monkeypatch, tmp_directory):
+def test_change_default_branch(monkeypatch, tmp_directory, _mock_email):
     # mock metadata to make it look older
     metadata = _mock_metadata(timestamp=(datetime.now() -
                                          timedelta(days=1)).timestamp())
@@ -149,7 +149,7 @@ def test_change_default_branch(monkeypatch, tmp_directory):
 
 
 def test_does_not_download_again_if_no_explicit_branch_requested(
-        monkeypatch, tmp_directory):
+        monkeypatch, tmp_directory, _mock_email):
     dir_ = Path(tmp_directory, 'examples')
     monkeypatch.setattr(examples, '_home', dir_)
 

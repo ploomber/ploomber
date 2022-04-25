@@ -184,8 +184,8 @@ def mock_main(monkeypatch):
     return main_pip, main_conda
 
 
-def test_use_lock_none_with_pip_lock_exists(_mock_email, tmp_directory,
-                                            monkeypatch, mock_main):
+def test_use_lock_none_with_pip_lock_exists(tmp_directory, monkeypatch,
+                                            mock_main):
     main_pip, main_conda = mock_main
     # simulate no conda
     monkeypatch.setattr(install_module.shutil, 'which', lambda _: None)
@@ -200,8 +200,8 @@ def test_use_lock_none_with_pip_lock_exists(_mock_email, tmp_directory,
     main_conda.assert_not_called()
 
 
-def test_use_lock_none_with_pip_regular_exists(_mock_email, tmp_directory,
-                                               monkeypatch, mock_main):
+def test_use_lock_none_with_pip_regular_exists(tmp_directory, monkeypatch,
+                                               mock_main):
     main_pip, main_conda = mock_main
     # simulate no conda
     monkeypatch.setattr(install_module.shutil, 'which', lambda _: None)
@@ -216,8 +216,7 @@ def test_use_lock_none_with_pip_regular_exists(_mock_email, tmp_directory,
     main_conda.assert_not_called()
 
 
-def test_use_lock_none_with_conda_lock_exists(_mock_email, tmp_directory,
-                                              mock_main):
+def test_use_lock_none_with_conda_lock_exists(tmp_directory, mock_main):
     main_pip, main_conda = mock_main
 
     Path('environment.lock.yml').touch()
@@ -230,8 +229,7 @@ def test_use_lock_none_with_conda_lock_exists(_mock_email, tmp_directory,
     main_pip.assert_not_called()
 
 
-def test_use_lock_none_with_conda_regular_exists(_mock_email, tmp_directory,
-                                                 mock_main):
+def test_use_lock_none_with_conda_regular_exists(tmp_directory, mock_main):
     main_pip, main_conda = mock_main
     Path('environment.yml').touch()
 
@@ -272,8 +270,7 @@ def test_use_lock_none_with_pip_wrong_lock_exists(tmp_directory, mock_main):
     assert expected in result.output
 
 
-def test_use_venv_even_if_conda_installed(_mock_email, tmp_directory,
-                                          mock_main):
+def test_use_venv_even_if_conda_installed(tmp_directory, mock_main):
     main_pip, main_conda = mock_main
 
     Path('requirements.lock.txt').touch()
@@ -382,9 +379,8 @@ def test_install_with_pip(tmp_directory, has_conda, use_lock, env, env_lock,
     [[], False, 'some-env', False],
     [['--create-env'], True, 'some-env', True],
 ])
-def test_installs_conda_inline_if_inside_venv(_mock_email, tmp_directory,
-                                              monkeypatch, args, is_conda,
-                                              env_name, create_env):
+def test_installs_conda_inline_if_inside_venv(tmp_directory, monkeypatch, args,
+                                              is_conda, env_name, create_env):
     _write_sample_conda_files()
 
     main = Mock()
@@ -408,9 +404,8 @@ def test_installs_conda_inline_if_inside_venv(_mock_email, tmp_directory,
     [[], True, False],
     [['--create-env'], True, True],
 ])
-def test_installs_pip_inline_if_inside_venv(_mock_email, tmp_directory,
-                                            monkeypatch, args, in_venv,
-                                            create_env):
+def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
+                                            in_venv, create_env):
     _write_sample_pip_files()
 
     main = Mock()
@@ -859,7 +854,7 @@ def test_install_lock_package_with_conda(tmp_directory, monkeypatch,
 # creates symlinks
 @pytest.mark.xfail(sys.platform == 'win32',
                    reason='Test not working on Github Actions on Windows')
-def test_install_pip(_mock_email, tmp_directory):
+def test_install_pip(tmp_directory):
     _write_sample_pip_req()
 
     Path('setup.py').write_text(setup_py)
@@ -885,8 +880,7 @@ def test_install_pip(_mock_email, tmp_directory):
 
 @pytest.mark.xfail(sys.platform == 'win32',
                    reason='Test not working on Github Actions on Windows')
-def test_install_pip_does_not_duplicate_gitignore_entry(
-        _mock_email, tmp_directory):
+def test_install_pip_does_not_duplicate_gitignore_entry(tmp_directory):
     _write_sample_pip_req()
 
     Path('setup.py').write_text(setup_py)
@@ -902,7 +896,7 @@ def test_install_pip_does_not_duplicate_gitignore_entry(
     assert result.exit_code == 0
 
 
-def test_non_package_with_pip(_mock_email, tmp_directory):
+def test_non_package_with_pip(tmp_directory):
     _write_sample_pip_req()
 
     Path('setup.py').write_text(setup_py)
@@ -918,7 +912,7 @@ def test_non_package_with_pip(_mock_email, tmp_directory):
     assert result.exit_code == 0
 
 
-def test_non_package_with_pip_with_dev_deps(_mock_email, tmp_directory):
+def test_non_package_with_pip_with_dev_deps(tmp_directory):
     _write_sample_pip_req()
     _write_sample_pip_req('requirements.dev.txt')
 
@@ -942,8 +936,8 @@ def test_non_package_with_pip_with_dev_deps(_mock_email, tmp_directory):
 
 @pytest.mark.parametrize('create_setup_py', [True, False])
 @pytest.mark.parametrize('create_dev_lock', [True, False])
-def test_install_lock_pip(_mock_email, tmp_directory, mock_cmdr_wrapped,
-                          create_setup_py, create_dev_lock):
+def test_install_lock_pip(tmp_directory, mock_cmdr_wrapped, create_setup_py,
+                          create_dev_lock):
     _write_sample_pip_req('requirements.lock.txt')
 
     if create_dev_lock:

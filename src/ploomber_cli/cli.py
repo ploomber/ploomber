@@ -226,7 +226,7 @@ def install(use_lock, create_env, use_venv):
 @click.option('-f', '--force', help='Force examples download', is_flag=True)
 @click.option('-o', '--output', help='Target directory', default=None)
 @click.option('-b', '--branch', help='Git branch to use.', default=None)
-def examples(name, force, branch, output):
+def examples(name, force, branch, output, _mock_email):
     """
     Download examples
 

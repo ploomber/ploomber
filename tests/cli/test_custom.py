@@ -122,7 +122,7 @@ def test_help_shows_env_keys_w_entry_point(cmd, tmp_nbs,
     assert not excinfo.value.code
 
 
-def test_build(_mock_email, monkeypatch, tmp_sample_dir):
+def test_build(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
                         ['python', '--entry-point', 'test_pkg.entry.with_doc'])
     build.main(catch_exception=False)
@@ -143,7 +143,7 @@ def test_build_help_shows_docstring(capsys, monkeypatch):
 
 
 @pytest.mark.parametrize('arg', ['.', '*.py'])
-def test_build_from_directory(_mock_email, arg, monkeypatch, tmp_nbs_no_yaml):
+def test_build_from_directory(arg, monkeypatch, tmp_nbs_no_yaml):
     Path('output').mkdir()
     monkeypatch.setattr(sys, 'argv', ['python', '--entry-point', arg])
     build.main(catch_exception=False)
@@ -200,7 +200,7 @@ def test_report_includes_plot(monkeypatch, tmp_sample_dir):
     mock_plot.assert_called_once()
 
 
-def test_log_enabled(_mock_email, monkeypatch, tmp_sample_dir):
+def test_log_enabled(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
         'python', '--entry-point', 'test_pkg.entry.with_doc', '--log', 'INFO'
     ])
@@ -276,7 +276,7 @@ def test_interactive_session_render_fails(monkeypatch, tmp_nbs):
         interact.main(catch_exception=False)
 
 
-def test_replace_env_value(_mock_email, monkeypatch, tmp_sample_dir):
+def test_replace_env_value(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
         'python', '--entry-point', 'test_pkg.entry.with_doc',
         '--env--path--data', '/another/path'
@@ -284,7 +284,7 @@ def test_replace_env_value(_mock_email, monkeypatch, tmp_sample_dir):
     build.main(catch_exception=False)
 
 
-def test_w_param(_mock_email, monkeypatch, tmp_sample_dir):
+def test_w_param(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
         'python', '--entry-point', 'test_pkg.entry.with_param',
         'some_value_for_param'
@@ -292,20 +292,20 @@ def test_w_param(_mock_email, monkeypatch, tmp_sample_dir):
     build.main(catch_exception=False)
 
 
-def test_no_doc(_mock_email, monkeypatch, tmp_sample_dir):
+def test_no_doc(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv',
                         ['python', '--entry-point', 'test_pkg.entry.no_doc'])
     build.main(catch_exception=False)
 
 
-def test_incomplete_doc(_mock_email, monkeypatch, tmp_sample_dir):
+def test_incomplete_doc(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(
         sys, 'argv',
         ['python', '--entry-point', 'test_pkg.entry.incomplete_doc'])
     build.main(catch_exception=False)
 
 
-def test_invalid_doc(_mock_email, monkeypatch, tmp_sample_dir):
+def test_invalid_doc(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(
         sys, 'argv', ['python', '--entry-point', 'test_pkg.entry.invalid_doc'])
     build.main(catch_exception=False)
@@ -351,7 +351,7 @@ def test_invalid_function(monkeypatch):
         build.main(catch_exception=False)
 
 
-def test_undecorated_function(_mock_email, monkeypatch, tmp_sample_dir):
+def test_undecorated_function(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(
         sys, 'argv',
         ['python', '--entry-point', 'test_pkg.entry.plain_function'])
@@ -359,8 +359,7 @@ def test_undecorated_function(_mock_email, monkeypatch, tmp_sample_dir):
     build.main(catch_exception=False)
 
 
-def test_undecorated_function_w_param(_mock_email, monkeypatch,
-                                      tmp_sample_dir):
+def test_undecorated_function_w_param(monkeypatch, tmp_sample_dir):
     monkeypatch.setattr(sys, 'argv', [
         'python', '--entry-point', 'test_pkg.entry.plain_function_w_param',
         'some_value_for_param'
@@ -426,7 +425,7 @@ def test_parse_doc_if_missing_numpydoc(docstring, expected_summary,
 
 
 @pytest.mark.parametrize('args', [[], ['--partially', 'plot']])
-def test_build_command(_mock_email, args, tmp_nbs, monkeypatch):
+def test_build_command(args, tmp_nbs, monkeypatch):
     args = ['python', '--entry-point', 'pipeline.yaml'] + args
     monkeypatch.setattr(sys, 'argv', args)
     build.main(catch_exception=False)
@@ -485,7 +484,7 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
     CustomParserWrapper.dag_mock.render.assert_called_once_with()
 
 
-def test_build_with_replaced_env_value(_mock_email, tmp_nbs, monkeypatch):
+def test_build_with_replaced_env_value(tmp_nbs, monkeypatch):
     monkeypatch.setattr(
         sys, 'argv',
         ['python', '--entry-point', 'pipeline.yaml', '--env--sample', 'True'])

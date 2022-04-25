@@ -274,7 +274,7 @@ def test_install_lock_uses_telemetry(tmp_directory, has_conda, use_lock, env,
     assert mock.call_count == 2
 
 
-def test_install_uses_telemetry(_mock_email, monkeypatch, tmp_directory):
+def test_install_uses_telemetry(monkeypatch, tmp_directory):
 
     _write_sample_conda_env(env_name='telemetry')
     Path('setup.py').write_text(setup_py)
@@ -298,8 +298,7 @@ def test_install_uses_telemetry(_mock_email, monkeypatch, tmp_directory):
              'dag': dag_module.DAG("No name")
          })
 ]])
-def test_build_uses_telemetry(_mock_email, monkeypatch, tmp_directory,
-                              expected):
+def test_build_uses_telemetry(monkeypatch, tmp_directory, expected):
     _write_sample_conda_env()
     Path('setup.py').write_text(setup_py)
 
