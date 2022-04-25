@@ -1119,8 +1119,6 @@ def test_pip_mixed_versions(monkeypatch):
 
 
 def test_user_email_called_on_install(tmp_directory, monkeypatch):
-    email_mock = Mock()
-    monkeypatch.setattr(install_module, '_email_input', email_mock)
     _write_sample_pip_req()
 
     Path('setup.py').write_text(setup_py)
@@ -1128,5 +1126,3 @@ def test_user_email_called_on_install(tmp_directory, monkeypatch):
 
     runner = CliRunner()
     runner.invoke(install, args=['--create-env'], catch_exceptions=False)
-
-    email_mock.assert_called_once()

@@ -18,7 +18,7 @@ def _mock_metadata(**kwargs):
 
 
 @pytest.fixture(scope='session')
-def clone_examples(_mock_email):
+def clone_examples():
     examples.main(name=None, force=True)
 
 
@@ -60,7 +60,7 @@ def clone_examples(_mock_email):
         dict(name=None, force=False, branch=None, output='path/to/dir'),
     ],
 ])
-def test_cli(monkeypatch, argv, kwargs):
+def test_cli(_mock_email, monkeypatch, argv, kwargs):
     mock = Mock()
     monkeypatch.setattr(examples, 'main', mock)
 
@@ -175,7 +175,7 @@ def test_home_default_value():
     assert examples._home == Path('~', '.ploomber')
 
 
-def test_list(clone_examples, capsys):
+def test_list(_mock_email, clone_examples, capsys):
     examples.main(name=None, force=False)
     captured = capsys.readouterr()
 
@@ -186,7 +186,7 @@ def test_list(clone_examples, capsys):
     assert 'Cookbook' in captured.out
 
 
-def test_do_not_clone_if_recent(clone_examples, monkeypatch):
+def test_do_not_clone_if_recent(_mock_email, clone_examples, monkeypatch):
     # mock metadata to make it look recent
     metadata = _mock_metadata()
     monkeypatch.setattr(examples._ExamplesManager, 'load_metadata',
@@ -203,7 +203,7 @@ def test_do_not_clone_if_recent(clone_examples, monkeypatch):
     mock_run.assert_not_called()
 
 
-def test_clones_if_outdated(clone_examples, monkeypatch, capsys):
+def test_clones_if_outdated(_mock_email, clone_examples, monkeypatch, capsys):
     # mock metadata to make it look older
     metadata = _mock_metadata(timestamp=(datetime.now() -
                                          timedelta(days=1)).timestamp(),
@@ -224,7 +224,8 @@ def test_clones_if_outdated(clone_examples, monkeypatch, capsys):
     assert 'Examples copy is more than 1 day old...' in captured.out
 
 
-def test_clones_if_different_branch(clone_examples, monkeypatch, capsys):
+def test_clones_if_different_branch(_mock_email, clone_examples, monkeypatch,
+                                    capsys):
     # mock metadata to make it look like it's a copy from another branch
     metadata = _mock_metadata(branch='another-branch')
     monkeypatch.setattr(examples._ExamplesManager, 'load_metadata',
@@ -243,8 +244,8 @@ def test_clones_if_different_branch(clone_examples, monkeypatch, capsys):
     assert 'Different branch requested...' in captured.out
 
 
-def test_clones_if_corrupted_metadata(clone_examples, tmp_directory,
-                                      monkeypatch):
+def test_clones_if_corrupted_metadata(clone_examples, _mock_email,
+                                      tmp_directory, monkeypatch):
     # corrupt metadata
     not_json = Path(tmp_directory, 'not.json')
     not_json.write_text('hello')
@@ -262,7 +263,7 @@ def test_clones_if_corrupted_metadata(clone_examples, tmp_directory,
     mock_run.assert_called_once()
 
 
-def test_force_clone(clone_examples, monkeypatch):
+def test_force_clone(_mock_email, clone_examples, monkeypatch):
     # mock metadata to make it look recent
     metadata = _mock_metadata()
     monkeypatch.setattr(examples._ExamplesManager, 'load_metadata',
@@ -280,7 +281,7 @@ def test_force_clone(clone_examples, monkeypatch):
     mock_run.assert_called_once()
 
 
-def test_copy_example(clone_examples, tmp_directory):
+def test_copy_example(_mock_email, clone_examples, tmp_directory):
     examples.main(name='templates/ml-online', force=False)
 
     assert Path(tmp_directory, 'templates/ml-online').is_dir()
@@ -289,14 +290,15 @@ def test_copy_example(clone_examples, tmp_directory):
 
 
 @pytest.mark.parametrize('target', ['custom-dir', 'custom/dir'])
-def test_copy_to_custom_directory(clone_examples, tmp_directory, target):
+def test_copy_to_custom_directory(_mock_email, clone_examples, tmp_directory,
+                                  target):
     examples.main(name='templates/ml-online', output=target)
 
     assert Path(tmp_directory, target).is_dir()
     assert Path(tmp_directory, target, 'src', 'ml_online').is_dir()
 
 
-def test_error_unknown_example(tmp_directory, clone_examples):
+def test_error_unknown_example(tmp_directory, _mock_email, clone_examples):
     runner = CliRunner()
     result = runner.invoke(
         cli.cli,
@@ -306,7 +308,7 @@ def test_error_unknown_example(tmp_directory, clone_examples):
     assert "There is no example named 'not-an-example'" in result.output
 
 
-def test_error_if_already_exists(clone_examples, tmp_directory):
+def test_error_if_already_exists(_mock_email, clone_examples, tmp_directory):
     examples.main(name='templates/ml-online', force=False)
 
     runner = CliRunner()
