@@ -393,22 +393,20 @@ def test_get_pipeline_with_dag(monkeypatch, mock_api_key):
 @pytest.mark.parametrize('user_email', ['', 'test', '@', 'a@c'])
 def test_malformed_email_signup(monkeypatch, user_email):
     mock = Mock()
-    monkeypatch.setattr(cloud, 'update_conf_file', mock)
+    monkeypatch.setattr(cloud, '_email_registry', mock)
 
     cloud._email_validation(user_email)
     mock.assert_not_called()
 
 
 # Testing valid api calls when the email is correct
-def test_correct_email_signup(monkeypatch):
-    mock = Mock()
+def test_correct_email_signup(tmp_directory, monkeypatch):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
     registry_mock = Mock()
-    monkeypatch.setattr(cloud, 'update_conf_file', mock)
     monkeypatch.setattr(cloud, '_email_registry', registry_mock)
 
     sample_email = 'test@example.com'
     cloud._email_validation(sample_email)
-    mock.assert_called_once()
     registry_mock.assert_called_once()
 
 
@@ -431,15 +429,11 @@ def test_email_conf_file(tmp_directory, monkeypatch):
 
 
 def test_email_write_only_once(tmp_directory, monkeypatch):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
     input_mock = Mock(return_value='some1@email.com')
     monkeypatch.setattr(cloud, '_get_input', input_mock)
+    monkeypatch.setattr(telemetry.UserSettings, 'user_email', 'some@email.com')
 
-    stats = Path('stats')
-    stats.mkdir()
-    conf_path = stats / telemetry.DEFAULT_USER_CONF
-
-    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
-    conf_path.write_text("user_email: some@email.com\n")
     cloud._email_input()
     assert not input_mock.called
 
