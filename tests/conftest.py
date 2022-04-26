@@ -22,7 +22,7 @@ from ploomber.clients import SQLAlchemyClient
 from ploomber import Env
 import pandas as pd
 from glob import iglob
-from ploomber.cli import install, examples, cloud
+from ploomber.cli import install, examples
 import posthog
 from unittest.mock import Mock, MagicMock
 
