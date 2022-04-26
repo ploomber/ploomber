@@ -17,8 +17,8 @@ def _mock_metadata(**kwargs):
     return {**default, **kwargs}
 
 
-@pytest.fixture(scope='session')
-def clone_examples():
+@pytest.fixture(scope='function')
+def clone_examples(_mock_email):
     examples.main(name=None, force=True)
 
 
@@ -244,8 +244,8 @@ def test_clones_if_different_branch(_mock_email, clone_examples, monkeypatch,
     assert 'Different branch requested...' in captured.out
 
 
-def test_clones_if_corrupted_metadata(clone_examples, _mock_email,
-                                      tmp_directory, monkeypatch):
+def test_clones_if_corrupted_metadata(clone_examples, tmp_directory,
+                                      monkeypatch):
     # corrupt metadata
     not_json = Path(tmp_directory, 'not.json')
     not_json.write_text('hello')

@@ -45,12 +45,10 @@ def tmp_git(tmp_directory):
     git_init()
 
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def _mock_email(monkeypatch):
     examples_email_mock = Mock()
-    input_mock = Mock(return_value='some@email.com')
     monkeypatch.setattr(examples, '_email_input', examples_email_mock)
-    monkeypatch.setattr(cloud, '_get_input', input_mock)
 
 
 # FIXME: do we need this?
