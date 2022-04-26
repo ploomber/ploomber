@@ -59,6 +59,7 @@ class UserSettings(Config):
     """
     version_check_enabled: bool = True
     cloud_key: str = None
+    user_email: str = None
     stats_enabled: bool = True
 
     @classmethod
@@ -302,6 +303,16 @@ def is_cloud_user():
     return settings.cloud_key
 
 
+def email_registered():
+    """
+        The function checks if the email is set for the user.
+        Checks if the user_email is set in the User conf file (config.yaml).
+        returns True/False accordingly.
+        """
+    settings = UserSettings()
+    return settings.user_email
+
+
 def check_version():
     """
     The function checks if the user runs the latest version
@@ -395,6 +406,7 @@ def log_api(action, client_time=None, total_runtime=None, metadata=None):
     py_version = python_version()
     docker_container = is_docker()
     cloud = is_cloud_user()
+    email = email_registered()
     colab = is_colab()
     if colab:
         metadata['colab'] = colab
@@ -438,6 +450,7 @@ def log_api(action, client_time=None, total_runtime=None, metadata=None):
             'ploomber_version': product_version,
             'docker_container': docker_container,
             'cloud': cloud,
+            'email': email,
             'os': os,
             'environment': environment,
             'metadata': metadata,
