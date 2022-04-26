@@ -17,8 +17,8 @@ def _mock_metadata(**kwargs):
     return {**default, **kwargs}
 
 
-@pytest.fixture(scope='function')
-def clone_examples(_mock_email):
+@pytest.fixture(scope='session')
+def clone_examples():
     examples.main(name=None, force=True)
 
 
