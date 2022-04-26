@@ -486,7 +486,31 @@ Path(product['model']).touch()
     dag.build()
 
 
-def test_multiple_nb_product(tmp_directory):
+@pytest.mark.parametrize(
+    'product, nb_product_key, nbconvert_exporter_name',
+    [({
+        'nb_ipynb': File(Path('out.ipynb')),
+        'nb_html': File(Path('out.html')),
+        'nb_pdf': File(Path('out.pdf')),
+        'file': File(Path('another', 'data', 'file.txt')),
+    }, ['nb_ipynb', 'nb_html', 'nb_pdf'], {
+        'nb_pdf': 'webpdf'
+    }),
+     ({
+         'nb_ipynb': File(Path('out.ipynb')),
+         'nb_html': File(Path('out.html')),
+         'file': File(Path('another', 'data', 'file.txt')),
+     }, ['nb_ipynb', 'nb_html'], None),
+     ({
+         'nb': File(Path('out.ipynb')),
+         'file': File(Path('another', 'data', 'file.txt')),
+     }, 'nb', None),
+     ({
+         'nb': File(Path('out.pdf')),
+         'file': File(Path('another', 'data', 'file.txt')),
+     }, 'nb', 'webpdf')])
+def test_multiple_nb_product_success(product, nb_product_key,
+                                     nbconvert_exporter_name):
     dag = DAG()
 
     code = """
@@ -498,55 +522,65 @@ from pathlib import Path
 Path(product['file']).touch()
     """
 
-    product = {
-        'nb_ipynb': File(Path(tmp_directory, 'out.ipynb')),
-        'nb_html': File(Path(tmp_directory, 'out.html')),
-        'nb_pdf': File(Path(tmp_directory, 'out.pdf')),
-        'file': File(Path(tmp_directory, 'another', 'data', 'file.txt'))
-    }
-
-    nbconvert_exporter_name = {'nb_pdf': 'webpdf'}
-
-    NotebookRunner(
-        code,
-        product=product,
-        dag=dag,
-        ext_in='py',
-        nbconvert_exporter_name=nbconvert_exporter_name,
-        nb_product_key=['nb_ipynb', 'nb_html', 'nb_pdf'],
-        # nb_product_key='nb',
-        name='nb')
+    NotebookRunner(code,
+                   product=product,
+                   dag=dag,
+                   ext_in='py',
+                   nbconvert_exporter_name=nbconvert_exporter_name,
+                   nb_product_key=nb_product_key,
+                   name='nb')
     dag.build()
 
-def test_multiple_nb_product_missing_keys(tmp_directory):
+
+@pytest.mark.parametrize(
+    'product, nb_product_key, nbconvert_exporter_name, '
+    'expected_error',
+    [({
+        'nb_ipynb': File(Path('out.ipynb')),
+        'nb_html': File(Path('out.html')),
+    }, ['nb_ipynb', 'nb_html'
+        ], 'webpdf', "When specifying nb_product_key as a list"),
+     ({
+         'nb': File(Path('out.ipynb'))
+     }, 'nb', {
+         'nb_pdf': 'webpdf'
+     }, "Please specify a single nbconvert_exporter_name"),
+     ({
+         'nb_ipynb': File(Path('out.ipynb')),
+         'nb_html': File(Path('out.html'))
+     }, ['nb_ipynb', 'nb_html'], {
+         'nb_pdf': 'webpdf'
+     }, "Invalid nbconvert exporter"),
+     ({
+         'nb_html': File(Path('out.html'))
+     }, ['nb_html'], None, "Missing mandatory ipynb key"),
+     ({
+         'nb_ipynb': File(Path('out.ipynb')),
+         'nb_doc': File(Path('out.docx'))
+     }, ['nb_ipynb', 'nb_docx'], None, "Invalid key \'nb_docx\' in product"),
+     ({
+         'nb_ipynb': File(Path('out.ipynb'))
+     }, ['nb_ipynb', 'nb_pdf'], None, "Missing key \\\'nb_pdf\\\' in product")]
+)
+def test_multiple_nb_product_error(product, nb_product_key,
+                                   nbconvert_exporter_name, expected_error):
     dag = DAG()
 
     code = """
 # + tags=["parameters"]
 var = None
-
-# +
-from pathlib import Path
-Path(product['file']).touch()
     """
 
-    product = {
-        'nb_ipynb': File(Path(tmp_directory, 'out.ipynb')),
-        'nb_html': File(Path(tmp_directory, 'out.html')),
-        'file': File(Path(tmp_directory, 'another', 'data', 'file.txt'))
-    }
     with pytest.raises(TaskInitializationError) as excinfo:
-        NotebookRunner(
-            code,
-            product=product,
-            dag=dag,
-            ext_in='py',
-            nb_product_key=['nb_ipynb', 'nb_html', 'nb_pdf'],
-            name='nb')
+        NotebookRunner(code,
+                       product=product,
+                       dag=dag,
+                       ext_in='py',
+                       nb_product_key=nb_product_key,
+                       nbconvert_exporter_name=nbconvert_exporter_name,
+                       name='nb')
 
-    assert "When specifying nb_product_key as a " \
-           "list, create a dictionary under " \
-           "nbconvert_exporter_name" in str(excinfo)
+    assert expected_error in str(excinfo)
 
 
 def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory):

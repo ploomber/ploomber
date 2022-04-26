@@ -449,19 +449,24 @@ class NotebookRunner(NotebookMixin, Task):
         information to choose a kernel or the notebook already includes
         kernelspec data (in metadata.kernelspec), this is ignored, otherwise,
         the kernel is looked up using jupyter_client.kernelspec.get_kernel_spec
-    nbconvert_exporter_name: str, optional
+    nbconvert_exporter_name: str or dict, optional
         Once the notebook is run, this parameter controls whether to export
         the notebook to a different parameter using the nbconvert package,
         it is not needed unless the extension cannot be used to infer the
         final output format, in which case the nbconvert.get_exporter is used.
+        If nb_product_key is a list of multiple nb products keys,
+        nbconvert_exporter_name should be a dict containing keys from this
+        list.
     ext_in: str, optional
         Source extension. Required if loading from a str. If source is a
         ``pathlib.Path``, the extension from the file is used.
-    nb_product_key: str, optional
+    nb_product_key: str or list, optional
         If the notebook is expected to generate other products, pass the key
         to identify the output notebook (i.e. if product is a list with 3
         ploomber.File, pass the index pointing to the notebook path). If the
         only output is the notebook itself, this parameter is not needed
+        If multiple notebook conversions are required like html, pdf, this
+        parameter should be a list of keys like 'nb_ipynb', 'nb_html, 'nb_pdf'.
     static_analysis : ('disabled', 'regular', 'strict'), default='regular'
         Check for various errors in the notebook. In 'regular' mode, it aborts
         execution if the notebook has syntax issues, or similar problems that
@@ -512,11 +517,11 @@ class NotebookRunner(NotebookMixin, Task):
 
     def _validate_nbconvert_exporter(self):
         if isinstance(self.nb_product_key, list) and isinstance(
-                self.nbconvert_exporter_name, dict) is False:
+                self.nbconvert_exporter_name, str):
             raise TaskInitializationError(
                 f"When specifying nb_product_key as a list, "
                 f"create a dictionary under nbconvert_exporter_name "
-                f"with each item in {self.nb_product_key!r}. ")
+                f"with required keys in {self.nb_product_key!r}. ")
 
         if isinstance(self.nb_product_key, str) and isinstance(
                 self.nbconvert_exporter_name, dict):
@@ -530,24 +535,24 @@ class NotebookRunner(NotebookMixin, Task):
             for exporter_name in self.nbconvert_exporter_name:
                 if exporter_name not in self.nb_product_key:
                     raise TaskInitializationError(
-                        f"Invalid nbconvert exporter : {exporter_name}. "
+                        f"Invalid nbconvert exporter : {exporter_name!r}. "
                         f"All exporter names in nbconvert_exporter_name "
                         f"should be present in nb_product_key")
 
     def _validate_nb_product_key(self):
-        if self.multiple_nb_params.get('nb_key') not in self.nb_product_key:
+        if self.multiple_nb_params.get('ipynb_key') not in self.nb_product_key:
             raise TaskInitializationError(
-                f"Missing mandatory key "
-                f"'{self.multiple_nb_params.get('nb_key')}' "
-                f"in product: {(str(self.product))!r}. ")
+                f"Missing mandatory ipynb key "
+                f"'{self.multiple_nb_params.get('ipynb_key')}' "
+                f"in product: {self.nb_product_key!r}. ")
 
         for key in self.nb_product_key:
             if key not in self.multiple_nb_params.get('valid_keys'):
                 raise TaskInitializationError(
                     f"Invalid key '{key}' in "
-                    f"product: {(str(self.product))!r}. "
-                    f"Please select one from : )"
-                    f"{self.valid_nb_product_key!r}.")
+                    f"product: {self.nb_product_key!r}. "
+                    f"Please select from : )"
+                    f"{self.multiple_nb_params.get('valid_keys')!r}.")
 
             if self.product.get(key) is None:
                 raise TaskInitializationError(
@@ -583,7 +588,7 @@ class NotebookRunner(NotebookMixin, Task):
         self.check_if_kernel_installed = check_if_kernel_installed
         self.multiple_nb_params = {
             'valid_keys': ['nb_ipynb', 'nb_html', 'nb_pdf'],
-            'nb_key': 'nb_ipynb'
+            'ipynb_key': 'nb_ipynb'
         }
 
         if 'cwd' in self.papermill_params and self.local_execution:
@@ -631,11 +636,14 @@ class NotebookRunner(NotebookMixin, Task):
                                                 nbconvert_exporter_name,
                                                 nbconvert_export_kwargs)
         else:
-            self._converter = [
-                NotebookConverter(product_nb, nbconvert_exporter_name.get(key),
-                                  nbconvert_export_kwargs)
-                for key, product_nb in multiple_product_nb.items()
-            ]
+            self._converter = []
+            for key, product_nb in multiple_product_nb.items():
+
+                exporter = nbconvert_exporter_name.get(
+                    key) if nbconvert_exporter_name else None
+                self._converter.append(
+                    NotebookConverter(product_nb, exporter,
+                                      nbconvert_export_kwargs))
 
     @staticmethod
     def _init_source(source,
@@ -666,9 +674,10 @@ class NotebookRunner(NotebookMixin, Task):
                 path_to_out = Path(str(self.product[self.nb_product_key]))
             else:
                 path_to_out = Path(
-                    str(self.product[self.multiple_nb_params.get('nb_key')]))
+                    str(self.product[self.multiple_nb_params.get(
+                        'ipynb_key')]))
                 for key in self.nb_product_key:
-                    if key != self.multiple_nb_params.get('nb_key'):
+                    if key != self.multiple_nb_params.get('ipynb_key'):
                         multiple_nb_products.append(
                             Path(str(self.product[key])))
 
