@@ -58,6 +58,7 @@ def test_user_settings_create_file(tmp_directory, monkeypatch):
 
     assert content == {
         'cloud_key': None,
+        'user_email': None,
         'stats_enabled': True,
         'version_check_enabled': True,
     }
