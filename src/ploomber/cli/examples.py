@@ -16,6 +16,7 @@ from ploomber.cli.io import command_endpoint
 from ploomber.table import Table
 from ploomber.telemetry import telemetry
 from ploomber.exceptions import BaseException
+from ploomber.cli.cloud import _email_input
 
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer
@@ -231,7 +232,7 @@ class _ExamplesManager:
         tw.write('\nTo run these examples in free, hosted '
                  f'environment, see instructions at: {_URL}')
         tw.write('\nTo download: ploomber examples -n name -o path\n')
-        tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n')
+        tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n\n')
 
 
 @command_endpoint
@@ -287,3 +288,4 @@ def main(name, force=False, branch=None, output=None):
                      f'\n$ ploomber install')
             tw.write(f'\n\nOpen {str(path_to_readme)} for details.\n',
                      blue=True)
+    _email_input()

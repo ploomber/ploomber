@@ -15,6 +15,7 @@ from json import JSONDecodeError
 import http.client as httplib
 import click
 from functools import wraps
+import re
 
 import humanize
 
@@ -22,8 +23,9 @@ from ploomber.exceptions import BaseException
 from ploomber.telemetry import telemetry
 from ploomber.telemetry.telemetry import parse_dag, UserSettings
 
-CLOUD_APP_URL = 'ggeheljnx2.execute-api.us-east-1.amazonaws.com'
-PIPELINES_RESOURCE = '/prod/pipelines'
+CLOUD_APP_URL = 'api.ploomber.io'
+PIPELINES_RESOURCE = '/pipelines'
+EMAIL_RESOURCE = '/emailSignup'
 headers = {'Content-type': 'application/json'}
 
 
@@ -236,3 +238,44 @@ def cloud_wrapper(payload=False):
         return wrapper
 
     return _cloud_call
+
+
+def _get_input(text):
+    return input(text)
+
+
+def _email_input():
+    # Validate that's the first email registration
+    settings = UserSettings()
+    if not settings.user_email:
+        email = _get_input(
+            "\nOur users enjoy updates, support and unique content "
+            "through email, please add your email, if you'd like "
+            "to register (type email): \n")
+        _email_validation(email)
+
+
+def _email_validation(email):
+    pattern = r"[^@]+@[^@]+\.[^@]+"
+    settings = UserSettings()
+    if re.match(pattern, email):
+        # Save in conf file
+        settings.user_email = email
+
+        # Call API
+        _email_registry(email)
+    else:
+        # Save in conf file
+        settings.user_email = 'empty_email'
+
+
+def _email_registry(email):
+    conn = httplib.HTTPSConnection(CLOUD_APP_URL, timeout=3)
+    try:
+        user_headers = {'email': email, 'source': 'OS'}
+        conn.request("POST", EMAIL_RESOURCE, headers=user_headers)
+        print("Thanks for signing up!")
+    except httplib.HTTPException:
+        pass
+    finally:
+        conn.close()
