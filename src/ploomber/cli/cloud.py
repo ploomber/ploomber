@@ -249,21 +249,24 @@ def _email_input():
     settings = UserSettings()
     if not settings.user_email:
         email = _get_input(
-            "Our users enjoy updates, support and unique content "
+            "\nOur users enjoy updates, support and unique content "
             "through email, please add your email, if you'd like "
-            "to register (type email): ")
+            "to register (type email): \n")
         _email_validation(email)
 
 
 def _email_validation(email):
     pattern = r"[^@]+@[^@]+\.[^@]+"
+    settings = UserSettings()
     if re.match(pattern, email):
         # Save in conf file
-        settings = UserSettings()
         settings.user_email = email
 
         # Call API
         _email_registry(email)
+    else:
+        # Save in conf file
+        settings.user_email = 'empty_email'
 
 
 def _email_registry(email):
