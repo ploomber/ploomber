@@ -232,7 +232,7 @@ class _ExamplesManager:
         tw.write('\nTo run these examples in free, hosted '
                  f'environment, see instructions at: {_URL}')
         tw.write('\nTo download: ploomber examples -n name -o path\n')
-        tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n')
+        tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n\n')
 
 
 @command_endpoint

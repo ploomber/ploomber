@@ -445,9 +445,10 @@ def test_email_call_on_examples(tmp_directory, monkeypatch):
     email_mock.assert_called_once()
 
 
-def test_email_called_once(tmp_directory, monkeypatch):
+@pytest.mark.parametrize('user_email', ['email@ploomber.io', ''])
+def test_email_called_once(tmp_directory, monkeypatch, user_email):
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
-    email_mock = Mock(return_value='email@ploomber.io')
+    email_mock = Mock(return_value=user_email)
     api_mock = Mock()
     monkeypatch.setattr(cloud, '_get_input', email_mock)
     monkeypatch.setattr(cloud, '_email_registry', api_mock)
