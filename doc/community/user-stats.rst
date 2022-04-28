@@ -12,6 +12,7 @@ The data we collect is limited to:
 - A generated UUID, randomized when the initial install takes place, no personal or any identifiable information.
 - Environment variables: The OS architecture Ploomber is used in (Python version etc.)
 - Information about the different product phases: installation, API calls and errors.
+- For users who explicitly stated their email, we collect an email address.
 
 Version updates
 ---------------
