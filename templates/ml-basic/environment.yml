@@ -1,0 +1,17 @@
+name: ml-basic
+
+channels:
+  - conda-forge
+
+dependencies:
+  
+  - pip
+
+  - pip:
+    - ploomber
+    - pandas
+    - scikit-learn
+    - pyarrow
+    - sklearn-evaluation
+    - jupyter
+    # - google-cloud-storage

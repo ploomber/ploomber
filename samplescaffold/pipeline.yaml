@@ -1,0 +1,14 @@
+tasks:
+  - source: tasks/load.py
+    product:
+      nb: out/load.html
+      data: out/load.csv
+
+  - source: tasks/clean.py
+    product:
+      nb: out/clean.html
+      data: out/clean.csv
+
+  # Example
+  # - source: path/to/script.py
+  #   product: products/report.ipynb
