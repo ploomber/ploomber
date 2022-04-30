@@ -170,11 +170,11 @@ $ ploomber nb -S
 
 Re-format .ipynb notebooks as .py files with the percent format:
 
-$ plomber nb -f py:percent
+$ ploomber nb -f py:percent
 
 Re-format .py files as .ipynb notebooks:
 
-$ plomber nb -f ipynb
+$ ploomber nb -f ipynb
 """
 
 

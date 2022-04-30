@@ -360,7 +360,7 @@ class NotebookSource(Source):
                 check_if_kernel_installed=self._check_if_kernel_installed,
                 path=self._path)
 
-            # if the user injected cells manually (with plomber nb --inject)
+            # if the user injected cells manually (with ploomber nb --inject)
             # the source will contain the injected cell, remove it because
             # it should not be considered part of the source code
             self._nb_obj_unrendered = _cleanup_rendered_nb(nb, print_=False)
