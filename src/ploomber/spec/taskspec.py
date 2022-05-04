@@ -201,12 +201,12 @@ class TaskSpec(MutableMapping):
                  project_root,
                  lazy_import=False,
                  reload=False,
-                 task_defaults=""):
+                 task_defaults=None):
         self.data = deepcopy(data)
         self.meta = deepcopy(meta)
         self.project_root = project_root
         self.lazy_import = lazy_import
-        self.task_defaults = task_defaults
+        self.task_defaults = task_defaults or {}
 
         self.validate()
 
@@ -359,7 +359,7 @@ class TaskSpec(MutableMapping):
         return '{}({!r})'.format(type(self).__name__, self.data)
 
 
-def _init_task(data, meta, project_root, lazy_import, dag, task_defaults=""):
+def _init_task(data, meta, project_root, lazy_import, dag, task_defaults=None):
     """Initialize a single task from a dictionary spec
     """
     task_dict = copy(data)
@@ -403,10 +403,7 @@ def _init_task(data, meta, project_root, lazy_import, dag, task_defaults=""):
         task_dict['params'] = resolve_resources(task_dict['params'],
                                                 relative_to=project_root)
 
-    if task_defaults != "":
-        init_params = {**task_defaults[class_], **task_dict}
-    else:
-        init_params = task_dict
+    init_params = {**task_defaults[class_], **task_dict}
 
     try:
         task = class_(source=source,
