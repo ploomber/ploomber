@@ -200,7 +200,7 @@ div.document .toctree-l2 {
 /* independent scrolling in table of contents */
 
 .global-toc {
-    max-height: calc(100vh - 3.5rem);
+    max-height: calc(100vh - 7.5rem);
     overflow-y: auto;
 }
 
