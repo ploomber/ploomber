@@ -282,9 +282,7 @@ def test_nb_str_contains_kernel_info():
 
 
 def test_ignores_static_analysis_if_non_python_file():
-    source = NotebookSource(new_nb(fmt='r:light'),
-                            ext_in='R',
-                            static_analysis=True)
+    source = NotebookSource(new_nb(fmt='r:light'), ext_in='R')
     params = Params._from_dict({'product': File('output.ipynb')})
 
     source.render(params)
@@ -296,10 +294,7 @@ def test_no_error_if_missing_product_or_upstream():
 
 # +
 """
-    source = NotebookSource(code,
-                            ext_in='py',
-                            kernelspec_name='python3',
-                            static_analysis=True)
+    source = NotebookSource(code, ext_in='py', kernelspec_name='python3')
 
     params = Params._from_dict({'product': File('output.ipynb')})
 
@@ -312,7 +307,7 @@ def test_static_analysis(hot_reload, tmp_directory):
     path = Path('nb.ipynb')
     path.write_text(jupytext.writes(nb, fmt='ipynb'))
 
-    source = NotebookSource(path, static_analysis=True, hot_reload=hot_reload)
+    source = NotebookSource(path, hot_reload=hot_reload)
 
     params = Params._from_dict({
         'product': File('output.ipynb'),
@@ -933,3 +928,13 @@ def test_error_if_last_cell_in_nb_is_the_parameters_cell(tmp_directory):
 
     assert 'nb.ipynb' in str(excinfo.value)
     assert 'Add a new cell with your code.' in str(excinfo.value)
+
+
+def test_error_if_source_str_like_path(tmp_directory):
+    Path('script.py').touch()
+
+    with pytest.raises(ValueError) as excinfo:
+        NotebookSource('script.py')
+
+    assert 'Perhaps you meant passing a pathlib.Path object' in str(
+        excinfo.value)

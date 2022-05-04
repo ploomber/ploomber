@@ -12,8 +12,41 @@ from ploomber.env.expand import EnvironmentExpander
 from ploomber.env.frozenjson import FrozenJSON
 from ploomber import repo
 from ploomber.util import default
+from ploomber.util.validate import keys as validate_keys
 from ploomber.placeholders import util
-from ploomber.exceptions import BaseException
+from ploomber.exceptions import BaseException, ValidationError
+
+
+def _get_import_from(raw_data, path_to_here):
+    meta = raw_data.get('meta', {})
+
+    if not isinstance(meta, Mapping):
+        raise ValidationError(
+            "Expected 'meta' to contain a "
+            f"dictionary, but got: {meta} ({type(meta).__name__})")
+
+    validate_keys(valid={'import_from'}, passed=set(meta), name='meta')
+
+    if 'import_from' in meta:
+        import_from = meta['import_from']
+
+        if not isinstance(import_from, str):
+            raise ValidationError(
+                "Expected 'import_from' to contain a "
+                "string, but "
+                f"got: {import_from} ({type(import_from).__name__})")
+
+        path = Path(path_to_here, import_from)
+
+        if not path.is_file():
+            raise ValidationError(
+                "Expected import_from "
+                f"value {import_from!r} to be a path to a file, "
+                "but such file does not exist")
+
+        return EnvDict(path)._data
+
+    return None
 
 
 # TODO: custom expanders, this could be done trough another special directive
@@ -46,7 +79,6 @@ class EnvDict(Mapping):
     (project's root folder, if any)
     """
     def __init__(self, source, path_to_here=None, defaults=None):
-
         # if initialized from another EnvDict, copy the attributes to
         # initialize
         # this happens in the  CLI parser, which instanttiates the env
@@ -73,18 +105,6 @@ class EnvDict(Mapping):
             if defaults:
                 raw_data = {**defaults, **raw_data}
 
-            # add default placeholders but override them if they are defined
-            # in the raw data
-            default = self._default_dict(path_to_here=path_to_here)
-            self._default_keys = set(default) - set(raw_data)
-            raw_data = {**default, **raw_data}
-
-            # check raw data is ok
-            validate.raw_data_keys(raw_data)
-
-            # expand _module special key, return its expanded value
-            self._preprocessed = raw_preprocess(raw_data, self._path_to_env)
-
             # initialize expander, which converts placeholders to their values
             # we need to pass path_to_env since the {{here}} placeholder
             # resolves to its parent
@@ -95,10 +115,32 @@ class EnvDict(Mapping):
             else:
                 path_to_here = Path(path_to_here).resolve()
 
+            # add default placeholders but override them if they are defined
+            # in the raw data
+            default = self._default_dict(path_to_here=path_to_here)
+            self._default_keys = set(default) - set(raw_data)
+            raw_data = {**default, **raw_data}
+
+            # check if this one is importing
+            import_from = _get_import_from(raw_data, path_to_here)
+
+            if import_from:
+                raw_data = {**import_from, **raw_data}
+
+            # check raw data is ok
+            validate.raw_data_keys(raw_data)
+
+            # expand _module special key, return its expanded value
+            self._preprocessed = raw_preprocess(raw_data, self._path_to_env)
+
             self._expander = EnvironmentExpander(self._preprocessed,
-                                                 path_to_here=path_to_here)
+                                                 path_to_here=path_to_here,
+                                                 path_to_env=self._path_to_env)
             # now expand all values
-            self._data = self._expander.expand_raw_dictionary(raw_data)
+            data = self._expander.expand_raw_dictionary(raw_data)
+            # this section is for config and should not be visible
+            data.pop('meta', None)
+            self._data = data
 
             self._repr = Repr()
 
@@ -136,7 +178,7 @@ class EnvDict(Mapping):
             'now': '{{now}}',
         }
 
-        if default.try_to_find_root_recursively() is not None:
+        if default.try_to_find_root_recursively(path_to_here) is not None:
             placeholders['root'] = '{{root}}'
 
         if path_to_here is not None:
@@ -277,7 +319,9 @@ class EnvDict(Mapping):
                 f'Error replacing placeholders:\n{msg}\n\nLoaded env: '
                 f'{self!r}')
 
-        value = Template(raw_value, undefined=StrictUndefined).render(**self)
+        # render using self._data since self contains FrozenJSON objects
+        value = Template(raw_value,
+                         undefined=StrictUndefined).render(**self._data)
 
         return value, placeholders
 

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<style>
+  html {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    height: 100%;
+  }
+
+  #dag {
+    width: 100%;
+    height: 100%;
+  }
+
+  #js-message {
+    padding-top: 10px;
+    padding-left: 20px;
+  }
+</style>
+
+<head>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://unpkg.com/d3-dag@0.9.0"></script>
+</head>
+
+<body>
+  <div id="js-message">
+    <h1>Javascript is disabled</h1>
+    <p>If using <b> JupyterLab</b>, click on <b>Trust HTML</b> in the upper left corner.</p>
+    <p>Otherwise, check your browser settings.</p>
+  </div>
+  <svg id="dag"></svg>
+</body>
+
+<script>
+  document.querySelector('#js-message').style.display = 'none';
+
+  // starts here - custom util/ helper functions to generate dag
+  function get_node_product_rectangle(align) {
+    if (align == "left") {
+      return "translate(3, 6)";
+    } else {
+      return "translate(-50, 6)";
+    }
+  }
+
+  function get_node_product_text(n_products, align) {
+    n_products = n_products < 2 ? 2 : n_products;
+    if (align == "left") {
+      return "translate(5," + 16 / n_products + ")";
+    } else {
+      return "translate(-50, " + 16 / n_products + ")";
+    }
+  }
+
+  function products_len(d, default_val, thresh) {
+    if (d.data.products != undefined && d.data.products.length > thresh) {
+      return d.data.products.length;
+    }
+    return default_val;
+  }
+
+  function get_task_properties(node, align) {
+    // products
+    var node_props = {};
+    node_props["align"] = align;
+    node_props["n_products"] = 0;
+    node_props["product_width"] = 30;
+    node_props["product_height"] = 6;
+
+    if ("products" in node.data && node.data.products.length != 0) {
+      node_props["n_products"] = node.data.products.length;
+      node_props["product_width"] *=
+        node_props["n_products"] < 2 ? 2 : node_props["n_products"];
+      node_props["product_height"] *= node_props["n_products"];
+      // node_props["product_display"] = "block";
+    } else {
+      node_props["product_display"] = "contents";
+    }
+    node_props["product_rect_align"] = get_node_product_rectangle(align);
+    node_props["product_text_align"] = get_node_product_text(
+      node_props["n_products"],
+      align
+    );
+
+    return node_props;
+  }
+
+  function get_properties(dag) {
+    var properties = {};
+
+    for (var eNode of dag) {
+      // var align = ec % 2 ? "right" : "left";
+      properties[eNode.data.id] = get_task_properties(
+        eNode,
+        'left'
+      );
+    }
+    return properties;
+  }
+
+  // ends here - custom util/ helper functions to generate dag
+
+  const data = {{ json_data }};
+  const dag = d3.dagStratify()(data);
+
+  const nodeRadius = 20;
+  const layout = d3
+    .sugiyama() // base layout
+    .decross(d3.decrossOpt()) // minimize number of crossings
+    .nodeSize((node) => [(node ? 3.6 : 0.25) * nodeRadius, 3 * nodeRadius]); // set node size instead of constraining to fit
+  const { width, height } = layout(dag);
+
+  // --------------------------------
+  // This code only handles rendering
+  // --------------------------------
+  const svgSelection = d3.select("#dag");
+  svgSelection.attr("viewBox", [0, 0, width, height].join(" "));
+
+  // How to draw edges
+  const line = d3
+    .line()
+    .curve(d3.curveCatmullRom)
+    .x((d) => d.x)
+    .y((d) => d.y);
+
+  // Plot edges
+  svgSelection
+    .append("g")
+    .selectAll("path")
+    .data(dag.links())
+    .enter()
+    .append("path")
+    .attr("d", ({ points }) => line(points))
+    .attr("fill", "none")
+    .attr("stroke-width", 1)
+    .attr("stroke", "black");
+
+
+  // Select tasks
+  const tasks = svgSelection
+    .append("g")
+    .selectAll("g")
+    .data(dag.descendants())
+    .enter()
+    .append("g")
+    .attr("transform", ({ x, y }) => `translate(${x}, ${y})`);
+
+
+  // Plot tasks as circles
+  tasks
+    .append("circle")
+    .attr("r", nodeRadius)
+    .attr("fill", (d) => d.data.fillcolor)
+    .attr("stroke", (d) => "black")
+    .attr("stroke-width", 0.4);
+
+
+  const properties = get_properties(dag);
+
+  // plot products as rectangles
+  // tasks.append("rect")
+  //   .attr("display", (d) => { return properties[d.data.id]['product_display'] })
+  //   .attr("transform", (d) => { return properties[d.data.id]['product_rect_align'] })
+  //   .attr("width", (d) => { return properties[d.data.id]['product_width'] })
+  //   .attr("height", (d) => { return properties[d.data.id]['product_height'] })
+  //   .attr("fill", (d) => d.data.fillcolor)
+  //   .attr("stroke-width", 0.3)
+  //   .attr("stroke", "black");
+
+
+  function wrap(text, width) {
+    text.each(function () {
+      var text = d3.select(this),
+        words = text.text().split(',').reverse(),
+        word,
+        line = [],
+        lineNumber = 0,
+        lineHeight = 0.5, // ems
+        y = text.attr("y"),
+        dy = parseFloat(text.attr("dy")) || 0,
+        tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+      while (word = words.pop()) {
+        line.push(word);
+        tspan.text(line.join(" "));
+        if (tspan.node().getComputedTextLength() > width) {
+          line.pop();
+          tspan.text(line.join(" "));
+          line = [word];
+          tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+        }
+      }
+    });
+  }
+
+  // add text to products
+  // tasks.append("text")
+  //   .attr("transform",
+  //     (d) => { return properties[d.data.id]['product_text_align'] })
+  //   .attr("font-size", 5)
+  //   .attr("fill", "black")
+  //   .text((d) => d.data.label)
+  //   .call(wrap, 2);
+
+
+  // Add text to tasks
+  tasks.append("text")
+    .text((d) => d.data.id)
+    .attr("font-size", 6)
+    .attr("font-family", "sans-serif")
+    .attr("text-anchor", "middle")
+    .attr("alignment-baseline", "middle")
+    .attr("fill", "black");
+
+
+  const arrow = d3.symbol().type(d3.symbolTriangle).size(nodeRadius * nodeRadius / 20.0);
+  svgSelection.append('g')
+    .selectAll('path')
+    .data(dag.links())
+    .enter()
+    .append('path')
+    .attr('d', arrow)
+    .attr('transform', ({
+      source,
+      target,
+      points
+    }) => {
+      const [end, start] = points.slice().reverse();
+      // This sets the arrows the node radius (20) + a little bit (3) away from the node center, on the last line segment of the edge.
+      // This means that edges that only span ine level will work perfectly, but if the edge bends, this will be a little off.
+      const dx = start.x - end.x;
+      const dy = start.y - end.y;
+      const scale = nodeRadius * 1.15 / Math.sqrt(dx * dx + dy * dy);
+      // This is the angle of the last line segment
+      const angle = Math.atan2(-dy, -dx) * 180 / Math.PI + 90;
+      return `translate(${end.x + dx * scale}, ${end.y + dy * scale}) rotate(${angle})`;
+    })
+    .attr('fill', "black")
+    .attr('stroke-width', 1.5);
+</script>
+
+</html>

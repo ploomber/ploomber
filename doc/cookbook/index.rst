@@ -10,6 +10,7 @@ Cookbook
     :maxdepth: 2
 
     parametrization
+    report-generation
     debugging
     logging
     serialization

@@ -98,12 +98,18 @@ class EnvironmentExpander:
         Whether determining package version requires import or not. If False,
         the root ``__init__.py`` file in the module must have
         a ``__version__ = 'LITERAL'`` variable. Literal is extracted.
+
+    path_to_env : str, default=None
+        Path to the env.yaml. If not None, it is used to hint the user which
+        file to fix if there are errors.
     """
     def __init__(self,
                  preprocessed,
                  path_to_here=None,
-                 version_requires_import=False):
+                 version_requires_import=False,
+                 path_to_env=None):
         self._preprocessed = preprocessed
+        self._path_to_env = path_to_env
 
         # {{here}} resolves to this value
         self._path_to_here = (None if path_to_here is None else str(
@@ -169,7 +175,7 @@ class EnvironmentExpander:
                 # if it has an explicit trailing slash, interpret it as
                 # a directory and create it, we have to do it at this point,
                 # because once we cast to Path, we lose the trailing slash
-                if value.endswith('/'):
+                if str(value).endswith('/'):
                     self._try_create_dir(value)
 
                 return Path(value).expanduser()
@@ -195,7 +201,15 @@ class EnvironmentExpander:
 
                 self._placeholders[key] = value
             else:
-                raise RuntimeError('Unknown placeholder "{}"'.format(key))
+                if self._path_to_env:
+                    msg = ('Error resolving env '
+                           f'at {str(self._path_to_env)!r}: '
+                           f'Undeclared value for placeholder {key!r}')
+                else:
+                    msg = ('Error resolving env: Undeclared '
+                           f'value for placeholder {key!r}')
+
+                raise BaseException(msg)
 
         return self._placeholders[key]
 

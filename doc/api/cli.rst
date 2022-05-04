@@ -128,7 +128,7 @@ You may skip building upstream dependencies using the ``--skip-upstream``
     ploomber build --partially 'fit-*' --skip-upstream # note the single quotes
 
 Note that the previous command fails if the upstream products of ``fit-*`` tasks
-do no exist yet.
+do not exist yet.
 
 Plot
 ****
@@ -137,16 +137,13 @@ Plot
 
     ploomber plot
 
+Creates a pipeline plot and stores it.
 
-Create a pipeline plot and save it in a ``pipeline.png`` file.
-
-.. warning::
-
-    To plot the pipeline (``ploomber plot`` command), you must
-    :ref:`install pygraphviz <faq-plotting-a-pipeline>`.
+**New in Ploomber 0.18.2**: You can plot the pipeline without installing extra dependencies.
+``pygraphviz`` is still supported but optional. To learn more, :ref:`see this <faq-plotting-a-pipeline>`.
 
 
-To include the task's products in the plot:
+To include the task's products in the plot (only supported when using the ``pygraphviz`` backend):
 
 .. code-block:: console
 

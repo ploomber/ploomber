@@ -575,7 +575,8 @@ def test_postgres_sql_spec(tmp_pipeline_sql, pg_client_and_schema,
     # clients for this pipeline are initialized without custom create_engine
     # args but we need to set the default schema, mock the call so it
     # includes that info
-    monkeypatch.setattr(db, 'create_engine', create_engine_with_schema(schema))
+    monkeypatch.setattr(db.sqlalchemy, 'create_engine',
+                        create_engine_with_schema(schema))
 
     dates = _random_date_from(datetime(2016, 1, 1), 365, 100)
     df = pd.DataFrame({
@@ -655,7 +656,8 @@ def test_mixed_db_sql_spec(tmp_pipeline_sql, add_current_to_sys_path,
     # clients for this pipeline are initialized without custom create_engine
     # args but we need to set the default schema, mock the call so it
     # includes that info
-    monkeypatch.setattr(db, 'create_engine', create_engine_with_schema(schema))
+    monkeypatch.setattr(db.sqlalchemy, 'create_engine',
+                        create_engine_with_schema(schema))
 
     dates = _random_date_from(datetime(2016, 1, 1), 365, 100)
     df = pd.DataFrame({
@@ -2099,3 +2101,31 @@ def test_dagspec_from_dir_doesnt_assign_name(tmp_directory):
     }).to_dag()
 
     assert dag.name == 'No name'
+
+
+def test_dagspec_with_complex_env(tmp_directory):
+    Path('script.py').write_text("""\
+# %% tags=['parameters']
+upstream = None
+product = None
+
+# %%
+1 + 1
+""")
+
+    Path('env.yaml').write_text("""
+param: [{'a': 1}, {'a': {'b': 2}}, 3]
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: output.ipynb
+      params:
+        param: '{{param}}'
+""")
+
+    dag = DAGSpec('pipeline.yaml').to_dag()
+    dag.render()
+
+    assert dag['script'].params['param'] == [{'a': 1}, {'a': {'b': 2}}, 3]

@@ -128,3 +128,51 @@ put an ``env.yaml`` on each one:
         pipeline.yaml
         env.yaml
 
+
+``env.yaml`` composition (DRY)
+------------------------------
+
+.. note:: New in version 0.18
+
+In many cases, your development and production environment configuration share
+many values in common. To keep them simple, you may create an ``env.yaml``
+(development configuration) and have your ``env.prod.yaml`` (production
+configuration) inherit from it:
+
+.. code-block:: yaml
+    :class: text-editor
+    :name: env-yaml
+
+    key: value
+    key_another: dev-value
+
+
+Then in your ``env.prod.yaml``:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    meta:
+      # import development config
+      import_from: env.yaml
+
+    # no need to declare key: value here, it'll be imported from env.yaml
+
+    # overwrite value
+    key_another: production-value
+
+Note that if the value in ``import_from`` is a relative path, it is considered
+so relative to the location of the env file (in our case ``env.prod.yaml``).
+
+You can switch values in ``env.yaml`` from the command line, to see how:
+
+.. code-block:: console
+
+    ploomber build --help
+
+
+Example, if you have a ``key`` in your ``env.yaml``:
+
+.. code-block:: console
+
+    ploomber build --env--key new-value

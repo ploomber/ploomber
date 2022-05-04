@@ -1,3 +1,7 @@
+import os
+import contextlib
+import tempfile
+from pathlib import Path
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -84,3 +88,27 @@ def fetch_remote_metadata_in_parallel(dag):
                     raise RuntimeError(
                         'An error occurred when fetching '
                         f'remote metadata for file {local!r}') from exception
+
+
+@contextlib.contextmanager
+def _path_for_plot(path_to_plot, fmt):
+    """Context manager to manage DAG.plot
+
+    Parameters
+    ----------
+    path_to_plot : str
+        Where to store the plot. If 'embed', It returns a temporary empty file
+        otherwise and deletes it when exiting. Otherwise, it just passes the
+        value
+    """
+    if path_to_plot == 'embed':
+        fd, path = tempfile.mkstemp(suffix=f'.{fmt}')
+        os.close(fd)
+    else:
+        path = str(path_to_plot)
+
+    try:
+        yield path
+    finally:
+        if path_to_plot == 'embed':
+            Path(path).unlink()

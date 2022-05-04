@@ -50,6 +50,49 @@ def ignore_env_var_and_set_tmp_default_home_dir(
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
 
 
+def test_user_settings_create_file(tmp_directory, monkeypatch):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+
+    settings = telemetry.UserSettings()
+    content = yaml.safe_load(Path('stats', 'config.yaml').read_text())
+
+    assert content == {
+        'cloud_key': None,
+        'user_email': None,
+        'stats_enabled': True,
+        'version_check_enabled': True,
+    }
+    assert settings.cloud_key is None
+    assert settings.stats_enabled
+
+
+def test_internal_create_file(tmp_directory, monkeypatch):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+    monkeypatch.setattr(telemetry, 'uuid4', lambda: 'some-unique-uuid')
+
+    internal = telemetry.Internal()
+    content = yaml.safe_load(Path('stats', 'uid.yaml').read_text())
+
+    assert content == {
+        'uid': 'some-unique-uuid',
+        'last_version_check': None,
+        'first_time': True
+    }
+    assert internal.uid == 'some-unique-uuid'
+    assert internal.last_version_check is None
+
+
+def test_does_not_overwrite_existing_uid(tmp_directory, monkeypatch):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+
+    Path('stats').mkdir()
+    Path('stats', 'uid.yaml').write_text(yaml.dump({'uid': 'existing-uid'}))
+
+    internal = telemetry.Internal()
+
+    assert internal.uid == 'existing-uid'
+
+
 # Validations tests
 def test_str_validation():
     res = str_param("Test", "")
@@ -79,7 +122,7 @@ def test_opt_str_validation():
 
 
 def test_check_stats_enabled(ignore_env_var_and_set_tmp_default_home_dir):
-    stats_enabled = telemetry.check_stats_enabled()
+    stats_enabled = telemetry.check_telemetry_enabled()
     assert stats_enabled is True
 
 
@@ -102,24 +145,18 @@ def test_env_var_takes_precedence(monkeypatch,
                                         stats_enabled: {yaml_value}
                                         """)
 
-    assert telemetry.check_stats_enabled() is expected_first
+    assert telemetry.check_telemetry_enabled() is expected_first
 
     monkeypatch.setenv('PLOOMBER_STATS_ENABLED', env_value, prepend=False)
 
-    assert telemetry.check_stats_enabled() is expected_second
+    assert telemetry.check_telemetry_enabled() is expected_second
 
 
 def test_first_usage(monkeypatch, tmp_directory):
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
 
-    stats = Path('stats')
-    stats.mkdir()
-
-    # This isn't a first time usage since the config file doesn't exist yet.
-    assert not telemetry.check_first_time_usage()
-    (stats / 'config.yaml').write_text("stats_enabled: True")
-
     assert telemetry.check_first_time_usage()
+    assert not telemetry.check_first_time_usage()
 
 
 # The below fixtures are to mock the different virtual environments
@@ -198,11 +235,6 @@ def test_os_type(monkeypatch, os_param):
     monkeypatch.setattr(telemetry.platform, 'system', mock)
     os_type = telemetry.get_os()
     assert os_type == os_param
-
-
-def test_uid_file():
-    uid = telemetry.check_uid()
-    assert isinstance(uid, str)
 
 
 def test_full_telemetry_info(ignore_env_var_and_set_tmp_default_home_dir):
@@ -502,7 +534,7 @@ def test_conf_file_after_version_check(tmp_directory, monkeypatch):
     with version_path.open("r") as file:
         conf = yaml.safe_load(file)
     assert 'uid' in conf.keys()
-    assert len(conf.keys()) == 2
+    assert len(conf.keys()) == 3
 
 
 def test_get_version_timeout():
@@ -571,10 +603,11 @@ def test_user_output_on_different_versions(tmp_directory, capsys, monkeypatch):
 
 
 def test_no_output_latest_version(tmp_directory, capsys, monkeypatch):
-    # The file's date is today now, no error should be raised
+    # The file's date is today now, no output should be displayed
     write_to_conf_file(tmp_directory=tmp_directory,
                        monkeypatch=monkeypatch,
                        last_check=datetime.datetime.now())
+
     telemetry.check_version()
     captured = capsys.readouterr()
     assert "Ploomber version" not in captured.out

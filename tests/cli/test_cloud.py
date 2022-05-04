@@ -6,7 +6,7 @@ import pytest
 import yaml
 from click.testing import CliRunner
 
-from ploomber.cli import cloud
+from ploomber.cli import cloud, examples
 from ploomber_cli.cli import get_key, set_key, write_pipeline, get_pipelines,\
                             delete_pipeline
 from ploomber.telemetry import telemetry
@@ -91,7 +91,6 @@ def test_write_key_no_conf_file(tmp_directory, monkeypatch):
     with full_path.open("r") as file:
         conf = yaml.safe_load(file)
 
-    assert len(conf.keys()) == 1
     assert key_name in conf.keys()
     assert key_val in conf[key_name]
 
@@ -112,25 +111,19 @@ def test_overwrites_api_key(write_sample_conf):
     assert another_val in conf[key_name]
 
 
-def test_api_key_well_formatted(write_sample_conf):
-    with pytest.warns(Warning) as record:
-        cloud.set_key(None)
+@pytest.mark.parametrize('arg', [None, '12345'])
+def test_api_key_well_formatted(write_sample_conf, arg):
+    with pytest.raises(BaseException) as excinfo:
+        cloud.set_key(arg)
 
-    if not record:
-        pytest.fail("Expected a user warning!")
-
-    with pytest.warns(Warning) as record:
-        cloud.set_key("12345")
-
-    if not record:
-        pytest.fail("Expected a user warning!")
+    assert 'The API key is malformed' in str(excinfo.value)
 
 
 def test_get_api_key(write_sample_conf, capsys):
     key_val = "TEST_KEY12345678987654"
     runner = CliRunner()
     result = runner.invoke(set_key, args=[key_val], catch_exceptions=False)
-    assert 'Key was stored\n' == result.stdout
+    assert 'Key was stored\n' in result.stdout
 
     result = runner.invoke(get_key, catch_exceptions=False)
     assert key_val in result.stdout
@@ -394,3 +387,72 @@ def test_get_pipeline_with_dag(monkeypatch, mock_api_key):
 #         id = p['pipeline_id']
 #         res = cloud.delete_pipeline(id)
 #         assert id in str(res)
+
+
+# Test empty string/emails without a @
+@pytest.mark.parametrize('user_email', ['', 'test', '@', 'a@c'])
+def test_malformed_email_signup(monkeypatch, user_email):
+    mock = Mock()
+    monkeypatch.setattr(cloud, '_email_registry', mock)
+
+    cloud._email_validation(user_email)
+    mock.assert_not_called()
+
+
+# Testing valid api calls when the email is correct
+def test_correct_email_signup(tmp_directory, monkeypatch):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+    registry_mock = Mock()
+    monkeypatch.setattr(cloud, '_email_registry', registry_mock)
+
+    sample_email = 'test@example.com'
+    cloud._email_validation(sample_email)
+    registry_mock.assert_called_once()
+
+
+# Test valid emails are stored in the user conf
+def test_email_conf_file(tmp_directory, monkeypatch):
+    registry_mock = Mock()
+    monkeypatch.setattr(cloud, '_email_registry', registry_mock)
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+
+    stats = Path('stats')
+    stats.mkdir()
+    conf_path = stats / telemetry.DEFAULT_USER_CONF
+    conf_path.write_text("sample_conf_key: True\n")
+
+    sample_email = 'test@example.com'
+    cloud._email_validation(sample_email)
+
+    conf = conf_path.read_text()
+    assert sample_email in conf
+
+
+def test_email_write_only_once(tmp_directory, monkeypatch):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+    input_mock = Mock(return_value='some1@email.com')
+    monkeypatch.setattr(cloud, '_get_input', input_mock)
+    monkeypatch.setattr(telemetry.UserSettings, 'user_email', 'some@email.com')
+
+    cloud._email_input()
+    assert not input_mock.called
+
+
+def test_email_call_on_examples(tmp_directory, monkeypatch):
+    email_mock = Mock()
+    monkeypatch.setattr(examples, '_email_input', email_mock)
+    examples.main(name=None, force=True)
+    email_mock.assert_called_once()
+
+
+@pytest.mark.parametrize('user_email', ['email@ploomber.io', ''])
+def test_email_called_once(tmp_directory, monkeypatch, user_email):
+    monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
+    email_mock = Mock(return_value=user_email)
+    api_mock = Mock()
+    monkeypatch.setattr(cloud, '_get_input', email_mock)
+    monkeypatch.setattr(cloud, '_email_registry', api_mock)
+
+    examples.main(name=None, force=True)
+    examples.main(name=None, force=True)
+    email_mock.assert_called_once()

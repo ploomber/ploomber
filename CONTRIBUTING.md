@@ -138,6 +138,37 @@ invoke uninstall-git-hook
 
 The installed hook only takes effect in your current repository.
 
+### Create Pull Requests
+
+When you have finished the feature development and you are ready for a Code Review (a.k.a Pull Request in Github), make sure you `"squash"` the commits in your development branch before creating a PR
+
+There are two ways to do that:
+
+1. Squash all the commits in Command Line
+2. Utilize Github PR page when you are about to merge to main branch
+
+**1. Using Command Line: `git rebase`**
+
+> [What is `git rebase`](https://www.delftstack.com/tutorial/git/git-rebase/#what-is-git-rebase)
+
+```
+$ git rebase -i <-i for interactive>
+
+# "squash" the command history
+# for example
+
+pick commit_hash_1 commit_message_1
+s    commit_hash_2 commit_message_2
+s    commit_hash_3 commit_message_3
+s    commit_hash_4 commit_message_4
+```
+
+**2. Using Github Console**
+
+> [Squash and merge your pull request commits](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#squash-and-merge-your-pull-request-commits)
+
+![](_static/squash-and-merge.png)
+
 ## Tips for writing tests
 
 * We use [pytest](https://docs.pytest.org/en/6.2.x/) for testing. A basic understanding of `pytest` is highly recommended to get started

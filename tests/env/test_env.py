@@ -20,7 +20,7 @@ from ploomber.env.expand import (EnvironmentExpander, expand_raw_dictionary,
                                  expand_raw_dictionaries_and_extract_tags)
 from ploomber.util import default
 from ploomber import repo
-from ploomber.exceptions import BaseException
+from ploomber.exceptions import BaseException, ValidationError
 
 
 def test_env_repr_and_str(cleanup_env, monkeypatch):
@@ -50,6 +50,7 @@ def test_env_repr_and_str_when_loaded_from_file(tmp_directory, cleanup_env,
         'user': 'user',
         'cwd': 'cwd',
         'now': 'current-timestamp',
+        'here': str(Path(tmp_directory).resolve()),
         'root': 'root',
     }
     path_env.write_text(yaml.dump(d))
@@ -698,6 +699,35 @@ def test_replace_value_casts_if_possible():
     assert env.c == 2.2
 
 
+def test_includes_path_if_undeclared_placeholder(tmp_directory):
+    Path('myenv.yaml').write_text("""
+key: '{{something}}'
+""")
+
+    with pytest.raises(BaseException) as excinfo:
+        EnvDict('myenv.yaml')
+
+    assert 'myenv.yaml' in str(excinfo.value)
+    assert 'something' in str(excinfo.value)
+
+
+def test_includes_path_if_undeclared_placeholder_in_base_yaml(tmp_directory):
+    Path('base.yaml').write_text("""
+key: '{{something}}'
+""")
+
+    Path('myenv.yaml').write_text("""
+meta:
+  import_from: base.yaml
+""")
+
+    with pytest.raises(BaseException) as excinfo:
+        EnvDict('myenv.yaml')
+
+    assert 'base.yaml' in str(excinfo.value)
+    assert 'something' in str(excinfo.value)
+
+
 def test_attribute_error_message():
     env = EnvDict({'user': 'user', 'cwd': 'cwd', 'root': 'root'})
 
@@ -800,18 +830,45 @@ def test_find(tmp_directory):
     assert env.here == expected_here
 
 
-@pytest.mark.parametrize('value, error', [
-    ['{{git}}', 'Ensure git is installed and git repository exists'],
-    ['{{git_hash}}', 'Ensure git is installed and git repository exists'],
-    ['{{here}}', 'Ensure the spec was initialized from a file'],
-    ['{{root}}', 'Ensure a pipeline.yaml or setup.py exist'],
-    ['{{another}}', 'Ensure the placeholder is defined'],
-])
+@pytest.mark.parametrize('value, error, arg', [
+    [
+        '{{git}}',
+        'Ensure git is installed and git repository exists',
+        'env.yaml',
+    ],
+    [
+        '{{git_hash}}',
+        'Ensure git is installed and git repository exists',
+        'env.yaml',
+    ],
+    [
+        '{{here}}',
+        'Ensure the spec was initialized from a file',
+        dict(),
+    ],
+    [
+        '{{root}}',
+        'Ensure a pipeline.yaml or setup.py exist',
+        'env.yaml',
+    ],
+    [
+        '{{another}}',
+        'Ensure the placeholder is defined',
+        'env.yaml',
+    ],
+],
+                         ids=[
+                             'git',
+                             'git_hash',
+                             'here',
+                             'root',
+                             'another',
+                         ])
 def test_error_message_if_missing_default_placeholder(tmp_directory, value,
-                                                      error):
+                                                      error, arg):
     Path('env.yaml').write_text(yaml.dump({'key': 'value'}))
 
-    env = EnvDict('env.yaml')
+    env = EnvDict(arg)
 
     with pytest.raises(BaseException) as excinfo:
         expand_raw_dictionary({
@@ -819,3 +876,173 @@ def test_error_message_if_missing_default_placeholder(tmp_directory, value,
         }, env)
 
     assert error in str(excinfo.value)
+
+
+@pytest.mark.parametrize('value', [[{
+    'b': {
+        'c': 1
+    }
+}, {
+    'd': {
+        'e': 100
+    }
+}], {
+    'x': 1
+}, {
+    'a': {
+        'b': {
+            'c': 1
+        }
+    }
+}, [{
+    'a': 1
+}, {
+    'b': 1
+}, {
+    'c': {
+        'd': 42
+    }
+}]])
+@pytest.mark.parametrize('kwarg', ['source', 'defaults'])
+def test_render(kwarg, value):
+    kwargs = dict(source=dict(), defaults=None)
+    kwargs[kwarg] = {'key': value}
+    env = EnvDict(**kwargs)
+    value, _ = env._render('{{key}}')
+
+    assert value == str(value)
+
+
+def test_import_from_another_file(tmp_directory):
+    Path('base.yaml').write_text("""
+key: value
+base: 42
+""")
+
+    env = EnvDict(
+        {
+            'meta': {
+                'import_from': 'base.yaml'
+            },
+            'key': 'new_value'
+        },
+        path_to_here=os.getcwd(),
+    )
+
+    assert env['key'] == 'new_value'
+    assert env['base'] == 42
+    # this section is for config, and should not be visible
+    assert 'meta' not in env
+
+
+def test_import_from_resolves_default_placeholders(tmp_directory):
+    Path('base').mkdir()
+    Path('base', 'base.yaml').write_text("""
+base_here: '{{here}}'
+""")
+
+    env = EnvDict(
+        {
+            'meta': {
+                'import_from': 'base/base.yaml'
+            },
+            'here': '{{here}}'
+        },
+        path_to_here=os.getcwd(),
+    )
+
+    assert Path(env.here).resolve() == Path(tmp_directory).resolve()
+    assert (Path(env.base_here).resolve() == Path(tmp_directory,
+                                                  'base').resolve())
+
+
+def test_import_from_parent_directory(tmp_directory):
+    Path('base.yaml').write_text("""
+key: value
+base: 42
+""")
+
+    Path('sub').mkdir()
+    os.chdir('sub')
+
+    Path('env.yaml').write_text("""
+meta:
+    import_from: ../base.yaml
+
+key: new_value
+""")
+
+    env = EnvDict('env.yaml')
+
+    assert env['key'] == 'new_value'
+    assert env['base'] == 42
+
+
+def test_import_from_parent_directory_error_if_missing_root(tmp_directory):
+    # this will fail since root cannot be resolved as this is in the parent
+    # directory of pipeline.yaml
+    Path('base.yaml').write_text("""
+key: value
+base_here: '{{root}}'
+""")
+
+    Path('sub').mkdir()
+    os.chdir('sub')
+
+    Path('pipeline.yaml').touch()
+
+    Path('env.yaml').write_text("""
+meta:
+    import_from: ../base.yaml
+
+key: new_value
+""")
+
+    with pytest.raises(BaseException) as excinfo:
+        EnvDict('env.yaml')
+
+    expected = 'An error happened while expanding placeholder {{root}}'
+    assert expected == str(excinfo.value)
+
+
+def test_import_from_validates_meta_is_a_dictionary():
+    with pytest.raises(ValidationError) as excinfo:
+        EnvDict({'meta': 1})
+
+    expected = "Expected 'meta' to contain a dictionary, but got: 1 (int)"
+    assert expected == str(excinfo.value)
+
+
+def test_import_from_validates_meta_keys():
+    with pytest.raises(ValidationError) as excinfo:
+        EnvDict({'meta': {'invalid-key': 42}})
+
+    expected = ("Error validating meta, the following keys aren't "
+                "valid: 'invalid-key'. Valid keys are: 'import_from'")
+    assert expected == str(excinfo.value)
+
+
+def test_import_from_validates_meta_import_from_is_a_string():
+    with pytest.raises(ValidationError) as excinfo:
+        EnvDict({'meta': {'import_from': 42}})
+
+    expected = "Expected 'import_from' to contain a string, but got: 42 (int)"
+    assert expected == str(excinfo.value)
+
+
+def test_import_from_validates_meta_import_from_exists(tmp_directory):
+    with pytest.raises(ValidationError) as excinfo:
+        EnvDict(
+            {
+                'meta': {
+                    'import_from': 'base.yaml'
+                },
+                'key': 'new_value'
+            },
+            path_to_here=os.getcwd(),
+        )
+
+    expected = ("Expected import_from value 'base.yaml' to be a "
+                "path to a file, but such file does not exist")
+
+    assert expected == str(excinfo.value)
