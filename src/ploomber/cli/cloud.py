@@ -1,7 +1,7 @@
 """
 Implementation of:
 
-$ plomber cloud
+$ ploomber cloud
 
 This command runs a bunch of pip/conda commands (depending on what's available)
 and it does the *right thing*: creating a new environment if needed, and
