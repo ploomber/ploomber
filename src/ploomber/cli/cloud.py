@@ -252,8 +252,8 @@ def _email_input():
     settings = UserSettings()
     if not settings.user_email:
         email = _get_input(
-            "\nOur users enjoy updates, support and unique content "
-            "through email. Please add your email to stay in touch: \n")
+            "\nPlease add your email to get updates and support "
+            "(type enter to skip): \n")
         _email_validation(email)
 
 
