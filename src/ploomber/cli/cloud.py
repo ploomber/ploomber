@@ -253,8 +253,7 @@ def _email_input():
     if not settings.user_email:
         email = _get_input(
             "\nOur users enjoy updates, support and unique content "
-            "through email, please add your email, if you'd like "
-            "to register (type email): \n")
+            "through email. Please add your email to stay in touch: \n")
         _email_validation(email)
 
 
