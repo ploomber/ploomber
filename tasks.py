@@ -16,12 +16,6 @@ if not Path('LICENSE').exists():
              'with the README.md and setup.py files)')
 
 
-def _print_psycopg_msg():
-    print("Failed to run the command 'invoke setup'. Have issues "
-          "installing the psycopg2 package? Remove it from "
-          "setup.py then try again.")
-
-
 @task
 def db_credentials(c):
     """Encode db credentials (for github actions)
@@ -57,11 +51,7 @@ def setup(c, doc=False, version=None):
 
     c.run(f'conda create --name {env_name} python={version} --yes')
 
-    try:
-        c.run(' && '.join(cmds))
-    except Exception:
-        _print_psycopg_msg()
-        raise
+    c.run(' && '.join(cmds))
 
     if doc:
         cmds = [
@@ -84,11 +74,7 @@ def setup_pip(c, doc=False):
     """[pip] Setup dev environment
     """
     # install ploomber in editable mode and include development dependencies
-    try:
-        c.run('pip install --editable ".[dev]"')
-    except Exception:
-        _print_psycopg_msg()
-        raise
+    c.run('pip install --editable ".[dev]"')
 
     # install sample package required in some tests
     c.run('pip install --editable tests/assets/test_pkg')
