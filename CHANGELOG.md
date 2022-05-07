@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.18.2dev
+## 0.19 (2022-05-07)
 * `ploomber plot` uses D3 backend if `pygraphviz` is not installed
 * Request email (optional) after running `ploomber examples` for the first time
 * Changes to `ploomber cloud`
