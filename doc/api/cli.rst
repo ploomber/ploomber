@@ -300,11 +300,31 @@ your code. To install from lock files:
 
 ``nb`` is short for *notebook*. This command manages notebooks and scripts in your pipeline.
 
+Inject cell to scripts and notebooks in your pipeline:
+
+.. code-block:: console
+
+    ploomber nb --inject
+
+
 Enable opening ``.py`` as notebooks in JupyterLab with one click on the file:
 
 .. code-block:: console
 
     ploomber nb --single-click
+
+Re-format ``.ipynb`` notebooks as ``.py`` files with the percent format:
+
+.. code-block:: console
+
+    ploomber nb -f py:percent
+
+
+Re-format ``.py`` files as ``.ipynb`` notebooks:
+
+.. code-block:: console
+
+    ploomber nb -f ipynb
 
 
 The rest of the options are useful when using editors such
@@ -312,13 +332,6 @@ as :doc:`VSCode or PyCharm <../user-guide/editors>` or when running old
 JupyterLab versions (``<2.x``). When using recent JupyterLab versions,
 script/notebooks management is automatically performed by
 the :doc:`Jupyter plug-in <../user-guide/jupyter>`. 
-
-Inject cell to scripts and notebooks in your pipeline:
-
-.. code-block:: console
-
-    ploomber nb --inject
-
 
 Other commands are available, run ``ploomber nb --help`` to learn more.
 
