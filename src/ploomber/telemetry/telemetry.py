@@ -295,10 +295,10 @@ def get_latest_version():
 
 def is_cloud_user():
     """
-        The function checks if the cloud api key is set for the user.
-        Checks if the cloud_key is set in the User conf file (config.yaml).
-        returns True/False accordingly.
-        """
+    The function checks if the cloud api key is set for the user.
+    Checks if the cloud_key is set in the User conf file (config.yaml).
+    returns True/False accordingly.
+    """
     settings = UserSettings()
     return settings.cloud_key
 
