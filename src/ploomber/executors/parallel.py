@@ -59,6 +59,26 @@ class Parallel(Executor):
     print_progress : bool, default=False
         Whether to print progress to stdout, otherwise just log it
 
+    Examples
+    --------
+    Spec API:
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        # add at the top of your pipeline.yaml
+        executor: parallel
+
+
+    Python API:
+
+    >>> from ploomber import DAG
+    >>> from ploomber.executors import Parallel
+    >>> dag = DAG(executor='parallel') # use with default values
+    >>> dag = DAG(executor=Parallel(processes=2)) # customize
+
+
     Notes
     -----
     If any task crashes, downstream tasks execution is aborted, building
