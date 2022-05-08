@@ -35,10 +35,11 @@ class Env:
     Examples
     --------
     >>> from ploomber import Env
-    >>> Env({'db': {'uri': 'my_uri'}, 'path': {'raw': '/path/to/raw'}})
-    >>> env = Env.load()
-    >>> env.db.uri # traverse the yaml tree structure using dot notation
-    >>> env.path.raw # returns an absolute path to the raw data
+    >>> env = Env({'db': {'uri': 'my_uri'}, 'path': {'raw': '/path/to/raw'}})
+    >>> env.db.uri
+    'my_uri'
+    >>> env.path.raw
+    PosixPath('/path/to/raw')
 
     Notes
     -----

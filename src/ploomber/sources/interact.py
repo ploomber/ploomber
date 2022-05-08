@@ -74,7 +74,8 @@ class CallableInteractiveDeveloper:
 
     Examples
     --------
-    >>> wih CallableInteractiveDeveloper(fn, {'param': 1}) as path_to_nb:
+    >>> with CallableInteractiveDeveloper(fn, # doctest: +SKIP
+    ...     {'param': 1}) as path_to_nb:
     ...     # do stuff with the notebook file
     ...     pass
     """

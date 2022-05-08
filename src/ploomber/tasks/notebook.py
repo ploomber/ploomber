@@ -490,16 +490,16 @@ class NotebookRunner(NotebookMixin, Task):
     >>> # do not include input code (only cell's output)
     >>> NotebookRunner(Path('nb.ipynb'), File('out-1.html'), dag=dag,
     ...                nbconvert_export_kwargs={'exclude_input': True},
-    ...                name=1)
+    ...                name=1) # doctest: +SKIP
     >>> # Selectively remove cells with the tag "remove"
     >>> config = {'TagRemovePreprocessor': {'remove_cell_tags': ('remove',)},
-    ...           'HTMLExporter':
-    ...             {'preprocessors':
-    ...             ['nbconvert.preprocessors.TagRemovePreprocessor']}}
+    ...        'HTMLExporter':
+    ...         {'preprocessors':
+    ...    ['nbconvert.preprocessors.TagRemovePreprocessor']}} # doctest: +SKIP
     >>> NotebookRunner(Path('nb.ipynb'), File('out-2.html'), dag=dag,
     ...                nbconvert_export_kwargs={'config': config},
-    ...                name=2)
-    >>> dag.build()
+    ...                name=2) # doctest: +SKIP
+    >>> dag.build() # doctest: +SKIP
 
     Notes
     -----

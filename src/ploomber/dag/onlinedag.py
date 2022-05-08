@@ -143,9 +143,9 @@ class OnlineModel(OnlineDAG):
 
     Examples
     --------
-    >>> import my_module
-    >>> model = OnlineModel(my_module)
-    >>> model.predict(x=some_input)
+    >>> import my_module # doctest: +SKIP
+    >>> model = OnlineModel(my_module) # doctest: +SKIP
+    >>> model.predict(x=some_input) # doctest: +SKIP
     """
     def __init__(self, module):
         self._module = module

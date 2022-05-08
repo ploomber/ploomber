@@ -38,8 +38,8 @@ class SourceLoader:
     --------
     >>> from ploomber import SourceLoader
     >>> loader = SourceLoader('path/to/templates/')
-    >>> loader['load_customers.sql'] # ipython autocompletion available
-    >>> loader.get_template('load_customers.sql') # same as above
+    >>> loader['load_customers.sql'] # doctest: +SKIP
+    >>> loader.get_template('load_customers.sql') # doctest: +SKIP
     """
     def __init__(self, path=None, module=None):
 
