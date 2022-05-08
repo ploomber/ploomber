@@ -62,7 +62,8 @@ class UploadJobGenerator:
     Examples
     --------
     >>> from ploomber.cloud import io
-    >>> io.upload('v2.mov', 5 * 1024 * 1024, 'ploomber-bucket', 'raw/v2.mov')
+    >>> io.upload('v2.mov', 5 * 1024 * 1024,
+    ...     'ploomber-bucket', 'raw/v2.mov') # doctest: +SKIP
 
     Notes
     -----

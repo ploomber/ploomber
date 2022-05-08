@@ -21,6 +21,7 @@ class CommanderTester:
 
     Examples
     --------
+    >>> from unittest.mock import Mock
     >>> from ploomber.io import _commander
     >>> tester = CommanderTester(run=[('python', 'script.py')],
     ...                       return_value={('python', '--version'): b'3.10'})
@@ -28,7 +29,8 @@ class CommanderTester:
     >>> # we need to mock check_all and check_output since Commander uses both
     >>> subprocess_mock.check_call.side_effect = tester
     >>> subprocess_mock.check_output.side_effect = tester
-    >>> monkeypatch.setattr(_commander, 'subprocess', subprocess_mock)
+    >>> monkeypatch.setattr(_commander, 'subprocess',
+    ...     subprocess_mock) # doctest: +SKIP
     """
     def __init__(self, run=None, return_value=None):
         self._run = run or []

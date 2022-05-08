@@ -475,7 +475,8 @@ class Task(abc.ABC):
         >>> from ploomber.products import File
         >>> def fn(product):
         ...     Path(str(product)).touch()
-        >>> PythonCallable(fn, File('file.txt'), dag=DAG()).build()
+        >>> task = PythonCallable(fn, File('file.txt'), dag=DAG())
+        >>> task.build() # doctest: +SKIP
 
         Returns
         -------

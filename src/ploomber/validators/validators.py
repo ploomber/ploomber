@@ -15,7 +15,7 @@ class Assert:
     >>> assert_(True, 'This wont be displayed')
     >>> assert_(False, 'This will be displayed')
     >>> assert_(False, 'This will also be displayed')
-    >>> assert_.check() # raise an exception, show all error messages
+    >>> assert_.check() # doctest: +SKIP
     """
     def __init__(self):
         self.messages_error = []
@@ -195,7 +195,7 @@ def data_frame_validator(df, validators):
     ...                      validate_values(values={'z': ('range', (0, 1)),
     ...                                              'i': ('unique', {'a'}),
     ...                                              'j': ('unique', {'b'})}
-    ...                                      )])
+    ...                                      )]) # doctest: +SKIP
     """
     assert_ = Assert()
 
