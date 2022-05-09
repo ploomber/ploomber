@@ -8,6 +8,8 @@ If you get stuck, [open an issue](https://github.com/ploomber/ploomber/issues/ne
 
 If you're contributing to the documentation, go to [doc/CONTRIBUTING.md](doc/CONTRIBUTING.md).
 
+To support your journey, check out our [blog post](https://ploomber.io/blog/open-source/) (you might read it in chunks as you make progress).
+
 ## Setup with conda
 
 The easiest way to setup the development environment is via the setup command; you must have miniconda installed. If you don't want to use conda, skip to the next section.
