@@ -334,7 +334,6 @@ def test_get_latest_pipeline(monkeypatch, mock_api_key):
     assert pid in pipeline
 
 
-@pytest.mark.xfail(reason="backend needs fix")
 def test_get_active_pipeline(monkeypatch, mock_api_key):
     pid = str(uuid.uuid4())
     res = write_sample_pipeline(pipeline_id=pid, status='started')
