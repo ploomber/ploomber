@@ -14,6 +14,7 @@ The data we collect is limited to:
 - Information about the different product phases: installation, API calls and errors.
 - For users who explicitly stated their email, we collect an email address.
 
+
 Version updates
 ---------------
 If there's an outdated version, ploomber will alert it through the console every second day in a non-invasive way.
