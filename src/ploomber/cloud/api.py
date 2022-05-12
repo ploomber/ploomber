@@ -156,15 +156,23 @@ def runs_register_ids(headers, runid, ids):
     return _put(f"{HOST}/runs/{runid}/ids", headers=headers, json=ids).json()
 
 
+def _parse_datetime(timestamp):
+    try:
+        return humanize.naturaltime(
+            datetime.fromisoformat(timestamp),
+            when=datetime.utcnow(),
+        )
+    # Python 3.6 does not have fromisoformat
+    except AttributeError:
+        return timestamp
+
+
 @auth_header
 def runs(headers):
     res = _get(f"{HOST}/runs", headers=headers).json()
 
     for run in res:
-        run['created_at'] = humanize.naturaltime(
-            datetime.fromisoformat(run['created_at']),
-            when=datetime.utcnow(),
-        )
+        run['created_at'] = _parse_datetime(run['created_at'])
 
     print(Table.from_dicts(res))
 

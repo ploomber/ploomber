@@ -1,4 +1,3 @@
-import os
 import uuid
 from unittest.mock import Mock
 from pathlib import Path
@@ -105,7 +104,9 @@ def test_api_key_well_formatted(write_sample_conf, arg):
     assert 'The API key is malformed' in str(excinfo.value)
 
 
-def test_get_api_key(write_sample_conf, capsys):
+def test_get_api_key(monkeypatch, write_sample_conf, capsys):
+    monkeypatch.delenv('PLOOMBER_CLOUD_KEY', raising=True)
+
     key_val = "TEST_KEY12345678987654"
     runner = CliRunner()
     result = runner.invoke(set_key, args=[key_val], catch_exceptions=False)
@@ -115,14 +116,32 @@ def test_get_api_key(write_sample_conf, capsys):
     assert key_val in result.stdout
 
 
-def test_get_no_key(write_sample_conf, capsys):
+def test_get_api_key_from_env_var(monkeypatch):
+    key_val = 'TEST_KEY12345678987654'
+    monkeypatch.setenv('PLOOMBER_CLOUD_KEY', key_val)
+
+    runner = CliRunner()
+    result = runner.invoke(set_key,
+                           args=["XXXX_KEY12345678987654"],
+                           catch_exceptions=False)
+    assert 'Key was stored\n' in result.stdout
+
+    result = runner.invoke(get_key, catch_exceptions=False)
+    assert key_val in result.stdout
+
+
+def test_get_no_key(monkeypatch, write_sample_conf, capsys):
+    monkeypatch.delenv('PLOOMBER_CLOUD_KEY', raising=True)
+
     runner = CliRunner()
     result = runner.invoke(get_key, catch_exceptions=False)
 
     assert 'No cloud API key was found.\n' == result.stdout
 
 
-def test_two_keys_not_supported(write_sample_conf, capsys):
+def test_two_keys_not_supported(monkeypatch, write_sample_conf, capsys):
+    monkeypatch.delenv('PLOOMBER_CLOUD_KEY', raising=True)
+
     key_val = "TEST_KEY12345678987654"
     key2 = 'SEC_KEY12345678987654'
     runner = CliRunner()
