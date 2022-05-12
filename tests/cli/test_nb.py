@@ -82,6 +82,15 @@ def test_format_skips_non_notebooks(monkeypatch, backup_simple,
     cli.cmd_router()
 
 
+def test_format_adjusts_pipeline(monkeypatch, tmp_nbs):
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--format', 'ipynb'])
+    assert Path('load.py').exists()
+    cli.cmd_router()
+
+    assert jupytext.read('load.ipynb')
+    assert '.py' not in Path('pipeline.yaml').read_text()
+
+
 def test_pair_sync(monkeypatch, tmp_nbs):
     monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--pair', 'nbs'])
 
