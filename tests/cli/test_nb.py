@@ -91,6 +91,14 @@ def test_format_adjusts_pipeline(monkeypatch, tmp_nbs):
     assert '.py' not in Path('pipeline.yaml').read_text()
 
 
+def test_format_same_pipeline(monkeypatch, tmp_nbs):
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--format', 'py'])
+    pipeline = Path('pipeline.yaml').read_text()
+    cli.cmd_router()
+
+    assert pipeline == Path('pipeline.yaml').read_text()
+
+
 def test_pair_sync(monkeypatch, tmp_nbs):
     monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--pair', 'nbs'])
 
