@@ -319,11 +319,30 @@ def cmd_router():
     else:
         suggestion = _suggest_command(cmd_name, cli.commands.keys())
 
+        # Set nested command keys based on command option
+        nested_cmds = {'cloud': cloud.commands.keys()}
+
+        # Evaluate nested command and provide suggested command if applicable
+        if cmd_name in nested_cmds:
+            nested_cmd_name = None if len(sys.argv) < 3 else sys.argv[2]
+            nested_suggestion = _suggest_command(nested_cmd_name,
+                                                 nested_cmds[cmd_name])
+        else:
+            nested_suggestion = None
+
         if suggestion:
             _exit_with_error_message(
                 "Try 'ploomber --help' for help.\n\n"
                 f"Error: {cmd_name!r} is not a valid command."
                 f" Did you mean {suggestion!r}?")
+        elif nested_suggestion:
+            cmds = f'{cmd_name} {nested_cmd_name}'
+            suggestion = f'{cmd_name} {nested_suggestion}'
+            suggested_help = f'ploomber {cmd_name} --help'
+
+            _exit_with_error_message(f"Try {suggested_help!r} for help.\n\n"
+                                     f"Error: {cmds!r} is not a valid command."
+                                     f" Did you mean {suggestion!r}?")
         else:
             cli()
 
