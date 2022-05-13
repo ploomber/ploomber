@@ -606,9 +606,8 @@ Go to: https://ploomber.io/s/params for more information
         if extension_changed:
             path = self._path.with_suffix(ext_format)
             Path(self._path).unlink()
-            modified_entry = Path(entry_point).\
-                read_text().replace(f'{self.name}{ext_file}',
-                                    f'{self.name}{ext_format}')
+            modified_entry = (Path(entry_point).read_text().replace(
+                f'{self.name}{ext_file}', f'{self.name}{ext_format}'))
             Path(entry_point).write_text(modified_entry)
         else:
             path = self._path

@@ -312,8 +312,7 @@ def main():
 
         if len(new_paths):
             click.echo('Extension changed for the following '
-                       f'tasks: {", ".join(new_paths)}. Pipeline.yaml was '
-                       f'updated automatically.')
+                       f'tasks: {", ".join(new_paths)}.')
 
     if args.inject:
         _call_in_source(
