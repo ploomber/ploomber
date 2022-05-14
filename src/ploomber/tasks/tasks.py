@@ -88,6 +88,50 @@ class PythonCallable(Task):
     Examples
     --------
 
+    Spec API:
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        tasks:
+          - source: my_functions.my_task
+            product: data.csv
+
+
+    .. code-block:: python
+        :class: text-editor
+
+        # content of my_functions.py
+        from pathlib import Path
+
+        def my_task(product):
+            Path(product).touch()
+
+
+    Spec API (multiple outputs):
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        tasks:
+          - source: my_functions.another_task
+            product:
+                one: one.csv
+                another: another.csv
+
+
+    .. code-block:: python
+        :class: text-editor
+
+        # content of my_functions.py
+        from pathlib import Path
+
+        def another_task(product):
+            Path(product['one']).touch()
+            Path(product['another']).touch()
+
     Python API:
 
     >>> from pathlib import Path
@@ -123,9 +167,11 @@ class PythonCallable(Task):
 
     Notes
     -----
+    More `examples using the Python API. <https://github.com/ploomber/projects/tree/master/python-api-examples>`_
+
     The ``executor=Serial(build_in_subprocess=False)`` argument is only
-    required if running examples inline. If you store them in a script, you
-    may delete it and call ``dag.build`` like this:
+    required if copy-pasting the example in a Python session. If you store the
+    code in a script, you may delete it and call ``dag.build`` like this:
 
     .. code-block:: py
         :class: text-editor
@@ -133,6 +179,12 @@ class PythonCallable(Task):
         if __name__ == '__main__':
             dag.build()
 
+    Then call your script:
+
+    .. code-block:: console
+        :class: text-editor
+
+        python script.py
     """
     def __init__(self,
                  source,
