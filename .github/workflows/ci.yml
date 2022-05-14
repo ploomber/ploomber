@@ -87,6 +87,6 @@ jobs:
         unset PY_IGNORE_IMPORTMISMATCH
 
         # unit tests
-        pytest --cov=ploomber
+        pytest tests --cov=ploomber
         coveralls
 
