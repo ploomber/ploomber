@@ -55,11 +55,16 @@ def monkeypatch_session():
 
 
 @pytest.fixture(scope='class', autouse=True)
-def external_access(monkeypatch_session):
-    external_access = MagicMock()
-    external_access.get_something = MagicMock(return_value='Mock was used.')
-    monkeypatch_session.setattr(posthog, 'capture',
-                                external_access.get_something)
+def external_access(request, monkeypatch_session):
+    # https://miguendes.me/pytest-disable-autouse
+    if 'allow_posthog' in request.keywords:
+        yield
+    else:
+        external_access = MagicMock()
+        external_access.get_something = MagicMock(
+            return_value='Mock was used.')
+        monkeypatch_session.setattr(posthog, 'capture',
+                                    external_access.get_something)
 
 
 def _path_to_tests():
