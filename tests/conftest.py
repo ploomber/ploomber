@@ -73,7 +73,7 @@ def _path_to_tests():
     return Path(__file__).resolve().parent
 
 
-def fixture_tmp_dir(source):
+def fixture_tmp_dir(source, **kwargs):
     """
     A lot of our fixtures are copying a few files into a temporary location,
     making that location the current working directory and deleting after
@@ -102,7 +102,7 @@ def fixture_tmp_dir(source):
             os.chdir(old)
             shutil.rmtree(tmp_dir)
 
-        return pytest.fixture(wrapper)
+        return pytest.fixture(wrapper, **kwargs)
 
     return decorator
 
