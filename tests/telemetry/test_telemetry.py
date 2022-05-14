@@ -2,10 +2,13 @@ import pathlib
 import sys
 from unittest.mock import Mock, call
 from pathlib import Path
+import datetime
+import logging
 
 import pytest
 import yaml
-import datetime
+import posthog
+
 import ploomber
 from ploomber.telemetry import telemetry
 from ploomber.telemetry.validate_inputs import str_param, opt_str_param
@@ -823,3 +826,17 @@ def test_parses_dag_on_exception(mock_posthog_capture, tmp_nbs):
 
     call2_kwargs = mock_posthog_capture.call_args_list[1][1]
     assert call2_kwargs['properties']['metadata']['dag'] == expected_dag_dict
+
+
+@pytest.mark.allow_posthog
+def test_hides_posthog_log(caplog, monkeypatch):
+    def fake_capture(*args, **kwargs):
+        log = logging.getLogger("posthog")
+        log.error('some error happened')
+
+    monkeypatch.setattr(posthog, 'capture', fake_capture)
+
+    with caplog.at_level(logging.ERROR, logger="posthog"):
+        telemetry.log_api('some-test')
+
+    assert len(caplog.records) == 0
