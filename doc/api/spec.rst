@@ -154,6 +154,106 @@ sections are shown first:
             some_param: some_value
 
 
+``meta``
+--------
+
+``meta`` is an optional section for meta-configuration, it controls how the
+DAG is constructed.
+
+``meta.source_loader``
+*****************
+
+
+Load task sources (``tasks[*].source``) from a Python module. For example,
+say you have a module ``my_module`` and want to load sources from a
+``path/to/sources`` directory inside that module:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    meta:
+        source_loader:
+            module: my_module
+            path: path/to/sources
+
+
+``meta.import_tasks_from``
+**************************
+
+Add tasks defined in a different file to the current one. This direcive is
+useful for composing pipelines. For example, if you have a training and a
+serving pipeline, you can define the pre-processing logic in a
+``pipeline.preprocessing.yaml`` and then import the file into
+``pipeline.training.yaml`` and ``pipeline.serving.yaml``:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    meta:
+        import_tasks_from: /path/to/tasks.yaml
+
+
+The file must be a list where each element is a valid Task.
+
+`Click here <https://github.com/ploomber/projects/tree/master/templates/ml-intermediate>`_ to see a batch serving example.
+
+`Click here <https://github.com/ploomber/projects/tree/master/templates/ml-online>`_ to see an online serving example.
+
+
+``meta.extract_upstream``
+*************************
+
+Extract upstream dependencies from the source code (``True`` by default).
+
+.. code-block:: yaml
+    :class: text-editor
+
+    meta:
+        extract_upstream: True
+
+
+If False, tasks must declare dependencies using the ``upstream`` key:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    meta:
+        extract_upstream: false
+
+    tasks:
+        - source: tasks/clean.py
+          product: outupt/report.html
+          upstream: [some_task, another_task]
+
+
+``meta.extract_product``
+************************
+
+.. code-block:: yaml
+    :class: text-editor
+
+    meta:
+        extract_product: False
+
+``meta.product_default_class``
+******************************
+
+Product class key for a given task class. Names should match (case-sensitive)
+the names in the Python API. These are rarely changed, except
+for ``SQLScript``. Defaults:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    meta:
+        product_default_class:
+            SQLScript: SQLRelation
+            SQLDump: File
+            NotebookRunner: File
+            ShellScript: File
+            PythonCallable: File
+
+
 ``executor``
 ************
 
@@ -434,24 +534,6 @@ that uses ``product_default_class`` to configure a SQLite pipeline with
 incremental builds.
 
 For more information on product clients, see: :doc:`../user-guide/faq_index`.
-
-``import_tasks_from``
-*********************
-
-When training a Machine Learning pipeline, we obtain raw data, generate
-features, and train a model. When serving, we receive new observations, create
-features, and make predictions. Only the first and last parts change, but what
-happens in the middle remains the same (i.e., feature engineering).
-``import_tasks_from`` allows you to compose pipelines for training and serving.
-
-For example, you may define all your feature engineering code in a
-``pipeline-features.yaml`` file. Then import those tasks (using
-``import_tasks_from``) in a training pipeline (``pipeline.yaml``)
-and a serving pipeline (``pipeline-serving.yaml``).
-
-`Click here <https://github.com/ploomber/projects/tree/master/templates/ml-intermediate>`_ to see a batch serving example.
-
-`Click here <https://github.com/ploomber/projects/tree/master/templates/ml-online>`_ to see an online serving example.
 
 
 Loading from a factory
