@@ -37,7 +37,7 @@ def test_connection_error(method, mock_connection_error):
 @pytest.mark.parametrize('method', methods)
 def test_timeout_error(method):
     with pytest.raises(exceptions.NetworkException) as excinfo:
-        method('https://ploomber.io', timeout=0.01)
+        method('https://ploomber.io', timeout=0.0001)
 
     assert 'server took too long' in str(excinfo.value)
     assert 'https://ploomber.io' in str(excinfo.value)
