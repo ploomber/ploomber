@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.19.2dev
+
 ## 0.19.1 (2022-05-14)
 * Fixes incompatibility with nbconvert 5 ([#741](https://github.com/ploomber/ploomber/issues/741))
 * Improved error messages when the network fails while hitting the cloud build API
