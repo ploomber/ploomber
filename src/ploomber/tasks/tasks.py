@@ -167,7 +167,7 @@ class PythonCallable(Task):
 
     Notes
     -----
-    More `examples using the Python API. <https://github.com/ploomber/projects/tree/master/python-api-examples>`_
+    More `examples using the Python API. <https://github.com/ploomber/projects/tree/master/python-api-examples>`_ # noqa
 
     The ``executor=Serial(build_in_subprocess=False)`` argument is only
     required if copy-pasting the example in a Python session. If you store the
