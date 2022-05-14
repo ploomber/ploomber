@@ -14,7 +14,6 @@ from datetime import datetime
 import json
 
 import click
-import requests
 import humanize
 
 from ploomber.table import Table
@@ -23,6 +22,7 @@ from ploomber.exceptions import BaseException
 from ploomber.spec import DAGSpec
 from ploomber.dag import util
 from ploomber.cli.cloud import get_key
+from ploomber import _requests
 
 HOST = os.environ.get('PLOOMBER_CLOUD_HOST', 'https://api.ploomber.io')
 
@@ -66,31 +66,6 @@ def _download_file(url, skip_if_exists=False, raise_on_missing=False):
         urlretrieve(url, path)
 
     return path
-
-
-def _request_factory(method):
-    def _request(*args, **kwargs):
-        response = method(*args, **kwargs)
-
-        if response.status_code >= 300:
-            json_ = response.json()
-            message = json_.get("Message")
-
-            if message:
-                raise BaseException(
-                    f'{message} (status: {response.status_code})')
-            else:
-                raise BaseException(f'Error: {json_}')
-
-        return response
-
-    return _request
-
-
-_get = _request_factory(requests.get)
-_post = _request_factory(requests.post)
-_put = _request_factory(requests.put)
-_delete = _request_factory(requests.delete)
 
 
 def download_from_presigned(presigned):
@@ -138,7 +113,7 @@ def auth_header(func):
 def runs_new(headers, metadata):
     """Register a new run in the database
     """
-    response = _post(f"{HOST}/runs", headers=headers, json=metadata)
+    response = _requests.post(f"{HOST}/runs", headers=headers, json=metadata)
     return response.json()['runid']
 
 
@@ -146,14 +121,16 @@ def runs_new(headers, metadata):
 def runs_update(headers, runid, graph):
     """Update run status, store graph
     """
-    return _put(f"{HOST}/runs/{runid}", headers=headers, json=graph).json()
+    return _requests.put(f"{HOST}/runs/{runid}", headers=headers,
+                         json=graph).json()
 
 
 @auth_header
 def runs_register_ids(headers, runid, ids):
     """Update run status, store ids
     """
-    return _put(f"{HOST}/runs/{runid}/ids", headers=headers, json=ids).json()
+    return _requests.put(f"{HOST}/runs/{runid}/ids", headers=headers,
+                         json=ids).json()
 
 
 def _parse_datetime(timestamp):
@@ -169,7 +146,7 @@ def _parse_datetime(timestamp):
 
 @auth_header
 def runs(headers):
-    res = _get(f"{HOST}/runs", headers=headers).json()
+    res = _requests.get(f"{HOST}/runs", headers=headers).json()
 
     for run in res:
         run['created_at'] = _parse_datetime(run['created_at'])
@@ -179,12 +156,12 @@ def runs(headers):
 
 # NOTE: this doesn't need authentication (add unit test)
 def tasks_update(task_id, status):
-    return _get(f"{HOST}/tasks/{task_id}/{status}").json()
+    return _requests.get(f"{HOST}/tasks/{task_id}/{status}").json()
 
 
 @auth_header
 def run_detail(headers, run_id):
-    res = _get(f"{HOST}/runs/{run_id}", headers=headers).json()
+    res = _requests.get(f"{HOST}/runs/{run_id}", headers=headers).json()
     return res
 
 
@@ -205,7 +182,7 @@ def run_detail_print(run_id):
 
 @auth_header
 def run_logs(headers, run_id):
-    res = _get(f"{HOST}/runs/{run_id}/logs", headers=headers).json()
+    res = _requests.get(f"{HOST}/runs/{run_id}/logs", headers=headers).json()
 
     for name, log in res.items():
         click.echo(f'\n\n***** START OF LOGS FOR TASK: {name} *****')
@@ -215,7 +192,7 @@ def run_logs(headers, run_id):
 
 @auth_header
 def run_logs_image(headers, run_id, tail=None):
-    res = _get(f"{HOST}/runs/{run_id}/logs/image", headers=headers)
+    res = _requests.get(f"{HOST}/runs/{run_id}/logs/image", headers=headers)
 
     if not len(res.text):
         out = "Image build hasn't started yet..."
@@ -229,19 +206,19 @@ def run_logs_image(headers, run_id, tail=None):
 
 @auth_header
 def run_abort(headers, run_id):
-    _get(f"{HOST}/runs/{run_id}/abort", headers=headers).json()
+    _requests.get(f"{HOST}/runs/{run_id}/abort", headers=headers).json()
     print("Aborted.")
 
 
 @auth_header
 def run_finished(headers, runid):
-    response = _get(f"{HOST}/runs/{runid}/finished", headers=headers)
+    response = _requests.get(f"{HOST}/runs/{runid}/finished", headers=headers)
     return response
 
 
 @auth_header
 def products_list(headers):
-    res = _get(f"{HOST}/products", headers=headers).json()
+    res = _requests.get(f"{HOST}/products", headers=headers).json()
 
     if res:
         print(Table.from_dicts([{'path': r} for r in res]))
@@ -251,7 +228,7 @@ def products_list(headers):
 
 @auth_header
 def data_list(headers):
-    res = _get(f"{HOST}/data", headers=headers).json()
+    res = _requests.get(f"{HOST}/data", headers=headers).json()
 
     if res:
         print(Table.from_dicts([{'path': r} for r in res]))
@@ -261,9 +238,9 @@ def data_list(headers):
 
 @auth_header
 def products_download(headers, pattern):
-    res = _post(f"{HOST}/products",
-                headers=headers,
-                json=dict(pattern=pattern)).json()
+    res = _requests.post(f"{HOST}/products",
+                         headers=headers,
+                         json=dict(pattern=pattern)).json()
     download_from_presigned(res)
 
 
@@ -312,15 +289,15 @@ def zip_project(force, runid, github_number, verbose, ignore_prefixes=None):
 
 @auth_header
 def get_presigned_link(headers):
-    return _get(f"{HOST}/upload", headers=headers).json()
+    return _requests.get(f"{HOST}/upload", headers=headers).json()
 
 
 def upload_zipped_project(response, verbose):
     with open("project.zip", "rb") as f:
         files = {"file": f}
-        http_response = _post(response["url"],
-                              data=response["fields"],
-                              files=files)
+        http_response = _requests.post(response["url"],
+                                       data=response["fields"],
+                                       files=files)
 
     if http_response.status_code != 204:
         raise ValueError(f"An error happened: {http_response}")
@@ -331,7 +308,7 @@ def upload_zipped_project(response, verbose):
 
 @auth_header
 def trigger(headers):
-    res = _get(f"{HOST}/trigger", headers=headers).json()
+    res = _requests.get(f"{HOST}/trigger", headers=headers).json()
     return res
 
 
@@ -388,9 +365,10 @@ def upload_project(force=False,
 def upload_data(headers, path):
     key = Path(path).name
 
-    create = _post(f"{HOST}/upload/data/create",
-                   headers=headers,
-                   json=dict(key=key, n_parts=io.n_parts(path))).json()
+    create = _requests.post(f"{HOST}/upload/data/create",
+                            headers=headers,
+                            json=dict(key=key,
+                                      n_parts=io.n_parts(path))).json()
 
     gen = io.UploadJobGenerator(path,
                                 key=key,
@@ -400,33 +378,34 @@ def upload_data(headers, path):
     click.echo('Uploading...')
     parts = gen.upload()
 
-    _post(f"{HOST}/upload/data/complete",
-          headers=headers,
-          json=dict(key=key, parts=parts,
-                    upload_id=create['upload_id'])).json()
+    _requests.post(f"{HOST}/upload/data/complete",
+                   headers=headers,
+                   json=dict(key=key,
+                             parts=parts,
+                             upload_id=create['upload_id'])).json()
 
     # print snippet showing how to download it in the pipeline
 
 
 @auth_header
 def download_data(headers, key):
-    response = _post(f"{HOST}/download/data",
-                     headers=headers,
-                     json=dict(key=key))
+    response = _requests.post(f"{HOST}/download/data",
+                              headers=headers,
+                              json=dict(key=key))
     return response
 
 
 @auth_header
 def delete_data(headers, pattern):
-    response = _delete(f"{HOST}/data",
-                       headers=headers,
-                       json=dict(pattern=pattern))
+    response = _requests.delete(f"{HOST}/data",
+                                headers=headers,
+                                json=dict(pattern=pattern))
     print(response.json())
 
 
 @auth_header
 def delete_products(headers, pattern):
-    response = _delete(f"{HOST}/products",
-                       headers=headers,
-                       json=dict(pattern=pattern))
+    response = _requests.delete(f"{HOST}/products",
+                                headers=headers,
+                                json=dict(pattern=pattern))
     print(response.json())
