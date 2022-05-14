@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## 0.19.1dev
+* Fixes incompatibility with nbconvert 5 (#741)
+* Improved error messages when the network fails while hitting the cloud build API
+* Hiding posthog error logs (#744)
 
 ## 0.19 (2022-05-07)
 * `ploomber plot` uses D3 backend if `pygraphviz` is not installed

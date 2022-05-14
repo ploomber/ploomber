@@ -12,7 +12,12 @@ import jupytext
 import nbformat
 import nbconvert
 from nbconvert import ExporterNameError
-from nbconvert.exporters.webpdf import WebPDFExporter
+
+# this was introduced in nbconvert 6.0
+try:
+    from nbconvert.exporters.webpdf import WebPDFExporter
+except ModuleNotFoundError:
+    WebPDFExporter = None
 
 # papermill is importing a deprecated module from pyarrow
 with warnings.catch_warnings():
@@ -86,7 +91,7 @@ def _check_exporter(exporter, path_to_output):
     """
     Validate if the user can use the selected exporter
     """
-    if exporter is WebPDFExporter:
+    if WebPDFExporter is not None and exporter is WebPDFExporter:
         pyppeteer_installed = find_spec('pyppeteer') is not None
 
         if not pyppeteer_installed:
