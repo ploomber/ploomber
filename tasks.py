@@ -116,7 +116,8 @@ def upload(c, tag, production=True):
 def test(c, report=False):
     """Run tests
     """
-    c.run('pytest --cov ploomber ' + ('--cov-report html' if report else ''),
+    c.run('pytest tests --cov ploomber ' +
+          ('--cov-report html' if report else ''),
           pty=True)
     c.run('flake8')
 
