@@ -30,11 +30,14 @@ Run (and organize) more experiments
 ***********************************
 
 Ploomber allows you to run many experiments efficiently.
-You can :doc:`parametrize your pipeline <../user-guide/parametrize>` to run the
-same code with different configurations. For example, run the same analysis
-with different data slices and organize the outputs in different folders,
-depending on the input parameters. To accelerate your research, you can execute
-independent tasks in parallel with no extra configuration.
+You can :doc:`parametrize pipelines <../user-guide/parametrized>` to run the
+same code with different configurations.
+
+Furthermore, you can quickly generate all the parameter combinations from a
+:doc:`grid <../cookbook/grid>`.
+
+You can execute independent tasks in :class:`parallel <ploomber.executors.Parallel>` with no extra configuration to
+accelerate your research. If one machine isn't enough, :doc:`export to systems <../deployment/large-scale-training>` like Kubernetes or SLURM easily.
 
 Ensure reproducibility
 **********************
