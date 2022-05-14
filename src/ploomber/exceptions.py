@@ -226,6 +226,12 @@ class ValidationError(BaseException):
     pass
 
 
+class NetworkException(BaseException):
+    """Raised when failin to call remote APIs
+    """
+    pass
+
+
 def display_errors(errors):
     return '\n'.join(f'{_display_error_loc(e)} ({e["msg"]})' for e in errors)
 
