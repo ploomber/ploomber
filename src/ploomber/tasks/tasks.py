@@ -55,7 +55,7 @@ def _unserialize_params(params_original, unserializer):
 
 class PythonCallable(Task):
     """
-    Run a Python callable (e.g. a function)
+    Execute a Python function
 
     Parameters
     ----------
@@ -84,6 +84,55 @@ class PythonCallable(Task):
         task's source is responsible for serializing its own product. If
         used, the source function must not have a "product" parameter but
         return its result instead
+
+    Examples
+    --------
+
+    Python API:
+
+    >>> from pathlib import Path
+    >>> from ploomber import DAG
+    >>> from ploomber.tasks import PythonCallable
+    >>> from ploomber.products import File
+    >>> from ploomber.executors import Serial
+    >>> dag = DAG(executor=Serial(build_in_subprocess=False))
+    >>> def my_function(product):
+    ...     # create data.csv
+    ...     Path(product).touch()
+    >>> PythonCallable(my_function, File('data.csv'), dag=dag)
+    PythonCallable: my_function -> File('data.csv')
+    >>> summary = dag.build()
+
+    Python API (multiple products):
+
+
+    >>> from pathlib import Path
+    >>> from ploomber import DAG
+    >>> from ploomber.tasks import PythonCallable
+    >>> from ploomber.products import File
+    >>> from ploomber.executors import Serial
+    >>> dag = DAG(executor=Serial(build_in_subprocess=False))
+    >>> def my_function(product):
+    ...     Path(product['first']).touch()
+    ...     Path(product['second']).touch()
+    >>> product = {'first': File('first.csv'),
+    ...            'second': File('second.csv')}
+    >>> task = PythonCallable(my_function, product, dag=dag)
+    >>> summary = dag.build()
+
+
+    Notes
+    -----
+    The ``executor=Serial(build_in_subprocess=False)`` argument is only
+    required if running examples inline. If you store them in a script, you
+    may delete it and call ``dag.build`` like this:
+
+    .. code-block:: py
+        :class: text-editor
+
+        if __name__ == '__main__':
+            dag.build()
+
     """
     def __init__(self,
                  source,
