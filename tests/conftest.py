@@ -60,11 +60,13 @@ def external_access(request, monkeypatch_session):
     if 'allow_posthog' in request.keywords:
         yield
     else:
+        # https://github.com/pytest-dev/pytest/issues/7061#issuecomment-611892868
         external_access = MagicMock()
         external_access.get_something = MagicMock(
             return_value='Mock was used.')
         monkeypatch_session.setattr(posthog, 'capture',
                                     external_access.get_something)
+        yield
 
 
 def _path_to_tests():
