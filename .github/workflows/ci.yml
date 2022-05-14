@@ -82,7 +82,9 @@ jobs:
         conda activate conda-env
 
         # doc tests
+        export PY_IGNORE_IMPORTMISMATCH=1
         pytest src/ploomber --doctest-modules --ignore src/ploomber/resources
+        unset PY_IGNORE_IMPORTMISMATCH
 
         # unit tests
         pytest --cov=ploomber
