@@ -411,6 +411,7 @@ def test_parse_doc():
 ])
 def test_parse_doc_if_missing_numpydoc(docstring, expected_summary,
                                        monkeypatch):
+
     def _module_not_found(arg):
         raise ModuleNotFoundError
 
@@ -462,10 +463,15 @@ def test_build_crash_hides_internal_traceback(tmp_nbs, monkeypatch, capsys):
     ['--status', '--build'],
     ['--on-finish'],
 ])
-def test_task_command(args, tmp_nbs, monkeypatch):
+def test_task_command(args, tmp_nbs, monkeypatch, capsys):
     args = ['task', '--entry-point', 'pipeline.yaml', 'load'] + args
     monkeypatch.setattr(sys, 'argv', args)
+    print('test task here!!')
     task.main(catch_exception=False)
+    captured = capsys.readouterr()
+    if args == '--source' or args == '--status' or args == '--on-finish':
+        assert "executed successfully!" in captured.out
+        assert "Products" in captured.out
 
 
 def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
@@ -477,6 +483,7 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
     monkeypatch.setattr(sys, 'argv', args)
 
     class CustomParserWrapper(CustomParser):
+
         def load_from_entry_point_arg(self):
             dag, args = super().load_from_entry_point_arg()
             dag_mock = MagicMock(wraps=dag)
