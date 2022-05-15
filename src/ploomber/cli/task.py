@@ -2,6 +2,7 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.telemetry import telemetry
 from ploomber.cloud import api
+import click
 
 # TODO: we are just smoke testing this, we need to improve the tests
 # (check the appropriate functions are called)
@@ -63,6 +64,8 @@ def _task_cli(accept_task_id=False):
                 api.tasks_update(getattr(args, 'task_id'), 'failed')
             raise
         else:
+            click.echo("{} executed successfully!".format(task.name))
+            click.echo("Products:\n" + repr(task.product))
             if getattr(args, 'task_id', None):
                 api.tasks_update(getattr(args, 'task_id'), 'finished')
 
