@@ -89,7 +89,7 @@ def get_pipeline(pipeline_id=None, verbose=None):
         return "No cloud API Key was found: {}".format(key)
 
     # Get pipeline API call
-    conn = httplib.HTTPSConnection(CLOUD_APP_URL, timeout=3)
+    conn = httplib.HTTPSConnection(CLOUD_APP_URL, timeout=8)
     try:
         headers = {'api_key': key}
         if pipeline_id:
