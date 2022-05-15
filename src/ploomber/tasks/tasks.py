@@ -370,7 +370,7 @@ def task_factory(_func=None, **factory_kwargs):
 
 
 class ShellScript(ClientMixin, Task):
-    """Execute a shell script in a shell
+    """Execute a shell script.
 
     Parameters
     ----------
@@ -394,6 +394,26 @@ class ShellScript(ClientMixin, Task):
         dependencies along with any parameters declared here. The source
         code is converted to a jinja2.Template for passing parameters,
         refer to jinja2 documentation for details
+
+    Examples
+    --------
+    Spec API:
+
+    :doc:`See here. </user-guide/shell>`
+
+    Python API:
+
+    >>> from pathlib import Path
+    >>> from ploomber import DAG
+    >>> from ploomber.tasks import ShellScript
+    >>> from ploomber.products import File
+    >>> code = "touch {{product['first']}}; touch {{product['second']}}"
+    >>> _ = Path('script.sh').write_text(code)
+    >>> dag = DAG()
+    >>> product = {'first': File('first.txt'), 'second': File('second.txt')}
+    >>> _ = ShellScript(Path('script.sh'), product, dag=dag)
+    >>> summary = dag.build()
+
     """
     def __init__(self,
                  source,
