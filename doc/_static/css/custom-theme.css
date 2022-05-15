@@ -81,10 +81,12 @@ div.output_area [class*="highlight-"] {
     background: #ec6a5f;
     border-color: #d04e42;
 }
+
 .green {
     background: #64cc57;
     border-color: #4ea73b;
 }
+
 .yellow {
     background: #f5c04f;
     border-color: #d6a13d;
@@ -97,7 +99,7 @@ div.output_area [class*="highlight-"] {
     color: RGB(0, 200, 0);
 }
 
-pre > :not(:first-child).ipynb-lexed * {
+pre> :not(:first-child).ipynb-lexed * {
     margin-top: 1rem !important;
 }
 
@@ -112,22 +114,22 @@ pre > :not(:first-child).ipynb-lexed * {
     padding: 0;
 }
 
-.toctree-l1 > a {
+.toctree-l1>a {
     font-size: larger;
     color: black;
 }
 
-.toctree-l1.current > a {
+.toctree-l1.current>a {
     font-size: larger;
     color: black;
     font-weight: 800;
 }
 
-.toctree-l2 > a {
+.toctree-l2>a {
     color: gray;
 }
 
-.toctree-l2.current > a {
+.toctree-l2.current>a {
     color: gray;
     font-weight: 600;
 }
@@ -211,8 +213,10 @@ div.document .toctree-l2 {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .global-toc {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 /* help toltip (bottom left) */
@@ -270,11 +274,13 @@ div.sphinxsidebarwrapper::-webkit-scrollbar {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 div.sphinxsidebarwrapper {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
-div.sphinxsidebarwrapper > ul > li > a {
+div.sphinxsidebarwrapper>ul>li>a {
     font-size: larger;
     color: black;
     font-weight: 800;
@@ -438,9 +444,21 @@ p.rubric {
     margin-top: 2rem;
 }
 
+div.seealso {
+    max-width: 100%;
+    padding-left: 0;
+}
+
+div.seealso>p.admonition-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-decoration: underline;
+    margin-top: 2rem;
+}
+
 /* sections inside methods */
 
-.py > dd > dl > dd > p.rubric {
+.py>dd>dl>dd>p.rubric {
     font-size: 1rem;
 }
 
@@ -453,8 +471,8 @@ p.rubric {
 }
 
 /* class signature */
-.py.class > .sig.sig-object.py,
-.py.function > .sig.sig-object.py {
+.py.class>.sig.sig-object.py,
+.py.function>.sig.sig-object.py {
     margin-bottom: 2rem;
     font-size: 1.3rem;
 }
@@ -559,7 +577,7 @@ span.highlighted {
 
 /* search results list */
 
-.search li > a {
+.search li>a {
     font-weight: bolder;
     font-size: 1.2rem;
 }
