@@ -678,7 +678,34 @@ class ScriptRunner(NotebookMixin, Task):
     Similar to NotebookRunner, except it uses python to run the code,
     instead of papermill, hence, it doesn't generate an output notebook. But
     it also works by injecting a cell into the source code. Source can be
-    a .py script or an .ipynb notebook. Does not support magics.
+    a ``.py`` script or an ``.ipynb`` notebook. **Does not support magics.**
+
+    Examples
+    --------
+
+    Spec API:
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        tasks:
+          - source: script.py
+            class: ScriptRunner
+            product:
+                data: data.csv
+                another: another.csv
+
+    Python API:
+
+    >>> from pathlib import Path
+    >>> from ploomber import DAG
+    >>> from ploomber.tasks import ScriptRunner
+    >>> from ploomber.products import File
+    >>> dag = DAG()
+    >>> product = {'data': File('data.csv'), 'another': File('another.csv')}
+    >>> _ = ScriptRunner(Path('script.py'), product, dag=dag)
+    >>> _ = dag.build()
     """
     @requires(['jupyter', 'jupytext'], 'ScriptRunner')
     def __init__(self,
