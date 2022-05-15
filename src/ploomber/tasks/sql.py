@@ -122,6 +122,50 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
         handler from the product's extension if that doesn't work, it uses
         io.CSVIO
 
+    Examples
+    --------
+
+    Spec API:
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        clients:
+          # define a get function in clients.py that returns the client
+          SQLDump: clients.get
+
+        tasks:
+          # script with a SELECT statement
+          - source: script.sql
+            product: data.parquet
+
+    `Full spec API example. <https://github.com/ploomber/projects/tree/master/cookbook/sql-dump>`_ # noqa
+
+    Python API:
+
+    >>> import sqlite3
+    >>> import pandas as pd
+    >>> from ploomber import DAG
+    >>> from ploomber.products import File
+    >>> from ploomber.tasks import SQLDump
+    >>> from ploomber.clients import DBAPIClient
+    >>> con_raw = sqlite3.connect(database='my_db.db')
+    >>> df = pd.DataFrame({'a': range(100), 'b': range(100)})
+    >>> _ = df.to_sql('numbers', con_raw, index=False)
+    >>> con_raw.close()
+    >>> dag = DAG()
+    >>> client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'))
+    >>> _ = SQLDump('SELECT * FROM numbers', File('data.parquet'),
+    ...             dag=dag, name='dump', client=client, chunksize=None)
+    >>> _ = dag.build()
+    >>> df = pd.read_parquet('data.parquet')
+    >>> df.head(3)
+       a  b
+    0  0  0
+    1  1  1
+    2  2  2
+
     Notes
     -----
     The chunksize parameter is also set in cursor.arraysize object, this
@@ -129,6 +173,14 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
     driver uses cursors.arraysize as the number of rows to fetch on a single
     network trip, but this is driver-dependent, not all drivers implement
     this (cx_Oracle does it)
+
+    See Also
+    --------
+    ploomber.clients.DBAPIClient :
+        A client to connect to a database
+
+    ploomber.clients.SQLAlchemyClient :
+        A client to connect to a database using sqlalchemy as backend
     """
     PRODUCT_CLASSES_ALLOWED = (File, GenericProduct)
 
