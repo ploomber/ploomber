@@ -1,4 +1,3 @@
-import os
 import uuid
 from unittest.mock import Mock
 from pathlib import Path
@@ -21,20 +20,6 @@ def write_sample_conf(tmp_directory, monkeypatch):
     stats.mkdir()
     full_path = (stats / DEFAULT_USER_CONF)
     full_path.write_text("stats_enabled: False")
-
-
-@pytest.fixture()
-def mock_api_key(monkeypatch):
-    key = get_ci_api_key()
-    cloud_mock = Mock(return_value=key)
-    monkeypatch.setattr(cloud, 'get_key', cloud_mock)
-
-
-def get_ci_api_key():
-    if 'PLOOMBER_CLOUD_API_KEY' in os.environ:
-        return os.environ['PLOOMBER_CLOUD_API_KEY']
-    else:
-        return cloud.get_key()
 
 
 def write_sample_pipeline(pipeline_id=None, status=None):
@@ -119,7 +104,9 @@ def test_api_key_well_formatted(write_sample_conf, arg):
     assert 'The API key is malformed' in str(excinfo.value)
 
 
-def test_get_api_key(write_sample_conf, capsys):
+def test_get_api_key(monkeypatch, write_sample_conf, capsys):
+    monkeypatch.delenv('PLOOMBER_CLOUD_KEY', raising=True)
+
     key_val = "TEST_KEY12345678987654"
     runner = CliRunner()
     result = runner.invoke(set_key, args=[key_val], catch_exceptions=False)
@@ -129,14 +116,32 @@ def test_get_api_key(write_sample_conf, capsys):
     assert key_val in result.stdout
 
 
-def test_get_no_key(write_sample_conf, capsys):
+def test_get_api_key_from_env_var(monkeypatch):
+    key_val = 'TEST_KEY12345678987654'
+    monkeypatch.setenv('PLOOMBER_CLOUD_KEY', key_val)
+
+    runner = CliRunner()
+    result = runner.invoke(set_key,
+                           args=["XXXX_KEY12345678987654"],
+                           catch_exceptions=False)
+    assert 'Key was stored\n' in result.stdout
+
+    result = runner.invoke(get_key, catch_exceptions=False)
+    assert key_val in result.stdout
+
+
+def test_get_no_key(monkeypatch, write_sample_conf, capsys):
+    monkeypatch.delenv('PLOOMBER_CLOUD_KEY', raising=True)
+
     runner = CliRunner()
     result = runner.invoke(get_key, catch_exceptions=False)
 
     assert 'No cloud API key was found.\n' == result.stdout
 
 
-def test_two_keys_not_supported(write_sample_conf, capsys):
+def test_two_keys_not_supported(monkeypatch, write_sample_conf, capsys):
+    monkeypatch.delenv('PLOOMBER_CLOUD_KEY', raising=True)
+
     key_val = "TEST_KEY12345678987654"
     key2 = 'SEC_KEY12345678987654'
     runner = CliRunner()
@@ -162,8 +167,8 @@ def test_cloud_user_tracked(write_sample_conf):
     assert key_val == telemetry.is_cloud_user()
 
 
-@pytest.mark.xfail(reason="backend needs fix")
-def test_get_pipeline(monkeypatch, mock_api_key):
+@pytest.mark.xfail(reason="timing out")
+def test_get_pipeline(monkeypatch):
     # Write sample pipeline
     pid = str(uuid.uuid4())
     status = 'started'
@@ -188,8 +193,8 @@ def test_get_pipeline_no_key(tmp_directory, monkeypatch):
     assert 'API_Key not valid' in pipeline
 
 
-@pytest.mark.xfail(reason="backend needs fix")
-def test_write_pipeline(mock_api_key):
+@pytest.mark.xfail(reason="timing out")
+def test_write_pipeline():
     pid = str(uuid.uuid4())
     status = 'started'
     res = write_sample_pipeline(pid, status)
@@ -209,7 +214,7 @@ def test_write_pipeline_no_valid_key(monkeypatch):
     assert 'API_Key' in res
 
 
-def test_write_pipeline_no_status_id(mock_api_key):
+def test_write_pipeline_no_status_id():
     pipeline_id = ''
     status = 'started'
     res = write_sample_pipeline(pipeline_id, status)
@@ -221,8 +226,8 @@ def test_write_pipeline_no_status_id(mock_api_key):
     assert 'No input pipeline status' in res
 
 
-@pytest.mark.xfail(reason="backend needs fix")
-def test_write_delete_pipeline(mock_api_key):
+@pytest.mark.xfail(reason="timing out")
+def test_write_delete_pipeline():
     pid = str(uuid.uuid4())
     status = 'started'
     res = write_sample_pipeline(pid, status)
@@ -231,8 +236,8 @@ def test_write_delete_pipeline(mock_api_key):
     assert pid in res
 
 
-@pytest.mark.xfail(reason="backend needs fix")
-def test_delete_non_exist_pipeline(mock_api_key):
+@pytest.mark.xfail(reason="timing out")
+def test_delete_non_exist_pipeline():
     pid = 'TEST_PIPELINE'
     res = get_tabular_pipeline(pid)
     assert f'{pid} was not' in res
@@ -241,8 +246,8 @@ def test_delete_non_exist_pipeline(mock_api_key):
     assert 'doesn\'t exist' in res
 
 
-@pytest.mark.xfail(reason="backend needs fix")
-def test_update_existing_pipeline(mock_api_key):
+@pytest.mark.xfail(reason="timing out")
+def test_update_existing_pipeline():
     pid = str(uuid.uuid4())
     end_status = 'finished'
     res = write_sample_pipeline(pipeline_id=pid, status='started')
@@ -259,8 +264,8 @@ def test_update_existing_pipeline(mock_api_key):
     assert pid in res
 
 
-@pytest.mark.xfail(reason="backend needs fix")
-def test_pipeline_write_error(mock_api_key):
+@pytest.mark.xfail(reason="timing out")
+def test_pipeline_write_error():
     pid = str(uuid.uuid4())
     end_status = 'error'
     log = 'Error: issue building the dag'
@@ -279,8 +284,8 @@ def test_pipeline_write_error(mock_api_key):
 
 
 # Get all pipelines, minimum of 3 should exist.
-@pytest.mark.xfail(reason="backend needs fix")
-def test_get_multiple_pipelines(monkeypatch, mock_api_key):
+@pytest.mark.xfail(reason="timing out")
+def test_get_multiple_pipelines(monkeypatch):
     class CustomTableWrapper(table.Table):
         @classmethod
         def from_dicts(cls, dicts, complete_keys):
@@ -319,7 +324,7 @@ def test_get_multiple_pipelines(monkeypatch, mock_api_key):
     assert pid3 in res
 
 
-def test_get_latest_pipeline(monkeypatch, mock_api_key):
+def test_get_latest_pipeline(monkeypatch):
     pid = str(uuid.uuid4())
     status = 'started'
     api_mock = Mock(return_value=[{"pipeline_id": pid}])
@@ -334,8 +339,8 @@ def test_get_latest_pipeline(monkeypatch, mock_api_key):
     assert pid in pipeline
 
 
-@pytest.mark.xfail(reason="backend needs fix")
-def test_get_active_pipeline(monkeypatch, mock_api_key):
+@pytest.mark.xfail(reason="timing out")
+def test_get_active_pipeline(monkeypatch):
     pid = str(uuid.uuid4())
     res = write_sample_pipeline(pipeline_id=pid, status='started')
     assert pid in res
@@ -349,8 +354,8 @@ def test_get_active_pipeline(monkeypatch, mock_api_key):
     assert pid in res
 
 
-@pytest.mark.xfail(reason="backend needs fix")
-def test_get_pipeline_with_dag(monkeypatch, mock_api_key):
+@pytest.mark.xfail(reason="timing out")
+def test_get_pipeline_with_dag(monkeypatch):
     dag_mock = Mock(
         return_value={
             "dag_size": "2",

@@ -466,6 +466,7 @@ def test_build_crash_hides_internal_traceback(tmp_nbs, monkeypatch, capsys):
 def test_task_command(args, tmp_nbs, monkeypatch, capsys):
     args = ['task', '--entry-point', 'pipeline.yaml', 'load'] + args
     monkeypatch.setattr(sys, 'argv', args)
+    print('test task here!!')
     task.main(catch_exception=False)
     captured = capsys.readouterr()
     if args == '--source' or args == '--status' or args == '--on-finish':
