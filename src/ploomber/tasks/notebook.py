@@ -747,21 +747,36 @@ class NotebookRunner(NotebookMixin, Task):
 
         multiple_nb_products = []
 
+        # the task generates more than one product
         if isinstance(self.product, MetaProduct):
 
+            # generating a single output notebook
             if isinstance(self.nb_product_key, str):
-                path_to_out = Path(str(self.product[self.nb_product_key]))
-            else:
-                for key in self.nb_product_key:
-                    multiple_nb_products.append(Path(str(self.product[key])))
-                path_to_out = multiple_nb_products[0]
+                nb_product = self.product[self.nb_product_key]
 
+            # generates multiple output notebooks
+            else:
+                # grab the last one by default
+                key_to_use = self.nb_product_key[-1]
+
+                for key in self.nb_product_key:
+                    path = Path(str(self.product[key]))
+                    multiple_nb_products.append(path)
+
+                    # but prefer the one which is already an ipynb file
+                    if path.suffix == '.ipynb':
+                        key_to_use = key
+
+                nb_product = self.product[key_to_use]
+
+        # only one product - it must be the output notebook
         else:
-            path_to_out = Path(str(self.product))
+            nb_product = self.product
 
         # we will run the notebook with this extension, regardless of the
         # user's choice, if any error happens, this will allow them to debug
         # we will change the extension after the notebook runs successfully
+        path_to_out = Path(str(nb_product))
         path_to_out_ipynb = path_to_out.with_suffix('.ipynb')
 
         fd, tmp = tempfile.mkstemp('.ipynb')
@@ -781,11 +796,23 @@ class NotebookRunner(NotebookMixin, Task):
             pm.execute_notebook(str(tmp), str(path_to_out_ipynb),
                                 **self.papermill_params)
         except Exception as e:
-            raise TaskBuildError(
-                'Error when executing task'
-                f' {self.name!r}. Partially'
-                f' executed notebook available at {str(path_to_out_ipynb)}'
-            ) from e
+            # upload partially executed notebook if there's a clint
+            if nb_product.client:
+                nb_product.client.upload(str(path_to_out_ipynb))
+                parent = nb_product.client.parent
+
+                raise TaskBuildError(
+                    'Error when executing task'
+                    f' {self.name!r}. Partially'
+                    ' executed notebook uploaded to '
+                    'remote storage at: '
+                    f'{parent}/{str(path_to_out_ipynb)}') from e
+            else:
+                raise TaskBuildError(
+                    'Error when executing task'
+                    f' {self.name!r}. Partially'
+                    f' executed notebook available at {str(path_to_out_ipynb)}'
+                ) from e
         finally:
             tmp.unlink()
 

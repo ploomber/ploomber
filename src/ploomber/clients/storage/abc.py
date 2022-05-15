@@ -6,7 +6,6 @@ from ploomber.clients.storage.util import _resolve
 
 
 class AbstractStorageClient(abc.ABC):
-
     @abc.abstractmethod
     def __init__(self):
         pass
@@ -41,6 +40,12 @@ class AbstractStorageClient(abc.ABC):
                     self._upload(f)
         else:
             self._upload(local)
+
+    @abc.abstractproperty
+    def parent(self):
+        """Parent where all products are stored
+        """
+        pass
 
     @abc.abstractmethod
     def _download(self, local, destination):

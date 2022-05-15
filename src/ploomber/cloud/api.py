@@ -324,6 +324,8 @@ def upload_project(force=False,
                    github_owner=None,
                    github_repo=None,
                    verbose=False):
+    # TODO: this should use the function in the default.py module to load
+    # the default entry-point
     dag = DAGSpec('pipeline.yaml').to_dag().render(show_progress=False)
 
     # TODO: test

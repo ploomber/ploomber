@@ -23,7 +23,6 @@ class LocalStorageClient(AbstractStorageClient):
         up automatically and assigns it to the parent folder of the root YAML
         spec ot setup.py (if your project is a package).
     """
-
     def __init__(self, path_to_backup_dir, path_to_project_root=None):
         self._path_to_backup_dir = Path(path_to_backup_dir)
         self._path_to_backup_dir.mkdir(exist_ok=True, parents=True)
@@ -88,3 +87,7 @@ class LocalStorageClient(AbstractStorageClient):
 
     def __repr__(self):
         return f'{type(self).__name__}({str(self._path_to_backup_dir)!r})'
+
+    @property
+    def parent(self):
+        return str(self._path_to_backup_dir)

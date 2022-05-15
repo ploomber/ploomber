@@ -176,3 +176,9 @@ def test_error_if_missing_project_root(tmp_directory):
         LocalStorageClient('remote')
 
     assert 'Cannot initialize' in str(excinfo.value)
+
+
+def test_parent(tmp_directory):
+    Path('pipeline.yaml').touch()
+    c = LocalStorageClient('remote')
+    assert c.parent == 'remote'

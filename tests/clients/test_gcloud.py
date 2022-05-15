@@ -287,3 +287,9 @@ def test_error_if_missing_project_root(tmp_directory):
         GCloudStorageClient('some-bucket', 'some-folder')
 
     assert 'Cannot initialize' in str(excinfo.value)
+
+
+def test_parent(tmp_directory, mock_client):
+    Path('pipeline.yaml').touch()
+    c = GCloudStorageClient('some-bucket', 'some-folder')
+    assert c.parent == 'some-folder'

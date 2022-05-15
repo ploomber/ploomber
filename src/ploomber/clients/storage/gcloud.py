@@ -259,3 +259,7 @@ class GCloudStorageClient(AbstractStorageClient):
         return (f'{type(self).__name__}(bucket_name={self._bucket_name!r}, '
                 f'parent={self._parent!r}, '
                 f'path_to_project_root={str(self._path_to_project_root)!r})')
+
+    @property
+    def parent(self):
+        return str(self._parent)
