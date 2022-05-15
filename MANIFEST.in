@@ -3,5 +3,6 @@ include README.md
 recursive-include jupyter-config *.json
 include src/ploomber/resources/*
 include src/ploomber/resources/ploomber_add/*
+exclude src/conftest.py
 global-exclude __pycache__
 global-exclude *.py[co]
