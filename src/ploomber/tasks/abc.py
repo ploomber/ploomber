@@ -467,17 +467,6 @@ class Task(abc.ABC):
         task does not have any unrendered upstream dependencies, if that's the
         case, you should call DAG.render() before calling Task.build()
 
-        Examples
-        --------
-        >>> from pathlib import Path
-        >>> from ploomber import DAG
-        >>> from ploomber.tasks import PythonCallable
-        >>> from ploomber.products import File
-        >>> def fn(product):
-        ...     Path(str(product)).touch()
-        >>> task = PythonCallable(fn, File('file.txt'), dag=DAG())
-        >>> task.build() # doctest: +SKIP
-
         Returns
         -------
         dict
