@@ -123,13 +123,13 @@ pp = pprint.PrettyPrinter(indent=4)
 class DAGSpec(MutableMapping):
     """
     A DAG spec is a dictionary with certain structure that can be converted
-    to a DAG using DAGSpec.to_dag().
+    to a DAG using ``DAGSpec.to_dag()``.
 
     There are two cases: the simplest one is just a dictionary with a
     "location" key with the factory to call, the other explicitly describes
     the DAG structure as a dictionary.
 
-    When .to_dag() is called, the current working directory is temporarily
+    When ``.to_dag()`` is called, the current working directory is temporarily
     switched to the spec file parent folder (only applies when loading from
     a file)
 
@@ -172,6 +172,30 @@ class DAGSpec(MutableMapping):
         Reloads modules before importing dotted paths to detect code changes
         if the module has already been imported. Has no effect if
         lazy_import=True.
+
+    Examples
+    --------
+    Load from ``pipeline.yaml``:
+
+    >>> from ploomber.spec import DAGSpec
+    >>> spec = DAGSpec('spec/pipeline.yaml') # load spec
+    >>> dag = spec.to_dag() # convert to DAG
+    >>> status = dag.status()
+
+    Override ``env.yaml``:
+
+    >>> from ploomber.spec import DAGSpec
+    >>> spec = DAGSpec('spec/pipeline.yaml', env=dict(key='value'))
+    >>> dag = spec.to_dag()
+    >>> status = dag.status()
+
+
+    See Also
+    --------
+    ploomber.DAG
+        Pipeline internal representation, implements the methods in the
+        command-line interface (e.g., ``DAG.build()``, or ``DAG.plot``)
+
 
     Attributes
     ----------
