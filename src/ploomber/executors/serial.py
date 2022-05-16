@@ -39,6 +39,29 @@ class Serial(Executor):
         and there is an error building the DAG, capture warnings are still
         shown before raising the collected exceptions.
 
+    Examples
+    --------
+    Spec API:
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        # add at the top of your pipeline.yaml
+        executor: serial
+
+
+    Python API:
+
+    >>> from ploomber import DAG
+    >>> from ploomber.executors import Serial
+    >>> dag = DAG(executor='parallel') # use with default values
+    >>> dag = DAG(executor=Serial(build_in_subprocess=False)) # customize
+
+    See Also
+    --------
+    ploomber.executors.Parallel :
+        Parallel executor
     """
     def __init__(self,
                  build_in_subprocess=True,
