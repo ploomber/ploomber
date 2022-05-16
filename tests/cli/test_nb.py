@@ -99,6 +99,30 @@ def test_format_same_pipeline(monkeypatch, tmp_nbs):
     assert pipeline == Path('pipeline.yaml').read_text()
 
 
+def test_format_no_entry_point(monkeypatch, tmp_nbs_factory, capsys):
+    monkeypatch.setattr(sys, 'argv', [
+        'ploomber', 'nb', '--entry-point', 'factory.make', '--format', 'ipynb'
+    ])
+    cli.cmd_router()
+    out, err = capsys.readouterr()
+    assert 'entry-point is not a valid file' in out
+
+
+def test_format_missing_file_in_entry_point(monkeypatch, tmp_directory,
+                                            capsys):
+    Path('pipeline.yaml').write_text("""tasks:
+  - source: '{{root}}'
+    product: 'some_file.ipynb'""")
+    file_name = 'get.py'
+    Path('env.yaml').write_text(f"""root: {file_name}""")
+    Path(file_name).write_text("""print("test")""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--format', 'ipynb'])
+    cli.cmd_router()
+    out, err = capsys.readouterr()
+    assert f'{file_name} does not appear in entry-point' in out
+
+
 def test_pair_sync(monkeypatch, tmp_nbs):
     monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--pair', 'nbs'])
 
