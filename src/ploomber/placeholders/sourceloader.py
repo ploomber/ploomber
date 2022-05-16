@@ -36,10 +36,13 @@ class SourceLoader:
 
     Examples
     --------
-    >>> from ploomber import SourceLoader
-    >>> loader = SourceLoader('path/to/templates/')
-    >>> loader['load_customers.sql'] # doctest: +SKIP
-    >>> loader.get_template('load_customers.sql') # doctest: +SKIP
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber import SourceLoader
+        >>> loader = SourceLoader('path/to/templates/')
+        >>> loader['load_customers.sql'] # doctest: +SKIP
+        >>> loader.get_template('load_customers.sql') # doctest: +SKIP
     """
     def __init__(self, path=None, module=None):
 

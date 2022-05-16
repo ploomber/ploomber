@@ -74,10 +74,13 @@ class CallableInteractiveDeveloper:
 
     Examples
     --------
-    >>> with CallableInteractiveDeveloper(fn, # doctest: +SKIP
-    ...     {'param': 1}) as path_to_nb:
-    ...     # do stuff with the notebook file
-    ...     pass
+    .. code-block:: python
+        :class: python-console
+
+        >>> with CallableInteractiveDeveloper(fn, # doctest: +SKIP
+        ...     {'param': 1}) as path_to_nb:
+        ...     # do stuff with the notebook file
+        ...     pass
     """
     def __init__(self, fn, params):
         self.fn = fn

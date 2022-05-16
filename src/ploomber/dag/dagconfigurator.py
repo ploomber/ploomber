@@ -34,12 +34,15 @@ class DAGConfigurator:
 
     Examples
     --------
-    >>> from ploomber import DAGConfigurator
-    >>> configurator = DAGConfigurator()
-    >>> configurator.params.outdated_by_code = True
-    >>> configurator.params.cache_rendered_status = False
-    >>> configurator.params.hot_reload = True
-    >>> dag = configurator.create()
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber import DAGConfigurator
+        >>> configurator = DAGConfigurator()
+        >>> configurator.params.outdated_by_code = True
+        >>> configurator.params.cache_rendered_status = False
+        >>> configurator.params.hot_reload = True
+        >>> dag = configurator.create()
     """
     def __init__(self, d=None):
         if d:

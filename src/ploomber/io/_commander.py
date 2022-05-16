@@ -184,7 +184,10 @@ class Commander:
 
         Examples
         --------
-        >>> cmdr.rm('file', 'directory') # doctest: +SKIP
+        .. code-block:: python
+            :class: python-console
+
+            >>> cmdr.rm('file', 'directory') # doctest: +SKIP
         """
         for f in args:
             _delete(f)
@@ -194,7 +197,10 @@ class Commander:
 
         Examples
         --------
-        >>> cmdr.rm_on_exit('some_temporary_file') # doctest: +SKIP
+        .. code-block:: python
+            :class: python-console
+
+            >>> cmdr.rm_on_exit('some_temporary_file') # doctest: +SKIP
         """
         self._to_delete.append(Path(path).resolve())
 
@@ -211,9 +217,12 @@ class Commander:
 
         Examples
         --------
-        >>> # copies template in {templates-path}/directory/template.yaml
-        >>> # to {workspace}/template.yaml
-        >>> cmdr.copy_template('directory/template.yaml') # doctest: +SKIP
+        .. code-block:: python
+            :class: python-console
+
+            >>> # copies template in {templates-path}/directory/template.yaml
+            >>> # to {workspace}/template.yaml
+            >>> cmdr.copy_template('directory/template.yaml') # doctest: +SKIP
         """
         dst = Path(self.workspace, PurePosixPath(path).name)
 
@@ -244,8 +253,11 @@ class Commander:
 
         Examples
         --------
-        >>> # copies dir/file to {workspace}/file
-        >>> cmdr.cp('dir/file') # doctest: +SKIP
+        .. code-block:: python
+            :class: python-console
+
+            >>> # copies dir/file to {workspace}/file
+            >>> cmdr.cp('dir/file') # doctest: +SKIP
         """
         path = Path(src)
 
@@ -277,7 +289,10 @@ class Commander:
 
         Examples
         --------
-        >>> cmdr.append_inline('*.csv', '.gitignore') # doctest: +SKIP
+        .. code-block:: python
+            :class: python-console
+
+            >>> cmdr.append_inline('*.csv', '.gitignore') # doctest: +SKIP
         """
         if not Path(dst).exists():
             Path(dst).touch()

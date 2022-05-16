@@ -514,37 +514,43 @@ class NotebookRunner(NotebookMixin, Task):
 
     Python API:
 
-    >>> from pathlib import Path
-    >>> from ploomber import DAG
-    >>> from ploomber.tasks import NotebookRunner
-    >>> from ploomber.products import File
-    >>> dag = DAG()
-    >>> NotebookRunner(Path('nb.ipynb'), File('report.html'), dag=dag)
-    NotebookRunner: nb -> File('report.html')
-    >>> dag.build() # doctest: +SKIP
+    .. code-block:: python
+        :class: python-console
+
+        >>> from pathlib import Path
+        >>> from ploomber import DAG
+        >>> from ploomber.tasks import NotebookRunner
+        >>> from ploomber.products import File
+        >>> dag = DAG()
+        >>> NotebookRunner(Path('nb.ipynb'), File('report.html'), dag=dag)
+        NotebookRunner: nb -> File('report.html')
+        >>> dag.build() # doctest: +SKIP
 
     Python API (customize output notebook):
 
-    >>> from pathlib import Path
-    >>> from ploomber import DAG
-    >>> from ploomber.tasks import NotebookRunner
-    >>> from ploomber.products import File
-    >>> dag = DAG()
-    >>> # do not include input code (only cell's output)
-    >>> NotebookRunner(Path('nb.ipynb'), File('out-1.html'), dag=dag,
-    ...                nbconvert_export_kwargs={'exclude_input': True},
-    ...                name='one')
-    NotebookRunner: one -> File('out-1.html')
-    >>> # Selectively remove cells with the tag "remove"
-    >>> config = {'TagRemovePreprocessor': {'remove_cell_tags': ('remove',)},
-    ...        'HTMLExporter':
-    ...         {'preprocessors':
-    ...    ['nbconvert.preprocessors.TagRemovePreprocessor']}}
-    >>> NotebookRunner(Path('nb.ipynb'), File('out-2.html'), dag=dag,
-    ...                nbconvert_export_kwargs={'config': config},
-    ...                name='another')
-    NotebookRunner: another -> File('out-2.html')
-    >>> dag.build() # doctest: +SKIP
+    .. code-block:: python
+        :class: python-console
+
+        >>> from pathlib import Path
+        >>> from ploomber import DAG
+        >>> from ploomber.tasks import NotebookRunner
+        >>> from ploomber.products import File
+        >>> dag = DAG()
+        >>> # do not include input code (only cell's output)
+        >>> NotebookRunner(Path('nb.ipynb'), File('out-1.html'), dag=dag,
+        ...                nbconvert_export_kwargs={'exclude_input': True},
+        ...                name='one')
+        NotebookRunner: one -> File('out-1.html')
+        >>> # Selectively remove cells with the tag "remove"
+        >>> config = {'TagRemovePreprocessor': {'remove_cell_tags': ('remove',)},
+        ...        'HTMLExporter':
+        ...         {'preprocessors':
+        ...    ['nbconvert.preprocessors.TagRemovePreprocessor']}}
+        >>> NotebookRunner(Path('nb.ipynb'), File('out-2.html'), dag=dag,
+        ...                nbconvert_export_kwargs={'config': config},
+        ...                name='another')
+        NotebookRunner: another -> File('out-2.html')
+        >>> dag.build() # doctest: +SKIP
 
     Notes
     -----
@@ -698,14 +704,17 @@ class ScriptRunner(NotebookMixin, Task):
 
     Python API:
 
-    >>> from pathlib import Path
-    >>> from ploomber import DAG
-    >>> from ploomber.tasks import ScriptRunner
-    >>> from ploomber.products import File
-    >>> dag = DAG()
-    >>> product = {'data': File('data.csv'), 'another': File('another.csv')}
-    >>> _ = ScriptRunner(Path('script.py'), product, dag=dag)
-    >>> _ = dag.build()
+    .. code-block:: python
+        :class: python-console
+
+        >>> from pathlib import Path
+        >>> from ploomber import DAG
+        >>> from ploomber.tasks import ScriptRunner
+        >>> from ploomber.products import File
+        >>> dag = DAG()
+        >>> product = {'data': File('data.csv'), 'another': File('another.csv')}
+        >>> _ = ScriptRunner(Path('script.py'), product, dag=dag)
+        >>> _ = dag.build()
     """
     @requires(['jupyter', 'jupytext'], 'ScriptRunner')
     def __init__(self,

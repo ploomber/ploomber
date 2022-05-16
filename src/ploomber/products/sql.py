@@ -141,10 +141,13 @@ class SQLiteRelation(SQLProductMixin, SQLiteBackedProductMixin, Product):
 
     Examples
     --------
-    >>> from ploomber.products import SQLiteRelation
-    >>> relation = SQLiteRelation(('schema', 'some_table', 'table'))
-    >>> str(relation) # returns qualified name
-    'schema.some_table'
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber.products import SQLiteRelation
+        >>> relation = SQLiteRelation(('schema', 'some_table', 'table'))
+        >>> str(relation) # returns qualified name
+        'schema.some_table'
     """
     def __init__(self, identifier, client=None):
         super().__init__(identifier)
@@ -214,10 +217,13 @@ class PostgresRelation(SQLProductMixin, ProductWithClientMixin, Product):
 
     Examples
     --------
-    >>> from ploomber.products import PostgresRelation
-    >>> relation = PostgresRelation(('schema', 'some_table', 'table'))
-    >>> str(relation) # returns qualified name
-    'schema.some_table'
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber.products import PostgresRelation
+        >>> relation = PostgresRelation(('schema', 'some_table', 'table'))
+        >>> str(relation) # returns qualified name
+        'schema.some_table'
     """
 
     # FIXME: identifier has schema as optional but that introduces ambiguity

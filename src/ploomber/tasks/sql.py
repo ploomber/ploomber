@@ -144,27 +144,30 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
 
     Python API:
 
-    >>> import sqlite3
-    >>> import pandas as pd
-    >>> from ploomber import DAG
-    >>> from ploomber.products import File
-    >>> from ploomber.tasks import SQLDump
-    >>> from ploomber.clients import DBAPIClient
-    >>> con_raw = sqlite3.connect(database='my_db.db')
-    >>> df = pd.DataFrame({'a': range(100), 'b': range(100)})
-    >>> _ = df.to_sql('numbers', con_raw, index=False)
-    >>> con_raw.close()
-    >>> dag = DAG()
-    >>> client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'))
-    >>> _ = SQLDump('SELECT * FROM numbers', File('data.parquet'),
-    ...             dag=dag, name='dump', client=client, chunksize=None)
-    >>> _ = dag.build()
-    >>> df = pd.read_parquet('data.parquet')
-    >>> df.head(3)
-       a  b
-    0  0  0
-    1  1  1
-    2  2  2
+    .. code-block:: python
+        :class: python-console
+
+        >>> import sqlite3
+        >>> import pandas as pd
+        >>> from ploomber import DAG
+        >>> from ploomber.products import File
+        >>> from ploomber.tasks import SQLDump
+        >>> from ploomber.clients import DBAPIClient
+        >>> con_raw = sqlite3.connect(database='my_db.db')
+        >>> df = pd.DataFrame({'a': range(100), 'b': range(100)})
+        >>> _ = df.to_sql('numbers', con_raw, index=False)
+        >>> con_raw.close()
+        >>> dag = DAG()
+        >>> client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'))
+        >>> _ = SQLDump('SELECT * FROM numbers', File('data.parquet'),
+        ...             dag=dag, name='dump', client=client, chunksize=None)
+        >>> _ = dag.build()
+        >>> df = pd.read_parquet('data.parquet')
+        >>> df.head(3)
+           a  b
+        0  0  0
+        1  1  1
+        2  2  2
 
     Notes
     -----

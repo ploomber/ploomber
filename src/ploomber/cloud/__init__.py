@@ -6,8 +6,11 @@ def download_data(key):
 
     Examples
     --------
-    >>> from ploomber.cloud import download_data
-    >>> download_data('raw.csv') # doctest: +SKIP
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber.cloud import download_data
+        >>> download_data('raw.csv') # doctest: +SKIP
     """
     # TODO: this should find the root directory and download relative to it
     # then return the absolute path

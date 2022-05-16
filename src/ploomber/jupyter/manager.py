@@ -3,11 +3,15 @@ Module for the jupyter extension
 
 
 For debugging:
->>> from ploomber.jupyter.dag import JupyterDAGManager
->>> from ploomber.jupyter.manager import derive_class
->>> from jupytext.contentsmanager import TextFileContentsManager
->>> PloomberContentsManager = derive_class(TextFileContentsManager)
->>> cm = PloomberContentsManager()
+
+.. code-block:: python
+    :class: python-console
+
+    >>> from ploomber.jupyter.dag import JupyterDAGManager
+    >>> from ploomber.jupyter.manager import derive_class
+    >>> from jupytext.contentsmanager import TextFileContentsManager
+    >>> PloomberContentsManager = derive_class(TextFileContentsManager)
+    >>> cm = PloomberContentsManager()
 """
 import sys
 import datetime

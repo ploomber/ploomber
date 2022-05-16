@@ -24,8 +24,11 @@ class Row:
 
     Examples
     --------
-    >>> from ploomber.table import Row
-    >>> row = Row({'a': 'some value', 'b': 'another value'})
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber.table import Row
+        >>> row = Row({'a': 'some value', 'b': 'another value'})
     """
     def __init__(self, mapping):
         if not isinstance(mapping, Mapping):

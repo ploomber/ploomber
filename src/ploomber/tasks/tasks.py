@@ -134,35 +134,40 @@ class PythonCallable(Task):
 
     Python API:
 
-    >>> from pathlib import Path
-    >>> from ploomber import DAG
-    >>> from ploomber.tasks import PythonCallable
-    >>> from ploomber.products import File
-    >>> from ploomber.executors import Serial
-    >>> dag = DAG(executor=Serial(build_in_subprocess=False))
-    >>> def my_function(product):
-    ...     # create data.csv
-    ...     Path(product).touch()
-    >>> PythonCallable(my_function, File('data.csv'), dag=dag)
-    PythonCallable: my_function -> File('data.csv')
-    >>> summary = dag.build()
+    .. code-block:: python
+        :class: python-console
+
+        >>> from pathlib import Path
+        >>> from ploomber import DAG
+        >>> from ploomber.tasks import PythonCallable
+        >>> from ploomber.products import File
+        >>> from ploomber.executors import Serial
+        >>> dag = DAG(executor=Serial(build_in_subprocess=False))
+        >>> def my_function(product):
+        ...     # create data.csv
+        ...     Path(product).touch()
+        >>> PythonCallable(my_function, File('data.csv'), dag=dag)
+        PythonCallable: my_function -> File('data.csv')
+        >>> summary = dag.build()
 
     Python API (multiple products):
 
+    .. code-block:: python
+        :class: python-console
 
-    >>> from pathlib import Path
-    >>> from ploomber import DAG
-    >>> from ploomber.tasks import PythonCallable
-    >>> from ploomber.products import File
-    >>> from ploomber.executors import Serial
-    >>> dag = DAG(executor=Serial(build_in_subprocess=False))
-    >>> def my_function(product):
-    ...     Path(product['first']).touch()
-    ...     Path(product['second']).touch()
-    >>> product = {'first': File('first.csv'),
-    ...            'second': File('second.csv')}
-    >>> task = PythonCallable(my_function, product, dag=dag)
-    >>> summary = dag.build()
+        >>> from pathlib import Path
+        >>> from ploomber import DAG
+        >>> from ploomber.tasks import PythonCallable
+        >>> from ploomber.products import File
+        >>> from ploomber.executors import Serial
+        >>> dag = DAG(executor=Serial(build_in_subprocess=False))
+        >>> def my_function(product):
+        ...     Path(product['first']).touch()
+        ...     Path(product['second']).touch()
+        >>> product = {'first': File('first.csv'),
+        ...            'second': File('second.csv')}
+        >>> task = PythonCallable(my_function, product, dag=dag)
+        >>> summary = dag.build()
 
 
     Notes
@@ -403,16 +408,19 @@ class ShellScript(ClientMixin, Task):
 
     Python API:
 
-    >>> from pathlib import Path
-    >>> from ploomber import DAG
-    >>> from ploomber.tasks import ShellScript
-    >>> from ploomber.products import File
-    >>> code = "touch {{product['first']}}; touch {{product['second']}}"
-    >>> _ = Path('script.sh').write_text(code)
-    >>> dag = DAG()
-    >>> product = {'first': File('first.txt'), 'second': File('second.txt')}
-    >>> _ = ShellScript(Path('script.sh'), product, dag=dag)
-    >>> summary = dag.build()
+    .. code-block:: python
+        :class: python-console
+
+        >>> from pathlib import Path
+        >>> from ploomber import DAG
+        >>> from ploomber.tasks import ShellScript
+        >>> from ploomber.products import File
+        >>> code = "touch {{product['first']}}; touch {{product['second']}}"
+        >>> _ = Path('script.sh').write_text(code)
+        >>> dag = DAG()
+        >>> product = {'first': File('first.txt'), 'second': File('second.txt')}
+        >>> _ = ShellScript(Path('script.sh'), product, dag=dag)
+        >>> summary = dag.build()
 
     """
     def __init__(self,

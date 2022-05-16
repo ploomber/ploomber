@@ -8,18 +8,21 @@ class Interval:
     """Generate intervals from lower to upper of size delta, last interval
     will be smaller if needed
 
-    >>> from ploomber.util import Interval
-    >>> from datetime import date
-    >>> from dateutil.relativedelta import relativedelta
-    >>> interval = Interval(date(year=2020, month=1, day=1),
-    ...                     date(year=2022, month=6, day=1),
-    ...                     relativedelta(years=1)).expand()
-    >>> interval[0]
-    (datetime.date(2020, 1, 1), datetime.date(2021, 1, 1))
-    >>> interval[1]
-    (datetime.date(2021, 1, 1), datetime.date(2022, 1, 1))
-    >>> interval[2]
-    (datetime.date(2022, 1, 1), datetime.date(2022, 6, 1))
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber.util import Interval
+        >>> from datetime import date
+        >>> from dateutil.relativedelta import relativedelta
+        >>> interval = Interval(date(year=2020, month=1, day=1),
+        ...                     date(year=2022, month=6, day=1),
+        ...                     relativedelta(years=1)).expand()
+        >>> interval[0]
+        (datetime.date(2020, 1, 1), datetime.date(2021, 1, 1))
+        >>> interval[1]
+        (datetime.date(2021, 1, 1), datetime.date(2022, 1, 1))
+        >>> interval[2]
+        (datetime.date(2022, 1, 1), datetime.date(2022, 6, 1))
     """
     def __init__(self, lower, upper, delta):
         if lower >= upper:
@@ -65,19 +68,22 @@ class ParamGrid:
 
     Examples
     --------
-    >>> pg = ParamGrid({'a': [1, 2, 3], 'b': [2, 4, 6]})
-    >>> list(pg.zip())
-    [{'a': 1, 'b': 2}, {'a': 2, 'b': 4}, {'a': 3, 'b': 6}]
+    .. code-block:: python
+        :class: python-console
 
-    >>> list(pg.product())  # doctest: +NORMALIZE_WHITESPACE
-    [{'a': 1, 'b': 2}, {'a': 1, 'b': 4}, {'a': 1, 'b': 6}, {'a': 2, 'b': 2},
-    {'a': 2, 'b': 4}, {'a': 2, 'b': 6}, {'a': 3, 'b': 2}, {'a': 3, 'b': 4},
-    {'a': 3, 'b': 6}]
+        >>> pg = ParamGrid({'a': [1, 2, 3], 'b': [2, 4, 6]})
+        >>> list(pg.zip())
+        [{'a': 1, 'b': 2}, {'a': 2, 'b': 4}, {'a': 3, 'b': 6}]
 
-    >>> pg = ParamGrid({'a': Interval(0, 10, 2), 'b': [2, 4, 6, 8, 10]})
-    >>> list(pg.zip())  # doctest: +NORMALIZE_WHITESPACE
-    [{'a': (0, 2), 'b': 2}, {'a': (2, 4), 'b': 4}, {'a': (4, 6), 'b': 6},
-    {'a': (6, 8), 'b': 8}, {'a': (8, 10), 'b': 10}]
+        >>> list(pg.product())  # doctest: +NORMALIZE_WHITESPACE
+        [{'a': 1, 'b': 2}, {'a': 1, 'b': 4}, {'a': 1, 'b': 6}, {'a': 2, 'b': 2},
+        {'a': 2, 'b': 4}, {'a': 2, 'b': 6}, {'a': 3, 'b': 2}, {'a': 3, 'b': 4},
+        {'a': 3, 'b': 6}]
+
+        >>> pg = ParamGrid({'a': Interval(0, 10, 2), 'b': [2, 4, 6, 8, 10]})
+        >>> list(pg.zip())  # doctest: +NORMALIZE_WHITESPACE
+        [{'a': (0, 2), 'b': 2}, {'a': (2, 4), 'b': 4}, {'a': (4, 6), 'b': 6},
+        {'a': (6, 8), 'b': 8}, {'a': (8, 10), 'b': 10}]
 
     Notes
     -----

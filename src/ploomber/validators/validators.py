@@ -10,12 +10,15 @@ class Assert:
 
     Examples
     --------
-    >>> from ploomber.validators import Assert
-    >>> assert_ = Assert()
-    >>> assert_(True, 'This wont be displayed')
-    >>> assert_(False, 'This will be displayed')
-    >>> assert_(False, 'This will also be displayed')
-    >>> assert_.check() # doctest: +SKIP
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber.validators import Assert
+        >>> assert_ = Assert()
+        >>> assert_(True, 'This wont be displayed')
+        >>> assert_(False, 'This will be displayed')
+        >>> assert_(False, 'This will also be displayed')
+        >>> assert_.check() # doctest: +SKIP
     """
     def __init__(self):
         self.messages_error = []
@@ -184,18 +187,21 @@ def data_frame_validator(df, validators):
 
     Examples
     --------
-    >>> from ploomber.validators import data_frame_validator
-    >>> from ploomber.validators import validate_schema, validate_values
-    >>> import pandas as pd
-    >>> import numpy as np
-    >>> df = pd.DataFrame({'x': np.random.rand(3), 'y': np.random.rand(3),
-    ...                    'z': [0, 1, 2], 'i': ['a', 'b', 'c']})
-    >>> data_frame_validator(df,
-    ...                     [validate_schema(schema={'x': 'int', 'z': 'int'}),
-    ...                      validate_values(values={'z': ('range', (0, 1)),
-    ...                                              'i': ('unique', {'a'}),
-    ...                                              'j': ('unique', {'b'})}
-    ...                                      )]) # doctest: +SKIP
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber.validators import data_frame_validator
+        >>> from ploomber.validators import validate_schema, validate_values
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> df = pd.DataFrame({'x': np.random.rand(3), 'y': np.random.rand(3),
+        ...                    'z': [0, 1, 2], 'i': ['a', 'b', 'c']})
+        >>> data_frame_validator(df,
+        ...                     [validate_schema(schema={'x': 'int', 'z': 'int'}),
+        ...                      validate_values(values={'z': ('range', (0, 1)),
+        ...                                              'i': ('unique', {'a'}),
+        ...                                              'j': ('unique', {'b'})}
+        ...                                      )]) # doctest: +SKIP
     """
     assert_ = Assert()
 

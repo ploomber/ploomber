@@ -73,10 +73,13 @@ class Parallel(Executor):
 
     Python API:
 
-    >>> from ploomber import DAG
-    >>> from ploomber.executors import Parallel
-    >>> dag = DAG(executor='parallel') # use with default values
-    >>> dag = DAG(executor=Parallel(processes=2)) # customize
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber import DAG
+        >>> from ploomber.executors import Parallel
+        >>> dag = DAG(executor='parallel') # use with default values
+        >>> dag = DAG(executor=Parallel(processes=2)) # customize
 
 
     Notes

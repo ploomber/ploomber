@@ -181,25 +181,28 @@ class DAG(AbstractDAG):
 
     Python API:
 
-    >>> from pathlib import Path
-    >>> from ploomber import DAG
-    >>> from ploomber.tasks import ShellScript, PythonCallable
-    >>> from ploomber.products import File
-    >>> from ploomber.executors import Serial
-    >>> code = ("echo hi > {{product['first']}}; "
-    ...         "echo bye > {{product['second']}}")
-    >>> _ = Path('script.sh').write_text(code)
-    >>> dag = DAG(executor=Serial(build_in_subprocess=False))
-    >>> product = {'first': File('first.txt'), 'second': File('second.txt')}
-    >>> shell = ShellScript(Path('script.sh'), product, dag=dag, name='script')
-    >>> def my_task(upstream, product):
-    ...     first = Path(upstream['script']['first']).read_text()
-    ...     second = Path(upstream['script']['second']).read_text()
-    ...     Path(product).write_text(first + ' ' + second)
-    >>> callable = PythonCallable(my_task, File('final.txt'), dag=dag)
-    >>> shell >> callable
-    PythonCallable: my_task -> File('final.txt')
-    >>> _ = dag.build()
+    .. code-block:: python
+        :class: python-console
+
+        >>> from pathlib import Path
+        >>> from ploomber import DAG
+        >>> from ploomber.tasks import ShellScript, PythonCallable
+        >>> from ploomber.products import File
+        >>> from ploomber.executors import Serial
+        >>> code = ("echo hi > {{product['first']}}; "
+        ...         "echo bye > {{product['second']}}")
+        >>> _ = Path('script.sh').write_text(code)
+        >>> dag = DAG(executor=Serial(build_in_subprocess=False))
+        >>> product = {'first': File('first.txt'), 'second': File('second.txt')}
+        >>> shell = ShellScript(Path('script.sh'), product, dag=dag, name='script')
+        >>> def my_task(upstream, product):
+        ...     first = Path(upstream['script']['first']).read_text()
+        ...     second = Path(upstream['script']['second']).read_text()
+        ...     Path(product).write_text(first + ' ' + second)
+        >>> callable = PythonCallable(my_task, File('final.txt'), dag=dag)
+        >>> shell >> callable
+        PythonCallable: my_task -> File('final.txt')
+        >>> _ = dag.build()
 
     """
     def __init__(self, name=None, clients=None, executor='serial'):

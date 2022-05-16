@@ -18,6 +18,9 @@ $(document).ready(function () {
     editor = document.getElementsByClassName("text-editor");
     addTerminalStyle(editor, "Text editor", (buttons = true));
 
+    python = document.getElementsByClassName("python-console");
+    addTerminalStyle(python, "Terminal (Python)", (buttons = true));
+
     // TODO: this should listen for click events in the whole terminal
     // window, not only in the content sub-window
     $("div.highlight").click(function () {

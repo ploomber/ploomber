@@ -34,12 +34,15 @@ class Env:
 
     Examples
     --------
-    >>> from ploomber import Env
-    >>> env = Env({'db': {'uri': 'my_uri'}, 'path': {'raw': '/path/to/raw'}})
-    >>> env.db.uri
-    'my_uri'
-    >>> env.path.raw
-    PosixPath('/path/to/raw')
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber import Env
+        >>> env = Env({'db': {'uri': 'my_uri'}, 'path': {'raw': '/path/to/raw'}})
+        >>> env.db.uri
+        'my_uri'
+        >>> env.path.raw
+        PosixPath('/path/to/raw')
 
     Notes
     -----

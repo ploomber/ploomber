@@ -51,9 +51,12 @@ class DBAPIClient(Client):
 
     Examples
     --------
-    >>> from ploomber.clients import DBAPIClient
-    >>> import sqlite3
-    >>> client = DBAPIClient(sqlite3.connect, dict(database='my.db'))
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber.clients import DBAPIClient
+        >>> import sqlite3
+        >>> client = DBAPIClient(sqlite3.connect, dict(database='my.db'))
     """
     def __init__(self, connect_fn, connect_kwargs, split_source=None):
         super().__init__()
@@ -132,12 +135,15 @@ class SQLAlchemyClient(Client):
 
     Examples
     --------
-    >>> from ploomber.clients import SQLAlchemyClient
-    >>> client = SQLAlchemyClient('sqlite:///my_db.db')
-    >>> import sqlalchemy
-    >>> url = sqlalchemy.engine.url.URL.create(drivername='sqlite',
-    ...                                        database='my_db.db')
-    >>> client = SQLAlchemyClient(url)
+    .. code-block:: python
+        :class: python-console
+
+        >>> from ploomber.clients import SQLAlchemyClient
+        >>> client = SQLAlchemyClient('sqlite:///my_db.db')
+        >>> import sqlalchemy
+        >>> url = sqlalchemy.engine.url.URL.create(drivername='sqlite',
+        ...                                        database='my_db.db')
+        >>> client = SQLAlchemyClient(url)
     """
     split_source_mapping = {'sqlite': ';'}
 
