@@ -51,9 +51,108 @@ class DBAPIClient(Client):
 
     Examples
     --------
-    >>> from ploomber.clients import DBAPIClient
+
+    Spec API:
+
+    Given the following ``clients.py``:
+
+    .. code-block:: python
+        :class: text-editor
+        :name: clients-py
+
+        import sqlite3
+        from ploomber.clients import DBAPIClient
+
+        def get():
+            return DBAPIClient(sqlite3.connect, dict(database='my.db'))
+
+
+    Spec API (dag-level client):
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        clients:
+            # key is a task class such as SQLDump or SQLScript
+            SQLDump: clients.get
+
+        tasks:
+            - source: query.sql
+              product: output/data.csv
+
+
+    Spec API (task-level client):
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        tasks:
+            - source: query.sql
+              product: output/data.csv
+              client: clients.get
+
+
+    Python API (dag-level client):
+
     >>> import sqlite3
-    >>> client = DBAPIClient(sqlite3.connect, dict(database='my.db'))
+    >>> import pandas as pd
+    >>> from ploomber import DAG
+    >>> from ploomber.products import File
+    >>> from ploomber.tasks import SQLDump
+    >>> from ploomber.clients import DBAPIClient
+    >>> con_raw = sqlite3.connect(database='my_db.db')
+    >>> df = pd.DataFrame({'a': range(100), 'b': range(100)})
+    >>> _ = df.to_sql('numbers', con_raw, index=False)
+    >>> con_raw.close()
+    >>> dag = DAG()
+    >>> client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'))
+    >>> dag.clients[SQLDump] = client # dag-level client
+    >>> _ = SQLDump('SELECT * FROM numbers', File('data.parquet'),
+    ...             dag=dag, name='dump',
+    ...             client=client,
+    ...             chunksize=None) # no need to pass client here
+    >>> _ = dag.build()
+    >>> df = pd.read_parquet('data.parquet')
+    >>> df.head(3)
+       a  b
+    0  0  0
+    1  1  1
+    2  2  2
+
+
+    Python API (task-level client):
+
+    >>> import sqlite3
+    >>> import pandas as pd
+    >>> from ploomber import DAG
+    >>> from ploomber.products import File
+    >>> from ploomber.tasks import SQLDump
+    >>> from ploomber.clients import DBAPIClient
+    >>> con_raw = sqlite3.connect(database='my_db.db')
+    >>> df = pd.DataFrame({'a': range(100), 'b': range(100)})
+    >>> _ = df.to_sql('numbers', con_raw, index=False)
+    >>> con_raw.close()
+    >>> dag = DAG()
+    >>> client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'))
+    >>> _ = SQLDump('SELECT * FROM numbers', File('data.parquet'),
+    ...             dag=dag, name='dump',
+    ...             client=client,  # pass client to task
+    ...             chunksize=None)
+    >>> _ = dag.build()
+    >>> df = pd.read_parquet('data.parquet')
+    >>> df.head(3)
+       a  b
+    0  0  0
+    1  1  1
+    2  2  2
+
+
+    See Also
+    --------
+    ploomber.clients.SQLAlchemyClient :
+        A client to connect to a database using sqlalchemy as backend
     """
     def __init__(self, connect_fn, connect_kwargs, split_source=None):
         super().__init__()
@@ -114,7 +213,7 @@ class SQLAlchemyClient(Client):
 
     split_source : str, optional
         Some database drivers do not support multiple commands in a single
-        execute statement. Use this optiion to split commands by a given
+        execute statement. Use this option to split commands by a given
         character (e.g. ';') and send them one at a time. Defaults to
         'default', which splits by ';' if using SQLite database,
         but does not perform any splitting with other databases. If None,
@@ -132,12 +231,112 @@ class SQLAlchemyClient(Client):
 
     Examples
     --------
-    >>> from ploomber.clients import SQLAlchemyClient
-    >>> client = SQLAlchemyClient('sqlite:///my_db.db')
+
+    Spec API:
+
+    Given the following ``clients.py``:
+
+    .. code-block:: python
+        :class: text-editor
+        :name: clients-py
+
+        import sqlalchemy
+        from ploomber.clients import SQLAlchemyClient
+
+        def get():
+            url = sqlalchemy.engine.url.URL.create(drivername='sqlite',
+                                                   database='my_db.db')
+            return SQLAlchemyClient(url)
+
+
+    Spec API (dag-level client):
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        clients:
+            # key is a task class such as SQLDump or SQLScript
+            SQLDump: clients.get
+
+        tasks:
+            - source: query.sql
+              product: output/data.csv
+
+
+    Spec API (task-level client):
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        tasks:
+            - source: query.sql
+              product: output/data.csv
+              client: clients.get
+
+    Python API (dag-level client):
+
+    >>> import sqlite3
     >>> import sqlalchemy
+    >>> import pandas as pd
+    >>> from ploomber import DAG
+    >>> from ploomber.products import File
+    >>> from ploomber.tasks import SQLDump
+    >>> from ploomber.clients import SQLAlchemyClient
+    >>> con_raw = sqlite3.connect(database='my_db.db')
+    >>> df = pd.DataFrame({'a': range(100), 'b': range(100)})
+    >>> _ = df.to_sql('numbers', con_raw, index=False)
+    >>> con_raw.close()
+    >>> dag = DAG()
     >>> url = sqlalchemy.engine.url.URL.create(drivername='sqlite',
     ...                                        database='my_db.db')
     >>> client = SQLAlchemyClient(url)
+    >>> dag.clients[SQLDump] = client # dag-level client
+    >>> _ = SQLDump('SELECT * FROM numbers', File('data.parquet'),
+    ...             dag=dag, name='dump,
+    ...             chunksize=None) # no need to pass client here
+    >>> _ = dag.build()
+    >>> df = pd.read_parquet('data.parquet')
+    >>> df.head(3)
+       a  b
+    0  0  0
+    1  1  1
+    2  2  2
+
+    Python API (task-level client):
+
+    >>> import sqlite3
+    >>> import sqlalchemy
+    >>> import pandas as pd
+    >>> from ploomber import DAG
+    >>> from ploomber.products import File
+    >>> from ploomber.tasks import SQLDump
+    >>> from ploomber.clients import SQLAlchemyClient
+    >>> con_raw = sqlite3.connect(database='my_db.db')
+    >>> df = pd.DataFrame({'a': range(100), 'b': range(100)})
+    >>> _ = df.to_sql('numbers', con_raw, index=False)
+    >>> con_raw.close()
+    >>> dag = DAG()
+    >>> url = sqlalchemy.engine.url.URL.create(drivername='sqlite',
+    ...                                        database='my_db.db')
+    >>> client = SQLAlchemyClient(url)
+    >>> _ = SQLDump('SELECT * FROM numbers', File('data.parquet'),
+    ...             dag=dag, name='dump',
+    ...             client=client, # pass client to task
+    ...             chunksize=None)
+    >>> _ = dag.build()
+    >>> df = pd.read_parquet('data.parquet')
+    >>> df.head(3)
+       a  b
+    0  0  0
+    1  1  1
+    2  2  2
+
+    See Also
+    --------
+    ploomber.clients.DBAPIClient :
+        A client to connect to a database
     """
     split_source_mapping = {'sqlite': ';'}
 
