@@ -6,10 +6,6 @@ import tempfile
 from ploomber.products import File
 
 
-def get_data(product):
-    Path(product).write_text("hello")
-
-
 def make():
     dag = DAG()
 
