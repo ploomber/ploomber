@@ -15,6 +15,7 @@ def make():
 
     NotebookRunner(Path('clean.py'),
                    File(Path(tempfile.mkdtemp()) / 'file.html'),
-                   dag=dag)
+                   dag=dag,
+                   name='clean')
 
     return dag
