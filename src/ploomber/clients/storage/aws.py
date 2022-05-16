@@ -53,8 +53,91 @@ class S3Client(AbstractStorageClient):
 
     **kwargs
         Keyword arguments for the client constructor
-    """
 
+    Examples
+    --------
+
+    Spec API:
+
+    Given the following ``clients.py``:
+
+    .. code-block:: python
+        :class: text-editor
+        :name: clients-py
+
+        import sqlalchemy
+        from ploomber.clients import S3Client
+
+        def get():
+            return S3Client(bucket_name='my-bucket', parent='my-pipeline')
+
+
+    Spec API (dag-level client):
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        clients:
+            # all files from all tasks will be uploaded
+            File: clients.get
+
+        tasks:
+            - source: notebook.ipynb
+              product: output/report.html
+
+
+    Spec API (product-level client):
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        tasks:
+            - source: notebook.ipynb
+              product_client: clients.get
+              # outputs from this task will be uploaded
+              product: output/report.html
+
+    Python API (dag-level client):
+
+    >>> from ploomber import DAG
+    >>> from ploomber.products import File
+    >>> from ploomber.tasks import PythonCallable
+    >>> from ploomber.clients import S3Client
+    >>> dag = DAG()
+    >>> client = S3Client(bucket_name='my-bucket', parent='my-pipeline',
+    ...                   path_to_project_root='.')
+    >>> dag.clients[File] = client # dag-level client
+    >>> dag = DAG()
+    >>> def my_function(product):
+    ...     Path(product).touch()
+    >>> _ = PythonCallable(my_function, File('file.txt'), dag=dag)
+    >>> dag.build() # doctest: +SKIP
+
+
+    Python API (product-level client):
+
+    >>> from ploomber import DAG
+    >>> from ploomber.products import File
+    >>> from ploomber.tasks import PythonCallable
+    >>> from ploomber.clients import S3Client
+    >>> dag = DAG()
+    >>> client = S3Client(bucket_name='my-bucket', parent='my-pipeline',
+    ...                   path_to_project_root='.')
+    >>> dag = DAG()
+    >>> def my_function(product):
+    ...     Path(product).touch()
+    >>> product = File('file.txt', client=client)
+    >>> _ = PythonCallable(my_function, product, dag=dag)
+    >>> dag.build() # doctest: +SKIP
+
+    See Also
+    --------
+    ploomber.clients.GCloudStorageClient :
+        Client for uploading products to Amazon Google Cloud Storage
+
+    """
     @requires(['boto3', 'botocore'], name='S3Client')
     def __init__(self,
                  bucket_name,
