@@ -22,7 +22,7 @@ class InMemoryDAG:
 
     Examples
     --------
-    .. literalinclude:: ../../../doc/examples/InMemoryDAG.py
+    .. literalinclude:: ../../../examples/InMemoryDAG.py
     """
     def __init__(self, dag, return_postprocessor=None):
         types = {type(dag[t]) for t in dag._iter()}
