@@ -4,7 +4,6 @@ from ploomber.tasks import NotebookRunner
 from pathlib import Path
 import tempfile
 from ploomber.products import File
-import pandas as pd
 
 
 def get_data(product):
