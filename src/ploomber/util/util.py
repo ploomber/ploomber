@@ -251,10 +251,9 @@ def signature_check(fn, params, task_name):
                     'You are passing {}. Do you mean {}?'.format(e, "product")
                 )
             else:
-                raise TaskRenderError(
-                    'Error rendering task "{}" initialized with '
-                        'function "{}". {}'.format(
-                            task_name, fn_name, msg))
+                raise TaskRenderError('Error rendering task "{}" initialized with '
+                              'function "{}". {}'.format(
+                                  task_name, fn_name, msg))
 
     return True
 
