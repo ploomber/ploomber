@@ -4,6 +4,7 @@ import warnings
 from pathlib import Path, WindowsPath
 import importlib
 from functools import wraps
+import difflib as dl
 import base64
 import shutil
 import inspect
@@ -242,9 +243,18 @@ def signature_check(fn, params, task_name):
         msg = '. '.join(errors)
         # not all functions have __name__ (e.g. partials)
         fn_name = getattr(fn, '__name__', fn)
-        raise TaskRenderError('Error rendering task "{}" initialized with '
-                              'function "{}". {}'.format(
-                                  task_name, fn_name, msg))
+        ele = missing.pop()
+        if(dl.get_close_matches(
+            ele, ['product'], cutoff=0.1, n=1
+        ) == ['product']):
+            raise TaskRenderError(
+                'You are passing {}. Do you mean {}?'.format(ele, "product")
+            )
+        else:
+            raise TaskRenderError(
+                'Error rendering task "{}" initialized with '
+                    'function "{}". {}'.format(
+                        task_name, fn_name, msg))
 
     return True
 
