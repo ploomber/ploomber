@@ -9,7 +9,7 @@ from ploomber.cli import cloud, examples
 from ploomber_cli.cli import get_key, set_key, write_pipeline, get_pipelines,\
                             delete_pipeline
 from ploomber.telemetry import telemetry
-from ploomber.telemetry.telemetry import DEFAULT_USER_CONF, UserSettings
+from ploomber.telemetry.telemetry import DEFAULT_USER_CONF
 from ploomber import table
 
 
@@ -25,14 +25,14 @@ def write_sample_conf(tmp_directory, monkeypatch):
 @pytest.fixture()
 def save_user_settings():
     configFile = Path('stats', 'config.yaml')
-    file_exists = configFile.exists() 
+    file_exists = configFile.exists()
     if file_exists:
         content = yaml.safe_load(configFile.read_text())
-    
+
     yield
-    
+
     if file_exists:
-        yaml.safe_dump(content,configFile.open('w'))
+        yaml.safe_dump(content, configFile.open('w'))
 
 
 def write_sample_pipeline(pipeline_id=None, status=None):
@@ -76,7 +76,8 @@ def test_write_api_key(write_sample_conf, save_user_settings):
     assert key_val in conf[key_name]
 
 
-def test_write_key_no_conf_file(tmp_directory, monkeypatch, save_user_settings):
+def test_write_key_no_conf_file(tmp_directory, monkeypatch,
+                                save_user_settings):
     key_val = "TEST_KEY12345678987654"
     key_name = "cloud_key"
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
@@ -117,7 +118,8 @@ def test_api_key_well_formatted(write_sample_conf, arg, save_user_settings):
     assert 'The API key is malformed' in str(excinfo.value)
 
 
-def test_get_api_key(monkeypatch, write_sample_conf, capsys, save_user_settings):
+def test_get_api_key(monkeypatch, write_sample_conf, capsys,
+                     save_user_settings):
     monkeypatch.delenv('PLOOMBER_CLOUD_KEY', raising=True)
 
     key_val = "TEST_KEY12345678987654"
@@ -152,7 +154,8 @@ def test_get_no_key(monkeypatch, write_sample_conf, capsys):
     assert 'No cloud API key was found.\n' == result.stdout
 
 
-def test_two_keys_not_supported(monkeypatch, write_sample_conf, capsys, save_user_settings):
+def test_two_keys_not_supported(monkeypatch, write_sample_conf, capsys,
+                                save_user_settings):
     monkeypatch.delenv('PLOOMBER_CLOUD_KEY', raising=True)
 
     key_val = "TEST_KEY12345678987654"
@@ -299,7 +302,9 @@ def test_pipeline_write_error():
 # Get all pipelines, minimum of 3 should exist.
 @pytest.mark.xfail(reason="timing out")
 def test_get_multiple_pipelines(monkeypatch):
+
     class CustomTableWrapper(table.Table):
+
         @classmethod
         def from_dicts(cls, dicts, complete_keys):
             # call the super class
