@@ -1,6 +1,9 @@
 """
 Clients that communicate with databases
 """
+import re
+from pathlib import Path
+
 try:
     import sqlalchemy
 except ImportError:
@@ -8,9 +11,6 @@ except ImportError:
 
 from ploomber.clients.client import Client
 from ploomber.util import requires
-
-import re
-from pathlib import Path
 
 
 def code_split(code, token=';'):
