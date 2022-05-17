@@ -73,6 +73,11 @@ class GenericSQLRelation(SQLProductMixin, GenericProduct):
     client : ploomber.clients.DBAPIClient or SQLAlchemyClient, optional
         The client used to *store metadata for this product*. Only required
         if no dag-level client has been declared using dag.clients[class]
+
+    See Also
+    --------
+    ploomber.products.SQRelation :
+        SQL relation (table or view) with no metadata.
     """
     def _init_identifier(self, identifier):
         return SQLRelationPlaceholder(identifier)
@@ -100,7 +105,11 @@ class GenericSQLRelation(SQLProductMixin, GenericProduct):
 
 
 class SQLRelation(SQLProductMixin, Product):
-    """A product that represents a SQL relation but has no metadata
+    """
+    A product that represents a SQL relation (table or view) with no metadata
+    (incremental builds won't work). See
+    :class:`ploomber.products.GenericSQLRelation` if you want to enable
+    incremental builds.
 
     Parameters
     ----------
@@ -108,6 +117,11 @@ class SQLRelation(SQLProductMixin, Product):
         A tuple with (schema, name, kind) where kind must be either 'table'
         or 'view'
 
+    See Also
+    --------
+    ploomber.products.GenericSQLRelation :
+        SQL relation (table or view) that stores metadata (to enable
+        incremental builds) in a SQLite database.
     """
     def _init_identifier(self, identifier):
         return SQLRelationPlaceholder(identifier)
