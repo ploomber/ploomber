@@ -244,8 +244,8 @@ def signature_check(fn, params, task_name):
         # not all functions have __name__ (e.g. partials)
         fn_name = getattr(fn, "__name__", fn)
         for e in missing:
-            if dl.get_close_matches(e, ["product"], cutoff=0.1, n=1
-            ) == ["product"]:
+            if dl.get_close_matches(e, ["product"],
+             cutoff=0.1, n=1) == ["product"]:
                 raise TaskRenderError(
                     "You are passing {}. Do you mean {}?".format(e, "product")
                 )
