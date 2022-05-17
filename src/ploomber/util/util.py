@@ -240,20 +240,19 @@ def signature_check(fn, params, task_name):
         errors.append(f'Pass {missing_except_upstream} in "params"')
 
     if extra or missing:
-        msg = '. '.join(errors)
+        msg = ". ".join(errors)
         # not all functions have __name__ (e.g. partials)
-        fn_name = getattr(fn, '__name__', fn)
+        fn_name = getattr(fn, "__name__", fn)
         for e in missing:
-            if(dl.get_close_matches(
-                e, ['product'], cutoff=0.1, n=1
-            ) == ['product']):
+            if dl.get_close_matches(e, ["product"], cutoff=0.1, n=1) == ["product"]:
                 raise TaskRenderError(
-                    'You are passing {}. Do you mean {}?'.format(e, "product")
+                    "You are passing {}. Do you mean {}?".format(e, "product")
                 )
             else:
-                raise TaskRenderError('Error rendering task "{}" initialized with '
-                              'function "{}". {}'.format(
-                                  task_name, fn_name, msg))
+                raise TaskRenderError(
+                    'Error rendering task "{}" initialized with '
+                    'function "{}". {}'.format(task_name, fn_name, msg)
+                )
 
     return True
 
