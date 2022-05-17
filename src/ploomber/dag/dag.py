@@ -865,6 +865,9 @@ class DAG(AbstractDAG):
             raise ValueError("Expected backend to be: None, 'd3' "
                              f"or 'pygraphviz', but got: {backend!r}")
 
+        # FIXME: add tests for this
+        self.render()
+
         if plot.choose_backend(backend) == 'd3':
             if include_products:
                 raise ValueError("'include_products' is not supported "
@@ -879,9 +882,6 @@ class DAG(AbstractDAG):
                                      'expected a path with '
                                      f'extension .html, but got: {output!r}, '
                                      'please change the extension')
-
-            # FIXME: add tests for this
-            self.render()
 
             G = self._to_graph(fmt='d3', include_products=include_products)
 
