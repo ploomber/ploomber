@@ -1,6 +1,12 @@
 # CHANGELOG
 
 ## 0.19.2dev
+* Adds documentation for `pipeline.yaml` `meta` section
+* Adds many inline examples
+* Improved docs for `pipeline.yaml` `grid`
+* `ploomber task` prints a confirmation message upon successful execution
+* `DAG.close_clients()` only calls `.close()` on each client once
+* Fixes `dag.plot()` error when dag needs rendering
 
 ## 0.19.1 (2022-05-14)
 * Fixes incompatibility with nbconvert 5 ([#741](https://github.com/ploomber/ploomber/issues/741))
