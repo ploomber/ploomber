@@ -637,17 +637,27 @@ class DAG(AbstractDAG):
     def close_clients(self):
         """Close all clients (dag-level, task-level and product-level)
         """
+        # keep track of closed clients so we only call .close() once.
+        # For most clients, calling .close() multiple times does not throw
+        # any errors. However, when using google.cloud.bigquery.dbapi (and
+        # possible others), calling .close() many times will throw an error
+        closed = []
+
         for client in self.clients.values():
-            client.close()
+            if client not in closed:
+                client.close()
+                closed.append(client)
 
         for task_name in self._iter():
             task = self[task_name]
 
-            if task.client:
+            if task.client and task.client not in closed:
                 task.client.close()
+                closed.append(task.client)
 
-            if task.product.client:
+            if task.product.client and task.product.client not in closed:
                 task.product.client.close()
+                closed.append(task.product.client)
 
     def _run_on_failure(self, tb):
         if self.on_failure:
