@@ -102,12 +102,12 @@ class DBAPIClient(Client):
     >>> from ploomber.products import File
     >>> from ploomber.tasks import SQLDump
     >>> from ploomber.clients import DBAPIClient
-    >>> con_raw = sqlite3.connect(database='my_db.db')
+    >>> con_raw = sqlite3.connect(database='my.db')
     >>> df = pd.DataFrame({'a': range(100), 'b': range(100)})
     >>> _ = df.to_sql('numbers', con_raw, index=False)
     >>> con_raw.close()
     >>> dag = DAG()
-    >>> client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'))
+    >>> client = DBAPIClient(sqlite3.connect, dict(database='my.db'))
     >>> dag.clients[SQLDump] = client # dag-level client
     >>> _ = SQLDump('SELECT * FROM numbers', File('data.parquet'),
     ...             dag=dag, name='dump',
@@ -130,12 +130,12 @@ class DBAPIClient(Client):
     >>> from ploomber.products import File
     >>> from ploomber.tasks import SQLDump
     >>> from ploomber.clients import DBAPIClient
-    >>> con_raw = sqlite3.connect(database='my_db.db')
+    >>> con_raw = sqlite3.connect(database='some.db')
     >>> df = pd.DataFrame({'a': range(100), 'b': range(100)})
     >>> _ = df.to_sql('numbers', con_raw, index=False)
     >>> con_raw.close()
     >>> dag = DAG()
-    >>> client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'))
+    >>> client = DBAPIClient(sqlite3.connect, dict(database='some.db'))
     >>> _ = SQLDump('SELECT * FROM numbers', File('data.parquet'),
     ...             dag=dag, name='dump',
     ...             client=client,  # pass client to task
@@ -284,17 +284,17 @@ class SQLAlchemyClient(Client):
     >>> from ploomber.products import File
     >>> from ploomber.tasks import SQLDump
     >>> from ploomber.clients import SQLAlchemyClient
-    >>> con_raw = sqlite3.connect(database='my_db.db')
+    >>> con_raw = sqlite3.connect(database='my.db')
     >>> df = pd.DataFrame({'a': range(100), 'b': range(100)})
     >>> _ = df.to_sql('numbers', con_raw, index=False)
     >>> con_raw.close()
     >>> dag = DAG()
     >>> url = sqlalchemy.engine.url.URL.create(drivername='sqlite',
-    ...                                        database='my_db.db')
+    ...                                        database='my.db')
     >>> client = SQLAlchemyClient(url)
     >>> dag.clients[SQLDump] = client # dag-level client
     >>> _ = SQLDump('SELECT * FROM numbers', File('data.parquet'),
-    ...             dag=dag, name='dump,
+    ...             dag=dag, name='dump',
     ...             chunksize=None) # no need to pass client here
     >>> _ = dag.build()
     >>> df = pd.read_parquet('data.parquet')
@@ -313,13 +313,13 @@ class SQLAlchemyClient(Client):
     >>> from ploomber.products import File
     >>> from ploomber.tasks import SQLDump
     >>> from ploomber.clients import SQLAlchemyClient
-    >>> con_raw = sqlite3.connect(database='my_db.db')
+    >>> con_raw = sqlite3.connect(database='some.db')
     >>> df = pd.DataFrame({'a': range(100), 'b': range(100)})
     >>> _ = df.to_sql('numbers', con_raw, index=False)
     >>> con_raw.close()
     >>> dag = DAG()
     >>> url = sqlalchemy.engine.url.URL.create(drivername='sqlite',
-    ...                                        database='my_db.db')
+    ...                                        database='some.db')
     >>> client = SQLAlchemyClient(url)
     >>> _ = SQLDump('SELECT * FROM numbers', File('data.parquet'),
     ...             dag=dag, name='dump',
