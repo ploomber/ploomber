@@ -19,6 +19,7 @@ def write_sample_conf(tmp_directory, monkeypatch):
     stats = Path('stats')
     stats.mkdir()
     full_path = (stats / DEFAULT_USER_CONF)
+
     full_path.write_text("stats_enabled: False")
 
 
@@ -286,7 +287,9 @@ def test_pipeline_write_error():
 # Get all pipelines, minimum of 3 should exist.
 @pytest.mark.xfail(reason="timing out")
 def test_get_multiple_pipelines(monkeypatch):
+
     class CustomTableWrapper(table.Table):
+
         @classmethod
         def from_dicts(cls, dicts, complete_keys):
             # call the super class
