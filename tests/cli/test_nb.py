@@ -99,12 +99,18 @@ def test_format_same_pipeline(monkeypatch, tmp_nbs):
     assert pipeline == Path('pipeline.yaml').read_text()
 
 
-def test_format_no_entry_point(monkeypatch, tmp_nbs_factory, capsys):
+def test_format_no_entry_point(monkeypatch, tmp_nbs_factory, capsys,
+                               tmp_imports):
     monkeypatch.setattr(sys, 'argv', [
-        'ploomber', 'nb', '--entry-point', 'factory.make', '--format', 'ipynb'
+        'ploomber',
+        'nb',
+        '--entry-point',
+        'nbs_factory.make',
+        '--format',
+        'ipynb',
     ])
     cli.cmd_router()
-    out, err = capsys.readouterr()
+    out, _ = capsys.readouterr()
     assert 'entry-point is not a valid file' in out
 
 
