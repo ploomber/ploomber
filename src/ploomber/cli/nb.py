@@ -305,17 +305,14 @@ def main():
     if args.format:
         new_paths = [
             str(p) for p in _call_in_source(
-                dag,
-                'format',
-                'Formatted notebooks',
-                dict(fmt=args.format),
-            ) if p is not None
+                dag, 'format', 'Formatted notebooks',
+                dict(fmt=args.format, entry_point=args.entry_point))
+            if p is not None
         ]
 
         if len(new_paths):
             click.echo('Extension changed for the following '
-                       f'tasks: {", ".join(new_paths)}. Update your '
-                       'pipeline declaration.')
+                       f'tasks: {", ".join(new_paths)}.')
 
     if args.inject:
         _call_in_source(

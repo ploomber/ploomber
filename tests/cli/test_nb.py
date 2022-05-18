@@ -82,6 +82,53 @@ def test_format_skips_non_notebooks(monkeypatch, backup_simple,
     cli.cmd_router()
 
 
+def test_format_adjusts_pipeline(monkeypatch, tmp_nbs):
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--format', 'ipynb'])
+    assert Path('load.py').exists()
+    cli.cmd_router()
+
+    assert jupytext.read('load.ipynb')
+    assert '.py' not in Path('pipeline.yaml').read_text()
+
+
+def test_format_same_pipeline(monkeypatch, tmp_nbs):
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--format', 'py'])
+    pipeline = Path('pipeline.yaml').read_text()
+    cli.cmd_router()
+
+    assert pipeline == Path('pipeline.yaml').read_text()
+
+
+def test_format_no_entry_point(monkeypatch, tmp_nbs_factory, capsys,
+                               tmp_imports):
+    monkeypatch.setattr(sys, 'argv', [
+        'ploomber',
+        'nb',
+        '--entry-point',
+        'nbs_factory.make',
+        '--format',
+        'ipynb',
+    ])
+    cli.cmd_router()
+    out, _ = capsys.readouterr()
+    assert 'entry-point is not a valid file' in out
+
+
+def test_format_missing_file_in_entry_point(monkeypatch, tmp_directory,
+                                            capsys):
+    Path('pipeline.yaml').write_text("""tasks:
+  - source: '{{root}}'
+    product: 'some_file.ipynb'""")
+    file_name = 'get.py'
+    Path('env.yaml').write_text(f"""root: {file_name}""")
+    Path(file_name).write_text("""print("test")""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--format', 'ipynb'])
+    cli.cmd_router()
+    out, err = capsys.readouterr()
+    assert f'{file_name} does not appear in entry-point' in out
+
+
 def test_pair_sync(monkeypatch, tmp_nbs):
     monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--pair', 'nbs'])
 

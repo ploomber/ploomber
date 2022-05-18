@@ -224,6 +224,11 @@ def tmp_fns_and_scripts():
     pass
 
 
+@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-factory')
+def tmp_nbs_factory():
+    pass
+
+
 @pytest.fixture(scope='session')
 def path_to_source_code_file():
     return (_path_to_tests() / 'assets' / 'sample' / 'src' / 'pkg' / 'module' /
