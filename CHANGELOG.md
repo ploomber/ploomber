@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.19.2dev
+## 0.19.2 (2022-05-17)
 * Adds documentation for `pipeline.yaml` `meta` section
 * Adds many inline examples
 * Improved docs for `pipeline.yaml` `grid`
