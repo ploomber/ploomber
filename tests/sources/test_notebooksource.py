@@ -20,7 +20,7 @@ from ploomber.exceptions import RenderError, SourceInitializationError
 
 @pytest.fixture
 def tmp_nbs_ipynb(tmp_nbs):
-    """Modigies the nbs example to have one task with ipynb format
+    """Modifies the nbs example to have one task with ipynb format
     """
     # modify the spec so it has one ipynb task
     with open('pipeline.yaml') as f:
