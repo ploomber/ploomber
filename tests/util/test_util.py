@@ -27,3 +27,4 @@ def test_signature_check():
         signature_check(get, {'product': 1}, 'get')
         
     assert error == str(e.value)
+    
