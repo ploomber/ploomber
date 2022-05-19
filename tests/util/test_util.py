@@ -1,7 +1,9 @@
 import inspect
+import pytest
 from sklearn import datasets
 from pathlib import Path
 import pandas as pd
+from ploomber.exceptions import TaskRenderError
 
 from ploomber.util.util import signature_check
 
@@ -19,5 +21,7 @@ def get(products):
     df.to_parquet(str(product))
 
 def test_signature_check():
-    x = signature_check(get, inspect.signature(get).parameters, 'get')
-    assert x == True
+    error = ("You are passing products. Do you mean product?")
+    with pytest.raises(TaskRenderError) as e:
+        signature_check(get, {'product': 1}, 'get')
+    assert error == str(e.value)
