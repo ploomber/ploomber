@@ -21,9 +21,6 @@ def write_sample_conf(tmp_directory, monkeypatch):
     full_path = (stats / DEFAULT_USER_CONF)
     full_path.write_text("stats_enabled: False")
 
-
-@pytest.fixture()
-def save_user_settings():
     configFile = Path('stats', 'config.yaml')
     file_exists = configFile.exists()
     if file_exists:
@@ -62,7 +59,7 @@ def get_tabular_pipeline(pipeline_id=None, verbose=None):
     return res.stdout
 
 
-def test_write_api_key(write_sample_conf, save_user_settings):
+def test_write_api_key(write_sample_confs):
     key_val = "TEST_KEY12345678987654"
     key_name = "cloud_key"
     full_path = (Path('stats') / DEFAULT_USER_CONF)
@@ -76,8 +73,7 @@ def test_write_api_key(write_sample_conf, save_user_settings):
     assert key_val in conf[key_name]
 
 
-def test_write_key_no_conf_file(tmp_directory, monkeypatch,
-                                save_user_settings):
+def test_write_key_no_conf_file(tmp_directory, monkeypatch):
     key_val = "TEST_KEY12345678987654"
     key_name = "cloud_key"
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')
@@ -94,7 +90,7 @@ def test_write_key_no_conf_file(tmp_directory, monkeypatch,
     assert key_val in conf[key_name]
 
 
-def test_overwrites_api_key(write_sample_conf, save_user_settings):
+def test_overwrites_api_key(write_sample_conf):
     key_val = "TEST_KEY12345678987654"
     key_name = "cloud_key"
     full_path = (Path('stats') / DEFAULT_USER_CONF)
@@ -111,15 +107,14 @@ def test_overwrites_api_key(write_sample_conf, save_user_settings):
 
 
 @pytest.mark.parametrize('arg', [None, '12345'])
-def test_api_key_well_formatted(write_sample_conf, arg, save_user_settings):
+def test_api_key_well_formatted(write_sample_conf, arg):
     with pytest.raises(BaseException) as excinfo:
         cloud.set_key(arg)
 
     assert 'The API key is malformed' in str(excinfo.value)
 
 
-def test_get_api_key(monkeypatch, write_sample_conf, capsys,
-                     save_user_settings):
+def test_get_api_key(monkeypatch, write_sample_conf, capsys):
     monkeypatch.delenv('PLOOMBER_CLOUD_KEY', raising=True)
 
     key_val = "TEST_KEY12345678987654"
@@ -131,7 +126,7 @@ def test_get_api_key(monkeypatch, write_sample_conf, capsys,
     assert key_val in result.stdout
 
 
-def test_get_api_key_from_env_var(monkeypatch, save_user_settings):
+def test_get_api_key_from_env_var(monkeypatch):
     key_val = 'TEST_KEY12345678987654'
     monkeypatch.setenv('PLOOMBER_CLOUD_KEY', key_val)
 
@@ -154,8 +149,7 @@ def test_get_no_key(monkeypatch, write_sample_conf, capsys):
     assert 'No cloud API key was found.\n' == result.stdout
 
 
-def test_two_keys_not_supported(monkeypatch, write_sample_conf, capsys,
-                                save_user_settings):
+def test_two_keys_not_supported(monkeypatch, write_sample_conf, capsys):
     monkeypatch.delenv('PLOOMBER_CLOUD_KEY', raising=True)
 
     key_val = "TEST_KEY12345678987654"
@@ -175,7 +169,7 @@ def test_two_keys_not_supported(monkeypatch, write_sample_conf, capsys,
     assert key2 in res.stdout
 
 
-def test_cloud_user_tracked(write_sample_conf, save_user_settings):
+def test_cloud_user_tracked(write_sample_conf):
     key_val = "TEST_KEY12345678987654"
     runner = CliRunner()
     runner.invoke(set_key, args=[key_val], catch_exceptions=False)
