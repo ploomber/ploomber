@@ -59,7 +59,7 @@ def get_tabular_pipeline(pipeline_id=None, verbose=None):
     return res.stdout
 
 
-def test_write_api_key(write_sample_confs):
+def test_write_api_key(write_sample_conf):
     key_val = "TEST_KEY12345678987654"
     key_name = "cloud_key"
     full_path = (Path('stats') / DEFAULT_USER_CONF)
