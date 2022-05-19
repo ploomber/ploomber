@@ -22,6 +22,8 @@ def get(products):
 
 def test_signature_check():
     error = ("You are passing products. Do you mean product?")
+
     with pytest.raises(TaskRenderError) as e:
         signature_check(get, {'product': 1}, 'get')
+        
     assert error == str(e.value)
