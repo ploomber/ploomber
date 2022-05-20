@@ -94,6 +94,21 @@ def _display_markdown(tw, path):
 
 class _ExamplesManager:
     """Listing and downloading examples
+
+    Parameters
+    ----------
+    home : str, default=None
+        Where to download examples. If None, it uses ~/.ploomber
+
+    branch : str, default=None
+        Branch to clone. If None, it uses 'master'
+
+    force : bool, default=False
+        If True, it forces to clone again, otherwise, it only clones every
+        24 hours
+
+    verbose : bool, default=True
+        Controls verbosity
     """
     def __init__(self, home=None, branch=None, force=False, verbose=True):
         self._home = Path(home or _home).expanduser()
