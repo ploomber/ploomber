@@ -402,8 +402,10 @@ def _init_task(data, meta, project_root, lazy_import, dag, task_defaults=None):
     if 'params' in task_dict:
         task_dict['params'] = resolve_resources(task_dict['params'],
                                                 relative_to=project_root)
-
-    init_params = {**task_defaults[class_], **task_dict}
+    if type(task_defaults) == dict:
+        init_params = {**task_defaults[class_], **task_dict}
+    else:
+        init_params = task_dict
 
     try:
         task = class_(source=source,
