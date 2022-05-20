@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 0.19.3dev
+* Adds onboarding command: `python -m ploomber.onboard`
+* Updating `pipeline.yaml` if `ploomnber nb --format {fmt}` command changes extensions (#755)
 
 ## 0.19.2 (2022-05-17)
 * Adds documentation for `pipeline.yaml` `meta` section
