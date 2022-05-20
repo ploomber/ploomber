@@ -17,35 +17,17 @@ Quickstart
     conda install ploomber -c conda-forge
 
 
-Run an example
-**************
+Learn Ploomber in 2 minutes
+***************************
 
 Download example:
 
 .. code-block:: console
 
-    ploomber examples -n templates/ml-basic -o ml-basic
-    cd ml-basic
+    pip install ploomber --upgrade
 
-Install the dependencies:
+    python -m ploomber.onboard
 
-.. code-block:: console
-
-    pip install -r requirements.txt
-
-
-Run it:
-
-.. code-block:: console
-
-    ploomber build
-
-
-You just ran a Ploomber pipeline! 🎉
-
-Check out the ``output`` folder, you'll see an HTML report with model results!
-
-Also, check out the ``pipeline.yaml``, which contains the pipeline declaration.
 
 What's next?
 ************

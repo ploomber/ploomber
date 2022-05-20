@@ -60,25 +60,13 @@ conda install ploomber -c conda-forge
 
 [![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster)
 
-**Run an example locally:**
+**or learn it locally in 2 minutes:**
 
 ```sh
-# ML pipeline example
-ploomber examples -n templates/ml-basic -o ml-basic
-cd ml-basic
+pip install ploomber --upgrade
 
-# install dependencies
-pip install -r requirements.txt
-
-# run pipeline
-ploomber build
+python -m ploomber.onboard
 ```
-
-You just ran a Ploomber pipeline! 🎉
-
-Check out the `output/nb.html` report with model results!
-
-The `pipeline.yaml` contains the pipeline declaration. Feel free to modify any of the tasks, then call `ploomber build` again to update the results (Note: if using VSCode or PyCharm, execute `ploomber nb -i` before editing the files).
 
 **What's next?**
 
