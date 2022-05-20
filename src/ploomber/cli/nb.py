@@ -13,7 +13,25 @@ from ploomber.sources.notebooksource import recursive_update
 from ploomber.exceptions import BaseException
 
 
-def _call_in_source(dag, method_name, message, kwargs=None):
+def _format(fmt, entry_point, dag, verbose=True):
+    return [
+        str(p) for p in _call_in_source(dag,
+                                        'format',
+                                        'Formatted notebooks',
+                                        dict(fmt=fmt, entry_point=entry_point),
+                                        verbose=verbose) if p is not None
+    ]
+
+
+def _inject_cell(dag):
+    _call_in_source(dag,
+                    'save_injected_cell',
+                    'Injected cell',
+                    dict(),
+                    verbose=False)
+
+
+def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
     """
     Execute method on each task.source in dag, passing kwargs
     """
@@ -31,7 +49,9 @@ def _call_in_source(dag, method_name, message, kwargs=None):
             files.append(str(task.source._path))
 
     files_ = '\n'.join((f'    {f}' for f in files))
-    click.echo(f'{message}:\n{files_}')
+
+    if verbose:
+        click.echo(f'{message}:\n{files_}')
 
     return results
 
@@ -303,25 +323,16 @@ def main():
     # options that need a valid DAG
 
     if args.format:
-        new_paths = [
-            str(p) for p in _call_in_source(
-                dag, 'format', 'Formatted notebooks',
-                dict(fmt=args.format, entry_point=args.entry_point))
-            if p is not None
-        ]
+        new_paths = _format(fmt=args.format,
+                            entry_point=args.entry_point,
+                            dag=dag)
 
         if len(new_paths):
             click.echo('Extension changed for the following '
                        f'tasks: {", ".join(new_paths)}.')
 
     if args.inject:
-        _call_in_source(
-            dag,
-            'save_injected_cell',
-            'Injected cell',
-            dict(),
-        )
-
+        _inject_cell(dag)
         click.secho(
             'Finished cell injection. Re-run this command if your '
             'pipeline.yaml changes.',
