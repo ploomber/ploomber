@@ -49,7 +49,7 @@ def _get_open_callable():
         open_binary = 'open'
 
     if shutil.which('xdg-open'):
-        open_binary = 'open'
+        open_binary = 'xdg-open'
 
     if open_binary:
         return _make_open_callable(open_binary)
