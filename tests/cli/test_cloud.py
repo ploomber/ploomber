@@ -460,6 +460,7 @@ def test_email_write_only_once(tmp_directory, monkeypatch):
     assert not input_mock.called
 
 
+@pytest.mark.skip(reason="moved email prompt to onboarding workflow")
 def test_email_call_on_examples(tmp_directory, monkeypatch):
     email_mock = Mock()
     monkeypatch.setattr(examples, '_email_input', email_mock)
@@ -467,6 +468,7 @@ def test_email_call_on_examples(tmp_directory, monkeypatch):
     email_mock.assert_called_once()
 
 
+@pytest.mark.skip(reason="moved email prompt to onboarding workflow")
 @pytest.mark.parametrize('user_email', ['email@ploomber.io', ''])
 def test_email_called_once(tmp_directory, monkeypatch, user_email):
     monkeypatch.setattr(telemetry, 'DEFAULT_HOME_DIR', '.')

@@ -19,7 +19,7 @@ import test_pkg
 from ploomber.clients import SQLAlchemyClient
 from ploomber import Env
 import pandas as pd
-from ploomber.cli import install, examples
+from ploomber.cli import install
 import posthog
 from unittest.mock import Mock, MagicMock
 
@@ -406,9 +406,3 @@ def tmp_imports(add_current_to_sys_path, no_sys_modules_cache):
     test execution upon exit
     """
     yield
-
-
-@pytest.fixture
-def _mock_email(monkeypatch):
-    examples_email_mock = Mock()
-    monkeypatch.setattr(examples, '_email_input', examples_email_mock)
