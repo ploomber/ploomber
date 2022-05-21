@@ -16,7 +16,6 @@ from ploomber.cli.io import command_endpoint
 from ploomber.table import Table
 from ploomber.telemetry import telemetry
 from ploomber.exceptions import BaseException
-from ploomber.cli.cloud import _email_input
 
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer
@@ -312,5 +311,3 @@ def main(name, force=False, branch=None, output=None):
         manager.list()
     else:
         manager.download(name=name, output=output)
-
-    _email_input()
