@@ -361,3 +361,4 @@ Where to go from here
 
 - :doc:`../user-guide/sql-templating` shows how to use jinja to write succinct SQL scripts
 - `Advanced SQL pipeline example <https://github.com/ploomber/projects/tree/master/templates/etl>`_
+- `BigQuery example <https://github.com/ploomber/projects/tree/master/templates/google-cloud>`_
