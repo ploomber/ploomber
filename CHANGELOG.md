@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.19.5dev
+
 ## 0.19.4 (2022-05-21)
 * Fixes error when running `python -m ploomber.onboard` on Linux
 * Moving email prompt to onboarding tutorial ([#800](https://github.com/ploomber/ploomber/issues/800))
