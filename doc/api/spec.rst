@@ -295,21 +295,60 @@ To learn more about the executors:
 ``clients``
 ***********
 
-These are the default Task or Product clients to use. It allows you to specify
-a single client for all Tasks/Products with a given class, instead of one per
-Task or Product. The most common use case is SQL database configuration.
+These are the default clients. It allows you to specify
+a single client for all Tasks/Products for a given class. The most common
+use case is SQL database configuration.
 
 Keys must be valid :py:mod:`ploomber.tasks` or :py:mod:`ploomber.products`
 names, values must be dotted paths to functions that return a
 :py:mod:`ploomber.clients` instance.
 
+Can be a string (call without arguments):
+
+.. code-block:: yaml
+    :class: text-editor
+    :name: task-client-string-yaml
+
+    clients:
+        # this assumes there is a clients.py with a get_client function
+        {some-class}: clients.get_client
+
+Or a dictionary (to call with arguments):
+
+.. code-block:: yaml
+    :class: text-editor
+    :name: task-client-dict-yaml
+
+    clients:
+        {some-class}:
+            # this assumes there is a clients.py with a get_client function
+            dotted_path: clients.get_client
+            kwarg_1: value_1
+            ...
+            kwarg_k: value_k
+
+
+For example, if you want to configure a client for dumping data from a database
+into a local file:
+
+
+.. code-block:: yaml
+    :class: text-editor
+    :name: task-client-string-yaml
+
+    clients:
+        # this assumes there is a clients.py with a get_client function
+        SQLDump: clients.get_db_client
+
 `Here's an example <https://github.com/ploomber/projects/tree/master/templates/spec-api-sql>`_
 that uses ``clients`` to configure Task and Product clients.
+
+`An example using BigQuery and Cloud Storage. <https://github.com/ploomber/projects/tree/master/templates/google-cloud>`_
 
 Other scenarios are :py:mod:`ploomber.products.File` clients, which Ploomber can use
 to backup pipeline results (say, for example, you run a job that trains
 several models and want to save output results. You can use
-:py:mod:`ploomber.clients.GCloudStorageClient` for that.
+:py:mod:`ploomber.clients.GCloudStorageClient` or :py:mod:`ploomber.clients.S3Client` for that.
 
 .. _on-render-finish-failure:
 

@@ -82,6 +82,24 @@ class GCloudStorageClient(AbstractStorageClient):
               product: output/report.html
 
 
+    Spec API (dag-level client, custom arguments):
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        clients:
+            # if your get function takes arguments, pass them like this
+            File:
+                dotted_path: clients.get
+                arg: value
+                ...
+
+        tasks:
+            - source: notebook.ipynb
+              product: output/report.html
+
+
     Spec API (product-level client):
 
     .. code-block:: yaml
@@ -133,6 +151,11 @@ class GCloudStorageClient(AbstractStorageClient):
     --------
     ploomber.clients.S3Client :
         Client for uploading products to Amazon S3
+
+
+    Notes
+    -----
+    `Complete example using the Spec API <https://github.com/ploomber/projects/tree/master/templates/google-cloud>`_ # noqa
     """
     @requires(['google.cloud.storage'],
               name='GCloudStorageClient',
