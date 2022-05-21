@@ -87,6 +87,24 @@ class S3Client(AbstractStorageClient):
               product: output/report.html
 
 
+    Spec API (dag-level client, custom arguments):
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        clients:
+            # if your get function takes arguments, pass them like this
+            File:
+                dotted_path: clients.get
+                arg: value
+                ...
+
+        tasks:
+            - source: notebook.ipynb
+              product: output/report.html
+
+
     Spec API (product-level client):
 
     .. code-block:: yaml
