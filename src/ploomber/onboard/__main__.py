@@ -16,6 +16,7 @@ from ploomber.spec import DAGSpec
 from ploomber.constants import TaskStatus
 from ploomber.cli.io import command_endpoint
 from ploomber.telemetry import telemetry
+from ploomber.cli.cloud import _email_input
 
 WINDOWS = platform.system() == 'Windows'
 
@@ -102,9 +103,9 @@ def main(payload):
         'data pipelines. Let me show you how!',
         prefix='')
 
-    # TODO: ask for email
+    _email_input()
 
-    EDITOR = click.prompt('What editor do you use?',
+    EDITOR = click.prompt('\nWhat editor do you use?',
                           type=click.Choice(['jupyter', 'other']),
                           default='other')
     FILENAME = 'fit.py' if EDITOR == 'other' else 'fit.ipynb'
