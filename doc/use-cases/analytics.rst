@@ -50,3 +50,5 @@ automatically convert the output for you.
 
 
 Check out our `this template <https://github.com/ploomber/projects/tree/master/templates/exploratory-analysis>`_ to get started.
+
+We also have a more sophisticated example that uses BigQuery and Cloud Storage, `click here <https://github.com/ploomber/projects/tree/master/templates/google-cloud>`_

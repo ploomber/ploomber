@@ -153,6 +153,7 @@ class DBAPIClient(Client):
     --------
     ploomber.clients.SQLAlchemyClient :
         A client to connect to a database using sqlalchemy as backend
+
     """
     def __init__(self, connect_fn, connect_kwargs, split_source=None):
         super().__init__()
