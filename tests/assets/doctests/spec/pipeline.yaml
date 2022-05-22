@@ -1,0 +1,7 @@
+tasks:
+  - source: tasks.get
+    product: output/get.parquet
+
+  - source: plot.py
+    product:
+        nb: output/plot.html

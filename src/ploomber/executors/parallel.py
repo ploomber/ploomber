@@ -83,6 +83,12 @@ class Parallel(Executor):
     -----
     If any task crashes, downstream tasks execution is aborted, building
     continues until no more tasks can be executed
+
+    See Also
+    --------
+    ploomber.executors.Serial :
+        Serial executor
+
     """
 
     # NOTE: Tasks should not create child processes

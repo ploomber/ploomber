@@ -27,6 +27,12 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
     color: white;
 }
 
+/* CSS to ignore selection of ">>>" and "..." in code snippets */ 
+
+.highlight .gp { 
+	user-select: none; 
+}
+
 .terminal-top {
     background: #e8e6e8;
     color: black;

@@ -255,9 +255,9 @@ def _email_input():
     # Validate that's the first email registration
     settings = UserSettings()
     if not settings.user_email:
-        email = _get_input(
-            "\nPlease add your email to get updates and support "
-            "(type enter to skip): \n")
+        email = _get_input("\nBefore we start, please add your email to get "
+                           "updates and support "
+                           "(press enter to skip): ")
         _email_validation(email)
 
 

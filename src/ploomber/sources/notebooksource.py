@@ -36,6 +36,7 @@ with warnings.catch_warnings():
     warnings.simplefilter('ignore', FutureWarning)
     from papermill.parameterize import parameterize_notebook
 
+import click
 import nbformat
 import jupytext
 from jupytext import cli as jupytext_cli
@@ -589,7 +590,7 @@ Go to: https://ploomber.io/s/params for more information
             jupytext.write(nb_clean, fp=path, fmt=fmt_)
 
     @requires_path
-    def format(self, fmt):
+    def format(self, fmt, entry_point):
         """Change source format
 
         Returns
@@ -604,8 +605,27 @@ Go to: https://ploomber.io/s/params for more information
         extension_changed = ext_file != ext_format
 
         if extension_changed:
-            path = self._path.with_suffix(ext_format)
-            Path(self._path).unlink()
+            if Path(entry_point).is_file():
+                path = self._path.with_suffix(ext_format)
+                Path(self._path).unlink()
+                modified_entry = Path(entry_point).read_text()
+                main_file = f'{self.name}{ext_file}'
+                if main_file in modified_entry:
+                    modified_entry = modified_entry.replace(
+                        main_file, f'{self.name}{ext_format}')
+                    Path(entry_point).write_text(modified_entry)
+                else:
+                    click.secho(
+                        f'{main_file} does not appear in entry-point'
+                        f'please edit manually\n',
+                        fg='yellow')
+                    path = self._path
+            else:
+                click.secho(
+                    "The entry-point is not a valid file, please"
+                    " update the pipeline file extensions manually\n",
+                    fg='yellow')
+                path = self._path
         else:
             path = self._path
 

@@ -28,7 +28,7 @@ suffix2taskclass = {
     '.r': tasks.NotebookRunner,
     '.ipynb': tasks.NotebookRunner,
     '.sql': tasks.SQLScript,
-    '.sh': tasks.ShellScript
+    '.sh': tasks.ShellScript,
 }
 
 

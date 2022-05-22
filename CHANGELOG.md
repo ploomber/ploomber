@@ -1,6 +1,22 @@
 # CHANGELOG
 
-## 0.19.2dev
+## 0.19.5dev
+
+## 0.19.4 (2022-05-21)
+* Fixes error when running `python -m ploomber.onboard` on Linux
+* Moving email prompt to onboarding tutorial ([#800](https://github.com/ploomber/ploomber/issues/800))
+
+## 0.19.3 (2022-05-20)
+* Adds onboarding command: `python -m ploomber.onboard`
+* Updating `pipeline.yaml` if `ploomnber nb --format {fmt}` command changes extensions ([#755](https://github.com/ploomber/ploomber/issues/755))
+
+## 0.19.2 (2022-05-17)
+* Adds documentation for `pipeline.yaml` `meta` section
+* Adds many inline examples
+* Improved docs for `pipeline.yaml` `grid`
+* `ploomber task` prints a confirmation message upon successful execution
+* `DAG.close_clients()` only calls `.close()` on each client once
+* Fixes `dag.plot()` error when dag needs rendering
 
 ## 0.19.1 (2022-05-14)
 * Fixes incompatibility with nbconvert 5 ([#741](https://github.com/ploomber/ploomber/issues/741))

@@ -1252,3 +1252,16 @@ def test_error_if_missing_pypgraphviz(monkeypatch, dag):
                 "Install with: pip install 'pygraphviz'" in str(excinfo.value))
         assert ("conda install pygraphviz -c conda-forge"
                 in str(excinfo.value))
+
+
+def test_close_clients_only_calls_close_once_per_client():
+    dag = DAG()
+
+    client = Mock()
+
+    dag.clients[SQLDump] = client
+    dag.clients[SQLScript] = client
+
+    dag.close_clients()
+
+    client.close.assert_called_once()
