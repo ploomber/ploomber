@@ -14,4 +14,4 @@ sphinx==4.0.2
 papermill
 jupytext
 ipywidgets
-sphinx-togglebutton
+sphinx-toolbox

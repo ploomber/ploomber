@@ -21,7 +21,7 @@ dependencies:
     - nbsphinx
 
     # for the toggle  button
-    - sphinx-togglebutton
+    - sphinx-toolbox
 
     # https://github.com/spatialaudio/nbsphinx/issues/584
     - sphinx==4.0.2
