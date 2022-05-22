@@ -10,149 +10,7 @@ Spec API (``pipeline.yaml``)
     The `projects repository <https://github.com/ploomber/projects>`_ contains several ``pipeline.yaml`` examples.
 
 
-This section describes how to specify pipelines using a ``pipeline.yaml``.
-
-Quick reference
----------------
-
-A typical ``pipeline.yaml`` looks like this:
-
-.. code-block:: yaml
-    :class: text-editor
-
-    tasks:
-        - source: functions.get_raw_data
-          product: output/raw.csv
-
-        - source: scripts/plot.py
-          product:
-            nb: output/plots.html
-            data: output/clean.csv
-
-For each task, ``source`` specifies the source code for the task, while
-``product`` says where to save the output (relative to the location of the
-``pipeline.yaml`` file).
-
-When your pipeline executes, Ploomber extracts ``upstream`` dependencies from
-the source code and passes corresponding values in ``product`` and
-``upstream`` variables.
-
-Schema
-------
-
-Under some situations, you might want to change the default configuration; a common scenario happens when using SQL scripts: you have to configure a client
-to connect to the database.
-
-The complete schema is shown below (with default values), most commonly used
-sections are shown first:
-
-.. code-block:: yaml
-    :class: text-editor
-    :name: pipeline-yaml
-
-    # (optional section)
-    meta:
-        # load task sources (.tasks[*].source) using a ploomber.SourceLoader
-        # See section below for details
-        source_loader:
-            # Example:
-            # Load sources from my_module...
-            module: my_module
-            # [optional] ...use this path inside my_module
-            path: path/to/sources/
-
-        # Include tasks defined in a different file (must be a list where each
-        # element is a valid Task. Useful for composing pipelines.
-        # See section below for details
-        import_tasks_from: /path/to/tasks.yaml
-
-        # Reload your pipeline every time you open a Jupyter notebook. May
-        # affect performance Jupyter's file loading performance if pipeline
-        # has many tasks
-        jupyter_hot_reload: True
-
-        # Show function tasks as notebooks in jupyter
-        jupyter_functions_as_notebooks: False
-
-        # Default product class key for a given task class. Names should
-        # match (case-sensitive) the names in the Python API. These are rarely
-        # changed, except for SQLScript, see the section below for details
-        product_default_class:
-            SQLScript: SQLRelation
-            SQLDump: File
-            NotebookRunner: File
-            ShellScript: File
-            PythonCallable: File
-
-        # Extract upstream dependencies from source code. If False, tasks
-        # must declare dependencies using the "upstream" key
-        extract_upstream: True
-
-        # Extract product from source code. If False, tasks must have a "product" key
-        extract_product: False
-
-        # Make paths in File products relative to their sources, otherwise
-        # they are relative to the pipeline.yaml parent folder
-        product_relative_to_source: False
-
-    # execute tasks serially or in parallel (defaults to "serial")
-    # for details, scroll down to the "executor" section
-    executor: serial # parallel, or dotted path
-
-    # DAG configuration (optional section)
-    config:
-        # For allowed keys and values see ploomber.DAGConfigurator
-        {config-key}: {config-value}
-
-    # DAG clients (optional section)
-    clients:
-        # Clients for connecting to databases
-        {task or product class name}: {dotted.path.to.function}
-        # Example (calls db.get_client without arguments)
-        SQLScript: db.get_client
-        # Call with arguments:
-        PostgresRelation:
-            dotted_path: db.get_client
-            some_keyword_arg: value
-
-    # DAG-level serializer/unserializer for Python functions (both optional)
-    # see section below for details
-    serializer: {dotted.path.to.serializer, optional}
-    unserializer: {dotted.path.to.unserializer}
-
-    # DAG-level hooks execute a function on certain events
-    # (see section below for more details)
-    on_render: {dotted.path.to.hook, optional}
-    # executes upon successful execution (all tasks succeed)
-    on_finish: {dotted.path.to.hook, optional}
-    # executes upon failure (at least one task failed)
-    on_failure: {dotted.path.to.hook, optional}
-
-    # (this section is required)
-    tasks:
-        - {task dictionary, see next section for full details}
-
-        # Example (notebook task)
-        - source: clean_data.py
-          # assuming meta.extract_product: False
-          # and meta.extract_upstream: True
-          product:
-            nb: output/clean_data.ipynb
-            data: output/clean.csv
-          # params for the task, see section below for details
-          params:
-            some_param: some_value
-
-            # resources is a special section, changes to the *contents* of
-            # the files listed here cause the task to execute again, see the
-            # corresponding section for details
-            resources_:
-                my_resource: file.json
-          # grid of params (can be a dictionary or a list), see the section
-          # below for details
-          grid:
-            some_param: some_value
-
+This section describes the ``pipeline.yaml`` schema.
 
 ``meta``
 --------
@@ -229,6 +87,8 @@ If False, tasks must declare dependencies using the ``upstream`` key:
 ``meta.extract_product``
 ************************
 
+Default:
+
 .. code-block:: yaml
     :class: text-editor
 
@@ -299,6 +159,12 @@ These are the default clients. It allows you to specify
 a single client for all Tasks/Products for a given class. The most common
 use case is SQL database configuration.
 
+Other scenarios are :py:mod:`ploomber.products.File` clients, which Ploomber can use
+to backup pipeline results (say, for example, you run a job that trains
+several models and want to save output results. You can use
+:py:mod:`ploomber.clients.GCloudStorageClient` or :py:mod:`ploomber.clients.S3Client` for that.
+
+
 Keys must be valid :py:mod:`ploomber.tasks` or :py:mod:`ploomber.products`
 names, values must be dotted paths to functions that return a
 :py:mod:`ploomber.clients` instance.
@@ -328,27 +194,52 @@ Or a dictionary (to call with arguments):
             kwarg_k: value_k
 
 
-For example, if you want to configure a client for dumping data from a database
-into a local file:
+**Example: Database dump**
+
+.. toggle::
+
+    .. literalinclude:: ../../../projects-ploomber/cookbook/sql-dump/pipeline.yaml
+        :class: text-editor
+        :language: yaml
 
 
-.. code-block:: yaml
-    :class: text-editor
-    :name: task-client-string-yaml
+    .. literalinclude:: ../../../projects-ploomber/cookbook/sql-dump/clients.py
+        :class: text-editor
+        :language: python
 
-    clients:
-        # this assumes there is a clients.py with a get_client function
-        SQLDump: clients.get_db_client
+    Download:
 
-`Here's an example <https://github.com/ploomber/projects/tree/master/templates/spec-api-sql>`_
-that uses ``clients`` to configure Task and Product clients.
+    .. code-block:: console
 
-`An example using BigQuery and Cloud Storage. <https://github.com/ploomber/projects/tree/master/templates/google-cloud>`_
+        ploomber examples -n cookbook/sql-dump -o sql-dump
 
-Other scenarios are :py:mod:`ploomber.products.File` clients, which Ploomber can use
-to backup pipeline results (say, for example, you run a job that trains
-several models and want to save output results. You can use
-:py:mod:`ploomber.clients.GCloudStorageClient` or :py:mod:`ploomber.clients.S3Client` for that.
+**Example: Upload files to the cloud**
+
+.. toggle::
+
+    .. literalinclude:: ../../../projects-ploomber/cookbook/file-client/pipeline.yaml
+        :class: text-editor
+        :language: yaml
+
+
+    .. literalinclude:: ../../../projects-ploomber/cookbook/file-client/clients.py
+        :class: text-editor
+        :language: python
+
+
+    Download:
+
+    .. code-block:: console
+
+        ploomber examples -n cookbook/file-client -o file-client
+
+**Full projects:**
+
+.. toggle::
+
+    * `SQL pipeline <https://github.com/ploomber/projects/tree/master/templates/spec-api-sql>`_
+    * `Example using BigQuery and Cloud Storage. <https://github.com/ploomber/projects/tree/master/templates/google-cloud>`_
+
 
 .. _on-render-finish-failure:
 
@@ -368,22 +259,8 @@ These are hooks that execute when specific events happen:
 3. ``on_failure``: executes upon failed pipeline run
 
 They all are optional and take a dotted path as an argument. For example,
-assume your ``hooks.py`` looks like this:
-
-.. code-block:: python
-    :class: text-editor
-
-    def on_render():
-        print('finished rendering!')
-
-    def on_finish():
-        print('finished executing!')
-
-    def on_failure():
-        print('error when executing!')
-
-
-Add those hooks to your ``pipeline.yaml`` like this:
+assume you have a ``hooks.py`` with function ``on_render``, ``on_finish``,
+and ``on_failure``. You can add them to your ``pipeline.yaml`` like this:
 
 .. code-block:: yaml
     :class: text-editor
@@ -404,37 +281,40 @@ If your hook takes arguments, you may call it like this:
         dotted_path: {dotted.path.to.hook}
         argument: value
 
-For example:
-
-.. code-block:: yaml
-    :class: text-editor
-
-    on_render:
-        dotted_path: hooks.on_render
-        # on_render function defined in hooks.py must take an argument named
-        # "some_param"
-        some_param: 42
-
 Calling with arguments is useful when you have :doc:`a parametrized pipeline <../user-guide/parametrized>`.
 
+If you need information from your DAG in your hook, you may
+request the ``dag`` (:class:`ploomber.DAG`) argument in any of the
+hooks. ``on_finish`` can also request a ``report`` argument, which constains a
+summary report of the pipeline's execution.
 
-If you need information from your DAG in your hook, you may request the ``dag`` argument:
-
-.. code-block:: python
-    :class: text-editor
-
-    def on_finish(dag):
-        print(f'finished executing a dag with {len(dag)} tasks!')
-
-
-``dag`` is an instance of :class:`ploomber.DAG`.
-
-``on_finish`` can also request a ``report`` argument, containing a summary
-report of the pipeline's execution. ``on_failure`` can request a ``traceback``
+``on_failure`` can request a ``traceback``
 argument which will have a dictionary, possible keys are ``build`` which
 has the build error traceback, and ``on_finish`` which includes the
 ``on_finish`` hook traceback, if any. For more information, see the DAG
 documentation :class:`ploomber.DAG`.
+
+
+**Example**
+
+.. toggle::
+
+    .. literalinclude:: ../../../projects-ploomber/cookbook/hooks/pipeline.yaml
+        :class: text-editor
+        :language: yaml
+        :lines: 1-6
+
+
+    .. literalinclude:: ../../../projects-ploomber/cookbook/hooks/hooks.py
+        :class: text-editor
+        :language: python
+        :lines: 6-25
+
+    Download:
+
+    .. code-block:: console
+
+        ploomber examples -n cookbook/hooks -o hooks
 
 
 .. _serializer-and-unserializer:
@@ -554,7 +434,7 @@ The above should print something like ``path/to/my_package/__init__.py``.
 Using the configuration above, it implies that source loader will load the file
 from ``path/to/my_package/my_sources/script.sql``.
 
-** Note:** this only applies to tasks whose ``source`` is a relative path. Dotted
+**Note:** this only applies to tasks whose ``source`` is a relative path. Dotted
 paths and absolute paths are not affected.
 
 For details, see :py:mod:`ploomber.SourceLoader`, which is the underlying Python
@@ -590,60 +470,25 @@ and want to save some typing, you can specify a ``pipeline.yaml`` like this:
 With such configuration, commands such as ``ploomber build`` will work.
 
 
-``task`` schema
----------------
+``task``
+--------
 
-.. code-block:: yaml
-    :class: text-editor
-    :name: task-schema-yaml
+``task`` schema.
 
 
-    # Task source code location, see section below for details
-    source: {path/to/source/file or dotted.path.to.function}
+.. tip::
 
-    # Task product. Required if meta.extract_product=False,
-    # see section below for details
-    product: {str or dict}
+    All other keys passed here are forwarded to the class constructor, so the
+    allowed values will depend on the task class. For example, if running a
+    notebook the task class is :class:`ploomber.tasks.NotebookRunner`, if it's
+    a function it'll be a :class:`ploomber.tasks.PythonCallable`, see the
+    documentation to learn what extra arguments they take.
 
-    # Task name. If missing, inferred from the task's source
-    name: {task name, optional}
+``tasks[*].name``
+*****************
 
-    # Function to execute when the task finishes successfully
-    on_finish: {dotted.path.to.function, optional}
-    # Function to execute when the task fails
-    on_failure: {dotted.path.to.function, optional}
-    # Function to execute after checking task declaration has no errors
-    on_render: {dotted.path.to.function, optional}
-
-    # Task parameters. See section below for details
-    params:
-        {key}: {value}
-
-    # Dotted path to a function that returns the task client.
-    # See section below for details.
-    client: {dotted.path.to.function, optional}
-
-    # Dotted path to a function that returns the product client.
-    # See section below for details.
-    product_client: {dotted.path.to.function, optional}
-
-    # Task class to use (any class from ploomber.tasks)
-    # You rarely have to set this, since it is inferred from "source".
-    # (e.g., NotebookRunner for .py and .ipynb files, SQLScript for .sql,
-    # PythonCallable for dotted paths)
-    class: {task class, optional}
-
-    # Product class (any class from ploomber.products)
-    # You rarely have to set this, since values from meta.product_default_class
-    # contain the typical cases
-    product_class: {str, optional}
-
-    # Dependencies for this task. Only required if meta.extract_upstream=True
-    upstream: {str or list, optional}
-
-    # All remaining values are passed to the task constructor as keyword
-    # arguments. See ploomber.tasks documentation for details
-
+The name of the task. The filename (without the extension) is used if not
+defined.
 
 ``tasks[*].source``
 *******************
@@ -856,22 +701,9 @@ specific task. There are three types of hooks:
 3. ``on_failure`` executes when a task errors during execution.
 
 They all are optional and take a dotted path as an argument. For example,
-assume your ``hooks.py`` looks like this:
-
-.. code-block:: python
-    :class: text-editor
-
-    def on_render():
-        print('finished rendering!')
-
-    def on_finish():
-        print('finished executing!')
-
-    def on_failure():
-        print('error when executing!')
-
-
-Add those hooks to a task in your ``pipeline.yaml`` like this:
+assume your ``hooks.py`` with functions ``on_render``, ``on_finish``, and
+``on_failure``. You can add those hooks to a task in your ``pipeline.yaml``
+like this:
 
 .. code-block:: yaml
     :class: text-editor
@@ -894,29 +726,7 @@ If your hook takes arguments, you may call it like this:
         dotted_path: {dotted.path.to.hook}
         argument: value
 
-For example, let's say your ``on_render`` hook looks like this:
-
-
-.. code-block:: python
-    :class: text-editor
-
-    def on_render(some_param):
-        print(f'some_param: {some_param}')
-
-
-You can pass a value from the ``pipeline.yaml`` file like this:
-
-.. code-block:: yaml
-    :class: text-editor
-
-    on_render:
-        dotted_path: hooks.on_render
-        # on_render function defined in hooks.py must take an argument named
-        # "some_param"
-        some_param: 42
-
 Calling with arguments is useful when you have :doc:`a parametrized pipeline <../user-guide/parametrized>`.
-
 
 If you need information from the task, you may add any of the following
 arguments to the hook:
@@ -939,6 +749,25 @@ For example, if you want to check the data quality of a function that cleans som
         # check that column "age" has no NAs
         assert not df.age.isna().sum()
 
+**Example**
+
+.. toggle::
+
+    .. literalinclude:: ../../../projects-ploomber/cookbook/hooks/pipeline.yaml
+        :class: text-editor
+        :language: yaml
+        :lines: 8-16
+
+    .. literalinclude:: ../../../projects-ploomber/cookbook/hooks/hooks.py
+        :class: text-editor
+        :language: python
+        :lines: 28-46
+
+    Download:
+
+    .. code-block:: console
+
+        ploomber examples -n cookbook/hooks -o hooks
 
 .. _tasks-params-resources:
 
@@ -1038,7 +867,23 @@ wildcard (e.g., ``train-model-*``).
 **Added in version 0.17.2**: You can use ``params`` and ``grid`` in the same task.
 Values in ``params`` are constant across the grid.
 
-:doc:`Click here <../cookbook/grid>` to see some sample code.
+
+**Example**
+
+.. toggle::
+
+    .. literalinclude:: ../../../projects-ploomber/cookbook/grid/pipeline.yaml
+        :class: text-editor
+        :language: yaml
+        :lines: 17-35
+
+    Download:
+
+    .. code-block:: console
+
+        ploomber examples -n cookbook/grid -o grid
+
+
 
 ``tasks[*].client``
 *******************
@@ -1077,8 +922,48 @@ It can be a string or a dictionary (API is the same as ``tasks[*].client``).
 
 More information on product clients: :doc:`../user-guide/faq_index`.
 
-Custom task parameters
-**********************
+
+``tasks[*].upstream``
+*********************
+
+Dependencies for this task. Only required if ``meta.extract_upstream=True``
+
+.. code-block:: yaml
+    :class: text-editor
+
+    tasks:
+        ...
+        upstream: {str or list}
+
+
+**Example:**
+
+.. code-block:: yaml
+    :class: text-editor
+
+    tasks:
+        source: scripts/my-script.py
+        product: output/report.html
+        upstream: [clean_data_a, clean_data_b]
+
+
+``tasks[*].class``
+*****************
+
+Task class to use (any class from ploomber.tasks). You rarely have to set
+this, since it is inferred from ``source``. For example,
+:class:`ploomber.tasks.NotebookRunner` for ``.py`` and ``.ipynb``
+files, :class:`ploomber.tasks.SQLScript` for ``.sql``, and
+:class:`ploomber.tasks.PythonCallable` for dotted paths.
+
+``tasks[*].product_class``
+**************************
+
+This takes any class name from :class:`ploomber.products`. You rarely have
+to set this, since values from ``meta.product_default_class`` contain the
+typical values.
+
+
 
 Parametrizing with ``env.yaml``
 -------------------------------
@@ -1154,7 +1039,6 @@ either by updating the ``env.yaml`` file or via the command line), if you want
 to define dynamic parameters, you can do so with the Python API,
 `check out this example <https://github.com/ploomber/projects/tree/master/cookbook/dynamic-params>`_ for an
 example.
-
 
 
 Setting parameters from the CLI
