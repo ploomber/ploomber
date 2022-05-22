@@ -59,7 +59,7 @@ $(document).ready(function () {
         }
         pre.innerHTML = "";
         processed_pre.map((code_span) => {
-            vdom.innerHTML = code_span + "<br>";
+            vdom.innerHTML = code_span + "\n";
             pre.innerHTML += vdom.outerHTML;
         });
     });
