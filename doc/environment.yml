@@ -20,6 +20,9 @@ dependencies:
     # for converting notebooks
     - nbsphinx
 
+    # for the toggle  button
+    - sphinx-togglebutton
+
     # https://github.com/spatialaudio/nbsphinx/issues/584
     - sphinx==4.0.2
 
