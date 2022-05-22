@@ -38,6 +38,59 @@ class SQLScript(ClientMixin, Task):
         dependencies along with any parameters declared here. The source
         code is converted to a jinja2.Template for passing parameters,
         refer to jinja2 documentation for details
+
+    Examples
+    --------
+
+    Spec API:
+
+    .. code-block:: yaml
+        :class: text-editor
+        :name: pipeline-yaml
+
+        clients:
+          SQLScript: clients.get
+          SQLiteRelation: clients.get
+
+        tasks:
+          - source: script.sql
+            product: [subset, table]
+
+    Python API (SQLite):
+
+    >>> import sqlite3
+    >>> import pandas as pd
+    >>> from ploomber import DAG
+    >>> from ploomber.products import SQLiteRelation
+    >>> from ploomber.tasks import SQLScript
+    >>> from ploomber.clients import DBAPIClient
+    >>> con_raw = sqlite3.connect(database='my_db.db')
+    >>> df = pd.DataFrame({'a': range(100), 'b': range(100)})
+    >>> _ = df.to_sql('numbers', con_raw, index=False)
+    >>> dag = DAG()
+    >>> client = DBAPIClient(sqlite3.connect, dict(database='my_db.db'),
+    ...                      split_source=';')
+    >>> dag.clients[SQLScript] = client
+    >>> dag.clients[SQLiteRelation] = client
+    >>> script = ('DROP TABLE IF EXISTS {{product}};'
+    ...           'CREATE TABLE {{product}} AS '
+    ...           'SELECT * FROM numbers LIMIT 3')
+    >>> _ = SQLScript(script, SQLiteRelation(('subset', 'table')),
+    ...               dag=dag, name='create-subset')
+    >>> _ = dag.build()
+    >>> df = pd.read_sql('SELECT * FROM subset', con_raw)
+    >>> con_raw.close()
+    >>> df.head(3)
+       a  b
+    0  0  0
+    1  1  1
+    2  2  2
+
+    See Also
+    --------
+    ploomber.clients.SQLDump :
+        A task to execute a ``SELECT`` statement and dump the output into
+        a file
     """
     PRODUCT_CLASSES_ALLOWED = (PostgresRelation, SQLiteRelation,
                                GenericSQLRelation, SQLRelation)
@@ -176,11 +229,8 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
 
     See Also
     --------
-    ploomber.clients.DBAPIClient :
-        A client to connect to a database
-
-    ploomber.clients.SQLAlchemyClient :
-        A client to connect to a database using sqlalchemy as backend
+    ploomber.clients.SQLScript :
+        A task to execute a SQL script and create a table/view as product
     """
     PRODUCT_CLASSES_ALLOWED = (File, GenericProduct)
 
@@ -393,8 +443,9 @@ class SQLUpload(ClientMixin, Task):
 
     to_sql_kwargs : dict, optional
         Keyword arguments passed to the pandas.DataFrame.to_sql function,
-        one useful parameter is "if_exists", which determines if the inserted
-        rows should replace the table or just be appended
+        one useful parameter is "if_exists", which determines if the
+        task should fail ("fail"), the relation should be replaced
+        ("replace") or rows appended ("append").
 
     Notes
     -----

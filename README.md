@@ -32,9 +32,7 @@
 
 
 Ploomber is the fastest way to build data pipelines ⚡️. Use your favorite editor (**[Jupyter](https://docs.ploomber.io/en/latest/user-guide/jupyter.html), [VSCode](https://docs.ploomber.io/en/latest/user-guide/editors.html), [PyCharm](https://docs.ploomber.io/en/latest/user-guide/editors.html)**) to develop interactively and deploy ☁️ without code changes (**[Kubernetes](https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html), [Airflow](https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html), [AWS Batch](https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html), and [SLURM](https://soopervisor.readthedocs.io/en/latest/tutorials/slurm.html)**). Do you have legacy notebooks? Refactor them into modular pipelines with a single command.
-<p align="center">
-    <a href="https://colab.research.google.com/github/ploomber/projects/blob/master/guides/first-pipeline/colab.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-</p>
+
 <p align="center">
   <a href="https://docs.ploomber.io/en/latest/get-started/quick-start.html"> <img src="_static/get-started.svg" alt="Get Started"> </a>
 </p>
@@ -62,25 +60,13 @@ conda install ploomber -c conda-forge
 
 [![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster)
 
-**Run an example locally:**
+**or learn it locally in 2 minutes:**
 
 ```sh
-# ML pipeline example
-ploomber examples -n templates/ml-basic -o ml-basic
-cd ml-basic
+pip install ploomber --upgrade
 
-# install dependencies
-pip install -r requirements.txt
-
-# run pipeline
-ploomber build
+python -m ploomber.onboard
 ```
-
-You just ran a Ploomber pipeline! 🎉
-
-Check out the `output/nb.html` report with model results!
-
-The `pipeline.yaml` contains the pipeline declaration. Feel free to modify any of the tasks, then call `ploomber build` again to update the results (Note: if using VSCode or PyCharm, execute `ploomber nb -i` before editing the files).
 
 **What's next?**
 

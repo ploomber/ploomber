@@ -16,7 +16,6 @@ from ploomber.cli.io import command_endpoint
 from ploomber.table import Table
 from ploomber.telemetry import telemetry
 from ploomber.exceptions import BaseException
-from ploomber.cli.cloud import _email_input
 
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer
@@ -95,14 +94,39 @@ def _display_markdown(tw, path):
 
 
 class _ExamplesManager:
-    """Class for managing examples data
+    """Listing and downloading examples
+
+    Parameters
+    ----------
+    home : str, default=None
+        Where to download examples. If None, it uses ~/.ploomber
+
+    branch : str, default=None
+        Branch to clone. If None, it uses 'master'
+
+    force : bool, default=False
+        If True, it forces to clone again, otherwise, it only clones every
+        24 hours
+
+    verbose : bool, default=True
+        Controls verbosity
     """
-    def __init__(self, home, branch=None):
-        self._home = Path(home).expanduser()
+    def __init__(self, home=None, branch=None, force=False, verbose=True):
+        self._home = Path(home or _home).expanduser()
         self._path_to_metadata = self._home / '.metadata'
         self._examples = self._home / 'projects'
         self._branch = branch or _DEFAULT_BRANCH
         self._explicit_branch = branch is not None
+        self._tw = TerminalWriter()
+        self._verbose = verbose
+
+        if not self.examples.exists() or self.outdated() or force:
+            if self._verbose and not self.examples.exists():
+                click.echo('Local copy does not exist...')
+            elif self._verbose and force:
+                click.echo('Forcing download...')
+
+            self.clone()
 
     @property
     def home(self):
@@ -236,7 +260,6 @@ class _ExamplesManager:
         tw.write('\nTo download: ploomber examples -n name -o path\n')
         tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n\n')
 
-
 @command_endpoint
 @telemetry.log_call('examples')
 def main(name, force=False, branch=None, output=None):
@@ -268,6 +291,10 @@ def main(name, force=False, branch=None, output=None):
             del row['idx']
             x.append(category)
 
+    def download(self, name, output):
+        selected = self.path_to(name)
+
+
         if not selected.exists():
             close_match = _suggest_command(name, x)
             raise BaseException(
@@ -280,7 +307,10 @@ def main(name, force=False, branch=None, output=None):
         else:
             output = output or name
 
-            tw.sep('=', f'Copying example {name} to {output}/', blue=True)
+            if self._verbose:
+                self._tw.sep('=',
+                             f'Copying example {name} to {output}/',
+                             blue=True)
 
             if Path(output).exists():
                 raise BaseException(
@@ -295,9 +325,24 @@ def main(name, force=False, branch=None, output=None):
             out_dir = output + ('\\'
                                 if platform.system() == 'Windows' else '/')
 
-            tw.write('Next steps:\n\n'
-                     f'$ cd {out_dir}'
-                     f'\n$ ploomber install')
-            tw.write(f'\n\nOpen {str(path_to_readme)} for details.\n',
-                     blue=True)
-    _email_input()
+            if self._verbose:
+                self._tw.write('Next steps:\n\n'
+                               f'$ cd {out_dir}'
+                               f'\n$ ploomber install')
+                self._tw.write(
+                    f'\n\nOpen {str(path_to_readme)} for details.\n',
+                    blue=True)
+
+
+@command_endpoint
+@telemetry.log_call('examples')
+def main(name, force=False, branch=None, output=None):
+    """
+    Entry point for examples
+    """
+    manager = _ExamplesManager(branch=branch, verbose=True, force=force)
+
+    if not name:
+        manager.list()
+    else:
+        manager.download(name=name, output=output)

@@ -20,7 +20,7 @@ from ploomber.exceptions import RenderError, SourceInitializationError
 
 @pytest.fixture
 def tmp_nbs_ipynb(tmp_nbs):
-    """Modigies the nbs example to have one task with ipynb format
+    """Modifies the nbs example to have one task with ipynb format
     """
     # modify the spec so it has one ipynb task
     with open('pipeline.yaml') as f:
@@ -684,18 +684,20 @@ def test_remove_injected_cell_in_paired_notebooks(tmp_nbs, prefix):
 
 
 def test_format(tmp_nbs):
-    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    pipeline = 'pipeline.yaml'
+    dag = DAGSpec(pipeline).to_dag().render()
 
     assert '# + tags=["parameters"]' in Path('load.py').read_text()
 
-    dag['load'].source.format(fmt='py:percent')
+    dag['load'].source.format(fmt='py:percent', entry_point=pipeline)
 
     assert '# %% tags=["parameters"]' in Path('load.py').read_text()
 
 
 def test_format_with_extension_change(tmp_nbs):
-    dag = DAGSpec('pipeline.yaml').to_dag().render()
-    dag['load'].source.format(fmt='ipynb')
+    pipeline = 'pipeline.yaml'
+    dag = DAGSpec(pipeline).to_dag().render()
+    dag['load'].source.format(fmt='ipynb', entry_point=pipeline)
 
     assert not Path('load.py').exists()
     assert jupytext.read('load.ipynb')

@@ -637,17 +637,27 @@ class DAG(AbstractDAG):
     def close_clients(self):
         """Close all clients (dag-level, task-level and product-level)
         """
+        # keep track of closed clients so we only call .close() once.
+        # For most clients, calling .close() multiple times does not throw
+        # any errors. However, when using google.cloud.bigquery.dbapi (and
+        # possible others), calling .close() many times will throw an error
+        closed = []
+
         for client in self.clients.values():
-            client.close()
+            if client not in closed:
+                client.close()
+                closed.append(client)
 
         for task_name in self._iter():
             task = self[task_name]
 
-            if task.client:
+            if task.client and task.client not in closed:
                 task.client.close()
+                closed.append(task.client)
 
-            if task.product.client:
+            if task.product.client and task.product.client not in closed:
                 task.product.client.close()
+                closed.append(task.product.client)
 
     def _run_on_failure(self, tb):
         if self.on_failure:
@@ -855,6 +865,9 @@ class DAG(AbstractDAG):
             raise ValueError("Expected backend to be: None, 'd3' "
                              f"or 'pygraphviz', but got: {backend!r}")
 
+        # FIXME: add tests for this
+        self.render()
+
         if plot.choose_backend(backend) == 'd3':
             if include_products:
                 raise ValueError("'include_products' is not supported "
@@ -869,9 +882,6 @@ class DAG(AbstractDAG):
                                      'expected a path with '
                                      f'extension .html, but got: {output!r}, '
                                      'please change the extension')
-
-            # FIXME: add tests for this
-            self.render()
 
             G = self._to_graph(fmt='d3', include_products=include_products)
 
