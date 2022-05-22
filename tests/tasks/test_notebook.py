@@ -489,18 +489,22 @@ Path(product['model']).touch()
 @pytest.mark.parametrize(
     'product, nb_product_key, nbconvert_exporter_name',
     [({
-        'nb_ipynb': File(Path('out.ipynb')),
-        'nb_html': File(Path('out.html')),
-        'nb_pdf': File(Path('out.pdf')),
+        'notebook': File(Path('out.ipynb')),
+        'report_html': File(Path('out.html')),
+        'report_pdf': File(Path('out.pdf')),
         'file': File(Path('another', 'data', 'file.txt')),
-    }, ['nb_ipynb', 'nb_html', 'nb_pdf'], {
-        'nb_pdf': 'webpdf'
+    }, ['notebook', 'report_html', 'report_pdf'], {
+        'report_pdf': 'webpdf'
     }),
      ({
          'nb_ipynb': File(Path('out.ipynb')),
          'nb_html': File(Path('out.html')),
          'file': File(Path('another', 'data', 'file.txt')),
      }, ['nb_ipynb', 'nb_html'], None),
+     ({
+         'report_html': File(Path('out.html')),
+         'file': File(Path('another', 'data', 'file.txt')),
+     }, ['report_html'], None),
      ({
          'nb': File(Path('out.ipynb')),
          'file': File(Path('another', 'data', 'file.txt')),
@@ -552,16 +556,9 @@ Path(product['file']).touch()
          'nb_pdf': 'webpdf'
      }, "Invalid nbconvert exporter"),
      ({
-         'nb_html': File(Path('out.html'))
-     }, ['nb_html'], None, "Missing mandatory ipynb key"),
-     ({
-         'nb_ipynb': File(Path('out.ipynb')),
-         'nb_doc': File(Path('out.docx'))
-     }, ['nb_ipynb', 'nb_docx'], None, "Invalid key \'nb_docx\' in product"),
-     ({
          'nb_ipynb': File(Path('out.ipynb'))
-     }, ['nb_ipynb', 'nb_pdf'], None, "Missing key \\\'nb_pdf\\\' in product")]
-)
+     }, ['nb_ipynb', 'report_pdf'
+         ], None, "Missing key \\\'report_pdf\\\' in product")])
 def test_multiple_nb_product_error(product, nb_product_key,
                                    nbconvert_exporter_name, expected_error):
     dag = DAG()

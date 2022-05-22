@@ -585,20 +585,7 @@ class NotebookRunner(NotebookMixin, Task):
                         f"should be present in nb_product_key")
 
     def _validate_nb_product_key(self):
-        if self.multiple_nb_params.get('ipynb_key') not in self.nb_product_key:
-            raise TaskInitializationError(
-                f"Missing mandatory ipynb key "
-                f"'{self.multiple_nb_params.get('ipynb_key')}' "
-                f"in product: {self.nb_product_key!r}. ")
-
         for key in self.nb_product_key:
-            if key not in self.multiple_nb_params.get('valid_keys'):
-                raise TaskInitializationError(
-                    f"Invalid key '{key}' in "
-                    f"product: {self.nb_product_key!r}. "
-                    f"Please select from : )"
-                    f"{self.multiple_nb_params.get('valid_keys')!r}.")
-
             if self.product.get(key) is None:
                 raise TaskInitializationError(
                     f"Missing key '{key}' in "
@@ -631,10 +618,6 @@ class NotebookRunner(NotebookMixin, Task):
         self.nb_product_key = nb_product_key
         self.local_execution = local_execution
         self.check_if_kernel_installed = check_if_kernel_installed
-        self.multiple_nb_params = {
-            'valid_keys': ['nb_ipynb', 'nb_html', 'nb_pdf'],
-            'ipynb_key': 'nb_ipynb'
-        }
 
         if 'cwd' in self.papermill_params and self.local_execution:
             raise KeyError('If local_execution is set to True, "cwd" should '
@@ -718,13 +701,9 @@ class NotebookRunner(NotebookMixin, Task):
             if isinstance(self.nb_product_key, str):
                 path_to_out = Path(str(self.product[self.nb_product_key]))
             else:
-                path_to_out = Path(
-                    str(self.product[self.multiple_nb_params.get(
-                        'ipynb_key')]))
                 for key in self.nb_product_key:
-                    if key != self.multiple_nb_params.get('ipynb_key'):
-                        multiple_nb_products.append(
-                            Path(str(self.product[key])))
+                    multiple_nb_products.append(Path(str(self.product[key])))
+                path_to_out = multiple_nb_products[0]
 
         else:
             path_to_out = Path(str(self.product))
@@ -764,7 +743,8 @@ class NotebookRunner(NotebookMixin, Task):
             path_to_out.unlink()
 
         for product in multiple_nb_products:
-            shutil.copyfile(path_to_out_ipynb, product)
+            if path_to_out_ipynb != product:
+                shutil.copyfile(path_to_out_ipynb, product)
 
         path_to_out_ipynb.rename(path_to_out)
 
