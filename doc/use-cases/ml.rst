@@ -56,6 +56,15 @@ Machine Learning experiments.
         ploomber examples -n cookbook/grid -o grid
 
 
+.. collapse:: Example: Model selection with nested cross-validation
+
+
+    .. code-block:: console
+
+        pip install ploomber
+        ploomber examples -n cookbook/nested-cv -o nested-cv
+
+
 Large-scale model training
 **************************
 

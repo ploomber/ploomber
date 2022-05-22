@@ -882,6 +882,20 @@ wildcard (e.g., ``train-model-*``).
         ploomber examples -n cookbook/grid -o grid
 
 
+.. collapse:: Example: Model selection with nested cross-validation
+
+
+    .. literalinclude:: ../../../projects-ploomber/cookbook/nested-cv/pipeline.yaml
+        :class: text-editor
+        :language: yaml
+
+    Download:
+
+    .. code-block:: console
+
+        pip install ploomber
+        ploomber examples -n cookbook/nested-cv -o nested-cv
+
 .. collapse:: Changelog
 
     .. versionadded:: 0.17.2
