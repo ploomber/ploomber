@@ -22,6 +22,8 @@ from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer
 from pygments import highlight
 
+from ploomber_cli.cli import _suggest_command
+
 _URL = 'https://github.com/ploomber/projects'
 _DEFAULT_BRANCH = 'master'
 _home = Path('~', '.ploomber')
@@ -256,10 +258,45 @@ def main(name, force=False, branch=None, output=None):
         manager.list()
     else:
         selected = manager.path_to(name)
+        examples = [
+            "cookbook/dynamic-params",
+            "cookbook/file-client",
+            "cookbook/grid",
+            "cookbook/nested-cv",
+            "cookbook/python-load",
+            "cookbook/report-generation",
+            "cookbook/serialization",
+            "cookbook/sql-dump",
+            "cookbook/variable-number-of-products",
+            "guides/cron",
+            "guides/debugging",
+            "guides/first-pipeline",
+            "guides/logging",
+            "guides/monitoring",
+            "guides/parametrized",
+            "guides/refactor",
+            "guides/serialization",
+            "guides/sql-templating",
+            "guides/testing",
+            "guides/versioning",
+            "templates/etl",
+            "templates/exploratory-analysis",
+            "templates/ml-advanced",
+            "templates/ml-basic",
+            "templates/ml-intermediate",
+            "templates/ml-online",
+            "templates/mlflow",
+            "templates/python-api",
+            "templates/shell",
+            "templates/spec-api-directory",
+            "templates/spec-api-r",
+            "templates/spec-api-sql"
+        ]
 
         if not selected.exists():
+            close_match = _suggest_command(name, examples)
             raise BaseException(
-                f'There is no example named {name!r}.\n'
+                f'There is no example named {name!r}, did you mean "{close_match}"\n'
                 'List examples: ploomber examples\n'
                 'Update local copy: ploomber examples -f\n'
                 'Get ML example: ploomber examples -n '
