@@ -22,6 +22,8 @@ from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer
 from pygments import highlight
 
+from ploomber_cli.cli import _suggest_command
+
 _URL = 'https://github.com/ploomber/projects'
 _DEFAULT_BRANCH = 'master'
 _home = Path('~', '.ploomber')
@@ -255,11 +257,21 @@ def main(name, force=False, branch=None, output=None):
     if not name:
         manager.list()
     else:
+        with open(manager.examples / '_index.csv',
+                  newline='',
+                  encoding='utf-8-sig') as f:
+            rows = list(csv.DictReader(f))
         selected = manager.path_to(name)
+        x = []
+        for row in rows:
+            category = row.pop('name')
+            del row['idx']
+            x.append(category)
 
         if not selected.exists():
+            close_match = _suggest_command(name, x)
             raise BaseException(
-                f'There is no example named {name!r}.\n'
+                f'There is no example named {name!r}. Did you mean "{close_match}"?\n'
                 'List examples: ploomber examples\n'
                 'Update local copy: ploomber examples -f\n'
                 'Get ML example: ploomber examples -n '
