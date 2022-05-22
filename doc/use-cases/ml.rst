@@ -28,18 +28,33 @@ having to re-compute everything from scratch.
 Experiment tracking
 *******************
 
-Ploomber also plays nicely with experiment
-trackers, `here's an example <https://github.com/ploomber/projects/tree/master/templates/mlflow>`_
-showing how to integrate Ploomber with MLflow.
+Ploomber also plays nicely with experiment trackers, allowing you to train
+hundreds of models and track the results.
+
+.. collapse:: Example: Integration with MLflow
+
+    `Instructions <https://github.com/ploomber/projects/tree/master/templates/mlflow>`_
+
+    .. code-block:: console
+
+        pip install ploomber
+        ploomber examples -n templates/mlflow -o ploomber-mlflow
+
 
 Parallel experiments
 ********************
 
 To help you find the best performing model, Ploomber allows you to parallelize
-Machine Learning experiments. If you're using the Spec API (``pipeline.yaml``),
-you can use the :doc:`grid feature  <../cookbook/grid>` to create many tasks
-at once with different parameters. If you're using the Python API, you can
-easily create highly customized grids of tasks.
+Machine Learning experiments.
+
+.. collapse:: Example: Running a grid of experiments in parallel
+
+
+    .. code-block:: console
+
+        pip install ploomber
+        ploomber examples -n cookbook/grid -o grid
+
 
 Large-scale model training
 **************************

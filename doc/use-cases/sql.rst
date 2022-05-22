@@ -14,18 +14,31 @@ Ploomber manages connections to the database and orchestrates execution for you.
     </div>
 
 
-Feature engineering with SQL
+Process with SQL and Python
 ****************************
 
-With modern data-warehouses such as Snowflake, using SQL for feature engineering
+With data warehouses such as Snowflake, using SQL for transforming data
 can significantly simplify the development process since the warehouse takes care of
 scaling your code.
 
-You can use Ploomber and SQL to iterate on your feature engineering code
-quickly, then download the features to train a model using Python.
+You can use Ploomber and SQL to process large datasets
+quickly, then download the data to continue your analysis with Python for
+plotting or training a Machine Learning model
 
-`Here's an example <https://github.com/ploomber/projects/tree/master/templates/spec-api-sql>`_ that applies
-transformations in a database, dumps a table to a local file, and then processes it using Python.
+.. collapse:: Example: BigQuery and Cloud Storage pipeline
+
+    .. code-block:: console
+
+        pip install ploomber
+        ploomber examples -n templates/google-cloud -o google-cloud
+
+.. collapse:: Example: SQL pipeline (transform with SQL, and plot with Python)
+
+    .. code-block:: console
+
+        pip install ploomber
+        ploomber examples -n templates/spec-api-sql -o spec-api-sql
+
 
 Uploading batch predictions to a database
 *****************************************
@@ -36,4 +49,12 @@ database table, you can implement this with Ploomber.
 ETL
 ***
 
-Ploomber allows you to easily write SQL pipelines. `Here's an ETL example <https://github.com/ploomber/projects/tree/master/templates/etl>`_.
+Ploomber allows you to write ETL SQL pipelines.
+
+.. collapse:: Example: ETL pipeline
+
+    .. code-block:: console
+
+        pip install ploomber
+        ploomber examples -n templates/etl -o etl
+

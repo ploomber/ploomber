@@ -29,15 +29,19 @@ Ploomber will only execute the code that has changed since your last run.
 Run (and organize) more experiments
 ***********************************
 
-Ploomber allows you to run many experiments efficiently.
+Ploomber allows you to run many experiments in parallel.
 You can :doc:`parametrize pipelines <../user-guide/parametrized>` to run the
 same code with different configurations.
 
 Furthermore, you can quickly generate all the parameter combinations from a
-:doc:`grid <../cookbook/grid>`.
+:doc:`grid <../cookbook/grid>`. If one machine isn't enough, :doc:`export to systems <../deployment/large-scale-training>` like Kubernetes or SLURM easily.
 
-You can execute independent tasks in :class:`parallel <ploomber.executors.Parallel>` with no extra configuration to
-accelerate your research. If one machine isn't enough, :doc:`export to systems <../deployment/large-scale-training>` like Kubernetes or SLURM easily.
+.. collapse:: Example: Running a grid of experiments in parallel
+
+    .. code-block:: console
+
+        pip install ploomber
+        ploomber examples -n cookbook/grid -o grid
 
 Ensure reproducibility
 **********************

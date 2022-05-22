@@ -15,6 +15,22 @@ reports.
     </div>
 
 
+.. collapse:: Example: BigQuery and Cloud Storage pipeline
+
+    .. code-block:: console
+
+        pip install ploomber
+        ploomber examples -n templates/google-cloud -o google-cloud
+
+
+.. collapse:: Example: Exploratory data analysis pipeline
+
+    .. code-block:: console
+
+        pip install ploomber
+        ploomber examples -n templates/exploratory-analysis -o exploratory-analysis
+
+
 Modularize your project
 ***********************
 
@@ -47,8 +63,3 @@ automatically convert the output for you.
         # execute your .py file and generate an .html version of it
         # all tables and charts are included
         product: output/report.html
-
-
-Check out our `this template <https://github.com/ploomber/projects/tree/master/templates/exploratory-analysis>`_ to get started.
-
-We also have a more sophisticated example that uses BigQuery and Cloud Storage, `click here <https://github.com/ploomber/projects/tree/master/templates/google-cloud>`_
