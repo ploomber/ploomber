@@ -567,8 +567,6 @@ class NotebookRunner(NotebookMixin, Task):
     """
     PRODUCT_CLASSES_ALLOWED = (File, )
 
-    VALID_EXTENSION = ['.md', '.html', '.tex', '.pdf', '.rst', '.ipynb']
-
     def _validate_nbconvert_exporter(self):
         if isinstance(self.nb_product_key, list) and isinstance(
                 self.nbconvert_exporter_name, str):
@@ -606,7 +604,8 @@ class NotebookRunner(NotebookMixin, Task):
         for key, path in self.product.to_json_serializable().items():
             if _safe_suffix(
                     path
-            ) in self.VALID_EXTENSION and key not in self.nb_product_key:
+            ) in ['.md', '.html', '.tex', '.pdf', '.rst', '.ipynb'] \
+                    and key not in self.nb_product_key:
                 raise TaskInitializationError(
                     f"Missing key '{key}' in "
                     f"nb_product_key: {self.nb_product_key!r}. "
