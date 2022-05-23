@@ -545,6 +545,10 @@ Path(product['file']).touch()
     }, ['nb_ipynb', 'nb_html'
         ], 'webpdf', "When specifying nb_product_key as a list"),
      ({
+         'nb_ipynb': File(Path('out.ipynb')),
+         'nb_html': File(Path('out.html')),
+     }, ['nb_html'], None, "Missing key \\\'nb_ipynb\\\' in nb_product_key:"),
+     ({
          'nb': File(Path('out.ipynb'))
      }, 'nb', {
          'nb_pdf': 'webpdf'

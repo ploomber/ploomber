@@ -112,6 +112,13 @@ def _check_exporter(exporter, path_to_output):
                 'and try again')
 
 
+def _safe_suffix(product):
+    try:
+        return Path(product).suffix
+    except Exception:
+        return None
+
+
 class NotebookConverter:
     """
     Thin wrapper around nbconvert to provide a simple API to convert .ipynb
@@ -560,6 +567,8 @@ class NotebookRunner(NotebookMixin, Task):
     """
     PRODUCT_CLASSES_ALLOWED = (File, )
 
+    VALID_EXTENSION = ['.md', '.html', '.tex', '.pdf', '.rst', '.ipynb']
+
     def _validate_nbconvert_exporter(self):
         if isinstance(self.nb_product_key, list) and isinstance(
                 self.nbconvert_exporter_name, str):
@@ -593,6 +602,17 @@ class NotebookRunner(NotebookMixin, Task):
                     f"All keys specified in "
                     f"{self.nb_product_key!r} must contain the "
                     f"corresponding product path.")
+
+        for key, path in self.product.to_json_serializable().items():
+            if _safe_suffix(
+                    path
+            ) in self.VALID_EXTENSION and key not in self.nb_product_key:
+                raise TaskInitializationError(
+                    f"Missing key '{key}' in "
+                    f"nb_product_key: {self.nb_product_key!r}. "
+                    f"All notebook product keys specified in "
+                    f"{(str(self.product))!r} must be specified "
+                    f"in nb_product_key as well.")
 
     @requires(['jupyter', 'papermill', 'jupytext'], 'NotebookRunner')
     def __init__(self,
