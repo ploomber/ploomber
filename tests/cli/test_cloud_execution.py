@@ -42,7 +42,7 @@ def test_cloud_status(runid):
     assert 'name' in result.output
     assert 'runid' in result.output
     assert 'status' in result.output
-    assert len(result.output.splitlines()) == 16
+    assert len(result.output.splitlines()) == 17
     assert result.exit_code == 0
 
 
