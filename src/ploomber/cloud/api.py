@@ -91,7 +91,6 @@ def download_from_presigned(presigned):
 
 
 def auth_header(func):
-
     @wraps(func)
     def wrapper(*args, **kwargs):
         api_key = get_key()
@@ -170,6 +169,7 @@ def run_detail_print(run_id):
     out = run_detail(run_id)
     tasks = out['tasks']
     run = out['run']
+    
     if run['status'] == 'created':
         click.echo('Run created...')
     elif tasks:

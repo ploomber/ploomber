@@ -26,6 +26,7 @@ def test_cloud_build():
 def test_cloud_list():
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'list'], catch_exceptions=False)
+    
     assert 'created_at' in result.output
     assert 'runid' in result.output
     assert 'status' in result.output
