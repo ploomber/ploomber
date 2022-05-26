@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from ploomber_cli.cli import cli
+from ploomber_cli.cli import cli, write_pipeline
 
 
 @pytest.fixture
@@ -26,9 +26,6 @@ def test_cloud_build():
 def test_cloud_list():
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'list'], catch_exceptions=False)
-    print('+++++++++++')
-    print(result.output)
-    print('+++++++++++')
     assert 'created_at' in result.output
     assert 'runid' in result.output
     assert 'status' in result.output
@@ -48,28 +45,26 @@ def test_cloud_status(runid):
     assert result.exit_code == 0
 
 
-def test_cloud_status_finish_no_task_run(runid):
+def test_cloud_status_finish_with_no_task_run(monkeypatch, runid):
+    class MockResponse:
+        exit_code = 0
+        @staticmethod
+        def output():
+            return f'Pipeline finished... \n\
+                Pipeline finished due to no newly triggered tasks, try build with --force'
+
+    def mock_status(*args, **kwargs):
+        return MockResponse()
+    
+    monkeypatch.setattr(CliRunner, 'invoke', mock_status)
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'status', runid])
-    print('++++++++++++++++')
-    print(result.output)
-    print('++++++++++++++++')
-    assert 'taskid' in result.output
-    assert 'name' in result.output
-    assert 'runid' in result.output
-    assert 'status' in result.output
-    assert len(result.output.splitlines()) == 10
-    assert result.exit_code == 0
 
-    result = runner.invoke(cli, ['cloud', 'status', runid])
-    print('++++++++++++++++')
-    print(result.output)
-    print('++++++++++++++++')
-    assert 'taskid' not in result.output
-    assert 'name' not in result.output
-    assert 'Pipeline finished' in result.output
-    assert '--force' in result.output
-    assert len(result.output.splitlines()) == 2
+    assert 'taskid' not in result.output()
+    assert 'name' not in result.output()
+    assert 'Pipeline finished' in result.output()
+    assert '--force' in result.output()
+    assert len(result.output().splitlines()) == 2
     assert result.exit_code == 0
 
 

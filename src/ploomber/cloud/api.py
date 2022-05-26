@@ -169,13 +169,15 @@ def run_detail_print(run_id):
     out = run_detail(run_id)
     tasks = out['tasks']
     run = out['run']
-
     if run['status'] == 'created':
         click.echo('Run created...')
     elif tasks:
         click.echo(Table.from_dicts(tasks))
     else:
-        click.echo('Pipeline up-to-date, no tasks scheduled for this run.')
+        if run['status'] == 'finished':
+            click.echo('Pipeline finished...')
+        if not tasks:
+            click.echo('Pipeline finished due to no newly triggered tasks, try build with --force')
 
     return out
 
