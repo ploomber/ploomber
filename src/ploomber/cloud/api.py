@@ -91,6 +91,7 @@ def download_from_presigned(presigned):
 
 
 def auth_header(func):
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         api_key = get_key()
@@ -177,7 +178,8 @@ def run_detail_print(run_id):
         if run['status'] == 'finished':
             click.echo('Pipeline finished...')
         if not tasks:
-            click.echo('Pipeline finished due to no newly triggered tasks, try build with --force')
+            click.echo('Pipeline finished due to no newly triggered tasks, \
+                try build with --force')
 
     return out
 

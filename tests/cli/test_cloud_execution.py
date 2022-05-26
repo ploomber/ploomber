@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from ploomber_cli.cli import cli, write_pipeline
+from ploomber_cli.cli import cli
 
 
 @pytest.fixture
@@ -46,16 +46,19 @@ def test_cloud_status(runid):
 
 
 def test_cloud_status_finish_with_no_task_run(monkeypatch, runid):
+
     class MockResponse:
         exit_code = 0
+
         @staticmethod
         def output():
-            return f'Pipeline finished... \n\
-                Pipeline finished due to no newly triggered tasks, try build with --force'
+            return 'Pipeline finished... \n\
+                Pipeline finished due to no newly triggered tasks, \
+                    try build with --force'
 
     def mock_status(*args, **kwargs):
         return MockResponse()
-    
+
     monkeypatch.setattr(CliRunner, 'invoke', mock_status)
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'status', runid])
