@@ -3,11 +3,13 @@ from pathlib import Path
 import pytest
 
 from ploomber.spec.taskspec import TaskSpec, task_class_from_source_str
-from ploomber.spec.dagspec import Meta
+from ploomber.spec.dagspec import DAGSpec, Meta
 from ploomber.tasks import (NotebookRunner, SQLScript, SQLDump, ShellScript,
                             PythonCallable)
 from ploomber.exceptions import DAGSpecInitializationError, ValidationError
 from ploomber import DAG
+from conftest import git_init
+import yaml
 
 
 @pytest.mark.parametrize('source_str, expected', [
@@ -596,3 +598,27 @@ def test_constructor_deep_copies_spec_and_meta(tmp_directory, tmp_imports):
     assert meta is not task_spec.meta
     assert params is not task_spec.data['params']
     assert prod_default_class is not task_spec.meta['product_default_class']
+
+def test_task_default_parameters(tmp_directory, tmp_imports):
+    Path('script.py').write_text("""
+# %% tags=["parameters"]
+upstream = None
+product = None
+
+# %%
+1 + 1
+""")
+    spec = DAGSpec({
+        'task_defaults': {
+            'NotebookRunner': {
+                'check_if_kernel_installed': False
+            }
+        },
+        'tasks': [{
+            'source': 'script.py',
+            'product': 'report.html'
+        }]
+    })
+
+    dag = spec.to_dag()
+    assert dag['script'].check_if_kernal_installed is False
