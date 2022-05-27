@@ -65,6 +65,19 @@ jobs:
           echo "skipping pygraphviz installation"
         fi
 
+        if [ $VERSION!=10 ]; then
+          echo "inside"
+        else
+          echo "skipping"
+        fi
+
+        if [ $VERSION -ne 10 ]; then
+          echo "inside2"
+        else
+          echo "skipping2"
+        fi
+
+
         # seems like pygraphviz just doesnt work on windows
         # https://github.com/pygraphviz/pygraphviz/issues/40
         # pip install pygraphviz
