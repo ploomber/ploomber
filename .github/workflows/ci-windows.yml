@@ -58,6 +58,7 @@ jobs:
         # To support python 3.10, installing only for other versions.
         VERSION=$(python -c 'import sys; print(".".join(map(str, sys.version_info[1:2])))')
         if [ $VERSION!="10" ]; then
+          echo version:  $VERSION
           echo "installing pygraphviz"
           # conda install -y -c alubbock pygraphviz
         else
