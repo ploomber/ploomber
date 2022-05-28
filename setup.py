@@ -65,7 +65,7 @@ TESTING = [
     # plotting. strictly speaking pygrapviz is an optional dependency but we
     # don't add it as such because it's gonna break installation for most
     # setups, since we don't expect users to have graphviz installed
-    'pygraphviz',
+    'pygraphviz; platform_system != "Windows"',
     # RemoteShellClient
     'paramiko',
     # Upload to S3
