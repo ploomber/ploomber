@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.19.5dev
+* Adds support for choosing environment in `cloud.yaml`
 
 ## 0.19.4 (2022-05-21)
 * Fixes error when running `python -m ploomber.onboard` on Linux
