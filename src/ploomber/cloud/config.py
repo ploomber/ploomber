@@ -15,6 +15,7 @@ class TaskResource(BaseModel):
 
 
 class CloudConfig(BaseModel):
+    environment: str = None
     task_resources: Mapping[str, TaskResource] = None
 
     class Config:
