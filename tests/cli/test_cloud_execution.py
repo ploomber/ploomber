@@ -18,6 +18,7 @@ def runid():
 def taskid():
     return '3827ee34-7048-44d2-9507-79544d0f0e43'
 
+
 # Not implemented
 def test_cloud_build():
     pass
