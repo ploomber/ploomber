@@ -11,7 +11,7 @@ from ploomber_cli.cli import cli
 
 @pytest.fixture
 def runid():
-    return '1e8224b0-07e9-4c29-bb81-393817926c12'
+    return 'afabd29e-2622-4349-a398-c330f39e9a95'
 
 
 @pytest.fixture
