@@ -163,7 +163,7 @@ def test_plot_embed(dag, monkeypatch_plot):
     assert img is image_out
     mock_to_agraph.draw.assert_called_once()
 
-
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="requires < python3.9")
 def test_plot_include_products(dag, monkeypatch):
     mock = Mock(wraps=dag._to_graph)
     monkeypatch.setattr(DAG, '_to_graph', mock)
