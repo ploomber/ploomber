@@ -266,6 +266,24 @@ def test_path_to_env_error_if_dir(tmp_directory):
     assert str(excinfo.value) == expected
 
 
+def test_find_env_yml(tmp_directory):
+    Path('dir').mkdir()
+    Path('dir', 'env.yml').touch()
+
+    assert default.try_to_find_env_yml('dir/pipeline.yaml') == str(
+        Path('dir', 'env.yml').resolve())
+
+
+def test_find_env_yml_with_name(tmp_directory):
+    Path('env.train.yml').touch()
+    Path('dir').mkdir()
+    Path('dir', 'pipeline.train.yaml').touch()
+
+    assert default.try_to_find_env_yml(
+        Path('dir',
+             'pipeline.train.yaml')) == str(Path('env.train.yml').resolve())
+
+
 def test_finds_pipeline_yaml(tmp_directory):
     expected = Path(tmp_directory).resolve()
     pip = Path('pipeline.yaml').resolve()
