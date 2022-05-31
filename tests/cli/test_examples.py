@@ -346,8 +346,6 @@ def test_did_you_mean_feature():
     result = runner.invoke(cli.cli,
                            ['examples', '--name', "report-generation"])
 
-    # print("this is a test")
-    # print(result.output)
     assert "did you mean \"cookbook/report-generation\"" in result.output
 
 
