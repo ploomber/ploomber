@@ -339,6 +339,18 @@ def test_error_if_git_clone_fails(monkeypatch, capsys):
         "(Error message: 'message')\n")
 
 
+def test_did_you_mean_feature():
+    examples.main(name=None, force=True)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.cli,
+                           ['examples', '--name', "report-generation"])
+
+    # print("this is a test")
+    # print(result.output)
+    assert "did you mean \"cookbook/report-generation\"" in result.output
+
+
 @pytest.mark.parametrize('md, expected', [
     ['', None],
     ['<!-- start header -->\n', None],

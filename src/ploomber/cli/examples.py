@@ -20,6 +20,7 @@ from ploomber.exceptions import BaseException
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer
 from pygments import highlight
+from ploomber_cli.cli import _suggest_command
 
 _URL = 'https://github.com/ploomber/projects'
 _DEFAULT_BRANCH = 'master'
@@ -109,6 +110,7 @@ class _ExamplesManager:
     verbose : bool, default=True
         Controls verbosity
     """
+
     def __init__(self, home=None, branch=None, force=False, verbose=True):
         self._home = Path(home or _home).expanduser()
         self._path_to_metadata = self._home / '.metadata'
@@ -263,7 +265,7 @@ class _ExamplesManager:
 
         if not selected.exists():
             raise BaseException(
-                f'There is no example named {name!r}.\n'
+                f'There is no example named {name!r}\n'
                 'List examples: ploomber examples\n'
                 'Update local copy: ploomber examples -f\n'
                 'Get ML example: ploomber examples -n '
@@ -310,4 +312,24 @@ def main(name, force=False, branch=None, output=None):
     if not name:
         manager.list()
     else:
-        manager.download(name=name, output=output)
+        # manager.download(name=name, output=output)
+        with open(manager.examples / '_index.csv',
+                  newline='',
+                  encoding='utf-8-sig') as file:
+            rows = list(csv.DictReader(file))
+        selected = manager.path_to(name)
+        categories = []
+        for row in rows:
+            category = row.pop('name')
+            del row['idx']
+            categories.append(category)
+
+        if not selected.exists():
+            closest_match = _suggest_command(name, categories)
+            raise BaseException(
+                # f'There is no example named {name!r}.\n'
+                f'There is no example named "{name!r}", '
+                f'did you mean "{closest_match}"?\n'
+                'List examples: ploomber examples\n'
+                'Update local copy: ploomber examples -f\n'
+                'Get ML example: ploomber examples -n')
