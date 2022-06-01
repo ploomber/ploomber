@@ -592,9 +592,10 @@ class NotebookRunner(NotebookMixin, Task):
     .. collapse:: changelog
 
         .. versionchanged:: 0.19.6
-            Support for generating output notebooks in multiple formats, see example above
+            Support for generating output notebooks in multiple formats, see
+            example above
 
-    `nbconvert's documentation <https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options>`_
+    `nbconvert's documentation <https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options>`_ # noqa
     """
     PRODUCT_CLASSES_ALLOWED = (File, )
 
