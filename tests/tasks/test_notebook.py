@@ -486,6 +486,104 @@ Path(product['model']).touch()
     dag.build()
 
 
+@pytest.mark.parametrize(
+    'product, nb_product_key, nbconvert_exporter_name',
+    [({
+        'notebook': File(Path('out.ipynb')),
+        'report_html': File(Path('out.html')),
+        'report_pdf': File(Path('out.pdf')),
+        'file': File(Path('another', 'data', 'file.txt')),
+    }, ['notebook', 'report_html', 'report_pdf'], {
+        'report_pdf': 'webpdf'
+    }),
+     ({
+         'nb_ipynb': File(Path('out.ipynb')),
+         'nb_html': File(Path('out.html')),
+         'file': File(Path('another', 'data', 'file.txt')),
+     }, ['nb_ipynb', 'nb_html'], None),
+     ({
+         'report_html': File(Path('out.html')),
+         'file': File(Path('another', 'data', 'file.txt')),
+     }, ['report_html'], None),
+     ({
+         'nb': File(Path('out.ipynb')),
+         'file': File(Path('another', 'data', 'file.txt')),
+     }, 'nb', None),
+     ({
+         'nb': File(Path('out.pdf')),
+         'file': File(Path('another', 'data', 'file.txt')),
+     }, 'nb', 'webpdf')])
+def test_multiple_nb_product_success(product, nb_product_key,
+                                     nbconvert_exporter_name):
+    dag = DAG()
+
+    code = """
+# + tags=["parameters"]
+var = None
+
+# +
+from pathlib import Path
+Path(product['file']).touch()
+    """
+
+    NotebookRunner(code,
+                   product=product,
+                   dag=dag,
+                   ext_in='py',
+                   nbconvert_exporter_name=nbconvert_exporter_name,
+                   nb_product_key=nb_product_key,
+                   name='nb')
+    dag.build()
+
+
+@pytest.mark.parametrize(
+    'product, nb_product_key, nbconvert_exporter_name, '
+    'expected_error',
+    [({
+        'nb_ipynb': File(Path('out.ipynb')),
+        'nb_html': File(Path('out.html')),
+    }, ['nb_ipynb', 'nb_html'
+        ], 'webpdf', "When specifying nb_product_key as a list"),
+     ({
+         'nb_ipynb': File(Path('out.ipynb')),
+         'nb_html': File(Path('out.html')),
+     }, ['nb_html'], None, "Missing key \\\'nb_ipynb\\\' in nb_product_key:"),
+     ({
+         'nb': File(Path('out.ipynb'))
+     }, 'nb', {
+         'nb_pdf': 'webpdf'
+     }, "Please specify a single nbconvert_exporter_name"),
+     ({
+         'nb_ipynb': File(Path('out.ipynb')),
+         'nb_html': File(Path('out.html'))
+     }, ['nb_ipynb', 'nb_html'], {
+         'nb_pdf': 'webpdf'
+     }, "Invalid nbconvert exporter"),
+     ({
+         'nb_ipynb': File(Path('out.ipynb'))
+     }, ['nb_ipynb', 'report_pdf'
+         ], None, "Missing key \\\'report_pdf\\\' in product")])
+def test_multiple_nb_product_error(product, nb_product_key,
+                                   nbconvert_exporter_name, expected_error):
+    dag = DAG()
+
+    code = """
+# + tags=["parameters"]
+var = None
+    """
+
+    with pytest.raises(TaskInitializationError) as excinfo:
+        NotebookRunner(code,
+                       product=product,
+                       dag=dag,
+                       ext_in='py',
+                       nb_product_key=nb_product_key,
+                       nbconvert_exporter_name=nbconvert_exporter_name,
+                       name='nb')
+
+    assert expected_error in str(excinfo)
+
+
 def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory):
     dag = DAG()
 
@@ -642,6 +740,7 @@ var = None
 
 
 def test_develop_saves_changes(tmp_dag, monkeypatch):
+
     def mock_jupyter_notebook(args, check):
         nb = jupytext.reads('2 + 2', fmt='py')
         # args: "jupyter" {app} {path} {other args, ...}
