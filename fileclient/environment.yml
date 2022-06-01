@@ -1,0 +1,11 @@
+name: cookbook-dynamic-params
+
+channels:
+  - conda-forge
+
+dependencies:
+  
+  - pip
+
+  - pip:
+    - ploomber

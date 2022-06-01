@@ -88,7 +88,7 @@ TESTING = [
     'seaborn',
     # https://www.psycopg.org/docs/install.html#psycopg-vs-psycopg-binary
     # this one is easier to install
-    # 'psycopg2-binary',
+    'psycopg2-binary',
     # requires for some Table tests where we parse the HTML repr
     'lxml',
 
