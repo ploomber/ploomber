@@ -398,7 +398,20 @@ If no such file exists, it looks for a ``setup.py``. If it exists, it searches
 for a ``src/{pkg}/pipeline.yaml`` file where ``{pkg}`` is a folder with any
 name. ``setup.py`` is only required for packaged projects.
 
-If your pipeline has a different filename, you may set the ``ENTRY_POINT``
+If your pipeline has a different filename, you can create a ``setup.cfg`` file
+and indicate what file you want to set as default. Note that **changing the
+default affects both the command-line interface and the Jupyter plug-in**.
+
+.. code-block:: cfg
+    :class: text-editor
+    :name: setup-cfg
+
+    [ploomber]
+    entry-point = path/to/pipeline.yaml
+
+Note that paths are relative to the parent directory of ``setup.cfg``.
+
+Alternatively, you may set the ``ENTRY_POINT``
 environment variable to a different filename (e.g.,
 ``export ENTRY_POINT=pipeline.serve.yaml``). Note that this must be a filename,
 not a path to a file.
@@ -410,3 +423,8 @@ If you want to know which file will be used based on your project's layout:
     ploomber status --help
 
 Look at the ``--entry-point`` description in the printed output.
+
+.. collapse:: changelog
+
+    .. versionadded:: 0.19.6
+        Support for switching entry point with a ``setup.cfg`` file
