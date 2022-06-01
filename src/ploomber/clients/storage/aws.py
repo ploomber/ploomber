@@ -155,6 +155,10 @@ class S3Client(AbstractStorageClient):
     ploomber.clients.GCloudStorageClient :
         Client for uploading products to Amazon Google Cloud Storage
 
+    Notes
+    -----
+    If a notebook (or script) task fails, the partially executed ``.ipynb``
+    file will be uploaded using this client.
     """
     @requires(['boto3', 'botocore'], name='S3Client')
     def __init__(self,
