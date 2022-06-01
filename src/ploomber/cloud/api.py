@@ -217,6 +217,13 @@ def run_finished(headers, runid):
 
 
 @auth_header
+def run_latest_failed(headers, reason):
+    if reason != "none":
+        _requests.get(f"{HOST}/runs/latest/failed", headers=headers)
+        click.echo('Marked latest run as failed...')
+
+
+@auth_header
 def products_list(headers):
     res = _requests.get(f"{HOST}/products", headers=headers).json()
 
