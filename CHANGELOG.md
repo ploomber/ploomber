@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## 0.19.6dev
+* `setup.cfg` allows to switch default entry point
+* Generate multiple notebook products from a single task (#708)
+* `NotebookRunner` uploads partially executed notebook if it fails and a client is configured
 
 ## 0.19.5 (2022-05-30)
 * Adds support for choosing environment in `cloud.yaml`
