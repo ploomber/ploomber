@@ -66,6 +66,7 @@ from os.path import relpath
 
 from ploomber.exceptions import DAGSpecInvalidError
 from ploomber.entrypoint import try_to_find_entry_point_type, EntryPoint
+from ploomber.util import config
 
 
 def _filesystem_root():
@@ -127,7 +128,7 @@ def entry_point_with_name(root_path=None, name=None):
             return relpath(entry_point, Path().resolve())
 
     # otherwise use {project_root}/{file}. note that this file must
-    # exust since find_root_recursively raises an error if it doesn't
+    # exist since find_root_recursively raises an error if it doesn't
     return relpath(Path(project_root, filename), Path().resolve())
 
 
@@ -176,6 +177,25 @@ def entry_point(root_path=None):
         filename = env_var
     else:
         filename = 'pipeline.yaml'
+
+    # check if there's a config file
+    path_to_config, _ = find_file_recursively(name='setup.cfg',
+                                              starting_dir=root_path)
+
+    if path_to_config:
+        cfg = config.load_config(path_to_config)
+
+        if cfg and cfg['ploomber'].get('entry_point'):
+            parent = Path(path_to_config).parent
+            entry_point = str(parent / cfg['ploomber']['entry_point'])
+
+            if not Path(entry_point).is_file():
+                raise DAGSpecInvalidError('Skipping DAG initialization:'
+                                          ' found setup.cfg but '
+                                          f'entry_point {entry_point!r} '
+                                          'does not exist')
+
+            return entry_point
 
     return entry_point_with_name(root_path=root_path, name=filename)
 

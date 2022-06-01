@@ -116,7 +116,7 @@ def derive_class(base_class):
             if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
                 msg = (
                     '[Ploomber] An error occured when trying to initialize '
-                    'the pipeline. Cells won\' be injected until your '
+                    'the pipeline. Cells won\'t be injected until your '
                     'pipeline processes correctly. See error details below.')
 
                 if self.spec and not self.spec['meta']['jupyter_hot_reload']:
