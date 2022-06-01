@@ -163,13 +163,25 @@ See the CLI API documentation :doc:`../api/cli` for a detailed overview of each 
 Enabling Completion
 ------------------
 
-In order to setup autocompletion for the CLI, you need to configure your shell.
+To configure autocompletion for the CLI, you need to configure your shell.
 
-If using bash, add this to ~/bashrc:
-eval "$(_PLOOMBER_COMPLETE=zsh_source ploomber)"
+If using **bash**, add this to ``~/bashrc``:
 
-If using zshrc, add this to ~/.zshrc:
-eval "$(_PLOOMBER_COMPLETE=zsh_source ploomber)"
+.. code-block:: bash
+    :class: text-editor
 
-If using fish, add this to ~/.config/fish/completions/ploomber.fish:
-eval (env _PLOOMBER_COMPLETE=fish_source ploomber)
+    eval "$(_PLOOMBER_COMPLETE=zsh_source ploomber)"
+
+If using **zsh**, add this to ``~/.zshrc``:
+
+.. code-block:: bash
+    :class: text-editor
+
+    eval "$(_PLOOMBER_COMPLETE=zsh_source ploomber)"
+
+If using **fish**, add this to ``~/.config/fish/completions/ploomber.fish``:
+
+.. code-block:: bash
+    :class: text-editor
+
+    eval (env _PLOOMBER_COMPLETE=fish_source ploomber)
