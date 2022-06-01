@@ -185,14 +185,14 @@ def entry_point(root_path=None):
     if path_to_config:
         cfg = config.load_config(path_to_config)
 
-        if cfg and cfg['ploomber'].get('entry_point'):
+        if cfg and cfg['ploomber'].get('entry-point'):
             parent = Path(path_to_config).parent
-            entry_point = str(parent / cfg['ploomber']['entry_point'])
+            entry_point = str(parent / cfg['ploomber']['entry-point'])
 
             if not Path(entry_point).is_file():
                 raise DAGSpecInvalidError('Skipping DAG initialization:'
                                           ' found setup.cfg but '
-                                          f'entry_point {entry_point!r} '
+                                          f'entry-point {entry_point!r} '
                                           'does not exist')
 
             return entry_point

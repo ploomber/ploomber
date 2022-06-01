@@ -585,7 +585,7 @@ x = 1
 def test_entry_point_from_config_file(tmp_directory, entry_point):
     Path('setup.cfg').write_text(f"""
 [ploomber]
-entry_point = {entry_point}
+entry-point = {entry_point}
 """)
 
     Path(entry_point).parent.mkdir(exist_ok=True)
@@ -599,7 +599,7 @@ def test_entry_point_from_config_file_nested(tmp_directory):
     Path('dir').mkdir()
     Path('dir', 'setup.cfg').write_text("""
 [ploomber]
-entry_point = pipeline.another.yaml
+entry-point = pipeline.another.yaml
 """)
 
     Path('dir', 'pipeline.another.yaml').touch()
