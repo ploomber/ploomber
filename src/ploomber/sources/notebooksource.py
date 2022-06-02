@@ -27,15 +27,11 @@ from functools import wraps
 import ast
 from pathlib import Path
 import warnings
+import logging
 from contextlib import redirect_stdout
 from io import StringIO
 from copy import deepcopy
-
-# papermill is importing a deprecated module from pyarrow
-with warnings.catch_warnings():
-    warnings.simplefilter('ignore', FutureWarning)
-    from papermill.parameterize import parameterize_notebook
-
+from papermill.parameterize import parameterize_notebook
 import click
 import nbformat
 import jupytext
@@ -54,6 +50,14 @@ from ploomber.static_analysis.extractors import extractor_class_for_language
 from ploomber.static_analysis.pyflakes import check_notebook
 from ploomber.sources import docstring
 from ploomber.io import pretty_print
+
+
+class IgnoreBlackWarning(logging.Filter):
+    def filter(self, record):
+        return 'Black is not installed' not in record.msg
+
+
+logging.getLogger("papermill.translators").addFilter(IgnoreBlackWarning())
 
 
 def _jupytext_fmt(primitive, extension):
