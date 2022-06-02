@@ -5,7 +5,7 @@ import shutil
 import tempfile
 import subprocess
 from subprocess import PIPE
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from importlib.util import find_spec
 import warnings
 
@@ -800,13 +800,13 @@ class NotebookRunner(NotebookMixin, Task):
             if nb_product.client:
                 nb_product.client.upload(str(path_to_out_ipynb))
                 parent = nb_product.client.parent
+                remote_path = str(PurePosixPath(parent, path_to_out_ipynb))
 
-                raise TaskBuildError(
-                    'Error when executing task'
-                    f' {self.name!r}. Partially'
-                    ' executed notebook uploaded to '
-                    'remote storage at: '
-                    f'{parent}/{str(path_to_out_ipynb)}') from e
+                raise TaskBuildError('Error when executing task'
+                                     f' {self.name!r}. Partially'
+                                     ' executed notebook uploaded to '
+                                     'remote storage at: '
+                                     f'{remote_path}') from e
             else:
                 raise TaskBuildError(
                     'Error when executing task'
