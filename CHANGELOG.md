@@ -1,8 +1,8 @@
 # CHANGELOG
 
-## 0.19.6dev
+## 0.19.6 (2022-06-02)
 * `setup.cfg` allows to switch default entry point
-* Generate multiple notebook products from a single task (#708)
+* Generate multiple notebook products from a single task ([#708](https://github.com/ploomber/ploomber/issues/708))
 * `NotebookRunner` uploads partially executed notebook if it fails and a client is configured
 
 ## 0.19.5 (2022-05-30)
