@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.19.7dev
+
 ## 0.19.6 (2022-06-02)
 * `setup.cfg` allows to switch default entry point
 * Generate multiple notebook products from a single task ([#708](https://github.com/ploomber/ploomber/issues/708))
