@@ -46,7 +46,7 @@ To create sample data, you can run the following code:
 
 with expected output as:
 
-.. code-block:: bash
+.. code-block:: txt
 
     Requirement already satisfied: sqlalchemy in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (1.4.25)
     Requirement already satisfied: faker in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (9.2.0)
