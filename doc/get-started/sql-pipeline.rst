@@ -1,4 +1,4 @@
-SQL pipelines
+SQL Pipelines
 =============
 
 This guide explains how to develop pipelines where some of all tasks are SQL scripts.
@@ -30,7 +30,33 @@ Or run it locally:
   
 You can refer to https://github.com/ploomber/projects/blob/master/templates/spec-api-sql/README.ipynb for more information on using SQL scripts to manipulate data in a database, dump a table, and plot it with Python.
 
-Connecting to databases
+Creating Sample Data
+-----------------------
+
+.. code-block:: bash
+
+    %%bash
+    # create sample data
+    cd setup
+    bash setup.sh
+    # move back to the original spec-api-sql folder
+    cd ..
+
+with expected output as:
+
+.. code-block:: bash
+    Requirement already satisfied: sqlalchemy in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (1.4.25)
+    Requirement already satisfied: faker in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (9.2.0)
+    Requirement already satisfied: numpy in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (1.21.2)
+    Requirement already satisfied: pandas in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (1.3.3)
+    Requirement already satisfied: greenlet!=0.4.17 in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (from sqlalchemy) (1.1.2)
+    Requirement already satisfied: text-unidecode==1.3 in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (from faker) (1.3)
+    Requirement already satisfied: python-dateutil>=2.4 in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (from faker) (2.8.2)
+    Requirement already satisfied: pytz>=2017.3 in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (from pandas) (2021.3)
+    Requirement already satisfied: six>=1.5 in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (from python-dateutil>=2.4->faker) (1.16.0)
+
+
+Connecting To Databases
 -----------------------
 
 .. note:: For a more detailed explanation on connecting to a database, see: :doc:`../cookbook/db-config`.
@@ -64,7 +90,7 @@ If SQLAlchemy doesn't support your database, you must use
 details.
 
 
-Configuring the task client in ``pipeline.yaml``
+Configuring The Task Client In ``pipeline.yaml``
 ------------------------------------------------
 
 To configure your ``pipeline.yaml`` to run a SQL task, ``source`` must be a
@@ -105,7 +131,7 @@ client like this:
 ``SQLScript`` (creates a table/view), and ``SQLDump`` (dump to a local file)
 are the two most common types of SQL tasks, let's review them in detail.
 
-Creating SQL tables/views with ``SQLScript``
+Creating SQL Tables/Views With ``SQLScript``
 --------------------------------------------
 
 If you want to organize your SQL processing in multiple steps, you can use
@@ -143,7 +169,7 @@ be replaced at runtime for the name value in ``tasks[*].product`` (in our case:
 ``schema.name``.
 
 
-``SQLScript`` and Product's metadata
+``SQLScript`` And Product's Metadata
 -------------------------------------
 
 Incremental builds (:ref:`incremental-builds`) allow you speed up pipeline
@@ -209,7 +235,7 @@ Don't confuse the task's client with the product's client. **Task clients contro
 where to execute the code. Product clients manage where to save metadata.**
 
 
-Placeholders in SQL scripts
+Placeholders In SQL Scripts
 ---------------------------
 
 You can reference the ``product`` list in your ``pipeline.yaml`` in your script
@@ -280,7 +306,7 @@ source code for each task and the rendered version.
    :target: https://ploomber.io/images/doc/sql/diag.png
    :alt: sql-diag
 
-Dumping data with ``SQLDump``
+Dumping Data With ``SQLDump``
 -----------------------------
 
 .. note:: ``SQLDump`` only works with :py:mod:`ploomber.clients.SQLAlchemyClient`.
@@ -347,7 +373,7 @@ To dump a single file: ``chunksize: null``.
     performance overhead. So if you're dumping large tables, consider
     implementing a solution optimized for your database.
 
-Other SQL tasks
+Other SQL Tasks
 ---------------
 
 There are other SQL tasks not covered here, check out the documentation for
@@ -358,7 +384,7 @@ details:
 * :py:mod:`ploomber.tasks.PostgresCopyFrom` (efficient postgres data upload)
 
 
-Where to go from here
+Where To Go From Here
 ---------------------
 
 - :doc:`../user-guide/sql-templating` shows how to use jinja to write succinct SQL scripts
