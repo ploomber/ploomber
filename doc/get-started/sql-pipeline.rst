@@ -45,6 +45,7 @@ Creating Sample Data
 with expected output as:
 
 .. code-block:: bash
+
     Requirement already satisfied: sqlalchemy in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (1.4.25)
     Requirement already satisfied: faker in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (9.2.0)
     Requirement already satisfied: numpy in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (1.21.2)
