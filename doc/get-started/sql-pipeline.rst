@@ -123,9 +123,9 @@ client like this:
 
     clients:
         # all SQLScript tasks use the same client instance
-        SQLScript: clients.get_client
+        SQLScript: config.get_client
         # all SQLDump tasks use the same client instance
-        SQLDump: clients.get_client
+        SQLDump: config.get_client
 
     tasks:
         source: sql/create-table.sql
