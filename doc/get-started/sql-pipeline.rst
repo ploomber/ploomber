@@ -28,10 +28,12 @@ Or run it locally:
     ploomber examples --name templates/spec-api-sql
   
   
-You can refer to https://github.com/ploomber/projects/blob/master/templates/spec-api-sql/README.ipynb for more information on using SQL scripts to manipulate data in a database, dump a table, and plot it with Python.
+You can also refer to https://github.com/ploomber/projects/blob/master/templates/spec-api-sql/README.ipynb for more information on using SQL scripts to manipulate data in a database, dump a table, and plot it with Python.
 
 Creating Sample Data
 -----------------------
+
+To create sample data, you can run the following code:
 
 .. code-block:: bash
 
