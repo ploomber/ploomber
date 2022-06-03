@@ -26,7 +26,9 @@ Or run it locally:
 .. code-block:: console
 
     ploomber examples --name templates/spec-api-sql
-
+  
+  
+You can refer to https://github.com/ploomber/projects/blob/master/templates/spec-api-sql/README.ipynb for more information on using SQL scripts to manipulate data in a database, dump a table, and plot it with Python.
 
 Connecting to databases
 -----------------------
