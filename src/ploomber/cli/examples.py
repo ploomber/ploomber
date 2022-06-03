@@ -312,7 +312,6 @@ def main(name, force=False, branch=None, output=None):
     if not name:
         manager.list()
     else:
-        # manager.download(name=name, output=output)
         with open(manager.examples / '_index.csv',
                   newline='',
                   encoding='utf-8-sig') as file:
