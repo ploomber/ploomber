@@ -100,3 +100,121 @@ def test_upload_project_ignores_product_prefixes(monkeypatch, tmp_nbs):
         files = zip.namelist()
 
     assert 'output/should-not-appear' not in files
+
+
+def test_run_detailed_print_finish_no_task(monkeypatch, capsys):
+
+    def mock_return(self):
+        return {'run': {'status': 'finished'}, 'tasks': []}
+
+    monkeypatch.setattr(api, 'run_detail', mock_return)
+    api.run_detail_print('some-key')
+    captured = capsys.readouterr()
+
+    assert captured.out.splitlines()[0] == 'Pipeline finished...'
+    assert captured.out.splitlines()[1] == 'Pipeline finished due ' \
+        'to no newly triggered tasks, try running ploomber cloud build --force'
+
+
+def test_run_detailed_print_finish_with_tasks(monkeypatch, capsys):
+
+    def mock_return(self):
+        return {
+            'run': {
+                'status': 'finished'
+            },
+            'tasks': [{
+                'taskid': 'mock-id',
+                'name': 'mock',
+                'runid': 'some-key',
+                'status': 'finished'
+            }]
+        }
+
+    monkeypatch.setattr(api, 'run_detail', mock_return)
+    api.run_detail_print('some-key')
+    captured = capsys.readouterr()
+
+    assert captured.out.splitlines()[0] == 'Pipeline finished...'
+    assert 'taskid' in captured.out.splitlines()[1]
+    assert 'name' in captured.out.splitlines()[1]
+    assert 'runid' in captured.out.splitlines()[1]
+    assert 'status' in captured.out.splitlines()[1]
+
+
+def test_run_detailed_print_abort(monkeypatch, capsys):
+
+    def mock_return(self):
+        return {
+            'run': {
+                'status': 'aborted'
+            },
+            'tasks': [{
+                'taskid': 'mock-id',
+                'name': 'mock',
+                'runid': 'some-key',
+                'status': 'aborted'
+            }]
+        }
+
+    monkeypatch.setattr(api, 'run_detail', mock_return)
+    api.run_detail_print('some-key')
+    captured = capsys.readouterr()
+
+    assert captured.out.splitlines()[0] == 'Pipeline aborted...'
+    assert 'taskid' in captured.out.splitlines()[1]
+    assert 'name' in captured.out.splitlines()[1]
+    assert 'runid' in captured.out.splitlines()[1]
+    assert 'status' in captured.out.splitlines()[1]
+
+
+def test_run_detailed_print_fail(monkeypatch, capsys):
+
+    def mock_return(self):
+        return {
+            'run': {
+                'status': 'failed'
+            },
+            'tasks': [{
+                'taskid': 'mock-id',
+                'name': 'mock',
+                'runid': 'some-key',
+                'status': 'failed'
+            }]
+        }
+
+    monkeypatch.setattr(api, 'run_detail', mock_return)
+    api.run_detail_print('some-key')
+    captured = capsys.readouterr()
+
+    assert captured.out.splitlines()[0] == 'Pipeline failed...'
+    assert 'taskid' in captured.out.splitlines()[1]
+    assert 'name' in captured.out.splitlines()[1]
+    assert 'runid' in captured.out.splitlines()[1]
+    assert 'status' in captured.out.splitlines()[1]
+
+
+def test_run_detailed_print_unknown(monkeypatch, capsys):
+
+    def mock_return(self):
+        return {
+            'run': {
+                'status': 'error'
+            },
+            'tasks': [{
+                'taskid': 'mock-id',
+                'name': 'mock',
+                'runid': 'some-key',
+                'status': 'error'
+            }]
+        }
+
+    monkeypatch.setattr(api, 'run_detail', mock_return)
+    api.run_detail_print('some-key')
+    captured = capsys.readouterr()
+
+    assert captured.out.splitlines()[0] == 'Unknown status: error'
+    assert 'taskid' in captured.out.splitlines()[1]
+    assert 'name' in captured.out.splitlines()[1]
+    assert 'runid' in captured.out.splitlines()[1]
+    assert 'status' in captured.out.splitlines()[1]

@@ -91,6 +91,7 @@ def download_from_presigned(presigned):
 
 
 def auth_header(func):
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         api_key = get_key()
@@ -172,10 +173,24 @@ def run_detail_print(run_id):
 
     if run['status'] == 'created':
         click.echo('Run created...')
+    elif run['status'] == 'finished':
+        click.echo('Pipeline finished...')
+        if tasks:
+            click.echo(Table.from_dicts(tasks))
+        else:
+            click.echo('Pipeline finished due to no newly triggered tasks,'
+                       ' try running ploomber cloud build --force')
     elif tasks:
+        if run['status'] == 'aborted':
+            click.echo('Pipeline aborted...')
+        elif run['status'] == 'failed':
+            click.echo('Pipeline failed...')
+        else:
+            click.echo('Unknown status: ' + run['status'])
         click.echo(Table.from_dicts(tasks))
     else:
-        click.echo('Pipeline up-to-date, no tasks scheduled for this run.')
+        click.echo('Unknown status: ' + run['status'] +
+                   ', no tasks triggered.')
 
     return out
 
