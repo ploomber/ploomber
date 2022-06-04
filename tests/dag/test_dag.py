@@ -4,6 +4,7 @@ import warnings
 from pathlib import Path
 from unittest.mock import Mock, MagicMock
 import sqlite3
+import sys
 
 import pytest
 import tqdm.auto
@@ -147,6 +148,7 @@ def test_errror_on_invalid_executor():
         DAG(executor=None)
 
 
+@pytest.mark.skipif(sys.version_info == (3, 10), reason="requires < 3.10")
 def test_plot_embed(dag, monkeypatch_plot):
     mock_Image, mock_to_agraph, image_out = monkeypatch_plot
 
@@ -161,6 +163,7 @@ def test_plot_embed(dag, monkeypatch_plot):
     mock_to_agraph.draw.assert_called_once()
 
 
+@pytest.mark.skipif(sys.version_info == (3, 10), reason="requires < 3.10")
 def test_plot_path(dag, tmp_directory, monkeypatch_plot):
     mock_Image, mock_to_agraph, image_out = monkeypatch_plot
 
@@ -174,6 +177,7 @@ def test_plot_path(dag, tmp_directory, monkeypatch_plot):
     mock_to_agraph.draw.assert_called_once()
 
 
+@pytest.mark.skipif(sys.version_info == (3, 10), reason="requires < 3.10")
 @pytest.mark.parametrize('fmt', ['html', 'md'])
 @pytest.mark.parametrize('sections', [None, 'plot', 'status', 'source'])
 def test_to_markup(fmt, sections, dag, monkeypatch_plot):
@@ -196,6 +200,7 @@ def test_error_when_adding_task_with_existing_name(dag):
     assert "DAG already has a task with name 'first'" in str(excinfo.value)
 
 
+@pytest.mark.skipif(sys.version_info == (3, 10), reason="requires < 3.10")
 def test_to_graph_prepare_for_graphviz(dag):
     graph = dag._to_graph(return_graphviz=True)
 
@@ -207,6 +212,7 @@ def test_to_graph_prepare_for_graphviz(dag):
     assert len(graph) == 2
 
 
+@pytest.mark.skipif(sys.version_info == (3, 10), reason="requires < 3.10")
 def test_graphviz_graph_with_clashing_task_str(dag):
     def fn1(product):
         pass
@@ -429,6 +435,7 @@ def test_build_partially_diff_sessions(tmp_directory):
     assert df.loc['b']['Ran?']
 
 
+@pytest.mark.skipif(sys.version_info == (3, 10), reason="requires < 3.10")
 @pytest.mark.parametrize('function_name', ['render', 'build', 'plot'])
 @pytest.mark.parametrize('executor', _executors)
 def test_dag_functions_do_not_fetch_metadata(function_name, executor,

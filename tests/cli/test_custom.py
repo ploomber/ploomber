@@ -119,6 +119,7 @@ def test_status(monkeypatch_session, tmp_sample_dir):
     status.main(catch_exception=False)
 
 
+@pytest.mark.skipif(sys.version_info == (3, 10), reason="requires < 3.10")
 @pytest.mark.parametrize(
     'custom_args',
     [[], ['--output', 'custom.png'], ['-o', 'custom.png'], ['--log', 'DEBUG'],
