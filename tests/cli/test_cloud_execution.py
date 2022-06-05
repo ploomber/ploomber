@@ -34,15 +34,15 @@ def test_cloud_list():
     assert result.exit_code == 0
 
 
+# @pytest.mark.skip(reason="This needs to be mocked")
 def test_cloud_status(runid):
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'status', runid])
-
-    assert 'taskid' in result.output
-    assert 'name' in result.output
-    assert 'runid' in result.output
-    assert 'status' in result.output
-    assert len(result.output.splitlines()) == 17
+    out = result.output
+    assert 'taskid' in out
+    assert 'name' in out
+    assert 'runid' in out
+    assert 'status' in out
     assert result.exit_code == 0
 
 
