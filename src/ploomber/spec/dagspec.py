@@ -799,7 +799,7 @@ def process_tasks(dag, dag_spec, root_path=None):
             task_dict['product'] = source.extract_product()
 
         # convert to task, up has the content of "upstream" if any
-        task, up = task_dict.to_task(dag)
+        task, up = task_dict.to_task(dag, dag_spec['task_defaults'])
 
         if isinstance(task, TaskGroup):
             for t in task:

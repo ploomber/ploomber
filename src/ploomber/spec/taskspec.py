@@ -268,7 +268,7 @@ class TaskSpec(MutableMapping):
                 'meta.extract_product is set to True, tasks '
                 'should not have a "product" key'.format(self.data))
 
-    def to_task(self, dag):
+    def to_task(self, dag, task_defaults):
         """
         Convert the spec to a Task or TaskGroup and add it to the dag.
         Returns a (task, upstream) tuple with the Task instance and list of
@@ -337,7 +337,8 @@ class TaskSpec(MutableMapping):
                               meta=self.meta,
                               project_root=self.project_root,
                               lazy_import=self.lazy_import,
-                              dag=dag), upstream
+                              dag=dag,
+                              task_defaults=task_defaults), upstream
 
     def __getitem__(self, key):
         return self.data[key]
@@ -403,7 +404,7 @@ def _init_task(data, meta, project_root, lazy_import, dag, task_defaults=None):
         task_dict['params'] = resolve_resources(task_dict['params'],
                                                 relative_to=project_root)
     if type(task_defaults) == dict:
-        init_params = {**task_defaults[class_], **task_dict}
+        init_params = {**task_defaults[class_.__name__], **task_dict}
     else:
         init_params = task_dict
 

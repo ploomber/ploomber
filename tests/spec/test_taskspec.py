@@ -621,4 +621,4 @@ product = None
     })
 
     dag = spec.to_dag()
-    assert dag['script'].check_if_kernal_installed is False
+    assert dag['script'].check_if_kernel_installed is False
