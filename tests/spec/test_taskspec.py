@@ -8,8 +8,6 @@ from ploomber.tasks import (NotebookRunner, SQLScript, SQLDump, ShellScript,
                             PythonCallable)
 from ploomber.exceptions import DAGSpecInitializationError, ValidationError
 from ploomber import DAG
-from conftest import git_init
-import yaml
 
 
 @pytest.mark.parametrize('source_str, expected', [
@@ -601,6 +599,7 @@ def test_constructor_deep_copies_spec_and_meta(tmp_directory, tmp_imports):
 
 def test_task_default_parameters(tmp_directory, tmp_imports):
     Path('script.py').write_text("""
+
 # %% tags=["parameters"]
 upstream = None
 product = None
