@@ -411,7 +411,6 @@ def test_parse_doc():
 ])
 def test_parse_doc_if_missing_numpydoc(docstring, expected_summary,
                                        monkeypatch):
-
     def _module_not_found(arg):
         raise ModuleNotFoundError
 
@@ -483,7 +482,6 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
     monkeypatch.setattr(sys, 'argv', args)
 
     class CustomParserWrapper(CustomParser):
-
         def load_from_entry_point_arg(self):
             dag, args = super().load_from_entry_point_arg()
             dag_mock = MagicMock(wraps=dag)

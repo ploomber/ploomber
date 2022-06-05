@@ -91,7 +91,6 @@ def download_from_presigned(presigned):
 
 
 def auth_header(func):
-
     @wraps(func)
     def wrapper(*args, **kwargs):
         api_key = get_key()
