@@ -268,7 +268,7 @@ class TaskSpec(MutableMapping):
                 'meta.extract_product is set to True, tasks '
                 'should not have a "product" key'.format(self.data))
 
-    def to_task(self, dag, task_defaults):
+    def to_task(self, dag, task_defaults=None):
         """
         Convert the spec to a Task or TaskGroup and add it to the dag.
         Returns a (task, upstream) tuple with the Task instance and list of
