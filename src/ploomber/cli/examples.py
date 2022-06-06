@@ -333,4 +333,3 @@ def main(name, force=False, branch=None, output=None):
                 'Get ML example: ploomber examples -n'
                 'templates/ml-basic -o ml-example',
                 type_='no-example-with-name')
-
