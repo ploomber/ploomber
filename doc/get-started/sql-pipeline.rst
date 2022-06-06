@@ -37,7 +37,6 @@ To create sample data, you can run the following code:
 
 .. code-block:: bash
 
-    %%bash
     # create sample data
     cd setup
     bash setup.sh
