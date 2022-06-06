@@ -43,21 +43,7 @@ To create sample data, you can run the following code:
     bash setup.sh
     # move back to the original spec-api-sql folder
     cd ..
-
-with expected output as:
-
-.. code-block:: txt
-
-    Requirement already satisfied: sqlalchemy in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (1.4.25)
-    Requirement already satisfied: faker in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (9.2.0)
-    Requirement already satisfied: numpy in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (1.21.2)
-    Requirement already satisfied: pandas in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (1.3.3)
-    Requirement already satisfied: greenlet!=0.4.17 in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (from sqlalchemy) (1.1.2)
-    Requirement already satisfied: text-unidecode==1.3 in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (from faker) (1.3)
-    Requirement already satisfied: python-dateutil>=2.4 in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (from faker) (2.8.2)
-    Requirement already satisfied: pytz>=2017.3 in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (from pandas) (2021.3)
-    Requirement already satisfied: six>=1.5 in /Users/Edu/miniconda3/envs/projects/lib/python3.9/site-packages (from python-dateutil>=2.4->faker) (1.16.0)
-
+    
 
 Connecting To Databases
 -----------------------
