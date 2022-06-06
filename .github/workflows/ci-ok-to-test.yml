@@ -1,0 +1,162 @@
+name: CI ok-to-test Linux
+on:
+  pull_request
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+    
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v2
+
+    - name: Config
+      run: |
+        conda create -q -n conda-env python=${{ matrix.python-version }}
+
+        # for the tests that depend on git repos
+        git config --global user.email "someone@example.com"
+        git config --global user.name "Someone"
+
+    - name: Install dependencies
+      run: |
+
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+
+        # make the build fail quickly on flake8 errors
+        pip install flake8
+        flake8
+
+        # for some reason, conda does not resolve the env correctly and
+        # installs and old version of pygraphviz (1.3) which breaks in
+        # Python 3.7
+        conda install -y "pygraphviz>=1.6" -c conda-forge
+
+        # Test vanilla installation, make sure core modules are importable
+        pip install .
+        python -c 'import ploomber'
+        python -c 'import ploomber.tasks'
+        python -c 'import ploomber.products'
+        python -c 'import ploomber.clients'
+        python -c 'import ploomber.io'
+
+        # install dev requirements
+        pip install .[dev]
+
+        # install IR kernel
+        echo "install.packages('IRkernel', repos='http://cran.us.r-project.org'); IRkernel::installspec()" | Rscript -
+
+        # install sample package for tests
+        pip install --editable tests/assets/test_pkg
+
+    - name: Run Unit tests
+      run: |
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+
+        # doc tests
+        export PY_IGNORE_IMPORTMISMATCH=1
+        pytest src/ploomber --doctest-modules --ignore src/ploomber/resources
+        unset PY_IGNORE_IMPORTMISMATCH
+
+        # unit tests
+        pytest tests --cov=ploomber --ignore=tests/cli/test_cloud_execution.py
+        coveralls
+
+    - run: echo "Unit tests... success! ;-)"
+
+  integration-tests:
+  on:
+    pull_request:
+    repository_dispatch:
+      types: [ok-to-test-command]
+  
+  jobs:
+  # Branch-based pull request
+  integration-trusted:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+
+    - name: Branch based PR checkout
+      uses: actions/checkout@v2
+
+  # Repo owner has commented /ok-to-test on a (fork-based) pull request
+  integration-fork:
+    runs-on: ubuntu-latest
+    if: 
+      github.event_name == 'repository_dispatch' &&
+      github.event.client_payload.slash_command.sha != '' &&
+      contains(github.event.client_payload.pull_request.head.sha, github.event.client_payload.slash_command.sha)
+    steps:
+
+    # Check out merge commit
+    - name: Fork based /ok-to-test checkout
+      uses: actions/checkout@v2
+      with:
+        ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+
+    - name: Run Integration tests
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PLOOMBER_CLOUD_KEY: ${{ secrets.PLOOMBER_CLOUD_KEY }}
+        PLOOMBER_STATS_ENABLED: false
+      run: |
+        pytest --cov=ploomber tests/cli/test_cloud_excution.py
+
+    - run: |
+        echo "Integration tests... success! ;-)"
+    # Update check run called "integration-fork"
+    - uses: actions/github-script@v5
+      id: update-check-run
+      if: ${{ always() }}
+      env:
+        number: ${{ github.event.client_payload.pull_request.number }}
+        job: ${{ github.job }}
+        # Conveniently, job.status maps to https://developer.github.com/v3/checks/runs/#update-a-check-run
+        conclusion: ${{ job.status }} 
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const { data: pull } = await github.rest.pulls.get({
+            ...context.repo,
+            pull_number: process.env.number
+          });
+          const ref = pull.head.sha;
+          const { data: checks } = await github.rest.checks.listForRef({
+            ...context.repo,
+            ref
+          });
+          const check = checks.check_runs.filter(c => c.name === process.env.job);
+          const { data: result } = await github.rest.checks.update({
+            ...context.repo,
+            check_run_id: check[0].id,
+            status: 'completed',
+            conclusion: process.env.conclusion
+          });
+          return result;
