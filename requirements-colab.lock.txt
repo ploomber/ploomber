@@ -12,7 +12,7 @@ mistune==0.8.4
 nbconvert==5.6.1
 nbformat==5.4.0
 networkx==2.6.3
-notebook==5.3.1
+notebook==6.4.10
 papermill==2.3.4
 parso==0.8.3
 ploomber-scaffold==0.3.1
