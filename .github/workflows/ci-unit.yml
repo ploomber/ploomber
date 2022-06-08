@@ -1,0 +1,254 @@
+# Run unit tests on any branch/fork pull request
+on:
+  pull_request
+
+name: Unit tests
+
+jobs:
+  unit-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+    
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v2
+
+    - name: Config
+      run: |
+        conda create -q -n conda-env python=${{ matrix.python-version }}
+        # for the tests that depend on git repos
+        git config --global user.email "someone@example.com"
+        git config --global user.name "Someone"
+    - name: Install dependencies
+      run: |
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+        # make the build fail quickly on flake8 errors
+        pip install flake8
+        flake8
+        # for some reason, conda does not resolve the env correctly and
+        # installs and old version of pygraphviz (1.3) which breaks in
+        # Python 3.7
+        conda install -y "pygraphviz>=1.6" -c conda-forge
+        # Test vanilla installation, make sure core modules are importable
+        pip install .
+        python -c 'import ploomber'
+        python -c 'import ploomber.tasks'
+        python -c 'import ploomber.products'
+        python -c 'import ploomber.clients'
+        python -c 'import ploomber.io'
+        # install dev requirements
+        pip install .[dev]
+        # install IR kernel
+        echo "install.packages('IRkernel', repos='http://cran.us.r-project.org'); IRkernel::installspec()" | Rscript -
+        # install sample package for tests
+        pip install --editable tests/assets/test_pkg
+    - name: Run tests
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PLOOMBER_CLOUD_KEY: ${{ secrets.PLOOMBER_CLOUD_KEY }}
+        PLOOMBER_STATS_ENABLED: false
+      run: |
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+        # doc tests
+        export PY_IGNORE_IMPORTMISMATCH=1
+        pytest src/ploomber --doctest-modules --ignore src/ploomber/resources
+        unset PY_IGNORE_IMPORTMISMATCH
+        # unit tests
+        pytest tests --cov=ploomber --ignore=tests/cli/test_cloud_execution.py
+        coveralls
+
+
+    - run: echo "Unit tests... success on linux!"
+  
+  unit-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+
+    steps:
+      # https://www.cybertec-postgresql.com/en/postgresql-github-actions-continuous-integration/
+    - name: Start PostgreSQL
+      run: |
+        brew services start postgresql
+        echo "Check PostgreSQL service is running"
+        i=10
+        COMMAND='pg_isready'
+        while [ $i -gt 0 ]; do
+            echo "Check PostgreSQL service status"
+            eval $COMMAND && break
+            ((i--))
+            if [ $i == 0 ]; then
+                echo "PostgreSQL service not ready, all attempts exhausted"
+                exit 1
+            fi
+            echo "PostgreSQL service not ready, wait 10 more sec, attempts left: $i"
+            sleep 10
+        done
+
+    - name: Create PostgreSQL user
+      run: psql --command="CREATE USER postgres PASSWORD 'postgres'" postgres
+
+    - name: Update PostgreSQL permissions
+      run: psql --command="ALTER DATABASE postgres OWNER TO postgres" postgres
+
+    - name: Check PostgreSQL authentication
+      run: PGPASSWORD=postgres pg_isready --dbname postgres --username postgres
+
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniconda-version: "latest"
+        activate-environment: conda-env
+        python-version: ${{ matrix.python-version }}
+
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v2
+
+    - name: Install dependencies
+      run: |
+
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+
+        # make the build fail quickly on flake8 errors
+        pip install flake8
+        flake8
+
+        conda install -y pygraphviz -c conda-forge
+
+        # Test vanilla installation, make sure core modules are importable
+        # note: I needed to add "--ignore-installed certifi" because the
+        # installation started failing suddenly
+        pip install .  --ignore-installed certifi
+        python -c 'import ploomber'
+        python -c 'import ploomber.tasks'
+        python -c 'import ploomber.products'
+        python -c 'import ploomber.clients'
+
+        # install dev requirements
+        pip install .[dev]
+
+        # install IR kernel
+        echo "install.packages('IRkernel', repos='http://cran.us.r-project.org'); IRkernel::installspec()" | Rscript -
+
+        # install sample package for tests
+        pip install --editable tests/assets/test_pkg
+
+    - name: Run tests
+      env:
+        PLOOMBER_STATS_ENABLED: false
+        PLOOMBER_CLOUD_KEY: ${{ secrets.PLOOMBER_CLOUD_KEY }}
+      run: |
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+        pytest tests --ignore=tests/cli/test_cloud_execution.py
+
+  unit-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+
+    steps:
+    # https://www.cybertec-postgresql.com/en/postgresql-github-actions-continuous-integration/
+    - name: Start PostgreSQL
+      run: |
+        $pgService = Get-Service -Name postgresql*
+        Set-Service -InputObject $pgService -Status running -StartupType automatic
+        Start-Process -FilePath "$env:PGBIN\pg_isready" -Wait -PassThru
+    - name: Change PostgreSQL password
+      run: |
+        & $env:PGBIN\psql --command  "ALTER USER postgres PASSWORD 'postgres'"
+    - name: Check PostgreSQL authentication
+      run: |
+        $env:PGPASSWORD = 'postgres'
+        & $env:PGBIN\pg_isready --dbname postgres --username postgres
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniconda-version: "latest"
+        activate-environment: conda-env
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      shell: bash -l {0}
+      run: |
+
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+
+        # make the build fail quickly on flake8 errors
+        pip install flake8
+        flake8
+
+        # there's a bug in jupyter, we need to install this first
+        conda install pywin32
+
+        # install graphviz (pygraphviz not available in conda for win-64,
+        # it will be installed from pip)
+        # conda install -y graphviz -c conda-forge
+        # note: this installation still gives trouble (error when saving png
+        # files but it makes pygraphviz importable), we can get rid of this
+        # once we update the tests to mock the @requires decorator to make
+        # it think that pygraphviz is installed when it's not. the tests
+        # currently do not call pygraphviz (it's mocked), but @requires imports
+        conda install -y -c alubbock pygraphviz 
+        # seems like pygraphviz just doesnt work on windows
+        # https://github.com/pygraphviz/pygraphviz/issues/40
+        # pip install pygraphviz
+
+        # Test vanilla installation, make sure core modules are importable
+        pip install .
+        python -c 'import ploomber'
+        python -c 'import ploomber.tasks'
+        python -c 'import ploomber.products'
+        python -c 'import ploomber.clients'
+
+        # install dev requirements
+        pip install .[dev]
+
+        # https://github.com/ipython/ipython/issues/12049
+        pip install prompt-toolkit==2.0.10
+
+        # install R and IR kernel
+        conda install -y r-base r-irkernel -c conda-forge
+        echo "IRkernel::installspec()" | Rscript -
+
+        # install sample package for tests
+        pip install --editable tests/assets/test_pkg
+
+    - name: Run tests
+      env:
+        PLOOMBER_STATS_ENABLED: false
+        PLOOMBER_CLOUD_KEY: ${{ secrets.PLOOMBER_CLOUD_KEY }}
+      shell: bash -l {0}
+      run: |
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+        pytest tests --ignore=tests/cli/test_cloud_execution.py
