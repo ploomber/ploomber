@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ['3.6', '3.7','3.8', '3.9', '3.10']
 
     steps:
     # https://www.cybertec-postgresql.com/en/postgresql-github-actions-continuous-integration/
@@ -55,7 +55,17 @@ jobs:
         # once we update the tests to mock the @requires decorator to make
         # it think that pygraphviz is installed when it's not. the tests
         # currently do not call pygraphviz (it's mocked), but @requires imports
-        conda install -y -c alubbock pygraphviz 
+        # To support python 3.10, installing only for other versions.
+        VERSION=$(python -c 'import sys; print(".".join(map(str, sys.version_info[1:2])))')
+        if [ $VERSION -ne 10 ]; then
+          echo version:  $VERSION
+          echo "installing pygraphviz"
+          conda install -y -c alubbock pygraphviz
+        else
+          echo "skipping pygraphviz installation"
+        fi
+
+
         # seems like pygraphviz just doesnt work on windows
         # https://github.com/pygraphviz/pygraphviz/issues/40
         # pip install pygraphviz
