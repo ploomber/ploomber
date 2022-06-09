@@ -183,6 +183,7 @@ def test_plot(custom_args, monkeypatch, tmp_sample_dir, output,
                                  include_products=include_products)
 
 
+@pytest.mark.skipif(sys.version_info == (3, 10), reason="requires < 3.10")
 def test_plot_uses_name_if_any(tmp_nbs, monkeypatch):
     os.rename('pipeline.yaml', 'pipeline.train.yaml')
 
