@@ -260,12 +260,23 @@ class _ExamplesManager:
         tw.write('\nTo download: ploomber examples -n name -o path\n')
         tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n\n')
 
-    def download(self, name, output):
-        selected = self.path_to(name)
+    def download(self, name, output, branch, force):
+        examples_manager = _ExamplesManager(branch=branch, verbose=True, force=force)
+        with open(examples_manager.examples / '_index.csv',
+                  newline='',
+                  encoding='utf-8-sig') as f:
+            rows = list(csv.DictReader(f))
+        selected = examples_manager.path_to(name)
+        categories = []
+        for row in rows:
+            category = row.pop('name')
+            del row['idx']
+            categories.append(category)
 
         if not selected.exists():
+            closest_match = _suggest_command(name, categories)
             raise BaseException(
-                f'There is no example named {name!r}.\n'
+                f'There is no example named {name!r}. Did you mean "{closest_match}"?\n'
                 'List examples: ploomber examples\n'
                 'Update local copy: ploomber examples -f\n'
                 'Get ML example: ploomber examples -n '
@@ -307,30 +318,15 @@ def main(name, force=False, branch=None, output=None):
     """
     Entry point for examples
     """
-    manager = _ExamplesManager(branch=branch, verbose=True, force=force)
+    examples_manager = _ExamplesManager(branch=branch, verbose=True, force=force)
 
+    if not examples_manager.examples.exists() or examples_manager.outdated() or force:
+        if not examples_manager.examples.exists():
+            click.echo('Local copy does not exist...')
+        elif force:
+            click.echo('Forcing download...')
+        examples_manager.clone()
     if not name:
-        manager.list()
+        examples_manager.list()
     else:
-        manager.download(name=name, output=output)
-        with open(manager.examples / '_index.csv',
-                  newline='',
-                  encoding='utf-8-sig') as file:
-            rows = list(csv.DictReader(file))
-        selected = manager.path_to(name)
-        categories = []
-        for row in rows:
-            category = row.pop('name')
-            del row['idx']
-            categories.append(category)
-
-        if not selected.exists():
-            closest_match = _suggest_command(name, categories)
-            raise BaseException(
-                f'There is no example named "{name!r}", '
-                f'did you mean "{closest_match}"?\n'
-                'List examples: ploomber examples\n'
-                'Update local copy: ploomber examples -f\n'
-                'Get ML example: ploomber examples -n'
-                'templates/ml-basic -o ml-example',
-                type_='no-example-with-name')
+        examples_manager.download(name=name, output=output, branch=branch, force=force)
