@@ -155,6 +155,7 @@ def test_status(monkeypatch, tmp_sample_dir):
     status.main(catch_exception=False)
 
 
+@pytest.mark.skipif(sys.version_info == (3, 10), reason="requires < 3.10")
 @pytest.mark.parametrize('custom_args, output, include_products, backend', [
     [[], 'pipeline.entry.png', False, None],
     [['--output', 'custom.png'], 'custom.png', False, None],
