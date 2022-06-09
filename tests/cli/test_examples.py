@@ -345,10 +345,6 @@ def test_did_you_mean_feature():
                            ['examples', '--name', "reportgeneration"])
     assert "did you mean \"cookbook/report-generation\"" in result.output
 
-    result2 = runner.invoke(cli.cli,
-                           ['examples', '--name', "cookbook/sqldump"])
-    assert "did you mean \"cookbook/sql-dump\"" not in result2.output
-
 
 @pytest.mark.parametrize('md, expected', [
     ['', None],
