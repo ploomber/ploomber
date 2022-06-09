@@ -340,13 +340,14 @@ def test_error_if_git_clone_fails(monkeypatch, capsys):
 
 
 def test_did_you_mean_feature():
-    examples.main(name=None, force=True)
-
     runner = CliRunner()
     result = runner.invoke(cli.cli,
-                           ['examples', '--name', "report-generation"])
-
+                           ['examples', '--name', "reportgeneration"])
     assert "did you mean \"cookbook/report-generation\"" in result.output
+
+    result2 = runner.invoke(cli.cli,
+                           ['examples', '--name', "cookbook/sql-dump"])
+    assert "did you mean \"cookbook/sql-dump\"" not in result2.output
 
 
 @pytest.mark.parametrize('md, expected', [
