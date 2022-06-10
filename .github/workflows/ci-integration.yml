@@ -1,6 +1,7 @@
 # Run secret-dependent integration tests only after /ok-to-test approval
 on:
   pull_request:
+  push:
   schedule:
     - cron: '0 0 * * *'
   repository_dispatch:
@@ -12,7 +13,7 @@ jobs:
   # Branch-based pull request
   integration-trusted-linux:
     runs-on: ubuntu-latest
-    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule'
+    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
@@ -100,7 +101,6 @@ jobs:
         pytest tests/cli/test_cloud_execution.py --cov=ploomber 
         pytest tests/cloud --cov=ploomber
         pytest tests/telemetry --cov=ploomber
-        coveralls
 
   # Repo owner has commented /ok-to-test on a (fork-based) pull request
   integration-fork-linux:
@@ -198,9 +198,8 @@ jobs:
         unset PY_IGNORE_IMPORTMISMATCH
 
         pytest tests/cli/test_cloud_execution.py --cov=ploomber 
-        pytest tests/cloud --covploomber
-        pytest tests/telemetry --covploomber
-        coveralls
+        pytest tests/cloud --cov=ploomber
+        pytest tests/telemetry --cov=ploomber
   
     - run: |
         echo "Integration tests... success! ;-)"
@@ -245,7 +244,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
-    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule'
+    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
     steps:
     - name: Start PostgreSQL
       run: |
@@ -467,7 +466,7 @@ jobs:
       matrix:
         python-version: [3.7, 3.8, 3.9]
 
-    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule'
+    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
     steps:
 
     - name: Start PostgreSQL
