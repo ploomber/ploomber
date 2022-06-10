@@ -7,12 +7,12 @@ on:
   repository_dispatch:
     types: [ok-to-test-command]
 
-name: Integration tests
 
 jobs:
   # Branch-based pull request
   integration-trusted-linux:
     runs-on: ubuntu-latest
+    name: linux-integration
     if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
     strategy:
       matrix:
