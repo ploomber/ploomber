@@ -27,7 +27,7 @@ def check_if_windows_python_3_10():
 
 def choose_backend(backend):
     """Determine which backend to use for plotting
-       Temporary disable pygraphviz for Python 3.10 on Windows
+       Temporarily disable pygraphviz for Python 3.10 on Windows
     """
     if ((not check_pygraphviz_installed() and backend is None)
             or (backend == 'd3')
