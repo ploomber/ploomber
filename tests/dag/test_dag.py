@@ -1,4 +1,5 @@
 import sys
+from platform import system
 import logging
 from itertools import product
 import warnings
@@ -24,6 +25,10 @@ from ploomber.clients import SQLAlchemyClient
 from ploomber.dag.dagclients import DAGClients
 from ploomber.dag import plot as dag_plot_module
 from ploomber.util import util as ploomber_util
+
+
+IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and system() == 'Windows'
+
 
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
@@ -150,7 +155,7 @@ def test_errror_on_invalid_executor():
         DAG(executor=None)
 
 
-@pytest.mark.skipif('pygraphviz' not in sys.modules,
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
                     reason="requires the pygraphviz library")
 def test_plot_embed(dag, monkeypatch_plot):
     mock_Image, mock_to_agraph, image_out = monkeypatch_plot
@@ -166,7 +171,7 @@ def test_plot_embed(dag, monkeypatch_plot):
     mock_to_agraph.draw.assert_called_once()
 
 
-@pytest.mark.skipif('pygraphviz' not in sys.modules,
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
                     reason="requires the pygraphviz library")
 def test_plot_include_products(dag, monkeypatch):
     mock = Mock(wraps=dag._to_graph)
@@ -178,7 +183,7 @@ def test_plot_include_products(dag, monkeypatch):
     mock.assert_called_with(fmt='pygraphviz', include_products=True)
 
 
-@pytest.mark.skipif('pygraphviz' not in sys.modules,
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
                     reason="requires the pygraphviz library")
 def test_plot_path(dag, tmp_directory, monkeypatch_plot):
     mock_Image, mock_to_agraph, image_out = monkeypatch_plot
@@ -255,7 +260,6 @@ def test_plot_error_if_d3_and_include_products(dag):
     assert expected in str(excinfo.value)
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="requires < 3.10")
 @pytest.mark.parametrize('fmt', ['html', 'md'])
 @pytest.mark.parametrize('sections', [None, 'plot', 'status', 'source'])
 def test_to_markup(fmt, sections, dag, monkeypatch_plot):
@@ -299,7 +303,7 @@ def test_to_graph_d3(dag):
     assert list(graph.edges) == [('first', 'second')]
 
 
-@pytest.mark.skipif('pygraphviz' not in sys.modules,
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
                     reason="requires the pygraphviz library")
 def test_to_graph_prepare_for_graphviz(dag):
     graph = dag._to_graph(fmt='pygraphviz')
@@ -310,7 +314,7 @@ def test_to_graph_prepare_for_graphviz(dag):
     assert len(graph) == 2
 
 
-@pytest.mark.skipif('pygraphviz' not in sys.modules,
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
                     reason="requires the pygraphviz library")
 def test_to_graph_prepare_for_graphviz_include_products(dag):
     graph = dag._to_graph(fmt='pygraphviz', include_products=True)
@@ -323,7 +327,7 @@ def test_to_graph_prepare_for_graphviz_include_products(dag):
     assert len(graph) == 2
 
 
-@pytest.mark.skipif('pygraphviz' not in sys.modules,
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
                     reason="requires the pygraphviz library")
 def test_graphviz_graph_with_clashing_task_str(dag):
     def fn1(product):
@@ -547,7 +551,7 @@ def test_build_partially_diff_sessions(tmp_directory):
     assert df.loc['b']['Ran?']
 
 
-@pytest.mark.skipif('pygraphviz' not in sys.modules,
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
                     reason="requires the pygraphviz library")
 @pytest.mark.parametrize('function_name', ['render', 'build', 'plot'])
 @pytest.mark.parametrize('executor', _executors)

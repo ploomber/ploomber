@@ -2,6 +2,7 @@ import os
 import subprocess
 import importlib
 import sys
+from platform import system
 from pathlib import Path
 from unittest.mock import Mock, MagicMock
 
@@ -18,6 +19,9 @@ import ploomber.dag.dag as dag_module
 # TODO: optimize some of the tests that build dags by mocking and checking
 # that the build function is called with the appropriate args
 from ploomber.telemetry import telemetry
+
+
+IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and system() == 'Windows'
 
 
 def test_no_options(monkeypatch):
@@ -155,7 +159,7 @@ def test_status(monkeypatch, tmp_sample_dir):
     status.main(catch_exception=False)
 
 
-@pytest.mark.skipif('pygraphviz' not in sys.modules,
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
                     reason="requires the pygraphviz library")
 @pytest.mark.parametrize('custom_args, output, include_products, backend', [
     [[], 'pipeline.entry.png', False, None],
@@ -184,7 +188,7 @@ def test_plot(custom_args, monkeypatch, tmp_sample_dir, output,
                                  include_products=include_products)
 
 
-@pytest.mark.skipif('pygraphviz' not in sys.modules,
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
                     reason="requires the pygraphviz library")
 def test_plot_uses_name_if_any(tmp_nbs, monkeypatch):
     os.rename('pipeline.yaml', 'pipeline.train.yaml')
