@@ -160,7 +160,7 @@ def test_status(monkeypatch, tmp_sample_dir):
 
 
 @pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires the pygraphviz library")
+                    reason="requires < 3.10")
 @pytest.mark.parametrize('custom_args, output, include_products, backend', [
     [[], 'pipeline.entry.png', False, None],
     [['--output', 'custom.png'], 'custom.png', False, None],
@@ -189,7 +189,7 @@ def test_plot(custom_args, monkeypatch, tmp_sample_dir, output,
 
 
 @pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires the pygraphviz library")
+                    reason="requires < 3.10")
 def test_plot_uses_name_if_any(tmp_nbs, monkeypatch):
     os.rename('pipeline.yaml', 'pipeline.train.yaml')
 
