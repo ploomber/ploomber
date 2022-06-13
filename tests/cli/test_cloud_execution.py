@@ -63,6 +63,7 @@ def test_cloud_download(tmp_directory):
     assert result.exit_code == 0
 
 
+@pytest.mark.skip()
 def test_cloud_logs(runid):
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'logs', runid])

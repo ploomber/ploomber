@@ -1258,6 +1258,8 @@ def test_cycle_exception():
         dag.build()
 
 
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
+                    reason="requires < 3.10")
 def test_error_if_missing_pypgraphviz(monkeypatch, dag):
     monkeypatch.setattr(dag_plot_module, 'find_spec', lambda _: None)
 
