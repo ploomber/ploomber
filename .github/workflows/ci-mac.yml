@@ -51,7 +51,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Set up R
-      uses: r-lib/actions/setup-r@v2.2.2
+      uses: r-lib/actions/setup-r@v2
 
     - name: Install dependencies
       run: |
@@ -98,4 +98,4 @@ jobs:
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env
-        pytest tests/dag/test_dag.py
+        pytest tests

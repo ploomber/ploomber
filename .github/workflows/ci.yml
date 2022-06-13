@@ -34,7 +34,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Set up R
-      uses: r-lib/actions/setup-r@v2.2.2
+      uses: r-lib/actions/setup-r@v2
 
     - name: Config
       run: |
@@ -98,5 +98,5 @@ jobs:
         unset PY_IGNORE_IMPORTMISMATCH
 
         # unit tests
-        pytest tests/dag/test_dag.py --cov=ploomber
+        pytest tests --cov=ploomber
         coveralls
