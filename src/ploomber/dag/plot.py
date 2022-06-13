@@ -1,7 +1,8 @@
 import json
-from pathlib import Path
-from importlib.util import find_spec
 import sys
+from importlib.util import find_spec
+from pathlib import Path
+from platform import system
 
 import jinja2
 from IPython.display import HTML
@@ -21,7 +22,7 @@ def check_pygraphviz_installed():
 
 
 def check_if_windows_python_3_10():
-    return 'win' in sys.platform and sys.version_info >= (3, 10)
+    return system() == 'Windows' and sys.version_info >= (3, 10)
 
 
 def choose_backend(backend):
@@ -72,6 +73,7 @@ def with_d3(graph, output):
           pip_names=['requests-html', 'nest_asyncio'])
 def embedded_html(path):
     import asyncio
+
     import nest_asyncio
     nest_asyncio.apply()
     return asyncio.get_event_loop().run_until_complete(
@@ -81,7 +83,8 @@ def embedded_html(path):
 async def _embedded_html(path):
     # https://github.com/jupyter/nbclient/blob/1d629b2bed561fde521e6408e190a8159f117ddc/nbclient/util.py
     # https://github.com/jupyter/nbclient/blob/main/requirements.txt
-    from requests_html import HTML as HTML_, AsyncHTMLSession
+    from requests_html import HTML as HTML_
+    from requests_html import AsyncHTMLSession
 
     session = AsyncHTMLSession()
     html = HTML_(html=Path(path).read_text(), session=session)
