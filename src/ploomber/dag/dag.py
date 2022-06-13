@@ -790,7 +790,7 @@ class DAG(AbstractDAG):
 
         return Table([self[name].status(**kwargs) for name in self])
 
-    def to_markup(self, path=None, fmt='html', sections=None):
+    def to_markup(self, path=None, fmt='html', sections=None, backend=None):
         """Returns a str (md or html) with the pipeline's description
 
         Parameters
@@ -810,15 +810,17 @@ class DAG(AbstractDAG):
             status = False
 
         if 'plot' in sections:
-            fd, path_to_plot = tempfile.mkstemp(suffix='.png')
+            ext = '.png' if plot.choose_backend(backend) == 'pygraphviz' \
+                  else 'html'
+            fd, path_to_plot = tempfile.mkstemp(suffix=ext)
             os.close(fd)
             self.plot(output=path_to_plot)
-            plot = image_bytes2html(Path(path_to_plot).read_bytes())
+            plot_ = image_bytes2html(Path(path_to_plot).read_bytes())
         else:
-            plot = False
+            plot_ = False
 
         template_md = importlib_resources.read_text(resources, 'dag.md')
-        out = Template(template_md).render(plot=plot,
+        out = Template(template_md).render(plot=plot_,
                                            status=status,
                                            source='source' in sections,
                                            dag=self)

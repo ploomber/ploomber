@@ -264,8 +264,9 @@ def test_plot_error_if_d3_and_include_products(dag):
 
 @pytest.mark.parametrize('fmt', ['html', 'md'])
 @pytest.mark.parametrize('sections', [None, 'plot', 'status', 'source'])
-def test_to_markup(fmt, sections, dag, monkeypatch_plot):
-    dag.to_markup(fmt=fmt, sections=sections)
+@pytest.mark.parametrize('backend', [None, 'd3', 'pygraphviz'])
+def test_to_markup(fmt, sections, backend, dag, monkeypatch_plot):
+    dag.to_markup(fmt=fmt, sections=sections, backend=backend)
 
 
 def test_error_on_invalid_markup_format(dag):
