@@ -2,7 +2,6 @@ import json
 import sys
 from importlib.util import find_spec
 from pathlib import Path
-from platform import system
 
 import jinja2
 from IPython.display import HTML
@@ -22,7 +21,7 @@ def check_pygraphviz_installed():
 
 
 def check_if_windows_python_3_10():
-    return system() == 'Windows' and sys.version_info >= (3, 10)
+    return 'win' in sys.platform and sys.version_info >= (3, 10)
 
 
 def choose_backend(backend):

@@ -1,5 +1,4 @@
 import sys
-from platform import system
 import logging
 from itertools import product
 import warnings
@@ -27,7 +26,7 @@ from ploomber.dag import plot as dag_plot_module
 from ploomber.util import util as ploomber_util
 
 
-IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and system() == 'Windows'
+IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and 'win' in sys.platform
 
 
 # TODO: a lot of these tests should be in a test_executor file

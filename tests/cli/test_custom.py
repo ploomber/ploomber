@@ -2,7 +2,6 @@ import os
 import subprocess
 import importlib
 import sys
-from platform import system
 from pathlib import Path
 from unittest.mock import Mock, MagicMock
 
@@ -21,7 +20,7 @@ import ploomber.dag.dag as dag_module
 from ploomber.telemetry import telemetry
 
 
-IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and system() == 'Windows'
+IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and 'win' in sys.platform
 
 
 def test_no_options(monkeypatch):
