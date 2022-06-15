@@ -260,10 +260,8 @@ class _ExamplesManager:
         tw.write('\nTo download: ploomber examples -n name -o path\n')
         tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n\n')
 
-    def download(self, name, output, branch, force):
-        examples_manager = _ExamplesManager(branch=branch,
-                                            verbose=True,
-                                            force=force)
+    def download(self, name, output):
+        examples_manager = _ExamplesManager(branch=self.branch, verbose=True)
         with open(examples_manager.examples / '_index.csv',
                   newline='',
                   encoding='utf-8-sig') as f:
@@ -274,12 +272,11 @@ class _ExamplesManager:
             category = row.pop('name')
             del row['idx']
             categories.append(category)
-
         if not selected.exists():
             closest_match = _suggest_command(name, categories)
             raise BaseException(
-                f'There is no example named {name!r}. '
-                f'Did you mean "{closest_match}"?\n'
+                f'There is no example named "{name!r}", '
+                f'did you mean "{closest_match}"?\n'
                 'List examples: ploomber examples\n'
                 'Update local copy: ploomber examples -f\n'
                 'Get ML example: ploomber examples -n '
@@ -324,19 +321,8 @@ def main(name, force=False, branch=None, output=None):
     examples_manager = _ExamplesManager(branch=branch,
                                         verbose=True,
                                         force=force)
-
-    if not examples_manager.examples.exists() \
-            or examples_manager.outdated() \
-            or force:
-        if not examples_manager.examples.exists():
-            click.echo('Local copy does not exist...')
-        elif force:
-            click.echo('Forcing download...')
-        examples_manager.clone()
     if not name:
         examples_manager.list()
     else:
         examples_manager.download(name=name,
-                                  output=output,
-                                  branch=branch,
-                                  force=force)
+                                  output=output)
