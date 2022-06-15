@@ -104,7 +104,7 @@ jobs:
         pytest tests/telemetry --cov=ploomber
 
   # Repo owner has commented /ok-to-test on a (fork-based) pull request
-  integration-fork-linux:
+  Linux-integration-forked:
     runs-on: ubuntu-latest
     name: Linux-integration-forked
     if: 
@@ -331,7 +331,7 @@ jobs:
         pytest tests/telemetry
 
   # Repo owner has commented /ok-to-test on a (fork-based) pull request
-  integration-fork-macos:
+  Macos-integration-forked:
     runs-on: macos-latest
     name: Macos-integration-forked
     strategy:
@@ -556,7 +556,7 @@ jobs:
         pytest tests/telemetry
 
   # Repo owner has commented /ok-to-test on a (fork-based) pull request
-  integration-fork-windows:
+  Windows-integration-forked:
     runs-on: windows-latest
     name: Windows-integration-forked
     strategy:
