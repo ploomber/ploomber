@@ -30,7 +30,6 @@ def test_cloud_list():
     assert 'created_at' in result.output
     assert 'runid' in result.output
     assert 'status' in result.output
-    assert len(result.output.splitlines()) == 7
     assert result.exit_code == 0
 
 
