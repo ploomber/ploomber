@@ -17,7 +17,7 @@ jobs:
     if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
     
     services:
       postgres:
@@ -66,7 +66,14 @@ jobs:
         # for some reason, conda does not resolve the env correctly and
         # installs and old version of pygraphviz (1.3) which breaks in
         # Python 3.7
-        conda install -y "pygraphviz>=1.6" -c conda-forge
+        # To support python 3.10, installing only for other versions.
+        VERSION=$(python -c 'import sys; print(".".join(map(str, sys.version_info[1:2])))')
+        if [ $VERSION!="10" ]; then
+          echo "installing pygraphviz"
+          conda install -y "pygraphviz>=1.6" -c conda-forge
+        else
+          echo "skipping pygraphviz installation"
+        fi
 
         # Test vanilla installation, make sure core modules are importable
         pip install .
@@ -114,7 +121,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
     
     services:
       postgres:
@@ -166,7 +173,14 @@ jobs:
         # for some reason, conda does not resolve the env correctly and
         # installs and old version of pygraphviz (1.3) which breaks in
         # Python 3.7
-        conda install -y "pygraphviz>=1.6" -c conda-forge
+        # To support python 3.10, installing only for other versions.
+        VERSION=$(python -c 'import sys; print(".".join(map(str, sys.version_info[1:2])))')
+        if [ $VERSION!="10" ]; then
+          echo "installing pygraphviz"
+          conda install -y "pygraphviz>=1.6" -c conda-forge
+        else
+          echo "skipping pygraphviz installation"
+        fi
 
         # Test vanilla installation, make sure core modules are importable
         pip install .
@@ -246,7 +260,7 @@ jobs:
     name: Macos-integration
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
     if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
     steps:
     - name: Start PostgreSQL
@@ -336,7 +350,7 @@ jobs:
     name: Macos-integration-forked
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
     if: 
       github.event_name == 'repository_dispatch' &&
       github.event.client_payload.slash_command.sha != '' &&
@@ -469,7 +483,7 @@ jobs:
     name: Windows-integration
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ['3.7', '3.8', '3.9', '3.10']
 
     if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
     steps:
@@ -561,7 +575,7 @@ jobs:
     name: Windows-integration-forked
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ['3.7', '3.8', '3.9', '3.10']
 
     if: 
       github.event_name == 'repository_dispatch' &&
