@@ -92,7 +92,9 @@ def _display_markdown(tw, path):
         tw.write(f'\n[...{str(path)} continues]\n', yellow=True)
 
 
-calledTime = 0;
+# calledTime = 0
+
+
 class _ExamplesManager:
     """Listing and downloading examples
 
@@ -329,3 +331,4 @@ def main(name, force=False, branch=None, output=None):
         examples_manager.download(name=name,
                                   output=output)
         # calledTime += 1
+
