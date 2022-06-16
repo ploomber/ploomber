@@ -17,7 +17,7 @@ jobs:
     if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, 3.10]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
     
     services:
       postgres:
@@ -121,7 +121,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, 3.10]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
     
     services:
       postgres:
@@ -260,7 +260,7 @@ jobs:
     name: Macos-integration
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
     if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
     steps:
     - name: Start PostgreSQL
@@ -350,7 +350,7 @@ jobs:
     name: Macos-integration-forked
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
     if: 
       github.event_name == 'repository_dispatch' &&
       github.event.client_payload.slash_command.sha != '' &&
@@ -575,7 +575,7 @@ jobs:
     name: Windows-integration-forked
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ['3.7', '3.8', '3.9', '3.10']
 
     if: 
       github.event_name == 'repository_dispatch' &&

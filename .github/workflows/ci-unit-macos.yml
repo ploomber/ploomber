@@ -12,7 +12,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
 
     steps:
       # https://www.cybertec-postgresql.com/en/postgresql-github-actions-continuous-integration/
@@ -64,7 +64,7 @@ jobs:
         # make the build fail quickly on flake8 errors
         pip install flake8
         flake8
-        
+
         # To support python 3.10, installing only for other versions.
         VERSION=$(python -c 'import sys; print(".".join(map(str, sys.version_info[1:2])))')
         if [ $VERSION != "10" ]; then
