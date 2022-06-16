@@ -1,19 +1,21 @@
-name: CI macOS
+# Run unit tests on any branch/fork pull request
 on:
   push:
   pull_request:
   schedule:
     - cron: '0 0 * * *'
 
-jobs:
-  test:
+name: MacOS unit test
+
+jobs:  
+  macOS:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
+        python-version: [3.6, 3.7, 3.8, 3.9]
 
     steps:
-    # https://www.cybertec-postgresql.com/en/postgresql-github-actions-continuous-integration/
+      # https://www.cybertec-postgresql.com/en/postgresql-github-actions-continuous-integration/
     - name: Start PostgreSQL
       run: |
         brew services start postgresql
@@ -62,7 +64,7 @@ jobs:
         # make the build fail quickly on flake8 errors
         pip install flake8
         flake8
-
+        
         # To support python 3.10, installing only for other versions.
         VERSION=$(python -c 'import sys; print(".".join(map(str, sys.version_info[1:2])))')
         if [ $VERSION != "10" ]; then
@@ -71,7 +73,6 @@ jobs:
         else
           echo "skipping pygraphviz installation"
         fi
-
 
         # Test vanilla installation, make sure core modules are importable
         # note: I needed to add "--ignore-installed certifi" because the
@@ -98,4 +99,4 @@ jobs:
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env
-        pytest tests
+        pytest tests --ignore=tests/cli/test_cloud_execution.py --ignore=tests/cloud --ignore=tests/telemetry

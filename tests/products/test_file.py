@@ -330,7 +330,6 @@ def test_task_with_client_is_not_outdated_returns_waiting_download(
 
 
 @pytest.mark.parametrize('operation', [_edit_source_code, _delete_metadata])
-@pytest.mark.skip()
 def test_task_with_client_and_metaproduct_isnt_outdated_rtrns_waiting_download(
         operation, tmp_directory):
     """

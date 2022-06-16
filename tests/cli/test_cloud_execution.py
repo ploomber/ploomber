@@ -22,7 +22,6 @@ def test_cloud_build():
     pass
 
 
-@pytest.mark.skip()
 def test_cloud_list():
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'list'], catch_exceptions=False)
@@ -45,7 +44,6 @@ def test_cloud_status(runid):
     assert result.exit_code == 0
 
 
-@pytest.mark.skip()
 def test_cloud_products():
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'products'])
@@ -54,7 +52,6 @@ def test_cloud_products():
     assert result.exit_code == 0
 
 
-@pytest.mark.skip()
 def test_cloud_download(tmp_directory):
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'download', '*.html'])
@@ -63,7 +60,6 @@ def test_cloud_download(tmp_directory):
     assert result.exit_code == 0
 
 
-@pytest.mark.skip()
 def test_cloud_logs(runid):
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'logs', runid])
