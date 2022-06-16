@@ -1,0 +1,95 @@
+# Run unit tests on any branch/fork pull request
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *'
+
+name: MacOS unit test
+
+jobs:  
+  macOS:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+
+    steps:
+      # https://www.cybertec-postgresql.com/en/postgresql-github-actions-continuous-integration/
+    - name: Start PostgreSQL
+      run: |
+        brew services start postgresql
+        echo "Check PostgreSQL service is running"
+        i=10
+        COMMAND='pg_isready'
+        while [ $i -gt 0 ]; do
+            echo "Check PostgreSQL service status"
+            eval $COMMAND && break
+            ((i--))
+            if [ $i == 0 ]; then
+                echo "PostgreSQL service not ready, all attempts exhausted"
+                exit 1
+            fi
+            echo "PostgreSQL service not ready, wait 10 more sec, attempts left: $i"
+            sleep 10
+        done
+
+    - name: Create PostgreSQL user
+      run: psql --command="CREATE USER postgres PASSWORD 'postgres'" postgres
+
+    - name: Update PostgreSQL permissions
+      run: psql --command="ALTER DATABASE postgres OWNER TO postgres" postgres
+
+    - name: Check PostgreSQL authentication
+      run: PGPASSWORD=postgres pg_isready --dbname postgres --username postgres
+
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniconda-version: "latest"
+        activate-environment: conda-env
+        python-version: ${{ matrix.python-version }}
+
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v2
+
+    - name: Install dependencies
+      run: |
+
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+
+        # make the build fail quickly on flake8 errors
+        pip install flake8
+        flake8
+
+        conda install -y pygraphviz -c conda-forge
+
+        # Test vanilla installation, make sure core modules are importable
+        # note: I needed to add "--ignore-installed certifi" because the
+        # installation started failing suddenly
+        pip install .  --ignore-installed certifi
+        python -c 'import ploomber'
+        python -c 'import ploomber.tasks'
+        python -c 'import ploomber.products'
+        python -c 'import ploomber.clients'
+
+        # install dev requirements
+        pip install .[dev]
+
+        # install IR kernel
+        echo "install.packages('IRkernel', repos='http://cran.us.r-project.org'); IRkernel::installspec()" | Rscript -
+
+        # install sample package for tests
+        pip install --editable tests/assets/test_pkg
+
+    - name: Run tests
+      env:
+        PLOOMBER_STATS_ENABLED: false
+        PLOOMBER_CLOUD_KEY: ${{ secrets.PLOOMBER_CLOUD_KEY }}
+      run: |
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+        pytest tests --ignore=tests/cli/test_cloud_execution.py --ignore=tests/cloud --ignore=tests/telemetry

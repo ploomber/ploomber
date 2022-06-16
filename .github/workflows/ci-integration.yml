@@ -13,6 +13,7 @@ jobs:
   # Branch-based pull request
   integration-trusted-linux:
     runs-on: ubuntu-latest
+    name: Linux-integration
     if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
     strategy:
       matrix:
@@ -103,8 +104,9 @@ jobs:
         pytest tests/telemetry --cov=ploomber
 
   # Repo owner has commented /ok-to-test on a (fork-based) pull request
-  integration-fork-linux:
+  Linux-integration-forked:
     runs-on: ubuntu-latest
+    name: Linux-integration-forked
     if: 
       github.event_name == 'repository_dispatch' &&
       github.event.client_payload.slash_command.sha != '' &&
@@ -241,6 +243,7 @@ jobs:
 
   integration-trusted-macos:
     runs-on: macos-latest
+    name: Macos-integration
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
@@ -328,8 +331,9 @@ jobs:
         pytest tests/telemetry
 
   # Repo owner has commented /ok-to-test on a (fork-based) pull request
-  integration-fork-macos:
+  Macos-integration-forked:
     runs-on: macos-latest
+    name: Macos-integration-forked
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
@@ -462,6 +466,7 @@ jobs:
 
   integration-trusted-windows:
     runs-on: windows-latest
+    name: Windows-integration
     strategy:
       matrix:
         python-version: [3.7, 3.8, 3.9]
@@ -551,8 +556,9 @@ jobs:
         pytest tests/telemetry
 
   # Repo owner has commented /ok-to-test on a (fork-based) pull request
-  integration-fork-windows:
+  Windows-integration-forked:
     runs-on: windows-latest
+    name: Windows-integration-forked
     strategy:
       matrix:
         python-version: [3.7, 3.8, 3.9]
