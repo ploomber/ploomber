@@ -92,6 +92,7 @@ def _display_markdown(tw, path):
         tw.write(f'\n[...{str(path)} continues]\n', yellow=True)
 
 
+calledTime = 0;
 class _ExamplesManager:
     """Listing and downloading examples
 
@@ -275,7 +276,7 @@ class _ExamplesManager:
         if not selected.exists():
             closest_match = _suggest_command(name, categories)
             raise BaseException(
-                f'There is no example named "{name!r}", '
+                f'There is no example named {name!r}, '
                 f'did you mean "{closest_match}"?\n'
                 'List examples: ploomber examples\n'
                 'Update local copy: ploomber examples -f\n'
@@ -321,8 +322,10 @@ def main(name, force=False, branch=None, output=None):
     examples_manager = _ExamplesManager(branch=branch,
                                         verbose=True,
                                         force=force)
+    global calledTime
     if not name:
         examples_manager.list()
     else:
         examples_manager.download(name=name,
                                   output=output)
+        # calledTime += 1

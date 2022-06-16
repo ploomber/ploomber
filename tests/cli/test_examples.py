@@ -343,6 +343,8 @@ def test_did_you_mean_feature():
     runner = CliRunner()
     result = runner.invoke(cli.cli,
                            ['examples', '--name', "reportgeneration"])
+    assert result.exit_code == 1
+    assert "There is no example named 'reportgeneration'" in result.output
     assert "did you mean \"cookbook/report-generation\"" in result.output
 
 
