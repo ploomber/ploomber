@@ -1,0 +1,236 @@
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: '0 0 * * *'
+  repository_dispatch:
+    types: [ok-to-test-command]
+
+name: Windows integration tests
+
+jobs:
+  integration-trusted-windows:
+    runs-on: windows-latest
+    name: Windows-integration
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+
+    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
+    steps:
+
+    - name: Start PostgreSQL
+      run: |
+        $pgService = Get-Service -Name postgresql*
+        Set-Service -InputObject $pgService -Status running -StartupType automatic
+        Start-Process -FilePath "$env:PGBIN\pg_isready" -Wait -PassThru
+    - name: Change PostgreSQL password
+      run: |
+        & $env:PGBIN\psql --command  "ALTER USER postgres PASSWORD 'postgres'"
+    - name: Check PostgreSQL authentication
+      run: |
+        $env:PGPASSWORD = 'postgres'
+        & $env:PGBIN\pg_isready --dbname postgres --username postgres
+
+    - name: Branch based PR checkout
+      uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniconda-version: "latest"
+        activate-environment: conda-env
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      shell: bash -l {0}
+      run: |
+
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+
+        # make the build fail quickly on flake8 errors
+        pip install flake8
+        flake8
+
+        # there's a bug in jupyter, we need to install this first
+        conda install pywin32
+
+        # install graphviz (pygraphviz not available in conda for win-64,
+        # it will be installed from pip)
+        # conda install -y graphviz -c conda-forge
+        # note: this installation still gives trouble (error when saving png
+        # files but it makes pygraphviz importable), we can get rid of this
+        # once we update the tests to mock the @requires decorator to make
+        # it think that pygraphviz is installed when it's not. the tests
+        # currently do not call pygraphviz (it's mocked), but @requires imports
+        conda install -y -c alubbock pygraphviz 
+        # seems like pygraphviz just doesnt work on windows
+        # https://github.com/pygraphviz/pygraphviz/issues/40
+        # pip install pygraphviz
+
+        # Test vanilla installation, make sure core modules are importable
+        pip install .
+        python -c 'import ploomber'
+        python -c 'import ploomber.tasks'
+        python -c 'import ploomber.products'
+        python -c 'import ploomber.clients'
+
+        # install dev requirements
+        pip install .[dev]
+
+        # https://github.com/ipython/ipython/issues/12049
+        pip install prompt-toolkit==2.0.10
+
+        # install R and IR kernel
+        conda install -y r-base r-irkernel -c conda-forge
+        echo "IRkernel::installspec()" | Rscript -
+
+        # install sample package for tests
+        pip install --editable tests/assets/test_pkg
+
+    - name: Run tests
+      env:
+        PLOOMBER_STATS_ENABLED: false
+        PLOOMBER_CLOUD_KEY: ${{ secrets.PLOOMBER_CLOUD_KEY }}
+      shell: bash -l {0}
+      run: |
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+        pytest tests/cli/test_cloud_execution.py
+        pytest tests/cloud
+        pytest tests/telemetry
+
+  # Repo owner has commented /ok-to-test on a (fork-based) pull request
+  Windows-integration-forked:
+    runs-on: windows-latest
+    name: Windows-integration-forked
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+
+    if: 
+      github.event_name == 'repository_dispatch' &&
+      github.event.client_payload.slash_command.sha != '' &&
+      contains(github.event.client_payload.pull_request.head.sha, github.event.client_payload.slash_command.sha)
+    steps:
+
+    # Check out merge commit
+    - name: Fork based /ok-to-test checkout
+      uses: actions/checkout@v2
+      with:
+        ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+
+    - name: Start PostgreSQL
+      run: |
+        $pgService = Get-Service -Name postgresql*
+        Set-Service -InputObject $pgService -Status running -StartupType automatic
+        Start-Process -FilePath "$env:PGBIN\pg_isready" -Wait -PassThru
+    - name: Change PostgreSQL password
+      run: |
+        & $env:PGBIN\psql --command  "ALTER USER postgres PASSWORD 'postgres'"
+    - name: Check PostgreSQL authentication
+      run: |
+        $env:PGPASSWORD = 'postgres'
+        & $env:PGBIN\pg_isready --dbname postgres --username postgres
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniconda-version: "latest"
+        activate-environment: conda-env
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      shell: bash -l {0}
+      run: |
+
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+
+        # make the build fail quickly on flake8 errors
+        pip install flake8
+        flake8
+
+        # there's a bug in jupyter, we need to install this first
+        conda install pywin32
+
+        # install graphviz (pygraphviz not available in conda for win-64,
+        # it will be installed from pip)
+        # conda install -y graphviz -c conda-forge
+        # note: this installation still gives trouble (error when saving png
+        # files but it makes pygraphviz importable), we can get rid of this
+        # once we update the tests to mock the @requires decorator to make
+        # it think that pygraphviz is installed when it's not. the tests
+        # currently do not call pygraphviz (it's mocked), but @requires imports
+        conda install -y -c alubbock pygraphviz 
+        # seems like pygraphviz just doesnt work on windows
+        # https://github.com/pygraphviz/pygraphviz/issues/40
+        # pip install pygraphviz
+
+        # Test vanilla installation, make sure core modules are importable
+        pip install .
+        python -c 'import ploomber'
+        python -c 'import ploomber.tasks'
+        python -c 'import ploomber.products'
+        python -c 'import ploomber.clients'
+
+        # install dev requirements
+        pip install .[dev]
+
+        # https://github.com/ipython/ipython/issues/12049
+        pip install prompt-toolkit==2.0.10
+
+        # install R and IR kernel
+        conda install -y r-base r-irkernel -c conda-forge
+        echo "IRkernel::installspec()" | Rscript -
+
+        # install sample package for tests
+        pip install --editable tests/assets/test_pkg
+
+    - name: Run tests
+      env:
+        PLOOMBER_STATS_ENABLED: false
+        PLOOMBER_CLOUD_KEY: ${{ secrets.PLOOMBER_CLOUD_KEY }}
+      shell: bash -l {0}
+      run: |
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+        pytest tests/cli/test_cloud_execution.py
+        pytest tests/cloud
+        pytest tests/telemetry
+
+    - run: |
+        echo "Integration tests... success! ;-)"
+
+    # Update check run called "integration-fork"
+    - uses: actions/github-script@v5
+      id: update-check-run
+      if: ${{ always() }}
+      env:
+        number: ${{ github.event.client_payload.pull_request.number }}
+        job: ${{ github.job }}
+        # Conveniently, job.status maps to https://developer.github.com/v3/checks/runs/#update-a-check-run
+        conclusion: ${{ job.status }} 
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const { data: pull } = await github.rest.pulls.get({
+            ...context.repo,
+            pull_number: process.env.number
+          });
+          const ref = pull.head.sha;
+
+          const { data: checks } = await github.rest.checks.listForRef({
+            ...context.repo,
+            ref
+          });
+
+          const check = checks.check_runs.filter(c => c.name === process.env.job);
+
+          const { data: result } = await github.rest.checks.update({
+            ...context.repo,
+            check_run_id: check[0].id,
+            status: 'completed',
+            conclusion: process.env.conclusion
+          });
+
+          return result;
