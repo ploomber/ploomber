@@ -1,3 +1,5 @@
+REMOVE ME
+
 <p align="center" width="100%">
   <img src="_static/logo.png" height="250">
 </p>
