@@ -166,7 +166,9 @@ def test_does_not_download_again_if_no_explicit_branch_requested(
 
     # if called again but no force nor branch arg, it shouldn't download again
     examples.main(name=None, force=False, branch=None)
-    examples.main(name='templates/ml-online', force=False, branch=None)
+    examples.main(name=None, force=False)
+    examples.main(name=None, branch=None)
+    examples.main(name=None, force=False, branch=None)
 
     mock_run.assert_not_called()
 
