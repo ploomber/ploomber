@@ -1,0 +1,232 @@
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: '0 0 * * *'
+  repository_dispatch:
+    types: [ok-to-test-command]
+
+name: MacOS integration tests
+
+jobs:
+  integration-trusted-macos:
+    runs-on: macos-latest
+    name: Macos-integration
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
+    steps:
+    - name: Start PostgreSQL
+      run: |
+        brew services start postgresql
+        echo "Check PostgreSQL service is running"
+        i=10
+        COMMAND='pg_isready'
+        while [ $i -gt 0 ]; do
+            echo "Check PostgreSQL service status"
+            eval $COMMAND && break
+            ((i--))
+            if [ $i == 0 ]; then
+                echo "PostgreSQL service not ready, all attempts exhausted"
+                exit 1
+            fi
+            echo "PostgreSQL service not ready, wait 10 more sec, attempts left: $i"
+            sleep 10
+        done
+
+    - name: Create PostgreSQL user
+      run: psql --command="CREATE USER postgres PASSWORD 'postgres'" postgres
+
+    - name: Update PostgreSQL permissions
+      run: psql --command="ALTER DATABASE postgres OWNER TO postgres" postgres
+
+    - name: Check PostgreSQL authentication
+      run: PGPASSWORD=postgres pg_isready --dbname postgres --username postgres
+
+    - name: Branch based PR checkout
+      uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniconda-version: "latest"
+        activate-environment: conda-env
+        python-version: ${{ matrix.python-version }}
+
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v2
+
+    - name: Install dependencies
+      run: |
+
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+
+        # make the build fail quickly on flake8 errors
+        pip install flake8
+        flake8
+
+        conda install -y pygraphviz -c conda-forge
+
+        # Test vanilla installation, make sure core modules are importable
+        # note: I needed to add "--ignore-installed certifi" because the
+        # installation started failing suddenly
+        pip install .  --ignore-installed certifi
+        python -c 'import ploomber'
+        python -c 'import ploomber.tasks'
+        python -c 'import ploomber.products'
+        python -c 'import ploomber.clients'
+
+        # install dev requirements
+        pip install .[dev]
+
+        # install IR kernel
+        echo "install.packages('IRkernel', repos='http://cran.us.r-project.org'); IRkernel::installspec()" | Rscript -
+
+        # install sample package for tests
+        pip install --editable tests/assets/test_pkg
+
+    - name: Run tests
+      env:
+        PLOOMBER_STATS_ENABLED: false
+        PLOOMBER_CLOUD_KEY: ${{ secrets.PLOOMBER_CLOUD_KEY }}
+      run: |
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+        pytest tests/cli/test_cloud_execution.py
+        pytest tests/cloud
+        pytest tests/telemetry
+
+  # Repo owner has commented /ok-to-test on a (fork-based) pull request
+  Macos-integration-forked:
+    runs-on: macos-latest
+    name: Macos-integration-forked
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+    if: 
+      github.event_name == 'repository_dispatch' &&
+      github.event.client_payload.slash_command.sha != '' &&
+      contains(github.event.client_payload.pull_request.head.sha, github.event.client_payload.slash_command.sha)
+    steps:
+    - name: Start PostgreSQL
+      run: |
+        brew services start postgresql
+        echo "Check PostgreSQL service is running"
+        i=10
+        COMMAND='pg_isready'
+        while [ $i -gt 0 ]; do
+            echo "Check PostgreSQL service status"
+            eval $COMMAND && break
+            ((i--))
+            if [ $i == 0 ]; then
+                echo "PostgreSQL service not ready, all attempts exhausted"
+                exit 1
+            fi
+            echo "PostgreSQL service not ready, wait 10 more sec, attempts left: $i"
+            sleep 10
+        done
+
+    - name: Create PostgreSQL user
+      run: psql --command="CREATE USER postgres PASSWORD 'postgres'" postgres
+
+    - name: Update PostgreSQL permissions
+      run: psql --command="ALTER DATABASE postgres OWNER TO postgres" postgres
+
+    - name: Check PostgreSQL authentication
+      run: PGPASSWORD=postgres pg_isready --dbname postgres --username postgres
+
+    # Check out merge commit
+    - name: Fork based /ok-to-test checkout
+      uses: actions/checkout@v2
+      with:
+        ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniconda-version: "latest"
+        activate-environment: conda-env
+        python-version: ${{ matrix.python-version }}
+
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v2
+
+    - name: Install dependencies
+      run: |
+
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+
+        # make the build fail quickly on flake8 errors
+        pip install flake8
+        flake8
+
+        conda install -y pygraphviz -c conda-forge
+
+        # Test vanilla installation, make sure core modules are importable
+        # note: I needed to add "--ignore-installed certifi" because the
+        # installation started failing suddenly
+        pip install .  --ignore-installed certifi
+        python -c 'import ploomber'
+        python -c 'import ploomber.tasks'
+        python -c 'import ploomber.products'
+        python -c 'import ploomber.clients'
+
+        # install dev requirements
+        pip install .[dev]
+
+        # install IR kernel
+        echo "install.packages('IRkernel', repos='http://cran.us.r-project.org'); IRkernel::installspec()" | Rscript -
+
+        # install sample package for tests
+        pip install --editable tests/assets/test_pkg
+
+    - name: Run tests
+      env:
+        PLOOMBER_STATS_ENABLED: false
+        PLOOMBER_CLOUD_KEY: ${{ secrets.PLOOMBER_CLOUD_KEY }}
+      run: |
+        eval "$(conda shell.bash hook)"
+        conda activate conda-env
+        pytest tests/cli/test_cloud_execution.py
+        pytest tests/cloud
+        pytest tests/telemetry
+
+    - run: |
+        echo "Integration tests... success! ;-)"
+
+    # Update check run called "integration-fork"
+    - uses: actions/github-script@v5
+      id: update-check-run
+      if: ${{ always() }}
+      env:
+        number: ${{ github.event.client_payload.pull_request.number }}
+        job: ${{ github.job }}
+        # Conveniently, job.status maps to https://developer.github.com/v3/checks/runs/#update-a-check-run
+        conclusion: ${{ job.status }} 
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const { data: pull } = await github.rest.pulls.get({
+            ...context.repo,
+            pull_number: process.env.number
+          });
+          const ref = pull.head.sha;
+
+          const { data: checks } = await github.rest.checks.listForRef({
+            ...context.repo,
+            ref
+          });
+
+          const check = checks.check_runs.filter(c => c.name === process.env.job);
+
+          const { data: result } = await github.rest.checks.update({
+            ...context.repo,
+            check_run_id: check[0].id,
+            status: 'completed',
+            conclusion: process.env.conclusion
+          });
+
+          return result;
