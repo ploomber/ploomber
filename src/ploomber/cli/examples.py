@@ -321,25 +321,7 @@ def main(name, branch=None, force=False, output=None):
     examples_manager = _ExamplesManager(branch=branch,
                                         force=force,
                                         verbose=True)
-    print(name)
-    print(branch)
-    print(force)
-    # if not name:
-    #     print("judgement1")
-    #     examples_manager.list()
-    # else:
-    #     print("judgement2")
-    #     if branch is None and force is False:
-    #         print("judgement2.1")
-    #         return
-    #     else:
-    #         print("judgement2.2")
-    #         examples_manager.download(name=name,
-    #                                   output=output)
     if not name:
-        print("judgement1")
         examples_manager.list()
     else:
-        print("judgement2")
         examples_manager.download(name=name, output=output)
-        
