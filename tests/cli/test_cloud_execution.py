@@ -2,7 +2,6 @@
 Tests for cloud execution
 """
 from pathlib import Path
-
 import pytest
 from click.testing import CliRunner
 
@@ -11,12 +10,12 @@ from ploomber_cli.cli import cli
 
 @pytest.fixture
 def runid():
-    return 'a9663eee-72c4-4ff7-b82a-460d516000f3'
+    return '7b795661-15ad-415b-be95-0cd9dbe8588e'
 
 
 @pytest.fixture
 def taskid():
-    return 'ef9cd110-393f-42bf-bd63-375c66041e3a'
+    return 'c29b409e-cfff-45ff-bc3d-77206180e1c5'
 
 
 def test_cloud_build():
@@ -30,7 +29,6 @@ def test_cloud_list():
     assert 'created_at' in result.output
     assert 'runid' in result.output
     assert 'status' in result.output
-    assert len(result.output.splitlines()) == 7
     assert result.exit_code == 0
 
 

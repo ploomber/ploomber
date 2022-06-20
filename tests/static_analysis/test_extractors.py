@@ -47,6 +47,13 @@ def test_jinja_variable_access():
     assert extractor.find_variable_assignment('non_var') is None
 
 
+def test_jinja_variable_access_nested():
+    extractor = JinjaExtractor("""
+{{upstream.a}} {{upstream["b"]["another"]}}
+""")
+    assert extractor.find_variable_access('upstream') == {'a', 'b'}
+
+
 @pytest.mark.parametrize('code', [case_error_1, case_error_2, case_error_3])
 def test_error_from_code_cell(code):
     extractor = PythonNotebookExtractor(parameters_cell=code)

@@ -257,6 +257,27 @@ def entry_point_relative(name=None):
     return location_pkg or location
 
 
+def try_to_find_env_yml(path_to_spec):
+    """
+
+    The purpose of this function is to check whether there are env files
+    ending with .yml format. It will return that file if it does exist,
+    otherwise return None.
+
+    This function will only be called right after path_to_env_from_spec.
+
+    """
+    # FIXME: delete this
+    if path_to_spec is None:
+        return None
+
+    path_to_parent = Path(path_to_spec).parent
+    name = extract_name(path_to_spec)
+    filename = 'env.yml' if name is None else f'env.{name}.yml'
+    return _path_to_filename_in_cwd_or_with_parent(
+        filename=filename, path_to_parent=path_to_parent, raise_=False)
+
+
 def path_to_env_from_spec(path_to_spec):
     """
 
@@ -335,7 +356,22 @@ def _search_for_env_with_name_and_parent(filename, path_to_parent, raise_):
 def _path_to_filename_in_cwd_or_with_parent(filename, path_to_parent, raise_):
     """
     Looks for a file with filename in the current working directory, if it
-    doesn't exist, it looks for it relative to path_to_parent.
+    doesn't exist, it looks for the file under parent directory again
+
+    For example:
+    project/
+        pipeline.yaml
+        another/ <- assume this is the current working directory
+            env.yaml <- this gets loaded
+
+    And:
+    project/ <- this is path_to_parent
+        pipeline.yaml
+        env.yaml <- this gets loaded
+        another/ <- assume this is the current working directory
+        sibling/
+            env.yaml <- this will never get loaded
+                        (under sibling rather than project)
 
     Parameters
     ----------
@@ -350,13 +386,11 @@ def _path_to_filename_in_cwd_or_with_parent(filename, path_to_parent, raise_):
         If Trye, raises an error if the file doesn't exist
     """
     local_env = Path('.', filename).resolve()
-
     if local_env.exists():
         return str(local_env)
 
     if path_to_parent:
         sibling_env = Path(path_to_parent, filename).resolve()
-
         if sibling_env.exists():
             return str(sibling_env)
 

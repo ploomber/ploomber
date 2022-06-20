@@ -312,7 +312,6 @@ class DAGSpec(MutableMapping):
         env = env or dict()
         path_to_defaults = default.path_to_env_from_spec(
             path_to_spec=self._path)
-
         # there is an env.yaml we can use
         if path_to_defaults:
             defaults = yaml.safe_load(Path(path_to_defaults).read_text())
@@ -322,6 +321,11 @@ class DAGSpec(MutableMapping):
 
         # there is no env.yaml
         else:
+            # wrong extension of env.yml or env.{name}.yml found
+            if default.try_to_find_env_yml(path_to_spec=self._path):
+                raise DAGSpecInitializationError(
+                    'Error: found env file ends with .yml. '
+                    'Change the extension to .yaml.')
             self.env = EnvDict(env, path_to_here=self._parent_path)
 
         self.data, tags = expand_raw_dictionary_and_extract_tags(
@@ -663,6 +667,7 @@ class DAGSpecPartial(DAGSpec):
     A DAGSpec subclass that initializes from a list of tasks (used in the
     onlinedag.py) module
     """
+
     def __init__(self, path_to_partial, env=None):
         with open(path_to_partial) as f:
             tasks = yaml.safe_load(f)
