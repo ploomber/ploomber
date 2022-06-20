@@ -308,7 +308,7 @@ def _edit_source_code(path):
 
 
 def _delete_metadata(path):
-    #Path(path).unlink()
+    # Path(path).unlink()
     os.remove(Path(path))
 
 
