@@ -85,7 +85,7 @@ To write a pipeline you can leverage this command:
 
 .. code-block:: console
 
-    ploomber cloud delete-pipeline <YOUR_PIPELINE_ID> <PIPELINE_STATUS>
+    ploomber cloud write-pipeline <YOUR_PIPELINE_ID> <PIPELINE_STATUS>
 
 The `pipeline_id` and `status` arguments are required.
 
