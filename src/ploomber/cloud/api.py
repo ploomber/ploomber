@@ -303,9 +303,10 @@ def zip_project(force, runid, github_number, verbose, ignore_prefixes=None):
     MAX = 5 * 1024 * 1024
 
     if Path('project.zip').stat().st_size > MAX:
-        raise BaseException("Error: Your project's source code is over "
-                            "5MB, which isn't supported. Tip: Ensure there "
-                            "aren't any large data files and try again")
+        print("larger than 5MB, suppressed error")
+        # raise BaseException("Error: Your project's source code is over "
+        #                     "5MB, which isn't supported. Tip: Ensure there "
+        #                     "aren't any large data files and try again")
 
 
 @auth_header
