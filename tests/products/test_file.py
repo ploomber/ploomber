@@ -301,25 +301,28 @@ def test_task_without_client_is_outdated_by_code(tmp_directory):
     assert t.product._is_outdated()
 
 
-def _edit_source_code(path):
+def _edit_source_code(path, tmp_path):
+    tmp_path = tmp_path / "temp.txt"
     m = _load_json(path)
     m['stored_source_code'] = m['stored_source_code'] + '1 + 1\n'
-    _write_json(m, path)
+    with open(tmp_path, 'w') as f:
+        json.dump(m, f)
+    os.replace(tmp_path, path)
 
 
-def _delete_metadata(path):
+def _delete_metadata(path, tmp_path):
     os.remove(Path(path))
 
 
 @pytest.mark.parametrize('operation', [_edit_source_code, _delete_metadata])
 def test_task_with_client_is_not_outdated_returns_waiting_download(
-        operation, tmp_directory):
+        operation, tmp_directory, tmp_path):
     dag = _make_dag(with_client=True)
     dag.build()
 
     # simulate local outdated tasks
-    operation('.file.txt.metadata')
-    operation('.root.metadata')
+    operation('.file.txt.metadata', tmp_path)
+    operation('.root.metadata', tmp_path)
 
     dag = _make_dag(with_client=True).render()
 
@@ -331,7 +334,7 @@ def test_task_with_client_is_not_outdated_returns_waiting_download(
 
 @pytest.mark.parametrize('operation', [_edit_source_code, _delete_metadata])
 def test_task_with_client_and_metaproduct_isnt_outdated_rtrns_waiting_download(
-        operation, tmp_directory):
+        operation, tmp_directory, tmp_path):
     """
     Checking MetaProduct correctly forwards WaitingDownload when calling
     MetaProduct._is_outdated
@@ -340,9 +343,9 @@ def test_task_with_client_and_metaproduct_isnt_outdated_rtrns_waiting_download(
     dag.build()
 
     # simulate local outdated tasks
-    operation('.file.txt.metadata')
-    operation('.another.txt.metadata')
-    operation('.root.metadata')
+    operation('.file.txt.metadata', tmp_path)
+    operation('.another.txt.metadata', tmp_path)
+    operation('.root.metadata', tmp_path)
 
     dag = _make_dag_with_metaproduct(with_client=True).render()
 
@@ -354,7 +357,7 @@ def test_task_with_client_and_metaproduct_isnt_outdated_rtrns_waiting_download(
 
 @pytest.mark.parametrize('operation', [_edit_source_code, _delete_metadata])
 def test_task_with_client_and_metaproduct_with_some_missing_products(
-        operation, tmp_directory):
+        operation, tmp_directory, tmp_path):
     """
     If local MetaProduct content isn't consistent, it should execute instead of
     download
@@ -363,8 +366,8 @@ def test_task_with_client_and_metaproduct_with_some_missing_products(
     dag.build()
 
     # simulate *some* local outdated tasks
-    operation('.file.txt.metadata')
-    operation('.root.metadata')
+    operation('.file.txt.metadata', tmp_path)
+    operation('.root.metadata', tmp_path)
 
     dag = _make_dag_with_metaproduct(with_client=True).render()
 
@@ -374,12 +377,13 @@ def test_task_with_client_and_metaproduct_with_some_missing_products(
     assert dag['task'].exec_status == TaskStatus.WaitingDownload
 
 
-def test_downloads_if_missing_some_products_in_metaproduct(tmp_directory):
+def test_downloads_if_missing_some_products_in_metaproduct(
+        tmp_directory, tmp_path):
     dag = _make_dag_with_metaproduct(with_client=True)
     dag.build()
 
     # simulate *some* local outdated tasks
-    _delete_metadata('.file.txt.metadata')
+    _delete_metadata('.file.txt.metadata', tmp_path)
 
     dag = _make_dag_with_metaproduct(with_client=True).render()
 
@@ -391,7 +395,7 @@ def test_downloads_if_missing_some_products_in_metaproduct(tmp_directory):
 
 @pytest.mark.parametrize('operation', [_edit_source_code, _delete_metadata])
 def test_task_with_client_and_metaproduct_with_some_missing_remote_products(
-        operation, tmp_directory):
+        operation, tmp_directory, tmp_path):
     """
     If remote MetaProduct content isn't consistent, it should execute instead
     of download
@@ -400,11 +404,11 @@ def test_task_with_client_and_metaproduct_with_some_missing_remote_products(
     dag.build()
 
     # simulate *some* local outdated tasks (to force remote metadata lookup)
-    operation('.file.txt.metadata')
-    operation('.root.metadata')
+    operation('.file.txt.metadata', tmp_path)
+    operation('.root.metadata', tmp_path)
 
     # simulate corrupted remote MetaProduct metadata
-    operation('remote/.file.txt.metadata')
+    operation('remote/.file.txt.metadata', tmp_path)
 
     dag = _make_dag_with_metaproduct(with_client=True).render()
 
