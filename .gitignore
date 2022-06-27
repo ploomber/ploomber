@@ -69,6 +69,9 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+out.html
+out.ipynb
+out.pdf
 
 # Translations
 *.mo

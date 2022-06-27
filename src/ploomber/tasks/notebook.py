@@ -251,7 +251,8 @@ class NotebookConverter:
 
         path = Path(path_to_nb)
 
-        nb = nbformat.reads(path.read_text(), as_version=nbformat.NO_CONVERT)
+        nb = nbformat.reads(path.read_text(encoding='utf-8'),
+                            as_version=nbformat.NO_CONVERT)
         content, _ = nbconvert.export(exporter, nb, **nbconvert_export_kwargs)
 
         if isinstance(content, str):
