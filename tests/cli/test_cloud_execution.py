@@ -62,8 +62,7 @@ def test_cloud_download(tmp_directory):
 def test_cloud_logs(runid):
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'logs', runid])
-    assert 'START OF LOGS FOR TASK' in result.output
-    assert 'END OF LOGS FOR TASK' in result.output
+
     assert result.exit_code == 0
 
 
