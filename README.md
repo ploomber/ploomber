@@ -40,7 +40,7 @@ Ploomber is the fastest way to build data pipelines ⚡️. Use your favorite ed
 
 ## Installation
 
-*Compatible with Python 3.6 and higher.*
+*Compatible with Python 3.7 and higher.*
 
 Install with `pip`:
 

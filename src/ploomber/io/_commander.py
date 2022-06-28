@@ -115,24 +115,19 @@ class Commander:
 
         error = None
 
-        # py 3.6 compatibility: cannot use subprocess.run directly
-        # because the check_output arg was included until version 3.7
-        if not capture_output:
-            try:
-                result = subprocess.check_call(cmd)
-            except Exception as e:
-                error = e
-        # capture outpuut
+        try:
+            result = subprocess.run(cmd, capture_output=capture_output)
+            # throw error if return code is not 0
+            result.check_returncode()
+        except Exception as e:
+            error = e
         else:
-            try:
-                result = subprocess.check_output(cmd)
-            except Exception as e:
-                error = e
-            else:
-                result = result.decode(sys.stdout.encoding)
+            # result is None if run is run with capture_output=false
+            if result.stdout is not None:
+                result = result.stdout.decode(sys.stdout.encoding)
 
-            if expected_output is not None:
-                error = result != expected_output
+        if expected_output is not None:
+            error = result != expected_output
 
         if error:
             lines = []
