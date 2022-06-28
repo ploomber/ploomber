@@ -301,6 +301,14 @@ def test_task_without_client_is_outdated_by_code(tmp_directory):
     assert t.product._is_outdated()
 
 
+# Previously this method was directly writing to the json file.
+# This has been changed to first creating a temporary file,
+# writing the modified json to it and then using os.replace
+# to replace the temp file with original path, which is why we
+# need the tmp_path parameter. os.replace would be done in an atomic
+# way, so we should not face the race condition seen earlier.
+
+
 def _edit_source_code(path, tmp_path):
     tmp_path = tmp_path / "temp.txt"
     m = _load_json(path)
@@ -310,6 +318,10 @@ def _edit_source_code(path, tmp_path):
     os.replace(tmp_path, path)
 
 
+# This has been changed from unlink to remove because of an
+# intermittent CI failure. tmp_path is required because we
+# need it in _edit_source_code, and there's a common method
+# operation for calling these methods.
 def _delete_metadata(path, tmp_path):
     os.remove(Path(path))
 
