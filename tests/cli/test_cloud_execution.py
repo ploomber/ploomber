@@ -72,6 +72,7 @@ def test_cloud_abort(runid):
 
     assert 'Aborted.' in result.output
     assert result.exit_code == 0
+    assert 1 == 2
 
 
 def test_cloud_data_list():
@@ -90,7 +91,3 @@ def test_cloud_data_upload_delete(tmp_directory):
 
     result = runner.invoke(cli, ['cloud', 'data', '--delete', 'file.txt'])
     assert result.exit_code == 0
-
-
-def fail_test_on_purpose():
-    assert 1 == 2
