@@ -15,6 +15,7 @@ import json
 
 import click
 import humanize
+from requests import RequestException
 
 from ploomber.table import Table
 from ploomber.cloud import io, config
@@ -320,11 +321,17 @@ def get_presigned_link(headers):
 
 def upload_zipped_project(response, verbose):
     with open("project.zip", "rb") as f:
+        print("[debug] upload_zipped_project:open done")
         files = {"file": f}
-        http_response = _requests.post(response["url"],
+        print("[debug] upload_zipped_project:file done")
+        try:
+            http_response = _requests.post(response["url"],
                                        data=response["fields"],
                                        files=files)
-
+            print("[debug] upload_zipped_project:http_response done")
+        except Exception as err:
+            raise ValueError(f"An error happened during POST request: {err}")
+    print("try done")
     if http_response.status_code != 204:
         raise ValueError(f"An error happened: {http_response}")
 
@@ -382,7 +389,7 @@ def upload_project(force=False,
         click.echo("Starting build...")
 
     trigger()
-
+    print("[debug] trigger done")
     # TODO: if anything fails after runs_new, update the status to error
     # convert runs_new into a context manager
 

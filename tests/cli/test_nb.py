@@ -14,6 +14,7 @@ from ploomber.cli import nb
 
 def git_init():
     subprocess.check_call(['git', 'init'])
+    subprocess.check_call(['git', 'config', 'commit.gpgsign', 'false'])
     subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
     subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
 
