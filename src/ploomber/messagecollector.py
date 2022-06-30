@@ -118,6 +118,19 @@ class MessageCollector(abc.ABC):
             yield message
 
 
+# gets the message for a single task
+def task_build_exception(task, message, exception):
+    # use this just to get a single task collected from the abstract class
+    class TaskBuildExceptionsCollector(MessageCollector):
+        def __str__(self):
+            return self._to_str(name='Task build failed',
+                                file=None,
+                                writer_kwargs=dict(red=True))
+    tbec = TaskBuildExceptionsCollector()
+    tbec.append(task=task, message=message, obj=exception)
+    return str(tbec)
+
+
 class BuildExceptionsCollector(MessageCollector):
     def __str__(self):
         return self._to_str(name='DAG build failed',
