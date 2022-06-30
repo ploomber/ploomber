@@ -311,7 +311,10 @@ def zip_project(force, runid, github_number, verbose, ignore_prefixes=None):
 
 @auth_header
 def get_presigned_link(headers):
-    return _requests.get(f"{HOST}/upload", headers=headers).json()
+    try:
+        return _requests.get(f"{HOST}/upload", headers=headers).json()
+    except Exception as err:
+        return {"Error": err}
 
 
 def upload_zipped_project(response, verbose):
@@ -371,9 +374,9 @@ def upload_project(force=False,
         click.echo("Uploading project...")
 
     response = get_presigned_link()
-
+    print("get_presigned_link done")
     upload_zipped_project(response, verbose)
-
+    print("upload_zipped_project done")
     if verbose:
         click.echo("Starting build...")
 
