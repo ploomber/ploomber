@@ -303,7 +303,8 @@ def zip_project(force, runid, github_number, verbose, ignore_prefixes=None):
     MAX = 5 * 1024 * 1024
 
     if Path('project.zip').stat().st_size > MAX:
-        print("larger than 5MB, suppressed error")
+        print("[debug] larger than 5MB, temp suppressed error"
+              " to ensure the backend also validates")
         # raise BaseException("Error: Your project's source code is over "
         #                     "5MB, which isn't supported. Tip: Ensure there "
         #                     "aren't any large data files and try again")
@@ -374,9 +375,9 @@ def upload_project(force=False,
         click.echo("Uploading project...")
 
     response = get_presigned_link()
-    print("get_presigned_link done")
+    print("[debug] get_presigned_link done")
     upload_zipped_project(response, verbose)
-    print("upload_zipped_project done")
+    print("[debug] upload_zipped_project done")
     if verbose:
         click.echo("Starting build...")
 

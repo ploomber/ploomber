@@ -83,6 +83,22 @@ key: value
         api.upload_project()
 
 
+def test_zip_project_errors_if_too_large(tmp_directory, sample_project, capsys):
+    Path('requirements.lock.txt').touch()
+    # create a 150MB file (so the compressed file > 5MB)
+    mb = 150
+    with open("myTestFile.txt", "wb") as tf:
+        tf.seek(mb * 1024 * 1024 - 1)
+        tf.write(b'0')
+        tf.seek(0)
+        api.zip_project(force=False,
+                        runid='runid',
+                        github_number='number',
+                        verbose=False)
+    captured = capsys.readouterr()
+    assert "Error: Your project's source code is over 5MB" in captured
+
+
 def test_upload_project_ignores_product_prefixes(monkeypatch, tmp_nbs):
     monkeypatch.setenv('PLOOMBER_CLOUD_KEY', 'some-key')
     monkeypatch.setattr(api, 'runs_new', Mock(return_value='runid'))
