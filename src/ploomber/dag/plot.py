@@ -4,7 +4,6 @@ from importlib.util import find_spec
 from pathlib import Path
 
 import jinja2
-from IPython.display import HTML
 
 try:
     import importlib.resources as importlib_resources
@@ -29,8 +28,7 @@ def choose_backend(backend):
        Temporarily disable pygraphviz for Python 3.10 on Windows
     """
     if ((not check_pygraphviz_installed() and backend is None)
-            or (backend == 'd3')
-            or (check_if_windows_python_3_10())):
+            or (backend == 'd3') or (check_if_windows_python_3_10())):
         return 'd3'
 
     return 'pygraphviz'
@@ -72,22 +70,8 @@ def with_d3(graph, output):
           pip_names=['requests-html', 'nest_asyncio'])
 def embedded_html(path):
     import asyncio
+    from IPython.display import IFrame
 
     import nest_asyncio
     nest_asyncio.apply()
-    return asyncio.get_event_loop().run_until_complete(
-        _embedded_html(path=path))
-
-
-async def _embedded_html(path):
-    # https://github.com/jupyter/nbclient/blob/1d629b2bed561fde521e6408e190a8159f117ddc/nbclient/util.py
-    # https://github.com/jupyter/nbclient/blob/main/requirements.txt
-    from requests_html import HTML as HTML_
-    from requests_html import AsyncHTMLSession
-
-    session = AsyncHTMLSession()
-    html = HTML_(html=Path(path).read_text(), session=session)
-    await html.arender()
-    # ensure we close the session, otherwise this will fail on windows
-    await session.close()
-    return HTML(data=html.html)
+    return asyncio.get_event_loop().run_until_complete(IFrame(src=path))
