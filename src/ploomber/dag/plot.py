@@ -2,6 +2,7 @@ import json
 import sys
 from importlib.util import find_spec
 from pathlib import Path
+from IPython.display import IFrame
 
 import jinja2
 
@@ -12,7 +13,6 @@ except ImportError:  # pragma: no cover
     import importlib_resources
 
 from ploomber import resources
-from ploomber.util.util import requires
 
 
 def check_pygraphviz_installed():
@@ -65,13 +65,5 @@ def with_d3(graph, output):
     Path(output).write_text(rendered)
 
 
-@requires(['requests_html', 'nest_asyncio'],
-          name='embedded HTML with D3 backend',
-          pip_names=['requests-html', 'nest_asyncio'])
 def embedded_html(path):
-    import asyncio
-    from IPython.display import IFrame
-
-    import nest_asyncio
-    nest_asyncio.apply()
-    return asyncio.get_event_loop().run_until_complete(IFrame(src=path))
+    return IFrame(src=path)
