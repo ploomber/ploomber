@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.19.8dev
+
 ## 0.19.7 (2022-07-04)
 * Suppressing "black is not installed" message ([#831](https://github.com/ploomber/ploomber/issues/831))
 * Better error message in `ploomber cloud build` when pipeline is up-to-date ([#815](https://github.com/ploomber/ploomber/issues/815))
