@@ -199,6 +199,7 @@ def test_get_pipeline(monkeypatch):
     assert pid in res
 
 
+@pytest.mark.xfail(reason="prod broken")
 def test_get_pipeline_no_key(tmp_directory, monkeypatch):
     key = "TEST_KEY"
     sample_pipeline_id = str(uuid.uuid4())
@@ -220,6 +221,7 @@ def test_write_pipeline():
     assert pid in res
 
 
+@pytest.mark.xfail(reason="prod broken")
 def test_write_pipeline_no_valid_key(monkeypatch):
     key = "2AhdF2MnRDw-ZZZZZZZZZZ"
     sample_pipeline_id = str(uuid.uuid4())
