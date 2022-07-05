@@ -21,6 +21,7 @@ from ploomber.sources.notebooksource import (_cleanup_rendered_nb, inject_cell)
 from ploomber.jupyter.dag import JupyterDAGManager
 from ploomber.util import loader
 from ploomber.exceptions import DAGSpecInvalidError
+from ploomber.tasks.notebook import NotebookMixin
 
 
 class DAGMapping(Mapping):
@@ -116,7 +117,7 @@ def derive_class(base_class):
             if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
                 msg = (
                     '[Ploomber] An error occured when trying to initialize '
-                    'the pipeline. Cells won\' be injected until your '
+                    'the pipeline. Cells won\'t be injected until your '
                     'pipeline processes correctly. See error details below.')
 
                 if self.spec and not self.spec['meta']['jupyter_hot_reload']:
@@ -190,9 +191,14 @@ def derive_class(base_class):
                     else:
                         self.manager = None
 
+                    notebook_tasks = [
+                        task for task in self.dag.values()
+                        if isinstance(task, NotebookMixin)
+                    ]
+
                     pairs = [(resolve_path(
                         Path(self.root_dir).resolve(), t.source.loc), t)
-                             for t in self.dag.values()
+                             for t in notebook_tasks
                              if t.source.loc is not None]
                     dag_mapping = DAGMapping(pairs)
 

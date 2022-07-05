@@ -20,10 +20,12 @@ $(document).ready(function () {
 
     // TODO: this should listen for click events in the whole terminal
     // window, not only in the content sub-window
+    // Clicking on the terminnals copies the content to the clipboard
     $("div.highlight").click(function () {
         navigator.clipboard.writeText($(this).text());
     });
 
+    // Hovering on the terminals shows "Click to copy"
     $("[class*='highlight-']").hover(
         function () {
             $(this).find(".copy-message").css("opacity", 1);
@@ -34,6 +36,7 @@ $(document).ready(function () {
         }
     );
 
+    // Clicking on terminals displays "Copied!"
     $("[class*='highlight-']").click(function () {
         $(this).find(".copy-message").text("Copied!");
     });

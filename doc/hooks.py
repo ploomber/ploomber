@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import shutil
 from urllib import request
@@ -17,7 +18,6 @@ def config_init(app, config):
     else:
         print('Cloning from git...')
         git_clone()
-        projects = Path('../../projects-master')
 
     # key: directory in the projects directory
     # value: directory in the documentation
@@ -49,6 +49,8 @@ def git_clone():
 
     with zipfile.ZipFile('../../master.zip', 'r') as f:
         f.extractall('../../')
+
+    os.rename('../../projects-master', Path('../../projects-ploomber'))
 
 
 def jinja_filters(app):

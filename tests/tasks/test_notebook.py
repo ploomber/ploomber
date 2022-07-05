@@ -1,6 +1,6 @@
 import sys
 from unittest.mock import Mock, ANY
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 import jupytext
@@ -14,6 +14,7 @@ from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  TaskInitializationError)
 from ploomber.tasks import notebook
 from ploomber.executors import Serial
+from ploomber.clients import LocalStorageClient
 
 
 def fake_from_notebook_node(self, nb, resources):
@@ -484,6 +485,112 @@ Path(product['model']).touch()
                    nb_product_key='nb',
                    name='nb')
     dag.build()
+
+
+@pytest.mark.parametrize('product, nb_product_key, nbconvert_exporter_name', [
+    (
+        {
+            'notebook': File(Path('out.ipynb')),
+            'report_html': File(Path('out.html')),
+            'report_pdf': File(Path('out.pdf')),
+            'file': File(Path('another', 'data', 'file.txt')),
+        },
+        [
+            'notebook',
+            'report_html',
+            'report_pdf',
+        ],
+        {
+            'report_pdf': 'webpdf'
+        },
+    ),
+    ({
+        'nb_ipynb': File(Path('out.ipynb')),
+        'nb_html': File(Path('out.html')),
+        'file': File(Path('another', 'data', 'file.txt')),
+    }, ['nb_ipynb', 'nb_html'], None),
+    ({
+        'report_html': File(Path('out.html')),
+        'file': File(Path('another', 'data', 'file.txt')),
+    }, ['report_html'], None),
+    ({
+        'nb': File(Path('out.ipynb')),
+        'file': File(Path('another', 'data', 'file.txt')),
+    }, 'nb', None),
+    ({
+        'nb': File(Path('out.pdf')),
+        'file': File(Path('another', 'data', 'file.txt')),
+    }, 'nb', 'webpdf')
+])
+def test_multiple_nb_product_success(product, nb_product_key,
+                                     nbconvert_exporter_name):
+    dag = DAG()
+
+    code = """
+# + tags=["parameters"]
+var = None
+
+# +
+from pathlib import Path
+Path(product['file']).touch()
+    """
+
+    NotebookRunner(code,
+                   product=product,
+                   dag=dag,
+                   ext_in='py',
+                   nbconvert_exporter_name=nbconvert_exporter_name,
+                   nb_product_key=nb_product_key,
+                   name='nb')
+    dag.build()
+
+
+@pytest.mark.parametrize(
+    'product, nb_product_key, nbconvert_exporter_name, '
+    'expected_error',
+    [({
+        'nb_ipynb': File(Path('out.ipynb')),
+        'nb_html': File(Path('out.html')),
+    }, ['nb_ipynb', 'nb_html'
+        ], 'webpdf', "When specifying nb_product_key as a list"),
+     ({
+         'nb_ipynb': File(Path('out.ipynb')),
+         'nb_html': File(Path('out.html')),
+     }, ['nb_html'], None, "Missing key \\\'nb_ipynb\\\' in nb_product_key:"),
+     ({
+         'nb': File(Path('out.ipynb'))
+     }, 'nb', {
+         'nb_pdf': 'webpdf'
+     }, "Please specify a single nbconvert_exporter_name"),
+     ({
+         'nb_ipynb': File(Path('out.ipynb')),
+         'nb_html': File(Path('out.html'))
+     }, ['nb_ipynb', 'nb_html'], {
+         'nb_pdf': 'webpdf'
+     }, "Invalid nbconvert exporter"),
+     ({
+         'nb_ipynb': File(Path('out.ipynb'))
+     }, ['nb_ipynb', 'report_pdf'
+         ], None, "Missing key \\\'report_pdf\\\' in product")])
+def test_multiple_nb_product_error(product, nb_product_key,
+                                   nbconvert_exporter_name, expected_error):
+    dag = DAG()
+
+    code = """
+# + tags=["parameters"]
+var = None
+    """
+
+    with pytest.raises(TaskInitializationError) as excinfo:
+        NotebookRunner(code,
+                       product=product,
+                       dag=dag,
+                       ext_in='py',
+                       nb_product_key=nb_product_key,
+                       nbconvert_exporter_name=nbconvert_exporter_name,
+                       name='nb')
+
+    assert expected_error in str(excinfo)
 
 
 def test_raises_error_if_key_does_not_exist_in_metaproduct(tmp_directory):
@@ -979,3 +1086,123 @@ def test_initialize_with_str_like_path(tmp_directory):
 
     assert 'Perhaps you meant passing a pathlib.Path object' in str(
         excinfo.value)
+
+
+@pytest.mark.parametrize(
+    'product, expected_remote, kwargs',
+    [
+        [
+            File('out.ipynb'),
+            'remote/out.ipynb',
+            dict(),
+        ],
+        [
+            File('out.html'),
+            'remote/out.ipynb',
+            dict(),
+        ],
+        [
+            {
+                'nb': File('out.ipynb'),
+                'another': File('another.csv')
+            },
+            'remote/out.ipynb',
+            dict(),
+        ],
+        [
+            {
+                'nb': File('out.html'),
+                'another': File('another.csv')
+            },
+            'remote/out.ipynb',
+            dict(),
+        ],
+        [
+            {
+                'some_key': File('out.ipynb'),
+                'another': File('another.csv')
+            },
+            'remote/out.ipynb',
+            dict(nb_product_key='some_key'),
+        ],
+        [
+            {
+                'notebook': File('out.ipynb'),
+                'report': File('out.html'),
+                'another': File('another.csv')
+            },
+            'remote/out.ipynb',
+            dict(nb_product_key=['notebook', 'report']),
+        ],
+        [
+            {
+                'pdf': File('out.pdf'),
+                'html': File('out.html'),
+                'another': File('another.csv')
+            },
+            'remote/out.ipynb',
+            dict(nb_product_key=['pdf', 'html']),
+        ],
+        [
+            {
+                'notebook': File('notebooks/nb.ipynb'),
+                'report': File('reports/report.html'),
+                'document': File('documents/doc.pdf'),
+                'another': File('another.csv')
+            },
+            'remote/notebooks/nb.ipynb',
+            dict(nb_product_key=['notebook', 'report', 'document']),
+        ],
+        [
+            {
+                'report': File('reports/report.html'),
+                'document': File('documents/doc.pdf'),
+                'another': File('another.csv')
+            },
+            'remote/reports/report.ipynb',
+            dict(nb_product_key=['document', 'report']),
+        ],
+        [
+            {
+                'notebook': File('mynotebook.ipynb'),
+                'report': File('report.html'),
+                'another': File('another.csv')
+            },
+            # notebookrunner should use the out.ipynb to store the partially
+            # executed report, independent of the order in nb_product_key
+            'remote/mynotebook.ipynb',
+            dict(nb_product_key=['notebook', 'report']),
+        ],
+    ],
+    ids=[
+        'one-ipynb',
+        'one-non-ipynb',
+        'multiple-products-one-ipynb',
+        'multiple-products-non-ipynb',
+        'one-ipynb-custom-key',
+        'multiple-notebooks-one-ipynb',
+        'multiple-notebooks-non-ipynb',
+        'multiple-notebooks-one-ipynb-nested-location',
+        'multiple-notebooks-non-ipynb-nested-location',
+        'multiple-notebooks-one-ipynb-different-names',
+    ])
+def test_uploads_notebook_if_it_fails(tmp_directory, product, expected_remote,
+                                      kwargs):
+    path = Path('nb.py')
+    path.write_text("""
+# + tags=["parameters"]
+# some code
+
+# +
+raise ValueError("some stuff happened")
+    """)
+
+    dag = DAG()
+    dag.clients[File] = LocalStorageClient('remote', path_to_project_root='.')
+    NotebookRunner(Path('nb.py'), product, dag=dag, **kwargs)
+
+    with pytest.raises(DAGBuildError) as excinfo:
+        dag.build()
+
+    assert str(PurePosixPath(expected_remote)) in str(excinfo.value)
+    assert Path(expected_remote).is_file()

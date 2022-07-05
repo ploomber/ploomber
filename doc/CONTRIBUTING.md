@@ -44,6 +44,13 @@ invoke docs
 To see the docs, open `doc/_build/html/index.html`
 
 
+## Layout
+
+Documentation files are under `doc/`. CSS, JS, and images are under `doc/_static`, and HTML templates are under `doc/_templates`. The documentation content are all the files under `doc/` with `.rst` extension. They are converted to `.html` when building the documentation.
+
+Once the documentation is built, you'll see a `doc/_build` folder. Do not edit these files, since building the documentation again will overwrite results. If you want to edit the content, edit the `.rst` files, if you want to edit the layour, edit the files in `doc/_static` or `doc/_templates`.
+
+
 ## Editing code snippets
 
 To make the docs clear, we distinguish between a Python script and a Python

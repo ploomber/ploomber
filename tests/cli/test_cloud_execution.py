@@ -2,7 +2,6 @@
 Tests for cloud execution
 """
 from pathlib import Path
-
 import pytest
 from click.testing import CliRunner
 
@@ -11,12 +10,12 @@ from ploomber_cli.cli import cli
 
 @pytest.fixture
 def runid():
-    return '1e8224b0-07e9-4c29-bb81-393817926c12'
+    return 'e5054fd2-6a72-4e10-83e9-f39f4cde9c54'
 
 
 @pytest.fixture
 def taskid():
-    return '3827ee34-7048-44d2-9507-79544d0f0e43'
+    return '665cba1f-e891-424a-a2ae-30009d29385c'
 
 
 def test_cloud_build():
@@ -30,19 +29,17 @@ def test_cloud_list():
     assert 'created_at' in result.output
     assert 'runid' in result.output
     assert 'status' in result.output
-    assert len(result.output.splitlines()) == 7
     assert result.exit_code == 0
 
 
 def test_cloud_status(runid):
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'status', runid])
-
-    assert 'taskid' in result.output
-    assert 'name' in result.output
-    assert 'runid' in result.output
-    assert 'status' in result.output
-    assert len(result.output.splitlines()) == 10
+    out = result.output
+    assert 'taskid' in out
+    assert 'name' in out
+    assert 'runid' in out
+    assert 'status' in out
     assert result.exit_code == 0
 
 
@@ -66,8 +63,6 @@ def test_cloud_logs(runid):
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'logs', runid])
 
-    assert 'START OF LOGS FOR TASK' in result.output
-    assert 'END OF LOGS FOR TASK' in result.output
     assert result.exit_code == 0
 
 

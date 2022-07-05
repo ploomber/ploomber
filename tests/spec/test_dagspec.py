@@ -34,6 +34,7 @@ from ploomber.sources.nb_utils import find_cell_with_tag
 
 
 def create_engine_with_schema(schema):
+
     def fake_create_engine(*args, **kwargs):
         if 'sqlite' in args[0]:
             return create_engine(*args, **kwargs)
@@ -318,6 +319,69 @@ def test_doesnt_load_env_in_default_location_if_loading_from_dict(tmp_nbs):
 
     spec = DAGSpec(d)
     assert set(spec.env) == {'user', 'cwd', 'root', 'now'}
+
+
+def test_error_if_env_yml_exists_cwd(tmp_directory):
+    Path('env.yml').write_text("{'a': 1}")
+    Path('script.py').write_text("""
+# + tags=["parameters"]
+something = None
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: output.ipynb
+""")
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        DAGSpec('pipeline.yaml')
+
+    assert 'Error: found env file ends with .yml' in str(excinfo.value)
+
+
+def test_error_if_load_env_yml_from_sibl_dir(tmp_directory):
+    p = Path(str(tmp_directory) + '/child')
+    p.mkdir(parents=True, exist_ok=True)
+    Path('child', 'env.yml').write_text("{'a': 1}")
+    Path('script.py').write_text("""
+# + tags=["parameters"]
+something = None
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: output.ipynb
+""")
+    os.chdir(Path(str(tmp_directory) + '/child'))
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        DAGSpec(str(tmp_directory) + '/pipeline.yaml')
+
+    assert 'Error: found env file ends with .yml' in str(excinfo.value)
+
+
+def test_error_if_load_env_yml_from_parent_dir(tmp_directory):
+    p = Path(str(tmp_directory) + '/child')
+    p.mkdir(parents=True, exist_ok=True)
+    Path('env.yml').write_text("{'a': 1}")
+    Path('script.py').write_text("""
+# + tags=["parameters"]
+something = None
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: script.py
+      product: output.ipynb
+""")
+    os.chdir(Path(str(tmp_directory) + '/child'))
+
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        DAGSpec(str(tmp_directory) + '/pipeline.yaml')
+
+    assert 'Error: found env file ends with .yml' in str(excinfo.value)
 
 
 def test_notebook_spec_w_location(tmp_nbs, add_current_to_sys_path):

@@ -195,3 +195,9 @@ def test_error_if_missing_project_root(tmp_directory):
         S3Client('some-bucket', 'some-folder')
 
     assert 'Cannot initialize' in str(excinfo.value)
+
+
+def test_parent(tmp_directory):
+    Path('pipeline.yaml').touch()
+    c = S3Client('some-bucket', 'some-folder')
+    assert c.parent == 'some-folder'

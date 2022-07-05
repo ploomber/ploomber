@@ -172,10 +172,24 @@ def run_detail_print(run_id):
 
     if run['status'] == 'created':
         click.echo('Run created...')
+    elif run['status'] == 'finished':
+        click.echo('Pipeline finished...')
+        if tasks:
+            click.echo(Table.from_dicts(tasks))
+        else:
+            click.echo('Pipeline finished due to no newly triggered tasks,'
+                       ' try running ploomber cloud build --force')
     elif tasks:
+        if run['status'] == 'aborted':
+            click.echo('Pipeline aborted...')
+        elif run['status'] == 'failed':
+            click.echo('Pipeline failed...')
+        else:
+            click.echo('Unknown status: ' + run['status'])
         click.echo(Table.from_dicts(tasks))
     else:
-        click.echo('Pipeline up-to-date, no tasks scheduled for this run.')
+        click.echo('Unknown status: ' + run['status'] +
+                   ', no tasks triggered.')
 
     return out
 
@@ -214,6 +228,13 @@ def run_abort(headers, run_id):
 def run_finished(headers, runid):
     response = _requests.get(f"{HOST}/runs/{runid}/finished", headers=headers)
     return response
+
+
+@auth_header
+def run_latest_failed(headers, reason):
+    if reason != "none":
+        _requests.get(f"{HOST}/runs/latest/failed", headers=headers)
+        click.echo('Marked latest run as failed...')
 
 
 @auth_header
@@ -317,6 +338,8 @@ def upload_project(force=False,
                    github_owner=None,
                    github_repo=None,
                    verbose=False):
+    # TODO: this should use the function in the default.py module to load
+    # the default entry-point
     dag = DAGSpec('pipeline.yaml').to_dag().render(show_progress=False)
 
     # TODO: test

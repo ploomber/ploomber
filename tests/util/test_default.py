@@ -266,6 +266,24 @@ def test_path_to_env_error_if_dir(tmp_directory):
     assert str(excinfo.value) == expected
 
 
+def test_find_env_yml(tmp_directory):
+    Path('dir').mkdir()
+    Path('dir', 'env.yml').touch()
+
+    assert default.try_to_find_env_yml('dir/pipeline.yaml') == str(
+        Path('dir', 'env.yml').resolve())
+
+
+def test_find_env_yml_with_name(tmp_directory):
+    Path('env.train.yml').touch()
+    Path('dir').mkdir()
+    Path('dir', 'pipeline.train.yaml').touch()
+
+    assert default.try_to_find_env_yml(
+        Path('dir',
+             'pipeline.train.yaml')) == str(Path('env.train.yml').resolve())
+
+
 def test_finds_pipeline_yaml(tmp_directory):
     expected = Path(tmp_directory).resolve()
     pip = Path('pipeline.yaml').resolve()
@@ -564,3 +582,46 @@ def test_empty_reqs_mixed_envs():
         warnings.simplefilter("error")
         util.check_mixed_envs("")
         util.check_mixed_envs("nlnlyo2h3fnoun29hf2nu39ub")  # No \n in str
+
+
+def test_config_ignored_if_missing_ploomber_section(tmp_directory):
+    Path('setup.cfg').write_text("""
+[some-tool]
+x = 1
+""")
+
+    Path('pipeline.yaml').touch()
+
+    assert default.entry_point() == 'pipeline.yaml'
+
+
+@pytest.mark.parametrize('entry_point', [
+    'pipeline.another.yaml',
+    'dir/pipeline.yaml',
+    'dir\\pipeline.yaml',
+])
+def test_entry_point_from_config_file(tmp_directory, entry_point):
+    Path('setup.cfg').write_text(f"""
+[ploomber]
+entry-point = {entry_point}
+""")
+
+    Path(entry_point).parent.mkdir(exist_ok=True)
+    Path(entry_point).touch()
+    Path('pipeline.yaml').touch()
+
+    assert Path(default.entry_point()).resolve() == Path(entry_point).resolve()
+
+
+def test_entry_point_from_config_file_nested(tmp_directory):
+    Path('dir').mkdir()
+    Path('dir', 'setup.cfg').write_text("""
+[ploomber]
+entry-point = pipeline.another.yaml
+""")
+
+    Path('dir', 'pipeline.another.yaml').touch()
+    Path('pipeline.yaml').touch()
+
+    assert Path(default.entry_point(root_path='dir')).resolve() == Path(
+        'dir', 'pipeline.another.yaml').resolve()

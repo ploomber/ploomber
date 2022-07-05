@@ -253,7 +253,20 @@ extension looks for a ``pipeline.yaml`` file in the current directory and
 parent directories. If it finds one, it will load the pipeline and inject
 the appropriate cell if the existing file is a task in the loaded pipeline.
 
-If your pipeline spec has a different name, you can set the ``ENTRY_POINT``
+If your pipeline spec has a different name, you can create a ``setup.cfg`` file
+and indicate what file you want to load. Note that **changing the
+default affects both the command-line interface and the Jupyter plug-in**.
+
+.. code-block:: cfg
+    :class: text-editor
+    :name: setup-cfg
+
+    [ploomber]
+    entry-point = path/to/pipeline.yaml
+
+Note that paths are relative to the parent directory of ``setup.cfg``.
+
+Alternatively, you can set the ``ENTRY_POINT``
 environment variable. For example, to load a ``pipeline.serve.yaml``:
 
 .. code-block:: console
@@ -272,6 +285,10 @@ Note that ``ENTRY_POINT`` must be a file name and not a path. When you start
 Jupyter, Ploomber will look for that file in the current and parent directories
 until it finds one.
 
+.. collapse:: changelog
+
+    .. versionadded:: 0.19.6
+        Support for switching entry point with a ``setup.cfg`` file
 
 .. _troubleshooting-pipeline-loading:
 

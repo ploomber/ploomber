@@ -66,6 +66,7 @@ from os.path import relpath
 
 from ploomber.exceptions import DAGSpecInvalidError
 from ploomber.entrypoint import try_to_find_entry_point_type, EntryPoint
+from ploomber.util import config
 
 
 def _filesystem_root():
@@ -127,7 +128,7 @@ def entry_point_with_name(root_path=None, name=None):
             return relpath(entry_point, Path().resolve())
 
     # otherwise use {project_root}/{file}. note that this file must
-    # exust since find_root_recursively raises an error if it doesn't
+    # exist since find_root_recursively raises an error if it doesn't
     return relpath(Path(project_root, filename), Path().resolve())
 
 
@@ -176,6 +177,25 @@ def entry_point(root_path=None):
         filename = env_var
     else:
         filename = 'pipeline.yaml'
+
+    # check if there's a config file
+    path_to_config, _ = find_file_recursively(name='setup.cfg',
+                                              starting_dir=root_path)
+
+    if path_to_config:
+        cfg = config.load_config(path_to_config)
+
+        if cfg and cfg['ploomber'].get('entry-point'):
+            parent = Path(path_to_config).parent
+            entry_point = str(parent / cfg['ploomber']['entry-point'])
+
+            if not Path(entry_point).is_file():
+                raise DAGSpecInvalidError('Skipping DAG initialization:'
+                                          ' found setup.cfg but '
+                                          f'entry-point {entry_point!r} '
+                                          'does not exist')
+
+            return entry_point
 
     return entry_point_with_name(root_path=root_path, name=filename)
 
@@ -235,6 +255,27 @@ def entry_point_relative(name=None):
             'your package if your project is one)')
 
     return location_pkg or location
+
+
+def try_to_find_env_yml(path_to_spec):
+    """
+
+    The purpose of this function is to check whether there are env files
+    ending with .yml format. It will return that file if it does exist,
+    otherwise return None.
+
+    This function will only be called right after path_to_env_from_spec.
+
+    """
+    # FIXME: delete this
+    if path_to_spec is None:
+        return None
+
+    path_to_parent = Path(path_to_spec).parent
+    name = extract_name(path_to_spec)
+    filename = 'env.yml' if name is None else f'env.{name}.yml'
+    return _path_to_filename_in_cwd_or_with_parent(
+        filename=filename, path_to_parent=path_to_parent, raise_=False)
 
 
 def path_to_env_from_spec(path_to_spec):
@@ -315,7 +356,22 @@ def _search_for_env_with_name_and_parent(filename, path_to_parent, raise_):
 def _path_to_filename_in_cwd_or_with_parent(filename, path_to_parent, raise_):
     """
     Looks for a file with filename in the current working directory, if it
-    doesn't exist, it looks for it relative to path_to_parent.
+    doesn't exist, it looks for the file under parent directory again
+
+    For example:
+    project/
+        pipeline.yaml
+        another/ <- assume this is the current working directory
+            env.yaml <- this gets loaded
+
+    And:
+    project/ <- this is path_to_parent
+        pipeline.yaml
+        env.yaml <- this gets loaded
+        another/ <- assume this is the current working directory
+        sibling/
+            env.yaml <- this will never get loaded
+                        (under sibling rather than project)
 
     Parameters
     ----------
@@ -330,13 +386,11 @@ def _path_to_filename_in_cwd_or_with_parent(filename, path_to_parent, raise_):
         If Trye, raises an error if the file doesn't exist
     """
     local_env = Path('.', filename).resolve()
-
     if local_env.exists():
         return str(local_env)
 
     if path_to_parent:
         sibling_env = Path(path_to_parent, filename).resolve()
-
         if sibling_env.exists():
             return str(sibling_env)
 

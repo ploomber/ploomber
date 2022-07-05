@@ -20,6 +20,9 @@ import ploomber.dag.dag as dag_module
 from ploomber.telemetry import telemetry
 
 
+IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and 'win' in sys.platform
+
+
 def test_no_options(monkeypatch):
     # when running "ploomber"
     monkeypatch.setattr(sys, 'argv', ['ploomber'])
@@ -155,6 +158,8 @@ def test_status(monkeypatch, tmp_sample_dir):
     status.main(catch_exception=False)
 
 
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
+                    reason="requires < 3.10")
 @pytest.mark.parametrize('custom_args, output, include_products, backend', [
     [[], 'pipeline.entry.png', False, None],
     [['--output', 'custom.png'], 'custom.png', False, None],
@@ -182,6 +187,8 @@ def test_plot(custom_args, monkeypatch, tmp_sample_dir, output,
                                  include_products=include_products)
 
 
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
+                    reason="requires < 3.10")
 def test_plot_uses_name_if_any(tmp_nbs, monkeypatch):
     os.rename('pipeline.yaml', 'pipeline.train.yaml')
 
@@ -411,7 +418,6 @@ def test_parse_doc():
 ])
 def test_parse_doc_if_missing_numpydoc(docstring, expected_summary,
                                        monkeypatch):
-
     def _module_not_found(arg):
         raise ModuleNotFoundError
 
@@ -483,7 +489,6 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
     monkeypatch.setattr(sys, 'argv', args)
 
     class CustomParserWrapper(CustomParser):
-
         def load_from_entry_point_arg(self):
             dag, args = super().load_from_entry_point_arg()
             dag_mock = MagicMock(wraps=dag)
