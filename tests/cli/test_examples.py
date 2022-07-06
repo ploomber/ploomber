@@ -341,13 +341,30 @@ def test_error_if_git_clone_fails(monkeypatch, capsys):
         "(Error message: 'message')\n")
 
 
-def test_did_you_mean_feature():
+# TODO: fix ["grid", "cookbook/grid"] in suggest_command
+@pytest.mark.parametrize('input_name, expected_name', [
+    ['reportgeneration', 'cookbook/report-generation'],
+    ['ml-basic', 'templates/ml-basic'],
+    ['cookbookgrid', 'cookbook/grid'],
+    ['parametrized', 'guides/parametrized'],
+    ['variablenumberofproducts', 'cookbook/variable-number-of-products'],
+    ['guides/cro', 'guides/cron'],
+    ['debuging', 'guides/debugging'],
+    ['seerialization', 'guides/serialization'],
+    ['File-Client', 'cookbook/file-client'],
+    ['abcd', None]
+])
+def test_did_you_mean_feature(input_name, expected_name):
     runner = CliRunner()
     result = runner.invoke(cli.cli,
-                           ['examples', '--name', "reportgeneration"])
-    assert result.exit_code == 1
-    assert "There is no example named 'reportgeneration'" in result.output
-    assert "did you mean \"cookbook/report-generation\"" in result.output
+                           ['examples', '--name', input_name])
+    # assert result.exit_code == 1
+    assert f'There is no example named {input_name!r}' in result.output
+    if expected_name is not None:
+        assert f'Did you mean "{expected_name}"' in result.output
+    else:
+        # if the suggested command returns None, disable did you mean feature
+        assert 'Did you mean' not in result.output
 
 
 @pytest.mark.parametrize('md, expected', [

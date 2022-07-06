@@ -261,12 +261,11 @@ class _ExamplesManager:
         tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n\n')
 
     def download(self, name, output):
-        examples_manager = _ExamplesManager(branch=self.branch, verbose=True)
-        with open(examples_manager.examples / '_index.csv',
+        with open(self.examples / '_index.csv',
                   newline='',
                   encoding='utf-8-sig') as f:
             rows = list(csv.DictReader(f))
-        selected = examples_manager.path_to(name)
+        selected = self.path_to(name)
         categories = []
         for row in rows:
             category = row.pop('name')
@@ -274,9 +273,12 @@ class _ExamplesManager:
             categories.append(category)
         if not selected.exists():
             closest_match = _suggest_command(name, categories)
+            # when suggested command returns None, disable did you mean feature
+            did_you_mean_message = f'Did you mean "{closest_match}"?\n' \
+                if closest_match is not None else ''
             raise BaseException(
-                f'There is no example named {name!r}, '
-                f'did you mean "{closest_match}"?\n'
+                f'There is no example named {name!r}. '
+                f'{did_you_mean_message}'
                 'List examples: ploomber examples\n'
                 'Update local copy: ploomber examples -f\n'
                 'Get ML example: ploomber examples -n '
