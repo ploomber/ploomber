@@ -1,0 +1,383 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>User Guide &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Downloading templates" href="templates.html" />
+    <link rel="prev" title="SQL Pipelines" href="../use-cases/sql.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="templates.html">Downloading templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Jupyter integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html">Scaffolding projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring.html">Refactoring legacy notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametrized.html">Parametrized pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html">SQL Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html">SQL templating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Pipeline testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html">Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shell.html">Shell tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html">Other editors (VSCode, PyCharm, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html">R support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html">FAQ and Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html">Spec API vs. Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+user-guide%2Findex"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="user-guide">
+<h1>User Guide<a class="headerlink" href="#user-guide" title="Permalink to this headline">¶</a></h1>
+<p class="lead">In-depth tutorials for developing Ploomber pipelines.</p><div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">Downloading templates</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="templates.html#selected-templates">Selected templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="templates.html#downloading-a-template">Downloading a template</a></li>
+<li class="toctree-l2"><a class="reference internal" href="templates.html#listing-all-templates">Listing all templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="templates.html#templates-structure">Templates structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="templates.html#starting-projects-from-scratch">Starting projects from scratch</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command-line interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#entry-points">Entry points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#basic-commands">Basic commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#interactive-sessions">Interactive sessions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#other-commands">Other commands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#enabling-completion">Enabling Completion</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="jupyter.html">Jupyter integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html#interactive-development">Interactive development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html#the-upstream-variable">The <code class="docutils literal notranslate"><span class="pre">upstream</span></code> variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html#choosing-the-source-format">Choosing the source format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html#activating-the-jupyter-extension">Activating the Jupyter extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html#custom-jupyter-pipeline-loading">Custom Jupyter pipeline loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html#troubleshooting-pipeline-loading">Troubleshooting pipeline loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html#detecting-changes">Detecting changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html#managing-multiple-pipelines">Managing multiple pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html#exploratory-data-analysis">Exploratory Data Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html#opening-py-files-as-notebooks-with-a-single-click">Opening <code class="docutils literal notranslate"><span class="pre">.py</span></code> files as notebooks with a single click</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scaffold.html">Scaffolding projects</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html#scaffolding-tasks">Scaffolding tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html#packaging-projects">Packaging projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html#managing-development-and-production-dependencies">Managing development and production dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html#locking-dependencies">Locking dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="refactoring.html">Refactoring legacy notebooks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="refactoring.html#resources">Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="parametrized.html">Parametrized pipelines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="parametrized.html#Spec-API-(pipeline.yaml)">Spec API (<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametrized.html#Python-API-(factory-functions)">Python API (factory functions)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#managing-multiple-pipelines">Managing multiple pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#env-yaml-composition-dry"><code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> composition (DRY)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../get-started/sql-pipeline.html">SQL Pipelines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html#creating-sample-data">Creating Sample Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html#connecting-to-databases">Connecting To Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html#configuring-the-task-client-in-pipeline-yaml">Configuring The Task Client In <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html#creating-sql-tables-views-with-sqlscript">Creating SQL Tables/Views With <code class="docutils literal notranslate"><span class="pre">SQLScript</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html#sqlscript-and-product-s-metadata"><code class="docutils literal notranslate"><span class="pre">SQLScript</span></code> And Product’s Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html#placeholders-in-sql-scripts">Placeholders In SQL Scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html#dumping-data-with-sqldump">Dumping Data With <code class="docutils literal notranslate"><span class="pre">SQLDump</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html#other-sql-tasks">Other SQL Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html#where-to-go-from-here">Where To Go From Here</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sql-templating.html">SQL templating</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html#Basic-templating">Basic templating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html#Control-structures">Control structures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html#Macros">Macros</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html#Printing-rendered-code">Printing rendered code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html#Where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Pipeline testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#Sample-data">Sample data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#Testing-Python-scripts">Testing Python scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#Testing-SQL-scripts">Testing SQL scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#Running-the-pipeline">Running the pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#Test-driven-development-(TDD)">Test-driven development (TDD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#Pro-tip:-debugging-and-developing-tests-interactively">Pro tip: debugging and developing tests interactively</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#Where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#Why-debugging-pipelines-is-hard">Why debugging pipelines is hard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#Debugger-basics">Debugger basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#Tales-of-a-buggy-pipeline">Tales of a buggy pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#Starting-line-by-line-debugging-sessions">Starting line-by-line debugging sessions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#Post-mortem-debugging">Post-mortem debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#More-difficult-scenario:-no-exceptions-raised-but-wrong-output">More difficult scenario: no exceptions raised but wrong output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#Using-the-CLI-to-check-if-we-fixed-the-bug">Using the CLI to check if we fixed the bug</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#Letting-our-pipeline-fail-under-unforeseen-circumstances">Letting our pipeline fail under unforeseen circumstances</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#Debugging-(templated)-SQL-scripts">Debugging (templated) SQL scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#Where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="versioning.html">Versioning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html#Using-{{git}}">Using <code class="docutils literal notranslate"><span class="pre">{{git}}</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html#Using-{{git_hash}}">Using <code class="docutils literal notranslate"><span class="pre">{{git_hash}}</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html#Adding-the-current-timestamp-with-{{now}}">Adding the current timestamp with <code class="docutils literal notranslate"><span class="pre">{{now}}</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html#Using-placeholders-in-selected-tasks">Using placeholders in selected tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html#Using-an-env.yaml">Using an <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html">Logging</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="logging.html#Sample-pipeline">Sample pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html#Why-not-print?">Why not print?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html#Logging-to-a-file">Logging to a file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html#Logging-to-a-file-from-Python">Logging to a file from Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html#Controlling-logging-level">Controlling logging level</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html#Implementation-details">Implementation details</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="serialization.html">Serialization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html#Built-in-pickle-serialization">Built-in pickle serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html#Custom-serialization-logic">Custom serialization logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html#Custom-serialization-logic-based-on-the-product’s-extension">Custom serialization logic based on the product’s extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html#Using-a-fallback-format">Using a fallback format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html#Using-default-serializers">Using default serializers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html#Wrapping-up">Wrapping up</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="shell.html">Shell tasks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="shell.html#executing-source-code-in-other-programming-languages">Executing source code in other programming languages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="editors.html">Other editors (VSCode, PyCharm, etc.)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="editors.html#using-the-percent-format">Using the <code class="docutils literal notranslate"><span class="pre">percent</span></code> format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html#pairing-ipynb-files">Pairing <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html#using-ipynb-as-sources">Using <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> as sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html#removing-the-injected-cell">Removing the injected cell</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html#using-git-hooks">Using <code class="docutils literal notranslate"><span class="pre">git</span></code> hooks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="r-support.html">R support</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html#configuring-r-environment">Configuring R environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html#setting-up-r-and-irkernel-via-conda">Setting up R and IRkernel via <code class="docutils literal notranslate"><span class="pre">conda</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html#interactive-example">Interactive example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq_index.html">FAQ and Glossary</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html#why-do-products-have-clients">Why do products have clients?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html#which-databases-are-supported">Which databases are supported?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html#what-are-incremental-builds">What are incremental builds?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html#how-do-i-specify-a-task-with-a-variable-number-of-outputs">How do I specify a task with a variable number of outputs?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html#should-tasks-generate-products">Should tasks generate products?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html#auto-reloading-code-in-jupyter">Auto reloading code in Jupyter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html#cell-tags">Cell tags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html#parameterizing-notebooks">Parameterizing Notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html#plotting-a-pipeline">Plotting a pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html#can-i-use-ploomber-in-old-jupyterlab-1-x-versions">Can I use Ploomber in old JupyterLab <code class="docutils literal notranslate"><span class="pre">1.x</span></code> versions?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html#multiprocessing-errors-on-macos-and-windows">Multiprocessing errors on macOS and Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html#glossary">Glossary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="spec-vs-python.html">Spec API vs. Python API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html#entry-points">Entry points</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html#directory-entry-point">Directory entry point</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html#spec-api-spec-entry-point">[Spec API] Spec entry point</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html#python-api-factory-entry-point">[Python API] Factory entry point</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

@@ -1,0 +1,352 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Command-line interface &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Jupyter integration" href="jupyter.html" />
+    <link rel="prev" title="Downloading templates" href="templates.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="templates.html">Downloading templates</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Jupyter integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html">Scaffolding projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring.html">Refactoring legacy notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametrized.html">Parametrized pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html">SQL Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html">SQL templating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Pipeline testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html">Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shell.html">Shell tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html">Other editors (VSCode, PyCharm, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html">R support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html">FAQ and Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html">Spec API vs. Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+user-guide%2Fcli"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="command-line-interface">
+<h1>Command-line interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is an introductory tutorial to the command line interface; for a complete API description, see: <a class="reference internal" href="../api/cli.html"><span class="doc">Command line interface</span></a>.</p>
+</div>
+<section id="entry-points">
+<h2>Entry points<a class="headerlink" href="#entry-points" title="Permalink to this headline">¶</a></h2>
+<p>By default, the CLI looks for an <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file in certain standard
+locations (<a class="reference internal" href="../api/cli.html#api-cli-default-locations"><span class="std std-ref">Default locations</span></a>). If your pipeline exists in a
+non-standard location, pass the <code class="docutils literal notranslate"><span class="pre">--entry-point</span></code> argument.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file is known as “entry point”. However, this is
+not the only type of entry point (See this guide to learn
+more: <a class="reference internal" href="spec-vs-python.html"><span class="doc">Spec API vs. Python API</span></a>).</p>
+</section>
+<section id="basic-commands">
+<h2>Basic commands<a class="headerlink" href="#basic-commands" title="Permalink to this headline">¶</a></h2>
+<p>Build pipeline (skips up-to-date tasks):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber build</span>
+</pre></div>
+</div>
+<p>Forced build (runs all tasks, regardless of status):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber build --force</span>
+</pre></div>
+</div>
+<p>Generate pipeline plot:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber plot</span>
+</pre></div>
+</div>
+<p><strong>New in Ploomber 0.18.2</strong>: You can plot the pipeline without installing extra dependencies.
+<code class="docutils literal notranslate"><span class="pre">pygraphviz</span></code> is still supported but optional. To learn more, <a class="reference internal" href="faq_index.html#faq-plotting-a-pipeline"><span class="std std-ref">see this</span></a>.</p>
+</section>
+<section id="interactive-sessions">
+<span id="user-guide-cli-interactive-sessions"></span><h2>Interactive sessions<a class="headerlink" href="#interactive-sessions" title="Permalink to this headline">¶</a></h2>
+<p>Interactive sessions allow you to access the structure of your pipeline to
+help you test and debug:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber interact</span>
+</pre></div>
+</div>
+<p>The command above starts a Python session, parses your pipeline, and exposes
+a <code class="docutils literal notranslate"><span class="pre">dag</span></code> variable (an instance of the <a class="reference internal" href="../api/_modules/root/ploomber.DAG.html#ploomber.DAG" title="ploomber.DAG"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.DAG</span></code></a> class).</p>
+<p>For example, to generate the plot:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Get task names:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">list</span><span class="p">(</span><span class="n">dag</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can also interact with specific tasks:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">task</span> <span class="o">=</span> <span class="n">dag</span><span class="p">[</span><span class="s1">&#39;task_name&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><strong>Tip:</strong> If using IPython or Jupyter, press <code class="docutils literal notranslate"><span class="pre">Tab</span></code> to get autocompletion when
+typing the task name: <code class="docutils literal notranslate"><span class="pre">dag['some_task']</span></code></p>
+<p>Get task’s product:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span><span class="p">[</span><span class="s1">&#39;some_task&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">product</span>
+</pre></div>
+</div>
+<p>If the product is a dictionary:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span><span class="p">[</span><span class="s1">&#39;some_task&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;product_name&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>You can use this to avoid hardcoding paths to load products:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">dag</span><span class="p">[</span><span class="s1">&#39;some_task&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">product</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you are working with Python tasks (functions, scripts, or notebooks), you can
+start a line by line debugging session:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span><span class="p">[</span><span class="s1">&#39;some_task&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">debug</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Enter <code class="docutils literal notranslate"><span class="pre">quit</span></code> to exit the debugging session. Refer to
+<a class="reference external" href="https://docs.python.org/3/library/pdb.html">The Python Debugger</a>
+documentation for details.</p>
+<p>To print the source code of a given task:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span><span class="p">[</span><span class="s1">&#39;some_task&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">source</span>
+</pre></div>
+</div>
+<p>To find the source code location of a given task:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span><span class="p">[</span><span class="s1">&#39;some_task&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">loc</span>
+</pre></div>
+</div>
+<p>Get upstream dependencies:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span><span class="p">[</span><span class="s1">&#39;some_task&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">upstream</span>
+</pre></div>
+</div>
+<p>Get downstream tasks:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span><span class="o">.</span><span class="n">get_downstream</span><span class="p">(</span><span class="s1">&#39;some_task&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="other-commands">
+<h2>Other commands<a class="headerlink" href="#other-commands" title="Permalink to this headline">¶</a></h2>
+<p>Some commands didn’t cover here:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">examples</span></code>: <a class="reference internal" href="templates.html"><span class="doc">Download examples</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">install</span></code>: Install dependencies</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nb</span></code> (short for notebook): Manage notebooks and scripts</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">report</span></code>: Generate a pipeline report</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scaffold</span></code>: <a class="reference internal" href="scaffold.html"><span class="doc">Create a new project</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">status</span></code>: Pipeline status summary</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">task</span></code>: Execute a single task</p></li>
+</ul>
+<p>See the CLI API documentation <a class="reference internal" href="../api/cli.html"><span class="doc">Command line interface</span></a> for a detailed overview of each command.</p>
+</section>
+<section id="enabling-completion">
+<h2>Enabling Completion<a class="headerlink" href="#enabling-completion" title="Permalink to this headline">¶</a></h2>
+<p>To configure autocompletion for the CLI, you need to configure your shell.</p>
+<p>If using <strong>bash</strong>, add this to <code class="docutils literal notranslate"><span class="pre">~/bashrc</span></code>:</p>
+<div class="text-editor highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">eval</span> <span class="s2">&quot;</span><span class="k">$(</span><span class="nv">_PLOOMBER_COMPLETE</span><span class="o">=</span>zsh_source ploomber<span class="k">)</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>If using <strong>zsh</strong>, add this to <code class="docutils literal notranslate"><span class="pre">~/.zshrc</span></code>:</p>
+<div class="text-editor highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">eval</span> <span class="s2">&quot;</span><span class="k">$(</span><span class="nv">_PLOOMBER_COMPLETE</span><span class="o">=</span>zsh_source ploomber<span class="k">)</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>If using <strong>fish</strong>, add this to <code class="docutils literal notranslate"><span class="pre">~/.config/fish/completions/ploomber.fish</span></code>:</p>
+<div class="text-editor highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">eval</span> <span class="o">(</span>env <span class="nv">_PLOOMBER_COMPLETE</span><span class="o">=</span>fish_source ploomber<span class="o">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Command-line interface</a><ul>
+<li><a class="reference internal" href="#entry-points">Entry points</a></li>
+<li><a class="reference internal" href="#basic-commands">Basic commands</a></li>
+<li><a class="reference internal" href="#interactive-sessions">Interactive sessions</a></li>
+<li><a class="reference internal" href="#other-commands">Other commands</a></li>
+<li><a class="reference internal" href="#enabling-completion">Enabling Completion</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

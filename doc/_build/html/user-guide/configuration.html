@@ -1,0 +1,361 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Configuration (dev/prod) &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="SQL Pipelines" href="../get-started/sql-pipeline.html" />
+    <link rel="prev" title="Parametrized pipelines" href="parametrized.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="templates.html">Downloading templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Jupyter integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html">Scaffolding projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring.html">Refactoring legacy notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametrized.html">Parametrized pipelines</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html">SQL Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html">SQL templating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Pipeline testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html">Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shell.html">Shell tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html">Other editors (VSCode, PyCharm, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html">R support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html">FAQ and Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html">Spec API vs. Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+user-guide%2Fconfiguration"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="configuration-dev-prod">
+<h1>Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)<a class="headerlink" href="#configuration-dev-prod" title="Permalink to this headline">¶</a></h1>
+<p>In the previous guide (<a class="reference internal" href="parametrized.html"><span class="doc">Parametrized pipelines</span></a>), we saw how to use an
+<code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> file to parametrize our pipeline and switch parameters from the
+command line.</p>
+<p>Sometimes we want to change all the parameters at once. The most common
+scenario is to change configuration during development and production.</p>
+<p>For example, say you’re working on a Machine Learning pipeline whose
+<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> looks like this:</p>
+<div class="text-editor highlight-yaml notranslate" id="pipeline-yaml"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">get.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">get.ipynb</span><span class="w"></span>
+<span class="w">      </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw.csv</span><span class="w"></span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">sample_pct</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{sample_pct}}&#39;</span><span class="w"></span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">get.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">get.ipynb</span><span class="w"></span>
+<span class="w">      </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw.csv</span><span class="w"></span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">get.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">get.ipynb</span><span class="w"></span>
+<span class="w">      </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">raw.csv</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The pipeline above has one placeholder <code class="docutils literal notranslate"><span class="pre">'{{sample_pct}}'</span></code>, which controls
+which percentage of raw data to download. You may want to develop locally with a
+fraction of the data, say 20%, to iterate quickly. To
+<a class="reference external" href="https://en.wikipedia.org/wiki/Smoke_testing_(software)">smoke test</a> quickly,
+you may run it with a smaller sample, say 1%. Finally, to train a model, you’ll
+use 100% of the data.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can use placeholders (e.g., <code class="docutils literal notranslate"><span class="pre">{{sample_pct}}</span></code>) anywhere in the
+<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file. Another typical use case is to switch the product
+location (e.g., <code class="docutils literal notranslate"><span class="pre">product:</span> <span class="pre">'{{product_directory}}/some-data.csv'</span></code>.</p>
+</div>
+<p>By default, Ploomber looks for an <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code>. To enable rapid local
+development with 20% of the data, you may create an <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> file like this:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">sample_pct</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span><span class="w"></span>
+</pre></div>
+</div>
+<p>For smoke testing, <code class="docutils literal notranslate"><span class="pre">env.test.yaml</span></code>:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">sample_pct</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+</pre></div>
+</div>
+<p>And for training, <code class="docutils literal notranslate"><span class="pre">env.train.yaml</span></code>:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">sample_pct</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w"></span>
+</pre></div>
+</div>
+<p>To switch configurations, you can set the <code class="docutils literal notranslate"><span class="pre">PLOOMBER_ENV_FILENAME</span></code> environment variable
+to <code class="docutils literal notranslate"><span class="pre">env.test.yaml</span></code> in the testing environment and to <code class="docutils literal notranslate"><span class="pre">env.train.yaml</span></code> in
+the training environment.</p>
+<p>Whenever <code class="docutils literal notranslate"><span class="pre">PLOOMBER_ENV_FILENAME</span></code> has a value, Ploomber uses it and looks for a file
+with such a name. Note that this must be a filename, not a path since Ploomber
+expects <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> files to exist in the same folder as the <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>
+file. For example, if you’re on Linux or macOS:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">export PLOOMBER_ENV_FILENAME=env.train.yaml &amp;&amp; ploomber build</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If you’re using the Jupyter integration and want to see the changes
+reflected in the injected cell, you need to shut down Jupyter
+set <code class="docutils literal notranslate"><span class="pre">PLOOMBER_ENV_FILENAME</span></code>, and start Jupyter again.</p>
+</div>
+<section id="managing-multiple-pipelines">
+<h2>Managing multiple pipelines<a class="headerlink" href="#managing-multiple-pipelines" title="Permalink to this headline">¶</a></h2>
+<p>If your project has more than one pipeline, they’ll likely need
+different <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> files.</p>
+<p>Say you have two pipelines, one for training a model (<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>) and
+one for serving it (<code class="docutils literal notranslate"><span class="pre">pipeline.serve.yaml</span></code>). You can create an <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code>
+file to parametrize <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> and an <code class="docutils literal notranslate"><span class="pre">env.serve.yaml</span></code> to parametrize
+<code class="docutils literal notranslate"><span class="pre">pipeline.serve.yaml</span></code>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>project/
+    pipeline.yaml
+    pipeline.serve.yaml
+    env.yaml
+    env.serve.yaml
+</pre></div>
+</div>
+<p>The general rule is as follows: When loading a <code class="docutils literal notranslate"><span class="pre">pipeline.{name}.yaml</span></code>,
+extract the <code class="docutils literal notranslate"><span class="pre">{name}</span></code> portion. Then look for a <code class="docutils literal notranslate"><span class="pre">env.{name}.yaml</span></code> file, if
+such file doesn’t exist, look for an <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> file. Note that the
+<code class="docutils literal notranslate"><span class="pre">PLOOMBER_ENV_FILENAME</span></code> environment variable overrides this process.</p>
+<p>Alternatively, you may separate the pipelines into different directories, and
+put an <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> on each one:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>project-a/
+    pipeline.yaml
+    env.yaml
+project-b/
+    pipeline.yaml
+    env.yaml
+</pre></div>
+</div>
+</section>
+<section id="env-yaml-composition-dry">
+<h2><code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> composition (DRY)<a class="headerlink" href="#env-yaml-composition-dry" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>New in version 0.18</p>
+</div>
+<p>In many cases, your development and production environment configuration share
+many values in common. To keep them simple, you may create an <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code>
+(development configuration) and have your <code class="docutils literal notranslate"><span class="pre">env.prod.yaml</span></code> (production
+configuration) inherit from it:</p>
+<div class="text-editor highlight-yaml notranslate" id="env-yaml"><div class="highlight"><pre><span></span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span><span class="w"></span>
+<span class="nt">key_another</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dev-value</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Then in your <code class="docutils literal notranslate"><span class="pre">env.prod.yaml</span></code>:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">meta</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># import development config</span><span class="w"></span>
+<span class="w">  </span><span class="nt">import_from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">env.yaml</span><span class="w"></span>
+
+<span class="c1"># no need to declare key: value here, it&#39;ll be imported from env.yaml</span><span class="w"></span>
+
+<span class="c1"># overwrite value</span><span class="w"></span>
+<span class="nt">key_another</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">production-value</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Note that if the value in <code class="docutils literal notranslate"><span class="pre">import_from</span></code> is a relative path, it is considered
+so relative to the location of the env file (in our case <code class="docutils literal notranslate"><span class="pre">env.prod.yaml</span></code>).</p>
+<p>You can switch values in <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> from the command line, to see how:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber build --help</span>
+</pre></div>
+</div>
+<p>Example, if you have a <code class="docutils literal notranslate"><span class="pre">key</span></code> in your <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber build --env--key new-value</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a><ul>
+<li><a class="reference internal" href="#managing-multiple-pipelines">Managing multiple pipelines</a></li>
+<li><a class="reference internal" href="#env-yaml-composition-dry"><code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> composition (DRY)</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

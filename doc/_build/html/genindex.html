@@ -1,0 +1,976 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/mermaid-layout.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/js/custom.js"></script>
+    <script src="_static/js/mermaid.min.js"></script>
+    <script src="_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user-guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+genindex"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#K"><strong>K</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+ 
+</div>
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.build">build() (ploomber.DAG method)</a>
+
+      <ul>
+        <li><a href="api/_modules/root/ploomber.InMemoryDAG.html#ploomber.InMemoryDAG.build">(ploomber.InMemoryDAG method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.DownloadFromURL.html#ploomber.tasks.DownloadFromURL.build">(ploomber.tasks.DownloadFromURL method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Input.html#ploomber.tasks.Input.build">(ploomber.tasks.Input method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Link.html#ploomber.tasks.Link.build">(ploomber.tasks.Link method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.NotebookRunner.html#ploomber.tasks.NotebookRunner.build">(ploomber.tasks.NotebookRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PostgresCopyFrom.html#ploomber.tasks.PostgresCopyFrom.build">(ploomber.tasks.PostgresCopyFrom method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable.build">(ploomber.tasks.PythonCallable method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ScriptRunner.html#ploomber.tasks.ScriptRunner.build">(ploomber.tasks.ScriptRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ShellScript.html#ploomber.tasks.ShellScript.build">(ploomber.tasks.ShellScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLDump.html#ploomber.tasks.SQLDump.build">(ploomber.tasks.SQLDump method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLScript.html#ploomber.tasks.SQLScript.build">(ploomber.tasks.SQLScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLTransfer.html#ploomber.tasks.SQLTransfer.build">(ploomber.tasks.SQLTransfer method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLUpload.html#ploomber.tasks.SQLUpload.build">(ploomber.tasks.SQLUpload method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task.build">(ploomber.tasks.Task method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.build_partially">build_partially() (ploomber.DAG method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.check_tasks_have_allowed_status">check_tasks_have_allowed_status() (ploomber.DAG method)</a>
+</li>
+      <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.clear">clear() (ploomber.spec.DAGSpec method)</a>
+</li>
+      <li><a href="api/_modules/clients/ploomber.clients.Client.html#ploomber.clients.Client">Client (class in ploomber.clients)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.clients">clients (ploomber.DAG attribute)</a>
+</li>
+      <li><a href="api/_modules/clients/ploomber.clients.Client.html#ploomber.clients.Client.close">close() (ploomber.clients.Client method)</a>
+
+      <ul>
+        <li><a href="api/_modules/clients/ploomber.clients.DBAPIClient.html#ploomber.clients.DBAPIClient.close">(ploomber.clients.DBAPIClient method)</a>
+</li>
+        <li><a href="api/_modules/clients/ploomber.clients.GCloudStorageClient.html#ploomber.clients.GCloudStorageClient.close">(ploomber.clients.GCloudStorageClient method)</a>
+</li>
+        <li><a href="api/_modules/clients/ploomber.clients.S3Client.html#ploomber.clients.S3Client.close">(ploomber.clients.S3Client method)</a>
+</li>
+        <li><a href="api/_modules/clients/ploomber.clients.ShellClient.html#ploomber.clients.ShellClient.close">(ploomber.clients.ShellClient method)</a>
+</li>
+        <li><a href="api/_modules/clients/ploomber.clients.SQLAlchemyClient.html#ploomber.clients.SQLAlchemyClient.close">(ploomber.clients.SQLAlchemyClient method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.close_clients">close_clients() (ploomber.DAG method)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.DAGConfigurator.html#ploomber.DAGConfigurator.create">create() (ploomber.DAGConfigurator method)</a>
+</li>
+      <li><a href="api/_modules/clients/ploomber.clients.DBAPIClient.html#ploomber.clients.DBAPIClient.cursor">cursor() (ploomber.clients.DBAPIClient method)</a>
+
+      <ul>
+        <li><a href="api/_modules/clients/ploomber.clients.SQLAlchemyClient.html#ploomber.clients.SQLAlchemyClient.cursor">(ploomber.clients.SQLAlchemyClient method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG">DAG (class in ploomber)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.DAGConfigurator.html#ploomber.DAGConfigurator">DAGConfigurator (class in ploomber)</a>
+</li>
+      <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec">DAGSpec (class in ploomber.spec)</a>
+</li>
+      <li><a href="api/_modules/clients/ploomber.clients.DBAPIClient.html#ploomber.clients.DBAPIClient">DBAPIClient (class in ploomber.clients)</a>
+</li>
+      <li><a href="api/_modules/tasks/ploomber.tasks.DownloadFromURL.html#ploomber.tasks.DownloadFromURL.debug">debug() (ploomber.tasks.DownloadFromURL method)</a>
+
+      <ul>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Input.html#ploomber.tasks.Input.debug">(ploomber.tasks.Input method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Link.html#ploomber.tasks.Link.debug">(ploomber.tasks.Link method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.NotebookRunner.html#ploomber.tasks.NotebookRunner.debug">(ploomber.tasks.NotebookRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PostgresCopyFrom.html#ploomber.tasks.PostgresCopyFrom.debug">(ploomber.tasks.PostgresCopyFrom method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable.debug">(ploomber.tasks.PythonCallable method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ScriptRunner.html#ploomber.tasks.ScriptRunner.debug">(ploomber.tasks.ScriptRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ShellScript.html#ploomber.tasks.ShellScript.debug">(ploomber.tasks.ShellScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLDump.html#ploomber.tasks.SQLDump.debug">(ploomber.tasks.SQLDump method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLScript.html#ploomber.tasks.SQLScript.debug">(ploomber.tasks.SQLScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLTransfer.html#ploomber.tasks.SQLTransfer.debug">(ploomber.tasks.SQLTransfer method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLUpload.html#ploomber.tasks.SQLUpload.debug">(ploomber.tasks.SQLUpload method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task.debug">(ploomber.tasks.Task method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/products/ploomber.products.File.html#ploomber.products.File.delete">delete() (ploomber.products.File method)</a>
+
+      <ul>
+        <li><a href="api/_modules/products/ploomber.products.GenericProduct.html#ploomber.products.GenericProduct.delete">(ploomber.products.GenericProduct method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.GenericSQLRelation.html#ploomber.products.GenericSQLRelation.delete">(ploomber.products.GenericSQLRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.PostgresRelation.html#ploomber.products.PostgresRelation.delete">(ploomber.products.PostgresRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.Product.html#ploomber.products.Product.delete">(ploomber.products.Product method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLiteRelation.html#ploomber.products.SQLiteRelation.delete">(ploomber.products.SQLiteRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation.delete">(ploomber.products.SQLRelation method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/tasks/ploomber.tasks.DownloadFromURL.html#ploomber.tasks.DownloadFromURL.develop">develop() (ploomber.tasks.DownloadFromURL method)</a>
+
+      <ul>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Input.html#ploomber.tasks.Input.develop">(ploomber.tasks.Input method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Link.html#ploomber.tasks.Link.develop">(ploomber.tasks.Link method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.NotebookRunner.html#ploomber.tasks.NotebookRunner.develop">(ploomber.tasks.NotebookRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PostgresCopyFrom.html#ploomber.tasks.PostgresCopyFrom.develop">(ploomber.tasks.PostgresCopyFrom method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable.develop">(ploomber.tasks.PythonCallable method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ScriptRunner.html#ploomber.tasks.ScriptRunner.develop">(ploomber.tasks.ScriptRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ShellScript.html#ploomber.tasks.ShellScript.develop">(ploomber.tasks.ShellScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLDump.html#ploomber.tasks.SQLDump.develop">(ploomber.tasks.SQLDump method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLScript.html#ploomber.tasks.SQLScript.develop">(ploomber.tasks.SQLScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLTransfer.html#ploomber.tasks.SQLTransfer.develop">(ploomber.tasks.SQLTransfer method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLUpload.html#ploomber.tasks.SQLUpload.develop">(ploomber.tasks.SQLUpload method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task.develop">(ploomber.tasks.Task method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/testing/ploomber.testing.sql.distinct_values_in_column.html#ploomber.testing.sql.distinct_values_in_column">distinct_values_in_column() (in module ploomber.testing.sql)</a>
+</li>
+      <li><a href="api/_modules/clients/ploomber.clients.GCloudStorageClient.html#ploomber.clients.GCloudStorageClient.download">download() (ploomber.clients.GCloudStorageClient method)</a>
+
+      <ul>
+        <li><a href="api/_modules/clients/ploomber.clients.S3Client.html#ploomber.clients.S3Client.download">(ploomber.clients.S3Client method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.File.html#ploomber.products.File.download">(ploomber.products.File method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.GenericProduct.html#ploomber.products.GenericProduct.download">(ploomber.products.GenericProduct method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.GenericSQLRelation.html#ploomber.products.GenericSQLRelation.download">(ploomber.products.GenericSQLRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.PostgresRelation.html#ploomber.products.PostgresRelation.download">(ploomber.products.PostgresRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.Product.html#ploomber.products.Product.download">(ploomber.products.Product method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLiteRelation.html#ploomber.products.SQLiteRelation.download">(ploomber.products.SQLiteRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation.download">(ploomber.products.SQLRelation method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/tasks/ploomber.tasks.DownloadFromURL.html#ploomber.tasks.DownloadFromURL">DownloadFromURL (class in ploomber.tasks)</a>
+</li>
+      <li><a href="api/_modules/testing/ploomber.testing.sql.duplicates_in_column.html#ploomber.testing.sql.duplicates_in_column">duplicates_in_column() (in module ploomber.testing.sql)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.Env.html#ploomber.Env.end">end() (ploomber.Env class method)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.Env.html#ploomber.Env">Env (class in ploomber)</a>
+</li>
+      <li><a href="api/_modules/clients/ploomber.clients.Client.html#ploomber.clients.Client.execute">execute() (ploomber.clients.Client method)</a>
+
+      <ul>
+        <li><a href="api/_modules/clients/ploomber.clients.DBAPIClient.html#ploomber.clients.DBAPIClient.execute">(ploomber.clients.DBAPIClient method)</a>
+</li>
+        <li><a href="api/_modules/clients/ploomber.clients.ShellClient.html#ploomber.clients.ShellClient.execute">(ploomber.clients.ShellClient method)</a>
+</li>
+        <li><a href="api/_modules/clients/ploomber.clients.SQLAlchemyClient.html#ploomber.clients.SQLAlchemyClient.execute">(ploomber.clients.SQLAlchemyClient method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.executor">executor (ploomber.DAG attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/products/ploomber.products.File.html#ploomber.products.File.exists">exists() (ploomber.products.File method)</a>
+
+      <ul>
+        <li><a href="api/_modules/products/ploomber.products.GenericProduct.html#ploomber.products.GenericProduct.exists">(ploomber.products.GenericProduct method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.GenericSQLRelation.html#ploomber.products.GenericSQLRelation.exists">(ploomber.products.GenericSQLRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.PostgresRelation.html#ploomber.products.PostgresRelation.exists">(ploomber.products.PostgresRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.Product.html#ploomber.products.Product.exists">(ploomber.products.Product method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLiteRelation.html#ploomber.products.SQLiteRelation.exists">(ploomber.products.SQLiteRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation.exists">(ploomber.products.SQLRelation method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/testing/ploomber.testing.sql.exists_row_where.html#ploomber.testing.sql.exists_row_where">exists_row_where() (in module ploomber.testing.sql)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/products/ploomber.products.File.html#ploomber.products.File.fetch_metadata">fetch_metadata() (ploomber.products.File method)</a>
+
+      <ul>
+        <li><a href="api/_modules/products/ploomber.products.GenericProduct.html#ploomber.products.GenericProduct.fetch_metadata">(ploomber.products.GenericProduct method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.GenericSQLRelation.html#ploomber.products.GenericSQLRelation.fetch_metadata">(ploomber.products.GenericSQLRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.PostgresRelation.html#ploomber.products.PostgresRelation.fetch_metadata">(ploomber.products.PostgresRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.Product.html#ploomber.products.Product.fetch_metadata">(ploomber.products.Product method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLiteRelation.html#ploomber.products.SQLiteRelation.fetch_metadata">(ploomber.products.SQLiteRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation.fetch_metadata">(ploomber.products.SQLRelation method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/products/ploomber.products.File.html#ploomber.products.File">File (class in ploomber.products)</a>
+</li>
+      <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.find">find() (ploomber.spec.DAGSpec class method)</a>
+</li>
+      <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.from_directory">from_directory() (ploomber.spec.DAGSpec class method)</a>
+</li>
+      <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.from_files">from_files() (ploomber.spec.DAGSpec class method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/clients/ploomber.clients.GCloudStorageClient.html#ploomber.clients.GCloudStorageClient">GCloudStorageClient (class in ploomber.clients)</a>
+</li>
+      <li><a href="api/_modules/products/ploomber.products.GenericProduct.html#ploomber.products.GenericProduct">GenericProduct (class in ploomber.products)</a>
+</li>
+      <li><a href="api/_modules/products/ploomber.products.GenericSQLRelation.html#ploomber.products.GenericSQLRelation">GenericSQLRelation (class in ploomber.products)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.get">get() (ploomber.DAG method)</a>
+
+      <ul>
+        <li><a href="api/_modules/root/ploomber.SourceLoader.html#ploomber.SourceLoader.get">(ploomber.SourceLoader method)</a>
+</li>
+        <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.get">(ploomber.spec.DAGSpec method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.get_downstream">get_downstream() (ploomber.DAG method)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.OnlineDAG.html#ploomber.OnlineDAG.get_partial">get_partial() (ploomber.OnlineDAG static method)</a>
+
+      <ul>
+        <li><a href="api/_modules/root/ploomber.OnlineModel.html#ploomber.OnlineModel.get_partial">(ploomber.OnlineModel method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/root/ploomber.SourceLoader.html#ploomber.SourceLoader.get_template">get_template() (ploomber.SourceLoader method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.OnlineDAG.html#ploomber.OnlineDAG.init_dag_from_partial">init_dag_from_partial() (ploomber.OnlineDAG class method)</a>
+
+      <ul>
+        <li><a href="api/_modules/root/ploomber.OnlineModel.html#ploomber.OnlineModel.init_dag_from_partial">(ploomber.OnlineModel class method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/root/ploomber.InMemoryDAG.html#ploomber.InMemoryDAG">InMemoryDAG (class in ploomber)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/tasks/ploomber.tasks.Input.html#ploomber.tasks.Input">Input (class in ploomber.tasks)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.items">items() (ploomber.DAG method)</a>
+
+      <ul>
+        <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.items">(ploomber.spec.DAGSpec method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.keys">keys() (ploomber.DAG method)</a>
+
+      <ul>
+        <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.keys">(ploomber.spec.DAGSpec method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/tasks/ploomber.tasks.Link.html#ploomber.tasks.Link">Link (class in ploomber.tasks)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.Env.html#ploomber.Env.load">load() (ploomber.Env class method)</a>
+
+      <ul>
+        <li><a href="api/_modules/tasks/ploomber.tasks.DownloadFromURL.html#ploomber.tasks.DownloadFromURL.load">(ploomber.tasks.DownloadFromURL method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Input.html#ploomber.tasks.Input.load">(ploomber.tasks.Input method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Link.html#ploomber.tasks.Link.load">(ploomber.tasks.Link method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.NotebookRunner.html#ploomber.tasks.NotebookRunner.load">(ploomber.tasks.NotebookRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PostgresCopyFrom.html#ploomber.tasks.PostgresCopyFrom.load">(ploomber.tasks.PostgresCopyFrom method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable.load">(ploomber.tasks.PythonCallable method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ScriptRunner.html#ploomber.tasks.ScriptRunner.load">(ploomber.tasks.ScriptRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ShellScript.html#ploomber.tasks.ShellScript.load">(ploomber.tasks.ShellScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLDump.html#ploomber.tasks.SQLDump.load">(ploomber.tasks.SQLDump method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLScript.html#ploomber.tasks.SQLScript.load">(ploomber.tasks.SQLScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLTransfer.html#ploomber.tasks.SQLTransfer.load">(ploomber.tasks.SQLTransfer method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLUpload.html#ploomber.tasks.SQLUpload.load">(ploomber.tasks.SQLUpload method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task.load">(ploomber.tasks.Task method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.load_env.html#ploomber.load_env">load_env() (in module ploomber)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.name">name (ploomber.DAG attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/tasks/ploomber.tasks.NotebookRunner.html#ploomber.tasks.NotebookRunner">NotebookRunner (class in ploomber.tasks)</a>
+</li>
+      <li><a href="api/_modules/testing/ploomber.testing.sql.nulls_in_columns.html#ploomber.testing.sql.nulls_in_columns">nulls_in_columns() (in module ploomber.testing.sql)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.on_failure">on_failure (ploomber.DAG attribute)</a>
+
+      <ul>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task.on_failure">(ploomber.tasks.Task attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.on_finish">on_finish (ploomber.DAG attribute)</a>
+
+      <ul>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task.on_finish">(ploomber.tasks.Task attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.on_render">on_render (ploomber.DAG attribute)</a>
+
+      <ul>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task.on_render">(ploomber.tasks.Task attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/root/ploomber.OnlineDAG.html#ploomber.OnlineDAG">OnlineDAG (class in ploomber)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.OnlineModel.html#ploomber.OnlineModel">OnlineModel (class in ploomber)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/executors/ploomber.executors.Parallel.html#ploomber.executors.Parallel">Parallel (class in ploomber.executors)</a>
+</li>
+      <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task.params">params (ploomber.tasks.Task attribute)</a>
+</li>
+      <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.path">path (ploomber.spec.DAGSpec attribute)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.SourceLoader.html#ploomber.SourceLoader.path_to">path_to() (ploomber.SourceLoader method)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.plot">plot() (ploomber.DAG method)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.pop">pop() (ploomber.DAG method)</a>
+
+      <ul>
+        <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.pop">(ploomber.spec.DAGSpec method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.popitem">popitem() (ploomber.spec.DAGSpec method)</a>
+</li>
+      <li><a href="api/_modules/tasks/ploomber.tasks.PostgresCopyFrom.html#ploomber.tasks.PostgresCopyFrom">PostgresCopyFrom (class in ploomber.tasks)</a>
+</li>
+      <li><a href="api/_modules/products/ploomber.products.PostgresRelation.html#ploomber.products.PostgresRelation">PostgresRelation (class in ploomber.products)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.OnlineDAG.html#ploomber.OnlineDAG.predict">predict() (ploomber.OnlineDAG method)</a>
+
+      <ul>
+        <li><a href="api/_modules/root/ploomber.OnlineModel.html#ploomber.OnlineModel.predict">(ploomber.OnlineModel method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/products/ploomber.products.Product.html#ploomber.products.Product.prepare_metadata">prepare_metadata (ploomber.products.Product attribute)</a>
+</li>
+      <li><a href="api/_modules/products/ploomber.products.Product.html#ploomber.products.Product">Product (class in ploomber.products)</a>
+</li>
+      <li><a href="api/_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable">PythonCallable (class in ploomber.tasks)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/testing/ploomber.testing.sql.range_in_column.html#ploomber.testing.sql.range_in_column">range_in_column() (in module ploomber.testing.sql)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.render">render() (ploomber.DAG method)</a>
+
+      <ul>
+        <li><a href="api/_modules/products/ploomber.products.File.html#ploomber.products.File.render">(ploomber.products.File method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.GenericProduct.html#ploomber.products.GenericProduct.render">(ploomber.products.GenericProduct method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.GenericSQLRelation.html#ploomber.products.GenericSQLRelation.render">(ploomber.products.GenericSQLRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.PostgresRelation.html#ploomber.products.PostgresRelation.render">(ploomber.products.PostgresRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.Product.html#ploomber.products.Product.render">(ploomber.products.Product method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLiteRelation.html#ploomber.products.SQLiteRelation.render">(ploomber.products.SQLiteRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation.render">(ploomber.products.SQLRelation method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.DownloadFromURL.html#ploomber.tasks.DownloadFromURL.render">(ploomber.tasks.DownloadFromURL method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Input.html#ploomber.tasks.Input.render">(ploomber.tasks.Input method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Link.html#ploomber.tasks.Link.render">(ploomber.tasks.Link method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.NotebookRunner.html#ploomber.tasks.NotebookRunner.render">(ploomber.tasks.NotebookRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PostgresCopyFrom.html#ploomber.tasks.PostgresCopyFrom.render">(ploomber.tasks.PostgresCopyFrom method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable.render">(ploomber.tasks.PythonCallable method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ScriptRunner.html#ploomber.tasks.ScriptRunner.render">(ploomber.tasks.ScriptRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ShellScript.html#ploomber.tasks.ShellScript.render">(ploomber.tasks.ShellScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLDump.html#ploomber.tasks.SQLDump.render">(ploomber.tasks.SQLDump method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLScript.html#ploomber.tasks.SQLScript.render">(ploomber.tasks.SQLScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLTransfer.html#ploomber.tasks.SQLTransfer.render">(ploomber.tasks.SQLTransfer method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLUpload.html#ploomber.tasks.SQLUpload.render">(ploomber.tasks.SQLUpload method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task.render">(ploomber.tasks.Task method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/tasks/ploomber.tasks.DownloadFromURL.html#ploomber.tasks.DownloadFromURL.run">run() (ploomber.tasks.DownloadFromURL method)</a>
+
+      <ul>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Input.html#ploomber.tasks.Input.run">(ploomber.tasks.Input method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Link.html#ploomber.tasks.Link.run">(ploomber.tasks.Link method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.NotebookRunner.html#ploomber.tasks.NotebookRunner.run">(ploomber.tasks.NotebookRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PostgresCopyFrom.html#ploomber.tasks.PostgresCopyFrom.run">(ploomber.tasks.PostgresCopyFrom method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable.run">(ploomber.tasks.PythonCallable method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ScriptRunner.html#ploomber.tasks.ScriptRunner.run">(ploomber.tasks.ScriptRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ShellScript.html#ploomber.tasks.ShellScript.run">(ploomber.tasks.ShellScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLDump.html#ploomber.tasks.SQLDump.run">(ploomber.tasks.SQLDump method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLScript.html#ploomber.tasks.SQLScript.run">(ploomber.tasks.SQLScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLTransfer.html#ploomber.tasks.SQLTransfer.run">(ploomber.tasks.SQLTransfer method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLUpload.html#ploomber.tasks.SQLUpload.run">(ploomber.tasks.SQLUpload method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task.run">(ploomber.tasks.Task method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/clients/ploomber.clients.S3Client.html#ploomber.clients.S3Client">S3Client (class in ploomber.clients)</a>
+</li>
+      <li><a href="api/_modules/products/ploomber.products.File.html#ploomber.products.File.save_metadata">save_metadata() (ploomber.products.File method)</a>
+
+      <ul>
+        <li><a href="api/_modules/products/ploomber.products.GenericProduct.html#ploomber.products.GenericProduct.save_metadata">(ploomber.products.GenericProduct method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.GenericSQLRelation.html#ploomber.products.GenericSQLRelation.save_metadata">(ploomber.products.GenericSQLRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.PostgresRelation.html#ploomber.products.PostgresRelation.save_metadata">(ploomber.products.PostgresRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.Product.html#ploomber.products.Product.save_metadata">(ploomber.products.Product method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLiteRelation.html#ploomber.products.SQLiteRelation.save_metadata">(ploomber.products.SQLiteRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation.save_metadata">(ploomber.products.SQLRelation method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/tasks/ploomber.tasks.ScriptRunner.html#ploomber.tasks.ScriptRunner">ScriptRunner (class in ploomber.tasks)</a>
+</li>
+      <li><a href="api/_modules/executors/ploomber.executors.Serial.html#ploomber.executors.Serial">Serial (class in ploomber.executors)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.serializer">serializer (ploomber.DAG attribute)</a>
+</li>
+      <li><a href="api/_modules/io/ploomber.io.serializer.html#ploomber.io.serializer">serializer() (in module ploomber.io)</a>
+</li>
+      <li><a href="api/_modules/io/ploomber.io.serializer_pickle.html#ploomber.io.serializer_pickle">serializer_pickle() (in module ploomber.io)</a>
+</li>
+      <li><a href="api/_modules/tasks/ploomber.tasks.DownloadFromURL.html#ploomber.tasks.DownloadFromURL.set_upstream">set_upstream() (ploomber.tasks.DownloadFromURL method)</a>
+
+      <ul>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Input.html#ploomber.tasks.Input.set_upstream">(ploomber.tasks.Input method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Link.html#ploomber.tasks.Link.set_upstream">(ploomber.tasks.Link method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.NotebookRunner.html#ploomber.tasks.NotebookRunner.set_upstream">(ploomber.tasks.NotebookRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PostgresCopyFrom.html#ploomber.tasks.PostgresCopyFrom.set_upstream">(ploomber.tasks.PostgresCopyFrom method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable.set_upstream">(ploomber.tasks.PythonCallable method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ScriptRunner.html#ploomber.tasks.ScriptRunner.set_upstream">(ploomber.tasks.ScriptRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ShellScript.html#ploomber.tasks.ShellScript.set_upstream">(ploomber.tasks.ShellScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLDump.html#ploomber.tasks.SQLDump.set_upstream">(ploomber.tasks.SQLDump method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLScript.html#ploomber.tasks.SQLScript.set_upstream">(ploomber.tasks.SQLScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLTransfer.html#ploomber.tasks.SQLTransfer.set_upstream">(ploomber.tasks.SQLTransfer method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLUpload.html#ploomber.tasks.SQLUpload.set_upstream">(ploomber.tasks.SQLUpload method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task.set_upstream">(ploomber.tasks.Task method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.setdefault">setdefault() (ploomber.spec.DAGSpec method)</a>
+</li>
+      <li><a href="api/_modules/clients/ploomber.clients.ShellClient.html#ploomber.clients.ShellClient">ShellClient (class in ploomber.clients)</a>
+</li>
+      <li><a href="api/_modules/tasks/ploomber.tasks.ShellScript.html#ploomber.tasks.ShellScript">ShellScript (class in ploomber.tasks)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.SourceLoader.html#ploomber.SourceLoader">SourceLoader (class in ploomber)</a>
+</li>
+      <li><a href="api/_modules/clients/ploomber.clients.SQLAlchemyClient.html#ploomber.clients.SQLAlchemyClient">SQLAlchemyClient (class in ploomber.clients)</a>
+</li>
+      <li><a href="api/_modules/tasks/ploomber.tasks.SQLDump.html#ploomber.tasks.SQLDump">SQLDump (class in ploomber.tasks)</a>
+</li>
+      <li><a href="api/_modules/products/ploomber.products.SQLiteRelation.html#ploomber.products.SQLiteRelation">SQLiteRelation (class in ploomber.products)</a>
+</li>
+      <li><a href="api/_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation">SQLRelation (class in ploomber.products)</a>
+</li>
+      <li><a href="api/_modules/tasks/ploomber.tasks.SQLScript.html#ploomber.tasks.SQLScript">SQLScript (class in ploomber.tasks)</a>
+</li>
+      <li><a href="api/_modules/tasks/ploomber.tasks.SQLTransfer.html#ploomber.tasks.SQLTransfer">SQLTransfer (class in ploomber.tasks)</a>
+</li>
+      <li><a href="api/_modules/tasks/ploomber.tasks.SQLUpload.html#ploomber.tasks.SQLUpload">SQLUpload (class in ploomber.tasks)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.status">status() (ploomber.DAG method)</a>
+
+      <ul>
+        <li><a href="api/_modules/tasks/ploomber.tasks.DownloadFromURL.html#ploomber.tasks.DownloadFromURL.status">(ploomber.tasks.DownloadFromURL method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Input.html#ploomber.tasks.Input.status">(ploomber.tasks.Input method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Link.html#ploomber.tasks.Link.status">(ploomber.tasks.Link method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.NotebookRunner.html#ploomber.tasks.NotebookRunner.status">(ploomber.tasks.NotebookRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PostgresCopyFrom.html#ploomber.tasks.PostgresCopyFrom.status">(ploomber.tasks.PostgresCopyFrom method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable.status">(ploomber.tasks.PythonCallable method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ScriptRunner.html#ploomber.tasks.ScriptRunner.status">(ploomber.tasks.ScriptRunner method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.ShellScript.html#ploomber.tasks.ShellScript.status">(ploomber.tasks.ShellScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLDump.html#ploomber.tasks.SQLDump.status">(ploomber.tasks.SQLDump method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLScript.html#ploomber.tasks.SQLScript.status">(ploomber.tasks.SQLScript method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLTransfer.html#ploomber.tasks.SQLTransfer.status">(ploomber.tasks.SQLTransfer method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.SQLUpload.html#ploomber.tasks.SQLUpload.status">(ploomber.tasks.SQLUpload method)</a>
+</li>
+        <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task.status">(ploomber.tasks.Task method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task">Task (class in ploomber.tasks)</a>
+</li>
+      <li><a href="api/_modules/root/ploomber.OnlineDAG.html#ploomber.OnlineDAG.terminal_params">terminal_params() (ploomber.OnlineDAG static method)</a>
+
+      <ul>
+        <li><a href="api/_modules/root/ploomber.OnlineModel.html#ploomber.OnlineModel.terminal_params">(ploomber.OnlineModel method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/root/ploomber.OnlineDAG.html#ploomber.OnlineDAG.terminal_task">terminal_task() (ploomber.OnlineDAG static method)</a>
+
+      <ul>
+        <li><a href="api/_modules/root/ploomber.OnlineModel.html#ploomber.OnlineModel.terminal_task">(ploomber.OnlineModel static method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.to_dag">to_dag() (ploomber.spec.DAGSpec method)</a>
+</li>
+      <li><a href="api/_modules/products/ploomber.products.File.html#ploomber.products.File.to_json_serializable">to_json_serializable() (ploomber.products.File method)</a>
+
+      <ul>
+        <li><a href="api/_modules/products/ploomber.products.GenericProduct.html#ploomber.products.GenericProduct.to_json_serializable">(ploomber.products.GenericProduct method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.GenericSQLRelation.html#ploomber.products.GenericSQLRelation.to_json_serializable">(ploomber.products.GenericSQLRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.PostgresRelation.html#ploomber.products.PostgresRelation.to_json_serializable">(ploomber.products.PostgresRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.Product.html#ploomber.products.Product.to_json_serializable">(ploomber.products.Product method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLiteRelation.html#ploomber.products.SQLiteRelation.to_json_serializable">(ploomber.products.SQLiteRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation.to_json_serializable">(ploomber.products.SQLRelation method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.to_markup">to_markup() (ploomber.DAG method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.unserializer">unserializer (ploomber.DAG attribute)</a>
+</li>
+      <li><a href="api/_modules/io/ploomber.io.unserializer.html#ploomber.io.unserializer">unserializer() (in module ploomber.io)</a>
+</li>
+      <li><a href="api/_modules/io/ploomber.io.unserializer_pickle.html#ploomber.io.unserializer_pickle">unserializer_pickle() (in module ploomber.io)</a>
+</li>
+      <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.update">update() (ploomber.spec.DAGSpec method)</a>
+</li>
+      <li><a href="api/_modules/clients/ploomber.clients.GCloudStorageClient.html#ploomber.clients.GCloudStorageClient.upload">upload() (ploomber.clients.GCloudStorageClient method)</a>
+
+      <ul>
+        <li><a href="api/_modules/clients/ploomber.clients.S3Client.html#ploomber.clients.S3Client.upload">(ploomber.clients.S3Client method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.File.html#ploomber.products.File.upload">(ploomber.products.File method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.GenericProduct.html#ploomber.products.GenericProduct.upload">(ploomber.products.GenericProduct method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.GenericSQLRelation.html#ploomber.products.GenericSQLRelation.upload">(ploomber.products.GenericSQLRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.PostgresRelation.html#ploomber.products.PostgresRelation.upload">(ploomber.products.PostgresRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.Product.html#ploomber.products.Product.upload">(ploomber.products.Product method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLiteRelation.html#ploomber.products.SQLiteRelation.upload">(ploomber.products.SQLiteRelation method)</a>
+</li>
+        <li><a href="api/_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation.upload">(ploomber.products.SQLRelation method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.DAG.html#ploomber.DAG.values">values() (ploomber.DAG method)</a>
+
+      <ul>
+        <li><a href="api/_modules/spec/ploomber.spec.DAGSpec.html#ploomber.spec.DAGSpec.values">(ploomber.spec.DAGSpec method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/_modules/root/ploomber.with_env.html#ploomber.with_env">with_env() (in module ploomber)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

@@ -1,0 +1,529 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>SQL Pipelines &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="SQL templating" href="../user-guide/sql-templating.html" />
+    <link rel="prev" title="Configuration (dev/prod)" href="../user-guide/configuration.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../user-guide/index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/templates.html">Downloading templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/cli.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/jupyter.html">Jupyter integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/scaffold.html">Scaffolding projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/refactoring.html">Refactoring legacy notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/parametrized.html">Parametrized pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/configuration.html">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">SQL Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/sql-templating.html">SQL templating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/testing.html">Pipeline testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/versioning.html">Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/logging.html">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/shell.html">Shell tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/editors.html">Other editors (VSCode, PyCharm, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/r-support.html">R support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/faq_index.html">FAQ and Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../user-guide/spec-vs-python.html">Spec API vs. Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+get-started%2Fsql-pipeline"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="sql-pipelines">
+<h1>SQL Pipelines<a class="headerlink" href="#sql-pipelines" title="Permalink to this headline">¶</a></h1>
+<p>This guide explains how to develop pipelines where some of all tasks are SQL scripts.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This tutorial shows the built-in SQL features. However, this is not
+the only way for Ploomber to interact with databases. You may as well create
+functions (or scripts) that run queries in a database. The primary benefit
+of using the built-in features is that Ploomber manages many things for you
+(such as active connections, running queries in parallel, dumping tables to
+local files), so you only write <code class="docutils literal notranslate"><span class="pre">.sql</span></code> files.</p>
+</div>
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>If you want to take a look at the sample pipeline, you have a few options:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/spec-api-sql">Source code on Github</a></p></li>
+<li><p><a class="reference external" href="https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Ftemplates/spec-api-sql%252FREADME.ipynb%26branch%3Dmaster">Interactive demo</a></p></li>
+</ul>
+<p>Or run it locally:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber examples --name templates/spec-api-sql</span>
+</pre></div>
+</div>
+<p>You can also refer to this <a class="reference external" href="https://github.com/ploomber/projects/blob/master/templates/spec-api-sql/README.ipynb">README</a> file for more information on using SQL scripts to manipulate data in a database, dump a table, and plot it with Python.</p>
+</section>
+<section id="creating-sample-data">
+<h2>Creating Sample Data<a class="headerlink" href="#creating-sample-data" title="Permalink to this headline">¶</a></h2>
+<p>To create sample data, you can run the following code:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># create sample data</span>
+<span class="nb">cd</span> setup
+bash setup.sh
+<span class="c1"># move back to the original spec-api-sql folder</span>
+<span class="nb">cd</span> ..
+</pre></div>
+</div>
+</section>
+<section id="connecting-to-databases">
+<h2>Connecting To Databases<a class="headerlink" href="#connecting-to-databases" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For a more detailed explanation on connecting to a database, see: <a class="reference internal" href="../cookbook/db-config.html"><span class="doc">Database configuration</span></a>.</p>
+</div>
+<p>The first step to write a SQL pipeline is to tell Ploomber how to connect to
+the database, by providing a function that returns either a
+<a class="reference internal" href="../api/_modules/clients/ploomber.clients.SQLAlchemyClient.html#ploomber.clients.SQLAlchemyClient" title="ploomber.clients.SQLAlchemyClient"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.clients.SQLAlchemyClient</span></code></a> or a
+<a class="reference internal" href="../api/_modules/clients/ploomber.clients.DBAPIClient.html#ploomber.clients.DBAPIClient" title="ploomber.clients.DBAPIClient"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.clients.DBAPIClient</span></code></a>. These two clients cover all databases
+supported by Python, even systems like Snowflake or Apache
+Hive.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SQLAlchemyClient</span></code> takes a single argument, the database URI
+(<a class="reference external" href="https://docs.sqlalchemy.org/en/13/core/engines.html">Click here for documentation on sqlalchemy URIs</a>.). As the name
+suggests, it uses SQLAlchemy under the hood, so any database supported by such
+library is supported as well. Below, there’s is an example that connects to
+a local SQLite database:</p>
+<div class="text-editor highlight-python notranslate" id="clients-py"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber.clients</span> <span class="kn">import</span> <span class="n">SQLAlchemyClient</span>
+
+<span class="k">def</span> <span class="nf">get_client</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">SQLAlchemyClient</span><span class="p">(</span><span class="s1">&#39;sqlite:///database.db&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If SQLAlchemy doesn’t support your database, you must use
+<a class="reference internal" href="../api/_modules/clients/ploomber.clients.DBAPIClient.html#ploomber.clients.DBAPIClient" title="ploomber.clients.DBAPIClient"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.clients.DBAPIClient</span></code></a> instead. Refer to the documentation for
+details.</p>
+</section>
+<section id="configuring-the-task-client-in-pipeline-yaml">
+<h2>Configuring The Task Client In <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code><a class="headerlink" href="#configuring-the-task-client-in-pipeline-yaml" title="Permalink to this headline">¶</a></h2>
+<p>To configure your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> to run a SQL task, <code class="docutils literal notranslate"><span class="pre">source</span></code> must be a
+path to the SQL script. To indicate how to load the client, you have to
+include the <code class="docutils literal notranslate"><span class="pre">client</span></code> key:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sql/create-table.sql</span><span class="w"></span>
+<span class="w">    </span><span class="nt">client</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get_client</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># task declaration continues...</span><span class="w"></span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">client</span></code> must be a dotted path to a function that
+instantiates a client. If your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">clients.py</span></code> are in the same
+folder, you should be able to do this directly. If they are in a different
+folder, you’ll have to ensure that the function is importable.</p>
+<p>You can reuse the same dotted path in many tasks. However, since it is
+common for many tasks to query the same database, you may declare a task-level
+client like this:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">clients</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># all SQLScript tasks use the same client instance</span><span class="w"></span>
+<span class="w">    </span><span class="nt">SQLScript</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.get_client</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># all SQLDump tasks use the same client instance</span><span class="w"></span>
+<span class="w">    </span><span class="nt">SQLDump</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">config.get_client</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sql/create-table.sql</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># no need to add client here</span><span class="w"></span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">SQLScript</span></code> (creates a table/view), and <code class="docutils literal notranslate"><span class="pre">SQLDump</span></code> (dump to a local file)
+are the two most common types of SQL tasks, let’s review them in detail.</p>
+</section>
+<section id="creating-sql-tables-views-with-sqlscript">
+<h2>Creating SQL Tables/Views With <code class="docutils literal notranslate"><span class="pre">SQLScript</span></code><a class="headerlink" href="#creating-sql-tables-views-with-sqlscript" title="Permalink to this headline">¶</a></h2>
+<p>If you want to organize your SQL processing in multiple steps, you can use
+<code class="docutils literal notranslate"><span class="pre">SQLScript</span></code> to generate one table/view per task. The declaration in the
+<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file looks like this:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sql/create-table.sql</span><span class="w"></span>
+<span class="w">    </span><span class="nt">client</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get_client</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">schema</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">name</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">table</span><span class="p p-Indicator">]</span><span class="w"></span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">product</span></code> can be a list with three elements: <code class="docutils literal notranslate"><span class="pre">[schema,</span> <span class="pre">name,</span> <span class="pre">kind]</span></code>,
+or 2: <code class="docutils literal notranslate"><span class="pre">[name,</span> <span class="pre">kind]</span></code>. Where <code class="docutils literal notranslate"><span class="pre">kind</span></code> can be <code class="docutils literal notranslate"><span class="pre">table</span></code> or <code class="docutils literal notranslate"><span class="pre">view</span></code>.</p>
+<p>A typical script (<code class="docutils literal notranslate"><span class="pre">sql/create-table.sql</span></code> in our case) looks like this:</p>
+<div class="text-editor highlight-postgresql notranslate" id="task-sql"><div class="highlight"><pre><span></span><span class="k">DROP</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="p">{{</span><span class="n">product</span><span class="p">}};</span><span class="w"></span>
+
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="p">{{</span><span class="n">product</span><span class="p">}}</span><span class="w"> </span><span class="k">AS</span><span class="w"></span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">schema</span><span class="mf">.</span><span class="n">clean</span><span class="w"></span>
+<span class="o">#</span><span class="w"> </span><span class="n">continues</span><span class="mf">...</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This <code class="docutils literal notranslate"><span class="pre">DROP</span> <span class="pre">TABLE</span> <span class="pre">...</span> <span class="pre">CREATE</span> <span class="pre">TABLE</span> <span class="pre">..</span></code> format ensures that the table
+(or view) is deleted before creating a new version if the source code changes.</p>
+<p>Note that we are using a <code class="docutils literal notranslate"><span class="pre">{{product}}</span></code> placeholder in our script, this will
+be replaced at runtime for the name value in <code class="docutils literal notranslate"><span class="pre">tasks[*].product</span></code> (in our case:
+<code class="docutils literal notranslate"><span class="pre">schema.name</span></code>.</p>
+</section>
+<section id="sqlscript-and-product-s-metadata">
+<h2><code class="docutils literal notranslate"><span class="pre">SQLScript</span></code> And Product’s Metadata<a class="headerlink" href="#sqlscript-and-product-s-metadata" title="Permalink to this headline">¶</a></h2>
+<p>Incremental builds (<a class="reference internal" href="../user-guide/faq_index.html#incremental-builds"><span class="std std-ref">What are incremental builds?</span></a>) allow you speed up pipeline
+execution. To enable this, Ploomber keeps track of source code changes. When
+tasks generate files (say <code class="docutils literal notranslate"><span class="pre">data.csv</span></code>), a metadata file is saved next to
+the product file (e.g., <code class="docutils literal notranslate"><span class="pre">.data.csv.metadata</span></code>).</p>
+<p>To enable incremental builds in <code class="docutils literal notranslate"><span class="pre">SQLScript</span></code> tasks, you must configure a
+product metadata backend.</p>
+<p>If you are using PostgreSQL, you can use
+<a class="reference internal" href="../api/_modules/products/ploomber.products.PostgresRelation.html#ploomber.products.PostgresRelation" title="ploomber.products.PostgresRelation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products.PostgresRelation</span></code></a>; if using SQLite, you can use
+<a class="reference internal" href="../api/_modules/products/ploomber.products.SQLiteRelation.html#ploomber.products.SQLiteRelation" title="ploomber.products.SQLiteRelation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products.SQLiteRelation</span></code></a>. In both cases, metadata is saved
+in the same database where the tables/views are created. Hence, you can reuse
+the task client. Here’s an example if using PostgreSQL:</p>
+<div class="text-editor highlight-yaml notranslate" id="pipeline-pg-yaml"><div class="highlight"><pre><span></span><span class="nt">meta</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># configure pipeline to use PostgresRelation by default</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product_default_class</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">SQLScript</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PostgresRelation</span><span class="w"></span>
+
+<span class="c1"># same client for task and product</span><span class="w"></span>
+<span class="nt">clients</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">SQLScript</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get_pg_client</span><span class="w"></span>
+<span class="w">    </span><span class="nt">PostgresRelation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get_pg_client</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sql/create-table.sql</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">schema</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">name</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">table</span><span class="p p-Indicator">]</span><span class="w"></span>
+</pre></div>
+</div>
+<p>For any other database, you have two options, either use
+<a class="reference internal" href="../api/_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation" title="ploomber.products.SQLRelation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products.SQLRelation</span></code></a> which is a product that does not save
+any metadata at all (this means you don’t get incremental builds) or use
+<a class="reference internal" href="../api/_modules/products/ploomber.products.GenericSQLRelation.html#ploomber.products.GenericSQLRelation" title="ploomber.products.GenericSQLRelation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products.GenericSQLRelation</span></code></a>, which stores metadata in a
+SQLite database.</p>
+<p>A typical configuration to enable incremental builds looks like this:</p>
+<div class="text-editor highlight-yaml notranslate" id="pipeline-generic-yaml"><div class="highlight"><pre><span></span><span class="nt">meta</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product_default_class</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">SQLScript</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GenericSQLRelation</span><span class="w"></span>
+
+<span class="nt">clients</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">SQLScript</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get_db_client</span><span class="w"></span>
+<span class="w">    </span><span class="nt">GenericSQLRelation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get_metadata_client</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sql/create-table.sql</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">some_task</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Don’t confuse the task’s client with the product’s client. <strong>Task clients control
+where to execute the code. Product clients manage where to save metadata.</strong></p>
+</section>
+<section id="placeholders-in-sql-scripts">
+<h2>Placeholders In SQL Scripts<a class="headerlink" href="#placeholders-in-sql-scripts" title="Permalink to this headline">¶</a></h2>
+<p>You can reference the <code class="docutils literal notranslate"><span class="pre">product</span></code> list in your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> in your script
+using the <code class="docutils literal notranslate"><span class="pre">{{product}}</span></code> placeholder. For example <code class="docutils literal notranslate"><span class="pre">[schema,</span> <span class="pre">name,</span> <span class="pre">table]</span></code>
+renders to: <code class="docutils literal notranslate"><span class="pre">schema.name</span></code>.</p>
+<p>To specify upstream dependencies, use the <code class="docutils literal notranslate"><span class="pre">{{upstream['some_task']}}</span></code>
+placeholder. Here’s a complete example:</p>
+<div class="text-editor highlight-postgresql notranslate" id="id1"><div class="highlight"><pre><span></span><span class="c1">-- {{product}} gets replaced by the value in pipeline.yaml</span>
+<span class="k">DROP</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="p">{{</span><span class="n">product</span><span class="p">}};</span><span class="w"></span>
+
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="p">{{</span><span class="n">product</span><span class="p">}}</span><span class="w"> </span><span class="k">AS</span><span class="w"></span>
+<span class="c1">-- this task depends on the output generated by a task named &quot;clean&quot;</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="p">{{</span><span class="n">upstream</span><span class="p">[</span><span class="s1">&#39;clean&#39;</span><span class="p">]}}</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">10</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Let’s say our product is <code class="docutils literal notranslate"><span class="pre">[schema,</span> <span class="pre">name,</span> <span class="pre">table]</span></code> And the task named <code class="docutils literal notranslate"><span class="pre">clean</span></code>
+generates a product <code class="docutils literal notranslate"><span class="pre">schema.clean</span></code>, the script above renders to:</p>
+<div class="text-editor highlight-postgresql notranslate" id="id2"><div class="highlight"><pre><span></span><span class="k">DROP</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="k">schema</span><span class="mf">.</span><span class="k">name</span><span class="p">;</span><span class="w"></span>
+
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">schema</span><span class="mf">.</span><span class="k">name</span><span class="w"> </span><span class="k">AS</span><span class="w"></span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="k">schema</span><span class="mf">.</span><span class="n">clean</span><span class="w"></span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">10</span><span class="w"></span>
+</pre></div>
+</div>
+<p>If you want to see the rendered code for any task, execute the following in
+the terminal:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber task task_name --source</span>
+</pre></div>
+</div>
+<p>(Change <code class="docutils literal notranslate"><span class="pre">task_name</span></code> for the task you want)</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>when executing a SQL script, you usually want to replace any existing
+table/view. Some databases support the
+<code class="docutils literal notranslate"><span class="pre">DROP</span> <span class="pre">TABLE</span> <span class="pre">IF</span> <span class="pre">EXISTS</span></code> statement to do so, but other databases (e.g., Oracle)
+have different procedures. Check your database’s documentation for details.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Some database drivers do not support sending multiple statements to the
+database in a single call (e.g., SQLite), in such case, you can use the
+<code class="docutils literal notranslate"><span class="pre">split_source</span></code> parameter in either <code class="docutils literal notranslate"><span class="pre">SQLAlchemyClient</span></code> or <code class="docutils literal notranslate"><span class="pre">DBAPIClient</span></code>
+to split your statements and execute them one at a time, allowing you
+to write a single <code class="docutils literal notranslate"><span class="pre">.sql</span></code> file to perform the
+<code class="docutils literal notranslate"><span class="pre">DROP</span> <span class="pre">TABLE</span> <span class="pre">IF</span> <span class="pre">EXISTS</span></code> then <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">TABLE</span> <span class="pre">AS</span></code> logic.</p>
+</div>
+<p>The following diagram shows our example pipeline along with some sample
+source code for each task and the rendered version.</p>
+<a class="reference external image-reference" href="https://ploomber.io/images/doc/sql/diag.png"><img alt="sql-diag" src="https://ploomber.io/images/doc/sql/diag.png" /></a>
+</section>
+<section id="dumping-data-with-sqldump">
+<h2>Dumping Data With <code class="docutils literal notranslate"><span class="pre">SQLDump</span></code><a class="headerlink" href="#dumping-data-with-sqldump" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">SQLDump</span></code> only works with <a class="reference internal" href="../api/_modules/clients/ploomber.clients.SQLAlchemyClient.html#ploomber.clients.SQLAlchemyClient" title="ploomber.clients.SQLAlchemyClient"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.clients.SQLAlchemyClient</span></code></a>.</p>
+</div>
+<p>A minimal SQLDump example is available <a class="reference external" href="https://github.com/ploomber/projects/tree/master/cookbook/sql-dump">here</a></p>
+<p>If you want to dump the result of a SQL query, use
+<a class="reference internal" href="../api/_modules/tasks/ploomber.tasks.SQLDump.html#ploomber.tasks.SQLDump" title="ploomber.tasks.SQLDump"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.tasks.SQLDump</span></code></a>. Configuring this task is very similar to a
+regular SQL task:</p>
+<div class="text-editor highlight-yaml notranslate" id="pipeline-yaml"><div class="highlight"><pre><span></span><span class="nt">clients</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># client for the database to pull data from</span><span class="w"></span>
+<span class="w">    </span><span class="nt">SQLDump</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get_client</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># some sql tasks here...</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1"># dump the output of dump-query.sql</span><span class="w"></span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sql/dump-query.sql</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># since this is a SQL dump, product is a path to a file</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/data.csv</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1"># some python tasks here...</span><span class="w"></span>
+</pre></div>
+</div>
+<p>If you want to dump an entire table, you can do:</p>
+<div class="text-editor highlight-postgresql notranslate" id="dump-query-sql"><div class="highlight"><pre><span></span><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="p">{{</span><span class="n">upstream</span><span class="p">[</span><span class="s1">&#39;some_task&#39;</span><span class="p">]}}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">SQLDump</span></code> only works with <code class="docutils literal notranslate"><span class="pre">SQLAlchemyClient</span></code>. Product must be
+a file with <code class="docutils literal notranslate"><span class="pre">.csv</span></code> or <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> extension.</p>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">SQLDump</span></code> downloads data in chunks of 10,000 rows, but yu can
+change this value:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sql/dump-query.sql</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/data.csv</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># set chunksize to 1 million rows</span><span class="w"></span>
+<span class="w">    </span><span class="nt">chunksize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000000</span><span class="w"></span>
+</pre></div>
+</div>
+<p>To dump a single file: <code class="docutils literal notranslate"><span class="pre">chunksize:</span> <span class="pre">null</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Downloading <code class="docutils literal notranslate"><span class="pre">.parquet</span></code> in chunks may yield errors if the schema inferred
+from one chunk is not the same as the one in another chunk. If you
+experience an issue, either change to <code class="docutils literal notranslate"><span class="pre">.csv</span></code> or set <code class="docutils literal notranslate"><span class="pre">chunksize:</span> <span class="pre">null</span></code>.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><code class="docutils literal notranslate"><span class="pre">SQLDump</span></code> works with all databases supported by Python because it
+relies on <code class="docutils literal notranslate"><span class="pre">pandas</span></code> to dump data. However, this introduces a
+performance overhead. So if you’re dumping large tables, consider
+implementing a solution optimized for your database.</p>
+</div>
+</section>
+<section id="other-sql-tasks">
+<h2>Other SQL Tasks<a class="headerlink" href="#other-sql-tasks" title="Permalink to this headline">¶</a></h2>
+<p>There are other SQL tasks not covered here, check out the documentation for
+details:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/_modules/tasks/ploomber.tasks.SQLTransfer.html#ploomber.tasks.SQLTransfer" title="ploomber.tasks.SQLTransfer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.tasks.SQLTransfer</span></code></a> (move data from one db to another)</p></li>
+<li><p><a class="reference internal" href="../api/_modules/tasks/ploomber.tasks.SQLDump.html#ploomber.tasks.SQLDump" title="ploomber.tasks.SQLDump"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.tasks.SQLDump</span></code></a> (upload data)</p></li>
+<li><p><a class="reference internal" href="../api/_modules/tasks/ploomber.tasks.PostgresCopyFrom.html#ploomber.tasks.PostgresCopyFrom" title="ploomber.tasks.PostgresCopyFrom"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.tasks.PostgresCopyFrom</span></code></a> (efficient postgres data upload)</p></li>
+</ul>
+</section>
+<section id="where-to-go-from-here">
+<h2>Where To Go From Here<a class="headerlink" href="#where-to-go-from-here" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../user-guide/sql-templating.html"><span class="doc">SQL templating</span></a> shows how to use jinja to write succinct SQL scripts</p></li>
+<li><p><a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/etl">Advanced SQL pipeline example</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/google-cloud">BigQuery example</a></p></li>
+</ul>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">SQL Pipelines</a><ul>
+<li><a class="reference internal" href="#quick-start">Quick Start</a></li>
+<li><a class="reference internal" href="#creating-sample-data">Creating Sample Data</a></li>
+<li><a class="reference internal" href="#connecting-to-databases">Connecting To Databases</a></li>
+<li><a class="reference internal" href="#configuring-the-task-client-in-pipeline-yaml">Configuring The Task Client In <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code></a></li>
+<li><a class="reference internal" href="#creating-sql-tables-views-with-sqlscript">Creating SQL Tables/Views With <code class="docutils literal notranslate"><span class="pre">SQLScript</span></code></a></li>
+<li><a class="reference internal" href="#sqlscript-and-product-s-metadata"><code class="docutils literal notranslate"><span class="pre">SQLScript</span></code> And Product’s Metadata</a></li>
+<li><a class="reference internal" href="#placeholders-in-sql-scripts">Placeholders In SQL Scripts</a></li>
+<li><a class="reference internal" href="#dumping-data-with-sqldump">Dumping Data With <code class="docutils literal notranslate"><span class="pre">SQLDump</span></code></a></li>
+<li><a class="reference internal" href="#other-sql-tasks">Other SQL Tasks</a></li>
+<li><a class="reference internal" href="#where-to-go-from-here">Where To Go From Here</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

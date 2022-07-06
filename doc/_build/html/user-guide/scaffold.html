@@ -1,0 +1,356 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Scaffolding projects &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Refactoring legacy notebooks" href="refactoring.html" />
+    <link rel="prev" title="Jupyter integration" href="jupyter.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="templates.html">Downloading templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Jupyter integration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Scaffolding projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring.html">Refactoring legacy notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametrized.html">Parametrized pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html">SQL Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html">SQL templating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Pipeline testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html">Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shell.html">Shell tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html">Other editors (VSCode, PyCharm, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html">R support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html">FAQ and Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html">Spec API vs. Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+user-guide%2Fscaffold"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="scaffolding-projects">
+<h1>Scaffolding projects<a class="headerlink" href="#scaffolding-projects" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is a guide on <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span></code>. For API docs
+see <a class="reference internal" href="../api/cli.html#api-cli-ploomber-scaffold"><span class="std std-ref">Create new project</span></a>.</p>
+</div>
+<p>You can quickly create new projects using the <code class="docutils literal notranslate"><span class="pre">scaffold</span></code> command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber scaffold</span>
+</pre></div>
+</div>
+<p>After running it, type a name for your project and press enter. The command will create a pre-configured project with a sample pipeline.</p>
+<p><strong>New in 0.16:</strong> <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span></code> now takes a positional argument. For example, <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">example</span> <span class="pre">my-project</span></code>.</p>
+<p>By adding the <code class="docutils literal notranslate"><span class="pre">--empty</span></code> flag to scaffold, you can create a project with an empty <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber scaffold --empty</span>
+</pre></div>
+</div>
+<section id="scaffolding-tasks">
+<h2>Scaffolding tasks<a class="headerlink" href="#scaffolding-tasks" title="Permalink to this headline">¶</a></h2>
+<p>Once you have a <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file, <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span></code> behaves
+differently, allowing you to create new task files quickly. For example, say
+you add the following task to your YAML file:</p>
+<div class="text-editor highlight-yaml notranslate" id="pipeline-yaml"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># some existing tasks....</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1"># new task</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks/my-new-task.py</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/my-new-task.ipynb</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Executing:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber scaffold</span>
+</pre></div>
+</div>
+<p>Will create a base task at <code class="docutils literal notranslate"><span class="pre">tasks/my-new-task.py</span></code>. This command works with
+Python scripts, functions, Jupyter notebooks, R Markdown files, R scripts, and
+SQL scripts.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span></code> works as long as your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file
+is in a standard location (<a class="reference internal" href="../api/cli.html#api-cli-default-locations"><span class="std std-ref">Default locations</span></a>); hence, you can
+use it even if you didn’t create your project with an initial call to
+<code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span></code>.</p>
+<p>By adding the <code class="docutils literal notranslate"><span class="pre">--entry-point</span></code>/ <code class="docutils literal notranslate"><span class="pre">-e</span></code>, you can specify a custom entry point.
+For example, if your spec is named <code class="docutils literal notranslate"><span class="pre">pipeline.serve.yaml</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber scaffold --entry-point pipeline.serve.yaml</span>
+</pre></div>
+</div>
+</section>
+<section id="packaging-projects">
+<h2>Packaging projects<a class="headerlink" href="#packaging-projects" title="Permalink to this headline">¶</a></h2>
+<p>When working on larger projects, it’s a good idea to configure them as a Python
+package. Packaged projects have more structure and require more configuration, but
+they allow you to organize your work better.</p>
+<p>For example, if you have Python functions that you re-use in several files,
+you must modify your <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> or <code class="docutils literal notranslate"><span class="pre">sys.path</span></code> to ensure that such
+functions are importable wherever you want to use them. If you package your
+project, this is no longer necessary since you can install your project using
+<code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install --editable path/to/myproject</span>
+</pre></div>
+</div>
+<p>Installing with <cite>pip</cite> tells Python to treat your project as any other package,
+allowing you to import modules anywhere (in a Python session, notebook, or other modules inside
+your project).</p>
+<p>You can scaffold a packaged project with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber scaffold --package</span>
+</pre></div>
+</div>
+<p>Note that the layout is different. At the root of your project, you’ll see a
+<code class="docutils literal notranslate"><span class="pre">setup.py</span></code> file, which tells Python that this directory contains a package.
+The <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file is located at <code class="docutils literal notranslate"><span class="pre">src/{package-name}/pipeline.yaml</span></code>.
+All your pipeline’s source code must be inside the <code class="docutils literal notranslate"><span class="pre">src/{package-name}</span></code>
+directory. Other files such as exploratory notebooks or documentation must be
+outside the <code class="docutils literal notranslate"><span class="pre">src</span></code> directory.</p>
+<p>For example, say you have a <code class="docutils literal notranslate"><span class="pre">process_data</span></code> function defined at
+<code class="docutils literal notranslate"><span class="pre">src/my_awesome_package/processors.py</span></code>, you may start a Python session and
+run:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">my_awesome_package</span> <span class="kn">import</span> <span class="n">processors</span>
+
+<span class="n">processors</span><span class="o">.</span><span class="n">process_data</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Such import statement works independently of the current working directory; you
+no longer have to modify the <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> or <code class="docutils literal notranslate"><span class="pre">sys.path</span></code>. Everything under
+<code class="docutils literal notranslate"><span class="pre">src/{package-name}</span></code> is importable.</p>
+</section>
+<section id="managing-development-and-production-dependencies">
+<h2>Managing development and production dependencies<a class="headerlink" href="#managing-development-and-production-dependencies" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span></code> generates two dependencies files:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span></code>: <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> (production) and <code class="docutils literal notranslate"><span class="pre">requirements.dev.txt</span></code> (development)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conda</span></code>: <code class="docutils literal notranslate"><span class="pre">environment.yml</span></code> (production) and <code class="docutils literal notranslate"><span class="pre">environment.dev.yml</span></code> (development)</p></li>
+</ul>
+<p>While not required, separating development from production
+dependencies is highly recommended. During development, we usually need more
+dependencies than we do in production. A typical example is plotting libraries
+(e.g., matplotlib or seaborn); we need them for model evaluation but not for
+serving predictions. Fewer production dependencies make the project faster to
+install, but more importantly, it reduces dependency resolution errors. The
+more dependencies you have, the higher the chance of running into installation
+issues.</p>
+<p>After executing <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span></code> command, and editing your dependency
+files, you can run:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber install</span>
+</pre></div>
+</div>
+<p>To install dependencies. Furthermore, it configures your project if it’s a
+package (i.e., you created it with <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span> <span class="pre">--package</span></code>).</p>
+<p>During deployment, only install production dependencies and ignore development ones.</p>
+<p>If you want to learn more about the <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">install</span></code> command, check out
+the CLI documentation: <a class="reference internal" href="../api/cli.html#api-cli-ploomber-install"><span class="std std-ref">install</span></a>.</p>
+<p>If you want to know more about dependency management, check out
+<a class="reference external" href="https://ploomber.io/posts/python-envs/">this post in our blog</a>.</p>
+</section>
+<section id="locking-dependencies">
+<h2>Locking dependencies<a class="headerlink" href="#locking-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>Changes in your dependencies may break your project at any moment if you don’t
+pin versions. For example, if you train a model using scikit-learn version
+0.24 but only set <cite>scikit-learn</cite> as a dependency (without the version number).
+As soon as scikit-learn introduces breaking API changes, your project will
+fail. Therefore, it is essential to record specific versions to prevent broken
+projects.</p>
+<p>You can do so with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber install</span>
+</pre></div>
+</div>
+<p>Such command detects whether to use pip/conda and creates lock
+files for development and production dependencies; lock files contain an
+exhaustive list of dependencies with a specific version.</p>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Scaffolding projects</a><ul>
+<li><a class="reference internal" href="#scaffolding-tasks">Scaffolding tasks</a></li>
+<li><a class="reference internal" href="#packaging-projects">Packaging projects</a></li>
+<li><a class="reference internal" href="#managing-development-and-production-dependencies">Managing development and production dependencies</a></li>
+<li><a class="reference internal" href="#locking-dependencies">Locking dependencies</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

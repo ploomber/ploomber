@@ -1,0 +1,997 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Cloud Execution &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Cloud User Guide" href="guide.html" />
+    <link rel="prev" title="Setting Up" href="api-key.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="#">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Cloud</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api-key.html">Setting Up</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Cloud Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide.html">Cloud User Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="monitoring.html">Monitoring</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+cloud%2Fcloud-execution"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<style>
+    div.nbinput.container div.input_area {
+        background: black;
+    }
+</style>
+
+<script src="../_static/js/nbsphinx.js"></script><section id="Cloud-Execution">
+<h1>Cloud Execution<a class="headerlink" href="#Cloud-Execution" title="Permalink to this headline">¶</a></h1>
+<p><strong>Note:</strong> To use Ploomber Cloud, you need an API key, <a class="reference external" href="https://docs.ploomber.io/en/latest/cloud/api-key.html">click here</a> to get one.</p>
+<p>Ploomber Cloud allows you to go from your local environment to a distributed environment in the cloud (to run hundreds of experiments in parallel!) and back in a single command.</p>
+<section id="The-pipeline">
+<h2>The pipeline<a class="headerlink" href="#The-pipeline" title="Permalink to this headline">¶</a></h2>
+<p>We’ll run a sample pipeline that prepares some data and trains 10 models in parallel, here’s how the pipeline looks like:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber.spec</span> <span class="kn">import</span> <span class="n">DAGSpec</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span> <span class="o">=</span> <span class="n">DAGSpec</span><span class="p">(</span><span class="s1">&#39;pipeline.yaml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_dag</span><span class="p">()</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "3b0e0034390140dd83fb3dafdafe7418", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/cloud_cloud-execution_3_1.png" src="../_images/cloud_cloud-execution_3_1.png" />
+</div>
+</div>
+<p>All we need is to provide a <code class="docutils literal notranslate"><span class="pre">requirements.lock.txt</span></code> with the dependencies that our project needs. No need to learn Kubernetes! Ploomber Cloud will to all the heavy lifting of sending our code to the cloud, creating a Docker image, scheduling jobs, communicating them and storing the results.</p>
+</section>
+<section id="Setup">
+<h2>Setup<a class="headerlink" href="#Setup" title="Permalink to this headline">¶</a></h2>
+<p>We are constantly updating the Ploomber Cloud CLI so ensure you’re running the latest version:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip install ploomber --upgrade
+</pre></div>
+</div>
+<p>Now, let’s set our API key:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ploomber cloud set-key <span class="o">{</span>your-key<span class="o">}</span>
+</pre></div>
+</div>
+<p>Download this example:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># download</span>
+ploomber examples -n guides/cloud-execution -o example
+
+<span class="c1"># move to the example</span>
+<span class="nb">cd</span> example
+</pre></div>
+</div>
+</section>
+<section id="To-the-cloud!">
+<h2>To the cloud!<a class="headerlink" href="#To-the-cloud!" title="Permalink to this headline">¶</a></h2>
+<p>In Ploomber, you run pipelines locally with:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ploomber build
+</pre></div>
+</div>
+<p>To run the pipeline in the cloud, you do:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ploomber cloud build
+</pre></div>
+</div>
+<p>Let’s see it in action!</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+ploomber cloud build
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Zipping project -&gt; project.zip
+Uploading project...
+Uploaded project, starting execution...
+Starting build...
+</pre></div></div>
+</div>
+<p>That’s it! Let’s now check that our pipeline was scheduled:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+ploomber cloud list
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+created_at      runid                                 status
+--------------  ------------------------------------  --------
+14 seconds ago  136f9b47-27fa-4f65-b06f-b6fe665f3ea9  created
+8 hours ago     62ac3682-b1bf-4521-aa26-260135a2f982  finished
+10 hours ago    921748f6-5ef7-4f4e-a500-07162d1e3245  finished
+12 hours ago    2b21a085-1d03-4426-be99-0f7a1b8c4f2e  finished
+13 hours ago    abd50a1c-f5ee-479b-9a3c-92c7be172b9e  finished
+</pre></div></div>
+</div>
+<p>We can see our runs in the list, let’s copy the ID to retrieve the status:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+ploomber cloud status 136f9b47-27fa-4f65-b06f-b6fe665f3ea9
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Run created...
+</pre></div></div>
+</div>
+<p>“Run created…” means Ploomber Cloud is building the Docker image, let’s wait a minute to give it some time to finish and send the jobs to the cluster. Ploomber Cloud runs one container per task, allowing you to parallelize our pipeline easily!</p>
+<p>You can check the Docker image building docs with the following command:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+ploomber cloud logs 136f9b47-27fa-4f65-b06f-b6fe665f3ea9 --image
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Image build hasn&#39;t started yet...
+</pre></div></div>
+</div>
+<p>It’ll take about a minute for the Docker build process to start, you may execute the following command to continuously watch the logs:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ploomber cloud logs <span class="o">{</span>runid<span class="o">}</span> --image --watch
+</pre></div>
+</div>
+<p>Let’s check the status of the individual tasks:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+ploomber cloud status 136f9b47-27fa-4f65-b06f-b6fe665f3ea9
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+taskid                          name    runid                           status
+------------------------------  ------  ------------------------------  --------
+da8f149e-27cb-4297-8061-8dae36  fit5    136f9b47-27fa-4f65-b06f-b6fe66  created
+1ab37b                                  5f3ea9
+c6920fd4-ba65-495c-b022-d68274  fit9    136f9b47-27fa-4f65-b06f-b6fe66  created
+ff7307                                  5f3ea9
+9bfdaf0e-28d3-43b1-9c91-c1e185  fit6    136f9b47-27fa-4f65-b06f-b6fe66  created
+255797                                  5f3ea9
+69cbd6db-0b29-49db-a87a-70c70c  fit1    136f9b47-27fa-4f65-b06f-b6fe66  created
+fb066f                                  5f3ea9
+b26948e3-4ff8-49e7-afbf-9c3cf1  fit0    136f9b47-27fa-4f65-b06f-b6fe66  created
+ac0f75                                  5f3ea9
+13e30907-9adb-4fd2-ac1d-c70c5b  join    136f9b47-27fa-4f65-b06f-b6fe66  created
+a6368a                                  5f3ea9
+bef13025-b0f3-4563-95f0-95b332  fit7    136f9b47-27fa-4f65-b06f-b6fe66  created
+9afbb9                                  5f3ea9
+85e0fd4b-911b-42be-9593-63209b  fit4    136f9b47-27fa-4f65-b06f-b6fe66  created
+47c933                                  5f3ea9
+94c0cbbf-853e-47c6-972b-76a01d  fit8    136f9b47-27fa-4f65-b06f-b6fe66  created
+e680ac                                  5f3ea9
+39219c5b-ec35-42d6-bc34-bbf21c  fit3    136f9b47-27fa-4f65-b06f-b6fe66  created
+6d568c                                  5f3ea9
+27586e14-f07b-4734-86b8-7219fe  fit2    136f9b47-27fa-4f65-b06f-b6fe66  created
+654d90                                  5f3ea9
+</pre></div></div>
+</div>
+<p>Great! We see that our jobs have been scheduled.</p>
+<p>You can execute the following to watch the task status continuously:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ploomber cloud status <span class="o">{</span>runid<span class="o">}</span> --watch
+</pre></div>
+</div>
+<p>Let’s give it a few minutes for it to finish training the 10 models, and run the command again:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+ploomber cloud status 136f9b47-27fa-4f65-b06f-b6fe665f3ea9
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+taskid                          name    runid                           status
+------------------------------  ------  ------------------------------  --------
+da8f149e-27cb-4297-8061-8dae36  fit5    136f9b47-27fa-4f65-b06f-b6fe66  finished
+1ab37b                                  5f3ea9
+c6920fd4-ba65-495c-b022-d68274  fit9    136f9b47-27fa-4f65-b06f-b6fe66  finished
+ff7307                                  5f3ea9
+9bfdaf0e-28d3-43b1-9c91-c1e185  fit6    136f9b47-27fa-4f65-b06f-b6fe66  finished
+255797                                  5f3ea9
+69cbd6db-0b29-49db-a87a-70c70c  fit1    136f9b47-27fa-4f65-b06f-b6fe66  finished
+fb066f                                  5f3ea9
+b26948e3-4ff8-49e7-afbf-9c3cf1  fit0    136f9b47-27fa-4f65-b06f-b6fe66  finished
+ac0f75                                  5f3ea9
+13e30907-9adb-4fd2-ac1d-c70c5b  join    136f9b47-27fa-4f65-b06f-b6fe66  finished
+a6368a                                  5f3ea9
+bef13025-b0f3-4563-95f0-95b332  fit7    136f9b47-27fa-4f65-b06f-b6fe66  finished
+9afbb9                                  5f3ea9
+85e0fd4b-911b-42be-9593-63209b  fit4    136f9b47-27fa-4f65-b06f-b6fe66  finished
+47c933                                  5f3ea9
+94c0cbbf-853e-47c6-972b-76a01d  fit8    136f9b47-27fa-4f65-b06f-b6fe66  finished
+e680ac                                  5f3ea9
+39219c5b-ec35-42d6-bc34-bbf21c  fit3    136f9b47-27fa-4f65-b06f-b6fe66  finished
+6d568c                                  5f3ea9
+27586e14-f07b-4734-86b8-7219fe  fit2    136f9b47-27fa-4f65-b06f-b6fe66  finished
+654d90                                  5f3ea9
+</pre></div></div>
+</div>
+</section>
+<section id="Task-logs">
+<h2>Task logs<a class="headerlink" href="#Task-logs" title="Permalink to this headline">¶</a></h2>
+<p>To check the logs for each task:</p>
+<p>(Note: it may take a few minutes for the task to start, and hence, for the logs to be visible. Ploomber Cloud spins up the necessary infrastructure on-demand, so you only pay for what you use, however, this requires us to shut down any unused infrastructure)</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+ploomber cloud logs 136f9b47-27fa-4f65-b06f-b6fe665f3ea9
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+
+***** START OF LOGS FOR TASK: fit0 *****
+/opt/bitnami/python/lib/python3.9/runpy.py:127: RuntimeWarning: &#39;ploomber.cli.task&#39; found in sys.modules after import of package &#39;ploomber.cli&#39;, but prior to execution of &#39;ploomber.cli.task&#39;; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+100%|██████████| 13/13 [00:00&lt;00:00, 8752.16it/s]
+Executing: 100%|██████████| 11/11 [00:03&lt;00:00,  2.78cell/s]
+***** END OF LOGS FOR TASK: fit0 *****
+
+
+***** START OF LOGS FOR TASK: fit9 *****
+/opt/bitnami/python/lib/python3.9/runpy.py:127: RuntimeWarning: &#39;ploomber.cli.task&#39; found in sys.modules after import of package &#39;ploomber.cli&#39;, but prior to execution of &#39;ploomber.cli.task&#39;; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+100%|██████████| 13/13 [00:00&lt;00:00, 7419.51it/s]
+Executing: 100%|██████████| 11/11 [00:04&lt;00:00,  2.50cell/s]
+***** END OF LOGS FOR TASK: fit9 *****
+
+
+***** START OF LOGS FOR TASK: fit8 *****
+/opt/bitnami/python/lib/python3.9/runpy.py:127: RuntimeWarning: &#39;ploomber.cli.task&#39; found in sys.modules after import of package &#39;ploomber.cli&#39;, but prior to execution of &#39;ploomber.cli.task&#39;; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+100%|██████████| 13/13 [00:00&lt;00:00, 8305.55it/s]
+Executing: 100%|██████████| 11/11 [00:04&lt;00:00,  2.71cell/s]
+***** END OF LOGS FOR TASK: fit8 *****
+
+
+***** START OF LOGS FOR TASK: fit7 *****
+/opt/bitnami/python/lib/python3.9/runpy.py:127: RuntimeWarning: &#39;ploomber.cli.task&#39; found in sys.modules after import of package &#39;ploomber.cli&#39;, but prior to execution of &#39;ploomber.cli.task&#39;; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+100%|██████████| 13/13 [00:00&lt;00:00, 7707.94it/s]
+Executing: 100%|██████████| 11/11 [00:04&lt;00:00,  2.54cell/s]
+***** END OF LOGS FOR TASK: fit7 *****
+
+
+***** START OF LOGS FOR TASK: fit6 *****
+/opt/bitnami/python/lib/python3.9/runpy.py:127: RuntimeWarning: &#39;ploomber.cli.task&#39; found in sys.modules after import of package &#39;ploomber.cli&#39;, but prior to execution of &#39;ploomber.cli.task&#39;; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+100%|██████████| 13/13 [00:00&lt;00:00, 7500.13it/s]
+***** END OF LOGS FOR TASK: fit6 *****
+
+
+***** START OF LOGS FOR TASK: join *****
+/opt/bitnami/python/lib/python3.9/runpy.py:127: RuntimeWarning: &#39;ploomber.cli.task&#39; found in sys.modules after import of package &#39;ploomber.cli&#39;, but prior to execution of &#39;ploomber.cli.task&#39;; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+100%|██████████| 13/13 [00:00&lt;00:00, 7439.75it/s]
+Executing: 100%|██████████| 11/11 [00:04&lt;00:00,  2.52cell/s]
+***** END OF LOGS FOR TASK: join *****
+
+
+***** START OF LOGS FOR TASK: fit5 *****
+/opt/bitnami/python/lib/python3.9/runpy.py:127: RuntimeWarning: &#39;ploomber.cli.task&#39; found in sys.modules after import of package &#39;ploomber.cli&#39;, but prior to execution of &#39;ploomber.cli.task&#39;; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+100%|██████████| 13/13 [00:00&lt;00:00, 9230.74it/s]
+Executing: 100%|██████████| 11/11 [00:04&lt;00:00,  2.74cell/s]
+***** END OF LOGS FOR TASK: fit5 *****
+
+
+***** START OF LOGS FOR TASK: fit4 *****
+/opt/bitnami/python/lib/python3.9/runpy.py:127: RuntimeWarning: &#39;ploomber.cli.task&#39; found in sys.modules after import of package &#39;ploomber.cli&#39;, but prior to execution of &#39;ploomber.cli.task&#39;; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+100%|██████████| 13/13 [00:00&lt;00:00, 7881.75it/s]
+Executing: 100%|██████████| 11/11 [00:04&lt;00:00,  2.67cell/s]
+***** END OF LOGS FOR TASK: fit4 *****
+
+
+***** START OF LOGS FOR TASK: fit3 *****
+/opt/bitnami/python/lib/python3.9/runpy.py:127: RuntimeWarning: &#39;ploomber.cli.task&#39; found in sys.modules after import of package &#39;ploomber.cli&#39;, but prior to execution of &#39;ploomber.cli.task&#39;; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+100%|██████████| 13/13 [00:00&lt;00:00, 5777.28it/s]
+Executing: 100%|██████████| 11/11 [00:04&lt;00:00,  2.68cell/s]
+***** END OF LOGS FOR TASK: fit3 *****
+
+
+***** START OF LOGS FOR TASK: fit2 *****
+/opt/bitnami/python/lib/python3.9/runpy.py:127: RuntimeWarning: &#39;ploomber.cli.task&#39; found in sys.modules after import of package &#39;ploomber.cli&#39;, but prior to execution of &#39;ploomber.cli.task&#39;; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+100%|██████████| 13/13 [00:00&lt;00:00, 9246.39it/s]
+Executing: 100%|██████████| 11/11 [00:03&lt;00:00,  2.82cell/s]
+***** END OF LOGS FOR TASK: fit2 *****
+
+
+***** START OF LOGS FOR TASK: fit1 *****
+/opt/bitnami/python/lib/python3.9/runpy.py:127: RuntimeWarning: &#39;ploomber.cli.task&#39; found in sys.modules after import of package &#39;ploomber.cli&#39;, but prior to execution of &#39;ploomber.cli.task&#39;; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+100%|██████████| 13/13 [00:00&lt;00:00, 7745.16it/s]
+Executing: 100%|██████████| 11/11 [00:04&lt;00:00,  2.55cell/s]
+***** END OF LOGS FOR TASK: fit1 *****
+</pre></div></div>
+</div>
+</section>
+<section id="…and-back!">
+<h2>…and back!<a class="headerlink" href="#…and-back!" title="Permalink to this headline">¶</a></h2>
+<p>Great, so our jobs have finished. We can explore our cloud storage to see what files are available:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+ploomber cloud products
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+path
+-----------------------
+output/features.parquet
+output/get.html
+output/get.parquet
+output/join.parquet
+output/model-0.pickle
+output/model-1.pickle
+output/model-2.pickle
+output/model-3.pickle
+output/model-4.pickle
+output/model-5.pickle
+output/model-6.pickle
+output/model-7.pickle
+output/model-8.pickle
+output/model-9.pickle
+output/model.pickle
+output/nb-0.html
+output/nb-1.html
+output/nb-2.html
+output/nb-3.html
+output/nb-4.html
+output/nb-5.html
+output/nb-6.html
+output/nb-7.html
+output/nb-8.html
+output/nb-9.html
+output/nb.html
+output/raw.parquet
+</pre></div></div>
+</div>
+<p>Each model training task automatically generates an HTML report, we can download the files with this command:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ploomber cloud download <span class="o">{</span>pattern<span class="o">}</span>
+</pre></div>
+</div>
+<p>Where pattern is a glob-like pattern, for example to download all files:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ploomber cloud download <span class="s1">&#39;*&#39;</span>
+</pre></div>
+</div>
+<p>Or files with a specific extension:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ploomber cloud download <span class="s1">&#39;*.extension&#39;</span>
+</pre></div>
+</div>
+<p>Let’s download the HTML reports:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+ploomber cloud download <span class="s1">&#39;*.html&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Downloading output/nb-9.html
+Downloading output/nb.html
+Downloading output/.get.html.metadata
+Downloading output/nb-5.html
+Downloading output/.nb.html.metadata
+Downloading output/nb-0.html
+Downloading output/.nb-1.html.metadata
+Downloading output/.nb-9.html.metadata
+Downloading output/.nb-2.html.metadata
+Downloading output/nb-6.html
+Downloading output/nb-3.html
+Downloading output/.nb-0.html.metadata
+Downloading output/nb-4.html
+Downloading output/.nb-6.html.metadata
+Downloading output/get.html
+Downloading output/.nb-5.html.metadata
+Downloading output/.nb-3.html.metadata
+Downloading output/nb-2.html
+Downloading output/.nb-7.html.metadata
+Downloading output/.nb-8.html.metadata
+Downloading output/.nb-4.html.metadata
+Downloading output/nb-7.html
+Downloading output/nb-8.html
+Downloading output/nb-1.html
+</pre></div></div>
+</div>
+<p>Each <code class="docutils literal notranslate"><span class="pre">fit</span></code> task generated a model evaluation report. Go check them out!</p>
+</section>
+<section id="Incremental-builds">
+<h2>Incremental builds<a class="headerlink" href="#Incremental-builds" title="Permalink to this headline">¶</a></h2>
+<p>Ploomber allows you to dramatically speed up iterations with incremental builds. Let’s revisit our pipeline structure:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "f728eda457b545fc96403b60fd78fb4b", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/cloud_cloud-execution_25_1.png" src="../_images/cloud_cloud-execution_25_1.png" />
+</div>
+</div>
+<p>Let’s say you modify the <code class="docutils literal notranslate"><span class="pre">join</span></code> task. If you run <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">cloud</span> <span class="pre">build</span></code>, Ploomber Cloud will only execute the tasks that have changed. So it will run <code class="docutils literal notranslate"><span class="pre">join</span></code>, and all the <code class="docutils literal notranslate"><span class="pre">fit</span></code> tasks, but skip <code class="docutils literal notranslate"><span class="pre">get</span></code>, and <code class="docutils literal notranslate"><span class="pre">features</span></code>!</p>
+<p>To force execution of all tasks, you may execute: <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">cloud</span> <span class="pre">build</span> <span class="pre">--force</span></code></p>
+</section>
+<section id="Debugging">
+<h2>Debugging<a class="headerlink" href="#Debugging" title="Permalink to this headline">¶</a></h2>
+<p>If any of your notebooks (or scripts) fails, a copy of the partially executed notebook will be uploaded, so you can debug it.</p>
+<p>For example, let’s say I add the following in my notebook/script:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;some new error!&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Upon, execution, I can retrieve the logs with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ploomber cloud logs {runid}
+</pre></div>
+</div>
+<p>And I’ll see the following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>---------------------------------------------------------------------------
+Exception encountered at &quot;In [9]&quot;:
+---------------------------------------------------------------------------
+ValueError                                Traceback (most recent call last)
+/tmp/ipykernel_41/2195319445.py in &lt;cell line: 1&gt;()
+----&gt; 1 raise ValueError(&#39;some new error!&#39;)
+ValueError: some new error!
+</pre></div>
+</div>
+<p>And a few lines below:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ploomber.exceptions.TaskBuildError: Error when executing task &#39;fit&#39;. Partially executed notebook uploaded to remote storage at: products//project/output/nb.ipynb
+</pre></div>
+</div>
+<p>I can download that partially executed notebook with:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ploomber cloud download &#39;*nb.ipynb&#39;
+</pre></div>
+</div>
+<p>Then, I can open the notebook and I’ll see the code and cells with their corresponding output so I can debug!</p>
+</section>
+<section id="That’s-it!">
+<h2>That’s it!<a class="headerlink" href="#That’s-it!" title="Permalink to this headline">¶</a></h2>
+<p>We hope you enjoyed this tutorial and are excited to use Ploomber in your next project. Questions? <a class="reference external" href="https://ploomber.io/community">Ping us on Slack!</a></p>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Cloud Execution</a><ul>
+<li><a class="reference internal" href="#The-pipeline">The pipeline</a></li>
+<li><a class="reference internal" href="#Setup">Setup</a></li>
+<li><a class="reference internal" href="#To-the-cloud!">To the cloud!</a></li>
+<li><a class="reference internal" href="#Task-logs">Task logs</a></li>
+<li><a class="reference internal" href="#…and-back!">…and back!</a></li>
+<li><a class="reference internal" href="#Incremental-builds">Incremental builds</a></li>
+<li><a class="reference internal" href="#Debugging">Debugging</a></li>
+<li><a class="reference internal" href="#That’s-it!">That’s it!</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

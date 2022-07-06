@@ -1,0 +1,323 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Debugging &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Logging" href="logging.html" />
+    <link rel="prev" title="Report generation" href="report-generation.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Cookbook</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="parametrization.html">Parametrization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="report-generation.html">Report generation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db-config.html">Database configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid.html">Task grids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-load-python.html">Custom pipeline loading logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hooks.html">Hooks (e.g., <code class="docutils literal notranslate"><span class="pre">on_finish</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+cookbook%2Fdebugging"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="debugging">
+<h1>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is a quick reference, for an in-depth tutorial, <a class="reference internal" href="../user-guide/debugging.html"><span class="doc">click here</span></a>.</p>
+</div>
+<p>Ploomber has some built-in debugging features, and it integrates with the Python <a class="reference external" href="https://docs.python.org/3/library/pdb.html">debugger</a></p>
+<section id="debugging-a-task">
+<span id="id1"></span><h2>Debugging a task<a class="headerlink" href="#debugging-a-task" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">.debug()</span></code> works with Python functions, scripts, and notebooks.</p>
+</div>
+<p>Start an interactive session:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber interact</span>
+</pre></div>
+</div>
+<p>Start a debugging session:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dag</span><span class="p">[</span><span class="n">task_name</span><span class="p">]</span><span class="o">.</span><span class="n">debug</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>To get the list of task names: <code class="docutils literal notranslate"><span class="pre">list(dag)</span></code>.</p>
+<p>After running <code class="docutils literal notranslate"><span class="pre">.debug()</span></code>, you’ll start a debugging session, type <code class="docutils literal notranslate"><span class="pre">quit</span></code> and hit enter to exit the debugging session.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If debugging a script or notebook, you may call <code class="docutils literal notranslate"><span class="pre">.debug(kind='pm')</span></code> to start a post-mortem session, which runs the script/notebook until the code raises an exception, then the debugging session begins.</p>
+</div>
+</section>
+<section id="post-mortem-debugging">
+<h2>Post-mortem debugging<a class="headerlink" href="#post-mortem-debugging" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">--debug</span></code> only works with Python functions,  go to the <a class="reference internal" href="#debugging-in-jupyter"><span class="std std-ref">next section</span></a> to learn how to debug scripts/notebooks.</p>
+</div>
+<p>If you want the pipeline to run and start the debugging session the momeent it raises an exception:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber build --debug</span>
+</pre></div>
+</div>
+</section>
+<section id="breakpoints">
+<h2>Breakpoints<a class="headerlink" href="#breakpoints" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This only work with Python functions, go to the <a class="reference internal" href="#debugging-in-jupyter"><span class="std std-ref">next section</span></a> to learn how to debug scripts/notebooks.</p>
+</div>
+<p>If you want to stop execution at an arbitrary line:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_task</span><span class="p">(</span><span class="n">product</span><span class="p">):</span>
+    <span class="c1"># debugging session starts here...</span>
+    <span class="kn">from</span> <span class="nn">ipdb</span> <span class="kn">import</span> <span class="n">set_trace</span><span class="p">;</span> <span class="n">set_trace</span><span class="p">()</span>
+    <span class="c1"># code continues...</span>
+</pre></div>
+</div>
+<p>Then:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber build --debug</span>
+</pre></div>
+</div>
+</section>
+<section id="debugging-in-jupyter">
+<span id="id2"></span><h2>Debugging in Jupyter<a class="headerlink" href="#debugging-in-jupyter" title="Permalink to this headline">¶</a></h2>
+<p>If you want to debug scripts or notebook, you can do so from
+the <a class="reference internal" href="#debugging-a-task"><span class="std std-ref">terminal</span></a>, or from Jupyter. If you want to use
+Jupyter, first, open the script/notebook.</p>
+<section id="post-portem">
+<h3>Post-portem<a class="headerlink" href="#post-portem" title="Permalink to this headline">¶</a></h3>
+<p>If your code raises an exception, execute the following in a new cell and a debugging session will start:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">debug</span>
+</pre></div>
+</div>
+<p><a class="reference external" href="https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-debug">Click here</a> to see the <code class="docutils literal notranslate"><span class="pre">%pdb</span></code> documentation.</p>
+<p>If you want a debugging session to start whenever your code raises an exception:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">pdb</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>run <code class="docutils literal notranslate"><span class="pre">%pdb</span></code> again to turn it off.</p>
+</div>
+<p><a class="reference external" href="https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-pdb">Click here</a> to see the <code class="docutils literal notranslate"><span class="pre">%pdb</span></code> documentation.</p>
+</section>
+<section id="id4">
+<h3>Breakpoints<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>Once you’re in Jupyter, you can add a breakpoint at the line you want to debug:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">some_code_called_from_the_notebook</span><span class="p">():</span>
+    <span class="c1"># debugging session starts here...</span>
+    <span class="kn">from</span> <span class="nn">ipdb</span> <span class="kn">import</span> <span class="n">set_trace</span><span class="p">;</span> <span class="n">set_trace</span><span class="p">()</span>
+    <span class="c1"># code continues...</span>
+</pre></div>
+</div>
+<p>The breakpoint can be in an a module (i.e., something that you imported
+using a <code class="docutils literal notranslate"><span class="pre">import</span></code> statement)</p>
+</section>
+<section id="visual-debugger">
+<h3>Visual debugger<a class="headerlink" href="#visual-debugger" title="Permalink to this headline">¶</a></h3>
+<p>JupyterLab recently incorporated a native debugger, <a class="reference external" href="https://jupyterlab.readthedocs.io/en/stable/user/debugger.html">click here</a> to learn more.</p>
+</section>
+</section>
+<section id="using-the-debugger">
+<h2>Using the debugger<a class="headerlink" href="#using-the-debugger" title="Permalink to this headline">¶</a></h2>
+<p>Once you enter a debugging session, there are a few comands you can run. For example, you can execute <code class="docutils literal notranslate"><span class="pre">quit</span></code> to exit the debugger. For a complete list of available commands see the <a class="reference external" href="https://docs.python.org/3/library/pdb.html">documentation</a></p>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Debugging</a><ul>
+<li><a class="reference internal" href="#debugging-a-task">Debugging a task</a></li>
+<li><a class="reference internal" href="#post-mortem-debugging">Post-mortem debugging</a></li>
+<li><a class="reference internal" href="#breakpoints">Breakpoints</a></li>
+<li><a class="reference internal" href="#debugging-in-jupyter">Debugging in Jupyter</a><ul>
+<li><a class="reference internal" href="#post-portem">Post-portem</a></li>
+<li><a class="reference internal" href="#id4">Breakpoints</a></li>
+<li><a class="reference internal" href="#visual-debugger">Visual debugger</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-the-debugger">Using the debugger</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

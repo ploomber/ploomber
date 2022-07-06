@@ -1,0 +1,1208 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Spec API (pipeline.yaml) &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Command line interface" href="cli.html" />
+    <link rel="prev" title="API Reference" href="index.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Spec API (<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python_api.html">Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+api%2Fspec"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="spec-api-pipeline-yaml">
+<h1>Spec API (<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>)<a class="headerlink" href="#spec-api-pipeline-yaml" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This document assumes you are already familiar with Ploomber’s core concepts (DAG, product, task, and upstream). If you’re not, check out this guide: <a class="reference internal" href="../get-started/basic-concepts.html"><span class="doc">Basic concepts</span></a>.</p>
+</div>
+<p>This section describes the <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> schema.</p>
+<section id="meta">
+<h2><code class="docutils literal notranslate"><span class="pre">meta</span></code><a class="headerlink" href="#meta" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">meta</span></code> is an optional section for meta-configuration, it controls how the
+DAG is constructed.</p>
+<section id="meta-source-loader">
+<h3><code class="docutils literal notranslate"><span class="pre">meta.source_loader</span></code><a class="headerlink" href="#meta-source-loader" title="Permalink to this headline">¶</a></h3>
+<p>Load task sources (<code class="docutils literal notranslate"><span class="pre">tasks[*].source</span></code>) from a Python module. For example,
+say you have a module <code class="docutils literal notranslate"><span class="pre">my_module</span></code> and want to load sources from a
+<code class="docutils literal notranslate"><span class="pre">path/to/sources</span></code> directory inside that module:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">meta</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">source_loader</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_module</span><span class="w"></span>
+<span class="w">        </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">path/to/sources</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="meta-import-tasks-from">
+<h3><code class="docutils literal notranslate"><span class="pre">meta.import_tasks_from</span></code><a class="headerlink" href="#meta-import-tasks-from" title="Permalink to this headline">¶</a></h3>
+<p>Add tasks defined in a different file to the current one. This direcive is
+useful for composing pipelines. For example, if you have a training and a
+serving pipeline, you can define the pre-processing logic in a
+<code class="docutils literal notranslate"><span class="pre">pipeline.preprocessing.yaml</span></code> and then import the file into
+<code class="docutils literal notranslate"><span class="pre">pipeline.training.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">pipeline.serving.yaml</span></code>:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">meta</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">import_tasks_from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/tasks.yaml</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The file must be a list where each element is a valid Task.</p>
+<p><a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/ml-intermediate">Click here</a> to see a batch serving example.</p>
+<p><a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/ml-online">Click here</a> to see an online serving example.</p>
+</section>
+<section id="meta-extract-upstream">
+<h3><code class="docutils literal notranslate"><span class="pre">meta.extract_upstream</span></code><a class="headerlink" href="#meta-extract-upstream" title="Permalink to this headline">¶</a></h3>
+<p>Extract upstream dependencies from the source code (<code class="docutils literal notranslate"><span class="pre">True</span></code> by default).</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">meta</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">extract_upstream</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w"></span>
+</pre></div>
+</div>
+<p>If False, tasks must declare dependencies using the <code class="docutils literal notranslate"><span class="pre">upstream</span></code> key:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">meta</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">extract_upstream</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks/clean.py</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">outupt/report.html</span><span class="w"></span>
+<span class="w">      </span><span class="nt">upstream</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">some_task</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">another_task</span><span class="p p-Indicator">]</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="meta-extract-product">
+<h3><code class="docutils literal notranslate"><span class="pre">meta.extract_product</span></code><a class="headerlink" href="#meta-extract-product" title="Permalink to this headline">¶</a></h3>
+<p>Default:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">meta</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">extract_product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="meta-product-default-class">
+<h3><code class="docutils literal notranslate"><span class="pre">meta.product_default_class</span></code><a class="headerlink" href="#meta-product-default-class" title="Permalink to this headline">¶</a></h3>
+<p>Product class key for a given task class. Names should match (case-sensitive)
+the names in the Python API. These are rarely changed, except
+for <code class="docutils literal notranslate"><span class="pre">SQLScript</span></code>. Defaults:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">meta</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product_default_class</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">SQLScript</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SQLRelation</span><span class="w"></span>
+<span class="w">        </span><span class="nt">SQLDump</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">File</span><span class="w"></span>
+<span class="w">        </span><span class="nt">NotebookRunner</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">File</span><span class="w"></span>
+<span class="w">        </span><span class="nt">ShellScript</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">File</span><span class="w"></span>
+<span class="w">        </span><span class="nt">PythonCallable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">File</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="executor">
+<h3><code class="docutils literal notranslate"><span class="pre">executor</span></code><a class="headerlink" href="#executor" title="Permalink to this headline">¶</a></h3>
+<p>Determines which executor to use:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">serial</span></code>: Runs one task at a time (Note: By default, function tasks run in a subprocess)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parallel</span></code>: Run independent tasks in parallel (Note: this runs all tasks in a subprocess)</p></li>
+<li><p>Dotted path: This allows you to customize the initialization parameters</p></li>
+</ol>
+<p>For example, say you want to use the <a class="reference internal" href="_modules/executors/ploomber.executors.Serial.html#ploomber.executors.Serial" title="ploomber.executors.Serial"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.executors.Serial</span></code></a> executor
+but do not want to run functions in a subprocess, you can pass a dotted path
+and custom parameters like this:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">executor</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">dotted_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ploomber.executors.Serial</span><span class="w"></span>
+<span class="w">  </span><span class="nt">build_in_subprocess</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># do not run function tasks in a subprocess</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Another common use case is to limit the number of subprocesses when using the
+<a class="reference internal" href="_modules/executors/ploomber.executors.Parallel.html#ploomber.executors.Parallel" title="ploomber.executors.Parallel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.executors.Parallel</span></code></a> executor:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">executor</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">dotted_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ploomber.executors.Parallel</span><span class="w"></span>
+<span class="w">  </span><span class="nt">processes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w"> </span><span class="c1"># limit to a max of 2 processes</span><span class="w"></span>
+</pre></div>
+</div>
+<p>To learn more about the executors:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="_modules/executors/ploomber.executors.Serial.html#ploomber.executors.Serial" title="ploomber.executors.Serial"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.executors.Serial</span></code></a></p></li>
+<li><p><a class="reference internal" href="_modules/executors/ploomber.executors.Parallel.html#ploomber.executors.Parallel" title="ploomber.executors.Parallel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.executors.Parallel</span></code></a></p></li>
+</ul>
+</section>
+<section id="clients">
+<h3><code class="docutils literal notranslate"><span class="pre">clients</span></code><a class="headerlink" href="#clients" title="Permalink to this headline">¶</a></h3>
+<p>These are the default clients. It allows you to specify
+a single client for all Tasks/Products for a given class. The most common
+use case is SQL database configuration.</p>
+<p>Other scenarios are <a class="reference internal" href="_modules/products/ploomber.products.File.html#ploomber.products.File" title="ploomber.products.File"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products.File</span></code></a> clients, which Ploomber can use
+to backup pipeline results (say, for example, you run a job that trains
+several models and want to save output results. You can use
+<a class="reference internal" href="_modules/clients/ploomber.clients.GCloudStorageClient.html#ploomber.clients.GCloudStorageClient" title="ploomber.clients.GCloudStorageClient"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.clients.GCloudStorageClient</span></code></a> or <a class="reference internal" href="_modules/clients/ploomber.clients.S3Client.html#ploomber.clients.S3Client" title="ploomber.clients.S3Client"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.clients.S3Client</span></code></a> for that.</p>
+<p>Keys must be valid <code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.tasks</span></code> or <code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products</span></code>
+names, values must be dotted paths to functions that return a
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.clients</span></code> instance.</p>
+<p>Can be a string (call without arguments):</p>
+<div class="text-editor highlight-yaml notranslate" id="task-client-string-yaml"><div class="highlight"><pre><span></span><span class="nt">clients</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># this assumes there is a clients.py with a get_client function</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">{</span><span class="nv">some-class</span><span class="p p-Indicator">}:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get_client</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Or a dictionary (to call with arguments):</p>
+<div class="text-editor highlight-yaml notranslate" id="task-client-dict-yaml"><div class="highlight"><pre><span></span><span class="nt">clients</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">{</span><span class="nv">some-class</span><span class="p p-Indicator">}:</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># this assumes there is a clients.py with a get_client function</span><span class="w"></span>
+<span class="w">        </span><span class="nt">dotted_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get_client</span><span class="w"></span>
+<span class="w">        </span><span class="nt">kwarg_1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value_1</span><span class="w"></span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<span class="w">        </span><span class="nt">kwarg_k</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value_k</span><span class="w"></span>
+</pre></div>
+</div>
+<details class="summary-example-database-dump">
+<summary>Example: Database dump</summary><div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">clients</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">SQLDump</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">query.sql</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/data.csv</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># dump everything into a single file</span><span class="w"></span>
+<span class="w">    </span><span class="nt">chunksize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+</pre></div>
+</div>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber.clients</span> <span class="kn">import</span> <span class="n">SQLAlchemyClient</span>
+
+
+<span class="k">def</span> <span class="nf">get</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">SQLAlchemyClient</span><span class="p">(</span><span class="s1">&#39;sqlite:///my.db&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Download:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber examples -n cookbook/sql-dump -o sql-dump</span>
+</pre></div>
+</div>
+</details><details class="summary-example-upload-files-to-the-cloud">
+<summary>Example: Upload files to the cloud</summary><div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">clients</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># configures a dag-level File client</span><span class="w"></span>
+<span class="w">  </span><span class="nt">File</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get_local</span><span class="w"> </span><span class="c1"># you can switch to clients.get_s3 or clients.get_gcloud</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">functions.create_file</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># upon execution, this file is uploaded to storage</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">products/some-file.txt</span><span class="w"></span>
+<span class="w">  </span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scripts/some-script.py</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># upon execution, both files are uploaded to storage</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">products/some-script.ipynb</span><span class="w"></span>
+<span class="w">      </span><span class="nt">file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">products/another-file.txt</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># you may also pass a task-level File client if you don&#39;t want to upload</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># all products in the pipeline</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># client: clients.get_s3</span><span class="w"></span>
+</pre></div>
+</div>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber.clients</span> <span class="kn">import</span> <span class="n">LocalStorageClient</span><span class="p">,</span> <span class="n">GCloudStorageClient</span><span class="p">,</span> <span class="n">S3Client</span>
+
+
+<span class="k">def</span> <span class="nf">get_local</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns local client</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">LocalStorageClient</span><span class="p">(</span><span class="s1">&#39;backup&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_s3</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns S3 client</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># assumes your environment is already configured, you may also pass the</span>
+    <span class="c1"># json_credentials_path</span>
+    <span class="k">return</span> <span class="n">S3Client</span><span class="p">(</span><span class="n">bucket_name</span><span class="o">=</span><span class="s1">&#39;some-bucket&#39;</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="s1">&#39;my-project/products&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_gcloud</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns google cloud storage client</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># assumes your environment is already configured, you may also pass the</span>
+    <span class="c1"># json_credentials_path</span>
+    <span class="k">return</span> <span class="n">GCloudStorageClient</span><span class="p">(</span><span class="n">bucket_name</span><span class="o">=</span><span class="s1">&#39;some-bucket&#39;</span><span class="p">,</span>
+                               <span class="n">parent</span><span class="o">=</span><span class="s1">&#39;my-project/products&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Download:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber examples -n cookbook/file-client -o file-client</span>
+</pre></div>
+</div>
+</details><details class="summary-full-projects">
+<summary>Full projects</summary><ul class="simple">
+<li><p><a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/spec-api-sql">SQL pipeline</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/google-cloud">Example using BigQuery and Cloud Storage.</a></p></li>
+</ul>
+</details></section>
+<section id="on-render-finish-failure">
+<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">on_{render,</span> <span class="pre">finish,</span> <span class="pre">failure}</span></code><a class="headerlink" href="#on-render-finish-failure" title="Permalink to this headline">¶</a></h3>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Hooks are <strong>not</strong> executed when opening scripts/notebooks
+in <a class="reference internal" href="../user-guide/jupyter.html"><span class="doc">Jupyter.</span></a></p>
+</div>
+<p>These are hooks that execute when specific events happen:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">on_render</span></code>: executes after verifying there are no errors in your pipeline declaration (e.g., a task that doesn’t exist declared as an upstream dependency)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">on_finish</span></code>: executes upon successful pipeline run</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">on_failure</span></code>: executes upon failed pipeline run</p></li>
+</ol>
+<p>They all are optional and take a dotted path as an argument. For example,
+assume you have a <code class="docutils literal notranslate"><span class="pre">hooks.py</span></code> with function <code class="docutils literal notranslate"><span class="pre">on_render</span></code>, <code class="docutils literal notranslate"><span class="pre">on_finish</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">on_failure</span></code>. You can add them to your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> like this:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">on_render</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hooks.on_render</span><span class="w"></span>
+<span class="nt">on_finish</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hooks.on_finish</span><span class="w"></span>
+<span class="nt">on_failure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hooks.on_failure</span><span class="w"></span>
+</pre></div>
+</div>
+<p>If your hook takes arguments, you may call it like this:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># to call any hook with arguments</span><span class="w"></span>
+<span class="c1"># {hook-name} must be one of: on_render, on_finish, on_failure</span><span class="w"></span>
+<span class="p p-Indicator">{</span><span class="nv">hook-name</span><span class="p p-Indicator">}:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dotted_path</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">dotted.path.to.hook</span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">    </span><span class="nt">argument</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Calling with arguments is useful when you have <a class="reference internal" href="../user-guide/parametrized.html"><span class="doc">a parametrized pipeline</span></a>.</p>
+<p>If you need information from your DAG in your hook, you may
+request the <code class="docutils literal notranslate"><span class="pre">dag</span></code> (<a class="reference internal" href="_modules/root/ploomber.DAG.html#ploomber.DAG" title="ploomber.DAG"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.DAG</span></code></a>) argument in any of the
+hooks. <code class="docutils literal notranslate"><span class="pre">on_finish</span></code> can also request a <code class="docutils literal notranslate"><span class="pre">report</span></code> argument, which constains a
+summary report of the pipeline’s execution.</p>
+<p><code class="docutils literal notranslate"><span class="pre">on_failure</span></code> can request a <code class="docutils literal notranslate"><span class="pre">traceback</span></code>
+argument which will have a dictionary, possible keys are <code class="docutils literal notranslate"><span class="pre">build</span></code> which
+has the build error traceback, and <code class="docutils literal notranslate"><span class="pre">on_finish</span></code> which includes the
+<code class="docutils literal notranslate"><span class="pre">on_finish</span></code> hook traceback, if any. For more information, see the DAG
+documentation <a class="reference internal" href="_modules/root/ploomber.DAG.html#ploomber.DAG" title="ploomber.DAG"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.DAG</span></code></a>.</p>
+<details class="summary-example-hooks">
+<summary>Example: Hooks</summary><div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># dag-level hooks</span><span class="w"></span>
+<span class="nt">on_render</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">dotted_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hooks.dag_level_on_render</span><span class="w"></span>
+<span class="w">  </span><span class="nt">my_param</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w"></span>
+<span class="nt">on_finish</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hooks.dag_level_on_finish</span><span class="w"></span>
+<span class="nt">on_failure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hooks.dag_level_on_failure</span><span class="w"></span>
+</pre></div>
+</div>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">dag_level_on_render</span><span class="p">(</span><span class="n">my_param</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Executed after the pipeline renders (before execution)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;rendered DAG! my_param=</span><span class="si">{</span><span class="n">my_param</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">dag_level_on_finish</span><span class="p">(</span><span class="n">dag</span><span class="p">,</span> <span class="n">report</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Executes after the pipeline runs all tasks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Finished executing pipeline </span><span class="si">{</span><span class="n">dag</span><span class="si">}</span><span class="s1">, report:</span><span class="se">\n</span><span class="si">{</span><span class="n">report</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">dag_level_on_failure</span><span class="p">(</span><span class="n">traceback</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Executes if the pipeline fails</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">traceback</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;build&#39;</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Pipeline execution failed while running the tasks!&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">traceback</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;on_finish&#39;</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Pipeline execution failed while executing an on_finish hook!&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Download:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber examples -n cookbook/hooks -o hooks</span>
+</pre></div>
+</div>
+</details></section>
+<section id="serializer-and-unserializer">
+<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">serializer</span></code> and <code class="docutils literal notranslate"><span class="pre">unserializer</span></code><a class="headerlink" href="#serializer-and-unserializer" title="Permalink to this headline">¶</a></h3>
+<p>By default,  tasks whose source is a function
+(i.e., <a class="reference internal" href="_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable" title="ploomber.tasks.PythonCallable"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.tasks.PythonCallable</span></code></a>). Receive input paths
+(in <code class="docutils literal notranslate"><span class="pre">upstream</span></code>) and output paths (in <code class="docutils literal notranslate"><span class="pre">product</span></code>) when the function executes. Saving interim results allows Ploomber to provide incremental
+builds (<a class="reference internal" href="../user-guide/faq_index.html#incremental-builds"><span class="std std-ref">What are incremental builds?</span></a>).</p>
+<p>However, in some cases, we might want to provide a pipeline that performs
+all operations in memory (e.g., to do online serving).
+<a class="reference internal" href="_modules/root/ploomber.OnlineDAG.html#ploomber.OnlineDAG" title="ploomber.OnlineDAG"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.OnlineDAG</span></code></a> can convert a file-based pipeline
+into an in-memory one without code changes, allowing you to re-use your
+feature engineering code for training and serving. The only requisite is for
+tasks to configure a <code class="docutils literal notranslate"><span class="pre">serializer</span></code> and <code class="docutils literal notranslate"><span class="pre">unserializer</span></code>.
+<a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/ml-online">Click here</a> to
+see an example.</p>
+<p>Normally, a task whose source is a function looks like this:</p>
+<div class="text-editor highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="k">def</span> <span class="nf">my_task</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">upstream</span><span class="p">):</span>
+    <span class="n">df_upstream</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">upstream</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+    <span class="c1"># process data...</span>
+    <span class="c1"># save product</span>
+    <span class="n">df_product</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And you use the <code class="docutils literal notranslate"><span class="pre">product</span></code> parameter to save any task output.</p>
+<p>However, if you add a <code class="docutils literal notranslate"><span class="pre">serializer</span></code>, <code class="docutils literal notranslate"><span class="pre">product</span></code> isn’t passed, and you must
+return the product object:</p>
+<div class="text-editor highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="k">def</span> <span class="nf">my_task</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
+    <span class="n">df_upstream</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">upstream</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+    <span class="c1"># process data...</span>
+    <span class="k">return</span> <span class="n">df_product</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">serializer</span></code> function is called with the returned object as its
+first argument and <code class="docutils literal notranslate"><span class="pre">product</span></code> (output path) as the second argument:</p>
+<div class="text-editor highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">serializer</span><span class="p">(</span><span class="n">df_product</span><span class="p">,</span> <span class="n">product</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A similar logic applies to <code class="docutils literal notranslate"><span class="pre">unserializer</span></code>; when present, the function is
+called for each upstream dependency with the product as the argument:</p>
+<div class="text-editor highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">unserializer</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In your task function, you receive objects (instead of paths):</p>
+<div class="text-editor highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="k">def</span> <span class="nf">my_task</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
+    <span class="c1"># no need to call pd.read_csv here</span>
+    <span class="n">df_upstream</span> <span class="o">=</span> <span class="n">upstream</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">df_product</span>
+</pre></div>
+</div>
+<p>If you want to provide a Task-level serializer/unserializer pass it directly to
+the task, if you set a DAG-level serializer/unserializer and wish to exclude
+specific task pass <code class="docutils literal notranslate"><span class="pre">serializer:</span> <span class="pre">null</span></code> or <code class="docutils literal notranslate"><span class="pre">unserializer:</span> <span class="pre">null</span></code> in the
+selected task.</p>
+<details class="summary-example-serialization">
+<summary>Example: Serialization</summary><div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">serializer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">util.my_serializer</span><span class="w"></span>
+<span class="nt">unserializer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">util.my_unserializer</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks.one_product</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/one.txt</span><span class="w"></span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks.many_products</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">something</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/something.csv</span><span class="w"></span>
+<span class="w">      </span><span class="nt">another</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/something.txt</span><span class="w"></span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks.joblib_product</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/something.joblib</span><span class="w"></span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks.final_product</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/final.csv</span><span class="w"></span>
+</pre></div>
+</div>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber.io</span> <span class="kn">import</span> <span class="n">serializer</span><span class="p">,</span> <span class="n">unserializer</span>
+
+
+<span class="nd">@serializer</span><span class="p">(</span><span class="n">fallback</span><span class="o">=</span><span class="s1">&#39;joblib&#39;</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;.txt&#39;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">my_serializer</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">product</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="nd">@unserializer</span><span class="p">(</span><span class="n">fallback</span><span class="o">=</span><span class="s1">&#39;joblib&#39;</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;.txt&#39;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">my_unserializer</span><span class="p">(</span><span class="n">product</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>Download:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber examples -n cookbook/serialization -o serialization</span>
+</pre></div>
+</div>
+</details></section>
+<section id="source-loader">
+<h3><code class="docutils literal notranslate"><span class="pre">source_loader</span></code><a class="headerlink" href="#source-loader" title="Permalink to this headline">¶</a></h3>
+<p>If you package your project (i.e., add a <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>), <code class="docutils literal notranslate"><span class="pre">source_loader</span></code> offers
+a convenient way to load sources inside such package.</p>
+<p>For example, if your package is named <code class="docutils literal notranslate"><span class="pre">my_package</span></code> and you want to load from
+the folder <code class="docutils literal notranslate"><span class="pre">my_sources/</span></code> within the package:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">meta</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">source_loader</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">module</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_package</span><span class="w"></span>
+<span class="w">        </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_sources</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># this is loaded from my_package (my_sources directory)</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">script.sql</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># task definition continues...</span><span class="w"></span>
+</pre></div>
+</div>
+<p>To find out the location used, you can execute the following in a Python
+session:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">my_package</span><span class="p">;</span> <span class="nb">print</span><span class="p">(</span><span class="n">my_package</span><span class="p">)</span> <span class="c1"># print package location</span>
+</pre></div>
+</div>
+<p>The above should print something like <code class="docutils literal notranslate"><span class="pre">path/to/my_package/__init__.py</span></code>.
+Using the configuration above, it implies that source loader will load the file
+from <code class="docutils literal notranslate"><span class="pre">path/to/my_package/my_sources/script.sql</span></code>.</p>
+<p><strong>Note:</strong> this only applies to tasks whose <code class="docutils literal notranslate"><span class="pre">source</span></code> is a relative path. Dotted
+paths and absolute paths are not affected.</p>
+<p>For details, see <a class="reference internal" href="_modules/root/ploomber.SourceLoader.html#ploomber.SourceLoader" title="ploomber.SourceLoader"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.SourceLoader</span></code></a>, which is the underlying Python
+implementation. <a class="reference external" href="https://github.com/ploomber/projects/blob/master/templates/ml-online/src/ml_online/pipeline.yaml">Here’s an example that uses source_loader</a>.</p>
+</section>
+<section id="sqlscript-product-class">
+<h3>SQLScript product class<a class="headerlink" href="#sqlscript-product-class" title="Permalink to this headline">¶</a></h3>
+<p>By default, SQL scripts use <a class="reference internal" href="_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation" title="ploomber.products.SQLRelation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products.SQLRelation</span></code></a> as
+product class. Such product doesn’t save product’s metadata; required for
+incremental builds (<a class="reference internal" href="../user-guide/faq_index.html#incremental-builds"><span class="std std-ref">What are incremental builds?</span></a>). If you want to use them, you
+need to change the default value and configure the product’s client.</p>
+<p><a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/spec-api-sql">Here’s an example</a>
+that uses <code class="docutils literal notranslate"><span class="pre">product_default_class</span></code> to configure a SQLite pipeline with
+incremental builds.</p>
+<p>For more information on product clients, see: <a class="reference internal" href="../user-guide/faq_index.html"><span class="doc">FAQ and Glossary</span></a>.</p>
+</section>
+<section id="loading-from-a-factory">
+<h3>Loading from a factory<a class="headerlink" href="#loading-from-a-factory" title="Permalink to this headline">¶</a></h3>
+<p>The CLI looks for a <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> by default, if you’re using the Python API,
+and want to save some typing, you can specify a <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> like this:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># pipeline.yaml</span><span class="w"></span>
+<span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">dotted.path.to.factory</span><span class="p p-Indicator">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>With such configuration, commands such as <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">build</span></code> will work.</p>
+</section>
+</section>
+<section id="task">
+<h2><code class="docutils literal notranslate"><span class="pre">task</span></code><a class="headerlink" href="#task" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">task</span></code> schema.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>All other keys passed here are forwarded to the class constructor, so the
+allowed values will depend on the task class. For example, if running a
+notebook the task class is <a class="reference internal" href="_modules/tasks/ploomber.tasks.NotebookRunner.html#ploomber.tasks.NotebookRunner" title="ploomber.tasks.NotebookRunner"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.tasks.NotebookRunner</span></code></a>, if it’s
+a function it’ll be a <a class="reference internal" href="_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable" title="ploomber.tasks.PythonCallable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.tasks.PythonCallable</span></code></a>, see the
+documentation to learn what extra arguments they take.</p>
+</div>
+<section id="tasks-name">
+<h3><code class="docutils literal notranslate"><span class="pre">tasks[*].name</span></code><a class="headerlink" href="#tasks-name" title="Permalink to this headline">¶</a></h3>
+<p>The name of the task. The filename (without the extension) is used if not
+defined.</p>
+</section>
+<section id="tasks-source">
+<h3><code class="docutils literal notranslate"><span class="pre">tasks[*].source</span></code><a class="headerlink" href="#tasks-source" title="Permalink to this headline">¶</a></h3>
+<p>Indicates where the source code for a task is. This can be a path to a files if
+using scripts/notebooks or dotted paths if using a function.</p>
+<p>By default, paths are relative to the <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> parent folder (absolute
+paths are not affected), unless <code class="docutils literal notranslate"><span class="pre">source_loader</span></code> is configured; in such
+situation, paths are relative to the location configured in the
+<code class="docutils literal notranslate"><span class="pre">SourceLoader</span></code> object. See the <code class="docutils literal notranslate"><span class="pre">source_loader</span></code> section for more details.</p>
+<p>For example, if your pipeline is located at <code class="docutils literal notranslate"><span class="pre">project/pipeline.yaml</span></code>, and
+you have:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scripts/my_script.py</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># task definition continues...</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Ploomber will expect your script to be located at
+<code class="docutils literal notranslate"><span class="pre">project/scripts/my_script.py</span></code></p>
+<p>If using a function, the dotted path should be importable. for example, if
+you have:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_package.my_module.my_function</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># task definition continues...</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Ploomber runs a code equivalent to:</p>
+<div class="text-editor highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">my_package.my_module</span> <span class="kn">import</span> <span class="n">my_function</span>
+</pre></div>
+</div>
+</section>
+<section id="tasks-product">
+<h3><code class="docutils literal notranslate"><span class="pre">tasks[*].product</span></code><a class="headerlink" href="#tasks-product" title="Permalink to this headline">¶</a></h3>
+<p>Indicates output(s) generated by the task. This can be either a File(s) or
+SQL relation(s) (table or view). The exact type depends on the <code class="docutils literal notranslate"><span class="pre">source</span></code> value
+for the given task: SQL scripts generate SQL relations, everything else
+generates files.</p>
+<p>When generating files, paths are relative to the <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> parent
+directory. For example, if your pipeline is located at
+<code class="docutils literal notranslate"><span class="pre">project/pipeline.yaml</span></code>, and you have:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scripts/my_script.py</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/my_output.csv</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Ploomber will save your output to <code class="docutils literal notranslate"><span class="pre">project/output/my_output.csv</span></code></p>
+<p>When generating SQL relations, the format is different:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scripts/my_script.sql</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># list with three elements (last one can be table or view)</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">schema</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">name</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">table</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># schema is optional, it can also be: [name, table]</span><span class="w"></span>
+</pre></div>
+</div>
+<p>If the task generates multiple products, pass a dictionary:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scripts/my_script.py</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/report.html</span><span class="w"></span>
+<span class="w">        </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/data.csv</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The mechanism to make <code class="docutils literal notranslate"><span class="pre">product</span></code> available when exeuting your task
+depends on the type of task.</p>
+<p>SQL tasks receive a <code class="docutils literal notranslate"><span class="pre">{{product}}</span></code> placeholder:</p>
+<div class="text-editor highlight-postgresql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- {{product}} is replaced by &quot;schema.name&quot; or &quot;name&quot; if schema is empty</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="p">{{</span><span class="n">product</span><span class="p">}}</span><span class="w"> </span><span class="k">AS</span><span class="w"></span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">my_table</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">my_column</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">10</span><span class="w"></span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">product</span></code> is a dictionary, use <code class="docutils literal notranslate"><span class="pre">{{product['key']}}</span></code></p>
+<p>Python/R scripts/notebooks receive a <code class="docutils literal notranslate"><span class="pre">product</span></code> variable in the
+“injected-parameters” cell:</p>
+<div class="text-editor highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># %% tags=[&quot;parameters&quot;]</span>
+<span class="n">product</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="c1"># %% tags=[&quot;injected-parameters&quot;]</span>
+<span class="n">product</span> <span class="o">=</span> <span class="s1">&#39;/path/to/output/data.csv&#39;</span>
+
+<span class="c1"># your code...</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">product</span></code> is a dictionary, this becomes
+<code class="docutils literal notranslate"><span class="pre">product</span> <span class="pre">=</span> <span class="pre">{'key':</span> <span class="pre">'/path/to/output/data.csv',</span> <span class="pre">...}</span></code></p>
+<p>Python functions receive the <code class="docutils literal notranslate"><span class="pre">product</span></code> argument:</p>
+<div class="text-editor highlight-py notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="k">def</span> <span class="nf">my_task</span><span class="p">(</span><span class="n">product</span><span class="p">):</span>
+    <span class="c1"># process data...</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">product</span></code> is a dictionary, use <code class="docutils literal notranslate"><span class="pre">product['key']</span></code>.</p>
+<p>The same logic applies when making <code class="docutils literal notranslate"><span class="pre">upstream</span></code> dependencies available to
+tasks, but in this case. <code class="docutils literal notranslate"><span class="pre">upstream</span></code> is always a dictionary: SQL scripts can
+refer to their upstream dependencies using <code class="docutils literal notranslate"><span class="pre">{{upstream['key']}}</span></code>. While
+Python scripts and notebooks receive upstream in the “injected-parameters”
+cell, and Python functions are called with an <code class="docutils literal notranslate"><span class="pre">upstream</span></code> argument.</p>
+</section>
+<section id="tasks-params">
+<h3><code class="docutils literal notranslate"><span class="pre">tasks[*].params</span></code><a class="headerlink" href="#tasks-params" title="Permalink to this headline">¶</a></h3>
+<p>Use this section to pass arbitrary parameters to a task. The exact mechanism
+depends on the task type. Assume you have the following:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">some-source</span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">some-product</span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">my_param</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span><span class="w"></span>
+</pre></div>
+</div>
+<p>SQL tasks receive them as placeholders.</p>
+<div class="text-editor highlight-postgresql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- {{my_param}} is replaced by 42</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">my_table</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">my_column</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="p">{{</span><span class="n">my_param</span><span class="p">}}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Python/R scripts/notebooks receive them in the “injected-parameters” cell:</p>
+<div class="text-editor highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># %% tags=[&quot;parameters&quot;]</span>
+<span class="n">my_param</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="c1"># %% tags=[&quot;injected-parameters&quot;]</span>
+<span class="n">my_param</span> <span class="o">=</span> <span class="mi">42</span>
+
+<span class="c1"># your code...</span>
+</pre></div>
+</div>
+<p>Python functions receive them as arguments:</p>
+<div class="text-editor highlight-py notranslate"><div class="highlight"><pre><span></span><span class="c1"># function is called with my_param=42</span>
+<span class="k">def</span> <span class="nf">my_task</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">my_param</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</section>
+<section id="tasks-on-render-finish-failure">
+<span id="id5"></span><h3><code class="docutils literal notranslate"><span class="pre">tasks[*].on_{render,</span> <span class="pre">finish,</span> <span class="pre">failure}</span></code><a class="headerlink" href="#tasks-on-render-finish-failure" title="Permalink to this headline">¶</a></h3>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Hooks are <strong>not</strong> executed when opening scripts/notebooks
+in <a class="reference internal" href="../user-guide/jupyter.html"><span class="doc">Jupyter.</span></a></p>
+</div>
+<p>These are hooks that execute under certain events. They are equivalent to
+<a class="reference internal" href="#on-render-finish-failure"><span class="std std-ref">dag-level hooks</span></a>, except they apply to a
+specific task. There are three types of hooks:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">on_render</span></code> executes right before executing the task.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">on_finish</span></code> executes when a task finishes successfully.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">on_failure</span></code> executes when a task errors during execution.</p></li>
+</ol>
+<p>They all are optional and take a dotted path as an argument. For example,
+assume your <code class="docutils literal notranslate"><span class="pre">hooks.py</span></code> with functions <code class="docutils literal notranslate"><span class="pre">on_render</span></code>, <code class="docutils literal notranslate"><span class="pre">on_finish</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">on_failure</span></code>. You can add those hooks to a task in your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>
+like this:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks.my_task</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">products/output.csv</span><span class="w"></span>
+<span class="w">      </span><span class="nt">on_render</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hooks.on_render</span><span class="w"></span>
+<span class="w">      </span><span class="nt">on_finish</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hooks.on_finish</span><span class="w"></span>
+<span class="w">      </span><span class="nt">on_failure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hooks.on_failure</span><span class="w"></span>
+</pre></div>
+</div>
+<p>If your hook takes arguments, you may call it like this:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># to call any hook with arguments</span><span class="w"></span>
+<span class="c1"># {hook-name} must be one of: on_render, on_finish, on_failure</span><span class="w"></span>
+<span class="p p-Indicator">{</span><span class="nv">hook-name</span><span class="p p-Indicator">}:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dotted_path</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">dotted.path.to.hook</span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">    </span><span class="nt">argument</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Calling with arguments is useful when you have <a class="reference internal" href="../user-guide/parametrized.html"><span class="doc">a parametrized pipeline</span></a>.</p>
+<p>If you need information from the task, you may add any of the following
+arguments to the hook:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">task</span></code>: Task object (a subclass of  <a class="reference internal" href="_modules/tasks/ploomber.tasks.Task.html#ploomber.tasks.Task" title="ploomber.tasks.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.tasks.Task</span></code></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">client</span></code>: Tasks’s client (a subclass of  <a class="reference internal" href="_modules/clients/ploomber.clients.Client.html#ploomber.clients.Client" title="ploomber.clients.Client"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.clients.Client</span></code></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">product</span></code>: Tasks’s product (a subclass of  <a class="reference internal" href="_modules/products/ploomber.products.Product.html#ploomber.products.Product" title="ploomber.products.Product"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.products.Product</span></code></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">params</span></code>: Tasks’s params (a dictionary)</p></li>
+</ol>
+<p>For example, if you want to check the data quality of a function that cleans some data, you may want to add an <code class="docutils literal notranslate"><span class="pre">on_finish</span></code> hook that loads the output and tests the data:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="k">def</span> <span class="nf">on_finish</span><span class="p">(</span><span class="n">product</span><span class="p">):</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+
+    <span class="c1"># check that column &quot;age&quot; has no NAs</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">age</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+</div>
+<details class="summary-example-hooks">
+<summary>Example: Hooks</summary><div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks.do_something</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/data.csv</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># task-level hooks</span><span class="w"></span>
+<span class="w">    </span><span class="nt">on_render</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">dotted_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hooks.on_render</span><span class="w"></span>
+<span class="w">      </span><span class="nt">my_param</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span><span class="w"></span>
+<span class="w">    </span><span class="nt">on_finish</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hooks.on_finish</span><span class="w"></span>
+<span class="w">    </span><span class="nt">on_failure</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hooks.on_failure</span><span class="w"></span>
+</pre></div>
+</div>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">on_render</span><span class="p">(</span><span class="n">my_param</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Executed after the task renders (before execution)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Finished rendering </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> with my_param </span><span class="si">{</span><span class="n">my_param</span><span class="si">}</span><span class="s1">, &#39;</span>
+          <span class="sa">f</span><span class="s1">&#39;client </span><span class="si">{</span><span class="n">client</span><span class="si">}</span><span class="s1">, product </span><span class="si">{</span><span class="n">product</span><span class="si">}</span><span class="s1">, and task params </span><span class="si">{</span><span class="n">params</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">on_finish</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Executes after the task runs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Finished running </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> with client </span><span class="si">{</span><span class="n">client</span><span class="si">}</span><span class="s1">, &#39;</span>
+          <span class="sa">f</span><span class="s1">&#39;product </span><span class="si">{</span><span class="n">product</span><span class="si">}</span><span class="s1"> and params </span><span class="si">{</span><span class="n">params</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">on_failure</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Executes if the task fails</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> with client </span><span class="si">{</span><span class="n">client</span><span class="si">}</span><span class="s1">, &#39;</span>
+          <span class="sa">f</span><span class="s1">&#39;product </span><span class="si">{</span><span class="n">product</span><span class="si">}</span><span class="s1"> and params </span><span class="si">{</span><span class="n">params</span><span class="si">}</span><span class="s1"> failed!&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Download:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber examples -n cookbook/hooks -o hooks</span>
+</pre></div>
+</div>
+</details></section>
+<section id="tasks-params-resources">
+<span id="id6"></span><h3><code class="docutils literal notranslate"><span class="pre">tasks[*].params.resources_</span></code><a class="headerlink" href="#tasks-params-resources" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">params</span></code> section contains an optional section called <code class="docutils literal notranslate"><span class="pre">resources_</span></code> (Note
+the trailing underscore). By default, Ploomber marks tasks as outdated when
+their parameters change; however, parameters in the <code class="docutils literal notranslate"><span class="pre">resources_</span></code>
+section work differently: they’re marked as outdated when the contents of the file
+change. For example, suppose you’re using a JSON file as a configuration
+source for a given task, and want to make Ploomber re-run a task if such file
+changes, you can do something like this:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scripts/my-script.py</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">report.html</span><span class="w"></span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">resources_</span><span class="p">:</span><span class="w"></span>
+<span class="w">            </span><span class="c1"># whenever the JSON file changes, my-script.py runs again</span><span class="w"></span>
+<span class="w">            </span><span class="nt">file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-config-file.json</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="tasks-grid">
+<span id="id7"></span><h3><code class="docutils literal notranslate"><span class="pre">tasks[*].grid</span></code><a class="headerlink" href="#tasks-grid" title="Permalink to this headline">¶</a></h3>
+<p>Sometimes, you may want to run the same task over a set of parameters, <code class="docutils literal notranslate"><span class="pre">grid</span></code>
+allows you to do so. For example, say you want to train multiple models, each
+one with a different set of parameters:</p>
+<div class="text-editor highlight-yaml notranslate" id="grid-example-1-yaml"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">random-forest.py</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># name is required when using grid</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">random-forest-</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">random-forest.html</span><span class="w"></span>
+<span class="w">    </span><span class="nt">grid</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">n_estimators</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">10</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">20</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">        </span><span class="nt">criterion</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">gini</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">entropy</span><span class="p p-Indicator">]</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The spec above generates nine tasks for each combination of parameters with
+products <code class="docutils literal notranslate"><span class="pre">random-forest-X.html</span></code> where <code class="docutils literal notranslate"><span class="pre">X</span></code> goes from <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">8</span></code>. Task
+names also include a suffix.</p>
+<p>You can also customize the product outputs to organize them in different
+folders and names (<strong>Added in version 0.17.2</strong>):</p>
+<div class="text-editor highlight-yaml notranslate" id="grid-example-2-yaml"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">random-forest.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">random-forest-</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;n_estimators=[[n_estimators]]/criterion=[[criterion]].html&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">grid</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">n_estimators</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">10</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">20</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">        </span><span class="nt">criterion</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">gini</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">entropy</span><span class="p p-Indicator">]</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The example above will generate outputs by replacing the parameter values;
+for example, it will store the random forest with <code class="docutils literal notranslate"><span class="pre">n_estimators=5</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">criterion=gini</span></code> at, <code class="docutils literal notranslate"><span class="pre">n_estimators=5/criterion=gini.html</span></code>. Note that this
+uses square brackets to differentiate them from regular placeholders when
+using an <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> file.</p>
+<p>You may pass a list instead of a dictionary to use multiple sets of parameters:</p>
+<div class="text-editor highlight-yaml notranslate" id="grid-example-3-yaml"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">train-model.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">train-model-</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">train-model.html</span><span class="w"></span>
+<span class="w">    </span><span class="nt">grid</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">model_type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">random-forest</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">        </span><span class="nt">n_estimators</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">10</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">20</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">        </span><span class="nt">criterion</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">gini</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">entropy</span><span class="p p-Indicator">]</span><span class="w"></span>
+
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">model_type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">ada-boost</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">        </span><span class="nt">n_estimators</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">5</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">        </span><span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span><span class="w"></span>
+</pre></div>
+</div>
+<p>To create a task downstream to all tasks generated by <code class="docutils literal notranslate"><span class="pre">grid</span></code>, you can use a
+wildcard (e.g., <code class="docutils literal notranslate"><span class="pre">train-model-*</span></code>).</p>
+<details class="summary-example-grid">
+<summary>Example: Grid</summary><div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scripts/fit.py</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># generates tasks fit-1, fit-2, etc</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit-</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># disabling static_analysis because the notebook does not have</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># a fixed set of parameters (depends on random-forest vs ada-boost)</span><span class="w"></span>
+<span class="w">    </span><span class="nt">static_analysis</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">disable</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">products/report.html</span><span class="w"></span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">products/model.pickle</span><span class="w"></span>
+<span class="w">    </span><span class="nt">grid</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># generates 6 tasks (1 * 3 * 2)</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">model_type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">random-forest</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">        </span><span class="nt">n_estimators</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">5</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">        </span><span class="nt">criterion</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">gini</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">entropy</span><span class="p p-Indicator">]</span><span class="w"></span>
+
+<span class="w">      </span><span class="c1"># generates 6 tasks (1 * 3 * 2)</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">model_type</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">ada-boost</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">        </span><span class="nt">n_estimators</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">5</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">        </span><span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Download:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber examples -n cookbook/grid -o grid</span>
+</pre></div>
+</div>
+</details><details class="summary-example-model-selection-with-nested-cross-validation">
+<summary>Example: Model selection with nested cross-validation</summary><div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">executor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">parallel</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks/load.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">products/load.html</span><span class="w"></span>
+<span class="w">      </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">products/data.csv</span><span class="w"></span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks/fit.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fit-</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">products/fit.html</span><span class="w"></span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">products/model.pkl</span><span class="w"></span>
+<span class="w">    </span><span class="nt">grid</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sklearn.ensemble.RandomForestClassifier</span><span class="w"></span>
+<span class="w">        </span><span class="nt">model_params</span><span class="p">:</span><span class="w"></span>
+<span class="w">          </span><span class="c1"># optimize over these parameters</span><span class="w"></span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">n_estimators</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">5</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">            </span><span class="nt">criterion</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">gini</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">entropy</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">    </span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sklearn.svm.SVC</span><span class="w"></span>
+<span class="w">        </span><span class="nt">model_params</span><span class="p">:</span><span class="w"></span>
+<span class="w">          </span><span class="c1"># optimize over these parameters</span><span class="w"></span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">kernel</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">linear</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">poly</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">            </span><span class="nt">C</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">      </span>
+<span class="w">      </span>
+</pre></div>
+</div>
+<p>Download:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install ploomber</span>
+<span class="go">ploomber examples -n cookbook/nested-cv -o nested-cv</span>
+</pre></div>
+</div>
+</details><details class="summary-changelog">
+<summary>Changelog</summary><div class="versionadded">
+<p><span class="versionmodified added">New in version 0.17.2: </span>Use <code class="docutils literal notranslate"><span class="pre">params</span></code> and <code class="docutils literal notranslate"><span class="pre">grid</span></code> in the same task. Values in <code class="docutils literal notranslate"><span class="pre">params</span></code> are constant across the grid.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.17.2: </span>Cstomize the product paths with placeholders <code class="docutils literal notranslate"><span class="pre">[[placeholder]]</span></code></p>
+</div>
+</details></section>
+<section id="tasks-client">
+<h3><code class="docutils literal notranslate"><span class="pre">tasks[*].client</span></code><a class="headerlink" href="#tasks-client" title="Permalink to this headline">¶</a></h3>
+<p>Task client to use. By default, the class-level client in the <code class="docutils literal notranslate"><span class="pre">clients</span></code>
+section is used. This task-level value overrides it. Required for some
+tasks (e.g., <code class="docutils literal notranslate"><span class="pre">SQLScript</span></code>), optional for others (e.g., <code class="docutils literal notranslate"><span class="pre">File</span></code>).</p>
+<p>Can be a string (call without arguments):</p>
+<div class="text-editor highlight-yaml notranslate" id="id8"><div class="highlight"><pre><span></span><span class="nt">client</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get_db_client</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Or a dictionary (to call with arguments):</p>
+<div class="text-editor highlight-yaml notranslate" id="id9"><div class="highlight"><pre><span></span><span class="nt">client</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dotted_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get_db_client</span><span class="w"></span>
+<span class="w">    </span><span class="nt">kwarg_1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value_1</span><span class="w"></span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<span class="w">    </span><span class="nt">kwarg_k</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value_k</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="tasks-product-client">
+<h3><code class="docutils literal notranslate"><span class="pre">tasks[*].product_client</span></code><a class="headerlink" href="#tasks-product-client" title="Permalink to this headline">¶</a></h3>
+<p>Product client to use (to save product’s metadata). Only required if you want
+to enable incremental builds (<a class="reference internal" href="../user-guide/faq_index.html#incremental-builds"><span class="std std-ref">What are incremental builds?</span></a>) if using SQL products.
+It can be a string or a dictionary (API is the same as <code class="docutils literal notranslate"><span class="pre">tasks[*].client</span></code>).</p>
+<p>More information on product clients: <a class="reference internal" href="../user-guide/faq_index.html"><span class="doc">FAQ and Glossary</span></a>.</p>
+</section>
+<section id="tasks-upstream">
+<h3><code class="docutils literal notranslate"><span class="pre">tasks[*].upstream</span></code><a class="headerlink" href="#tasks-upstream" title="Permalink to this headline">¶</a></h3>
+<p>Dependencies for this task. Only required if <code class="docutils literal notranslate"><span class="pre">meta.extract_upstream=True</span></code></p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">upstream</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">str or list</span><span class="p p-Indicator">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p><strong>Example:</strong></p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scripts/my-script.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/report.html</span><span class="w"></span>
+<span class="w">    </span><span class="nt">upstream</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">clean_data_a</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">clean_data_b</span><span class="p p-Indicator">]</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="tasks-class">
+<h3><code class="docutils literal notranslate"><span class="pre">tasks[*].class</span></code><a class="headerlink" href="#tasks-class" title="Permalink to this headline">¶</a></h3>
+<p>Task class to use (any class from ploomber.tasks). You rarely have to set
+this, since it is inferred from <code class="docutils literal notranslate"><span class="pre">source</span></code>. For example,
+<a class="reference internal" href="_modules/tasks/ploomber.tasks.NotebookRunner.html#ploomber.tasks.NotebookRunner" title="ploomber.tasks.NotebookRunner"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.tasks.NotebookRunner</span></code></a> for <code class="docutils literal notranslate"><span class="pre">.py</span></code> and <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code>
+files, <a class="reference internal" href="_modules/tasks/ploomber.tasks.SQLScript.html#ploomber.tasks.SQLScript" title="ploomber.tasks.SQLScript"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.tasks.SQLScript</span></code></a> for <code class="docutils literal notranslate"><span class="pre">.sql</span></code>, and
+<a class="reference internal" href="_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable" title="ploomber.tasks.PythonCallable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.tasks.PythonCallable</span></code></a> for dotted paths.</p>
+</section>
+<section id="tasks-product-class">
+<h3><code class="docutils literal notranslate"><span class="pre">tasks[*].product_class</span></code><a class="headerlink" href="#tasks-product-class" title="Permalink to this headline">¶</a></h3>
+<p>This takes any class name from <code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.products</span></code>. You rarely have
+to set this, since values from <code class="docutils literal notranslate"><span class="pre">meta.product_default_class</span></code> contain the
+typical values.</p>
+</section>
+</section>
+<section id="parametrizing-with-env-yaml">
+<h2>Parametrizing with <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code><a class="headerlink" href="#parametrizing-with-env-yaml" title="Permalink to this headline">¶</a></h2>
+<p>In some situations, it’s helpful to parametrize a pipeline. For example, you
+could run your pipeline with a sample of the data as a smoke test; to make
+sure it runs before triggering a run with the entire dataset, which could take
+several hours to finish.</p>
+<p>To add parameters to your pipeline, create and <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> file next to your
+<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>:</p>
+<div class="text-editor highlight-yaml notranslate" id="env-yaml"><div class="highlight"><pre><span></span><span class="nt">my_param</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_value</span><span class="w"></span>
+<span class="nt">nested</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">param</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">another_value</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Then use placeholders in your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">module.function</span><span class="w"></span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">my_param</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{my_param}}&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="nt">my_second_param</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{nested.param}}&#39;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>In the previous example, <code class="docutils literal notranslate"><span class="pre">module.function</span></code> is called with
+<code class="docutils literal notranslate"><span class="pre">my_param='my_value'</span></code> and <code class="docutils literal notranslate"><span class="pre">my_second_param='another_value'</span></code>.</p>
+<p>A common pattern is to use a pipeline parameter to change the location of
+<code class="docutils literal notranslate"><span class="pre">tasks[*].product</span></code>. For example:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">module.function</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># path determined by a parameter</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{some_directory}}/output.csv&#39;</span><span class="w"></span>
+
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_script.sql</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># schema and prefix determined by a parameter</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;{{some_schema}}&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;{{some_prefix}}_name&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">table</span><span class="p p-Indicator">]</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This can help you keep products generated by runs with different parameters in
+different locations.</p>
+<p>These are the most common use cases, but you can use placeholders anywhere in
+your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> values (not keys):</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">module.function</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># doesn&#39;t work</span><span class="w"></span>
+<span class="w">      </span><span class="s">&#39;{{placeholder}}&#39;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span><span class="w"></span>
+</pre></div>
+</div>
+<p>You can update your <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> file or switch them from the command-line to
+change the parameter values, run <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">build</span> <span class="pre">--help</span></code> to get a list of
+arguments you can pass to override the parameters defined in <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code>.</p>
+<p>Note that these parameters are constant (they must be changed explicitly by you
+either by updating the <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> file or via the command line), if you want
+to define dynamic parameters, you can do so with the Python API,
+<a class="reference external" href="https://github.com/ploomber/projects/tree/master/cookbook/dynamic-params">check out this example</a> for an
+example.</p>
+<section id="setting-parameters-from-the-cli">
+<h3>Setting parameters from the CLI<a class="headerlink" href="#setting-parameters-from-the-cli" title="Permalink to this headline">¶</a></h3>
+<p>Once you define pipeline parameters, you can switch them from the command line:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber {command} --env--param value # note the double dash</span>
+</pre></div>
+</div>
+<p>For example:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber build --env--param value</span>
+</pre></div>
+</div>
+</section>
+<section id="default-placeholders">
+<h3>Default placeholders<a class="headerlink" href="#default-placeholders" title="Permalink to this headline">¶</a></h3>
+<p>There are a few default placeholders you can use in your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>,
+even if not defined in the <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> (or if you don’t have a <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code> altogether)</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">{{here}}</span></code>: Absolute path to the parent folder of <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{{cwd}}</span></code>: Absolute path to the current working directory</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{{root}}</span></code>: Absolute path to project’s root folder. It is usually the same as <code class="docutils literal notranslate"><span class="pre">{{here}}</span></code>, except when the project is a package (i.e., it has <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> file), in such a case, it points to the parent directory of the <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{{user}}</span></code>: Current username</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{{now}}</span></code>: Current timestamp in ISO 8601 format (<em>Added in Ploomber 0.13.4</em>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{{git_hash}}</span></code>: git tag (if any) or git hash (<em>Added in Ploomber 0.17.1</em>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{{git}}</span></code>: returns the branch name (if at the tip of it), git tag (if any), or git hash (<em>Added in Ploomber 0.17.1</em>)</p></li>
+</ul>
+<p>A common use case for this is when passing paths to files to scripts/notebooks. For example, let’s say your script has to read a file from a specific location. Using <code class="docutils literal notranslate"><span class="pre">{{here}}</span></code> turns path into absolute so you can ready it when using Jupyter, even if the script is in a different location than your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>.</p>
+<p>By default, paths in <code class="docutils literal notranslate"><span class="pre">tasks[*].product</span></code> are interpreted relative to the
+parent folder of <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>. You can use  <code class="docutils literal notranslate"><span class="pre">{{cwd}}</span></code> or <code class="docutils literal notranslate"><span class="pre">{{root}}</span></code>
+to override this behavior:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scripts/my-script.py</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">products/report.html</span><span class="w"></span>
+<span class="w">        </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">product/data.csv</span><span class="w"></span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># make this an absolute file so you can read it when opening</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># scripts/my-script.py in Jupyter</span><span class="w"></span>
+<span class="w">        </span><span class="nt">input_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;{{here}}/some/path/file.json&#39;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>For more on parametrized pipelines, check out the guide: <a class="reference internal" href="../user-guide/parametrized.html"><span class="doc">Parametrized pipelines</span></a>.</p>
+</section>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Spec API (<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>)</a><ul>
+<li><a class="reference internal" href="#meta"><code class="docutils literal notranslate"><span class="pre">meta</span></code></a><ul>
+<li><a class="reference internal" href="#meta-source-loader"><code class="docutils literal notranslate"><span class="pre">meta.source_loader</span></code></a></li>
+<li><a class="reference internal" href="#meta-import-tasks-from"><code class="docutils literal notranslate"><span class="pre">meta.import_tasks_from</span></code></a></li>
+<li><a class="reference internal" href="#meta-extract-upstream"><code class="docutils literal notranslate"><span class="pre">meta.extract_upstream</span></code></a></li>
+<li><a class="reference internal" href="#meta-extract-product"><code class="docutils literal notranslate"><span class="pre">meta.extract_product</span></code></a></li>
+<li><a class="reference internal" href="#meta-product-default-class"><code class="docutils literal notranslate"><span class="pre">meta.product_default_class</span></code></a></li>
+<li><a class="reference internal" href="#executor"><code class="docutils literal notranslate"><span class="pre">executor</span></code></a></li>
+<li><a class="reference internal" href="#clients"><code class="docutils literal notranslate"><span class="pre">clients</span></code></a></li>
+<li><a class="reference internal" href="#on-render-finish-failure"><code class="docutils literal notranslate"><span class="pre">on_{render,</span> <span class="pre">finish,</span> <span class="pre">failure}</span></code></a></li>
+<li><a class="reference internal" href="#serializer-and-unserializer"><code class="docutils literal notranslate"><span class="pre">serializer</span></code> and <code class="docutils literal notranslate"><span class="pre">unserializer</span></code></a></li>
+<li><a class="reference internal" href="#source-loader"><code class="docutils literal notranslate"><span class="pre">source_loader</span></code></a></li>
+<li><a class="reference internal" href="#sqlscript-product-class">SQLScript product class</a></li>
+<li><a class="reference internal" href="#loading-from-a-factory">Loading from a factory</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#task"><code class="docutils literal notranslate"><span class="pre">task</span></code></a><ul>
+<li><a class="reference internal" href="#tasks-name"><code class="docutils literal notranslate"><span class="pre">tasks[*].name</span></code></a></li>
+<li><a class="reference internal" href="#tasks-source"><code class="docutils literal notranslate"><span class="pre">tasks[*].source</span></code></a></li>
+<li><a class="reference internal" href="#tasks-product"><code class="docutils literal notranslate"><span class="pre">tasks[*].product</span></code></a></li>
+<li><a class="reference internal" href="#tasks-params"><code class="docutils literal notranslate"><span class="pre">tasks[*].params</span></code></a></li>
+<li><a class="reference internal" href="#tasks-on-render-finish-failure"><code class="docutils literal notranslate"><span class="pre">tasks[*].on_{render,</span> <span class="pre">finish,</span> <span class="pre">failure}</span></code></a></li>
+<li><a class="reference internal" href="#tasks-params-resources"><code class="docutils literal notranslate"><span class="pre">tasks[*].params.resources_</span></code></a></li>
+<li><a class="reference internal" href="#tasks-grid"><code class="docutils literal notranslate"><span class="pre">tasks[*].grid</span></code></a></li>
+<li><a class="reference internal" href="#tasks-client"><code class="docutils literal notranslate"><span class="pre">tasks[*].client</span></code></a></li>
+<li><a class="reference internal" href="#tasks-product-client"><code class="docutils literal notranslate"><span class="pre">tasks[*].product_client</span></code></a></li>
+<li><a class="reference internal" href="#tasks-upstream"><code class="docutils literal notranslate"><span class="pre">tasks[*].upstream</span></code></a></li>
+<li><a class="reference internal" href="#tasks-class"><code class="docutils literal notranslate"><span class="pre">tasks[*].class</span></code></a></li>
+<li><a class="reference internal" href="#tasks-product-class"><code class="docutils literal notranslate"><span class="pre">tasks[*].product_class</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#parametrizing-with-env-yaml">Parametrizing with <code class="docutils literal notranslate"><span class="pre">env.yaml</span></code></a><ul>
+<li><a class="reference internal" href="#setting-parameters-from-the-cli">Setting parameters from the CLI</a></li>
+<li><a class="reference internal" href="#default-placeholders">Default placeholders</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

@@ -1,0 +1,946 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Logging &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Serialization" href="serialization.html" />
+    <link rel="prev" title="Versioning" href="versioning.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="templates.html">Downloading templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Jupyter integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html">Scaffolding projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring.html">Refactoring legacy notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametrized.html">Parametrized pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html">SQL Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html">SQL templating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Pipeline testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html">Versioning</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shell.html">Shell tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html">Other editors (VSCode, PyCharm, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html">R support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html">FAQ and Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html">Spec API vs. Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+user-guide%2Flogging"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<style>
+    div.nbinput.container div.input_area {
+        background: black;
+    }
+</style>
+
+<script src="../_static/js/nbsphinx.js"></script><p>To run this example locally, <a class="reference external" href="https://docs.ploomber.io/en/latest/get-started/quick-start.html">install Ploomber</a> and execute: <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">examples</span> <span class="pre">-n</span> <span class="pre">guides/logging</span></code></p>
+<p>To start a free, hosted JupyterLab: <a class="reference external" href="https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/logging%252FREADME.ipynb%26branch%3Dmaster"><img alt="binder-logo" src="https://mybinder.org/badge_logo.svg" /></a></p>
+<p>Found an issue? <a class="reference external" href="https://github.com/ploomber/projects/issues/new?title=guides/logging%20issue">Let us know.</a></p>
+<p>Have questions? <a class="reference external" href="https://ploomber.io/community/">Ask us anything on Slack.</a></p>
+<section id="Logging">
+<h1>Logging<a class="headerlink" href="#Logging" title="Permalink to this headline">¶</a></h1>
+<!-- start description --><p>Tutorial showing how to add logging to a pipeline.</p>
+<section id="Sample-pipeline">
+<h2>Sample pipeline<a class="headerlink" href="#Sample-pipeline" title="Permalink to this headline">¶</a></h2>
+<p>The pipeline we’ll be using for this guide contains two tasks (a script and a function):</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Content of basic/pipeline.yaml</span><span class="w"></span>
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">script.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/nb-log.html</span><span class="w"></span>
+<span class="w">    </span><span class="nt">papermill_params</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">log_output</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w"></span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks.function</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/fn-log.txt</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Note that the script task contains:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">papermill_params</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">log_output</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This extra configuration is required on each script/notebook task in your pipeline to enable logging. The code on each task isn’t important; they contain a for loop and log a message on each iteration. Let’s see it in action:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+<span class="nb">cd</span> basic
+ploomber build --log info --force
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Loading pipeline...
+name      Ran?      Elapsed (s)    Percentage
+--------  ------  -------------  ------------
+script    True          4.66689       60.8412
+function  True          3.00372       39.1588
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:traitlets:Kernel Provisioning: The &#39;local-provisioner&#39; is not found.  This is likely due to the presence of multiple jupyter_client distributions and a previous distribution is being used as the source for entrypoints - which does not include &#39;local-provisioner&#39;.  That distribution should be removed such that only the version-appropriate distribution remains (version &gt;= 7).  Until then, a &#39;local-provisioner&#39; entrypoint will be automatically constructed and used.
+The candidate distribution locations are: [&#39;/workspaces/projects/venv/lib/python3.8/site-packages/jupyter_client-7.3.2.dist-info&#39;]
+INFO:blib2to3.pgen2.driver:Generating grammar tables from /workspaces/projects/venv/lib/python3.8/site-packages/blib2to3/Grammar.txt
+INFO:blib2to3.pgen2.driver:Writing grammar tables to /home/codespace/.cache/black/22.3.0/Grammar3.8.13.final.0.pickle
+INFO:blib2to3.pgen2.driver:Writing failed: [Errno 2] No such file or directory: &#39;/home/codespace/.cache/black/22.3.0/tmp1j9p6bb9&#39;
+INFO:blib2to3.pgen2.driver:Generating grammar tables from /workspaces/projects/venv/lib/python3.8/site-packages/blib2to3/PatternGrammar.txt
+INFO:blib2to3.pgen2.driver:Writing grammar tables to /home/codespace/.cache/black/22.3.0/PatternGrammar3.8.13.final.0.pickle
+INFO:blib2to3.pgen2.driver:Writing failed: [Errno 2] No such file or directory: &#39;/home/codespace/.cache/black/22.3.0/tmp2rs4570f&#39;
+INFO:ploomber.dag.dag:Building DAG DAG(&#34;basic&#34;)
+Building task &#39;script&#39;:   0%|          | 0/2 [00:00&lt;?, ?it/s]INFO:ploomber.tasks.abc.NotebookRunner:Starting execution: NotebookRunner: script -&gt; File(&#39;output/nb-log.html&#39;)
+INFO:papermill:Input Notebook:  /tmp/tmp_odbqsk5.ipynb
+INFO:papermill:Output Notebook: /workspaces/projects/guides/logging/basic/output/nb-log.ipynb
+
+Executing:   0%|          | 0/6 [00:00&lt;?, ?cell/s]INFO:papermill:Executing notebook with kernel: python3
+INFO:papermill:Executing Cell 1---------------------------------------
+INFO:papermill:Ending Cell 1------------------------------------------
+
+Executing:  17%|█▋        | 1/6 [00:01&lt;00:05,  1.02s/cell]INFO:papermill:Executing Cell 2---------------------------------------
+INFO:papermill:Ending Cell 2------------------------------------------
+INFO:papermill:Executing Cell 3---------------------------------------
+INFO:papermill:Ending Cell 3------------------------------------------
+INFO:papermill:Executing Cell 4---------------------------------------
+INFO:papermill:Ending Cell 4------------------------------------------
+INFO:papermill:Executing Cell 5---------------------------------------
+INFO:papermill:Ending Cell 5------------------------------------------
+INFO:papermill:Executing Cell 6---------------------------------------
+INFO:papermill:INFO:__main__:[script log] Finished step 1...
+
+INFO:papermill:INFO:__main__:[script log] Finished step 2...
+
+INFO:papermill:INFO:__main__:[script log] Finished step 3...
+
+INFO:papermill:INFO:__main__:[script log] Done.
+
+INFO:papermill:Ending Cell 6------------------------------------------
+
+Executing: 100%|██████████| 6/6 [00:04&lt;00:00,  1.40cell/s]
+INFO:ploomber.tasks.abc.NotebookRunner:Done. Operation took 4.7 seconds
+Building task &#39;function&#39;:  50%|█████     | 1/2 [00:04&lt;00:04,  4.67s/it]INFO:ploomber.tasks.abc.PythonCallable:Starting execution: PythonCallable: function -&gt; File(&#39;output/fn-log.txt&#39;)
+INFO:tasks:[function log] Finished step 1...
+INFO:tasks:[function log] Finished step 2...
+INFO:tasks:[function log] Finished step 3...
+INFO:tasks:[function log] Done.
+INFO:ploomber.tasks.abc.PythonCallable:Done. Operation took 3.0 seconds
+Building task &#39;function&#39;: 100%|██████████| 2/2 [00:07&lt;00:00,  3.85s/it]
+INFO:ploomber.dag.dag: DAG report:
+name      Ran?      Elapsed (s)    Percentage
+--------  ------  -------------  ------------
+script    True          4.66689       60.8412
+function  True          3.00372       39.1588
+</pre></div></div>
+</div>
+<p>We can see that the logging statements appear in the console. If you want to take a look at the code, <a class="reference external" href="https://github.com/ploomber/projects/tree/master/guides/logging/basic">click here</a>.</p>
+</section>
+<section id="Why-not-print?">
+<h2>Why not print?<a class="headerlink" href="#Why-not-print?" title="Permalink to this headline">¶</a></h2>
+<p>Note that the snippets above use the <code class="docutils literal notranslate"><span class="pre">logging</span></code> module instead of <code class="docutils literal notranslate"><span class="pre">print</span></code>. Although <code class="docutils literal notranslate"><span class="pre">print</span></code> is a quick and easy way to display messages in the console, the <code class="docutils literal notranslate"><span class="pre">logging</span></code> module is more flexible. Hence, it is the recommended option.</p>
+</section>
+<section id="Logging-to-a-file">
+<h2>Logging to a file<a class="headerlink" href="#Logging-to-a-file" title="Permalink to this headline">¶</a></h2>
+<p>It’s common to send all your log records to a file. You can do so with the <code class="docutils literal notranslate"><span class="pre">--log-file/-F</span></code> option:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>ploomber build --log info --log-file my.log
+</pre></div>
+</div>
+</section>
+<section id="Logging-to-a-file-from-Python">
+<h2>Logging to a file from Python<a class="headerlink" href="#Logging-to-a-file-from-Python" title="Permalink to this headline">¶</a></h2>
+<p>Alternatively, you can configure logging from Python, which gives you more flexibility:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># you may store the contents of this cell in a .py file and then call it from the command line</span>
+<span class="c1"># e.g., python run_pipeline.py</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">ploomber.executors</span> <span class="kn">import</span> <span class="n">Serial</span>
+<span class="kn">from</span> <span class="nn">ploomber.spec</span> <span class="kn">import</span> <span class="n">DAGSpec</span>
+
+<span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;my.log&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+    <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;my.log&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;my.log&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(levelname)s</span><span class="s1">:</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+<span class="c1"># make sure we can import basic/tasks.py since basic/pipeline.yaml uses it</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;basic&#39;</span><span class="p">)</span>
+
+<span class="n">dag</span> <span class="o">=</span> <span class="n">DAGSpec</span><span class="p">(</span><span class="s1">&#39;basic/pipeline.yaml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_dag</span><span class="p">()</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "3b39360e17084144b980f5ccdff20d8f", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "da249a9b13054865bc352610d1eeb803", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<table>
+<thead>
+<tr><th>name    </th><th>Ran?  </th><th style="text-align: right;">  Elapsed (s)</th><th style="text-align: right;">  Percentage</th></tr>
+</thead>
+<tbody>
+<tr><td>script  </td><td>True  </td><td style="text-align: right;">      4.76759</td><td style="text-align: right;">     61.3428</td></tr>
+<tr><td>function</td><td>True  </td><td style="text-align: right;">      3.00445</td><td style="text-align: right;">     38.6572</td></tr>
+</tbody>
+</table></div>
+</div>
+<p>Let’s look at the file contents:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;my.log&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+INFO:Generating grammar tables from /workspaces/projects/venv/lib/python3.8/site-packages/blib2to3/Grammar.txt
+INFO:Writing grammar tables to /home/codespace/.cache/black/22.3.0/Grammar3.8.13.final.0.pickle
+INFO:Writing failed: [Errno 2] No such file or directory: &#39;/home/codespace/.cache/black/22.3.0/tmpeca0cxtc&#39;
+INFO:Generating grammar tables from /workspaces/projects/venv/lib/python3.8/site-packages/blib2to3/PatternGrammar.txt
+INFO:Writing grammar tables to /home/codespace/.cache/black/22.3.0/PatternGrammar3.8.13.final.0.pickle
+INFO:Writing failed: [Errno 2] No such file or directory: &#39;/home/codespace/.cache/black/22.3.0/tmp3djgccxy&#39;
+INFO:Building DAG DAG(&#34;basic&#34;)
+INFO:Starting execution: NotebookRunner: script -&gt; File(&#39;basic/output/nb-log.html&#39;)
+INFO:Input Notebook:  /tmp/tmp1y05qp_7.ipynb
+INFO:Output Notebook: /workspaces/projects/guides/logging/basic/output/nb-log.ipynb
+INFO:Executing notebook with kernel: python3
+INFO:Executing Cell 1---------------------------------------
+INFO:Ending Cell 1------------------------------------------
+INFO:Executing Cell 2---------------------------------------
+INFO:Ending Cell 2------------------------------------------
+INFO:Executing Cell 3---------------------------------------
+INFO:Ending Cell 3------------------------------------------
+INFO:Executing Cell 4---------------------------------------
+INFO:Ending Cell 4------------------------------------------
+INFO:Executing Cell 5---------------------------------------
+INFO:Ending Cell 5------------------------------------------
+INFO:Executing Cell 6---------------------------------------
+INFO:INFO:__main__:[script log] Finished step 1...
+
+INFO:INFO:__main__:[script log] Finished step 2...
+
+INFO:INFO:__main__:[script log] Finished step 3...
+
+INFO:INFO:__main__:[script log] Done.
+
+INFO:Ending Cell 6------------------------------------------
+INFO:Done. Operation took 4.8 seconds
+INFO:Starting execution: PythonCallable: function -&gt; File(&#39;basic/output/fn-log.txt&#39;)
+INFO:[function log] Finished step 1...
+INFO:[function log] Finished step 2...
+INFO:[function log] Finished step 3...
+INFO:[function log] Done.
+INFO:Done. Operation took 3.0 seconds
+INFO: DAG report:
+name      Ran?      Elapsed (s)    Percentage
+--------  ------  -------------  ------------
+script    True          4.76759       61.3428
+function  True          3.00445       38.6572
+
+</pre></div></div>
+</div>
+</section>
+<section id="Controlling-logging-level">
+<h2>Controlling logging level<a class="headerlink" href="#Controlling-logging-level" title="Permalink to this headline">¶</a></h2>
+<p>The Python’s <a class="reference external" href="https://docs.python.org/3/library/logging.html">logging</a> module allows you to filter messages depending on their priority. For example, when running your pipeline, you may only want to display <em>regular</em> messages, but you may allow <em>regular</em> and <em>debugging</em> messages for more granularity when debugging. Since Ploomber runs tasks differently depending on their type (i.e., functions vs. scripts/notebooks), controlling the logging level requires a bit of extra work. Let’s use the
+same pipeline in the <code class="docutils literal notranslate"><span class="pre">parametrized</span></code> directory:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+<span class="nb">cd</span> parametrized
+ploomber build --log info --env--logging_level info --force
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Loading pipeline...
+name      Ran?      Elapsed (s)    Percentage
+--------  ------  -------------  ------------
+script    True          4.49249       59.9239
+function  True          3.0045        40.0761
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:traitlets:Kernel Provisioning: The &#39;local-provisioner&#39; is not found.  This is likely due to the presence of multiple jupyter_client distributions and a previous distribution is being used as the source for entrypoints - which does not include &#39;local-provisioner&#39;.  That distribution should be removed such that only the version-appropriate distribution remains (version &gt;= 7).  Until then, a &#39;local-provisioner&#39; entrypoint will be automatically constructed and used.
+The candidate distribution locations are: [&#39;/workspaces/projects/venv/lib/python3.8/site-packages/jupyter_client-7.3.2.dist-info&#39;]
+INFO:blib2to3.pgen2.driver:Generating grammar tables from /workspaces/projects/venv/lib/python3.8/site-packages/blib2to3/Grammar.txt
+INFO:blib2to3.pgen2.driver:Writing grammar tables to /home/codespace/.cache/black/22.3.0/Grammar3.8.13.final.0.pickle
+INFO:blib2to3.pgen2.driver:Writing failed: [Errno 2] No such file or directory: &#39;/home/codespace/.cache/black/22.3.0/tmp8s6jihtc&#39;
+INFO:blib2to3.pgen2.driver:Generating grammar tables from /workspaces/projects/venv/lib/python3.8/site-packages/blib2to3/PatternGrammar.txt
+INFO:blib2to3.pgen2.driver:Writing grammar tables to /home/codespace/.cache/black/22.3.0/PatternGrammar3.8.13.final.0.pickle
+INFO:blib2to3.pgen2.driver:Writing failed: [Errno 2] No such file or directory: &#39;/home/codespace/.cache/black/22.3.0/tmp2yj6e00b&#39;
+INFO:ploomber.dag.dag:Building DAG DAG(&#34;parametrized&#34;)
+Building task &#39;script&#39;:   0%|          | 0/2 [00:00&lt;?, ?it/s]INFO:ploomber.tasks.abc.NotebookRunner:Starting execution: NotebookRunner: script -&gt; File(&#39;output/nb-log.html&#39;)
+INFO:papermill:Input Notebook:  /tmp/tmprwq9ox1n.ipynb
+INFO:papermill:Output Notebook: /workspaces/projects/guides/logging/parametrized/output/nb-log.ipynb
+
+Executing:   0%|          | 0/6 [00:00&lt;?, ?cell/s]INFO:papermill:Executing notebook with kernel: python3
+INFO:papermill:Executing Cell 1---------------------------------------
+INFO:papermill:Ending Cell 1------------------------------------------
+
+Executing:  17%|█▋        | 1/6 [00:00&lt;00:04,  1.12cell/s]INFO:papermill:Executing Cell 2---------------------------------------
+INFO:papermill:Ending Cell 2------------------------------------------
+INFO:papermill:Executing Cell 3---------------------------------------
+INFO:papermill:Ending Cell 3------------------------------------------
+INFO:papermill:Executing Cell 4---------------------------------------
+INFO:papermill:Ending Cell 4------------------------------------------
+INFO:papermill:Executing Cell 5---------------------------------------
+INFO:papermill:Ending Cell 5------------------------------------------
+INFO:papermill:Executing Cell 6---------------------------------------
+INFO:papermill:INFO:__main__:[script log] Finished step 1...
+
+INFO:papermill:INFO:__main__:[script log] Finished step 2...
+
+INFO:papermill:INFO:__main__:[script log] Finished step 3...
+
+INFO:papermill:INFO:__main__:[script log] Done.
+
+INFO:papermill:Ending Cell 6------------------------------------------
+
+Executing: 100%|██████████| 6/6 [00:04&lt;00:00,  1.44cell/s]
+INFO:ploomber.tasks.abc.NotebookRunner:Done. Operation took 4.5 seconds
+Building task &#39;function&#39;:  50%|█████     | 1/2 [00:04&lt;00:04,  4.49s/it]INFO:ploomber.tasks.abc.PythonCallable:Starting execution: PythonCallable: function -&gt; File(&#39;output/fn-log.txt&#39;)
+INFO:tasks:[function log] Finished step 1...
+INFO:tasks:[function log] Finished step 2...
+INFO:tasks:[function log] Finished step 3...
+INFO:tasks:[function log] Done.
+INFO:ploomber.tasks.abc.PythonCallable:Done. Operation took 3.0 seconds
+Building task &#39;function&#39;: 100%|██████████| 2/2 [00:07&lt;00:00,  3.76s/it]
+INFO:ploomber.dag.dag: DAG report:
+name      Ran?      Elapsed (s)    Percentage
+--------  ------  -------------  ------------
+script    True          4.49249       59.9239
+function  True          3.0045        40.0761
+</pre></div></div>
+</div>
+<p>Let’s now run the pipeline but switch the logging level to debug, this will print the records we saw above, plus the ones with <code class="docutils literal notranslate"><span class="pre">debug</span></code> level:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+<span class="nb">cd</span> parametrized
+ploomber build --log debug --env--logging_level debug --force
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Loading pipeline...
+name      Ran?      Elapsed (s)    Percentage
+--------  ------  -------------  ------------
+script    True          4.47259       59.8168
+function  True          3.00456       40.1832
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+DEBUG:ploomber.spec.dagspec:DAGSpec enviroment:
+EnvDict({&#39;cwd&#39;: &#39;/workspaces/.../parametrized&#39;, &#39;git&#39;: &#39;master&#39;, &#39;git_hash&#39;: &#39;1738307-dirty&#39;, &#39;here&#39;: &#39;/workspaces/.../parametrized&#39;, ...})
+DEBUG:ploomber.spec.dagspec:Expanded DAGSpec:
+{   &#39;tasks&#39;: [   {   &#39;papermill_params&#39;: {&#39;log_output&#39;: True},
+                     &#39;params&#39;: {&#39;logging_level&#39;: &#39;{{logging_level}}&#39;},
+                     &#39;product&#39;: &#39;output/nb-log.html&#39;,
+                     &#39;source&#39;: &#39;script.py&#39;},
+                 {   &#39;params&#39;: {&#39;logging_level&#39;: &#39;{{logging_level}}&#39;},
+                     &#39;product&#39;: &#39;output/fn-log.txt&#39;,
+                     &#39;source&#39;: &#39;tasks.function&#39;}]}
+WARNING:traitlets:Kernel Provisioning: The &#39;local-provisioner&#39; is not found.  This is likely due to the presence of multiple jupyter_client distributions and a previous distribution is being used as the source for entrypoints - which does not include &#39;local-provisioner&#39;.  That distribution should be removed such that only the version-appropriate distribution remains (version &gt;= 7).  Until then, a &#39;local-provisioner&#39; entrypoint will be automatically constructed and used.
+The candidate distribution locations are: [&#39;/workspaces/projects/venv/lib/python3.8/site-packages/jupyter_client-7.3.2.dist-info&#39;]
+DEBUG:ploomber.tasks.abc.NotebookRunner:Setting &#34;script&#34; status to TaskStatus.WaitingRender
+DEBUG:ploomber.tasks.abc.PythonCallable:Setting &#34;function&#34; status to TaskStatus.WaitingRender
+DEBUG:ploomber.spec.dagspec:Extracted upstream dependencies for task script: None
+DEBUG:ploomber.spec.dagspec:Extracted upstream dependencies for task function: None
+INFO:blib2to3.pgen2.driver:Generating grammar tables from /workspaces/projects/venv/lib/python3.8/site-packages/blib2to3/Grammar.txt
+INFO:blib2to3.pgen2.driver:Writing grammar tables to /home/codespace/.cache/black/22.3.0/Grammar3.8.13.final.0.pickle
+INFO:blib2to3.pgen2.driver:Writing failed: [Errno 2] No such file or directory: &#39;/home/codespace/.cache/black/22.3.0/tmp55q_ywf2&#39;
+INFO:blib2to3.pgen2.driver:Generating grammar tables from /workspaces/projects/venv/lib/python3.8/site-packages/blib2to3/PatternGrammar.txt
+INFO:blib2to3.pgen2.driver:Writing grammar tables to /home/codespace/.cache/black/22.3.0/PatternGrammar3.8.13.final.0.pickle
+INFO:blib2to3.pgen2.driver:Writing failed: [Errno 2] No such file or directory: &#39;/home/codespace/.cache/black/22.3.0/tmpvxyhyfii&#39;
+INFO:ploomber.dag.dag:Building DAG DAG(&#34;parametrized&#34;)
+Building task &#39;script&#39;:   0%|          | 0/2 [00:00&lt;?, ?it/s]INFO:ploomber.tasks.abc.NotebookRunner:Starting execution: NotebookRunner: script -&gt; File(&#39;output/nb-log.html&#39;)
+INFO:papermill:Input Notebook:  /tmp/tmpue38o2oe.ipynb
+INFO:papermill:Output Notebook: /workspaces/projects/guides/logging/parametrized/output/nb-log.ipynb
+
+Executing:   0%|          | 0/6 [00:00&lt;?, ?cell/s]INFO:papermill:Executing notebook with kernel: python3
+INFO:papermill:Executing Cell 1---------------------------------------
+INFO:papermill:Ending Cell 1------------------------------------------
+
+Executing:  17%|█▋        | 1/6 [00:00&lt;00:04,  1.13cell/s]INFO:papermill:Executing Cell 2---------------------------------------
+INFO:papermill:Ending Cell 2------------------------------------------
+INFO:papermill:Executing Cell 3---------------------------------------
+INFO:papermill:Ending Cell 3------------------------------------------
+INFO:papermill:Executing Cell 4---------------------------------------
+INFO:papermill:Ending Cell 4------------------------------------------
+INFO:papermill:Executing Cell 5---------------------------------------
+INFO:papermill:Ending Cell 5------------------------------------------
+INFO:papermill:Executing Cell 6---------------------------------------
+INFO:papermill:DEBUG:__main__:[script log] This is a message for debugging
+
+INFO:papermill:INFO:__main__:[script log] Finished step 1...
+
+INFO:papermill:INFO:__main__:[script log] Finished step 2...
+
+INFO:papermill:INFO:__main__:[script log] Finished step 3...
+
+INFO:papermill:INFO:__main__:[script log] Done.
+
+INFO:papermill:Ending Cell 6------------------------------------------
+
+Executing: 100%|██████████| 6/6 [00:04&lt;00:00,  1.44cell/s]
+INFO:ploomber.tasks.abc.NotebookRunner:Done. Operation took 4.5 seconds
+Building task &#39;function&#39;:  50%|█████     | 1/2 [00:04&lt;00:04,  4.47s/it]INFO:ploomber.tasks.abc.PythonCallable:Starting execution: PythonCallable: function -&gt; File(&#39;output/fn-log.txt&#39;)
+INFO:tasks:[function log] Finished step 1...
+INFO:tasks:[function log] Finished step 2...
+INFO:tasks:[function log] Finished step 3...
+INFO:tasks:[function log] Done.
+INFO:ploomber.tasks.abc.PythonCallable:Done. Operation took 3.0 seconds
+Building task &#39;function&#39;: 100%|██████████| 2/2 [00:07&lt;00:00,  3.75s/it]
+INFO:ploomber.dag.dag: DAG report:
+name      Ran?      Elapsed (s)    Percentage
+--------  ------  -------------  ------------
+script    True          4.47259       59.8168
+function  True          3.00456       40.1832
+</pre></div></div>
+</div>
+<p>To get the code for the previous example, <a class="reference external" href="https://github.com/ploomber/projects/tree/master/guides/logging/parametrized">click here</a>.</p>
+</section>
+<section id="Implementation-details">
+<h2>Implementation details<a class="headerlink" href="#Implementation-details" title="Permalink to this headline">¶</a></h2>
+<p>To keep the tutorial short, we overlooked some technical details. However, if you want to customize logging, they are essential to know.</p>
+<section id="Function-tasks-and-sub-processes">
+<h3>Function tasks and sub-processes<a class="headerlink" href="#Function-tasks-and-sub-processes" title="Permalink to this headline">¶</a></h3>
+<p>By default, Ploomber runs function tasks in a child process. However, beginning on version 3.8, <a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods">Python 3.8 switched to use spawn instead of fork on macOS</a>, this implies that child processes <em>do not</em> inherit the logging configuration of their parents. That’s why you must configure a logger inside the function’s body:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+
+<span class="k">def</span> <span class="nf">some_task</span><span class="p">(</span><span class="n">product</span><span class="p">):</span>
+    <span class="c1"># the following line is required on Python&gt;=3.8 if using macOS</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="c1"># to log a message, call logger.info</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Some message&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="Scripts-and-notebooks">
+<h3>Scripts and notebooks<a class="headerlink" href="#Scripts-and-notebooks" title="Permalink to this headline">¶</a></h3>
+<p>Unlike function tasks, which can run in the same process as Ploomber or in a child process, scripts and notebooks execute independently. Hence, any logging configuration made in the main process is lost, and We have to configure a separate logger at the top of the script/notebook.</p>
+</section>
+<section id="Parallel-execution">
+<h3>Parallel execution<a class="headerlink" href="#Parallel-execution" title="Permalink to this headline">¶</a></h3>
+<p>Logging is currently unavailable when using the <code class="docutils literal notranslate"><span class="pre">Parallel</span></code> executor.</p>
+<script type="application/vnd.jupyter.widget-state+json">
+{"state": {"0397d42e629348a288a1047bcd58fdce": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_tooltip": null, "layout": "IPY_MODEL_521a28af092b495486656b6762b63c0b", "max": 2, "min": 0, "orientation": "horizontal", "style": "IPY_MODEL_2528f50f1ade43b7a0dc7dfbde31c628", "value": 2}}, "05c10e4d49c7454591aacd851e25950c": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "HTMLView", "description": "", "description_tooltip": null, "layout": "IPY_MODEL_8b235eab08564dd0bca68467da4ffc2e", "placeholder": "\u200b", "style": "IPY_MODEL_45aca98ca21e48859363af45a4856ddd", "value": "Executing: 100%"}}, "0a83f8de832447359b1cdf411f032893": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_cb3f348cc75b475cb958156910b234a0", "IPY_MODEL_0397d42e629348a288a1047bcd58fdce", "IPY_MODEL_243b2e143a7647718579c32284e76d30"], "layout": "IPY_MODEL_6820387ed545425c9b699015c847c612"}}, "243b2e143a7647718579c32284e76d30": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "HTMLView", "description": "", "description_tooltip": null, "layout": "IPY_MODEL_afe657425469483bb1d6b847375aba03", "placeholder": "\u200b", "style": "IPY_MODEL_edf2a01268fc4856b08aaadf837c0d05", "value": " 2/2 [00:10&lt;00:00,  5.49s/it]"}}, "24a7bf9537184bafb4861db86dcb1034": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "HTMLView", "description": "", "description_tooltip": null, "layout": "IPY_MODEL_f34bac1269e54dffa5aff50cc3b473b0", "placeholder": "\u200b", "style": "IPY_MODEL_dd789e4833f64d5c9eca17cc53ba0f93", "value": " 6/6 [00:05&lt;00:00,  1.11cell/s]"}}, "2528f50f1ade43b7a0dc7dfbde31c628": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "3ffbf6aca4574326af508281db6fd3fa": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_05c10e4d49c7454591aacd851e25950c", "IPY_MODEL_dedb18ff56854736812256a7f196fabb", "IPY_MODEL_24a7bf9537184bafb4861db86dcb1034"], "layout": "IPY_MODEL_a981d57c88fb419195621d7eed24ba64"}}, "45aca98ca21e48859363af45a4856ddd": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "DescriptionStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "StyleView", "description_width": ""}}, "521a28af092b495486656b6762b63c0b": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "64ddfeff19f44be3a84a754fa48a560f": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "6820387ed545425c9b699015c847c612": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "8b235eab08564dd0bca68467da4ffc2e": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "a18ecb42871b4719b7f2a10f61d57443": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "DescriptionStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "StyleView", "description_width": ""}}, "a981d57c88fb419195621d7eed24ba64": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "afe657425469483bb1d6b847375aba03": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "cb3f348cc75b475cb958156910b234a0": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "HTMLView", "description": "", "description_tooltip": null, "layout": "IPY_MODEL_e37d7d28da3649119ff279c463cdf072", "placeholder": "\u200b", "style": "IPY_MODEL_a18ecb42871b4719b7f2a10f61d57443", "value": "Building task &#x27;function&#x27;: 100%"}}, "dd789e4833f64d5c9eca17cc53ba0f93": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "DescriptionStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "StyleView", "description_width": ""}}, "dedb18ff56854736812256a7f196fabb": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "1.5.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_tooltip": null, "layout": "IPY_MODEL_ffb20c0485c44b41bbefd9657fa47b19", "max": 6, "min": 0, "orientation": "horizontal", "style": "IPY_MODEL_64ddfeff19f44be3a84a754fa48a560f", "value": 6}}, "e37d7d28da3649119ff279c463cdf072": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "edf2a01268fc4856b08aaadf837c0d05": {"model_module": "@jupyter-widgets/controls", "model_module_version": "1.5.0", "model_name": "DescriptionStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "1.5.0", "_model_name": "DescriptionStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "StyleView", "description_width": ""}}, "f34bac1269e54dffa5aff50cc3b473b0": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "ffb20c0485c44b41bbefd9657fa47b19": {"model_module": "@jupyter-widgets/base", "model_module_version": "1.2.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "1.2.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "1.2.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "overflow_x": null, "overflow_y": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}}, "version_major": 2, "version_minor": 0}
+</script></section>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Logging</a><ul>
+<li><a class="reference internal" href="#Sample-pipeline">Sample pipeline</a></li>
+<li><a class="reference internal" href="#Why-not-print?">Why not print?</a></li>
+<li><a class="reference internal" href="#Logging-to-a-file">Logging to a file</a></li>
+<li><a class="reference internal" href="#Logging-to-a-file-from-Python">Logging to a file from Python</a></li>
+<li><a class="reference internal" href="#Controlling-logging-level">Controlling logging level</a></li>
+<li><a class="reference internal" href="#Implementation-details">Implementation details</a><ul>
+<li><a class="reference internal" href="#Function-tasks-and-sub-processes">Function tasks and sub-processes</a></li>
+<li><a class="reference internal" href="#Scripts-and-notebooks">Scripts and notebooks</a></li>
+<li><a class="reference internal" href="#Parallel-execution">Parallel execution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

@@ -55,7 +55,7 @@ def _unserialize_params(params_original, unserializer):
 
 class PythonCallable(Task):
     """
-    Execute a Python function
+    Execute a Python function ADDHERE
 
     Parameters
     ----------
@@ -133,6 +133,9 @@ class PythonCallable(Task):
             Path(product['another']).touch()
 
     Python API:
+    
+    .. code-block:: python
+        :class: python-console
 
     >>> from pathlib import Path
     >>> from ploomber import DAG
@@ -149,6 +152,8 @@ class PythonCallable(Task):
 
     Python API (multiple products):
 
+    .. code-block:: python
+        :class: python-console
 
     >>> from pathlib import Path
     >>> from ploomber import DAG
@@ -597,3 +602,5 @@ class Input(Task):
         # this should be __true but we can't due to
         # https://bugs.python.org/issue33007
         return True
+
+# class test

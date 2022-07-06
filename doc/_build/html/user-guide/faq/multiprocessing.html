@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Multiprocessing errors on macOS and Windows &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/mermaid-layout.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/custom.js"></script>
+    <script src="../../_static/js/mermaid.min.js"></script>
+    <script src="../../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+user-guide%2Ffaq%2Fmultiprocessing"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="multiprocessing-errors-on-macos-and-windows">
+<h1>Multiprocessing errors on macOS and Windows<a class="headerlink" href="#multiprocessing-errors-on-macos-and-windows" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference internal" href="../faq_index.html#solution-1-add-name-main"><span class="std std-ref">Show me the solution</span></a>.</p>
+<p>By default, Ploomber executes <a class="reference internal" href="../../api/_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable" title="ploomber.tasks.PythonCallable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.tasks.PythonCallable</span></code></a>
+(i.e., function tasks) in a child process using the <a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html">multiprocessing</a>
+library. On macOS and Windows, Python uses the <a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods">spawn</a>
+method to create child processes; this isn’t an issue if you’re
+running your pipeline from the command-line (i.e., <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">build</span></code>), but you’ll
+encounter the following issue if running from a script:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>An attempt has been made to start a new process before the current process
+has finished its bootstrapping phase.
+
+This probably means that you are not using fork to start your
+child processes and you have forgotten to use the proper idiom
+in the main module:
+
+    if __name__ == &#39;__main__&#39;:
+        freeze_support()
+        ...
+
+The &quot;freeze_support()&quot; line can be omitted if the program
+is not going to be frozen to produce an executable.
+</pre></div>
+</div>
+<p>This happens if you store a script (say <code class="docutils literal notranslate"><span class="pre">run.py</span></code>):</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber.spec</span> <span class="kn">import</span> <span class="n">DAGSpec</span>
+
+<span class="n">dag</span> <span class="o">=</span> <span class="n">DAGSpec</span><span class="p">(</span><span class="s1">&#39;pipeline.yaml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_dag</span><span class="p">()</span>
+<span class="c1"># This fails on macOS and Windows!</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>And call your pipeline with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python run.py</span>
+</pre></div>
+</div>
+<p>There are two ways to solve this problem.</p>
+<section id="solution-1-add-name-main">
+<span id="id1"></span><h2>Solution 1: Add <code class="docutils literal notranslate"><span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">'__main__'</span></code><a class="headerlink" href="#solution-1-add-name-main" title="Permalink to this headline">¶</a></h2>
+<p>To allow correct creation of child processes using <code class="docutils literal notranslate"><span class="pre">spawn</span></code>, run your pipeline
+like this:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber.spec</span> <span class="kn">import</span> <span class="n">DAGSpec</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">dag</span> <span class="o">=</span> <span class="n">DAGSpec</span><span class="p">(</span><span class="s1">&#39;pipeline.yaml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_dag</span><span class="p">()</span>
+    <span class="c1"># calling build under this if statement allows</span>
+    <span class="c1"># correct creation of child processes</span>
+    <span class="n">dag</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="solution-2-disable-multiprocessing">
+<h2>Solution 2: Disable multiprocessing<a class="headerlink" href="#solution-2-disable-multiprocessing" title="Permalink to this headline">¶</a></h2>
+<p>You can disable multiprocessing in your pipeline like this:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber.spec</span> <span class="kn">import</span> <span class="n">DAGSpec</span>
+<span class="kn">from</span> <span class="nn">ploomber.executor</span> <span class="kn">import</span> <span class="n">Serial</span>
+
+<span class="n">dag</span> <span class="o">=</span> <span class="n">DAGSpec</span><span class="p">(</span><span class="s1">&#39;pipeline.yaml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_dag</span><span class="p">()</span>
+<span class="c1"># overwrite executor regardless of what the pipeline.yaml</span>
+<span class="c1"># says in the &#39;executor&#39; field</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">executor</span> <span class="o">=</span> <span class="n">Serial</span><span class="p">(</span><span class="n">build_in_subprocess</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">dag</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Multiprocessing errors on macOS and Windows</a><ul>
+<li><a class="reference internal" href="#solution-1-add-name-main">Solution 1: Add <code class="docutils literal notranslate"><span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">'__main__'</span></code></a></li>
+<li><a class="reference internal" href="#solution-2-disable-multiprocessing">Solution 2: Disable multiprocessing</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

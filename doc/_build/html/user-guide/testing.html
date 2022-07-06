@@ -1,0 +1,908 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Pipeline testing &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Debugging" href="debugging.html" />
+    <link rel="prev" title="SQL templating" href="sql-templating.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="templates.html">Downloading templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Jupyter integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html">Scaffolding projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring.html">Refactoring legacy notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametrized.html">Parametrized pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html">SQL Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html">SQL templating</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Pipeline testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html">Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shell.html">Shell tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html">Other editors (VSCode, PyCharm, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html">R support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html">FAQ and Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html">Spec API vs. Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+user-guide%2Ftesting"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<style>
+    div.nbinput.container div.input_area {
+        background: black;
+    }
+</style>
+
+<script src="../_static/js/nbsphinx.js"></script><p>To run this example locally, <a class="reference external" href="https://docs.ploomber.io/en/latest/get-started/quick-start.html">install Ploomber</a> and execute: <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">examples</span> <span class="pre">-n</span> <span class="pre">guides/testing</span></code></p>
+<p>To start a free, hosted JupyterLab: <a class="reference external" href="https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/testing%252FREADME.ipynb%26branch%3Dmaster"><img alt="binder-logo" src="https://mybinder.org/badge_logo.svg" /></a></p>
+<p>Found an issue? <a class="reference external" href="https://github.com/ploomber/projects/issues/new?title=guides/testing%20issue">Let us know.</a></p>
+<p>Have questions? <a class="reference external" href="https://ploomber.io/community/">Ask us anything on Slack.</a></p>
+<section id="Pipeline-testing">
+<h1>Pipeline testing<a class="headerlink" href="#Pipeline-testing" title="Permalink to this headline">¶</a></h1>
+<!-- start description --><p>Tutorial showing how to use a task’s on_finish hook to test data quality.</p>
+<p>Testing your pipeline is critical to ensure your data expectations hold. When you perform a data transformation, you are expecting the output to have certain properties (e.g. no nulls in certain column). Without testing, these expectations won’t be verified and will cause errors errors to propagate to all downstream tasks.</p>
+<p>These are the most common sources of errors when transforming data:</p>
+<ol class="arabic simple">
+<li><p>A join operation generates duplicated entries because a wrong assumption of a one-to-one relationship (which is really a one-to-many) in the source tables</p></li>
+<li><p>A function that aggregates data returns <code class="docutils literal notranslate"><span class="pre">NULL</span></code> because at least one of the input data points was <code class="docutils literal notranslate"><span class="pre">NULL</span></code></p></li>
+<li><p>Dirty data points are used in the analysis (e.g. in a column <code class="docutils literal notranslate"><span class="pre">age</span></code>, you forgot to remove corrupted data points with negative values)</p></li>
+</ol>
+<p>Some of these errors are easy to spot (2), but it might take you some tome to find out about others (1 and 3), or worst, you will never notice these errors and just use incorrect data in your analysis. And even if your code is correct and all your expectations hold true, it might not hold true in the future if the data changes and it’s important for you to know this as soon as it happens.</p>
+<p>To make testing effective, <strong>your tests should run every time you run your tasks</strong>. Ploomber has a mechanism to automate this.</p>
+<section id="Sample-data">
+<h2>Sample data<a class="headerlink" href="#Sample-data" title="Permalink to this headline">¶</a></h2>
+<p>This example loads data from a single table called <code class="docutils literal notranslate"><span class="pre">my_table</span></code>, which has two columns:</p>
+<ol class="arabic simple">
+<li><p>age: ranges from 21 to 80 but there are some corrupted records with -42</p></li>
+<li><p>score: ranges from 0 to 10 but there are some corrupted records with missing values</p></li>
+</ol>
+<p>Let’s take a look at our example <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+</pre></div>
+</div>
+</div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Content of pipeline.yaml</span><span class="w"></span>
+<span class="nt">clients</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">SQLScript</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">db.get_client</span><span class="w"></span>
+<span class="w">  </span><span class="nt">SQLDump</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">db.get_client</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clean.sql</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clean</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;my_clean_table&#39;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&#39;table&#39;</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">    </span><span class="nt">on_finish</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">integration_tests.test_sql_clean</span><span class="w"></span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dump.sql</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dump</span><span class="w"></span>
+<span class="w">    </span><span class="nt">class</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SQLDump</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/my_clean_table.csv</span><span class="w"></span>
+<span class="w">    </span><span class="nt">chunksize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">transform.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/transformed.html</span><span class="w"></span>
+<span class="w">        </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/transformed.csv</span><span class="w"></span>
+<span class="w">    </span><span class="nt">on_finish</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">integration_tests.test_py_transform</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The pipeline has three tasks, one to clean the raw table, another one to dump the clean data to a CSV file and finally, one Python task to transform the data. We included a SQL and a Python task to show how you can test both types of tasks but we recommend you to do as much analysis as you can using SQL because it scales much better than Python code (you won’t have to deal with memory errors).</p>
+<p>The configuration is straightforward, the only new key is <code class="docutils literal notranslate"><span class="pre">on_finish</span></code> (inside the first and third task). This is known as a <em>hook</em>. Task hooks allow you to embed custom logic when certain events happen. <code class="docutils literal notranslate"><span class="pre">on_finish</span></code> is executed after a task successfully executes. The value is a dotted path, which tells Ploomber where to find your testing function. Under the hood, Ploomber will import your function and call it after the task is executed, here’s some equivalent code:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">integration_tests</span> <span class="kn">import</span> <span class="n">test_sql_clean</span>
+
+<span class="c1"># your task is executed...</span>
+
+<span class="c1"># ploomber calls your testing function...</span>
+<span class="n">test_sql_clean</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Before diving into the testing source code, let’s see the rest of the tasks.</p>
+<p><code class="docutils literal notranslate"><span class="pre">clean.sql</span></code> just filters columns we don’t want to include in the analysis:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span># Content of clean.sql
+DROP TABLE IF EXISTS {{product}};
+
+CREATE TABLE {{product}} AS
+SELECT * FROM my_table
+WHERE score is not null AND age &gt; 0
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">dump.sql</span></code> just selects all rows from the clean table to dump it to the CSV file:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span># Content of dump.sql
+SELECT * FROM {{upstream[&#39;clean&#39;]}}
+</pre></div>
+</div>
+<p>Finally, the <code class="docutils literal notranslate"><span class="pre">transform.py</span></code> script generates a new column using <code class="docutils literal notranslate"><span class="pre">score</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Content of transform.py</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="c1"># + tags=[&quot;parameters&quot;]</span>
+<span class="n">upstream</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dump&#39;</span><span class="p">]</span>
+<span class="n">product</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="c1"># +</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">upstream</span><span class="p">[</span><span class="s1">&#39;dump&#39;</span><span class="p">])</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;multiplied_score&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">score</span> <span class="o">*</span> <span class="mi">42</span>
+
+<span class="c1"># +</span>
+<span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Let’s now take a look at our tests:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Content of integration_tests.py</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">ploomber.testing.sql</span> <span class="kn">import</span> <span class="n">nulls_in_columns</span><span class="p">,</span> <span class="n">range_in_column</span>
+
+
+<span class="k">def</span> <span class="nf">test_sql_clean</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">product</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for clean.sql</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="n">nulls_in_columns</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">],</span> <span class="n">product</span><span class="p">)</span>
+    <span class="n">min_age</span><span class="p">,</span> <span class="n">max_age</span> <span class="o">=</span> <span class="n">range_in_column</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">,</span> <span class="n">product</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">min_age</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+
+<span class="k">def</span> <span class="nf">test_py_transform</span><span class="p">(</span><span class="n">product</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for transform.py</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]))</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">multiplied_score</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">df</span><span class="o">.</span><span class="n">multiplied_score</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+</section>
+<section id="Testing-Python-scripts">
+<h2>Testing Python scripts<a class="headerlink" href="#Testing-Python-scripts" title="Permalink to this headline">¶</a></h2>
+<p>To test your Python scripts, you have to know which file to look at. You can do so by simply adding <code class="docutils literal notranslate"><span class="pre">product</span></code> as argument to your function. If your Python script generates more than one product (like in our case), <code class="docutils literal notranslate"><span class="pre">product</span></code> will be a dictionary-like object, that’s why we are using <code class="docutils literal notranslate"><span class="pre">product['data']</span></code>. This returns a <code class="docutils literal notranslate"><span class="pre">Product</span></code> object, to get the path to the file, simply use the <code class="docutils literal notranslate"><span class="pre">str</span></code> function.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">product</span> <span class="c1"># dictionary-like object: maps names to Product objects</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="c1"># Product object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span> <span class="c1"># path to the data file</span>
+</pre></div>
+</div>
+</section>
+<section id="Testing-SQL-scripts">
+<h2>Testing SQL scripts<a class="headerlink" href="#Testing-SQL-scripts" title="Permalink to this headline">¶</a></h2>
+<p>To test SQL scripts, you also need the client to send queries to the appropriate database, to do so, just add <code class="docutils literal notranslate"><span class="pre">client</span></code> to your testing function.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">ploomber.testing.sql</span></code> module implements convenient functions to test your tables. They always take <code class="docutils literal notranslate"><span class="pre">client</span></code> as its first argument, just pass the client variable directly. Since our SQL script only generates a product, you can directly pass the product object to the testing function (otherwise pass <code class="docutils literal notranslate"><span class="pre">product[key]</span></code>) with the appropriate key.</p>
+<p><em>Note:</em> If you’re implementing your own SQL testing logic, doing <code class="docutils literal notranslate"><span class="pre">str(product)</span></code> will return a <code class="docutils literal notranslate"><span class="pre">{schema}.{name}</span></code> string, you can also use <code class="docutils literal notranslate"><span class="pre">product.schema</span></code> and <code class="docutils literal notranslate"><span class="pre">product.name</span></code>.</p>
+</section>
+<section id="Running-the-pipeline">
+<h2>Running the pipeline<a class="headerlink" href="#Running-the-pipeline" title="Permalink to this headline">¶</a></h2>
+<p>Before we run the pipeline, we generate a sample database:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+<span class="nb">cd</span> setup
+python script.py
+</pre></div>
+</div>
+</div>
+<p>Let’s now run our pipeline:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+ploomber build
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+name       Ran?      Elapsed (s)    Percentage
+---------  ------  -------------  ------------
+clean      True         0.02013      0.78097
+dump       True         0.002051     0.0795713
+transform  True         2.55538     99.1395
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Building task &#39;transform&#39;:   0%|          | 0/3 [00:00&lt;?, ?it/s]
+Executing:   0%|          | 0/5 [00:00&lt;?, ?cell/s]
+Executing:  20%|██        | 1/5 [00:01&lt;00:06,  1.75s/cell]
+Executing: 100%|██████████| 5/5 [00:02&lt;00:00,  2.39cell/s]
+Building task &#39;transform&#39;: 100%|██████████| 3/3 [00:02&lt;00:00,  1.16it/s]
+</pre></div></div>
+</div>
+<p>Everything looks good.</p>
+<p>Let’s now imagine a colleague found an error in the cleaning logic and has re-written the script. However, he was unaware that both columns in the raw table had corrupted data and forgot to include the filtering conditions.</p>
+<p>The script now looks like this:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;clean.sql&#39;</span><span class="p">)</span>
+<span class="n">new_code</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;WHERE score is not null AND age &gt; 0&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+<span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">new_code</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+86
+</pre></div></div>
+</div>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span># Content of clean.sql
+DROP TABLE IF EXISTS {{product}};
+
+CREATE TABLE {{product}} AS
+SELECT * FROM my_table
+WHERE score is not null AND age &gt; 0
+</pre></div>
+</div>
+<p>Let’s see what happens if we run the pipeline:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%capture</span> captured
+<span class="o">%%</span><span class="n">sh</span> <span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="k">raise</span><span class="o">-</span><span class="n">error</span>
+<span class="n">ploomber</span> <span class="n">build</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">captured</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Building task &#39;clean&#39;: 100%|██████████| 3/3 [00:00&lt;00:00, 115.03it/s]
+Traceback (most recent call last):
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/cli/io.py&#34;, line 20, in wrapper
+    fn(**kwargs)
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/cli/build.py&#34;, line 51, in main
+    report = dag.build(force=args.force, debug=args.debug)
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/dag/dag.py&#34;, line 482, in build
+    report = callable_()
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/dag/dag.py&#34;, line 581, in _build
+    raise build_exception
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/dag/dag.py&#34;, line 513, in _build
+    task_reports = self._executor(dag=self,
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/executors/serial.py&#34;, line 138, in __call__
+    raise DAGBuildError(str(exceptions_all))
+ploomber.exceptions.DAGBuildError:
+=============================== DAG build failed ===============================
+--------- SQLScript: clean -&gt; SQLRelation((&#39;my_clean_table&#39;, &#39;table&#39;)) ---------
+---------- /Users/Edu/dev/projects-ploomber/guides/testing/clean.sql -----------
+Traceback (most recent call last):
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/tasks/abc.py&#34;, line 591, in _build
+    self._post_run_actions()
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/tasks/abc.py&#34;, line 342, in _post_run_actions
+    self._run_on_finish()
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/tasks/abc.py&#34;, line 333, in _run_on_finish
+    self.on_finish(**kwargs)
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/util/dotted_path.py&#34;, line 74, in __call__
+    out = self._callable(*args, **kwargs_final)
+  File &#34;/Users/Edu/dev/projects-ploomber/guides/testing/integration_tests.py&#34;, line 8, in test_sql_clean
+    assert not nulls_in_columns(client, [&#39;score&#39;, &#39;age&#39;], product)
+AssertionError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/executors/serial.py&#34;, line 186, in catch_exceptions
+    fn()
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/executors/serial.py&#34;, line 159, in __call__
+    return self.fn(**self.kwargs)
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/executors/serial.py&#34;, line 166, in catch_warnings
+    result = fn()
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/executors/serial.py&#34;, line 159, in __call__
+    return self.fn(**self.kwargs)
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/executors/serial.py&#34;, line 235, in build_in_subprocess
+    report, meta = task._build(**build_kwargs)
+  File &#34;/Users/Edu/dev/ploomber/src/ploomber/tasks/abc.py&#34;, line 603, in _build
+    raise TaskBuildError(msg) from e
+ploomber.exceptions.TaskBuildError: Exception when running on_finish for task &#34;clean&#34;:
+=============================== Summary (1 task) ===============================
+SQLScript: clean -&gt; SQLRelation((&#39;my_clean_table&#39;, &#39;table&#39;))
+=============================== DAG build failed ===============================
+
+
+
+</pre></div></div>
+</div>
+<p>Ploomber a structured error message to understand why your pipeline failed. The last few lines are a summary:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>=============================== Summary (1 task) ===============================
+SQLScript: clean -&gt; SQLRelation((&#39;my_clean_table&#39;, &#39;table&#39;))
+=============================== DAG build failed ===============================
+</pre></div>
+</div>
+<p>By looking at the summary we know our pipeline failed because one task crashed (<code class="docutils literal notranslate"><span class="pre">clean</span></code>). If we scroll up we’ll see a header section:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>--------- SQLScript: clean -&gt; SQLRelation((&#39;my_clean_table&#39;, &#39;table&#39;)) ---------
+-------------- /Users/Edu/dev/projects-ploomber/testing/clean.sql --------------
+</pre></div>
+</div>
+<p>Each task displays its traceback on a separate section. Since only one task failed in our example we only see one task traceback.</p>
+<p>At the end of this task traceback, we see the following line:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Exception when running on_finish for task &quot;clean&quot;:
+</pre></div>
+</div>
+<p>Now we know that the <code class="docutils literal notranslate"><span class="pre">on_finish</span></code> hook crashed. If we go up a few lines up:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>assert not nulls_in_columns(client, [&#39;score&#39;, &#39;age&#39;], product)
+AssertionError
+</pre></div>
+</div>
+<p>That tells me the exact test that failed! Pipelines can get very large; it helps a lot to have a structured error message that tells us what failed and where it happened. Our take away from the error message is: “the pipeline building process failed because the <code class="docutils literal notranslate"><span class="pre">on_finish</span></code> hook in the <code class="docutils literal notranslate"><span class="pre">clean</span></code> task raised an exception in certain assertion”. That’s much better than either “the pipeline failed” or “this line raised an exception”.</p>
+<p>Let’s fix our pipeline and add the <code class="docutils literal notranslate"><span class="pre">WHERE</span></code> clause again:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;clean.sql&#39;</span><span class="p">)</span>
+<span class="n">new_code</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;WHERE score is not null AND age &gt; 0&#39;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">new_code</span><span class="p">)</span>
+<span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">new_code</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+DROP TABLE IF EXISTS {{product}};
+
+CREATE TABLE {{product}} AS
+SELECT * FROM my_table
+WHERE score is not null AND age &gt; 0
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+121
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-sh notranslate"><div class="highlight"><pre><span></span>%%sh
+ploomber build
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+name       Ran?      Elapsed (s)    Percentage
+---------  ------  -------------  ------------
+clean      True         0.017694     0.67259
+dump       True         0.001669     0.0634426
+transform  True         2.61136     99.264
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Building task &#39;transform&#39;:   0%|          | 0/3 [00:00&lt;?, ?it/s]
+Executing:   0%|          | 0/5 [00:00&lt;?, ?cell/s]
+Executing:  20%|██        | 1/5 [00:01&lt;00:07,  1.78s/cell]
+Executing: 100%|██████████| 5/5 [00:02&lt;00:00,  2.34cell/s]
+Building task &#39;transform&#39;: 100%|██████████| 3/3 [00:02&lt;00:00,  1.13it/s]
+</pre></div></div>
+</div>
+<p>All good! Pipeline is running without issues again!</p>
+</section>
+<section id="Test-driven-development-(TDD)">
+<h2>Test-driven development (TDD)<a class="headerlink" href="#Test-driven-development-(TDD)" title="Permalink to this headline">¶</a></h2>
+<p>Writing data tests is essential for developing robust pipelines. Coding tests is simple, all we have to do is write in code that we already have in our mind when thinking what the outcome of a script should be.</p>
+<p>This thought process happens <em>before</em> we write the actual code, which means we could easily write tests even before we write the actual code. This approach is called Test-driven development (TDD).</p>
+<p>Following this framework has an added benefit, since we force ourselves to put in concrete terms our data expectations, it makes easier to think how we want to get there.</p>
+<p>Furthermore, <em>tests also serve as documentation</em> for us (and for others). By looking at our tests, anyone can see what <em>our intent</em> is. Then by looking at the code, it will be easier to spot mismatches between our intent and our implementation.</p>
+</section>
+<section id="Pro-tip:-debugging-and-developing-tests-interactively">
+<h2>Pro tip: debugging and developing tests interactively<a class="headerlink" href="#Pro-tip:-debugging-and-developing-tests-interactively" title="Permalink to this headline">¶</a></h2>
+<p>Even though tests are usually just a few short statements, writing them in an interactive way can help you quickly prototype your assertions. One simple trick you can use to do this is to start an interactive session and load the <code class="docutils literal notranslate"><span class="pre">client</span></code> and <code class="docutils literal notranslate"><span class="pre">product</span></code> variables.</p>
+<p>Let’s imagine you want to write a test for a new SQL script (but the same applies for other types of scripts). You add a testing function, but it’s currently empty:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_sql_testing_function</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">product</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>If you run this, Ploomber will still call your function, you can start an interactive session when this happens:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_sql_testing_function</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">product</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">IPython</span> <span class="kn">import</span> <span class="n">embed</span><span class="p">;</span> <span class="n">embed</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Once you call <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">build</span></code>, wait for the Python prompt to show and verify you have the <code class="docutils literal notranslate"><span class="pre">client</span></code> and <code class="docutils literal notranslate"><span class="pre">product</span></code> variables:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="Where-to-go-next">
+<h2>Where to go next<a class="headerlink" href="#Where-to-go-next" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../api/testing.html"><span class="doc">Documentation for ploomber.testing - Handy functions for testing pipelines</span></a></p></li>
+<li><p><a class="reference external" href="https://towardsdatascience.com/rethinking-continuous-integration-for-data-science-ebf0dfc61788">Our blog post on CI for Data Science (which includes a section on testing pipelines)</a></p></li>
+</ul>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Pipeline testing</a><ul>
+<li><a class="reference internal" href="#Sample-data">Sample data</a></li>
+<li><a class="reference internal" href="#Testing-Python-scripts">Testing Python scripts</a></li>
+<li><a class="reference internal" href="#Testing-SQL-scripts">Testing SQL scripts</a></li>
+<li><a class="reference internal" href="#Running-the-pipeline">Running the pipeline</a></li>
+<li><a class="reference internal" href="#Test-driven-development-(TDD)">Test-driven development (TDD)</a></li>
+<li><a class="reference internal" href="#Pro-tip:-debugging-and-developing-tests-interactively">Pro tip: debugging and developing tests interactively</a></li>
+<li><a class="reference internal" href="#Where-to-go-next">Where to go next</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

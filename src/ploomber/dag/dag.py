@@ -112,7 +112,7 @@ _pygraphviz_message = (
 
 
 class DAG(AbstractDAG):
-    """A collection of tasks with dependencies
+    """A collection of tasks with dependencies ADDHERE
 
     Parameters
     ----------

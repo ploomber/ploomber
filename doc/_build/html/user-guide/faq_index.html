@@ -1,0 +1,507 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>FAQ and Glossary &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Spec API vs. Python API" href="spec-vs-python.html" />
+    <link rel="prev" title="R support" href="r-support.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="templates.html">Downloading templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Jupyter integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html">Scaffolding projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring.html">Refactoring legacy notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametrized.html">Parametrized pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html">SQL Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html">SQL templating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Pipeline testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html">Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shell.html">Shell tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html">Other editors (VSCode, PyCharm, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html">R support</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">FAQ and Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html">Spec API vs. Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+user-guide%2Ffaq_index"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="faq-and-glossary">
+<h1>FAQ and Glossary<a class="headerlink" href="#faq-and-glossary" title="Permalink to this headline">¶</a></h1>
+<section id="why-do-products-have-clients">
+<h2>Why do products have clients?<a class="headerlink" href="#why-do-products-have-clients" title="Permalink to this headline">¶</a></h2>
+<p>Clients exist in tasks and products because they serve different purposes. A
+task client manages the connection to the database that runs your script. On
+the other hand, the product’s client only handles the storage of the
+product’s metadata.</p>
+<p>To enable incremental runs. Ploomber has to store the source code that generated
+any given product. Storing metadata in the same database that runs your code
+requires a system-specific implementation. Currently, only SQLite and PostgreSQL
+are supported via <a class="reference internal" href="../api/_modules/products/ploomber.products.SQLiteRelation.html#ploomber.products.SQLiteRelation" title="ploomber.products.SQLiteRelation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products.SQLiteRelation</span></code></a> and
+<a class="reference internal" href="../api/_modules/products/ploomber.products.PostgresRelation.html#ploomber.products.PostgresRelation" title="ploomber.products.PostgresRelation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products.PostgresRelation</span></code></a> respectively. For these two cases,
+task client and product client communicate to the same system (the database).
+Hence they can initialize with the same client.</p>
+<p>For any other database, we provide two alternatives; in both cases, the
+task’s client is different from the product’s client. The first alternative
+is <a class="reference internal" href="../api/_modules/products/ploomber.products.GenericSQLRelation.html#ploomber.products.GenericSQLRelation" title="ploomber.products.GenericSQLRelation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products.GenericSQLRelation</span></code></a> which represents a generic
+table or view and saves metadata in a SQLite database; on this case, the
+task’s client is the database client (e.g., Oracle, Hive, Snowflake) but
+the product’s client is a SQLite client. If you don’t need the incremental
+builds features, you can use <a class="reference internal" href="../api/_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation" title="ploomber.products.SQLRelation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products.SQLRelation</span></code></a> instead
+which is a product with no metadata.</p>
+</section>
+<section id="which-databases-are-supported">
+<h2>Which databases are supported?<a class="headerlink" href="#which-databases-are-supported" title="Permalink to this headline">¶</a></h2>
+<p>The answer depends on the task to use. There are two types of database clients.
+<a class="reference internal" href="../api/_modules/clients/ploomber.clients.SQLAlchemyClient.html#ploomber.clients.SQLAlchemyClient" title="ploomber.clients.SQLAlchemyClient"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.clients.SQLAlchemyClient</span></code></a> for <code class="docutils literal notranslate"><span class="pre">SQLAlchemy</span></code> compatible
+database and <a class="reference internal" href="../api/_modules/clients/ploomber.clients.DBAPIClient.html#ploomber.clients.DBAPIClient" title="ploomber.clients.DBAPIClient"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.clients.DBAPIClient</span></code></a> for the rest (the only
+requirement for <code class="docutils literal notranslate"><span class="pre">DBAPIClient</span></code> is a driver that implements
+<a class="reference external" href="https://www.python.org/dev/peps/pep-0249/">PEP 249</a>.</p>
+<p><a class="reference internal" href="../api/_modules/tasks/ploomber.tasks.SQLDump.html#ploomber.tasks.SQLDump" title="ploomber.tasks.SQLDump"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.tasks.SQLDump</span></code></a> supports both types of clients.</p>
+<p><a class="reference internal" href="../api/_modules/tasks/ploomber.tasks.SQLScript.html#ploomber.tasks.SQLScript" title="ploomber.tasks.SQLScript"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.tasks.SQLScript</span></code></a> supports both types of clients. But if you
+want incremental builds, you must also configure a product client. See the section
+below for details.</p>
+<p><a class="reference internal" href="../api/_modules/tasks/ploomber.tasks.SQLUpload.html#ploomber.tasks.SQLUpload" title="ploomber.tasks.SQLUpload"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.tasks.SQLUpload</span></code></a> relies on <cite>pandas.to_sql</cite> to upload a local
+file to a database. Such method relies on SQLAlchemy to work. Hence it only
+supports <code class="docutils literal notranslate"><span class="pre">SQLAlchemyClient</span></code>.</p>
+<p><a class="reference internal" href="../api/_modules/tasks/ploomber.tasks.PostgresCopyFrom.html#ploomber.tasks.PostgresCopyFrom" title="ploomber.tasks.PostgresCopyFrom"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.tasks.PostgresCopyFrom</span></code></a> is a faster alternative to
+<code class="docutils literal notranslate"><span class="pre">SQLUpload</span></code> when using PostgreSQL. It relies on <cite>pandas.to_sql</cite> <strong>only</strong>
+to create the database, but actual data upload is done using <code class="docutils literal notranslate"><span class="pre">psycopg</span></code>
+which calls the native <code class="docutils literal notranslate"><span class="pre">COPY</span> <span class="pre">FROM</span></code> procedure.</p>
+</section>
+<section id="what-are-incremental-builds">
+<span id="incremental-builds"></span><h2>What are incremental builds?<a class="headerlink" href="#what-are-incremental-builds" title="Permalink to this headline">¶</a></h2>
+<p>When developing pipelines, we usually make small changes and want to see how the
+the final output looks like (e.g., add a feature to a model training pipeline).
+Incremental builds allow us to skip redundant work by only executing tasks
+whose source code has changed since the last execution. To do so, Ploomber
+has to save the Product’s metadata. For <a class="reference internal" href="../api/_modules/products/ploomber.products.File.html#ploomber.products.File" title="ploomber.products.File"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products.File</span></code></a>, it creates
+another file in the same location, for SQL products such as
+<a class="reference internal" href="../api/_modules/products/ploomber.products.SQLRelation.html#ploomber.products.SQLRelation" title="ploomber.products.SQLRelation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.products.SQLRelation</span></code></a>, a metadata backend is required, which
+is configured using the <code class="docutils literal notranslate"><span class="pre">client</span></code> parameter.</p>
+</section>
+<section id="how-do-i-specify-a-task-with-a-variable-number-of-outputs">
+<h2>How do I specify a task with a variable number of outputs?<a class="headerlink" href="#how-do-i-specify-a-task-with-a-variable-number-of-outputs" title="Permalink to this headline">¶</a></h2>
+<p>You must group the outputs into a single product and declare it as a directory.</p>
+<ul class="simple">
+<li><p>Click here to see an <a class="reference external" href="https://github.com/ploomber/projects/tree/master/cookbook/variable-number-of-products/basic">example</a>.</p></li>
+<li><p>If you’re using serializers, click here to see an <a class="reference external" href="https://github.com/ploomber/projects/tree/master/cookbook/variable-number-of-products/serializer">example</a>.</p></li>
+</ul>
+</section>
+<section id="should-tasks-generate-products">
+<h2>Should tasks generate products?<a class="headerlink" href="#should-tasks-generate-products" title="Permalink to this headline">¶</a></h2>
+<p>Yes. Tasks must generate at least one product; this is typically a file but can be a table or view in a database.</p>
+<p>If you find yourself trying to write a task that generates no outputs, consider the following options:</p>
+<ol class="arabic simple">
+<li><p>Merge the code that does not generate outputs with upstream tasks that generate outputs.</p></li>
+<li><p>Use the <code class="docutils literal notranslate"><span class="pre">on_finish</span></code> hook to execute code after a task executes successfully (click <a class="reference internal" href="../cookbook/hooks.html"><span class="doc">here</span></a> to learn more).</p></li>
+</ol>
+</section>
+<section id="auto-reloading-code-in-jupyter">
+<h2>Auto reloading code in Jupyter<a class="headerlink" href="#auto-reloading-code-in-jupyter" title="Permalink to this headline">¶</a></h2>
+<p>When you import a module in Python (e.g., <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">module</span> <span class="pre">import</span> <span class="pre">my_function</span></code>),
+the system caches the code and subsequent changes to <code class="docutils literal notranslate"><span class="pre">my_funcion</span></code> won’t take
+effect even if you run the import statement again until you restar the kernel,
+which is inconvenient if you are iterating on some code stored in an external
+file.</p>
+<p>To overcome such limitation, you can insert the following at the top of your
+notebook, before any <code class="docutils literal notranslate"><span class="pre">import</span></code> statements:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># auto reload modules</span>
+<span class="o">%</span><span class="n">load_ext</span> <span class="n">autoreload</span>
+<span class="o">%</span><span class="n">autoreload</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>Once executed, any updates to imported modules will take effect if you change
+the source code. Note that this feature has some <a class="reference external" href="https://ipython.readthedocs.io/en/stable/config/extensions/autoreload.html#caveats">limitations.</a></p>
+</section>
+<section id="cell-tags">
+<h2>Cell tags<a class="headerlink" href="#cell-tags" title="Permalink to this headline">¶</a></h2>
+<p>Scripts (with the <code class="docutils literal notranslate"><span class="pre">%%</span></code> separator) and notebooks support cell tags. Tags
+help identify cells for several purposes; the two most common ones are:</p>
+<ol class="arabic simple">
+<li><p>Notebook parameters: Ploomber uses this cell to know where to inject parameters from <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>. In most cases, you don’t need to manually tag cells since Ploomber does it automatically.</p></li>
+<li><p>Cell filtering: When generating reports, you may want to selectively hide specific cells from the output report.</p></li>
+</ol>
+<p>For an example of adding cell tags, see the <a class="reference internal" href="#parametrizing-notebooks"><span class="std std-ref">Parameterizing Notebooks</span></a> section.</p>
+</section>
+<section id="parameterizing-notebooks">
+<span id="parametrizing-notebooks"></span><h2>Parameterizing Notebooks<a class="headerlink" href="#parameterizing-notebooks" title="Permalink to this headline">¶</a></h2>
+<p>You must first parametrize the notebook by assigning the tag <code class="docutils literal notranslate"><span class="pre">parameters</span></code> to an
+initial cell when performing a notebook task. Note that the parameters in
+the <code class="docutils literal notranslate"><span class="pre">parameters</span></code> cell are placeholders; they indicate the parameter names that
+your script or notebook takes, but they are replaced values declared in
+your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file at runtime. The only exception is
+the <code class="docutils literal notranslate"><span class="pre">upstream</span></code> parameter, which contains a list of task dependencies.</p>
+<section id="parameterizing-py-files">
+<h3>Parameterizing <code class="docutils literal notranslate"><span class="pre">.py</span></code> files<a class="headerlink" href="#parameterizing-py-files" title="Permalink to this headline">¶</a></h3>
+<p>For <code class="docutils literal notranslate"><span class="pre">.py</span></code> files, include the <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">%%</span> <span class="pre">tags=[&quot;parameters&quot;]</span></code> comment before declaring your default variables or parameters.</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># %% tags=[&quot;parameters&quot;]</span>
+<span class="n">upstream</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">product</span> <span class="o">=</span> <span class="kc">None</span>
+</pre></div>
+</div>
+<p>Note that Ploomber is compatible with all <code class="docutils literal notranslate"><span class="pre">.py</span></code> formats supported by jupytext. Another common alternative is the light format.
+The <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">+</span></code> marker denotes the beginning of a cell, and <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">-</span></code> marker indicates the end of the cell. Your cell should look like this:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># + tags=[&quot;parameters&quot;]</span>
+<span class="n">upstream</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">product</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="c1"># -</span>
+</pre></div>
+</div>
+<p>If you’re using another format, check out <a class="reference external" href="https://jupytext.readthedocs.io/en/latest/formats.html">jupytext’s documentation</a>.</p>
+</section>
+<section id="parameterizing-ipynb-files-in-jupyter">
+<h3>Parameterizing <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> files in Jupyter<a class="headerlink" href="#parameterizing-ipynb-files-in-jupyter" title="Permalink to this headline">¶</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This applies to JupyterLab 3.0 and higher. For more information on parameterizing notebooks in older versions, please refer to <a class="reference external" href="https://papermill.readthedocs.io/en/stable/usage-parameterize.html">papermill docs</a></p>
+</div>
+<p>To parametrize your notebooks, add a new cell at the top, then in the right sidebar, click to open the property
+inspector (double gear icon). Next, hit the “Add Tag” button, type in the word <code class="docutils literal notranslate"><span class="pre">parameters</span></code>, and press “Enter”.</p>
+<a class="reference internal image-reference" href="../_images/parameterize-ipynb-example.png"><img alt="../_images/parameterize-ipynb-example.png" src="../_images/parameterize-ipynb-example.png" style="width: 800px;" /></a>
+</section>
+</section>
+<section id="plotting-a-pipeline">
+<span id="faq-plotting-a-pipeline"></span><h2>Plotting a pipeline<a class="headerlink" href="#plotting-a-pipeline" title="Permalink to this headline">¶</a></h2>
+<p>You can generate a plot of your pipeline with <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">plot</span></code>. It supports
+using D3 and <code class="docutils literal notranslate"><span class="pre">pygraphviz</span></code> as backends to create the plot. D3 is the
+most straightforward option since it doesn’t require any extra dependencies, but
+<code class="docutils literal notranslate"><span class="pre">pygraphviz</span></code> is more flexible and produces a better plot. Once installed,
+Ploomber will use <code class="docutils literal notranslate"><span class="pre">pygraphviz</span></code>, but you can use the <code class="docutils literal notranslate"><span class="pre">--backend</span></code> argument
+in the <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">plot</span></code> command to switch between <code class="docutils literal notranslate"><span class="pre">d3</span></code> and <code class="docutils literal notranslate"><span class="pre">pygraphviz</span></code>.</p>
+<p>The simplest way to install <code class="docutils literal notranslate"><span class="pre">pygraphviz</span></code> is to use <code class="docutils literal notranslate"><span class="pre">conda</span></code>, but you can also get it working with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.</p>
+<section id="conda-simplest">
+<h3><code class="docutils literal notranslate"><span class="pre">conda</span></code> (simplest)<a class="headerlink" href="#conda-simplest" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">conda install pygraphviz -c conda-forge</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If you’re running Python <code class="docutils literal notranslate"><span class="pre">3.7.x</span></code> or lower, run: <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">'pygraphviz&lt;1.8'</span> <span class="pre">-c</span> <span class="pre">conda-forge</span></code></p>
+</div>
+</section>
+<section id="pip">
+<h3><code class="docutils literal notranslate"><span class="pre">pip</span></code><a class="headerlink" href="#pip" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">graphviz</span></code> cannot be installed via <code class="docutils literal notranslate"><span class="pre">pip</span></code>, so you must install it with
+another package manager, if you have <code class="docutils literal notranslate"><span class="pre">brew</span></code>, you can get it with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">brew install graphviz</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you don’t have <code class="docutils literal notranslate"><span class="pre">brew</span></code>, refer to <a class="reference external" href="https://www.graphviz.org/download/">graphviz docs</a> for alternatives.</p>
+</div>
+<p>Once you have <code class="docutils literal notranslate"><span class="pre">graphviz</span></code>, you can install <code class="docutils literal notranslate"><span class="pre">pygraphviz</span></code> with <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install pygraphviz</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If you’re running Python <code class="docutils literal notranslate"><span class="pre">3.7.x</span></code> or lower, run: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'pygraphviz&lt;1.8'</span></code></p>
+</div>
+</section>
+</section>
+<section id="can-i-use-ploomber-in-old-jupyterlab-1-x-versions">
+<h2>Can I use Ploomber in old JupyterLab <code class="docutils literal notranslate"><span class="pre">1.x</span></code> versions?<a class="headerlink" href="#can-i-use-ploomber-in-old-jupyterlab-1-x-versions" title="Permalink to this headline">¶</a></h2>
+<p>Yes! Although our JupyterLab plug-in requires version <code class="docutils literal notranslate"><span class="pre">2.x</span></code>, you can still
+use Ploomber if using the old <code class="docutils literal notranslate"><span class="pre">1.x</span></code> version, which (as of December 2021) is the
+case if you’re using <strong>Amazon Sagemaker</strong>. Since Ploomber is a command-line
+tool, it is independent of your editor/IDE. Furthermore, you can get the same
+experience as JupyerLab users by using the
+<code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">nb</span></code> command; <a class="reference internal" href="editors.html"><span class="doc">click here to learn more.</span></a></p>
+</section>
+<section id="multiprocessing-errors-on-macos-and-windows">
+<h2>Multiprocessing errors on macOS and Windows<a class="headerlink" href="#multiprocessing-errors-on-macos-and-windows" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference internal" href="#solution-1-add-name-main"><span class="std std-ref">Show me the solution</span></a>.</p>
+<p>By default, Ploomber executes <a class="reference internal" href="../api/_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable" title="ploomber.tasks.PythonCallable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ploomber.tasks.PythonCallable</span></code></a>
+(i.e., function tasks) in a child process using the <a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html">multiprocessing</a>
+library. On macOS and Windows, Python uses the <a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods">spawn</a>
+method to create child processes; this isn’t an issue if you’re
+running your pipeline from the command-line (i.e., <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">build</span></code>), but you’ll
+encounter the following issue if running from a script:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>An attempt has been made to start a new process before the current process
+has finished its bootstrapping phase.
+
+This probably means that you are not using fork to start your
+child processes and you have forgotten to use the proper idiom
+in the main module:
+
+    if __name__ == &#39;__main__&#39;:
+        freeze_support()
+        ...
+
+The &quot;freeze_support()&quot; line can be omitted if the program
+is not going to be frozen to produce an executable.
+</pre></div>
+</div>
+<p>This happens if you store a script (say <code class="docutils literal notranslate"><span class="pre">run.py</span></code>):</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber.spec</span> <span class="kn">import</span> <span class="n">DAGSpec</span>
+
+<span class="n">dag</span> <span class="o">=</span> <span class="n">DAGSpec</span><span class="p">(</span><span class="s1">&#39;pipeline.yaml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_dag</span><span class="p">()</span>
+<span class="c1"># This fails on macOS and Windows!</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>And call your pipeline with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python run.py</span>
+</pre></div>
+</div>
+<p>There are two ways to solve this problem.</p>
+<section id="solution-1-add-name-main">
+<span id="id2"></span><h3>Solution 1: Add <code class="docutils literal notranslate"><span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">'__main__'</span></code><a class="headerlink" href="#solution-1-add-name-main" title="Permalink to this headline">¶</a></h3>
+<p>To allow correct creation of child processes using <code class="docutils literal notranslate"><span class="pre">spawn</span></code>, run your pipeline
+like this:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber.spec</span> <span class="kn">import</span> <span class="n">DAGSpec</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">dag</span> <span class="o">=</span> <span class="n">DAGSpec</span><span class="p">(</span><span class="s1">&#39;pipeline.yaml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_dag</span><span class="p">()</span>
+    <span class="c1"># calling build under this if statement allows</span>
+    <span class="c1"># correct creation of child processes</span>
+    <span class="n">dag</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="solution-2-disable-multiprocessing">
+<h3>Solution 2: Disable multiprocessing<a class="headerlink" href="#solution-2-disable-multiprocessing" title="Permalink to this headline">¶</a></h3>
+<p>You can disable multiprocessing in your pipeline like this:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber.spec</span> <span class="kn">import</span> <span class="n">DAGSpec</span>
+<span class="kn">from</span> <span class="nn">ploomber.executor</span> <span class="kn">import</span> <span class="n">Serial</span>
+
+<span class="n">dag</span> <span class="o">=</span> <span class="n">DAGSpec</span><span class="p">(</span><span class="s1">&#39;pipeline.yaml&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_dag</span><span class="p">()</span>
+<span class="c1"># overwrite executor regardless of what the pipeline.yaml</span>
+<span class="c1"># says in the &#39;executor&#39; field</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">executor</span> <span class="o">=</span> <span class="n">Serial</span><span class="p">(</span><span class="n">build_in_subprocess</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">dag</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="glossary">
+<h2>Glossary<a class="headerlink" href="#glossary" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Dotted path</strong>. A dot-separated string pointing to a Python module/class/function, e.g. “my_module.my_function”.</p></li>
+<li><p><strong>Entry point</strong>. A location to tell Ploomber how to initialize a DAG, can be a spec file, a directory, or a dotted path</p></li>
+<li><p><strong>Hook</strong>. A function executed after a certain event happens, e.g., the task “on finish” hook executes after the task executes successfully</p></li>
+<li><p><strong>Spec</strong>. A dictionary-like specification to initialize a DAG, usually provided via a YAML file</p></li>
+</ol>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">FAQ and Glossary</a><ul>
+<li><a class="reference internal" href="#why-do-products-have-clients">Why do products have clients?</a></li>
+<li><a class="reference internal" href="#which-databases-are-supported">Which databases are supported?</a></li>
+<li><a class="reference internal" href="#what-are-incremental-builds">What are incremental builds?</a></li>
+<li><a class="reference internal" href="#how-do-i-specify-a-task-with-a-variable-number-of-outputs">How do I specify a task with a variable number of outputs?</a></li>
+<li><a class="reference internal" href="#should-tasks-generate-products">Should tasks generate products?</a></li>
+<li><a class="reference internal" href="#auto-reloading-code-in-jupyter">Auto reloading code in Jupyter</a></li>
+<li><a class="reference internal" href="#cell-tags">Cell tags</a></li>
+<li><a class="reference internal" href="#parameterizing-notebooks">Parameterizing Notebooks</a><ul>
+<li><a class="reference internal" href="#parameterizing-py-files">Parameterizing <code class="docutils literal notranslate"><span class="pre">.py</span></code> files</a></li>
+<li><a class="reference internal" href="#parameterizing-ipynb-files-in-jupyter">Parameterizing <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> files in Jupyter</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#plotting-a-pipeline">Plotting a pipeline</a><ul>
+<li><a class="reference internal" href="#conda-simplest"><code class="docutils literal notranslate"><span class="pre">conda</span></code> (simplest)</a></li>
+<li><a class="reference internal" href="#pip"><code class="docutils literal notranslate"><span class="pre">pip</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#can-i-use-ploomber-in-old-jupyterlab-1-x-versions">Can I use Ploomber in old JupyterLab <code class="docutils literal notranslate"><span class="pre">1.x</span></code> versions?</a></li>
+<li><a class="reference internal" href="#multiprocessing-errors-on-macos-and-windows">Multiprocessing errors on macOS and Windows</a><ul>
+<li><a class="reference internal" href="#solution-1-add-name-main">Solution 1: Add <code class="docutils literal notranslate"><span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">'__main__'</span></code></a></li>
+<li><a class="reference internal" href="#solution-2-disable-multiprocessing">Solution 2: Disable multiprocessing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#glossary">Glossary</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

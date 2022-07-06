@@ -1,0 +1,41 @@
+.pending > rect{
+    fill:#ffbc40 !important;
+    stroke:#ffa600 !important;
+    stroke-width:4px !important;
+}
+
+.done > rect{
+    fill:#c1ffb5 !important;
+    stroke:#6bfc4e !important;
+    stroke-width:4px !important;
+}
+
+
+/* Status */
+
+.uptodate > rect{
+    fill:#90fcb9 !important;
+    stroke:#31ff80 !important;
+    stroke-width:2px !important;
+}
+
+.outdated > rect{
+    fill:#f7ff8e !important;
+    stroke:#f1ff2f !important;
+    stroke-width:2px !important;
+}
+
+/* Build */
+
+
+.executed > rect{
+    fill:#4bb7ff !important;
+    stroke:#2788f7 !important;
+    stroke-width:2px !important;
+}
+
+.skipped > rect{
+    fill:#ffffff !important;
+    stroke:#c5c5c5 !important;
+    stroke-width:2px !important;
+}

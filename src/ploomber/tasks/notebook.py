@@ -436,7 +436,7 @@ class NotebookMixin(FileLoaderMixin):
 
 class NotebookRunner(NotebookMixin, Task):
     """
-    Run a Jupyter notebook using papermill. Support several input formats
+    ADDHERE Run a Jupyter notebook using papermill. Support several input formats
     via jupytext and several output formats via nbconvert
 
     Parameters

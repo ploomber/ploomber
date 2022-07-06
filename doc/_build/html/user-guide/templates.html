@@ -1,0 +1,318 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Downloading templates &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Command-line interface" href="cli.html" />
+    <link rel="prev" title="User Guide" href="index.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Downloading templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Jupyter integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html">Scaffolding projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring.html">Refactoring legacy notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametrized.html">Parametrized pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html">SQL Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html">SQL templating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Pipeline testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html">Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shell.html">Shell tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html">Other editors (VSCode, PyCharm, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html">R support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html">FAQ and Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html">Spec API vs. Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+user-guide%2Ftemplates"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="downloading-templates">
+<h1>Downloading templates<a class="headerlink" href="#downloading-templates" title="Permalink to this headline">¶</a></h1>
+<p>Use our pre-configured templates as a starting point for your projects.</p>
+<section id="selected-templates">
+<h2>Selected templates<a class="headerlink" href="#selected-templates" title="Permalink to this headline">¶</a></h2>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Click on the template link to see the source code on GitHub. Once there, you’ll see an option to launch a free, hosted JupyterLab.</p>
+</div>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Exploratory Data Analysis</dt><dd><ol class="arabic simple">
+<li><p><em>Basic EDA example</em>: Load and clean data. Then create HTML reports with visualizations. (<a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/exploratory-analysis">templates/exploratory-analysis</a>)</p></li>
+</ol>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Machine Learning</dt><dd><ol class="arabic simple">
+<li><p><em>Basic ML example</em>: Get data, clean it, and train a model. (<a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/ml-basic">templates/ml-basic</a>)</p></li>
+<li><p><em>Intermediate ML example</em>: Create training and batch serving pipelines. (<a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/ml-intermediate">templates/ml-intermediate</a>)</p></li>
+<li><p><em>Online API</em>: Deploy pipeline as an API using Flask. (<a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/ml-online">templates/ml-online</a>)</p></li>
+<li><p><em>Experiment grid + Mlflow</em>: Create a grid of experiments and track them with MLflow. (<a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/mlflow">templates/mlflow</a>)</p></li>
+</ol>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>SQL databases</dt><dd><ol class="arabic simple">
+<li><p><em>Basic SQL example</em>: Process data, dump it, and visualize with Python. (<a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/spec-api-sql">templates/spec-api-sql</a>)</p></li>
+<li><p><em>ETL</em>: dump data from remote storage, upload it to a database, process it, and visualize it with Python. (<a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/etl">templates/etl</a>)</p></li>
+</ol>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="downloading-a-template">
+<h2>Downloading a template<a class="headerlink" href="#downloading-a-template" title="Permalink to this headline">¶</a></h2>
+<p>To download any of the examples:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber examples -n {template} -o {output-directory}</span>
+</pre></div>
+</div>
+<p>For example, if you want to copy the <em>Basic EDA example</em> to the <code class="docutils literal notranslate"><span class="pre">eda</span></code> directory in your computer:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber examples -n templates/exploratory-analysis -o eda</span>
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Once you download an example, you can explore it with Jupyter. Check out
+the <a class="reference internal" href="jupyter.html"><span class="doc">Jupyter integration</span></a> guide to learn more.</p>
+</div>
+<p>Once the download finishes, you’ll need to install dependencies; you can use
+the <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">install</span></code> command. You may call <code class="docutils literal notranslate"><span class="pre">conda</span></code> or <code class="docutils literal notranslate"><span class="pre">pip</span></code> directly.</p>
+</section>
+<section id="listing-all-templates">
+<h2>Listing all templates<a class="headerlink" href="#listing-all-templates" title="Permalink to this headline">¶</a></h2>
+<p>To list all the available examples:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber examples</span>
+</pre></div>
+</div>
+<p>Note that the command above will display three sections:</p>
+<ol class="arabic simple">
+<li><p><em>Templates.</em> Pre-configured projects that you can use as a starting point.</p></li>
+<li><p><em>Cookbook.</em> Short examples to get something done quickly.</p></li>
+<li><p><em>Guides.</em> In-depth tutorials covering features in detail.</p></li>
+</ol>
+<p>Note that both <code class="docutils literal notranslate"><span class="pre">Cookbook</span></code> and <code class="docutils literal notranslate"><span class="pre">Guides</span></code> are part of the documentation itself, and
+you can navigate to any of them using the left sidebar or download them to run them locally.</p>
+</section>
+<section id="templates-structure">
+<h2>Templates structure<a class="headerlink" href="#templates-structure" title="Permalink to this headline">¶</a></h2>
+<p>All templates follow the same structure:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">README.md</span></code>: Instructions to run the template.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">README.ipynb</span></code>: Same as <code class="docutils literal notranslate"><span class="pre">README.md</span></code> but in notebook format and with command outputs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">environment.yml</span></code>: <code class="docutils literal notranslate"><span class="pre">conda</span></code> dependencies file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code>: <code class="docutils literal notranslate"><span class="pre">pip</span></code> dependencies file.</p></li>
+</ol>
+<p>Most templates contain a <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file, so you can
+run <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">build</span></code> to execute the pipeline, but there are a few exceptions.
+Check out the template’s <code class="docutils literal notranslate"><span class="pre">README.md</span></code> for specifics.</p>
+</section>
+<section id="starting-projects-from-scratch">
+<h2>Starting projects from scratch<a class="headerlink" href="#starting-projects-from-scratch" title="Permalink to this headline">¶</a></h2>
+<p>If no template suits your needs, use the <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span></code> command
+to create a clean slate project. <a class="reference internal" href="scaffold.html"><span class="doc">Click here to learn how to scaffold projects</span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span></code> also comes with utilities to modify existing pipelines,
+so can use it to change any of the templates.</p>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Downloading templates</a><ul>
+<li><a class="reference internal" href="#selected-templates">Selected templates</a></li>
+<li><a class="reference internal" href="#downloading-a-template">Downloading a template</a></li>
+<li><a class="reference internal" href="#listing-all-templates">Listing all templates</a></li>
+<li><a class="reference internal" href="#templates-structure">Templates structure</a></li>
+<li><a class="reference internal" href="#starting-projects-from-scratch">Starting projects from scratch</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

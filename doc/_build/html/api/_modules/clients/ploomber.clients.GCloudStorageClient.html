@@ -1,0 +1,384 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>ploomber.clients.GCloudStorageClient &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/mermaid-layout.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/custom.js"></script>
+    <script src="../../../_static/js/mermaid.min.js"></script>
+    <script src="../../../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ploomber.spec.DAGSpec" href="../spec/ploomber.spec.DAGSpec.html" />
+    <link rel="prev" title="ploomber.clients.S3Client" href="ploomber.clients.S3Client.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../../../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../../../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../../../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../../../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../../../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../spec.html">Spec API (<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cli.html">Command line interface</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../python_api.html">Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../testing.html">Testing utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+api%2F_modules%2Fclients%2Fploomber.clients.GCloudStorageClient"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="ploomber-clients-gcloudstorageclient">
+<h1>ploomber.clients.GCloudStorageClient<a class="headerlink" href="#ploomber-clients-gcloudstorageclient" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="ploomber.clients.GCloudStorageClient">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ploomber.clients.</span></span><span class="sig-name descname"><span class="pre">GCloudStorageClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bucket_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_credentials_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_project_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">credentials_relative_to_project_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.clients.GCloudStorageClient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Client for uploading File products to Google Cloud Storage</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bucket_name</strong> (<em>str</em>) – Bucket to use</p></li>
+<li><p><strong>parent</strong> (<em>str</em>) – Parent folder in the bucket to store files. For example, if
+<code class="docutils literal notranslate"><span class="pre">parent='path/to'</span></code>, and a product in your pipeline is
+<code class="docutils literal notranslate"><span class="pre">out/data.csv</span></code>, your file will appea in the bucket at
+<code class="docutils literal notranslate"><span class="pre">path/to/out/data.csv</span></code>.</p></li>
+<li><p><strong>json_credentials_path</strong> (<em>str</em><em>, </em><em>default=None</em>) – Use the given JSON file to authenticate the client
+(uses  <code class="docutils literal notranslate"><span class="pre">Client.from_service_account_json(**kwargs)</span></code>), if <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+initializes the client using <code class="docutils literal notranslate"><span class="pre">Client(**kwargs)</span></code></p></li>
+<li><p><strong>path_to_project_root</strong> (<em>str</em><em>, </em><em>default=None</em>) – Path to project root. If None, looks it
+up automatically and assigns it to the parent folder of your
+<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> spec or <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> (if your project is a package).
+This determines the path in remote storage. For example, if
+<code class="docutils literal notranslate"><span class="pre">path_to_project_root</span></code> is <code class="docutils literal notranslate"><span class="pre">/my-project</span></code>, you’re storing a
+product at <code class="docutils literal notranslate"><span class="pre">/my-project/out/data.csv</span></code>, and <code class="docutils literal notranslate"><span class="pre">parent='some-dir'</span></code>,
+the file will be stored in the bucket at <code class="docutils literal notranslate"><span class="pre">some-dir/out/data.csv</span></code>
+(we first compute the path of your product relative to the project
+root, then prefix it with <code class="docutils literal notranslate"><span class="pre">parent</span></code>).</p></li>
+<li><p><strong>credentials_relative_to_project_root</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, relative paths in <code class="docutils literal notranslate"><span class="pre">json_credentials_path</span></code> are so to the
+<code class="docutils literal notranslate"><span class="pre">path_to_project_root</span></code>, instead of the current working directory</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for the client constructor</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Spec API:</p>
+<p>Given the following <code class="docutils literal notranslate"><span class="pre">clients.py</span></code>:</p>
+<div class="text-editor highlight-python notranslate" id="clients-py"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sqlalchemy</span>
+<span class="kn">from</span> <span class="nn">ploomber.clients</span> <span class="kn">import</span> <span class="n">GCloudStorageClient</span>
+
+<span class="k">def</span> <span class="nf">get</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">GCloudStorageClient</span><span class="p">(</span><span class="n">bucket_name</span><span class="o">=</span><span class="s1">&#39;my-bucket&#39;</span><span class="p">,</span>
+                               <span class="n">parent</span><span class="o">=</span><span class="s1">&#39;my-pipeline&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Spec API (dag-level client):</p>
+<div class="text-editor highlight-yaml notranslate" id="pipeline-yaml"><div class="highlight"><pre><span></span><span class="nt">clients</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># all files from all tasks will be uploaded</span><span class="w"></span>
+<span class="w">    </span><span class="nt">File</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">notebook.ipynb</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/report.html</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Spec API (dag-level client, custom arguments):</p>
+<div class="text-editor highlight-yaml notranslate" id="id1"><div class="highlight"><pre><span></span><span class="nt">clients</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># if your get function takes arguments, pass them like this</span><span class="w"></span>
+<span class="w">    </span><span class="nt">File</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">dotted_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get</span><span class="w"></span>
+<span class="w">        </span><span class="nt">arg</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span><span class="w"></span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+
+<span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">notebook.ipynb</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/report.html</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Spec API (product-level client):</p>
+<div class="text-editor highlight-yaml notranslate" id="id2"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">notebook.ipynb</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product_client</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clients.get</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># outputs from this task will be uploaded</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/report.html</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Python API (dag-level client):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ploomber</span> <span class="kn">import</span> <span class="n">DAG</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ploomber.products</span> <span class="kn">import</span> <span class="n">File</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ploomber.tasks</span> <span class="kn">import</span> <span class="n">PythonCallable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ploomber.clients</span> <span class="kn">import</span> <span class="n">GCloudStorageClient</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dag</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">GCloudStorageClient</span><span class="p">(</span><span class="n">bucket_name</span><span class="o">=</span><span class="s1">&#39;my-bucket&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">parent</span><span class="o">=</span><span class="s1">&#39;my-pipeline&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">path_to_project_root</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dag</span><span class="o">.</span><span class="n">clients</span><span class="p">[</span><span class="n">File</span><span class="p">]</span> <span class="o">=</span> <span class="n">client</span> <span class="c1"># dag-level client</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dag</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_function</span><span class="p">(</span><span class="n">product</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">Path</span><span class="p">(</span><span class="n">product</span><span class="p">)</span><span class="o">.</span><span class="n">touch</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">PythonCallable</span><span class="p">(</span><span class="n">my_function</span><span class="p">,</span> <span class="n">File</span><span class="p">(</span><span class="s1">&#39;file.txt&#39;</span><span class="p">),</span> <span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dag</span><span class="o">.</span><span class="n">build</span><span class="p">()</span> 
+</pre></div>
+</div>
+<p>Python API (product-level client):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ploomber</span> <span class="kn">import</span> <span class="n">DAG</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ploomber.products</span> <span class="kn">import</span> <span class="n">File</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ploomber.tasks</span> <span class="kn">import</span> <span class="n">PythonCallable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ploomber.clients</span> <span class="kn">import</span> <span class="n">GCloudStorageClient</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dag</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">GCloudStorageClient</span><span class="p">(</span><span class="n">bucket_name</span><span class="o">=</span><span class="s1">&#39;my-bucket&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">parent</span><span class="o">=</span><span class="s1">&#39;my-pipeline&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">path_to_project_root</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dag</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_function</span><span class="p">(</span><span class="n">product</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">Path</span><span class="p">(</span><span class="n">product</span><span class="p">)</span><span class="o">.</span><span class="n">touch</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">product</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="s1">&#39;file.txt&#39;</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">PythonCallable</span><span class="p">(</span><span class="n">my_function</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dag</span><span class="o">.</span><span class="n">build</span><span class="p">()</span> 
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="ploomber.clients.S3Client.html#ploomber.clients.S3Client" title="ploomber.clients.S3Client"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ploomber.clients.S3Client</span></code></a></dt><dd><p>Client for uploading products to Amazon S3</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p><a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/google-cloud">Complete example using the Spec API</a> # noqa</p>
+<p>If a notebook (or script) task fails, the partially executed <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code>
+file will be uploaded using this client.</p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.clients.GCloudStorageClient.close" title="ploomber.clients.GCloudStorageClient.close"><code class="xref py py-obj docutils literal notranslate"><span class="pre">close</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.clients.GCloudStorageClient.download" title="ploomber.clients.GCloudStorageClient.download"><code class="xref py py-obj docutils literal notranslate"><span class="pre">download</span></code></a>(local[, destination])</p></td>
+<td><p>Download remote copy of a given local path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.clients.GCloudStorageClient.upload" title="ploomber.clients.GCloudStorageClient.upload"><code class="xref py py-obj docutils literal notranslate"><span class="pre">upload</span></code></a>(local)</p></td>
+<td><p>Upload file or folder from a local path by calling _upload as needed</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.clients.GCloudStorageClient.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.clients.GCloudStorageClient.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.clients.GCloudStorageClient.download">
+<span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.clients.GCloudStorageClient.download" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download remote copy of a given local path. Local may be a file
+or a folder (all contents downloaded).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>local</strong> – Path to local file or folder whose remote copy will be downloaded</p></li>
+<li><p><strong>destination</strong> – Download location. If None, overwrites local copy</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.clients.GCloudStorageClient.upload">
+<span class="sig-name descname"><span class="pre">upload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.clients.GCloudStorageClient.upload" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upload file or folder from a local path by calling _upload as needed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>local</strong> – Path to local file or folder to upload</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parent</span></code></p></td>
+<td><p>Parent where all products are stored</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

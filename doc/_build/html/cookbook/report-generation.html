@@ -1,0 +1,421 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Report generation &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Debugging" href="debugging.html" />
+    <link rel="prev" title="Parametrization" href="parametrization.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Cookbook</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="parametrization.html">Parametrization</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Report generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="db-config.html">Database configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid.html">Task grids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-load-python.html">Custom pipeline loading logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hooks.html">Hooks (e.g., <code class="docutils literal notranslate"><span class="pre">on_finish</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+cookbook%2Freport-generation"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <style>
+    div.nbinput.container div.input_area {
+        background: black;
+    }
+</style>
+
+<script src="../_static/js/nbsphinx.js"></script><p>To run this example locally, <a class="reference external" href="https://docs.ploomber.io/en/latest/get-started/quick-start.html">install Ploomber</a> and execute: <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">examples</span> <span class="pre">-n</span> <span class="pre">cookbook/report-generation</span></code></p>
+<p>To start a free, hosted JupyterLab: <a class="reference external" href="https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fcookbook/report-generation%252FREADME.ipynb%26branch%3Dmaster"><img alt="binder-logo" src="https://mybinder.org/badge_logo.svg" /></a></p>
+<p>Found an issue? <a class="reference external" href="https://github.com/ploomber/projects/issues/new?title=cookbook/report-generation%20issue">Let us know.</a></p>
+<p>Have questions? <a class="reference external" href="https://ploomber.io/community/">Ask us anything on Slack.</a></p>
+<section id="Report-generation">
+<h1>Report generation<a class="headerlink" href="#Report-generation" title="Permalink to this headline">¶</a></h1>
+<!-- start description --><p>Generating HTML/PDF reports.</p>
+<p>Ploomber makes it simple to generate HTML and PDF reports from notebooks and scripts. To see some examples, go to the <code class="docutils literal notranslate"><span class="pre">reports/</span></code> directory. This cookbook covers several use cases and includes runnable examples.</p>
+<section id="HTML-reports-(easiest-option)">
+<h2>HTML reports (easiest option)<a class="headerlink" href="#HTML-reports-(easiest-option)" title="Permalink to this headline">¶</a></h2>
+<p>HTML reports are the simplest option as they don’t require any extra dependencies. You only need to change the <code class="docutils literal notranslate"><span class="pre">product</span></code> extension to <code class="docutils literal notranslate"><span class="pre">.html</span></code> and Ploomber will do the conversion:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Content of pipeline.yaml</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># scripts can generate reports</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks/script.py</span><span class="w"></span>
+<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">html-report</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">reports/report.html</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># the task can generate more outputs, list them here</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Runnable example:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># get example</span>
+pip install ploomber <span class="s2">&quot;nbconvert[webpdf]&quot;</span> --upgrade
+ploomber examples -n cookbook/report-generation -o example
+<span class="nb">cd</span> example
+
+<span class="c1"># install example dependencies</span>
+ploomber install
+
+<span class="c1"># generate HTML report</span>
+ploomber task html-report
+</pre></div>
+</div>
+<p>Check out report at <code class="docutils literal notranslate"><span class="pre">reports/report.html</span></code></p>
+</section>
+<section id="PDF-reports">
+<h2>PDF reports<a class="headerlink" href="#PDF-reports" title="Permalink to this headline">¶</a></h2>
+<p>To generate PDF reports there are two options, using chromium or TeX.</p>
+<section id="Using-chromium-(easiest-pdf-option)">
+<h3>Using chromium (easiest pdf option)<a class="headerlink" href="#Using-chromium-(easiest-pdf-option)" title="Permalink to this headline">¶</a></h3>
+<p>To use use chromium, pass <code class="docutils literal notranslate"><span class="pre">nbconvert_exporter_name:</span> <span class="pre">webpdf</span></code></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Content of pipeline.yaml</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># pdf report example</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks/script.py</span><span class="w"></span>
+<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">webpdf-report</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># use the webpdf exporter (supportes embedded charts)</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># (it will download chromium if needed)</span><span class="w"></span>
+<span class="w">      </span><span class="nt">nbconvert_exporter_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">webpdf</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">reports/report-webpdf.pdf</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Runnable example:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># get example</span>
+pip install ploomber <span class="s2">&quot;nbconvert[webpdf]&quot;</span> --upgrade
+ploomber examples -n cookbook/report-generation -o example
+<span class="nb">cd</span> example
+
+<span class="c1"># install example dependencies</span>
+ploomber install
+
+<span class="c1"># generate PDF report</span>
+ploomber task webpdf-report
+</pre></div>
+</div>
+<p>Check out report at <code class="docutils literal notranslate"><span class="pre">reports/report-webpdf.pdf</span></code></p>
+</section>
+<section id="Using-TeX">
+<h3>Using TeX<a class="headerlink" href="#Using-TeX" title="Permalink to this headline">¶</a></h3>
+<p>TeX is the default, to use it, set the product extension to <code class="docutils literal notranslate"><span class="pre">.pdf</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Content of pipeline.yaml</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># pdf report example (requires latex)</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks/script.py</span><span class="w"></span>
+<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pdf-report</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># generate pdf report by changing the extension.</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">reports/report.pdf</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Runnable example:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># get example</span>
+pip install ploomber <span class="s2">&quot;nbconvert[webpdf]&quot;</span> --upgrade
+ploomber examples -n cookbook/report-generation -o example
+<span class="nb">cd</span> example
+
+<span class="c1"># install example dependencies</span>
+ploomber install
+
+<span class="c1"># generate PDF report</span>
+ploomber task pdf-report
+</pre></div>
+</div>
+<p>Check out report at <code class="docutils literal notranslate"><span class="pre">reports/report.pdf</span></code></p>
+<section id="Installing-TeX">
+<h4>Installing TeX<a class="headerlink" href="#Installing-TeX" title="Permalink to this headline">¶</a></h4>
+<p>For instructions on installing TeX, <a class="reference external" href="https://www.tug.org/texlive/">see this.</a>.</p>
+<p>TeXLive is a large distribution, as an alternative, you may install BasicTeX. Here are instructions for <a class="reference external" href="https://www.tug.org/mactex/morepackages.html">macOS</a>.</p>
+<p>Upon BasicTeX installation, you’ll need to install a few extra packages:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Note: if using macOS or Linux, you may need to execute with sudo</span>
+tlmgr install adjustbox <span class="se">\</span>
+  caption <span class="se">\</span>
+  collectbox <span class="se">\</span>
+  enumitem <span class="se">\</span>
+  environ <span class="se">\</span>
+  eurosym <span class="se">\</span>
+  jknapltx <span class="se">\</span>
+  parskip <span class="se">\</span>
+  pgf <span class="se">\</span>
+  rsfs <span class="se">\</span>
+  tcolorbox <span class="se">\</span>
+  titling <span class="se">\</span>
+  trimspaces <span class="se">\</span>
+  ucs <span class="se">\</span>
+  ulem <span class="se">\</span>
+  upquote
+</pre></div>
+</div>
+<p><a class="reference external" href="https://github.com/jupyter/nbconvert/issues/1328">Source.</a></p>
+</section>
+</section>
+</section>
+<section id="Hiding-code">
+<h2>Hiding code<a class="headerlink" href="#Hiding-code" title="Permalink to this headline">¶</a></h2>
+<p>In many cases, you want to hide the code so the report only contains tables and charts, you can do so easily with the <code class="docutils literal notranslate"><span class="pre">exclude_input</span></code> option:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Content of pipeline.yaml</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># notebooks as well</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks/notebook.ipynb</span><span class="w"></span>
+<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">another-html-report</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">reports/another.html</span><span class="w"></span>
+
+<span class="w">      </span><span class="nt">nbconvert_export_kwargs</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># optionally hide the code from the report</span><span class="w"></span>
+<span class="w">        </span><span class="nt">exclude_input</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Runnable example:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># get example</span>
+pip install ploomber <span class="s2">&quot;nbconvert[webpdf]&quot;</span> --upgrade
+ploomber examples -n cookbook/report-generation -o example
+<span class="nb">cd</span> example
+
+<span class="c1"># install example dependencies</span>
+ploomber install
+
+<span class="c1"># generate HTML report and hide code</span>
+ploomber task another-html-report
+</pre></div>
+</div>
+<p>Check out report at <code class="docutils literal notranslate"><span class="pre">reports/another.html</span></code></p>
+</section>
+<section id="Hiding-cells">
+<h2>Hiding cells<a class="headerlink" href="#Hiding-cells" title="Permalink to this headline">¶</a></h2>
+<p>You may want to hide cells from the output notebook selectively. You can do so with the <code class="docutils literal notranslate"><span class="pre">TagRemovePreprocessor</span></code>, which takes a list of tags. Any cells with such tags are excluded:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Content of pipeline.yaml</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># notebooks as well</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tasks/notebook.ipynb</span><span class="w"></span>
+<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">another-html-report</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">reports/another.html</span><span class="w"></span>
+
+<span class="w">      </span><span class="nt">nbconvert_export_kwargs</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># optionally hide the code from the report</span><span class="w"></span>
+<span class="w">        </span><span class="nt">exclude_input</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span><span class="w"></span>
+
+<span class="w">        </span><span class="c1"># optionally, exclude cells with certain tags</span><span class="w"></span>
+<span class="w">        </span><span class="nt">config</span><span class="p">:</span><span class="w"></span>
+<span class="w">          </span><span class="nt">HTMLExporter</span><span class="p">:</span><span class="w"></span>
+<span class="w">            </span><span class="nt">preprocessors</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">nbconvert.preprocessors.TagRemovePreprocessor</span><span class="p p-Indicator">]</span><span class="w"></span>
+<span class="w">          </span><span class="nt">TagRemovePreprocessor</span><span class="p">:</span><span class="w"></span>
+<span class="w">            </span><span class="nt">remove_cell_tags</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">boxplot</span><span class="p p-Indicator">]</span><span class="w"></span>
+</pre></div>
+</div>
+<p>To learn how to add cell tags, <a class="reference external" href="https://ploomber.io/s/tags">see this.</a></p>
+<p>Runnable example:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># get example</span>
+pip install ploomber <span class="s2">&quot;nbconvert[webpdf]&quot;</span> --upgrade
+ploomber examples -n cookbook/report-generation -o example
+<span class="nb">cd</span> example
+
+<span class="c1"># install example dependencies</span>
+ploomber install
+
+<span class="c1"># generate HTML report and hide boxplot</span>
+ploomber task another-html-report
+</pre></div>
+</div>
+<p>Check out report at <code class="docutils literal notranslate"><span class="pre">reports/another.html</span></code></p>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Report generation</a><ul>
+<li><a class="reference internal" href="#HTML-reports-(easiest-option)">HTML reports (easiest option)</a></li>
+<li><a class="reference internal" href="#PDF-reports">PDF reports</a><ul>
+<li><a class="reference internal" href="#Using-chromium-(easiest-pdf-option)">Using chromium (easiest pdf option)</a></li>
+<li><a class="reference internal" href="#Using-TeX">Using TeX</a><ul>
+<li><a class="reference internal" href="#Installing-TeX">Installing TeX</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Hiding-code">Hiding code</a></li>
+<li><a class="reference internal" href="#Hiding-cells">Hiding cells</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

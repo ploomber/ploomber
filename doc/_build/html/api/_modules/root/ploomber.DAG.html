@@ -1,0 +1,589 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>ploomber.DAG &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/mermaid-layout.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/custom.js"></script>
+    <script src="../../../_static/js/mermaid.min.js"></script>
+    <script src="../../../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ploomber.OnlineModel" href="ploomber.OnlineModel.html" />
+    <link rel="prev" title="Python API" href="../../python_api.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../../../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../../../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../../../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../../../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../../../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../spec.html">Spec API (<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cli.html">Command line interface</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../python_api.html">Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../testing.html">Testing utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+api%2F_modules%2Froot%2Fploomber.DAG"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="ploomber-dag">
+<h1>ploomber.DAG<a class="headerlink" href="#ploomber-dag" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="ploomber.DAG">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ploomber.</span></span><span class="sig-name descname"><span class="pre">DAG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clients</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">executor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'serial'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.DAG" title="Permalink to this definition">¶</a></dt>
+<dd><p>A collection of tasks with dependencies</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – A name to identify this DAG</p></li>
+<li><p><strong>clients</strong> (<em>dict</em><em>, </em><em>optional</em>) – A dictionary with classes as keys and clients as values, can be
+later modified using dag.clients[dag] = client</p></li>
+<li><p><strong>differ</strong> (<em>CodeDiffer</em>) – An object to determine whether two pieces of code are the same and
+to output a diff, defaults to CodeDiffer() (default parameters)</p></li>
+<li><p><strong>executor</strong> (<em>str</em><em> or </em><em>ploomber.executors instance</em><em>, </em><em>optional</em>) – The executor to use (ploomber.executors.Serial and
+ploomber.executors.Parallel), is a string is passed (‘serial’
+or ‘parallel’) the corresponding executor is initialized with default
+parameters</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ploomber.DAG.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#ploomber.DAG.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>A name to identify the DAG</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ploomber.DAG.clients">
+<span class="sig-name descname"><span class="pre">clients</span></span><a class="headerlink" href="#ploomber.DAG.clients" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to client mapping</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ploomber.DAG.executor">
+<span class="sig-name descname"><span class="pre">executor</span></span><a class="headerlink" href="#ploomber.DAG.executor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executor object to run tasks</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ploomber.Executor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ploomber.DAG.on_render">
+<span class="sig-name descname"><span class="pre">on_render</span></span><a class="headerlink" href="#ploomber.DAG.on_render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to execute upon rendering. Can request a “dag” parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ploomber.DAG.on_finish">
+<span class="sig-name descname"><span class="pre">on_finish</span></span><a class="headerlink" href="#ploomber.DAG.on_finish" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to execute upon execution. Can request a “dag” parameter
+and/or “report”, which contains the report object returned by the
+build function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ploomber.DAG.on_failure">
+<span class="sig-name descname"><span class="pre">on_failure</span></span><a class="headerlink" href="#ploomber.DAG.on_failure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to execute upon failure. Can request a “dag” parameter and/or
+“traceback” which will contain a dictionary, possible keys are “build”
+which contains the build error traceback and “on_finish” which contains
+the on_finish hook traceback, if any.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ploomber.DAG.serializer">
+<span class="sig-name descname"><span class="pre">serializer</span></span><a class="headerlink" href="#ploomber.DAG.serializer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to serialize products from PythonCallable tasks. Used if the
+task has no serializer. See <code class="docutils literal notranslate"><span class="pre">ploombe.tasks.PythonCallable</span></code>
+documentation for details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ploomber.DAG.unserializer">
+<span class="sig-name descname"><span class="pre">unserializer</span></span><a class="headerlink" href="#ploomber.DAG.unserializer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to unserialize products from PythonCallable tasks. Used if the
+task has no serializer. See <code class="docutils literal notranslate"><span class="pre">ploombe.tasks.PythonCallable</span></code>
+documentation for details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<p>Spec API:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip install ploomber
+ploomber examples -n guides/first-pipeline -o example
+<span class="nb">cd</span> example
+pip install -r requirements.txt
+ploomber build
+</pre></div>
+</div>
+<p>Python API:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ploomber</span> <span class="kn">import</span> <span class="n">DAG</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ploomber.tasks</span> <span class="kn">import</span> <span class="n">ShellScript</span><span class="p">,</span> <span class="n">PythonCallable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ploomber.products</span> <span class="kn">import</span> <span class="n">File</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ploomber.executors</span> <span class="kn">import</span> <span class="n">Serial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">code</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;echo hi &gt; {{product[&#39;first&#39;]}}; &quot;</span>
+<span class="gp">... </span>        <span class="s2">&quot;echo bye &gt; {{product[&#39;second&#39;]}}&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;script.sh&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dag</span> <span class="o">=</span> <span class="n">DAG</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">Serial</span><span class="p">(</span><span class="n">build_in_subprocess</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">product</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;first&#39;</span><span class="p">:</span> <span class="n">File</span><span class="p">(</span><span class="s1">&#39;first.txt&#39;</span><span class="p">),</span> <span class="s1">&#39;second&#39;</span><span class="p">:</span> <span class="n">File</span><span class="p">(</span><span class="s1">&#39;second.txt&#39;</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shell</span> <span class="o">=</span> <span class="n">ShellScript</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;script.sh&#39;</span><span class="p">),</span> <span class="n">product</span><span class="p">,</span> <span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;script&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_task</span><span class="p">(</span><span class="n">upstream</span><span class="p">,</span> <span class="n">product</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">first</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">upstream</span><span class="p">[</span><span class="s1">&#39;script&#39;</span><span class="p">][</span><span class="s1">&#39;first&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">second</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">upstream</span><span class="p">[</span><span class="s1">&#39;script&#39;</span><span class="p">][</span><span class="s1">&#39;second&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">Path</span><span class="p">(</span><span class="n">product</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">first</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">second</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">callable</span> <span class="o">=</span> <span class="n">PythonCallable</span><span class="p">(</span><span class="n">my_task</span><span class="p">,</span> <span class="n">File</span><span class="p">(</span><span class="s1">&#39;final.txt&#39;</span><span class="p">),</span> <span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shell</span> <span class="o">&gt;&gt;</span> <span class="n">callable</span>
+<span class="go">PythonCallable: my_task -&gt; File(&#39;final.txt&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.DAG.build" title="ploomber.DAG.build"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build</span></code></a>([force, show_progress, debug, ...])</p></td>
+<td><p>Runs the DAG in order so that all upstream dependencies are run for every task</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.DAG.build_partially" title="ploomber.DAG.build_partially"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build_partially</span></code></a>(target[, force, ...])</p></td>
+<td><p>Partially build a dag until certain task</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.DAG.check_tasks_have_allowed_status" title="ploomber.DAG.check_tasks_have_allowed_status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_tasks_have_allowed_status</span></code></a>(allowed, ...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.DAG.close_clients" title="ploomber.DAG.close_clients"><code class="xref py py-obj docutils literal notranslate"><span class="pre">close_clients</span></code></a>()</p></td>
+<td><p>Close all clients (dag-level, task-level and product-level)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.DAG.get" title="ploomber.DAG.get"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code></a>(k[,d])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.DAG.get_downstream" title="ploomber.DAG.get_downstream"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_downstream</span></code></a>(task_name)</p></td>
+<td><p>Get downstream tasks for a given task name</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.DAG.items" title="ploomber.DAG.items"><code class="xref py py-obj docutils literal notranslate"><span class="pre">items</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.DAG.keys" title="ploomber.DAG.keys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">keys</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.DAG.plot" title="ploomber.DAG.plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></a>([output, include_products, backend])</p></td>
+<td><p>Plot the DAG</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.DAG.pop" title="ploomber.DAG.pop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop</span></code></a>(name)</p></td>
+<td><p>Remove a task from the dag</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.DAG.render" title="ploomber.DAG.render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render</span></code></a>([force, show_progress, remote])</p></td>
+<td><p>Render resolves all placeholders in tasks and determines whether a task should run or not based on the task.product metadata, this allows up-to-date tasks to be skipped</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.DAG.status" title="ploomber.DAG.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a>(**kwargs)</p></td>
+<td><p>Returns a table with tasks status</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.DAG.to_markup" title="ploomber.DAG.to_markup"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_markup</span></code></a>([path, fmt, sections])</p></td>
+<td><p>Returns a str (md or html) with the pipeline's description</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.DAG.values" title="ploomber.DAG.values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">values</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">close_clients</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.DAG.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the DAG in order so that all upstream dependencies are run for
+every task</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>force</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, it will run all tasks regardless of status, defaults to
+False</p></li>
+<li><p><strong>show_progress</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Show progress bar</p></li>
+<li><p><strong>debug</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Drop a debugging session if building raises an exception. Note that
+this modifies the executor, temporarily setting it to Serial
+with subprocess off and catching exceptions/warnings off. Restores
+the original executor at the end</p></li>
+<li><p><strong>close_clients</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Close all clients (dag-level, task-level and product-level) upon
+successful build</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>All dag-level clients are closed after calling this function</p>
+<p><code class="docutils literal notranslate"><span class="pre">debug</span></code> is useful to let a pipeline run and start debugging at a
+failing  PythonCallable task but it won’t work with failing
+<code class="docutils literal notranslate"><span class="pre">NotebookRunner</span></code> tasks because notebooks/scripts are executed in a
+different process. If you want to debug <code class="docutils literal notranslate"><span class="pre">NotebookRunner</span></code> tasks, use
+<code class="docutils literal notranslate"><span class="pre">NotebookRunner.debug()</span></code> instead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A dict-like object with tasks as keys and dicts with task
+status as values</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>BuildReport</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.build_partially">
+<span class="sig-name descname"><span class="pre">build_partially</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_upstream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.DAG.build_partially" title="Permalink to this definition">¶</a></dt>
+<dd><p>Partially build a dag until certain task</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<em>str</em>) – Name of the target task (last one to build). Can pass a wildcard
+such as ‘tasks-<a href="#id1"><span class="problematic" id="id2">*</span></a>’</p></li>
+<li><p><strong>force</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, it will run all tasks regardless of status, defaults to
+False</p></li>
+<li><p><strong>show_progress</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Show progress bar</p></li>
+<li><p><strong>debug</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Drop a debugging session if building raises an exception. Note that
+this modifies the executor and temporarily sets it to Serial
+with subprocess off and catching exceptions/warnings off. Restores
+the original executor at the end.</p></li>
+<li><p><strong>skip_upstream</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If False, includes all upstream dependencies required to build
+target, otherwise it skips them. Note that if this is True and
+it’s not possible to build a given task (e.g., missing upstream
+products), this will fail</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.check_tasks_have_allowed_status">
+<span class="sig-name descname"><span class="pre">check_tasks_have_allowed_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">allowed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_status</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.DAG.check_tasks_have_allowed_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.close_clients">
+<span class="sig-name descname"><span class="pre">close_clients</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.DAG.close_clients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close all clients (dag-level, task-level and product-level)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="optional">]</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">D[k]</span> <span class="pre">if</span> <span class="pre">k</span> <span class="pre">in</span> <span class="pre">D,</span> <span class="pre">else</span> <span class="pre">d.</span>&#160; <span class="pre">d</span> <span class="pre">defaults</span> <span class="pre">to</span> <span class="pre">None.</span></span></span><a class="headerlink" href="#ploomber.DAG.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.get_downstream">
+<span class="sig-name descname"><span class="pre">get_downstream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.DAG.get_downstream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get downstream tasks for a given task name</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.items">
+<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">a</span> <span class="pre">set-like</span> <span class="pre">object</span> <span class="pre">providing</span> <span class="pre">a</span> <span class="pre">view</span> <span class="pre">on</span> <span class="pre">D's</span> <span class="pre">items</span></span></span><a class="headerlink" href="#ploomber.DAG.items" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.keys">
+<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">a</span> <span class="pre">set-like</span> <span class="pre">object</span> <span class="pre">providing</span> <span class="pre">a</span> <span class="pre">view</span> <span class="pre">on</span> <span class="pre">D's</span> <span class="pre">keys</span></span></span><a class="headerlink" href="#ploomber.DAG.keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'embed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_products</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.DAG.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the DAG</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> (<em>str</em><em>, </em><em>default='embed'</em>) – Where to save the output (e.g., pipeline.png). If ‘embed’, it
+returns an IPython image instead.</p></li>
+<li><p><strong>include_products</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If False, each node only contains the task name, if True
+if contains the task name and products. Only available when using
+the pygraphviz backend</p></li>
+<li><p><strong>backend</strong> (<em>str</em><em>, </em><em>default=None</em>) – How to generate the plot, if None it uses pygraphviz if installed,
+otherwise it uses D3 (which doesn’t require extra dependencies),
+you can force to use a backend by passing ‘pygraphviz’ or ‘d3’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.pop">
+<span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.DAG.pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a task from the dag</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.DAG.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Render resolves all placeholders in tasks and determines whether
+a task should run or not based on the task.product metadata, this
+allows up-to-date tasks to be skipped</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>force</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Ignore product metadata status and prepare all tasks to be
+executed. This option renders much faster in DAGs with products
+whose metadata is stored in remote systems, because there is no
+need to fetch metadata over the network. If the DAG won’t be
+built, this option is recommended.</p></li>
+<li><p><strong>show_progress</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Show progress bar</p></li>
+<li><p><strong>remote</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Use remote metadata for determining task status. In most scenarios,
+you want this to be False, Ploomber uses this internally when
+exporting pipelines to other platforms (via Soopervisor).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.DAG.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a table with tasks status</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.to_markup">
+<span class="sig-name descname"><span class="pre">to_markup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'html'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.DAG.to_markup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a str (md or html) with the pipeline’s description</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sections</strong> (<em>list</em>) – Which sections to include, possible values are “plot”, “status”
+and “source”. Defaults to [“plot”, “status”]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.DAG.values">
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">an</span> <span class="pre">object</span> <span class="pre">providing</span> <span class="pre">a</span> <span class="pre">view</span> <span class="pre">on</span> <span class="pre">D's</span> <span class="pre">values</span></span></span><a class="headerlink" href="#ploomber.DAG.values" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.DAG.clients" title="ploomber.DAG.clients"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clients</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.DAG.executor" title="ploomber.DAG.executor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">executor</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">product</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

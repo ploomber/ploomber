@@ -1,0 +1,397 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Other editors (VSCode, PyCharm, etc.) &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="R support" href="r-support.html" />
+    <link rel="prev" title="Shell tasks" href="shell.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="templates.html">Downloading templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Jupyter integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html">Scaffolding projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring.html">Refactoring legacy notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametrized.html">Parametrized pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html">SQL Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html">SQL templating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Pipeline testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html">Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shell.html">Shell tasks</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Other editors (VSCode, PyCharm, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html">R support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html">FAQ and Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html">Spec API vs. Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+user-guide%2Feditors"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="other-editors-vscode-pycharm-etc">
+<h1>Other editors (VSCode, PyCharm, etc.)<a class="headerlink" href="#other-editors-vscode-pycharm-etc" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This feature requires Ploomber <code class="docutils literal notranslate"><span class="pre">0.14</span></code> or higher.</p>
+</div>
+<p>Ploomber can be entirely operated from the command-line, thus,
+independent of your text editor or IDE of choice. However, Ploomber comes with a
+Jupyter plugin that streamlines development via the cell injection process
+(to learn more about cell injection, <a class="reference internal" href="jupyter.html"><span class="doc">click here</span></a>).</p>
+<p>If you’re not using Jupyter, you can still leverage the cell injection
+feature. Depending on your text editor/IDE capabilities, you may choose one of
+these options:</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="#percent-format"><span class="std std-ref">Use the percent format in .py files</span></a> (recommended)</p></li>
+<li><p><a class="reference internal" href="#pairing-ipynb"><span class="std std-ref">Pair .py files with .ipynb files</span></a> (recommended if your editor does not support the <code class="docutils literal notranslate"><span class="pre">percent</span></code> format or if you’re running an old <code class="docutils literal notranslate"><span class="pre">JupyterLab</span> <span class="pre">1.x</span></code> version)</p></li>
+<li><p><a class="reference internal" href="#ipynb-as-sources"><span class="std std-ref">Use .ipynb files as sources</span></a></p></li>
+</ol>
+<p>To try out this feature, download our <code class="docutils literal notranslate"><span class="pre">ml-basic</span></code> example:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber examples -n templates/ml-basic -o ml-basic</span>
+</pre></div>
+</div>
+<p>Then move to the <code class="docutils literal notranslate"><span class="pre">ml-basic/</span></code> directory.</p>
+<section id="using-the-percent-format">
+<span id="percent-format"></span><h2>Using the <code class="docutils literal notranslate"><span class="pre">percent</span></code> format<a class="headerlink" href="#using-the-percent-format" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Editors such as <strong>VSCode, PyCharm, Spyder, and Atom (via Hydrogen)</strong> support
+the percent format.</p>
+</div>
+<p>The percent format allows you to represent <code class="docutils literal notranslate"><span class="pre">.py</span></code> files as notebooks by
+separating cells using <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">%%</span></code>:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># %%</span>
+<span class="c1"># first cell</span>
+<span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="c1"># %%</span>
+<span class="c1"># second cell</span>
+<span class="n">y</span> <span class="o">=</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>The first step is to ensure that your scripts are in the percent
+format. You can re-format all of them with the following command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber nb --format py:percent</span>
+</pre></div>
+</div>
+<p>If you’re following this using our <code class="docutils literal notranslate"><span class="pre">ml-basic</span></code> example, you can run
+such command, then open <code class="docutils literal notranslate"><span class="pre">fit.py</span></code> and see that the cells are delimited by
+<code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">%%</span></code>.</p>
+<p id="manual-cell-injection">Now, let’s inject the cell into each script manually:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber nb --inject</span>
+</pre></div>
+</div>
+<p>If you open any of your pipeline scripts, you’ll see the injected cell. If
+you’re following this with our <code class="docutils literal notranslate"><span class="pre">ml-basic</span></code> example; you’ll notice that
+after running <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">nb</span> <span class="pre">--inject</span></code>, the <code class="docutils literal notranslate"><span class="pre">fit.py</span></code> file has a few new
+lines:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># %% tags=[&quot;injected-parameters&quot;]</span>
+<span class="n">upstream</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;join&quot;</span><span class="p">:</span> <span class="s2">&quot;output/join.parquet&quot;</span><span class="p">}</span>
+
+<span class="n">product</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;nb&quot;</span><span class="p">:</span> <span class="s2">&quot;output/nb.ipynb&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="s2">&quot;output/model.pickle&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In our <code class="docutils literal notranslate"><span class="pre">ml-basic</span></code> example, <code class="docutils literal notranslate"><span class="pre">fit.py</span></code> depends on the <code class="docutils literal notranslate"><span class="pre">join</span></code> task, which implies that
+<code class="docutils literal notranslate"><span class="pre">fit.py</span></code> will use the output of <code class="docutils literal notranslate"><span class="pre">join</span></code> as input. Once you inject the cell,
+you’ll see that Ploomber extracted the outputs of <code class="docutils literal notranslate"><span class="pre">join</span></code> and added them to
+<code class="docutils literal notranslate"><span class="pre">fit.py</span></code>, now <code class="docutils literal notranslate"><span class="pre">fit.py</span></code> is complete, and you can run it interactively
+without hardcoding paths.</p>
+<p>To test this, run <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">build</span></code> in a terminal to
+generate all the outputs, then open <code class="docutils literal notranslate"><span class="pre">fit.py</span></code> and start running the script
+(if you’re on VSCode, you can click on the <code class="docutils literal notranslate"><span class="pre">Run</span> <span class="pre">Cell</span></code> button at the beginning
+of each cell). The following image shows the <code class="docutils literal notranslate"><span class="pre">fit.py</span></code> (left)
+and the interactive output (right) on VSCode:</p>
+<a class="reference external image-reference" href="https://ploomber.io/images/doc/editors-vscode-executed.png"><img alt="editors-vscode-executed" src="https://ploomber.io/images/doc/editors-vscode-executed.png" /></a>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Remember to run <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">nb</span> <span class="pre">--inject</span></code> whenever you change
+your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>. You can set up a file watcher for <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>.
+<a class="reference external" href="https://marketplace.visualstudio.com/items?itemName=appulate.filewatcher">Click here for a VSCode extension</a>,
+or <a class="reference external" href="https://www.jetbrains.com/help/pycharm/using-file-watchers.html">here for a PyCharm example</a>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>By default, Ploomber deletes the injected cell when you save a
+script/notebook from Jupyter; however, if you injected it via the
+<code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">nb</span> <span class="pre">--inject</span></code> command, this is disabled, and saving the
+script/notebook will not remove the injected cell.</p>
+</div>
+</section>
+<section id="pairing-ipynb-files">
+<span id="pairing-ipynb"></span><h2>Pairing <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> files<a class="headerlink" href="#pairing-ipynb-files" title="Permalink to this headline">¶</a></h2>
+<p>If your editor does not support the percent format, or if running and old
+<code class="docutils literal notranslate"><span class="pre">JupyterLab</span> <span class="pre">1.x</span></code> version (e.g., if using <strong>Amazon Sagemaker</strong>),
+you can pair <code class="docutils literal notranslate"><span class="pre">.py</span></code> and <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> files: this creates a synced <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code>
+copy of each <code class="docutils literal notranslate"><span class="pre">.py</span></code> task.</p>
+<p>Say you have a pipeline with <code class="docutils literal notranslate"><span class="pre">.py</span></code> files, to create the <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> ones:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber nb --pair notebooks</span>
+</pre></div>
+</div>
+<p>The command above will generate <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> files in a <code class="docutils literal notranslate"><span class="pre">notebooks/</span></code> directory,
+one per <code class="docutils literal notranslate"><span class="pre">.py</span></code> in your pipeline. If you’re following the <code class="docutils literal notranslate"><span class="pre">ml-basic</span></code> example,
+you’ll see that a new <code class="docutils literal notranslate"><span class="pre">notebooks/fit.ipynb</span></code> file will appear after running
+the previous command. Now, add the injected cell: <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">nb</span> <span class="pre">--inject</span></code> (more details in the the
+<a class="reference internal" href="#manual-cell-injection"><span class="std std-ref">previous section</span></a>).</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Keep your repository clean by adding the <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> files to your
+<code class="docutils literal notranslate"><span class="pre">.gitignore</span></code> file.</p>
+</div>
+<p>Once you modify the  <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code>, you can sync their  <code class="docutils literal notranslate"><span class="pre">.py</span></code> pairs with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber nb --sync</span>
+</pre></div>
+</div>
+<p>The following image shows the <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> / <code class="docutils literal notranslate"><span class="pre">.py</span></code> pair after running the sync
+command:</p>
+<a class="reference external image-reference" href="https://ploomber.io/images/doc/editors-paired.png"><img alt="editors-paired" src="https://ploomber.io/images/doc/editors-paired.png" /></a>
+<p>If you’re following this using the <code class="docutils literal notranslate"><span class="pre">ml-basic</span></code> command, modify
+<code class="docutils literal notranslate"><span class="pre">notebooks/fit.ipynb</span></code> (e.g., add a comment in the first cell), run
+<code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">nb</span> <span class="pre">--sync</span></code>, and then open <code class="docutils literal notranslate"><span class="pre">fit.py</span></code>, you’ll see that the change
+made to the <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> file is now visible in the <code class="docutils literal notranslate"><span class="pre">fit.py</span></code> file.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you want the <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">nb</span> <span class="pre">--sync</span></code> command to run automatically before
+you run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span></code>, check out the <a class="reference internal" href="#git-hooks"><span class="std std-ref">git hooks</span></a> section.</p>
+</div>
+</section>
+<section id="using-ipynb-as-sources">
+<span id="ipynb-as-sources"></span><h2>Using <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> as sources<a class="headerlink" href="#using-ipynb-as-sources" title="Permalink to this headline">¶</a></h2>
+<p>As a last option, you have the option to use <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> files as task sources
+in your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nbs/load.ipynb</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/report.ipynb</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Keep in mind that <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> files are hard to manage with git, so we recommend
+you to use one of the alternative options described above.</p>
+<p>To add the injected cell, follow the instructions from the
+<a class="reference internal" href="#manual-cell-injection"><span class="std std-ref">previous section</span></a>.</p>
+</section>
+<section id="removing-the-injected-cell">
+<h2>Removing the injected cell<a class="headerlink" href="#removing-the-injected-cell" title="Permalink to this headline">¶</a></h2>
+<p>If you wish to remove the injected cell from all scripts/notebooks:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber nb --remove</span>
+</pre></div>
+</div>
+</section>
+<section id="using-git-hooks">
+<span id="git-hooks"></span><h2>Using <code class="docutils literal notranslate"><span class="pre">git</span></code> hooks<a class="headerlink" href="#using-git-hooks" title="Permalink to this headline">¶</a></h2>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">nb</span> <span class="pre">--install-hook</span></code> does not work on Windows</p>
+</div>
+<p>To keep your scripts/notebooks clean, it’s a good idea to keep the injected
+cell out of version control.</p>
+<p>To automate injecting/removing, you can install git hooks that automatically
+remove the injected cells before committing files and inject them again after
+committing:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber nb --install-hook</span>
+</pre></div>
+</div>
+<p>To uninstall the hooks:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber nb --uninstall-hook</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Other editors (VSCode, PyCharm, etc.)</a><ul>
+<li><a class="reference internal" href="#using-the-percent-format">Using the <code class="docutils literal notranslate"><span class="pre">percent</span></code> format</a></li>
+<li><a class="reference internal" href="#pairing-ipynb-files">Pairing <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> files</a></li>
+<li><a class="reference internal" href="#using-ipynb-as-sources">Using <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> as sources</a></li>
+<li><a class="reference internal" href="#removing-the-injected-cell">Removing the injected cell</a></li>
+<li><a class="reference internal" href="#using-git-hooks">Using <code class="docutils literal notranslate"><span class="pre">git</span></code> hooks</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

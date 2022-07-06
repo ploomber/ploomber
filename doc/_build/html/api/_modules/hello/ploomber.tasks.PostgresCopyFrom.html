@@ -1,0 +1,396 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>ploomber.tasks.PostgresCopyFrom &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/mermaid-layout.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/custom.js"></script>
+    <script src="../../../_static/js/mermaid.min.js"></script>
+    <script src="../../../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="ploomber.tasks.ShellScript" href="ploomber.tasks.ShellScript.html" />
+    <link rel="prev" title="ploomber.tasks.SQLUpload" href="ploomber.tasks.SQLUpload.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../../../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../../../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../../../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../../../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../../../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../spec.html">Spec API (<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cli.html">Command line interface</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../python_api.html">Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../testing.html">Testing utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+api%2F_modules%2Fhello%2Fploomber.tasks.PostgresCopyFrom"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="ploomber-tasks-postgrescopyfrom">
+<h1>ploomber.tasks.PostgresCopyFrom<a class="headerlink" href="#ploomber-tasks-postgrescopyfrom" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="ploomber.tasks.PostgresCopyFrom">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ploomber.tasks.</span></span><span class="sig-name descname"><span class="pre">PostgresCopyFrom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.tasks.PostgresCopyFrom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Efficiently copy data to a postgres database using COPY FROM (faster
+alternative to SQLUpload for postgres). If using SQLAlchemy client
+for postgres is psycopg2. Replaces the table if exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> (<em>str</em><em> or </em><em>pathlib.Path</em>) – Path to parquet file to upload</p></li>
+<li><p><strong>client</strong> (<a class="reference internal" href="../clients/ploomber.clients.SQLAlchemyClient.html#ploomber.clients.SQLAlchemyClient" title="ploomber.clients.SQLAlchemyClient"><em>ploomber.clients.SQLAlchemyClient</em></a><em>, </em><em>optional</em>) – The client used to connect to the database and where the data will be
+uploaded. Only required
+if no dag-level client has been declared using dag.clients[class]</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Although this task does not depend on pandas for data i/o, it still
+needs it to dynamically create the table, after the table is created
+the COPY statement is used to upload the data</p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.tasks.PostgresCopyFrom.build" title="ploomber.tasks.PostgresCopyFrom.build"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build</span></code></a>([force, catch_exceptions])</p></td>
+<td><p>Build a single task</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.tasks.PostgresCopyFrom.debug" title="ploomber.tasks.PostgresCopyFrom.debug"><code class="xref py py-obj docutils literal notranslate"><span class="pre">debug</span></code></a>()</p></td>
+<td><p>Debug task, only implemented in certain tasks</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.tasks.PostgresCopyFrom.develop" title="ploomber.tasks.PostgresCopyFrom.develop"><code class="xref py py-obj docutils literal notranslate"><span class="pre">develop</span></code></a>()</p></td>
+<td><p>Develop task, only implemented in certain tasks</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.tasks.PostgresCopyFrom.load" title="ploomber.tasks.PostgresCopyFrom.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code></a>()</p></td>
+<td><p>Load task as pandas.DataFrame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.tasks.PostgresCopyFrom.render" title="ploomber.tasks.PostgresCopyFrom.render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render</span></code></a>([force, outdated_by_code, remote])</p></td>
+<td><p>Renders code and product, all upstream tasks must have been rendered first, for that reason, this method will usually not be called directly but via DAG.render(), which renders in the right order.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.tasks.PostgresCopyFrom.run" title="ploomber.tasks.PostgresCopyFrom.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>()</p></td>
+<td><p>This is the only required method Task subclasses must implement</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ploomber.tasks.PostgresCopyFrom.set_upstream" title="ploomber.tasks.PostgresCopyFrom.set_upstream"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_upstream</span></code></a>(other[, group_name])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ploomber.tasks.PostgresCopyFrom.status" title="ploomber.tasks.PostgresCopyFrom.status"><code class="xref py py-obj docutils literal notranslate"><span class="pre">status</span></code></a>([return_code_diff, sections])</p></td>
+<td><p>Prints the current task status</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.tasks.PostgresCopyFrom.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catch_exceptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.tasks.PostgresCopyFrom.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a single task</p>
+<p>Although Tasks are primarily designed to execute via DAG.build(), it
+is possible to do so in isolation. However, this only works if the
+task does not have any unrendered upstream dependencies, if that’s the
+case, you should call DAG.render() before calling Task.build()</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A dictionary with keys ‘run’ and ‘elapsed’</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>TaskBuildError</strong> – If the error failed to build because it has upstream dependencies,
+    the build itself failed or build succeded but on_finish hook failed</p></li>
+<li><p><strong>DAGBuildEarlyStop</strong> – If any task or on_finish hook raises a DAGBuildEarlyStop error</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.tasks.PostgresCopyFrom.debug">
+<span class="sig-name descname"><span class="pre">debug</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.tasks.PostgresCopyFrom.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Debug task, only implemented in certain tasks</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.tasks.PostgresCopyFrom.develop">
+<span class="sig-name descname"><span class="pre">develop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.tasks.PostgresCopyFrom.develop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Develop task, only implemented in certain tasks</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.tasks.PostgresCopyFrom.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.tasks.PostgresCopyFrom.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load task as pandas.DataFrame. Only implemented in certain tasks</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.tasks.PostgresCopyFrom.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outdated_by_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.tasks.PostgresCopyFrom.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders code and product, all upstream tasks must have been rendered
+first, for that reason, this method will usually not be called
+directly but via DAG.render(), which renders in the right order.</p>
+<p>Render fully determines whether a task should run or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>force</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, mark status as WaitingExecution/WaitingUpstream even if
+the task is up-to-date (if there are any File(s) with clients, this
+also ignores the status of the remote copy), otherwise, the normal
+process follows and only up-to-date tasks are marked as Skipped.</p></li>
+<li><p><strong>outdated_by_code</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Factors to determine if Task.product is marked outdated when source
+code changes. Otherwise just the upstream timestamps are used.</p></li>
+<li><p><strong>remote</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Use remote metadata to determine status</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This method tries to avoid calls to check for product status whenever
+possible, since checking product’s metadata can be a slow operation
+(e.g. if metadata is stored in a remote database)</p>
+<p>When passing force=True, product’s status checking is skipped
+altogether, this can be useful when we only want to quickly get
+a rendered DAG object to interact with it</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.tasks.PostgresCopyFrom.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.tasks.PostgresCopyFrom.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the only required method Task subclasses must implement</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.tasks.PostgresCopyFrom.set_upstream">
+<span class="sig-name descname"><span class="pre">set_upstream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.tasks.PostgresCopyFrom.set_upstream" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ploomber.tasks.PostgresCopyFrom.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_code_diff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ploomber.tasks.PostgresCopyFrom.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints the current task status</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sections</strong> (<em>list</em><em>, </em><em>optional</em>) – Sections to include. Defaults to “name”, “last_run”,
+“oudated”, “product”, “doc”, “location”</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PRODUCT_CLASSES_ALLOWED</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">client</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">exec_status</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></p></td>
+<td><p>A str that represents the name of the task, you can access tasks in a dag using dag['some_name']</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_failure</span></code></p></td>
+<td><p>Callable to be executed if task fails (passes Task as first parameter and the exception as second parameter)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_finish</span></code></p></td>
+<td><p>Callable to be executed after this task is built successfully (passes Task as first parameter)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_render</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">params</span></code></p></td>
+<td><p>dict that holds the parameter that will be passed to the task upon execution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">product</span></code></p></td>
+<td><p>The product this task will create upon execution</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">source</span></code></p></td>
+<td><p>Source is used by the task to compute its output, for most cases this is source code, for example PythonCallable takes a function as source and SQLScript takes a string with SQL code as source.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">upstream</span></code></p></td>
+<td><p>A mapping for upstream dependencies {task name} -&gt; [task object]</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

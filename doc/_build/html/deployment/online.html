@@ -1,0 +1,333 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Online service (API) &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Large-scale training" href="large-scale-training.html" />
+    <link rel="prev" title="Batch processing" href="batch.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Deployment</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="batch.html">Batch processing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Online service (API)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="large-scale-training.html">Large-scale training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom.html">Custom deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+deployment%2Fonline"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="online-service-api">
+<h1>Online service (API)<a class="headerlink" href="#online-service-api" title="Permalink to this headline">¶</a></h1>
+<p>To encapsulate all your pipeline’s logic for online predictions, use
+<a class="reference internal" href="../api/_modules/root/ploomber.OnlineDAG.html#ploomber.OnlineDAG" title="ploomber.OnlineDAG"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.OnlineDAG</span></code></a>. Once implemented, you can generate predictions
+like this:</p>
+<div class="text-editor highlight-python notranslate" id="online-py"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">my_project</span> <span class="kn">import</span> <span class="n">MyOnlineDAG</span>
+
+<span class="c1"># MyOnlineDAG is a subclass of OnlineDAG</span>
+<span class="n">dag</span> <span class="o">=</span> <span class="n">MyOnlineDAG</span><span class="p">()</span>
+<span class="n">dag</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="n">input_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can easily integrate an online DAG with any library such as Flask or gRPC.</p>
+<p>The only requisite is that your feature generation code should be entirely
+made of Python functions (i.e., <a class="reference internal" href="../api/_modules/tasks/ploomber.tasks.PythonCallable.html#ploomber.tasks.PythonCallable" title="ploomber.tasks.PythonCallable"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.tasks.PythonCallable</span></code></a>) tasks
+with configured <a class="reference internal" href="../api/spec.html#serializer-and-unserializer"><span class="std std-ref">serializer and unserializer</span></a>.</p>
+<section id="composing-online-pipelines">
+<h2>Composing online pipelines<a class="headerlink" href="#composing-online-pipelines" title="Permalink to this headline">¶</a></h2>
+<p>To create an online DAG, list your feature tasks in a <code class="docutils literal notranslate"><span class="pre">features.yaml</span></code> and
+use <code class="docutils literal notranslate"><span class="pre">import_tasks_from</span></code> in your training pipeline (<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>).
+Subclass <a class="reference internal" href="../api/_modules/root/ploomber.OnlineDAG.html#ploomber.OnlineDAG" title="ploomber.OnlineDAG"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ploomber.OnlineDAG</span></code></a> to create a serving pipeline.</p>
+<p><code class="docutils literal notranslate"><span class="pre">OnlineDAG</span></code> will take your tasks from <code class="docutils literal notranslate"><span class="pre">features.yaml</span></code> and create
+new “input tasks” based on <code class="docutils literal notranslate"><span class="pre">upstream</span></code> references in yout feature tasks.</p>
+<p>For example, if <code class="docutils literal notranslate"><span class="pre">features.yaml</span></code> has tasks <code class="docutils literal notranslate"><span class="pre">a_feature</span></code> and
+<code class="docutils literal notranslate"><span class="pre">another_feature</span></code> (see the diagram in the first section), and both obtain
+their inputs from a task named <code class="docutils literal notranslate"><span class="pre">get</span></code>; the source code may look like this:</p>
+<div class="text-editor highlight-py notranslate" id="features-py"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">a_feature</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
+    <span class="n">raw_data</span> <span class="o">=</span> <span class="n">upstream</span><span class="p">[</span><span class="s1">&#39;get&#39;</span><span class="p">]</span>
+    <span class="c1"># process raw_data to generate features...</span>
+    <span class="c1"># return a_feature</span>
+    <span class="k">return</span> <span class="n">df_a_feature</span>
+
+<span class="k">def</span> <span class="nf">another_feature</span><span class="p">(</span><span class="n">upstream</span><span class="p">):</span>
+    <span class="n">raw_data</span> <span class="o">=</span> <span class="n">upstream</span><span class="p">[</span><span class="s1">&#39;get&#39;</span><span class="p">]</span>
+    <span class="c1"># process raw_data to generate features...</span>
+    <span class="c1"># return another_feature</span>
+    <span class="k">return</span> <span class="n">df_another_feature</span>
+</pre></div>
+</div>
+<p>Since <code class="docutils literal notranslate"><span class="pre">features.yaml</span></code> does not contain a task named <code class="docutils literal notranslate"><span class="pre">get</span></code>, <code class="docutils literal notranslate"><span class="pre">OnlineDAG</span></code>
+automatically identifies it as an “input task”. Finally, you must provide a
+“terminal task”, which is the last task in your online pipeline:</p>
+<div class="mermaid">
+graph LR
+    A[Input] --> B1[A feature] --> C[Terminal task]
+    A --> B2[Another feature] --> C
+    subgraph Feature engineering
+    B1
+    B2
+    end
+
+</div><p>To implement this, create a subclass of <code class="docutils literal notranslate"><span class="pre">OnlineDAG</span></code> and provide the path
+to your <code class="docutils literal notranslate"><span class="pre">features.yaml</span></code>, parameters for your terminal task and the terminal
+task:</p>
+<div class="text-editor highlight-py notranslate" id="online-dag-py"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber</span> <span class="kn">import</span> <span class="n">OnlineDAG</span>
+
+<span class="c1"># subclass OnlineDAG...</span>
+<span class="k">class</span> <span class="nc">MyOnlineDAG</span><span class="p">(</span><span class="n">OnlineDAG</span><span class="p">):</span>
+    <span class="c1"># and provide these three methods...</span>
+
+    <span class="c1"># get_partial: returns a path to your feature tasks</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_partial</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s1">&#39;tasks-features.yaml&#39;</span>
+
+    <span class="c1"># terminal_params: returns a dictionary with parameters for the terminal task</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">terminal_params</span><span class="p">():</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">resources</span><span class="o">.</span><span class="n">read_binary</span><span class="p">(</span><span class="n">ml_online</span><span class="p">,</span> <span class="s1">&#39;model.pickle&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># terminal_task: implementation of your terminal task</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">terminal_task</span><span class="p">(</span><span class="n">upstream</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="c1"># receives all tasks with no downtream dependencies in</span>
+        <span class="c1"># tasks-features.yaml</span>
+        <span class="n">a_feature</span> <span class="o">=</span> <span class="n">upstream</span><span class="p">[</span><span class="s1">&#39;a_feature&#39;</span><span class="p">]</span>
+        <span class="n">another_feature</span> <span class="o">=</span> <span class="n">upstream</span><span class="p">[</span><span class="s1">&#39;another_feature&#39;</span><span class="p">]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;a_feature&#39;</span><span class="p">:</span> <span class="n">a_feature</span><span class="p">,</span>
+                          <span class="s1">&#39;anoter_feature&#39;</span><span class="p">:</span> <span class="n">anoter_feature</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To call <code class="docutils literal notranslate"><span class="pre">MyOnlineDAG</span></code>:</p>
+<div class="text-editor highlight-python notranslate" id="id1"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">my_project</span> <span class="kn">import</span> <span class="n">MyOnlineDAG</span>
+
+<span class="n">dag</span> <span class="o">=</span> <span class="n">MyOnlineDAG</span><span class="p">()</span>
+
+<span class="c1"># pass parameters (one per input)</span>
+<span class="n">prediction</span> <span class="o">=</span> <span class="n">dag</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">get</span><span class="o">=</span><span class="n">input_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can import and call <code class="docutils literal notranslate"><span class="pre">MyOnlineDAG</span></code> in any framework (e.g., Flask) to
+expose your pipeline as an online service.</p>
+<div class="text-editor highlight-python notranslate" id="micro-service-py"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">jsonify</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">my_project</span> <span class="kn">import</span> <span class="n">OnlineDAG</span>
+
+<span class="c1"># instantiate online dag</span>
+<span class="n">dag</span> <span class="o">=</span> <span class="n">OnlineDAG</span><span class="p">()</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">predict</span><span class="p">():</span>
+    <span class="n">request_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">()</span>
+    <span class="c1"># get JSON data and create a data frame with a single row</span>
+    <span class="n">input_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">request_data</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="c1"># pass input data, argument per root node</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">get</span><span class="o">=</span><span class="n">input_data</span><span class="p">)</span>
+    <span class="c1"># return output from the terminal task</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s1">&#39;prediction&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s1">&#39;terminal&#39;</span><span class="p">])})</span>
+</pre></div>
+</div>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://soopervisor.readthedocs.io/en/latest/tutorials/aws-lambda.html">Click here</a> to
+see a deployment example using AWS Lambda.</p>
+<p><a class="reference external" href="https://github.com/ploomber/projects/tree/master/templates/ml-online">Click here</a> to
+see a complete sample project that trains a model and exposes an API via Flask.</p>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Online service (API)</a><ul>
+<li><a class="reference internal" href="#composing-online-pipelines">Composing online pipelines</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>

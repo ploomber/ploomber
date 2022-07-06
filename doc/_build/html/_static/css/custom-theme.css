@@ -1,0 +1,617 @@
+/* Based on https://codeeverywhere.ca/post.php?id=10 */
+
+/* Available code lexers in sphinx 
+https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCodeExamplesInSphinx.html
+*/
+
+.container-fluid {
+    padding-bottom: 15px;
+}
+
+.navbar {
+    background-color: black;
+}
+
+.highlight * {
+    margin: 0;
+    padding: 0;
+}
+
+.highlight {
+    background-color: black;
+}
+
+.highlight pre {
+    background-color: RGB(2, 3, 3);
+    padding: 10px;
+    color: white;
+}
+
+/* CSS to ignore selection of ">>>" and "..." in code snippets */ 
+
+.highlight .gp { 
+	user-select: none; 
+}
+
+.terminal-top {
+    background: #e8e6e8;
+    color: black;
+    padding: 5px;
+    border-radius: 5px 5px 0 0;
+    text-align: center;
+    font-size: 12px;
+}
+
+.btns {
+    padding-top: 3px;
+}
+
+.copy-message {
+    opacity: 0;
+}
+
+/* CSS for terminal-like code snippets */
+
+[class*="highlight-"] {
+    width: 80%;
+    position: relative;
+    margin: auto;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* CSS for notebook output cells */
+
+div.output_area [class*="highlight-"] {
+    width: 80%;
+    position: relative;
+    margin: 0;
+    padding: 5px;
+}
+
+/* Terminal window buttons shapes */
+
+.btns .circle {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    border-radius: 15px;
+    margin-left: 2px;
+    border-width: 1px;
+    border-style: solid;
+}
+
+/* Terminal window buttons colors */
+
+.red {
+    background: #ec6a5f;
+    border-color: #d04e42;
+}
+
+.green {
+    background: #64cc57;
+    border-color: #4ea73b;
+}
+
+.yellow {
+    background: #f5c04f;
+    border-color: #d6a13d;
+}
+
+/* Prompts to differentiate shell vs ipython */
+
+.ipynb-lexed::before {
+    content: "In []: ";
+    color: RGB(0, 200, 0);
+}
+
+pre> :not(:first-child).ipynb-lexed * {
+    margin-top: 1rem !important;
+}
+
+.shell-lexed::before {
+    content: "$ ";
+    color: RGB(0, 200, 0);
+}
+
+.toctree-wrapper ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.toctree-l1>a {
+    font-size: larger;
+    color: black;
+}
+
+.toctree-l1.current>a {
+    font-size: larger;
+    color: black;
+    font-weight: 800;
+}
+
+.toctree-l2>a {
+    color: gray;
+}
+
+.toctree-l2.current>a {
+    color: gray;
+    font-weight: 600;
+}
+
+.first-column ul {
+    list-style-type: none;
+    padding-left: 0px;
+}
+
+.first-column li {
+    padding-top: 3px;
+    padding-left: 5px;
+}
+
+.first-column {
+    border-right: 2px solid #eee;
+}
+
+/* sticky table of contents on 768px and larger */
+
+@media (min-width: 768px) {
+    .first-column {
+        position: sticky !important;
+        top: 3.5rem;
+        z-index: 100;
+        height: calc(100vh - 3.5rem);
+        display: block !important;
+    }
+}
+
+/* overlay table of contents on smaller screens */
+
+@media (max-width: 767px) {
+    .first-column {
+        position: fixed !important;
+        top: 3.5rem;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+        background-color: #fff;
+    }
+}
+
+.sphinxsidebarwrapper ul {
+    list-style-type: none;
+    padding-left: 0px;
+}
+
+.sphinxsidebarwrapper li {
+    padding-left: 5px;
+}
+
+div.document {
+    padding-left: 40px;
+}
+
+div.document .toctree-l1 {
+    font-size: large;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+div.document .toctree-l2 {
+    font-weight: 300;
+    padding-left: 1.5rem;
+}
+
+
+/* independent scrolling in table of contents */
+
+.global-toc {
+    max-height: calc(100vh - 7.5rem);
+    overflow-y: auto;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.global-toc::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.global-toc {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+/* help toltip (bottom left) */
+
+.help-tooltip {
+    position: absolute;
+    bottom: 0px;
+    background-color: #fff;
+    border-top: 2px solid #eee;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+.help-tooltip p {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+/* navigation bar (right) */
+
+.third-column {
+    position: sticky !important;
+    top: 3.5rem;
+    /* change z-index to make the readthedocs injected widget clickable */
+    z-index: 0;
+    height: calc(100vh - 3.5rem);
+}
+
+/* readthedocs injected widget */
+
+.rst-versions.rst-badge {
+    bottom: 15px !important;
+    /* put a higher z-index than .third-column so this works */
+    z-index: 1 !important;
+}
+
+div.sphinxsidebarwrapper {
+    border-left: 2px solid #eee;
+    padding-left: 0px;
+    padding-right: 8px;
+
+    /* independent scrolling in page contents bar */
+
+    max-height: calc(100vh - 3.5rem);
+    overflow-y: auto;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+div.sphinxsidebarwrapper::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+div.sphinxsidebarwrapper {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+div.sphinxsidebarwrapper>ul>li>a {
+    font-size: larger;
+    color: black;
+    font-weight: 800;
+}
+
+div.sphinxsidebarwrapper li li a {
+    color: gray;
+    font-weight: 300;
+    font-size: 100%;
+}
+
+div.sphinxsidebarwrapper li li li a {
+    font-size: 90%;
+}
+
+div.sphinxsidebarwrapper li li {
+    padding-left: 10px;
+}
+
+div.sphinxsidebarwrapper li li li {
+    padding-left: 15px;
+}
+
+a.headerlink {
+    color: white;
+}
+
+:target::before {
+    content: "";
+    display: block;
+    height: 48px;
+    margin-top: -48px;
+}
+
+a.headerlink:hover {
+    color: gray;
+}
+
+p {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    max-width: 90%;
+}
+
+p.lead {
+    font-size: 1.5rem;
+    font-weight: 300;
+}
+
+div.document img {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+div.document h1 {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    font-weight: 700;
+    font-size: 3rem;
+}
+
+div.document h2 {
+    padding-top: 20px;
+    font-size: 2rem;
+}
+
+div.document h3 {
+    padding-top: 10px;
+    font-size: 1.5rem;
+}
+
+div.document .section {
+    padding-left: 15px;
+}
+
+/* code (no links) or code with links but in toctree */
+code,
+div.document div.toctree-wrapper a.reference code {
+    color: #7d7d7d !important;
+}
+
+/* links to Python API docs */
+div.document a.reference code {
+    color: #007bff !important;
+}
+
+table.longtable {
+    width: 100%;
+}
+
+table.longtable td {
+    width: 50%;
+}
+
+table.longtable tr {
+    border-bottom: 2px solid #eee;
+}
+
+table.longtable p {
+    width: 100%;
+    margin-bottom: 0px;
+}
+
+div.body img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* notebooks (nbsphinx) */
+
+.output_area {
+    background-color: rgb(40, 40, 40) !important;
+    margin: 0px 10px 30px 10px !important;
+}
+
+.output_area .highlight pre {
+    color: white !important;
+}
+
+.input_area {
+    background-color: rgb(24, 24, 24) !important;
+    margin: 10px 10px 5px 10px !important;
+}
+
+.input_area .highlight pre {
+    color: white !important;
+}
+
+.prompt {
+    margin-top: 10px !important;
+}
+
+/* python documentation */
+
+dl.py {
+    margin-top: 3rem;
+}
+
+dl.py dl.py {
+    margin-top: 2rem;
+}
+
+dl.py dt {
+    font-size: 1.2rem;
+}
+
+dl.py dd dt {
+    font-size: 1rem;
+}
+
+dl.py dd {
+    padding-left: 1.2em;
+}
+
+/* sections (notes, examples, etc) */
+p.rubric {
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-decoration: underline;
+    margin-top: 2rem;
+}
+
+div.seealso {
+    max-width: 100%;
+    padding-left: 0;
+}
+
+div.seealso>p.admonition-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    text-decoration: underline;
+    margin-top: 2rem;
+}
+
+/* sections inside methods */
+
+.py>dd>dl>dd>p.rubric {
+    font-size: 1rem;
+}
+
+/* list of init parameters */
+.field-list.simple ul {
+    list-style-type: none;
+    margin-top: 1rem;
+    padding: 0px;
+    margin-left: 2rem;
+}
+
+/* class signature */
+.py.class>.sig.sig-object.py,
+.py.function>.sig.sig-object.py {
+    margin-bottom: 2rem;
+    font-size: 1.3rem;
+}
+
+/* attributes */
+.py.attribute dd {
+    margin-top: 0rem;
+    margin-left: 1.5rem;
+}
+
+.py.attribute dd dl dd {
+    padding: 0;
+    margin-left: 1rem;
+    margin: 0 0 0 1rem;
+}
+
+.py.attribute {
+    margin-top: 0rem !important;
+    margin-bottom: 0rem;
+}
+
+.py.attribute p {
+    margin-bottom: 0.2rem;
+}
+
+/* methods names */
+
+.py.method .sig {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+}
+
+/* monospace name of attributes, init args, names of classes/functions */
+.py.attribute .sig-name.descname,
+.field-list.simple strong,
+.sig.py {
+    font-family: monospace;
+}
+
+/* top table in contents.html */
+
+#description-table,
+#description-table th,
+#description-table td {
+    border: 1px solid gray;
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+/* highlighting (for viewing search results */
+
+span.highlighted {
+    background-color: #ffdf80;
+}
+
+/* admonitions */
+
+.admonition {
+    position: relative;
+    padding: 0.2rem 0.75rem;
+    padding-right: 1.25rem;
+    border: 2px solid transparent;
+    border-radius: 0.3rem;
+    max-width: 80%;
+    margin: auto;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.admonition.note {
+    color: #004085;
+    background-color: #cce5ff;
+    border-color: #b8daff;
+}
+
+.admonition.tip {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.admonition.warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+.admonition.important {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.admonition-title {
+    font-weight: bold;
+}
+
+.admonition p {
+    margin: 0;
+    font-size: 0.95em;
+}
+
+/* search results list */
+
+.search li>a {
+    font-weight: bolder;
+    font-size: 1.2rem;
+}
+
+.search {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.context {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    margin-left: 2rem;
+}
+
+/* for call to action buttons in the docs index */
+
+.index-button {
+    padding-left: 2px;
+    padding-right: 2px;
+    margin-top: 6px !important;
+    margin-bottom: 6px !important;
+}
+
+
+/* adjust top bar so it doesn't overlay algolia's search modal */
+
+.fixed-top {
+    z-index: 150 !important;
+}

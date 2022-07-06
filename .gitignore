@@ -1,4 +1,4 @@
-doc/_build
+# doc/_build
 doc/api/_modules
 projects-tmp/
 *.sublime-project

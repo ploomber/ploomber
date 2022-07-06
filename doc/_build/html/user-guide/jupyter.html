@@ -1,0 +1,601 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Jupyter integration &#8212; ploomber 0.19.6 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-style.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/mermaid-layout.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/custom.js"></script>
+    <script src="../_static/js/mermaid.min.js"></script>
+    <script src="../_static/js/terminal.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Scaffolding projects" href="scaffold.html" />
+    <link rel="prev" title="Command-line interface" href="cli.html" />
+ 
+
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    body {
+        padding-top: 5rem;
+    }
+
+    /* make all images responsive (same as .img-fluid) */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<!-- Algolia -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+</pre>
+</link>
+
+<!-- Below script for subscribe button in videos page-->
+<script src="https://apis.google.com/js/platform.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!-- jQuery is loaded by sphinx anyway -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+
+
+
+  </head><body>
+
+
+
+<nav class="navbar navbar-expand-md navbar-dark fixed-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <a class="navbar-brand" href="../index.html">Ploomber</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
+            viewBox="0 0 16 16">
+            <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+        </svg>
+    </button>
+
+    <div class="collapse navbar-collapse" id="top-bar">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item  active ">
+                <a class="nav-link" href="../index.html">Documentation
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../cloud/cloud-execution.html">Cloud
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="../videos.html">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+        </ul>
+
+        <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
+        <div class="flex-md-shrink-0" id="search">
+            <!-- flex-md-shrink-0 is a responsive class inside boostrap flex class that shrinks elements as the width decreases!-->
+            <form class="search form-inline my-2 my-lg-0" action="../search.html" method="get">
+                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search" name="q">
+                <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-xl-2 first-column collapse" id="first-column">
+            
+
+<div class="global-toc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get-started/index.html">Get Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../use-cases/index.html">Use Cases</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="templates.html">Downloading templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line interface</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Jupyter integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scaffold.html">Scaffolding projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refactoring.html">Refactoring legacy notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parametrized.html">Parametrized pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration (<code class="docutils literal notranslate"><span class="pre">dev</span></code>/<code class="docutils literal notranslate"><span class="pre">prod</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../get-started/sql-pipeline.html">SQL Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-templating.html">SQL templating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Pipeline testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="versioning.html">Versioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="serialization.html">Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shell.html">Shell tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors.html">Other editors (VSCode, PyCharm, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="r-support.html">R support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq_index.html">FAQ and Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spec-vs-python.html">Spec API vs. Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cloud/index.html">Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment/index.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cookbook/index.html">Cookbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../community/index.html">Community</a></li>
+</ul>
+</div>
+
+            <div class="help-tooltip">
+                <p>Something not working? <a
+                        href="https://github.com/ploomber/ploomber/issues/new?body=Documentation+page%3A+user-guide%2Fjupyter"
+                        target="_blank" rel="noreferrer">Open an issue on
+                        GitHub</a> or <a href="https://ploomber.io/community" target="_blank" rel="noreferrer">message
+                        us on Slack.</a></p>
+            </div>
+        </div>
+        <div class="col-md-9 col-xl-8">
+            <div class="document">
+                <div class="documentwrapper">
+                    <div class="bodywrapper">
+                        <div class="body" role="main">
+                            
+  <section id="jupyter-integration">
+<h1>Jupyter integration<a class="headerlink" href="#jupyter-integration" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This guide is applicable if running JupyterLab <code class="docutils literal notranslate"><span class="pre">&gt;=2.x</span></code>. If running older
+versions or using other editors (such as VSCode or PyCharm), check out
+the <a class="reference internal" href="editors.html"><span class="doc">Other editors (VSCode, PyCharm, etc.)</span></a> guide.</p>
+</div>
+<p>Ploomber integrates with Jupyter to make it easy to create multi-stage
+pipelines composed of small notebooks. Breaking down logic in multiple
+steps allows you to develop modularized pipelines that are easier to maintain
+and deploy.</p>
+<p>Before executing scripts or notebooks, Ploomber injects a new cell that
+replaces the <code class="docutils literal notranslate"><span class="pre">upstream</span></code> variable at the top of the notebook (which only
+contains dependency names) with a dictionary that maps these names to their
+corresponding output files to use as inputs in the current task.</p>
+<p>For example if a Python script (<code class="docutils literal notranslate"><span class="pre">task.py</span></code>) declares the following dependency:</p>
+<div class="text-editor highlight-python notranslate" id="task-py"><div class="highlight"><pre><span></span><span class="n">upstream</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;another-task&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>And <code class="docutils literal notranslate"><span class="pre">another-task</span></code> has the following <code class="docutils literal notranslate"><span class="pre">product</span></code> definition:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">another-task.py</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/another-task.ipynb</span><span class="w"></span>
+<span class="w">        </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/another-task.parquet</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The following cell will be injected in <code class="docutils literal notranslate"><span class="pre">task.py</span></code> before execution:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># this is injected automatically</span>
+<span class="n">upstream</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;another_task&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;nb&#39;</span><span class="p">:</span> <span class="s1">&#39;output/another-task.ipynb&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="s1">&#39;output/another-task.parquet&#39;</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p>The cell injection process happens during execution and development, allowing
+you to develop pipelines interactively.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When using <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">notebook</span></code>, scripts automatically render as
+notebooks. If using <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">lab</span></code>: <code class="docutils literal notranslate"><span class="pre">Right-click</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">Open</span> <span class="pre">With</span></code>
+-&gt; <code class="docutils literal notranslate"><span class="pre">Notebook</span></code> as depicted below:</p>
+</div>
+<a class="reference external image-reference" href="https://ploomber.io/images/doc/lab-open-with-notebook.png"><img alt="lab-open-with-notebook" src="https://ploomber.io/images/doc/lab-open-with-notebook.png" /></a>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you want to configure JuptyerLab to open <code class="docutils literal notranslate"><span class="pre">.py</span></code> files as notebooks with a
+single click, see the
+<a class="reference internal" href="#opening-files-as-notebooks-with-a-single-click"><span class="std std-ref">corresponding section</span></a>.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><a class="reference internal" href="../api/spec.html#tasks-on-render-finish-failure"><span class="std std-ref">Task-level</span></a> and
+<a class="reference internal" href="../api/spec.html#on-render-finish-failure"><span class="std std-ref">DAG-level</span></a> hooks
+are <strong>not</strong> executed when opening scripts/notebooks in Jupyter.</p>
+</div>
+<section id="interactive-development">
+<h2>Interactive development<a class="headerlink" href="#interactive-development" title="Permalink to this headline">¶</a></h2>
+<p>You can develop entire pipelines without leaving Jupyter. The fastest way to get
+started is to use the <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span></code> command, which creates a base
+project, check out the guide to learn more: <a class="reference internal" href="scaffold.html"><span class="doc">Scaffolding projects</span></a>.</p>
+<p>Once you have a <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file, you may add new tasks and run
+<code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span></code> again to create base scripts. For example, say you
+create a <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> like this:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scripts/get.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/get.ipynb</span><span class="w"></span>
+<span class="w">      </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/get.csv</span><span class="w"></span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scripts/clean.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/clean.ipynb</span><span class="w"></span>
+<span class="w">      </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/clean.csv</span><span class="w"></span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scripts/fit.py</span><span class="w"></span>
+<span class="w">    </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/fit.ipynb</span><span class="w"></span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/model.pickle</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Once you execute <code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">scaffold</span></code>, you’ll see the three new scripts
+under the <code class="docutils literal notranslate"><span class="pre">scripts/</span></code> directory. You can then start adding the relationships
+between tasks.</p>
+</section>
+<section id="the-upstream-variable">
+<span id="modifying-the-upstream-variable"></span><h2>The <code class="docutils literal notranslate"><span class="pre">upstream</span></code> variable<a class="headerlink" href="#the-upstream-variable" title="Permalink to this headline">¶</a></h2>
+<p>Let’s say your <code class="docutils literal notranslate"><span class="pre">scripts/clean.py</span></code> script cleans some raw data. That means
+you want to use the raw data as input (which is downloaded by
+<code class="docutils literal notranslate"><span class="pre">scripts/get.py</span></code>), you can modify the <code class="docutils literal notranslate"><span class="pre">upstream</span></code> variable to establish this
+execution dependency.</p>
+<div class="text-editor highlight-python notranslate" id="clean-py"><div class="highlight"><pre><span></span><span class="c1"># ensure we get the data, and then we clean it</span>
+<span class="n">upstream</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;get&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>To inject the cell, reload the file from disk:</p>
+<a class="reference external image-reference" href="https://ploomber.io/images/doc/lab-reload-file.png"><img alt="lab-reload-file" src="https://ploomber.io/images/doc/lab-reload-file.png" /></a>
+<p>Then, you’ll see something like this:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># injected cell</span>
+<span class="n">upstream</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;get&#39;</span><span class="p">:</span> <span class="s1">&#39;nb&#39;</span><span class="p">:</span> <span class="s1">&#39;output/clean.ipynb&#39;</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="s1">&#39;output/clean.csv&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Now you can continue developing your cleaning logic without hardcoding any
+paths. Furthermore, when executing your pipeline, Ploomber will
+run <code class="docutils literal notranslate"><span class="pre">scripts/get.py</span></code> and then <code class="docutils literal notranslate"><span class="pre">scripts/clean.py</span></code></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Ploomber needs to parse your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file to inject cells
+in your scripts/notebooks; if an error happens during the parsing process, you
+won’t see any injected cells. Check out
+the <a class="reference internal" href="#troubleshooting-pipeline-loading"><span class="std std-ref">Troubleshooting</span></a> section below
+for details.</p>
+</div>
+</section>
+<section id="choosing-the-source-format">
+<h2>Choosing the source format<a class="headerlink" href="#choosing-the-source-format" title="Permalink to this headline">¶</a></h2>
+<p>Ploomber supports scripts and notebooks as source formats for tasks. We
+recommend using <code class="docutils literal notranslate"><span class="pre">.py</span></code> files, but you can use the traditional <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> format
+if you prefer so. As long as your file has a tag named <code class="docutils literal notranslate"><span class="pre">parameters</span></code>, it will
+work fine (<a class="reference external" href="https://papermill.readthedocs.io/en/stable/usage-parameterize.html">click here</a> to learn how to add the <code class="docutils literal notranslate"><span class="pre">parameters</span></code> cell)</p>
+<p>The advantage of using <code class="docutils literal notranslate"><span class="pre">.py</span></code> files is that they’re much easier to manage with
+git, the disadvantage is that <code class="docutils literal notranslate"><span class="pre">.py</span></code> only contain code (not output), so after
+editing your <code class="docutils literal notranslate"><span class="pre">.py</span></code> file, you need to run the task to create the executed
+notebook (the one you declare as a product of the task).</p>
+<p>However, if you want a more ipynb-like experience with <code class="docutils literal notranslate"><span class="pre">.py</span></code> files, you can
+use <a class="reference external" href="https://jupytext.readthedocs.io/en/latest/paired-notebooks.html">jupytext’s pairing feature</a>
+to sync the output of a <code class="docutils literal notranslate"><span class="pre">.py</span></code> to a <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> file.</p>
+<p>We rely on Jupytext for the <code class="docutils literal notranslate"><span class="pre">.py</span></code> to <code class="docutils literal notranslate"><span class="pre">.ipynb</span></code> conversion so that you can use
+any of the <code class="docutils literal notranslate"><span class="pre">.py</span></code> flavors, here are some examples:</p>
+<section id="light-format">
+<h3>Light format<a class="headerlink" href="#light-format" title="Permalink to this headline">¶</a></h3>
+<div class="text-editor highlight-python notranslate" id="light-format-py"><div class="highlight"><pre><span></span><span class="c1"># + tags=[&quot;parameters&quot;]</span>
+<span class="n">upstream</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">product</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="c1"># +</span>
+<span class="c1"># another cell</span>
+</pre></div>
+</div>
+</section>
+<section id="percent-format">
+<h3>Percent format<a class="headerlink" href="#percent-format" title="Permalink to this headline">¶</a></h3>
+<div class="text-editor highlight-python notranslate" id="percent-format-py"><div class="highlight"><pre><span></span><span class="c1"># %% tags=[&quot;parameters&quot;]</span>
+<span class="n">upstream</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">product</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="c1"># %%</span>
+<span class="c1"># another cell</span>
+</pre></div>
+</div>
+<p><a class="reference external" href="https://jupytext.readthedocs.io/en/latest/formats.html#notebooks-as-scripts">Check out Jupytext documentation</a> for more details on the supported formats.</p>
+</section>
+</section>
+<section id="activating-the-jupyter-extension">
+<h2>Activating the Jupyter extension<a class="headerlink" href="#activating-the-jupyter-extension" title="Permalink to this headline">¶</a></h2>
+<p>In most cases, the extension configures when you install Ploomber; you can verify this by running:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">jupyter serverextension list</span>
+</pre></div>
+</div>
+<p>If Ploomber appears in the list, it means it’s activated. If it doesn’t show
+up, you can manually activate it with:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">jupyter serverextension enable ploomber</span>
+</pre></div>
+</div>
+<p>To disable it:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">jupyter serverextension disable ploomber</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If you want to use the extension in a hosted environment
+(JupyterHub, Domino, SageMaker, etc.), ensure Ploomber is installed
+<strong>before</strong> JupyterLab spins up. Usually, hosted platforms allow you to write
+a custom start script: add a <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">ploomber</span></code> line, and you’ll be
+ready to go. If you cannot get the extension to work, post a question
+in the <code class="docutils literal notranslate"><span class="pre">#ask-anything</span></code> channel on
+<a class="reference external" href="https://ploomber.io/community">Slack</a>. Alternatively, you may replicate
+the extension’s functionality using the command line, check out the
+<a class="reference internal" href="editors.html"><span class="doc">this guide</span></a> to learn more.</p>
+</div>
+</section>
+<section id="custom-jupyter-pipeline-loading">
+<h2>Custom Jupyter pipeline loading<a class="headerlink" href="#custom-jupyter-pipeline-loading" title="Permalink to this headline">¶</a></h2>
+<p>When you start the Jupyter app (via the <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">notebook/lab</span></code> command), the
+extension looks for a <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file in the current directory and
+parent directories. If it finds one, it will load the pipeline and inject
+the appropriate cell if the existing file is a task in the loaded pipeline.</p>
+<p>If your pipeline spec has a different name, you can create a <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code> file
+and indicate what file you want to load. Note that <strong>changing the
+default affects both the command-line interface and the Jupyter plug-in</strong>.</p>
+<div class="text-editor highlight-cfg notranslate" id="setup-cfg"><div class="highlight"><pre><span></span><span class="k">[ploomber]</span><span class="w"></span>
+<span class="na">entry-point</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">path/to/pipeline.yaml</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Note that paths are relative to the parent directory of <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code>.</p>
+<p>Alternatively, you can set the <code class="docutils literal notranslate"><span class="pre">ENTRY_POINT</span></code>
+environment variable. For example, to load a <code class="docutils literal notranslate"><span class="pre">pipeline.serve.yaml</span></code>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">export ENTRY_POINT=pipeline.serve.yaml</span>
+<span class="go">jupyter lab</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">ENTRY_POINT</span></code> must be executed in the same process that spins up
+JupyterLab. If you change it, you’ll need to start JupyterLab again</p>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">ENTRY_POINT</span></code> must be a file name and not a path. When you start
+Jupyter, Ploomber will look for that file in the current and parent directories
+until it finds one.</p>
+<details class="summary-changelog">
+<summary>changelog</summary><div class="versionadded">
+<p><span class="versionmodified added">New in version 0.19.6: </span>Support for switching entry point with a <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code> file</p>
+</div>
+</details></section>
+<section id="troubleshooting-pipeline-loading">
+<span id="id1"></span><h2>Troubleshooting pipeline loading<a class="headerlink" href="#troubleshooting-pipeline-loading" title="Permalink to this headline">¶</a></h2>
+<p>If a pipeline is not detected, the Jupyter notebook application will work
+as expected, but no cell injection will happen. You can see if Ploomber could
+not detect a pipeline by looking at the messages displayed after
+initializing Jupyter (the terminal window where you executed the
+<code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">notebook/lab</span></code> command, you’ll see something like this:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">[Ploomber] Skipping DAG initialization since there isn&#39;t a project root in the current or parent directories. Error message: {SOME_MESSAGE}</span>
+</pre></div>
+</div>
+<p>The message above means that Ploomber could not locate a <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file
+to use for cell injection, take a look at the entire error message as it will
+contain more details to help you fix the problem. A common mistake is not to
+include a <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file in the same directory (or parent) of the script/notebook you’re editing.</p>
+<p>If a <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> is found but fails to initialize, the Jupyter console
+will show another error message:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">[Ploomber] An error occurred when trying to initialize the pipeline.</span>
+</pre></div>
+</div>
+<p>A common reason for this is an invalid <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file.</p>
+<p>Note that even if your pipeline is missing or fails to initialize,
+Jupyter will start anyway, so ensure to take a look at the console if you
+experience problems.</p>
+<p>Another common situation is <code class="docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code> errors. Jupyter must
+parse your pipeline in the process that runs the Jupyter application itself.
+If your pipeline contains dotted paths (e.g., tasks that are Python functions,
+task hooks, task clients, etc.), loading the pipeline will fail if such dotted
+paths are not importable. Scripts and notebooks are handled differently. Hence,
+a pipeline whose tasks are all notebooks/scripts won’t have this issue.</p>
+<p>If you cannot find the problem, you can move to a directory that stores
+any of the scripts that aren’t having the cell injected, start a Python
+session and run:</p>
+<div class="ipython highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber</span> <span class="kn">import</span> <span class="n">lazily_load_entry_point</span><span class="p">;</span> <span class="n">lazily_load_entry_point</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">lazily_load_entry_point</span></code> is the function that Ploomber uses internally
+to initialize your pipeline. Calling this function allows you to replicate
+the same conditions when initializing your pipeline for cell injection.</p>
+</section>
+<section id="detecting-changes">
+<h2>Detecting changes<a class="headerlink" href="#detecting-changes" title="Permalink to this headline">¶</a></h2>
+<p>Ploomber parses your pipeline whenever you open a file to detect changes.
+The parsing runtime depends on the number of tasks, and although it is
+fast, it may slow down file loading in pipelines with lots of tasks. You can
+turn off continuous parsing by setting <code class="docutils literal notranslate"><span class="pre">jupyter_hot_reload</span></code> (in the <code class="docutils literal notranslate"><span class="pre">meta</span></code>
+section) option to <code class="docutils literal notranslate"><span class="pre">False</span></code>. You’ll have to restart Jupyter if you turn this
+option off to detect changes.</p>
+</section>
+<section id="managing-multiple-pipelines">
+<h2>Managing multiple pipelines<a class="headerlink" href="#managing-multiple-pipelines" title="Permalink to this headline">¶</a></h2>
+<p>Jupyter can detect more than one pipeline in a single project.
+There are two ways to achieve this.</p>
+<p>The first one is to create sibling folders, each one with its own
+<code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>some-pipeline/
+    pipeline.yaml
+    some-script.py
+another-pipeline/
+    pipeline.yaml
+    another-script.py
+</pre></div>
+</div>
+<p>Since Ploomber looks for a <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> file in the current directory
+and parents, it will correctly find the appropriate file if you open
+<code class="docutils literal notranslate"><span class="pre">some-script.py</span></code> or <code class="docutils literal notranslate"><span class="pre">another-script.py</span></code> (assuming they’re already declared
+as tasks in their corresponding <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If using Python functions as tasks, you must use different module
+names for each pipeline. Otherwise, the module imports first will be cached
+and used for the other pipeline. See the following example.</p>
+</div>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>some-pipeline/
+    pipeline.yaml
+    some_tasks.py
+another-pipeline/
+    pipeline.yaml
+    other_tasks.py
+</pre></div>
+</div>
+<p>The second option is to keep a unique project root and name each pipeline
+differently:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pipeline.yaml
+some-script.py
+pipeline.another.yaml
+another-script.py
+</pre></div>
+</div>
+<p>In this case, Ploomber will load <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code> by default, but you can
+switch this by setting the <code class="docutils literal notranslate"><span class="pre">ENTRY_POINT</span></code> variable to the other spec.
+(e.g., <code class="docutils literal notranslate"><span class="pre">pipeline.another.yaml</span></code>). Note that the environment variable must be
+a filename and not a path.</p>
+</section>
+<section id="exploratory-data-analysis">
+<h2>Exploratory Data Analysis<a class="headerlink" href="#exploratory-data-analysis" title="Permalink to this headline">¶</a></h2>
+<p>There are two ways to use Ploomber in Jupyter. The first one is by opening a
+task file in Jupyter (i.e., the source file is listed in your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>
+file.</p>
+<p>Another way is to load your pipeline in Jupyter to interact with it. This second
+approach is best when you already have some tasks, and you want to explore their
+outputs to decide how to proceed with further analysis.</p>
+<p>Say that you have a single task that loads the data:</p>
+<div class="text-editor highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tasks</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">load.py</span><span class="w"></span>
+<span class="w">      </span><span class="nt">product</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">nb</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/load.ipynb</span><span class="w"></span>
+<span class="w">        </span><span class="nt">data</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">output/data.csv</span><span class="w"></span>
+</pre></div>
+</div>
+<p>If you want to explore the raw data to decide how to organize downstream tasks (i.e., for data
+cleaning). You can create a new notebook with the following code:</p>
+<div class="text-editor highlight-python notranslate" id="exploratory-ipynb"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ploomber.spec</span> <span class="kn">import</span> <span class="n">DAGSpec</span>
+
+<span class="n">dag</span> <span class="o">=</span> <span class="n">DAGSpec</span><span class="o">.</span><span class="n">find</span><span class="p">()</span><span class="o">.</span><span class="n">to_dag</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Note that this exploratory notebook <strong>is not</strong> part of your pipeline (i.e., it
+doesn’t appear in the <code class="docutils literal notranslate"><span class="pre">tasks</span></code> section of your <code class="docutils literal notranslate"><span class="pre">pipeline.yaml</span></code>), it’s an
+independent notebook that loads your pipeline declaration.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">dag</span></code> variable is an object that contains your pipeline definition. If you
+want to load your raw data:</p>
+<div class="text-editor highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">dag</span><span class="p">[</span><span class="s1">&#39;load&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">product</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">dag</span></code> object avoids hardcoded paths to keep notebooks clean.</p>
+<p>There are other things you can do with the <code class="docutils literal notranslate"><span class="pre">dag</span></code> object. See the following
+guide for more examples: <a class="reference internal" href="cli.html#user-guide-cli-interactive-sessions"><span class="std std-ref">Interactive sessions</span></a>.</p>
+<p>As your pipeline grows, exploring it from Jupyter helps you decide what tasks to
+build next and understand dependencies among tasks.</p>
+<p>If you want to take a quick look at your pipeline, you may use
+<code class="docutils literal notranslate"><span class="pre">ploomber</span> <span class="pre">interact</span></code> from a terminal to get the <code class="docutils literal notranslate"><span class="pre">dag</span></code> object.</p>
+</section>
+<section id="opening-py-files-as-notebooks-with-a-single-click">
+<span id="opening-files-as-notebooks-with-a-single-click"></span><h2>Opening <code class="docutils literal notranslate"><span class="pre">.py</span></code> files as notebooks with a single click<a class="headerlink" href="#opening-py-files-as-notebooks-with-a-single-click" title="Permalink to this headline">¶</a></h2>
+<p>It is now possible to open <code class="docutils literal notranslate"><span class="pre">.py</span></code> files as notebooks in <code class="docutils literal notranslate"><span class="pre">JuptyerLab</span></code> with a
+single click (this requires <code class="docutils literal notranslate"><span class="pre">jupytext&gt;=1.13.2</span></code>).</p>
+<p>If using <code class="docutils literal notranslate"><span class="pre">ploomber&gt;=0.14.7</span></code>, you can enable this with the following command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber nb --single-click</span>
+</pre></div>
+</div>
+<p>To disable:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ploomber nb --single-click-disable</span>
+</pre></div>
+</div>
+<p>If running earlier versions of Ploomber, you can enable this by changing the
+default viewer for text notebooks. For instructions,
+<a class="reference external" href="https://jupytext.readthedocs.io/en/latest/index.html#install">see jupytext’s documentation</a>
+(click on the triangle right before the <code class="docutils literal notranslate"><span class="pre">With</span> <span class="pre">a</span> <span class="pre">click</span> <span class="pre">on</span> <span class="pre">the</span> <span class="pre">text</span> <span class="pre">file</span> <span class="pre">in</span> <span class="pre">JupyterLab</span></code> section).</p>
+</section>
+</section>
+
+
+                            <div class="clearer"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearer"></div>
+            </div>
+        </div>
+        <div class="d-none d-xl-block col-xl-2 third-column">
+            
+<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    <div class="sphinxsidebarwrapper">
+<ul>
+<li><a class="reference internal" href="#">Jupyter integration</a><ul>
+<li><a class="reference internal" href="#interactive-development">Interactive development</a></li>
+<li><a class="reference internal" href="#the-upstream-variable">The <code class="docutils literal notranslate"><span class="pre">upstream</span></code> variable</a></li>
+<li><a class="reference internal" href="#choosing-the-source-format">Choosing the source format</a><ul>
+<li><a class="reference internal" href="#light-format">Light format</a></li>
+<li><a class="reference internal" href="#percent-format">Percent format</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#activating-the-jupyter-extension">Activating the Jupyter extension</a></li>
+<li><a class="reference internal" href="#custom-jupyter-pipeline-loading">Custom Jupyter pipeline loading</a></li>
+<li><a class="reference internal" href="#troubleshooting-pipeline-loading">Troubleshooting pipeline loading</a></li>
+<li><a class="reference internal" href="#detecting-changes">Detecting changes</a></li>
+<li><a class="reference internal" href="#managing-multiple-pipelines">Managing multiple pipelines</a></li>
+<li><a class="reference internal" href="#exploratory-data-analysis">Exploratory Data Analysis</a></li>
+<li><a class="reference internal" href="#opening-py-files-as-notebooks-with-a-single-click">Opening <code class="docutils literal notranslate"><span class="pre">.py</span></code> files as notebooks with a single click</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+
+<script type="text/javascript">
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#search',
+        debug: false
+
+    });
+</script>
+<div class="footer" role="contentinfo">
+</div>
+  </body>
+</html>
