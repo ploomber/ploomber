@@ -1,0 +1,17 @@
+meta:
+  extract_upstream: True
+  extract_product: False
+
+tasks:
+  - source: load.py
+    product:
+      nb: output/load.ipynb
+      data: output/data.csv
+
+  - source: clean.py
+    product:
+      nb: output/clean.ipynb
+      data: output/clean.csv
+
+  - source: plot.py
+    product: output/plot.ipynb
