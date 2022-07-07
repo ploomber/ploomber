@@ -5,6 +5,7 @@ import sys
 import os
 from pathlib import Path
 from unittest.mock import Mock
+import shutil
 
 import yaml
 from ipython_genutils.tempdir import TemporaryDirectory
@@ -55,7 +56,30 @@ def get_injected_cell(nb):
     return injected
 
 
+class YAML:
+    def __init__(self, path):
+        self.path = Path(path)
+
+        if not self.path.exists():
+            self.data = dict()
+        else:
+            self.data = self.read()
+
+    def write(self):
+        self.path.write_text(yaml.dump(self.data))
+
+    def read(self):
+        self.data = yaml.safe_load(self.path.read_text())
+        return self.data
+
+
 def test_manager_initialization(tmp_directory):
+    """
+    There some weird stuff in the Jupyter contents manager base class that
+    causses the initialization to break if we modify the __init__ method
+    in PloomberContentsManager. We add this to check that values are
+    correctly initialized
+    """
     dir_ = Path('some_dir')
     dir_.mkdir()
     dir_ = dir_.resolve()
@@ -138,13 +162,11 @@ def test_does_not_log_again_if_using_the_same_spec(tmp_nbs):
 
     log_messages = [
         line for line in lines if '[Ploomber] Using dag defined at:' in line
-        or '[Ploomber] Pipeline mapping keys:' in line
     ]
 
     # since the spec is still the same, we should not log the spec info again
-    # and there must only be one record to log the spec location and another
-    # one for the mapping keys
-    assert len(log_messages) == 2
+    # and there must only be one record to log the spec location
+    assert len(log_messages) == 1
 
 
 def test_logs_if_spec_keys_change(tmp_directory):
@@ -192,10 +214,9 @@ tasks:
 
     log_messages = [
         line for line in lines if '[Ploomber] Using dag defined at:' in line
-        or '[Ploomber] Pipeline mapping keys:' in line
     ]
 
-    assert len(log_messages) == 4
+    assert len(log_messages) == 2
 
 
 def test_logs_if_spec_location_changes(tmp_directory):
@@ -256,12 +277,9 @@ tasks:
 
     log_messages = [
         line for line in lines if '[Ploomber] Using dag defined at:' in line
-        or '[Ploomber] Pipeline mapping keys:' in line
     ]
 
-    # note that this logs 8 times because each call to contents_manager.get
-    # calls load dag twice. see the implementation of get for details
-    assert len(log_messages) == 8
+    assert len(log_messages) == 3
 
 
 def test_cell_injection_if_using_notebook_dir_option_nested_script(tmp_nbs):
@@ -976,3 +994,154 @@ tasks:
 
     model = cm.get(str('load.py'))
     assert get_injected_cell(model['content'])
+
+
+def test_caches_dag(tmp_nbs):
+    cm = PloomberContentsManager()
+
+    cm.get('load.py')
+    dag_first = cm.dag
+    cm.get('load.py')
+    dag_second = cm.dag
+    cm.get('clean.py')
+    dag_third = cm.dag
+
+    assert dag_first is dag_second
+    assert dag_second is dag_third
+
+
+def test_reloads_dag_if_spec_changes(tmp_nbs):
+    cm = PloomberContentsManager()
+
+    cm.get('load.py')
+    dag_first = cm.dag
+
+    path = Path('pipeline.yaml')
+    new = path.read_text() + '\n\n# some new comment'
+    path.write_text(new)
+
+    cm.get('clean.py')
+    dag_second = cm.dag
+
+    assert dag_first is not dag_second
+
+
+def test_reloads_dag_if_path_changes_due_to_env_var(tmp_nbs, monkeypatch):
+    shutil.copy('pipeline.yaml', 'pipeline.another.yaml')
+
+    cm = PloomberContentsManager()
+
+    cm.get('load.py')
+    dag_first = cm.dag
+
+    monkeypatch.setenv('ENTRY_POINT', 'pipeline.another.yaml')
+
+    cm.get('clean.py')
+    dag_second = cm.dag
+
+    assert dag_first is not dag_second
+
+
+def test_reloads_dag_if_path_changes_due_to_setup_cfg(tmp_nbs):
+    shutil.copy('pipeline.yaml', 'pipeline.another.yaml')
+
+    cm = PloomberContentsManager()
+
+    cm.get('load.py')
+    dag_first = cm.dag
+
+    Path('setup.cfg').write_text("""
+[ploomber]
+entry-point = pipeline.another.yaml
+""")
+
+    cm.get('clean.py')
+    dag_second = cm.dag
+
+    assert dag_first is not dag_second
+
+
+def test_reloads_dag_if_upstream_changes(tmp_nbs, monkeypatch):
+    monkeypatch.setenv('ENTRY_POINT', 'pipeline.extract-upstream.yaml')
+
+    cm = PloomberContentsManager()
+
+    cm.get('load.py')
+    dag_first = cm.dag
+
+    # change upstream
+    nb = jupytext.read('plot.py')
+    nb['cells'][1]['source'] = 'upstream = ["load"]'
+    jupytext.write(nb, 'plot.py')
+
+    # request the one whose upstream changed
+    cm.get('plot.py')
+    dag_second = cm.dag
+
+    assert dag_first is not dag_second
+
+
+def test_caches_dag_if_upstream_changes_but_extra_upstream_is_false(tmp_nbs):
+    cm = PloomberContentsManager()
+
+    cm.get('load.py')
+    dag_first = cm.dag
+
+    # change upstream
+    nb = jupytext.read('plot.py')
+    nb['cells'][1]['source'] = 'upstream = ["load"]'
+    jupytext.write(nb, 'plot.py')
+
+    # request the one whose upstream changed
+    cm.get('plot.py')
+    dag_second = cm.dag
+
+    assert dag_first is dag_second
+
+
+def test_reloads_dag_if_env_changes(tmp_nbs):
+    yaml_ = YAML('pipeline.yaml')
+    yaml_.data['tasks'][0]['params'] = dict(param='{{param}}')
+    yaml_.write()
+
+    yaml_env = YAML('env.yaml')
+    yaml_env.data['param'] = 'value'
+    yaml_env.write()
+
+    cm = PloomberContentsManager()
+    cm.get('load.py')
+    dag_first = cm.dag
+
+    # change env
+    yaml_env.data['param'] = 'another-value'
+    yaml_env.write()
+
+    cm.get('load.py')
+    dag_second = cm.dag
+
+    assert dag_first is not dag_second
+
+
+def test_reloads_dag_if_env_path_changes(tmp_nbs, monkeypatch):
+    # parametrize pipeline
+    yaml_ = YAML('pipeline.yaml')
+    yaml_.data['tasks'][0]['params'] = dict(param='{{param}}')
+    yaml_.write()
+
+    # create two sample envs
+    yaml_env = YAML('env.yaml')
+    yaml_env.data['param'] = 'value'
+    yaml_env.write()
+    shutil.copy('env.yaml', 'env.another.yaml')
+
+    cm = PloomberContentsManager()
+    cm.get('load.py')
+    dag_first = cm.dag
+
+    # change env
+    monkeypatch.setenv('PLOOMBER_ENV_FILENAME', 'env.another.yaml')
+
+    cm.get('load.py')
+    dag_second = cm.dag
+
+    assert dag_first is not dag_second
