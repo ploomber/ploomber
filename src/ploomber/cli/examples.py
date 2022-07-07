@@ -20,7 +20,7 @@ from ploomber.exceptions import BaseException
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer
 from pygments import highlight
-from ploomber_cli.cli import _suggest_command
+from difflib import get_close_matches
 
 _URL = 'https://github.com/ploomber/projects'
 _DEFAULT_BRANCH = 'master'
@@ -219,6 +219,16 @@ class _ExamplesManager:
     def path_to_readme(self):
         return self.examples / 'README.md'
 
+    def _suggest_example(self, name: str, options: list):
+        if not name or name in options:
+            return None
+        name = name.lower()
+        close_commands = get_close_matches(name, options)
+        if close_commands:
+            return close_commands[0]
+        else:
+            return None
+
     def list(self):
         with open(self.examples / '_index.csv',
                   newline='',
@@ -272,7 +282,7 @@ class _ExamplesManager:
             del row['idx']
             categories.append(category)
         if not selected.exists():
-            closest_match = _suggest_command(name, categories)
+            closest_match = self._suggest_example(name, categories)
             # when suggested command returns None, disable did you mean feature
             did_you_mean_message = f'Did you mean "{closest_match}"?\n' \
                 if closest_match is not None else ''
@@ -316,7 +326,7 @@ class _ExamplesManager:
 
 @command_endpoint
 @telemetry.log_call('examples')
-def main(name, branch=None, force=False, output=None):
+def main(name, force=False, branch=None, output=None):
     """
     Entry point for examples
     """
