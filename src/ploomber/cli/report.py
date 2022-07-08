@@ -17,8 +17,10 @@ def main():
         parser.add_argument(
             '--backend',
             '-b',
-            help='The backend used for plotting, defaults to d3',
-            default='s3')
+            help=('How to generate the plot: d3 or '
+                  'pygraphviz. Using whatever is '
+                  'available by default'),
+            default=None)
 
     dag, args = parser.load_from_entry_point_arg()
     dag.to_markup(path=args.output, backend=args.backend)
