@@ -14,8 +14,13 @@ def main():
             '-o',
             help='Where to save the report, defaults to pipeline.html',
             default='pipeline.html')
+        parser.add_argument(
+            '--backend',
+            '-b',
+            help='The backend used for plotting, defaults to d3',
+            default='s3')
 
     dag, args = parser.load_from_entry_point_arg()
-    dag.to_markup(path=args.output)
+    dag.to_markup(path=args.output, backend=args.backend)
 
     print('Report saved at:', args.output)
