@@ -12,6 +12,11 @@ $(document).ready(function () {
         "Terminal (shell)"
     );
 
+    addTerminalStyle(
+        $('[class="doctest highlight-default notranslate"]'),
+        "Python Console"
+    );
+
     ipython = document.getElementsByClassName("ipython");
     addTerminalStyle(ipython, "Terminal (ipython)");
 
