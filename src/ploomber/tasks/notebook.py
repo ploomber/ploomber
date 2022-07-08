@@ -36,7 +36,7 @@ from ploomber.sources import NotebookSource
 from ploomber.sources.notebooksource import _cleanup_rendered_nb
 from ploomber.products import File, MetaProduct
 from ploomber.tasks.abc import Task
-from ploomber.util import requires, chdir_code
+from ploomber.util import chdir_code
 from ploomber.io import FileLoaderMixin, pretty_print
 from ploomber.util._sys import _python_bin
 
@@ -646,7 +646,6 @@ class NotebookRunner(NotebookMixin, Task):
                     f"{(str(self.product))!r} must be specified "
                     f"in nb_product_key as well.")
 
-    @requires(['jupyter', 'papermill', 'jupytext'], 'NotebookRunner')
     def __init__(self,
                  source,
                  product,
@@ -868,7 +867,6 @@ class ScriptRunner(NotebookMixin, Task):
     >>> _ = ScriptRunner(Path('script.py'), product, dag=dag)
     >>> _ = dag.build()
     """
-    @requires(['jupyter', 'jupytext'], 'ScriptRunner')
     def __init__(self,
                  source,
                  product,
