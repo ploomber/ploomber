@@ -27,7 +27,16 @@ $(document).ready(function () {
     // window, not only in the content sub-window
     // Clicking on the terminnals copies the content to the clipboard
     $("div.highlight").click(function () {
-        navigator.clipboard.writeText($(this).text());
+        if ("jquery: ", $(this).parent().attr('class') == "doctest highlight-default notranslate") {
+            let text = $(this).text();
+            textArr = text.split("\n");
+            textArr = textArr.filter(line => (line.startsWith("... ") || line.startsWith(">>> ")));
+            text = textArr.join("\n");
+            text = text.replaceAll("... ", "").replaceAll(">>> ", "");
+            navigator.clipboard.writeText(text);
+        } else {
+            navigator.clipboard.writeText($(this).text());
+        }
     });
 
     // Hovering on the terminals shows "Click to copy"
