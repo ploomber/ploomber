@@ -814,7 +814,7 @@ class DAG(AbstractDAG):
                   else '.html'
             fd, path_to_plot = tempfile.mkstemp(suffix=ext)
             os.close(fd)
-            self.plot(output=path_to_plot)
+            self.plot(output=path_to_plot, backend=backend)
             plot_ = image_bytes2html(Path(path_to_plot).read_bytes())
         else:
             plot_ = False

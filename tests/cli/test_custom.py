@@ -536,13 +536,15 @@ tasks:
 @pytest.mark.parametrize('output', [None, 'pipeline.html', 'pipeline.png'])
 @pytest.mark.parametrize('backend', [None, 'd3', 'pygraphviz'])
 def test_report_command(tmp_nbs, backend, output, monkeypatch, capsys):
+    args = ['ploomber', 'report', '--entry-point', 'pipeline.yaml',
+            '--backend', backend]
+    if output is not None:
+        args.extend(['--output', output])
     monkeypatch.setattr(
-        sys, 'argv', ['ploomber', 'report',
-                      '--entry-point', 'pipeline.yaml',
-                      '--backend', backend,
-                      '--output', output])
+        sys, 'argv', args)
+    output = 'pipeline.html' if output is None else output
     cmd_router()
-    expected_output_path = Path(output) if output else Path('pipeline.html')
+    expected_output_path = Path(output)
     captured = capsys.readouterr()
 
     assert expected_output_path.exists()
