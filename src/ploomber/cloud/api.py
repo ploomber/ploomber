@@ -303,11 +303,9 @@ def zip_project(force, runid, github_number, verbose, ignore_prefixes=None):
     MAX = 5 * 1024 * 1024
 
     if Path('project.zip').stat().st_size > MAX:
-        print("[debug] larger than 5MB, temp suppressed error"
-              " to ensure the backend also validates")
-        # raise BaseException("Error: Your project's source code is over "
-        #                     "5MB, which isn't supported. Tip: Ensure there "
-        #                     "aren't any large data files and try again")
+        raise BaseException("Error: Your project's source code is over "
+                            "5MB, which isn't supported. Tip: Ensure there "
+                            "aren't any large data files and try again")
 
 
 @auth_header
@@ -320,14 +318,11 @@ def get_presigned_link(headers):
 
 def upload_zipped_project(response, verbose, runid):
     with open("project.zip", "rb") as f:
-        print("[debug] upload_zipped_project:open done")
         files = {"file": f}
-        print("[debug] upload_zipped_project:file done")
         try:
             http_response = _requests.post(response["url"],
                                        data=response["fields"],
                                        files=files)
-            print("[debug] upload_zipped_project:http_response done")
         except json.JSONDecodeError as err:
             raise BaseException(f"An error happened during POST request: {err}\n"
                                 "It is possible that your project's source code size is "
@@ -337,7 +332,6 @@ def upload_zipped_project(response, verbose, runid):
         finally:
             run_abort(runid)
 
-    print("try done")
     if http_response.status_code != 204:
         raise ValueError(f"An error happened: {http_response}")
 
@@ -388,14 +382,11 @@ def upload_project(force=False,
         click.echo("Uploading project...")
 
     response = get_presigned_link()
-    print("[debug] get_presigned_link done")
     upload_zipped_project(response, verbose, runid)
-    print("[debug] upload_zipped_project done")
     if verbose:
         click.echo("Starting build...")
 
     trigger()
-    print("[debug] trigger done")
     # TODO: if anything fails after runs_new, update the status to error
     # convert runs_new into a context manager
 
