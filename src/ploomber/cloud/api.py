@@ -15,7 +15,6 @@ import json
 
 import click
 import humanize
-from requests import RequestException
 
 from ploomber.table import Table
 from ploomber.cloud import io, config
@@ -331,7 +330,7 @@ def upload_zipped_project(response, verbose, runid):
             print("[debug] upload_zipped_project:http_response done")
         except Exception as err:
             run_abort(runid)
-            raise ValueError(f"An error happened during POST request: {err}")
+            raise BaseException(f"An error happened during POST request: {err}")
     print("try done")
     if http_response.status_code != 204:
         raise ValueError(f"An error happened: {http_response}")

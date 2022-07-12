@@ -1,6 +1,13 @@
 # CHANGELOG
 
-## 0.19.7dev
+## 0.19.8dev
+
+## 0.19.7 (2022-07-04)
+* Suppressing "black is not installed" message ([#831](https://github.com/ploomber/ploomber/issues/831))
+* Better error message in `ploomber cloud build` when pipeline is up-to-date ([#815](https://github.com/ploomber/ploomber/issues/815))
+* Error message when `env.yml` found instead of `env.yaml` ([#829](https://github.com/ploomber/ploomber/issues/829))
+* Fixes jinja extractor when upstream had nested getitem ([#859](https://github.com/ploomber/ploomber/issues/859))
+* Fixes notebook loading on Windows when UTF-8 is not the default encoding ([#870](https://github.com/ploomber/ploomber/issues/870))
 
 ## 0.19.6 (2022-06-02)
 * `setup.cfg` allows to switch default entry point

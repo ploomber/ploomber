@@ -142,7 +142,8 @@ def tmp_directory():
 
     os.chdir(old)
 
-    shutil.rmtree(str(tmp))
+    # ignore unexpected permission error during test suite cleanup
+    shutil.rmtree(str(tmp), ignore_errors=True)
 
 
 @pytest.fixture
