@@ -328,9 +328,15 @@ def upload_zipped_project(response, verbose, runid):
                                        data=response["fields"],
                                        files=files)
             print("[debug] upload_zipped_project:http_response done")
+        except json.JSONDecodeError as err:
+            raise BaseException(f"An error happened during POST request: {err}\n"
+                                "It is possible that your project's source code size is "
+                                "over 5MB, which isn't supported.")
         except Exception as err:
-            run_abort(runid)
             raise BaseException(f"An error happened during POST request: {err}")
+        finally:
+            run_abort(runid)
+
     print("try done")
     if http_response.status_code != 204:
         raise ValueError(f"An error happened: {http_response}")
