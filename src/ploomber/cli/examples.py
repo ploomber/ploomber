@@ -128,6 +128,21 @@ class _ExamplesManager:
 
             self.clone()
 
+        with open(self.examples / '_index.csv',
+                  newline='',
+                  encoding='utf-8-sig') as f:
+            rows = list(csv.DictReader(f))
+        self._examples_by_category = defaultdict(lambda: [])
+        for row in rows:
+            category = row.pop('category')
+            del row['idx']
+            self._examples_by_category[category].append(row)
+        self._example_names = [example["name"]
+                               for _, examples
+                               in self._examples_by_category.items()
+                               for example
+                               in examples]
+
     @property
     def home(self):
         return self._home
@@ -230,19 +245,8 @@ class _ExamplesManager:
             return None
 
     def list(self):
-        with open(self.examples / '_index.csv',
-                  newline='',
-                  encoding='utf-8-sig') as f:
-            rows = list(csv.DictReader(f))
 
         categories = json.loads((self.examples / '_category.json').read_text())
-
-        by_category = defaultdict(lambda: [])
-
-        for row in rows:
-            category = row.pop('category')
-            del row['idx']
-            by_category[category].append(row)
 
         tw = TerminalWriter()
 
@@ -250,7 +254,7 @@ class _ExamplesManager:
         tw.sep('=', 'Ploomber examples', blue=True)
         click.echo()
 
-        for category in sorted(by_category):
+        for category in sorted(self._examples_by_category):
             title = category.capitalize()
             description = categories.get(category)
 
@@ -260,7 +264,8 @@ class _ExamplesManager:
             tw.sep(' ', title, green=True)
             click.echo()
             click.echo(
-                Table.from_dicts(by_category[category]).to_format('simple'))
+                Table.from_dicts(self._examples_by_category[category])
+                     .to_format('simple'))
             click.echo()
 
         tw.sep('=', blue=True)
@@ -271,29 +276,24 @@ class _ExamplesManager:
         tw.write('Example: ploomber examples -n templates/ml-basic -o ml\n\n')
 
     def download(self, name, output):
-        with open(self.examples / '_index.csv',
-                  newline='',
-                  encoding='utf-8-sig') as f:
-            rows = list(csv.DictReader(f))
         selected = self.path_to(name)
-        categories = []
-        for row in rows:
-            category = row.pop('name')
-            del row['idx']
-            categories.append(category)
+
         if not selected.exists():
-            closest_match = self._suggest_example(name, categories)
+            closest_match = self._suggest_example(name, self._example_names)
             # when suggested command returns None, disable did you mean feature
-            did_you_mean_message = f'Did you mean "{closest_match}"?\n' \
-                if closest_match is not None else ''
-            raise BaseException(
-                f'There is no example named {name!r}. '
-                f'{did_you_mean_message}'
-                'List examples: ploomber examples\n'
-                'Update local copy: ploomber examples -f\n'
-                'Get ML example: ploomber examples -n '
-                'templates/ml-basic -o ml-example',
-                type_='no-example-with-name')
+            if closest_match is not None:
+                raise BaseException(
+                    f'There is no example named {name!r}. '
+                    f'Did you mean "{closest_match}"?\n',
+                    type_='no-example-with-name')
+            else:
+                raise BaseException(
+                    f'There is no example named {name!r}. '
+                    'List examples: ploomber examples\n'
+                    'Update local copy: ploomber examples -f\n'
+                    'Get ML example: ploomber examples -n '
+                    'templates/ml-basic -o ml-example',
+                    type_='no-example-with-name')
         else:
             output = output or name
 

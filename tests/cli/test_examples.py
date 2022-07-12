@@ -135,6 +135,7 @@ def test_change_default_branch(monkeypatch, tmp_directory):
     monkeypatch.setattr(examples.subprocess, 'run', mock_run)
 
     # mock list, otherwise this will fail since we aren't cloning
+    monkeypatch.setattr(examples._ExamplesManager, '__init__', lambda _: None)
     monkeypatch.setattr(examples._ExamplesManager, 'list', lambda _: None)
 
     examples.main(name=None, force=False, branch='custom-branch')
@@ -166,9 +167,7 @@ def test_does_not_download_again_if_no_explicit_branch_requested(
 
     # if called again but no force nor branch arg, it shouldn't download again
     examples.main(name=None, force=False, branch=None)
-    examples.main(name=None, force=False)
-    examples.main(name=None, branch=None)
-    examples.main(name=None, force=False, branch=None)
+    examples.main(name='templates/ml-online', force=False, branch=None)
 
     mock_run.assert_not_called()
 
