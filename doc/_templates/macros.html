@@ -41,7 +41,7 @@
                 <a class="nav-link" href="https://ploomber.io">Blog</a>
             </li>
             <li class="nav-item">
-                <span class="nav-link d-md-none">Search</span>
+                <span class="nav-link d-md-none" id="toggleSearch">Search</span>
             </li>
 
         </ul>
@@ -56,5 +56,10 @@
         </div>
 
     </div>
+    <script>
+        $('#toggleSearch').on('click', function() {
+            $(".DocSearch-Button").click();
+        });
+    </script>
 </nav>
 {% endmacro %}
