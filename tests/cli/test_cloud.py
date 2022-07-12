@@ -183,7 +183,6 @@ def test_cloud_user_tracked():
     assert key_val == telemetry.is_cloud_user()
 
 
-@pytest.mark.xfail(reason="timing out")
 def test_get_pipeline(monkeypatch):
     # Write sample pipeline
     pid = str(uuid.uuid4())
@@ -199,7 +198,6 @@ def test_get_pipeline(monkeypatch):
     assert pid in res
 
 
-@pytest.mark.xfail(reason="prod broken")
 def test_get_pipeline_no_key(tmp_directory, monkeypatch):
     key = "TEST_KEY"
     sample_pipeline_id = str(uuid.uuid4())
@@ -210,7 +208,6 @@ def test_get_pipeline_no_key(tmp_directory, monkeypatch):
     assert 'Invalid API key' in pipeline
 
 
-@pytest.mark.xfail(reason="timing out")
 def test_write_pipeline():
     pid = str(uuid.uuid4())
     status = 'started'
@@ -221,7 +218,6 @@ def test_write_pipeline():
     assert pid in res
 
 
-@pytest.mark.xfail(reason="prod broken")
 def test_write_pipeline_no_valid_key(monkeypatch):
     key = "2AhdF2MnRDw-ZZZZZZZZZZ"
     sample_pipeline_id = str(uuid.uuid4())
@@ -246,7 +242,6 @@ def test_write_pipeline_no_status_id(monkeypatch):
     assert 'No input pipeline status' in res
 
 
-@pytest.mark.xfail(reason="timing out")
 def test_write_delete_pipeline():
     pid = str(uuid.uuid4())
     status = 'started'
@@ -256,7 +251,6 @@ def test_write_delete_pipeline():
     assert pid in res
 
 
-@pytest.mark.xfail(reason="timing out")
 def test_delete_non_exist_pipeline():
     pid = 'TEST_PIPELINE'
     res = get_tabular_pipeline(pid)
@@ -266,7 +260,6 @@ def test_delete_non_exist_pipeline():
     assert 'doesn\'t exist' in res
 
 
-@pytest.mark.xfail(reason="timing out")
 def test_update_existing_pipeline():
     pid = str(uuid.uuid4())
     end_status = 'finished'
@@ -284,7 +277,6 @@ def test_update_existing_pipeline():
     assert pid in res
 
 
-@pytest.mark.xfail(reason="timing out")
 def test_pipeline_write_error():
     pid = str(uuid.uuid4())
     end_status = 'error'
@@ -304,7 +296,6 @@ def test_pipeline_write_error():
 
 
 # Get all pipelines, minimum of 3 should exist.
-@pytest.mark.xfail(reason="timing out")
 def test_get_multiple_pipelines(monkeypatch):
     class CustomTableWrapper(table.Table):
         @classmethod
@@ -359,7 +350,6 @@ def test_get_latest_pipeline(monkeypatch):
     assert pid in pipeline
 
 
-@pytest.mark.xfail(reason="timing out")
 def test_get_active_pipeline(monkeypatch):
     pid = str(uuid.uuid4())
     res = write_sample_pipeline(pipeline_id=pid, status='started')
@@ -374,7 +364,6 @@ def test_get_active_pipeline(monkeypatch):
     assert pid in res
 
 
-@pytest.mark.xfail(reason="timing out")
 def test_get_pipeline_with_dag(monkeypatch):
     dag_mock = Mock(
         return_value={
