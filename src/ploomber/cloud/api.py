@@ -321,14 +321,19 @@ def upload_zipped_project(response, verbose, runid):
         files = {"file": f}
         try:
             http_response = _requests.post(response["url"],
-                                       data=response["fields"],
-                                       files=files)
+                                           data=response["fields"],
+                                           files=files)
         except json.JSONDecodeError as err:
-            raise BaseException(f"An error happened during POST request: {err}\n"
-                                "It is possible that your project's source code size is "
-                                "over 5MB, which isn't supported.")
+            raise BaseException(
+                f"An error happened during POST request: {err}"
+                "\nIt is possible that your project's"
+                " source code size is over 5MB,"
+                " which isn't supported."
+            )
         except Exception as err:
-            raise BaseException(f"An error happened during POST request: {err}")
+            raise BaseException(
+                f"An error happened during POST request: {err}"
+            )
         finally:
             run_abort(runid)
 
