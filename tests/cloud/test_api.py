@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 import zipfile
 from pathlib import Path
 
@@ -59,6 +59,17 @@ def test_zip_project_ignore_prefixes(tmp_directory, sample_project):
         'c/c1/c2',
         '.ploomber-cloud',
     }
+
+
+def test_zip_project_errors_if_too_large(tmp_directory, sample_project):
+    with patch('pathlib.Path.stat') as stat, \
+         pytest.raises(BaseException) as excinfo:
+        stat.return_value.st_size = 6 * 1024 * 1024
+        api.zip_project(force=False,
+                        runid='runid',
+                        github_number='number',
+                        verbose=False)
+    assert "Your project's source code is over 5MB" in str(excinfo.value)
 
 
 @pytest.mark.skip(reason="no way of currently testing this")

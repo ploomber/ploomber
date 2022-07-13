@@ -278,7 +278,8 @@ def zip_project(force, runid, github_number, verbose, ignore_prefixes=None):
     if Path("project.zip").exists():
         if verbose:
             click.secho("Deleting existing project.zip...", fg="yellow")
-        Path("project.zip").unlink()
+        # ignore FileNotFoundError exceptions
+        Path("project.zip").unlink(missing_ok=True)
 
     files = glob("**/*", recursive=True)
 
@@ -387,7 +388,9 @@ def upload_project(force=False,
         click.echo("Uploading project...")
 
     response = get_presigned_link()
+
     upload_zipped_project(response, verbose, runid)
+
     if verbose:
         click.echo("Starting build...")
 
