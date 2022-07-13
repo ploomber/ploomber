@@ -61,7 +61,7 @@ def test_zip_project_ignore_prefixes(tmp_directory, sample_project):
     }
 
 
-def test_zip_project_errors_if_too_large(tmp_directory, sample_project):
+def test_zip_project_errors_if_file_too_large(tmp_directory, sample_project):
     with patch('pathlib.Path.stat') as stat, \
          pytest.raises(BaseException) as excinfo:
         stat.return_value.st_size = 6 * 1024 * 1024
