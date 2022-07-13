@@ -102,6 +102,7 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
         pytest tests/cli/test_cloud_execution.py
+        pytest tests/cli/test_cloud.py
         pytest tests/cloud
         pytest tests/telemetry
 
@@ -205,6 +206,7 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
         pytest tests/cli/test_cloud_execution.py
+        pytest tests/cli/test_cloud.py
         pytest tests/cloud
         pytest tests/telemetry
 
