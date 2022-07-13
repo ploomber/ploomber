@@ -178,6 +178,11 @@ pre> :not(:first-child).ipynb-lexed * {
         z-index: 100;
         background-color: #fff;
     }
+    #search {
+        margin-top: -40px;
+        margin-left: 50px;
+        margin-bottom: 10px;
+    }
 }
 
 .sphinxsidebarwrapper ul {

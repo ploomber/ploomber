@@ -1,20 +1,18 @@
 {% macro nav_bar(pathto, active=none) %}
 
 <nav class="navbar navbar-expand-md navbar-dark fixed-top">
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
-        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
-        <span class="navbar-toggler-icon"></span>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column" aria-controls="first-column"
+        aria-expanded="false" aria-label="Toggle TOC">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-files" viewBox="0 0 16 16">
+            <path d="M13 0H6a2 2 0 0 0-2 2 2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm0 13V4a2 2 0 0 0-2-2H5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1zM3 4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4z"/>
+        </svg>
     </button>
 
     <a class="navbar-brand" href="{{ pathto('index') }}">Ploomber</a>
 
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar" aria-controls="top-bar"
-        aria-expanded="false" aria-label="Toggle navigation">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search"
-            viewBox="0 0 16 16">
-            <path
-                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
-        </svg>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar"
+        aria-controls="top-bar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="top-bar">
@@ -42,6 +40,10 @@
             <li class="nav-item">
                 <a class="nav-link" href="https://ploomber.io">Blog</a>
             </li>
+            <li class="nav-item">
+                <span class="nav-link d-md-none" id="toggleSearch">Search</span>
+            </li>
+
         </ul>
 
         <!-- By default any child element that uses Bootstrap nav class falls under display flex! -->
@@ -54,5 +56,10 @@
         </div>
 
     </div>
+    <script>
+        $('#toggleSearch').on('click', function() {
+            $(".DocSearch-Button").click();
+        });
+    </script>
 </nav>
 {% endmacro %}
