@@ -220,8 +220,11 @@ def run_logs_image(headers, run_id, tail=None):
 
 @auth_header
 def run_abort(headers, run_id):
-    _requests.get(f"{HOST}/runs/{run_id}/abort", headers=headers).json()
-    print("Aborted.")
+    try:
+        _requests.get(f"{HOST}/runs/{run_id}/abort", headers=headers).json()
+        print(f"Aborted {run_id}.")
+    except BaseException as e:
+        print(f"Error encounted while aborting {run_id}: {e}")
 
 
 @auth_header
@@ -328,7 +331,7 @@ def upload_zipped_project(response, verbose, runid):
             raise BaseException(
                 f"An error happened during POST request: {err}"
                 "\nIt is possible that your project's"
-                " source code size is over 5MB,"
+                " source code is over 5MB,"
                 " which isn't supported."
             )
         except Exception as err:

@@ -72,6 +72,20 @@ def test_zip_project_errors_if_file_too_large(tmp_directory, sample_project):
     assert "Your project's source code is over 5MB" in str(excinfo.value)
 
 
+def test_upload_zipped_project_errors_if_too_large(tmp_directory):
+    '''if user makes a POST request directly'''
+    mb = 6
+    with open("project.zip", "wb") as tf:
+        tf.seek(mb * 1024 * 1024 - 1)
+        tf.write(b'0')
+        tf.seek(0)
+    response = api.get_presigned_link()
+    with pytest.raises(BaseException) as excinfo:
+        api.upload_zipped_project(response, False, "run-id")
+
+    assert "your project's source code is over 5MB" in str(excinfo.value)
+
+
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_runs_new():
     api.runs_new(metadata=dict(a=1))
