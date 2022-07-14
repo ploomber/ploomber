@@ -194,7 +194,7 @@ where to save our outputs.
 **When executing your pipeline, Ploomber injects a new cell** into each
 script/notebooks, with new ``product`` and ``upstream`` variables that
 replace the original ones by extracting information from the
-``pipeline.yaml.yaml``:
+``pipeline.yaml``:
 
 .. image:: /_static/img/basics/injected.png
    :target: /_static/img/basics/injected.png

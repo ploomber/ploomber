@@ -105,7 +105,8 @@ jobs:
         pytest src/ploomber --doctest-modules --ignore src/ploomber/resources
         unset PY_IGNORE_IMPORTMISMATCH
 
-        pytest tests/cli/test_cloud_execution.py --cov=ploomber 
+        pytest tests/cli/test_cloud_execution.py --cov=ploomber
+        pytest tests/cli/test_cloud.py --cov=ploomber
         pytest tests/cloud --cov=ploomber
         pytest tests/telemetry --cov=ploomber
 
@@ -213,6 +214,7 @@ jobs:
         unset PY_IGNORE_IMPORTMISMATCH
 
         pytest tests/cli/test_cloud_execution.py --cov=ploomber 
+        pytest tests/cli/test_cloud.py --cov=ploomber
         pytest tests/cloud --cov=ploomber
         pytest tests/telemetry --cov=ploomber
   
