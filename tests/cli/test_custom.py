@@ -538,11 +538,11 @@ tasks:
 def test_report_command(tmp_nbs, backend, output, monkeypatch, capsys):
     args = ['ploomber', 'report', '--entry-point', 'pipeline.yaml',
             '--backend', backend]
-    if output is not None:
+    if output:
         args.extend(['--output', output])
     monkeypatch.setattr(
         sys, 'argv', args)
-    output = 'pipeline.html' if output is None else output
+    output = 'pipeline.html' if not output else output
     cmd_router()
     expected_output_path = Path(output)
     captured = capsys.readouterr()
