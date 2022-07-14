@@ -114,8 +114,8 @@ def test_clones_in_home_directory(monkeypatch, tmp_directory):
 
     try:
         examples.main(name=None, force=False)
-    except:
-        pass
+    except BaseException as e:
+        print(e)
 
     # check clones inside home directory
     mock_run.assert_called_once_with([
@@ -141,8 +141,8 @@ def test_change_default_branch(monkeypatch, tmp_directory):
     monkeypatch.setattr(examples._ExamplesManager, 'list', lambda _: None)
     try:
         examples.main(name=None, force=False, branch='custom-branch')
-    except:
-        pass
+    except BaseException as e:
+        print(e)
     # check clones inside home directory
     mock_run.assert_called_once_with([
         'git', 'clone', '--depth', '1', '--branch', 'custom-branch',
