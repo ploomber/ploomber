@@ -124,5 +124,7 @@ To embed a Python code block within an `.rst` file, refer to the following sampl
 
 Read more about additional options to embed code blocks in `.rst` files by visiting [this link](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#showing-code-examples).
 
+#### Working with Algolia Crawler
 
+Login to [algolia crawler](https://crawler.algolia.com). Select ploomber in the crawlers section. Select Editor from the side bar. This allows you to make edits to the config file. After making edits, you can use the URL Tester to test. Click save when you are ready. After clicking save, exit the text editor and restart the crawler. After the crawler finishes restarting, Docsearch should be updated on the site. 
 
