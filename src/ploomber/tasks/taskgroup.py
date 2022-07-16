@@ -130,10 +130,12 @@ class TaskGroup:
             The name prefix for each of the tasks in the task group. If namer
             is None, this must not be None.
 
-        namer : callable, default=None
+        namer : callable or str, default=None
             A function that receives a single argument (the task parameters
             dict) and returns a string used as a task name. If name is None,
-            this must not be None.
+            this must not be None. Beginning in 0.19.8 you can also pass a
+            string with placeholders that are replaced by the parameter values
+            (e.g., 'param=[[param]]-another=[[another]]')
 
         resolve_relative_to : str or pathlib.Path, default=None
             If not None, paths in File products are resolved to be absolute
@@ -177,9 +179,19 @@ class TaskGroup:
 
             # user provided a namer function
             if namer:
-                task_name = namer(params)
-                # if function provided, do not use indexing
-                index = None
+                if isinstance(namer, str):
+                    task_name = Template(
+                        namer,
+                        variable_start_string='[[',
+                        variable_end_string=']]',
+                    ).render(**params)
+
+                else:
+                    task_name = namer(params)
+
+                    # if function provided, do not use indexing
+                    index = None
+
             # no namer function, just add an index
             else:
                 task_name = name + str(index)
