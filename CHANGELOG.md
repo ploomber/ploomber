@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## 0.19.8dev
+* Allow dotted paths in `pipeline.yaml` `grid` parameters (#804)
+* Templating task names when usnig `grid` via `[[placeholders]]` (#698)
+* Improved performance when loading the DAG in the Jupyter plugin (#894)
 
 ## 0.19.7 (2022-07-04)
 * Suppressing "black is not installed" message ([#831](https://github.com/ploomber/ploomber/issues/831))
