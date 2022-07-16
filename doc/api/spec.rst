@@ -900,6 +900,25 @@ for example, it will store the random forest with ``n_estimators=5``, and
 uses square brackets to differentiate them from regular placeholders when
 using an ``env.yaml`` file.
 
+**Templating name tasks**
+
+Similarly, you can also customize task names (**Added in version 0.19.8**):
+
+.. code-block:: yaml
+    :class: text-editor
+    :name: grid-example-3-yaml
+
+    tasks:
+      - source: random-forest.py
+        name: random-forest-[[n_estimators]]-[[criterion]]
+        product: 'n_estimators=[[n_estimators]]/criterion=[[criterion]].html'
+        grid:
+            n_estimators: [5, 10, 20]
+            criterion: [gini, entropy]
+
+
+The above will generate with task names ``random-forest-5-gini``, ``random-forest-10-gini``, etc.
+
 **Passing a list of grids**
 
 You may pass a list instead of a dictionary to use multiple sets of parameters:
@@ -968,6 +987,9 @@ wildcard with the ``*`` character:
 
     .. versionadded:: 0.19.8
         Pass dotted path (``module.function``) to generate large grids dynamically
+
+    .. versionadded:: 0.19.8
+        Customize task names using placeholders ``[[placeholder]]``
 
     .. versionadded:: 0.17.2
         Use ``params`` and ``grid`` in the same task. Values in ``params`` are constant across the grid.
