@@ -297,7 +297,7 @@ class TaskSpec(MutableMapping):
             product_class = _find_product_class(task_class, data, self.meta)
             product = data.pop('product')
             name = data.pop('name')
-            grid = data.pop('grid')
+            grid = _preprocess_grid_spec(data.pop('grid'))
 
             # hooks
             on_render = data.pop('on_render', None)
@@ -594,3 +594,40 @@ def get_value_at(d, dotted_path):
             return None
 
     return current
+
+
+def _preprocess_grid_spec(grid_spec):
+    """
+    Preprocess a grid (list or dictionary) to expand values if it contains
+    dotted paths
+    """
+    if isinstance(grid_spec, Mapping):
+        return _preprocess_grid_spec_mapping(grid_spec)
+    else:
+        out = []
+
+        for element in grid_spec:
+            out.append(_preprocess_grid_spec_mapping(element))
+
+        return out
+
+
+def _preprocess_grid_spec_mapping(grid_spec):
+    """
+    Preprocess a grid (dictionary) to expand values if it contains
+    dotted paths
+    """
+    out = dict()
+
+    for key, value in grid_spec.items():
+        try:
+            dp = dotted_path.DottedPath(value, allow_return_none=False)
+        except TypeError:
+            dp = None
+
+        if dp:
+            out[key] = dp()
+        else:
+            out[key] = value
+
+    return out

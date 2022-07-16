@@ -238,7 +238,8 @@ def test_doesnt_warn_if_relations_match(sql, split_source):
     with pytest.warns(None) as record:
         source.render({'product': product})
 
-    assert not record
+    assert all(
+        ['It appears that your script' not in str(r.message) for r in record])
 
 
 def test_warns_if_inferred_relations_do_not_match_product():
