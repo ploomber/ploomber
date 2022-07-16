@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.19.9dev
+
 ## 0.19.8 (2022-07-16)
 * Allow dotted paths in `pipeline.yaml` `grid` parameters ([#804](https://github.com/ploomber/ploomber/issues/804))
 * Templating task names when using `grid` via `[[placeholders]]` ([#698](https://github.com/ploomber/ploomber/issues/698))
