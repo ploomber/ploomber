@@ -51,6 +51,25 @@ def sample_dagspec(tmp_directory, write_tasks):
 
 
 @pytest.fixture
+def sample_dagspec_with_placeholder_task_names(tmp_directory, write_tasks):
+    spec = {
+        'tasks': [{
+            'source': 'upstream.py',
+            'name': 'upstream-param=[[param]]',
+            'product': 'output/param=[[param]].ipynb',
+            'grid': {
+                'param': [1, 2]
+            }
+        }, {
+            'source': 'downstream.py',
+            'product': 'downstream.ipynb'
+        }]
+    }
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec))
+
+
+@pytest.fixture
 def sample_dagspec_with_params(tmp_directory, write_tasks):
     spec = {
         'tasks': [{
@@ -93,3 +112,11 @@ def test_grid_with_params(sample_dagspec_with_params):
         'another': 100,
         'one-more': 200
     }
+
+
+def test_with_with_placeholder_task_names(
+        sample_dagspec_with_placeholder_task_names):
+    dag = DAGSpec('pipeline.yaml').to_dag()
+
+    assert 'param=1-0.ipynb' in str(dag['upstream-param=1'].product)
+    assert 'param=2-1.ipynb' in str(dag['upstream-param=2'].product)
