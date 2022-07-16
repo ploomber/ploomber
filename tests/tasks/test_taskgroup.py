@@ -38,6 +38,28 @@ def test_from_params():
     assert str(dag['task_group1'].product) == str(Path('dir', 'file-1.txt'))
 
 
+def test_from_params_with_name_placeholders():
+    dag = DAG()
+    TaskGroup.from_params(PythonCallable,
+                          File,
+                          'dir/param=[[param]].txt', {'source': touch},
+                          dag,
+                          namer='param=[[param]]',
+                          params_array=[{
+                              'param': 1
+                          }, {
+                              'param': 2
+                          }])
+
+    dag.render()
+
+    assert set(dag) == {'param=1', 'param=2'}
+    assert dag['param=1'].source.primitive is touch
+    assert dag['param=2'].source.primitive is touch
+    assert str(dag['param=1'].product) == str(Path('dir', 'param=1-0.txt'))
+    assert str(dag['param=2'].product) == str(Path('dir', 'param=2-1.txt'))
+
+
 def test_from_params_with_product_placeholders():
     dag = DAG()
     group = TaskGroup.from_params(PythonCallable,
