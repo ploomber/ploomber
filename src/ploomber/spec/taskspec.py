@@ -318,18 +318,25 @@ class TaskSpec(MutableMapping):
 
             params = data.pop('params', None)
 
+            # if the name argument is a placeholder, pass it in the namer
+            # argument to the placeholders are replaced by their values
+            if '[[' in name and ']]' in name:
+                name_arg = dict(namer=name)
+            else:
+                name_arg = dict(name=name)
+
             return TaskGroup.from_grid(task_class=task_class,
                                        product_class=product_class,
                                        product_primitive=product,
                                        task_kwargs=data,
                                        dag=dag,
-                                       name=name,
                                        grid=grid,
                                        resolve_relative_to=self.project_root,
                                        on_render=on_render,
                                        on_finish=on_finish,
                                        on_failure=on_failure,
-                                       params=params), upstream
+                                       params=params,
+                                       **name_arg), upstream
         else:
             return _init_task(data=data,
                               meta=self.meta,
