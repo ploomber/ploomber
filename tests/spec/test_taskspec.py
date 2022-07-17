@@ -596,3 +596,138 @@ def test_constructor_deep_copies_spec_and_meta(tmp_directory, tmp_imports):
     assert meta is not task_spec.meta
     assert params is not task_spec.data['params']
     assert prod_default_class is not task_spec.meta['product_default_class']
+
+
+@pytest.mark.parametrize('grid, n_expected', [
+    [
+        {
+            'a': 'my_module.a',
+            'b': [4, 5, 6],
+        },
+        9,
+    ],
+    [
+        {
+            'a': 'my_module.b',
+            'b': [4, 5, 6],
+        },
+        9,
+    ],
+    [
+        {
+            'a': {
+                'dotted_path': 'my_module.range_',
+                'n': 4
+            },
+            'b': [4, 5, 6],
+        },
+        12,
+    ],
+    [
+        [
+            {
+                'a': {
+                    'dotted_path': 'my_module.range_',
+                    'n': 3
+                },
+                'b': [4, 5],
+            },
+            {
+                'c': {
+                    'dotted_path': 'my_module.range_',
+                    'n': 2
+                },
+                'd': {
+                    'dotted_path': 'my_module.range_',
+                    'n': 3
+                },
+            },
+        ],
+        12,
+    ],
+])
+def test_grid_with_dotted_paths(tmp_directory, tmp_imports, grid, n_expected):
+    Path('my_module.py').write_text("""
+def fn():
+    pass
+
+def a():
+    return list(range(3))
+
+def b():
+    return [4, 5, 6]
+
+
+def range_(n):
+    return list(range(n))
+""")
+
+    spec = TaskSpec(
+        {
+            'source': 'my_module.fn',
+            'product': 'report.ipynb',
+            'name': 'fn-',
+            'grid': grid,
+        },
+        Meta.default_meta(),
+        '.',
+        lazy_import=True)
+
+    group, _ = spec.to_task(dag=DAG())
+
+    assert len(group) == n_expected
+
+
+@pytest.mark.parametrize('grid, error_expected', [
+    [
+        {
+            'a': 'my_module.non_existing',
+            'b': [4, 5, 6],
+        },
+        "Could not get 'non_existing' from module 'my_module'",
+    ],
+    [
+        {
+            'a': 'my_module.return_none',
+            'b': [4, 5, 6],
+        },
+        "Error calling dotted path 'my_module.return_none'",
+    ],
+    [
+        {
+            'a': 'my_module.crash',
+            'b': [4, 5, 6],
+        },
+        "some error",
+    ],
+],
+                         ids=[
+                             'non-existing',
+                             'returns-none',
+                             'crashes',
+                         ])
+def test_errors_in_grid_with_dotted_paths(tmp_directory, tmp_imports, grid,
+                                          error_expected):
+    Path('my_module.py').write_text("""
+def return_none():
+    return None
+
+def crash():
+    raise ValueError('some error')
+""")
+
+    spec = TaskSpec(
+        {
+            'source': 'my_module.fn',
+            'product': 'report.ipynb',
+            'name': 'fn-',
+            'grid': grid,
+        },
+        Meta.default_meta(),
+        '.',
+        lazy_import=True)
+
+    with pytest.raises(Exception) as excinfo:
+        spec.to_task(dag=DAG())
+
+    assert error_expected in str(excinfo.value)

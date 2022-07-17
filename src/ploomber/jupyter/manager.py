@@ -19,9 +19,139 @@ from collections import defaultdict
 
 from ploomber.sources.notebooksource import (_cleanup_rendered_nb, inject_cell)
 from ploomber.jupyter.dag import JupyterDAGManager
-from ploomber.util import loader
+from ploomber.util import loader, default
 from ploomber.exceptions import DAGSpecInvalidError
 from ploomber.tasks.notebook import NotebookMixin
+
+
+class DAGLoader:
+    """
+    Finds and loads the DAG for cell injection, caching it if it
+    hasn't changed
+    """
+    def __init__(self, root_dir, log):
+        self._log = log
+        self._root_dir = root_dir
+        self._spec = None
+        self._path = None
+        self._text = None
+        self._path_to_spec = None
+
+        self.__dag = None
+        self.__mapping = None
+
+    @property
+    def _dag(self):
+        return self.__dag
+
+    @_dag.setter
+    def _dag(self, value):
+        # if we assign a new DAG, we must reset the mapping
+        self.__mapping = None
+        self.__dag = value
+
+    @property
+    def _mapping(self):
+        """Returns the corresponding DAGMapping instance for the current DAG
+        """
+        if self.__mapping is None:
+
+            notebook_tasks = [
+                task for task in self._dag.values()
+                if isinstance(task, NotebookMixin)
+            ]
+
+            pairs = [
+                (resolve_path(Path(self._root_dir).resolve(), t.source.loc), t)
+                for t in notebook_tasks if t.source.loc is not None
+            ]
+            self.__mapping = DAGMapping(pairs)
+
+        return self.__mapping
+
+    def _load(self, generator):
+        self._log.info('[Ploomber] Loading pipeline')
+        (self._spec, self._dag, self._path,
+         self._path_to_spec) = next(generator)
+
+        if self._path_to_spec is not None:
+            self._text = Path(self._path_to_spec).read_text()
+
+            self._path_to_env = default.path_to_env_from_spec(
+                self._path_to_spec)
+
+            if self._path_to_env:
+                self._text_env = Path(self._path_to_env).read_text()
+            else:
+                self._text_env = None
+        else:
+            self._text = None
+
+    def load(self, starting_dir, reload, model):
+        loaded = False
+
+        # locate the spec to load
+        generator = loader._lazily_load_entry_point_generator(
+            starting_dir=starting_dir, reload=reload)
+        path_to_spec = next(generator)
+
+        # path_to_spec will be None if loading pipeline from a directory
+        # or dotted path, caching is unsupported in those two caes
+        if path_to_spec is None:
+            self._log.info('[Ploomber] Caching unsupported.'
+                           ' Reloading pipeline...')
+            self._load(generator)
+            loaded = True
+
+        # FIXME: caching is not supported when this is enabled
+        elif self._spec and self._spec['meta'][
+                'jupyter_functions_as_notebooks']:
+            self._load(generator)
+            loaded = True
+
+        # determine if it has changed (loaded a new file or contents changed)
+        elif (str(path_to_spec) != str(self._path_to_spec)
+              or self._text != Path(path_to_spec).read_text()):
+            self._log.info('[Ploomber] Spec changed. Reloading pipeline...')
+            # if so, reload
+            self._load(generator)
+            loaded = True
+
+        elif self._spec['meta']['extract_upstream']:
+            path = model['path']
+            task = self._mapping.get(path)
+
+            # if the current notebook is in the pipeline, we must check if
+            # the upstream has changed
+            if task:
+                upstream_in_dag = set(task.upstream)
+                upstream_in_source = set(
+                    task.source.extract_upstream(force=True) or set())
+
+                if upstream_in_dag != upstream_in_source:
+                    self._log.info(f'[Ploomber] Upstream for {path!r} '
+                                   'changed. Reloading pipeline...')
+                    self._load(generator)
+                    loaded = True
+
+        # the last possibility is that the env file changed
+        if not loaded:
+            path_to_env = default.path_to_env_from_spec(path_to_spec)
+            # TODO: pass the read values to _load so we don't read the file
+            # again
+
+            if path_to_env and (
+                (str(path_to_env) != str(self._path_to_env)
+                 or self._text_env != Path(path_to_env).read_text())):
+                self._log.info('[Ploomber] Env changed. Reloading pipeline...')
+                # if so, reload
+                self._load(generator)
+                loaded = True
+
+        if not loaded:
+            self._log.info('[Ploomber] Using cached pipeline...')
+
+        return self._spec, self._dag, self._path, loaded
 
 
 class DAGMapping(Mapping):
@@ -111,9 +241,31 @@ def derive_class(base_class):
         """
         restart_msg = (' Fix the issue and and restart "jupyter notebook"')
 
+        def __init__(self, *args, **kwargs):
+            """
+            Initialize the content manger, look for a pipeline.yaml file in the
+            current directory, if there is one, load it, if there isn't one
+            don't do anything
+            """
+            # NOTE: there is some strange behavior in the Jupyter contents
+            # manager. We should not access attributes here (e.g.,
+            # self.root_dir) otherwise they aren't correctly initialized.
+            # We have a test that checks this:
+            # test_manager_initialization in test_jupyter.py
+            self.reset_dag()
+            super().__init__(*args, **kwargs)
+            self.__dag_loader = None
+
+        @property
+        def _dag_loader(self):
+            if self.__dag_loader is None:
+                self.__dag_loader = DAGLoader(self.root_dir, self.log)
+
+            return self.__dag_loader
+
         # TODO: we can cache this depending on the folder where it's called
         # all files in the same folder share the same dag
-        def load_dag(self, starting_dir=None, log=True):
+        def load_dag(self, starting_dir=None, log=True, model=None):
             if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
                 msg = (
                     '[Ploomber] An error occured when trying to initialize '
@@ -126,9 +278,11 @@ def derive_class(base_class):
                 try:
                     hot_reload = (self.spec
                                   and self.spec['meta']['jupyter_hot_reload'])
-                    (self.spec, self.dag,
-                     path) = loader.lazily_load_entry_point(
-                         starting_dir=starting_dir, reload=hot_reload)
+
+                    (self.spec, self.dag, path,
+                     loaded) = self._dag_loader.load(starting_dir=starting_dir,
+                                                     reload=hot_reload,
+                                                     model=model)
                     path = str(Path(path).resolve())
                 # this error means we couldn't locate a parent root (which is
                 # required to determine which spec to use). Since it's expected
@@ -166,41 +320,37 @@ def derive_class(base_class):
                         # running time, which we need to be fast
                         sys.path.insert(0, str(base_path))
 
-                    render_success = True
+                    # if we just loaded this (i.e. not using cache), render it
+                    # also check if it hasn't been rendered
+                    if loaded or not self.render_success:
+                        self.render_success = True
 
-                    with chdir(base_path):
-                        # this dag object won't be executed, forcing speeds
-                        # up rendering
-                        try:
-                            self.dag.render(force=True, show_progress=False)
-                        except Exception:
-                            render_success = False
-                            self.reset_dag()
-                            if log:
-                                msg = ("[Ploomber] An error ocurred when "
-                                       "rendering your DAG, cells won't be "
-                                       "injected until the issue is resolved")
-                                self.log.exception(msg)
+                        with chdir(base_path):
+                            # this dag object won't be executed, forcing speeds
+                            # up rendering
+                            try:
+                                self.dag.render(force=True,
+                                                show_progress=False)
+                            except Exception:
+                                self.render_success = False
+                                self.reset_dag()
+                                if log:
+                                    msg = (
+                                        "[Ploomber] An error ocurred when "
+                                        "rendering your DAG, cells won't be "
+                                        "injected until the issue is resolved")
+                                    self.log.exception(msg)
 
-                    # if rendering failed, do not continue
-                    if not render_success:
-                        return
+                        # if rendering failed, do not continue
+                        if not self.render_success:
+                            return
 
                     if self.spec['meta']['jupyter_functions_as_notebooks']:
                         self.manager = JupyterDAGManager(self.dag)
                     else:
                         self.manager = None
 
-                    notebook_tasks = [
-                        task for task in self.dag.values()
-                        if isinstance(task, NotebookMixin)
-                    ]
-
-                    pairs = [(resolve_path(
-                        Path(self.root_dir).resolve(), t.source.loc), t)
-                             for t in notebook_tasks
-                             if t.source.loc is not None]
-                    dag_mapping = DAGMapping(pairs)
+                    dag_mapping = self._dag_loader._mapping
 
                     did_keys_change = (
                         self.dag_mapping is None
@@ -209,8 +359,6 @@ def derive_class(base_class):
                     if did_keys_change or self.path != path:
                         self.log.info('[Ploomber] Using dag defined '
                                       f'at: {str(base_path)!r}')
-                        self.log.info('[Ploomber] Pipeline mapping keys: '
-                                      f'{list(dag_mapping)}')
 
                     self.dag_mapping = dag_mapping
                     self.path = path
@@ -221,27 +369,20 @@ def derive_class(base_class):
             self.path = None
             self.dag_mapping = None
             self.manager = None
-
-        def __init__(self, *args, **kwargs):
-            """
-            Initialize the content manger, look for a pipeline.yaml file in the
-            current directory, if there is one, load it, if there isn't one
-            don't do anything
-            """
-            # NOTE: there is some strange behavior in Jupyter contents
-            # manager. We should not access attributes here (e.g.,
-            # self.root_dir) otherwise they aren't correctly initialized
-            self.reset_dag()
-            super().__init__(*args, **kwargs)
+            self.render_success = None
 
         def get(self, path, content=True, type=None, format=None):
             """
-            This is called when a file/directory is requested (even in the list
-            view)
+            This is called when opening a file (content=True) and when listing
+            files. When listing it's called once per file with (content=False).
+
+            Also called for directories. When the directory is part of the
+            listing (content=False) and when opened (content=True)
             """
-            # FIXME: we only need this call when functions as notebooks is true
             # FIXME: reloading inside a (functions) folder causes 404
-            if content:
+            if content and (
+                    self.spec is None
+                    or self.spec['meta']['jupyter_functions_as_notebooks']):
                 # this load_dag() is required to list the folder that contains
                 # the notebooks exported from functions, however, since jupyter
                 # continuosly calls this for the current directory it gets
@@ -251,6 +392,7 @@ def derive_class(base_class):
             if self.manager and path in self.manager:
                 return self.manager.get(path, content)
 
+            # get the model contents (e.g. notebook content)
             model = super().get(path=path,
                                 content=content,
                                 type=type,
@@ -264,14 +406,15 @@ def derive_class(base_class):
 
             check_metadata_filter(self.log, model)
 
-            # if opening a file (ignore file listing), load dag again
+            # if opening a file
             if (model['content'] and model['type'] == 'notebook'):
                 # instantiate the dag using starting at the current folder
                 self.log.info(
                     f'[Ploomber] Requested model: {model["path"]}. '
                     f'Looking for DAG with root dir: {self.root_dir}')
-                self.load_dag(
-                    starting_dir=Path(self.root_dir, model['path']).parent)
+                self.load_dag(starting_dir=Path(self.root_dir,
+                                                model['path']).parent,
+                              model=model)
 
                 if self._model_in_dag(model):
                     self.log.info('[Ploomber] Injecting cell...')

@@ -341,7 +341,7 @@ class NotebookSource(Source):
         self._nb_str_rendered = nbformat.writes(nb)
         self._post_render_validation()
 
-    def _read_nb_str_unrendered(self):
+    def _read_nb_str_unrendered(self, force=False):
         """
         Returns the notebook representation (JSON string), this is the raw
         source code passed, does not contain injected parameters.
@@ -352,10 +352,15 @@ class NotebookSource(Source):
         An exception is raised if we cannot determine kernel information.
         """
         # hot_reload causes to always re-evalaute the notebook representation
-        if self._nb_str_unrendered is None or self._hot_reload:
+        if self._nb_str_unrendered is None or self._hot_reload or force:
+            if force:
+                primitive = _read_primitive(self._path)
+            else:
+                primitive = self.primitive
+
             # this is the notebook node representation
             nb = _to_nb_obj(
-                self.primitive,
+                primitive,
                 ext=self._ext_in,
                 # passing the underscored version
                 # because that's the only one available
@@ -529,14 +534,15 @@ Go to: https://ploomber.io/s/params for more information
     def _nb_str_to_obj(self, nb_str):
         return nbformat.reads(nb_str, as_version=nbformat.NO_CONVERT)
 
-    def _get_parameters_cell(self):
-        self._read_nb_str_unrendered()
+    def _get_parameters_cell(self, force=False):
+        self._read_nb_str_unrendered(force=force)
         cell, _ = find_cell_with_tag(self._nb_obj_unrendered, tag='parameters')
         return cell.source
 
-    def extract_upstream(self):
+    def extract_upstream(self, force=False):
         extractor_class = extractor_class_for_language(self.language)
-        return extractor_class(self._get_parameters_cell()).extract_upstream()
+        return extractor_class(
+            self._get_parameters_cell(force=force)).extract_upstream()
 
     def extract_product(self):
         extractor_class = extractor_class_for_language(self.language)
