@@ -328,6 +328,7 @@ def upload_zipped_project(response, verbose, runid):
                                            data=response["fields"],
                                            files=files)
         except json.JSONDecodeError as err:
+            run_abort(runid)
             raise BaseException(
                 f"An error happened during POST request: {err}"
                 "\nIt is possible that your project's"
@@ -335,11 +336,10 @@ def upload_zipped_project(response, verbose, runid):
                 " which isn't supported."
             )
         except Exception as err:
+            run_abort(runid)
             raise BaseException(
                 f"An error happened during POST request: {err}"
             )
-        finally:
-            run_abort(runid)
 
     if http_response.status_code != 204:
         raise ValueError(f"An error happened: {http_response}")
