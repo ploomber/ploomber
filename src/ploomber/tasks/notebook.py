@@ -498,6 +498,9 @@ class NotebookRunner(NotebookMixin, Task):
         Change working directory to be the parent of the notebook's source.
         Defaults to False. This resembles the default behavior when
         running notebooks interactively via `jupyter notebook`
+    debug : bool, default=False
+        If True, runs notebook in debug mode, this will enable the Python
+        debugger and start a debugging session if an error is thrown.
 
     Examples
     --------
@@ -592,9 +595,12 @@ class NotebookRunner(NotebookMixin, Task):
     -----
     .. collapse:: changelog
 
+        .. versionchanged:: 0.19.9
+            ``debug`` flag.
+
         .. versionchanged:: 0.19.6
             Support for generating output notebooks in multiple formats, see
-            example above
+            example above.
 
     `nbconvert's documentation <https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options>`_ # noqa
     """
@@ -660,7 +666,8 @@ class NotebookRunner(NotebookMixin, Task):
                  static_analysis='regular',
                  nbconvert_export_kwargs=None,
                  local_execution=False,
-                 check_if_kernel_installed=True):
+                 check_if_kernel_installed=True,
+                 debug=False):
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name
@@ -669,17 +676,27 @@ class NotebookRunner(NotebookMixin, Task):
         self.nb_product_key = nb_product_key
         self.local_execution = local_execution
         self.check_if_kernel_installed = check_if_kernel_installed
+        self._debug = debug
 
         if 'cwd' in self.papermill_params and self.local_execution:
             raise KeyError('If local_execution is set to True, "cwd" should '
                            'not appear in papermill_params, as such '
                            'parameter will be set by the task itself')
 
+        if 'engine' in self.papermill_params and debug:
+            raise ValueError('Engine should not appear in "papermill_params" '
+                             'when "debug" is True')
+
         kwargs = dict(hot_reload=dag._params.hot_reload)
-        self._source = NotebookRunner._init_source(source, kwargs, ext_in,
-                                                   kernelspec_name,
-                                                   static_analysis,
-                                                   check_if_kernel_installed)
+        self._source = NotebookRunner._init_source(
+            source,
+            kwargs,
+            ext_in,
+            kernelspec_name,
+            static_analysis,
+            check_if_kernel_installed,
+            debug,
+        )
         super().__init__(product, dag, name, params)
 
         self._validate_nbconvert_exporter()
@@ -730,13 +747,15 @@ class NotebookRunner(NotebookMixin, Task):
                      ext_in=None,
                      kernelspec_name=None,
                      static_analysis='regular',
-                     check_if_kernel_installed=False):
+                     check_if_kernel_installed=False,
+                     debug=False):
         return NotebookSource(
             source,
             ext_in=ext_in,
             kernelspec_name=kernelspec_name,
             static_analysis=static_analysis,
             check_if_kernel_installed=check_if_kernel_installed,
+            debug=debug,
             **kwargs)
 
     def run(self):
@@ -788,6 +807,10 @@ class NotebookRunner(NotebookMixin, Task):
         if self.local_execution:
             self.papermill_params['cwd'] = str(self.source.loc.parent)
 
+        # use our custom engine
+        if self._debug:
+            self.papermill_params['engine_name'] = 'ploomber-engine'
+
         # create parent folders if they don't exist
         Path(path_to_out_ipynb).parent.mkdir(parents=True, exist_ok=True)
 
@@ -811,8 +834,8 @@ class NotebookRunner(NotebookMixin, Task):
                 raise TaskBuildError(
                     'Error when executing task'
                     f' {self.name!r}. Partially'
-                    f' executed notebook available at {str(path_to_out_ipynb)}'
-                ) from e
+                    ' executed notebook '
+                    f'available at {str(path_to_out_ipynb)}', self) from e
         finally:
             tmp.unlink()
 
@@ -867,6 +890,7 @@ class ScriptRunner(NotebookMixin, Task):
     >>> _ = ScriptRunner(Path('script.py'), product, dag=dag)
     >>> _ = dag.build()
     """
+
     def __init__(self,
                  source,
                  product,
@@ -886,12 +910,15 @@ class ScriptRunner(NotebookMixin, Task):
 
     @staticmethod
     def _init_source(source, kwargs, ext_in=None, static_analysis='regular'):
-        return NotebookSource(source,
-                              ext_in=ext_in,
-                              static_analysis=static_analysis,
-                              kernelspec_name=None,
-                              check_if_kernel_installed=False,
-                              **kwargs)
+        return NotebookSource(
+            source,
+            ext_in=ext_in,
+            static_analysis=static_analysis,
+            kernelspec_name=None,
+            check_if_kernel_installed=False,
+            debug=False,
+            **kwargs,
+        )
 
     def run(self):
         # regular mode: raise but not check signature
@@ -943,7 +970,8 @@ def _run_script_in_subprocess(interpreter, path, cwd):
                        'ScriptRunner, remove them or use the regular '
                        'NotebookRunner)')
 
-        raise RuntimeError('Error while executing ScriptRunner:\n' f'{stderr}')
+        raise RuntimeError('Error while executing ScriptRunner:\n'
+                           f'{stderr}')
 
 
 def _read_rendered_notebook(nb_str):
