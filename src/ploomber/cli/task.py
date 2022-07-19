@@ -1,6 +1,7 @@
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
-from ploomber.telemetry import telemetry
+from ploomber_core.telemetry import telemetry
+from ploomber import __version__ as ver
 from ploomber.cloud import api
 import click
 
@@ -71,7 +72,7 @@ def _task_cli(accept_task_id=False):
 
 
 @cli_endpoint
-@telemetry.log_call('task')
+@telemetry.log_call('task', 'ploomber', ver)
 def main():
     _task_cli()
 

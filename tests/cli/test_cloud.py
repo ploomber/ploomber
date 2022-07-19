@@ -8,8 +8,8 @@ from click.testing import CliRunner
 from ploomber.cli import cloud
 from ploomber_cli.cli import get_key, set_key, write_pipeline, get_pipelines,\
                             delete_pipeline
-from ploomber.telemetry import telemetry
-from ploomber.telemetry.telemetry import DEFAULT_USER_CONF
+from ploomber_core.telemetry import telemetry
+from ploomber_core.telemetry.telemetry import DEFAULT_USER_CONF
 from ploomber import table
 
 

@@ -102,7 +102,7 @@ def scaffold(name, conda, package, entry_point, empty):
     Need help? https://ploomber.io/community
     """
     from ploomber import scaffold as _scaffold
-    from ploomber.telemetry import telemetry
+    from ploomber_core.telemetry import telemetry
 
     template = '-e/--entry-point is not compatible with {flag}'
     user_passed_name = name is not None
@@ -110,6 +110,7 @@ def scaffold(name, conda, package, entry_point, empty):
     if entry_point and name:
         err = '-e/--entry-point is not compatible with the "name" argument'
         telemetry.log_api("scaffold_error",
+                          "ploomber",
                           metadata={
                               'type': 'entry_and_name',
                               'exception': err,
@@ -120,6 +121,7 @@ def scaffold(name, conda, package, entry_point, empty):
     if entry_point and conda:
         err = template.format(flag='--conda')
         telemetry.log_api("scaffold_error",
+                          "ploomber",
                           metadata={
                               'type': 'entry_and_conda_flag',
                               'exception': err,
@@ -130,6 +132,7 @@ def scaffold(name, conda, package, entry_point, empty):
     if entry_point and package:
         err = template.format(flag='--package')
         telemetry.log_api("scaffold_error",
+                          "ploomber",
                           metadata={
                               'type': 'entry_and_package_flag',
                               'exception': err,
@@ -140,6 +143,7 @@ def scaffold(name, conda, package, entry_point, empty):
     if entry_point and empty:
         err = template.format(flag='--empty')
         telemetry.log_api("scaffold_error",
+                          "ploomber",
                           metadata={
                               'type': 'entry_and_empty_flag',
                               'exception': err,
@@ -161,6 +165,7 @@ def scaffold(name, conda, package, entry_point, empty):
             )
         except Exception as e:
             telemetry.log_api("scaffold_error",
+                              "ploomber",
                               metadata={
                                   'type': 'dag_load_failed',
                                   'exception': str(e),
@@ -180,6 +185,7 @@ def scaffold(name, conda, package, entry_point, empty):
         _scaffold.add(spec, path_to_spec)
 
         telemetry.log_api("ploomber_scaffold",
+                          "ploomber",
                           metadata={
                               'type': 'add_task',
                               'argv': sys.argv,
@@ -188,6 +194,7 @@ def scaffold(name, conda, package, entry_point, empty):
     else:
         # no pipeline, create base project
         telemetry.log_api("ploomber_scaffold",
+                          "ploomber",
                           metadata={
                               'type': 'base_project',
                               'argv': sys.argv
@@ -249,7 +256,7 @@ def examples(name, force, branch, output):
     """
     click.echo('Loading examples...')
 
-    from ploomber.telemetry import telemetry
+    from ploomber_core.telemetry import telemetry
     from ploomber import cli as cli_module
 
     try:
@@ -261,6 +268,7 @@ def examples(name, force, branch, output):
         raise
     except Exception as e:
         telemetry.log_api("examples_error",
+                          "ploomber",
                           metadata={
                               'type': 'runtime_error',
                               'exception': str(e),
