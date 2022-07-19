@@ -1,5 +1,6 @@
 # Contributing to Ploomber
 
+
 Thanks for considering contributing to Ploomber!
 
 Issues tagged with [good first issue](https://github.com/ploomber/ploomber/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are great options to start contributing.
