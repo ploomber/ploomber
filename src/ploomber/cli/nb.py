@@ -8,9 +8,10 @@ import click
 
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import command_endpoint
-from ploomber.telemetry import telemetry
+from ploomber_core.telemetry import telemetry
 from ploomber.sources.notebooksource import recursive_update
 from ploomber.exceptions import BaseException
+from ploomber import __version__ as ver
 
 
 def _format(fmt, entry_point, dag, verbose=True):
@@ -200,7 +201,7 @@ $ ploomber nb -f ipynb
 
 # TODO: --log, --log-file should not appear as options
 @command_endpoint
-@telemetry.log_call('nb')
+@telemetry.log_call('nb', 'ploomber', ver)
 def main():
     parser = CustomParser(
         description=_description,

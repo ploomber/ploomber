@@ -21,8 +21,9 @@ from ploomber.io._commander import Commander
 from ploomber.exceptions import BaseException
 from ploomber.util.util import check_mixed_envs
 from ploomber.cli.io import command_endpoint
-from ploomber.telemetry import telemetry
+from ploomber_core.telemetry import telemetry
 from ploomber.util._sys import _python_bin
+from ploomber import __version__ as ver
 
 _SETUP_PY = 'setup.py'
 
@@ -36,7 +37,7 @@ _PYTHON_BIN_NAME = _python_bin()
 
 
 @command_endpoint
-@telemetry.log_call('install')
+@telemetry.log_call('install', 'ploomber', ver)
 def main(use_lock, create_env=None, use_venv=False):
     """
     Install project, automatically detecting if it's a conda-based or pip-based
@@ -228,6 +229,7 @@ def main_conda(use_lock, create_env=True):
                    'environment. Activate a different one and try '
                    'again: conda activate base')
             telemetry.log_api("install-error",
+                              "ploomber",
                               metadata={
                                   'type': 'env_running_conflict',
                                   'exception': err
@@ -256,6 +258,7 @@ def main_conda(use_lock, create_env=True):
                    f'delete it and try again '
                    f'(conda env remove --name {env_name})')
             telemetry.log_api("install-error",
+                              "ploomber",
                               metadata={
                                   'type': 'duplicate_env',
                                   'exception': err
@@ -358,6 +361,7 @@ def _find_conda_root(conda_bin):
            f'directory: {str(conda_bin)!r}. Please submit an issue: '
            'https://github.com/ploomber/ploomber/issues/new')
     telemetry.log_api("install-error",
+                      "ploomber",
                       metadata={
                           'type': 'no_conda_root',
                           'exception': err
@@ -382,6 +386,7 @@ def _locate_pip_inside_conda(env_name):
         err = (f'Could not locate pip in environment {env_name!r}, make sure '
                'it is included in your environment.yml and try again')
         telemetry.log_api("install-error",
+                          "ploomber",
                           metadata={
                               'type': 'no_pip_env',
                               'exception': err

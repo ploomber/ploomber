@@ -18,7 +18,7 @@ from ploomber import DAG
 import ploomber.dag.dag as dag_module
 # TODO: optimize some of the tests that build dags by mocking and checking
 # that the build function is called with the appropriate args
-from ploomber.telemetry import telemetry
+from ploomber_core.telemetry import telemetry
 
 IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and 'win' in sys.platform
 
