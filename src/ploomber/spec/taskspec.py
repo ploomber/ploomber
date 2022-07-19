@@ -5,6 +5,7 @@ Note: All validation errors should raise DAGSpecInitializationError, this
 allows the CLI to signal that this is a user's input error and hides the
 traceback and only displays the error message
 """
+import mimetypes
 from functools import partial
 from copy import copy, deepcopy
 from pathlib import Path
@@ -41,10 +42,17 @@ def _safe_suffix(product):
 
 def _looks_like_path(s):
     system = platform.system()
+
     if system == 'Windows':
-        return '\\' in s
+        is_path = '\\' in s
     else:
-        return '/' in s
+        is_path = '/' in s
+
+    if is_path:
+        return is_path
+    else:
+        is_recognized_file_type = mimetypes.guess_type(s)[0] is not None
+        return is_recognized_file_type
 
 
 def _extension_typo(extension, valid_extensions):
@@ -96,7 +104,8 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
             'Failed to determine task class for '
             f'source {source_str!r} (invalid '
             f'extension {extension!r}). Valid extensions '
-            f'are: {pretty_print.iterable(suffix2taskclass)}')
+            f'are: {pretty_print.iterable(suffix2taskclass)}\n'
+            'If you meant to import a function, please rename it.')
     elif lazy_import == 'skip':
         # Anything that has not been caught before is treated as a
         # Python function, thus we return a PythonCallable

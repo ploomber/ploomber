@@ -27,6 +27,7 @@ def test_task_class_from_script(tmp_directory, source_str, expected):
 @pytest.mark.parametrize('source_str', [
     str(Path('something', 'script.md')),
     str(Path('something', 'another', 'script.json')),
+    str(Path('file.html'))
 ])
 def test_task_class_from_script_unknown_extension(tmp_directory, source_str):
     with pytest.raises(DAGSpecInitializationError) as excinfo:
