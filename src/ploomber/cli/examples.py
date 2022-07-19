@@ -14,7 +14,8 @@ import click
 from ploomber.io.terminalwriter import TerminalWriter
 from ploomber.cli.io import command_endpoint
 from ploomber.table import Table
-from ploomber.telemetry import telemetry
+from ploomber_core.telemetry import telemetry
+from ploomber import __version__ as ver
 from ploomber.exceptions import BaseException
 
 from pygments.formatters.terminal import TerminalFormatter
@@ -300,7 +301,7 @@ class _ExamplesManager:
 
 
 @command_endpoint
-@telemetry.log_call('examples')
+@telemetry.log_call('examples', 'ploomber', ver)
 def main(name, force=False, branch=None, output=None):
     """
     Entry point for examples

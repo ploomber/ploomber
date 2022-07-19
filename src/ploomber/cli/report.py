@@ -1,10 +1,11 @@
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
-from ploomber.telemetry import telemetry
+from ploomber_core.telemetry import telemetry
+from ploomber import __version__ as ver
 
 
 @cli_endpoint
-@telemetry.log_call('report')
+@telemetry.log_call('report', 'ploomber', ver)
 def main():
     parser = CustomParser(description='Make a pipeline report',
                           prog='ploomber report')
