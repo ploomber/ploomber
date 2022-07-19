@@ -266,6 +266,13 @@ def derive_class(base_class):
         # TODO: we can cache this depending on the folder where it's called
         # all files in the same folder share the same dag
         def load_dag(self, starting_dir=None, log=True, model=None):
+            try:
+                self._load_dag(starting_dir, log, model)
+            except Exception as e:
+                self._log.error('An error occured when loading '
+                                f'your pipeline: {e}')
+
+        def _load_dag(self, starting_dir=None, log=True, model=None):
             if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
                 msg = (
                     '[Ploomber] An error occured when trying to initialize '
