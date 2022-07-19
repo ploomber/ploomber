@@ -112,10 +112,8 @@ def test_clones_in_home_directory(monkeypatch, tmp_directory):
     # mock list, otherwise this will fail since we aren't cloning
     monkeypatch.setattr(examples._ExamplesManager, 'list', lambda _: None)
 
-    try:
+    with pytest.raises(BaseException):
         examples.main(name=None, force=False)
-    except BaseException as e:
-        print(e)
 
     # check clones inside home directory
     mock_run.assert_called_once_with([
@@ -139,10 +137,8 @@ def test_change_default_branch(monkeypatch, tmp_directory):
 
     # mock list, otherwise this will fail since we aren't cloning
     monkeypatch.setattr(examples._ExamplesManager, 'list', lambda _: None)
-    try:
+    with pytest.raises(BaseException):
         examples.main(name=None, force=False, branch='custom-branch')
-    except BaseException as e:
-        print(e)
     # check clones inside home directory
     mock_run.assert_called_once_with([
         'git', 'clone', '--depth', '1', '--branch', 'custom-branch',

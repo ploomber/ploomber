@@ -284,11 +284,12 @@ class _ExamplesManager:
             if closest_match is not None:
                 raise BaseException(
                     f'There is no example named {name!r}. '
-                    f'Did you mean "{closest_match}"?\n',
+                    f'Did you mean "{closest_match}"?',
                     type_='no-example-with-name')
             else:
+                print()
                 raise BaseException(
-                    f'There is no example named {name!r}. '
+                    f'There is no example named {name!r}. \n'
                     'List examples: ploomber examples\n'
                     'Update local copy: ploomber examples -f\n'
                     'Get ML example: ploomber examples -n '
