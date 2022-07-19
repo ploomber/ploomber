@@ -62,7 +62,6 @@ jobs:
         if [ $VERSION -ne 10 ]; then
           echo "installing pygraphviz"
           conda install -y -c alubbock pygraphviz
-          dot -c
         else
           echo "skipping pygraphviz installation"
         fi

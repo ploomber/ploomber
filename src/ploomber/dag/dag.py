@@ -809,14 +809,12 @@ class DAG(AbstractDAG):
         else:
             status = False
 
-        backend = plot.choose_backend(backend)
-
         if 'plot' in sections:
-            ext = '.png' if backend == 'pygraphviz' \
+            ext = '.png' if plot.choose_backend(backend) == 'pygraphviz' \
                   else '.html'
             fd, path_to_plot = tempfile.mkstemp(suffix=ext)
             os.close(fd)
-            self.plot(output=path_to_plot, backend=backend)
+            self.plot(output=path_to_plot)
             plot_ = image_bytes2html(Path(path_to_plot).read_bytes())
         else:
             plot_ = False
