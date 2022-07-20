@@ -49,7 +49,7 @@ def _looks_like_path(s):
         return '/' in s
 
 
-def _loos_like_file_name(s):
+def _looks_like_file_name(s):
     return mimetypes.guess_type(s)[0] is not None
 
 
@@ -116,7 +116,7 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
             error = e
 
         if imported is None:
-            if _loos_like_file_name(source_str):
+            if _looks_like_file_name(source_str):
                 raise DAGSpecInitializationError(
                     'Failed to determine task class for '
                     f'source {source_str!r} (invalid '
