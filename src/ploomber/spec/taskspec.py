@@ -113,8 +113,7 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
         if imported is None:
             raise DAGSpecInitializationError(
                 'Failed to determine task class for '
-                f'source {source_str!r}: {error!s}. (invalid '
-                f'extension {extension!r}). Valid extensions '
+                f'source {source_str!r}: {error!s}.\nValid extensions '
                 f'are: {pretty_print.iterable(suffix2taskclass)}\n'
                 'If you meant to import a function, please rename it.')
         else:
