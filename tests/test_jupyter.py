@@ -1145,3 +1145,18 @@ def test_reloads_dag_if_env_path_changes(tmp_nbs, monkeypatch):
     dag_second = cm.dag
 
     assert dag_first is not dag_second
+
+
+def test_load_dag_exception_handling(monkeypatch):
+    cm = PloomberContentsManager()
+    mock_exception = Mock(side_effect=ValueError('known error'))
+    monkeypatch.setattr(cm.log, 'exception', Mock())
+    monkeypatch.setattr(cm, '_load_dag', mock_exception)
+
+    try:
+        cm.load_dag()
+    except Exception as e:
+        assert False, f'{e} Exception raised'
+
+    msg = 'An error occured when loading your pipeline: known error'
+    cm.log.exception.assert_called_with(msg)

@@ -269,8 +269,8 @@ def derive_class(base_class):
             try:
                 self._load_dag(starting_dir, log, model)
             except Exception as e:
-                self._log.error('An error occured when loading '
-                                f'your pipeline: {e}')
+                self.log.exception('An error occured when loading '
+                                   f'your pipeline: {e}')
 
         def _load_dag(self, starting_dir=None, log=True, model=None):
             if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
