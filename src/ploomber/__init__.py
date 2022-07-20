@@ -1,4 +1,6 @@
 import logging
+import warnings
+from sys import version_info
 from ploomber.dag.dag import DAG
 from ploomber.dag.inmemorydag import InMemoryDAG
 from ploomber.dag.dagconfigurator import DAGConfigurator
@@ -14,6 +16,12 @@ __version__ = '0.19.9dev'
 # Set default logging handler to avoid "No handler found" warnings.
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+
+if version_info < (3, 7):
+    warnings.warn("Ploomber 0.20 will no longer support Python 3.6.\n"
+                  "Please upgrade your Python version to 3.7+.",
+                  DeprecationWarning)
 
 __all__ = [
     'DAG',
