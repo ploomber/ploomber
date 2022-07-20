@@ -9,7 +9,7 @@ from invoke import task
 import shutil
 
 _IS_WINDOWS = platform.system() == 'Windows'
-_PY_DEFAULT_VERSION = '3.9'
+_PY_DEFAULT_VERSION = '3.6'
 
 if not Path('LICENSE').exists():
     sys.exit('Error: Run the command from the root folder (the directory '

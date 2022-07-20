@@ -32,7 +32,7 @@ def read(name):
 NB = [
     'papermill',
     # we need this for our custom papermill engine
-    'nbclient>=0.6.1',
+    'nbclient',
     'jupytext',
     'ipykernel>=1.5.2',
     'jupyter_client>=5.3.1',

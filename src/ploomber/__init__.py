@@ -17,7 +17,7 @@ __version__ = '0.19.9dev'
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-
+print(version_info)
 if version_info < (3, 7):
     warnings.warn("Ploomber 0.20 will no longer support Python 3.6.\n"
                   "Please upgrade your Python version to 3.7+.",
