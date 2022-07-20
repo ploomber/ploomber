@@ -838,7 +838,7 @@ to produce all values (**Added in version 0.19.8**):
     def generate_values():
         return range(10)
 
-Then call if in your ``pipeline.yaml`` like this:
+Then call it in your ``pipeline.yaml`` like this:
 
 
 .. code-block:: yaml
