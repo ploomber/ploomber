@@ -312,7 +312,7 @@ def mock_posthog_capture(monkeypatch):
     mock_dt = Mock()
     mock_dt.now.side_effect = [1, 2, 3]
     monkeypatch.setattr(telemetry.posthog, 'capture', mock)
-    monkeypatch.setattr(telemetry, '_get_telemetry_info', lambda:
+    monkeypatch.setattr(telemetry, '_get_telemetry_info', lambda x, y: 
                         (True, 'UID', False))
     return mock
 
