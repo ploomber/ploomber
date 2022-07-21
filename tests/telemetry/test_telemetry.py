@@ -1,4 +1,5 @@
 import sys
+import os
 from unittest.mock import Mock, call
 from pathlib import Path
 import datetime
@@ -24,7 +25,8 @@ def ignore_ploomber_stats_enabled_env_var(monkeypatch):
     environment variable to prevent CI events from going to posthog, this
     inferes with some tests. This fixture removes its value temporarily
     """
-    monkeypatch.delenv('PLOOMBER_STATS_ENABLED', raising=True)
+    if 'PLOOMBER_STATS_ENABLED' in os.environ:
+        monkeypatch.delenv('PLOOMBER_STATS_ENABLED', raising=True)
 
 
 @pytest.fixture
@@ -102,11 +104,15 @@ def test_install_uses_telemetry(monkeypatch, tmp_directory):
 
 @pytest.mark.parametrize('expected', [[
     call(action='build-started',
+         package_name='ploomber',
+         version=ver,
          metadata={
              'argv': ['python', '--entry-point', 'test_pkg.entry.with_doc']
          }),
     call(action='build-success',
          total_runtime='0:00:00',
+         package_name='ploomber',
+         version=ver,
          metadata={
              'argv': ['python', '--entry-point', 'test_pkg.entry.with_doc'],
              'dag': dag_module.DAG("No name")

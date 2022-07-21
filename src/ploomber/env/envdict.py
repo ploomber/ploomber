@@ -15,7 +15,7 @@ from ploomber.util import default
 from ploomber.util.validate import keys as validate_keys
 from ploomber.placeholders import util
 from ploomber.exceptions import ValidationError
-from ploomber_core.exception import BaseException
+from ploomber_core.exceptions import BaseException
 
 def _get_import_from(raw_data, path_to_here):
     meta = raw_data.get('meta', {})
