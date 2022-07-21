@@ -1,5 +1,4 @@
 from ploomber_core.exceptions import BaseException
-from gettext import gettext as _
 
 
 class DAGRenderError(Exception):
