@@ -18,7 +18,7 @@ import click
 import yaml
 
 from ploomber.io._commander import Commander
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
 from ploomber.util.util import check_mixed_envs
 from ploomber.cli.io import command_endpoint
 from ploomber_core.telemetry import telemetry
@@ -230,6 +230,7 @@ def main_conda(use_lock, create_env=True):
                    'again: conda activate base')
             telemetry.log_api("install-error",
                               "ploomber",
+                              ver,
                               metadata={
                                   'type': 'env_running_conflict',
                                   'exception': err
@@ -259,6 +260,7 @@ def main_conda(use_lock, create_env=True):
                    f'(conda env remove --name {env_name})')
             telemetry.log_api("install-error",
                               "ploomber",
+                              ver,
                               metadata={
                                   'type': 'duplicate_env',
                                   'exception': err
@@ -362,6 +364,7 @@ def _find_conda_root(conda_bin):
            'https://github.com/ploomber/ploomber/issues/new')
     telemetry.log_api("install-error",
                       "ploomber",
+                      ver,
                       metadata={
                           'type': 'no_conda_root',
                           'exception': err
@@ -387,6 +390,7 @@ def _locate_pip_inside_conda(env_name):
                'it is included in your environment.yml and try again')
         telemetry.log_api("install-error",
                           "ploomber",
+                          ver,
                           metadata={
                               'type': 'no_pip_env',
                               'exception': err

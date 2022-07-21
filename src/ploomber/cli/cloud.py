@@ -20,7 +20,7 @@ import re
 
 import humanize
 
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
 from ploomber import __version__ as ver
 from ploomber_core.telemetry import telemetry
 from ploomber_core.telemetry.telemetry import parse_dag, UserSettings
@@ -112,7 +112,7 @@ def get_pipeline(pipeline_id=None, verbose=None):
         conn.close()
 
 
-@telemetry.log_call('write-pipeline', 'ploomber')
+@telemetry.log_call('write-pipeline', 'ploomber', ver)
 def write_pipeline(pipeline_id,
                    status,
                    log=None,
@@ -172,7 +172,7 @@ def _write_pipeline(pipeline_id,
         conn.close()
 
 
-@telemetry.log_call('delete-pipeline', 'ploomber')
+@telemetry.log_call('delete-pipeline', 'ploomber', ver)
 def delete_pipeline(pipeline_id):
     """
     Updates a user pipeline via the cloud api key. Validates the key.

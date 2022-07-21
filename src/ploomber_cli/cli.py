@@ -5,6 +5,7 @@ from difflib import get_close_matches
 import sys
 
 from ploomber_scaffold import scaffold as scaffold_project
+from ploomber import __version__ as ver
 
 import click
 
@@ -111,6 +112,7 @@ def scaffold(name, conda, package, entry_point, empty):
         err = '-e/--entry-point is not compatible with the "name" argument'
         telemetry.log_api("scaffold_error",
                           "ploomber",
+                          ver,
                           metadata={
                               'type': 'entry_and_name',
                               'exception': err,
@@ -122,6 +124,7 @@ def scaffold(name, conda, package, entry_point, empty):
         err = template.format(flag='--conda')
         telemetry.log_api("scaffold_error",
                           "ploomber",
+                          ver,
                           metadata={
                               'type': 'entry_and_conda_flag',
                               'exception': err,
@@ -133,6 +136,7 @@ def scaffold(name, conda, package, entry_point, empty):
         err = template.format(flag='--package')
         telemetry.log_api("scaffold_error",
                           "ploomber",
+                          ver,
                           metadata={
                               'type': 'entry_and_package_flag',
                               'exception': err,
@@ -144,6 +148,7 @@ def scaffold(name, conda, package, entry_point, empty):
         err = template.format(flag='--empty')
         telemetry.log_api("scaffold_error",
                           "ploomber",
+                          ver,
                           metadata={
                               'type': 'entry_and_empty_flag',
                               'exception': err,
@@ -166,6 +171,7 @@ def scaffold(name, conda, package, entry_point, empty):
         except Exception as e:
             telemetry.log_api("scaffold_error",
                               "ploomber",
+                              ver,
                               metadata={
                                   'type': 'dag_load_failed',
                                   'exception': str(e),
@@ -186,6 +192,7 @@ def scaffold(name, conda, package, entry_point, empty):
 
         telemetry.log_api("ploomber_scaffold",
                           "ploomber",
+                          ver,
                           metadata={
                               'type': 'add_task',
                               'argv': sys.argv,
@@ -195,6 +202,7 @@ def scaffold(name, conda, package, entry_point, empty):
         # no pipeline, create base project
         telemetry.log_api("ploomber_scaffold",
                           "ploomber",
+                          ver,
                           metadata={
                               'type': 'base_project',
                               'argv': sys.argv
@@ -269,6 +277,7 @@ def examples(name, force, branch, output):
     except Exception as e:
         telemetry.log_api("examples_error",
                           "ploomber",
+                          ver,
                           metadata={
                               'type': 'runtime_error',
                               'exception': str(e),

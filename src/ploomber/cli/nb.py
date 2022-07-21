@@ -10,7 +10,7 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import command_endpoint
 from ploomber_core.telemetry import telemetry
 from ploomber.sources.notebooksource import recursive_update
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
 from ploomber import __version__ as ver
 
 

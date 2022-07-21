@@ -13,7 +13,7 @@ from click.testing import CliRunner
 from ploomber.cli import install as install_module
 from ploomber_cli.cli import install
 from ploomber.cli.install import _pip_install
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
 from conftest import (_write_sample_conda_env, _prepare_files,
                       _write_sample_pip_req, _write_sample_conda_files,
                       _write_sample_pip_files)

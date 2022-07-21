@@ -11,7 +11,8 @@ except ModuleNotFoundError:
 import click
 
 from ploomber.io import TerminalWriter
-from ploomber.exceptions import DAGBuildError, DAGRenderError, BaseException
+from ploomber.exceptions import DAGBuildError, DAGRenderError
+from ploomber_core.exceptions import BaseException
 from ploomber.executors import _format
 
 # TODO: there are two types of cli commands: the ones that execute user's

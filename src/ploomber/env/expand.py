@@ -15,7 +15,7 @@ from jinja2 import Template
 from ploomber.placeholders import util
 from ploomber import repo
 from ploomber.util import default
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
 
 
 def expand_raw_dictionary_and_extract_tags(raw, mapping):

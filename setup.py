@@ -155,6 +155,7 @@ setup(
     ],
     install_requires=[
         'ploomber-scaffold>=0.3',
+        'ploomber-core',
         'pyyaml',
         'networkx>=2.5',
         # nbconvert is broken with jinja>=3.1
