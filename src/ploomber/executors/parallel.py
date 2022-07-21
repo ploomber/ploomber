@@ -113,8 +113,7 @@ class Parallel(Executor):
             raise ValueError(
                 'Invalid start_method. '
                 f'Valid values for start_method are: '
-                f'{pretty_print.iterable(self.multiprocessing_start_methods)}'
-            )
+                f'{pretty_print.iterable(self.multiprocessing_start_methods)}')
 
     def __call__(self, dag, show_progress):
         super().__call__(dag)

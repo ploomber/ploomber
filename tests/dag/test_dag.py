@@ -988,13 +988,21 @@ def test_early_stop_from_task_level_on_finish(executor, tmp_directory):
 # test early stop when registered an on_failure hook, maybe don't run hook?
 
 
-@pytest.mark.parametrize('start_method', ["invalid_start_method_value"])
+@pytest.mark.parametrize('start_method', ['invalid_start_method_value'])
 def test_invalid_start_method_in_parallel_executor(tmp_directory,
                                                    start_method):
     with pytest.raises(ValueError) as excinfo:
         DAG(executor=Parallel(processes=2, start_method=start_method))
 
     assert 'Invalid start_method' in str(excinfo.value)
+
+
+@pytest.mark.parametrize('start_method', ['spawn', 'fork', 'forkserver'])
+def test_switch_start_method_in_parallel_executor(tmp_directory, start_method,
+                                                  monkeypatch):
+    dag = DAG(executor=Parallel(processes=2, start_method=start_method))
+
+    assert dag.executor.start_method == start_method
 
 
 def test_metadata_is_synced_when_executing_in_subprocess(tmp_directory):
