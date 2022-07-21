@@ -4,7 +4,7 @@ Tests for the custom jupyter contents manager
 import sys
 import os
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 import shutil
 
 import yaml
@@ -113,7 +113,7 @@ def test_does_not_log_error_dag_when_getting_a_directory(
     app.initialize(argv=[])
 
     # jupyter refreshes the current directory every few seconds
-    # (by calling.get('')), we simulate taht here
+    # (by calling.get('')), we simulate that here
     app.contents_manager.get('')
     app.contents_manager.get('')
 
@@ -1145,3 +1145,15 @@ def test_reloads_dag_if_env_path_changes(tmp_nbs, monkeypatch):
     dag_second = cm.dag
 
     assert dag_first is not dag_second
+
+
+def test_load_dag_exception_handling(monkeypatch):
+    cm = PloomberContentsManager()
+    mock_exception = Mock(side_effect=ValueError('known error'))
+    monkeypatch.setattr(cm.log, 'exception', Mock())
+    monkeypatch.setattr(cm, '_load_dag', mock_exception)
+
+    cm.load_dag()
+
+    msg = 'An error occured when loading your pipeline: known error'
+    assert cm.log.exception.call_args_list == [call(msg)]
