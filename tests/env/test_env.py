@@ -23,6 +23,7 @@ from ploomber import repo
 from ploomber.exceptions import ValidationError
 from ploomber_core.exceptions import BaseException
 
+
 def test_env_repr_and_str(cleanup_env, monkeypatch):
     mock = Mock()
     mock.datetime.now().isoformat.return_value = 'current-timestamp'
