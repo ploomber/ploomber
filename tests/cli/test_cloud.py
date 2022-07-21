@@ -10,6 +10,7 @@ from ploomber_cli.cli import get_key, set_key, write_pipeline, get_pipelines,\
                             delete_pipeline
 from ploomber_core.telemetry import telemetry
 from ploomber_core.telemetry.telemetry import DEFAULT_USER_CONF
+from ploomber_core.exceptions import BaseException
 from ploomber import table
 
 

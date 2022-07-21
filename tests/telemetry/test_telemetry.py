@@ -10,7 +10,7 @@ from ploomber.cli import plot, install, build, interact, task, report, status
 import ploomber.dag.dag as dag_module
 from ploomber.tasks.tasks import PythonCallable
 from ploomber.products.file import File
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
 from ploomber.spec import DAGSpec
 from ploomber import __version__ as ver
 
