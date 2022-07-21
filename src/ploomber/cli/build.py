@@ -7,6 +7,7 @@ from ploomber.executors import Parallel
 from ploomber_core.telemetry import telemetry
 from ploomber.cli.cloud import _write_pipeline
 from ploomber import __version__ as ver
+from ploomber import POSTHOG_API_KEY as key
 
 ONLY_IN_CALLABLES_AND_NBS = 'Only supported in function and notebook tasks.'
 
@@ -54,6 +55,7 @@ def main(payload, render_only=False):
         telemetry.log_api("unsupported_build_cmd",
                           "ploomber",
                           ver,
+                          key,
                           metadata={
                               'cmd_name': cmd_name,
                               'suggestion': suggestion,

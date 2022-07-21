@@ -3,10 +3,11 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber_core.telemetry import telemetry
 from ploomber import __version__ as ver
+from ploomber import POSTHOG_API_KEY as key
 
 
 @cli_endpoint
-@telemetry.log_call('interact', 'ploomber', ver)
+@telemetry.log_call('interact', 'ploomber', ver, key)
 def main():
     parser = CustomParser(description='Call an entry point '
                           '(pipeline.yaml or dotted path to factory)',
@@ -25,6 +26,7 @@ def main():
         telemetry.log_api("interact-error-render",
                           "ploomber",
                           ver,
+                          key,
                           metadata={
                               'type': 'dag_render_failed',
                               'exception': err,

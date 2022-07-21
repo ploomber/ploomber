@@ -14,6 +14,7 @@ from ploomber.products.file import File
 from ploomber_core.exceptions import BaseException
 from ploomber.spec import DAGSpec
 from ploomber import __version__ as ver
+from ploomber import POSTHOG_API_KEY as key
 
 from conftest import _write_sample_conda_env, _prepare_files
 
@@ -319,7 +320,7 @@ def mock_posthog_capture(monkeypatch):
 
 @pytest.mark.xfail(sys.platform == "win32", reason="bug in parse_dag")
 def test_parses_dag(mock_posthog_capture, tmp_nbs):
-    @telemetry.log_call('some-action', 'ploomber', ver, payload=True)
+    @telemetry.log_call('some-action', 'ploomber', ver, key, payload=True)
     def my_function(payload):
         payload['dag'] = DAGSpec('pipeline.yaml').to_dag()
 
@@ -331,7 +332,7 @@ def test_parses_dag(mock_posthog_capture, tmp_nbs):
 
 @pytest.mark.xfail(sys.platform == "win32", reason="bug in parse_dag")
 def test_parses_dag_on_exception(mock_posthog_capture, tmp_nbs):
-    @telemetry.log_call('some-action', 'ploomber', ver, payload=True)
+    @telemetry.log_call('some-action', 'ploomber', ver, key, payload=True)
     def my_function(payload):
         payload['dag'] = DAGSpec('pipeline.yaml').to_dag()
         raise BaseException('some error', type_='some-type')

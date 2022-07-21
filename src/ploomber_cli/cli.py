@@ -6,6 +6,7 @@ import sys
 
 from ploomber_scaffold import scaffold as scaffold_project
 from ploomber import __version__ as ver
+from ploomber import POSTHOG_API_KEY as key
 
 import click
 

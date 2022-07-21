@@ -24,6 +24,8 @@ from ploomber.cli.io import command_endpoint
 from ploomber_core.telemetry import telemetry
 from ploomber.util._sys import _python_bin
 from ploomber import __version__ as ver
+from ploomber import POSTHOG_API_KEY as key
+
 
 _SETUP_PY = 'setup.py'
 

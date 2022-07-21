@@ -12,7 +12,7 @@ from ploomber_core.telemetry import telemetry
 from ploomber.sources.notebooksource import recursive_update
 from ploomber_core.exceptions import BaseException
 from ploomber import __version__ as ver
-
+from ploomber import POSTHOG_API_KEY as key
 
 def _format(fmt, entry_point, dag, verbose=True):
     return [
@@ -201,7 +201,7 @@ $ ploomber nb -f ipynb
 
 # TODO: --log, --log-file should not appear as options
 @command_endpoint
-@telemetry.log_call('nb', 'ploomber', ver)
+@telemetry.log_call('nb', 'ploomber', ver, key)
 def main():
     parser = CustomParser(
         description=_description,

@@ -6,10 +6,10 @@ from ploomber.util.default import extract_name
 from ploomber.dag.plot import choose_backend
 from ploomber_core.telemetry import telemetry
 from ploomber import __version__ as ver
-
+from ploomber import POSTHOG_API_KEY as key
 
 @cli_endpoint
-@telemetry.log_call('plot', 'ploomber', ver)
+@telemetry.log_call('plot', 'ploomber', ver, key)
 def main():
     parser = CustomParser(description='Plot a pipeline', prog='ploomber plot')
     with parser:

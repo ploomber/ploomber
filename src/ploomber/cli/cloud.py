@@ -22,6 +22,7 @@ import humanize
 
 from ploomber_core.exceptions import BaseException
 from ploomber import __version__ as ver
+from ploomber import POSTHOG_API_KEY as key
 from ploomber_core.telemetry import telemetry
 from ploomber_core.telemetry.telemetry import parse_dag, UserSettings
 
@@ -42,7 +43,7 @@ def get_key():
     return UserSettings().cloud_key
 
 
-@telemetry.log_call('set-key', 'ploomber', ver)
+@telemetry.log_call('set-key', 'ploomber', ver, key)
 def set_key(user_key):
     """
     Sets the user cloud api key, if key isn't valid 16 chars length, returns.

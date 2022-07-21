@@ -16,6 +16,7 @@ from ploomber.cli.io import command_endpoint
 from ploomber.table import Table
 from ploomber_core.telemetry import telemetry
 from ploomber import __version__ as ver
+from ploomber import POSTHOG_API_KEY as key
 from ploomber_core.exceptions import BaseException
 
 from pygments.formatters.terminal import TerminalFormatter
@@ -327,7 +328,7 @@ class _ExamplesManager:
 
 
 @command_endpoint
-@telemetry.log_call('examples', 'ploomber', ver)
+@telemetry.log_call('examples', 'ploomber', ver, key)
 def main(name, force=False, branch=None, output=None):
     """
     Entry point for examples
