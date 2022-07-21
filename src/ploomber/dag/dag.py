@@ -97,6 +97,7 @@ from ploomber.dag.util import (check_duplicated_products,
                                fetch_remote_metadata_in_parallel,
                                _path_for_plot)
 from ploomber.tasks.abc import Task
+from ploomber.tasks import NotebookRunner
 
 if sys.version_info < (3, 8):
     # pygraphviz dropped support for python 3.7
@@ -202,6 +203,7 @@ class DAG(AbstractDAG):
     >>> _ = dag.build()
 
     """
+
     def __init__(self, name=None, clients=None, executor='serial'):
         self._G = nx.DiGraph()
 
@@ -524,6 +526,14 @@ class DAG(AbstractDAG):
                                              catch_exceptions=False,
                                              catch_warnings=False)
 
+            # set debug flag to True on all tasks that have one. Currently
+            # only NotebookRunner exposes this
+            for name in self._iter():
+                task = self[name]
+                if isinstance(task, NotebookRunner):
+                    task._debug = True
+                    task.source._debug = True
+
         callable_ = partial(self._build,
                             force=force,
                             show_progress=show_progress)
@@ -809,12 +819,14 @@ class DAG(AbstractDAG):
         else:
             status = False
 
+        backend = plot.choose_backend(backend)
+
         if 'plot' in sections:
-            ext = '.png' if plot.choose_backend(backend) == 'pygraphviz' \
+            ext = '.png' if backend == 'pygraphviz' \
                   else '.html'
             fd, path_to_plot = tempfile.mkstemp(suffix=ext)
             os.close(fd)
-            self.plot(output=path_to_plot)
+            self.plot(output=path_to_plot, backend=backend)
             plot_ = image_bytes2html(Path(path_to_plot).read_bytes())
         else:
             plot_ = False
@@ -1180,6 +1192,7 @@ def _product_short_repr(product):
 
 
 def _task_short_repr(task):
+
     def short(s):
         max_l = 30
         return s if len(s) <= max_l else s[:max_l - 3] + '...'

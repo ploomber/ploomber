@@ -112,7 +112,8 @@ def test_clones_in_home_directory(monkeypatch, tmp_directory):
     # mock list, otherwise this will fail since we aren't cloning
     monkeypatch.setattr(examples._ExamplesManager, 'list', lambda _: None)
 
-    examples.main(name=None, force=False)
+    with pytest.raises(BaseException):
+        examples.main(name=None, force=False)
 
     # check clones inside home directory
     mock_run.assert_called_once_with([
@@ -136,9 +137,8 @@ def test_change_default_branch(monkeypatch, tmp_directory):
 
     # mock list, otherwise this will fail since we aren't cloning
     monkeypatch.setattr(examples._ExamplesManager, 'list', lambda _: None)
-
-    examples.main(name=None, force=False, branch='custom-branch')
-
+    with pytest.raises(BaseException):
+        examples.main(name=None, force=False, branch='custom-branch')
     # check clones inside home directory
     mock_run.assert_called_once_with([
         'git', 'clone', '--depth', '1', '--branch', 'custom-branch',
@@ -337,6 +337,32 @@ def test_error_if_git_clone_fails(monkeypatch, capsys):
         'Error: An error occurred when downloading '
         'examples. Verify git is installed and your internet connection. '
         "(Error message: 'message')\n")
+
+
+# TODO: fix ["grid", "cookbook/grid"] in suggest_command
+@pytest.mark.parametrize('input_name, expected_name', [
+    ['reportgeneration', 'cookbook/report-generation'],
+    ['ml-basic', 'templates/ml-basic'],
+    ['cookbookgrid', 'cookbook/grid'],
+    ['parametrized', 'guides/parametrized'],
+    ['variablenumberofproducts', 'cookbook/variable-number-of-products'],
+    ['guides/cro', 'guides/cron'],
+    ['debuging', 'guides/debugging'],
+    ['seerialization', 'guides/serialization'],
+    ['File-Client', 'cookbook/file-client'],
+    ['abcd', None]
+])
+def test_did_you_mean_feature(input_name, expected_name):
+    runner = CliRunner()
+    result = runner.invoke(cli.cli,
+                           ['examples', '--name', input_name])
+    # assert result.exit_code == 1
+    assert f'There is no example named {input_name!r}' in result.output
+    if expected_name is not None:
+        assert f'Did you mean "{expected_name}"' in result.output
+    else:
+        # if the suggested command returns None, disable did you mean feature
+        assert 'Did you mean' not in result.output
 
 
 @pytest.mark.parametrize('md, expected', [

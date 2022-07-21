@@ -27,6 +27,7 @@ class BaseException(ClickException):
     A subclass of ClickException that adds support for printing error messages
     from chained exceptions
     """
+
     def __init__(self, message, type_=None):
         super().__init__(message)
         self.type_ = type_
@@ -51,6 +52,7 @@ class DAGRenderError(Exception):
     exceptions signals special output formatting in the CLI (via the
     @cli_endpoint decorator)
     """
+
     def __init__(self, message):
         message = message + '\nNeed help? https://ploomber.io/community'
         super().__init__(message)
@@ -66,6 +68,7 @@ class DAGBuildError(Exception):
     exceptions signals special output formatting in the CLI (via the
     @cli_endpoint decorator)
     """
+
     def __init__(self, message):
         message = message + '\nNeed help? https://ploomber.io/community'
         super().__init__(message)
@@ -164,6 +167,7 @@ class DAGCycle(Exception):
     """
     Raised when a DAG is defined with cycles.
     """
+
     def __init__(self):
         error_message = """
         Failed to process DAG because it contains cycles.
@@ -175,6 +179,7 @@ class SpecValidationError(Exception):
     """
     Raised when failing to validate a spec
     """
+
     def __init__(self, errors, model, kwargs):
         self.errors = errors
         self.model = model
@@ -195,6 +200,7 @@ class SQLTaskBuildError(TaskBuildError):
     """
     Raised by SQLScript and SQLDump when the .execute method fails
     """
+
     def __init__(self, type_, source_code, original):
         self.type_ = type_
         self.source_code = source_code

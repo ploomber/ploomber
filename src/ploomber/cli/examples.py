@@ -20,6 +20,7 @@ from ploomber.exceptions import BaseException
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer
 from pygments import highlight
+from difflib import get_close_matches
 
 _URL = 'https://github.com/ploomber/projects'
 _DEFAULT_BRANCH = 'master'
@@ -109,6 +110,7 @@ class _ExamplesManager:
     verbose : bool, default=True
         Controls verbosity
     """
+
     def __init__(self, home=None, branch=None, force=False, verbose=True):
         self._home = Path(home or _home).expanduser()
         self._path_to_metadata = self._home / '.metadata'
@@ -125,6 +127,21 @@ class _ExamplesManager:
                 click.echo('Forcing download...')
 
             self.clone()
+
+        with open(self.examples / '_index.csv',
+                  newline='',
+                  encoding='utf-8-sig') as f:
+            rows = list(csv.DictReader(f))
+        self._examples_by_category = defaultdict(lambda: [])
+        for row in rows:
+            category = row.pop('category')
+            del row['idx']
+            self._examples_by_category[category].append(row)
+        self._example_names = [example["name"]
+                               for _, examples
+                               in self._examples_by_category.items()
+                               for example
+                               in examples]
 
     @property
     def home(self):
@@ -217,20 +234,19 @@ class _ExamplesManager:
     def path_to_readme(self):
         return self.examples / 'README.md'
 
+    def _suggest_example(self, name: str, options: list):
+        if not name or name in options:
+            return None
+        name = name.lower()
+        close_commands = get_close_matches(name, options)
+        if close_commands:
+            return close_commands[0]
+        else:
+            return None
+
     def list(self):
-        with open(self.examples / '_index.csv',
-                  newline='',
-                  encoding='utf-8-sig') as f:
-            rows = list(csv.DictReader(f))
 
         categories = json.loads((self.examples / '_category.json').read_text())
-
-        by_category = defaultdict(lambda: [])
-
-        for row in rows:
-            category = row.pop('category')
-            del row['idx']
-            by_category[category].append(row)
 
         tw = TerminalWriter()
 
@@ -238,7 +254,7 @@ class _ExamplesManager:
         tw.sep('=', 'Ploomber examples', blue=True)
         click.echo()
 
-        for category in sorted(by_category):
+        for category in sorted(self._examples_by_category):
             title = category.capitalize()
             description = categories.get(category)
 
@@ -248,7 +264,8 @@ class _ExamplesManager:
             tw.sep(' ', title, green=True)
             click.echo()
             click.echo(
-                Table.from_dicts(by_category[category]).to_format('simple'))
+                Table.from_dicts(self._examples_by_category[category])
+                     .to_format('simple'))
             click.echo()
 
         tw.sep('=', blue=True)
@@ -262,13 +279,22 @@ class _ExamplesManager:
         selected = self.path_to(name)
 
         if not selected.exists():
-            raise BaseException(
-                f'There is no example named {name!r}.\n'
-                'List examples: ploomber examples\n'
-                'Update local copy: ploomber examples -f\n'
-                'Get ML example: ploomber examples -n '
-                'templates/ml-basic -o ml-example',
-                type_='no-example-with-name')
+            closest_match = self._suggest_example(name, self._example_names)
+            # when suggested command returns None, disable did you mean feature
+            if closest_match is not None:
+                raise BaseException(
+                    f'There is no example named {name!r}. '
+                    f'Did you mean "{closest_match}"?',
+                    type_='no-example-with-name')
+            else:
+                print()
+                raise BaseException(
+                    f'There is no example named {name!r}. \n'
+                    'List examples: ploomber examples\n'
+                    'Update local copy: ploomber examples -f\n'
+                    'Get ML example: ploomber examples -n '
+                    'templates/ml-basic -o ml-example',
+                    type_='no-example-with-name')
         else:
             output = output or name
 
@@ -305,9 +331,10 @@ def main(name, force=False, branch=None, output=None):
     """
     Entry point for examples
     """
-    manager = _ExamplesManager(branch=branch, verbose=True, force=force)
-
+    examples_manager = _ExamplesManager(branch=branch,
+                                        force=force,
+                                        verbose=True)
     if not name:
-        manager.list()
+        examples_manager.list()
     else:
-        manager.download(name=name, output=output)
+        examples_manager.download(name=name, output=output)
