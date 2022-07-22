@@ -5,6 +5,7 @@ Note: All validation errors should raise DAGSpecInitializationError, this
 allows the CLI to signal that this is a user's input error and hides the
 traceback and only displays the error message
 """
+import mimetypes
 from functools import partial
 from copy import copy, deepcopy
 from pathlib import Path
@@ -41,10 +42,15 @@ def _safe_suffix(product):
 
 def _looks_like_path(s):
     system = platform.system()
+
     if system == 'Windows':
         return '\\' in s
     else:
         return '/' in s
+
+
+def _looks_like_file_name(s):
+    return mimetypes.guess_type(s)[0] is not None
 
 
 def _extension_typo(extension, valid_extensions):
@@ -110,9 +116,17 @@ def task_class_from_source_str(source_str, lazy_import, reload, product):
             error = e
 
         if imported is None:
-            raise DAGSpecInitializationError(
-                'Failed to determine task class for '
-                f'source {source_str!r}: {error!s}. ')
+            if _looks_like_file_name(source_str):
+                raise DAGSpecInitializationError(
+                    'Failed to determine task class for '
+                    f'source {source_str!r} (invalid '
+                    f'extension {extension!r}). Valid extensions '
+                    f'are: {pretty_print.iterable(suffix2taskclass)}\n'
+                    'If you meant to import a function, please rename it.')
+            else:
+                raise DAGSpecInitializationError(
+                    'Failed to determine task class for '
+                    f'source {source_str!r}: {error!s}.')
         else:
             return tasks.PythonCallable
     else:
@@ -195,6 +209,7 @@ class TaskSpec(MutableMapping):
         if the module has already been imported. Has no effect if
         lazy_import=True.
     """
+
     def __init__(self,
                  data,
                  meta,
