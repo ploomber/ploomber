@@ -267,9 +267,23 @@ the next major release. For example, if the `dev` version is `0.20.1dev`, the
 next major release is `0.21`.
 
 If your change impacts the Spec API (i.e., `pipeline.yaml`). It should also
-be documented in [doc/api/spec.rst](doc/api/spec.rst).
+be documented in [doc/api/spec.rst](doc/api/spec.rst). The `spec.rst` also
+uses the `.. versionadded` and `.. versionchanged` directives:
 
-Finally, if the fix came as part of discovering an error (i.e., a user
+```rst
+.. collapse:: Changelog
+
+    .. versionchanged:: X.Y.Z
+        What changed
+
+    .. versionadded:: X.Y.Z
+        what was added
+```
+
+If there isn't a `.. collapse:: Changelog` at the end of the section, add one.
+## Capturing error messages
+
+If the fix came as part of discovering an error (i.e., a user
 reporting an error that it wasn't clear how to fix), we should capture the
 error, quick instructions on how to fix it and a link to the docs.
 
