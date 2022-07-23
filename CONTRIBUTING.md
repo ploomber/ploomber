@@ -221,14 +221,9 @@ git merge upstream/main
 
 ## Documenting changes and new features
 
-Whenever you make changes to the API (add arguments, add a new class, etc); the
-documentation must be updated. First, modify the docstring (we use the
-[numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) format)
-in the relevant Python function or class.
+The documentation must be updated when you make changes to the API (add arguments, add a new class, etc.). First, modify the docstring (we use the [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) format) in the relevant Python function or class.
 
-New arguments should be documented with a little note at the end. Furthemore,
-the `Notes` section should include the change as well, using `.. versionadded`
-or `.. versionchanged`. Example:
+New arguments should be documented with a note at the end. Furthermore, the `Notes` section should also include the change, using `.. versionadded` or `.. versionchanged`. Example:
 
 ```python
 class SomeExistingClass:
@@ -257,18 +252,11 @@ class SomeExistingClass:
 
 ### Which version to put?
 
-If your change is not making breaking API changes, look at the current
-development version in [CHANGELOG.md](CHANGELOG.md), then drop the `dev`
-portion.
+If your change is not making breaking API changes, look at the current development version in [CHANGELOG.md](CHANGELOG.md), then drop the `dev` portion.
 
-If the change breaks the API, then the version will be handled on a
-case-by-case bases. However, in most cases the change will be scheduled for
-the next major release. For example, if the `dev` version is `0.20.1dev`, the
-next major release is `0.21`.
+If the change breaks the API, the version will be handled case by case. However, in most situations, the change will be scheduled for the next major release. For example, if the `dev` version is `0.20.1dev`, the next major release is `0.21`.
 
-If your change impacts the Spec API (i.e., `pipeline.yaml`). It should also
-be documented in [doc/api/spec.rst](doc/api/spec.rst). The `spec.rst` also
-uses the `.. versionadded` and `.. versionchanged` directives:
+If your change impacts the Spec API (i.e., `pipeline.yaml`). It should also be documented in [doc/api/spec.rst](doc/api/spec.rst). The `spec.rst` also uses the `.. versionadded` and `.. versionchanged` directives:
 
 ```rst
 .. collapse:: Changelog
@@ -314,19 +302,19 @@ def thing_that_the_user_calls(argument):
     ...
 ```
 
-Let's say that when `SomeException` is raised, the fix is to follow certain
+Let's say that when `SomeException` is raised, the fix is to follow specific
 instructions; with this code, the user will see both our instructions on how
 to fix it and the original message. However, when some other exception is
-raised, only the original exception is raised. Note that we use our custom
-`BaseException`; it's important to use this one since it implements a few
-customizations so it's rendered appropriately in the terminal.
+raised, we don't modify it. Note that we use our custom
+`BaseException`; it's essential to use this one since it implements a few
+customization, so it's rendered appropriately in the terminal.
 
-In some cases, we might not be possible to catch a specific exception
+In some cases, it might not be possible to catch a specific exception
 (e.g., `SomeException`). In some cases, the exception type might be too
 general. In other cases, we might not want to import the exception since
-it might come from a third party package.
+it might come from a third-party package.
 
-Whatever the reason is, out best bet is to use the error message to decide
+Whatever the reason is, our best bet is to use the error message to decide
 whether to show the recommendation or not:
 
 
@@ -350,7 +338,7 @@ def thing_that_the_user_calls(argument):
 ```
 
 If we're unsure that our instructions are applicable under this scenario, we
-should be explicit about that in our message, and have something like:
+should be explicit about that in our message and have something like:
 
 > If having issues with X, try [instruction on how to fix it]
 
