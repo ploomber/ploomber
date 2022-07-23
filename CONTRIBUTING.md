@@ -219,6 +219,127 @@ git checkout main
 git merge upstream/main
 ```
 
+## Documenting changes and new features
+
+Whenever you make changes to the API (add arguments, add a new class, etc); the
+documentation must be updated. First, modify the docstring (we use the
+[numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) format)
+in the relevant Python function or class.
+
+New arguments should be documented with a little note at the end. Furthemore,
+the `Notes` section should include the change as well, using `.. versionadded`
+or `.. versionchanged`. Example:
+
+```python
+class SomeExistingClass:
+    def some_method(self, existing, new):
+        """
+        Parameters
+        ----------
+        existing : bool, default=None
+            Some description
+
+        new : str, default=None
+            Another description (Added in version X.Y.Z)
+
+        Notes
+        ----
+        .. collapse :: changelog
+
+            .. versionadded:: X.Y.Z
+                Added `new` argument
+
+            .. versionchanged:: X.Y.Z
+                Modified behavior of `existing`
+        """
+        pass
+```
+
+### Which version to put?
+
+If your change is not making breaking API changes, look at the current
+development version in [CHANGELOG.md](CHANGELOG.md), then drop the `dev`
+portion.
+
+If the change breaks the API, then the version will be handled on a
+case-by-case bases. However, in most cases the change will be scheduled for
+the next major release. For example, if the `dev` version is `0.20.1dev`, the
+next major release is `0.21`.
+
+If your change impacts the Spec API (i.e., `pipeline.yaml`). It should also
+be documented in [doc/api/spec.rst](doc/api/spec.rst).
+
+Finally, if the fix came as part of discovering an error (i.e., a user
+reporting an error that it wasn't clear how to fix), we should capture the
+error, quick instructions on how to fix it and a link to the docs.
+
+Here's a real example ([#882](https://github.com/ploomber/ploomber/issues/882)).
+A user reported the following error:
+
+> RuntimeError: Cannot re-initialize CUDA in forked subprocess. To use CUDA with multiprocessing, you must use the 'spawn' start method
+
+We fixed this by adding a new argument to the [`Parallel`](https://github.com/ploomber/ploomber/blob/2c5417abb606a83d441737acf6e4ac3877364ac5/src/ploomber/executors/parallel.py#L54) executor.
+After replicating the error, we should add a `try: ... catch: ...` statement
+to add more details to the error message, here's a simplified example:
+
+```python
+from ploomber.exception import BaseException
+
+def thing_that_breaks(argument):
+    ...
+
+
+def thing_that_the_user_calls(argument):
+
+    try:
+        thing_that_breaks(argument=argument)
+    except SomeException as e:
+        raise BaseException('Instructions on how to fix it') from e
+    except:
+        raise
+    ...
+```
+
+Let's say that when `SomeException` is raised, the fix is to follow certain
+instructions; with this code, the user will see both our instructions on how
+to fix it and the original message. However, when some other exception is
+raised, only the original exception is raised. Note that we use our custom
+`BaseException`; it's important to use this one since it implements a few
+customizations so it's rendered appropriately in the terminal.
+
+In some cases, we might not be possible to catch a specific exception
+(e.g., `SomeException`). In some cases, the exception type might be too
+general. In other cases, we might not want to import the exception since
+it might come from a third party package.
+
+Whatever the reason is, out best bet is to use the error message to decide
+whether to show the recommendation or not:
+
+
+```python
+from ploomber.exception import BaseException
+
+def thing_that_breaks(argument):
+    ...
+
+
+def thing_that_the_user_calls(argument):
+
+    try:
+        thing_that_breaks(argument=argument)
+    except Exception:
+        if 'some hint' in:
+            raise BaseException('Instructions on how to fix it') from e
+        else:
+            raise
+    ...
+```
+
+If we're unsure that our instructions are applicable under this scenario, we
+should be explicit about that in our message, and have something like:
+
+> If having issues with X, try [instruction on how to fix it]
+
 ## Maintaining backwards compatibility
 
 We follow [scikit-learn's guidelines](https://scikit-learn.org/stable/developers/contributing.html#maintaining-backwards-compatibility).
