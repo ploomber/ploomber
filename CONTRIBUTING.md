@@ -281,7 +281,7 @@ uses the `.. versionadded` and `.. versionchanged` directives:
 ```
 
 If there isn't a `.. collapse:: Changelog` at the end of the section, add one.
-## Capturing error messages
+### Capturing error messages
 
 If the fix came as part of discovering an error (i.e., a user
 reporting an error that it wasn't clear how to fix), we should capture the
