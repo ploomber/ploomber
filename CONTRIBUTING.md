@@ -329,8 +329,8 @@ def thing_that_the_user_calls(argument):
 
     try:
         thing_that_breaks(argument=argument)
-    except Exception:
-        if 'some hint' in:
+    except Exception as e:
+        if 'some hint' in str(e):
             raise BaseException('Instructions on how to fix it') from e
         else:
             raise
