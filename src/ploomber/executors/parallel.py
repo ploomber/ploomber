@@ -14,6 +14,8 @@ from ploomber.executors.abc import Executor
 from ploomber.exceptions import DAGBuildError
 from ploomber.messagecollector import (BuildExceptionsCollector, Message)
 from ploomber.executors import _format
+from multiprocessing import get_context, get_start_method
+from ploomber.io import pretty_print
 
 # TODO: support for show_progress, we can use a progress bar but we have
 # to modify the label since at any point more than one task might be
@@ -30,6 +32,7 @@ class TaskBuildWrapper:
     here and return it so at the end of the DAG execution, a message with the
     traceback can be printed
     """
+
     def __init__(self, task):
         self.task = task
 
@@ -93,13 +96,24 @@ class Parallel(Executor):
 
     # NOTE: Tasks should not create child processes
     # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.daemon
+    multiprocessing_start_methods = ['fork', 'spawn', 'forkserver']
 
-    def __init__(self, processes=None, print_progress=False):
+    def __init__(self,
+                 processes=None,
+                 print_progress=False,
+                 start_method=get_start_method()):
         self.processes = processes or os.cpu_count()
         self.print_progress = print_progress
 
         self._logger = logging.getLogger(__name__)
         self._i = 0
+        if start_method in self.multiprocessing_start_methods:
+            self.start_method = start_method
+        else:
+            raise ValueError(
+                'Invalid start_method. '
+                f'Valid values for start_method are: '
+                f'{pretty_print.iterable(self.multiprocessing_start_methods)}')
 
     def __call__(self, dag, show_progress):
         super().__call__(dag)
@@ -195,7 +209,10 @@ class Parallel(Executor):
 
         task_kwargs = {'catch_exceptions': True}
 
-        with ProcessPoolExecutor(max_workers=self.processes) as pool:
+        context = get_context(self.start_method)
+
+        with ProcessPoolExecutor(max_workers=self.processes,
+                                 mp_context=context) as pool:
             while True:
                 try:
                     task = next_task()

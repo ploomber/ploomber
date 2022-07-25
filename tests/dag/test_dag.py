@@ -25,9 +25,7 @@ from ploomber.dag.dagclients import DAGClients
 from ploomber.dag import plot as dag_plot_module
 from ploomber.util import util as ploomber_util
 
-
 IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and 'win' in sys.platform
-
 
 # TODO: a lot of these tests should be in a test_executor file
 # since they test Errored or Executed status and the output errors, which
@@ -104,6 +102,7 @@ def failing(upstream, product):
 
 @pytest.fixture
 def dag():
+
     def fn1(product):
         pass
 
@@ -154,8 +153,7 @@ def test_errror_on_invalid_executor():
         DAG(executor=None)
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 def test_plot_embed(dag, monkeypatch_plot):
     mock_Image, mock_to_agraph, image_out = monkeypatch_plot
 
@@ -170,8 +168,7 @@ def test_plot_embed(dag, monkeypatch_plot):
     mock_to_agraph.draw.assert_called_once()
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 def test_plot_include_products(dag, monkeypatch):
     mock = Mock(wraps=dag._to_graph)
     monkeypatch.setattr(DAG, '_to_graph', mock)
@@ -182,8 +179,7 @@ def test_plot_include_products(dag, monkeypatch):
     mock.assert_called_with(fmt='pygraphviz', include_products=True)
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 def test_plot_path(dag, tmp_directory, monkeypatch_plot):
     mock_Image, mock_to_agraph, image_out = monkeypatch_plot
 
@@ -226,8 +222,7 @@ def test_plot_with_d3_embed(dag, tmp_directory, monkeypatch, backend):
     assert '<div id="js-message" style="display: none;">' in output.data
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 def test_plot_with_d3_embed_error_if_missing_dependency(
         dag, tmp_directory, monkeypatch):
     monkeypatch.setattr(ploomber_util.importlib.util, 'find_spec',
@@ -305,8 +300,7 @@ def test_to_graph_d3(dag):
     assert list(graph.edges) == [('first', 'second')]
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 def test_to_graph_prepare_for_graphviz(dag):
     graph = dag._to_graph(fmt='pygraphviz')
 
@@ -316,8 +310,7 @@ def test_to_graph_prepare_for_graphviz(dag):
     assert len(graph) == 2
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 def test_to_graph_prepare_for_graphviz_include_products(dag):
     graph = dag._to_graph(fmt='pygraphviz', include_products=True)
 
@@ -329,9 +322,9 @@ def test_to_graph_prepare_for_graphviz_include_products(dag):
     assert len(graph) == 2
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 def test_graphviz_graph_with_clashing_task_str(dag):
+
     def fn1(product):
         pass
 
@@ -520,6 +513,7 @@ def test_build_partially_with_wildcard_skip_upstream(tmp_directory):
 
 
 def test_build_partially_diff_sessions(tmp_directory):
+
     def make():
         dag = DAG()
         a = PythonCallable(touch_root, File('a.txt'), dag, name='a')
@@ -553,8 +547,7 @@ def test_build_partially_diff_sessions(tmp_directory):
     assert df.loc['b']['Ran?']
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 @pytest.mark.parametrize('function_name', ['render', 'build', 'plot'])
 @pytest.mark.parametrize('executor', _executors)
 def test_dag_functions_do_not_fetch_metadata(function_name, executor,
@@ -745,6 +738,7 @@ def test_executor_keeps_running_until_no_more_tasks_can_run(
 
 
 def test_status_on_render_source_fail():
+
     def make():
         mock_client = Mock()
         dag = DAG()
@@ -796,6 +790,7 @@ def test_status_on_render_source_fail():
 
 
 def test_status_on_product_source_fail():
+
     def make():
         mock_client = Mock()
 
@@ -991,6 +986,23 @@ def test_early_stop_from_task_level_on_finish(executor, tmp_directory):
 
 
 # test early stop when registered an on_failure hook, maybe don't run hook?
+
+
+@pytest.mark.parametrize('start_method', ['invalid_start_method_value'])
+def test_invalid_start_method_in_parallel_executor(tmp_directory,
+                                                   start_method):
+    with pytest.raises(ValueError) as excinfo:
+        DAG(executor=Parallel(processes=2, start_method=start_method))
+
+    assert 'Invalid start_method' in str(excinfo.value)
+
+
+@pytest.mark.parametrize('start_method', ['spawn', 'fork', 'forkserver'])
+def test_switch_start_method_in_parallel_executor(tmp_directory, start_method,
+                                                  monkeypatch):
+    dag = DAG(executor=Parallel(processes=2, start_method=start_method))
+
+    assert dag.executor.start_method == start_method
 
 
 def test_metadata_is_synced_when_executing_in_subprocess(tmp_directory):
@@ -1214,6 +1226,7 @@ def test_task_grouping():
 
 
 def test_outdated_if_different_params(tmp_directory):
+
     def make(some_param):
         dag = DAG(executor=Serial(build_in_subprocess=False))
         PythonCallable(touch_root_w_param,
@@ -1232,6 +1245,7 @@ def test_outdated_if_different_params(tmp_directory):
 
 
 def test_up_to_date_status_when_unserializable_params(tmp_directory):
+
     def make():
         dag = DAG(executor=Serial(build_in_subprocess=False))
         PythonCallable(touch_root_w_param,
@@ -1257,8 +1271,7 @@ def test_cycle_exception():
         dag.build()
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 def test_error_if_missing_pypgraphviz(monkeypatch, dag):
     monkeypatch.setattr(dag_plot_module, 'find_spec', lambda _: None)
 

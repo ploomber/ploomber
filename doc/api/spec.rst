@@ -817,12 +817,11 @@ one with a different set of parameters:
         name: random-forest-
         product: random-forest.html
         grid:
+            # six tasks: 3 * 2
             n_estimators: [5, 10, 20]
             criterion: [gini, entropy]
 
-The spec above generates nine tasks for each combination of parameters with
-products ``random-forest-X.html`` where ``X`` goes from ``0`` to ``8``. Task
-names also include a suffix.
+The spec above generates six tasks, one for each combination of parameters ``(3 * 2)``. In this example, products will be named ``random-forest-X.html`` where ``X`` goes from ``0`` to ``5``. Similarly, task names will be `random-forest-X`. You can customize task names and product names to contain the corresponding parameter values, see the below sections for details.
 
 **Generating large grids dynamically**
 
@@ -838,7 +837,7 @@ to produce all values (**Added in version 0.19.8**):
     def generate_values():
         return range(10)
 
-Then call if in your ``pipeline.yaml`` like this:
+Then call it in your ``pipeline.yaml`` like this:
 
 
 .. code-block:: yaml
