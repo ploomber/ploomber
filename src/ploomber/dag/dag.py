@@ -88,7 +88,8 @@ from ploomber.exceptions import (DAGBuildError, DAGRenderError,
                                  DAGBuildEarlyStop, DAGCycle)
 from ploomber.messagecollector import (RenderExceptionsCollector,
                                        RenderWarningsCollector)
-from ploomber.util.util import callback_check, _make_requires_error_message
+from ploomber.util.util import (callback_check, _make_requires_error_message,
+                                svg2html)
 from ploomber.dag.dagconfiguration import DAGConfiguration
 from ploomber.dag.daglogger import DAGLogger
 from ploomber.dag.dagclients import DAGClients
@@ -816,8 +817,15 @@ class DAG(AbstractDAG):
                   else '.html'
             fd, path_to_plot = tempfile.mkstemp(suffix=ext)
             os.close(fd)
-            self.plot(output=path_to_plot, backend=backend)
-            plot_ = image_bytes2html(Path(path_to_plot).read_bytes())
+
+            if backend == 'pygraphviz':
+                self.plot(output=path_to_plot, backend=backend)
+                plot_ = image_bytes2html(Path(path_to_plot).read_bytes())
+            else:
+                self.plot(output=path_to_plot, backend=backend,
+                          image_only=True)
+                json_data = Path(path_to_plot).read_text()
+                plot_ = svg2html()
         else:
             plot_ = False
 
@@ -837,16 +845,22 @@ class DAG(AbstractDAG):
             out = mistune.markdown(out, escape=False, renderer=renderer)
 
             # add css
-            html = importlib_resources.read_text(resources,
-                                                 'github-markdown.html')
-            out = Template(html).render(content=out)
+            if backend == 'pygraphviz':
+                html = importlib_resources.read_text(resources,
+                                                     'github-markdown.html')
+                out = Template(html).render(content=out)
+            else:
+                html = importlib_resources.read_text(resources,
+                                                     'github-markdown-d3.html')
+                out = Template(html).render(content=out, json_data=json_data)
 
         if path is not None:
             Path(path).write_text(out)
 
         return out
 
-    def plot(self, output='embed', include_products=False, backend=None):
+    def plot(self, output='embed', include_products=False,
+             backend=None, image_only=False):
         """Plot the DAG
 
         Parameters
@@ -892,7 +906,7 @@ class DAG(AbstractDAG):
             dag_json = nx.readwrite.json_graph.node_link_data(G)
 
             with _path_for_plot(path_to_plot=output, fmt='html') as path:
-                plot.with_d3(dag_json, output=path)
+                plot.with_d3(dag_json, output=path, image_only=image_only)
 
                 if output == 'embed':
                     return plot.embedded_html(path=path)
