@@ -845,14 +845,14 @@ class DAG(AbstractDAG):
             out = mistune.markdown(out, escape=False, renderer=renderer)
 
             # add css
-            if backend == 'pygraphviz':
-                html = importlib_resources.read_text(resources,
-                                                     'github-markdown.html')
-                out = Template(html).render(content=out)
-            else:
+            if backend == 'd3' and 'plot' in sections:
                 html = importlib_resources.read_text(resources,
                                                      'github-markdown-d3.html')
                 out = Template(html).render(content=out, json_data=json_data)
+            else:
+                html = importlib_resources.read_text(resources,
+                                                     'github-markdown.html')
+                out = Template(html).render(content=out)
 
         if path is not None:
             Path(path).write_text(out)
