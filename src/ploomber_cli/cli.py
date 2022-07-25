@@ -114,6 +114,7 @@ def scaffold(name, conda, package, entry_point, empty):
         telemetry.log_api("scaffold_error",
                           "ploomber",
                           ver,
+                          key,
                           metadata={
                               'type': 'entry_and_name',
                               'exception': err,
@@ -126,6 +127,7 @@ def scaffold(name, conda, package, entry_point, empty):
         telemetry.log_api("scaffold_error",
                           "ploomber",
                           ver,
+                          key,
                           metadata={
                               'type': 'entry_and_conda_flag',
                               'exception': err,
@@ -138,6 +140,7 @@ def scaffold(name, conda, package, entry_point, empty):
         telemetry.log_api("scaffold_error",
                           "ploomber",
                           ver,
+                          key,
                           metadata={
                               'type': 'entry_and_package_flag',
                               'exception': err,
@@ -150,6 +153,7 @@ def scaffold(name, conda, package, entry_point, empty):
         telemetry.log_api("scaffold_error",
                           "ploomber",
                           ver,
+                          key,
                           metadata={
                               'type': 'entry_and_empty_flag',
                               'exception': err,
@@ -173,6 +177,7 @@ def scaffold(name, conda, package, entry_point, empty):
             telemetry.log_api("scaffold_error",
                               "ploomber",
                               ver,
+                              key,
                               metadata={
                                   'type': 'dag_load_failed',
                                   'exception': str(e),
@@ -194,6 +199,7 @@ def scaffold(name, conda, package, entry_point, empty):
         telemetry.log_api("ploomber_scaffold",
                           "ploomber",
                           ver,
+                          key,
                           metadata={
                               'type': 'add_task',
                               'argv': sys.argv,
@@ -204,6 +210,7 @@ def scaffold(name, conda, package, entry_point, empty):
         telemetry.log_api("ploomber_scaffold",
                           "ploomber",
                           ver,
+                          key,
                           metadata={
                               'type': 'base_project',
                               'argv': sys.argv
@@ -279,6 +286,7 @@ def examples(name, force, branch, output):
         telemetry.log_api("examples_error",
                           "ploomber",
                           ver,
+                          key,
                           metadata={
                               'type': 'runtime_error',
                               'exception': str(e),

@@ -39,7 +39,7 @@ _PYTHON_BIN_NAME = _python_bin()
 
 
 @command_endpoint
-@telemetry.log_call('install', 'ploomber', ver)
+@telemetry.log_call('install', 'ploomber', ver, key)
 def main(use_lock, create_env=None, use_venv=False):
     """
     Install project, automatically detecting if it's a conda-based or pip-based
@@ -233,6 +233,7 @@ def main_conda(use_lock, create_env=True):
             telemetry.log_api("install-error",
                               "ploomber",
                               ver,
+                              key,
                               metadata={
                                   'type': 'env_running_conflict',
                                   'exception': err
@@ -263,6 +264,7 @@ def main_conda(use_lock, create_env=True):
             telemetry.log_api("install-error",
                               "ploomber",
                               ver,
+                              key,
                               metadata={
                                   'type': 'duplicate_env',
                                   'exception': err
@@ -367,6 +369,7 @@ def _find_conda_root(conda_bin):
     telemetry.log_api("install-error",
                       "ploomber",
                       ver,
+                      key,
                       metadata={
                           'type': 'no_conda_root',
                           'exception': err
@@ -393,6 +396,7 @@ def _locate_pip_inside_conda(env_name):
         telemetry.log_api("install-error",
                           "ploomber",
                           ver,
+                          key,
                           metadata={
                               'type': 'no_pip_env',
                               'exception': err

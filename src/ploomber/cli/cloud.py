@@ -78,7 +78,7 @@ def get_last_run(timestamp):
         return timestamp
 
 
-@telemetry.log_call('get-pipeline', 'ploomber', ver)
+@telemetry.log_call('get-pipeline', 'ploomber', ver, key)
 def get_pipeline(pipeline_id=None, verbose=None):
     """
     Gets a user pipeline via the cloud api key. Validates the key.
@@ -113,7 +113,7 @@ def get_pipeline(pipeline_id=None, verbose=None):
         conn.close()
 
 
-@telemetry.log_call('write-pipeline', 'ploomber', ver)
+@telemetry.log_call('write-pipeline', 'ploomber', ver, key)
 def write_pipeline(pipeline_id,
                    status,
                    log=None,
@@ -173,7 +173,7 @@ def _write_pipeline(pipeline_id,
         conn.close()
 
 
-@telemetry.log_call('delete-pipeline', 'ploomber', ver)
+@telemetry.log_call('delete-pipeline', 'ploomber', ver, key)
 def delete_pipeline(pipeline_id):
     """
     Updates a user pipeline via the cloud api key. Validates the key.

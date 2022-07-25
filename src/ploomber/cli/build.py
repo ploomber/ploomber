@@ -14,7 +14,7 @@ ONLY_IN_CALLABLES_AND_NBS = 'Only supported in function and notebook tasks.'
 
 # this parameter is only set to True when calling "ploomber interactive"
 @cli_endpoint
-@telemetry.log_call('build', 'ploomber', ver, payload=True)
+@telemetry.log_call('build', 'ploomber', ver, key, payload=True)
 def main(payload, render_only=False):
     parser = CustomParser(description='Build pipeline', prog='ploomber build')
 
