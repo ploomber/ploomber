@@ -807,10 +807,6 @@ class NotebookRunner(NotebookMixin, Task):
         if self.local_execution:
             self.papermill_params['cwd'] = str(self.source.loc.parent)
 
-        # use our custom engine
-        if self._debug:
-            self.papermill_params['engine_name'] = 'ploomber-engine'
-
         # create parent folders if they don't exist
         Path(path_to_out_ipynb).parent.mkdir(parents=True, exist_ok=True)
 
