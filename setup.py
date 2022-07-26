@@ -31,8 +31,6 @@ def read(name):
 # https://github.com/nteract/papermill/issues/239
 NB = [
     'papermill',
-    # we need this for our custom papermill engine
-    'nbclient>=0.6.1',
     'jupytext',
     'ipykernel>=1.5.2',
     'jupyter_client>=5.3.1',
@@ -188,7 +186,5 @@ setup(
     },
     entry_points={
         'console_scripts': ['ploomber=ploomber_cli.cli:cmd_router'],
-        "papermill.engine":
-        ["ploomber-engine=ploomber.papermill.engine:PloomberClientEngine"],
     },
 )
