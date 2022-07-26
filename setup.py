@@ -36,8 +36,6 @@ NB = [
     'jupyter_client>=5.3.1',
     'nbconvert>=5.6.0',
     'nbformat',
-    # NOTE: do we need this?
-    'notebook',
     # for notebook validation
     'pyflakes',
 ]
@@ -95,6 +93,7 @@ TESTING = [
 
     # for testing jupyter lab plugin
     'jupyter_server',
+    'notebook',
 
     # optional dependencies for @serializer and @unserializer
     'joblib',
