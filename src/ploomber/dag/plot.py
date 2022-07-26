@@ -57,14 +57,18 @@ def json_dag_parser(graph: dict):
     return json.dumps(list(nodes.values()))
 
 
-def with_d3(graph, output):
+def with_d3(graph, output, image_only=False):
     """Generates D3 Dag html output and return output file name
     """
-    template = jinja2.Template(
-        importlib_resources.read_text(resources, 'dag_template.html'))
+    json_data = json_dag_parser(graph=graph)
+    if image_only:
+        Path(output).write_text(json_data)
+    else:
+        template = jinja2.Template(
+            importlib_resources.read_text(resources, 'dag_template.html'))
 
-    rendered = template.render(json_data=json_dag_parser(graph=graph))
-    Path(output).write_text(rendered)
+        rendered = template.render(json_data=json_data)
+        Path(output).write_text(rendered)
 
 
 @requires(['requests_html', 'nest_asyncio'],
