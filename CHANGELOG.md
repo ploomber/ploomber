@@ -5,6 +5,10 @@
 * Add custom papermill engine to enable debugging: `ploomber build --debug` (#823)
 
 ## 0.19.9dev
+
+*Note: this is the latest version compatible with Python 3.6*
+
+* Adds warning notice when running on Python 3.6
 * Add `--backend` to `ploomber report` to choose plotting backend (#904)
 * Add *did you mean?* feature to `ploomber examples` (#805)
 
