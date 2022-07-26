@@ -113,6 +113,11 @@ def image_bytes2html(data):
     return html
 
 
+def svg2html():
+    html = '<svg id="dag"></svg>'
+    return html
+
+
 def isiterable(obj):
     try:
         iter(obj)
