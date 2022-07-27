@@ -186,7 +186,7 @@ def is_airflow():
 
 
 def is_argo():
-    """Returns: True for Airflow env"""
+    """Returns: True for Argo env"""
     return "ARGO_AGENT_TASK_WORKERS" in os.environ or \
            "ARGO_KUBELET_PORT" in os.environ
 
