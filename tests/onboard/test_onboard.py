@@ -80,13 +80,14 @@ def clone_examples():
     examples.main(name=None, force=True)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8),
+                    reason='magic mock support pathlib 3.8 or higher')
 def test_main(clone_examples, monkeypatch, capsys, tmp_directory):
     magic_mock = MagicMock()
-    magic_mock_path = MagicMock(return_value='/tmp/mock')
     magic_mock_return = MagicMock(return_value=True)
     monkeypatch.setattr(subprocess, 'run', magic_mock)
     monkeypatch.setattr(click, 'prompt', magic_mock)
-    monkeypatch.setattr(onboard, '_load_dag', magic_mock_path)
+    monkeypatch.setattr(onboard, '_load_dag', magic_mock)
     monkeypatch.setattr(examples._ExamplesManager, 'download', magic_mock)
     monkeypatch.setattr(Path, 'relative_to', magic_mock)
     monkeypatch.setattr(onboard, '_modified_task', magic_mock_return)
