@@ -9,7 +9,7 @@ from ploomber.onboard import __main__ as onboard
 
 from ploomber.cli import examples
 from ploomber import DAG
-import ploomber
+
 
 def test_make_open_callable():
     callable_open = onboard._make_open_callable('open')
@@ -87,8 +87,7 @@ def test_main(clone_examples, monkeypatch, capsys, tmp_directory):
     monkeypatch.setattr(Path, 'relative_to', magic_mock)
     monkeypatch.setattr(onboard, '_modified_task', magic_mock_return)
     monkeypatch.setattr(onboard, '_try_open', magic_mock)
-    monkeypatch.setattr(ploomber.cli.cloud, '_email_input', magic_mock)
-    monkeypatch.setattr('sys.stdin', 'mock_input')
+    monkeypatch.setattr(onboard, '_email_input', magic_mock)
 
     onboard.main()
     captured = capsys.readouterr()
