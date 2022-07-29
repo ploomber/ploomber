@@ -5,6 +5,7 @@ Note: All validation errors should raise DAGSpecInitializationError, this
 allows the CLI to signal that this is a user's input error and hides the
 traceback and only displays the error message
 """
+import warnings
 import mimetypes
 from functools import partial
 from copy import copy, deepcopy
@@ -644,7 +645,16 @@ def _preprocess_grid_spec_mapping(grid_spec):
     for key, value in grid_spec.items():
         try:
             dp = dotted_path.DottedPath(value, allow_return_none=False)
-        except TypeError:
+        # raised if not a string
+        except (TypeError, ValueError):
+            dp = None
+        # there are other exceptions, but we only display a warning since
+        # it might be that the user just wants to pass that string as-is
+        # and it's not intended to be a dotted path
+        except Exception as e:
+            msg = ('You parameter looks like a dotted path '
+                   f'but it failed to load: {str(e)}')
+            warnings.warn(msg, category=dotted_path.DottedPathWarning)
             dp = None
 
         if dp:
