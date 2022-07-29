@@ -85,17 +85,23 @@ def _task_cli(accept_task_id=False):
     # the --build flag is required
     no_flags = not any((args.build, args.status, args.source, args.on_finish))
 
+    err = None
+
     if no_flags or args.build:
         try:
             task.build(force=args.force)
         except Exception as e:
+            err = e
+
+        if err is not None:
             if getattr(args, 'task_id', None):
                 api.tasks_update(getattr(args, 'task_id'), 'failed')
 
+            msg = _format.exception(err)
             exception_string = task_build_exception(task=task,
-                                                    message=_format
-                                                    .exception(e),
-                                                    exception=e)
+                                                    message=msg,
+                                                    exception=err)
+
             raise TaskBuildError(exception_string)
         else:
             click.echo(f"{task.name!r} task executed successfully!")
