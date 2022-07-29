@@ -85,6 +85,7 @@ def test_init_with_absolute_path(cleanup_env, tmp_directory):
 
 
 def test_includes_function_module_and_name_if_decorated(cleanup_env):
+
     @with_env({'a': 1})
     def my_fn(env):
         return env
@@ -271,6 +272,7 @@ def test_with_env_initialized_from_path_looks_recursively(
 
 
 def test_with_env_decorator(cleanup_env):
+
     @with_env({'a': 1})
     def my_fn(env, b):
         return env.a, b
@@ -279,6 +281,7 @@ def test_with_env_decorator(cleanup_env):
 
 
 def test_with_env_modifies_signature(cleanup_env):
+
     @with_env({'a': 1})
     def my_fn(env, b):
         return env.a, b
@@ -288,6 +291,7 @@ def test_with_env_modifies_signature(cleanup_env):
 
 # TODO: try even more nested
 def test_with_env_casts_paths(cleanup_env):
+
     @with_env({'path': {'data': '/some/path'}})
     def my_fn(env):
         return env.path.data
@@ -314,6 +318,7 @@ def test_with_env_fails_if_fn_takes_no_args(cleanup_env):
 
 
 def test_replace_defaults(cleanup_env):
+
     @with_env({'a': {'b': 1}})
     def my_fn(env, c):
         return env.a.b + c
@@ -332,6 +337,7 @@ def test_with_env_without_args(tmp_directory, cleanup_env):
 
 
 def test_env_dict_is_available_upon_decoration():
+
     @with_env({'a': 1})
     def make(env, param, optional=1):
         pass
@@ -339,7 +345,8 @@ def test_env_dict_is_available_upon_decoration():
     assert make._env_dict['a'] == 1
 
 
-def test_replacing_defaults_also_expand(monkeypatch, cleanup_env):
+def test_placeholder_of_existing_default(monkeypatch, cleanup_env):
+
     @with_env({'user': 'some_user'})
     def my_fn(env):
         return env.user
@@ -349,10 +356,13 @@ def test_replacing_defaults_also_expand(monkeypatch, cleanup_env):
 
     monkeypatch.setattr(getpass, 'getuser', mockreturn)
 
-    assert my_fn(env__user='{{user}}') == 'expanded_username'
+    # this should expand to the existing default value, instead of
+    # the  getpass.getuser value
+    assert my_fn(env__user='{{user}}') == 'some_user'
 
 
 def test_replacing_raises_error_if_key_does_not_exist():
+
     @with_env({'a': {'b': 1}})
     def my_fn(env, c):
         return env.a.b + c
@@ -373,6 +383,7 @@ def test_with_env_shows_name_and_module_if_invalid_env(cleanup_env):
 
 
 def test_with_env_shows_function_names_if_env_exists(cleanup_env):
+
     @with_env({'a': 1})
     def first(env):
         pass
@@ -410,12 +421,14 @@ def test_leading_underscore_in_top_key_raises_error(cleanup_env):
 
 
 def test_can_decorate_w_load_env_without_initialized_env():
+
     @load_env
     def fn(env):
         pass
 
 
 def test_load_env_modifies_signature(cleanup_env):
+
     @load_env
     def fn(env):
         pass
@@ -434,6 +447,7 @@ def test_load_env_decorator(cleanup_env):
 
 
 def test_expand_tags(monkeypatch, tmp_directory):
+
     def mockreturn():
         return 'username'
 
@@ -1046,3 +1060,17 @@ def test_import_from_validates_meta_import_from_exists(tmp_directory):
                 "path to a file, but such file does not exist")
 
     assert expected == str(excinfo.value)
+
+
+def test_resole_previous_values():
+    env = EnvDict({
+        'prefix': 'path/to/output',
+        'something': '{{prefix}}/something',
+        'final': '{{something}}/final',
+    })
+
+    assert env.something == 'path/to/output/something'
+    assert env.final == 'path/to/output/something/final'
+
+
+# TODO: make sure a warnin is not displayed due to unused placeholders

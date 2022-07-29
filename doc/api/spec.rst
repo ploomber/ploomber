@@ -1152,6 +1152,22 @@ to define dynamic parameters, you can do so with the Python API,
 `check out this example <https://github.com/ploomber/projects/tree/master/cookbook/dynamic-params>`_ for an
 example.
 
+Re-using values in ``env.yaml``
+*******************************
+
+In version ``0.20`` and newer, you can refer to existing keys in your
+``env.yaml`` and re-use them in upcoming values:
+
+.. code-block:: yaml
+    :class: text-editor
+    :name: env-yaml
+
+    prefix: path/to/outputs
+    reports: '{{prefix}}/reports' # resolves to /path/to/outputs/reports
+    models: '{{prefix}}/models' # resolves to /path/to/outputs/models
+
+Note that order matters; you can only refer to keys that have been defined
+earlier in the file.
 
 Setting parameters from the CLI
 *******************************
