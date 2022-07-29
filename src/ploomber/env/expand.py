@@ -103,6 +103,7 @@ class EnvironmentExpander:
         Path to the env.yaml. If not None, it is used to hint the user which
         file to fix if there are errors.
     """
+
     def __init__(self,
                  preprocessed,
                  path_to_here=None,
@@ -178,9 +179,16 @@ class EnvironmentExpander:
                 if str(value).endswith('/'):
                     self._try_create_dir(value)
 
-                return Path(value).expanduser()
+                value = Path(value).expanduser()
             else:
-                return cast_if_possible(value)
+                value = cast_if_possible(value)
+
+        # store the rendered value so it's available for upcoming raw_values
+        # NOTE: the current implementation only works for non-nested keys
+        if len(parents) == 1 and isinstance(parents[0], str):
+            self._placeholders[parents[0]] = value
+
+        return value
 
     def _try_create_dir(self, value):
         # make sure to expand user to avoid creating a "~" folder
