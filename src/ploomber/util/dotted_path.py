@@ -21,6 +21,13 @@ import pydantic
 from ploomber.exceptions import SpecValidationError
 
 
+class DottedPathWarning(UserWarning):
+    """Displayed in cases where raising an exception after failing to
+    initialize or load a dotted path is not necessary
+    """
+    pass
+
+
 class DottedPath:
     """
 
@@ -38,6 +45,7 @@ class DottedPath:
         If True, it allows calling the dotted path to return None, otherwise
         it raises an exception
     """
+
     def __init__(self, dotted_path, lazy_load=False, allow_return_none=True):
         self._spec = DottedPathSpecModel.from_spec(dotted_path)
         self._callable = None
@@ -381,6 +389,7 @@ def dotted_path_exists(dotted_path):
 class BaseModel(pydantic.BaseModel):
     """Base model for specs
     """
+
     def __init__(self, **kwargs):
         # customize ValidationError message
         try:
