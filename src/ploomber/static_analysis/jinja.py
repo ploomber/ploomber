@@ -13,6 +13,7 @@ class JinjaExtractor:
     code : str or Placeholder
         SQL code
     """
+
     def __init__(self, code):
         if not isinstance(code, (str, Placeholder)):
             raise TypeError('Code must be a str or Placeholder object, got: '
@@ -36,7 +37,9 @@ class JinjaExtractor:
             return self.code._raw
 
     def find_variable_access(self, variable):
-        """Find occurrences of {{variable.something}} and {{variable['something']}}
+        """
+        Find occurrences of {{variable.something}} and
+        {{variable['something']}}
         """
         attr = self.ast.find_all(Getattr)
         item = self.ast.find_all(Getitem)
