@@ -212,7 +212,9 @@ class CustomParser(argparse.ArgumentParser):
         return dag, args
 
     def load_from_entry_point_arg(self):
-        """Parses an entry point, adding arguments by extracting them from the env.
+        """
+        Parses an entry point, adding arguments by extracting them from
+        the env.
 
         Returns a dag and the parsed args
         """
