@@ -105,6 +105,13 @@ Run some tests:
 pytest tests/util
 ```
 
+## Branch name requirement
+
+To prevent double execution of the same CI pipelines, we have chosen to set a limitation to github push event. Only pushes to certain branches will trigger the pipelines. That means if you have turned on github action and want to run workflows in your forked repo, you will need to either make pushes directly to your master branch or branches name strictly following this convention: `dev/{your-branch-name}`.
+
+On the other hand, if you choose not to turn on github action in your own repo and simply run tests locally, you can disregard this information since your pull request from your forked repo to ploomber/ploomber repo will always trigger the pipelines. 
+
+
 ## Submitting code
 
 
@@ -178,6 +185,13 @@ s    commit_hash_4 commit_message_4
 * Ploomber loads user's code dynamically via dotted paths (e.g., `my_module.my_function` is similar to doing `from my_module import my_function`). Hence, some of our tests do this as well. Dynamic imports can become a problem if tests create and import modules (i.e., create a new `.py` file and import it). To prevent temporary modules from polluting other tasks, use the `tmp_imports` pytest fixture, which deletes all packages imported inside a test
 * Some tests make calls to a PostgreSQL database. When running on Github Actions, a database is automatically provisioned, but the tests will fail locally.
 * If you're checking error messages and they include absolute paths to files, you may encounter some issues when running the Windows CI since the Github Actions VM has some symlinks. If the test calls `Pathlib.resolve()` ([resolves symlinks](https://docs.python.org/3/library/pathlib.html#id5)), call it in the test as well, if it doesn't, use `os.path.abspath()` (does not resolve symlinks).
+
+
+## Ok-to-test
+
+We have separated our tests to unit tests and integration tests. Some of the integration tests may require certain secrets or credentials to run, to prevent such sensitive data from leaking, we have migrated the [ok-to-test](https://github.com/imjohnbo/ok-to-test) template into our CI. 
+
+In short, when you start a pull request from your forked repo, only the workflow for unit tests that don't require any special secrets will run. The integration tests in your pull request check will display skipped. To run the integration tests, please ask one of the maintainers of ploomber to comment `/ok-to-test sha={#commit}` on your pull request where the #commit is the first seven digits of the latest commit of your branch.
 
 
 ## Conda releases
