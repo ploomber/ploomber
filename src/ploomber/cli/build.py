@@ -4,7 +4,8 @@ import uuid
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.executors import Parallel
-from ploomber_core.telemetry import telemetry
+from ploomber_core.telemetry.telemetry import Telemetry
+from ploomber_core.telemetry import telemetry as _telemetry
 from ploomber.cli.cloud import _write_pipeline
 from ploomber import __version__ as ver
 from ploomber import POSTHOG_API_KEY as key
@@ -12,9 +13,12 @@ from ploomber import POSTHOG_API_KEY as key
 ONLY_IN_CALLABLES_AND_NBS = 'Only supported in function and notebook tasks.'
 
 
+telemetry = Telemetry(key, ver, 'ploomber')
+
+
 # this parameter is only set to True when calling "ploomber interactive"
 @cli_endpoint
-@telemetry.log_call('build', 'ploomber', ver, key, payload=True)
+@telemetry.log_call('build', payload=True)
 def main(payload, render_only=False):
     parser = CustomParser(description='Build pipeline', prog='ploomber build')
 
@@ -53,9 +57,6 @@ def main(payload, render_only=False):
         suggestion = 'ploomber task {task-name}'
         cmd_name = parser.prog
         telemetry.log_api("unsupported_build_cmd",
-                          "ploomber",
-                          ver,
-                          key,
                           metadata={
                               'cmd_name': cmd_name,
                               'suggestion': suggestion,
@@ -106,6 +107,6 @@ def main(payload, render_only=False):
     _write_pipeline(pipeline_id=pid,
                     status='finished',
                     pipeline_name=dag.name,
-                    dag=telemetry.parse_dag(dag))
+                    dag=_telemetry.parse_dag(dag))
 
     return dag

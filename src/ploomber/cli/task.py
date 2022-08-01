@@ -1,11 +1,13 @@
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
-from ploomber_core.telemetry import telemetry
+from ploomber_core.telemetry.telemetry import Telemetry
 from ploomber import __version__ as ver
 from ploomber import POSTHOG_API_KEY as key
 from ploomber.cloud import api
 from ploomber.tasks import NotebookRunner, PythonCallable
 import click
+
+telemetry = Telemetry(key, ver, 'ploomber')
 
 # TODO: we are just smoke testing this, we need to improve the tests
 # (check the appropriate functions are called)
@@ -100,7 +102,7 @@ def _task_cli(accept_task_id=False):
 
 
 @cli_endpoint
-@telemetry.log_call('task', 'ploomber', ver, key)
+@telemetry.log_call('task')
 def main():
     _task_cli()
 

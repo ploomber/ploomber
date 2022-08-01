@@ -8,11 +8,14 @@ import click
 
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import command_endpoint
-from ploomber_core.telemetry import telemetry
+from ploomber_core.telemetry.telemetry import Telemetry
 from ploomber.sources.notebooksource import recursive_update
 from ploomber_core.exceptions import BaseException
 from ploomber import __version__ as ver
 from ploomber import POSTHOG_API_KEY as key
+
+telemetry = Telemetry(key, ver, 'ploomber')
+
 
 def _format(fmt, entry_point, dag, verbose=True):
     return [
@@ -201,7 +204,7 @@ $ ploomber nb -f ipynb
 
 # TODO: --log, --log-file should not appear as options
 @command_endpoint
-@telemetry.log_call('nb', 'ploomber', ver, key)
+@telemetry.log_call('nb')
 def main():
     parser = CustomParser(
         description=_description,

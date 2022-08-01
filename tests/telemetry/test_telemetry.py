@@ -6,6 +6,7 @@ import datetime
 
 import pytest
 
+from ploomber_core.telemetry.telemetry import Telemetry
 from ploomber_core.telemetry import telemetry
 from ploomber.cli import plot, install, build, interact, task, report, status
 import ploomber.dag.dag as dag_module
@@ -17,6 +18,8 @@ from ploomber import __version__ as ver
 from ploomber import POSTHOG_API_KEY as key
 
 from conftest import _write_sample_conda_env, _prepare_files
+
+_telemetry = Telemetry(key, ver, 'ploomber')
 
 
 @pytest.fixture
@@ -84,7 +87,7 @@ def test_install_lock_uses_telemetry(tmp_directory, has_conda, use_lock, env,
     Path('setup.py').write_text(setup_py)
 
     mock = Mock()
-    monkeypatch.setattr(install.telemetry, "log_api", mock)
+    monkeypatch.setattr(install.Telemetry, "log_api", mock)
 
     with pytest.raises(SystemExit):
         install.main(use_lock=True if use_lock else False)
@@ -97,7 +100,7 @@ def test_install_uses_telemetry(monkeypatch, tmp_directory):
     Path('setup.py').write_text(setup_py)
 
     mock = Mock()
-    monkeypatch.setattr(install.telemetry, "log_api", mock)
+    monkeypatch.setattr(install.Telemetry, "log_api", mock)
 
     install.main(use_lock=False)
     assert mock.call_count == 2
@@ -105,15 +108,11 @@ def test_install_uses_telemetry(monkeypatch, tmp_directory):
 
 @pytest.mark.parametrize('expected', [[
     call(action='build-started',
-         package_name='ploomber',
-         version=ver,
          metadata={
              'argv': ['python', '--entry-point', 'test_pkg.entry.with_doc']
          }),
     call(action='build-success',
          total_runtime='0:00:00',
-         package_name='ploomber',
-         version=ver,
          metadata={
              'argv': ['python', '--entry-point', 'test_pkg.entry.with_doc'],
              'dag': dag_module.DAG("No name")
@@ -128,7 +127,7 @@ def test_build_uses_telemetry(monkeypatch, tmp_directory, expected):
     mock_dt.now.return_value = datetime.datetime(2022, 2, 24, 8, 16, 29)
     monkeypatch.setattr(sys, 'argv',
                         ['python', '--entry-point', 'test_pkg.entry.with_doc'])
-    monkeypatch.setattr(build.telemetry, "log_api", mock)
+    monkeypatch.setattr(build.Telemetry, "log_api", mock)
     monkeypatch.setattr(telemetry.datetime, 'datetime', mock_dt)
 
     build.main(catch_exception=False)
@@ -150,7 +149,7 @@ def test_task_command(args, tmp_nbs, monkeypatch):
     monkeypatch.setattr(sys, 'argv', args)
 
     mock = Mock()
-    monkeypatch.setattr(task.telemetry, "log_api", mock)
+    monkeypatch.setattr(task.Telemetry, "log_api", mock)
     task.main(catch_exception=False)
 
     assert mock.call_count == 2
@@ -163,7 +162,7 @@ def test_report_command(monkeypatch, tmp_directory):
     mock_log = Mock()
     mock_plot = Mock()
     monkeypatch.setattr(dag_module.DAG, 'plot', mock_plot)
-    monkeypatch.setattr(report.telemetry, 'log_api', mock_log)
+    monkeypatch.setattr(report.Telemetry, 'log_api', mock_log)
 
     report.main(catch_exception=False)
 
@@ -175,7 +174,7 @@ def test_status_command(monkeypatch):
                         ['python', '--entry-point', 'test_pkg.entry.with_doc'])
 
     mock = Mock()
-    monkeypatch.setattr(status.telemetry, "log_api", mock)
+    monkeypatch.setattr(status.Telemetry, "log_api", mock)
     status.main(catch_exception=False)
 
     assert mock.call_count == 2
@@ -185,7 +184,7 @@ def test_interact_uses_telemetry(monkeypatch, tmp_nbs):
     mock_start_ipython = Mock()
     monkeypatch.setattr(sys, 'argv', ['interact'])
     monkeypatch.setattr(interact, 'start_ipython', Mock())
-    monkeypatch.setattr(interact.telemetry, 'log_api', mock_start_ipython)
+    monkeypatch.setattr(interact.Telemetry, 'log_api', mock_start_ipython)
     interact.main(catch_exception=False)
 
     assert mock_start_ipython.call_count == 2
@@ -320,7 +319,7 @@ def mock_posthog_capture(monkeypatch):
 
 @pytest.mark.xfail(sys.platform == "win32", reason="bug in parse_dag")
 def test_parses_dag(mock_posthog_capture, tmp_nbs):
-    @telemetry.log_call('some-action', 'ploomber', ver, key, payload=True)
+    @_telemetry.log_call('some-action', payload=True)
     def my_function(payload):
         payload['dag'] = DAGSpec('pipeline.yaml').to_dag()
 
@@ -332,7 +331,7 @@ def test_parses_dag(mock_posthog_capture, tmp_nbs):
 
 @pytest.mark.xfail(sys.platform == "win32", reason="bug in parse_dag")
 def test_parses_dag_on_exception(mock_posthog_capture, tmp_nbs):
-    @telemetry.log_call('some-action', 'ploomber', ver, key, payload=True)
+    @_telemetry.log_call('some-action', payload=True)
     def my_function(payload):
         payload['dag'] = DAGSpec('pipeline.yaml').to_dag()
         raise BaseException('some error', type_='some-type')

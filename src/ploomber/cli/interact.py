@@ -1,13 +1,15 @@
 from IPython import start_ipython
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
-from ploomber_core.telemetry import telemetry
+from ploomber_core.telemetry.telemetry import Telemetry
 from ploomber import __version__ as ver
 from ploomber import POSTHOG_API_KEY as key
 
+telemetry = Telemetry(key, ver, 'ploomber')
+
 
 @cli_endpoint
-@telemetry.log_call('interact', 'ploomber', ver, key)
+@telemetry.log_call('interact')
 def main():
     parser = CustomParser(description='Call an entry point '
                           '(pipeline.yaml or dotted path to factory)',
@@ -24,9 +26,6 @@ def main():
         err = ('Your dag failed to render, but you can still inspect the '
                'object to debug it.\n')
         telemetry.log_api("interact-error-render",
-                          "ploomber",
-                          ver,
-                          key,
                           metadata={
                               'type': 'dag_render_failed',
                               'exception': err,

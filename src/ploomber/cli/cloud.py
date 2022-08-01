@@ -23,13 +23,17 @@ import humanize
 from ploomber_core.exceptions import BaseException
 from ploomber import __version__ as ver
 from ploomber import POSTHOG_API_KEY as key
-from ploomber_core.telemetry import telemetry
-from ploomber_core.telemetry.telemetry import parse_dag, UserSettings
+from ploomber_core.telemetry.telemetry import (
+                                                parse_dag,
+                                                UserSettings,
+                                                Telemetry
+                                            )
 
 CLOUD_APP_URL = 'api.ploomber.io'
 PIPELINES_RESOURCE = '/pipelines'
 EMAIL_RESOURCE = '/emailSignup'
 headers = {'Content-type': 'application/json'}
+telemetry = Telemetry(key, ver, 'ploomber')
 
 
 def get_key():
@@ -43,7 +47,7 @@ def get_key():
     return UserSettings().cloud_key
 
 
-@telemetry.log_call('set-key', 'ploomber', ver, key)
+@telemetry.log_call('set-key')
 def set_key(user_key):
     """
     Sets the user cloud api key, if key isn't valid 16 chars length, returns.
@@ -78,7 +82,7 @@ def get_last_run(timestamp):
         return timestamp
 
 
-@telemetry.log_call('get-pipeline', 'ploomber', ver, key)
+@telemetry.log_call('get-pipeline')
 def get_pipeline(pipeline_id=None, verbose=None):
     """
     Gets a user pipeline via the cloud api key. Validates the key.
@@ -113,7 +117,7 @@ def get_pipeline(pipeline_id=None, verbose=None):
         conn.close()
 
 
-@telemetry.log_call('write-pipeline', 'ploomber', ver, key)
+@telemetry.log_call('write-pipeline')
 def write_pipeline(pipeline_id,
                    status,
                    log=None,
@@ -173,7 +177,7 @@ def _write_pipeline(pipeline_id,
         conn.close()
 
 
-@telemetry.log_call('delete-pipeline', 'ploomber', ver, key)
+@telemetry.log_call('delete-pipeline')
 def delete_pipeline(pipeline_id):
     """
     Updates a user pipeline via the cloud api key. Validates the key.

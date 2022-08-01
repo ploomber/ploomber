@@ -15,12 +15,13 @@ from ploomber.cli.nb import _inject_cell, _format
 from ploomber.spec import DAGSpec
 from ploomber.constants import TaskStatus
 from ploomber.cli.io import command_endpoint
-from ploomber_core.telemetry import telemetry
+from ploomber_core.telemetry.telemetry import Telemetry
 from ploomber import __version__ as ver
 from ploomber import POSTHOG_API_KEY as key
 from ploomber.cli.cloud import _email_input
 
 WINDOWS = platform.system() == 'Windows'
+telemetry = Telemetry(key, ver, 'ploomber')
 
 
 def _confirm(message):
@@ -93,7 +94,7 @@ def _cmd(cmd):
 
 
 @command_endpoint
-@telemetry.log_call('onboard', 'ploomber', ver, key, payload=True)
+@telemetry.log_call('onboard', payload=True)
 def main(payload):
     """Runs the onboarding tutorial
     """

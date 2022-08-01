@@ -21,7 +21,8 @@ from ploomber.io._commander import Commander
 from ploomber_core.exceptions import BaseException
 from ploomber.util.util import check_mixed_envs
 from ploomber.cli.io import command_endpoint
-from ploomber_core.telemetry import telemetry
+from ploomber_core.telemetry.telemetry import Telemetry
+from ploomber_core.telemetry import telemetry as _telemetry
 from ploomber.util._sys import _python_bin
 from ploomber import __version__ as ver
 from ploomber import POSTHOG_API_KEY as key
@@ -37,9 +38,11 @@ _ENV_LOCK_YML = 'environment.lock.yml'
 
 _PYTHON_BIN_NAME = _python_bin()
 
+telemetry = Telemetry(key, ver, 'ploomber')
+
 
 @command_endpoint
-@telemetry.log_call('install', 'ploomber', ver, key)
+@telemetry.log_call('install')
 def main(use_lock, create_env=None, use_venv=False):
     """
     Install project, automatically detecting if it's a conda-based or pip-based
@@ -113,7 +116,7 @@ def main(use_lock, create_env=None, use_venv=False):
         # TODO: emit warnings if unused environment.yml?
         main_pip(use_lock=use_lock,
                  create_env=create_env
-                 if create_env is not None else not telemetry.in_virtualenv())
+                 if create_env is not None else not _telemetry.in_virtualenv())
 
 
 def main_pip(use_lock, create_env=True):
@@ -231,9 +234,6 @@ def main_conda(use_lock, create_env=True):
                    'environment. Activate a different one and try '
                    'again: conda activate base')
             telemetry.log_api("install-error",
-                              "ploomber",
-                              ver,
-                              key,
                               metadata={
                                   'type': 'env_running_conflict',
                                   'exception': err
@@ -262,9 +262,6 @@ def main_conda(use_lock, create_env=True):
                    f'delete it and try again '
                    f'(conda env remove --name {env_name})')
             telemetry.log_api("install-error",
-                              "ploomber",
-                              ver,
-                              key,
                               metadata={
                                   'type': 'duplicate_env',
                                   'exception': err
@@ -340,8 +337,8 @@ def _run_conda_commands(
 
 def _should_create_conda_env():
     # not in conda env or running in base conda env
-    return (not telemetry.is_conda()
-            or (telemetry.is_conda() and _current_conda_env_name() == 'base'))
+    return (not _telemetry.is_conda()
+            or (_telemetry.is_conda() and _current_conda_env_name() == 'base'))
 
 
 def _current_conda_env_name():
@@ -367,9 +364,6 @@ def _find_conda_root(conda_bin):
            f'directory: {str(conda_bin)!r}. Please submit an issue: '
            'https://github.com/ploomber/ploomber/issues/new')
     telemetry.log_api("install-error",
-                      "ploomber",
-                      ver,
-                      key,
                       metadata={
                           'type': 'no_conda_root',
                           'exception': err
@@ -394,9 +388,6 @@ def _locate_pip_inside_conda(env_name):
         err = (f'Could not locate pip in environment {env_name!r}, make sure '
                'it is included in your environment.yml and try again')
         telemetry.log_api("install-error",
-                          "ploomber",
-                          ver,
-                          key,
                           metadata={
                               'type': 'no_pip_env',
                               'exception': err

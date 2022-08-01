@@ -14,7 +14,7 @@ import click
 from ploomber.io.terminalwriter import TerminalWriter
 from ploomber.cli.io import command_endpoint
 from ploomber.table import Table
-from ploomber_core.telemetry import telemetry
+from ploomber_core.telemetry.telemetry import Telemetry
 from ploomber import __version__ as ver
 from ploomber import POSTHOG_API_KEY as key
 from ploomber_core.exceptions import BaseException
@@ -30,6 +30,8 @@ _home = Path('~', '.ploomber')
 
 _lexer = MarkdownLexer()
 _formatter = TerminalFormatter(bg="dark")
+
+telemetry = Telemetry(key, ver, 'ploomber')
 
 
 def _find_header(md):
@@ -328,7 +330,7 @@ class _ExamplesManager:
 
 
 @command_endpoint
-@telemetry.log_call('examples', 'ploomber', ver, key)
+@telemetry.log_call('examples')
 def main(name, force=False, branch=None, output=None):
     """
     Entry point for examples

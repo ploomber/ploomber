@@ -18,7 +18,7 @@ from ploomber import DAG
 import ploomber.dag.dag as dag_module
 # TODO: optimize some of the tests that build dags by mocking and checking
 # that the build function is called with the appropriate args
-from ploomber_core.telemetry import telemetry
+from ploomber_core.telemetry.telemetry import Telemetry
 
 IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and 'win' in sys.platform
 
@@ -221,7 +221,7 @@ def test_log_enabled(monkeypatch, tmp_sample_dir):
 
 def test_interactive_session(tmp_sample_dir, monkeypatch):
     mock_log = Mock()
-    monkeypatch.setattr(telemetry, 'log_api', mock_log)
+    monkeypatch.setattr(Telemetry, 'log_api', mock_log)
     res = subprocess.run(
         ['ploomber', 'interact', '--entry-point', 'test_pkg.entry.with_doc'],
         input=b'type(dag)',
@@ -236,7 +236,7 @@ def test_interact_command_starts_full_ipython_session(monkeypatch, tmp_nbs):
     mock_start_ipython = Mock()
     monkeypatch.setattr(sys, 'argv', ['interact'])
     monkeypatch.setattr(interact, 'start_ipython', mock_start_ipython)
-    monkeypatch.setattr(telemetry, 'log_api', mock_log)
+    monkeypatch.setattr(Telemetry, 'log_api', mock_log)
     monkeypatch.setattr(interact.CustomParser, 'load_from_entry_point_arg',
                         lambda _: (mock_dag, None))
 
