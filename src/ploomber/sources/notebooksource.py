@@ -65,6 +65,8 @@ def _jupytext_fmt(primitive, extension):
     """
     Determine the jupytext fmt string to use based on the content and extension
     """
+    if extension.startswith('.'):
+        extension = extension[1:]
 
     if extension != 'ipynb':
         fmt, _ = jupytext.guess_format(primitive, f'.{extension}')
