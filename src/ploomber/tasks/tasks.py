@@ -10,6 +10,8 @@ import pdb
 import functools
 from collections.abc import Mapping
 
+import click
+import debuglater
 from IPython.terminal.debugger import TerminalPdb, Pdb
 
 from ploomber.tasks.abc import Task
@@ -22,6 +24,7 @@ from ploomber.constants import TaskStatus
 from ploomber.sources.interact import CallableInteractiveDeveloper
 from ploomber.tasks._params import Params
 from ploomber.io.loaders import _file_load
+from ploomber.io import pretty_print
 from ploomber.products import MetaProduct
 
 
@@ -84,6 +87,9 @@ class PythonCallable(Task):
         task's source is responsible for serializing its own product. If
         used, the source function must not have a "product" parameter but
         return its result instead
+    debug : 'later' False, optional, defailt=False
+        If 'later', the task will serialize the traceback if it fails.
+        (added in 0.20)
 
     Examples
     --------
@@ -167,6 +173,11 @@ class PythonCallable(Task):
 
     Notes
     -----
+    .. collapse:: changelog
+
+        .. versionadded:: 0.20
+            ``debug`` flag.
+
     More `examples using the Python API. <https://github.com/ploomber/projects/tree/master/python-api-examples>`_ # noqa
 
     The ``executor=Serial(build_in_subprocess=False)`` argument is only
@@ -186,6 +197,7 @@ class PythonCallable(Task):
 
         python script.py
     """
+
     def __init__(self,
                  source,
                  product,
@@ -193,12 +205,21 @@ class PythonCallable(Task):
                  name=None,
                  params=None,
                  unserializer=None,
-                 serializer=None):
+                 serializer=None,
+                 debug=False):
         self._serializer = serializer or dag.serializer
         kwargs = dict(hot_reload=dag._params.hot_reload,
                       needs_product=self._serializer is None)
         self._source = type(self)._init_source(source, kwargs)
         self._unserializer = unserializer or dag.unserializer
+        self._debug = debug
+
+        debug_valid = {'later', False}
+
+        if self._debug not in debug_valid:
+            raise ValueError(f'{self._debug} is not a valid value, allowed: '
+                             f'{pretty_print.iterable(self._debug)}')
+
         super().__init__(product, dag, name, params)
 
     @staticmethod
@@ -218,8 +239,25 @@ class PythonCallable(Task):
         else:
             product = params['product']
 
-        # call function
-        out = self.source.primitive(**params)
+        if self._debug == 'later':
+            try:
+                out = self.source.primitive(**params)
+            except Exception as e:
+                debuglater.run(self.name, echo=False)
+                path_to_dump = f'{self.name}.dump'
+                message = ((f'Serializing traceback to: {path_to_dump}. '
+                            f'To debug: dltr {path_to_dump}'))
+                raise TaskBuildError(message) from e
+        else:
+            try:
+                out = self.source.primitive(**params)
+            except Exception:
+                if self._debug:
+                    click.secho(
+                        f'Error in task {self.name!r}. '
+                        'Starting debugger...',
+                        fg='red')
+                raise
 
         # serialize output if needed
         if self._serializer:
@@ -298,6 +336,10 @@ class PythonCallable(Task):
         """
         opts = {'ipdb', 'pdb'}
 
+        if kind == 'pm':
+            raise ValueError('Post-mortem debugging is not supported '
+                             'via the .debug() method.')
+
         if kind not in opts:
             raise ValueError('"kind" must be one of {}, got: "{}"'.format(
                 opts, kind))
@@ -358,7 +400,9 @@ class PythonCallable(Task):
 def task_factory(_func=None, **factory_kwargs):
     """Syntactic sugar for building PythonCallable tasks
     """
+
     def decorator(func):
+
         @functools.wraps(func)
         def wrapper(**wrapper_kwargs):
             kwargs = {**factory_kwargs, **wrapper_kwargs}
@@ -415,6 +459,7 @@ class ShellScript(ClientMixin, Task):
     >>> summary = dag.build()
 
     """
+
     def __init__(self,
                  source,
                  product,
@@ -465,6 +510,7 @@ class DownloadFromURL(Task):
     name: str
         A str to indentify this task. Should not already exist in the dag
     """
+
     def __init__(self, source, product, dag, name=None, params=None):
         params = params or {}
         kwargs = dict(hot_reload=dag._params.hot_reload)
@@ -510,6 +556,7 @@ class Link(Task):
     name: str
         A str to indentify this task. Should not already exist in the dag
     """
+
     def __init__(self, product, dag, name):
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(kwargs)
@@ -560,6 +607,7 @@ class Input(Task):
     name: str
         A str to indentify this task. Should not already exist in the dag
     """
+
     def __init__(self, product, dag, name):
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(kwargs)

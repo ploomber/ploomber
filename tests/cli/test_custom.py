@@ -19,7 +19,6 @@ import ploomber.dag.dag as dag_module
 # that the build function is called with the appropriate args
 from ploomber.telemetry import telemetry
 
-
 IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and 'win' in sys.platform
 
 
@@ -158,8 +157,7 @@ def test_status(monkeypatch, tmp_sample_dir):
     status.main(catch_exception=False)
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 @pytest.mark.parametrize('custom_args, output, include_products, backend', [
     [[], 'pipeline.entry.png', False, None],
     [['--output', 'custom.png'], 'custom.png', False, None],
@@ -187,8 +185,7 @@ def test_plot(custom_args, monkeypatch, tmp_sample_dir, output,
                                  include_products=include_products)
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 def test_plot_uses_name_if_any(tmp_nbs, monkeypatch):
     os.rename('pipeline.yaml', 'pipeline.train.yaml')
 
@@ -418,6 +415,7 @@ def test_parse_doc():
 ])
 def test_parse_doc_if_missing_numpydoc(docstring, expected_summary,
                                        monkeypatch):
+
     def _module_not_found(arg):
         raise ModuleNotFoundError
 
@@ -489,6 +487,7 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
     monkeypatch.setattr(sys, 'argv', args)
 
     class CustomParserWrapper(CustomParser):
+
         def load_from_entry_point_arg(self):
             dag, args = super().load_from_entry_point_arg()
             dag_mock = MagicMock(wraps=dag)
@@ -536,12 +535,13 @@ tasks:
 @pytest.mark.parametrize('output', [None, 'pipeline.html', 'pipeline.png'])
 @pytest.mark.parametrize('backend', [None, 'd3', 'pygraphviz'])
 def test_report_command(tmp_nbs, backend, output, monkeypatch, capsys):
-    args = ['ploomber', 'report', '--entry-point', 'pipeline.yaml',
-            '--backend', backend]
+    args = [
+        'ploomber', 'report', '--entry-point', 'pipeline.yaml', '--backend',
+        backend
+    ]
     if output:
         args.extend(['--output', output])
-    monkeypatch.setattr(
-        sys, 'argv', args)
+    monkeypatch.setattr(sys, 'argv', args)
     output = 'pipeline.html' if not output else output
     cmd_router()
     expected_output_path = Path(output)
@@ -549,3 +549,19 @@ def test_report_command(tmp_nbs, backend, output, monkeypatch, capsys):
 
     assert expected_output_path.exists()
     assert f'saved at: {output}' in captured.out
+
+
+def test_build_debug_now_python_callable():
+    raise NotImplementedError
+
+
+def test_build_debug_later_python_callable():
+    raise NotImplementedError
+
+
+def test_build_debug_now_notebook():
+    raise NotImplementedError
+
+
+def test_build_debug_later_notebook():
+    raise NotImplementedError

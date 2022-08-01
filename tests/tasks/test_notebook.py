@@ -6,12 +6,13 @@ import pytest
 import jupytext
 import nbformat
 import nbconvert
+from debuglater.pydump import debug_dump
 
 from ploomber import DAG, DAGConfigurator
 from ploomber.tasks import NotebookRunner
 from ploomber.products import File
 from ploomber.exceptions import (DAGBuildError, DAGRenderError,
-                                 TaskInitializationError)
+                                 TaskInitializationError, TaskBuildError)
 from ploomber.tasks import notebook
 from ploomber.executors import Serial
 from ploomber.clients import LocalStorageClient
@@ -749,6 +750,7 @@ var = None
 
 
 def test_develop_saves_changes(tmp_dag, monkeypatch):
+
     def mock_jupyter_notebook(args, check):
         nb = jupytext.reads('2 + 2', fmt='py')
         # args: "jupyter" {app} {path} {other args, ...}
@@ -1206,3 +1208,92 @@ raise ValueError("some stuff happened")
 
     assert str(PurePosixPath(expected_remote)) in str(excinfo.value)
     assert Path(expected_remote).is_file()
+
+
+def test_validates_debug_in_constructor(tmp_directory):
+    path = Path('nb.py')
+    path.write_text("""
+# + tags=["parameters"]
+# some code
+    """)
+
+    with pytest.raises(ValueError) as excinfo:
+        NotebookRunner(Path('nb.py'),
+                       File('out.html'),
+                       dag=DAG(),
+                       debug='something')
+
+    msg = "'something' is an invalid value for 'debug'. Valid values:"
+    assert msg in str(excinfo.value)
+
+
+def test_validates_debug_property(tmp_directory):
+    path = Path('nb.py')
+    path.write_text("""
+# + tags=["parameters"]
+# some code
+    """)
+
+    task = NotebookRunner(Path('nb.py'),
+                          File('out.html'),
+                          dag=DAG(),
+                          debug=False)
+
+    with pytest.raises(ValueError) as excinfo:
+        task.debug = 'something'
+
+    msg = "'something' is an invalid value for 'debug'. Valid values:"
+    assert msg in str(excinfo.value)
+
+
+def test_debug_now(tmp_directory, monkeypatch):
+    path = Path('nb.py')
+    path.write_text("""
+# + tags=["parameters"]
+x, y = 1, 0
+
+# +
+x/y
+    """)
+
+    task = NotebookRunner(Path('nb.py'),
+                          File('out.html'),
+                          dag=DAG(),
+                          debug=True)
+
+    mock = Mock(side_effect=['x', 'quit'])
+
+    with pytest.raises(SystemExit):
+        with monkeypatch.context() as m:
+            m.setattr('builtins.input', mock)
+            task.build()
+
+
+def test_debug_later(tmp_directory, monkeypatch, capsys):
+    path = Path('nb.py')
+    path.write_text("""
+# + tags=["parameters"]
+x, y = 1, 0
+
+# +
+x/y
+    """)
+
+    task = NotebookRunner(Path('nb.py'),
+                          File('out.html'),
+                          dag=DAG(),
+                          debug='later')
+
+    with pytest.raises(TaskBuildError) as excinfo:
+        task.build()
+
+    assert "dltr nb.dump" in str(excinfo.getrepr())
+
+    mock = Mock(side_effect=["print(f'x={x}')", 'quit'])
+
+    with monkeypatch.context() as m:
+        m.setattr('builtins.input', mock)
+        debug_dump('nb.dump')
+
+    captured = capsys.readouterr()
+    assert "x=1" in captured.out
