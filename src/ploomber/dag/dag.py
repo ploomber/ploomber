@@ -98,7 +98,7 @@ from ploomber.dag.util import (check_duplicated_products,
                                fetch_remote_metadata_in_parallel,
                                _path_for_plot)
 from ploomber.tasks.abc import Task
-from ploomber.tasks import NotebookRunner
+from ploomber.tasks import NotebookRunner, PythonCallable
 
 if sys.version_info < (3, 8):
     # pygraphviz dropped support for python 3.7
@@ -523,17 +523,19 @@ class DAG(AbstractDAG):
         # the debugging session in the right place
         if debug:
             executor_original = self.executor
-            self.executor = executors.Serial(build_in_subprocess=False,
-                                             catch_exceptions=False,
-                                             catch_warnings=False)
+
+            # serial debugger needed if debugnow
+            if debug is True:
+                self.executor = executors.Serial(build_in_subprocess=False,
+                                                 catch_exceptions=False,
+                                                 catch_warnings=False)
 
             # set debug flag to True on all tasks that have one. Currently
             # only NotebookRunner exposes this
             for name in self._iter():
                 task = self[name]
-                if isinstance(task, NotebookRunner):
-                    task._debug = True
-                    task.source._debug = True
+                if isinstance(task, (NotebookRunner, PythonCallable)):
+                    task._debug = debug
 
         callable_ = partial(self._build,
                             force=force,
@@ -541,7 +543,9 @@ class DAG(AbstractDAG):
 
         with dag_logger:
             try:
-                if debug:
+                # NOTE: we have to adapt this to work on functions and
+                # notebooks.
+                if debug is True:
                     report = debug_if_exception(callable_)
                 else:
                     report = callable_()
@@ -549,7 +553,8 @@ class DAG(AbstractDAG):
                 if close_clients:
                     self.close_clients()
 
-        if debug:
+        # if debugging now, revert back the original executor
+        if debug is True:
             self.executor = executor_original
 
         return report
@@ -832,7 +837,8 @@ class DAG(AbstractDAG):
                 self.plot(output=path_to_plot, backend=backend)
                 plot_ = image_bytes2html(Path(path_to_plot).read_bytes())
             else:
-                self.plot(output=path_to_plot, backend=backend,
+                self.plot(output=path_to_plot,
+                          backend=backend,
                           image_only=True)
                 json_data = Path(path_to_plot).read_text()
                 plot_ = svg2html()
@@ -856,8 +862,8 @@ class DAG(AbstractDAG):
 
             # add css
             if backend == 'd3' and 'plot' in sections:
-                html = importlib_resources.read_text(resources,
-                                                     'github-markdown-d3.html')
+                html = importlib_resources.read_text(
+                    resources, 'github-markdown-d3.html')
                 out = Template(html).render(content=out, json_data=json_data)
             else:
                 html = importlib_resources.read_text(resources,
@@ -869,8 +875,11 @@ class DAG(AbstractDAG):
 
         return out
 
-    def plot(self, output='embed', include_products=False,
-             backend=None, image_only=False):
+    def plot(self,
+             output='embed',
+             include_products=False,
+             backend=None,
+             image_only=False):
         """Plot the DAG
 
         Parameters

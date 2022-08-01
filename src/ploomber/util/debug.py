@@ -1,6 +1,7 @@
 import sys
 
 
+# TODO: we should move this logic to PythonCallable.run
 def debug_if_exception(callable_):
     """
     Drop a debugger session if running callable_() raises an exception,

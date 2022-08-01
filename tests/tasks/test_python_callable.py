@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 import pandas as pd
+from debuglater.pydump import debug_dump
 
 from test_pkg import functions
 from ploomber import DAG, DAGConfigurator, tasks
@@ -446,3 +447,55 @@ def test_creates_parent_dirs_meta_product(tmp_directory):
     dag.build()
 
     return dag
+
+
+def test_validates_debug_mode_in_constructor():
+    with pytest.raises(ValueError) as excinfo:
+        PythonCallable(touch,
+                       File('file.txt'),
+                       dag=DAG(),
+                       debug_mode='something')
+
+    msg = "'something' is an invalid value for 'debug_mode'. Valid values:"
+    assert msg in str(excinfo.value)
+
+
+def test_validates_debug_mode_property():
+    task = PythonCallable(touch, File('file.txt'), dag=DAG(), debug_mode=None)
+
+    with pytest.raises(ValueError) as excinfo:
+        task.debug_mode = 'something'
+
+    msg = "'something' is an invalid value for 'debug_mode'. Valid values:"
+    assert msg in str(excinfo.value)
+
+
+def test_debug_now():
+
+    raise NotImplementedError
+
+
+def test_debug_later(tmp_directory, monkeypatch, capsys):
+
+    def crash(product):
+        x, y = 1, 0
+        return x / y
+
+    task = PythonCallable(crash,
+                          File('file.txt'),
+                          dag=DAG(),
+                          debug_mode='later')
+
+    with pytest.raises(TaskBuildError) as excinfo:
+        task.build()
+
+    assert "dltr crash.dump" in str(excinfo.getrepr())
+
+    mock = Mock(side_effect=["print(f'x={x}')", 'quit'])
+
+    with monkeypatch.context() as m:
+        m.setattr('builtins.input', mock)
+        debug_dump('crash.dump')
+
+    captured = capsys.readouterr()
+    assert "x=1" in captured.out

@@ -7,6 +7,8 @@ from ploomber.executors import Parallel
 from ploomber.telemetry import telemetry
 from ploomber.cli.cloud import _write_pipeline
 
+ONLY_IN_CALLABLES_AND_NBS = 'Only supported in function and notebook tasks.'
+
 
 # this parameter is only set to True when calling "ploomber interactive"
 @cli_endpoint
@@ -31,12 +33,18 @@ def main(payload, render_only=False):
             '-p',
             help='Build a pipeline partially until certain task',
             default=None)
-        parser.add_argument(
-            '--debug',
-            '-d',
-            help='Drop a debugger session if an exception happens',
-            action='store_true',
-            default=False)
+
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument('--debug',
+                           '-d',
+                           help=('Start debugger upon crashing. ' +
+                                 ONLY_IN_CALLABLES_AND_NBS),
+                           action='store_true')
+        group.add_argument('--debuglater',
+                           '-D',
+                           help=('Serialize traceback for later debugging. ' +
+                                 ONLY_IN_CALLABLES_AND_NBS),
+                           action='store_true')
 
     # users may try to run "ploomber build {name}" to build a single task
     if len(sys.argv) > 1 and not sys.argv[1].startswith('-'):
@@ -55,6 +63,16 @@ def main(payload, render_only=False):
     pid = str(uuid.uuid4())
     _write_pipeline(pipeline_id=pid, status='started', pipeline_name=dag.name)
 
+    if args.debug:
+        # debug now
+        debug = True
+    elif args.debuglater:
+        # debug later
+        debug = 'later'
+    else:
+        # no debg
+        debug = False
+
     # when using the parallel executor from the CLI, ensure we print progress
     # to stdout
     if isinstance(dag.executor, Parallel):
@@ -66,10 +84,10 @@ def main(payload, render_only=False):
             if args.partially:
                 report = dag.build_partially(args.partially,
                                              force=args.force,
-                                             debug=args.debug,
+                                             debug=debug,
                                              skip_upstream=args.skip_upstream)
             else:
-                report = dag.build(force=args.force, debug=args.debug)
+                report = dag.build(force=args.force, debug=debug)
     except Exception as e:
         _write_pipeline(pipeline_id=pid,
                         status='error',

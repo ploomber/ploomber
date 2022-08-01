@@ -499,8 +499,8 @@ class NotebookRunner(NotebookMixin, Task):
         Defaults to False. This resembles the default behavior when
         running notebooks interactively via `jupyter notebook`
     debug : bool, default=False
-        If True, runs notebook in debug mode, this will enable the Python
-        debugger and start a debugging session if an error is thrown.
+        If True, runs notebook in debug mode, this will start debugger if an
+        error is thrown.
 
     Examples
     --------
@@ -695,7 +695,6 @@ class NotebookRunner(NotebookMixin, Task):
             kernelspec_name,
             static_analysis,
             check_if_kernel_installed,
-            debug,
         )
         super().__init__(product, dag, name, params)
 
@@ -747,15 +746,13 @@ class NotebookRunner(NotebookMixin, Task):
                      ext_in=None,
                      kernelspec_name=None,
                      static_analysis='regular',
-                     check_if_kernel_installed=False,
-                     debug=False):
+                     check_if_kernel_installed=False):
         return NotebookSource(
             source,
             ext_in=ext_in,
             kernelspec_name=kernelspec_name,
             static_analysis=static_analysis,
             check_if_kernel_installed=check_if_kernel_installed,
-            debug=debug,
             **kwargs)
 
     def run(self):
@@ -806,6 +803,13 @@ class NotebookRunner(NotebookMixin, Task):
 
         if self.local_execution:
             self.papermill_params['cwd'] = str(self.source.loc.parent)
+
+        # use our custom engine
+        if self._debug is True:
+            self.papermill_params['engine_name'] = 'debug'
+        else:
+            self.papermill_params['engine_name'] = 'debuglater'
+            self.papermill_params['path_to_dump'] = f'{self.name}.dump'
 
         # create parent folders if they don't exist
         Path(path_to_out_ipynb).parent.mkdir(parents=True, exist_ok=True)
@@ -912,7 +916,6 @@ class ScriptRunner(NotebookMixin, Task):
             static_analysis=static_analysis,
             kernelspec_name=None,
             check_if_kernel_installed=False,
-            debug=False,
             **kwargs,
         )
 
