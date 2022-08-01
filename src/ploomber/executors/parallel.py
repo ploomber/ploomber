@@ -92,7 +92,7 @@ class Parallel(Executor):
     If any task crashes, downstream tasks execution is aborted, building
     continues until no more tasks can be executed
 
-    .. versionadded:: X.Y.Z
+    .. versionadded:: 0.20
         Added `start_method` argument
 
     See Also
