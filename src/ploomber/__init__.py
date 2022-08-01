@@ -11,7 +11,7 @@ from ploomber.util.loader import lazily_load_entry_point
 
 __version__ = '0.20.1dev'
 
-POSTHOG_API_KEY = 'placeholder'
+POSTHOG_API_KEY = 'phc_P9SpSeypyPwxrMdFn2edOOEooQioF2axppyEeDwtMSP'
 
 # Set default logging handler to avoid "No handler found" warnings.
 

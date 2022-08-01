@@ -386,7 +386,7 @@ def test_installs_conda_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     main = Mock()
     monkeypatch.setattr(install_module.shutil, 'which', Mock())
     monkeypatch.setattr(install_module, 'main_conda', main)
-    monkeypatch.setattr(install_module.telemetry, 'is_conda', lambda: is_conda)
+    monkeypatch.setattr(install_module._telemetry, 'is_conda', lambda: is_conda)
     monkeypatch.setattr(install_module, '_current_conda_env_name',
                         lambda: env_name)
 
@@ -412,7 +412,7 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     # simulate no conda
     monkeypatch.setattr(install_module.shutil, 'which', lambda _: None)
     monkeypatch.setattr(install_module, 'main_pip', main)
-    monkeypatch.setattr(install_module.telemetry, 'in_virtualenv',
+    monkeypatch.setattr(install_module._telemetry, 'in_virtualenv',
                         lambda: in_venv)
 
     runner = CliRunner()
