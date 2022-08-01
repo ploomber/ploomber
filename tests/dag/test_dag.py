@@ -1005,6 +1005,16 @@ def test_switch_start_method_in_parallel_executor(tmp_directory, start_method,
     assert dag.executor.start_method == start_method
 
 
+@pytest.mark.parametrize('start_method', [None])
+def test_default_start_method_in_parallel_executor(tmp_directory, start_method,
+                                                   monkeypatch):
+    dag = DAG(executor=Parallel(processes=2, start_method=start_method))
+
+    allowed_methods = ['spawn', 'fork', 'forkserver']
+
+    assert dag.executor.start_method in allowed_methods
+
+
 def test_metadata_is_synced_when_executing_in_subprocess(tmp_directory):
     dag = DAG(executor=Serial(build_in_subprocess=True))
     t = PythonCallable(touch_root, File('file.txt'), dag)
