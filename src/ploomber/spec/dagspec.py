@@ -387,7 +387,7 @@ class DAGSpec(MutableMapping):
 
             # check if there are any params declared in env, not used in
             # in the pipeline
-            extra = set(self.env) - self.env.default_keys - tags
+            extra = self.env.get_unused_placeholders() - tags
 
             if extra:
                 warnings.warn('The following placeholders are declared in the '
