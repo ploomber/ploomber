@@ -8,7 +8,7 @@ import yaml
 from jinja2 import Template, StrictUndefined
 
 from ploomber.env import validate
-from ploomber.env.expand import EnvironmentExpander
+from ploomber.env.expand import EnvironmentExpander, iterate_nested_dict
 from ploomber.env.frozenjson import FrozenJSON
 from ploomber import repo
 from ploomber.util import default
@@ -78,6 +78,7 @@ class EnvDict(Mapping):
     {{cwd}} (working directory), {{here}} (env.yaml location, if any), {{root}}
     (project's root folder, if any)
     """
+
     def __init__(self, source, path_to_here=None, defaults=None):
         # if initialized from another EnvDict, copy the attributes to
         # initialize
@@ -92,6 +93,7 @@ class EnvDict(Mapping):
                     '_data',
                     '_repr',
                     '_default_keys',
+                    '_tags_in_raw_data',
             ):
                 original = getattr(source, attr)
                 setattr(self, attr, deepcopy(original))
@@ -101,6 +103,9 @@ class EnvDict(Mapping):
                 raw_data,
                 # this will be None if source is a dict
                 self._path_to_env) = load_from_source(source)
+
+            # placeholders in user's env content
+            self._tags_in_raw_data = find_tags_in_dict(raw_data)
 
             if defaults:
                 raw_data = {**defaults, **raw_data}
@@ -325,6 +330,13 @@ class EnvDict(Mapping):
 
         return value, placeholders
 
+    def get_unused_placeholders(self):
+        """
+        Returns unused placeholders, can be used to warn users. Excludes
+        default values such as {{now}} and {{user}}
+        """
+        return set(self) - self.default_keys - self._tags_in_raw_data
+
 
 def _error_message_for_undefined_list(undefined):
     return '\n'.join(_error_message_for_undefined(u) for u in undefined)
@@ -450,3 +462,12 @@ def raw_preprocess(raw, path_to_raw):
             preprocessed['_module'] = path_to_module
 
     return preprocessed
+
+
+def find_tags_in_dict(d):
+    tags = set()
+
+    for k in iterate_nested_dict(d):
+        tags = tags | util.get_tags_in_str(k)
+
+    return tags

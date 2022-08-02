@@ -917,10 +917,14 @@ def test_error_message_if_missing_default_placeholder(tmp_directory, value,
         'd': 42
     }
 }]])
-@pytest.mark.parametrize('kwarg', ['source', 'defaults'])
-def test_render(kwarg, value):
+@pytest.mark.parametrize('key', [
+    'source',
+    'defaults',
+])
+def test_render(key, value):
     kwargs = dict(source=dict(), defaults=None)
-    kwargs[kwarg] = {'key': value}
+    kwargs[key] = {'key': value}
+
     env = EnvDict(**kwargs)
     value, _ = env._render('{{key}}')
 
@@ -1073,4 +1077,10 @@ def test_resole_previous_values():
     assert env.final == 'path/to/output/something/final'
 
 
-# TODO: make sure a warnin is not displayed due to unused placeholders
+def test_get_unused_placeholders():
+    env = EnvDict({
+        'prefix': 'path/to/output',
+        'something': '{{prefix}}/something',
+    })
+
+    assert env.get_unused_placeholders() == {'something'}
