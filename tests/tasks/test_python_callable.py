@@ -1,3 +1,4 @@
+import sys
 from collections.abc import Mapping
 from unittest.mock import Mock
 from pathlib import Path
@@ -470,9 +471,23 @@ def test_validates_debug_mode_property():
     assert msg in str(excinfo.value)
 
 
-def test_debug_now():
+def test_debug_now(monkeypatch):
 
-    raise NotImplementedError
+    def crash(product):
+        x, y = 1, 0
+        return x / y
+
+    task = PythonCallable(crash, File('file.txt'), dag=DAG(), debug_mode=True)
+
+    mock = Mock()
+
+    with pytest.raises(TaskBuildError):
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'ipdb', mock)
+            task.build()
+
+    tb = mock.post_mortem.call_args[0][0]
+    assert type(tb).__name__ == 'traceback'
 
 
 def test_debug_later(tmp_directory, monkeypatch, capsys):

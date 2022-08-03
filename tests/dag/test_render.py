@@ -244,7 +244,7 @@ def test_warnings_are_shown(tmp_directory):
     assert 'This is another warning' in str(record[0].message)
 
 
-def test_recover_from_failed_render():
+def test_recover_from_failed_render(tmp_directory):
     dag = DAG()
     t1 = PythonCallable(touch_root, File('file.txt'), dag)
     t2 = PythonCallable(touch, File('file2.txt'), dag)
@@ -271,6 +271,7 @@ def test_render_checks_outdated_status_once(monkeypatch, tmp_directory):
     _check_is_outdated is an expensive operation and it should only run
     once per task
     """
+
     def _make_dag():
         dag = DAG(executor=Serial(build_in_subprocess=False))
         t1 = PythonCallable(touch_root, File('one.txt'), dag, name='one')
