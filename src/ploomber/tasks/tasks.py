@@ -10,7 +10,6 @@ import pdb
 import functools
 from collections.abc import Mapping
 
-import click
 import debuglater
 from IPython.terminal.debugger import TerminalPdb, Pdb
 
@@ -253,14 +252,7 @@ class PythonCallable(Task):
                             f'To debug: dltr {path_to_dump}'))
                 raise TaskBuildError(message) from e
         elif self.debug_mode is True:
-            try:
-                out = debug_if_exception(self.source.primitive, params)
-            except Exception:
-                click.secho(
-                    f'Error in task {self.name!r}. '
-                    'Starting debugger...',
-                    fg='red')
-                raise
+            out = debug_if_exception(self.source.primitive, self.name, params)
         else:
             out = self.source.primitive(**params)
 

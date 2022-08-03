@@ -92,8 +92,9 @@ def _task_cli(accept_task_id=False):
                 api.tasks_update(getattr(args, 'task_id'), 'failed')
             raise
         else:
-            click.echo("{} executed successfully!".format(task.name))
+            click.echo(f"{task.name!r} task executed successfully!")
             click.echo("Products:\n" + repr(task.product))
+
             if getattr(args, 'task_id', None):
                 api.tasks_update(getattr(args, 'task_id'), 'finished')
 
