@@ -1,8 +1,12 @@
 import sys
 
+import click
+
+from ploomber.exceptions import DebuggingFinished
+
 
 # TODO: we should move this logic to PythonCallable.run
-def debug_if_exception(callable_, kwargs=None):
+def debug_if_exception(callable_, task_name, kwargs=None):
     """
     Drop a debugger session if running callable_() raises an exception,
     otherwise it just returns the value returned by callable_()
@@ -20,7 +24,13 @@ def debug_if_exception(callable_, kwargs=None):
 
     try:
         result = callable_(**kwargs)
-    except Exception:
+    except Exception as e:
+        click.secho(f'Error in task {task_name!r}. '
+                    'Starting debugger...',
+                    fg='red')
+
         ipdb.post_mortem(sys.exc_info()[2])
+
+        raise DebuggingFinished(task_name) from e
     else:
         return result
