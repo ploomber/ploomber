@@ -8,6 +8,7 @@ from unittest.mock import Mock, MagicMock
 import jupytext
 import nbformat
 import pytest
+from debuglater.pydump import debug_dump
 
 from ploomber.cli import plot, build, parsers, task, report, status, interact
 from ploomber_cli.cli import cmd_router
@@ -15,7 +16,6 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.tasks import notebook
 from ploomber import DAG
 import ploomber.dag.dag as dag_module
-from ploomber.exceptions import TaskBuildError
 # TODO: optimize some of the tests that build dags by mocking and checking
 # that the build function is called with the appropriate args
 from ploomber.telemetry import telemetry
@@ -570,9 +570,10 @@ tasks:
 
     mock = Mock()
 
-    with monkeypatch.context() as m:
-        m.setitem(sys.modules, 'ipdb', mock)
-        cmd_router()
+    with pytest.raises(SystemExit):
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'ipdb', mock)
+            cmd_router()
 
     tb = mock.post_mortem.call_args[0][0]
     assert type(tb).__name__ == 'traceback'
@@ -603,26 +604,171 @@ tasks:
     assert 'dltr crash.dump' in captured.err
 
 
-def test_build_debug_now_notebook():
-    raise NotImplementedError
+def test_build_debug_now_notebook(tmp_directory, monkeypatch, tmp_imports):
+    Path('crash.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+
+# +
+x, y = 1, 0
+x / y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: crash.py
+      product: out.ipynb
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'build', '--debug'])
+
+    mock = Mock(side_effect=["print(f'x={x}')", 'quit'])
+
+    with pytest.raises(SystemExit):
+        with monkeypatch.context() as m:
+            m.setattr('builtins.input', mock)
+            cmd_router()
 
 
-def test_build_debug_later_notebook():
-    raise NotImplementedError
+def test_build_debug_later_notebook(tmp_directory, monkeypatch, tmp_imports,
+                                    capsys):
+    Path('crash.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+
+# +
+x, y = 1, 0
+x / y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: crash.py
+      product: out.ipynb
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'build', '--debuglater'])
+
+    with pytest.raises(SystemExit):
+        cmd_router()
+
+    captured = capsys.readouterr()
+    assert 'dltr crash.dump' in captured.err
+
+    mock = Mock(side_effect=["print(f'x={x}')", 'quit'])
+
+    with monkeypatch.context() as m:
+        m.setattr('builtins.input', mock)
+        debug_dump('crash.dump')
 
 
 def test_task_debug_now_python_callable(tmp_directory, monkeypatch,
                                         tmp_imports):
-    raise NotImplementedError
+    Path('functions.py').write_text("""
+def crash(product):
+    x, y = 1, 0
+    x/y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: functions.crash
+      product: out.txt
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'task', 'crash', '--debug'])
+
+    mock = Mock()
+
+    with pytest.raises(SystemExit):
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'ipdb', mock)
+            cmd_router()
+
+    tb = mock.post_mortem.call_args[0][0]
+    assert type(tb).__name__ == 'traceback'
 
 
-def test_task_debug_later_python_callable(monkeypatch):
-    raise NotImplementedError
+def test_task_debug_later_python_callable(tmp_directory, monkeypatch,
+                                          tmp_imports, capsys):
+    Path('functions.py').write_text("""
+def crash(product):
+    x, y = 1, 0
+    x/y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: functions.crash
+      product: out.txt
+""")
+
+    monkeypatch.setattr(sys, 'argv',
+                        ['ploomber', 'task', 'crash', '--debuglater'])
+
+    with pytest.raises(SystemExit):
+        cmd_router()
+
+    captured = capsys.readouterr()
+
+    assert Path('crash.dump').is_file()
+    assert 'dltr crash.dump' in captured.err
 
 
-def test_task_debug_now_notebook():
-    raise NotImplementedError
+def test_task_debug_now_notebook(tmp_directory, monkeypatch, tmp_imports):
+    Path('crash.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+
+# +
+x, y = 1, 0
+x / y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: crash.py
+      product: out.ipynb
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'task', 'crash', '--debug'])
+
+    mock = Mock(side_effect=["print(f'x={x}')", 'quit'])
+
+    with pytest.raises(SystemExit):
+        with monkeypatch.context() as m:
+            m.setattr('builtins.input', mock)
+            cmd_router()
 
 
-def test_task_debug_later_notebook():
-    raise NotImplementedError
+def test_task_debug_later_notebook(tmp_directory, monkeypatch, tmp_imports,
+                                   capsys):
+    Path('crash.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+
+# +
+x, y = 1, 0
+x / y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: crash.py
+      product: out.ipynb
+""")
+
+    monkeypatch.setattr(sys, 'argv',
+                        ['ploomber', 'task', 'crash', '--debuglater'])
+
+    with pytest.raises(SystemExit):
+        cmd_router()
+
+    captured = capsys.readouterr()
+    assert 'dltr crash.dump' in captured.err
+
+    mock = Mock(side_effect=["print(f'x={x}')", 'quit'])
+
+    with monkeypatch.context() as m:
+        m.setattr('builtins.input', mock)
+        debug_dump('crash.dump')
