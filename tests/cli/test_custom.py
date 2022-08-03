@@ -15,6 +15,7 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.tasks import notebook
 from ploomber import DAG
 import ploomber.dag.dag as dag_module
+from ploomber.exceptions import TaskBuildError
 # TODO: optimize some of the tests that build dags by mocking and checking
 # that the build function is called with the appropriate args
 from ploomber.telemetry import telemetry
@@ -551,12 +552,55 @@ def test_report_command(tmp_nbs, backend, output, monkeypatch, capsys):
     assert f'saved at: {output}' in captured.out
 
 
-def test_build_debug_now_python_callable():
-    raise NotImplementedError
+def test_build_debug_now_python_callable(tmp_directory, monkeypatch,
+                                         tmp_imports):
+    Path('functions.py').write_text("""
+def crash(product):
+    x, y = 1, 0
+    x/y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: functions.crash
+      product: out.txt
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'build', '--debug'])
+
+    mock = Mock()
+
+    with monkeypatch.context() as m:
+        m.setitem(sys.modules, 'ipdb', mock)
+        cmd_router()
+
+    tb = mock.post_mortem.call_args[0][0]
+    assert type(tb).__name__ == 'traceback'
 
 
-def test_build_debug_later_python_callable():
-    raise NotImplementedError
+def test_build_debug_later_python_callable(tmp_directory, monkeypatch,
+                                           tmp_imports, capsys):
+    Path('functions.py').write_text("""
+def crash(product):
+    x, y = 1, 0
+    x/y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: functions.crash
+      product: out.txt
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'build', '--debuglater'])
+
+    with pytest.raises(SystemExit):
+        cmd_router()
+
+    captured = capsys.readouterr()
+
+    assert Path('crash.dump').is_file()
+    assert 'dltr crash.dump' in captured.err
 
 
 def test_build_debug_now_notebook():
@@ -564,4 +608,21 @@ def test_build_debug_now_notebook():
 
 
 def test_build_debug_later_notebook():
+    raise NotImplementedError
+
+
+def test_task_debug_now_python_callable(tmp_directory, monkeypatch,
+                                        tmp_imports):
+    raise NotImplementedError
+
+
+def test_task_debug_later_python_callable(monkeypatch):
+    raise NotImplementedError
+
+
+def test_task_debug_now_notebook():
+    raise NotImplementedError
+
+
+def test_task_debug_later_notebook():
     raise NotImplementedError
