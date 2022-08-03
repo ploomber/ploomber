@@ -748,7 +748,7 @@ class NotebookRunner(NotebookMixin, Task):
 
     @debug_mode.setter
     def debug_mode(self, value):
-        _validate.is_in(value, {False, True, 'later'}, 'debug_mode')
+        _validate.is_in(value, {None, True, 'later'}, 'debug_mode')
         self._debug_mode = value
 
     @staticmethod
@@ -818,7 +818,7 @@ class NotebookRunner(NotebookMixin, Task):
         # use our custom engine
         if self.debug_mode is True:
             self.papermill_params['engine_name'] = 'debug'
-        else:
+        elif self.debug_mode == 'later':
             self.papermill_params['engine_name'] = 'debuglater'
             self.papermill_params['path_to_dump'] = f'{self.name}.dump'
 
