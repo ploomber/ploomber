@@ -26,6 +26,7 @@ from ploomber.tasks._params import Params
 from ploomber.io.loaders import _file_load
 from ploomber.io import _validate
 from ploomber.products import MetaProduct
+from ploomber.util.debug import debug_if_exception
 
 
 def _unserializer(product, unserializer):
@@ -222,7 +223,7 @@ class PythonCallable(Task):
 
     @debug_mode.setter
     def debug_mode(self, value):
-        _validate.is_in(value, {None, 'later'}, 'debug_mode')
+        _validate.is_in(value, {None, True, 'later'}, 'debug_mode')
         self._debug_mode = value
 
     @staticmethod
@@ -251,16 +252,17 @@ class PythonCallable(Task):
                 message = ((f'Serializing traceback to: {path_to_dump}. '
                             f'To debug: dltr {path_to_dump}'))
                 raise TaskBuildError(message) from e
-        else:
+        elif self.debug_mode is True:
             try:
-                out = self.source.primitive(**params)
+                out = debug_if_exception(self.source.primitive, params)
             except Exception:
-                if self.debug_mode:
-                    click.secho(
-                        f'Error in task {self.name!r}. '
-                        'Starting debugger...',
-                        fg='red')
+                click.secho(
+                    f'Error in task {self.name!r}. '
+                    'Starting debugger...',
+                    fg='red')
                 raise
+        else:
+            out = self.source.primitive(**params)
 
         # serialize output if needed
         if self._serializer:

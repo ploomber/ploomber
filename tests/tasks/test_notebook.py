@@ -1237,7 +1237,7 @@ def test_validates_debug_mode_property(tmp_directory):
     task = NotebookRunner(Path('nb.py'),
                           File('out.html'),
                           dag=DAG(),
-                          debug_mode=False)
+                          debug_mode=None)
 
     with pytest.raises(ValueError) as excinfo:
         task.debug_mode = 'something'
