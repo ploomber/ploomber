@@ -501,7 +501,7 @@ class NotebookRunner(NotebookMixin, Task):
     debug_mode : None, True  or 'later', default=None
         If True, runs notebook in debug mode, this will start debugger if an
         error is thrown. If 'later', it will serialize the traceback for later
-        debugging.
+        debugging. (Added in 0.20)
 
     Examples
     --------
