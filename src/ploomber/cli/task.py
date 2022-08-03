@@ -68,17 +68,17 @@ def _task_cli(accept_task_id=False):
 
     if args.debug:
         # debug now
-        debug = True
+        debug_mode = True
     elif args.debuglater:
         # debug later
-        debug = 'later'
+        debug_mode = 'later'
     else:
-        # no debg
-        debug = False
+        # no debug
+        debug_mode = None
 
     # TODO: support debug in python callable
     if isinstance(task, (NotebookRunner, PythonCallable)):
-        task._debug = debug
+        task.debug_mode = debug_mode
 
     # task if build by default, but when --source or --status are passed,
     # the --build flag is required
