@@ -211,6 +211,9 @@ Percent format
 
 Activating the Jupyter extension
 --------------------------------
+.. note::
+    
+    For tips on troubleshooting pipeline loading, see :ref:`Troubleshooting pipeline loading`.
 
 In most cases, the extension configures when you install Ploomber; you can verify this by running:
 
@@ -294,6 +297,9 @@ until it finds one.
 
 Troubleshooting pipeline loading
 --------------------------------
+.. note::
+    
+    For tips on activating the Jupyter extension, see :ref:`Activating the Jupyter extension`.
 
 If a pipeline is not detected, the Jupyter notebook application will work
 as expected, but no cell injection will happen. You can see if Ploomber could

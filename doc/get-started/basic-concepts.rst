@@ -166,6 +166,10 @@ editing. If a script/notebook has no dependencies, set ``upstream = None``.
 
 The cell injection process
 **************************
+.. note::
+    
+    For tips on troubleshooting pipeline loading, see :ref:`Troubleshooting pipeline loading`.
+    
 
 Let's review the contents a sample ``clean.py`` file:
 
