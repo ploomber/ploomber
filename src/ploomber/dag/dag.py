@@ -466,7 +466,7 @@ class DAG(AbstractDAG):
     def build(self,
               force=False,
               show_progress=True,
-              debug=False,
+              debug=None,
               close_clients=True):
         """
         Runs the DAG in order so that all upstream dependencies are run for
@@ -481,11 +481,14 @@ class DAG(AbstractDAG):
         show_progress : bool, default=True
             Show progress bar
 
-        debug : bool, default=False
-            Drop a debugging session if building raises an exception. Note that
-            this modifies the executor, temporarily setting it to Serial
-            with subprocess off and catching exceptions/warnings off. Restores
-            the original executor at the end
+        debug : True or 'later', default=None
+            If True, Drop a debugging session if building raises an exception.
+            Note that this modifies the executor and temporarily sets it
+            to Serial with subprocess off and catching exceptions/warnings off.
+            Restores the original executor at the end. If 'later' it keeps the
+            executor the same and serializes the traceback errors for later
+            debugging
+
 
         close_clients : bool, default=True
             Close all clients (dag-level, task-level and product-level) upon
@@ -495,11 +498,13 @@ class DAG(AbstractDAG):
         -----
         All dag-level clients are closed after calling this function
 
-        ``debug`` is useful to let a pipeline run and start debugging at a
-        failing  PythonCallable task but it won't work with failing
-        ``NotebookRunner`` tasks because notebooks/scripts are executed in a
-        different process. If you want to debug ``NotebookRunner`` tasks, use
-        ``NotebookRunner.debug()`` instead.
+        .. collapse:: changelog
+
+            .. versionchanged:: 0.20
+                ``debug`` changed from True/False to True/'later'/None.
+
+            .. versionadded:: 0.20
+                ``debug`` now supports debugging NotebookRunner tasks
 
         Returns
         -------
@@ -716,7 +721,7 @@ class DAG(AbstractDAG):
                         target,
                         force=False,
                         show_progress=True,
-                        debug=False,
+                        debug=None,
                         skip_upstream=False):
         """Partially build a dag until certain task
 
@@ -733,17 +738,29 @@ class DAG(AbstractDAG):
         show_progress : bool, default=True
             Show progress bar
 
-        debug : bool, default=False
-            Drop a debugging session if building raises an exception. Note that
-            this modifies the executor and temporarily sets it to Serial
-            with subprocess off and catching exceptions/warnings off. Restores
-            the original executor at the end.
+        debug : True or 'later', default=None
+            If True, Drop a debugging session if building raises an exception.
+            Note that this modifies the executor and temporarily sets it
+            to Serial with subprocess off and catching exceptions/warnings off.
+            Restores the original executor at the end. If 'later' it keeps the
+            executor the same and serializes the traceback errors for later
+            debugging
 
         skip_upstream : bool, default=False
             If False, includes all upstream dependencies required to build
             target, otherwise it skips them. Note that if this is True and
             it's not possible to build a given task (e.g., missing upstream
             products), this will fail
+
+        Notes
+        -----
+        .. collapse:: changelog
+
+            .. versionchanged:: 0.20
+                ``debug`` changed from True/False to True/'later'/None
+
+            .. versionadded:: 0.20
+                ``debug`` now supports debugging NotebookRunner tasks
         """
 
         # we have to use a deep copy since using a soft one will corrupt

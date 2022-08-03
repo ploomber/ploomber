@@ -87,9 +87,10 @@ class PythonCallable(Task):
         task's source is responsible for serializing its own product. If
         used, the source function must not have a "product" parameter but
         return its result instead
-    debug_mode : 'later', None, optional, default=None
-        If 'later', the task will serialize the traceback if it fails.
-        (added in 0.20)
+    debug_mode : None, True  or 'later', default=None
+        If True, runs notebook in debug mode, this will start debugger if an
+        error is thrown. If 'later', it will serialize the traceback for later
+        debugging. (Added in 0.20)
 
     Examples
     --------
