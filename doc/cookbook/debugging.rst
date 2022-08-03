@@ -87,6 +87,12 @@ Then, to start a debugging session:
 
 Once you're done debugging, you can delete the ``{task-name}.dump`` file.
 
+.. important::
+
+    Beware that using ``--debuglater`` will serialize all the variables, so
+    ensure you have enough disk space when using it, especially if running
+    with the Parallel executor
+
 .. collapse:: changelog
 
     .. versionadded:: 0.20
