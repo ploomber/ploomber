@@ -1210,7 +1210,7 @@ raise ValueError("some stuff happened")
     assert Path(expected_remote).is_file()
 
 
-def test_validates_debug_in_constructor(tmp_directory):
+def test_validates_debug_mode_in_constructor(tmp_directory):
     path = Path('nb.py')
     path.write_text("""
 # + tags=["parameters"]
@@ -1221,13 +1221,13 @@ def test_validates_debug_in_constructor(tmp_directory):
         NotebookRunner(Path('nb.py'),
                        File('out.html'),
                        dag=DAG(),
-                       debug='something')
+                       debug_mode='something')
 
-    msg = "'something' is an invalid value for 'debug'. Valid values:"
+    msg = "'something' is an invalid value for 'debug_mode'. Valid values:"
     assert msg in str(excinfo.value)
 
 
-def test_validates_debug_property(tmp_directory):
+def test_validates_debug_mode_property(tmp_directory):
     path = Path('nb.py')
     path.write_text("""
 # + tags=["parameters"]
@@ -1237,16 +1237,16 @@ def test_validates_debug_property(tmp_directory):
     task = NotebookRunner(Path('nb.py'),
                           File('out.html'),
                           dag=DAG(),
-                          debug=False)
+                          debug_mode=False)
 
     with pytest.raises(ValueError) as excinfo:
-        task.debug = 'something'
+        task.debug_mode = 'something'
 
-    msg = "'something' is an invalid value for 'debug'. Valid values:"
+    msg = "'something' is an invalid value for 'debug_mode'. Valid values:"
     assert msg in str(excinfo.value)
 
 
-def test_debug_now(tmp_directory, monkeypatch):
+def test_debug_mode_now(tmp_directory, monkeypatch):
     path = Path('nb.py')
     path.write_text("""
 # + tags=["parameters"]
@@ -1259,7 +1259,7 @@ x/y
     task = NotebookRunner(Path('nb.py'),
                           File('out.html'),
                           dag=DAG(),
-                          debug=True)
+                          debug_mode=True)
 
     mock = Mock(side_effect=['x', 'quit'])
 
@@ -1269,7 +1269,7 @@ x/y
             task.build()
 
 
-def test_debug_later(tmp_directory, monkeypatch, capsys):
+def test_debug_mode_later(tmp_directory, monkeypatch, capsys):
     path = Path('nb.py')
     path.write_text("""
 # + tags=["parameters"]
@@ -1282,7 +1282,7 @@ x/y
     task = NotebookRunner(Path('nb.py'),
                           File('out.html'),
                           dag=DAG(),
-                          debug='later')
+                          debug_mode='later')
 
     with pytest.raises(TaskBuildError) as excinfo:
         task.build()
