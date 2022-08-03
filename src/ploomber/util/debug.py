@@ -2,7 +2,7 @@ import sys
 
 
 # TODO: we should move this logic to PythonCallable.run
-def debug_if_exception(callable_):
+def debug_if_exception(callable_, kwargs=None):
     """
     Drop a debugger session if running callable_() raises an exception,
     otherwise it just returns the value returned by callable_()
@@ -16,8 +16,10 @@ def debug_if_exception(callable_):
     # issues
     import ipdb
 
+    kwargs = kwargs or dict()
+
     try:
-        result = callable_()
+        result = callable_(**kwargs)
     except Exception:
         ipdb.post_mortem(sys.exc_info()[2])
     else:
