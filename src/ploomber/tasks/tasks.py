@@ -176,8 +176,8 @@ class PythonCallable(Task):
     .. collapse:: changelog
 
         .. versionadded:: 0.20
-            ``debug`` flag renamed to ``debug_mode`` to avoid conflicts with
-            the ``debug`` method.
+            ``debug`` constructor flag renamed to ``debug_mode`` to avoid
+            conflicts with the ``debug`` method.
 
     More `examples using the Python API. <https://github.com/ploomber/projects/tree/master/python-api-examples>`_ # noqa
 
@@ -242,7 +242,7 @@ class PythonCallable(Task):
         else:
             product = params['product']
 
-        if self._debug_mode == 'later':
+        if self.debug_mode == 'later':
             try:
                 out = self.source.primitive(**params)
             except Exception as e:
@@ -255,7 +255,7 @@ class PythonCallable(Task):
             try:
                 out = self.source.primitive(**params)
             except Exception:
-                if self._debug_mode:
+                if self.debug_mode:
                     click.secho(
                         f'Error in task {self.name!r}. '
                         'Starting debugger...',
