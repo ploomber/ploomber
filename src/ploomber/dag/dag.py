@@ -79,7 +79,6 @@ from IPython.display import Image
 from ploomber.table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
 from ploomber.util import (image_bytes2html, isiterable)
-from ploomber.util.debug import debug_if_exception
 from ploomber import resources
 from ploomber import executors
 from ploomber.executors import _format
@@ -535,7 +534,7 @@ class DAG(AbstractDAG):
             for name in self._iter():
                 task = self[name]
                 if isinstance(task, (NotebookRunner, PythonCallable)):
-                    task._debug = debug
+                    task.debug_mode = debug
 
         callable_ = partial(self._build,
                             force=force,
@@ -543,12 +542,7 @@ class DAG(AbstractDAG):
 
         with dag_logger:
             try:
-                # NOTE: we have to adapt this to work on functions and
-                # notebooks.
-                if debug is True:
-                    report = debug_if_exception(callable_)
-                else:
-                    report = callable_()
+                report = callable_()
             finally:
                 if close_clients:
                     self.close_clients()
