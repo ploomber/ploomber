@@ -24,7 +24,7 @@ from ploomber.constants import TaskStatus
 from ploomber.sources.interact import CallableInteractiveDeveloper
 from ploomber.tasks._params import Params
 from ploomber.io.loaders import _file_load
-from ploomber.io import pretty_print
+from ploomber.io import _validate
 from ploomber.products import MetaProduct
 
 
@@ -87,7 +87,7 @@ class PythonCallable(Task):
         task's source is responsible for serializing its own product. If
         used, the source function must not have a "product" parameter but
         return its result instead
-    debug : 'later' False, optional, defailt=False
+    debug_mode : 'later', None, optional, default=None
         If 'later', the task will serialize the traceback if it fails.
         (added in 0.20)
 
@@ -176,7 +176,8 @@ class PythonCallable(Task):
     .. collapse:: changelog
 
         .. versionadded:: 0.20
-            ``debug`` flag.
+            ``debug`` flag renamed to ``debug_mode`` to avoid conflicts with
+            the ``debug`` method.
 
     More `examples using the Python API. <https://github.com/ploomber/projects/tree/master/python-api-examples>`_ # noqa
 
@@ -206,21 +207,23 @@ class PythonCallable(Task):
                  params=None,
                  unserializer=None,
                  serializer=None,
-                 debug=False):
+                 debug_mode=None):
         self._serializer = serializer or dag.serializer
         kwargs = dict(hot_reload=dag._params.hot_reload,
                       needs_product=self._serializer is None)
         self._source = type(self)._init_source(source, kwargs)
         self._unserializer = unserializer or dag.unserializer
-        self._debug = debug
-
-        debug_valid = {'later', False}
-
-        if self._debug not in debug_valid:
-            raise ValueError(f'{self._debug} is not a valid value, allowed: '
-                             f'{pretty_print.iterable(self._debug)}')
-
+        self.debug_mode = debug_mode
         super().__init__(product, dag, name, params)
+
+    @property
+    def debug_mode(self):
+        return self._debug_mode
+
+    @debug_mode.setter
+    def debug_mode(self, value):
+        _validate.is_in(value, {None, 'later'}, 'debug_mode')
+        self._debug_mode = value
 
     @staticmethod
     def _init_source(source, kwargs):
@@ -239,7 +242,7 @@ class PythonCallable(Task):
         else:
             product = params['product']
 
-        if self._debug == 'later':
+        if self._debug_mode == 'later':
             try:
                 out = self.source.primitive(**params)
             except Exception as e:
@@ -252,7 +255,7 @@ class PythonCallable(Task):
             try:
                 out = self.source.primitive(**params)
             except Exception:
-                if self._debug:
+                if self._debug_mode:
                     click.secho(
                         f'Error in task {self.name!r}. '
                         'Starting debugger...',
