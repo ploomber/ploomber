@@ -105,6 +105,13 @@ Run some tests:
 pytest tests/util
 ```
 
+## Branch name requirement
+
+To prevent double execution of the same CI pipelines, we have chosen to set a limitation to github push event. Only pushes to certain branches will trigger the pipelines. That means if you have turned on github action and want to run workflows in your forked repo, you will need to either make pushes directly to your master branch or branches name strictly following this convention: `dev/{your-branch-name}`.
+
+On the other hand, if you choose not to turn on github action in your own repo and simply run tests locally, you can disregard this information since your pull request from your forked repo to ploomber/ploomber repo will always trigger the pipelines. 
+
+
 ## Submitting code
 
 
@@ -180,6 +187,13 @@ s    commit_hash_4 commit_message_4
 * If you're checking error messages and they include absolute paths to files, you may encounter some issues when running the Windows CI since the Github Actions VM has some symlinks. If the test calls `Pathlib.resolve()` ([resolves symlinks](https://docs.python.org/3/library/pathlib.html#id5)), call it in the test as well, if it doesn't, use `os.path.abspath()` (does not resolve symlinks).
 
 
+## Ok-to-test
+
+We have separated our tests to unit tests and integration tests. Some of the integration tests may require certain secrets or credentials to run, to prevent such sensitive data from leaking, we have migrated the [ok-to-test](https://github.com/imjohnbo/ok-to-test) template into our CI. 
+
+In short, when you start a pull request from your forked repo, only the workflow for unit tests that don't require any special secrets will run. The integration tests in your pull request check will display skipped. To run the integration tests, please ask one of the maintainers of ploomber to comment `/ok-to-test sha={#commit}` on your pull request where the #commit is the first seven digits of the latest commit of your branch.
+
+
 ## Conda releases
 
 `ploomber` is available in conda (via [conda-forge](https://conda-forge.org/)). The recipes are located here:
@@ -218,6 +232,129 @@ git fetch upstream
 git checkout main
 git merge upstream/main
 ```
+
+## Documenting changes and new features
+
+The documentation must be updated when you make changes to the API (add arguments, add a new class, etc.). First, modify the docstring (we use the [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) format) in the relevant Python function or class.
+
+New arguments should be documented with a note at the end. Furthermore, the `Notes` section should also include the change, using `.. versionadded` or `.. versionchanged`. Example:
+
+```python
+class SomeExistingClass:
+    def some_method(self, existing, new):
+        """
+        Parameters
+        ----------
+        existing : bool, default=None
+            Some description
+
+        new : str, default=None
+            Another description (Added in version X.Y.Z)
+
+        Notes
+        ----
+        .. collapse :: changelog
+
+            .. versionadded:: X.Y.Z
+                Added `new` argument
+
+            .. versionchanged:: X.Y.Z
+                Modified behavior of `existing`
+        """
+        pass
+```
+
+### Which version to put?
+
+If your change is not making breaking API changes, look at the current development version in [CHANGELOG.md](CHANGELOG.md), then drop the `dev` portion.
+
+If the change breaks the API, the version will be handled case by case. However, in most situations, the change will be scheduled for the next major release. For example, if the `dev` version is `0.20.1dev`, the next major release is `0.21`.
+
+If your change impacts the Spec API (i.e., `pipeline.yaml`). It should also be documented in [doc/api/spec.rst](doc/api/spec.rst). The `spec.rst` also uses the `.. versionadded` and `.. versionchanged` directives:
+
+```rst
+.. collapse:: Changelog
+
+    .. versionchanged:: X.Y.Z
+        What changed
+
+    .. versionadded:: X.Y.Z
+        what was added
+```
+
+If there isn't a `.. collapse:: Changelog` at the end of the section, add one.
+### Capturing error messages
+
+If the fix came as part of discovering an error (i.e., a user
+reporting an error that it wasn't clear how to fix), we should capture the
+error, quick instructions on how to fix it and a link to the docs.
+
+Here's a real example ([#882](https://github.com/ploomber/ploomber/issues/882)).
+A user reported the following error:
+
+> RuntimeError: Cannot re-initialize CUDA in forked subprocess. To use CUDA with multiprocessing, you must use the 'spawn' start method
+
+We fixed this by adding a new argument to the [`Parallel`](https://github.com/ploomber/ploomber/blob/2c5417abb606a83d441737acf6e4ac3877364ac5/src/ploomber/executors/parallel.py#L54) executor.
+After replicating the error, we should add a `try: ... catch: ...` statement
+to add more details to the error message, here's a simplified example:
+
+```python
+from ploomber.exception import BaseException
+
+def thing_that_breaks(argument):
+    ...
+
+
+def thing_that_the_user_calls(argument):
+
+    try:
+        thing_that_breaks(argument=argument)
+    except SomeException as e:
+        raise BaseException('Instructions on how to fix it') from e
+    except:
+        raise
+    ...
+```
+
+Let's say that when `SomeException` is raised, the fix is to follow specific
+instructions; with this code, the user will see both our instructions on how
+to fix it and the original message. However, when some other exception is
+raised, we don't modify it. Note that we use our custom
+`BaseException`; it's essential to use this one since it implements a few
+customization, so it's rendered appropriately in the terminal.
+
+In some cases, it might not be possible to catch a specific exception
+(e.g., `SomeException`). In some cases, the exception type might be too
+general. In other cases, we might not want to import the exception since
+it might come from a third-party package.
+
+Whatever the reason is, our best bet is to use the error message to decide
+whether to show the recommendation or not:
+
+
+```python
+from ploomber.exception import BaseException
+
+def thing_that_breaks(argument):
+    ...
+
+
+def thing_that_the_user_calls(argument):
+
+    try:
+        thing_that_breaks(argument=argument)
+    except Exception as e:
+        if 'some hint' in str(e):
+            raise BaseException('Instructions on how to fix it') from e
+        else:
+            raise
+    ...
+```
+
+If we're unsure that our instructions are applicable under this scenario, we
+should be explicit about that in our message and have something like:
+
+> If having issues with X, try [instruction on how to fix it]
 
 ## Maintaining backwards compatibility
 

@@ -21,7 +21,7 @@ The simplest way to install ``pygraphviz`` is to use ``conda``, but you can also
 
 
 .. important::
-    If you're running Python ``3.7.x`` or lower, run: ``conda install 'pygraphviz<1.8' -c conda-forge``
+    If you're running Python ``3.7.x``, run: ``conda install 'pygraphviz<1.8' -c conda-forge``
 
 ``pip``
 *******
@@ -45,4 +45,4 @@ Once you have ``graphviz``, you can install ``pygraphviz`` with ``pip``:
 
 
 .. important::
-    If you're running Python ``3.7.x`` or lower, run: ``pip install 'pygraphviz<1.8'``
+    If you're running Python ``3.7.x``, run: ``pip install 'pygraphviz<1.8'``

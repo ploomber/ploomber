@@ -134,14 +134,10 @@ def runs_register_ids(headers, runid, ids):
 
 
 def _parse_datetime(timestamp):
-    try:
-        return humanize.naturaltime(
-            datetime.fromisoformat(timestamp),
-            when=datetime.utcnow(),
-        )
-    # Python 3.6 does not have fromisoformat
-    except AttributeError:
-        return timestamp
+    return humanize.naturaltime(
+        datetime.fromisoformat(timestamp),
+        when=datetime.utcnow(),
+    )
 
 
 @auth_header

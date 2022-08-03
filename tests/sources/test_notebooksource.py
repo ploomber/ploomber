@@ -8,11 +8,16 @@ from jupyter_client.kernelspec import NoSuchKernel
 
 from ploomber.spec import DAGSpec
 from ploomber.tasks._params import Params
-from ploomber.sources.notebooksource import (NotebookSource, is_python,
-                                             inject_cell,
-                                             determine_kernel_name,
-                                             _cleanup_rendered_nb,
-                                             add_parameters_cell, _to_nb_obj)
+from ploomber.sources.notebooksource import (
+    NotebookSource,
+    is_python,
+    inject_cell,
+    determine_kernel_name,
+    _cleanup_rendered_nb,
+    add_parameters_cell,
+    _to_nb_obj,
+    _jupytext_fmt,
+)
 from ploomber.sources.nb_utils import find_cell_with_tag
 from ploomber.products import File
 from ploomber.exceptions import RenderError, SourceInitializationError
@@ -940,3 +945,26 @@ def test_error_if_source_str_like_path(tmp_directory):
 
     assert 'Perhaps you meant passing a pathlib.Path object' in str(
         excinfo.value)
+
+
+@pytest.mark.parametrize('extension', ['.md', 'md'])
+def test_jupytext_fmt(extension):
+    assert _jupytext_fmt(
+        """\
+---
+jupytext:
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.14.0
+kernelspec:
+  display_name: Python 3.9.13 64-bit
+  language: python
+  name: python3
+---
+
+```{code-cell} ipython3
+1 + 1
+```
+""", extension) == 'md:myst'

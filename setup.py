@@ -31,15 +31,11 @@ def read(name):
 # https://github.com/nteract/papermill/issues/239
 NB = [
     'papermill',
-    # we need this for our custom papermill engine
-    'nbclient>=0.6.1',
     'jupytext',
     'ipykernel>=1.5.2',
     'jupyter_client>=5.3.1',
     'nbconvert>=5.6.0',
     'nbformat',
-    # NOTE: do we need this?
-    'notebook',
     # for notebook validation
     'pyflakes',
 ]
@@ -97,6 +93,7 @@ TESTING = [
 
     # for testing jupyter lab plugin
     'jupyter_server',
+    'notebook',
 
     # optional dependencies for @serializer and @unserializer
     'joblib',
@@ -144,7 +141,6 @@ setup(
         'Operating System :: Microsoft :: Windows',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
@@ -188,7 +184,5 @@ setup(
     },
     entry_points={
         'console_scripts': ['ploomber=ploomber_cli.cli:cmd_router'],
-        "papermill.engine":
-        ["ploomber-engine=ploomber.papermill.engine:PloomberClientEngine"],
     },
 )

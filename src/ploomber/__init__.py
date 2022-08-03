@@ -1,15 +1,15 @@
 import logging
 from ploomber.dag.dag import DAG
-from ploomber.dag.inmemorydag import InMemoryDAG
 from ploomber.dag.dagconfigurator import DAGConfigurator
+from ploomber.dag.inmemorydag import InMemoryDAG
 from ploomber.dag.onlinedag import OnlineDAG, OnlineModel
-from ploomber.env.env import Env
 from ploomber.env.decorators import load_env, with_env
-from ploomber.placeholders.sourceloader import SourceLoader
+from ploomber.env.env import Env
 from ploomber.jupyter.manager import _load_jupyter_server_extension
+from ploomber.placeholders.sourceloader import SourceLoader
 from ploomber.util.loader import lazily_load_entry_point
 
-__version__ = '0.19.9dev'
+__version__ = '0.19.10dev'
 
 # Set default logging handler to avoid "No handler found" warnings.
 

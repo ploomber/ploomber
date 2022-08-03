@@ -1,12 +1,15 @@
+import warnings
 from pathlib import Path
 
 import pytest
 
-from ploomber.spec.taskspec import TaskSpec, task_class_from_source_str
+from ploomber.spec.taskspec import (TaskSpec, task_class_from_source_str,
+                                    _preprocess_grid_spec_mapping)
 from ploomber.spec.dagspec import Meta
 from ploomber.tasks import (NotebookRunner, SQLScript, SQLDump, ShellScript,
                             PythonCallable)
 from ploomber.exceptions import DAGSpecInitializationError, ValidationError
+from ploomber.util.dotted_path import DottedPathWarning
 from ploomber import DAG
 
 
@@ -24,9 +27,28 @@ def test_task_class_from_script(tmp_directory, source_str, expected):
         source_str, lazy_import=False, reload=False, product=None) is expected
 
 
+@pytest.mark.parametrize(
+    'source_str',
+    [str(Path('file.html')),
+     str(Path('file.json')),
+     str(Path('file.a'))])
+def test_task_class_from_valid_file_without_path_unsupported_extension(
+        tmp_directory, source_str):
+    with pytest.raises(DAGSpecInitializationError) as excinfo:
+        task_class_from_source_str(source_str,
+                                   lazy_import=False,
+                                   reload=False,
+                                   product=None)
+
+    assert 'Failed to determine task class' in str(excinfo.value)
+    assert 'invalid extension' in str(excinfo.value)
+    assert 'If you meant to import a function, please rename it.' in str(
+        excinfo.value)
+
+
 @pytest.mark.parametrize('source_str', [
     str(Path('something', 'script.md')),
-    str(Path('something', 'another', 'script.json')),
+    str(Path('something', 'another', 'script.json'))
 ])
 def test_task_class_from_script_unknown_extension(tmp_directory, source_str):
     with pytest.raises(DAGSpecInitializationError) as excinfo:
@@ -681,13 +703,6 @@ def range_(n):
 @pytest.mark.parametrize('grid, error_expected', [
     [
         {
-            'a': 'my_module.non_existing',
-            'b': [4, 5, 6],
-        },
-        "Could not get 'non_existing' from module 'my_module'",
-    ],
-    [
-        {
             'a': 'my_module.return_none',
             'b': [4, 5, 6],
         },
@@ -702,7 +717,6 @@ def range_(n):
     ],
 ],
                          ids=[
-                             'non-existing',
                              'returns-none',
                              'crashes',
                          ])
@@ -731,3 +745,71 @@ def crash():
         spec.to_task(dag=DAG())
 
     assert error_expected in str(excinfo.value)
+
+
+@pytest.mark.parametrize('spec, expected', [
+    [
+        {
+            'a': [1, 2],
+            'b': [1, 2]
+        },
+        {
+            'a': [1, 2],
+            'b': [1, 2]
+        },
+    ],
+    [
+        {
+            'a': 'some_functions.numbers'
+        },
+        {
+            'a': [1, 2, 3]
+        },
+    ],
+    [
+        {
+            'a': 'some invalid dotted path'
+        },
+        {
+            'a': 'some invalid dotted path'
+        },
+    ],
+],
+                         ids=[
+                             'no-dotted-path',
+                             'valid-dotted-path',
+                             'no-dotted-path-string',
+                         ])
+def test_preprocess_grid_spec_mapping(tmp_directory, spec, expected,
+                                      tmp_imports):
+    Path('some_functions.py').write_text("""
+def numbers():
+    return [1, 2, 3]
+""")
+
+    # check no warnings displayed
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        out = _preprocess_grid_spec_mapping(spec)
+
+    assert out == expected
+
+
+@pytest.mark.parametrize('spec', [
+    {
+        'a': 'some_functions.missing_attributes'
+    },
+    {
+        'a': 'not_a_module.function'
+    },
+])
+def test_preprocess_grid_spec_mapping_warnings(tmp_directory, spec,
+                                               tmp_imports):
+    Path('some_functions.py').write_text("""
+def numbers():
+    return [1, 2, 3]
+""")
+
+    with pytest.warns(DottedPathWarning,
+                      match='You parameter looks like a dotted path'):
+        _preprocess_grid_spec_mapping(spec)

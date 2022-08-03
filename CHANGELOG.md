@@ -1,9 +1,23 @@
 # CHANGELOG
 
-## 0.19.9dev
-* Add `--backend` to `ploomber report` to choose plotting backend (#904)
-* Add *did you mean?* feature to `ploomber examples` (#805)
-* Add custom papermill engine to enable debugging: `ploomber build --debug` (#823)
+## 0.19.10dev
+
+## 0.20dev
+
+*Note: Ploomber 0.20 dropped support for Python 3.6*
+
+* Add custom papermill engine to enable debugging: `ploomber build --debug` ([#823](https://github.com/ploomber/ploomber/issues/823))
+* `env.yaml` allows to use existing keys in subsequent values
+* Fixes missing plot when generating `ploomber report` with `--backend d3`
+* Fixes error when using dotted paths in `grid` (#951)
+
+## 0.19.9 (2022-07-26)
+
+*Note: this is the latest version compatible with Python 3.6*
+
+* Adds warning notice when running on Python 3.6
+* Add `--backend` to `ploomber report` to choose plotting backend ([#904](https://github.com/ploomber/ploomber/issues/904))
+* Add *did you mean?* feature to `ploomber examples` ([#805](https://github.com/ploomber/ploomber/issues/805))
 
 ## 0.19.8 (2022-07-16)
 * Allow dotted paths in `pipeline.yaml` `grid` parameters ([#804](https://github.com/ploomber/ploomber/issues/804))
