@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.20.1dev
+
 ## 0.20 (2022-08-04)
 
 *Note: Ploomber 0.20 dropped support for Python 3.6 ([#876](https://github.com/ploomber/ploomber/issues/876))*
