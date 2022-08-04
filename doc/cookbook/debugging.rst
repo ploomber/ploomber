@@ -87,11 +87,17 @@ Then, to start a debugging session:
 
 Once you're done debugging, you can delete the ``{task-name}.dump`` file.
 
+.. note::
+
+    Only built-in objects will be stored in the ``.dump`` file, for others,
+    (e.g., pandas data frames, numpy arrays) only the string representation
+    is stored. To serialize all: ``pip install 'debuglater[all]'``
+
 .. important::
 
-    Beware that using ``--debuglater`` will serialize all the variables, so
-    ensure you have enough disk space when using it, especially if running
-    with the Parallel executor
+    Using ``--debuglater`` will serialize all the variables, ensure you have
+    enough disk space, especially if running tasks in parallel.
+
 
 .. collapse:: changelog
 
