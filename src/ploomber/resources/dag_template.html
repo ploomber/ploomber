@@ -215,6 +215,19 @@
     .attr("alignment-baseline", "middle")
     .attr("fill", "black");
 
+  // Adjusts font size based on the circle/task width
+  let circleSvgs = document.getElementsByTagName("circle");
+  for (let i = 0; i< circleSvgs.length; i++) {
+    let circleSvgWidth = circleSvgs[i].getBoundingClientRect().width;
+    let text = circleSvgs[i].nextElementSibling;
+    let textWidth= text.getBoundingClientRect().width;
+    let fontSize = 6;
+    while (textWidth >= circleSvgWidth && fontSize > 1) {
+      fontSize -= 1;
+      text.setAttribute("font-size", fontSize);
+      textWidth= text.getBoundingClientRect().width;
+    }
+  }
 
   const arrow = d3.symbol().type(d3.symbolTriangle).size(nodeRadius * nodeRadius / 20.0);
   svgSelection.append('g')
