@@ -1,14 +1,14 @@
 # CHANGELOG
 
-## 0.19.10dev
-
 ## 0.20dev
 
-*Note: Ploomber 0.20 dropped support for Python 3.6*
+*Note: Ploomber 0.20 dropped support for Python 3.6 (#876)*
 
-* Add custom papermill engine to enable debugging: `ploomber build --debug` ([#823](https://github.com/ploomber/ploomber/issues/823))
+* Adds support to serialize the traceback for later post-mortem debugging: `ploomber build --debuglater` and `ploomber task {name} --debuglater`
+* Support for notebook post-mortem debugging: `ploomber build --debug` `ploomber task {name} --debug` ([#823](https://github.com/ploomber/ploomber/issues/823))
 * `env.yaml` allows to use existing keys in subsequent values
-* Fixes missing plot when generating `ploomber report` with `--backend d3`
+* Clearing screen before updating execution status when using the `Parallel` executor
+* Fixes missing plot when generating `ploomber report` with `--backend d3` (#946)
 * Fixes error when using dotted paths in `grid` (#951)
 
 ## 0.19.9 (2022-07-26)
