@@ -477,7 +477,7 @@ def test_debug_now(monkeypatch):
         x, y = 1, 0
         return x / y
 
-    task = PythonCallable(crash, File('file.txt'), dag=DAG(), debug_mode=True)
+    task = PythonCallable(crash, File('file.txt'), dag=DAG(), debug_mode='now')
 
     mock = Mock()
 

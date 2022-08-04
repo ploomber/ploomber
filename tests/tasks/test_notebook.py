@@ -1259,7 +1259,7 @@ x/y
     task = NotebookRunner(Path('nb.py'),
                           File('out.html'),
                           dag=DAG(),
-                          debug_mode=True)
+                          debug_mode='now')
 
     mock = Mock(side_effect=['x', 'quit'])
 

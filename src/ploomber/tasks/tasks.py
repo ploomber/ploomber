@@ -87,8 +87,8 @@ class PythonCallable(Task):
         task's source is responsible for serializing its own product. If
         used, the source function must not have a "product" parameter but
         return its result instead
-    debug_mode : None, True  or 'later', default=None
-        If True, runs notebook in debug mode, this will start debugger if an
+    debug_mode : None, 'now'  or 'later', default=None
+        If 'now', runs notebook in debug mode, this will start debugger if an
         error is thrown. If 'later', it will serialize the traceback for later
         debugging. (Added in 0.20)
 
@@ -223,7 +223,7 @@ class PythonCallable(Task):
 
     @debug_mode.setter
     def debug_mode(self, value):
-        _validate.is_in(value, {None, True, 'later'}, 'debug_mode')
+        _validate.is_in(value, {None, 'now', 'later'}, 'debug_mode')
         self._debug_mode = value
 
     @staticmethod
@@ -252,7 +252,7 @@ class PythonCallable(Task):
                 message = ((f'Serializing traceback to: {path_to_dump}. '
                             f'To debug: dltr {path_to_dump}'))
                 raise TaskBuildError(message) from e
-        elif self.debug_mode is True:
+        elif self.debug_mode == 'now':
             out = debug_if_exception(self.source.primitive, self.name, params)
         else:
             out = self.source.primitive(**params)

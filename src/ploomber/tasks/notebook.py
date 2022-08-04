@@ -498,8 +498,8 @@ class NotebookRunner(NotebookMixin, Task):
         Change working directory to be the parent of the notebook's source.
         Defaults to False. This resembles the default behavior when
         running notebooks interactively via `jupyter notebook`
-    debug_mode : None, True  or 'later', default=None
-        If True, runs notebook in debug mode, this will start debugger if an
+    debug_mode : None, 'now'  or 'later', default=None
+        If 'now', runs notebook in debug mode, this will start debugger if an
         error is thrown. If 'later', it will serialize the traceback for later
         debugging. (Added in 0.20)
 
@@ -748,7 +748,7 @@ class NotebookRunner(NotebookMixin, Task):
 
     @debug_mode.setter
     def debug_mode(self, value):
-        _validate.is_in(value, {None, True, 'later'}, 'debug_mode')
+        _validate.is_in(value, {None, 'now', 'later'}, 'debug_mode')
         self._debug_mode = value
 
     @staticmethod
@@ -816,7 +816,7 @@ class NotebookRunner(NotebookMixin, Task):
             self.papermill_params['cwd'] = str(self.source.loc.parent)
 
         # use our custom engine
-        if self.debug_mode is True:
+        if self.debug_mode == 'now':
             self.papermill_params['engine_name'] = 'debug'
         elif self.debug_mode == 'later':
             self.papermill_params['engine_name'] = 'debuglater'
