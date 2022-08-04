@@ -64,14 +64,12 @@ def main(payload, render_only=False):
     _write_pipeline(pipeline_id=pid, status='started', pipeline_name=dag.name)
 
     if args.debug:
-        # debug now
-        debug = True
+        debug = 'now'
     elif args.debuglater:
-        # debug later
         debug = 'later'
     else:
-        # no debg
-        debug = False
+        # no debug
+        debug = None
 
     # when using the parallel executor from the CLI, ensure we print progress
     # to stdout

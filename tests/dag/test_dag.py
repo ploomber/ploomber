@@ -1146,9 +1146,9 @@ def test_build_debug(method, monkeypatch):
     dag.executor = fake_executor
 
     if method == 'build':
-        getattr(dag, method)(debug=True)
+        getattr(dag, method)(debug='now')
     else:
-        getattr(dag, method)('first', debug=True)
+        getattr(dag, method)('first', debug='now')
 
     # debug has to modify the executor but must restore it back to the original
     # value

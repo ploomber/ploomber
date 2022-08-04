@@ -67,10 +67,8 @@ def _task_cli(accept_task_id=False):
         task._run_on_finish()
 
     if args.debug:
-        # debug now
-        debug_mode = True
+        debug_mode = 'now'
     elif args.debuglater:
-        # debug later
         debug_mode = 'later'
     else:
         # no debug

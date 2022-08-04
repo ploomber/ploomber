@@ -481,8 +481,8 @@ class DAG(AbstractDAG):
         show_progress : bool, default=True
             Show progress bar
 
-        debug : True or 'later', default=None
-            If True, Drop a debugging session if building raises an exception.
+        debug : 'now' or 'later', default=None
+            If 'now', Drop a debugging session if building raises an exception.
             Note that this modifies the executor and temporarily sets it
             to Serial with subprocess off and catching exceptions/warnings off.
             Restores the original executor at the end. If 'later' it keeps the
@@ -501,7 +501,7 @@ class DAG(AbstractDAG):
         .. collapse:: changelog
 
             .. versionchanged:: 0.20
-                ``debug`` changed from True/False to True/'later'/None.
+                ``debug`` changed from True/False to 'now'/'later'/None
 
             .. versionadded:: 0.20
                 ``debug`` now supports debugging NotebookRunner tasks
@@ -529,7 +529,7 @@ class DAG(AbstractDAG):
             executor_original = self.executor
 
             # serial debugger needed if debugnow
-            if debug is True:
+            if debug == 'now':
                 self.executor = executors.Serial(build_in_subprocess=False,
                                                  catch_exceptions=False,
                                                  catch_warnings=False)
@@ -553,7 +553,7 @@ class DAG(AbstractDAG):
                     self.close_clients()
 
         # if debugging now, revert back the original executor
-        if debug is True:
+        if debug == 'now':
             self.executor = executor_original
 
         return report
@@ -738,8 +738,8 @@ class DAG(AbstractDAG):
         show_progress : bool, default=True
             Show progress bar
 
-        debug : True or 'later', default=None
-            If True, Drop a debugging session if building raises an exception.
+        debug : 'now' or 'later', default=None
+            If 'now', Drop a debugging session if building raises an exception.
             Note that this modifies the executor and temporarily sets it
             to Serial with subprocess off and catching exceptions/warnings off.
             Restores the original executor at the end. If 'later' it keeps the
@@ -757,7 +757,7 @@ class DAG(AbstractDAG):
         .. collapse:: changelog
 
             .. versionchanged:: 0.20
-                ``debug`` changed from True/False to True/'later'/None
+                ``debug`` changed from True/False to 'now'/'later'/None
 
             .. versionadded:: 0.20
                 ``debug`` now supports debugging NotebookRunner tasks
