@@ -1,3 +1,8 @@
+// https://stackoverflow.com/questions/31128855/comparing-ecma6-sets-for-equality
+const eqSet = (xs, ys) => 
+    xs.size === ys.size &&
+    [...xs].every((x) => ys.has(x));
+
 $(document).ready(function () {
     addTerminalStyle(
         $('[class="highlight-bash notranslate"]'),
@@ -26,17 +31,25 @@ $(document).ready(function () {
     // TODO: this should listen for click events in the whole terminal
     // window, not only in the content sub-window
     // Clicking on the terminnals copies the content to the clipboard
-    $("div.highlight").click(function () {
-        if ("jquery: ", $(this).parent().attr('class') == "doctest highlight-default notranslate") {
-            let text = $(this).text();
+    $("[class*='highlight-']") .click(function () {
+        const formatPythonConsoleText = (text) => {
             textArr = text.split("\n");
             textArr = textArr.filter(line => (line.startsWith("... ") || line.startsWith(">>> ")));
             text = textArr.join("\n");
             text = text.replaceAll("... ", "").replaceAll(">>> ", "");
-            navigator.clipboard.writeText(text);
-        } else {
-            navigator.clipboard.writeText($(this).text());
+            return text;
         }
+
+        const terminalText = $(this).find('div.highlight').text();
+        const isPythonConsole = eqSet(new Set($(this).attr('class').split(' ')),
+            new Set(["doctest",  "highlight-default", "notranslate"])
+        );
+
+        const copyText = isPythonConsole ? formatPythonConsoleText(terminalText) : terminalText;
+        navigator.clipboard.writeText(copyText);
+
+        // Clicking on terminals displays "Copied!"
+        $(this).find(".copy-message").text("Copied!");
     });
 
     // Hovering on the terminals shows "Click to copy"
@@ -49,11 +62,6 @@ $(document).ready(function () {
             $(this).find(".copy-message").text("Click to copy");
         }
     );
-
-    // Clicking on terminals displays "Copied!"
-    $("[class*='highlight-']").click(function () {
-        $(this).find(".copy-message").text("Copied!");
-    });
 
     // select terminal containers, but only the console and ipython ones
     const terminal_containers = [
