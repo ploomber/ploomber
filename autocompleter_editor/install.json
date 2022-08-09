@@ -1,0 +1,5 @@
+{
+  "packageManager": "python",
+  "packageName": "autocompleter_editor",
+  "uninstallInstructions": "Use your Python package manager (pip, conda, etc.) to uninstall the package autocompleter_editor"
+}
