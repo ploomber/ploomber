@@ -1,5 +1,112 @@
-/*
-    See the JupyterLab Developer Guide for useful CSS Patterns:
+:root {
+    --jp-private-completer-item-height: 24px;
+  
+    /* Shift the baseline of the type character to align with the match text */
+    --jp-private-completer-type-offset: 2px;
 
-    https://jupyterlab.readthedocs.io/en/stable/developer/css.html
-*/
+    --jp-elevation-z6: 0 3px 5px -1px var(--jp-shadow-umbra-color);
+    
+    --jp-shadow-base-lightness: 0;
+    --jp-shadow-umbra-color: rgba(
+      var(--jp-shadow-base-lightness),
+      var(--jp-shadow-base-lightness),
+      var(--jp-shadow-base-lightness),
+      0.2
+    );
+    --jp-layout-color1: white;
+    --jp-content-font-color1: rgba(0, 0, 0, 0.87);
+    --jp-border-width: 1px;
+    --jp-border-color1: var(--md-grey-400);
+    
+    --jp-code-font-family-default: menlo, consolas, 'DejaVu Sans Mono', monospace;
+    --jp-code-font-family: var(--jp-code-font-family-default);
+    --jp-code-font-size: 13px;
+    --md-blue-700: #1976d2;
+    --jp-brand-color1: var(--md-blue-700);
+
+  
+
+  }
+  
+  .jp-Completer {
+    box-shadow: var(--jp-elevation-z6); 
+    background: var(--jp-layout-color1);
+    color: var(--jp-content-font-color1);
+    border: var(--jp-border-width) solid var(--jp-border-color1);
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+  
+    /* Position the completer relative to the text editor, align the '.' */
+    margin: 4px 0 0 -30px;
+    z-index: 10001; 
+    
+    width: auto; 
+    max-height: 300px;
+  }
+  
+.jp-HoverBox {
+  position: fixed;
+}
+
+.jp-Completer-list {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    overflow-y: scroll;
+    overflow-x: auto;
+    max-height: calc((10 * var(--jp-private-completer-item-height)));
+    min-height: calc(var(--jp-private-completer-item-height));
+}
+  
+.jp-Completer-item {
+  display: table-row;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  height: var(--jp-private-completer-item-height);
+  min-width: 150px;
+}
+  
+.jp-Completer-item:hover {
+  background: var(--jp-layout-color2);
+  opacity: 0.8;
+}
+  
+.jp-Completer-item .jp-Completer-match {
+  display: table-cell;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 8px 0 6px;
+  height: var(--jp-private-completer-item-height);
+  font-family: var(--jp-code-font-family);
+  font-size: var(--jp-code-font-size);
+  line-height: var(--jp-private-completer-item-height);
+  vertical-align: middle;
+}
+
+.jp-Completer-item.jp-mod-active {
+  background: var(--jp-brand-color1);
+  color: white;
+}
+  
+ .jp-Completer-item .jp-Completer-match {
+  display: table-cell;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 8px 0 6px;
+  height: var(--jp-private-completer-item-height);
+  font-family: var(--jp-code-font-family);
+  font-size: var(--jp-code-font-size);
+  line-height: var(--jp-private-completer-item-height);
+  vertical-align: middle;
+}
+
+.jp-Completer-item .jp-Completer-match mark {
+  font-weight: bold;
+  background: inherit;
+  color: inherit;
+}
+
+
+  
