@@ -10,6 +10,7 @@
 * `env.yaml` allows to use existing keys in subsequent values
 * Fixes missing plot when generating `ploomber report` with `--backend d3`
 * Fixes error when using dotted paths in `grid` (#951)
+* Add `start_method` to Parallel executor to set the method which should be used to start child processes ([#942](https://github.com/ploomber/ploomber/issues/942))
 
 ## 0.19.9 (2022-07-26)
 
