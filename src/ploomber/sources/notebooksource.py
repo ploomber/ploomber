@@ -183,16 +183,8 @@ class NotebookSource(Source):
     check_if_kernel_installed : bool, optional
         Check if the kernel is installed during initization
 
-    debug : bool, default=False
-        If True, adds a "%pbd on" cell at the beginning of the notebook.
-
     Notes
     -----
-    .. collapse:: changelog
-
-        .. versionchanged:: 0.19.9
-            ``debug`` flag.
-
     The render method prepares the notebook for execution: it adds the
     parameters and it makes sure kernelspec is defined
     """
@@ -207,8 +199,7 @@ class NotebookSource(Source):
                  ext_in=None,
                  kernelspec_name=None,
                  static_analysis='regular',
-                 check_if_kernel_installed=True,
-                 debug=False):
+                 check_if_kernel_installed=True):
         # any non-py file must first be converted using jupytext, we need
         # that representation for validation, if input is already a .py file
         # do not convert. If passed a string, try to guess format using
@@ -216,7 +207,6 @@ class NotebookSource(Source):
         # but do lazy loading in case we don't need both
         self._primitive = primitive
         self._check_if_kernel_installed = check_if_kernel_installed
-        self._debug = debug
 
         # this happens if using SourceLoader
         if isinstance(primitive, Placeholder):
@@ -347,14 +337,6 @@ class NotebookSource(Source):
         # using NotebookRunner.develop() when the source is script (each cell
         # will have an empty "papermill" metadata dictionary)
         nb = parameterize_notebook(nb, self._params)
-
-        # insert pdb cell, if needed
-        if self._debug:
-            source = ('# enable debugging (cell added by ploomber)\n'
-                      '%pdb on')
-            debugging_cell = nbformat.v4.new_code_cell(
-                source, metadata={'tags': ['debugging-settings']})
-            nb.cells.insert(0, debugging_cell)
 
         # delete empty tags to prevent cluttering the notebooks
         for cell in nb.cells:

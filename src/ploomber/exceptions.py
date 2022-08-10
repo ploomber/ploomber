@@ -238,6 +238,15 @@ class NetworkException(BaseException):
     pass
 
 
+class DebuggingFinished(TaskBuildError):
+    """Raised when quitting a debugging session
+    """
+
+    def __init__(self, task_name):
+        error_message = f'Finished debugging session for task {task_name!r}'
+        super().__init__(error_message)
+
+
 def display_errors(errors):
     return '\n'.join(f'{_display_error_loc(e)} ({e["msg"]})' for e in errors)
 

@@ -37,7 +37,7 @@ from ploomber.sources.notebooksource import _cleanup_rendered_nb
 from ploomber.products import File, MetaProduct
 from ploomber.tasks.abc import Task
 from ploomber.util import chdir_code
-from ploomber.io import FileLoaderMixin, pretty_print
+from ploomber.io import FileLoaderMixin, pretty_print, _validate
 from ploomber.util._sys import _python_bin
 
 
@@ -498,9 +498,10 @@ class NotebookRunner(NotebookMixin, Task):
         Change working directory to be the parent of the notebook's source.
         Defaults to False. This resembles the default behavior when
         running notebooks interactively via `jupyter notebook`
-    debug : bool, default=False
-        If True, runs notebook in debug mode, this will enable the Python
-        debugger and start a debugging session if an error is thrown.
+    debug_mode : None, 'now'  or 'later', default=None
+        If 'now', runs notebook in debug mode, this will start debugger if an
+        error is thrown. If 'later', it will serialize the traceback for later
+        debugging. (Added in 0.20)
 
     Examples
     --------
@@ -595,8 +596,9 @@ class NotebookRunner(NotebookMixin, Task):
     -----
     .. collapse:: changelog
 
-        .. versionchanged:: 0.19.9
-            ``debug`` flag.
+        .. versionchanged:: 0.20
+            ``debug`` constructor flag renamed to ``debug_mode`` to prevent
+            conflicts with the ``debug`` method
 
         .. versionchanged:: 0.19.6
             Support for generating output notebooks in multiple formats, see
@@ -667,7 +669,7 @@ class NotebookRunner(NotebookMixin, Task):
                  nbconvert_export_kwargs=None,
                  local_execution=False,
                  check_if_kernel_installed=True,
-                 debug=False):
+                 debug_mode=None):
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name
@@ -676,16 +678,16 @@ class NotebookRunner(NotebookMixin, Task):
         self.nb_product_key = nb_product_key
         self.local_execution = local_execution
         self.check_if_kernel_installed = check_if_kernel_installed
-        self._debug = debug
+        self.debug_mode = debug_mode
 
         if 'cwd' in self.papermill_params and self.local_execution:
             raise KeyError('If local_execution is set to True, "cwd" should '
                            'not appear in papermill_params, as such '
                            'parameter will be set by the task itself')
 
-        if 'engine' in self.papermill_params and debug:
+        if 'engine' in self.papermill_params and debug_mode:
             raise ValueError('Engine should not appear in "papermill_params" '
-                             'when "debug" is True')
+                             'when "debug_mode" is enabled')
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = NotebookRunner._init_source(
@@ -695,7 +697,6 @@ class NotebookRunner(NotebookMixin, Task):
             kernelspec_name,
             static_analysis,
             check_if_kernel_installed,
-            debug,
         )
         super().__init__(product, dag, name, params)
 
@@ -741,21 +742,28 @@ class NotebookRunner(NotebookMixin, Task):
                     NotebookConverter(product_nb, exporter,
                                       nbconvert_export_kwargs))
 
+    @property
+    def debug_mode(self):
+        return self._debug_mode
+
+    @debug_mode.setter
+    def debug_mode(self, value):
+        _validate.is_in(value, {None, 'now', 'later'}, 'debug_mode')
+        self._debug_mode = value
+
     @staticmethod
     def _init_source(source,
                      kwargs,
                      ext_in=None,
                      kernelspec_name=None,
                      static_analysis='regular',
-                     check_if_kernel_installed=False,
-                     debug=False):
+                     check_if_kernel_installed=False):
         return NotebookSource(
             source,
             ext_in=ext_in,
             kernelspec_name=kernelspec_name,
             static_analysis=static_analysis,
             check_if_kernel_installed=check_if_kernel_installed,
-            debug=debug,
             **kwargs)
 
     def run(self):
@@ -806,6 +814,13 @@ class NotebookRunner(NotebookMixin, Task):
 
         if self.local_execution:
             self.papermill_params['cwd'] = str(self.source.loc.parent)
+
+        # use our custom engine
+        if self.debug_mode == 'now':
+            self.papermill_params['engine_name'] = 'debug'
+        elif self.debug_mode == 'later':
+            self.papermill_params['engine_name'] = 'debuglater'
+            self.papermill_params['path_to_dump'] = f'{self.name}.dump'
 
         # create parent folders if they don't exist
         Path(path_to_out_ipynb).parent.mkdir(parents=True, exist_ok=True)
@@ -912,7 +927,6 @@ class ScriptRunner(NotebookMixin, Task):
             static_analysis=static_analysis,
             kernelspec_name=None,
             check_if_kernel_installed=False,
-            debug=False,
             **kwargs,
         )
 

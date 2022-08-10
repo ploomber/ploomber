@@ -42,6 +42,7 @@ def cli_endpoint(fn):
     Call some_endpoint(catch_exception=False) to disable this behavior (e.g.
     for testing)
     """
+
     @wraps(fn)
     def wrapper(catch_exception=True, **kwargs):
         if os.environ.get('PLOOMBER_DEBUG'):
@@ -54,9 +55,15 @@ def cli_endpoint(fn):
             except (DAGBuildError, DAGRenderError) as e:
                 error = str(e)
                 color = False
+            # for base exceptions (we raise this), we display the message
+            # in red (no traceback since it's irrelevant for the user)
             except BaseException as e:
                 click.secho(e.get_message(), file=sys.stderr, fg='red')
                 sys.exit(1)
+            # this means it's an unknown error (either a bug in ploomber or
+            # an error in the user's code). we display the full traceback,
+            # but still hide irrelevant tracebacks (i.e. if a nested exception
+            # is raised where some of the exceptions are TaskBuildError)
             except Exception as e:
                 error = _format.exception(e)
                 color = True
@@ -92,6 +99,7 @@ def command_endpoint(fn):
     not execute them. If it tails, it prints error message to stderror, then
     calls with exit code 1.
     """
+
     @wraps(fn)
     def wrapper(**kwargs):
         try:

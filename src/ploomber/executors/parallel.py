@@ -17,6 +17,8 @@ from ploomber.executors import _format
 from multiprocessing import get_context, get_start_method
 from ploomber.io import pretty_print
 
+import click
+
 # TODO: support for show_progress, we can use a progress bar but we have
 # to modify the label since at any point more than one task might be
 # executing
@@ -199,10 +201,15 @@ class Parallel(Executor):
             set_done = set([t.name for t in done])
 
             if not self._i % 50000:
-                _log(f'Finished tasks so far: {set_done or ""}',
-                     self._logger.debug,
-                     print_progress=self.print_progress)
-                _log(f'Remaining tasks: {set_all - set_done}',
+                click.clear()
+
+                if set_done:
+                    _log(f'Finished: {pretty_print.iterable(set_done)}',
+                         self._logger.debug,
+                         print_progress=self.print_progress)
+
+                remaining = pretty_print.iterable(set_all - set_done)
+                _log(f'Remaining: {remaining}',
                      self._logger.debug,
                      print_progress=self.print_progress)
                 _log(f'Finished {len(set_done)} out of {len(set_all)} tasks',

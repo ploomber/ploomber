@@ -8,6 +8,7 @@ from unittest.mock import Mock, MagicMock
 import jupytext
 import nbformat
 import pytest
+from debuglater.pydump import debug_dump
 
 from ploomber.cli import plot, build, parsers, task, report, status, interact
 from ploomber_cli.cli import cmd_router
@@ -18,7 +19,6 @@ import ploomber.dag.dag as dag_module
 # TODO: optimize some of the tests that build dags by mocking and checking
 # that the build function is called with the appropriate args
 from ploomber.telemetry import telemetry
-
 
 IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and 'win' in sys.platform
 
@@ -158,8 +158,7 @@ def test_status(monkeypatch, tmp_sample_dir):
     status.main(catch_exception=False)
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 @pytest.mark.parametrize('custom_args, output, include_products, backend', [
     [[], 'pipeline.entry.png', False, None],
     [['--output', 'custom.png'], 'custom.png', False, None],
@@ -187,8 +186,7 @@ def test_plot(custom_args, monkeypatch, tmp_sample_dir, output,
                                  include_products=include_products)
 
 
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10,
-                    reason="requires < 3.10")
+@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
 def test_plot_uses_name_if_any(tmp_nbs, monkeypatch):
     os.rename('pipeline.yaml', 'pipeline.train.yaml')
 
@@ -418,6 +416,7 @@ def test_parse_doc():
 ])
 def test_parse_doc_if_missing_numpydoc(docstring, expected_summary,
                                        monkeypatch):
+
     def _module_not_found(arg):
         raise ModuleNotFoundError
 
@@ -489,6 +488,7 @@ def test_task_command_does_not_force_dag_render(tmp_nbs, monkeypatch):
     monkeypatch.setattr(sys, 'argv', args)
 
     class CustomParserWrapper(CustomParser):
+
         def load_from_entry_point_arg(self):
             dag, args = super().load_from_entry_point_arg()
             dag_mock = MagicMock(wraps=dag)
@@ -536,12 +536,13 @@ tasks:
 @pytest.mark.parametrize('output', [None, 'pipeline.html', 'pipeline.png'])
 @pytest.mark.parametrize('backend', [None, 'd3', 'pygraphviz'])
 def test_report_command(tmp_nbs, backend, output, monkeypatch, capsys):
-    args = ['ploomber', 'report', '--entry-point', 'pipeline.yaml',
-            '--backend', backend]
+    args = [
+        'ploomber', 'report', '--entry-point', 'pipeline.yaml', '--backend',
+        backend
+    ]
     if output:
         args.extend(['--output', output])
-    monkeypatch.setattr(
-        sys, 'argv', args)
+    monkeypatch.setattr(sys, 'argv', args)
     output = 'pipeline.html' if not output else output
     cmd_router()
     expected_output_path = Path(output)
@@ -549,3 +550,225 @@ def test_report_command(tmp_nbs, backend, output, monkeypatch, capsys):
 
     assert expected_output_path.exists()
     assert f'saved at: {output}' in captured.out
+
+
+def test_build_debug_now_python_callable(tmp_directory, monkeypatch,
+                                         tmp_imports):
+    Path('functions.py').write_text("""
+def crash(product):
+    x, y = 1, 0
+    x/y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: functions.crash
+      product: out.txt
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'build', '--debug'])
+
+    mock = Mock()
+
+    with pytest.raises(SystemExit):
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'ipdb', mock)
+            cmd_router()
+
+    tb = mock.post_mortem.call_args[0][0]
+    assert type(tb).__name__ == 'traceback'
+
+
+def test_build_debug_later_python_callable(tmp_directory, monkeypatch,
+                                           tmp_imports, capsys):
+    Path('functions.py').write_text("""
+def crash(product):
+    x, y = 1, 0
+    x/y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: functions.crash
+      product: out.txt
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'build', '--debuglater'])
+
+    with pytest.raises(SystemExit):
+        cmd_router()
+
+    captured = capsys.readouterr()
+
+    assert Path('crash.dump').is_file()
+    assert 'dltr crash.dump' in captured.err
+
+
+def test_build_debug_now_notebook(tmp_directory, monkeypatch, tmp_imports):
+    Path('crash.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+
+# +
+x, y = 1, 0
+x / y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: crash.py
+      product: out.ipynb
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'build', '--debug'])
+
+    mock = Mock(side_effect=["print(f'x={x}')", 'quit'])
+
+    with pytest.raises(SystemExit):
+        with monkeypatch.context() as m:
+            m.setattr('builtins.input', mock)
+            cmd_router()
+
+
+def test_build_debug_later_notebook(tmp_directory, monkeypatch, tmp_imports,
+                                    capsys):
+    Path('crash.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+
+# +
+x, y = 1, 0
+x / y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: crash.py
+      product: out.ipynb
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'build', '--debuglater'])
+
+    with pytest.raises(SystemExit):
+        cmd_router()
+
+    captured = capsys.readouterr()
+    assert 'dltr crash.dump' in captured.err
+
+    mock = Mock(side_effect=["print(f'x={x}')", 'quit'])
+
+    with monkeypatch.context() as m:
+        m.setattr('builtins.input', mock)
+        debug_dump('crash.dump')
+
+
+def test_task_debug_now_python_callable(tmp_directory, monkeypatch,
+                                        tmp_imports):
+    Path('functions.py').write_text("""
+def crash(product):
+    x, y = 1, 0
+    x/y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: functions.crash
+      product: out.txt
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'task', 'crash', '--debug'])
+
+    mock = Mock()
+
+    with pytest.raises(SystemExit):
+        with monkeypatch.context() as m:
+            m.setitem(sys.modules, 'ipdb', mock)
+            cmd_router()
+
+    tb = mock.post_mortem.call_args[0][0]
+    assert type(tb).__name__ == 'traceback'
+
+
+def test_task_debug_later_python_callable(tmp_directory, monkeypatch,
+                                          tmp_imports, capsys):
+    Path('functions.py').write_text("""
+def crash(product):
+    x, y = 1, 0
+    x/y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: functions.crash
+      product: out.txt
+""")
+
+    monkeypatch.setattr(sys, 'argv',
+                        ['ploomber', 'task', 'crash', '--debuglater'])
+
+    with pytest.raises(SystemExit):
+        cmd_router()
+
+    captured = capsys.readouterr()
+
+    assert Path('crash.dump').is_file()
+    assert 'dltr crash.dump' in captured.err
+
+
+def test_task_debug_now_notebook(tmp_directory, monkeypatch, tmp_imports):
+    Path('crash.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+
+# +
+x, y = 1, 0
+x / y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: crash.py
+      product: out.ipynb
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'task', 'crash', '--debug'])
+
+    mock = Mock(side_effect=["print(f'x={x}')", 'quit'])
+
+    with pytest.raises(SystemExit):
+        with monkeypatch.context() as m:
+            m.setattr('builtins.input', mock)
+            cmd_router()
+
+
+def test_task_debug_later_notebook(tmp_directory, monkeypatch, tmp_imports,
+                                   capsys):
+    Path('crash.py').write_text("""
+# + tags=["parameters"]
+upstream = None
+
+# +
+x, y = 1, 0
+x / y
+""")
+
+    Path('pipeline.yaml').write_text("""
+tasks:
+    - source: crash.py
+      product: out.ipynb
+""")
+
+    monkeypatch.setattr(sys, 'argv',
+                        ['ploomber', 'task', 'crash', '--debuglater'])
+
+    with pytest.raises(SystemExit):
+        cmd_router()
+
+    captured = capsys.readouterr()
+    assert 'dltr crash.dump' in captured.err
+
+    mock = Mock(side_effect=["print(f'x={x}')", 'quit'])
+
+    with monkeypatch.context() as m:
+        m.setattr('builtins.input', mock)
+        debug_dump('crash.dump')

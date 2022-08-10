@@ -13,9 +13,9 @@ def test_interface(concrete_class):
     allowed_mapping = {
         'Input': {'_true', '_null_update_metadata'},
         'Link': {'_false'},
-        'PythonCallable': {'load', '_interactive_developer'},
+        'PythonCallable': {'load', '_interactive_developer', 'debug_mode'},
         'SQLScript': {'load'},
-        'NotebookRunner': {'static_analysis'},
+        'NotebookRunner': {'static_analysis', 'debug_mode'},
         'ScriptRunner': {'static_analysis'}
     }
 
