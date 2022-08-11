@@ -970,8 +970,6 @@ class ScriptRunner(NotebookMixin, Task):
             static_analysis=static_analysis,
             kernelspec_name=None,
             check_if_kernel_installed=False,
-            extract_up=False,
-            extract_prod=False,
             **kwargs,
         )
         NotebookMixin._validate_parameters_cell(ns, extract_up, extract_prod)
