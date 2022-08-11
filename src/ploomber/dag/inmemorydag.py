@@ -24,14 +24,15 @@ class InMemoryDAG:
     --------
     .. literalinclude:: ../../../examples/InMemoryDAG.py
     """
+
     def __init__(self, dag, return_postprocessor=None):
         types = {type(dag[t]) for t in dag._iter()}
 
-        if not {PythonCallable} >= types:
-            extra = ','.join(
-                [type_.__name__ for type_ in types - {PythonCallable}])
-            raise TypeError('All tasks in the DAG must be PythonCallable, '
-                            'got unallowed types: {}'.format(extra))
+        # if not {PythonCallable} >= types:
+        #     extra = ','.join(
+        #         [type_.__name__ for type_ in types - {PythonCallable}])
+        #     raise TypeError('All tasks in the DAG must be PythonCallable, '
+        #                     'got unallowed types: {}'.format(extra))
 
         # if the tasks are not initialized with a serializer in the partial
         # (this happens when the partial is imported in a pipeline.yaml file
