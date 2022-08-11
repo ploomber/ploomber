@@ -1,3 +1,4 @@
+import click
 import os
 import shlex
 import pdb
@@ -33,6 +34,8 @@ except ImportError:
 
 from ploomber.exceptions import TaskBuildError, TaskInitializationError
 from ploomber.sources import NotebookSource
+from ploomber.sources import notebooksource
+from ploomber.sources.nb_utils import find_cell_with_tag
 from ploomber.sources.notebooksource import _cleanup_rendered_nb
 from ploomber.products import File, MetaProduct
 from ploomber.tasks.abc import Task
@@ -268,9 +271,24 @@ class NotebookConverter:
 
 
 class NotebookMixin(FileLoaderMixin):
+
+    @staticmethod
+    def _validate_parameters_cell(source, extract_up=False, extract_prod=False):
+        params_cell, _ = find_cell_with_tag(source._nb_obj_unrendered,
+                                            'parameters')
+
+        if params_cell is None:
+            loc = pretty_print.try_relative_path(source.loc)
+            # raise MissingParametersCellError(msg)
+            # import pdb; pdb.set_trace()
+            notebooksource.add_parameters_cell(source.loc, extract_up, extract_prod)
+            click.secho(
+                f'Notebook {loc} is missing the parameters cell, '
+                'adding it at the top of the file...',
+                fg='yellow')
+
     # expose the static_analysis attribute from the source, we need this
     # since we disable static_analysis when rendering the DAG in Jupyter
-
     @property
     def static_analysis(self):
         return self._source.static_analysis
@@ -669,7 +687,10 @@ class NotebookRunner(NotebookMixin, Task):
                  nbconvert_export_kwargs=None,
                  local_execution=False,
                  check_if_kernel_installed=True,
-                 debug_mode=None):
+                 debug_mode=None,
+                 extract_up=False,
+                 extract_prod=False
+                 ):
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name
@@ -697,6 +718,8 @@ class NotebookRunner(NotebookMixin, Task):
             kernelspec_name,
             static_analysis,
             check_if_kernel_installed,
+            extract_up,
+            extract_prod
         )
         super().__init__(product, dag, name, params)
 
@@ -757,7 +780,18 @@ class NotebookRunner(NotebookMixin, Task):
                      ext_in=None,
                      kernelspec_name=None,
                      static_analysis='regular',
-                     check_if_kernel_installed=False):
+                     check_if_kernel_installed=False,
+                     extract_up=False,
+                     extract_prod=False):
+        ns = NotebookSource(
+            source,
+            ext_in=ext_in,
+            kernelspec_name=kernelspec_name,
+            static_analysis=static_analysis,
+            check_if_kernel_installed=check_if_kernel_installed,
+            **kwargs)
+        NotebookMixin._validate_parameters_cell(ns, extract_up, extract_prod)
+        # re-create NotebookSource instance
         return NotebookSource(
             source,
             ext_in=ext_in,
@@ -910,17 +944,33 @@ class ScriptRunner(NotebookMixin, Task):
                  params=None,
                  ext_in=None,
                  static_analysis='regular',
-                 local_execution=False):
+                 local_execution=False,
+                 extract_up=False,
+                 extract_prod=False
+                 ):
         self.ext_in = ext_in
         self.local_execution = local_execution
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = ScriptRunner._init_source(source, kwargs, ext_in,
-                                                 static_analysis)
+                                                 static_analysis, extract_up,
+                                                 extract_prod)
         super().__init__(product, dag, name, params)
 
     @staticmethod
-    def _init_source(source, kwargs, ext_in=None, static_analysis='regular'):
+    def _init_source(source, kwargs, ext_in=None, static_analysis='regular',
+                     extract_up=False, extract_prod=False):
+        ns = NotebookSource(
+            source,
+            ext_in=ext_in,
+            static_analysis=static_analysis,
+            kernelspec_name=None,
+            check_if_kernel_installed=False,
+            extract_up=False,
+            extract_prod=False,
+            **kwargs,
+        )
+        NotebookMixin._validate_parameters_cell(ns, extract_up, extract_prod)
         return NotebookSource(
             source,
             ext_in=ext_in,

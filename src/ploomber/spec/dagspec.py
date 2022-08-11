@@ -804,24 +804,13 @@ def process_tasks(dag, dag_spec, root_path=None):
     # first pass: init tasks and them to dag
     for task_dict in dag_spec['tasks']:
         # init source to extract product
+
+
         fn = task_dict['class']._init_source
+        task_dict['extract_up'] = extract_up
+        task_dict['extract_prod'] = extract_prod
         kwargs = {'kwargs': {}, **task_dict}
-
-        try:
-            source = call_with_dictionary(fn, kwargs=kwargs)
-        except MissingParametersCellError:
-            missing_params = True
-        else:
-            missing_params = False
-
-        if missing_params:
-            click.secho(
-                f'{kwargs["source"]} is missing the parameters cell, '
-                'adding it at the top of the file...',
-                fg='yellow')
-            notebooksource.add_parameters_cell(kwargs['source'], extract_up,
-                                               extract_prod)
-            source = call_with_dictionary(fn, kwargs=kwargs)
+        source = call_with_dictionary(fn, kwargs=kwargs)
 
         if extract_prod:
             task_dict['product'] = source.extract_product()

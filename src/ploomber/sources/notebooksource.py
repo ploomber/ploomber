@@ -40,8 +40,7 @@ from jupytext.formats import long_form_one_format, short_form_one_format
 from jupytext.config import JupytextConfiguration
 import parso
 
-from ploomber.exceptions import (SourceInitializationError,
-                                 MissingParametersCellError)
+from ploomber.exceptions import SourceInitializationError
 from ploomber.placeholders.placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources.abc import Source
@@ -403,7 +402,7 @@ class NotebookSource(Source):
                                             'parameters')
 
         if params_cell is None:
-            loc = ' "{}"'.format(self.loc) if self.loc else ''
+            loc = ' "{}"'.format(pretty_print.try_relative_path(self.loc)) if self.loc else ''
             msg = ('Notebook{} does not have a cell tagged '
                    '"parameters"'.format(loc))
 
@@ -421,8 +420,7 @@ Go to: https://ploomber.io/s/params for more information
                 msg += ('. Add a cell at the top and tag it as "parameters". '
                         'Go to the next URL for '
                         'details: https://ploomber.io/s/params')
-
-            raise MissingParametersCellError(msg)
+            click.secho(msg)
 
     def _post_render_validation(self):
         """
@@ -544,7 +542,7 @@ Go to: https://ploomber.io/s/params for more information
     def _get_parameters_cell(self, force=False):
         self._read_nb_str_unrendered(force=force)
         cell, _ = find_cell_with_tag(self._nb_obj_unrendered, tag='parameters')
-        return cell.source
+        return cell.source if cell else None
 
     def extract_upstream(self, force=False):
         extractor_class = extractor_class_for_language(self.language)
@@ -1038,7 +1036,7 @@ def _warn_on_unused_params(nb, params):
                       f'task\'s source code: {pretty_print.iterable(unused)}')
 
 
-def add_parameters_cell(path, extract_upstream, extract_product):
+def add_parameters_cell(path, extract_upstream=False, extract_product=False):
     """
     Add parameters cell to a script/notebook in the given path, overwrites the
     original file
