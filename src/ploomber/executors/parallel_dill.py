@@ -1,31 +1,21 @@
-"""
-Task.exec_status only makes sense for parallel execution, when using the serial
-executor, we can update the _status automatically (within Task) but it is
-unusable, get rid of the logic that updates it automatically, however,
-we ar eusing here the _update status here to propagate dowstream updates.
-So think about which parts can go away and which ones should not
-"""
+# optional dependency
+try:
+    from multiprocess import Pool
+except ModuleNotFoundError:
+    Pool = None
+
 import os
 import logging
-from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from ploomber.constants import TaskStatus
 from ploomber.executors.abc import Executor
 from ploomber.exceptions import DAGBuildError
 from ploomber.messagecollector import (BuildExceptionsCollector, Message)
 from ploomber.executors import _format
-from multiprocessing import get_context, get_start_method
 from ploomber.io import pretty_print
+from ploomber.util import requires
 
-from tqdm.auto import tqdm
 import click
-
-# TODO: support for show_progress, we can use a progress bar but we have
-# to modify the label since at any point more than one task might be
-# executing
-
-# TODO: add support for logging errors, then add this executor to the tests
-# in test_hooks
 
 
 class TaskBuildWrapper:
@@ -42,9 +32,10 @@ class TaskBuildWrapper:
     def __call__(self, *args, **kwargs):
         try:
             output = self.task._build(**kwargs)
-            return output
+            return output, self.task.name
         except Exception as e:
-            return Message(task=self.task, message=_format.exception(e), obj=e)
+            return Message(task=self.task, message=_format.exception(e),
+                           obj=e), self.task.name
 
 
 def _log(msg, logger, print_progress):
@@ -54,8 +45,10 @@ def _log(msg, logger, print_progress):
         print(msg)
 
 
-class Parallel(Executor):
-    """Runs a DAG in parallel using multiprocessing
+class ParallelDill(Executor):
+    """
+    Runs a DAG in parallel, serializes using dill, which allows declaring
+    and running pipelines in a Jupyter notebook.
 
     Parameters
     ----------
@@ -65,131 +58,60 @@ class Parallel(Executor):
     print_progress : bool, default=False
         Whether to print progress to stdout, otherwise just log it
 
-    start_method : str, default=None
-        The method which should be used to start child processes. method
-        can be 'fork', 'spawn' or 'forkserver'. If None or empty then the
-        default start_method is used.
-
-    Examples
-    --------
-    Spec API:
-
-    .. code-block:: yaml
-        :class: text-editor
-        :name: pipeline-yaml
-
-        # add at the top of your pipeline.yaml
-        executor: parallel
-
-
-    Python API:
-
-    >>> from ploomber import DAG
-    >>> from ploomber.executors import Parallel
-    >>> dag = DAG(executor='parallel') # use with default values
-    >>> dag = DAG(executor=Parallel(processes=2)) # customize
-
-
     Notes
     -----
     If any task crashes, downstream tasks execution is aborted, building
     continues until no more tasks can be executed
-
-    .. versionadded:: 0.20
-        Added `start_method` argument
 
     See Also
     --------
     ploomber.executors.Serial :
         Serial executor
 
+    ploomber.executors.Parallel :
+        Parallel executor
     """
 
-    # NOTE: Tasks should not create child processes
-    # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Process.daemon
-    multiprocessing_start_methods = ['fork', 'spawn', 'forkserver']
-
-    def __init__(self,
-                 processes=None,
-                 print_progress=False,
-                 start_method=None):
+    @requires(['multiprocess'], 'ParallelDill')
+    def __init__(self, processes=None, print_progress=False):
         self.processes = processes or os.cpu_count()
         self.print_progress = print_progress
 
         self._logger = logging.getLogger(__name__)
         self._i = 0
-        start_method = start_method or get_start_method()
-        self._bar = None
-        if start_method in self.multiprocessing_start_methods:
-            self.start_method = start_method
-        else:
-            raise ValueError(
-                'Invalid start_method. '
-                f'Valid values for start_method are: '
-                f'{pretty_print.iterable(self.multiprocessing_start_methods)}')
 
     def __call__(self, dag, show_progress):
         super().__call__(dag)
 
-        # TODO: Have to test this with other Tasks, especially the ones that
-        # use clients - have to make sure they are serialized correctly
         done = []
         started = []
         set_all = set(dag)
         future_mapping = {}
-
-        # there might be up-to-date tasks, add them to done
-        # FIXME: this only happens when the dag is already build and then
-        # then try to build again (in the same session), if the session
-        # is restarted even up-to-date tasks will be WaitingExecution again
-        # this is a bit confusing, so maybe change WaitingExecution
-        # to WaitingBuild?
-        n_scheduled = 0
+        self._dag = dag
 
         for name in dag:
             if dag[name].exec_status in {
                     TaskStatus.Executed, TaskStatus.Skipped
             }:
                 done.append(dag[name])
-            else:
-                n_scheduled += 1
-
-        if show_progress:
-            self._bar = tqdm(total=n_scheduled)
-        else:
-            self._bar = None
 
         def callback(future):
             """Keep track of finished tasks
             """
-            if self._bar:
-                self._bar.update()
+            result, task_name = future
 
-            task = future_mapping[future]
-
+            task = self._dag[task_name]
             self._logger.debug('Added %s to the list of finished tasks...',
                                task.name)
-            try:
-                result = future.result()
-            except BrokenProcessPool:
-                # ignore the error here but flag the task,
-                # so next_task is able to stop the iteration,
-                # when we call result after breaking the loop,
-                # this will show up
-                task.exec_status = TaskStatus.BrokenProcessPool
-                if self._bar:
-                    self._bar.colour = 'red'
+
+            if isinstance(result, Message):
+                task.exec_status = TaskStatus.Errored
+            # sucessfully run task._build
             else:
-                if isinstance(result, Message):
-                    task.exec_status = TaskStatus.Errored
-                    if self._bar:
-                        self._bar.colour = 'red'
-                # sucessfully run task._build
-                else:
-                    # ignore report here, we just the metadata to update it
-                    _, meta = result
-                    task.product.metadata.update_locally(meta)
-                    task.exec_status = TaskStatus.Executed
+                # ignore report here, we just the metadata to update it
+                _, meta = result
+                task.product.metadata.update_locally(meta)
+                task.exec_status = TaskStatus.Executed
 
             done.append(task)
 
@@ -202,8 +124,6 @@ class Parallel(Executor):
             """
             for task in dag.values():
                 if task.exec_status in {TaskStatus.Aborted}:
-                    if self._bar:
-                        self._bar.update()
                     done.append(task)
                 elif task.exec_status == TaskStatus.BrokenProcessPool:
                     raise StopIteration
@@ -246,10 +166,7 @@ class Parallel(Executor):
 
         task_kwargs = {'catch_exceptions': True}
 
-        context = get_context(self.start_method)
-
-        with ProcessPoolExecutor(max_workers=self.processes,
-                                 mp_context=context) as pool:
+        with Pool(processes=self.processes) as pool:
             while True:
                 try:
                     task = next_task()
@@ -257,27 +174,20 @@ class Parallel(Executor):
                     break
                 else:
                     if task is not None:
-                        future = pool.submit(TaskBuildWrapper(task),
-                                             **task_kwargs)
-                        # the callback function uses the future mapping
-                        # so add it before registering the callback, otherwise
-                        # it might break and hang the whole process
-                        future_mapping[future] = task
-                        future.add_done_callback(callback)
+                        async_result = pool.apply_async(TaskBuildWrapper(task),
+                                                        kwds=task_kwargs,
+                                                        callback=callback)
+                        future_mapping[async_result] = task
                         started.append(task)
                         self._logger.info('Added %s to the pool...', task.name)
 
         results = [
             # results are the output of Task._build: (report, metadata)
             # OR a Message
-            get_future_result(f, future_mapping)
-            for f in future_mapping.keys()
+            f.get()[0] for f in future_mapping.keys()
         ]
 
         exps = [r for r in results if isinstance(r, Message)]
-
-        if self._bar:
-            self._bar.close()
 
         if exps:
             raise DAGBuildError(str(BuildExceptionsCollector(exps)))
@@ -285,24 +195,15 @@ class Parallel(Executor):
         # if we reach this, it means no tasks failed. only return reports
         return [r[0] for r in results]
 
+    # same as Parallel (and possibly Executor?)
     def __getstate__(self):
         state = self.__dict__.copy()
         # _logger is not pickable, so we remove them and build
         # them again in __setstate__
         del state['_logger']
-        # the progress bar is not pickable
-        del state['_bar']
         return state
 
+    # same as Parallel (and possibly Executor?)
     def __setstate__(self, state):
         self.__dict__.update(state)
         self._logger = logging.getLogger(__name__)
-        self._bar = None
-
-
-def get_future_result(future, future_mapping):
-    try:
-        return future.result()
-    except BrokenProcessPool as e:
-        raise BrokenProcessPool('Broken pool {}'.format(
-            future_mapping[future])) from e
