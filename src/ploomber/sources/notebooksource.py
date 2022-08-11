@@ -402,7 +402,8 @@ class NotebookSource(Source):
                                             'parameters')
 
         if params_cell is None:
-            loc = ' "{}"'.format(pretty_print.try_relative_path(self.loc)) if self.loc else ''
+            loc = ' "{}"'.format(pretty_print.try_relative_path(self.loc)) \
+                if self.loc else ''
             msg = ('Notebook{} does not have a cell tagged '
                    '"parameters"'.format(loc))
 

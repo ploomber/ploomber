@@ -273,7 +273,9 @@ class NotebookConverter:
 class NotebookMixin(FileLoaderMixin):
 
     @staticmethod
-    def _validate_parameters_cell(source, extract_up=False, extract_prod=False):
+    def _validate_parameters_cell(source,
+                                  extract_up=False,
+                                  extract_prod=False):
         params_cell, _ = find_cell_with_tag(source._nb_obj_unrendered,
                                             'parameters')
 
@@ -281,7 +283,9 @@ class NotebookMixin(FileLoaderMixin):
             loc = pretty_print.try_relative_path(source.loc)
             # raise MissingParametersCellError(msg)
             # import pdb; pdb.set_trace()
-            notebooksource.add_parameters_cell(source.loc, extract_up, extract_prod)
+            notebooksource.add_parameters_cell(source.loc,
+                                               extract_up,
+                                               extract_prod)
             click.secho(
                 f'Notebook {loc} is missing the parameters cell, '
                 'adding it at the top of the file...',
