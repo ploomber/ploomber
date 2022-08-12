@@ -23,13 +23,17 @@ def _unserializer(product):
     pass
 
 
-def signature_wrapper(f):
+def signature_wrapper(f, call_with_args):
 
     @wraps(f)
-    def wrapper(upstream):
+    def wrapper_args(upstream):
+        return f(*upstream.values())
+
+    @wraps(f)
+    def wrapper_kwargs(upstream):
         return f(**upstream)
 
-    return wrapper
+    return wrapper_args if call_with_args else wrapper_kwargs
 
 
 def _get_upstream(fn):
@@ -52,11 +56,12 @@ class _PythonCallableNoValidation(PythonCallable):
         return _NoValidationSource(source, **kwargs)
 
 
-def _make_task(callable_, dag, params, output):
+def _make_task(callable_, dag, params, output, call_with_args):
     name = callable_.__name__
 
     if set(signature(callable_).parameters) != {'input_data'}:
-        callable_ = signature_wrapper(callable_)
+        # wrap the callable_ so it looks like a function with an "upstream"
+        callable_ = signature_wrapper(callable_, call_with_args=call_with_args)
 
     task = _PythonCallableNoValidation(callable_,
                                        File(f'{output}/{name}'),
@@ -71,7 +76,8 @@ def _make_task(callable_, dag, params, output):
 def dag_from_functions(functions,
                        output='output',
                        params=None,
-                       parallel=False):
+                       parallel=False,
+                       dependencies=None):
     """Create a DAG from a list of functions
 
     Parameters
@@ -86,17 +92,24 @@ def dag_from_functions(functions,
         Parameters to pass to each task, it must be a dictionary with task
         names as keys and parameters (dict) as values
 
-    parallel : bool default=False
+    parallel : bool, default=False
         If True, the dag will run tasks in parallel when calling
         ``dag.build()``, note that this requires the 'multiprocess' package:
         ``pip install multiprocess``
-    """
 
+    dependencies : dict, default=None
+        A mapping with functions names to their dependencies. Use it if
+        the arguments in the function do not match the names of its
+        dependencies.
+    """
+    dependencies = dependencies or dict()
     params = params or dict()
 
     if parallel:
-        dag = dag = DAG(executor=ParallelDill())
+        dag = DAG(executor=ParallelDill())
     else:
+        # need to disable subprocess, otherwise pickling will fail since
+        # functions might be defined in the __main__ module
         dag = DAG(executor=Serial(build_in_subprocess=False))
 
     for callable_ in functions:
@@ -105,11 +118,20 @@ def dag_from_functions(functions,
         else:
             params_task = None
 
-        _make_task(callable_, dag=dag, params=params_task, output=output)
+        _make_task(callable_,
+                   dag=dag,
+                   params=params_task,
+                   output=output,
+                   call_with_args=callable_.__name__ in dependencies)
 
-    for task in dag._iter():
-        upstream = _get_upstream(dag[task].source.primitive)
+    for name in dag._iter():
+        # check if there are manually declared dependencies
+        if name in dependencies:
+            upstream = dependencies[name]
+        else:
+            upstream = _get_upstream(dag[name].source.primitive)
+
         for up in upstream:
-            dag[task].set_upstream(dag[up])
+            dag[name].set_upstream(dag[up])
 
     return dag

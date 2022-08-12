@@ -182,6 +182,7 @@ def serializer(extension_mapping=None,
         file, calling the serializing function one per (key, value) pair and
         using the key as filename.
     """
+
     def _serializer(fn):
         extension_mapping_final = _build_extension_mapping_final(
             extension_mapping, defaults, fn, _DEFAULTS, 'serializer')
@@ -297,6 +298,7 @@ def _serialize_product(obj, product, extension_mapping, fallback,
 
 
 def _make_serializer(fn):
+
     def _serialize(obj, product):
         with open(product, 'wb') as f:
             fn(obj, f)
