@@ -6,7 +6,6 @@ except ModuleNotFoundError:
 
 import os
 import logging
-from concurrent.futures.process import BrokenProcessPool
 from ploomber.constants import TaskStatus
 from ploomber.executors.abc import Executor
 from ploomber.exceptions import DAGBuildError
