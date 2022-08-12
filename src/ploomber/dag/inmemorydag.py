@@ -8,6 +8,18 @@ def _do_nothing(x):
     return x
 
 
+def _non_callables(dag):
+    non_callables = []
+
+    for name in dag._iter():
+        task = dag[name]
+
+        if not isinstance(task, PythonCallable):
+            non_callables.append(task)
+
+    return non_callables
+
+
 class InMemoryDAG:
     """
     Converts a DAG to a DAG-like object that performs all operations in memory
@@ -26,13 +38,13 @@ class InMemoryDAG:
     """
 
     def __init__(self, dag, return_postprocessor=None):
-        types = {type(dag[t]) for t in dag._iter()}
+        non_callables = _non_callables(dag)
 
-        # if not {PythonCallable} >= types:
-        #     extra = ','.join(
-        #         [type_.__name__ for type_ in types - {PythonCallable}])
-        #     raise TypeError('All tasks in the DAG must be PythonCallable, '
-        #                     'got unallowed types: {}'.format(extra))
+        if non_callables:
+            non_callables_repr = ', '.join(repr(t) for t in non_callables)
+            raise TypeError('All tasks in the DAG must be PythonCallable, '
+                            'got unallowed '
+                            f'types: {non_callables_repr}')
 
         # if the tasks are not initialized with a serializer in the partial
         # (this happens when the partial is imported in a pipeline.yaml file
