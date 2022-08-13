@@ -2,6 +2,7 @@
 This module contains utilities for defining inline pipelines. That is, defining
 and running pipelines inside a Jupyter notebook
 """
+from itertools import chain
 from functools import wraps
 from inspect import signature
 
@@ -11,6 +12,7 @@ from ploomber.products import File
 from ploomber.executors import ParallelDill, Serial
 from ploomber.sources import PythonCallableSource
 from ploomber.io import serializer, unserializer
+from ploomber.util.param_grid import ParamGrid
 
 
 @serializer(fallback=True)
@@ -23,22 +25,42 @@ def _unserializer(product):
     pass
 
 
+def grid(**params):
+
+    def decorator(f):
+        if not hasattr(f, '__ploomber_grid__'):
+            f.__ploomber_grid__ = []
+
+        # TODO: validate they have the same keys as the earlier ones
+        f.__ploomber_grid__.append(params)
+        return f
+
+    return decorator
+
+
 def signature_wrapper(f, call_with_args):
 
     @wraps(f)
-    def wrapper_args(upstream):
-        return f(*upstream.values())
+    def wrapper_args(upstream, **kwargs):
+        return f(*upstream.values(), **kwargs)
 
     @wraps(f)
-    def wrapper_kwargs(upstream):
-        return f(**upstream)
+    def wrapper_kwargs(upstream, **kwargs):
+        return f(**upstream, **kwargs)
 
     return wrapper_args if call_with_args else wrapper_kwargs
 
 
 def _get_upstream(fn):
     if hasattr(fn, '__wrapped__'):
-        return list(signature(fn.__wrapped__).parameters)
+        grid = getattr(fn, '__ploomber_grid__', None)
+
+        if grid is not None:
+            ignore = set(grid[0])
+        else:
+            ignore = set()
+
+        return set(signature(fn.__wrapped__).parameters) - ignore
     else:
         return []
 
@@ -56,8 +78,9 @@ class _PythonCallableNoValidation(PythonCallable):
         return _NoValidationSource(source, **kwargs)
 
 
-def _make_task(callable_, dag, params, output, call_with_args):
+def _make_task(callable_, dag, params, output, call_with_args, suffix=None):
     name = callable_.__name__
+    name = name if suffix is None else f'{name}-{suffix}'
 
     if set(signature(callable_).parameters) != {'input_data'}:
         # wrap the callable_ so it looks like a function with an "upstream"
@@ -116,13 +139,31 @@ def dag_from_functions(functions,
         if callable_.__name__ in params:
             params_task = params[callable_.__name__]
         else:
-            params_task = None
+            params_task = dict()
 
-        _make_task(callable_,
-                   dag=dag,
-                   params=params_task,
-                   output=output,
-                   call_with_args=callable_.__name__ in dependencies)
+        # if decorated, call with grid
+        if hasattr(callable_, '__ploomber_grid__'):
+
+            for i, items in enumerate(
+                    chain(*(ParamGrid(grid).product()
+                            for grid in callable_.__ploomber_grid__))):
+
+                _make_task(callable_,
+                           dag=dag,
+                           params={
+                               **params_task,
+                               **items
+                           },
+                           output=output,
+                           call_with_args=callable_.__name__ in dependencies,
+                           suffix=i)
+        else:
+
+            _make_task(callable_,
+                       dag=dag,
+                       params=params_task,
+                       output=output,
+                       call_with_args=callable_.__name__ in dependencies)
 
     for name in dag._iter():
         # check if there are manually declared dependencies
