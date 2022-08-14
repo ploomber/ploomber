@@ -36,8 +36,8 @@ class TaskBuildWrapper:
             output = self.task._build(**kwargs)
             return output, self.task.name
         except Exception as e:
-            return Message(task=self.task, message=_format.exception(e),
-                           obj=e), self.task.name
+            e._name = self.task.name
+            raise
 
 
 def _log(msg, logger, print_progress):
@@ -88,6 +88,7 @@ class ParallelDill(Executor):
 
         done = []
         started = []
+        failed = []
         set_all = set(dag)
         future_mapping = {}
         self._dag = dag
@@ -133,6 +134,27 @@ class ParallelDill(Executor):
                 task.exec_status = TaskStatus.Executed
 
             done.append(task)
+            started.remove(task)
+
+        def callback_error(exc):
+            if self._bar:
+                self._bar.update()
+
+            # TODO: if some unknown exception occurs, exc wont have ._name
+            task = self._dag[exc._name]
+            self._logger.debug('Added %s to the list of finished tasks...',
+                               task.name)
+
+            task.exec_status = TaskStatus.Errored
+
+            if self._bar:
+                self._bar.colour = 'red'
+
+            done.append(task)
+            started.remove(task)
+
+            failed.append(
+                Message(task=task, message=_format.exception(exc), obj=exc))
 
         def next_task():
             """
@@ -190,34 +212,38 @@ class ParallelDill(Executor):
 
         with Pool(processes=self.processes) as pool:
             while True:
+                wait = True
+                while wait:
+                    current = [t.name for t in started]
+                    wait = len(current) >= self.processes
+
+                if self._bar:
+                    current_ = pretty_print.iterable(current)
+                    self._bar.set_description(f'Running: {current_}')
+
                 try:
                     task = next_task()
                 except StopIteration:
                     break
                 else:
                     if task is not None:
-                        async_result = pool.apply_async(TaskBuildWrapper(task),
-                                                        kwds=task_kwargs,
-                                                        callback=callback)
+                        async_result = pool.apply_async(
+                            TaskBuildWrapper(task),
+                            kwds=task_kwargs,
+                            callback=callback,
+                            error_callback=callback_error)
                         future_mapping[async_result] = task
                         started.append(task)
                         self._logger.info('Added %s to the pool...', task.name)
 
-        results = [
-            # results are the output of Task._build: (report, metadata)
-            # OR a Message
-            f.get()[0] for f in future_mapping.keys()
-        ]
-
-        exps = [r for r in results if isinstance(r, Message)]
-
         if self._bar:
             self._bar.close()
 
-        if exps:
-            raise DAGBuildError(str(BuildExceptionsCollector(exps)))
+        if failed:
+            raise DAGBuildError(str(BuildExceptionsCollector(failed)))
 
-        # if we reach this, it means no tasks failed. only return reports
+        results = [f.get()[0] for f in future_mapping.keys()]
+
         return [r[0] for r in results]
 
     # same as Parallel (and possibly Executor?)

@@ -40,6 +40,11 @@ def _unserializer(product):
     pass
 
 
+# TODO: order should not (?) matter, add tests that have @capture
+# and @grid in both orders. it gets a little complidated since @grid can
+# appear many times, so maybe we should enforce order?
+
+
 def grid(**params):
 
     def decorator(f):
@@ -240,6 +245,12 @@ class _CapturedPythonCallable(_PythonCallableNoValidation):
         else:
             product = params["product"]
 
+        # NOTE: if the notebook contains too many definitions,
+        # it is more likely that __ploomber_globals__ will contain some
+        # non-pickable objects - there isn't a simple way around this. it's
+        # also state dependent (e.g. .build() runs from a clean state vs
+        # it runs after running cells out of order. perhaps we should add
+        # on this and discourage the parallel executor on Jupyter?)
         callable_ = partial(
             capture_execute,
             function=self.source.primitive,
@@ -344,12 +355,18 @@ def capture_execute(function, globals_, **kwargs):
 
     client = Client(nb)
     upstream = kwargs.pop('upstream', {})
+
+    # FIXME: there something weird going on. the content of globals_ changes
+    # after a few tasks, it's the same object and then all of a sudden, it
+    # changes (I checked with id(globals_))
+
     client._shell.user_ns = {
         **client._shell.user_ns,
         **globals_,
         **upstream,
         **kwargs
     }
+
     nb, val = client.execute()
 
     return nb, val
