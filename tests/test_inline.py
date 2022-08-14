@@ -9,11 +9,6 @@ import pytest
 
 from ploomber.exceptions import DAGBuildError
 from ploomber import inline
-from sklearn_evaluation import plot
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import (RandomForestClassifier, AdaBoostClassifier,
-                              ExtraTreesClassifier)
 
 
 def ones(input_data):
@@ -193,9 +188,21 @@ def test_capture(tmp_directory, parallel):
     assert nb.cells[0].metadata.tags[0] == 'plot'
 
 
-# end roots can return nothing
+# this fails since it tries to unpickle the THML
 def test_capture_can_return_nothing():
-    raise NotImplementedError
+
+    @inline.capture
+    def first():
+        x = 1
+        return x
+
+    # end nodes don't have to return anything
+    @inline.capture
+    def second(first):
+        pass
+
+    dag = inline.dag_from_functions([first, second])
+    dag.build()
 
 
 def test_capture_debug_now(tmp_directory, monkeypatch):
@@ -240,8 +247,20 @@ def test_capture_debug_later(tmp_directory, monkeypatch):
     assert Path('number.dump').is_file()
 
 
+# this fails since it tries to unpickle the HTML
 def test_capture_that_depends_on_capture():
-    raise NotImplementedError
+
+    @inline.capture
+    def first():
+        x = 1
+        return x
+
+    @inline.capture
+    def second(first):
+        return first + 1
+
+    dag = inline.dag_from_functions([first, second])
+    dag.build()
 
 
 def test_root_node_with_no_arguments(tmp_directory):
@@ -262,10 +281,20 @@ def test_root_node_with_no_arguments(tmp_directory):
     assert add_ == 2
 
 
-# TODO: grid and capture
+# TODO: also test with grid
 def test_decorated_root_with_input_data():
-    # i think this might break since it'll think input_data is a task
-    raise NotImplementedError
+
+    # this is failing because it's not passing input_data - we're not
+    # validating the signature,and just modifying the user's namespace,
+    # but we have to, otherwise the error is confusing: "input_data" is not
+    # defined
+    @inline.capture
+    def root(input_data):
+        x = input_data + 1
+        return x
+
+    dag = inline.dag_from_functions([root])
+    dag.build()
 
 
 # TODO: also try with grid
@@ -291,34 +320,22 @@ def test_decorated_root_without_arguments(tmp_directory):
 
 
 def get():
-    d = datasets.load_iris()
-    df = pd.DataFrame(d['data'])
-
-    df.columns = d['feature_names']
-    df['target'] = d['target']
+    df = pd.DataFrame({'target': [1, 0, 0, 1], 'a': [1, 2, 3, 4]})
     return df
 
 
 @inline.capture
 @inline.grid(model=[
-    RandomForestClassifier,
-    AdaBoostClassifier,
-    ExtraTreesClassifier,
+    'RandomForestClassifier',
+    'AdaBoostClassifier',
+    'ExtraTreesClassifier',
 ])
 def fit(get, model):
-    X = get.drop('target', axis='columns')
-    y = get.target
-
-    X_train, X_test, y_train, y_test = train_test_split(X,
-                                                        y,
-                                                        test_size=0.33,
-                                                        random_state=42)
-    clf = model()
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
+    _ = get.drop('target', axis='columns')
+    _ = get.target
 
     # tag=plot
-    plot.confusion_matrix(y_test, y_pred)
+    plt.plot([1, 2, 3])
 
     return model
 
@@ -348,6 +365,14 @@ def test_get_body_statements():
     assert len(inline.get_body_statements(fn)) == 2
 
 
+def test_deindents_statements():
+    # we're currently passing statements to IPython with the indentation, this
+    # breaks when using parso.parse to
+    # extract the return statement - the current: cell.source.strip()
+    # only works on simple cases
+    raise NotImplementedError
+
+
 @pytest.mark.parametrize('source, expected', [
     ['# tag=plot', 'plot'],
     ['# tag=cool_plot', 'cool_plot'],
@@ -358,3 +383,7 @@ def test_get_body_statements():
 ])
 def test_parse_tag(source, expected):
     assert inline.parse_tag(source) == expected
+
+
+def test_aborted_when_task_fails():
+    raise NotImplementedError

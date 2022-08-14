@@ -6,10 +6,13 @@ except ModuleNotFoundError:
 
 import os
 import logging
+
+from tqdm.auto import tqdm
+
 from ploomber.constants import TaskStatus
 from ploomber.executors.abc import Executor
 from ploomber.exceptions import DAGBuildError
-from ploomber.messagecollector import (BuildExceptionsCollector, Message)
+from ploomber.messagecollector import BuildExceptionsCollector, Message
 from ploomber.executors import _format
 from ploomber.io import pretty_print
 from ploomber.util import requires
@@ -78,6 +81,7 @@ class ParallelDill(Executor):
 
         self._logger = logging.getLogger(__name__)
         self._i = 0
+        self._bar = None
 
     def __call__(self, dag, show_progress):
         super().__call__(dag)
@@ -88,15 +92,27 @@ class ParallelDill(Executor):
         future_mapping = {}
         self._dag = dag
 
+        n_scheduled = 0
+
         for name in dag:
             if dag[name].exec_status in {
                     TaskStatus.Executed, TaskStatus.Skipped
             }:
                 done.append(dag[name])
+            else:
+                n_scheduled += 1
+
+        if show_progress:
+            self._bar = tqdm(total=n_scheduled)
+        else:
+            self._bar = None
 
         def callback(future):
             """Keep track of finished tasks
             """
+            if self._bar:
+                self._bar.update()
+
             result, task_name = future
 
             task = self._dag[task_name]
@@ -105,6 +121,10 @@ class ParallelDill(Executor):
 
             if isinstance(result, Message):
                 task.exec_status = TaskStatus.Errored
+
+                if self._bar:
+                    self._bar.colour = 'red'
+
             # sucessfully run task._build
             else:
                 # ignore report here, we just the metadata to update it
@@ -123,6 +143,9 @@ class ParallelDill(Executor):
             """
             for task in dag.values():
                 if task.exec_status in {TaskStatus.Aborted}:
+                    if self._bar:
+                        self._bar.update()
+
                     done.append(task)
                 elif task.exec_status == TaskStatus.BrokenProcessPool:
                     raise StopIteration
@@ -188,6 +211,9 @@ class ParallelDill(Executor):
 
         exps = [r for r in results if isinstance(r, Message)]
 
+        if self._bar:
+            self._bar.close()
+
         if exps:
             raise DAGBuildError(str(BuildExceptionsCollector(exps)))
 
@@ -200,9 +226,12 @@ class ParallelDill(Executor):
         # _logger is not pickable, so we remove them and build
         # them again in __setstate__
         del state['_logger']
+        # progress bar is not picklable
+        del state['_bar']
         return state
 
     # same as Parallel (and possibly Executor?)
     def __setstate__(self, state):
         self.__dict__.update(state)
         self._logger = logging.getLogger(__name__)
+        self._bar = None
