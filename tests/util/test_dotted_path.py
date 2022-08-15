@@ -16,6 +16,35 @@ from ploomber.util.dotted_path import (create_intermediate_modules,
 
 
 @pytest.mark.parametrize('spec', [
+    'a.b::c',
+    'a.b.c::d',
+    'module::Class',
+    'module::function',
+    'module.sub::Class',
+    'module.sub::function',
+    {
+        'dotted_path': 'a.b::c'
+    },
+])
+def test_strict_dotted_path(spec):
+    assert dotted_path.DottedPath(spec, strict=True, lazy_load=True)
+
+
+@pytest.mark.parametrize('spec', [
+    'a.b',
+    'a.b.c.d',
+    'module::sub::class',
+    'module::sub.function',
+    {
+        'dotted_path': 'a.b'
+    },
+])
+def test_strict_dotted_path_error(spec):
+    with pytest.raises(ValueError):
+        dotted_path.DottedPath(spec, strict=True, lazy_load=True)
+
+
+@pytest.mark.parametrize('spec', [
     'test_pkg.functions.some_function',
     {
         'dotted_path': 'test_pkg.functions.some_function'

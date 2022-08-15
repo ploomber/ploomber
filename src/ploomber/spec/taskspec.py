@@ -644,7 +644,9 @@ def _preprocess_grid_spec_mapping(grid_spec):
 
     for key, value in grid_spec.items():
         try:
-            dp = dotted_path.DottedPath(value, allow_return_none=False)
+            dp = dotted_path.DottedPath(value,
+                                        allow_return_none=False,
+                                        strict=True)
         # raised if not a string
         except (TypeError, ValueError):
             dp = None
