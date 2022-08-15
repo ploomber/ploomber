@@ -101,11 +101,7 @@ def scaffold(name, conda, package, entry_point, empty):
     Need help? https://ploomber.io/community
     """
     from ploomber import scaffold as _scaffold
-    from ploomber_core.telemetry.telemetry import Telemetry
-    from ploomber import __version__ as ver
-    from ploomber import POSTHOG_API_KEY as key
-
-    telemetry = Telemetry(key, ver, 'ploomber')
+    from ploomber.telemetry import telemetry
 
     template = '-e/--entry-point is not compatible with {flag}'
     user_passed_name = name is not None
@@ -253,11 +249,7 @@ def examples(name, force, branch, output):
     click.echo('Loading examples...')
 
     from ploomber import cli as cli_module
-    from ploomber_core.telemetry.telemetry import Telemetry
-    from ploomber import __version__ as ver
-    from ploomber import POSTHOG_API_KEY as key
-
-    telemetry = Telemetry(key, ver, 'ploomber')
+    from ploomber.telemetry import telemetry
 
     try:
         cli_module.examples.main(name=name,
