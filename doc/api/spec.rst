@@ -643,8 +643,7 @@ cell, and Python functions are called with an ``upstream`` argument.
 ``tasks[*].params``
 *******************
 
-Use this section to pass arbitrary parameters to a task. The exact mechanism
-depends on the task type. Assume you have the following:
+Use this section to pass arbitrary parameters to a task.
 
 .. code-block:: yaml
     :class: text-editor
@@ -654,6 +653,39 @@ depends on the task type. Assume you have the following:
           product: {some-product}
           params:
             my_param: 42
+
+You can also generate parameters from functions, for example:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    tasks:
+        - source: {some-source}
+          product: {some-product}
+          params:
+            my_param: params::my_param_generate
+
+This will ``import params`` and call the function ``my_param_generate``. The
+returned value is assigned to ``my_param``.
+
+If your function takes parameters:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    tasks:
+        - source: {some-source}
+          product: {some-product}
+          params:
+            my_param:
+              dotted_path: params::my_param_generate
+              arg1: value1
+              arg2: value2
+
+In this case, ``my_param_generate`` is called
+like ``my_param_generate(arg1='value1', arg2='value2')``
+
+The mechanism to pass ``params`` to tasks depends on the task type:
 
 SQL tasks receive them as placeholders.
 
@@ -686,6 +718,13 @@ Python functions receive them as arguments:
     # function is called with my_param=42
     def my_task(product, my_param):
         pass
+
+.. collapse:: Changelog
+
+    .. versionchanged:: 0.21
+        Allows passing dotted paths (``module::function``) to
+        ``tasks[*].params``
+
 
 .. _tasks-on-render-finish-failure:
 

@@ -421,6 +421,7 @@ def _init_task(data, meta, project_root, lazy_import, dag):
 
     # make paths to resources absolute
     if 'params' in task_dict:
+        task_dict['params'] = _process_dotted_paths(task_dict['params'])
         task_dict['params'] = resolve_resources(task_dict['params'],
                                                 relative_to=project_root)
 
@@ -625,17 +626,17 @@ def _preprocess_grid_spec(grid_spec):
     dotted paths
     """
     if isinstance(grid_spec, Mapping):
-        return _preprocess_grid_spec_mapping(grid_spec)
+        return _process_dotted_paths(grid_spec)
     else:
         out = []
 
         for element in grid_spec:
-            out.append(_preprocess_grid_spec_mapping(element))
+            out.append(_process_dotted_paths(element))
 
         return out
 
 
-def _preprocess_grid_spec_mapping(grid_spec):
+def _process_dotted_paths(grid_spec):
     """
     Preprocess a grid (dictionary) to expand values if it contains
     dotted paths
