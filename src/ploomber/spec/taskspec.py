@@ -5,7 +5,6 @@ Note: All validation errors should raise DAGSpecInitializationError, this
 allows the CLI to signal that this is a user's input error and hides the
 traceback and only displays the error message
 """
-import warnings
 import mimetypes
 from functools import partial
 from copy import copy, deepcopy
@@ -648,16 +647,10 @@ def _process_dotted_paths(grid_spec):
             dp = dotted_path.DottedPath(value,
                                         allow_return_none=False,
                                         strict=True)
-        # raised if not a string
-        except (TypeError, ValueError):
-            dp = None
-        # there are other exceptions, but we only display a warning since
-        # it might be that the user just wants to pass that string as-is
-        # and it's not intended to be a dotted path
-        except Exception as e:
-            msg = ('You parameter looks like a dotted path '
-                   f'but it failed to load: {str(e)}')
-            warnings.warn(msg, category=dotted_path.DottedPathWarning)
+        # TypeError: not a string or dictionary
+        # ValueError: not the module::function format
+        # KeyError: dictionary with missing dotted_path key
+        except (TypeError, ValueError, KeyError):
             dp = None
 
         if dp:

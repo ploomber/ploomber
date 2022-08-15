@@ -9,7 +9,6 @@ from ploomber.spec.dagspec import Meta
 from ploomber.tasks import (NotebookRunner, SQLScript, SQLDump, ShellScript,
                             PythonCallable)
 from ploomber.exceptions import DAGSpecInitializationError, ValidationError
-from ploomber.util.dotted_path import DottedPathWarning
 from ploomber import DAG
 
 
@@ -818,17 +817,35 @@ def crash():
 @pytest.mark.parametrize('spec, expected', [
     [
         {
+            'a': 1
+        },
+        {
+            'a': 1
+        },
+    ],
+    [
+        {
             'a': [1, 2],
-            'b': [1, 2]
+            'b': {'key': 'value'}
         },
         {
             'a': [1, 2],
-            'b': [1, 2]
+            'b': {'key': 'value'}
         },
     ],
     [
         {
             'a': 'some_functions::numbers'
+        },
+        {
+            'a': [1, 2, 3]
+        },
+    ],
+    [
+        {
+            'a': {
+                'dotted_path': 'some_functions::numbers'
+            }
         },
         {
             'a': [1, 2, 3]
@@ -844,9 +861,11 @@ def crash():
     ],
 ],
                          ids=[
-                             'no-dotted-path',
-                             'valid-dotted-path',
-                             'no-dotted-path-string',
+                             'no-dotted-path-type-int',
+                             'no-dotted-path-type-list-and-dict',
+                             'valid-dotted-path-str',
+                             'valid-dotted-path-dict',
+                             'no-dotted-path-format',
                          ])
 def test_process_dotted_paths(tmp_directory, spec, expected, tmp_imports):
     Path('some_functions.py').write_text("""
@@ -862,20 +881,26 @@ def numbers():
     assert out == expected
 
 
-@pytest.mark.parametrize('spec', [
-    {
-        'a': 'some_functions::missing_attributes'
-    },
-    {
-        'a': 'not_a_module::function'
-    },
+@pytest.mark.parametrize('spec, error_class', [
+    [
+        {
+            'a': 'some_functions::missing_attributes'
+        },
+        AttributeError,
+    ],
+    [
+        {
+            'a': 'not_a_module::function'
+        },
+        ModuleNotFoundError,
+    ],
 ])
-def test_process_dotted_paths_warnings(tmp_directory, spec, tmp_imports):
+def test_process_dotted_paths_errors(tmp_directory, spec, tmp_imports,
+                                     error_class):
     Path('some_functions.py').write_text("""
 def numbers():
     return [1, 2, 3]
 """)
 
-    with pytest.warns(DottedPathWarning,
-                      match='You parameter looks like a dotted path'):
+    with pytest.raises(error_class):
         _process_dotted_paths(spec)
