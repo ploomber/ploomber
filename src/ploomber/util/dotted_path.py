@@ -22,13 +22,6 @@ import pydantic
 from ploomber.exceptions import SpecValidationError
 
 
-class DottedPathWarning(UserWarning):
-    """Displayed in cases where raising an exception after failing to
-    initialize or load a dotted path is not necessary
-    """
-    pass
-
-
 class DottedPath:
     """
 
