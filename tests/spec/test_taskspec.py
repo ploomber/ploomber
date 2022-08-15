@@ -623,14 +623,14 @@ def test_constructor_deep_copies_spec_and_meta(tmp_directory, tmp_imports):
 @pytest.mark.parametrize('grid, n_expected', [
     [
         {
-            'a': 'my_module.a',
+            'a': 'my_module::a',
             'b': [4, 5, 6],
         },
         9,
     ],
     [
         {
-            'a': 'my_module.b',
+            'a': 'my_module::b',
             'b': [4, 5, 6],
         },
         9,
@@ -638,7 +638,7 @@ def test_constructor_deep_copies_spec_and_meta(tmp_directory, tmp_imports):
     [
         {
             'a': {
-                'dotted_path': 'my_module.range_',
+                'dotted_path': 'my_module::range_',
                 'n': 4
             },
             'b': [4, 5, 6],
@@ -649,18 +649,18 @@ def test_constructor_deep_copies_spec_and_meta(tmp_directory, tmp_imports):
         [
             {
                 'a': {
-                    'dotted_path': 'my_module.range_',
+                    'dotted_path': 'my_module::range_',
                     'n': 3
                 },
                 'b': [4, 5],
             },
             {
                 'c': {
-                    'dotted_path': 'my_module.range_',
+                    'dotted_path': 'my_module::range_',
                     'n': 2
                 },
                 'd': {
-                    'dotted_path': 'my_module.range_',
+                    'dotted_path': 'my_module::range_',
                     'n': 3
                 },
             },
@@ -703,14 +703,14 @@ def range_(n):
 @pytest.mark.parametrize('grid, error_expected', [
     [
         {
-            'a': 'my_module.return_none',
+            'a': 'my_module::return_none',
             'b': [4, 5, 6],
         },
-        "Error calling dotted path 'my_module.return_none'",
+        "Error calling dotted path 'my_module::return_none'",
     ],
     [
         {
-            'a': 'my_module.crash',
+            'a': 'my_module::crash',
             'b': [4, 5, 6],
         },
         "some error",
@@ -760,7 +760,7 @@ def crash():
     ],
     [
         {
-            'a': 'some_functions.numbers'
+            'a': 'some_functions::numbers'
         },
         {
             'a': [1, 2, 3]
@@ -797,10 +797,10 @@ def numbers():
 
 @pytest.mark.parametrize('spec', [
     {
-        'a': 'some_functions.missing_attributes'
+        'a': 'some_functions::missing_attributes'
     },
     {
-        'a': 'not_a_module.function'
+        'a': 'not_a_module::function'
     },
 ])
 def test_preprocess_grid_spec_mapping_warnings(tmp_directory, spec,
