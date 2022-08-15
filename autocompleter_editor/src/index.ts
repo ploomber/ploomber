@@ -19,7 +19,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     console.log('Ploomber:: JupyterLab extension autocompleter-editor is activated!');
 
     //Add an application command to the command palette
-    const command: string = 'editor:open';
+    const command: string = 'ploomber::autocompleter-editor:open';
     app.commands.addCommand(command, {
       label: 'Text Editor',
       execute: () => {
@@ -96,32 +96,41 @@ const plugin: JupyterFrontEndPlugin<void> = {
       }
     } 
 
+    let keys = {"Ctrl": false, "Space": false}; 
+
     function completerKeyboardEvents(widget: MainAreaWidget, content: CodeEditorWrapper) {
       let node = widget.node;
       let wordBeforeCursor = "";
       node.addEventListener("keydown", function(e) {
         let editor = content.editor;
 
-        if (completerWidget.style.display == "none" && e.key == 'Tab') {
-            currActiveOption = 0;
-            // find word before cursor
-            let lineNum = editor.getSelection().start.line;
-            let line = editor.getLine(lineNum);
-            let endingInd = editor.getSelection().start.column;
-            let lineTillCursor = line?.substring(0,endingInd+1);
-            let wordArr = lineTillCursor?.split(" ");
-            // uncomment for tabs and spaces
-            // let wordArr = lineTillCursor?.split(/\s+/);
-            if (wordArr)
-                wordBeforeCursor = wordArr[wordArr?.length -1].trim();
+        if (e.key == " ") {
+          keys["Space"] = true;
+        }
 
-            if (wordBeforeCursor != "") {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-            } else {
-                return;
-            }
+        if (e.key == "Control") {
+          keys["Ctrl"] = true;
+        }
+
+        if (completerWidget.style.display == "none" && keys["Space"] == true && keys["Ctrl"] == true) {
+          e.preventDefault();
+          currActiveOption = 0;
+          // find word before cursor
+          let lineNum = editor.getSelection().start.line;
+          let line = editor.getLine(lineNum);
+          let endingInd = editor.getSelection().start.column;
+          let lineTillCursor = line?.substring(0,endingInd+1);
+          let wordArr = lineTillCursor?.split(" ");
+          // uncomment for tabs and spaces
+          // let wordArr = lineTillCursor?.split(/\s+/);
+          if (wordArr)
+              wordBeforeCursor = wordArr[wordArr?.length -1].trim();
+
+          if (wordBeforeCursor != "") {
+              e.preventDefault();
+          } else {
+              return;
+          }
 
           // remove prior entries in the completer widget
           while (ul.firstChild) {
@@ -162,11 +171,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
         if (completerWidget.style.display != "none") {
           e.preventDefault();
-          e.stopPropagation();
-          e.stopImmediatePropagation();
 
           // moves entries downwards
-        if (e.key == "Tab") {
+          if (keys["Space"] == true && keys["Ctrl"] == true) {
             ul.children[currActiveOption].classList.remove("jp-mod-active");
             if (currActiveOption < ul.children.length-1){
               currActiveOption += 1;
@@ -175,7 +182,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
             }
             ul.children[currActiveOption].classList.add("jp-mod-active");
           }
-        // selects the entry
+          // selects the entry
           else if (e.key == "Enter") {
             completerWidget.style.display = "none";
             document.removeEventListener('click', completerClickEvents);
@@ -186,6 +193,16 @@ const plugin: JupyterFrontEndPlugin<void> = {
               editor.replaceSelection?.(textToReplace.substring(wordBeforeCursor.length));
             }
           }
+        }
+      });
+
+      node.addEventListener("keyup", function(e) {
+        if (e.key == " ") {
+          keys["Space"] = false;
+        }
+
+        if (e.key == "Control") {
+          keys["Ctrl"] = false;
         }
       });
     }
