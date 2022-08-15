@@ -5,9 +5,6 @@ from difflib import get_close_matches
 import sys
 
 from ploomber_scaffold import scaffold as scaffold_project
-from ploomber import __version__ as ver
-from ploomber import POSTHOG_API_KEY as key
-
 import click
 
 CLICK_VERSION = int(click.__version__[0])
@@ -105,6 +102,8 @@ def scaffold(name, conda, package, entry_point, empty):
     """
     from ploomber import scaffold as _scaffold
     from ploomber_core.telemetry.telemetry import Telemetry
+    from ploomber import __version__ as ver
+    from ploomber import POSTHOG_API_KEY as key
 
     telemetry = Telemetry(key, ver, 'ploomber')
 
@@ -255,6 +254,8 @@ def examples(name, force, branch, output):
 
     from ploomber import cli as cli_module
     from ploomber_core.telemetry.telemetry import Telemetry
+    from ploomber import __version__ as ver
+    from ploomber import POSTHOG_API_KEY as key
 
     telemetry = Telemetry(key, ver, 'ploomber')
 

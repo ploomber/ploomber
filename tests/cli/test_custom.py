@@ -4,6 +4,7 @@ import importlib
 import sys
 from pathlib import Path
 from unittest.mock import Mock, MagicMock
+from copy import copy
 
 import jupytext
 import nbformat
@@ -21,6 +22,20 @@ import ploomber.dag.dag as dag_module
 from ploomber_core.telemetry.telemetry import Telemetry
 
 IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and 'win' in sys.platform
+
+
+def test_cli_does_not_import_main_package(monkeypatch):
+    """
+    ploomber_cli.cli should NOT import ploomber since it's a heavy package
+    and we want the CLI to be responsive. imports should happen inside each
+    command
+    """
+    out = subprocess.check_output([
+        'python', '-c',
+        'import sys; import ploomber_cli.cli; print("ploomber" in sys.modules)'
+    ])
+
+    assert out.decode().strip() == 'False'
 
 
 def test_no_options(monkeypatch):
