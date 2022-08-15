@@ -186,6 +186,29 @@ s    commit_hash_4 commit_message_4
 * Some tests make calls to a PostgreSQL database. When running on Github Actions, a database is automatically provisioned, but the tests will fail locally.
 * If you're checking error messages and they include absolute paths to files, you may encounter some issues when running the Windows CI since the Github Actions VM has some symlinks. If the test calls `Pathlib.resolve()` ([resolves symlinks](https://docs.python.org/3/library/pathlib.html#id5)), call it in the test as well, if it doesn't, use `os.path.abspath()` (does not resolve symlinks).
 
+## Locally running GitHub actions
+
+Debugging GitHub actions by commiting, pushing, and then waiting for GitHub to 
+run them can be inconvenient because of the clunky workflow and inability to
+use debugging tools other than printing to the console
+
+We can use the tool [`act`](https://github.com/nektos/act) to run github 
+actions locally in docker containers
+
+Install then run `act` in the root directory. On the first invocation it will
+ask for a size. Select medium. `act` will then run actions from the 
+`.github/workflows` directory
+
+#### Working with containers
+
+If the tests fail, act will leave the docker images after the action finishes.
+These can be inspected by running `docker container list` then running
+`docker exec -it CONTAINER_ID bash` where `CONTAINER_ID` is a container id
+from `docker container list`
+
+To install packages in the container, first run `apt-get update`. Packages
+can be installed normally with apt after
+
 
 ## Ok-to-test
 
