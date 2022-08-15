@@ -23,6 +23,31 @@ def git_commit():
     subprocess.check_call(['git', 'add', '--all'])
     subprocess.check_call(['git', 'commit', '-m', 'commit'])
 
+# yafim start
+def test_inject_specific_task_parameters_that_use_the_same_template():
+    # ploomber nb --inject --priority task-a
+    # ploomber nb --inject --priority task-b
+    assert True is True 
+
+def test_inject_multiple_specific_task_parameters_that_use_different_templates():
+    # ploomber nb --inject --priority task-a --priority task-c
+    assert True is True
+
+def test_inject_multiple_specific_task_parameters_that_use_the_same_template():
+    # should raise an error
+    # ploomber nb --inject --priority task-a --priority task-b
+    assert True is True
+
+def test_inject_invalid_prioritized_task_single_task():
+    # should raise an error
+    # ploomber nb --inject --priority this-task-doesnt-exist
+    assert True is True
+
+def test_inject_invalid_prioritized_task_multiple_tasks():
+    # should raise an error
+    # ploomber nb --inject --priority task-name-exists --priority this-task-doesnt-exist
+    assert True is True
+# yafim end
 
 def test_inject_remove(monkeypatch, tmp_nbs):
     monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])

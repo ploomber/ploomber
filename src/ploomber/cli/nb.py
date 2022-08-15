@@ -23,11 +23,15 @@ def _format(fmt, entry_point, dag, verbose=True):
     ]
 
 
-def _inject_cell(dag):
+def _inject_cell(dag, **kwargs):
+    # yafim start
+    if not kwargs:
+        kwargs = dict()
+    # yafim end
     _call_in_source(dag,
                     'save_injected_cell',
                     'Injected cell',
-                    dict(),
+                    kwargs,
                     verbose=False)
 
 
@@ -38,15 +42,20 @@ def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
     kwargs = kwargs or {}
     files = []
     results = []
-
     for task in dag.values():
-        try:
-            method = getattr(task.source, method_name)
-        except AttributeError:
-            pass
-        else:
-            results.append(method(**kwargs))
-            files.append(str(task.source._path))
+        # yafim start
+        if len(kwargs) == 0 or task.name in kwargs['priority']:
+            # print(f'{task.name} is found')
+            # print(kwargs['priority'])
+            try:
+                method = getattr(task.source, method_name)
+            except AttributeError:
+                pass
+            else:
+                results.append(method(**kwargs))
+                files.append(str(task.source._path))
+        # yafim end
+       
 
     files_ = '\n'.join((f'    {f}' for f in files))
 
@@ -251,6 +260,13 @@ def main():
             action='store_true',
             help='Remove injected cell in all script/notebook tasks')
 
+        # yafim start
+        # we add sub-parser argumnet (--priority) for --inject
+        parser.add_argument('--priority',
+                            action='append',
+                            help='Task to inject')
+        # yafim end
+
         # re-format
         parser.add_argument('--format',
                             '-f',
@@ -332,7 +348,16 @@ def main():
                        f'tasks: {", ".join(new_paths)}.')
 
     if args.inject:
-        _inject_cell(dag)
+        # yafim start
+        if args.priority:
+            inject_cell_args = {
+                'priority' : args.priority
+            }
+        else:
+            inject_cell_args = dict()
+            
+        _inject_cell(dag, **inject_cell_args)
+        # yafim end
         click.secho(
             'Finished cell injection. Re-run this command if your '
             'pipeline.yaml changes.',
