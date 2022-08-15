@@ -4,7 +4,6 @@ import importlib
 import sys
 from pathlib import Path
 from unittest.mock import Mock, MagicMock
-from copy import copy
 
 import jupytext
 import nbformat
