@@ -24,6 +24,7 @@ def _format(fmt, entry_point, dag, verbose=True):
 
 
 def _inject_cell(dag):
+    print('=====================1======================')
     _call_in_source(dag,
                     'save_injected_cell',
                     'Injected cell',
@@ -38,8 +39,11 @@ def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
     kwargs = kwargs or {}
     files = []
     results = []
-
+    
     for task in dag.values():
+        print(task.source)
+        print(task.params)
+        print(task.name)
         try:
             method = getattr(task.source, method_name)
         except AttributeError:
@@ -49,10 +53,11 @@ def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
             files.append(str(task.source._path))
 
     files_ = '\n'.join((f'    {f}' for f in files))
-
+    print('=====================2======================')
     if verbose:
         click.echo(f'{message}:\n{files_}')
 
+    print(results)
     return results
 
 
@@ -278,6 +283,7 @@ def main():
     if any(getattr(args_, arg) for arg in needs_entry_point):
         try:
             dag, args = parser.load_from_entry_point_arg()
+            print('=====================4======================')
         except Exception as e:
             loading_error = e
         else:
@@ -332,6 +338,7 @@ def main():
                        f'tasks: {", ".join(new_paths)}.')
 
     if args.inject:
+        print('=====================3======================')
         _inject_cell(dag)
         click.secho(
             'Finished cell injection. Re-run this command if your '

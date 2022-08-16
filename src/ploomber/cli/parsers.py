@@ -218,6 +218,7 @@ class CustomParser(argparse.ArgumentParser):
 
         Returns a dag and the parsed args
         """
+        print('=====================5======================')
         entry_point = EntryPoint(self.parse_entry_point_value())
         dag, args = load_dag_from_entry_point_and_parser(
             entry_point, self, sys.argv)
@@ -494,6 +495,8 @@ def load_dag_from_entry_point_and_parser(entry_point, parser, argv):
         # process file, directory or glob pattern
         dag, args = _process_file_dir_or_glob(parser)
 
+    print('=====================6======================')
+    print(args)
     return dag, args
 
 
