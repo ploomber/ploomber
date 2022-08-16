@@ -21,19 +21,16 @@ import re
 import humanize
 
 from ploomber_core.exceptions import BaseException
-from ploomber import __version__ as ver
-from ploomber import POSTHOG_API_KEY as key
+from ploomber.telemetry import telemetry
 from ploomber_core.telemetry.telemetry import (
                                                 parse_dag,
-                                                UserSettings,
-                                                Telemetry
+                                                UserSettings
                                             )
 
 CLOUD_APP_URL = 'api.ploomber.io'
 PIPELINES_RESOURCE = '/pipelines'
 EMAIL_RESOURCE = '/emailSignup'
 headers = {'Content-type': 'application/json'}
-telemetry = Telemetry(key, ver, 'ploomber')
 
 
 def get_key():

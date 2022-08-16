@@ -4,16 +4,11 @@ import uuid
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.executors import Parallel
-from ploomber_core.telemetry.telemetry import Telemetry
 from ploomber_core.telemetry import telemetry as _telemetry
 from ploomber.cli.cloud import _write_pipeline
-from ploomber import __version__ as ver
-from ploomber import POSTHOG_API_KEY as key
+from ploomber.telemetry import telemetry
 
 ONLY_IN_CALLABLES_AND_NBS = 'Only supported in function and notebook tasks.'
-
-
-telemetry = Telemetry(key, ver, 'ploomber')
 
 
 # this parameter is only set to True when calling "ploomber interactive"

@@ -8,13 +8,9 @@ import click
 
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import command_endpoint
-from ploomber_core.telemetry.telemetry import Telemetry
 from ploomber.sources.notebooksource import recursive_update
 from ploomber_core.exceptions import BaseException
-from ploomber import __version__ as ver
-from ploomber import POSTHOG_API_KEY as key
-
-telemetry = Telemetry(key, ver, 'ploomber')
+from ploomber.telemetry import telemetry
 
 
 def _format(fmt, entry_point, dag, verbose=True):

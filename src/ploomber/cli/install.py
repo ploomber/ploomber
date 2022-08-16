@@ -21,12 +21,9 @@ from ploomber.io._commander import Commander
 from ploomber_core.exceptions import BaseException
 from ploomber.util.util import check_mixed_envs
 from ploomber.cli.io import command_endpoint
-from ploomber_core.telemetry.telemetry import Telemetry
 from ploomber_core.telemetry import telemetry as _telemetry
 from ploomber.util._sys import _python_bin
-from ploomber import __version__ as ver
-from ploomber import POSTHOG_API_KEY as key
-
+from ploomber.telemetry import telemetry
 
 _SETUP_PY = 'setup.py'
 
@@ -37,8 +34,6 @@ _ENV_YML = 'environment.yml'
 _ENV_LOCK_YML = 'environment.lock.yml'
 
 _PYTHON_BIN_NAME = _python_bin()
-
-telemetry = Telemetry(key, ver, 'ploomber')
 
 
 @command_endpoint
