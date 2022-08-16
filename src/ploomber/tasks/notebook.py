@@ -274,18 +274,24 @@ class NotebookMixin(FileLoaderMixin):
 
     @staticmethod
     def _validate_parameters_cell(source,
-                                  extract_up=False,
-                                  extract_prod=False):
+                                  extract_upstream=False,
+                                  extract_product=False):
+        '''Check parameters call and add it when it's missing
+
+        Keyword arguments:
+        extract_upstream -- Flags used to determine the content of
+        the parameters cell, only used if the notebook is
+        missing the parameters cell (default False)
+        extract_product -- Same as extract_upstream (default False)
+        '''
         params_cell, _ = find_cell_with_tag(source._nb_obj_unrendered,
                                             'parameters')
 
         if params_cell is None:
             loc = pretty_print.try_relative_path(source.loc)
-            # raise MissingParametersCellError(msg)
-            # import pdb; pdb.set_trace()
             notebooksource.add_parameters_cell(source.loc,
-                                               extract_up,
-                                               extract_prod)
+                                               extract_upstream,
+                                               extract_product)
             click.secho(
                 f'Notebook {loc} is missing the parameters cell, '
                 'adding it at the top of the file...',
@@ -691,9 +697,7 @@ class NotebookRunner(NotebookMixin, Task):
                  nbconvert_export_kwargs=None,
                  local_execution=False,
                  check_if_kernel_installed=True,
-                 debug_mode=None,
-                 extract_up=False,
-                 extract_prod=False
+                 debug_mode=None
                  ):
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
@@ -722,8 +726,8 @@ class NotebookRunner(NotebookMixin, Task):
             kernelspec_name,
             static_analysis,
             check_if_kernel_installed,
-            extract_up,
-            extract_prod
+            False,
+            False
         )
         super().__init__(product, dag, name, params)
 
@@ -949,16 +953,14 @@ class ScriptRunner(NotebookMixin, Task):
                  ext_in=None,
                  static_analysis='regular',
                  local_execution=False,
-                 extract_up=False,
-                 extract_prod=False
                  ):
         self.ext_in = ext_in
         self.local_execution = local_execution
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = ScriptRunner._init_source(source, kwargs, ext_in,
-                                                 static_analysis, extract_up,
-                                                 extract_prod)
+                                                 static_analysis, False,
+                                                 False)
         super().__init__(product, dag, name, params)
 
     @staticmethod
