@@ -274,15 +274,16 @@ def test_interactive_session_develop(monkeypatch, tmp_nbs):
 
 
 def test_interactive_session_render_fails(monkeypatch, tmp_nbs):
+    mock_dag = Mock(side_effect=['quit'])
+    mock_start_ipython = Mock()
     monkeypatch.setattr(sys, 'argv', ['python'])
-
-    mock = Mock(side_effect=['quit'])
+    monkeypatch.setattr(interact, 'start_ipython', mock_start_ipython)
 
     def fail(self):
         raise Exception
 
     with monkeypatch.context() as m:
-        m.setattr('builtins.input', mock)
+        m.setattr('builtins.input', mock_dag)
         m.setattr(DAG, 'render', fail)
         interact.main(catch_exception=False)
 
