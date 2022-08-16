@@ -423,6 +423,30 @@ Go to: https://ploomber.io/s/params for more information
                         'details: https://ploomber.io/s/params')
             click.secho(msg)
 
+    def _validate_parameters_cell(self,
+                                  extract_upstream=False,
+                                  extract_product=False):
+        '''Check parameters call and add it when it's missing
+
+        Keyword arguments:
+        extract_upstream -- Flags used to determine the content of
+        the parameters cell, only used if the notebook is
+        missing the parameters cell (default False)
+        extract_product -- Same as extract_upstream (default False)
+        '''
+        params_cell, _ = find_cell_with_tag(self._nb_obj_unrendered,
+                                            'parameters')
+
+        if params_cell is None:
+            loc = pretty_print.try_relative_path(self.loc)
+            add_parameters_cell(self.loc,
+                                extract_upstream,
+                                extract_product)
+            click.secho(
+                f'Notebook {loc} is missing the parameters cell, '
+                'adding it at the top of the file...',
+                fg='yellow')
+
     def _post_render_validation(self):
         """
         Validate params passed against parameters in the notebook

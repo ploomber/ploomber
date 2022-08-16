@@ -1,4 +1,3 @@
-import click
 import os
 import shlex
 import pdb
@@ -34,8 +33,6 @@ except ImportError:
 
 from ploomber.exceptions import TaskBuildError, TaskInitializationError
 from ploomber.sources import NotebookSource
-from ploomber.sources import notebooksource
-from ploomber.sources.nb_utils import find_cell_with_tag
 from ploomber.sources.notebooksource import _cleanup_rendered_nb
 from ploomber.products import File, MetaProduct
 from ploomber.tasks.abc import Task
@@ -271,34 +268,9 @@ class NotebookConverter:
 
 
 class NotebookMixin(FileLoaderMixin):
-
-    @staticmethod
-    def _validate_parameters_cell(source,
-                                  extract_upstream=False,
-                                  extract_product=False):
-        '''Check parameters call and add it when it's missing
-
-        Keyword arguments:
-        extract_upstream -- Flags used to determine the content of
-        the parameters cell, only used if the notebook is
-        missing the parameters cell (default False)
-        extract_product -- Same as extract_upstream (default False)
-        '''
-        params_cell, _ = find_cell_with_tag(source._nb_obj_unrendered,
-                                            'parameters')
-
-        if params_cell is None:
-            loc = pretty_print.try_relative_path(source.loc)
-            notebooksource.add_parameters_cell(source.loc,
-                                               extract_upstream,
-                                               extract_product)
-            click.secho(
-                f'Notebook {loc} is missing the parameters cell, '
-                'adding it at the top of the file...',
-                fg='yellow')
-
     # expose the static_analysis attribute from the source, we need this
     # since we disable static_analysis when rendering the DAG in Jupyter
+
     @property
     def static_analysis(self):
         return self._source.static_analysis
@@ -798,15 +770,8 @@ class NotebookRunner(NotebookMixin, Task):
             static_analysis=static_analysis,
             check_if_kernel_installed=check_if_kernel_installed,
             **kwargs)
-        NotebookMixin._validate_parameters_cell(ns, extract_up, extract_prod)
-        # re-create NotebookSource instance
-        return NotebookSource(
-            source,
-            ext_in=ext_in,
-            kernelspec_name=kernelspec_name,
-            static_analysis=static_analysis,
-            check_if_kernel_installed=check_if_kernel_installed,
-            **kwargs)
+        ns._validate_parameters_cell(extract_up, extract_prod)
+        return ns
 
     def run(self):
         # regular mode: raise but not check signature
@@ -974,15 +939,8 @@ class ScriptRunner(NotebookMixin, Task):
             check_if_kernel_installed=False,
             **kwargs,
         )
-        NotebookMixin._validate_parameters_cell(ns, extract_up, extract_prod)
-        return NotebookSource(
-            source,
-            ext_in=ext_in,
-            static_analysis=static_analysis,
-            kernelspec_name=None,
-            check_if_kernel_installed=False,
-            **kwargs,
-        )
+        ns._validate_parameters_cell(extract_up, extract_prod)
+        return ns
 
     def run(self):
         # regular mode: raise but not check signature
