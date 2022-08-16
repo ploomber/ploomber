@@ -2,6 +2,7 @@ import argparse
 import json
 import shutil
 from pathlib import Path
+from collections import defaultdict
 import stat
 
 import click
@@ -11,6 +12,8 @@ from ploomber.cli.io import command_endpoint
 from ploomber.sources.notebooksource import recursive_update
 from ploomber_core.exceptions import BaseException
 from ploomber.telemetry import telemetry
+from ploomber.util import config
+from ploomber.util.default import find_file_recursively
 
 
 def _format(fmt, entry_point, dag, verbose=True):
@@ -23,13 +26,22 @@ def _format(fmt, entry_point, dag, verbose=True):
     ]
 
 
-def _inject_cell(dag):
-    print('=====================1======================')
-    _call_in_source(dag,
-                    'save_injected_cell',
-                    'Injected cell',
-                    dict(),
-                    verbose=False)
+def _inject_cell(dag, priority_inject=False):
+    tasks = defaultdict(list)
+    for task in dag.values():
+        tasks[task.source.loc].append(task.name)
+
+    for task in dag.values():
+        if (len(tasks[task.source.loc]) > 1 and
+           '-suffix' not in task.name and priority_inject):
+            continue
+
+        try:
+            method = getattr(task.source, 'save_injected_cell')
+        except AttributeError:
+            pass
+        else:
+            method()
 
 
 def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
@@ -39,11 +51,9 @@ def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
     kwargs = kwargs or {}
     files = []
     results = []
-    
+
     for task in dag.values():
-        print(task.source)
-        print(task.params)
-        print(task.name)
+
         try:
             method = getattr(task.source, method_name)
         except AttributeError:
@@ -53,11 +63,9 @@ def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
             files.append(str(task.source._path))
 
     files_ = '\n'.join((f'    {f}' for f in files))
-    print('=====================2======================')
     if verbose:
         click.echo(f'{message}:\n{files_}')
 
-    print(results)
     return results
 
 
@@ -283,7 +291,6 @@ def main():
     if any(getattr(args_, arg) for arg in needs_entry_point):
         try:
             dag, args = parser.load_from_entry_point_arg()
-            print('=====================4======================')
         except Exception as e:
             loading_error = e
         else:
@@ -338,8 +345,18 @@ def main():
                        f'tasks: {", ".join(new_paths)}.')
 
     if args.inject:
-        print('=====================3======================')
-        _inject_cell(dag)
+        cfg = None
+        path_to_config, _ = find_file_recursively(name='setup.cfg',
+                                                  starting_dir='.')
+
+        if path_to_config:
+            cfg = config.load_config(path_to_config)
+
+        priority_inject = None
+        if cfg and cfg['ploomber'].get('inject-priority'):
+            priority_inject = True
+
+        _inject_cell(dag, priority_inject)
         click.secho(
             'Finished cell injection. Re-run this command if your '
             'pipeline.yaml changes.',

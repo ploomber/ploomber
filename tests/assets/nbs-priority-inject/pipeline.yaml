@@ -1,0 +1,50 @@
+meta:
+  extract_upstream: False
+  extract_product: False
+
+tasks:
+  - source: load.py
+    class: NotebookRunner
+    name: load
+    product:
+      nb: output/load-a.ipynb
+      data: output/data-a.csv
+    params:
+      some_param: param
+
+  - source: load.py
+    class: NotebookRunner
+    name: load-suffix
+    product:
+      nb: output/load-b.ipynb
+      data: output/data-b.csv
+    params:
+      some_param: param-suffix
+
+  
+  - source: clean.py
+    class: NotebookRunner
+    name: clean
+    product:
+      nb: output/clean.ipynb
+      data: output/clean.csv
+    upstream: [load]
+    params:
+      some_param: param
+  
+  - source: plot.py
+    class: NotebookRunner
+    name: plot-suffix
+    product: output/plot-suffix.ipynb
+    upstream: clean
+    params:
+      some_param: param-suffix
+
+
+  - source: plot.py
+    class: NotebookRunner
+    name: plot-b
+    product: output/plot-a.ipynb
+    upstream: clean
+    params:
+      some_param: param-b

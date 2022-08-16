@@ -177,7 +177,6 @@ def entry_point(root_path=None):
         filename = env_var
     else:
         filename = 'pipeline.yaml'
-    print('=====================7======================')
     # check if there's a config file
     path_to_config, _ = find_file_recursively(name='setup.cfg',
                                               starting_dir=root_path)
@@ -196,7 +195,6 @@ def entry_point(root_path=None):
                                           'does not exist')
 
             return entry_point
-    print('=====================8======================')
     return entry_point_with_name(root_path=root_path, name=filename)
 
 

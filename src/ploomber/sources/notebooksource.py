@@ -560,7 +560,6 @@ Go to: https://ploomber.io/s/params for more information
         """
         Inject cell, overwrite the source file (and any paired files)
         """
-        print('================-1===========================')
         fmt_ = _jupytext_fmt(self._primitive, self._ext_in)
 
         # add metadata to flag that the cell was injected manually

@@ -47,6 +47,42 @@ def test_inject_remove(monkeypatch, tmp_nbs):
     assert expected not in Path('plot.py').read_text()
 
 
+def test_priority_inject(monkeypatch, tmp_pi_nbs):
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])
+    expected = 'some_param = "param-suffix'
+
+    assert expected not in Path('load.py').read_text()
+    assert expected not in Path('clean.py').read_text()
+    assert expected not in Path('plot.py').read_text()
+
+    cli.cmd_router()
+
+    assert expected in Path('load.py').read_text()
+    assert expected not in Path('clean.py').read_text()
+    assert expected not in Path('plot.py').read_text()
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--remove'])
+
+    cli.cmd_router()
+
+    assert expected not in Path('load.py').read_text()
+    assert expected not in Path('clean.py').read_text()
+    assert expected not in Path('plot.py').read_text()
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])
+
+    Path('setup.cfg').write_text("""
+[ploomber]
+inject-priority = *-suffix
+""")
+
+    cli.cmd_router()
+
+    assert expected in Path('load.py').read_text()
+    assert expected not in Path('clean.py').read_text()
+    assert expected in Path('plot.py').read_text()
+
+
 def test_format(monkeypatch, tmp_nbs):
     monkeypatch.setattr(sys, 'argv',
                         ['ploomber', 'nb', '--format', 'py:percent'])
