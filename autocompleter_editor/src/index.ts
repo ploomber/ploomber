@@ -169,11 +169,12 @@ const plugin: JupyterFrontEndPlugin<void> = {
           return;
         }
 
-        if (completerWidget.style.display != "none") {
+        if (completerWidget.style.display != "none") {  
           e.preventDefault();
-
+          e.stopPropagation();
+          e.stopImmediatePropagation();        
           // moves entries downwards
-          if (keys["Space"] == true && keys["Ctrl"] == true) {
+          if (e.key == "ArrowDown") {
             ul.children[currActiveOption].classList.remove("jp-mod-active");
             if (currActiveOption < ul.children.length-1){
               currActiveOption += 1;
@@ -181,7 +182,17 @@ const plugin: JupyterFrontEndPlugin<void> = {
               currActiveOption = 0;
             }
             ul.children[currActiveOption].classList.add("jp-mod-active");
-          }
+          } 
+          // moves entries upwards
+          else if (e.key == "ArrowUp") {
+            ul.children[currActiveOption].classList.remove("jp-mod-active");
+            if (currActiveOption != 0) {
+              currActiveOption -= 1;
+            } else {
+              currActiveOption = ul.children.length-1;
+            }
+            ul.children[currActiveOption].classList.add("jp-mod-active");
+          } 
           // selects the entry
           else if (e.key == "Enter") {
             completerWidget.style.display = "none";
@@ -192,6 +203,11 @@ const plugin: JupyterFrontEndPlugin<void> = {
             if (textToReplace) {
               editor.replaceSelection?.(textToReplace.substring(wordBeforeCursor.length));
             }
+          }
+          // makes the tooltip disappear
+          else if (e.key == "Escape" || e.key == "ArrowLeft") {
+            completerWidget.style.display = "none";
+            document.removeEventListener('click', completerClickEvents);
           }
         }
       });
