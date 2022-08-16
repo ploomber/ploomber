@@ -5,9 +5,9 @@ import {
 } from '@jupyterlab/application';
 
 import { ICommandPalette, MainAreaWidget, WidgetTracker } from '@jupyterlab/apputils';
-import { CodeEditor, CodeEditorWrapper } from '@jupyterlab/codeeditor';
+import { CodeEditor, CodeEditorWrapper} from '@jupyterlab/codeeditor';
 import { CodeMirrorEditor } from '@jupyterlab/codemirror';
-
+import {IDisposable} from '@lumino/disposable';
 /**
  * Initialization data for the autocompleter-editor extension.
  */
@@ -93,11 +93,12 @@ const plugin: JupyterFrontEndPlugin<void> = {
       if (completerWidget.style.display != "none" && !completerWidget.contains(e.target as Node)) {
         completerWidget.style.display = "none";
         document.removeEventListener('click', completerClickEvents);
+        handlerDisposable.dispose();
       }
     } 
 
     let keys = {"Ctrl": false, "Space": false}; 
-
+    let handlerDisposable: IDisposable; 
     function completerKeyboardEvents(widget: MainAreaWidget, content: CodeEditorWrapper) {
       let node = widget.node;
       let wordBeforeCursor = "";
@@ -166,6 +167,10 @@ const plugin: JupyterFrontEndPlugin<void> = {
           }
           document.addEventListener("click", completerClickEvents);
 
+          const handler = (editor: CodeEditor.IEditor, event:KeyboardEvent) => {
+            return event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter";
+          }
+          handlerDisposable = content.editor.addKeydownHandler(handler);
           return;
         }
 
@@ -197,9 +202,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
           else if (e.key == "Enter") {
             completerWidget.style.display = "none";
             document.removeEventListener('click', completerClickEvents);
+            handlerDisposable.dispose();
             // replace cursor word with new word
             let textToReplace = ul.children[currActiveOption].textContent;
-
             if (textToReplace) {
               editor.replaceSelection?.(textToReplace.substring(wordBeforeCursor.length));
             }
@@ -208,6 +213,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
           else if (e.key == "Escape" || e.key == "ArrowLeft") {
             completerWidget.style.display = "none";
             document.removeEventListener('click', completerClickEvents);
+            handlerDisposable.dispose();
           }
         }
       });
