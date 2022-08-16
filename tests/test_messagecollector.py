@@ -20,8 +20,6 @@ def test_task_build_exception_works_for_valid_args():
 ============================== Task build failed ===============================
 ------------------ DownloadFromURL: download -> File('file') -------------------
 hello
-=============================== Summary (1 task) ===============================
-DownloadFromURL: download -> File('file')
 ============================== Task build failed ===============================
 """  # noqa: E501
 

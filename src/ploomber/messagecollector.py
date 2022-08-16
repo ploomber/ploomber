@@ -4,6 +4,7 @@ from io import StringIO
 
 
 class Message:
+
     def __init__(self, task, message, obj=None):
         self._task = task
         self._message = message
@@ -36,6 +37,7 @@ class MessageCollector(abc.ABC):
     one is shown along with the task name it generated it.
 
     """
+
     def __init__(self, messages=None):
         self.messages = messages or []
 
@@ -46,7 +48,11 @@ class MessageCollector(abc.ABC):
     def __str__(self):
         pass
 
-    def _to_str(self, name=None, file=None, writer_kwargs=None):
+    def _to_str(self,
+                name=None,
+                file=None,
+                writer_kwargs=None,
+                show_summary=True):
         """
         Return the string representation of the collected messages
 
@@ -85,14 +91,15 @@ class MessageCollector(abc.ABC):
 
             self.tw._write_source(msg.message.splitlines(), lexer='pytb')
 
-        n = len(self)
-        t = 'task' if n == 1 else 'tasks'
-        self.tw.sep('=', title=f'Summary ({n} {t})', **writer_kwargs)
+        if show_summary:
+            n = len(self)
+            t = 'task' if n == 1 else 'tasks'
+            self.tw.sep('=', title=f'Summary ({n} {t})', **writer_kwargs)
 
-        for msg in self.messages:
-            # TODO: include original exception type and error message in
-            # summary
-            self.tw.write(f'{msg.header}\n')
+            for msg in self.messages:
+                # TODO: include original exception type and error message in
+                # summary
+                self.tw.write(f'{msg.header}\n')
 
         if name:
             self.tw.sep('=', title=name, **writer_kwargs)
@@ -122,16 +129,20 @@ class MessageCollector(abc.ABC):
 def task_build_exception(task, message, exception):
     # use this just to get a single task collected from the abstract class
     class TaskBuildExceptionsCollector(MessageCollector):
+
         def __str__(self):
             return self._to_str(name='Task build failed',
                                 file=None,
-                                writer_kwargs=dict(red=True))
+                                writer_kwargs=dict(red=True),
+                                show_summary=False)
+
     tbec = TaskBuildExceptionsCollector()
     tbec.append(task=task, message=message, obj=exception)
     return str(tbec)
 
 
 class BuildExceptionsCollector(MessageCollector):
+
     def __str__(self):
         return self._to_str(name='DAG build failed',
                             file=None,
@@ -139,6 +150,7 @@ class BuildExceptionsCollector(MessageCollector):
 
 
 class RenderExceptionsCollector(MessageCollector):
+
     def __str__(self):
         return self._to_str(name='DAG render failed',
                             file=None,
@@ -146,6 +158,7 @@ class RenderExceptionsCollector(MessageCollector):
 
 
 class BuildWarningsCollector(MessageCollector):
+
     def __str__(self):
         return self._to_str(name='DAG build with warnings',
                             file=None,
@@ -153,6 +166,7 @@ class BuildWarningsCollector(MessageCollector):
 
 
 class RenderWarningsCollector(MessageCollector):
+
     def __str__(self):
         return self._to_str(name='DAG render with warnings',
                             file=None,
