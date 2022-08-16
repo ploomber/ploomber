@@ -336,7 +336,9 @@ class NotebookSource(Source):
         # section on each cell's metadata, which makes it too verbose when
         # using NotebookRunner.develop() when the source is script (each cell
         # will have an empty "papermill" metadata dictionary)
-        nb = parameterize_notebook(nb, self._params)
+
+        # NOTE: in papermill 2.4.0, this method no longer creates a deepcopy
+        nb = parameterize_notebook(deepcopy(nb), self._params)
 
         # delete empty tags to prevent cluttering the notebooks
         for cell in nb.cells:
