@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from ploomber.cloud import api
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
 
 
 @pytest.fixture

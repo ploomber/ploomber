@@ -18,7 +18,7 @@ import humanize
 
 from ploomber.table import Table
 from ploomber.cloud import io, config
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
 from ploomber.spec import DAGSpec
 from ploomber.dag import util
 from ploomber.cli.cloud import get_key
