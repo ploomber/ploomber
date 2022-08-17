@@ -175,7 +175,6 @@ setup(
         # for cli
         'click',
         # for ploomber interact and {PythonCallable, NotebookRunner}.debug()
-        'ipython<8',
         'ipdb',
         'pydantic',
     ] + NB,
