@@ -2,9 +2,13 @@ import ploomber.messagecollector as mc
 from ploomber.products import File
 from ploomber.tasks import DownloadFromURL
 from ploomber import DAG
+from tests_util import set_terminal_output_columns
 
 
-def test_task_build_exception_works_for_valid_args():
+def test_task_build_exception_works_for_valid_args(monkeypatch):
+    # hardcode terminal width to be consistent for ci on different platforms
+    set_terminal_output_columns(80, monkeypatch)
+
     dag = DAG()
 
     url = """
