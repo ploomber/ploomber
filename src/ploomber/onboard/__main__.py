@@ -15,8 +15,8 @@ from ploomber.cli.nb import _inject_cell, _format
 from ploomber.spec import DAGSpec
 from ploomber.constants import TaskStatus
 from ploomber.cli.io import command_endpoint
-from ploomber.telemetry import telemetry
 from ploomber.cli.cloud import _email_input
+from ploomber.telemetry import telemetry
 
 WINDOWS = platform.system() == 'Windows'
 
