@@ -256,23 +256,6 @@ def test_error_if_source_is_dir_suggest_scaffold(tmp_directory):
     assert 'ploomber scaffold' in str(excinfo.value)
 
 
-def test_warning_if_parameters_cell_doesnt_exist(capsys):
-    NotebookSource(new_nb(fmt='ipynb', add_tag=False), ext_in='ipynb')
-    captured = capsys.readouterr()
-    assert 'Notebook does not have a cell tagged "parameters"' in captured.out
-
-
-def test_warning_missing_params_cell_shows_path_if_available(tmp_directory,
-                                                             capsys):
-    path = Path('nb.ipynb')
-    path.write_text(new_nb(fmt='ipynb', add_tag=False))
-
-    NotebookSource(path)
-    captured = capsys.readouterr()
-    assert ('Notebook "nb.ipynb" does not have a cell tagged "parameters"'
-            in captured.out)
-
-
 def test_nb_str_contains_kernel_info():
     source = NotebookSource(new_nb(fmt='ipynb'), ext_in='ipynb')
     nb = nbformat.reads(source._nb_str_unrendered,
