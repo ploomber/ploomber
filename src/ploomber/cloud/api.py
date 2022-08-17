@@ -317,7 +317,7 @@ def get_presigned_link(headers):
     try:
         return _requests.get(f"{HOST}/upload", headers=headers).json()
     except Exception as err:
-        return {"Error": err}
+        return {"Error occurred while retrieving presigned upload link": err}
 
 
 def upload_zipped_project(response, verbose, runid):
