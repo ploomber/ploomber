@@ -636,46 +636,13 @@ def test_save_injected_cell_in_paired_notebooks(tmp_nbs, prefix):
     assert get_injected_cell(jupytext.read(Path(prefix, 'load.ipynb')))
     assert get_injected_cell(jupytext.read(Path('load.py')))
 
-def test_move_script_save_injected_cell_in_paired_notebooks(tmp_nbs):
 
-    Path('scripts').mkdir(parents=True, exist_ok=True)
-    Path('load.py').rename('scripts/load.py')
-    Path('clean.py').rename('scripts/clean.py')
-    Path('plot.py').rename('scripts/plot.py')
-
-    pipeline = """meta:
-  extract_upstream: False
-  extract_product: False
-
-tasks:
-  - source: scripts/load.py
-    class: NotebookRunner
-    name: load
-    product:
-      nb: output/load.ipynb
-      data: output/data.csv
-
-  - source: scripts/clean.py
-    class: NotebookRunner
-    name: clean
-    product:
-      nb: output/clean.ipynb
-      data: output/clean.csv
-    upstream: [load]
-
-  - source: scripts/plot.py
-    class: NotebookRunner
-    name: plot
-    product: output/plot.ipynb
-    upstream: clean"""
-
-    Path('pipeline.yaml').write_text(pipeline)
-
-    #pair notebooks
+def test_move_script_save_injected_cell_paired_ipynb(tmp_nbs_moved_scripts):
+    # pair notebooks
     dag = DAGSpec('pipeline.yaml').to_dag().render()
     dag['load'].source.pair('notebooks')
 
-    #inject cell
+    # inject cell
     dag = DAGSpec('pipeline.yaml').to_dag().render()
     dag['load'].source.save_injected_cell()
 
@@ -683,41 +650,8 @@ tasks:
         jupytext.read(Path('scripts/notebooks/load.ipynb')))
     assert get_injected_cell(jupytext.read(Path('scripts/load.py')))
 
-def test_move_script_remove_injected_cell_in_paired_notebooks(tmp_nbs):
 
-    Path('scripts').mkdir(parents=True, exist_ok=True)
-    Path('load.py').rename('scripts/load.py')
-    Path('clean.py').rename('scripts/clean.py')
-    Path('plot.py').rename('scripts/plot.py')
-
-    pipeline = """meta:
-  extract_upstream: False
-  extract_product: False
-
-tasks:
-  - source: scripts/load.py
-    class: NotebookRunner
-    name: load
-    product:
-      nb: output/load.ipynb
-      data: output/data.csv
-
-  - source: scripts/clean.py
-    class: NotebookRunner
-    name: clean
-    product:
-      nb: output/clean.ipynb
-      data: output/clean.csv
-    upstream: [load]
-
-  - source: scripts/plot.py
-    class: NotebookRunner
-    name: plot
-    product: output/plot.ipynb
-    upstream: clean"""
-
-    Path('pipeline.yaml').write_text(pipeline)
-
+def test_move_script_remove_injected_cell_paired_ipynb(tmp_nbs_moved_scripts):
     # pair notebooks
     dag = DAGSpec('pipeline.yaml').to_dag().render()
     dag['load'].source.pair('notebooks')
