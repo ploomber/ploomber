@@ -394,34 +394,7 @@ class NotebookSource(Source):
         Validate notebook after initialization (run pyflakes to detect
         syntax errors)
         """
-        # NOTE: what happens if I pass source code with errors to parso?
-        # maybe we don't need to use pyflakes after all
-        # we can also use compile. can pyflakes detect things that
-        # compile cannot?
-        params_cell, _ = find_cell_with_tag(self._nb_obj_unrendered,
-                                            'parameters')
-
-        if params_cell is None:
-            loc = ' "{}"'.format(pretty_print.try_relative_path(self.loc)) \
-                if self.loc else ''
-            msg = ('Notebook{} does not have a cell tagged '
-                   '"parameters"'.format(loc))
-
-            if self.loc and Path(self.loc).suffix == '.py':
-                msg += """.
-Add a cell at the top like this:
-
-# %% tags=["parameters"]
-upstream = None
-product = None
-
-Go to: https://ploomber.io/s/params for more information
-"""
-            if self.loc and Path(self.loc).suffix == '.ipynb':
-                msg += ('. Add a cell at the top and tag it as "parameters". '
-                        'Go to the next URL for '
-                        'details: https://ploomber.io/s/params')
-            click.secho(msg)
+        pass
 
     def _validate_parameters_cell(self,
                                   extract_upstream=False,
@@ -1076,6 +1049,12 @@ upstream = None
     if extract_product:
         source += """\
 # declare a dictionary with the outputs of this task
+product = None
+"""
+
+    if not extract_upstream and not extract_product:
+        source += """
+upstream = None
 product = None
 """
 
