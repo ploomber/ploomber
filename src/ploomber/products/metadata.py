@@ -19,6 +19,7 @@ class AbstractMetadata(abc.ABC):
     If product does not exist, initialize empty metadata, otherwise use
     ``product.fetch_metadata`` to load it
     """
+
     def __init__(self, product):
         self.__data = None
         self._product = product
@@ -158,6 +159,7 @@ class Metadata(AbstractMetadata):
     stored_source_code
         Last updates product source code
     """
+
     def _default_metadata(self):
         return dict(timestamp=None, stored_source_code=None, params=None)
 
@@ -180,11 +182,11 @@ class Metadata(AbstractMetadata):
 
     @property
     def stored_source_code(self):
-        return self._data.get('stored_source_code')
+        return self._data.get('stored_source_code', {})
 
     @property
     def source_tree(self):
-        return self._data.get('source_tree')
+        return self._data.get('source_tree', {})
 
     @property
     def _data(self):
@@ -459,6 +461,7 @@ class MetadataAlwaysUpToDate(AbstractMetadata):
     """
     Metadata for Link tasks (always up-to-date)
     """
+
     def __init__(self):
         pass
 

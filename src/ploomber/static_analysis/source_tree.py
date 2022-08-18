@@ -234,7 +234,13 @@ def extract_from_object(obj):
         return None
 
     path_to_source = inspect.getsourcefile(obj)
-    imports = Path(path_to_source).read_text()
+
+    try:
+        imports = Path(path_to_source).read_text()
+    # if the object isn't defined in a file (e.g. defined inline
+    # in IPython)
+    except FileNotFoundError:
+        return None
 
     # this returns symbols used through imports
     from_imports = _extract_imported_objects_from_source(
