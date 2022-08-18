@@ -206,11 +206,6 @@ def tmp_nbs():
     pass
 
 
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-moved-scripts')
-def tmp_nbs_moved_scripts():
-    pass
-
-
 @fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-nested')
 def tmp_nbs_nested():
     pass

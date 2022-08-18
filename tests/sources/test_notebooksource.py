@@ -637,36 +637,36 @@ def test_save_injected_cell_in_paired_notebooks(tmp_nbs, prefix):
     assert get_injected_cell(jupytext.read(Path('load.py')))
 
 
-def test_move_script_save_injected_cell_paired_ipynb(tmp_nbs_moved_scripts):
+def test_nested_nbs_save_injected_cell_paired_ipynb(tmp_nbs_nested):
     # pair notebooks
     dag = DAGSpec('pipeline.yaml').to_dag().render()
-    dag['load'].source.pair('notebooks')
+    dag['clean'].source.pair('notebooks')
 
     # inject cell
     dag = DAGSpec('pipeline.yaml').to_dag().render()
-    dag['load'].source.save_injected_cell()
+    dag['clean'].source.save_injected_cell()
 
-    assert get_injected_cell(
-        jupytext.read(Path('scripts/notebooks/load.ipynb')))
-    assert get_injected_cell(jupytext.read(Path('scripts/load.py')))
+    assert get_injected_cell(jupytext.read(
+        Path('clean/notebooks/clean.ipynb')))
+    assert get_injected_cell(jupytext.read(Path('clean/clean.py')))
 
 
-def test_move_script_remove_injected_cell_paired_ipynb(tmp_nbs_moved_scripts):
+def test_nested_nbs_remove_injected_cell_paired_ipynb(tmp_nbs_nested):
     # pair notebooks
     dag = DAGSpec('pipeline.yaml').to_dag().render()
-    dag['load'].source.pair('notebooks')
+    dag['clean'].source.pair('notebooks')
 
     # inject cell
     dag = DAGSpec('pipeline.yaml').to_dag().render()
-    dag['load'].source.save_injected_cell()
+    dag['clean'].source.save_injected_cell()
 
     # remove cell
     dag = DAGSpec('pipeline.yaml').to_dag().render()
-    dag['load'].source.remove_injected_cell()
+    dag['clean'].source.remove_injected_cell()
 
     assert not get_injected_cell(
-        jupytext.read(Path('scripts/notebooks/load.ipynb')))
-    assert not get_injected_cell(jupytext.read(Path('scripts/load.py')))
+        jupytext.read(Path('clean/notebooks/clean.ipynb')))
+    assert not get_injected_cell(jupytext.read(Path('clean/clean.py')))
 
 
 def test_remove_injected_cell(tmp_nbs):
