@@ -155,9 +155,7 @@ setup(
         'ploomber-core',
         'pyyaml',
         'networkx>=2.5',
-        # nbconvert is broken with jinja>=3.1
-        # https://github.com/jupyter/nbconvert/issues/1736
-        'jinja2<3.1',
+        'jinja2',
         'tabulate',
         'humanize',
         'tqdm',
