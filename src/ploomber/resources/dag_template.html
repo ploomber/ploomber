@@ -206,29 +206,40 @@
   //   .call(wrap, 2);
 
 
+  let circleSvgs = document.getElementsByTagName("circle");
+  let circleSvgWidth = circleSvgs[0].getBoundingClientRect().width;
+  function wrapTextInCircle(text) {
+    text.each(function () {
+      let text = d3.select(this);
+      words = text.text().split('-').reverse();
+      let word;
+      let line = [];
+      let lineHeight = "0.8em";
+      let tspan = text.text(null).append("tspan");
+      while (word = words.pop()) {
+        line.push(word);
+        tspan.text(line.join("-"));
+        if (line.length > 1 && tspan.node().getBoundingClientRect().width > circleSvgWidth) {
+          line.pop();
+          tspan.text(line.join("-") + "-");
+          line = [word];
+          tspan = text.append("tspan").text(word).attr("x", 0).attr("dy", lineHeight);
+        } 
+      }
+    });
+  }
+
   // Add text to tasks
   tasks.append("text")
     .text((d) => d.data.id)
-    .attr("font-size", 6)
+    .attr("font-size", 5.5)
     .attr("font-family", "sans-serif")
     .attr("text-anchor", "middle")
     .attr("alignment-baseline", "middle")
-    .attr("fill", "black");
-
-  // Adjusts font size based on the circle/task width
-  let circleSvgs = document.getElementsByTagName("circle");
-  for (let i = 0; i< circleSvgs.length; i++) {
-    let circleSvgWidth = circleSvgs[i].getBoundingClientRect().width;
-    let text = circleSvgs[i].nextElementSibling;
-    let textWidth= text.getBoundingClientRect().width;
-    let fontSize = 6;
-    while (textWidth >= circleSvgWidth && fontSize > 1) {
-      fontSize -= 1;
-      text.setAttribute("font-size", fontSize);
-      textWidth= text.getBoundingClientRect().width;
-    }
-  }
-
+    .attr("fill", "black")
+    .attr("y", "-10")
+    .call(wrapTextInCircle);
+  
   const arrow = d3.symbol().type(d3.symbolTriangle).size(nodeRadius * nodeRadius / 20.0);
   svgSelection.append('g')
     .selectAll('path')
