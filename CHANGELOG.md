@@ -34,6 +34,8 @@
 * Fixes jinja extractor when upstream had nested getitem ([#859](https://github.com/ploomber/ploomber/issues/859))
 * Fixes notebook loading on Windows when UTF-8 is not the default encoding ([#870](https://github.com/ploomber/ploomber/issues/870))
 
+* Remove extraneous output in `ploomber task` tracebacks ([#828]https://github.com/ploomber/ploomber/issues/828)
+
 ## 0.19.6 (2022-06-02)
 * `setup.cfg` allows to switch default entry point
 * Generate multiple notebook products from a single task ([#708](https://github.com/ploomber/ploomber/issues/708))

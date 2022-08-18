@@ -53,7 +53,7 @@ class TaskInitializationError(BaseException):
     pass
 
 
-class TaskBuildError(Exception):
+class TaskBuildError(BaseException):
     """Raise when a task fails to build
     """
     pass
