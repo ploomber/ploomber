@@ -3,6 +3,9 @@ from ploomber.cli.io import cli_endpoint
 from ploomber.telemetry import telemetry
 from ploomber.cloud import api
 from ploomber.tasks import NotebookRunner, PythonCallable
+from ploomber.executors import _format
+from ploomber.messagecollector import task_build_exception
+from ploomber.exceptions import TaskBuildError
 import click
 
 # TODO: we are just smoke testing this, we need to improve the tests
@@ -82,13 +85,24 @@ def _task_cli(accept_task_id=False):
     # the --build flag is required
     no_flags = not any((args.build, args.status, args.source, args.on_finish))
 
+    err = None
+
     if no_flags or args.build:
         try:
             task.build(force=args.force)
-        except Exception:
+        except Exception as e:
+            err = e
+
+        if err is not None:
             if getattr(args, 'task_id', None):
                 api.tasks_update(getattr(args, 'task_id'), 'failed')
-            raise
+
+            msg = _format.exception(err)
+            exception_string = task_build_exception(task=task,
+                                                    message=msg,
+                                                    exception=err)
+
+            raise TaskBuildError(exception_string)
         else:
             click.echo(f"{task.name!r} task executed successfully!")
             click.echo("Products:\n" + repr(task.product))
