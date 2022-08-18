@@ -444,6 +444,7 @@ class DAGSpec(MutableMapping):
                 'config',
                 'clients',
                 'tasks',
+                'task_defaults',
                 'serializer',
                 'unserializer',
                 'executor',
@@ -810,7 +811,10 @@ def process_tasks(dag, dag_spec, root_path=None):
             task_dict['product'] = source.extract_product()
 
         # convert to task, up has the content of "upstream" if any
-        task, up = task_dict.to_task(dag)
+        if 'task_defaults' in dag_spec:
+            task, up = task_dict.to_task(dag, dag_spec['task_defaults'])
+        else:
+            task, up = task_dict.to_task(dag)
 
         if isinstance(task, TaskGroup):
             for t in task:

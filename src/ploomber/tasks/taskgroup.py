@@ -168,7 +168,6 @@ class TaskGroup:
         tasks_all = []
 
         for index, params in enumerate(params_array):
-
             # each task should get a different deep copy, primarily cause they
             # should have a different product
             kwargs = deepcopy(task_kwargs)
@@ -176,7 +175,7 @@ class TaskGroup:
             # grid is re-used in several tasks, modifying anything there will
             # have side-effects
             params = deepcopy(params)
-
+            print(params)
             # user provided a namer function
             if namer:
                 if isinstance(namer, str):
@@ -217,12 +216,13 @@ class TaskGroup:
                                           'File and SQL products. '
                                           f'{product_class} is not supported')
 
+            
             t = task_class(product=product,
                            dag=dag,
                            name=task_name,
                            params=params,
                            **kwargs)
-
+            print(t)
             if on_render:
                 t.on_render = on_render
 

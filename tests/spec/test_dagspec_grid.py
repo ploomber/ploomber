@@ -92,6 +92,31 @@ def sample_dagspec_with_params(tmp_directory, write_tasks):
     Path('pipeline.yaml').write_text(yaml.dump(spec))
 
 
+@pytest.fixture
+def sample_dagspec_with_default_params(tmp_directory, write_tasks):
+    spec = {
+        'task_defaults': {
+            'NotebookRunner': {
+                'check_if_kernel_installed': False
+            }
+        },
+        'tasks': [{
+            'source': 'upstream.py',
+            'name': 'upstream-',
+            'product': 'output/param=[[param]].ipynb',
+            'grid': {
+                'param': [1, 2]
+            },
+            'params': {
+                'another': 100,
+                'one-more': 200
+            }
+        }]
+    }
+
+    Path('pipeline.yaml').write_text(yaml.dump(spec))
+
+
 def test_grid_with_params_placeholders(sample_dagspec):
     dag = DAGSpec('pipeline.yaml').to_dag()
 
@@ -114,9 +139,23 @@ def test_grid_with_params(sample_dagspec_with_params):
     }
 
 
-def test_with_with_placeholder_task_names(
+def test_with_placeholder_task_names(
         sample_dagspec_with_placeholder_task_names):
     dag = DAGSpec('pipeline.yaml').to_dag()
 
     assert 'param=1-0.ipynb' in str(dag['upstream-param=1'].product)
     assert 'param=2-1.ipynb' in str(dag['upstream-param=2'].product)
+
+
+def test_default_parameter_grid(
+        sample_dagspec_with_default_params):
+    dag = DAGSpec('pipeline.yaml').to_dag()
+
+    assert dag['upstream-0'].params == {
+        'param': 1,
+        'check_if_kernel_installed': False,
+        'another': 100,
+        'one-more': 200
+    }
+    assert dag['upstream-0'].check_if_kernel_installed is False
+    assert dag['upstream-1'].check_if_kernel_installed is False

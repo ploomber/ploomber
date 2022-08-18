@@ -5,6 +5,7 @@ Note: All validation errors should raise DAGSpecInitializationError, this
 allows the CLI to signal that this is a user's input error and hides the
 traceback and only displays the error message
 """
+from email.policy import default
 import mimetypes
 from functools import partial
 from copy import copy, deepcopy
@@ -215,11 +216,13 @@ class TaskSpec(MutableMapping):
                  meta,
                  project_root,
                  lazy_import=False,
-                 reload=False):
+                 reload=False,
+                 task_defaults=None):
         self.data = deepcopy(data)
         self.meta = deepcopy(meta)
         self.project_root = project_root
         self.lazy_import = lazy_import
+        self.task_defaults = task_defaults or {}
 
         self.validate()
 
@@ -281,7 +284,7 @@ class TaskSpec(MutableMapping):
                 'meta.extract_product is set to True, tasks '
                 'should not have a "product" key'.format(self.data))
 
-    def to_task(self, dag):
+    def to_task(self, dag, task_defaults=None):
         """
         Convert the spec to a Task or TaskGroup and add it to the dag.
         Returns a (task, upstream) tuple with the Task instance and list of
@@ -313,7 +316,6 @@ class TaskSpec(MutableMapping):
             product = data.pop('product')
             name = data.pop('name')
             grid = _preprocess_grid_spec(data.pop('grid'))
-
             # hooks
             on_render = data.pop('on_render', None)
             on_finish = data.pop('on_finish', None)
@@ -332,13 +334,17 @@ class TaskSpec(MutableMapping):
                                                     lazy_load=self.lazy_import)
 
             params = data.pop('params', None)
-
+            print(params)
             # if the name argument is a placeholder, pass it in the namer
             # argument to the placeholders are replaced by their values
             if '[[' in name and ']]' in name:
                 name_arg = dict(namer=name)
             else:
                 name_arg = dict(name=name)
+
+            
+            if task_defaults != None:
+                params = {**task_defaults[task_class.__name__], **params}
 
             return TaskGroup.from_grid(task_class=task_class,
                                        product_class=product_class,
@@ -357,7 +363,8 @@ class TaskSpec(MutableMapping):
                               meta=self.meta,
                               project_root=self.project_root,
                               lazy_import=self.lazy_import,
-                              dag=dag), upstream
+                              dag=dag,
+                              task_defaults=task_defaults), upstream
 
     def __getitem__(self, key):
         return self.data[key]
@@ -379,7 +386,7 @@ class TaskSpec(MutableMapping):
         return '{}({!r})'.format(type(self).__name__, self.data)
 
 
-def _init_task(data, meta, project_root, lazy_import, dag):
+def _init_task(data, meta, project_root, lazy_import, dag, task_defaults=None):
     """Initialize a single task from a dictionary spec
     """
     task_dict = copy(data)
@@ -424,12 +431,18 @@ def _init_task(data, meta, project_root, lazy_import, dag):
         task_dict['params'] = resolve_resources(task_dict['params'],
                                                 relative_to=project_root)
 
+    if type(task_defaults) == dict:
+        init_params = {**task_defaults[class_.__name__], **task_dict}
+    else:
+        init_params = task_dict
+
     try:
         task = class_(source=source,
                       product=product,
                       name=name,
                       dag=dag,
-                      **task_dict)
+                      **init_params)
+
     except Exception as e:
         source_ = pretty_print.try_relative_path(source)
         msg = (f'Failed to initialize {class_.__name__} task with '

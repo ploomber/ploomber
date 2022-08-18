@@ -2194,3 +2194,29 @@ tasks:
     dag.render()
 
     assert dag['script'].params['param'] == [{'a': 1}, {'a': {'b': 2}}, 3]
+
+
+def test_task_default_parameters(tmp_directory, tmp_imports):
+    Path('script.py').write_text("""
+# %% tags=["parameters"]
+upstream = None
+product = None
+# %%
+1 + 1
+""")
+    spec = DAGSpec({
+        'task_defaults': {
+            'NotebookRunner': {
+                'check_if_kernel_installed': False
+            }
+        },
+        'tasks': [{
+            'source': 'script.py',
+            'product': 'report.html'
+        }]
+    })
+
+    dag = spec.to_dag()
+    for k in dag:
+        print(k, dag[k])
+    assert dag['script'].check_if_kernel_installed is True
