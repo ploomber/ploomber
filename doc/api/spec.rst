@@ -143,6 +143,16 @@ Another common use case is to limit the number of subprocesses when using the
       processes: 2 # limit to a max of 2 processes
 
 
+You can set which method should be used to start child processes. method can be 'fork', 'spawn' or 'forkserver':
+
+.. code-block:: yaml
+    :class: text-editor
+
+    executor:
+      dotted_path: ploomber.executors.Parallel
+      processes: 2 # limit to a max of 2 processes
+      start_method: spawn # start child process using 'spawn' method
+
 To learn more about the executors:
 
 * :class:`ploomber.executors.Serial`
