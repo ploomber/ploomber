@@ -401,11 +401,13 @@ class NotebookSource(Source):
                                   extract_product=False):
         '''Check parameters call and add it when it's missing
 
-        Keyword arguments:
-        extract_upstream -- Flags used to determine the content of
-        the parameters cell, only used if the notebook is
-        missing the parameters cell (default False)
-        extract_product -- Same as extract_upstream (default False)
+        Parameters
+        ----------
+        extract_upstream : bool, default: True
+            Flags used to determine the content of the parameters cell,
+            only used if the notebook is missing the parameters cell
+        extract_product : bool, default: True
+            Same as extract_upstream (default False)
         '''
         params_cell, _ = find_cell_with_tag(self._nb_obj_unrendered,
                                             'parameters')
@@ -1053,10 +1055,7 @@ product = None
 """
 
     if not extract_upstream and not extract_product:
-        source += """
-upstream = None
-product = None
-"""
+        source += '# add default values for parameters here'
 
     c = JupytextConfiguration()
     c.notebook_metadata_filter
