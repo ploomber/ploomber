@@ -65,6 +65,11 @@ class Parallel(Executor):
     print_progress : bool, default=False
         Whether to print progress to stdout, otherwise just log it
 
+    start_method : str, default=None
+        The method which should be used to start child processes. method
+        can be 'fork', 'spawn' or 'forkserver'. If None or empty then the
+        default start_method is used.
+
     Examples
     --------
     Spec API:
@@ -90,6 +95,9 @@ class Parallel(Executor):
     If any task crashes, downstream tasks execution is aborted, building
     continues until no more tasks can be executed
 
+    .. versionadded:: 0.20
+        Added `start_method` argument
+
     See Also
     --------
     ploomber.executors.Serial :
@@ -104,12 +112,13 @@ class Parallel(Executor):
     def __init__(self,
                  processes=None,
                  print_progress=False,
-                 start_method=get_start_method()):
+                 start_method=None):
         self.processes = processes or os.cpu_count()
         self.print_progress = print_progress
 
         self._logger = logging.getLogger(__name__)
         self._i = 0
+        start_method = start_method or get_start_method()
         self._bar = None
         if start_method in self.multiprocessing_start_methods:
             self.start_method = start_method
