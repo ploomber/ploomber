@@ -403,11 +403,11 @@ class NotebookSource(Source):
 
         Parameters
         ----------
-        extract_upstream : bool, default: True
+        extract_upstream : bool, default: False
             Flags used to determine the content of the parameters cell,
             only used if the notebook is missing the parameters cell
-        extract_product : bool, default: True
-            Same as extract_upstream (default False)
+        extract_product : bool, default: False
+            Same as extract_upstream
         '''
         params_cell, _ = find_cell_with_tag(self._nb_obj_unrendered,
                                             'parameters')
