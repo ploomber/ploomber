@@ -669,7 +669,8 @@ class NotebookRunner(NotebookMixin, Task):
                  nbconvert_export_kwargs=None,
                  local_execution=False,
                  check_if_kernel_installed=True,
-                 debug_mode=None):
+                 debug_mode=None
+                 ):
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name
@@ -697,6 +698,8 @@ class NotebookRunner(NotebookMixin, Task):
             kernelspec_name,
             static_analysis,
             check_if_kernel_installed,
+            False,
+            False
         )
         super().__init__(product, dag, name, params)
 
@@ -757,14 +760,18 @@ class NotebookRunner(NotebookMixin, Task):
                      ext_in=None,
                      kernelspec_name=None,
                      static_analysis='regular',
-                     check_if_kernel_installed=False):
-        return NotebookSource(
+                     check_if_kernel_installed=False,
+                     extract_up=False,
+                     extract_prod=False):
+        ns = NotebookSource(
             source,
             ext_in=ext_in,
             kernelspec_name=kernelspec_name,
             static_analysis=static_analysis,
             check_if_kernel_installed=check_if_kernel_installed,
             **kwargs)
+        ns._validate_parameters_cell(extract_up, extract_prod)
+        return ns
 
     def run(self):
         # regular mode: raise but not check signature
@@ -910,18 +917,21 @@ class ScriptRunner(NotebookMixin, Task):
                  params=None,
                  ext_in=None,
                  static_analysis='regular',
-                 local_execution=False):
+                 local_execution=False,
+                 ):
         self.ext_in = ext_in
         self.local_execution = local_execution
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = ScriptRunner._init_source(source, kwargs, ext_in,
-                                                 static_analysis)
+                                                 static_analysis, False,
+                                                 False)
         super().__init__(product, dag, name, params)
 
     @staticmethod
-    def _init_source(source, kwargs, ext_in=None, static_analysis='regular'):
-        return NotebookSource(
+    def _init_source(source, kwargs, ext_in=None, static_analysis='regular',
+                     extract_up=False, extract_prod=False):
+        ns = NotebookSource(
             source,
             ext_in=ext_in,
             static_analysis=static_analysis,
@@ -929,6 +939,8 @@ class ScriptRunner(NotebookMixin, Task):
             check_if_kernel_installed=False,
             **kwargs,
         )
+        ns._validate_parameters_cell(extract_up, extract_prod)
+        return ns
 
     def run(self):
         # regular mode: raise but not check signature

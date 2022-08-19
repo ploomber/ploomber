@@ -122,7 +122,9 @@ def test_format_missing_file_in_entry_point(monkeypatch, tmp_directory,
     product: 'some_file.ipynb'""")
     file_name = 'get.py'
     Path('env.yaml').write_text(f"""root: {file_name}""")
-    Path(file_name).write_text("""print("test")""")
+    Path(file_name).write_text("""# %% tags=["parameters"]
+                               \nupstream = None\nproduct = None\n
+                               # %% section \nprint("test")""")
 
     monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--format', 'ipynb'])
     cli.cmd_router()
