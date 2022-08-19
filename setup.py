@@ -101,6 +101,9 @@ TESTING = [
 
     # for testing the webpdf converter
     'nbconvert[webpdf]',
+
+    # for testing ParallelDill,
+    'multiprocess',
 ]
 
 # packages needed for development

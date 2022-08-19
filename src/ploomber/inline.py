@@ -1,6 +1,6 @@
 """
-This module contains utilities for defining inline pipelines. That is, defining
-and running pipelines inside a Jupyter notebook
+This module contains utilities for defining micro pipelines. You can use it
+to define and run pipelines inside a Jupyter notebook
 """
 import re
 import contextlib
