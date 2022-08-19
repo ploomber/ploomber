@@ -317,7 +317,8 @@ class NotebookSource(Source):
         # the latest version
         _, nb = self._read_nb_str_unrendered()
 
-        if 'parameters' in _get_last_cell(nb).metadata.get('tags', []):
+        if nb.cells and 'parameters' in _get_last_cell(nb).metadata.get(
+                'tags', []):
             cell_suggestion = _get_cell_suggestion(nb)
             kind = 'notebook' if self._ext_in == 'ipynb' else 'script'
             raise SourceInitializationError(
@@ -414,9 +415,7 @@ class NotebookSource(Source):
 
         if params_cell is None:
             loc = pretty_print.try_relative_path(self.loc)
-            add_parameters_cell(self.loc,
-                                extract_upstream,
-                                extract_product)
+            add_parameters_cell(self.loc, extract_upstream, extract_product)
             click.secho(
                 f'Notebook {loc} is missing the parameters cell, '
                 'adding it at the top of the file...',
@@ -1019,6 +1018,11 @@ def _nb2codestr(nb):
 def _warn_on_unused_params(nb, params):
     nb = deepcopy(nb)
     _, idx = find_cell_with_tag(nb, 'parameters')
+
+    # the notebooks might not have a parameters cell
+    if not idx:
+        return
+
     del nb.cells[idx]
 
     code = _nb2codestr(nb)

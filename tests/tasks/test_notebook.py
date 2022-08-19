@@ -1299,38 +1299,37 @@ x/y
     assert "x=1" in captured.out
 
 
-@pytest.mark.parametrize(
-    'code, name, expected_fmt', [
-        ['', 'file.py', 'light'],
-        ['', 'file.py', 'light'],
-        ['', 'file.py', 'light'],
-        [
-            nbformat.writes(nbformat.v4.new_notebook()),
-            'file.ipynb',
-            'ipynb',
-        ],
-        [
-            nbformat.writes(nbformat.v4.new_notebook()),
-            'file.ipynb',
-            'ipynb',
-        ],
-        [
-            '# %%\n1+1\n\n# %%\n2+2',
-            'file.py',
-            'percent',
-        ],
-    ])
-def test_notebook_add_parameters_cell_if_missing(tmp_directory, code,
-                                                 name, expected_fmt,
-                                                 capsys):
+@pytest.mark.parametrize('code, name, expected_fmt', [
+    ['', 'file.py', 'light'],
+    ['', 'file.py', 'light'],
+    ['', 'file.py', 'light'],
+    [
+        nbformat.writes(nbformat.v4.new_notebook()),
+        'file.ipynb',
+        'ipynb',
+    ],
+    [
+        nbformat.writes(nbformat.v4.new_notebook()),
+        'file.ipynb',
+        'ipynb',
+    ],
+    [
+        '# %%\n1+1\n\n# %%\n2+2',
+        'file.py',
+        'percent',
+    ],
+])
+def test_notebook_add_parameters_cell_if_missing(tmp_directory, code, name,
+                                                 expected_fmt, capsys):
     path = Path(name)
     path.write_text(code)
     nb_old = jupytext.read(path)
 
-    NotebookRunner(Path(name),
-                   File('out.html'),
-                   dag=DAG(),
-                   debug_mode='later')
+    dag = DAG()
+
+    NotebookRunner(Path(name), File('out.html'), dag=dag, debug_mode='later')
+
+    dag.render()
 
     # displays adding cell message
     captured = capsys.readouterr()
