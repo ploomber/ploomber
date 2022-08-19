@@ -1020,7 +1020,7 @@ def _warn_on_unused_params(nb, params):
     _, idx = find_cell_with_tag(nb, 'parameters')
 
     # the notebooks might not have a parameters cell
-    if not idx:
+    if idx is None:
         return
 
     del nb.cells[idx]
