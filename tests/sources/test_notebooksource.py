@@ -256,25 +256,6 @@ def test_error_if_source_is_dir_suggest_scaffold(tmp_directory):
     assert 'ploomber scaffold' in str(excinfo.value)
 
 
-def test_error_if_parameters_cell_doesnt_exist():
-    with pytest.raises(SourceInitializationError) as excinfo:
-        NotebookSource(new_nb(fmt='ipynb', add_tag=False), ext_in='ipynb')
-
-    assert 'Notebook does not have a cell tagged "parameters"' in str(
-        excinfo.value)
-
-
-def test_error_missing_params_cell_shows_path_if_available(tmp_directory):
-    path = Path('nb.ipynb')
-    path.write_text(new_nb(fmt='ipynb', add_tag=False))
-
-    with pytest.raises(SourceInitializationError) as excinfo:
-        NotebookSource(path)
-
-    assert ('Notebook "nb.ipynb" does not have a cell tagged "parameters"'
-            in str(excinfo.value))
-
-
 def test_nb_str_contains_kernel_info():
     source = NotebookSource(new_nb(fmt='ipynb'), ext_in='ipynb')
     nb = nbformat.reads(source._nb_str_unrendered,
