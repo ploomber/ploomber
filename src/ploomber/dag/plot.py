@@ -13,7 +13,6 @@ except ImportError:  # pragma: no cover
     import importlib_resources
 
 from ploomber import resources
-from ploomber.util.util import requires
 
 
 def check_pygraphviz_installed():
@@ -29,8 +28,7 @@ def choose_backend(backend):
        Temporarily disable pygraphviz for Python 3.10 on Windows
     """
     if ((not check_pygraphviz_installed() and backend is None)
-            or (backend == 'd3')
-            or (check_if_windows_python_3_10())):
+            or (backend == 'd3') or (check_if_windows_python_3_10())):
         return 'd3'
 
     return 'pygraphviz'
@@ -74,7 +72,7 @@ def with_d3(graph, output, image_only=False):
 def embedded_html(path):
 
     import nest_asyncio
-    
+
     nest_asyncio.apply()
 
     return IFrame(src=path, width=700, height=600)

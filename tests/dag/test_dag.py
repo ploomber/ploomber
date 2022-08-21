@@ -23,7 +23,6 @@ from ploomber.executors import Serial, Parallel, serial
 from ploomber.clients import SQLAlchemyClient
 from ploomber.dag.dagclients import DAGClients
 from ploomber.dag import plot as dag_plot_module
-from ploomber.util import util as ploomber_util
 
 IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and 'win' in sys.platform
 
@@ -213,19 +212,11 @@ def test_plot_validates_html_extension_if_d3(dag, tmp_directory):
 @pytest.mark.parametrize('backend', [None, 'd3'])
 def test_plot_with_d3_embed(dag, tmp_directory, monkeypatch, backend):
     # simulate pygraphviz isn't installed
-    #print("hello")
     monkeypatch.setattr(dag_plot_module, 'find_spec', lambda _: None)
     output = dag.plot(backend=backend)
 
-    # {'src': '/var/folders/1x/fmgx1zt55c9gz7x42pwshz_80000gn/T/tmp8b5oxk5r.html', 'width': 700, 'height': 600, 'extras': [], 'params': {}}
-    # print("im printing the attributes\n")
-    # print(output.__dict__)
-    # print("\n")
-    #with capsys.disabled():
-    #    print("hello...")
-
     # test path exists
-    assert len(output.src) is not 0
+    assert len(output.src) != 0
 
 
 @pytest.mark.parametrize('backend', [None, 'd3'])
