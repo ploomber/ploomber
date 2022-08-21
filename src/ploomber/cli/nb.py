@@ -1,6 +1,5 @@
 import argparse
 import json
-from re import template
 import shutil
 from pathlib import Path
 import stat
@@ -53,12 +52,13 @@ def _get_tasks_to_inject(dag, templates_to_exclude=[]):
                 dag, template)
 
             task_to_inject_name = task_to_inject.name
-            
-
             tasks_to_inject.append(task_to_inject_name)
-            warning_message += (f'{template} appears more than once in your pipeline, '
-                                f'the parameters from {task_to_inject_name} will be injected, to inject the parameters of '
-                                'another task, pass: ploomber nb --inject --priority {task-name} \n')
+            warning_message += (
+                f'{template} appears more than once in your'
+                f'pipeline, the parameters from {task_to_inject_name}'
+                'will be injected, to inject the parameters of '
+                'another task, pass: ploomber nb --inject'
+                '--priority {task-name} \n')
 
     return tasks_to_inject, warning_message
 
@@ -67,23 +67,27 @@ def _get_inject_cells_args(dag, priorities=[]):
     used_tempaltes = []
     exceptions = []
     for prioritized_task_name_to_inject in priorities:
-        dag_task = _find_task_in_dag_by_name(
-            dag, prioritized_task_name_to_inject)
+        dag_task = _find_task_in_dag_by_name(dag,
+                                             prioritized_task_name_to_inject)
         is_prioritized_task_exist = True if dag_task is not None else False
         if is_prioritized_task_exist:
             full_template_name = Path(dag_task.source._path).name
             if full_template_name not in used_tempaltes:
                 used_tempaltes.append(full_template_name)
             else:
-                exceptions.append(BaseException(
-                    'Error. Values are correspond to the same task.'))
+                exceptions.append(
+                    BaseException(
+                        'Error. Values are correspond to the same task.'))
                 break
         else:
-            exceptions.append(ValueError(
-                f'Error. Invalid task name. {prioritized_task_name_to_inject} is not defined in pipeline.yaml'))
+            exceptions.append(
+                ValueError(
+                    f'Error. Invalid task name.'
+                    f'{prioritized_task_name_to_inject} '
+                    'is not defined in pipeline.yaml'))
             break
 
-    # get unprioritized tasks for unused tempaltes 
+    # get unprioritized tasks for unused tempaltes
     unprioritized_tasks_to_inject, warning_message = _get_tasks_to_inject(
         dag, templates_to_exclude=used_tempaltes)
 
@@ -94,9 +98,7 @@ def _get_inject_cells_args(dag, priorities=[]):
 
 
 def _format_inject_cells_args(tasks_to_inject):
-    return {
-        'priority': tasks_to_inject
-    }
+    return {'priority': tasks_to_inject}
 
 
 def _format(fmt, entry_point, dag, verbose=True):
@@ -431,7 +433,7 @@ def main():
             dag, priorities=priorities)
 
         for exception in exceptions:
-            raise(exception)
+            raise (exception)
 
         if warning_message:
             warnings.warn(warning_message)
