@@ -41,8 +41,9 @@ def test_inject_single_task_parameters_with_same_template(
     # ploomber nb --inject --priority task-b
     nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
     template_path = f'{nb_inject_assets_path}/template.ipynb'
+    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
 
-    Path('pipeline.yaml').write_text(f"""
+    Path(test_pipeline).write_text(f"""
 tasks:
   - source: {template_path}
     name: task-a
@@ -65,7 +66,8 @@ tasks:
         task_to_inject = f'task-{param_to_inject}'
         monkeypatch.setattr(
             sys, 'argv',
-            ['ploomber', 'nb', '--inject', '--priority', task_to_inject])
+            ['ploomber', 'nb', '--entry-point', test_pipeline,
+             '--inject', '--priority', task_to_inject])
         cli.cmd_router()
         out, err = capsys.readouterr()
         if err:
@@ -83,8 +85,9 @@ def test_inject_multiple_tasks_parameters_with_different_templates(
     nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
     template_path = f'{nb_inject_assets_path}/template.ipynb'
     template_b_path = f'{nb_inject_assets_path}/template_b.ipynb'
+    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
 
-    Path('pipeline.yaml').write_text(f"""
+    Path(test_pipeline).write_text(f"""
 tasks:
   - source: {template_path}
     name: task-a
@@ -104,7 +107,8 @@ tasks:
     param_to_inject_b = 'c'
 
     monkeypatch.setattr(sys, 'argv', [
-        'ploomber', 'nb', '--inject', '--priority',
+        'ploomber', 'nb', '--entry-point', test_pipeline,
+        '--inject', '--priority',
         f'task-{param_to_inject_a}', '--priority', f'task-{param_to_inject_b}'
     ])
 
@@ -127,8 +131,9 @@ def test_inject_multiple_task_parameters_that_use_the_same_template(
     # ploomber nb --inject --priority task-a --priority task-b
     nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
     template_path = f'{nb_inject_assets_path}/template.ipynb'
+    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
 
-    Path('pipeline.yaml').write_text(f"""
+    Path(test_pipeline).write_text(f"""
 tasks:
   - source: {template_path}
     name: task-a
@@ -147,7 +152,8 @@ tasks:
     param_to_inject_b = 'b'
 
     monkeypatch.setattr(sys, 'argv', [
-        'ploomber', 'nb', '--inject', '--priority',
+        'ploomber', 'nb', '--entry-point', test_pipeline,
+        '--inject', '--priority',
         f'task-{param_to_inject_a}', '--priority', f'task-{param_to_inject_b}'
     ])
 
@@ -163,8 +169,9 @@ def test_inject_invalid_prioritized_task_single_task(monkeypatch, capsys,
     # ploomber nb --inject --priority this-task-doesnt-exist
     nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
     template_path = f'{nb_inject_assets_path}/template.ipynb'
+    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
 
-    Path('pipeline.yaml').write_text(f"""
+    Path(test_pipeline).write_text(f"""
 tasks:
   - source: {template_path}
     name: task-a
@@ -182,7 +189,8 @@ tasks:
     task_name_to_inject = 'this-task-doesnt-exist'
 
     monkeypatch.setattr(sys, 'argv', [
-        'ploomber', 'nb', '--inject', '--priority',
+        'ploomber', 'nb', '--entry-point', test_pipeline,
+        '--inject', '--priority',
         f'task-{task_name_to_inject}'
     ])
 
@@ -199,8 +207,9 @@ def test_inject_with_priority_without_task(monkeypatch, capsys,
 
     nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
     template_path = f'{nb_inject_assets_path}/template.ipynb'
+    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
 
-    Path('pipeline.yaml').write_text(f"""
+    Path(test_pipeline).write_text(f"""
 tasks:
   - source: {template_path}
     name: task-a
@@ -216,7 +225,8 @@ tasks:
     """)
 
     monkeypatch.setattr(sys, 'argv',
-                        ['ploomber', 'nb', '--inject', '--priority'])
+                        ['ploomber', 'nb', '--entry-point', test_pipeline,
+                         '--inject', '--priority'])
 
     with pytest.raises(BaseException):
         cli.cmd_router()
@@ -232,8 +242,9 @@ def test_inject_default_task_when_no_priority_given(monkeypatch,
 
     nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
     template_path = f'{nb_inject_assets_path}/template.ipynb'
+    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
 
-    Path('pipeline.yaml').write_text(f"""
+    Path(test_pipeline).write_text(f"""
 tasks:
   - source: {template_path}
     name: task-a
@@ -250,7 +261,9 @@ tasks:
 
     expected_default_value = 'a'
 
-    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb',
+                                      '--entry-point', test_pipeline,
+                                      '--inject'])
 
     with pytest.warns(UserWarning) as warning:
         cli.cmd_router()
@@ -258,7 +271,8 @@ tasks:
     injected_params = get_nb_injected_params(template_path)
 
     assert (len(warning) == 1)
-    assert ('appears more than once in your pipeline' in warning[0].message.args[0])
+    assert ('appears more than once in your pipeline'
+            in warning[0].message.args[0])
     assert (injected_params == f'"{expected_default_value}"')
 
 

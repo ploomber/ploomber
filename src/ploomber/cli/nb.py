@@ -129,11 +129,11 @@ def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
     kwargs = kwargs or {}
     files = []
     results = []
-    priority_key = 'priority'
     for task in dag.values():
-        ok_to_inject_task = len(kwargs) == 0 or (
-            priority_key in kwargs and task.name in kwargs[priority_key]
-        )
+        ok_to_inject_task = True
+        if 'priority' in kwargs:
+            ok_to_inject_task = task.name in kwargs['priority']
+
         if ok_to_inject_task:
             try:
                 method = getattr(task.source, method_name)
