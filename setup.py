@@ -154,7 +154,8 @@ setup(
     ],
     install_requires=[
         'ploomber-scaffold>=0.3',
-        'ploomber-engine',
+        # added fix to manage the IPython terminal singleton
+        'ploomber-engine>=0.0.8',
         'ploomber-core',
         'pyyaml',
         'networkx>=2.5',
