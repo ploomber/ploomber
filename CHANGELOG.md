@@ -12,6 +12,7 @@
 * Clearing screen before updating execution status when using the `Parallel` executor
 * Fixes missing plot when generating `ploomber report` with `--backend d3` ([#946](https://github.com/ploomber/ploomber/issues/946))
 * Fixes error when using dotted paths in `grid` ([#951](https://github.com/ploomber/ploomber/issues/951))
+* Add `--priority` to `nb --inject` to choose parameters to inject ([#902](https://github.com/ploomber/ploomber/issues/902))
 
 ## 0.19.9 (2022-07-26)
 
