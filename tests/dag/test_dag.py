@@ -212,29 +212,20 @@ def test_plot_validates_html_extension_if_d3(dag, tmp_directory):
 
 @pytest.mark.parametrize('backend', [None, 'd3'])
 def test_plot_with_d3_embed(dag, tmp_directory, monkeypatch, backend):
-    # simulate pygraphviz isnt installed
+    # simulate pygraphviz isn't installed
+    #print("hello")
     monkeypatch.setattr(dag_plot_module, 'find_spec', lambda _: None)
     output = dag.plot(backend=backend)
 
-    # test the svg tag has the rendered content
-    assert '<svg id="dag" viewBox=' in output.data
-    # and the js message is hidden
-    assert '<div id="js-message" style="display: none;">' in output.data
+    # {'src': '/var/folders/1x/fmgx1zt55c9gz7x42pwshz_80000gn/T/tmp8b5oxk5r.html', 'width': 700, 'height': 600, 'extras': [], 'params': {}}
+    # print("im printing the attributes\n")
+    # print(output.__dict__)
+    # print("\n")
+    #with capsys.disabled():
+    #    print("hello...")
 
-
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
-def test_plot_with_d3_embed_error_if_missing_dependency(
-        dag, tmp_directory, monkeypatch):
-    monkeypatch.setattr(ploomber_util.importlib.util, 'find_spec',
-                        lambda _: None)
-
-    with pytest.raises(ImportError) as excinfo:
-        dag.plot(backend='d3')
-
-    expected = ("'requests-html' 'nest_asyncio' are "
-                "required to use 'embedded HTML with D3 backend'. "
-                "Install with: pip install 'requests-html' 'nest_asyncio'")
-    assert expected == str(excinfo.value)
+    # test path exists
+    assert len(output.src) is not 0
 
 
 @pytest.mark.parametrize('backend', [None, 'd3'])
