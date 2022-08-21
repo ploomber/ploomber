@@ -235,46 +235,6 @@ tasks:
     assert 'expected one argument' in err
 
 
-def test_inject_default_task_when_no_priority_given(monkeypatch,
-                                                    path_to_assets):
-    # ploomber nb --inject --priority task-a --priority task-b
-
-    nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
-    template_path = f'{nb_inject_assets_path}/template.ipynb'
-    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
-
-    Path(test_pipeline).write_text(f"""
-tasks:
-  - source: {template_path}
-    name: task-a
-    product: {nb_inject_assets_path}/report-a.ipynb
-    params:
-      some_param: a
-
-  - source: {template_path}
-    name: task-b
-    product: {nb_inject_assets_path}/report-b.ipynb
-    params:
-      some_param: b
-    """)
-
-    expected_default_value = 'a'
-
-    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb',
-                                      '--entry-point', test_pipeline,
-                                      '--inject'])
-
-    with pytest.warns(UserWarning) as warning:
-        cli.cmd_router()
-
-    injected_params = get_nb_injected_params(template_path)
-
-    assert (len(warning) > 0)
-    assert ('appears more than once in your pipeline'
-            in warning[0].message.args[0])
-    assert (injected_params == f'"{expected_default_value}"')
-
-
 def test_inject_remove(monkeypatch, tmp_nbs):
     monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])
     expected = 'tags=["injected-parameters"]'
