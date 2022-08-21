@@ -469,3 +469,22 @@ def twos(ones):
         'name': ['twos', 'ones'],
         'Ran?': [True, False]
     }
+
+
+@pytest.mark.skip
+def test_multi_step_grid(tmp_directory):
+
+    multi_grid = micro.MultiStepGrid()
+
+    @multi_grid(x=[1, 2, 3])
+    def first(x):
+        return x + 1
+
+    @multi_grid
+    def second(first):
+        return 2 * first
+
+    # TODO: this isn't good design. if using a multigrid, do we pass
+    # multigrid? first? first, second? all?
+    dag = micro.dag_from_functions([first, second])
+    dag.build()
