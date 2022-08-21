@@ -236,7 +236,6 @@ tasks:
 
 
 def test_inject_default_task_when_no_priority_given(monkeypatch,
-                                                    capsys,
                                                     path_to_assets):
     # ploomber nb --inject --priority task-a --priority task-b
 
@@ -270,7 +269,7 @@ tasks:
 
     injected_params = get_nb_injected_params(template_path)
 
-    assert (len(warning) == 1)
+    assert (len(warning) > 0)
     assert ('appears more than once in your pipeline'
             in warning[0].message.args[0])
     assert (injected_params == f'"{expected_default_value}"')
