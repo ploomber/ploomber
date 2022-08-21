@@ -29,8 +29,8 @@ def get_nb_injected_params(template_path):
     nb = json.loads(updated_template)
     parameters_cell_index = 1
     some_param_index = 1
-    some_param_string = nb['cells'][parameters_cell_index]
-    ['source'][some_param_index]
+    injected_cell = nb['cells'][parameters_cell_index]
+    some_param_string = injected_cell['source'][some_param_index]
     some_param = some_param_string.split()[2]
     return some_param
 
@@ -204,13 +204,13 @@ def test_inject_with_priority_without_task(monkeypatch, capsys,
 tasks:
   - source: {template_path}
     name: task-a
-    product: {path_to_assets}/report-a.ipynb
+    product: {nb_inject_assets_path}/report-a.ipynb
     params:
       some_param: a
 
   - source: {template_path}
     name: task-b
-    product: {path_to_assets}/report-b.ipynb
+    product: {nb_inject_assets_path}/report-b.ipynb
     params:
       some_param: b
     """)
@@ -226,6 +226,7 @@ tasks:
 
 
 def test_inject_default_task_when_no_priority_given(monkeypatch,
+                                                    capsys,
                                                     path_to_assets):
     # ploomber nb --inject --priority task-a --priority task-b
 
@@ -236,13 +237,13 @@ def test_inject_default_task_when_no_priority_given(monkeypatch,
 tasks:
   - source: {template_path}
     name: task-a
-    product: {path_to_assets}/report-a.ipynb
+    product: {nb_inject_assets_path}/report-a.ipynb
     params:
       some_param: a
 
   - source: {template_path}
     name: task-b
-    product: {path_to_assets}/report-b.ipynb
+    product: {nb_inject_assets_path}/report-b.ipynb
     params:
       some_param: b
     """)
@@ -257,8 +258,7 @@ tasks:
     injected_params = get_nb_injected_params(template_path)
 
     assert (len(warning) == 1)
-    assert ('appears more than once in your pipeline'
-            in warning[0].message.args[0])
+    assert ('appears more than once in your pipeline' in warning[0].message.args[0])
     assert (injected_params == f'"{expected_default_value}"')
 
 

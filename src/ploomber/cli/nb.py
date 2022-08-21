@@ -54,7 +54,7 @@ def _get_tasks_to_inject(dag, templates_to_exclude=[]):
             task_to_inject_name = task_to_inject.name
             tasks_to_inject.append(task_to_inject_name)
             warning_message += (
-                f'{template} appears more than once in your'
+                f'{template} appears more than once in your '
                 f'pipeline, the parameters from {task_to_inject_name}'
                 'will be injected, to inject the parameters of '
                 'another task, pass: ploomber nb --inject'
