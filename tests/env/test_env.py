@@ -20,7 +20,8 @@ from ploomber.env.expand import (EnvironmentExpander, expand_raw_dictionary,
                                  expand_raw_dictionaries_and_extract_tags)
 from ploomber.util import default
 from ploomber import repo
-from ploomber.exceptions import BaseException, ValidationError
+from ploomber.exceptions import ValidationError
+from ploomber_core.exceptions import BaseException
 
 
 def test_env_repr_and_str(cleanup_env, monkeypatch):

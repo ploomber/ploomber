@@ -11,7 +11,6 @@
 [![Conda](https://img.shields.io/conda/pn/conda-forge/ploomber)](https://anaconda.org/conda-forge/ploomber)
 [![Coverage](https://coveralls.io/repos/github/ploomber/ploomber/badge.svg?branch=master)](https://coveralls.io/github/ploomber/ploomber?branch=master)
 [![Twitter](https://img.shields.io/twitter/follow/ploomber?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=ploomber)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster)
 [![Downloads](https://pepy.tech/badge/ploomber)](https://pepy.tech/project/ploomber)
 
 <p align="center">
@@ -56,25 +55,18 @@ conda install ploomber -c conda-forge
 
 ## Getting started
 
-**Open a hosted JupyterLab instance:**
+### Try the tutorial:
+<p>
+  <a href="https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster"> <img src="_static/open-in-jupyterlab.svg" alt="Open In JupyterLab"> </a>
+</p>
 
-[![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster)
-
-**or learn it locally in 2 minutes:**
+### **Or locally:**
 
 ```sh
 pip install ploomber --upgrade
 
 python -m ploomber.onboard
-```
-
-**What's next?**
-
-Ready to **migrate your project?** [Click here.](https://docs.ploomber.io/en/latest/user-guide/refactoring.html)
-
-Do you want to **learn more?** [Check out the introductory tutorial.](https://docs.ploomber.io/en/latest/get-started/first-pipeline.html)
-
-Run more [examples.](https://docs.ploomber.io/en/latest/user-guide/templates.html)
+  ```
 
 ## Community
 

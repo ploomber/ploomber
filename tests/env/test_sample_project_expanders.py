@@ -2,6 +2,7 @@ from pathlib import Path
 import subprocess
 from ploomber import Env
 from ploomber.env.expand import EnvironmentExpander
+from ploomber_core.exceptions import BaseException
 
 import pytest
 

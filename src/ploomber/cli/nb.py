@@ -8,9 +8,9 @@ import click
 
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import command_endpoint
-from ploomber.telemetry import telemetry
 from ploomber.sources.notebooksource import recursive_update
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
+from ploomber.telemetry import telemetry
 import warnings
 from ploomber.dag.util import get_unique_list
 

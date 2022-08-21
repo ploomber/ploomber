@@ -17,6 +17,7 @@ from ploomber.executors import _format
 from multiprocessing import get_context, get_start_method
 from ploomber.io import pretty_print
 
+from tqdm.auto import tqdm
 import click
 
 # TODO: support for show_progress, we can use a progress bar but we have
@@ -64,6 +65,11 @@ class Parallel(Executor):
     print_progress : bool, default=False
         Whether to print progress to stdout, otherwise just log it
 
+    start_method : str, default=None
+        The method which should be used to start child processes. method
+        can be 'fork', 'spawn' or 'forkserver'. If None or empty then the
+        default start_method is used.
+
     Examples
     --------
     Spec API:
@@ -89,6 +95,9 @@ class Parallel(Executor):
     If any task crashes, downstream tasks execution is aborted, building
     continues until no more tasks can be executed
 
+    .. versionadded:: 0.20
+        Added `start_method` argument
+
     See Also
     --------
     ploomber.executors.Serial :
@@ -103,12 +112,14 @@ class Parallel(Executor):
     def __init__(self,
                  processes=None,
                  print_progress=False,
-                 start_method=get_start_method()):
+                 start_method=None):
         self.processes = processes or os.cpu_count()
         self.print_progress = print_progress
 
         self._logger = logging.getLogger(__name__)
         self._i = 0
+        start_method = start_method or get_start_method()
+        self._bar = None
         if start_method in self.multiprocessing_start_methods:
             self.start_method = start_method
         else:
@@ -133,15 +144,27 @@ class Parallel(Executor):
         # is restarted even up-to-date tasks will be WaitingExecution again
         # this is a bit confusing, so maybe change WaitingExecution
         # to WaitingBuild?
+        n_scheduled = 0
+
         for name in dag:
             if dag[name].exec_status in {
                     TaskStatus.Executed, TaskStatus.Skipped
             }:
                 done.append(dag[name])
+            else:
+                n_scheduled += 1
+
+        if show_progress:
+            self._bar = tqdm(total=n_scheduled)
+        else:
+            self._bar = None
 
         def callback(future):
             """Keep track of finished tasks
             """
+            if self._bar:
+                self._bar.update()
+
             task = future_mapping[future]
             self._logger.debug('Added %s to the list of finished tasks...',
                                task.name)
@@ -153,9 +176,13 @@ class Parallel(Executor):
                 # when we call result after breaking the loop,
                 # this will show up
                 task.exec_status = TaskStatus.BrokenProcessPool
+                if self._bar:
+                    self._bar.colour = 'red'
             else:
                 if isinstance(result, Message):
                     task.exec_status = TaskStatus.Errored
+                    if self._bar:
+                        self._bar.colour = 'red'
                 # sucessfully run task._build
                 else:
                     # ignore report here, we just the metadata to update it
@@ -174,6 +201,8 @@ class Parallel(Executor):
             """
             for task in dag.values():
                 if task.exec_status in {TaskStatus.Aborted}:
+                    if self._bar:
+                        self._bar.update()
                     done.append(task)
                 elif task.exec_status == TaskStatus.BrokenProcessPool:
                     raise StopIteration
@@ -246,6 +275,9 @@ class Parallel(Executor):
 
         exps = [r for r in results if isinstance(r, Message)]
 
+        if self._bar:
+            self._bar.close()
+
         if exps:
             raise DAGBuildError(str(BuildExceptionsCollector(exps)))
 
@@ -257,11 +289,14 @@ class Parallel(Executor):
         # _logger is not pickable, so we remove them and build
         # them again in __setstate__
         del state['_logger']
+        # the progress bar is not pickable
+        del state['_bar']
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
         self._logger = logging.getLogger(__name__)
+        self._bar = None
 
 
 def get_future_result(future, future_mapping):

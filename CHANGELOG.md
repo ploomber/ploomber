@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.20.1dev
+* Remove `parameters` cell missing exception and add `parameters` cell in `NotebookRunner` and `ScriptRunner` when it is missing ([#971](https://github.com/ploomber/ploomber/issues/971))
 
 ## 0.20 (2022-08-04)
 
@@ -9,6 +10,7 @@
 * Adds support to serialize the traceback for later post-mortem debugging: `ploomber build --debuglater` and `ploomber task {name} --debuglater`
 * Support for notebook post-mortem debugging: `ploomber build --debug` `ploomber task {name} --debug` ([#823](https://github.com/ploomber/ploomber/issues/823))
 * `env.yaml` allows to use existing keys in subsequent values
+* Add `start_method` to Parallel executor to set the method which should be used to start child processes ([#942](https://github.com/ploomber/ploomber/issues/942))
 * Clearing screen before updating execution status when using the `Parallel` executor
 * Fixes missing plot when generating `ploomber report` with `--backend d3` ([#946](https://github.com/ploomber/ploomber/issues/946))
 * Fixes error when using dotted paths in `grid` ([#951](https://github.com/ploomber/ploomber/issues/951))
@@ -33,6 +35,8 @@
 * Error message when `env.yml` found instead of `env.yaml` ([#829](https://github.com/ploomber/ploomber/issues/829))
 * Fixes jinja extractor when upstream had nested getitem ([#859](https://github.com/ploomber/ploomber/issues/859))
 * Fixes notebook loading on Windows when UTF-8 is not the default encoding ([#870](https://github.com/ploomber/ploomber/issues/870))
+
+* Remove extraneous output in `ploomber task` tracebacks ([#828]https://github.com/ploomber/ploomber/issues/828)
 
 ## 0.19.6 (2022-06-02)
 * `setup.cfg` allows to switch default entry point
