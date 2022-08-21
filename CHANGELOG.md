@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.20.1dev
+* Compatible with nbconvert 7
 * Adds `ploomber.micro` module for writing micro pipelines
 * Remove `parameters` cell missing exception and add `parameters` cell in `NotebookRunner` and `ScriptRunner` when it is missing ([#971](https://github.com/ploomber/ploomber/issues/971))
 
