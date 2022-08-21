@@ -105,11 +105,11 @@ def _add_to_sys_path(path, chdir=False):
 
 
 class _Client(PloomberClient):
-    """A subclass of PloomberClirny that looks for a "return value"
+    """A subclass of PloomberClient that looks for a "return value"
     statement and returns the value
     """
 
-    def execute(self):
+    def _execute(self):
         execution_count = 1
         returned_value = None
 
@@ -154,21 +154,21 @@ def _capture_execute(function, globals_, **kwargs):
         c = nbformat.v4.new_code_cell(source=statement)
         nb.cells.append(c)
 
-    client = _Client(nb)
     upstream = kwargs.pop('upstream', {})
 
     # FIXME: there something weird going on. the content of globals_ changes
     # after a few tasks, it's the same object and then all of a sudden, it
     # changes (I checked with id(globals_))
+    with _Client(nb) as client:
 
-    client._shell.user_ns = {
-        **client._shell.user_ns,
-        **globals_,
-        **upstream,
-        **kwargs
-    }
+        client._shell.user_ns = {
+            **client._shell.user_ns,
+            **globals_,
+            **upstream,
+            **kwargs
+        }
 
-    nb, val = client.execute()
+        nb, val = client._execute()
 
     return nb, val
 
@@ -217,10 +217,10 @@ def _deindent(body_elements):
 def _to_html(path, nb):
     """Convert a notebook to HTML
     """
-    Path(path).write_text(
-        nbconvert.export(nbconvert.exporters.HTMLExporter,
-                         nb,
-                         exclude_input=True)[0])
+    html = nbconvert.export(nbconvert.exporters.HTMLExporter,
+                            nb,
+                            exclude_input=True)[0]
+    Path(path).write_text(html, encoding='utf-8')
 
 
 def _parse_tag(source):

@@ -5,15 +5,12 @@ import sys
 from pathlib import Path
 from unittest.mock import Mock, MagicMock
 
-import jupytext
-import nbformat
 import pytest
 from debuglater.pydump import debug_dump
 
 from ploomber.cli import plot, build, parsers, task, report, status, interact
 from ploomber_cli.cli import cmd_router
 from ploomber.cli.parsers import CustomParser
-from ploomber.tasks import notebook
 from ploomber import DAG
 import ploomber.dag.dag as dag_module
 # TODO: optimize some of the tests that build dags by mocking and checking
@@ -258,33 +255,6 @@ def test_interact_command_starts_full_ipython_session(monkeypatch, tmp_nbs):
 
     mock_start_ipython.assert_called_once_with(argv=[],
                                                user_ns={'dag': mock_dag})
-
-
-def test_interactive_session_develop(monkeypatch, tmp_nbs):
-    monkeypatch.setattr(sys, 'argv', ['python'])
-
-    mock = Mock(side_effect=['dag["plot"].develop()', 'quit'])
-
-    def mock_jupyter_notebook(args, **kwargs):
-        nb = jupytext.reads('2 + 2', fmt='py')
-        # args: jupyter {app} {path} {other args,...}
-        nbformat.write(nb, args[2])
-
-    mock_sub = Mock()
-    mock_sub.run = mock_jupyter_notebook
-
-    with monkeypatch.context() as m:
-        # NOTE: I tried patching
-        # (IPython.terminal.interactiveshell.TerminalInteractiveShell
-        # .prompt_for_code)
-        # but didn't work, patching builtins input works
-        m.setattr('builtins.input', mock)
-
-        m.setattr(notebook, 'subprocess', mock_sub)
-        m.setattr(notebook, '_save', lambda: True)
-        interact.main(catch_exception=False)
-
-    assert Path('plot.py').read_text().strip() == '2 + 2'
 
 
 def test_interactive_session_render_fails(monkeypatch, tmp_nbs):
