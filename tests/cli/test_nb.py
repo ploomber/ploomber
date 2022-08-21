@@ -46,13 +46,13 @@ def test_inject_single_task_parameters_with_same_template(
 tasks:
   - source: {template_path}
     name: task-a
-    product: {path_to_assets}/report-a.ipynb
+    product: {nb_inject_assets_path}/report-a.ipynb
     params:
       some_param: a
 
   - source: {template_path}
     name: task-b
-    product: {path_to_assets}/report-b.ipynb
+    product: {nb_inject_assets_path}/report-b.ipynb
     params:
       some_param: b
     """)
@@ -88,13 +88,13 @@ def test_inject_multiple_tasks_parameters_with_different_templates(
 tasks:
   - source: {template_path}
     name: task-a
-    product: {path_to_assets}/report-a.ipynb
+    product: {nb_inject_assets_path}/report-a.ipynb
     params:
       some_param: a
 
   - source: {template_b_path}
     name: task-c
-    product: {path_to_assets}/report-c.ipynb
+    product: {nb_inject_assets_path}/report-c.ipynb
     params:
       some_param: c
     """)
@@ -132,13 +132,13 @@ def test_inject_multiple_task_parameters_that_use_the_same_template(
 tasks:
   - source: {template_path}
     name: task-a
-    product: {path_to_assets}/report-a.ipynb
+    product: {nb_inject_assets_path}/report-a.ipynb
     params:
       some_param: a
 
   - source: {template_path}
     name: task-b
-    product: {path_to_assets}/report-b.ipynb
+    product: {nb_inject_assets_path}/report-b.ipynb
     params:
       some_param: b
     """)
@@ -168,13 +168,13 @@ def test_inject_invalid_prioritized_task_single_task(monkeypatch, capsys,
 tasks:
   - source: {template_path}
     name: task-a
-    product: {path_to_assets}/report-a.ipynb
+    product: {nb_inject_assets_path}/report-a.ipynb
     params:
       some_param: a
 
   - source: {template_path}
     name: task-b
-    product: {path_to_assets}/report-b.ipynb
+    product: {nb_inject_assets_path}/report-b.ipynb
     params:
       some_param: b
     """)
