@@ -14,6 +14,7 @@ import nbformat
 import nbconvert
 from nbconvert import ExporterNameError
 
+from ploomber_core import deprecated
 # this was introduced in nbconvert 6.0
 try:
     from nbconvert.exporters.webpdf import WebPDFExporter
@@ -279,6 +280,7 @@ class NotebookMixin(FileLoaderMixin):
     def static_analysis(self, value):
         self._source.static_analysis = value
 
+    @deprecated.method(deprecated_in='0.21', removed_in='0.22')
     def develop(self, app='notebook', args=None):
         """
         Opens the rendered notebook (with injected parameters) and adds a
@@ -669,8 +671,7 @@ class NotebookRunner(NotebookMixin, Task):
                  nbconvert_export_kwargs=None,
                  local_execution=False,
                  check_if_kernel_installed=True,
-                 debug_mode=None
-                 ):
+                 debug_mode=None):
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name
@@ -691,16 +692,11 @@ class NotebookRunner(NotebookMixin, Task):
                              'when "debug_mode" is enabled')
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
-        self._source = NotebookRunner._init_source(
-            source,
-            kwargs,
-            ext_in,
-            kernelspec_name,
-            static_analysis,
-            check_if_kernel_installed,
-            False,
-            False
-        )
+        self._source = NotebookRunner._init_source(source, kwargs, ext_in,
+                                                   kernelspec_name,
+                                                   static_analysis,
+                                                   check_if_kernel_installed,
+                                                   False, False)
         super().__init__(product, dag, name, params)
 
         self._validate_nbconvert_exporter()
@@ -909,28 +905,32 @@ class ScriptRunner(NotebookMixin, Task):
     >>> _ = dag.build()
     """
 
-    def __init__(self,
-                 source,
-                 product,
-                 dag,
-                 name=None,
-                 params=None,
-                 ext_in=None,
-                 static_analysis='regular',
-                 local_execution=False,
-                 ):
+    def __init__(
+        self,
+        source,
+        product,
+        dag,
+        name=None,
+        params=None,
+        ext_in=None,
+        static_analysis='regular',
+        local_execution=False,
+    ):
         self.ext_in = ext_in
         self.local_execution = local_execution
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = ScriptRunner._init_source(source, kwargs, ext_in,
-                                                 static_analysis, False,
-                                                 False)
+                                                 static_analysis, False, False)
         super().__init__(product, dag, name, params)
 
     @staticmethod
-    def _init_source(source, kwargs, ext_in=None, static_analysis='regular',
-                     extract_up=False, extract_prod=False):
+    def _init_source(source,
+                     kwargs,
+                     ext_in=None,
+                     static_analysis='regular',
+                     extract_up=False,
+                     extract_prod=False):
         ns = NotebookSource(
             source,
             ext_in=ext_in,

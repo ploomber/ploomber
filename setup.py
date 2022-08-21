@@ -156,7 +156,8 @@ setup(
         'ploomber-scaffold>=0.3',
         # added fix to manage the IPython terminal singleton
         'ploomber-engine>=0.0.8',
-        'ploomber-core',
+        # added @deprecated.method
+        'ploomber-core>=0.0.5',
         'pyyaml',
         'networkx>=2.5',
         'jinja2',
