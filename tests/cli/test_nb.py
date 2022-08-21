@@ -1,4 +1,5 @@
 import json
+from pickle import TRUE
 import shutil
 import subprocess
 from pathlib import Path
@@ -23,31 +24,220 @@ def git_commit():
     subprocess.check_call(['git', 'add', '--all'])
     subprocess.check_call(['git', 'commit', '-m', 'commit'])
 
-# yafim start
-def test_inject_specific_task_parameters_that_use_the_same_template():
+
+def get_nb_injected_params(template_path):
+    updated_template = Path(template_path).read_text()
+    nb = json.loads(updated_template)
+    parameters_cell_index = 1
+    some_param_index = 1
+    some_param_string = nb['cells'][parameters_cell_index]['source'][some_param_index]
+    some_param = some_param_string.split()[2]
+    return some_param
+
+def test_inject_single_task_parameters_with_same_template(monkeypatch, capsys, path_to_assets):
     # ploomber nb --inject --priority task-a
     # ploomber nb --inject --priority task-b
-    assert True is True 
+    
+    template_path = f'{path_to_assets}/test-nb-inject-assets/template.ipynb'
 
-def test_inject_multiple_specific_task_parameters_that_use_different_templates():
+    Path('pipeline.yaml').write_text(f"""
+tasks:
+  - source: {template_path}
+    name: task-a
+    product: {path_to_assets}/report-a.ipynb
+    params:
+      some_param: a
+
+  - source: {template_path}
+    name: task-b
+    product: {path_to_assets}/report-b.ipynb
+    params:
+      some_param: b
+    """)
+
+
+    inject_results = []
+
+    params_to_inject = ['a', 'b']
+
+    for param_to_inject in params_to_inject:
+        task_to_inject = f'task-{param_to_inject}'
+        monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject', '--priority', task_to_inject])
+        cli.cmd_router()
+        out, err = capsys.readouterr()
+        if err:
+            inject_results.append(False)
+        else :
+            injected_params = get_nb_injected_params(template_path)
+            inject_results.append(injected_params == f'"{param_to_inject}"')
+
+
+    assert all(inject_results)
+
+
+def test_inject_multiple_tasks_parameters_with_different_templates(monkeypatch, capsys, path_to_assets):
     # ploomber nb --inject --priority task-a --priority task-c
-    assert True is True
+    template_path = f'{path_to_assets}/test-nb-inject-assets/template.ipynb'
+    template_b_path = f'{path_to_assets}/test-nb-inject-assets/template_b.ipynb'
 
-def test_inject_multiple_specific_task_parameters_that_use_the_same_template():
-    # should raise an error
+    Path('pipeline.yaml').write_text(f"""
+tasks:
+  - source: {template_path}
+    name: task-a
+    product: {path_to_assets}/report-a.ipynb
+    params:
+      some_param: a
+
+  - source: {template_b_path}
+    name: task-c
+    product: {path_to_assets}/report-c.ipynb
+    params:
+      some_param: c
+    """)
+
+
+    inject_results = []
+    param_to_inject_a = 'a'
+    param_to_inject_b = 'c'
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject', '--priority', f'task-{param_to_inject_a}', '--priority', f'task-{param_to_inject_b}'])
+    cli.cmd_router()
+    out, err = capsys.readouterr()
+    if err:
+        inject_results.append(False)
+    else :
+        injected_params_a = get_nb_injected_params(template_path)
+        inject_results.append(injected_params_a == f'"{param_to_inject_a}"')
+
+        injected_params_b = get_nb_injected_params(template_b_path)
+        inject_results.append(injected_params_b == f'"{param_to_inject_b}"')
+
+
+    assert all(inject_results)
+
+
+def test_inject_multiple_task_parameters_that_use_the_same_template(monkeypatch, capsys, path_to_assets):
     # ploomber nb --inject --priority task-a --priority task-b
-    assert True is True
+    template_path = f'{path_to_assets}/test-nb-inject-assets/template.ipynb'
 
-def test_inject_invalid_prioritized_task_single_task():
-    # should raise an error
+    Path('pipeline.yaml').write_text(f"""
+tasks:
+  - source: {template_path}
+    name: task-a
+    product: {path_to_assets}/report-a.ipynb
+    params:
+      some_param: a
+
+  - source: {template_path}
+    name: task-b
+    product: {path_to_assets}/report-b.ipynb
+    params:
+      some_param: b
+    """)
+
+    param_to_inject_a = 'a'
+    param_to_inject_b = 'b'
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject', '--priority', f'task-{param_to_inject_a}', '--priority', f'task-{param_to_inject_b}'])
+
+    with pytest.raises(BaseException):
+        cli.cmd_router()
+
+    out, err = capsys.readouterr()
+    assert 'Values are correspond to the same task' in err
+
+
+def test_inject_invalid_prioritized_task_single_task(monkeypatch, capsys, path_to_assets):
     # ploomber nb --inject --priority this-task-doesnt-exist
-    assert True is True
+    template_path = f'{path_to_assets}/test-nb-inject-assets/template.ipynb'
 
-def test_inject_invalid_prioritized_task_multiple_tasks():
-    # should raise an error
-    # ploomber nb --inject --priority task-name-exists --priority this-task-doesnt-exist
-    assert True is True
-# yafim end
+    Path('pipeline.yaml').write_text(f"""
+tasks:
+  - source: {template_path}
+    name: task-a
+    product: {path_to_assets}/report-a.ipynb
+    params:
+      some_param: a
+
+  - source: {template_path}
+    name: task-b
+    product: {path_to_assets}/report-b.ipynb
+    params:
+      some_param: b
+    """)
+
+    task_name_to_inject = 'this-task-doesnt-exist'
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject', '--priority', f'task-{task_name_to_inject}'])
+
+    with pytest.raises(BaseException):
+        cli.cmd_router()
+
+    out, err = capsys.readouterr()
+    assert 'Invalid task' in err
+
+
+def test_inject_with_priority_without_task(monkeypatch, capsys, path_to_assets):
+    # ploomber nb --inject --priority
+    
+    template_path = f'{path_to_assets}/test-nb-inject-assets/template.ipynb'
+
+    Path('pipeline.yaml').write_text(f"""
+tasks:
+  - source: {template_path}
+    name: task-a
+    product: {path_to_assets}/report-a.ipynb
+    params:
+      some_param: a
+
+  - source: {template_path}
+    name: task-b
+    product: {path_to_assets}/report-b.ipynb
+    params:
+      some_param: b
+    """)
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject', '--priority'])
+
+    with pytest.raises(BaseException):
+        cli.cmd_router()
+
+    out, err = capsys.readouterr()
+    assert 'expected one argument' in err
+
+
+def test_inject_default_task_when_no_priority_given(monkeypatch, capsys, path_to_assets):
+    # ploomber nb --inject --priority task-a --priority task-b
+    
+    template_path = f'{path_to_assets}/test-nb-inject-assets/template.ipynb'
+
+    Path('pipeline.yaml').write_text(f"""
+tasks:
+  - source: {template_path}
+    name: task-a
+    product: {path_to_assets}/report-a.ipynb
+    params:
+      some_param: a
+
+  - source: {template_path}
+    name: task-b
+    product: {path_to_assets}/report-b.ipynb
+    params:
+      some_param: b
+    """)
+
+    expected_default_value = 'a'
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])
+
+    with pytest.warns(UserWarning) as warning:
+        cli.cmd_router()
+    
+    injected_params = get_nb_injected_params(template_path)
+    
+    assert (len(warning) == 1)
+    assert ('appears more than once in your pipeline' in warning[0].message.args[0])
+    assert (injected_params == f'"{expected_default_value}"')
 
 def test_inject_remove(monkeypatch, tmp_nbs):
     monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])
