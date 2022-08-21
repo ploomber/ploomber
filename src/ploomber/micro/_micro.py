@@ -2,7 +2,8 @@ from functools import wraps
 from inspect import signature
 from itertools import chain
 
-from ploomber import DAG
+from functools import partial
+from ploomber import DAGConfigurator
 from ploomber.executors import ParallelDill, Serial
 from ploomber.io import serializer
 from ploomber.products import File
@@ -115,6 +116,11 @@ def _signature_wrapper(f, call_with_args):
     """An internal wrapper so functions don't need the upstream and product
     arguments
     """
+    # store the wrapper, we'll need this for hot_reload to work, see
+    # the constructor of CallableLoader in
+    # ploomber.sources.pythoncallablesource for details
+    f.__ploomber_wrapper_factory__ = partial(_signature_wrapper,
+                                             call_with_args=call_with_args)
 
     @wraps(f)
     def wrapper_args(upstream, **kwargs):
@@ -186,7 +192,8 @@ def dag_from_functions(functions,
                        output="output",
                        params=None,
                        parallel=False,
-                       dependencies=None):
+                       dependencies=None,
+                       hot_reload=True):
     """Create a DAG from a list of functions
 
     Parameters
@@ -210,16 +217,28 @@ def dag_from_functions(functions,
         A mapping with functions names to their dependencies. Use it if
         the arguments in the function do not match the names of its
         dependencies.
+
+    hot_reload : bool, default=False
+        If True, the dag will automatically detect changes in the source code.
+        However, this won't work if tasks are defined inside functions
     """
     dependencies = dependencies or dict()
     params = params or dict()
 
+    # NOTE: cache_rendered_status isn't doing anything. I modified Product
+    # to look at the hot_reload flag for the hot reloading to work. I don't
+    # think we're using the cache_rendered_status anywhere, so we should
+    # delete it.
+    configurator = DAGConfigurator()
+    configurator.params.hot_reload = hot_reload
+    dag = configurator.create()
+
     if parallel:
-        dag = DAG(executor=ParallelDill())
+        dag.executor = ParallelDill()
     else:
         # need to disable subprocess, otherwise pickling will fail since
         # functions might be defined in the __main__ module
-        dag = DAG(executor=Serial(build_in_subprocess=False))
+        dag.executor = Serial(build_in_subprocess=False)
 
     for callable_ in functions:
         if callable_.__name__ in params:

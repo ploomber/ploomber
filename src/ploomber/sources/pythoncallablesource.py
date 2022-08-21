@@ -31,6 +31,15 @@ class CallableLoader:
             # if using hot reload, we cannot keep the reference to the
             # original function, otherwise pickle will give errors
             self._primitive = None
+            self._factory = None
+
+            # this only happens when using the micro pipelines API, this
+            # attribute contains the wrapper we need to apply to the function
+            # we need this, otherwise reloading the function will lose the
+            # wrapper that modifies the signature
+            if hasattr(primitive, '__ploomber_wrapper_factory__'):
+                self._factory = primitive.__ploomber_wrapper_factory__
+
         elif self.hot_reload and self._from_dotted_path:
             raise NotImplementedError('hot_reload is not implemented when '
                                       'initializing from a dotted path')
@@ -41,8 +50,17 @@ class CallableLoader:
         else:
             if self.hot_reload:
                 module = importlib.import_module(self.module_name)
-                importlib.reload(module)
-                return getattr(module, self.fn_name)
+
+                # if running an interactive session, do not call .reload
+                if self.module_name != '__main__':
+                    importlib.reload(module)
+
+                fn = getattr(module, self.fn_name)
+
+                if self._factory:
+                    return self._factory(fn)
+                else:
+                    return fn
             else:
                 return self._primitive
 
@@ -93,6 +111,7 @@ class PythonCallableSource(Source):
         parameter is InMemoryDAG, since functions used as task are
         not expected to have a "product" parameter
     """
+
     def __init__(self, primitive, hot_reload=False, needs_product=True):
         if not (callable(primitive) or isinstance(primitive, str)):
             raise TypeError(
@@ -105,6 +124,10 @@ class PythonCallableSource(Source):
         self._loc = None
         self._hot_reload = hot_reload
         self._needs_product = needs_product
+
+    @property
+    def hot_reload(self):
+        return self._hot_reload
 
     @property
     def primitive(self):

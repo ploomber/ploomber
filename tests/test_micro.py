@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import nbformat
 import pytest
 
+from ploomber_engine.ipython import PloomberShell
 from ploomber.exceptions import DAGBuildError, DAGRenderError
 from ploomber import micro
 from ploomber.micro import _capture
@@ -215,7 +216,7 @@ def test_capture_debug_now(tmp_directory, monkeypatch):
         x, y = 1, 0
         x / y
 
-    dag = micro.dag_from_functions([number])
+    dag = micro.dag_from_functions([number], hot_reload=False)
 
     class MyException(Exception):
         pass
@@ -242,7 +243,7 @@ def test_capture_debug_later(tmp_directory, monkeypatch):
         x, y = 1, 0
         x / y
 
-    dag = micro.dag_from_functions([number])
+    dag = micro.dag_from_functions([number], hot_reload=False)
 
     with pytest.raises(DAGBuildError):
         dag.build(debug='later')
@@ -262,7 +263,7 @@ def test_capture_that_depends_on_capture(tmp_directory):
         second = first + 1
         return second
 
-    dag = micro.dag_from_functions([first, second])
+    dag = micro.dag_from_functions([first, second], hot_reload=False)
     dag.build()
 
 
@@ -285,7 +286,7 @@ def test_root_node_with_no_arguments(tmp_directory):
     def add(root):
         return root + 1
 
-    dag = micro.dag_from_functions([root, add])
+    dag = micro.dag_from_functions([root, add], hot_reload=False)
     dag.build()
 
     root_ = pickle.loads(Path('output', 'root').read_bytes())
@@ -307,7 +308,7 @@ def test_decorated_root_with_input_data(tmp_directory):
         x = input_data + 1
         return x
 
-    dag = micro.dag_from_functions([root])
+    dag = micro.dag_from_functions([root], hot_reload=False)
 
     with pytest.raises(DAGRenderError) as excinfo:
         dag.build()
@@ -327,7 +328,7 @@ def test_decorated_root_without_arguments(tmp_directory):
     def add(root):
         return root + 1
 
-    dag = micro.dag_from_functions([root, add])
+    dag = micro.dag_from_functions([root, add], hot_reload=False)
     dag.build()
 
     root_ = pickle.loads(Path('output', 'root').read_bytes())
@@ -420,3 +421,51 @@ def test_deindents_statements(fn, expected):
 ])
 def test_parse_tag(source, expected):
     assert _capture._parse_tag(source) == expected
+
+
+@pytest.fixture
+def shell():
+    yield PloomberShell()
+    PloomberShell.clear_instance()
+
+
+def test_hot_reload(tmp_directory, shell):
+    shell.run_cell("""
+import pandas as pd
+from ploomber import micro
+
+def ones(input_data):
+    return pd.Series(input_data)
+
+def twos(ones):
+    return ones + 1
+
+dag = micro.dag_from_functions(
+    [ones, twos],
+    params={"ones": {
+        "input_data": [1] * 3
+    }},
+    output='cache',
+)
+""")
+
+    shell.run_cell('dag.build()')
+
+    shell.run_cell('result = dag.build()')
+
+    assert shell.user_ns['result']['Ran?'] == [False, False]
+
+    # simulate user re-defines the twos function
+    shell.run_cell("""
+def twos(ones):
+    print('new print statement')
+    return ones + 1
+""")
+
+    shell.run_cell('result = dag.build()')
+
+    # check hot reload is working
+    assert shell.user_ns['result']['name', 'Ran?'].to_dict() == {
+        'name': ['twos', 'ones'],
+        'Ran?': [True, False]
+    }
