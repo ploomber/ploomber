@@ -89,5 +89,6 @@ jobs:
         export PY_IGNORE_IMPORTMISMATCH=1
         pytest src/ploomber --doctest-modules --ignore src/ploomber/resources
         unset PY_IGNORE_IMPORTMISMATCH
-        pytest tests --cov=ploomber --ignore=tests/cli/test_cloud_execution.py --ignore=tests/cli/test_cloud.py --ignore=tests/cloud --ignore=tests/telemetry
+        pip install pytest-timeout
+        pytest tests --cov=ploomber --ignore=tests/cli/test_cloud_execution.py --ignore=tests/cli/test_cloud.py --ignore=tests/cloud --ignore=tests/telemetry --timeout=120
 
