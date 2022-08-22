@@ -5,7 +5,6 @@ Note: All validation errors should raise DAGSpecInitializationError, this
 allows the CLI to signal that this is a user's input error and hides the
 traceback and only displays the error message
 """
-from email.policy import default
 import mimetypes
 from functools import partial
 from copy import copy, deepcopy
@@ -334,7 +333,6 @@ class TaskSpec(MutableMapping):
                                                     lazy_load=self.lazy_import)
 
             params = data.pop('params', None)
-            print(params)
             # if the name argument is a placeholder, pass it in the namer
             # argument to the placeholders are replaced by their values
             if '[[' in name and ']]' in name:
@@ -342,8 +340,7 @@ class TaskSpec(MutableMapping):
             else:
                 name_arg = dict(name=name)
 
-            
-            if task_defaults != None:
+            if task_defaults is not None:
                 params = {**task_defaults[task_class.__name__], **params}
 
             return TaskGroup.from_grid(task_class=task_class,

@@ -2212,11 +2212,13 @@ product = None
         },
         'tasks': [{
             'source': 'script.py',
-            'product': 'report.html'
+            'product': 'report.html',
+            'params': {
+                'another': 100,
+                'one-more': 200
+            }
         }]
     })
 
     dag = spec.to_dag()
-    for k in dag:
-        print(k, dag[k])
-    assert dag['script'].check_if_kernel_installed is True
+    assert dag['script'].check_if_kernel_installed is False
