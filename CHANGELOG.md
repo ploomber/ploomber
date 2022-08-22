@@ -2,6 +2,7 @@
 
 ## 0.20.1dev
 * Remove `parameters` cell missing exception and add `parameters` cell in `NotebookRunner` and `ScriptRunner` when it is missing ([#971](https://github.com/ploomber/ploomber/issues/971))
+* Add `--priority` to `nb --inject` to choose which parameters to inject ([#902](https://github.com/ploomber/ploomber/issues/902))
 
 ## 0.20 (2022-08-04)
 
@@ -14,7 +15,6 @@
 * Clearing screen before updating execution status when using the `Parallel` executor
 * Fixes missing plot when generating `ploomber report` with `--backend d3` ([#946](https://github.com/ploomber/ploomber/issues/946))
 * Fixes error when using dotted paths in `grid` ([#951](https://github.com/ploomber/ploomber/issues/951))
-* Add `--priority` to `nb --inject` to choose parameters to inject ([#902](https://github.com/ploomber/ploomber/issues/902))
 
 ## 0.19.9 (2022-07-26)
 
