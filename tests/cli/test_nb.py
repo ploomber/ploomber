@@ -204,7 +204,6 @@ tasks:
 def test_inject_with_priority_without_task(monkeypatch, capsys,
                                            path_to_assets):
     # ploomber nb --inject --priority
-
     nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
     template_path = f'{nb_inject_assets_path}/template.ipynb'
     test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
