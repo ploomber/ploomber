@@ -1246,6 +1246,7 @@ def test_validates_debug_mode_property(tmp_directory):
     assert msg in str(excinfo.value)
 
 
+@pytest.mark.skip
 def test_debug_mode_now(tmp_directory, monkeypatch):
     path = Path('nb.py')
     path.write_text("""
