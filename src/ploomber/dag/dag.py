@@ -857,19 +857,14 @@ class DAG(AbstractDAG):
             plot_ = False
 
         template_md = importlib_resources.read_text(resources, 'dag.md')
-        out = Template(template_md).render(plot=plot_,
-                                           status=status,
-                                           source='source' in sections,
-                                           dag=self)
+        out_md = Template(template_md).render(plot=plot_,
+                                              status=status,
+                                              source='source' in sections,
+                                              dag=self)
 
         if fmt == 'html':
-            # importing this requires mistune. we import here since it's
-            # an optional dependency
             from ploomber.util import markup
-            import mistune
-
-            renderer = markup.HighlightRenderer()
-            out = mistune.markdown(out, escape=False, renderer=renderer)
+            out = markup.markdown_to_html(out_md)
 
             # add css
             if backend == 'd3' and 'plot' in sections:
