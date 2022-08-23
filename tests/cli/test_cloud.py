@@ -350,6 +350,9 @@ def test_get_latest_pipeline(monkeypatch):
     assert isinstance(pipeline, str)
     assert pid in pipeline
 
+    res = delete_sample_pipeline(pid)
+    assert pid in res
+
 
 def test_get_active_pipeline(monkeypatch):
     pid = str(uuid.uuid4())
