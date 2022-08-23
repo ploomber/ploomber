@@ -21,6 +21,7 @@ class Interval:
     >>> interval[2]
     (datetime.date(2022, 1, 1), datetime.date(2022, 6, 1))
     """
+
     def __init__(self, lower, upper, delta):
         if lower >= upper:
             raise ValueError('lower must be strictly lower than upper')
@@ -83,6 +84,7 @@ class ParamGrid:
     -----
     Parameters with a single element are converted to lists of length 1
     """
+
     def __init__(self, grid, params=None):
         if isinstance(grid, Mapping):
             grid = [grid]
