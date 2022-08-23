@@ -24,14 +24,14 @@ make our code more maintainable and easier to test:
     </div>
 
 
-.. note:: A pipeline is also known as a directed acyclic graph (or DAG). We use both terms interchangeably.
+.. note:: A pipeline is also known as a directed acyclic graph (or DAG). We use both of these terms interchangeably.
 
 In a Ploomber pipeline, outputs (also known as **products**) from one
 task become inputs of "downstream" tasks. Hence, "upstream" dependencies read
 from left to right. For example, ``raw`` is an "upstream" dependency of ``clean``.
 
 An "upstream" dependency implies that a given task uses its upstream products
-as inputs. Following our pipeline example, ``clean`` uses ``raw``'s products, and ``plot`` uses ``clean``'s products.
+as inputs. Following the pipeline example, ``clean`` uses ``raw``'s products, and ``plot`` uses ``clean``'s products.
 
 Ploomber supports three types of tasks:
 
@@ -39,15 +39,15 @@ Ploomber supports three types of tasks:
 2. Python scripts/notebooks (and their R equivalents)
 3. SQL scripts
 
-You can mix any combination of tasks in your pipeline (e.g., dump data with a
-SQL query, then plot it with Python).
+You can mix any combination of tasks in your pipeline. For example, you can dump data with a
+SQL query, then plot it with Python.
 
 Defining a pipeline
 -------------------
 
-To execute your pipeline, Ploomber needs to know the location of the
+To execute a pipeline, Ploomber needs to know the location of the
 task's source code (``source`` key), and the location of the task's products
-(``product`` key), we do this via a ``pipeline.yaml`` file:
+(``product`` key). You can do this via a ``pipeline.yaml`` file:
 
 .. code-block:: yaml
     :class: text-editor
@@ -116,7 +116,7 @@ to delimit code cells and render the ``.py`` file as a notebook.
 .. note::
    
    The ``# %%`` is one way of representing ``.py`` as notebooks. Ploomber
-   uses jupytext to perform the conversion, other formats such as the
+   uses ``jupytext`` to perform the conversion, other formats such as the
    "light" (``# +``) format work too. Editors such as VS Code, Spyder, and
    PyCharm support the "percent" format.
 
@@ -136,7 +136,7 @@ To know more about integration with Jupyter notebooks, see the :doc:`../user-gui
 ****************************
 
 To specify task dependencies, include a special ``parameters`` cell in your
-script/notebook. Following our example pipeline, ``clean`` has ``raw``
+script/notebook. Following the example pipeline, ``clean`` has ``raw``
 as an upstream dependency as the **raw** task is an input to
 the **clean** task. We establish this relation by declaring an ``upstream``
 variable with a list of task names that should execute **before** the file we're
@@ -210,9 +210,8 @@ dependency called ``raw``. Thus, the injected cell has a dictionary that gives
 you the products of ``raw``, which we use as input, and a new ``product``
 variable that we use to store our outputs.
 
-The cell injection process also happens when opening the notebook/script in Jupyter.
-:ref:`Click here <modifying-the-upstream-variable>` to learn more about
-cell injection and the integration with Jupyter.
+The cell injection process also happens when opening the notebook/script in Jupyter. Learn more about
+:ref:`Cell injection and Jupyter integration <modifying-the-upstream-variable>`.
 
 
 .. note::
@@ -222,7 +221,7 @@ cell injection and the integration with Jupyter.
    notebook option.
 
 Since scripts/notebooks always create an executed notebook, you must specify
-where to save such a file, a typical task declaration looks like this:
+where to save such a file. A typical task declaration looks like this:
 
 .. code-block:: yaml
     :class: text-editor
@@ -346,7 +345,7 @@ Clients
 
 To establish a connection with a database, you have to configure a ``client``.
 All databases that have a Python driver are supported, including systems like
-Snowflake or Apache Hive. :doc:`Click here <sql-pipeline>` to see the SQL guide.
+Snowflake or Apache Hive. To learn more, see the :doc:`SQL guide <sql-pipeline>`.
 
 
 .. _where-to-go-from-here:
@@ -356,7 +355,7 @@ Where to go from here
 
 We've created many **runnable templates** to help you get up and running, check out our :doc:`/user-guide/templates` guide.
 
-If you want to read about **advanced features**, check out out :doc:`User Guide <../user-guide/index>`.
+If you want to read about **advanced features**, check out :doc:`User Guide <../user-guide/index>`.
 
 The ``pipeline.yaml`` API offers a concise way to declare
 pipelines, but if you want complete flexibility, **you can use the underlying Python
