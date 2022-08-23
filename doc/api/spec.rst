@@ -954,6 +954,32 @@ for example, it will store the random forest with ``n_estimators=5``, and
 uses square brackets to differentiate them from regular placeholders when
 using an ``env.yaml`` file.
 
+In the latest version, we have introduced a speical flag called `grid_number_suffix`.
+The purpose of this flag is to prevent naming conflicts of our outputs. It is default 
+to be turned off. For example, in above example, since we have two placeholders for 
+two params in the grid, all products will have different names, thus it works properly.
+
+Consider this case: 
+
+.. code-block:: yaml
+    :class: text-editor
+    :name: grid-example-2-yaml
+
+    tasks:
+      - source: random-forest.py
+        name: random-forest-
+        product: 'n_estimators.html'
+        grid:
+            n_estimators: [5, 10, 20]
+            criterion: [gini, entropy]
+
+All products will have the same `n_estimators.html` name and that is a problem. Such pipeline.yaml
+will output error to indicate either we can add `grid_number_suffix: True`, or we
+can give proper placeholders like the other case. If we turned on the flag, the output files will be
+something like `n_estimators.html-0`, `n_estimators.html-1`, etc. Be advised, not giving enough 
+placeholders for grid params will also cause ploomber to output error.
+
+
 **Templating name tasks**
 
 Similarly, you can also customize task names (**Added in version 0.19.8**):
