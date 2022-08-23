@@ -269,6 +269,12 @@ class TaskGroup:
         Notes
         -----
         All parameters, except for grid are the same as in .from_params
+
+        .. collapse :: change log
+
+            .. versionadded:: 0.21.1
+                Added grid_number_suffix flag
+        
         """
 
         if (

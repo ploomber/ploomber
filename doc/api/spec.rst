@@ -954,7 +954,7 @@ for example, it will store the random forest with ``n_estimators=5``, and
 uses square brackets to differentiate them from regular placeholders when
 using an ``env.yaml`` file.
 
-In the latest version, we have introduced a special flag called `grid_number_suffix`.
+After version 0.21.1, we have introduced a special flag called `grid_number_suffix`.
 The purpose of this flag is to prevent naming conflicts of our outputs. It is default 
 to be turned off. For example, in above example, since we have two placeholders for 
 two params in the grid, all products will have different names, thus it works properly.
