@@ -14,7 +14,10 @@ else:
         source activate {ENV_NAME}
         conda install pip
         pip install ploomber
-        """, capture_output=False, shell=True, check=True)
+        """,
+                       capture_output=False,
+                       shell=True,
+                       check=True)
 
         print(f"""
 To activate this environment, use
@@ -26,7 +29,10 @@ To deactivate an active environment, use
         subprocess.run(f"""
         python -m venv {ENV_NAME}
         ./{ENV_NAME}/bin/pip install ploomber
-        """, capture_output=False, shell=True, check=True)
+        """,
+                       capture_output=False,
+                       shell=True,
+                       check=True)
 
         print(f"""
 To activate this environment, use
