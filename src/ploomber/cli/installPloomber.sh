@@ -9,4 +9,4 @@ then
     brew install python@3.9
 fi
 
-python ploomber/src/ploomber/cli/installPloomber.py
+python src/ploomber/cli/installPloomber.py
