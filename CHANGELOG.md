@@ -2,6 +2,8 @@
 
 ## 0.21.1dev
 
+* Adds `grid_number_suffix` flag in pipeline.yaml to prevent naming conflicts of products ([#973](https://github.com/ploomber/ploomber/issues/973))
+
 ## 0.21 (2022-08-22)
 
 * Adds `ploomber.micro` module for writing micro pipelines
