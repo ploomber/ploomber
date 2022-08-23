@@ -274,7 +274,7 @@ class TaskGroup:
 
             .. versionadded:: 0.21.1
                 Added grid_number_suffix flag
-        
+
         """
 
         if (
