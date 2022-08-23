@@ -37,5 +37,5 @@ To deactivate an active environment, use
         print(f"""
 To activate this environment, use
     $ source {ENV_NAME}/bin/activate
-To deactivate an active environment, use 
+To deactivate an active environment, use
     $ deactivate\n""")
