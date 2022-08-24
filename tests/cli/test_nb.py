@@ -34,6 +34,7 @@ def get_nb_injected_params(template_path):
     some_param = some_param_string.split()[2]
     return some_param
 
+
 def get_assets_for_testing_inject(path_to_assets):
     nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
     template_path = f'{nb_inject_assets_path}/template.ipynb'
@@ -48,6 +49,7 @@ def get_assets_for_testing_inject(path_to_assets):
     }
 
     return assets
+
 
 def test_inject_single_task_parameters_with_same_template(
         monkeypatch, capsys, path_to_assets):

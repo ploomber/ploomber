@@ -11,8 +11,8 @@ from ploomber.products import File
 from ploomber.io import pretty_print
 
 
-def get_unique_list(l):
-    return list(set(l))
+def get_unique_list(lst):
+    return list(set(lst))
 
 
 def _generate_error_message_pair(key, value):
