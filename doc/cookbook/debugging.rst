@@ -3,42 +3,45 @@ Debugging
 
 .. note:: This is a quick reference, for an in-depth tutorial, :doc:`click here <../user-guide/debugging>`.
 
-Ploomber has some built-in debugging features, and it integrates with the Python `debugger <https://docs.python.org/3/library/pdb.html>`_
+.. note:: All this section assumes you're familiar with the Python debugger. See the `documentation here <https://docs.python.org/3/library/pdb.html>`_
+
 
 .. _debugging-a-task:
 
-Debugging a task
-----------------
+Executing task in debugging mode
+--------------------------------
 
-.. note:: ``.debug()`` works with Python functions, scripts, and notebooks.
-
-
-Start an interactive session:
+To jump to the first line of a task and start a debugging session:
 
 .. code-block:: console
 
     ploomber interact
 
-Start a debugging session:
+Then:
 
 .. code-block:: python
     :class: ipython
 
-    dag[task_name].debug()
+    dag['task-name'].debug()
 
+
+.. note:: ``.debug()`` only works with Python functions, scripts, and notebooks.
 
 To get the list of task names: ``list(dag)``.
 
-After running ``.debug()``, you'll start a debugging session, type ``quit`` and hit enter to exit the debugging session.
+After running ``.debug()``, you'll start a debugging session. You can use
+the ``next`` command to jump to the next line. Type ``quit``, and hit enter
+to exit the debugging session.
 
-.. tip:: If debugging a script or notebook, you may call ``.debug(kind='pm')`` to start a post-mortem session, which runs the script/notebook until the code raises an exception, then the debugging session begins.
 
 Post-mortem debugging
 ---------------------
 
-.. note:: ``--debug`` only works with Python functions,  go to the :ref:`next section <debugging-in-jupyter>` to learn how to debug scripts/notebooks.
+Run and start a debugging session as soon as a task raises an exception.
 
-If you want the pipeline to run and start the debugging session the momeent it raises an exception:
+.. code-block:: console
+
+    ploomber task {task-name} --debug
 
 
 .. code-block:: console
@@ -46,12 +49,73 @@ If you want the pipeline to run and start the debugging session the momeent it r
     ploomber build --debug
 
 
+.. collapse:: changelog
+
+    .. versionadded:: 0.20
+
+        Added support for post-mortem debugging in notebooks using ``--debug``
+
+    .. versionadded:: 0.20
+
+        Added ``--debug`` option to ``ploomber task``
+
+
+Post-mortem debugging (debug later)
+-----------------------------------
+
+*Added in version 0.20*
+
+Run the pipeline and serialize errors from all failing tasks for later
+debugging. This is useful when running tasks in parallel or notebooks
+overnight.
+
+.. code-block:: console
+
+    ploomber task {task-name} --debuglater
+
+
+.. code-block:: console
+
+    ploomber build --debuglater
+
+
+Then, to start a debugging session:
+
+.. code-block:: console
+
+    dltr {task-name}.dump
+
+Once you're done debugging, you can delete the ``{task-name}.dump`` file.
+
+.. note::
+
+    Only built-in objects will be stored in the ``.dump`` file, for others,
+    (e.g., pandas data frames, numpy arrays) only the string representation
+    is stored. To serialize all: ``pip install 'debuglater[all]'``
+
+.. important::
+
+    Using ``--debuglater`` will serialize all the variables, ensure you have
+    enough disk space, especially if running tasks in parallel.
+
+
+.. collapse:: changelog
+
+    .. versionadded:: 0.20
+
+        Added ``--debuglater`` option to ``ploomber task``
+
+    .. versionadded:: 0.20
+
+        Added ``--debuglater`` option to ``ploomber build``
+
+
 Breakpoints
 -----------
 
 .. note:: This only work with Python functions, go to the :ref:`next section <debugging-in-jupyter>` to learn how to debug scripts/notebooks.
 
-If you want to stop execution at an arbitrary line:
+Breakpoints allow you to start a debugger at given line:
 
 .. code-block:: python
     :class: text-editor
@@ -70,17 +134,15 @@ Then:
 
 .. _debugging-in-jupyter:
 
-Debugging in Jupyter
---------------------
+Debugging in Jupyter/VSCode
+---------------------------
 
-If you want to debug scripts or notebook, you can do so from
-the :ref:`terminal <debugging-a-task>`, or from Jupyter. If you want to use
-Jupyter, first, open the script/notebook.
+If you're using Jupyter or similar (e.g. notebooks in VSCode), you can debug there.
 
 Post-portem
 ***********
 
-If your code raises an exception, execute the following in a new cell and a debugging session will start:
+If your code raises an exception, execute the following in a new cell, and a debugging session will start:
 
 
 .. code-block:: python
@@ -115,7 +177,7 @@ Once you're in Jupyter, you can add a breakpoint at the line you want to debug:
         # code continues...
 
 
-The breakpoint can be in an a module (i.e., something that you imported
+The breakpoint can be in a module (i.e., something that you imported
 using a ``import`` statement)
 
 
@@ -123,8 +185,3 @@ Visual debugger
 ***************
 
 JupyterLab recently incorporated a native debugger, `click here <https://jupyterlab.readthedocs.io/en/stable/user/debugger.html>`_ to learn more.
-
-Using the debugger
-------------------
-
-Once you enter a debugging session, there are a few comands you can run. For example, you can execute ``quit`` to exit the debugger. For a complete list of available commands see the `documentation <https://docs.python.org/3/library/pdb.html>`_

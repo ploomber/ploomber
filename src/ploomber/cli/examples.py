@@ -15,7 +15,7 @@ from ploomber.io.terminalwriter import TerminalWriter
 from ploomber.cli.io import command_endpoint
 from ploomber.table import Table
 from ploomber.telemetry import telemetry
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
 
 from pygments.formatters.terminal import TerminalFormatter
 from pygments.lexers.markup import MarkdownLexer

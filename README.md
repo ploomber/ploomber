@@ -11,7 +11,6 @@
 [![Conda](https://img.shields.io/conda/pn/conda-forge/ploomber)](https://anaconda.org/conda-forge/ploomber)
 [![Coverage](https://coveralls.io/repos/github/ploomber/ploomber/badge.svg?branch=master)](https://coveralls.io/github/ploomber/ploomber?branch=master)
 [![Twitter](https://img.shields.io/twitter/follow/ploomber?label=Follow&style=social)](https://twitter.com/intent/user?screen_name=ploomber)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster)
 [![Downloads](https://pepy.tech/badge/ploomber)](https://pepy.tech/project/ploomber)
 
 <p align="center">
@@ -34,7 +33,7 @@
 Ploomber is the fastest way to build data pipelines ⚡️. Use your favorite editor (**[Jupyter](https://docs.ploomber.io/en/latest/user-guide/jupyter.html), [VSCode](https://docs.ploomber.io/en/latest/user-guide/editors.html), [PyCharm](https://docs.ploomber.io/en/latest/user-guide/editors.html)**) to develop interactively and deploy ☁️ without code changes (**[Kubernetes](https://soopervisor.readthedocs.io/en/latest/tutorials/kubernetes.html), [Airflow](https://soopervisor.readthedocs.io/en/latest/tutorials/airflow.html), [AWS Batch](https://soopervisor.readthedocs.io/en/latest/tutorials/aws-batch.html), and [SLURM](https://soopervisor.readthedocs.io/en/latest/tutorials/slurm.html)**). Do you have legacy notebooks? Refactor them into modular pipelines with a single command.
 
 <p align="center">
-  <a href="https://docs.ploomber.io/en/latest/get-started/quick-start.html"> <img src="_static/get-started.svg" alt="Get Started"> </a>
+  <a href="https://binder.ploomber.io/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/intro-to-ploomber%252FREADME.ipynb%26branch%3Dmaster"> <img src="_static/get-started.svg" alt="Get Started"> </a>
 </p>
 
 
@@ -56,25 +55,18 @@ conda install ploomber -c conda-forge
 
 ## Getting started
 
-**Open a hosted JupyterLab instance:**
+### Try the tutorial:
+<p>
+  <a href="https://binder.ploomber.io/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster"> <img src="_static/open-in-jupyterlab.svg" alt="Open In JupyterLab"> </a>
+</p>
 
-[![image](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster)
-
-**or learn it locally in 2 minutes:**
+### **Or locally:**
 
 ```sh
 pip install ploomber --upgrade
 
 python -m ploomber.onboard
-```
-
-**What's next?**
-
-Ready to **migrate your project?** [Click here.](https://docs.ploomber.io/en/latest/user-guide/refactoring.html)
-
-Do you want to **learn more?** [Check out the introductory tutorial.](https://docs.ploomber.io/en/latest/get-started/first-pipeline.html)
-
-Run more [examples.](https://docs.ploomber.io/en/latest/user-guide/templates.html)
+  ```
 
 ## Community
 

@@ -84,6 +84,7 @@ def test_from_params_with_product_placeholders():
 
 @pytest.mark.parametrize('hook_name', ['on_render', 'on_finish', 'on_failure'])
 def test_from_params_with_hook(hook_name):
+
     def my_hook():
         pass
 
@@ -127,6 +128,7 @@ def test_from_params_resolves_paths():
 
 
 def test_from_params_with_namer():
+
     def namer(params):
         return 'param={}'.format(params['param'])
 
@@ -213,6 +215,7 @@ def test_from_grid_with_params():
 
 @pytest.mark.parametrize('hook_name', ['on_render', 'on_finish', 'on_failure'])
 def test_from_grid_with_hook(hook_name):
+
     def my_hook():
         pass
 
@@ -249,10 +252,14 @@ def test_from_grid_resolve_relative_to():
                         },
                         resolve_relative_to='')
 
-    assert str(dag['task_group0'].product) == str(Path('file-0.txt').resolve())
-    assert str(dag['task_group1'].product) == str(Path('file-1.txt').resolve())
-    assert str(dag['task_group2'].product) == str(Path('file-2.txt').resolve())
-    assert str(dag['task_group3'].product) == str(Path('file-3.txt').resolve())
+    assert str(dag['task_group0'].product) == str(
+        Path('').resolve() / 'file-0.txt')
+    assert str(dag['task_group1'].product) == str(
+        Path('').resolve() / 'file-1.txt')
+    assert str(dag['task_group2'].product) == str(
+        Path('').resolve() / 'file-2.txt')
+    assert str(dag['task_group3'].product) == str(
+        Path('').resolve() / 'file-3.txt')
 
 
 def test_metaproduct():
@@ -300,6 +307,7 @@ def test_metaproduct_with_product_placeholders():
 
 
 def test_from_params_resolves_paths_in_metaproduct(tmp_directory):
+
     def touch(product, param):
         Path(product['one']).touch()
         Path(product['another']).touch()

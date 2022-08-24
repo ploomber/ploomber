@@ -40,8 +40,7 @@ from jupytext.formats import long_form_one_format, short_form_one_format
 from jupytext.config import JupytextConfiguration
 import parso
 
-from ploomber.exceptions import (SourceInitializationError,
-                                 MissingParametersCellError)
+from ploomber.exceptions import SourceInitializationError
 from ploomber.placeholders.placeholder import Placeholder
 from ploomber.util import requires
 from ploomber.sources.abc import Source
@@ -183,16 +182,8 @@ class NotebookSource(Source):
     check_if_kernel_installed : bool, optional
         Check if the kernel is installed during initization
 
-    debug : bool, default=False
-        If True, adds a "%pbd on" cell at the beginning of the notebook.
-
     Notes
     -----
-    .. collapse:: changelog
-
-        .. versionchanged:: 0.19.9
-            ``debug`` flag.
-
     The render method prepares the notebook for execution: it adds the
     parameters and it makes sure kernelspec is defined
     """
@@ -207,8 +198,7 @@ class NotebookSource(Source):
                  ext_in=None,
                  kernelspec_name=None,
                  static_analysis='regular',
-                 check_if_kernel_installed=True,
-                 debug=False):
+                 check_if_kernel_installed=True):
         # any non-py file must first be converted using jupytext, we need
         # that representation for validation, if input is already a .py file
         # do not convert. If passed a string, try to guess format using
@@ -216,7 +206,6 @@ class NotebookSource(Source):
         # but do lazy loading in case we don't need both
         self._primitive = primitive
         self._check_if_kernel_installed = check_if_kernel_installed
-        self._debug = debug
 
         # this happens if using SourceLoader
         if isinstance(primitive, Placeholder):
@@ -328,7 +317,8 @@ class NotebookSource(Source):
         # the latest version
         _, nb = self._read_nb_str_unrendered()
 
-        if 'parameters' in _get_last_cell(nb).metadata.get('tags', []):
+        if nb.cells and 'parameters' in _get_last_cell(nb).metadata.get(
+                'tags', []):
             cell_suggestion = _get_cell_suggestion(nb)
             kind = 'notebook' if self._ext_in == 'ipynb' else 'script'
             raise SourceInitializationError(
@@ -346,15 +336,9 @@ class NotebookSource(Source):
         # section on each cell's metadata, which makes it too verbose when
         # using NotebookRunner.develop() when the source is script (each cell
         # will have an empty "papermill" metadata dictionary)
-        nb = parameterize_notebook(nb, self._params)
 
-        # insert pdb cell, if needed
-        if self._debug:
-            source = ('# enable debugging (cell added by ploomber)\n'
-                      '%pdb on')
-            debugging_cell = nbformat.v4.new_code_cell(
-                source, metadata={'tags': ['debugging-settings']})
-            nb.cells.insert(0, debugging_cell)
+        # NOTE: in papermill 2.4.0, this method no longer creates a deepcopy
+        nb = parameterize_notebook(deepcopy(nb), self._params)
 
         # delete empty tags to prevent cluttering the notebooks
         for cell in nb.cells:
@@ -411,34 +395,31 @@ class NotebookSource(Source):
         Validate notebook after initialization (run pyflakes to detect
         syntax errors)
         """
-        # NOTE: what happens if I pass source code with errors to parso?
-        # maybe we don't need to use pyflakes after all
-        # we can also use compile. can pyflakes detect things that
-        # compile cannot?
+        pass
+
+    def _validate_parameters_cell(self,
+                                  extract_upstream=False,
+                                  extract_product=False):
+        '''Check parameters call and add it when it's missing
+
+        Parameters
+        ----------
+        extract_upstream : bool, default: False
+            Flags used to determine the content of the parameters cell,
+            only used if the notebook is missing the parameters cell
+        extract_product : bool, default: False
+            Same as extract_upstream
+        '''
         params_cell, _ = find_cell_with_tag(self._nb_obj_unrendered,
                                             'parameters')
 
         if params_cell is None:
-            loc = ' "{}"'.format(self.loc) if self.loc else ''
-            msg = ('Notebook{} does not have a cell tagged '
-                   '"parameters"'.format(loc))
-
-            if self.loc and Path(self.loc).suffix == '.py':
-                msg += """.
-Add a cell at the top like this:
-
-# %% tags=["parameters"]
-upstream = None
-product = None
-
-Go to: https://ploomber.io/s/params for more information
-"""
-            if self.loc and Path(self.loc).suffix == '.ipynb':
-                msg += ('. Add a cell at the top and tag it as "parameters". '
-                        'Go to the next URL for '
-                        'details: https://ploomber.io/s/params')
-
-            raise MissingParametersCellError(msg)
+            loc = pretty_print.try_relative_path(self.loc)
+            add_parameters_cell(self.loc, extract_upstream, extract_product)
+            click.secho(
+                f'Notebook {loc} is missing the parameters cell, '
+                'adding it at the top of the file...',
+                fg='yellow')
 
     def _post_render_validation(self):
         """
@@ -560,7 +541,7 @@ Go to: https://ploomber.io/s/params for more information
     def _get_parameters_cell(self, force=False):
         self._read_nb_str_unrendered(force=force)
         cell, _ = find_cell_with_tag(self._nb_obj_unrendered, tag='parameters')
-        return cell.source
+        return cell.source if cell else None
 
     def extract_upstream(self, force=False):
         extractor_class = extractor_class_for_language(self.language)
@@ -1037,6 +1018,11 @@ def _nb2codestr(nb):
 def _warn_on_unused_params(nb, params):
     nb = deepcopy(nb)
     _, idx = find_cell_with_tag(nb, 'parameters')
+
+    # the notebooks might not have a parameters cell
+    if idx is None:
+        return
+
     del nb.cells[idx]
 
     code = _nb2codestr(nb)
@@ -1054,7 +1040,7 @@ def _warn_on_unused_params(nb, params):
                       f'task\'s source code: {pretty_print.iterable(unused)}')
 
 
-def add_parameters_cell(path, extract_upstream, extract_product):
+def add_parameters_cell(path, extract_upstream=False, extract_product=False):
     """
     Add parameters cell to a script/notebook in the given path, overwrites the
     original file
@@ -1071,6 +1057,9 @@ upstream = None
 # declare a dictionary with the outputs of this task
 product = None
 """
+
+    if not extract_upstream and not extract_product:
+        source += '# add default values for parameters here'
 
     c = JupytextConfiguration()
     c.notebook_metadata_filter

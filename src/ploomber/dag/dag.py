@@ -79,7 +79,6 @@ from IPython.display import Image
 from ploomber.table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
 from ploomber.util import (image_bytes2html, isiterable)
-from ploomber.util.debug import debug_if_exception
 from ploomber import resources
 from ploomber import executors
 from ploomber.executors import _format
@@ -98,7 +97,7 @@ from ploomber.dag.util import (check_duplicated_products,
                                fetch_remote_metadata_in_parallel,
                                _path_for_plot)
 from ploomber.tasks.abc import Task
-from ploomber.tasks import NotebookRunner
+from ploomber.tasks import NotebookRunner, PythonCallable
 
 if sys.version_info < (3, 8):
     # pygraphviz dropped support for python 3.7
@@ -467,7 +466,7 @@ class DAG(AbstractDAG):
     def build(self,
               force=False,
               show_progress=True,
-              debug=False,
+              debug=None,
               close_clients=True):
         """
         Runs the DAG in order so that all upstream dependencies are run for
@@ -482,11 +481,14 @@ class DAG(AbstractDAG):
         show_progress : bool, default=True
             Show progress bar
 
-        debug : bool, default=False
-            Drop a debugging session if building raises an exception. Note that
-            this modifies the executor, temporarily setting it to Serial
-            with subprocess off and catching exceptions/warnings off. Restores
-            the original executor at the end
+        debug : 'now' or 'later', default=None
+            If 'now', Drop a debugging session if building raises an exception.
+            Note that this modifies the executor and temporarily sets it
+            to Serial with subprocess off and catching exceptions/warnings off.
+            Restores the original executor at the end. If 'later' it keeps the
+            executor the same and serializes the traceback errors for later
+            debugging
+
 
         close_clients : bool, default=True
             Close all clients (dag-level, task-level and product-level) upon
@@ -496,11 +498,13 @@ class DAG(AbstractDAG):
         -----
         All dag-level clients are closed after calling this function
 
-        ``debug`` is useful to let a pipeline run and start debugging at a
-        failing  PythonCallable task but it won't work with failing
-        ``NotebookRunner`` tasks because notebooks/scripts are executed in a
-        different process. If you want to debug ``NotebookRunner`` tasks, use
-        ``NotebookRunner.debug()`` instead.
+        .. collapse:: changelog
+
+            .. versionchanged:: 0.20
+                ``debug`` changed from True/False to 'now'/'later'/None
+
+            .. versionadded:: 0.20
+                ``debug`` now supports debugging NotebookRunner tasks
 
         Returns
         -------
@@ -523,17 +527,19 @@ class DAG(AbstractDAG):
         # the debugging session in the right place
         if debug:
             executor_original = self.executor
-            self.executor = executors.Serial(build_in_subprocess=False,
-                                             catch_exceptions=False,
-                                             catch_warnings=False)
+
+            # serial debugger needed if debugnow
+            if debug == 'now':
+                self.executor = executors.Serial(build_in_subprocess=False,
+                                                 catch_exceptions=False,
+                                                 catch_warnings=False)
 
             # set debug flag to True on all tasks that have one. Currently
             # only NotebookRunner exposes this
             for name in self._iter():
                 task = self[name]
-                if isinstance(task, NotebookRunner):
-                    task._debug = True
-                    task.source._debug = True
+                if isinstance(task, (NotebookRunner, PythonCallable)):
+                    task.debug_mode = debug
 
         callable_ = partial(self._build,
                             force=force,
@@ -541,15 +547,13 @@ class DAG(AbstractDAG):
 
         with dag_logger:
             try:
-                if debug:
-                    report = debug_if_exception(callable_)
-                else:
-                    report = callable_()
+                report = callable_()
             finally:
                 if close_clients:
                     self.close_clients()
 
-        if debug:
+        # if debugging now, revert back the original executor
+        if debug == 'now':
             self.executor = executor_original
 
         return report
@@ -717,7 +721,7 @@ class DAG(AbstractDAG):
                         target,
                         force=False,
                         show_progress=True,
-                        debug=False,
+                        debug=None,
                         skip_upstream=False):
         """Partially build a dag until certain task
 
@@ -734,17 +738,29 @@ class DAG(AbstractDAG):
         show_progress : bool, default=True
             Show progress bar
 
-        debug : bool, default=False
-            Drop a debugging session if building raises an exception. Note that
-            this modifies the executor and temporarily sets it to Serial
-            with subprocess off and catching exceptions/warnings off. Restores
-            the original executor at the end.
+        debug : 'now' or 'later', default=None
+            If 'now', Drop a debugging session if building raises an exception.
+            Note that this modifies the executor and temporarily sets it
+            to Serial with subprocess off and catching exceptions/warnings off.
+            Restores the original executor at the end. If 'later' it keeps the
+            executor the same and serializes the traceback errors for later
+            debugging
 
         skip_upstream : bool, default=False
             If False, includes all upstream dependencies required to build
             target, otherwise it skips them. Note that if this is True and
             it's not possible to build a given task (e.g., missing upstream
             products), this will fail
+
+        Notes
+        -----
+        .. collapse:: changelog
+
+            .. versionchanged:: 0.20
+                ``debug`` changed from True/False to 'now'/'later'/None
+
+            .. versionadded:: 0.20
+                ``debug`` now supports debugging NotebookRunner tasks
         """
 
         # we have to use a deep copy since using a soft one will corrupt
@@ -832,7 +848,8 @@ class DAG(AbstractDAG):
                 self.plot(output=path_to_plot, backend=backend)
                 plot_ = image_bytes2html(Path(path_to_plot).read_bytes())
             else:
-                self.plot(output=path_to_plot, backend=backend,
+                self.plot(output=path_to_plot,
+                          backend=backend,
                           image_only=True)
                 json_data = Path(path_to_plot).read_text()
                 plot_ = svg2html()
@@ -846,18 +863,13 @@ class DAG(AbstractDAG):
                                            dag=self)
 
         if fmt == 'html':
-            # importing this requires mistune. we import here since it's
-            # an optional dependency
             from ploomber.util import markup
-            import mistune
-
-            renderer = markup.HighlightRenderer()
-            out = mistune.markdown(out, escape=False, renderer=renderer)
+            out = markup.markdown_to_html(out)
 
             # add css
             if backend == 'd3' and 'plot' in sections:
-                html = importlib_resources.read_text(resources,
-                                                     'github-markdown-d3.html')
+                html = importlib_resources.read_text(
+                    resources, 'github-markdown-d3.html')
                 out = Template(html).render(content=out, json_data=json_data)
             else:
                 html = importlib_resources.read_text(resources,
@@ -869,8 +881,11 @@ class DAG(AbstractDAG):
 
         return out
 
-    def plot(self, output='embed', include_products=False,
-             backend=None, image_only=False):
+    def plot(self,
+             output='embed',
+             include_products=False,
+             backend=None,
+             image_only=False):
         """Plot the DAG
 
         Parameters

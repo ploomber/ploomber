@@ -26,6 +26,7 @@ class Source(abc.ABC):
     display the source class, code (first few lines if long) and file location,
     if loaded from a file (sources can also load from strings)
     """
+
     @abc.abstractmethod
     def __init__(self, primitive, hot_reload=False):
         pass  # pragma: no cover
@@ -145,3 +146,7 @@ class Source(abc.ABC):
     def extract_upstream(self):
         raise NotImplementedError('extract_upstream is not implemented in '
                                   '{}'.format(type(self).__name__))
+
+    @property
+    def hot_reload(self):
+        return False

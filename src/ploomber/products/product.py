@@ -87,6 +87,10 @@ class Product(abc.ABC):
         bool
             True if the Task should execute
         """
+        # if hot_reload is enable, we should not cache the status
+        if self.task.source.hot_reload:
+            self._reset_cached_outdated_status()
+
         if self._is_outdated_status is None:
             self._is_outdated_status = self._check_is_outdated(
                 outdated_by_code)

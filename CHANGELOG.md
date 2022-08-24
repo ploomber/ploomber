@@ -1,15 +1,34 @@
 # CHANGELOG
 
-## 0.19.10dev
+## 0.21.1dev
 
-## 0.20dev
+## 0.21 (2022-08-22)
 
-*Note: Ploomber 0.20 dropped support for Python 3.6*
+* Adds `ploomber.micro` module for writing micro pipelines
+* Allow dotted paths in params ([#477](https://github.com/ploomber/ploomber/issues/477))
+* Adds progress bar to `Parallel` executor
+* Allows to switch method when using `Parallel` executor ([#957](https://github.com/ploomber/ploomber/issues/957))
+* Clean traceback when using ploomber task ([#889](https://github.com/ploomber/ploomber/issues/889))
+* `grid` requires strict dotted path format (`a.b::c`)
+* Raise errors on wrong type or empty returned value for dotted paths in `params` and `grid`
+* Compatibility with papermill `2.4.0`
+* Compatibility with IPython `8` ([#978](https://github.com/ploomber/ploomber/issues/978))
+* Python API allows to execute notebooks without a parameters cell ([#971](https://github.com/ploomber/ploomber/issues/971))
+* Compatible with nbconvert `7`
+* Compatibility with mistune `0.8.x` and `2.x`
+* Adds deprecation warning to `NotebookRunner.develop()` and `PythonCallable.develop()`
 
-* Add custom papermill engine to enable debugging: `ploomber build --debug` ([#823](https://github.com/ploomber/ploomber/issues/823))
+## 0.20 (2022-08-04)
+
+*Note: Ploomber 0.20 dropped support for Python 3.6 ([#876](https://github.com/ploomber/ploomber/issues/876))*
+
+* Adds support to serialize the traceback for later post-mortem debugging: `ploomber build --debuglater` and `ploomber task {name} --debuglater`
+* Support for notebook post-mortem debugging: `ploomber build --debug` `ploomber task {name} --debug` ([#823](https://github.com/ploomber/ploomber/issues/823))
 * `env.yaml` allows to use existing keys in subsequent values
-* Fixes missing plot when generating `ploomber report` with `--backend d3`
-* Fixes error when using dotted paths in `grid` (#951)
+* Add `start_method` to Parallel executor to set the method which should be used to start child processes ([#942](https://github.com/ploomber/ploomber/issues/942))
+* Clearing screen before updating execution status when using the `Parallel` executor
+* Fixes missing plot when generating `ploomber report` with `--backend d3` ([#946](https://github.com/ploomber/ploomber/issues/946))
+* Fixes error when using dotted paths in `grid` ([#951](https://github.com/ploomber/ploomber/issues/951))
 
 ## 0.19.9 (2022-07-26)
 
@@ -30,6 +49,8 @@
 * Error message when `env.yml` found instead of `env.yaml` ([#829](https://github.com/ploomber/ploomber/issues/829))
 * Fixes jinja extractor when upstream had nested getitem ([#859](https://github.com/ploomber/ploomber/issues/859))
 * Fixes notebook loading on Windows when UTF-8 is not the default encoding ([#870](https://github.com/ploomber/ploomber/issues/870))
+
+* Remove extraneous output in `ploomber task` tracebacks ([#828]https://github.com/ploomber/ploomber/issues/828)
 
 ## 0.19.6 (2022-06-02)
 * `setup.cfg` allows to switch default entry point

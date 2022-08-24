@@ -1005,6 +1005,16 @@ def test_switch_start_method_in_parallel_executor(tmp_directory, start_method,
     assert dag.executor.start_method == start_method
 
 
+@pytest.mark.parametrize('start_method', [None])
+def test_default_start_method_in_parallel_executor(tmp_directory, start_method,
+                                                   monkeypatch):
+    dag = DAG(executor=Parallel(processes=2, start_method=start_method))
+
+    allowed_methods = ['spawn', 'fork', 'forkserver']
+
+    assert dag.executor.start_method in allowed_methods
+
+
 def test_metadata_is_synced_when_executing_in_subprocess(tmp_directory):
     dag = DAG(executor=Serial(build_in_subprocess=True))
     t = PythonCallable(touch_root, File('file.txt'), dag)
@@ -1134,23 +1144,22 @@ def test_on_failure_crashes_gracefully(caplog):
 
 
 @pytest.mark.parametrize('method', ['build', 'build_partially'])
-def test_build_debug(dag, method, monkeypatch):
-    m = Mock()
-    monkeypatch.setattr(dag_module, 'debug_if_exception', m)
+def test_build_debug(method, monkeypatch):
+    dag = DAG()
+    PythonCallable(touch_root,
+                   File('file.txt'),
+                   dag=dag,
+                   name='first',
+                   debug_mode=None)
 
     fake_executor = Mock()
     dag.executor = fake_executor
 
     if method == 'build':
-        getattr(dag, method)(debug=True)
+        getattr(dag, method)(debug='now')
     else:
-        getattr(dag, method)('first', debug=True)
+        getattr(dag, method)('first', debug='now')
 
-    m.assert_called_once()
-    partial = m.call_args[0][0]
-
-    assert partial.func.__name__ == '_build'
-    assert partial.keywords == {'force': False, 'show_progress': True}
     # debug has to modify the executor but must restore it back to the original
     # value
     assert dag.executor is fake_executor

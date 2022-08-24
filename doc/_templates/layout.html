@@ -1,5 +1,10 @@
 {% extends "basic/layout.html" %}
 
+<!-- Available variables: https://www.sphinx-doc.org/en/master/templating.html -->
+
+{%- block htmltitle %}
+<title> {{pagename.split('/')[0] | title}} - {{ title|striptags|e }}{{ titlesuffix }}</title>
+{%- endblock %}
 
 
 {%- block extrahead %}

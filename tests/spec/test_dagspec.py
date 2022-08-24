@@ -28,8 +28,9 @@ from ploomber.tasks import SQLScript
 from ploomber import exceptions
 from ploomber.executors import Serial, Parallel
 from ploomber.products import MetaProduct
-from ploomber.exceptions import (DAGSpecInitializationError, ValidationError,
-                                 BaseException)
+from ploomber.exceptions import (DAGSpecInitializationError, ValidationError)
+
+from ploomber_core.exceptions import BaseException
 from ploomber.sources.nb_utils import find_cell_with_tag
 
 

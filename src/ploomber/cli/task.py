@@ -2,10 +2,16 @@ from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.telemetry import telemetry
 from ploomber.cloud import api
+from ploomber.tasks import NotebookRunner, PythonCallable
+from ploomber.executors import _format
+from ploomber.messagecollector import task_build_exception
+from ploomber.exceptions import TaskBuildError
 import click
 
 # TODO: we are just smoke testing this, we need to improve the tests
 # (check the appropriate functions are called)
+
+ONLY_IN_CALLABLES_AND_NBS = 'Only supported in function and notebook tasks.'
 
 
 def _task_cli(accept_task_id=False):
@@ -34,6 +40,17 @@ def _task_cli(accept_task_id=False):
                             '-of',
                             help='Only execute on_finish hook',
                             action='store_true')
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument('--debug',
+                           '-d',
+                           help=('Start debugger upon crashing. ' +
+                                 ONLY_IN_CALLABLES_AND_NBS),
+                           action='store_true')
+        group.add_argument('--debuglater',
+                           '-D',
+                           help=('Serialize traceback for later debugging. ' +
+                                 ONLY_IN_CALLABLES_AND_NBS),
+                           action='store_true')
 
         if accept_task_id:
             parser.add_argument('--task-id')
@@ -52,20 +69,44 @@ def _task_cli(accept_task_id=False):
     if args.on_finish:
         task._run_on_finish()
 
+    if args.debug:
+        debug_mode = 'now'
+    elif args.debuglater:
+        debug_mode = 'later'
+    else:
+        # no debug
+        debug_mode = None
+
+    # TODO: support debug in python callable
+    if isinstance(task, (NotebookRunner, PythonCallable)):
+        task.debug_mode = debug_mode
+
     # task if build by default, but when --source or --status are passed,
     # the --build flag is required
     no_flags = not any((args.build, args.status, args.source, args.on_finish))
 
+    err = None
+
     if no_flags or args.build:
         try:
             task.build(force=args.force)
-        except Exception:
+        except Exception as e:
+            err = e
+
+        if err is not None:
             if getattr(args, 'task_id', None):
                 api.tasks_update(getattr(args, 'task_id'), 'failed')
-            raise
+
+            msg = _format.exception(err)
+            exception_string = task_build_exception(task=task,
+                                                    message=msg,
+                                                    exception=err)
+
+            raise TaskBuildError(exception_string)
         else:
-            click.echo("{} executed successfully!".format(task.name))
+            click.echo(f"{task.name!r} task executed successfully!")
             click.echo("Products:\n" + repr(task.product))
+
             if getattr(args, 'task_id', None):
                 api.tasks_update(getattr(args, 'task_id'), 'finished')
 
