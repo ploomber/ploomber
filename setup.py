@@ -101,6 +101,9 @@ TESTING = [
 
     # for testing the webpdf converter
     'nbconvert[webpdf]',
+
+    # for testing ParallelDill,
+    'multiprocess',
 ]
 
 # packages needed for development
@@ -151,8 +154,10 @@ setup(
     ],
     install_requires=[
         'ploomber-scaffold>=0.3',
-        'ploomber-engine',
-        'ploomber-core',
+        # added fix to manage the IPython terminal singleton
+        'ploomber-engine>=0.0.8',
+        # added @deprecated.method
+        'ploomber-core>=0.0.5',
         'pyyaml',
         'networkx>=2.5',
         'jinja2',

@@ -12,6 +12,7 @@ from collections.abc import Mapping
 
 import debuglater
 from IPython.terminal.debugger import TerminalPdb, Pdb
+from ploomber_core import deprecated
 
 from ploomber.tasks.abc import Task
 from ploomber.tasks.mixins import ClientMixin
@@ -266,6 +267,7 @@ class PythonCallable(Task):
             else:
                 self._serializer(out, product)
 
+    @deprecated.method(deprecated_in='0.21', removed_in='0.22')
     def develop(self, app='notebook', args=None):
         """Edit function interactively using Jupyter
 

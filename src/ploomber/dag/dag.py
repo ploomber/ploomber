@@ -863,13 +863,8 @@ class DAG(AbstractDAG):
                                            dag=self)
 
         if fmt == 'html':
-            # importing this requires mistune. we import here since it's
-            # an optional dependency
             from ploomber.util import markup
-            import mistune
-
-            renderer = markup.HighlightRenderer()
-            out = mistune.markdown(out, escape=False, renderer=renderer)
+            out = markup.markdown_to_html(out)
 
             # add css
             if backend == 'd3' and 'plot' in sections:
