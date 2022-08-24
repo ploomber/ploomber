@@ -11,15 +11,8 @@ from ploomber.products import File
 from ploomber.io import pretty_print
 
 
-def get_unique_list(list):
-    unique = []
-    duplicates = []
-    for item in list:
-        if item not in unique:
-            unique.append(item)
-        else:
-            duplicates.append(item)
-    return unique
+def get_unique_list(l):
+    return list(set(l))
 
 
 def _generate_error_message_pair(key, value):

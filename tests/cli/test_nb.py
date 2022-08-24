@@ -34,14 +34,29 @@ def get_nb_injected_params(template_path):
     some_param = some_param_string.split()[2]
     return some_param
 
+def get_assets_for_testing_inject(path_to_assets):
+    nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
+    template_path = f'{nb_inject_assets_path}/template.ipynb'
+    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
+    template_b_path = f'{nb_inject_assets_path}/template_b.ipynb'
+
+    assets = {
+        'nb_inject_assets_path': nb_inject_assets_path,
+        'template_path': template_path,
+        'template_b_path': template_b_path,
+        'test_pipeline': test_pipeline
+    }
+
+    return assets
 
 def test_inject_single_task_parameters_with_same_template(
         monkeypatch, capsys, path_to_assets):
     # ploomber nb --inject --priority task-a
     # ploomber nb --inject --priority task-b
-    nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
-    template_path = f'{nb_inject_assets_path}/template.ipynb'
-    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
+    assets = get_assets_for_testing_inject(path_to_assets)
+    nb_inject_assets_path = assets['nb_inject_assets_path']
+    template_path = assets['template_path']
+    test_pipeline = assets['test_pipeline']
 
     Path(test_pipeline).write_text(f"""
 tasks:
@@ -82,10 +97,12 @@ tasks:
 def test_inject_multiple_tasks_parameters_with_different_templates(
         monkeypatch, capsys, path_to_assets):
     # ploomber nb --inject --priority task-a --priority task-c
-    nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
-    template_path = f'{nb_inject_assets_path}/template.ipynb'
-    template_b_path = f'{nb_inject_assets_path}/template_b.ipynb'
-    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
+
+    assets = get_assets_for_testing_inject(path_to_assets)
+    nb_inject_assets_path = assets['nb_inject_assets_path']
+    template_path = assets['template_path']
+    template_b_path = assets['template_b_path']
+    test_pipeline = assets['test_pipeline']
 
     Path(test_pipeline).write_text(f"""
 tasks:
@@ -129,9 +146,10 @@ tasks:
 def test_inject_multiple_task_parameters_that_use_the_same_template(
         monkeypatch, capsys, path_to_assets):
     # ploomber nb --inject --priority task-a --priority task-b
-    nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
-    template_path = f'{nb_inject_assets_path}/template.ipynb'
-    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
+    assets = get_assets_for_testing_inject(path_to_assets)
+    nb_inject_assets_path = assets['nb_inject_assets_path']
+    template_path = assets['template_path']
+    test_pipeline = assets['test_pipeline']
 
     Path(test_pipeline).write_text(f"""
 tasks:
@@ -161,15 +179,16 @@ tasks:
         cli.cmd_router()
 
     out, err = capsys.readouterr()
-    assert 'Values are correspond to the same task' in err
+    assert 'Values correspond to the same task' in err
 
 
 def test_inject_invalid_prioritized_task_single_task(monkeypatch, capsys,
                                                      path_to_assets):
     # ploomber nb --inject --priority this-task-doesnt-exist
-    nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
-    template_path = f'{nb_inject_assets_path}/template.ipynb'
-    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
+    assets = get_assets_for_testing_inject(path_to_assets)
+    nb_inject_assets_path = assets['nb_inject_assets_path']
+    template_path = assets['template_path']
+    test_pipeline = assets['test_pipeline']
 
     Path(test_pipeline).write_text(f"""
 tasks:
@@ -204,9 +223,10 @@ tasks:
 def test_inject_with_priority_without_task(monkeypatch, capsys,
                                            path_to_assets):
     # ploomber nb --inject --priority
-    nb_inject_assets_path = f'{path_to_assets}/test-nb-inject-assets'
-    template_path = f'{nb_inject_assets_path}/template.ipynb'
-    test_pipeline = f'{nb_inject_assets_path}/pipeline.yaml'
+    assets = get_assets_for_testing_inject(path_to_assets)
+    nb_inject_assets_path = assets['nb_inject_assets_path']
+    template_path = assets['template_path']
+    test_pipeline = assets['test_pipeline']
 
     Path(test_pipeline).write_text(f"""
 tasks:

@@ -77,7 +77,7 @@ def _get_inject_cells_args(dag, priorities=[]):
             else:
                 exceptions.append(
                     BaseException(
-                        'Error. Values are correspond to the same task.'))
+                        'Error. Values correspond to the same task.'))
                 break
         else:
             exceptions.append(
