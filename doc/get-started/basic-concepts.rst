@@ -80,10 +80,10 @@ Once you have a ``pipeline.yaml`` file, you can run it with:
 
    ploomber build
 
-Ploomber keeps track of source changes to skip up-to-date tasks; if you
-``ploomber build`` that command again, only tasks whose source code has changed
+Ploomber keeps track of source changes to skip up-to-date tasks. If you run
+``ploomber build`` again, only tasks whose source code has changed
 are executed. This helps iterate faster, as changes to the pipeline only
-trigger the least amount of tasks.
+trigger the least number of tasks.
 
 .. tip::
    
