@@ -553,7 +553,7 @@ class NotebookSource(Source):
         return extractor_class(self._get_parameters_cell()).extract_product()
 
     @requires_path
-    def save_injected_cell(self):
+    def save_injected_cell(self, **kwargs):
         """
         Inject cell, overwrite the source file (and any paired files)
         """
