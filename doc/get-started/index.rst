@@ -12,3 +12,4 @@ Get Started
     quick-start
     first-pipeline
     basic-concepts
+    intro-to-ploomber
