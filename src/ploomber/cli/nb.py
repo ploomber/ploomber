@@ -11,94 +11,6 @@ from ploomber.cli.io import command_endpoint
 from ploomber.sources.notebooksource import recursive_update
 from ploomber_core.exceptions import BaseException
 from ploomber.telemetry import telemetry
-import warnings
-from ploomber.dag.util import get_unique_list
-
-
-def _find_task_in_dag_by_name(dag, task_name):
-    for task in dag.values():
-        if task.name == task_name:
-            return task
-
-    return None
-
-
-def _get_default_task_to_inject_by_template_name(dag, full_template_name):
-    default_task = None
-    # by default we take the 1st defined task we find for a given template
-    for task in dag.values():
-        if task.source is not None:
-            task_source = Path(task.source._path).name
-
-            if task_source == full_template_name:
-                default_task = task
-                break
-
-    return default_task
-
-
-def _get_tasks_to_inject(dag, templates_to_exclude=[]):
-    used_templates = []
-    for task in dag.values():
-        full_template_name = Path(task.source._path).name
-        used_templates.append(full_template_name)
-
-    templates = get_unique_list(used_templates)
-    tasks_to_inject = []
-    warning_message = ''
-    for template in templates:
-        if template not in templates_to_exclude:
-            task_to_inject = _get_default_task_to_inject_by_template_name(
-                dag, template)
-
-            task_to_inject_name = task_to_inject.name
-            tasks_to_inject.append(task_to_inject_name)
-            warning_message += (
-                f'{template} appears more than once in your '
-                f'pipeline, the parameters from {task_to_inject_name}'
-                'will be injected, to inject the parameters of '
-                'another task, pass: ploomber nb --inject'
-                '--priority {task-name} \n')
-
-    return tasks_to_inject, warning_message
-
-
-def _get_inject_cells_args(dag, priorities=[]):
-    used_tempaltes = []
-    exceptions = []
-    for prioritized_task_name_to_inject in priorities:
-        dag_task = _find_task_in_dag_by_name(dag,
-                                             prioritized_task_name_to_inject)
-        is_prioritized_task_exist = True if dag_task is not None else False
-        if is_prioritized_task_exist:
-            full_template_name = Path(dag_task.source._path).name
-            if full_template_name not in used_tempaltes:
-                used_tempaltes.append(full_template_name)
-            else:
-                exceptions.append(
-                    BaseException(
-                        'Error. Values correspond to the same task.'))
-                break
-        else:
-            exceptions.append(
-                ValueError(
-                    f'Error. Invalid task name.'
-                    f'{prioritized_task_name_to_inject} '
-                    'is not defined in pipeline.yaml'))
-            break
-
-    # get unprioritized tasks for unused tempaltes
-    unprioritized_tasks_to_inject, warning_message = _get_tasks_to_inject(
-        dag, templates_to_exclude=used_tempaltes)
-
-    tasks_to_inject = unprioritized_tasks_to_inject + priorities
-    inject_cell_args = _format_inject_cells_args(tasks_to_inject)
-
-    return inject_cell_args, warning_message, exceptions
-
-
-def _format_inject_cells_args(tasks_to_inject):
-    return {'priority': tasks_to_inject}
 
 
 def _format(fmt, entry_point, dag, verbose=True):
@@ -111,14 +23,11 @@ def _format(fmt, entry_point, dag, verbose=True):
     ]
 
 
-def _inject_cell(dag, **kwargs):
-    if not kwargs:
-        kwargs = dict()
-
+def _inject_cell(dag):
     _call_in_source(dag,
                     'save_injected_cell',
                     'Injected cell',
-                    kwargs,
+                    dict(),
                     verbose=False)
 
 
@@ -129,19 +38,15 @@ def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
     kwargs = kwargs or {}
     files = []
     results = []
-    for task in dag.values():
-        ok_to_inject_task = True
-        if 'priority' in kwargs:
-            ok_to_inject_task = task.name in kwargs['priority']
 
-        if ok_to_inject_task:
-            try:
-                method = getattr(task.source, method_name)
-            except AttributeError:
-                pass
-            else:
-                results.append(method(**kwargs))
-                files.append(str(task.source._path))
+    for task in dag.values():
+        try:
+            method = getattr(task.source, method_name)
+        except AttributeError:
+            pass
+        else:
+            results.append(method(**kwargs))
+            files.append(str(task.source._path))
 
     files_ = '\n'.join((f'    {f}' for f in files))
 
@@ -346,10 +251,6 @@ def main():
             action='store_true',
             help='Remove injected cell in all script/notebook tasks')
 
-        parser.add_argument('--priority',
-                            action='append',
-                            help='Task to inject')
-
         # re-format
         parser.add_argument('--format',
                             '-f',
@@ -431,18 +332,7 @@ def main():
                        f'tasks: {", ".join(new_paths)}.')
 
     if args.inject:
-        priorities = args.priority if args.priority else []
-        inject_cell_args, warning_message, exceptions = _get_inject_cells_args(
-            dag, priorities=priorities)
-
-        for exception in exceptions:
-            raise (exception)
-
-        if warning_message:
-            warnings.warn(warning_message)
-
-        _inject_cell(dag, **inject_cell_args)
-
+        _inject_cell(dag)
         click.secho(
             'Finished cell injection. Re-run this command if your '
             'pipeline.yaml changes.',
