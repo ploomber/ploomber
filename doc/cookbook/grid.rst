@@ -27,8 +27,8 @@ declaration, for example, to train various models with different parameters:
     tasks:
       - source: random-forest.py
         # generates random-forest-1, random-forest-2, ..., random-forest-6
-        name: random-forest-
-        product: random-forest.html
+        name: random-forest-[[n_estimators]]-[[criterion]]
+        product: random-forest-[[n_estimators]]-[[criterion]].html
         grid:
             # creates 6 tasks (3 * 2)
             n_estimators: [5, 10, 20]
