@@ -23,6 +23,7 @@ def config_init(app, config):
     # value: directory in the documentation
     directories = {
         'guides/first-pipeline': 'get-started',
+        'guides/intro-to-ploomber': 'get-started',
         'guides/parametrized': 'user-guide',
         'guides/sql-templating': 'user-guide',
         'guides/testing': 'user-guide',
