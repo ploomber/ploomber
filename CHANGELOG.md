@@ -1,10 +1,9 @@
 # CHANGELOG
 
-## 0.20.1dev
-* Remove `parameters` cell missing exception and add `parameters` cell in `NotebookRunner` and `ScriptRunner` when it is missing ([#971](https://github.com/ploomber/ploomber/issues/971))
-* Add `--priority` to `nb --inject` to choose which parameters to inject ([#902](https://github.com/ploomber/ploomber/issues/902))
+## 0.21.1dev
 
 ## 0.21 (2022-08-22)
+
 * Adds `ploomber.micro` module for writing micro pipelines
 * Allow dotted paths in params ([#477](https://github.com/ploomber/ploomber/issues/477))
 * Adds progress bar to `Parallel` executor
