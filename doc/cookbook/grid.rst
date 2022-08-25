@@ -26,7 +26,7 @@ declaration, for example, to train various models with different parameters:
 
     tasks:
       - source: random-forest.py
-        # generates random-forest-1, random-forest-2, ..., random-forest-6
+        # generates random-forest-5-gini, random-forest-10-gini, ..., random-forest-20-entropy
         name: random-forest-[[n_estimators]]-[[criterion]]
         product: random-forest-[[n_estimators]]-[[criterion]].html
         grid:
