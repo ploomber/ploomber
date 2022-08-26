@@ -43,7 +43,6 @@ def cli_endpoint(fn):
     Call some_endpoint(catch_exception=False) to disable this behavior (e.g.
     for testing)
     """
-
     @wraps(fn)
     def wrapper(catch_exception=True, **kwargs):
         if os.environ.get('PLOOMBER_DEBUG'):
@@ -98,7 +97,6 @@ def command_endpoint(fn):
     not execute them. If it tails, it prints error message to stderror, then
     calls with exit code 1.
     """
-
     @wraps(fn)
     def wrapper(**kwargs):
         try:
@@ -111,7 +109,8 @@ def command_endpoint(fn):
         except Exception as e:
             error = _format.exception(e)  # get the traceback
             if error:
-                tw = TerminalWriter(file=sys.stderr)  # write to terminal all the traceback
+                tw = TerminalWriter(
+                    file=sys.stderr)  # write to terminal all the traceback
                 tw._write_source(error.splitlines())
             else:
                 print(f'Error: {e}', file=sys.stderr)
