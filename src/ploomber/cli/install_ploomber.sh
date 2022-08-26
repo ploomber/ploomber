@@ -1,12 +1,12 @@
 #!/bin/sh
 
-which pythona > /dev/null 2>&1
+which python > /dev/null 2>&1
 PYTHON_EXIT_STATUS=$?
 if [ "$PYTHON_EXIT_STATUS" -ne "0" ] 
 then
     echo 'Python not found. Installing Python...'
 
-    which condaa > /dev/null 2>&1
+    which conda > /dev/null 2>&1
     CONDA_EXIT_STATUS=$?
     if [ "$CONDA_EXIT_STATUS" -ne "0" ] 
     then
