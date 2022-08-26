@@ -35,7 +35,6 @@ class TaskBuildWrapper:
     here and return it so at the end of the DAG execution, a message with the
     traceback can be printed
     """
-
     def __init__(self, task):
         self.task = task
 

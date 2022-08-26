@@ -210,7 +210,8 @@ class LazyFunction:
 def catch_warnings(fn, warnings_all):
     """
     Catch all warnings on the current task (except DeprecationWarning) 
-    and append them to warnings_all. Runs if the parameter catch_warnings is true.
+    and append them to warnings_all. Runs if the parameter catch_warnings
+    is true.
 
     Parameters
     ----------
@@ -242,8 +243,9 @@ def catch_exceptions(fn, exceptions_all):
     Parameters
     ----------
     fn : function
-        A LazyFunction that automatically calls catch_exceptions, with parameters 
-        from the main function (exceptions_all) and the current scheduled task.
+        A LazyFunction that automatically calls catch_exceptions, with 
+        parameters from the main function (exceptions_all) and the 
+        current scheduled task.
 
     exceptions_all: BuildExceptionsCollector object
         Collects all exceptions.
@@ -271,8 +273,8 @@ def catch_exceptions(fn, exceptions_all):
 
 def pass_exceptions(fn):
     """
-    Pass all exceptions for the current task and nothing. Runs if both parameters 
-    catch_exceptions and catch_warnings are false.
+    Pass all exceptions for the current task and nothing. Runs if 
+    both parameters catch_exceptions and catch_warnings are false.
 
     Parameters
     ----------
@@ -296,8 +298,8 @@ def build_in_current_process(task, build_kwargs, reports_all):
         The current task.
 
     build_kwargs: dict
-        Contains bool catch_exceptions and bool catch_warnings, checks whether to 
-        catch exceptions and warnings on the current task.
+        Contains bool catch_exceptions and bool catch_warnings, checks 
+        whether to catch exceptions and warnings on the current task.
 
     reports_all: list
         Collects the build report when executing the current DAG.
@@ -310,15 +312,15 @@ def build_in_subprocess(task, build_kwargs, reports_all):
     """
     Execute the current task in a subprocess. Runs if the parameter 
     build_in_subprocess is true.
-    
+
     Parameters
     ----------
     task : DAG object
         The current task.
 
     build_kwargs: dict
-        Contains bool catch_exceptions and bool catch_warnings, checks whether to 
-        catch exceptions and warnings on the current task.
+        Contains bool catch_exceptions and bool catch_warnings, checks 
+        whether to catch exceptions and warnings on the current task.
 
     reports_all: list
         Collects the build report when executing the current DAG.
