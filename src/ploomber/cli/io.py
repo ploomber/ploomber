@@ -103,6 +103,7 @@ def command_endpoint(fn):
     def wrapper(**kwargs):
         try:
             fn(**kwargs)
+        # echo error message when it's a subclass Exception
         except BaseException as e:
             click.secho(e.get_message(), file=sys.stderr, fg='red')
             sys.exit(1)
