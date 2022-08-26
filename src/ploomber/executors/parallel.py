@@ -90,6 +90,30 @@ class Parallel(Executor):
     >>> dag = DAG(executor=Parallel(processes=2)) # customize
 
 
+    DAG can exit gracefully on function tasks (PythonCallable):
+
+    >>> # A PythonCallable function that raises DAGBuildEarlyStop
+    >>> def early_stop_root(product):
+    >>>     raise DAGBuildEarlyStop('Ending gracefully')
+
+    >>> # Since DAGBuildEarlyStop is raised, DAG will exit gracefully.
+    >>> dag = DAG(executor='parallel') # use with default values
+    >>> PythonCallable(early_stop_root, File('file.txt'), dag)
+    >>> dag.build()  # This will return None
+
+
+    DAG can also exit gracefully on notebook tasks:
+
+    >>> # A function that calls on a task-level function fn
+    >>> def touch_root(fn):
+    >>>     Path(str(fn)).touch()
+
+    >>> # Use the task-level hook "on_finish" to exit DAG gracefully.
+    >>> dag = DAG(executor='parallel') # use with default values
+    >>> t = PythonCallable(touch_root, File('file.txt'), dag)
+    >>> t.on_finish = early_stop
+    >>> dag.build()  # This will return None
+
     Notes
     -----
     If any task crashes, downstream tasks execution is aborted, building
