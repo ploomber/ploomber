@@ -92,8 +92,6 @@ def cli_endpoint(fn):
     return wrapper
 
 
-# FIXME: capture only certain types of exceptions. If it's something we didn't
-# raise, we'd like to see the full traceback
 def command_endpoint(fn):
     """
     Decorator for command line endpoints that only parse dags or tasks but do
@@ -108,8 +106,14 @@ def command_endpoint(fn):
         except BaseException as e:
             click.secho(e.get_message(), file=sys.stderr, fg='red')
             sys.exit(1)
+        # show the full traceback if it's not a subclass Exception
         except Exception as e:
-            print(f'Error: {e}', file=sys.stderr)
+            error = _format.exception(e)  # get the traceback
+            if error:
+                tw = TerminalWriter(file=sys.stderr)  # write to terminal all the traceback
+                tw._write_source(error.splitlines())
+            else:
+                print(f'Error: {e}', file=sys.stderr)
             sys.exit(1)
 
     return wrapper
