@@ -13,6 +13,7 @@ else:
 conda create --name {ENV_NAME}
 CONDA_PATH=$(conda info | grep -i 'base environment' | cut -d ' ' -f 11)
 source $CONDA_PATH/etc/profile.d/conda.sh
+conda init
 conda activate {ENV_NAME}
 conda install pip
 pip install ploomber
