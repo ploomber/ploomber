@@ -61,33 +61,36 @@ class Serial(Executor):
 
     DAG can exit gracefully on function tasks (PythonCallable):
 
+    >>> from ploomber.products import File
+    >>> from ploomber.tasks import PythonCallable
     >>> # A PythonCallable function that raises DAGBuildEarlyStop
     >>> def early_stop_root(product):
-    >>>     raise DAGBuildEarlyStop('Ending gracefully')
+    ...     raise DAGBuildEarlyStop('Ending gracefully')
 
     >>> # Since DAGBuildEarlyStop is raised, DAG will exit gracefully.
     >>> dag = DAG(executor='parallel') # use with default values
-    >>> PythonCallable(early_stop_root, File('file.txt'), dag)
-    >>> dag.build()  # This will return None
+    ... PythonCallable(early_stop_root, File('file.txt'), dag)
+    ... dag.build()
 
 
     DAG can also exit gracefully on notebook tasks:
-
-    >>> # A function that calls on a task-level function fn
+    >>> from pathlib import Path
+    >>> from ploomber.tasks import NotebookRunner
     >>> def touch_root(fn):
-    >>>     Path(str(fn)).touch()
+    ...     Path(str(fn)).touch()
 
     >>> # Use the task-level hook "on_finish" to exit DAG gracefully.
     >>> dag = DAG(executor='parallel') # use with default values
-    >>> t = PythonCallable(touch_root, File('file.txt'), dag)
-    >>> t.on_finish = early_stop
-    >>> dag.build()  # This will return None
+    ... t = NotebookRunner(touch_root, File('file.txt'), dag)
+    ... t.on_finish = early_stop
+    ... dag.build()
 
     See Also
     --------
     ploomber.executors.Parallel :
         Parallel executor
     """
+
     def __init__(self,
                  build_in_subprocess=True,
                  catch_exceptions=True,
@@ -198,6 +201,7 @@ class Serial(Executor):
 
 
 class LazyFunction:
+
     def __init__(self, fn, kwargs, task):
         self.fn = fn
         self.kwargs = kwargs
@@ -209,14 +213,14 @@ class LazyFunction:
 
 def catch_warnings(fn, warnings_all):
     """
-    Catch all warnings on the current task (except DeprecationWarning) 
+    Catch all warnings on the current task (except DeprecationWarning)
     and append them to warnings_all. Runs if the parameter catch_warnings
     is true.
 
     Parameters
     ----------
     fn : function
-        A LazyFunction that automatically calls catch_warnings, with parameters 
+        A LazyFunction that automatically calls catch_warnings, with parameters
         from the main function (warnings_all) and the current scheduled task.
 
     warnings_all: BuildWarningsCollector object
@@ -237,14 +241,14 @@ def catch_warnings(fn, warnings_all):
 
 def catch_exceptions(fn, exceptions_all):
     """
-    If there is an exception, log it and append it to warnings_all. Runs if 
+    If there is an exception, log it and append it to warnings_all. Runs if
     the parameter catch_exceptions is true.
 
     Parameters
     ----------
     fn : function
-        A LazyFunction that automatically calls catch_exceptions, with 
-        parameters from the main function (exceptions_all) and the 
+        A LazyFunction that automatically calls catch_exceptions, with
+        parameters from the main function (exceptions_all) and the
         current scheduled task.
 
     exceptions_all: BuildExceptionsCollector object
@@ -273,13 +277,13 @@ def catch_exceptions(fn, exceptions_all):
 
 def pass_exceptions(fn):
     """
-    Pass all exceptions for the current task and nothing. Runs if 
+    Pass all exceptions for the current task and nothing. Runs if
     both parameters catch_exceptions and catch_warnings are false.
 
     Parameters
     ----------
     fn : function
-        A LazyFunction that automatically calls pass_exceptions on the 
+        A LazyFunction that automatically calls pass_exceptions on the
         current scheduled task.
     """
     # should i still check here for DAGBuildEarlyStop? is it worth
@@ -289,7 +293,7 @@ def pass_exceptions(fn):
 
 def build_in_current_process(task, build_kwargs, reports_all):
     """
-    Execute the current task in the current process. Runs if the parameter 
+    Execute the current task in the current process. Runs if the parameter
     build_in_subprocess is false.
 
     Parameters
@@ -298,7 +302,7 @@ def build_in_current_process(task, build_kwargs, reports_all):
         The current task.
 
     build_kwargs: dict
-        Contains bool catch_exceptions and bool catch_warnings, checks 
+        Contains bool catch_exceptions and bool catch_warnings, checks
         whether to catch exceptions and warnings on the current task.
 
     reports_all: list
@@ -310,7 +314,7 @@ def build_in_current_process(task, build_kwargs, reports_all):
 
 def build_in_subprocess(task, build_kwargs, reports_all):
     """
-    Execute the current task in a subprocess. Runs if the parameter 
+    Execute the current task in a subprocess. Runs if the parameter
     build_in_subprocess is true.
 
     Parameters
@@ -319,7 +323,7 @@ def build_in_subprocess(task, build_kwargs, reports_all):
         The current task.
 
     build_kwargs: dict
-        Contains bool catch_exceptions and bool catch_warnings, checks 
+        Contains bool catch_exceptions and bool catch_warnings, checks
         whether to catch exceptions and warnings on the current task.
 
     reports_all: list

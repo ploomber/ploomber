@@ -35,6 +35,7 @@ class TaskBuildWrapper:
     here and return it so at the end of the DAG execution, a message with the
     traceback can be printed
     """
+
     def __init__(self, task):
         self.task = task
 
@@ -91,27 +92,29 @@ class Parallel(Executor):
 
     DAG can exit gracefully on function tasks (PythonCallable):
 
+    >>> from ploomber.products import File
+    >>> from ploomber.tasks import PythonCallable
     >>> # A PythonCallable function that raises DAGBuildEarlyStop
     >>> def early_stop_root(product):
-    >>>     raise DAGBuildEarlyStop('Ending gracefully')
+    ...     raise DAGBuildEarlyStop('Ending gracefully')
 
     >>> # Since DAGBuildEarlyStop is raised, DAG will exit gracefully.
     >>> dag = DAG(executor='parallel') # use with default values
-    >>> PythonCallable(early_stop_root, File('file.txt'), dag)
-    >>> dag.build()  # This will return None
+    ... PythonCallable(early_stop_root, File('file.txt'), dag)
+    ... dag.build()
 
 
     DAG can also exit gracefully on notebook tasks:
-
-    >>> # A function that calls on a task-level function fn
+    >>> from pathlib import Path
+    >>> from ploomber.tasks import NotebookRunner
     >>> def touch_root(fn):
-    >>>     Path(str(fn)).touch()
+    ...     Path(str(fn)).touch()
 
     >>> # Use the task-level hook "on_finish" to exit DAG gracefully.
     >>> dag = DAG(executor='parallel') # use with default values
-    >>> t = PythonCallable(touch_root, File('file.txt'), dag)
-    >>> t.on_finish = early_stop
-    >>> dag.build()  # This will return None
+    ... t = NotebookRunner(touch_root, File('file.txt'), dag)
+    ... t.on_finish = early_stop
+    ... dag.build()
 
     Notes
     -----
