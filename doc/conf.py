@@ -15,6 +15,7 @@ import sys
 from ploomber import __version__
 
 sys.path.insert(0, os.path.abspath('.'))
+sys.path.append(os.path.abspath('./_ext'))
 import hooks  # noqa
 
 # -- Project information -----------------------------------------------------
@@ -31,12 +32,9 @@ release = version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.autosectionlabel',
-    'nbsphinx',
-    'sphinx_toolbox.collapse',
+    'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.autosummary',
+    'sphinx.ext.autosectionlabel', 'nbsphinx', 'sphinx_toolbox.collapse',
+    'sphinx_tabs.tabs', 'myst_parser', 'ploomber_example'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

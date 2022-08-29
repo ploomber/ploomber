@@ -15,3 +15,5 @@ papermill
 jupytext
 ipywidgets
 sphinx-toolbox
+sphinx-tabs
+myst-parser

@@ -9,6 +9,8 @@ projects-tmp/
 examples/pipeline/results/
 ploomber-venv
 
+# ignore docs generated from ploomber/projects
+doc/*/**/*.md
 doc/**/*.ipynb
 .pytest_cache/
 .vscode/

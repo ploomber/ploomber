@@ -28,3 +28,4 @@ User Guide
     r-support
     faq_index
     spec-vs-python
+    using-python-api

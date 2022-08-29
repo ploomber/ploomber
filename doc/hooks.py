@@ -36,9 +36,9 @@ def config_init(app, config):
 
     # move README.ipynb files to their corresponding location in the docs
     for path, target_dir in directories.items():
-        src = Path(projects, path, 'README.ipynb')
+        src = Path(projects, path, 'README.md')
         name = Path(path).name
-        dst = Path(target_dir, f'{name}.ipynb')
+        dst = Path(target_dir, f'{name}.md')
         print(f'Copying {src} to {dst}')
         shutil.copy(src, dst)
 

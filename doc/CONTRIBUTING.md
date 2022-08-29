@@ -128,3 +128,41 @@ Read more about additional options to embed code blocks in `.rst` files by visit
 
 Login to [algolia crawler](https://crawler.algolia.com). Select ploomber in the crawlers section. Select Editor from the side bar. This allows you to make edits to the config file. To add code snippets to the indexing, I appended  `pre` to the array assigned to `content`, which is under the `recordProps` property. This is because  code blocks are within a `<pre>` tag in HTML. After making edits, you can use the URL Tester to test. Click save when you are ready. After clicking save, exit the text editor and restart the crawler. After the crawler finishes restarting, Docsearch should be updated on the site. 
 
+
+#### Ploomber Example
+
+To reflect the users' option of using Ploomber's CLI tool or the Python API, we
+want the documentation to include examples with both. To do this we can use
+the custom sphinx directive `ploomber-example` when writing code snippets:
+
+rst:
+```rst
+.. ploomber-example::
+
+   .. example-python::
+
+       .. code-block:: python
+          :class: text-editor
+
+          dag.build()
+
+   .. example-cli::
+
+       .. code-block:: Bash
+          :class: text-editor
+          :name: task-bash
+
+          ploomber build --force
+```
+
+rendered:
+![image](https://user-images.githubusercontent.com/31556469/187514196-fad945fd-dd58-4f95-b6cb-8538d3bc03bc.png)
+![image](https://user-images.githubusercontent.com/31556469/187514250-34b1a356-16fe-4e83-937b-d4a0153710bc.png)
+
+
+Additionally, when writing documentation, we must consider that the Python
+API is stateful, while the CLI is not.
+
+For example, if a user runs `dag.build()`, modifies a task's source and runs
+`dag.build()` again - the source code change wont be detected, this is because
+once we load the DAG, we don't check status changes.
