@@ -71,8 +71,8 @@ def test_error_if_non_compatible_tasks():
     with pytest.raises(TypeError) as excinfo:
         InMemoryDAG(dag)
 
-    expected = ('All tasks in the DAG must be PythonCallable, '
-                'got unallowed types: ShellScript')
+    expected = ("All tasks in the DAG must be PythonCallable, "
+                "got unallowed types: ShellScript: task -> File('file.txt')")
     assert str(excinfo.value) == expected
 
 
@@ -98,6 +98,7 @@ def test_error_if_a_task_returns_none():
 
 @pytest.mark.parametrize('copy', [True, False])
 def test_copy(copy):
+
     def _assign_upstream(upstream):
         _assign_upstream.obj = upstream
         return 42

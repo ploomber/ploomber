@@ -13,7 +13,7 @@ from click.testing import CliRunner
 from ploomber.cli import install as install_module
 from ploomber_cli.cli import install
 from ploomber.cli.install import _pip_install
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
 from conftest import (_write_sample_conda_env, _prepare_files,
                       _write_sample_pip_req, _write_sample_conda_files,
                       _write_sample_pip_files)
@@ -386,7 +386,8 @@ def test_installs_conda_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     main = Mock()
     monkeypatch.setattr(install_module.shutil, 'which', Mock())
     monkeypatch.setattr(install_module, 'main_conda', main)
-    monkeypatch.setattr(install_module.telemetry, 'is_conda', lambda: is_conda)
+    monkeypatch.setattr(install_module._telemetry, 'is_conda',
+                        lambda: is_conda)
     monkeypatch.setattr(install_module, '_current_conda_env_name',
                         lambda: env_name)
 
@@ -412,7 +413,7 @@ def test_installs_pip_inline_if_inside_venv(tmp_directory, monkeypatch, args,
     # simulate no conda
     monkeypatch.setattr(install_module.shutil, 'which', lambda _: None)
     monkeypatch.setattr(install_module, 'main_pip', main)
-    monkeypatch.setattr(install_module.telemetry, 'in_virtualenv',
+    monkeypatch.setattr(install_module._telemetry, 'in_virtualenv',
                         lambda: in_venv)
 
     runner = CliRunner()

@@ -8,6 +8,7 @@ Definitions:
         a str or dict pointing to an object with optional parameters for
         calling it (a superset of the above)
 """
+import re
 import warnings
 from pathlib import Path
 import importlib
@@ -19,13 +20,6 @@ import parso
 import pydantic
 
 from ploomber.exceptions import SpecValidationError
-
-
-class DottedPathWarning(UserWarning):
-    """Displayed in cases where raising an exception after failing to
-    initialize or load a dotted path is not necessary
-    """
-    pass
 
 
 class DottedPath:
@@ -44,12 +38,21 @@ class DottedPath:
     allow_return_none : bool, default=True
         If True, it allows calling the dotted path to return None, otherwise
         it raises an exception
+
+    strict : bool, default=False
+        If True, it validates that the string has a.b::c format (passing a.b.c
+        will raise an error)
     """
 
-    def __init__(self, dotted_path, lazy_load=False, allow_return_none=True):
-        self._spec = DottedPathSpecModel.from_spec(dotted_path)
+    def __init__(self,
+                 dotted_path,
+                 lazy_load=False,
+                 allow_return_none=True,
+                 strict=False):
+        self._spec = DottedPathSpecModel.from_spec(dotted_path, strict=strict)
         self._callable = None
         self._allow_return_none = allow_return_none
+        self._strict = strict
 
         if not lazy_load:
             self._load_callable()
@@ -59,7 +62,12 @@ class DottedPath:
         return self._callable
 
     def _load_callable(self):
-        self._callable = load_callable_dotted_path(self._spec.dotted_path)
+        if self._strict:
+            dp = self._spec.dotted_path.replace('::', '.')
+        else:
+            dp = self._spec.dotted_path
+
+        self._callable = load_callable_dotted_path(dp)
 
     def __call__(self, *args, **kwargs):
         if self._callable is None:
@@ -405,6 +413,15 @@ class BaseModel(pydantic.BaseModel):
                                       kwargs=kwargs)
 
 
+def _validate_strict_dotted_path(dotted_path):
+    split = dotted_path.split('::')
+    if (not re.match(r'[\w\.]+::\w+', dotted_path) or len(split) > 2
+            or '.' in split[1]):
+        raise ValueError('Expected a dot-separated string whose last '
+                         'element is separated '
+                         'by "::" (e.g. a.b::c)')
+
+
 class DottedPathSpecModel(BaseModel):
     dotted_path: str
 
@@ -412,10 +429,16 @@ class DottedPathSpecModel(BaseModel):
         extra = 'allow'
 
     @classmethod
-    def from_spec(cls, dotted_path_spec):
+    def from_spec(cls, dotted_path_spec, strict=False):
+
         if isinstance(dotted_path_spec, str):
+            if strict:
+                _validate_strict_dotted_path(dotted_path_spec)
+
             return cls(dotted_path=dotted_path_spec)
         elif isinstance(dotted_path_spec, Mapping):
+            if strict:
+                _validate_strict_dotted_path(dotted_path_spec['dotted_path'])
             return cls(**dotted_path_spec)
         else:
             raise TypeError(
