@@ -60,14 +60,6 @@ conda install ploomber -c conda-forge
   <a href="https://binder.ploomber.io/v2/gh/ploomber/binder-env/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fploomber%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fguides/first-pipeline%252FREADME.ipynb%26branch%3Dmaster"> <img src="_static/open-in-jupyterlab.svg" alt="Open In JupyterLab"> </a>
 </p>
 
-### **Or locally:**
-
-```sh
-pip install ploomber --upgrade
-
-python -m ploomber.onboard
-  ```
-
 ## Community
 
 * [Join us on Slack](https://ploomber.io/community)
