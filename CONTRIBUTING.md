@@ -23,6 +23,7 @@ conda config --add channels conda-forge
 ```
 
 Once you have conda ready:
+
 Fork this repository to your own GitHub account.
 
 ```sh
