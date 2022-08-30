@@ -68,7 +68,7 @@ class Serial(Executor):
     ...     raise DAGBuildEarlyStop('Ending gracefully')
 
     >>> # Since DAGBuildEarlyStop is raised, DAG will exit gracefully.
-    >>> dag = DAG(executor='parallel') # use with default values
+    >>> dag = DAG(executor='parallel')
     ... PythonCallable(early_stop_root, File('file.txt'), dag)
     ... dag.build()
 
@@ -80,7 +80,7 @@ class Serial(Executor):
     ...     Path(str(fn)).touch()
 
     >>> # Use the task-level hook "on_finish" to exit DAG gracefully.
-    >>> dag = DAG(executor='parallel') # use with default values
+    >>> dag = DAG(executor='parallel')
     ... t = NotebookRunner(touch_root, File('file.txt'), dag)
     ... t.on_finish = early_stop
     ... dag.build()
