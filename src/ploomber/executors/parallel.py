@@ -110,7 +110,7 @@ class Parallel(Executor):
     >>> def touch_root(fn):
     ...     Path(str(fn)).touch()
 
-    >>> # Use the task-level hook "on_finish" to exit DAG gracefully.
+    >>> # Use task-level hook "on_finish" to exit DAG gracefully.
     ... dag = DAG(executor='parallel')
     ... t = NotebookRunner(touch_root, File('file.txt'), dag)
     ... t.on_finish = early_stop
