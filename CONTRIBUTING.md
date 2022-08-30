@@ -26,6 +26,8 @@ Once you have conda ready:
 
 Fork this repository to your own GitHub account.
 
+![](_static/fork-button.png)
+
 ```sh
 # get the code
 git clone https://github.com/ploomber/ploomber
