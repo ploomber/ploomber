@@ -109,6 +109,7 @@ def command_endpoint(fn):
             click.secho(e.get_message(), file=sys.stderr, fg='red')
             sys.exit(1)
         except Exception as e:
+            click.secho(e.get_message(), file=sys.stderr, fg='red')
             print(traceback.format_exc())
             sys.exit(1)
 
