@@ -50,6 +50,13 @@ class Serial(Executor):
         # add at the top of your pipeline.yaml
         executor: serial
 
+        tasks:
+          - source: script.py
+            nb_product_key: [nb_ipynb, nb_html]
+            product:
+                nb_ipynb: nb.ipynb
+                nb_html: report.html
+
 
     Python API:
 
@@ -63,27 +70,31 @@ class Serial(Executor):
 
     >>> from ploomber.products import File
     >>> from ploomber.tasks import PythonCallable
+    >>> from ploomber.exceptions import DAGBuildEarlyStop
     >>> # A PythonCallable function that raises DAGBuildEarlyStop
     >>> def early_stop_root(product):
+    ...     Path(product).touch()
     ...     raise DAGBuildEarlyStop('Ending gracefully')
 
     >>> # Since DAGBuildEarlyStop is raised, DAG will exit gracefully.
-    ... dag = DAG(executor='parallel')
-    ... PythonCallable(early_stop_root, File('file.txt'), dag)
-    ... dag.build()
+    >>> dag = DAG(executor='parallel')
+    >>> t = PythonCallable(early_stop_root, File('file.txt'), dag=dag)
+    >>> dag.build()  # doctest: +SKIP
 
 
     DAG can also exit gracefully on notebook tasks:
+    
     >>> from pathlib import Path
     >>> from ploomber.tasks import NotebookRunner
-    >>> def touch_root(fn):
-    ...     Path(str(fn)).touch()
+    >>> from ploomber.products import File
+    >>> def early_stop():
+    ...     raise DAGBuildEarlyStop('Ending gracefully')
 
-    >>> # Use the task-level hook "on_finish" to exit DAG gracefully.
-    ... dag = DAG(executor='parallel')
-    ... t = NotebookRunner(touch_root, File('file.txt'), dag)
-    ... t.on_finish = early_stop
-    ... dag.build()
+    >>> # Use task-level hook "on_finish" to exit DAG gracefully.
+    >>> dag = DAG(executor='parallel')
+    >>> t = NotebookRunner(Path('nb.ipynb'), File('report.html'), dag=dag)
+    >>> t.on_finish = early_stop
+    >>> dag.build()  # doctest: +SKIP
 
     See Also
     --------
@@ -97,7 +108,7 @@ class Serial(Executor):
                  catch_warnings=True):
         self._logger = logging.getLogger(__name__)
         self._build_in_subprocess = build_in_subprocess
-        self._catch_exceptions = catch_exceptions
+        self ._catch_exceptions = catch_exceptions
         self._catch_warnings = catch_warnings
 
     def __repr__(self):
