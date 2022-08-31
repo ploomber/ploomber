@@ -104,7 +104,6 @@ class Parallel(Executor):
     >>> from ploomber.exceptions import DAGBuildEarlyStop
     >>> # A PythonCallable function that raises DAGBuildEarlyStop
     >>> def early_stop_root(product):
-    ...     Path(product).touch()
     ...     raise DAGBuildEarlyStop('Ending gracefully')
 
     >>> # Since DAGBuildEarlyStop is raised, DAG will exit gracefully.
