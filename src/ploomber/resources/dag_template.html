@@ -206,19 +206,20 @@
   //   .call(wrap, 2);
 
   // Add text to tasks with text wrap
-  blockWidth = 40;
-  blockHeight= 30;
+  blockWidth = 38;
+  blockHeight= 38;
   fontSize = 5.5;
   tasks.append("foreignObject")
     .attr("width", blockWidth)
     .attr("height", blockHeight)
     .attr("x", -19)
-    .attr("y", -9)
+    .attr("y", -19)
     .append("xhtml:div")
     .style("color", "#000")
     .style("font-size", `${fontSize}px`)
     .style("height", `${blockHeight}px`)
-    .style("overflow-y", "auto")
+    .style("overflow-y", "auto")    
+    .style("text-align", "center")
     .html((d) => d.data.id)
   
   const arrow = d3.symbol().type(d3.symbolTriangle).size(nodeRadius * nodeRadius / 20.0);
