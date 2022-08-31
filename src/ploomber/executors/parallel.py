@@ -113,7 +113,7 @@ class Parallel(Executor):
 
 
     DAG can also exit gracefully on notebook tasks:
-    
+
     >>> from pathlib import Path
     >>> from ploomber.tasks import NotebookRunner
     >>> from ploomber.products import File

@@ -82,7 +82,7 @@ class Serial(Executor):
 
 
     DAG can also exit gracefully on notebook tasks:
-    
+
     >>> from pathlib import Path
     >>> from ploomber.tasks import NotebookRunner
     >>> from ploomber.products import File
@@ -107,7 +107,7 @@ class Serial(Executor):
                  catch_warnings=True):
         self._logger = logging.getLogger(__name__)
         self._build_in_subprocess = build_in_subprocess
-        self ._catch_exceptions = catch_exceptions
+        self._catch_exceptions = catch_exceptions
         self._catch_warnings = catch_warnings
 
     def __repr__(self):
