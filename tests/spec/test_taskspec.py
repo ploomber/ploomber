@@ -4,12 +4,11 @@ from pathlib import Path
 import pytest
 
 from ploomber.spec.taskspec import (TaskSpec, task_class_from_source_str,
-                                    _preprocess_grid_spec_mapping)
+                                    _process_dotted_paths)
 from ploomber.spec.dagspec import Meta
 from ploomber.tasks import (NotebookRunner, SQLScript, SQLDump, ShellScript,
                             PythonCallable)
 from ploomber.exceptions import DAGSpecInitializationError, ValidationError
-from ploomber.util.dotted_path import DottedPathWarning
 from ploomber import DAG
 
 
@@ -620,17 +619,85 @@ def test_constructor_deep_copies_spec_and_meta(tmp_directory, tmp_imports):
     assert prod_default_class is not task_spec.meta['product_default_class']
 
 
+@pytest.mark.parametrize('params, expected', [
+    [
+        {
+            'a': 'my_module::a'
+        },
+        {
+            'a': [0, 1, 2]
+        },
+    ],
+    [
+        {
+            'a': 'my_module::b'
+        },
+        {
+            'a': [4, 5, 6]
+        },
+    ],
+    [
+        {
+            'a': {
+                'dotted_path': 'my_module::range_',
+                'n': 5
+            },
+        },
+        {
+            'a': [0, 1, 2, 3, 4]
+        },
+    ],
+    [
+        {
+            'a': 'my_module::a',
+            'b': 'my_module::b',
+        },
+        {
+            'a': [0, 1, 2],
+            'b': [4, 5, 6],
+        },
+    ],
+])
+def test_params_with_dotted_path(tmp_directory, tmp_imports, params, expected):
+    Path('my_module.py').write_text("""
+def a():
+    return list(range(3))
+
+def b():
+    return [4, 5, 6]
+
+
+def range_(n):
+    return list(range(n))
+""")
+
+    spec = TaskSpec(
+        {
+            'source': 'my_module.fn',
+            'product': 'report.ipynb',
+            'name': 'fn-',
+            'params': params,
+        },
+        Meta.default_meta(),
+        '.',
+        lazy_import=True)
+
+    task, _ = spec.to_task(dag=DAG())
+
+    assert task.params == expected
+
+
 @pytest.mark.parametrize('grid, n_expected', [
     [
         {
-            'a': 'my_module.a',
+            'a': 'my_module::a',
             'b': [4, 5, 6],
         },
         9,
     ],
     [
         {
-            'a': 'my_module.b',
+            'a': 'my_module::b',
             'b': [4, 5, 6],
         },
         9,
@@ -638,7 +705,7 @@ def test_constructor_deep_copies_spec_and_meta(tmp_directory, tmp_imports):
     [
         {
             'a': {
-                'dotted_path': 'my_module.range_',
+                'dotted_path': 'my_module::range_',
                 'n': 4
             },
             'b': [4, 5, 6],
@@ -649,18 +716,18 @@ def test_constructor_deep_copies_spec_and_meta(tmp_directory, tmp_imports):
         [
             {
                 'a': {
-                    'dotted_path': 'my_module.range_',
+                    'dotted_path': 'my_module::range_',
                     'n': 3
                 },
                 'b': [4, 5],
             },
             {
                 'c': {
-                    'dotted_path': 'my_module.range_',
+                    'dotted_path': 'my_module::range_',
                     'n': 2
                 },
                 'd': {
-                    'dotted_path': 'my_module.range_',
+                    'dotted_path': 'my_module::range_',
                     'n': 3
                 },
             },
@@ -703,14 +770,14 @@ def range_(n):
 @pytest.mark.parametrize('grid, error_expected', [
     [
         {
-            'a': 'my_module.return_none',
+            'a': 'my_module::return_none',
             'b': [4, 5, 6],
         },
-        "Error calling dotted path 'my_module.return_none'",
+        "Error calling dotted path 'my_module::return_none'",
     ],
     [
         {
-            'a': 'my_module.crash',
+            'a': 'my_module::crash',
             'b': [4, 5, 6],
         },
         "some error",
@@ -750,17 +817,35 @@ def crash():
 @pytest.mark.parametrize('spec, expected', [
     [
         {
-            'a': [1, 2],
-            'b': [1, 2]
+            'a': 1
         },
         {
-            'a': [1, 2],
-            'b': [1, 2]
+            'a': 1
         },
     ],
     [
         {
-            'a': 'some_functions.numbers'
+            'a': [1, 2],
+            'b': {'key': 'value'}
+        },
+        {
+            'a': [1, 2],
+            'b': {'key': 'value'}
+        },
+    ],
+    [
+        {
+            'a': 'some_functions::numbers'
+        },
+        {
+            'a': [1, 2, 3]
+        },
+    ],
+    [
+        {
+            'a': {
+                'dotted_path': 'some_functions::numbers'
+            }
         },
         {
             'a': [1, 2, 3]
@@ -776,12 +861,13 @@ def crash():
     ],
 ],
                          ids=[
-                             'no-dotted-path',
-                             'valid-dotted-path',
-                             'no-dotted-path-string',
+                             'no-dotted-path-type-int',
+                             'no-dotted-path-type-list-and-dict',
+                             'valid-dotted-path-str',
+                             'valid-dotted-path-dict',
+                             'no-dotted-path-format',
                          ])
-def test_preprocess_grid_spec_mapping(tmp_directory, spec, expected,
-                                      tmp_imports):
+def test_process_dotted_paths(tmp_directory, spec, expected, tmp_imports):
     Path('some_functions.py').write_text("""
 def numbers():
     return [1, 2, 3]
@@ -790,26 +876,31 @@ def numbers():
     # check no warnings displayed
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        out = _preprocess_grid_spec_mapping(spec)
+        out = _process_dotted_paths(spec)
 
     assert out == expected
 
 
-@pytest.mark.parametrize('spec', [
-    {
-        'a': 'some_functions.missing_attributes'
-    },
-    {
-        'a': 'not_a_module.function'
-    },
+@pytest.mark.parametrize('spec, error_class', [
+    [
+        {
+            'a': 'some_functions::missing_attributes'
+        },
+        AttributeError,
+    ],
+    [
+        {
+            'a': 'not_a_module::function'
+        },
+        ModuleNotFoundError,
+    ],
 ])
-def test_preprocess_grid_spec_mapping_warnings(tmp_directory, spec,
-                                               tmp_imports):
+def test_process_dotted_paths_errors(tmp_directory, spec, tmp_imports,
+                                     error_class):
     Path('some_functions.py').write_text("""
 def numbers():
     return [1, 2, 3]
 """)
 
-    with pytest.warns(DottedPathWarning,
-                      match='You parameter looks like a dotted path'):
-        _preprocess_grid_spec_mapping(spec)
+    with pytest.raises(error_class):
+        _process_dotted_paths(spec)

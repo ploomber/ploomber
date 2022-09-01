@@ -18,11 +18,12 @@ import click
 import yaml
 
 from ploomber.io._commander import Commander
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
 from ploomber.util.util import check_mixed_envs
 from ploomber.cli.io import command_endpoint
-from ploomber.telemetry import telemetry
+from ploomber_core.telemetry import telemetry as _telemetry
 from ploomber.util._sys import _python_bin
+from ploomber.telemetry import telemetry
 
 _SETUP_PY = 'setup.py'
 
@@ -110,7 +111,7 @@ def main(use_lock, create_env=None, use_venv=False):
         # TODO: emit warnings if unused environment.yml?
         main_pip(use_lock=use_lock,
                  create_env=create_env
-                 if create_env is not None else not telemetry.in_virtualenv())
+                 if create_env is not None else not _telemetry.in_virtualenv())
 
 
 def main_pip(use_lock, create_env=True):
@@ -331,8 +332,8 @@ def _run_conda_commands(
 
 def _should_create_conda_env():
     # not in conda env or running in base conda env
-    return (not telemetry.is_conda()
-            or (telemetry.is_conda() and _current_conda_env_name() == 'base'))
+    return (not _telemetry.is_conda()
+            or (_telemetry.is_conda() and _current_conda_env_name() == 'base'))
 
 
 def _current_conda_env_name():

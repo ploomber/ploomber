@@ -887,13 +887,6 @@ class Task(abc.ABC):
             '"debug" is not implemented in "{}" tasks'.format(
                 type(self).__name__))
 
-    def develop(self):
-        """Develop task, only implemented in certain tasks
-        """
-        raise NotImplementedError(
-            '"develop" is not implemented in "{}" tasks'.format(
-                type(self).__name__))
-
     def load(self):
         """Load task as pandas.DataFrame. Only implemented in certain tasks
         """
@@ -1015,6 +1008,7 @@ class ProductEvaluator:
     A class to temporarily keep the outdated status of a product (when products
     are remote this operation is expensive)
     """
+
     def __init__(self, product, outdated_by_code, remote):
         self.product = product
         self.outdated_by_code = outdated_by_code

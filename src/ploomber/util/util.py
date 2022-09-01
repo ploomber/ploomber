@@ -40,7 +40,9 @@ def requires(pkgs, name=None, extra_msg=None, pip_names=None):
         command, use it if different to the package name itself
 
     """
+
     def decorator(f):
+
         @wraps(f)
         def wrapper(*args, **kwargs):
             is_pkg_missing = [
@@ -212,6 +214,7 @@ def signature_check(fn, params, task_name):
     Verify if the function signature used as source in a PythonCallable
     task matches available params
     """
+
     params = set(params)
     parameters = inspect.signature(fn).parameters
 

@@ -1,21 +1,21 @@
 import sys
-from unittest.mock import Mock, ANY
 from pathlib import Path, PurePosixPath
+from unittest.mock import ANY, Mock
 
-import pytest
 import jupytext
-import nbformat
 import nbconvert
+import nbformat
+import pytest
 from debuglater.pydump import debug_dump
 
 from ploomber import DAG, DAGConfigurator
-from ploomber.tasks import NotebookRunner
-from ploomber.products import File
-from ploomber.exceptions import (DAGBuildError, DAGRenderError,
-                                 TaskInitializationError, TaskBuildError)
-from ploomber.tasks import notebook
-from ploomber.executors import Serial
 from ploomber.clients import LocalStorageClient
+from ploomber.exceptions import (DAGBuildError, DAGRenderError, TaskBuildError,
+                                 TaskInitializationError)
+from ploomber.executors import Serial
+from ploomber.products import File
+from ploomber.sources.nb_utils import find_cell_with_tag
+from ploomber.tasks import NotebookRunner, notebook
 
 
 def fake_from_notebook_node(self, nb, resources):
@@ -1246,6 +1246,7 @@ def test_validates_debug_mode_property(tmp_directory):
     assert msg in str(excinfo.value)
 
 
+@pytest.mark.skip
 def test_debug_mode_now(tmp_directory, monkeypatch):
     path = Path('nb.py')
     path.write_text("""
@@ -1297,3 +1298,59 @@ x/y
 
     captured = capsys.readouterr()
     assert "x=1" in captured.out
+
+
+@pytest.mark.parametrize('code, name, expected_fmt', [
+    ['', 'file.py', 'light'],
+    ['', 'file.py', 'light'],
+    ['', 'file.py', 'light'],
+    [
+        nbformat.writes(nbformat.v4.new_notebook()),
+        'file.ipynb',
+        'ipynb',
+    ],
+    [
+        nbformat.writes(nbformat.v4.new_notebook()),
+        'file.ipynb',
+        'ipynb',
+    ],
+    [
+        '# %%\n1+1\n\n# %%\n2+2',
+        'file.py',
+        'percent',
+    ],
+])
+def test_notebook_add_parameters_cell_if_missing(tmp_directory, code, name,
+                                                 expected_fmt, capsys):
+    path = Path(name)
+    path.write_text(code)
+    nb_old = jupytext.read(path)
+
+    dag = DAG()
+
+    NotebookRunner(Path(name), File('out.html'), dag=dag, debug_mode='later')
+
+    dag.render()
+
+    # displays adding cell message
+    captured = capsys.readouterr()
+    assert ("missing the parameters cell, adding it at the top of the file"
+            in captured.out)
+
+    # checks parameters cell is added
+    nb_new = jupytext.read(path)
+    cell, idx = find_cell_with_tag(nb_new, 'parameters')
+
+    # adds the cell at the top
+    assert idx == 0
+
+    # only adds one cell
+    assert len(nb_old.cells) + 1 == len(nb_new.cells)
+
+    # expected source content
+    assert "add default values for parameters" in cell['source']
+
+    # keeps the same format
+    fmt, _ = (('ipynb', None) if path.suffix == '.ipynb' else
+              jupytext.guess_format(path.read_text(), ext=path.suffix))
+    assert fmt == expected_fmt

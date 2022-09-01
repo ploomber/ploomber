@@ -14,6 +14,7 @@ import nbformat
 import nbconvert
 from nbconvert import ExporterNameError
 
+from ploomber_core import deprecated
 # this was introduced in nbconvert 6.0
 try:
     from nbconvert.exporters.webpdf import WebPDFExporter
@@ -279,6 +280,7 @@ class NotebookMixin(FileLoaderMixin):
     def static_analysis(self, value):
         self._source.static_analysis = value
 
+    @deprecated.method(deprecated_in='0.21', removed_in='0.22')
     def develop(self, app='notebook', args=None):
         """
         Opens the rendered notebook (with injected parameters) and adds a
@@ -690,14 +692,11 @@ class NotebookRunner(NotebookMixin, Task):
                              'when "debug_mode" is enabled')
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
-        self._source = NotebookRunner._init_source(
-            source,
-            kwargs,
-            ext_in,
-            kernelspec_name,
-            static_analysis,
-            check_if_kernel_installed,
-        )
+        self._source = NotebookRunner._init_source(source, kwargs, ext_in,
+                                                   kernelspec_name,
+                                                   static_analysis,
+                                                   check_if_kernel_installed,
+                                                   False, False)
         super().__init__(product, dag, name, params)
 
         self._validate_nbconvert_exporter()
@@ -757,14 +756,18 @@ class NotebookRunner(NotebookMixin, Task):
                      ext_in=None,
                      kernelspec_name=None,
                      static_analysis='regular',
-                     check_if_kernel_installed=False):
-        return NotebookSource(
+                     check_if_kernel_installed=False,
+                     extract_up=False,
+                     extract_prod=False):
+        ns = NotebookSource(
             source,
             ext_in=ext_in,
             kernelspec_name=kernelspec_name,
             static_analysis=static_analysis,
             check_if_kernel_installed=check_if_kernel_installed,
             **kwargs)
+        ns._validate_parameters_cell(extract_up, extract_prod)
+        return ns
 
     def run(self):
         # regular mode: raise but not check signature
@@ -902,26 +905,33 @@ class ScriptRunner(NotebookMixin, Task):
     >>> _ = dag.build()
     """
 
-    def __init__(self,
-                 source,
-                 product,
-                 dag,
-                 name=None,
-                 params=None,
-                 ext_in=None,
-                 static_analysis='regular',
-                 local_execution=False):
+    def __init__(
+        self,
+        source,
+        product,
+        dag,
+        name=None,
+        params=None,
+        ext_in=None,
+        static_analysis='regular',
+        local_execution=False,
+    ):
         self.ext_in = ext_in
         self.local_execution = local_execution
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = ScriptRunner._init_source(source, kwargs, ext_in,
-                                                 static_analysis)
+                                                 static_analysis, False, False)
         super().__init__(product, dag, name, params)
 
     @staticmethod
-    def _init_source(source, kwargs, ext_in=None, static_analysis='regular'):
-        return NotebookSource(
+    def _init_source(source,
+                     kwargs,
+                     ext_in=None,
+                     static_analysis='regular',
+                     extract_up=False,
+                     extract_prod=False):
+        ns = NotebookSource(
             source,
             ext_in=ext_in,
             static_analysis=static_analysis,
@@ -929,6 +939,8 @@ class ScriptRunner(NotebookMixin, Task):
             check_if_kernel_installed=False,
             **kwargs,
         )
+        ns._validate_parameters_cell(extract_up, extract_prod)
+        return ns
 
     def run(self):
         # regular mode: raise but not check signature
