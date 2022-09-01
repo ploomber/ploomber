@@ -220,6 +220,7 @@
     .style("height", `${blockHeight}px`)
     .style("overflow-y", "auto")    
     .style("text-align", "center")
+    .style("font-family", "Arial")
     .html((d) => d.data.id)
   
   const arrow = d3.symbol().type(d3.symbolTriangle).size(nodeRadius * nodeRadius / 20.0);
