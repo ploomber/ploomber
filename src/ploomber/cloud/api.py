@@ -35,7 +35,8 @@ def _remove_prefix(path):
 def _download_file(url, skip_if_exists=False, raise_on_missing=False):
     try:
         parsed_url = urlparse(url)
-        path = parse_qs(parsed_url.query)['response-content-disposition'][0].split("filename = ")[1]
+        path = parse_qs(parsed_url.query)[
+            'response-content-disposition'][0].split("filename = ")[1]
     except HTTPError as e:
         if e.code == 404:
             path = _remove_prefix(parse.urlparse(url).path[1:])
