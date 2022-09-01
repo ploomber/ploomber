@@ -26,18 +26,16 @@ ensured_targets = [
 labext_name = pkg_json["name"]
 
 data_files_spec = [
-    ("share/jupyter/labextensions/%s" % labext_name, str(lab_path.relative_to(HERE)), "**"),
+    ("share/jupyter/labextensions/%s" % labext_name,
+     str(lab_path.relative_to(HERE)), "**"),
     ("share/jupyter/labextensions/%s" % labext_name, str("."), "install.json"),
 ]
 
 long_description = (HERE / "README.md").read_text(encoding="utf8")
 
-version = (
-    pkg_json["version"]
-    .replace("-alpha.", "a")
-    .replace("-beta.", "b")
-    .replace("-rc.", "rc")
-)
+version = (pkg_json["version"].replace("-alpha.",
+                                       "a").replace("-beta.",
+                                                    "b").replace("-rc.", "rc"))
 
 setup_args = dict(
     name=name,
@@ -73,20 +71,21 @@ setup_args = dict(
 )
 
 try:
-    from jupyter_packaging import (
-        wrap_installers,
-        npm_builder,
-        get_data_files
-    )
-    post_develop = npm_builder(
-        build_cmd="install:extension", source_dir="src", build_dir=lab_path
-    )
-    setup_args["cmdclass"] = wrap_installers(post_develop=post_develop, ensured_targets=ensured_targets)
+    from jupyter_packaging import (wrap_installers, npm_builder,
+                                   get_data_files)
+    post_develop = npm_builder(build_cmd="install:extension",
+                               source_dir="src",
+                               build_dir=lab_path)
+    setup_args["cmdclass"] = wrap_installers(post_develop=post_develop,
+                                             ensured_targets=ensured_targets)
     setup_args["data_files"] = get_data_files(data_files_spec)
 except ImportError as e:
     import logging
     logging.basicConfig(format="%(levelname)s: %(message)s")
-    logging.warning("Build tool `jupyter-packaging` is missing. Install it with pip or conda.")
+    logging.warning(
+        '''Build tool `jupyter-packaging` is missing.
+        Install it with pip or conda.'''
+    )
     if not ("--name" in sys.argv or "--version" in sys.argv):
         raise e
 
