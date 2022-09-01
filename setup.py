@@ -101,6 +101,9 @@ TESTING = [
 
     # for testing the webpdf converter
     'nbconvert[webpdf]',
+
+    # for testing ParallelDill,
+    'multiprocess',
 ]
 
 # packages needed for development
@@ -151,17 +154,17 @@ setup(
     ],
     install_requires=[
         'ploomber-scaffold>=0.3',
-        'ploomber-engine',
+        # added fix to manage the IPython terminal singleton
+        'ploomber-engine>=0.0.8',
+        # added @deprecated.method
+        'ploomber-core>=0.0.5',
         'pyyaml',
         'networkx>=2.5',
-        # nbconvert is broken with jinja>=3.1
-        # https://github.com/jupyter/nbconvert/issues/1736
-        'jinja2<3.1',
+        'jinja2',
         'tabulate',
         'humanize',
         'tqdm',
         'posthog',
-        'importlib_resources;python_version<"3.7"',
         # for code normalization, parso is also needed for inferring upstream
         # dependencies in jupyter notebooks
         'sqlparse',
@@ -175,7 +178,7 @@ setup(
         # for cli
         'click',
         # for ploomber interact and {PythonCallable, NotebookRunner}.debug()
-        'ipython<8',
+        'ipython',
         'ipdb',
         'pydantic',
     ] + NB,

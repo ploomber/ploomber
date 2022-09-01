@@ -20,9 +20,12 @@ import re
 
 import humanize
 
-from ploomber.exceptions import BaseException
+from ploomber_core.exceptions import BaseException
 from ploomber.telemetry import telemetry
-from ploomber.telemetry.telemetry import parse_dag, UserSettings
+from ploomber_core.telemetry.telemetry import (
+                                                parse_dag,
+                                                UserSettings
+                                            )
 
 CLOUD_APP_URL = 'api.ploomber.io'
 PIPELINES_RESOURCE = '/pipelines'

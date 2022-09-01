@@ -5,7 +5,6 @@ from difflib import get_close_matches
 import sys
 
 from ploomber_scaffold import scaffold as scaffold_project
-
 import click
 
 CLICK_VERSION = int(click.__version__[0])
@@ -249,8 +248,8 @@ def examples(name, force, branch, output):
     """
     click.echo('Loading examples...')
 
-    from ploomber.telemetry import telemetry
     from ploomber import cli as cli_module
+    from ploomber.telemetry import telemetry
 
     try:
         cli_module.examples.main(name=name,

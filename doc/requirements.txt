@@ -3,7 +3,7 @@ joblib
 scikit-learn
 seaborn
 psycopg2
-mistune<2
+mistune<3
 # for converting notebooks
 nbsphinx
 # https://github.com/spatialaudio/nbsphinx/issues/584

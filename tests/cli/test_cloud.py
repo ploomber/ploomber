@@ -8,8 +8,9 @@ from click.testing import CliRunner
 from ploomber.cli import cloud
 from ploomber_cli.cli import get_key, set_key, write_pipeline, get_pipelines,\
                             delete_pipeline
-from ploomber.telemetry import telemetry
-from ploomber.telemetry.telemetry import DEFAULT_USER_CONF
+from ploomber_core.telemetry import telemetry
+from ploomber_core.telemetry.telemetry import DEFAULT_USER_CONF
+from ploomber_core.exceptions import BaseException
 from ploomber import table
 
 
@@ -348,6 +349,9 @@ def test_get_latest_pipeline(monkeypatch):
     pipeline = get_tabular_pipeline('latest')
     assert isinstance(pipeline, str)
     assert pid in pipeline
+
+    res = delete_sample_pipeline(pid)
+    assert pid in res
 
 
 def test_get_active_pipeline(monkeypatch):

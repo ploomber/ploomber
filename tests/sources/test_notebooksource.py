@@ -256,25 +256,6 @@ def test_error_if_source_is_dir_suggest_scaffold(tmp_directory):
     assert 'ploomber scaffold' in str(excinfo.value)
 
 
-def test_error_if_parameters_cell_doesnt_exist():
-    with pytest.raises(SourceInitializationError) as excinfo:
-        NotebookSource(new_nb(fmt='ipynb', add_tag=False), ext_in='ipynb')
-
-    assert 'Notebook does not have a cell tagged "parameters"' in str(
-        excinfo.value)
-
-
-def test_error_missing_params_cell_shows_path_if_available(tmp_directory):
-    path = Path('nb.ipynb')
-    path.write_text(new_nb(fmt='ipynb', add_tag=False))
-
-    with pytest.raises(SourceInitializationError) as excinfo:
-        NotebookSource(path)
-
-    assert ('Notebook "nb.ipynb" does not have a cell tagged "parameters"'
-            in str(excinfo.value))
-
-
 def test_nb_str_contains_kernel_info():
     source = NotebookSource(new_nb(fmt='ipynb'), ext_in='ipynb')
     nb = nbformat.reads(source._nb_str_unrendered,
@@ -635,6 +616,38 @@ def test_save_injected_cell_in_paired_notebooks(tmp_nbs, prefix):
 
     assert get_injected_cell(jupytext.read(Path(prefix, 'load.ipynb')))
     assert get_injected_cell(jupytext.read(Path('load.py')))
+
+
+def test_nested_nbs_save_injected_cell_paired_ipynb(tmp_nbs_nested):
+    # pair notebooks
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['clean'].source.pair('notebooks')
+
+    # inject cell
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['clean'].source.save_injected_cell()
+
+    assert get_injected_cell(jupytext.read(
+        Path('clean/notebooks/clean.ipynb')))
+    assert get_injected_cell(jupytext.read(Path('clean/clean.py')))
+
+
+def test_nested_nbs_remove_injected_cell_paired_ipynb(tmp_nbs_nested):
+    # pair notebooks
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['clean'].source.pair('notebooks')
+
+    # inject cell
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['clean'].source.save_injected_cell()
+
+    # remove cell
+    dag = DAGSpec('pipeline.yaml').to_dag().render()
+    dag['clean'].source.remove_injected_cell()
+
+    assert not get_injected_cell(
+        jupytext.read(Path('clean/notebooks/clean.ipynb')))
+    assert not get_injected_cell(jupytext.read(Path('clean/clean.py')))
 
 
 def test_remove_injected_cell(tmp_nbs):

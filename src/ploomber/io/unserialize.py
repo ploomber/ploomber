@@ -100,6 +100,7 @@ def unserializer(extension_mapping=None,
         are the unserialized objects. Note that this isn't recursive, it only
         looks at files that are immediate children of the product directory.
     """
+
     def _unserializer(fn):
         extension_mapping_final = _build_extension_mapping_final(
             extension_mapping, defaults, fn, _DEFAULTS, 'unserializer')
@@ -157,6 +158,7 @@ def unserializer_pickle(product):
 
 
 def _make_unserializer(fn):
+
     def _unserialize(product):
         with open(product, 'rb') as f:
             obj = fn(f)
