@@ -18,7 +18,7 @@ def test_command_endpoint_shows_full_traceback(capsys):
         non_subclass_exception()
     captured = capsys.readouterr()
 
-    # check that the full traceback is displayed
+    # check whether the full traceback is displayed
     assert "error 1" in captured.err
     assert "error 2" in captured.err
     assert "error 3" in captured.err
