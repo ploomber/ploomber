@@ -1,8 +1,6 @@
 from pathlib import PurePosixPath
 from urllib import parse
-import cgi
 import sys
-import certifi
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 from urllib.error import HTTPError
