@@ -1,9 +1,9 @@
 from pathlib import PurePosixPath
 from urllib import parse
-import cgi
 import sys
 from pathlib import Path
-from urllib.request import urlretrieve, urlopen
+from urllib.request import urlretrieve
+from urllib.parse import urlparse, parse_qs
 from urllib.error import HTTPError
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
@@ -12,6 +12,7 @@ import zipfile
 from functools import wraps
 from datetime import datetime
 import json
+
 
 import click
 import humanize
@@ -34,7 +35,8 @@ def _remove_prefix(path):
 
 def _download_file(url, skip_if_exists=False, raise_on_missing=False):
     try:
-        remotefile = urlopen(url)
+        parsed_url = urlparse(url)
+        path = parse_qs(parsed_url.query)['response-content-disposition'][0].split("filename = ")[1]
     except HTTPError as e:
         if e.code == 404:
             path = _remove_prefix(parse.urlparse(url).path[1:])
@@ -49,14 +51,9 @@ def _download_file(url, skip_if_exists=False, raise_on_missing=False):
 
         else:
             raise
-
-    content_disposition = remotefile.info()['Content-Disposition']
-
-    if content_disposition:
-        _, params = cgi.parse_header(content_disposition)
-        path = params["filename"]
-    else:
-        path = Path(parse.urlparse(url).path[1:])
+    except Exception as e:
+        print(f"There was an issue downloading the file: {e}")
+        raise
 
     if skip_if_exists and Path(path).exists():
         print(f'{path} exists, skipping...')
