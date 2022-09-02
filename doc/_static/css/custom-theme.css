@@ -183,6 +183,15 @@ pre> :not(:first-child).ipynb-lexed * {
         margin-left: 50px;
         margin-bottom: 10px;
     }
+    #third-column {
+        position: fixed !important;
+        top: 3.5rem;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
+        background-color: #fff;
+    }
 }
 
 .sphinxsidebarwrapper ul {
