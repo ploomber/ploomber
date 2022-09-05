@@ -39,6 +39,7 @@ def touch_w_upstream(product, upstream):
 
 
 class ConcreteTask(Task):
+
     def __init__(self, product, dag, name=None, params=None):
         # FIXME: concrete classes are required to assign ._source before
         # calling init in the super class, this isn't clean, refactor
@@ -77,7 +78,7 @@ def test_task_status(monkeypatch):
     }
 
 
-@pytest.mark.parametrize('method', ['debug', 'develop'])
+@pytest.mark.parametrize('method', ['debug'])
 def test_debug_and_develop_in_abstract_class(method):
     task = ConcreteTask(product=File('some_file'), dag=DAG())
 
@@ -346,6 +347,7 @@ def test_building_a_single_task_when_has_unrendered_upstream():
 
 
 def test_building_a_single_task_when_rendered_upstream(tmp_directory):
+
     def make_dag():
         dag = DAG(executor=Serial(build_in_subprocess=False))
         t1 = PythonCallable(touch, File('1.txt'), dag, name=1)
@@ -362,6 +364,7 @@ def test_building_a_single_task_when_rendered_upstream(tmp_directory):
 
 
 def test_task_build_does_not_upload_if_downloaded(tmp_directory, monkeypatch):
+
     def make_dag():
         dag = DAG(executor=Serial(build_in_subprocess=False))
         dag.clients[File] = LocalStorageClient('backup',
@@ -388,6 +391,7 @@ def test_task_build_does_not_upload_if_downloaded(tmp_directory, monkeypatch):
 
 def test_task_build_does_not_overwrite_metadata_if_downloaded(
         tmp_directory, monkeypatch):
+
     def make_dag():
         dag = DAG(executor=Serial(build_in_subprocess=False))
         dag.clients[File] = LocalStorageClient('backup',
@@ -446,6 +450,7 @@ def test_forced_build_overrides_waiting_download(tmp_directory):
 
 
 def test_error_message_when_some_products_are_missing(tmp_directory):
+
     def my_task(product):
         Path(product['three']).touch()
 
@@ -463,6 +468,7 @@ def test_error_message_when_some_products_are_missing(tmp_directory):
 
 
 def test_error_message_when_product_is_missing(tmp_directory):
+
     def my_task(product):
         pass
 

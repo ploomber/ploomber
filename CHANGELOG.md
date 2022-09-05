@@ -1,7 +1,22 @@
 # CHANGELOG
 
-## 0.20.1dev
-* Remove `parameters` cell missing exception and add `parameters` cell in `NotebookRunner` and `ScriptRunner` when it is missing ([#971](https://github.com/ploomber/ploomber/issues/971))
+## 0.21.1dev
+
+## 0.21 (2022-08-22)
+
+* Adds `ploomber.micro` module for writing micro pipelines
+* Allow dotted paths in params ([#477](https://github.com/ploomber/ploomber/issues/477))
+* Adds progress bar to `Parallel` executor
+* Allows to switch method when using `Parallel` executor ([#957](https://github.com/ploomber/ploomber/issues/957))
+* Clean traceback when using ploomber task ([#889](https://github.com/ploomber/ploomber/issues/889))
+* `grid` requires strict dotted path format (`a.b::c`)
+* Raise errors on wrong type or empty returned value for dotted paths in `params` and `grid`
+* Compatibility with papermill `2.4.0`
+* Compatibility with IPython `8` ([#978](https://github.com/ploomber/ploomber/issues/978))
+* Python API allows to execute notebooks without a parameters cell ([#971](https://github.com/ploomber/ploomber/issues/971))
+* Compatible with nbconvert `7`
+* Compatibility with mistune `0.8.x` and `2.x`
+* Adds deprecation warning to `NotebookRunner.develop()` and `PythonCallable.develop()`
 
 ## 0.20 (2022-08-04)
 

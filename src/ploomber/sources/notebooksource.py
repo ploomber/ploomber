@@ -579,6 +579,8 @@ class NotebookSource(Source):
         # overwrite all paired files
         for path, fmt_ in iter_paired_notebooks(self.nb_obj_rendered, fmt_,
                                                 self._path.stem):
+            # get absolute path for each notebook
+            path = Path(self._path.parent / path)
             jupytext.write(self.nb_obj_rendered, fp=path, fmt=fmt_)
 
     @requires_path
@@ -601,6 +603,8 @@ class NotebookSource(Source):
         # overwrite all paired files
         for path, fmt_ in iter_paired_notebooks(self._nb_obj_unrendered, fmt_,
                                                 self._path.stem):
+            # get absolute path for each notebook
+            path = Path(self._path.parent / path)
             jupytext.write(nb_clean, fp=path, fmt=fmt_)
 
     @requires_path
