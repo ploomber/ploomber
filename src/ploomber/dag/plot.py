@@ -1,10 +1,13 @@
+import os
 import json
 import sys
 from importlib.util import find_spec
 from pathlib import Path
 
 import jinja2
-from IPython.display import IFrame
+from IPython.display import IFrame, HTML, display
+
+from ploomber.util.util import remove_all_files_from_dir
 
 try:
     import importlib.resources as importlib_resources
@@ -70,9 +73,27 @@ def with_d3(graph, output, image_only=False):
 
 
 def embedded_html(path):
+    # set output cell to hold 100% of the embedded content
+    display(HTML('<style>.output.output_scroll { height: 100% }</style>'))
 
-    import nest_asyncio
+    # create a temp copy of the file to embed in a local
+    # directory inorder to load it with iFrame
+    embedded_assets_dir = 'tmp-embedded-assets'
+    isTempEmbeddedAssetsDirExists = os.path.isdir(embedded_assets_dir)
 
-    nest_asyncio.apply()
+    if isTempEmbeddedAssetsDirExists:
+        # remove previous files
+        remove_all_files_from_dir(embedded_assets_dir)
+    else:
+        os.mkdir(embedded_assets_dir)
 
-    return IFrame(src=path, width=700, height=600)
+    original_file = Path(path)
+    local_file_copy = os.path.join(embedded_assets_dir, original_file.name)
+
+    with open(local_file_copy, 'w+') as html:
+        copy_of_html = Path(path).read_text()
+        html.write(copy_of_html)
+
+    iframe = IFrame(src=local_file_copy, width='100%', height=600)
+
+    return iframe

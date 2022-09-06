@@ -23,6 +23,7 @@ from ploomber.executors import Serial, Parallel, serial
 from ploomber.clients import SQLAlchemyClient
 from ploomber.dag.dagclients import DAGClients
 from ploomber.dag import plot as dag_plot_module
+from ploomber.util.util import remove_all_files_from_dir
 
 IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and 'win' in sys.platform
 
@@ -210,13 +211,18 @@ def test_plot_validates_html_extension_if_d3(dag, tmp_directory):
 
 
 @pytest.mark.parametrize('backend', [None, 'd3'])
-def test_plot_with_d3_embed(dag, tmp_directory, monkeypatch, backend):
+def test_plot_with_d3_embed(capsys, dag, monkeypatch, backend):
     # simulate pygraphviz isn't installed
     monkeypatch.setattr(dag_plot_module, 'find_spec', lambda _: None)
-    output = dag.plot(backend=backend)
+    embedded_assets_dir = 'tmp-embedded-assets'
+    iframe = dag.plot(backend=backend)
 
-    # test path exists
-    assert len(output.src) != 0
+    assert len(iframe.src) != 0
+    assert Path(iframe.src).is_file()
+
+    # clean created files
+    remove_all_files_from_dir(embedded_assets_dir, remove_dir=True)
+    assert Path(iframe.src).is_file() is False
 
 
 @pytest.mark.parametrize('backend', [None, 'd3'])
