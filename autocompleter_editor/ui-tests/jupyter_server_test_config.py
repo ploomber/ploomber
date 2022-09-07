@@ -4,6 +4,7 @@
 opens the server to the world and provide access to JupyterLab
 JavaScript objects through the global window variable.
 """
+#noqa
 from tempfile import mkdtemp
 
 c.ServerApp.port = 8888
