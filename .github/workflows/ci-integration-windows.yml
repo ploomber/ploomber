@@ -1,4 +1,5 @@
 on:
+  create:
   pull_request:
   push:
   schedule:
@@ -16,7 +17,7 @@ jobs:
       matrix:
         python-version: ['3.7', '3.8', '3.9', '3.10']
 
-    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
+    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'create'
     steps:
 
     - name: Start PostgreSQL
