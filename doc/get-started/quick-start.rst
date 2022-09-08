@@ -17,18 +17,6 @@ Quickstart
     conda install ploomber -c conda-forge
 
 
-Learn Ploomber in 2 minutes
-***************************
-
-Download example:
-
-.. code-block:: console
-
-    pip install ploomber --upgrade
-
-    python -m ploomber.onboard
-
-
 What's next?
 ************
 
