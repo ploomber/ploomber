@@ -24,6 +24,15 @@ conda config --add channels conda-forge
 
 Once you have conda ready:
 
+Fork the repository to your account by clicking fork button
+
+<p align="center" width="100%">
+  <img src="_static/fork.png" height="40">
+</p>
+
+Now ready to clone and setup the environment:
+
+
 ```sh
 # get the code
 git clone https://github.com/ploomber/ploomber
