@@ -88,4 +88,4 @@ jupyter lab
                            capture_output=False,
                            shell=True,
                            check=True)
-'''
+''' # noqa
