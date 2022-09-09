@@ -30,4 +30,4 @@ then
     conda install -c conda-forge python
 fi
 
-python src/ploomber/cli/install_ploomber.py
+# python src/ploomber/cli/install_ploomber.py
