@@ -2,7 +2,6 @@ from pathlib import PurePosixPath
 from urllib import parse
 import sys
 from pathlib import Path
-from urllib.request import urlretrieve
 from urllib.parse import urlparse, parse_qs
 from urllib.error import HTTPError
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -18,7 +17,7 @@ import humanize
 
 from ploomber.table import Table
 from ploomber.cloud import io, config
-from ploomber_core.exceptions import BaseException
+from ploomber.exceptions import BaseException
 from ploomber.spec import DAGSpec
 from ploomber.dag import util
 from ploomber.cli.cloud import get_key
@@ -34,6 +33,7 @@ def _remove_prefix(path):
 
 def _download_file(url, skip_if_exists=False, raise_on_missing=False):
     try:
+        response = _requests.get(url)
         parsed_url = urlparse(url)
         path = parse_qs(parsed_url.query)[
             'response-content-disposition'][0].split("filename = ")[1]
@@ -51,6 +51,7 @@ def _download_file(url, skip_if_exists=False, raise_on_missing=False):
 
         else:
             raise
+
     except Exception as e:
         print(f"There was an issue downloading the file: {e}")
         raise
@@ -59,8 +60,12 @@ def _download_file(url, skip_if_exists=False, raise_on_missing=False):
         print(f'{path} exists, skipping...')
     else:
         Path(path).parent.mkdir(exist_ok=True, parents=True)
-        print(f'Downloading {path}')
-        urlretrieve(url, path)
+        print(f'Writing file into path {path}')
+        try:
+            with open(path, "wb") as file:
+                file.write(response.content)
+        except Exception as e:
+            print(f"Error reading the file from URL: {e}")
 
     return path
 

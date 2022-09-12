@@ -55,7 +55,7 @@ def test_cloud_download(tmp_directory):
     runner = CliRunner()
     result = runner.invoke(cli, ['cloud', 'download', '*.html'])
 
-    assert 'Downloading' in result.output
+    assert 'Writing file' in result.output
     assert result.exit_code == 0
 
 
