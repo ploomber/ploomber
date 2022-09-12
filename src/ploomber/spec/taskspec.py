@@ -299,6 +299,7 @@ class TaskSpec(MutableMapping):
 
         if 'grid' in data:
             data_source_ = data["source"]
+            grid_number_suffix = data.pop('grid_number_suffix', False)
             data_source = str(data_source_ if not hasattr(
                 data_source_, '__name__') else data_source_.__name__)
 
@@ -350,6 +351,7 @@ class TaskSpec(MutableMapping):
                                        on_render=on_render,
                                        on_finish=on_finish,
                                        on_failure=on_failure,
+                                       grid_number_suffix=grid_number_suffix,
                                        params=params,
                                        **name_arg), upstream
         else:

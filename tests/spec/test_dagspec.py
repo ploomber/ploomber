@@ -449,6 +449,7 @@ def test_file_spec_resolves_sources_location(tmp_nbs):
                 'source': 'task.py',
                 'product': 'out.ipynb',
                 'name': 'task-',
+                'grid_number_suffix': True,
                 'grid': {
                     'param': [1, 2]
                 }
@@ -518,6 +519,7 @@ upstream = None
                 'source': 'task.py',
                 'product': 'out.ipynb',
                 'name': 'task-',
+                'grid_number_suffix': True,
                 'grid': {
                     'param': [1, 2]
                 }
@@ -1617,6 +1619,7 @@ _spec_upstream_extract = {
         'source': 'upstream.py',
         'name': 'upstream-',
         'product': 'upstream.ipynb',
+        'grid_number_suffix': True,
         'grid': {
             'param': [1, 2]
         }
@@ -1634,6 +1637,7 @@ _spec_upstream_manual = {
         'source': 'upstream.py',
         'name': 'upstream-',
         'product': 'upstream.ipynb',
+        'grid_number_suffix': True,
         'grid': {
             'param': [1, 2]
         }
@@ -1697,6 +1701,7 @@ _spec_callables_unserializer = {
         'source': 'sample_source_callables.upstream',
         'name': 'upstream-',
         'product': 'upstream.txt',
+        'grid_number_suffix': True,
         'grid': {
             'param': [1, 2]
         }

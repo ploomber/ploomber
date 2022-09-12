@@ -553,6 +553,7 @@ param = None
             'source': 'my-task.py',
             'name': 'my-task-',
             'product': 'my-task.ipynb',
+            'grid_number_suffix': True,
             'grid': {
                 'param': [1, 2]
             }

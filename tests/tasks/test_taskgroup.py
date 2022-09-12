@@ -181,6 +181,7 @@ def test_from_grid():
                                 },
                                 dag,
                                 name='task_group',
+                                grid_number_suffix=True,
                                 grid={
                                     'a': [1, 2],
                                     'b': [3, 4]
@@ -198,6 +199,7 @@ def test_from_grid_with_params():
                         },
                         dag,
                         name='task_group',
+                        grid_number_suffix=True,
                         grid={
                             'a': [1, 2],
                             'b': [3, 4]
@@ -227,6 +229,7 @@ def test_from_grid_with_hook(hook_name):
                                 },
                                 dag,
                                 name='task_group',
+                                grid_number_suffix=True,
                                 grid={
                                     'a': [1, 2],
                                     'b': [3, 4]
@@ -246,6 +249,7 @@ def test_from_grid_resolve_relative_to():
                         },
                         dag,
                         name='task_group',
+                        grid_number_suffix=True,
                         grid={
                             'a': [1, 2],
                             'b': [3, 4]

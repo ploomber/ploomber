@@ -479,6 +479,7 @@ def grid_spec():
         'source': 'my_tasks_flat.raw.function',
         'name': 'function-',
         'product': 'some_file.txt',
+        'grid_number_suffix': True,
         'grid': {
             'a': [1, 2],
             'b': [3, 4]
@@ -509,6 +510,7 @@ def test_grid_with_hook(backup_spec_with_functions_flat, tmp_imports):
         'source': 'my_tasks_flat.raw.function',
         'name': 'function-',
         'product': 'some_file.txt',
+        'grid_number_suffix': True,
         'grid': {
             'a': [1, 2],
             'b': [3, 4]
@@ -536,6 +538,7 @@ def test_grid_with_hook_lazy_import(backup_spec_with_functions_flat,
         'source': 'my_tasks_flat.raw.function',
         'name': 'function-',
         'product': 'some_file.txt',
+        'grid_number_suffix': True,
         'grid': {
             'a': [1, 2],
             'b': [3, 4]
@@ -756,6 +759,7 @@ def range_(n):
             'source': 'my_module.fn',
             'product': 'report.ipynb',
             'name': 'fn-',
+            'grid_number_suffix': True,
             'grid': grid,
         },
         Meta.default_meta(),
@@ -802,6 +806,7 @@ def crash():
             'source': 'my_module.fn',
             'product': 'report.ipynb',
             'name': 'fn-',
+            'grid_number_suffix': True,
             'grid': grid,
         },
         Meta.default_meta(),
