@@ -49,7 +49,10 @@ def _find_tasks_by_regex(dag, regex):
 
 def _get_prioritized_tasks_to_inject(dag):
     cfg = try_to_load_cfg_recursively()
-    priorities = _load_prioritized_tasks_to_inject_from_cfg(dag, cfg)
+    priorities = []
+    if cfg:
+        priorities = _load_prioritized_tasks_to_inject_from_cfg(dag, cfg)
+
     return priorities
 
 
