@@ -46,6 +46,7 @@ class TaskGroup:
 
     (task1 + task2) >> task3
     """
+
     def __init__(self, tasks):
         self.tasks = tasks
 
@@ -276,19 +277,17 @@ class TaskGroup:
                  Added grid_number_suffix flag
         """
 
-        if (
-             len(grid) != product_primitive.count('[[')
-             and not grid_number_suffix
-         ):
-             raise NameError('Unable to resolove pipeline. '
-                             'Multiple tasks may contain output '
-                             'files with identical names. \n'
-                             'You can change the product names, '
-                             'or add additional [[placeholders]] '
-                             'to uniquely identify these products or '
-                             'set `grid_number_suffix: true` '
-                             'to automatically add numbered suffixes '
-                             'to these products to make them unique.')
+        if (len(grid) != product_primitive.count('[[')
+                and not grid_number_suffix):
+            raise NameError('Unable to resolove pipeline. '
+                            'Multiple tasks may contain output '
+                            'files with identical names. \n'
+                            'You can change the product names, '
+                            'or add additional [[placeholders]] '
+                            'to uniquely identify these products or '
+                            'set `grid_number_suffix: true` '
+                            'to automatically add numbered suffixes '
+                            'to these products to make them unique.')
         params_array = ParamGrid(grid, params=params).product()
         return cls.from_params(task_class=task_class,
                                product_class=product_class,

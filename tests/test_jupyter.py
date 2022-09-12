@@ -57,6 +57,7 @@ def get_injected_cell(nb):
 
 
 class YAML:
+
     def __init__(self, path):
         self.path = Path(path)
 
@@ -297,6 +298,7 @@ def test_cell_injection_if_using_notebook_dir_option_nested_script(tmp_nbs):
 
 
 def test_injects_cell_if_file_in_dag(tmp_nbs):
+
     def resolve(path):
         return str(Path('.').resolve() / path)
 

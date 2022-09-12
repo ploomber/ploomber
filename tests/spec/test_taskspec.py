@@ -831,11 +831,15 @@ def crash():
     [
         {
             'a': [1, 2],
-            'b': {'key': 'value'}
+            'b': {
+                'key': 'value'
+            }
         },
         {
             'a': [1, 2],
-            'b': {'key': 'value'}
+            'b': {
+                'key': 'value'
+            }
         },
     ],
     [

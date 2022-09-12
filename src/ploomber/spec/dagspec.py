@@ -802,8 +802,12 @@ def process_tasks(dag, dag_spec, root_path=None):
     for task_dict in dag_spec['tasks']:
         # init source to extract product
         fn = task_dict['class']._init_source
-        kwargs = {'kwargs': {}, 'extract_up': extract_up,
-                  'extract_prod': extract_prod, **task_dict}
+        kwargs = {
+            'kwargs': {},
+            'extract_up': extract_up,
+            'extract_prod': extract_prod,
+            **task_dict
+        }
         source = call_with_dictionary(fn, kwargs=kwargs)
 
         if extract_prod:

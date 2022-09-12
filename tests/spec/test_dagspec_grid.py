@@ -224,8 +224,7 @@ def test_with_with_placeholder_task_names(
     assert 'param=2-1.ipynb' in str(dag['upstream-param=2'].product)
 
 
-def test_grid_number_suffix_off(
-        sample_dagspec_with_suffix_off):
+def test_grid_number_suffix_off(sample_dagspec_with_suffix_off):
 
     with pytest.raises(NameError) as e:
         DAGSpec('pipeline.yaml').to_dag()
@@ -233,8 +232,7 @@ def test_grid_number_suffix_off(
     assert 'Unable to resolove pipeline. ' in str(e)
 
 
-def test_grid_number_suffix_on(
-        sample_dagspec_with_suffix_on):
+def test_grid_number_suffix_on(sample_dagspec_with_suffix_on):
     dag = DAGSpec('pipeline.yaml').to_dag()
 
     assert 'param-0.ipynb' in str(dag['upstream-0'].product)
@@ -250,8 +248,7 @@ def test_grid_number_suffix_missing_placeholders(
     assert 'Unable to resolove pipeline. ' in str(e)
 
 
-def test_grid_number_no_flag(
-        sample_dagspec_with_no_flag):
+def test_grid_number_no_flag(sample_dagspec_with_no_flag):
     dag = DAGSpec('pipeline.yaml').to_dag()
 
     assert 'param=1-0.ipynb' in str(dag['upstream-0'].product)
@@ -259,8 +256,7 @@ def test_grid_number_no_flag(
     assert 'param=3-2.ipynb' in str(dag['upstream-2'].product)
 
 
-def test_grid_number_no_flag_error(
-        sample_dagspec_with_no_flag_error):
+def test_grid_number_no_flag_error(sample_dagspec_with_no_flag_error):
 
     with pytest.raises(NameError) as e:
         DAGSpec('pipeline.yaml').to_dag()
