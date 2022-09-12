@@ -631,3 +631,15 @@ def find_package_name(starting_dir=None):
             f'to your project root ({root})')
 
     return Path(pkg).parent.name
+
+
+def try_to_load_cfg_recursively(starting_dir=None):
+    _starting_dir = starting_dir or '.'
+    cfg = None
+    path_to_config, _ = find_file_recursively(name='setup.cfg',
+                                              starting_dir=_starting_dir)
+
+    if path_to_config:
+        cfg = config.load_config(path_to_config)
+
+    return cfg

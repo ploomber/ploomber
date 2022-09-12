@@ -13,6 +13,44 @@ from ploomber_core.exceptions import BaseException
 from ploomber.telemetry import telemetry
 import warnings
 from ploomber.dag.util import get_unique_list
+from ploomber.util.default import try_to_load_cfg_recursively
+import re
+
+
+def _load_prioritized_tasks_to_inject_from_cfg(dag, cfg):
+    priorities_set = set()
+    _cfg_inject_priorities = cfg['ploomber'].get('inject-priority')
+
+    if _cfg_inject_priorities:
+        prioritized_tasks_names = _cfg_inject_priorities.split(',')
+
+        for prioritized_task_name in prioritized_tasks_names:
+            has_wildcard = '*' in prioritized_task_name
+            if has_wildcard:
+                regex = prioritized_task_name.replace('*', '.*')
+                matching_tasks_set = _find_tasks_by_regex(dag, regex)
+                priorities_set = priorities_set.union(matching_tasks_set)
+            else:
+                priorities_set.add(prioritized_task_name)
+
+    priorities = list(priorities_set)
+    return priorities
+
+
+def _find_tasks_by_regex(dag, regex):
+    tasks = set()
+    for task_name in dag:
+        match = re.search(f'{regex}', task_name)
+        if match:
+            tasks.add(task_name)
+
+    return tasks
+
+
+def _get_prioritized_tasks_to_inject(dag):
+    cfg = try_to_load_cfg_recursively()
+    priorities = _load_prioritized_tasks_to_inject_from_cfg(dag, cfg)
+    return priorities
 
 
 def _find_task_in_dag_by_name(dag, task_name):
@@ -55,21 +93,21 @@ def _get_tasks_to_inject(dag, templates_to_exclude=[]):
             tasks_to_inject.append(task_to_inject_name)
             warning_message += (
                 f'{template} appears more than once in your '
-                f'pipeline, the parameters from {task_to_inject_name}'
+                f'pipeline, the parameters from {task_to_inject_name} '
                 'will be injected, to inject the parameters of '
-                'another task, pass: ploomber nb --inject'
-                '--priority {task-name} \n')
+                'another task please modify setup.cfg\n')
 
     return tasks_to_inject, warning_message
 
 
-def _get_inject_cells_args(dag, priorities=[]):
+def _get_params_to_inject(dag, priorities=[]):
     used_tempaltes = []
     exceptions = []
     for prioritized_task_name_to_inject in priorities:
         dag_task = _find_task_in_dag_by_name(dag,
                                              prioritized_task_name_to_inject)
         is_prioritized_task_exist = True if dag_task is not None else False
+
         if is_prioritized_task_exist:
             full_template_name = Path(dag_task.source._path).name
             if full_template_name not in used_tempaltes:
@@ -345,11 +383,6 @@ def main():
             '-r',
             action='store_true',
             help='Remove injected cell in all script/notebook tasks')
-
-        parser.add_argument('--priority',
-                            action='append',
-                            help='Task to inject')
-
         # re-format
         parser.add_argument('--format',
                             '-f',
@@ -431,9 +464,10 @@ def main():
                        f'tasks: {", ".join(new_paths)}.')
 
     if args.inject:
-        priorities = args.priority if args.priority else []
-        inject_cell_args, warning_message, exceptions = _get_inject_cells_args(
-            dag, priorities=priorities)
+        prioritized_tasks_to_inject = _get_prioritized_tasks_to_inject(dag)
+
+        params_to_inject, warning_message, exceptions = _get_params_to_inject(
+            dag, priorities=prioritized_tasks_to_inject)
 
         for exception in exceptions:
             raise (exception)
@@ -441,7 +475,7 @@ def main():
         if warning_message:
             warnings.warn(warning_message)
 
-        _inject_cell(dag, **inject_cell_args)
+        _inject_cell(dag, **params_to_inject)
 
         click.secho(
             'Finished cell injection. Re-run this command if your '
