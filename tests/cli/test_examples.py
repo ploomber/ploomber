@@ -336,7 +336,7 @@ def test_error_if_git_clone_fails(monkeypatch, capsys):
     assert (
         'Error: An error occurred when downloading '
         'examples. Verify git is installed and your internet connection. '
-        "(Error message: 'message')\n") in captured.err;
+        "(Error message: 'message')\n") in captured.err
 
 
 # TODO: fix ["grid", "cookbook/grid"] in suggest_command
