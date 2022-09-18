@@ -308,7 +308,8 @@ def chdir_code(path):
     return f'os.chdir("{path}")'
 
 
-def remove_all_files_from_dir(dir, remove_dir=False):
-    [f.unlink() for f in Path(dir).glob("*") if f.is_file()]
-    if remove_dir:
-        os.rmdir(dir)
+def remove_dir(dir):
+    is_dir_exists = os.path.isdir(dir)
+
+    if is_dir_exists:
+        shutil.rmtree(dir)
