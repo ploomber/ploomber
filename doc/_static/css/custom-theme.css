@@ -12,6 +12,10 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
     background-color: black;
 }
 
+.navbar-brand.mr-auto.ml-auto {
+    margin-right: 16px !important;
+}
+
 .highlight * {
     margin: 0;
     padding: 0;
@@ -27,10 +31,10 @@ https://build-me-the-docs-please.readthedocs.io/en/latest/Using_Sphinx/ShowingCo
     color: white;
 }
 
-/* CSS to ignore selection of ">>>" and "..." in code snippets */ 
+/* CSS to ignore selection of ">>>" and "..." in code snippets */
 
-.highlight .gp { 
-	user-select: none; 
+.highlight .gp {
+    user-select: none;
 }
 
 .terminal-top {
@@ -154,6 +158,31 @@ pre> :not(:first-child).ipynb-lexed * {
     border-right: 2px solid #eee;
 }
 
+.mobile {
+    display: none;
+}
+
+.horizontal-menu {
+    width: 100%;
+    margin-top: 7px;
+}
+
+.horizontal-menu ul {
+    display: grid;
+    grid-template-columns: auto auto auto auto auto;
+    width: inherit;
+}
+
+.horizontal-menu a.nav-link {
+    color: #fff;
+    padding: 5px;
+    font-size: 14px;
+}
+
+.horizontal-menu .nav-item.active {
+    border-bottom: 3px solid #fff;
+}
+
 /* sticky table of contents on 768px and larger */
 
 @media (min-width: 768px) {
@@ -178,19 +207,60 @@ pre> :not(:first-child).ipynb-lexed * {
         z-index: 100;
         background-color: #fff;
     }
-    #search {
-        margin-top: -40px;
-        margin-left: 50px;
-        margin-bottom: 10px;
+
+    .DocSearch-Button {
+        background-color: transparent !important;
     }
-    #third-column {
-        position: fixed !important;
-        top: 3.5rem;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 100;
-        background-color: #fff;
+
+    .DocSearch-Button .DocSearch-Search-Icon {
+        color: #fff !important;
+    }
+
+    .desktop {
+        display: none;
+    }
+
+    .mobile {
+        display: inherit;
+    }
+
+    div.document {
+        padding-left: 0 !important;
+    }
+
+    .navbar-brand.mr-auto.ml-auto {
+        margin-left: 10px !important;
+        margin-right: auto !important;
+    }
+
+    .first-column.collapse.show {
+        z-index: 9999;
+        top: 5.7rem;
+    }
+
+    body {
+        padding-top: 8rem !important;
+    }
+
+    .global-toc {
+        overflow-y: inherit;
+    }
+    
+    div.local-toc {
+        padding-right: 16px !important;
+    }
+
+    div.local-toc>ul>li>a {
+        font-size: inherit !important;
+        font-weight: 400 !important;
+    }
+
+    div.document h3 {
+        font-size: 16px !important;
+    }
+
+    .local-toc ul:first-of-type {
+        margin-bottom: 0px;
     }
 }
 
@@ -274,6 +344,90 @@ div.document .toctree-l2 {
     bottom: 15px !important;
     /* put a higher z-index than .third-column so this works */
     z-index: 1 !important;
+}
+
+.local-toc ul {
+    list-style-type: none;
+    padding-left: 0px;
+}
+
+.local-toc li {
+    padding-left: 5px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+div.local-toc {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+div.local-toc>ul>li>a {
+    font-size: larger;
+    color: black;
+    font-weight: 800;
+}
+
+div.local-toc li li a {
+    color: gray;
+    font-weight: 300;
+    font-size: 100%;
+}
+
+div.local-toc li li li a {
+    font-size: 90%;
+}
+
+div.local-toc li li {
+    padding-left: 10px;
+}
+
+div.local-toc li li li {
+    padding-left: 15px;
+}
+
+.local-toc-wrapper {
+    border: 1px solid lightgray;
+    border-radius: 0.3rem;
+}
+
+.local-toc-title {
+    text-align: left;
+    padding-right: 1rem;
+    width: 100%;
+}
+
+.toggle-local-toc-button {
+    display: flex;
+    padding: 0px 12px !important;
+    width: 100%;
+}
+
+.center-horizontal {
+    display: flex;
+    justify-content: center;
+}
+
+.center-vertical {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.auto-vertical-margin {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+/* https://stackoverflow.com/questions/2460100/remove-the-complete-styling-of-an-html-button-submit */
+.remove-default-button-style {
+    background: none;
+    color: inherit;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    outline: inherit;
 }
 
 div.sphinxsidebarwrapper {

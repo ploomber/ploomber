@@ -51,6 +51,66 @@
 
 {% endblock %}
 
+{%- macro local_toc() %}
+<div class="local-toc-wrapper" id="local-toc-wrapper">
+    <button 
+        class="remove-default-button-style toggle-local-toc-button"
+        onclick="toggleLocalTOC()"
+    >
+        <h3 class="local-toc-title" id="local-toc-title">
+            Contents
+        </h3>
+        <!-- closed -->
+        <div class="auto-vertical-margin d-none" id="local-toc-arrow-right">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+              </svg>
+        </div>
+        <!-- open -->
+        <div class="auto-vertical-margin" id="local-toc-arrow-down">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-up" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z"/>
+              </svg>
+        </div>
+    </button>
+    <div
+        class="sphinxsidebar"
+        role="navigation"
+        aria-label="main navigation"
+        id="local-toc-content"
+    >
+        <div class="local-toc" id="local-toc">
+            {%- include "localtoc.html" %}
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        const localTOCContentWrapper = document.getElementById("local-toc-wrapper");
+        const localTOC = document.getElementById("local-toc");
+        if (localTOC.children.length == 0) {
+            localTOCContentWrapper.classList.add("d-none");
+        }
+    });
+
+    function toggleLocalTOC() {
+        const localTOCContent = document.getElementById("local-toc-content");
+        const arrowDown = document.getElementById("local-toc-arrow-down")
+        const arrowRight = document.getElementById("local-toc-arrow-right")
+        if (localTOCContent.classList.contains("d-none")) {
+            localTOCContent.classList.remove("d-none");
+            arrowDown.classList.remove("d-none");
+            arrowRight.classList.add("d-none");
+        } else {
+            localTOCContent.classList.add("d-none");
+            arrowDown.classList.add("d-none");
+            arrowRight.classList.remove("d-none");
+        }
+    } 
+
+</script>
+{%- endmacro %}
+
 {%- macro sidebar2() %}
 {%- if render_sidebar %}
 <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -100,6 +160,9 @@ titles_only=false) %}
                     <div class="bodywrapper">
                         {%- endif %}
                         <div class="body" role="main">
+                            <div class="d-xl-none d-block">
+                                {{ local_toc() }}
+                            </div>
                             {% block body %} {% endblock %}
                             <div class="clearer"></div>
                         </div>
@@ -111,7 +174,7 @@ titles_only=false) %}
                 <div class="clearer"></div>
             </div>
         </div>
-        <div class="d-none d-xl-block col-xl-2 third-column" id="third-column">
+        <div class="d-none d-xl-block col-xl-2" id="third-column">
             {{ sidebar2() }}
         </div>
     </div>
@@ -125,10 +188,20 @@ titles_only=false) %}
         appId: 'Y6L7HQ2HZO',
         apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
         indexName: 'ploomber',
-        container: '#search',
+        container: '#desktop-search',
         debug: false
 
     });
+
+    docsearch({
+        appId: 'Y6L7HQ2HZO',
+        apiKey: 'a44b754f3d890a27dcbd9b4f860fea6b',
+        indexName: 'ploomber',
+        container: '#mobile-search',
+        debug: false
+
+    });
+
 </script>
 {%- endblock %}
 
