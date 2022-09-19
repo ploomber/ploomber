@@ -1,28 +1,20 @@
 {% macro nav_bar(pathto, active=none) %}
 
 <nav class="navbar navbar-expand-md navbar-dark fixed-top">
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column" aria-controls="first-column"
-        aria-expanded="false" aria-label="Toggle TOC">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-files" viewBox="0 0 16 16">
-            <path d="M13 0H6a2 2 0 0 0-2 2 2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm0 13V4a2 2 0 0 0-2-2H5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1zM3 4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4z"/>
-        </svg>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#first-column"
+        aria-controls="first-column" aria-expanded="false" aria-label="Toggle TOC">
+        <span class="navbar-toggler-icon"></span>
+
     </button>
 
-    <a class="navbar-brand ml-auto mr-auto" href="{{ pathto('index') }}">Ploomber</a>
+    <a class="navbar-brand ml-auto mobile-ml-2" href="{{ pathto('index') }}">Ploomber</a>
 
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#third-column"
-        aria-controls="third-column" aria-expanded="false" aria-label="Toggle third column" id="third-column-toggle" onclick="toggleThirdColumn()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
-            <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
-        </svg>
-    </button>
-
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar"
+    <button class="desktop navbar-toggler" type="button" data-toggle="collapse" data-target="#top-bar"
         aria-controls="top-bar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
 
-    <div class="collapse navbar-collapse" id="top-bar">
+    <div class="desktop collapse navbar-collapse" id="top-bar">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item {% if active == 'Documentation' %} active {% endif %}">
                 <a class="nav-link" href="{{ pathto('index') }}">Documentation
@@ -63,20 +55,42 @@
         </div>
 
     </div>
+
+    <div class="mobile horizontal-menu m-auto">
+        <ul class="nav nav-pills navbar-right">
+            <li class="nav-item {% if active == 'Documentation' %} active {% endif %}">
+                <a class="nav-link" href="{{ pathto('index') }}">Documentation
+                </a>
+            </li>
+            <li class="d-none nav-item {% if active == 'Cloud' %} active {% endif %}">
+                <a class="nav-link" href="{{ pathto('cloud/cloud-execution') }}">Cloud
+                </a>
+            </li>
+            <li class="nav-item {% if active == 'Videos' %} active {% endif %}">
+                <a class="nav-link" href="{{ pathto('videos') }}">Videos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/ploomber/ploomber">GitHub</a>
+            </li>
+            <li class="d-none nav-item">
+                <a class="nav-link" href="https://ploomber.io/community">Community</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://ploomber.io">Blog</a>
+            </li>
+            <li class="d-none nav-item">
+                <span class="nav-link d-md-none" id="toggleSearch">Search</span>
+            </li>
+        </ul>
+    </div>
+
     <script>
-        $('#toggleSearch').on('click', function() {
+        $('#toggleSearch').on('click', function () {
             $(".DocSearch-Button").click();
         });
-        
-        function toggleThirdColumn() {
-            let thirdColumn = document.getElementById("third-column");
-            if (thirdColumn.classList.contains("d-none")) {
-                thirdColumn.classList.remove("d-none");
-            } else {
-                thirdColumn.classList.add("d-none");
-            }
-        } 
-
     </script>
 </nav>
 {% endmacro %}
