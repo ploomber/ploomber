@@ -183,15 +183,6 @@ pre> :not(:first-child).ipynb-lexed * {
         margin-left: 50px;
         margin-bottom: 10px;
     }
-    #third-column {
-        position: fixed !important;
-        top: 3.5rem;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 100;
-        background-color: #fff;
-    }
 }
 
 .sphinxsidebarwrapper ul {
@@ -274,6 +265,83 @@ div.document .toctree-l2 {
     bottom: 15px !important;
     /* put a higher z-index than .third-column so this works */
     z-index: 1 !important;
+}
+
+.local-toc ul {
+    list-style-type: none;
+    padding-left: 0px;
+}
+
+.local-toc li {
+    padding-left: 5px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+div.local-toc {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+div.local-toc>ul>li>a {
+    font-size: larger;
+    color: black;
+    font-weight: 800;
+}
+
+div.local-toc li li a {
+    color: gray;
+    font-weight: 300;
+    font-size: 100%;
+}
+
+div.local-toc li li li a {
+    font-size: 90%;
+}
+
+div.local-toc li li {
+    padding-left: 10px;
+}
+
+div.local-toc li li li {
+    padding-left: 15px;
+}
+
+.local-toc-wrapper {
+    border: 1px solid lightgray; 
+    border-radius: 0.3rem;
+}
+
+.local-toc-title {
+    text-align: center;
+    padding-right: 1rem;
+}
+
+.toggle-local-toc-button {
+    width: 100%;
+    display: flex;
+}
+
+.center-horizontal {
+    display: flex;
+    justify-content: center;
+}
+
+.center-vertical {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* https://stackoverflow.com/questions/2460100/remove-the-complete-styling-of-an-html-button-submit */
+.remove-default-button-style {
+	background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	outline: inherit;
 }
 
 div.sphinxsidebarwrapper {
