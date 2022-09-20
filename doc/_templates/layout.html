@@ -73,7 +73,7 @@ titles_only=false) %}
 
 {%- block relbar1 %}
 {% import 'macros.html' as macros %}
-{{ macros.nav_bar(pathto=pathto, active='Documentation') }}
+{{ macros.nav_bar(pathto=pathto, active='Documentation', toc=sidebar1()) }}
 {% endblock %}
 
 

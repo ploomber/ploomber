@@ -620,3 +620,47 @@ span.highlighted {
 .fixed-top {
     z-index: 150 !important;
 }
+
+.topbar-toc {
+    background-color: #F0F0F0;
+    padding: 4px;
+}
+
+@media (max-width: 767.98px) {
+    .main-nav {
+        display: block;
+    }
+} 
+
+@media (min-width: 768px) {
+    .main-nav {
+        display: flex;
+        flex-direction: row;
+    }
+} 
+    .sm-navbar-light {
+        padding: 0 !important;
+        background-color: #F0F0F0 !important;
+    }
+
+    .main-nav {
+        background-color: #000;
+        width:100%;
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .topbar-radius {
+        background-color: #000;
+        border-radius: 0 0 12px 12px;
+        width: 100%;
+        height: 12px;
+    }
+
+    .nav-buttons {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
