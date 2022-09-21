@@ -236,7 +236,7 @@ def test_grid_number_suffix_on(sample_dagspec_with_suffix_on):
     dag = DAGSpec('pipeline.yaml').to_dag()
 
     assert 'param-0.ipynb' in str(dag['upstream-0'].product)
-    assert 'param-1.ipynb' in str(dag['upstream-1'].produc)
+    assert 'param-1.ipynb' in str(dag['upstream-1'].product)
 
 
 def test_grid_number_suffix_missing_placeholders(

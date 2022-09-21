@@ -1685,6 +1685,7 @@ _spec_callables = {
         'source': 'sample_source_callables.upstream',
         'name': 'upstream-',
         'product': 'upstream.txt',
+        'grid_number_suffix': True,
         'grid': {
             'param': [1, 2]
         }
