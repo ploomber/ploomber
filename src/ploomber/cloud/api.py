@@ -35,8 +35,9 @@ def _download_file(url, skip_if_exists=False, raise_on_missing=False):
     try:
         response = _requests.get(url)
         parsed_url = urlparse(url)
-        path = parse_qs(parsed_url.query)[
-            'response-content-disposition'][0].split("filename = ")[1]
+        path = parse_qs(
+            parsed_url.query)['response-content-disposition'][0].split(
+                "filename = ")[1]
     except HTTPError as e:
         if e.code == 404:
             path = _remove_prefix(parse.urlparse(url).path[1:])
@@ -93,6 +94,7 @@ def download_from_presigned(presigned):
 
 
 def auth_header(func):
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         api_key = get_key()
@@ -270,7 +272,12 @@ def _has_prefix(path, prefixes):
     return any(str(path).startswith(prefix) for prefix in prefixes)
 
 
-def zip_project(force, runid, github_number, verbose, ignore_prefixes=None):
+def zip_project(force,
+                runid,
+                github_number,
+                verbose,
+                ignore_prefixes=None,
+                task=None):
     ignore_prefixes = ignore_prefixes or []
 
     if Path("project.zip").exists():
@@ -295,7 +302,8 @@ def zip_project(force, runid, github_number, verbose, ignore_prefixes=None):
             json.dumps({
                 'force': force,
                 'runid': runid,
-                'github_number': github_number
+                'github_number': github_number,
+                'task': task,
             }))
 
     MAX = 5 * 1024 * 1024
@@ -335,7 +343,11 @@ def upload_project(force=False,
                    github_number=None,
                    github_owner=None,
                    github_repo=None,
-                   verbose=False):
+                   verbose=False,
+                   task=None):
+    """Upload project and execute it
+    """
+
     # TODO: this should use the function in the default.py module to load
     # the default entry-point
     dag = DAGSpec('pipeline.yaml').to_dag().render(show_progress=False)
@@ -362,7 +374,8 @@ def upload_project(force=False,
                 runid,
                 github_number,
                 verbose,
-                ignore_prefixes=util.extract_product_prefixes(dag))
+                ignore_prefixes=util.extract_product_prefixes(dag),
+                task=task)
 
     if verbose:
         click.echo("Uploading project...")
