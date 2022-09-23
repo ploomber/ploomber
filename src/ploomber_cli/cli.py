@@ -496,16 +496,35 @@ def delete_pipeline(pipeline_id):
 @click.option('--raw', is_flag=True)
 def cloud_build(force, github_number, github_owner, github_repo, raw):
     """Build pipeline in the cloud
-
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
     """
     from ploomber.cloud import api
     runid = api.upload_project(force,
                                github_number,
                                github_owner,
                                github_repo,
-                               verbose=not raw)
+                               verbose=not raw,
+                               task=None)
+    if raw:
+        click.echo(runid)
+
+
+@cloud.command(name='task')
+@click.argument('task_name')
+@click.option('-f',
+              '--force',
+              help='Force execution by ignoring status',
+              is_flag=True)
+@click.option('--raw', is_flag=True)
+def cloud_task(task_name, force, raw):
+    """Build task in the cloud
+    """
+    from ploomber.cloud import api
+    runid = api.upload_project(force,
+                               github_number=None,
+                               github_owner=None,
+                               github_repo=None,
+                               verbose=not raw,
+                               task=task_name)
     if raw:
         click.echo(runid)
 
