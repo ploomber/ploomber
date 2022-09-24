@@ -165,31 +165,55 @@ def run_detail(headers, run_id):
     return res
 
 
-def run_detail_print(run_id):
+def formatter(out, json_):
+    if json_:
+        s = json.dumps(out)
+    else:
+        s = Table.from_dicts(out)
+
+    click.echo(s)
+
+
+class Echo:
+
+    def __init__(self, enable):
+        self.enable = enable
+
+    def __call__(self, s):
+        if self.enable:
+            click.echo(s)
+
+
+def run_detail_print(run_id, json=False):
     out = run_detail(run_id)
     tasks = out['tasks']
     run = out['run']
 
+    echo = Echo(enable=not json)
+
     if run['status'] == 'created':
-        click.echo('Run created...')
+        echo('Run created...')
+
     elif run['status'] == 'finished':
-        click.echo('Pipeline finished...')
+        echo('Pipeline finished...')
+
         if tasks:
-            click.echo(Table.from_dicts(tasks))
+            formatter(tasks, json_=json)
         else:
-            click.echo('Pipeline finished due to no newly triggered tasks,'
-                       ' try running ploomber cloud build --force')
+            echo('Pipeline finished due to no newly triggered tasks,'
+                 ' try running ploomber cloud build --force')
     elif tasks:
         if run['status'] == 'aborted':
-            click.echo('Pipeline aborted...')
+            echo('Pipeline aborted...')
         elif run['status'] == 'failed':
-            click.echo('Pipeline failed...')
+            echo('Pipeline failed...')
         else:
-            click.echo('Unknown status: ' + run['status'])
-        click.echo(Table.from_dicts(tasks))
+            echo('Unknown status: ' + run['status'])
+
+        formatter(tasks, json_=json)
+
     else:
-        click.echo('Unknown status: ' + run['status'] +
-                   ', no tasks triggered.')
+        echo('Unknown status: ' + run['status'] + ', no tasks triggered.')
 
     return out
 
@@ -220,6 +244,11 @@ def run_logs_image(headers, run_id, tail=None):
 
 @auth_header
 def run_abort(headers, run_id):
+    if run_id == '@latest':
+        print('Geting latest ID...')
+        run_id = run_latest_id()
+        print(f'Got ID: {run_id}')
+
     _requests.get(f"{HOST}/runs/{run_id}/abort", headers=headers).json()
     print("Aborted.")
 
@@ -238,11 +267,18 @@ def run_latest_failed(headers, reason):
 
 
 @auth_header
-def products_list(headers):
+def run_latest_id(headers):
+    res = _requests.get(f"{HOST}/runs/latest", headers=headers).json()
+    return res['runid']
+
+
+@auth_header
+def products_list(headers, json=False):
     res = _requests.get(f"{HOST}/products", headers=headers).json()
 
     if res:
-        print(Table.from_dicts([{'path': r} for r in res]))
+        paths = [{'path': r} for r in res]
+        formatter(paths, json_=json)
     else:
         print("No products found.")
 

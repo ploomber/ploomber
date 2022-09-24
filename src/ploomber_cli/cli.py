@@ -543,7 +543,8 @@ def cloud_list():
 @cloud.command(name="status")
 @click.argument('run_id')
 @click.option('--watch', '-w', is_flag=True)
-def cloud_status(run_id, watch):
+@click.option('--json', is_flag=True)
+def cloud_status(run_id, watch, json):
     """Get details on a cloud execution
     $ ploomber cloud status {some-id}
 
@@ -572,23 +573,21 @@ def cloud_status(run_id, watch):
             time.sleep(idle)
             cumsum += idle
     else:
-        api.run_detail_print(run_id)
+        api.run_detail_print(run_id, json=json)
 
 
 @cloud.command(name="products")
 @click.option('-d', '--delete', default=None)
-def cloud_products(delete):
+@click.option('--json', is_flag=True)
+def cloud_products(delete, json):
     """List products in cloud workspace
-
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
     """
     from ploomber.cloud import api
 
     if delete:
         api.delete_products(delete)
     else:
-        api.products_list()
+        api.products_list(json=json)
 
 
 @cloud.command(name="download")
@@ -646,11 +645,10 @@ def cloud_logs(run_id, image, watch):
 @click.argument('run_id')
 def cloud_abort(run_id):
     """Abort a cloud execution
+
     $ ploomber cloud abort {some-id}
 
-
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
+    $ ploomber cloud abort @latest
     """
     from ploomber.cloud import api
     api.run_abort(run_id)
