@@ -44,6 +44,7 @@ class CommanderStop(Exception):
 class Commander:
     """Manage script workflows
     """
+
     def __init__(self,
                  workspace=None,
                  templates_path=None,
@@ -114,6 +115,7 @@ class Commander:
             self.tw.sep('=', header, blue=True)
 
         error = None
+        result = None
 
         try:
             result = subprocess.run(cmd, capture_output=capture_output)
