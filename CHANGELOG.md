@@ -1,6 +1,11 @@
 # CHANGELOG
 
 ## 0.21.1dev
+* Adds `ploomber cloud task` command
+* `ploomber cloud abort` can take the `@latest` argument to abort the latest build
+* Adds feature to select which parameters to install if the same source appears more than once (#985)
+* Fixes an error when pairing notebooks (#979)
+* Fixes the cloud download function (#1010)
 
 ## 0.21 (2022-08-22)
 
