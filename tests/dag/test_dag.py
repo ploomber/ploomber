@@ -1298,3 +1298,30 @@ def test_close_clients_only_calls_close_once_per_client():
     dag.close_clients()
 
     client.close.assert_called_once()
+
+
+def test_deepcopying_dag_does_not_copy_clients():
+
+    dag = DAG()
+
+    client = Mock()
+    client.non_picklable = sys
+
+    dag.clients[SQLDump] = client
+
+    copy = dag._deepcopy_safe()
+
+    assert dag is not copy
+    assert dag.clients is copy.clients
+
+
+def test_deepcopying_restores_clients_if_it_fails():
+    dag = DAG()
+    dag.non_picklable = sys
+    clients = dag.clients
+
+    with pytest.raises(RuntimeError):
+        dag._deepcopy_safe()
+
+    assert dag.clients is clients
+    assert dag.clients is not None
