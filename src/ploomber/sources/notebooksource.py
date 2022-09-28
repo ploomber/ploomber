@@ -429,7 +429,7 @@ class NotebookSource(Source):
         # but only warn
 
         # strict mode: raise and check signature
-        # regular mode: _check_notebook called in NotebookRunner.run
+        # regular mode: _check_notebook called in .run
         if self.static_analysis == 'strict':
             self._check_notebook(raise_=True, check_signature=True)
         else:
