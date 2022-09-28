@@ -23,7 +23,7 @@ from ploomber.executors import Serial, Parallel, serial
 from ploomber.clients import SQLAlchemyClient
 from ploomber.dag.dagclients import DAGClients
 from ploomber.dag import plot as dag_plot_module
-from ploomber.util import util as ploomber_util
+from ploomber.util.util import remove_dir
 
 IS_WINDOWS_PYTHON_3_10 = sys.version_info >= (3, 10) and 'win' in sys.platform
 
@@ -211,30 +211,18 @@ def test_plot_validates_html_extension_if_d3(dag, tmp_directory):
 
 
 @pytest.mark.parametrize('backend', [None, 'd3'])
-def test_plot_with_d3_embed(dag, tmp_directory, monkeypatch, backend):
-    # simulate pygraphviz isnt installed
+def test_plot_with_d3_embed(capsys, dag, monkeypatch, backend):
+    # simulate pygraphviz isn't installed
     monkeypatch.setattr(dag_plot_module, 'find_spec', lambda _: None)
-    output = dag.plot(backend=backend)
+    embedded_assets_dir = 'embedded-assets'
+    iframe = dag.plot(backend=backend)
 
-    # test the svg tag has the rendered content
-    assert '<svg id="dag" viewBox=' in output.data
-    # and the js message is hidden
-    assert '<div id="js-message" style="display: none;">' in output.data
+    assert len(iframe.src) != 0
+    assert Path(iframe.src).is_file()
 
-
-@pytest.mark.skipif(IS_WINDOWS_PYTHON_3_10, reason="requires < 3.10")
-def test_plot_with_d3_embed_error_if_missing_dependency(
-        dag, tmp_directory, monkeypatch):
-    monkeypatch.setattr(ploomber_util.importlib.util, 'find_spec',
-                        lambda _: None)
-
-    with pytest.raises(ImportError) as excinfo:
-        dag.plot(backend='d3')
-
-    expected = ("'requests-html' 'nest_asyncio' are "
-                "required to use 'embedded HTML with D3 backend'. "
-                "Install with: pip install 'requests-html' 'nest_asyncio'")
-    assert expected == str(excinfo.value)
+    # clean created files
+    remove_dir(embedded_assets_dir)
+    assert Path(iframe.src).is_file() is False
 
 
 @pytest.mark.parametrize('backend', [None, 'd3'])
