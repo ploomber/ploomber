@@ -711,11 +711,19 @@ class DAG(AbstractDAG):
                                '"%s", skipping', self.name)
 
     def _deepcopy_safe(self):
+        clients = self.clients
+        self._clients = None
+
         try:
-            return deepcopy(self)
+            copy = deepcopy(self)
         except Exception as e:
             raise RuntimeError(
                 "An error occurred while copying DAG object") from e
+        finally:
+            self._clients = clients
+
+        copy._clients = clients
+        return copy
 
     def build_partially(self,
                         target,
