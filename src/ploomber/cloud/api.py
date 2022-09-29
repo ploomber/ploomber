@@ -267,10 +267,10 @@ def run_finished(headers, runid):
 
 
 @auth_header
-def run_latest_failed(headers, reason):
+def run_failed(headers, runid, reason):
     if reason != "none":
-        _requests.get(f"{HOST}/runs/latest/failed", headers=headers)
-        click.echo('Marked latest run as failed...')
+        _requests.get(f"{HOST}/runs/{runid}/failed", headers=headers)
+        click.echo(f'Marking run {runid} as failed...')
 
 
 @auth_header
@@ -377,8 +377,8 @@ def upload_zipped_project(response, verbose):
 
 
 @auth_header
-def trigger(headers):
-    res = _requests.get(f"{HOST}/trigger", headers=headers).json()
+def trigger(headers, runid):
+    res = _requests.get(f"{HOST}/trigger/{runid}", headers=headers).json()
     return res
 
 
@@ -428,9 +428,9 @@ def upload_project(force=False,
     upload_zipped_project(response, verbose)
 
     if verbose:
-        click.echo("Starting build...")
+        click.echo(f"Starting build {runid}...")
 
-    trigger()
+    trigger(runid=runid)
 
     # TODO: if anything fails after runs_new, update the status to error
     # convert runs_new into a context manager
