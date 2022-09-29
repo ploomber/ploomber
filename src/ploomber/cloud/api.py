@@ -185,6 +185,7 @@ class Echo:
 
 
 def run_detail_print(run_id, json=False):
+    run_id = process_run_id(run_id)
     out = run_detail(run_id)
     tasks = out['tasks']
     run = out['run']
@@ -218,8 +219,17 @@ def run_detail_print(run_id, json=False):
     return out
 
 
+def process_run_id(run_id):
+    if run_id == '@latest':
+        print('Geting latest ID...')
+        run_id = run_latest_id()
+        print(f'Got ID: {run_id}')
+    return run_id
+
+
 @auth_header
 def run_logs(headers, run_id):
+    run_id = process_run_id(run_id)
     res = _requests.get(f"{HOST}/runs/{run_id}/logs", headers=headers).json()
 
     for name, log in res.items():
@@ -230,6 +240,7 @@ def run_logs(headers, run_id):
 
 @auth_header
 def run_logs_image(headers, run_id, tail=None):
+    run_id = process_run_id(run_id)
     res = _requests.get(f"{HOST}/runs/{run_id}/logs/image", headers=headers)
 
     if not len(res.text):
@@ -244,11 +255,7 @@ def run_logs_image(headers, run_id, tail=None):
 
 @auth_header
 def run_abort(headers, run_id):
-    if run_id == '@latest':
-        print('Geting latest ID...')
-        run_id = run_latest_id()
-        print(f'Got ID: {run_id}')
-
+    run_id = process_run_id(run_id)
     _requests.get(f"{HOST}/runs/{run_id}/abort", headers=headers).json()
     print("Aborted.")
 

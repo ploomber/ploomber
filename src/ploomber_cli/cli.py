@@ -546,11 +546,10 @@ def cloud_list():
 @click.option('--json', is_flag=True)
 def cloud_status(run_id, watch, json):
     """Get details on a cloud execution
+
     $ ploomber cloud status {some-id}
 
-
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
+    $ ploomber cloud status @latest
     """
     from ploomber.cloud import api
 
@@ -619,8 +618,8 @@ def cloud_logs(run_id, image, watch):
     Get Docker image building logs:
         $ ploomber cloud logs {some-id} --image
 
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
+    Get task logs for the latest run:
+        $ ploomber cloud logs @latest
     """
     from ploomber.cloud import api
 
