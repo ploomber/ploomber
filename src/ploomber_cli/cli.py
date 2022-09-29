@@ -530,14 +530,15 @@ def cloud_task(task_name, force, raw):
 
 
 @cloud.command(name="list")
-def cloud_list():
+@click.option('--json', is_flag=True)
+def cloud_list(json):
     """List cloud executions
 
     Currently in private alpha, ask us for an invite:
     https://ploomber.io/community
     """
     from ploomber.cloud import api
-    api.runs()
+    api.runs(json=json)
 
 
 @cloud.command(name="status")
