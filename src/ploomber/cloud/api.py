@@ -145,13 +145,13 @@ def _parse_datetime(timestamp):
 
 
 @auth_header
-def runs(headers):
+def runs(headers, json=False):
     res = _requests.get(f"{HOST}/runs", headers=headers).json()
 
     for run in res:
         run['created_at'] = _parse_datetime(run['created_at'])
 
-    print(Table.from_dicts(res))
+    formatter(res, json_=json)
 
 
 # NOTE: this doesn't need authentication (add unit test)
@@ -358,8 +358,8 @@ def zip_project(force,
 
 
 @auth_header
-def get_presigned_link(headers):
-    return _requests.get(f"{HOST}/upload", headers=headers).json()
+def get_presigned_link(headers, runid):
+    return _requests.get(f"{HOST}/upload/{runid}", headers=headers).json()
 
 
 def upload_zipped_project(response, verbose):
@@ -423,7 +423,7 @@ def upload_project(force=False,
     if verbose:
         click.echo("Uploading project...")
 
-    response = get_presigned_link()
+    response = get_presigned_link(runid=runid)
 
     upload_zipped_project(response, verbose)
 
