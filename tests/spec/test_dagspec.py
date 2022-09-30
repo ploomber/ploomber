@@ -1510,6 +1510,35 @@ def get(a=None):
     assert isinstance(dag.clients[SQLScript], Mock)
 
 
+def test_set_null_client(tmp_sample_tasks):
+    Path('test_sets_clients.py').write_text("""
+from unittest.mock import Mock
+
+def get(a=None):
+    return Mock()
+""")
+
+    spec = DAGSpec({
+        'meta': {
+            'extract_product': False,
+            'extract_upstream': True,
+        },
+        'tasks': [
+            {
+                'source': 'sample.sql',
+                'product': ['name', 'table']
+            },
+        ],
+        'clients': {
+            'SQLScript': None
+        }
+    })
+
+    dag = spec.to_dag()
+
+    assert len(dag.clients) == 0
+
+
 def test_validate_product_default_class_keys():
     spec = {
         'meta': {

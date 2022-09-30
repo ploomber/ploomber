@@ -471,8 +471,9 @@ def _init_product(task_dict, meta, task_class, root_path, lazy_import):
 
     CLASS = _find_product_class(task_class, task_dict, meta)
 
-    if 'product_client' in task_dict:
-        dp = dotted_path.DottedPath(task_dict.pop('product_client'),
+    dotted_path_spec = task_dict.pop('product_client', None)
+    if dotted_path_spec is not None:
+        dp = dotted_path.DottedPath(dotted_path_spec,
                                     lazy_load=lazy_import,
                                     allow_return_none=False)
 
@@ -596,8 +597,9 @@ def _resolve_if_file(product_raw, relative_to, class_):
 
 
 def _init_client(task_dict, lazy_import):
-    if 'client' in task_dict:
-        dp = dotted_path.DottedPath(task_dict.pop('client'),
+    dotted_path_spec = task_dict.pop('client', None)
+    if dotted_path_spec is not None:
+        dp = dotted_path.DottedPath(dotted_path_spec,
                                     lazy_load=lazy_import,
                                     allow_return_none=False)
 

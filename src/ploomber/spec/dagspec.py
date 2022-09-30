@@ -518,6 +518,8 @@ class DAGSpec(MutableMapping):
 
         if clients:
             for class_name, dotted_path_spec in clients.items():
+                if dotted_path_spec is None:
+                    continue
                 dps = dotted_path.DottedPath(dotted_path_spec,
                                              lazy_load=self._lazy_import,
                                              allow_return_none=False)
