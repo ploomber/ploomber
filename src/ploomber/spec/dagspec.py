@@ -84,6 +84,7 @@ predictions using ``OnlineDAG().predict()``. See ``OnlineDAG`` documentation
 for details.
 """
 import fnmatch
+import json
 import os
 import yaml
 import logging
@@ -425,10 +426,13 @@ class DAGSpec(MutableMapping):
                                      reload=reload))
                     except MissingKeysValidationError as e:
                         example_spec = _build_example_spec(t["source"])
-                        fixed_example = yaml.dump(example_spec,
-                                                  sort_keys=False)
+                        if isinstance(data, dict):
+                            example_str = json.dumps(example_spec)
+                        else:
+                            example_str = yaml.dump(example_spec,
+                                                    sort_keys=False)
                         e.message += '\nTo fix it, add the missing key (example):\n\n{}'.format(
-                            fixed_example)
+                            example_str)
                         raise e
                 self.data['tasks'] = task_specs
         else:
