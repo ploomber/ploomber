@@ -12,13 +12,14 @@ from pathlib import Path
 from collections.abc import MutableMapping, Mapping
 import platform
 from difflib import get_close_matches
+import yaml
 
 from ploomber import tasks, products
 from ploomber.util.util import _make_iterable
 from ploomber.util import validate, dotted_path
 from ploomber.tasks.taskgroup import TaskGroup
 from ploomber import validators
-from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.exceptions import DAGSpecInitializationError, MissingKeysValidationError
 from ploomber.products._resources import resolve_resources
 from ploomber.io import pretty_print
 
@@ -264,10 +265,18 @@ class TaskSpec(MutableMapping):
         else:
             required = {'product', 'source'}
 
-        validate.keys(valid=None,
-                      passed=self.data,
-                      required=required,
-                      name=repr(self))
+        try:
+            validate.keys(valid=None,
+                          passed=self.data,
+                          required=required,
+                          name=repr(self))
+        except MissingKeysValidationError as e:
+            fixed_example = yaml.dump([{
+                "source": self.data["source"],
+                "product": "products/data.csv"
+            }])
+            e.message += '\nTo fix it:\n\n{}'.format(fixed_example)
+            raise e
 
         if self.meta['extract_upstream'] and self.data.get('upstream'):
             raise DAGSpecInitializationError(

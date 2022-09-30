@@ -1,4 +1,4 @@
-from ploomber.exceptions import ValidationError
+from ploomber.exceptions import MissingKeysValidationError, ValidationError
 from ploomber.io import pretty_print
 
 
@@ -19,5 +19,5 @@ def keys(valid, passed, required=None, name='spec'):
         missing = set(required) - passed
 
         if missing:
-            raise ValidationError(f"Error validating {name}. Missing "
-                                  f"keys: { pretty_print.iterable(missing)}")
+            raise MissingKeysValidationError(f"Error validating {name}. Missing "
+                                             f"keys: { pretty_print.iterable(missing)}", missing_keys=missing)
