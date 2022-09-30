@@ -70,7 +70,8 @@ def test_upload_project_errors_if_missing_reqs_lock_txt(tmp_project):
     with pytest.raises(BaseException) as excinfo:
         api.upload_project()
 
-    assert 'Missing requirements.lock.txt' in str(excinfo.value)
+    assert 'requirements.lock.txt' in str(excinfo.value)
+    assert 'environment.lock.yml' in str(excinfo.value)
 
 
 def test_upload_project_errors_if_invalid_cloud_yaml(tmp_project):
