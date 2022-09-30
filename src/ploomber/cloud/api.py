@@ -395,10 +395,12 @@ def upload_project(force=False,
     # the default entry-point
     dag = DAGSpec('pipeline.yaml').to_dag().render(show_progress=False)
 
-    # TODO: test
-    if not Path("requirements.lock.txt").exists():
-        raise BaseException("Missing requirements.lock.txt file, add one "
-                            "with the dependencies to install")
+    if not (Path("requirements.lock.txt").exists()
+            or Path("environment.lock.yml").exists()):
+        raise BaseException(
+            "A pip requirements.lock.txt file or "
+            "conda environment.lock.yml file is required. Add one "
+            "and try again.")
 
     config.validate()
 
