@@ -271,11 +271,9 @@ class TaskSpec(MutableMapping):
                           required=required,
                           name=repr(self))
         except MissingKeysValidationError as e:
-            fixed_example = yaml.dump([{
-                "source": self.data["source"],
-                "product": "products/data.csv"
-            }])
-            e.message += '\nTo fix it:\n\n{}'.format(fixed_example)
+            example_spec = _build_example_spec(self.data["source"])
+            fixed_example = yaml.dump(example_spec, sort_keys=False)
+            e.message += '\nTo fix it, add the missing key (example):\n\n{}'.format(fixed_example)
             raise e
 
         if self.meta['extract_upstream'] and self.data.get('upstream'):
@@ -670,3 +668,22 @@ def _process_dotted_paths(grid_spec):
             out[key] = value
 
     return out
+
+def _build_example_spec(source):
+    """
+    Build an example spec from just the source.
+    """
+    example_spec = {}
+    example_spec["source"] = source
+    if suffix2taskclass[Path(source).suffix] is tasks.NotebookRunner:
+        example_product = {
+            "nb": "products/report.ipynb",
+            "data": "products/data.csv",
+        }
+    else:
+        example_product = "products/data.csv"
+    example_spec = [{
+        "source": source,
+        "product": example_product,
+    }]
+    return example_spec
