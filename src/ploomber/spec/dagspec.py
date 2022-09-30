@@ -102,7 +102,7 @@ from ploomber.spec.taskspec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
 from ploomber.util import default
 from ploomber.dag.dagconfiguration import DAGConfiguration
-from ploomber.exceptions import DAGSpecInitializationError
+from ploomber.exceptions import DAGSpecInitializationError, MissingKeysValidationError
 from ploomber.env.envdict import EnvDict
 from ploomber.env.expand import (expand_raw_dictionary_and_extract_tags,
                                  expand_raw_dictionaries_and_extract_tags)
@@ -414,13 +414,23 @@ class DAGSpec(MutableMapping):
             # make sure the folder where the pipeline is located is in sys.path
             # otherwise dynamic imports needed by TaskSpec will fail
             with add_to_sys_path(self._parent_path, chdir=False):
-                self.data['tasks'] = [
-                    TaskSpec(t,
-                             self.data['meta'],
-                             project_root=project_root,
-                             lazy_import=lazy_import,
-                             reload=reload) for t in self.data['tasks']
-                ]
+                task_specs = []
+                for t in self.data['tasks']:
+                    try:
+                        task_specs.append(
+                            TaskSpec(t,
+                                     self.data['meta'],
+                                     project_root=project_root,
+                                     lazy_import=lazy_import,
+                                     reload=reload))
+                    except MissingKeysValidationError as e:
+                        example_spec = _build_example_spec(t["source"])
+                        fixed_example = yaml.dump(example_spec,
+                                                  sort_keys=False)
+                        e.message += '\nTo fix it, add the missing key (example):\n\n{}'.format(
+                            fixed_example)
+                        raise e
+                self.data['tasks'] = task_specs
         else:
             self.data['meta'] = Meta.empty()
 
@@ -804,8 +814,12 @@ def process_tasks(dag, dag_spec, root_path=None):
     for task_dict in dag_spec['tasks']:
         # init source to extract product
         fn = task_dict['class']._init_source
-        kwargs = {'kwargs': {}, 'extract_up': extract_up,
-                  'extract_prod': extract_prod, **task_dict}
+        kwargs = {
+            'kwargs': {},
+            'extract_up': extract_up,
+            'extract_prod': extract_prod,
+            **task_dict
+        }
         source = call_with_dictionary(fn, kwargs=kwargs)
 
         if extract_prod:
@@ -904,3 +918,23 @@ def _expand_upstream(upstream, task_names):
             expanded[up] = None
 
     return expanded
+
+
+def _build_example_spec(source):
+    """
+    Build an example spec from just the source.
+    """
+    example_spec = {}
+    example_spec["source"] = source
+    if suffix2taskclass[Path(source).suffix] is NotebookRunner:
+        example_product = {
+            "nb": "products/report.ipynb",
+            "data": "products/data.csv",
+        }
+    else:
+        example_product = "products/data.csv"
+    example_spec = [{
+        "source": source,
+        "product": example_product,
+    }]
+    return example_spec
