@@ -783,3 +783,19 @@ span.highlighted {
 .fixed-top {
     z-index: 150 !important;
 }
+
+/* Highlight anchor links content */
+
+:target {
+    padding: 10px;
+    animation: highlight 1s;
+}
+
+@keyframes highlight {
+    0% {
+        background: rgb(243, 243, 136);
+    }
+    100% {
+        background: none;
+    }
+}
