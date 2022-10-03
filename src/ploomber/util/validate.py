@@ -19,5 +19,7 @@ def keys(valid, passed, required=None, name='spec'):
         missing = set(required) - passed
 
         if missing:
-            raise MissingKeysValidationError(f"Error validating {name}. Missing "
-                                             f"keys: { pretty_print.iterable(missing)}", missing_keys=missing)
+            raise MissingKeysValidationError(
+                f"Error validating {name}. Missing "
+                f"keys: { pretty_print.iterable(missing)}",
+                missing_keys=missing)

@@ -19,7 +19,7 @@ from ploomber.util.util import _make_iterable
 from ploomber.util import validate, dotted_path
 from ploomber.tasks.taskgroup import TaskGroup
 from ploomber import validators
-from ploomber.exceptions import DAGSpecInitializationError, MissingKeysValidationError
+from ploomber.exceptions import DAGSpecInitializationError
 from ploomber.products._resources import resolve_resources
 from ploomber.io import pretty_print
 
