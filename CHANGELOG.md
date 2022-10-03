@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.21.2dev
+
 ## 0.21.1 (2022-10-02)
 * Adds `ploomber cloud task` command
 * `ploomber cloud` can take the `@latest` argument in the `abort`, `log` and `status` commands
