@@ -12,7 +12,6 @@ from pathlib import Path
 from collections.abc import MutableMapping, Mapping
 import platform
 from difflib import get_close_matches
-import yaml
 
 from ploomber import tasks, products
 from ploomber.util.util import _make_iterable

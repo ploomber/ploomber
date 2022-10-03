@@ -103,7 +103,8 @@ from ploomber.spec.taskspec import TaskSpec, suffix2taskclass
 from ploomber.util import validate
 from ploomber.util import default
 from ploomber.dag.dagconfiguration import DAGConfiguration
-from ploomber.exceptions import DAGSpecInitializationError, MissingKeysValidationError
+from ploomber.exceptions import (DAGSpecInitializationError,
+                                 MissingKeysValidationError)
 from ploomber.env.envdict import EnvDict
 from ploomber.env.expand import (expand_raw_dictionary_and_extract_tags,
                                  expand_raw_dictionaries_and_extract_tags)
@@ -432,8 +433,8 @@ class DAGSpec(MutableMapping):
                                                     sort_keys=False)
                         else:
                             example_str = json.dumps(example_spec)
-                        e.message += '\nTo fix it, add the missing key (example):\n\n{}'.format(
-                            example_str)
+                        e.message += '\nTo fix it, add the missing key '
+                        '(example):\n\n{}'.format(example_str)
                         raise e
                 self.data['tasks'] = task_specs
         else:
