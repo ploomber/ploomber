@@ -229,9 +229,10 @@ class DAGSpec(MutableMapping):
               look_up_project_root_recursively):
         self._lazy_import = lazy_import
         self._name = None
+        data_argument_is_filepath = isinstance(data, (str, Path))
 
         # initialized with a path to a yaml file...
-        if isinstance(data, (str, Path)):
+        if data_argument_is_filepath:
             # TODO: test this
             if parent_path is not None:
                 raise ValueError('parent_path must be None when '
@@ -426,11 +427,11 @@ class DAGSpec(MutableMapping):
                                      reload=reload))
                     except MissingKeysValidationError as e:
                         example_spec = _build_example_spec(t["source"])
-                        if isinstance(data, dict):
-                            example_str = json.dumps(example_spec)
-                        else:
+                        if data_argument_is_filepath:
                             example_str = yaml.dump(example_spec,
                                                     sort_keys=False)
+                        else:
+                            example_str = json.dumps(example_spec)
                         e.message += '\nTo fix it, add the missing key (example):\n\n{}'.format(
                             example_str)
                         raise e
