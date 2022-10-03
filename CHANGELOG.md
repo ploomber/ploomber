@@ -1,12 +1,12 @@
 # CHANGELOG
 
-## 0.21.1dev
+## 0.21.1 (2022-10-02)
 * Adds `ploomber cloud task` command
 * `ploomber cloud` can take the `@latest` argument in the `abort`, `log` and `status` commands
 * Adds conda support to `ploomber cloud build` via `environment.lock.yml`
-* Adds feature to select which parameters to install if the same source appears more than once (#985)
-* Fixes an error when pairing notebooks (#979)
-* Fixes error in `ploomber cloud download` command (#1010)
+* Adds feature to select which parameters to install if the same source appears more than once ([#985](https://github.com/ploomber/ploomber/issues/985))
+* Fixes an error when pairing notebooks ([#979](https://github.com/ploomber/ploomber/issues/979))
+* Fixes error in `ploomber cloud download` command ([#1010](https://github.com/ploomber/ploomber/issues/1010))
 
 ## 0.21 (2022-08-22)
 
