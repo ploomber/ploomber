@@ -19,6 +19,14 @@
     padding-top: 10px;
     padding-left: 20px;
   }
+
+  foreignObject[vertical-align] div {
+    top: 50%;
+    left: 50%;
+    position: relative;
+    transform: translate(-50%, -50%);
+  }
+  
 </style>
 
 <head>
@@ -36,6 +44,17 @@
 </body>
 
 <script>
+  function wrapLongText(text) {
+    const maxChars = 25;
+    let wrapped = text.substring(0, maxChars);
+
+    if (text.length > maxChars) {
+      wrapped += '...';
+    }
+
+    return wrapped;
+  }
+
   document.querySelector('#js-message').style.display = 'none';
 
   // starts here - custom util/ helper functions to generate dag
@@ -171,31 +190,6 @@
   //   .attr("stroke-width", 0.3)
   //   .attr("stroke", "black");
 
-
-  function wrap(text, width) {
-    text.each(function () {
-      var text = d3.select(this),
-        words = text.text().split(',').reverse(),
-        word,
-        line = [],
-        lineNumber = 0,
-        lineHeight = 0.5, // ems
-        y = text.attr("y"),
-        dy = parseFloat(text.attr("dy")) || 0,
-        tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
-      while (word = words.pop()) {
-        line.push(word);
-        tspan.text(line.join(" "));
-        if (tspan.node().getComputedTextLength() > width) {
-          line.pop();
-          tspan.text(line.join(" "));
-          line = [word];
-          tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
-        }
-      }
-    });
-  }
-
   // add text to products
   // tasks.append("text")
   //   .attr("transform",
@@ -206,23 +200,23 @@
   //   .call(wrap, 2);
 
   // Add text to tasks with text wrap
-  blockWidth = 38;
-  blockHeight= 38;
+  const blockWidth = 25;
+  const blockHeight = 25;
   fontSize = 5.5;
   tasks.append("foreignObject")
     .attr("width", blockWidth)
     .attr("height", blockHeight)
-    .attr("x", -19)
-    .attr("y", -19)
+    .attr("x", -blockWidth/2)
+    .attr("y", -blockHeight/2)
+    .attr("vertical-align", "")
     .append("xhtml:div")
+    .attr("title", (d) => d.data.label)
     .style("color", "#000")
     .style("font-size", `${fontSize}px`)
-    .style("height", `${blockHeight}px`)
-    .style("overflow-y", "auto")    
     .style("text-align", "center")
     .style("font-family", "Arial")
-    .html((d) => d.data.id)
-  
+    .html((d) => wrapLongText(d.data.label))
+
   const arrow = d3.symbol().type(d3.symbolTriangle).size(nodeRadius * nodeRadius / 20.0);
   svgSelection.append('g')
     .selectAll('path')
