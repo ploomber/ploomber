@@ -2,7 +2,6 @@ from pathlib import PurePosixPath
 from urllib import parse
 import sys
 from pathlib import Path
-from urllib.request import urlretrieve
 from urllib.parse import urlparse, parse_qs
 from urllib.error import HTTPError
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -18,7 +17,7 @@ import humanize
 
 from ploomber.table import Table
 from ploomber.cloud import io, config
-from ploomber_core.exceptions import BaseException
+from ploomber.exceptions import BaseException
 from ploomber.spec import DAGSpec
 from ploomber.dag import util
 from ploomber.cli.cloud import get_key
@@ -34,9 +33,11 @@ def _remove_prefix(path):
 
 def _download_file(url, skip_if_exists=False, raise_on_missing=False):
     try:
+        response = _requests.get(url)
         parsed_url = urlparse(url)
-        path = parse_qs(parsed_url.query)[
-            'response-content-disposition'][0].split("filename = ")[1]
+        path = parse_qs(
+            parsed_url.query)['response-content-disposition'][0].split(
+                "filename = ")[1]
     except HTTPError as e:
         if e.code == 404:
             path = _remove_prefix(parse.urlparse(url).path[1:])
@@ -51,6 +52,7 @@ def _download_file(url, skip_if_exists=False, raise_on_missing=False):
 
         else:
             raise
+
     except Exception as e:
         print(f"There was an issue downloading the file: {e}")
         raise
@@ -59,8 +61,12 @@ def _download_file(url, skip_if_exists=False, raise_on_missing=False):
         print(f'{path} exists, skipping...')
     else:
         Path(path).parent.mkdir(exist_ok=True, parents=True)
-        print(f'Downloading {path}')
-        urlretrieve(url, path)
+        print(f'Writing file into path {path}')
+        try:
+            with open(path, "wb") as file:
+                file.write(response.content)
+        except Exception as e:
+            print(f"Error reading the file from URL: {e}")
 
     return path
 
@@ -88,6 +94,7 @@ def download_from_presigned(presigned):
 
 
 def auth_header(func):
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         api_key = get_key()
@@ -138,13 +145,13 @@ def _parse_datetime(timestamp):
 
 
 @auth_header
-def runs(headers):
+def runs(headers, json=False):
     res = _requests.get(f"{HOST}/runs", headers=headers).json()
 
     for run in res:
         run['created_at'] = _parse_datetime(run['created_at'])
 
-    print(Table.from_dicts(res))
+    formatter(res, json_=json)
 
 
 # NOTE: this doesn't need authentication (add unit test)
@@ -158,37 +165,71 @@ def run_detail(headers, run_id):
     return res
 
 
-def run_detail_print(run_id):
+def formatter(out, json_):
+    if json_:
+        s = json.dumps(out)
+    else:
+        s = Table.from_dicts(out)
+
+    click.echo(s)
+
+
+class Echo:
+
+    def __init__(self, enable):
+        self.enable = enable
+
+    def __call__(self, s):
+        if self.enable:
+            click.echo(s)
+
+
+def run_detail_print(run_id, json=False):
+    run_id = process_run_id(run_id)
     out = run_detail(run_id)
     tasks = out['tasks']
     run = out['run']
 
+    echo = Echo(enable=not json)
+
     if run['status'] == 'created':
-        click.echo('Run created...')
+        echo('Run created...')
+
     elif run['status'] == 'finished':
-        click.echo('Pipeline finished...')
+        echo('Pipeline finished...')
+
         if tasks:
-            click.echo(Table.from_dicts(tasks))
+            formatter(tasks, json_=json)
         else:
-            click.echo('Pipeline finished due to no newly triggered tasks,'
-                       ' try running ploomber cloud build --force')
+            echo('Pipeline finished due to no newly triggered tasks,'
+                 ' try running ploomber cloud build --force')
     elif tasks:
         if run['status'] == 'aborted':
-            click.echo('Pipeline aborted...')
+            echo('Pipeline aborted...')
         elif run['status'] == 'failed':
-            click.echo('Pipeline failed...')
+            echo('Pipeline failed...')
         else:
-            click.echo('Unknown status: ' + run['status'])
-        click.echo(Table.from_dicts(tasks))
+            echo('Unknown status: ' + run['status'])
+
+        formatter(tasks, json_=json)
+
     else:
-        click.echo('Unknown status: ' + run['status'] +
-                   ', no tasks triggered.')
+        echo('Unknown status: ' + run['status'] + ', no tasks triggered.')
 
     return out
 
 
+def process_run_id(run_id):
+    if run_id == '@latest':
+        print('Geting latest ID...')
+        run_id = run_latest_id()
+        print(f'Got ID: {run_id}')
+    return run_id
+
+
 @auth_header
 def run_logs(headers, run_id):
+    run_id = process_run_id(run_id)
     res = _requests.get(f"{HOST}/runs/{run_id}/logs", headers=headers).json()
 
     for name, log in res.items():
@@ -199,6 +240,7 @@ def run_logs(headers, run_id):
 
 @auth_header
 def run_logs_image(headers, run_id, tail=None):
+    run_id = process_run_id(run_id)
     res = _requests.get(f"{HOST}/runs/{run_id}/logs/image", headers=headers)
 
     if not len(res.text):
@@ -213,6 +255,7 @@ def run_logs_image(headers, run_id, tail=None):
 
 @auth_header
 def run_abort(headers, run_id):
+    run_id = process_run_id(run_id)
     _requests.get(f"{HOST}/runs/{run_id}/abort", headers=headers).json()
     print("Aborted.")
 
@@ -224,18 +267,25 @@ def run_finished(headers, runid):
 
 
 @auth_header
-def run_latest_failed(headers, reason):
+def run_failed(headers, runid, reason):
     if reason != "none":
-        _requests.get(f"{HOST}/runs/latest/failed", headers=headers)
-        click.echo('Marked latest run as failed...')
+        _requests.get(f"{HOST}/runs/{runid}/failed", headers=headers)
+        click.echo(f'Marking run {runid} as failed...')
 
 
 @auth_header
-def products_list(headers):
+def run_latest_id(headers):
+    res = _requests.get(f"{HOST}/runs/latest", headers=headers).json()
+    return res['runid']
+
+
+@auth_header
+def products_list(headers, json=False):
     res = _requests.get(f"{HOST}/products", headers=headers).json()
 
     if res:
-        print(Table.from_dicts([{'path': r} for r in res]))
+        paths = [{'path': r} for r in res]
+        formatter(paths, json_=json)
     else:
         print("No products found.")
 
@@ -265,7 +315,12 @@ def _has_prefix(path, prefixes):
     return any(str(path).startswith(prefix) for prefix in prefixes)
 
 
-def zip_project(force, runid, github_number, verbose, ignore_prefixes=None):
+def zip_project(force,
+                runid,
+                github_number,
+                verbose,
+                ignore_prefixes=None,
+                task=None):
     ignore_prefixes = ignore_prefixes or []
 
     if Path("project.zip").exists():
@@ -290,7 +345,8 @@ def zip_project(force, runid, github_number, verbose, ignore_prefixes=None):
             json.dumps({
                 'force': force,
                 'runid': runid,
-                'github_number': github_number
+                'github_number': github_number,
+                'task': task,
             }))
 
     MAX = 5 * 1024 * 1024
@@ -302,8 +358,8 @@ def zip_project(force, runid, github_number, verbose, ignore_prefixes=None):
 
 
 @auth_header
-def get_presigned_link(headers):
-    return _requests.get(f"{HOST}/upload", headers=headers).json()
+def get_presigned_link(headers, runid):
+    return _requests.get(f"{HOST}/upload/{runid}", headers=headers).json()
 
 
 def upload_zipped_project(response, verbose):
@@ -321,8 +377,8 @@ def upload_zipped_project(response, verbose):
 
 
 @auth_header
-def trigger(headers):
-    res = _requests.get(f"{HOST}/trigger", headers=headers).json()
+def trigger(headers, runid):
+    res = _requests.get(f"{HOST}/trigger/{runid}", headers=headers).json()
     return res
 
 
@@ -330,15 +386,21 @@ def upload_project(force=False,
                    github_number=None,
                    github_owner=None,
                    github_repo=None,
-                   verbose=False):
+                   verbose=False,
+                   task=None):
+    """Upload project and execute it
+    """
+
     # TODO: this should use the function in the default.py module to load
     # the default entry-point
     dag = DAGSpec('pipeline.yaml').to_dag().render(show_progress=False)
 
-    # TODO: test
-    if not Path("requirements.lock.txt").exists():
-        raise BaseException("Missing requirements.lock.txt file, add one "
-                            "with the dependencies to install")
+    if not (Path("requirements.lock.txt").exists()
+            or Path("environment.lock.yml").exists()):
+        raise BaseException(
+            "A pip requirements.lock.txt file or "
+            "conda environment.lock.yml file is required. Add one "
+            "and try again.")
 
     config.validate()
 
@@ -357,19 +419,20 @@ def upload_project(force=False,
                 runid,
                 github_number,
                 verbose,
-                ignore_prefixes=util.extract_product_prefixes(dag))
+                ignore_prefixes=util.extract_product_prefixes(dag),
+                task=task)
 
     if verbose:
         click.echo("Uploading project...")
 
-    response = get_presigned_link()
+    response = get_presigned_link(runid=runid)
 
     upload_zipped_project(response, verbose)
 
     if verbose:
-        click.echo("Starting build...")
+        click.echo(f"Starting build {runid}...")
 
-    trigger()
+    trigger(runid=runid)
 
     # TODO: if anything fails after runs_new, update the status to error
     # convert runs_new into a context manager

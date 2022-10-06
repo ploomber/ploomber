@@ -11,11 +11,12 @@ def cli():
 
 
 @cli.command()
+@click.argument('runid')
 @click.argument('reason')
-def mark_failed(reason):
+def mark_failed(runid, reason):
     """Mark latest run as failed if passed something different than "none"
     """
-    api.run_latest_failed(reason)
+    api.run_failed(runid, reason)
 
 
 if __name__ == '__main__':

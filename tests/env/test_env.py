@@ -1085,3 +1085,9 @@ def test_get_unused_placeholders():
     })
 
     assert env.get_unused_placeholders() == {'something'}
+
+
+def test_replace_none_keys():
+    env = EnvDict({'key': None})
+    env._replace_flatten_key('value', 'env__key')
+    assert env.key == 'value'

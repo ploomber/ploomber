@@ -496,41 +496,61 @@ def delete_pipeline(pipeline_id):
 @click.option('--raw', is_flag=True)
 def cloud_build(force, github_number, github_owner, github_repo, raw):
     """Build pipeline in the cloud
-
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
     """
     from ploomber.cloud import api
     runid = api.upload_project(force,
                                github_number,
                                github_owner,
                                github_repo,
-                               verbose=not raw)
+                               verbose=not raw,
+                               task=None)
+    if raw:
+        click.echo(runid)
+
+
+@cloud.command(name='task')
+@click.argument('task_name')
+@click.option('-f',
+              '--force',
+              help='Force execution by ignoring status',
+              is_flag=True)
+@click.option('--raw', is_flag=True)
+def cloud_task(task_name, force, raw):
+    """Build task in the cloud
+    """
+    from ploomber.cloud import api
+    runid = api.upload_project(force,
+                               github_number=None,
+                               github_owner=None,
+                               github_repo=None,
+                               verbose=not raw,
+                               task=task_name)
     if raw:
         click.echo(runid)
 
 
 @cloud.command(name="list")
-def cloud_list():
+@click.option('--json', is_flag=True)
+def cloud_list(json):
     """List cloud executions
 
     Currently in private alpha, ask us for an invite:
     https://ploomber.io/community
     """
     from ploomber.cloud import api
-    api.runs()
+    api.runs(json=json)
 
 
 @cloud.command(name="status")
 @click.argument('run_id')
 @click.option('--watch', '-w', is_flag=True)
-def cloud_status(run_id, watch):
+@click.option('--json', is_flag=True)
+def cloud_status(run_id, watch, json):
     """Get details on a cloud execution
+
     $ ploomber cloud status {some-id}
 
-
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
+    $ ploomber cloud status @latest
     """
     from ploomber.cloud import api
 
@@ -553,23 +573,21 @@ def cloud_status(run_id, watch):
             time.sleep(idle)
             cumsum += idle
     else:
-        api.run_detail_print(run_id)
+        api.run_detail_print(run_id, json=json)
 
 
 @cloud.command(name="products")
 @click.option('-d', '--delete', default=None)
-def cloud_products(delete):
+@click.option('--json', is_flag=True)
+def cloud_products(delete, json):
     """List products in cloud workspace
-
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
     """
     from ploomber.cloud import api
 
     if delete:
         api.delete_products(delete)
     else:
-        api.products_list()
+        api.products_list(json=json)
 
 
 @cloud.command(name="download")
@@ -601,8 +619,8 @@ def cloud_logs(run_id, image, watch):
     Get Docker image building logs:
         $ ploomber cloud logs {some-id} --image
 
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
+    Get task logs for the latest run:
+        $ ploomber cloud logs @latest
     """
     from ploomber.cloud import api
 
@@ -627,11 +645,10 @@ def cloud_logs(run_id, image, watch):
 @click.argument('run_id')
 def cloud_abort(run_id):
     """Abort a cloud execution
+
     $ ploomber cloud abort {some-id}
 
-
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
+    $ ploomber cloud abort @latest
     """
     from ploomber.cloud import api
     api.run_abort(run_id)

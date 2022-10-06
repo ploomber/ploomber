@@ -306,3 +306,10 @@ def chdir_code(path):
         path = str(path).replace('\\', '\\\\')
 
     return f'os.chdir("{path}")'
+
+
+def remove_dir(dir):
+    is_dir_exists = os.path.isdir(dir)
+
+    if is_dir_exists:
+        shutil.rmtree(dir)

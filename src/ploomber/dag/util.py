@@ -112,11 +112,10 @@ def _path_for_plot(path_to_plot, fmt):
         os.close(fd)
     else:
         path = str(path_to_plot)
-
     try:
         yield path
     finally:
-        if path_to_plot == 'embed':
+        if path_to_plot == 'embed' and fmt != 'html':
             Path(path).unlink()
 
 

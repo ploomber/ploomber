@@ -262,7 +262,7 @@ class EnvDict(Mapping):
         for e in keys_to_final_dict:
             dict_to_edit = dict_to_edit[e]
 
-        if dict_to_edit.get(key_to_edit) is None:
+        if key_to_edit not in dict_to_edit:
             dotted_path = '.'.join(keys_all)
             raise KeyError('Trying to replace key "{}" in env, '
                            'but it does not exist'.format(dotted_path))
