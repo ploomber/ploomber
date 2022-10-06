@@ -176,6 +176,11 @@ setup(
         'ipython',
         'ipdb',
         'pydantic',
+        # sphix requirements
+        'nbsphinx',
+        'sphinx_toolbox',
+        'myst-parser'
+
     ] + NB,
     extras_require={
         'all': OPTIONAL,
