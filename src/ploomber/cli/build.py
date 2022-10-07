@@ -81,10 +81,10 @@ def main(payload, render_only=False):
             dag.render()
         else:
             if args.partially:
-                report = dag.build_partially(args.partially,
-                                             force=args.force,
-                                             debug=debug,
-                                             skip_upstream=args.skip_upstream)
+                report = dag._build_partially(args.partially,
+                                              force=args.force,
+                                              debug=debug,
+                                              skip_upstream=args.skip_upstream)
             else:
                 report = dag.build(force=args.force, debug=debug)
     except Exception as e:
