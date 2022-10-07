@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path, PurePosixPath
 from unittest.mock import ANY, Mock
+import warnings
 
 import jupytext
 import nbconvert
@@ -488,36 +489,33 @@ Path(product['model']).touch()
     dag.build()
 
 
-# should not have warning when have multiple exports and
-# nbconvert_export_kwargs set
-@pytest.mark.parametrize('product, nb_product_key, nbconvert_exporter_name', [
-    ({
-        'nb': File(Path('out.pdf')),
-        'file': File(Path('another', 'data', 'file.txt')),
-    }, 'nb', 'webpdf')
-])
-def test_multiple_nb_no_kwargs_warning(product, nb_product_key,
-                                       nbconvert_exporter_name):
+def test_do_not_warn_on_nbconvert_export_kwargs_if_multiple_outputs(
+        tmp_directory):
     dag = DAG()
 
     code = """
 # + tags=["parameters"]
-var = None
+upstream = None
 
 # +
-from pathlib import Path
-Path(product['file']).touch()
+1 + 1
     """
 
     NotebookRunner(code,
-                   product=product,
+                   product={
+                       'nb': File('out.ipynb'),
+                       'report': File('out.html'),
+                   },
                    dag=dag,
                    ext_in='py',
-                   nbconvert_exporter_name=nbconvert_exporter_name,
-                   nb_product_key=nb_product_key,
+                   nb_product_key=['nb', 'report'],
                    nbconvert_export_kwargs=dict(exclude_input=True),
                    name='nb')
-    dag.build()
+
+    with warnings.catch_warnings():
+        # fail the test if this displays a warnings
+        warnings.simplefilter("error")
+        dag.build()
 
 
 @pytest.mark.parametrize('product, nb_product_key, nbconvert_exporter_name', [
@@ -555,7 +553,7 @@ Path(product['file']).touch()
         'file': File(Path('another', 'data', 'file.txt')),
     }, 'nb', 'webpdf')
 ])
-def test_multiple_nb_product_success(product, nb_product_key,
+def test_multiple_nb_product_success(tmp_directory, product, nb_product_key,
                                      nbconvert_exporter_name):
     dag = DAG()
 
