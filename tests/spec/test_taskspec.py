@@ -102,6 +102,16 @@ def test_task_class_from_source_str_invalid_path():
             },
             NotebookRunner,
         ],
+        # null clients where it is valid
+        [
+            {
+                'source': 'sample.py',
+                'product': 'out.ipynb',
+                'client': None,
+                'product_client': None
+            },
+            NotebookRunner,
+        ],
         [
             {
                 'source': 'sample.sql',
