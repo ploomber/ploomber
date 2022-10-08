@@ -64,6 +64,7 @@ def process_errors_and_warnings(messages):
 
 # https://github.com/PyCQA/pyflakes/blob/master/pyflakes/reporter.py
 class MyReporter(Reporter):
+
     def __init__(self):
         self._stdout = StringIO()
         self._stderr = StringIO()
@@ -278,6 +279,30 @@ def _is_ipython_cell_magic(source):
     return m.group()
 
 
+class ParamsCell:
+    """Parse variables defined in a  notebook cell
+    """
+
+    def __init__(self, source):
+        self._source = source
+        # dot not complain if product or upstream are missing since
+        # they are not user-defined params
+        self._IGNORE = {'product', 'upstream'}
+
+        self._declared = _get_defined_variables(self._source) - self._IGNORE
+
+    def get_defined(self):
+        return self._defined
+
+    def get_missing(self, passed):
+        passed = set(passed) - self._IGNORE
+        return self._declared - passed
+
+    def get_unexpected(self, passed):
+        passed = set(passed) - self._IGNORE
+        return passed - self._declared
+
+
 def check_params(passed, params_source, filename, warn=False):
     """
     Check that parameters passed to the notebook match the ones defined
@@ -304,14 +329,9 @@ def check_params(passed, params_source, filename, warn=False):
         If passed parameters do not match variables declared in params_source
         and warn is False
     """
-    # dot not complain if product or upstream are missing since
-    # they are not user-defined params
-    IGNORE = {'product', 'upstream'}
-
-    declared = _get_defined_variables(params_source) - IGNORE
-    passed = set(passed) - IGNORE
-    missing = declared - passed
-    unexpected = passed - declared
+    params_cell = ParamsCell(params_source)
+    missing = params_cell.get_missing(passed)
+    unexpected = params_cell.get_unexpected(passed)
 
     if missing or unexpected:
         errors = []
