@@ -1,3 +1,4 @@
+import ast
 import re
 import warnings
 from io import StringIO
@@ -289,18 +290,21 @@ class ParamsCell:
         # they are not user-defined params
         self._IGNORE = {'product', 'upstream'}
 
-        self._declared = _get_defined_variables(self._source) - self._IGNORE
+        self._declared = _get_defined_variables(self._source)
+
+        for key in self._IGNORE:
+            self._declared.pop(key, None)
 
     def get_defined(self):
-        return self._defined
+        return self._declared
 
     def get_missing(self, passed):
         passed = set(passed) - self._IGNORE
-        return self._declared - passed
+        return set(self._declared) - passed
 
     def get_unexpected(self, passed):
         passed = set(passed) - self._IGNORE
-        return passed - self._declared
+        return passed - set(self._declared)
 
 
 def check_params(passed, params_source, filename, warn=False):
@@ -370,6 +374,19 @@ def _get_defined_variables(params_source):
     variable assignments (e.g., function definitions, exceptions)
     """
     used_names = parso.parse(params_source).get_used_names()
-    return set(key for key, value in used_names.items()
-               if value[-1].is_definition()
-               and value[-1].get_definition().type == 'expr_stmt')
+
+    def _get_value(value):
+        possible_literal = value.get_definition().children[-1].get_code(
+        ).strip()
+
+        try:
+            # NOTE: this cannot parse dict(a=1, b=2)
+            return ast.literal_eval(possible_literal)
+        except ValueError:
+            return None
+
+    return {
+        key: _get_value(value[-1])
+        for key, value in used_names.items() if value[-1].is_definition()
+        and value[-1].get_definition().type == 'expr_stmt'
+    }

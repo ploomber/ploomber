@@ -375,3 +375,64 @@ a = 1
         "Parameters declared in the 'parameters' cell do not match task "
         "params. Missing params: 'a'")
     assert expected in str(excinfo.value)
+
+
+@pytest.mark.parametrize('source_code, expected', [
+    [
+        """
+x = 1
+y = 2
+""",
+        {
+            'x': 1,
+            'y': 2
+        },
+    ],
+    [
+        """
+x = 1
+x = 2
+""",
+        {
+            'x': 2
+        },
+    ],
+    [
+        """
+x = dict(a=1, b=2)
+z = [1, 2, 3]
+""",
+        {
+            'x': None,
+            'z': [1, 2, 3],
+        },
+    ],
+    [
+        """
+import pandas as pd
+
+x = pd.DataFrame({'x': [1, 2, 3]})
+z = (1, 2, 3)
+""",
+        {
+            'x': None,
+            'z': (1, 2, 3),
+        },
+    ],
+],
+                         ids=[
+                             'simple-case',
+                             'duplicated',
+                             'data-structures',
+                             'not-a-literal',
+                         ])
+def test_get_defined_variables(source_code, expected):
+    assert pyflakes._get_defined_variables(source_code) == expected
+
+
+def test_params_cell():
+    params_cell = pyflakes.ParamsCell(source='x = 1')
+
+    assert params_cell.get_defined() == {'x': 1}
+    assert params_cell.get_missing(passed={}) == {'x'}
+    assert params_cell.get_unexpected(passed=dict(y=1)) == {'y'}
