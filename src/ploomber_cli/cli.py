@@ -656,8 +656,10 @@ def cloud_abort(run_id):
 
 @cloud.command(name="data")
 @click.option('-u', '--upload', default=None)
+@click.option('-p', '--prefix', default=None)
+@click.option('-n', '--name', default=None)
 @click.option('-d', '--delete', default=None)
-def cloud_data(upload, delete):
+def cloud_data(upload, delete, prefix, name):
     """
     Manage raw data workspace
 
@@ -665,21 +667,42 @@ def cloud_data(upload, delete):
         $ ploomber cloud data
 
     Upload data:
-        $ ploomber cloud data --upload path/to/data.parquet
+        $ ploomber cloud data --upload dataset.parquet
+
+    Upload to a specific directory:
+        $ ploomber cloud data --upload dataset.parquet --prefix my-dataset
+
+    Upload with a specific name:
+        $ ploomber cloud data --upload dataset.parquet --name data.parquet
 
     Delete data (deletes all the objects matching the pattern):
         $ ploomber cloud data --delete '*.parquet'
 
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
+    In your notebook (file will be downloaded to data/dataset.parquet):
+        >>> from ploomber.cloud import download_data
+        >>> download_data('dataset.parquet') # doctest: +SKIP
     """
     from ploomber.cloud import api
 
     # one arg max
 
     if upload:
-        api.upload_data(upload)
+        api.upload_data(upload, prefix=prefix, key=name)
     elif delete:
+        if prefix:
+            click.echo(
+                'prefix has no effect when using -d/--delete. Ignoring...')
+
+        if name:
+            click.echo(
+                'name has no effect when using -d/--delete. Ignoring...')
+
         api.delete_data(delete)
     else:
+        if prefix:
+            click.echo('prefix has no effect when listing files. Ignoring...')
+
+        if name:
+            click.echo('name has no effect when listing files. Ignoring...')
+
         api.data_list()

@@ -31,13 +31,19 @@ def _remove_prefix(path):
     return str(PurePosixPath(*parts))
 
 
-def _download_file(url, skip_if_exists=False, raise_on_missing=False):
+def _download_file(url,
+                   skip_if_exists=False,
+                   raise_on_missing=False,
+                   path=None):
     try:
         response = _requests.get(url)
-        parsed_url = urlparse(url)
-        path = parse_qs(
-            parsed_url.query)['response-content-disposition'][0].split(
-                "filename = ")[1]
+
+        if path is None:
+            parsed_url = urlparse(url)
+            path = parse_qs(
+                parsed_url.query)['response-content-disposition'][0].split(
+                    "filename = ")[1]
+
     except HTTPError as e:
         if e.code == 404:
             path = _remove_prefix(parse.urlparse(url).path[1:])
@@ -441,16 +447,17 @@ def upload_project(force=False,
 
 
 @auth_header
-def upload_data(headers, path):
-    key = Path(path).name
+def upload_data(headers, path, prefix, key):
+    key = key or Path(path).name
 
     create = _requests.post(f"{HOST}/upload/data/create",
                             headers=headers,
                             json=dict(key=key,
-                                      n_parts=io.n_parts(path))).json()
+                                      n_parts=io.n_parts(path),
+                                      prefix=prefix)).json()
 
     gen = io.UploadJobGenerator(path,
-                                key=key,
+                                key=f'{prefix}/{key}' if prefix else key,
                                 upload_id=create['upload_id'],
                                 links=create['urls'])
 
@@ -461,6 +468,7 @@ def upload_data(headers, path):
                    headers=headers,
                    json=dict(key=key,
                              parts=parts,
+                             prefix=prefix,
                              upload_id=create['upload_id'])).json()
 
     # print snippet showing how to download it in the pipeline
