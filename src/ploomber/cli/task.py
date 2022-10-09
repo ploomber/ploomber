@@ -1,7 +1,7 @@
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import cli_endpoint
 from ploomber.telemetry import telemetry
-from ploomber.cloud import api
+from ploomber.cloud.api import PloomberCloudAPI
 from ploomber.tasks import NotebookRunner, PythonCallable
 from ploomber.executors import _format
 from ploomber.messagecollector import task_build_exception
@@ -95,7 +95,8 @@ def _task_cli(accept_task_id=False):
 
         if err is not None:
             if getattr(args, 'task_id', None):
-                api.tasks_update(getattr(args, 'task_id'), 'failed')
+                PloomberCloudAPI().tasks_update(getattr(args, 'task_id'),
+                                                'failed')
 
             msg = _format.exception(err)
             exception_string = task_build_exception(task=task,
@@ -108,7 +109,8 @@ def _task_cli(accept_task_id=False):
             click.echo("Products:\n" + repr(task.product))
 
             if getattr(args, 'task_id', None):
-                api.tasks_update(getattr(args, 'task_id'), 'finished')
+                PloomberCloudAPI().tasks_update(getattr(args, 'task_id'),
+                                                'finished')
 
 
 @cli_endpoint

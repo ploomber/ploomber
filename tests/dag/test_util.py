@@ -193,6 +193,7 @@ def test_error_extract_product_prefixes_if_absolute_path():
     with pytest.raises(ValueError) as excinfo:
         util.extract_product_prefixes(dag)
 
-    expected = ("Absolute product paths are not " f"supported: {path!r}")
+    expected = ("Absolute product paths are not "
+                f"supported: {path!r}")
 
     assert str(excinfo.value) == expected

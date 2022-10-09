@@ -3,8 +3,10 @@ Internal module for making requests to external APIs. It wraps the requests
 module to provide friendlier error messages and defaults
 """
 import requests
+import json
+from json import JSONDecodeError
 
-from ploomber.exceptions import NetworkException
+from ploomber.exceptions import NetworkException, RawBaseException
 
 
 def _make_error(reason):
@@ -13,7 +15,7 @@ def _make_error(reason):
                             'https://ploomber.io/community')
 
 
-def _request(method, url, params=None, **kwargs):
+def _request(method, url, params=None, json_error=False, **kwargs):
     try:
         response = method(url, params=params, **kwargs)
     except requests.exceptions.Timeout:
@@ -32,14 +34,24 @@ def _request(method, url, params=None, **kwargs):
         raise error
 
     if response.status_code >= 300:
-        json_ = response.json()
+        try:
+            json_ = response.json()
+        except JSONDecodeError:
+            json_ = None
+
+        if json_ is None:
+            raise NetworkException(
+                f"An error happened (code: {response.status_code})")
+
         message = json_.get("Message")
 
-        if message:
+        if message and not json_error:
             raise NetworkException(
                 f'{message} (status: {response.status_code})')
-        else:
+        elif not message and not json_error:
             raise NetworkException(f'Error: {json_}')
+        else:
+            raise RawBaseException(json.dumps(json_))
 
     return response
 
@@ -48,8 +60,8 @@ def get(*args, **kwargs):
     return _request(requests.get, *args, **kwargs)
 
 
-def post(*args, **kwargs):
-    return _request(requests.post, *args, **kwargs)
+def post(*args, json_error=False, **kwargs):
+    return _request(requests.post, *args, **kwargs, json_error=json_error)
 
 
 def put(*args, **kwargs):

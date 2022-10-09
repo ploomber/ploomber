@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 from difflib import get_close_matches
 import sys
+import json as json_module
 
 from ploomber_scaffold import scaffold as scaffold_project
 import click
@@ -493,19 +494,20 @@ def delete_pipeline(pipeline_id):
 @click.option('--github-number', help="Github's PR number", default=None)
 @click.option('--github-owner', help="Github's owner", default=None)
 @click.option('--github-repo', help="Github's repo", default=None)
-@click.option('--raw', is_flag=True)
-def cloud_build(force, github_number, github_owner, github_repo, raw):
+@click.option('--json', is_flag=True)
+def cloud_build(force, github_number, github_owner, github_repo, json):
     """Build pipeline in the cloud
     """
-    from ploomber.cloud import api
-    runid = api.upload_project(force,
-                               github_number,
-                               github_owner,
-                               github_repo,
-                               verbose=not raw,
-                               task=None)
-    if raw:
-        click.echo(runid)
+    from ploomber.cloud.api import PloomberCloudAPI
+    api = PloomberCloudAPI()
+    runid = api.build(force,
+                      github_number,
+                      github_owner,
+                      github_repo,
+                      verbose=not json,
+                      task=None)
+    if json:
+        click.echo(json_module.dumps(dict(runid=runid)))
 
 
 @cloud.command(name='task')
@@ -514,30 +516,29 @@ def cloud_build(force, github_number, github_owner, github_repo, raw):
               '--force',
               help='Force execution by ignoring status',
               is_flag=True)
-@click.option('--raw', is_flag=True)
-def cloud_task(task_name, force, raw):
+@click.option('--json', is_flag=True)
+def cloud_task(task_name, force, json):
     """Build task in the cloud
     """
-    from ploomber.cloud import api
-    runid = api.upload_project(force,
-                               github_number=None,
-                               github_owner=None,
-                               github_repo=None,
-                               verbose=not raw,
-                               task=task_name)
-    if raw:
-        click.echo(runid)
+    from ploomber.cloud.api import PloomberCloudAPI
+    api = PloomberCloudAPI()
+    runid = api.build(force,
+                      github_number=None,
+                      github_owner=None,
+                      github_repo=None,
+                      verbose=not json,
+                      task=task_name)
+    if json:
+        click.echo(json_module.dumps(dict(runid=runid)))
 
 
 @cloud.command(name="list")
 @click.option('--json', is_flag=True)
 def cloud_list(json):
     """List cloud executions
-
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
     """
-    from ploomber.cloud import api
+    from ploomber.cloud.api import PloomberCloudAPI
+    api = PloomberCloudAPI()
     api.runs(json=json)
 
 
@@ -552,7 +553,8 @@ def cloud_status(run_id, watch, json):
 
     $ ploomber cloud status @latest
     """
-    from ploomber.cloud import api
+    from ploomber.cloud.api import PloomberCloudAPI
+    api = PloomberCloudAPI()
 
     if watch:
         idle = 5
@@ -582,7 +584,8 @@ def cloud_status(run_id, watch, json):
 def cloud_products(delete, json):
     """List products in cloud workspace
     """
-    from ploomber.cloud import api
+    from ploomber.cloud.api import PloomberCloudAPI
+    api = PloomberCloudAPI()
 
     if delete:
         api.delete_products(delete)
@@ -596,12 +599,9 @@ def cloud_download(pattern):
     """Download products from cloud workspace
     Download all .csv files:
     $ ploomber cloud download '*.csv'
-
-
-    Currently in private alpha, ask us for an invite:
-    https://ploomber.io/community
     """
-    from ploomber.cloud import api
+    from ploomber.cloud.api import PloomberCloudAPI
+    api = PloomberCloudAPI()
     api.products_download(pattern)
 
 
@@ -622,7 +622,8 @@ def cloud_logs(run_id, image, watch):
     Get task logs for the latest run:
         $ ploomber cloud logs @latest
     """
-    from ploomber.cloud import api
+    from ploomber.cloud.api import PloomberCloudAPI
+    api = PloomberCloudAPI()
 
     if image:
         if watch:
@@ -650,7 +651,8 @@ def cloud_abort(run_id):
 
     $ ploomber cloud abort @latest
     """
-    from ploomber.cloud import api
+    from ploomber.cloud.api import PloomberCloudAPI
+    api = PloomberCloudAPI()
     api.run_abort(run_id)
 
 
@@ -682,7 +684,8 @@ def cloud_data(upload, delete, prefix, name):
         >>> from ploomber.cloud import download_data
         >>> download_data('dataset.parquet') # doctest: +SKIP
     """
-    from ploomber.cloud import api
+    from ploomber.cloud.api import PloomberCloudAPI
+    api = PloomberCloudAPI()
 
     # one arg max
 
@@ -706,3 +709,35 @@ def cloud_data(upload, delete, prefix, name):
             click.echo('name has no effect when listing files. Ignoring...')
 
         api.data_list()
+
+
+@cloud.command(name="nb")
+@click.argument('path_to_notebook', type=click.Path(exists=True))
+@click.option('--json', is_flag=True)
+def cloud_notebook(path_to_notebook, json):
+    """Run a notebook in Ploomber Cloud
+
+    $ ploomber cloud nb path/to/notebook.ipynb
+    """
+    from ploomber.cloud.api import PloomberCloudAPI
+
+    api = PloomberCloudAPI()
+    response_upload = api.upload_data(path_to_notebook,
+                                      prefix='notebooks',
+                                      key=Path(path_to_notebook).name,
+                                      version=True,
+                                      verbose=not json)
+    key = response_upload['key']
+
+    if not json:
+        print(f'Triggering execution of {key}...')
+
+    response_execute = api.notebooks_execute(key, json_=json)
+
+    if json:
+        response = {
+            'response_upload': response_upload,
+            'response_execute': response_execute
+        }
+
+        click.echo(json_module.dumps(response))
