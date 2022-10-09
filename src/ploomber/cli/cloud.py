@@ -7,7 +7,6 @@ This command runs a bunch of pip/conda commands (depending on what's available)
 and it does the *right thing*: creating a new environment if needed, and
 locking dependencies.
 """
-import os
 import json
 import uuid
 import warnings
@@ -22,26 +21,13 @@ import humanize
 
 from ploomber_core.exceptions import BaseException
 from ploomber.telemetry import telemetry
-from ploomber_core.telemetry.telemetry import (
-                                                parse_dag,
-                                                UserSettings
-                                            )
+from ploomber.cloud.key import get_key
+from ploomber_core.telemetry.telemetry import (parse_dag, UserSettings)
 
 CLOUD_APP_URL = 'api.ploomber.io'
 PIPELINES_RESOURCE = '/pipelines'
 EMAIL_RESOURCE = '/emailSignup'
 headers = {'Content-type': 'application/json'}
-
-
-def get_key():
-    """
-    This gets the user cloud api key, returns None if doesn't exist.
-    config.yaml is the default user conf file to fetch from.
-    """
-    if 'PLOOMBER_CLOUD_KEY' in os.environ:
-        return os.environ['PLOOMBER_CLOUD_KEY']
-
-    return UserSettings().cloud_key
 
 
 @telemetry.log_call('set-key')
@@ -211,7 +197,9 @@ def delete_pipeline(pipeline_id):
 def cloud_wrapper(payload=False):
     """Runs a function and logs the pipeline status
     """
+
     def _cloud_call(func):
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             _payload = dict()

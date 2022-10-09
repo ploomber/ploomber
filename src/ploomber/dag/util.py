@@ -127,9 +127,9 @@ def iter_file_products(dag):
                     yield prod
 
 
-def _get_parent_from_product(product):
+def _get_parent_from_product(product, base_dir):
     path = Path(str(product._identifier))
-    current = Path().resolve()
+    current = Path(base_dir or '').resolve()
 
     if path.is_absolute():
         try:
@@ -143,7 +143,8 @@ def _get_parent_from_product(product):
     return str(path.parent)
 
 
-def extract_product_prefixes(dag):
-    files = set(_get_parent_from_product(p) for p in iter_file_products(dag))
+def extract_product_prefixes(dag, base_dir=None):
+    files = set(
+        _get_parent_from_product(p, base_dir) for p in iter_file_products(dag))
 
     return sorted(files)

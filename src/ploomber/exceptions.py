@@ -191,6 +191,12 @@ class ValidationError(BaseException):
     pass
 
 
+class RawBaseException(BaseException):
+
+    def get_message(self):
+        return str(self)
+
+
 class NetworkException(BaseException):
     """Raised when failin to call remote APIs
     """
