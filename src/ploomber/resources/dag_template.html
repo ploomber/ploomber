@@ -20,13 +20,21 @@
     padding-left: 20px;
   }
 
-  foreignObject[vertical-align] div {
+  .inner-text {
+    margin: 0;
+    position: absolute;
     top: 50%;
     left: 50%;
-    position: relative;
+    -ms-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
+    /* height: 100%; */
+    width: 100%;
+    word-break: break-all;
+    text-align: center;
+    color: #000;
+    font-family: Arial, Helvetica, sans-serif;
   }
-  
+
 </style>
 
 <head>
@@ -44,8 +52,9 @@
 </body>
 
 <script>
-  function wrapLongText(text) {
-    const maxChars = 25;
+  function trimLongText(text) {
+    const maxChars = 30;
+
     let wrapped = text.substring(0, maxChars);
 
     if (text.length > maxChars) {
@@ -200,22 +209,22 @@
   //   .call(wrap, 2);
 
   // Add text to tasks with text wrap
-  const blockWidth = 25;
-  const blockHeight = 25;
-  fontSize = 5.5;
+  const nodeRadiusWithBuffer = nodeRadius + 5;
+  const blockWidth = nodeRadiusWithBuffer;
+  const blockHeight = nodeRadiusWithBuffer;
+  const fontSize = nodeRadiusWithBuffer / 5;
   tasks.append("foreignObject")
     .attr("width", blockWidth)
     .attr("height", blockHeight)
-    .attr("x", -blockWidth/2)
-    .attr("y", -blockHeight/2)
-    .attr("vertical-align", "")
+    .attr("x", -blockWidth / 2)
+    .attr("y", -blockHeight / 2)
     .append("xhtml:div")
+    .attr("class", "inner-text")
     .attr("title", (d) => d.data.label)
-    .style("color", "#000")
     .style("font-size", `${fontSize}px`)
-    .style("text-align", "center")
-    .style("font-family", "Arial")
-    .html((d) => wrapLongText(d.data.label))
+    .text((d) => trimLongText(d.data.label))
+
+
 
   const arrow = d3.symbol().type(d3.symbolTriangle).size(nodeRadius * nodeRadius / 20.0);
   svgSelection.append('g')
