@@ -202,14 +202,15 @@ def test_validation_help_message_yaml_nb(tmp_directory):
 
 def test_validation_help_message_dict():
     with pytest.raises(ValidationError) as excinfo:
-        DAGSpec({"tasks": [{"source": "mytask.sh",}]})
+        DAGSpec({"tasks": [{"source": "mytask.sh"}]})
     assert '"product": "products/data.csv"' in excinfo.value.message
 
 
 def test_validation_help_message_dict_nb():
     with pytest.raises(ValidationError) as excinfo:
-        DAGSpec({"tasks": [{"source": "mytask.py",}]})
-    assert '"product": {"nb": "products/report.ipynb", "data": "products/data.csv"}' in excinfo.value.message
+        DAGSpec({"tasks": [{"source": "mytask.py"}]})
+    assert ('"product": {"nb": "products/report.ipynb", ' +
+            'data": "products/data.csv"}') in excinfo.value.message
 
 
 def test_python_callables_spec(tmp_directory, add_current_to_sys_path):
