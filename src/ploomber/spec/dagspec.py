@@ -433,8 +433,8 @@ class DAGSpec(MutableMapping):
                                                     sort_keys=False)
                         else:
                             example_str = json.dumps(example_spec)
-                        e.message += '\nTo fix it, add the missing key '
-                        '(example):\n\n{}'.format(example_str)
+                        e.message += ('\nTo fix it, add the missing key ' +
+                                      '(example):\n\n{}').format(example_str)
                         raise e
                 self.data['tasks'] = task_specs
         else:
