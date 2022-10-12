@@ -126,7 +126,7 @@ copy of your scripts, converts them to .ipynb at runtime and executes them.** Th
 crucial concept: scripts are part of your project's source code, but executed
 notebooks are pipeline products.
 
-.. note:: Even though we recommend the use of ``.py`` files, you you can still use regular ``.ipynb`` files as sources if you prefer so.
+.. note:: Even though we recommend the use of ``.py`` files, you can still use regular ``.ipynb`` files as sources if you prefer so.
 
 To know more about integration with Jupyter notebooks, see the :doc:`../user-guide/jupyter` guide.
 
@@ -171,7 +171,7 @@ The cell injection process
     For tips on troubleshooting pipeline loading, see :ref:`Troubleshooting pipeline loading`.
     
 
-Let's review the contents a sample ``clean.py`` file:
+Let's review the contents of a sample ``clean.py`` file:
 
 .. code-block:: python
    :class: text-editor
@@ -217,7 +217,7 @@ The cell injection process also happens when opening the notebook/script in Jupy
 .. note::
    
    When using ``jupyter notebook``, scripts open automatically as
-   notebooks. If using ``jupyter lab``, you have to click right and select the
+   notebooks. If using ``jupyter lab``, you have to right-click and select the
    notebook option.
 
 Since scripts/notebooks always create an executed notebook, you must specify
@@ -245,6 +245,7 @@ dictionary under ``product``:
           # ...and any other keys for other files
           data: output/data.csv
 
+.. note:: The name of keys in the product dictionary can be chosen freely so as to be descriptive of the outputs (e.g. ``data``, ``data_clean``, ``model``, etc.)
 
 This covers scripts and notebooks as tasks, if you want to learn how to use
 functions as tasks, keep scrolling, otherwise, :ref:`skip to the end. <where-to-go-from-here>`

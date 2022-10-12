@@ -597,7 +597,9 @@ If the task generates multiple products, pass a dictionary:
             data: output/data.csv
 
 
-The mechanism to make ``product`` available when exeuting your task
+.. note:: The name of keys in the product dictionary can be chosen freely so as to be descriptive of the outputs (e.g. ``data``, ``data_clean``, ``model``, etc.)
+
+The mechanism to make ``product`` available when executing your task
 depends on the type of task.
 
 SQL tasks receive a ``{{product}}`` placeholder:
