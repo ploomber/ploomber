@@ -19,6 +19,22 @@
     padding-top: 10px;
     padding-left: 20px;
   }
+
+  .inner-text {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    /* height: 100%; */
+    width: 100%;
+    word-break: break-all;
+    text-align: center;
+    color: #000;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
 </style>
 
 <head>
@@ -36,6 +52,18 @@
 </body>
 
 <script>
+  function trimLongText(text) {
+    const maxChars = 30;
+
+    let wrapped = text.substring(0, maxChars);
+
+    if (text.length > maxChars) {
+      wrapped += '...';
+    }
+
+    return wrapped;
+  }
+
   document.querySelector('#js-message').style.display = 'none';
 
   // starts here - custom util/ helper functions to generate dag
@@ -171,31 +199,6 @@
   //   .attr("stroke-width", 0.3)
   //   .attr("stroke", "black");
 
-
-  function wrap(text, width) {
-    text.each(function () {
-      var text = d3.select(this),
-        words = text.text().split(',').reverse(),
-        word,
-        line = [],
-        lineNumber = 0,
-        lineHeight = 0.5, // ems
-        y = text.attr("y"),
-        dy = parseFloat(text.attr("dy")) || 0,
-        tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
-      while (word = words.pop()) {
-        line.push(word);
-        tspan.text(line.join(" "));
-        if (tspan.node().getComputedTextLength() > width) {
-          line.pop();
-          tspan.text(line.join(" "));
-          line = [word];
-          tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
-        }
-      }
-    });
-  }
-
   // add text to products
   // tasks.append("text")
   //   .attr("transform",
@@ -205,15 +208,22 @@
   //   .text((d) => d.data.label)
   //   .call(wrap, 2);
 
+  // Add text to tasks with text wrap
+  const nodeRadiusWithBuffer = nodeRadius + 5;
+  const blockWidth = nodeRadiusWithBuffer;
+  const blockHeight = nodeRadiusWithBuffer;
+  const fontSize = nodeRadiusWithBuffer / 5;
+  tasks.append("foreignObject")
+    .attr("width", blockWidth)
+    .attr("height", blockHeight)
+    .attr("x", -blockWidth / 2)
+    .attr("y", -blockHeight / 2)
+    .append("xhtml:div")
+    .attr("class", "inner-text")
+    .attr("title", (d) => d.data.label)
+    .style("font-size", `${fontSize}px`)
+    .text((d) => trimLongText(d.data.label))
 
-  // Add text to tasks
-  tasks.append("text")
-    .text((d) => d.data.id)
-    .attr("font-size", 6)
-    .attr("font-family", "sans-serif")
-    .attr("text-anchor", "middle")
-    .attr("alignment-baseline", "middle")
-    .attr("fill", "black");
 
 
   const arrow = d3.symbol().type(d3.symbolTriangle).size(nodeRadius * nodeRadius / 20.0);
