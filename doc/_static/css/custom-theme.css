@@ -176,7 +176,7 @@ pre> :not(:first-child).ipynb-lexed * {
 .horizontal-menu a.nav-link {
     color: #fff;
     padding: 5px;
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .horizontal-menu .nav-item.active {
@@ -247,7 +247,7 @@ pre> :not(:first-child).ipynb-lexed * {
     }
     
     div.local-toc {
-        padding-right: 16px !important;
+        padding-right: 1rem !important;
     }
 
     div.local-toc>ul>li>a {
@@ -256,7 +256,7 @@ pre> :not(:first-child).ipynb-lexed * {
     }
 
     div.document h3 {
-        font-size: 16px !important;
+        font-size: 1rem !important;
     }
 
     .local-toc ul:first-of-type {
