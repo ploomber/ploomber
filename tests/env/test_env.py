@@ -936,6 +936,9 @@ def test_import_from_another_file(tmp_directory):
     Path('base.yaml').write_text("""
 key: value
 base: 42
+nested:
+  key_1: value_1
+  key_2: value_2
 """)
 
     env = EnvDict(
@@ -943,13 +946,18 @@ base: 42
             'meta': {
                 'import_from': 'base.yaml'
             },
-            'key': 'new_value'
+            'key': 'new_value',
+            'nested': {
+                'key_1': 'new_value_1',
+            },
         },
         path_to_here=os.getcwd(),
     )
 
     assert env['key'] == 'new_value'
     assert env['base'] == 42
+    assert env['nested']['key_1'] == 'new_value_1'
+    assert env['nested']['key_2'] == 'value_2'
     # this section is for config, and should not be visible
     assert 'meta' not in env
 

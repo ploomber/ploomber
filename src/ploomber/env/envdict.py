@@ -131,7 +131,7 @@ class EnvDict(Mapping):
             import_from = _get_import_from(raw_data, path_to_here)
 
             if import_from:
-                raw_data = {**import_from, **raw_data}
+                raw_data = deep_merge(import_from, raw_data)
 
             # check raw data is ok
             validate.raw_data_keys(raw_data)
@@ -472,3 +472,14 @@ def find_tags_in_dict(d):
         tags = tags | util.get_tags_in_str(k)
 
     return tags
+
+
+def deep_merge(a: dict, b: dict) -> dict:
+    result = deepcopy(a)
+    for bk, bv in b.items():
+        av = result.get(bk)
+        if isinstance(av, dict) and isinstance(bv, dict):
+            result[bk] = deep_merge(av, bv)
+        else:
+            result[bk] = deepcopy(bv)
+    return result
