@@ -188,7 +188,8 @@ class NotebookConverter:
 
     def convert(self):
 
-        if (self._warn_on_ipynb and self._exporter is None and self._nbconvert_export_kwargs):
+        if (self._warn_on_ipynb and self._exporter is None
+                and self._nbconvert_export_kwargs):
             warnings.warn(
                 f'Output {self._path_to_output!r} is a '
                 'notebook file. nbconvert_export_kwargs '
@@ -740,7 +741,8 @@ class NotebookRunner(NotebookMixin, Task):
                 exporter = nbconvert_exporter_name.get(
                     key) if nbconvert_exporter_name else None
                 self._converter.append(
-                    NotebookConverter(product_nb, exporter,
+                    NotebookConverter(product_nb,
+                                      exporter,
                                       nbconvert_export_kwargs,
                                       warn_on_ipynb=False))
 

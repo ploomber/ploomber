@@ -490,10 +490,10 @@ Path(product['model']).touch()
 
 
 def test_do_not_warn_on_nbconvert_export_kwargs_if_multiple_outputs(
-         tmp_directory):
-     dag = DAG()
+        tmp_directory):
+    dag = DAG()
 
-     code = """
+    code = """
 # + tags=["parameters"]
 upstream = None
 
@@ -501,21 +501,21 @@ upstream = None
 1 + 1
     """
 
-     NotebookRunner(code,
-                    product={
-                        'nb': File('out.ipynb'),
-                        'report': File('out.html')
-                    },
-                    dag=dag,
-                    ext_in='py',
-                    nb_product_key=['nb', 'report'],
-                    nbconvert_export_kwargs=dict(exclude_input=True),
-                    name='nb')
+    NotebookRunner(code,
+                   product={
+                       'nb': File('out.ipynb'),
+                       'report': File('out.html')
+                   },
+                   dag=dag,
+                   ext_in='py',
+                   nb_product_key=['nb', 'report'],
+                   nbconvert_export_kwargs=dict(exclude_input=True),
+                   name='nb')
 
-     with warnings.catch_warnings():
-         # fail the test if this displays warnings
-         warnings.simplefilter("error")
-         dag.build()
+    with warnings.catch_warnings():
+        # fail the test if this displays warnings
+        warnings.simplefilter("error")
+        dag.build()
 
 
 @pytest.mark.parametrize('product, nb_product_key, nbconvert_exporter_name', [
@@ -553,8 +553,7 @@ upstream = None
         'file': File(Path('another', 'data', 'file.txt')),
     }, 'nb', 'webpdf')
 ])
-def test_multiple_nb_product_success(tmp_directory,
-                                     product, nb_product_key,
+def test_multiple_nb_product_success(tmp_directory, product, nb_product_key,
                                      nbconvert_exporter_name):
     dag = DAG()
 
