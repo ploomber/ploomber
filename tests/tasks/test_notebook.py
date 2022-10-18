@@ -494,17 +494,17 @@ def test_do_not_warn_on_nbconvert_export_kwargs_if_multiple_outputs(
      dag = DAG()
 
      code = """
- # + tags=["parameters"]
- upstream = None
+# + tags=["parameters"]
+upstream = None
 
- # +
- 1 + 1
-     """
+# +
+1 + 1
+    """
 
      NotebookRunner(code,
                     product={
                         'nb': File('out.ipynb'),
-                        'report': File('out.html'),
+                        'report': File('out.html')
                     },
                     dag=dag,
                     ext_in='py',
@@ -513,7 +513,7 @@ def test_do_not_warn_on_nbconvert_export_kwargs_if_multiple_outputs(
                     name='nb')
 
      with warnings.catch_warnings():
-         # fail the test if this displays a warnings
+         # fail the test if this displays warnings
          warnings.simplefilter("error")
          dag.build()
 
