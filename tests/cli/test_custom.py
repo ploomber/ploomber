@@ -589,7 +589,6 @@ tasks:
     assert 'dltr crash.dump' in captured.err
 
 
-@pytest.mark.skip
 def test_build_debug_now_notebook(tmp_directory, monkeypatch, tmp_imports):
     Path('crash.py').write_text("""
 # + tags=["parameters"]
@@ -701,7 +700,6 @@ tasks:
     assert 'dltr crash.dump' in captured.err
 
 
-@pytest.mark.skip
 def test_task_debug_now_notebook(tmp_directory, monkeypatch, tmp_imports):
     Path('crash.py').write_text("""
 # + tags=["parameters"]
