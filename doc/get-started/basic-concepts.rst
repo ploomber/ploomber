@@ -250,6 +250,25 @@ dictionary under ``product``:
 This covers scripts and notebooks as tasks, if you want to learn how to use
 functions as tasks, keep scrolling, otherwise, :ref:`skip to the end. <where-to-go-from-here>`
 
+It is also possible to use placeholders in the ``pipeline.yaml`` file. 
+For example, the following file uses a placeholder ``some_param``.
+
+.. code-block:: yaml
+    :class: text-editor
+
+    # Content of pipeline.yaml
+    tasks:
+    - source: print.py
+       name: print
+       product:
+          nb: 'output/{{some_param}}/notebook.html'
+       papermill_params:
+          log_output: True
+       params:
+          some_param: '{{some_param}}'
+
+This placeholder should be defined inside the ``env.yaml`` file, more on that `here <https://docs.ploomber.io/en/latest/user-guide/parametrized.html#Spec-API-(pipeline.yaml)>`_.
+
 
 Tasks: functions
 ----------------
