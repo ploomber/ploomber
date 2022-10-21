@@ -130,9 +130,13 @@ function findCurrentSection() {
     current.sort((a, b) => a.top - b.top);
 
     // Prioritize highlighting the first section that has its top visible in the viewport
-    return current.some((section) => section.top > 0)
-        ? current.filter((section) => section.top > 0)[0].href
-        : current.pop().href;
+    if(current.some((section) => section.top > 0)) {
+        return current.filter((section) => section.top > 0)[0].href;
+    }
+    // Checks if there is at least a single section
+    else if(current.length) {
+        return current.pop().href;
+    }
 }
 
 function updateCurrentSection() {
