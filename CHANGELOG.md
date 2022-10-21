@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 0.21.2dev
+* Adds `ploomber cloud nb` command
+* Allows setting `null` in `pipeline.yaml` clients (#1025)
+* Wrapping text in D3 plot for tasks with long names (#968)
+* Merge `env.yaml` nested keys when using `import_from` (#1034)
 
 ## 0.21.1 (2022-10-02)
 * Adds `ploomber cloud task` command
