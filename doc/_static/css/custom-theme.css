@@ -516,6 +516,12 @@ div.document h1 {
     font-size: 3rem;
 }
 
+@media (max-width: 420px) {
+    div.document h1 {
+        font-size: 2.5rem;
+    }
+}
+
 div.document h2 {
     padding-top: 20px;
     font-size: 2rem;
