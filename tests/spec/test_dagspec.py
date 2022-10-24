@@ -209,7 +209,7 @@ def test_validation_help_message_dict():
 def test_validation_help_message_dict_nb():
     with pytest.raises(ValidationError) as excinfo:
         DAGSpec({"tasks": [{"source": "mytask.py"}]})
-    assert ('"product": {"nb": "products/report.ipynb", ' + \
+    assert ('"product": {"nb": "products/report.ipynb", ' +
             '"data": "products/data.csv"}') in excinfo.value.message
 
 
