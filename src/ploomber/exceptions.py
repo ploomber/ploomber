@@ -195,6 +195,8 @@ class RawBaseException(BaseException):
 
     def get_message(self):
         return str(self)
+
+
 class MissingKeysValidationError(ValidationError):
     """Raised when failed to validate input data because keys were missing
     """
