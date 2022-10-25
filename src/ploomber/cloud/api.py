@@ -118,9 +118,9 @@ class Echo:
     def __init__(self, enable):
         self.enable = enable
 
-    def __call__(self, s):
+    def __call__(self, s, **kwargs):
         if self.enable:
-            click.echo(s)
+            click.secho(s, **kwargs)
 
 
 def _has_prefix(path, prefixes, base_dir):
@@ -206,30 +206,49 @@ class PloomberCloudAPI:
         return res
 
     @auth_header
-    def run_logs(self, headers, run_id):
+    def run_logs(self, headers, run_id, name=None):
         run_id = self.process_run_id(run_id)
         res = _requests.get(f"{self._host}/runs/{run_id}/logs",
                             headers=headers).json()
 
-        for name, log in res.items():
+        if not name:
+            for name, log in res.items():
+                click.echo(f'\n\n***** START OF LOGS FOR TASK: {name} *****')
+                click.echo(log)
+                click.echo(f'***** END OF LOGS FOR TASK: {name} *****')
+        elif name not in res:
+            keys = ','.join(res.keys())
+            click.secho(f'Run has no task with name {name!r}. '
+                        f'Available tasks are: {keys}')
+        else:
             click.echo(f'\n\n***** START OF LOGS FOR TASK: {name} *****')
-            click.echo(log)
+            click.echo(res[name])
             click.echo(f'***** END OF LOGS FOR TASK: {name} *****')
 
     @auth_header
     def run_logs_image(self, headers, run_id, tail=None):
+        done = False
         run_id = self.process_run_id(run_id)
         res = _requests.get(f"{self._host}/runs/{run_id}/logs/image",
                             headers=headers)
 
         if not len(res.text):
-            out = "Image build hasn't started yet..."
+            out = "Image build hasn't started yet. Wait a moment..."
         elif tail:
             out = '\n'.join(res.text.splitlines()[-tail:])
         else:
             out = res.text
 
         click.echo(out)
+
+        if "POST_BUILD State: SUCCEEDED" in out:
+            done = True
+            click.secho(
+                '\nSuccessful Docker build! Monitor task status:\n  '
+                f'$ ploomber cloud status {run_id} --watch',
+                fg='green')
+
+        return done
 
     @auth_header
     def run_abort(self, headers, run_id):
@@ -394,10 +413,8 @@ class PloomberCloudAPI:
         return res
 
     def process_run_id(self, run_id):
-        if run_id == '@latest':
-            print('Geting latest ID...')
+        if run_id in {'@latest', 'latest', 'last', '@last'}:
             run_id = self.run_latest_id()
-            print(f'Got ID: {run_id}')
         return run_id
 
     def run_detail_print(self, run_id, json=False):
@@ -405,29 +422,41 @@ class PloomberCloudAPI:
         out = self.run_detail(run_id)
         tasks = out['tasks']
         run = out['run']
-
         echo = Echo(enable=not json)
 
         if run['status'] == 'created':
             echo('Run created...')
 
         elif run['status'] == 'finished':
-            echo('Pipeline finished...')
-
             if tasks:
                 formatter(tasks, json_=json)
             else:
                 echo('Pipeline finished due to no newly triggered tasks,'
                      ' try running ploomber cloud build --force')
+
+            echo(
+                '\nPipeline finished. Check outputs:'
+                '\n  $ ploomber cloud products',
+                fg='green')
+
         elif tasks:
-            if run['status'] == 'aborted':
+            tasks_created = all([t['status'] == 'created' for t in tasks])
+            if tasks_created:
+                echo('Tasks created. Execution will start shortly...\n')
+            elif run['status'] == 'aborted':
                 echo('Pipeline aborted...')
-            elif run['status'] == 'failed':
-                echo('Pipeline failed...')
-            else:
-                echo('Unknown status: ' + run['status'])
 
             formatter(tasks, json_=json)
+
+            if run['status'] == 'failed':
+                echo(
+                    '\nPipeline failed. Check the logs.\n\nAll tasks:'
+                    f'\n  $ ploomber cloud logs {run_id}\n'
+                    '\nSpecific task:'
+                    f'\n  $ ploomber cloud logs {run_id} '
+                    '--task {task-name}\n',
+                    fg='red')
+                raise click.exceptions.ClickException('Pipeline failed.')
 
         else:
             echo('Unknown status: ' + run['status'] + ', no tasks triggered.')
@@ -488,6 +517,10 @@ class PloomberCloudAPI:
 
         if verbose:
             click.echo(f"Starting build with ID: {runid}")
+            click.secho(
+                "Monitor Docker build process with:\n  "
+                f"$ ploomber cloud logs {runid} --image --watch",
+                fg='green')
 
         self.trigger(runid=runid)
 
@@ -521,7 +554,7 @@ def zip_project(force,
 
     if path_to_zip.exists():
         if verbose:
-            click.secho("Deleting existing project.zip...", fg="yellow")
+            click.echo("Deleting existing project.zip...")
         path_to_zip.unlink()
 
     files = glob(f"{base_dir}/**/*", recursive=True)
@@ -567,4 +600,4 @@ def upload_zipped_project(response, verbose, *, base_dir):
         raise ValueError(f"An error happened: {http_response}")
 
     if verbose:
-        click.secho("Uploaded project, starting execution...", fg="green")
+        click.echo("Uploaded project, starting execution...")
