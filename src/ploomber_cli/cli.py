@@ -491,19 +491,22 @@ def delete_pipeline(pipeline_id):
               '--force',
               help='Force execution by ignoring status',
               is_flag=True)
-@click.option('--github-number', help="Github's PR number", default=None)
-@click.option('--github-owner', help="Github's owner", default=None)
-@click.option('--github-repo', help="Github's repo", default=None)
 @click.option('--json', is_flag=True)
-def cloud_build(force, github_number, github_owner, github_repo, json):
-    """Build pipeline in the cloud
+def cloud_build(force, json):
+    """Build pipeline in the cloud:
+
+    $ ploomber cloud build
+
+    Force execution regardless of product status:
+
+    $ ploomber cloud build --force
     """
     from ploomber.cloud.api import PloomberCloudAPI
     api = PloomberCloudAPI()
     runid = api.build(force,
-                      github_number,
-                      github_owner,
-                      github_repo,
+                      github_number=None,
+                      github_owner=None,
+                      github_repo=None,
                       verbose=not json,
                       task=None)
     if json:
@@ -518,7 +521,13 @@ def cloud_build(force, github_number, github_owner, github_repo, json):
               is_flag=True)
 @click.option('--json', is_flag=True)
 def cloud_task(task_name, force, json):
-    """Build task in the cloud
+    """Build a single pipeline task:
+
+    $ ploomber cloud task {task-name}
+
+    Force task execution regardless of status:
+
+    $ ploomber cloud task {task-name} --force
     """
     from ploomber.cloud.api import PloomberCloudAPI
     api = PloomberCloudAPI()
@@ -535,7 +544,9 @@ def cloud_task(task_name, force, json):
 @cloud.command(name="list")
 @click.option('--json', is_flag=True)
 def cloud_list(json):
-    """List cloud executions
+    """List executions:
+
+    $ ploomber cloud list
     """
     from ploomber.cloud.api import PloomberCloudAPI
     api = PloomberCloudAPI()
@@ -547,9 +558,11 @@ def cloud_list(json):
 @click.option('--watch', '-w', is_flag=True)
 @click.option('--json', is_flag=True)
 def cloud_status(run_id, watch, json):
-    """Get details on a cloud execution
+    """Get task's execution status:
 
     $ ploomber cloud status {some-id}
+
+    Get task's status of latest execution:
 
     $ ploomber cloud status @latest
     """
@@ -582,7 +595,19 @@ def cloud_status(run_id, watch, json):
 @click.option('-d', '--delete', default=None)
 @click.option('--json', is_flag=True)
 def cloud_products(delete, json):
-    """List products in cloud workspace
+    """Manage products (outputs) in cloud workspace
+
+    List products in your workspace:
+
+    $ ploomber cloud products
+
+    Delete products in your workspace:
+
+    $ ploomber cloud products --delete {pattern}
+
+    Delete all .csv files in your workspace:
+
+    $ ploomber cloud products --delete '*.csv'
     """
     from ploomber.cloud.api import PloomberCloudAPI
     api = PloomberCloudAPI()
@@ -596,8 +621,12 @@ def cloud_products(delete, json):
 @cloud.command(name="download")
 @click.argument('pattern')
 def cloud_download(pattern):
-    """Download products from cloud workspace
+    """Download products from cloud workspace:
+
+    $ ploomber cloud download {pattern}
+
     Download all .csv files:
+
     $ ploomber cloud download '*.csv'
     """
     from ploomber.cloud.api import PloomberCloudAPI
@@ -609,18 +638,29 @@ def cloud_download(pattern):
 @click.argument('run_id')
 @click.option('--image', '-i', is_flag=True)
 @click.option('--watch', '-w', is_flag=True)
-def cloud_logs(run_id, image, watch):
-    """Get logs on a cloud execution
+@click.option('--task', '-t', default=None)
+def cloud_logs(run_id, image, watch, task):
+    """Get logs for all tasks in a cloud run
 
     Get task logs:
-        $ ploomber cloud logs {some-id}
 
+    $ ploomber cloud logs {some-runid}
+
+    Get logs for a given task name:
+
+    $ ploomber cloud logs {some-runid} {some-task-name}
 
     Get Docker image building logs:
-        $ ploomber cloud logs {some-id} --image
+
+    $ ploomber cloud logs {some-runid} --image
 
     Get task logs for the latest run:
-        $ ploomber cloud logs @latest
+
+    $ ploomber cloud logs @latest
+
+    Watch logs:
+
+    $ ploomber cloud logs @latest --watch
     """
     from ploomber.cloud.api import PloomberCloudAPI
     api = PloomberCloudAPI()
@@ -634,20 +674,25 @@ def cloud_logs(run_id, image, watch):
             while cumsum < timeout:
                 click.clear()
                 time.sleep(idle)
-                api.run_logs_image(run_id, tail=20)
+                done = api.run_logs_image(run_id, tail=20)
                 cumsum += idle
+
+                if done:
+                    break
         else:
             api.run_logs_image(run_id)
     else:
-        api.run_logs(run_id)
+        api.run_logs(run_id, task)
 
 
 @cloud.command(name="abort")
 @click.argument('run_id')
 def cloud_abort(run_id):
-    """Abort a cloud execution
+    """Abort a cloud execution:
 
     $ ploomber cloud abort {some-id}
+
+    Abort latest run:
 
     $ ploomber cloud abort @latest
     """
@@ -662,27 +707,33 @@ def cloud_abort(run_id):
 @click.option('-n', '--name', default=None)
 @click.option('-d', '--delete', default=None)
 def cloud_data(upload, delete, prefix, name):
-    """
-    Manage raw data workspace
+    """Manage input data workspace
 
     List data files:
-        $ ploomber cloud data
+
+    $ ploomber cloud data
 
     Upload data:
-        $ ploomber cloud data --upload dataset.parquet
+
+    $ ploomber cloud data --upload dataset.parquet
 
     Upload to a specific directory:
-        $ ploomber cloud data --upload dataset.parquet --prefix my-dataset
+
+    $ ploomber cloud data --upload dataset.parquet --prefix my-dataset
 
     Upload with a specific name:
-        $ ploomber cloud data --upload dataset.parquet --name data.parquet
+
+    $ ploomber cloud data --upload dataset.parquet --name data.parquet
 
     Delete data (deletes all the objects matching the pattern):
-        $ ploomber cloud data --delete '*.parquet'
+
+    $ ploomber cloud data --delete '*.parquet'
 
     In your notebook (file will be downloaded to data/dataset.parquet):
-        >>> from ploomber.cloud import download_data
-        >>> download_data('dataset.parquet') # doctest: +SKIP
+
+    >>> from ploomber.cloud import download_data
+
+    >>> download_data('dataset.parquet') # doctest: +SKIP
     """
     from ploomber.cloud.api import PloomberCloudAPI
     api = PloomberCloudAPI()
@@ -715,7 +766,7 @@ def cloud_data(upload, delete, prefix, name):
 @click.argument('path_to_notebook', type=click.Path(exists=True))
 @click.option('--json', is_flag=True)
 def cloud_notebook(path_to_notebook, json):
-    """Run a notebook in Ploomber Cloud
+    """Run a notebook
 
     $ ploomber cloud nb path/to/notebook.ipynb
     """
@@ -730,7 +781,7 @@ def cloud_notebook(path_to_notebook, json):
     key = response_upload['key']
 
     if not json:
-        print(f'Triggering execution of {key}...')
+        click.echo(f'Triggering execution of {key}...')
 
     response_execute = api.notebooks_execute(key, json_=json)
 
@@ -741,3 +792,8 @@ def cloud_notebook(path_to_notebook, json):
         }
 
         click.echo(json_module.dumps(response))
+    else:
+        click.secho(
+            "Done. Monitor Docker build process with:\n  "
+            "$ ploomber cloud logs @latest --image --watch",
+            fg='green')
