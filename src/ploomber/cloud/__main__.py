@@ -1,7 +1,5 @@
 import click
 
-from ploomber.cloud import api
-
 
 @click.group()
 def cli():
@@ -16,6 +14,8 @@ def cli():
 def mark_failed(runid, reason):
     """Mark latest run as failed if passed something different than "none"
     """
+    from ploomber.cloud.api import PloomberCloudAPI
+    api = PloomberCloudAPI()
     api.run_failed(runid, reason)
 
 
