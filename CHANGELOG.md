@@ -1,6 +1,7 @@
 # CHANGELOG
 
-## 0.21.3dev
+## 0.21.3 (2022-10-24)
+* Fix to internal Cloud CLI
 
 ## 0.21.2 (2022-10-21)
 * Adds `ploomber cloud nb` command
