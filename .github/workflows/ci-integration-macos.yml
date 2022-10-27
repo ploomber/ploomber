@@ -17,33 +17,6 @@ jobs:
         python-version: ['3.7', '3.8', '3.9', '3.10']
     if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'schedule' || github.event_name == 'push'
     steps:
-    - name: Start PostgreSQL
-      run: |
-        brew services start postgresql
-        echo "Check PostgreSQL service is running"
-        i=10
-        COMMAND='pg_isready'
-        while [ $i -gt 0 ]; do
-            echo "Check PostgreSQL service status"
-            eval $COMMAND && break
-            ((i--))
-            if [ $i == 0 ]; then
-                echo "PostgreSQL service not ready, all attempts exhausted"
-                exit 1
-            fi
-            echo "PostgreSQL service not ready, wait 10 more sec, attempts left: $i"
-            sleep 10
-        done
-
-    - name: Create PostgreSQL user
-      run: psql --command="CREATE USER postgres PASSWORD 'postgres'" postgres
-
-    - name: Update PostgreSQL permissions
-      run: psql --command="ALTER DATABASE postgres OWNER TO postgres" postgres
-
-    - name: Check PostgreSQL authentication
-      run: PGPASSWORD=postgres pg_isready --dbname postgres --username postgres
-
     - name: Branch based PR checkout
       uses: actions/checkout@v2
 
@@ -53,9 +26,6 @@ jobs:
         miniconda-version: "latest"
         activate-environment: conda-env
         python-version: ${{ matrix.python-version }}
-
-    - name: Set up R
-      uses: r-lib/actions/setup-r@v2
 
     - name: Install dependencies
       run: |
@@ -87,9 +57,6 @@ jobs:
 
         # install dev requirements
         pip install .[dev]
-
-        # install IR kernel
-        echo "install.packages('IRkernel', repos='http://cran.us.r-project.org'); IRkernel::installspec()" | Rscript -
 
         # install sample package for tests
         pip install --editable tests/assets/test_pkg
@@ -118,33 +85,6 @@ jobs:
       github.event.client_payload.slash_command.sha != '' &&
       contains(github.event.client_payload.pull_request.head.sha, github.event.client_payload.slash_command.sha)
     steps:
-    - name: Start PostgreSQL
-      run: |
-        brew services start postgresql
-        echo "Check PostgreSQL service is running"
-        i=10
-        COMMAND='pg_isready'
-        while [ $i -gt 0 ]; do
-            echo "Check PostgreSQL service status"
-            eval $COMMAND && break
-            ((i--))
-            if [ $i == 0 ]; then
-                echo "PostgreSQL service not ready, all attempts exhausted"
-                exit 1
-            fi
-            echo "PostgreSQL service not ready, wait 10 more sec, attempts left: $i"
-            sleep 10
-        done
-
-    - name: Create PostgreSQL user
-      run: psql --command="CREATE USER postgres PASSWORD 'postgres'" postgres
-
-    - name: Update PostgreSQL permissions
-      run: psql --command="ALTER DATABASE postgres OWNER TO postgres" postgres
-
-    - name: Check PostgreSQL authentication
-      run: PGPASSWORD=postgres pg_isready --dbname postgres --username postgres
-
     # Check out merge commit
     - name: Fork based /ok-to-test checkout
       uses: actions/checkout@v2
@@ -157,9 +97,6 @@ jobs:
         miniconda-version: "latest"
         activate-environment: conda-env
         python-version: ${{ matrix.python-version }}
-
-    - name: Set up R
-      uses: r-lib/actions/setup-r@v2
 
     - name: Install dependencies
       run: |
@@ -191,9 +128,6 @@ jobs:
 
         # install dev requirements
         pip install .[dev]
-
-        # install IR kernel
-        echo "install.packages('IRkernel', repos='http://cran.us.r-project.org'); IRkernel::installspec()" | Rscript -
 
         # install sample package for tests
         pip install --editable tests/assets/test_pkg
