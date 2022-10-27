@@ -75,5 +75,5 @@ def test_generate_links(monkeypatch):
 def test_download_notebook_if_needed(tmp_directory, url, file):
     io.download_notebook_if_needed(url)
     assert Path(file).is_file()
-    assert nbformat.reads(Path(file).read_text(),
+    assert nbformat.reads(Path(file).read_text(encoding='utf-8'),
                           as_version=nbformat.NO_CONVERT)
