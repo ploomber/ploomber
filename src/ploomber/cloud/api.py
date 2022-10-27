@@ -148,7 +148,10 @@ def auth_header(func):
 
             return func(self, headers, *args, **kwargs)
         else:
-            click.secho('Error: Missing api key', fg='red')
+            click.secho(
+                'Error: Missing API key. '
+                'Get one: https://www.cloud.ploomber.io/signin.html',
+                fg='red')
             sys.exit(1)
 
     return wrapper
