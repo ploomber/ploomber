@@ -2,6 +2,7 @@ from unittest.mock import Mock
 import zipfile
 from pathlib import Path
 
+import click
 import pytest
 from pydantic import ValidationError
 
@@ -168,8 +169,8 @@ def test_run_detailed_print_finish_no_task(monkeypatch, capsys):
     PloomberCloudAPI().run_detail_print('some-key')
     captured = capsys.readouterr()
 
-    assert captured.out.splitlines()[0] == 'Pipeline finished...'
-    assert captured.out.splitlines()[1] == 'Pipeline finished due ' \
+    assert 'Pipeline finished. Check outputs:' in captured.out
+    assert captured.out.splitlines()[0] == 'Pipeline finished due ' \
         'to no newly triggered tasks, try running ploomber cloud build --force'
 
 
@@ -192,11 +193,11 @@ def test_run_detailed_print_finish_with_tasks(monkeypatch, capsys):
     PloomberCloudAPI().run_detail_print('some-key')
     captured = capsys.readouterr()
 
-    assert captured.out.splitlines()[0] == 'Pipeline finished...'
-    assert 'taskid' in captured.out.splitlines()[1]
-    assert 'name' in captured.out.splitlines()[1]
-    assert 'runid' in captured.out.splitlines()[1]
-    assert 'status' in captured.out.splitlines()[1]
+    assert 'Pipeline finished. Check outputs:' in captured.out
+    assert 'taskid' in captured.out.splitlines()[0]
+    assert 'name' in captured.out.splitlines()[0]
+    assert 'runid' in captured.out.splitlines()[0]
+    assert 'status' in captured.out.splitlines()[0]
 
 
 def test_run_detailed_print_abort(monkeypatch, capsys):
@@ -241,37 +242,14 @@ def test_run_detailed_print_fail(monkeypatch, capsys):
         }
 
     monkeypatch.setattr(PloomberCloudAPI, 'run_detail', mock_return)
-    PloomberCloudAPI().run_detail_print('some-key')
+
+    with pytest.raises(click.ClickException) as excinfo:
+        PloomberCloudAPI().run_detail_print('some-key')
+
     captured = capsys.readouterr()
 
-    assert captured.out.splitlines()[0] == 'Pipeline failed...'
-    assert 'taskid' in captured.out.splitlines()[1]
-    assert 'name' in captured.out.splitlines()[1]
-    assert 'runid' in captured.out.splitlines()[1]
-    assert 'status' in captured.out.splitlines()[1]
-
-
-def test_run_detailed_print_unknown(monkeypatch, capsys):
-
-    def mock_return(self, runid):
-        return {
-            'run': {
-                'status': 'error'
-            },
-            'tasks': [{
-                'taskid': 'mock-id',
-                'name': 'mock',
-                'runid': 'some-key',
-                'status': 'error'
-            }]
-        }
-
-    monkeypatch.setattr(PloomberCloudAPI, 'run_detail', mock_return)
-    PloomberCloudAPI().run_detail_print('some-key')
-    captured = capsys.readouterr()
-
-    assert captured.out.splitlines()[0] == 'Unknown status: error'
-    assert 'taskid' in captured.out.splitlines()[1]
-    assert 'name' in captured.out.splitlines()[1]
-    assert 'runid' in captured.out.splitlines()[1]
-    assert 'status' in captured.out.splitlines()[1]
+    assert 'Pipeline failed.' == str(excinfo.value)
+    assert 'taskid' in captured.out.splitlines()[0]
+    assert 'name' in captured.out.splitlines()[0]
+    assert 'runid' in captured.out.splitlines()[0]
+    assert 'status' in captured.out.splitlines()[0]

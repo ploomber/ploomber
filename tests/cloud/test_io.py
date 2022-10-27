@@ -58,10 +58,8 @@ def test_generate_links(monkeypatch):
 
 
 @pytest.mark.parametrize('url, file', [
-    [
-        "https://raw.githubusercontent.com/ploomber/projects/master/README.ipynb",
-        "README.ipynb"
-    ],
+    [("https://raw.githubusercontent.com/ploomber/projects"
+      "/master/README.ipynb"), "README.ipynb"],
     [
         "https://github.com/ploomber/projects/blob/master/README.ipynb",
         "README.ipynb"
