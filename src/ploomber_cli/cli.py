@@ -763,7 +763,7 @@ def cloud_data(upload, delete, prefix, name):
 
 
 @cloud.command(name="nb")
-@click.argument('path_to_notebook', type=click.Path(exists=True))
+@click.argument('path_to_notebook')
 @click.option('--json', is_flag=True)
 def cloud_notebook(path_to_notebook, json):
     """Run a notebook
@@ -771,6 +771,13 @@ def cloud_notebook(path_to_notebook, json):
     $ ploomber cloud nb path/to/notebook.ipynb
     """
     from ploomber.cloud.api import PloomberCloudAPI
+    from ploomber.cloud import io
+
+    # TODO: add unit test
+    path_to_notebook = io.download_notebook_if_needed(path_to_notebook)
+
+    if not Path(path_to_notebook).is_file():
+        raise click.ClickException(f"{path_to_notebook} does not exist")
 
     api = PloomberCloudAPI()
     response_upload = api.upload_data(path_to_notebook,
@@ -793,7 +800,8 @@ def cloud_notebook(path_to_notebook, json):
 
         click.echo(json_module.dumps(response))
     else:
+        runid = response_execute['runid']
         click.secho(
             "Done. Monitor Docker build process with:\n  "
-            "$ ploomber cloud logs @latest --image --watch",
+            f"$ ploomber cloud logs {runid} --image --watch",
             fg='green')

@@ -2,6 +2,7 @@ from unittest.mock import Mock
 from pathlib import Path
 
 import pytest
+import nbformat
 
 from ploomber.cloud import io
 
@@ -54,3 +55,27 @@ def test_generate_links(monkeypatch):
     links = io.generate_links('bucket', 'file.csv', 'someid', 10)
 
     assert len(links) == 10
+
+
+@pytest.mark.parametrize('url, file', [
+    [
+        "https://raw.githubusercontent.com/ploomber/projects/master/README.ipynb",
+        "README.ipynb"
+    ],
+    [
+        "https://github.com/ploomber/projects/blob/master/README.ipynb",
+        "README.ipynb"
+    ],
+    [("https://github.com/ploomber/projects/blob/master/templates/"
+      "ml-basic/README.ipynb"), "README.ipynb"],
+],
+                         ids=[
+                             "github-direct",
+                             "github",
+                             "github-nested",
+                         ])
+def test_download_notebook_if_needed(tmp_directory, url, file):
+    io.download_notebook_if_needed(url)
+    assert Path(file).is_file()
+    assert nbformat.reads(Path(file).read_text(),
+                          as_version=nbformat.NO_CONVERT)

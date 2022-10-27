@@ -445,7 +445,7 @@ class PloomberCloudAPI:
         elif tasks:
             tasks_created = all([t['status'] == 'created' for t in tasks])
             if tasks_created:
-                echo('Tasks created. Execution will start shortly...\n')
+                echo('Tasks created. Execution started...\n')
             elif run['status'] == 'aborted':
                 echo('Pipeline aborted...')
 
