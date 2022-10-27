@@ -73,7 +73,8 @@ TESTING = [
     'moto',
     # Upload to google cloud storage
     'google-cloud-storage',
-    'pytest',
+    # NOTE: pytest introduced some breaking changes
+    'pytest==7.1.*',
     'pytest-cov',
     # TODO: update config so coveralls 3 works
     'coveralls<3',
@@ -104,6 +105,8 @@ TESTING = [
 
     # for testing ParallelDill,
     'multiprocess',
+    # dill 0.3.6 is breaking windows github actions
+    'dill==0.3.5.1',
 ]
 
 # packages needed for development
