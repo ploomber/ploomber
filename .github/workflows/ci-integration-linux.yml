@@ -18,19 +18,6 @@ jobs:
       matrix:
         python-version: ['3.7', '3.8', '3.9', '3.10']
     
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
 
     - name: Branch based PR checkout
@@ -40,9 +27,6 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Set up R
-      uses: r-lib/actions/setup-r@v2
 
     - name: Config
       run: |
@@ -84,9 +68,6 @@ jobs:
 
         # install dev requirements
         pip install .[dev]
-
-        # install IR kernel
-        echo "install.packages('IRkernel', repos='http://cran.us.r-project.org'); IRkernel::installspec()" | Rscript -
 
         # install sample package for tests
         pip install --editable tests/assets/test_pkg
@@ -123,19 +104,6 @@ jobs:
       matrix:
         python-version: ['3.7', '3.8', '3.9', '3.10']
     
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
 
     # Check out merge commit
@@ -148,9 +116,6 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Set up R
-      uses: r-lib/actions/setup-r@v2
 
     - name: Config
       run: |
@@ -192,9 +157,6 @@ jobs:
 
         # install dev requirements
         pip install .[dev]
-
-        # install IR kernel
-        echo "install.packages('IRkernel', repos='http://cran.us.r-project.org'); IRkernel::installspec()" | Rscript -
 
         # install sample package for tests
         pip install --editable tests/assets/test_pkg
