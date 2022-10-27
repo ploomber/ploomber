@@ -163,7 +163,8 @@ def download_notebook_if_needed(location):
     if location.startswith('http://') or location.startswith('https://'):
         # handle github urls
         if location.startswith('https://github.com'):
-            template = "https://raw.githubusercontent.com/{user}/{name}/{branch}/{path}"
+            template = ("https://raw.githubusercontent.com"
+                        "/{user}/{name}/{branch}/{path}")
             parts = PurePosixPath(urllib.parse.urlparse(location).path).parts
             user, name, branch = parts[1], parts[2], parts[4]
             path = '/'.join(parts[5:])
