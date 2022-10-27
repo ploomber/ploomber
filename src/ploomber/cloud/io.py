@@ -1,8 +1,10 @@
 """Efficiently upload/download data
 """
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
+import click
 import requests
 
 try:
@@ -69,6 +71,7 @@ class UploadJobGenerator:
     -----
     https://github.com/boto/boto3/issues/2305
     """
+
     def __init__(self,
                  path,
                  key,
@@ -138,6 +141,7 @@ class UploadJobGenerator:
 
 
 class UploadJob:
+
     def __init__(self, path, link, i, j, num):
         self._path = path
         self._link = link
@@ -151,3 +155,26 @@ class UploadJob:
                            data=read_from_index(self._path, self._i, self._j))
         etag = res.headers['ETag']
         self._res = {'ETag': etag, 'PartNumber': self._num}
+
+
+def download_notebook_if_needed(location):
+    """Download a notebook if passed a URL, otherwise, return the argument
+    """
+    if location.startswith('http://') or location.startswith('https://'):
+        # handle github urls
+        if location.startswith('https://github.com'):
+            template = "https://raw.githubusercontent.com/{user}/{name}/{branch}/{path}"
+            parts = PurePosixPath(urllib.parse.urlparse(location).path).parts
+            user, name, branch = parts[1], parts[2], parts[4]
+            path = '/'.join(parts[5:])
+            location = template.format(user=user,
+                                       name=name,
+                                       branch=branch,
+                                       path=path)
+
+        name = PurePosixPath(location).name
+        click.echo(f'Downloading {name}')
+        urllib.request.urlretrieve(location, name)
+        return name
+    else:
+        return location
