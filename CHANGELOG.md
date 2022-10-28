@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 0.21.4dev
+* General `ploomber cloud` CLI improvements
+* General `ploomber cloud nb` accepts URL as argument
 
 ## 0.21.3 (2022-10-24)
 * Fix to internal Cloud CLI
