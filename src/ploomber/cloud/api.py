@@ -17,11 +17,17 @@ import humanize
 
 from ploomber.table import Table
 from ploomber.cloud import io, config
-from ploomber.exceptions import BaseException
+from ploomber.exceptions import BaseException, NetworkException
 from ploomber.spec import DAGSpec
 from ploomber.dag import util
 from ploomber.cloud.key import get_key
 from ploomber import _requests
+
+
+def _is_s3_metadata(parsed):
+    is_s3 = '.s3.amazonaws.com' in parsed.netloc
+    name = PurePosixPath(parsed.path).name
+    return is_s3 and name and name[0] == '.' and name.endswith('.metadata')
 
 
 def _remove_prefix(path):
@@ -42,11 +48,15 @@ def _download_file(url,
                 parsed_url.query)['response-content-disposition'][0].split(
                     "filename = ")[1]
 
-    except HTTPError as e:
+    except (HTTPError, NetworkException) as e:
         if e.code == 404:
-            path = _remove_prefix(parse.urlparse(url).path[1:])
+            parsed = parse.urlparse(url)
+            path = _remove_prefix(parsed.path[1:])
 
-            if raise_on_missing:
+            if _is_s3_metadata(parsed) and e.code == 404:
+                click.secho(f'Missing metadata file: {path}', fg='yellow')
+                return
+            elif raise_on_missing:
                 raise FileNotFoundError(
                     'The requested file does not exist.'
                     ' Upload it to cloud storage and try again.')
