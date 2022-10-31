@@ -84,7 +84,8 @@ def main(payload, render_only=False):
                 report = dag._build_partially(args.partially,
                                               force=args.force,
                                               debug=debug,
-                                              skip_upstream=args.skip_upstream)
+                                              skip_upstream=args.skip_upstream,
+                                              deepcopy=False)
             else:
                 report = dag.build(force=args.force, debug=debug)
     except Exception as e:
