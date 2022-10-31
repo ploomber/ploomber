@@ -770,21 +770,27 @@ class DAG(AbstractDAG):
             .. versionadded:: 0.20
                 ``debug`` now supports debugging NotebookRunner tasks
         """
-        # we have to use a deep copy since using a soft one will corrupt
-        # task status in subsequent runs
-        dag_copy = self._deepcopy_safe()
-        return dag_copy._build_partially(target=target,
-                                         force=force,
-                                         show_progress=show_progress,
-                                         debug=debug,
-                                         skip_upstream=skip_upstream)
+        return self._build_partially(target=target,
+                                     force=force,
+                                     show_progress=show_progress,
+                                     debug=debug,
+                                     skip_upstream=skip_upstream,
+                                     deepcopy=True)
 
     def _build_partially(self,
                          target,
                          force=False,
                          show_progress=True,
                          debug=None,
-                         skip_upstream=False):
+                         skip_upstream=False,
+                         deepcopy=True):
+        # we have to use a deep copy since using a soft one will corrupt
+        # task status in subsequent runs
+        if deepcopy:
+            dag_another = self._deepcopy_safe()
+        else:
+            dag_another = self
+
         # task names are usually str, although this isn't strictly enforced
         if isinstance(target, str) and '*' in target:
             targets = set(fnmatch.filter(self._iter(), target))
@@ -803,28 +809,28 @@ class DAG(AbstractDAG):
             targets = {target}
             lineage = self[target]._lineage or set()
 
-        to_remove = set(self) - targets - lineage
+        to_remove = set(dag_another) - targets - lineage
 
         for task in to_remove:
-            self.pop(task)
+            dag_another.pop(task)
 
         # clear metadata in the original dag, because building the copy
         # will make it outdated, we have to force reload from disk
         self._clear_metadata()
 
         if skip_upstream:
-            self.render(force=force, show_progress=show_progress)
+            dag_another.render(force=force, show_progress=show_progress)
             # to prevent call to self.render() inside self.build()
             # to overwrite Skipped status
-            self._params.cache_rendered_status = True
+            dag_another._params.cache_rendered_status = True
 
-            for name, task in self.items():
+            for name, task in dag_another.items():
                 if name not in targets:
-                    self[name].exec_status = TaskStatus.Skipped
+                    dag_another[name].exec_status = TaskStatus.Skipped
 
-        return self.build(force=force,
-                          show_progress=show_progress,
-                          debug=debug)
+        return dag_another.build(force=force,
+                                 show_progress=show_progress,
+                                 debug=debug)
 
     def status(self, **kwargs):
         """Returns a table with tasks status
