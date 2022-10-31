@@ -198,9 +198,12 @@ class RawBaseException(BaseException):
 
 
 class NetworkException(BaseException):
-    """Raised when failin to call remote APIs
+    """Raised when failing to call remote APIs
     """
-    pass
+
+    def __init__(self, error_message, code=None):
+        self.code = code
+        super().__init__(error_message)
 
 
 class DebuggingFinished(TaskBuildError):
