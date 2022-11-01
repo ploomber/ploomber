@@ -1,6 +1,9 @@
 # CHANGELOG
 
-## 0.21.5dev
+## 0.21.5 (2022-10-31)
+* `ploomber build --partially` doesn't create a `DAG` deep copy
+* Deep copying DAG does not copy the clients
+* Fixes error in `ploomber cloud download` when the metadata for a product is missing
 
 ## 0.21.4 (2022-10-27)
 * General `ploomber cloud` CLI improvements
