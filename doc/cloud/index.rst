@@ -9,9 +9,9 @@ Cloud
 .. toctree::
     :maxdepth: 2
 
+    api-key
     cloud-notebook-simple
     cloud-notebook-parametrized
-    api-key
     cloud-execution
     guide
     monitoring
