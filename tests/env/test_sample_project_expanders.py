@@ -42,6 +42,15 @@ def test_error_on_unknown_placeholder():
     assert expected == str(excinfo.value)
 
 
+def test_expand_env_vars():
+    expander = EnvironmentExpander({})
+
+    env_path = expander.expand_raw_value("{{env.PATH}}", parents=[])
+    env_user = expander.expand_raw_value("{{env.USER}}", parents=[])
+
+    assert len(env_path) > 0
+    assert len(env_user) > 0
+
 def test_error_on_git_placeholder_if_missing_underscore_module():
     expander = EnvironmentExpander({})
 

@@ -63,6 +63,21 @@ def test_env_repr_and_str_when_loaded_from_file(tmp_directory, cleanup_env,
     assert str(env) == str(d)
 
 
+def test_env_load_env_vars(tmp_directory, cleanup_env,
+                           monkeypatch):
+
+    path_env = Path('env.yaml')
+    d = {
+        'env_user': '{{env.USER}}',
+        'env_path': '{{env.PATH}}'
+    }
+
+    path_env.write_text(yaml.dump(d))
+    env = Env()
+
+    assert env['env_user'] == env['user']
+    assert len(env['env_path']) > 0
+
 def test_includes_path_in_repr_if_init_from_file(cleanup_env, tmp_directory):
     Path('env.yaml').write_text('a: 1')
     env = Env('env.yaml')
