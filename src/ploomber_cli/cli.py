@@ -557,7 +557,8 @@ def cloud_list(json):
 @click.argument('run_id')
 @click.option('--watch', '-w', is_flag=True)
 @click.option('--json', is_flag=True)
-def cloud_status(run_id, watch, json):
+@click.option('--summary', '-s', is_flag=True)
+def cloud_status(run_id, watch, json, summary):
     """Get task's execution status:
 
     $ ploomber cloud status {some-id}
@@ -565,6 +566,10 @@ def cloud_status(run_id, watch, json):
     Get task's status of latest execution:
 
     $ ploomber cloud status @latest
+
+    Only print the status count:
+
+    $ ploomber cloud status @latest --summary
     """
     from ploomber.cloud.api import PloomberCloudAPI
     api = PloomberCloudAPI()
@@ -576,7 +581,7 @@ def cloud_status(run_id, watch, json):
 
         while cumsum < timeout:
             click.clear()
-            out = api.run_detail_print(run_id)
+            out = api.run_detail_print(run_id, summary=summary)
 
             status = set([t['status'] for t in out['tasks']])
 
@@ -588,7 +593,7 @@ def cloud_status(run_id, watch, json):
             time.sleep(idle)
             cumsum += idle
     else:
-        api.run_detail_print(run_id, json=json)
+        api.run_detail_print(run_id, json=json, summary=summary)
 
 
 @cloud.command(name="products")

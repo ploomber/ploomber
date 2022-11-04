@@ -75,7 +75,7 @@ def _download_file(url,
         print(f'{path} exists, skipping...')
     else:
         Path(path).parent.mkdir(exist_ok=True, parents=True)
-        print(f'Writing file into path {path}')
+        print(f'Writing file to: {path}')
         try:
             with open(path, "wb") as file:
                 file.write(response.content)
@@ -437,7 +437,7 @@ class PloomberCloudAPI:
             run_id = self.run_latest_id()
         return run_id
 
-    def run_detail_print(self, run_id, json=False):
+    def run_detail_print(self, run_id, json=False, summary=False):
         run_id = self.process_run_id(run_id)
         out = self.run_detail(run_id)
         tasks = out['tasks']
@@ -449,7 +449,9 @@ class PloomberCloudAPI:
 
         elif run['status'] == 'finished':
             if tasks:
-                formatter(tasks, json_=json)
+                formatter(
+                    tasks if not summary else summarize_tasks_status(tasks),
+                    json_=json)
             else:
                 echo('Pipeline finished due to no newly triggered tasks,'
                      ' try running ploomber cloud build --force')
@@ -466,7 +468,8 @@ class PloomberCloudAPI:
             elif run['status'] == 'aborted':
                 echo('Pipeline aborted...')
 
-            formatter(tasks, json_=json)
+            formatter(tasks if not summary else summarize_tasks_status(tasks),
+                      json_=json)
 
             if run['status'] == 'failed':
                 echo(
@@ -621,3 +624,14 @@ def upload_zipped_project(response, verbose, *, base_dir):
 
     if verbose:
         click.echo("Uploaded project, starting execution...")
+
+
+def summarize_tasks_status(tasks):
+    status = [task['status'] for task in tasks]
+
+    summary = [{
+        'status': value,
+        'count': status.count(value)
+    } for value in set(status)]
+
+    return summary
