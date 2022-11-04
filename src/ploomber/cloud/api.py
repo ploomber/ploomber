@@ -402,7 +402,14 @@ class PloomberCloudAPI:
         response = _requests.delete(f"{self._host}/products",
                                     headers=headers,
                                     json=dict(pattern=pattern))
-        print(response.json())
+
+        deleted = response.json()
+
+        if deleted:
+            click.echo('Deleted:')
+            click.echo('\n'.join(f'* {path}' for path in deleted))
+        else:
+            click.echo('Nothing to delete: no files matched the criteria.')
 
     @auth_header
     def notebooks_interface(self, headers, nbid):
