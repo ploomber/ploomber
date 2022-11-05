@@ -197,6 +197,15 @@ class RawBaseException(BaseException):
         return str(self)
 
 
+class MissingKeysValidationError(ValidationError):
+    """Raised when failed to validate input data because keys were missing
+    """
+
+    def __init__(self, message, missing_keys):
+        self.missing_keys = missing_keys
+        super().__init__(message)
+
+
 class NetworkException(BaseException):
     """Raised when failing to call remote APIs
     """
