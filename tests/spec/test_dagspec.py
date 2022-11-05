@@ -176,6 +176,43 @@ def test_validate_meta_keys():
         DAGSpec({'tasks': [], 'meta': {'invalid_key': None}})
 
 
+def test_validation_help_message_yaml(tmp_directory):
+    Path("pipeline.yaml").write_text("""tasks:
+  - source: mytask.sh
+""")
+    Path("mytask.sh").write_text("""echo Hello, world!""")
+    with pytest.raises(ValidationError) as excinfo:
+        DAGSpec("pipeline.yaml")
+    assert """- source: mytask.sh
+  product: products/data.csv""" in excinfo.value.message
+
+
+def test_validation_help_message_yaml_nb(tmp_directory):
+    Path("pipeline.yaml").write_text("""tasks:
+  - source: mytask.py
+""")
+    Path("mytask.py").write_text("""print("Hello, world!")""")
+    with pytest.raises(ValidationError) as excinfo:
+        DAGSpec("pipeline.yaml")
+    assert """- source: mytask.py
+  product:
+    nb: products/report.ipynb
+    data: products/data.csv""" in excinfo.value.message
+
+
+def test_validation_help_message_dict():
+    with pytest.raises(ValidationError) as excinfo:
+        DAGSpec({"tasks": [{"source": "mytask.sh"}]})
+    assert '"product": "products/data.csv"' in excinfo.value.message
+
+
+def test_validation_help_message_dict_nb():
+    with pytest.raises(ValidationError) as excinfo:
+        DAGSpec({"tasks": [{"source": "mytask.py"}]})
+    assert ('"product": {"nb": "products/report.ipynb", ' +
+            '"data": "products/data.csv"}') in excinfo.value.message
+
+
 def test_python_callables_spec(tmp_directory, add_current_to_sys_path):
     Path('test_python_callables_spec.py').write_text("""
 def task1(product):
