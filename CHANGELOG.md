@@ -1,6 +1,10 @@
 # CHANGELOG
 
 ## 0.21.6dev
+* Adds `--summary` to `ploomber cloud status`
+* Adds `--summary` to `ploomber cloud download`
+* Clearer output when deleting cloud products
+* Improved error message when missing product key (#1027)
 
 ## 0.21.5 (2022-10-31)
 * `ploomber build --partially` doesn't create a `DAG` deep copy
