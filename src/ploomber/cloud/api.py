@@ -38,7 +38,8 @@ def _remove_prefix(path):
 def _download_file(url,
                    skip_if_exists=False,
                    raise_on_missing=False,
-                   path=None):
+                   path=None,
+                   summary=False):
     try:
         response = _requests.get(url)
 
@@ -75,7 +76,10 @@ def _download_file(url,
         print(f'{path} exists, skipping...')
     else:
         Path(path).parent.mkdir(exist_ok=True, parents=True)
-        print(f'Writing file to: {path}')
+
+        if not summary:
+            print(f'Writing file to: {path}')
+
         try:
             with open(path, "wb") as file:
                 file.write(response.content)
@@ -85,15 +89,17 @@ def _download_file(url,
     return path
 
 
-def download_from_presigned(presigned):
+def download_from_presigned(presigned, summary):
     if not presigned:
         click.echo('No files matched the criteria.\n'
                    'To list files: ploomber cloud products')
         return
 
+    downloaded = 0
+
     with ThreadPoolExecutor(max_workers=64) as executor:
         future2url = {
-            executor.submit(_download_file, url=url): url
+            executor.submit(_download_file, url=url, summary=summary): url
             for url in presigned
         }
 
@@ -105,6 +111,11 @@ def download_from_presigned(presigned):
                 raise RuntimeError(
                     'An error occurred when downloading product from '
                     f'url: {task!r}') from exception
+            else:
+                downloaded += 1
+
+    if summary:
+        click.echo(f'Downloaded {downloaded} files.')
 
 
 def _parse_datetime(timestamp):
@@ -308,11 +319,11 @@ class PloomberCloudAPI:
             print("No data found.")
 
     @auth_header
-    def products_download(self, headers, pattern):
+    def products_download(self, headers, pattern, summary):
         res = _requests.post(f"{self._host}/products",
                              headers=headers,
                              json=dict(pattern=pattern)).json()
-        download_from_presigned(res)
+        download_from_presigned(res, summary=summary)
 
     @auth_header
     def get_presigned_link(self, headers, runid):

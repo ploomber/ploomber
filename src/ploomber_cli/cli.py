@@ -625,7 +625,8 @@ def cloud_products(delete, json):
 
 @cloud.command(name="download")
 @click.argument('pattern')
-def cloud_download(pattern):
+@click.option('--summary', '-s', is_flag=True)
+def cloud_download(pattern, summary):
     """Download products from cloud workspace:
 
     $ ploomber cloud download {pattern}
@@ -633,10 +634,14 @@ def cloud_download(pattern):
     Download all .csv files:
 
     $ ploomber cloud download '*.csv'
+
+    Only print the number of downloaded files:
+
+    $ ploomber cloud download '*.csv' --summary
     """
     from ploomber.cloud.api import PloomberCloudAPI
     api = PloomberCloudAPI()
-    api.products_download(pattern)
+    api.products_download(pattern, summary=summary)
 
 
 @cloud.command(name="logs")
