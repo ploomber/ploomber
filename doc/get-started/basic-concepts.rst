@@ -246,6 +246,68 @@ dictionary under ``product``:
           data: output/data.csv
 
 
+To inject cells manually, users can run:
+
+.. code-block:: yaml
+    :class: text-editor
+
+    ploomber nb --inject
+
+
+However, if the same source appears more than once, ``--inject`` will pick the first declared task and inject those parameters.
+
+Here is an example where ``template.ipynb`` appears in two different tasks
+
+.. code-block:: yaml
+    :class: text-editor
+
+      tasks:
+      - source: template.ipynb
+         name: task-a
+         product: output/template-task-a.ipynb
+         params:
+         some_param: param-a
+
+      - source: template.ipynb
+         name: task-a-suffix
+         product: output/template-task-a-suffix.ipynb
+         params:
+         some_param: param-a-suffix
+
+      - source: template.ipynb
+         name: task-b-suffix
+         product: output/template-task-b-suffix.ipynb
+         params:
+         some_param: param-b-suffix      
+
+
+
+By using the ``inject-priority`` parameter in ``setup.cfg``, we can specify which set of parameters to inject:
+
+To inject ``param-a`` to ``task-a`` :
+
+.. code-block:: cfg
+    :class: text-editor
+    :name: setup-cfg
+   
+      [ploomber]
+      entry-point = path/to/pipeline.yaml
+      inject-priority = task-a
+
+
+Use wildcards to inject multiple parameters (*)
+
+To inject ``param-a-suffix`` to ``task-a-suffix``, and ``param-b-suffix`` to ``task-b-suffix`` :
+
+.. code-block:: cfg
+    :class: text-editor
+    :name: setup-cfg
+   
+      [ploomber]
+      entry-point = path/to/pipeline.yaml
+      inject-priority = *-suffix
+
+
 This covers scripts and notebooks as tasks, if you want to learn how to use
 functions as tasks, keep scrolling, otherwise, :ref:`skip to the end. <where-to-go-from-here>`
 
