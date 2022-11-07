@@ -33,9 +33,10 @@
 * Adds feature to select which parameters to install if the same source appears more than once ([#985](https://github.com/ploomber/ploomber/issues/985))
 * Fixes an error when pairing notebooks ([#979](https://github.com/ploomber/ploomber/issues/979))
 * Fixes error in `ploomber cloud download` command ([#1010](https://github.com/ploomber/ploomber/issues/1010))
+* Remove `parameters` cell missing exception and add `parameters` cell in `NotebookRunner` and `ScriptRunner` when it is missing ([#971](https://github.com/ploomber/ploomber/issues/971))
+* `setup.cfg` allows to set which task params to inject using `inject-priority` ([#902](https://github.com/ploomber/ploomber/issues/902))
 
 ## 0.21 (2022-08-22)
-
 * Adds `ploomber.micro` module for writing micro pipelines
 * Allow dotted paths in params ([#477](https://github.com/ploomber/ploomber/issues/477))
 * Adds progress bar to `Parallel` executor
