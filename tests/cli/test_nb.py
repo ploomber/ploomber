@@ -24,6 +24,157 @@ def git_commit():
     subprocess.check_call(['git', 'commit', '-m', 'commit'])
 
 
+@pytest.mark.parametrize(
+    'cfg_inject_priority, expected',
+    [
+        ('*-suffix', [
+            ('template_a.ipynb', '"param-a-suffix"'),
+            ('template_b.ipynb', '"param-b-suffix"'),
+        ]),
+
+        ('task-a', [
+            ('template_a.ipynb', '"param-a"'),
+            ('template_b.ipynb', '"param-b"'),
+        ]),
+
+        ('task-b-suffix', [
+            ('template_a.ipynb', '"param-a"'),
+            ('template_b.ipynb', '"param-b-suffix"')
+        ]),
+
+        ('task-b', [
+            ('template_a.ipynb', '"param-a"'),
+            ('template_b.ipynb', '"param-b"'),
+        ])
+    ]
+)
+def test_successfull_priority_injection(monkeypatch,
+                                        cfg_inject_priority,
+                                        expected,
+                                        tmp_pi_nbs,
+                                        capsys,
+                                        ):
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])
+    Path('setup.cfg').write_text(f"""
+[ploomber]
+inject-priority = {cfg_inject_priority}
+""")
+
+    cli.cmd_router()
+
+    inject_results = []
+
+    out, err = capsys.readouterr()
+
+    if err:
+        inject_results.append(False)
+    else:
+        for template, expected_param in expected:
+            injected_param = get_nb_injected_params(template)
+            inject_results.append(expected_param == injected_param)
+
+    assert all(inject_results)
+
+
+@pytest.mark.parametrize(
+    'cfg_inject_priority, expected',
+    [
+        ('task-a', [
+            ('template_a.ipynb', '"param-a"')
+        ]),
+
+        ('task-b-suffix', [
+            ('template_b.ipynb', '"param-b-suffix"')
+        ]),
+
+        ('task-b', [
+            ('template_b.ipynb', '"param-b"'),
+        ]),
+
+        ('', [
+            ('template_a.ipynb', '"param-a"'),
+            ('template_b.ipynb', '"param-b"'),
+        ])
+    ]
+)
+def test_successfull_priority_injection_with_warnings(monkeypatch,
+                                                      cfg_inject_priority,
+                                                      expected,
+                                                      tmp_pi_nbs,
+                                                      capsys,
+                                                      ):
+    _expected_warning_message = 'appears more than once in your'
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])
+    Path('setup.cfg').write_text(f"""
+    [ploomber]
+    inject-priority = {cfg_inject_priority}
+    """)
+
+    with pytest.warns(UserWarning) as warnings:
+        cli.cmd_router()
+
+    inject_results = []
+    inject_warnings = []
+
+    out, err = capsys.readouterr()
+
+    if err:
+        inject_results.append(False)
+    else:
+        for template, expected_param in expected:
+            for warning in warnings:
+                warning_message = warning.message.args[0]
+                inject_warnings.append(
+                    _expected_warning_message in warning_message)
+
+            injected_param = get_nb_injected_params(template)
+            inject_results.append(expected_param == injected_param)
+
+    # assert all(inject_warnings)
+    assert all(inject_results)
+
+
+@pytest.mark.parametrize(
+    'params',
+    [
+        ('*', 'Values correspond to the same task'),
+        ('invalid-task-name', 'Invalid task name')
+    ]
+)
+def test_failed_priority_injection_with_errors(
+    monkeypatch,
+    params,
+    tmp_pi_nbs,
+    capsys,
+):
+    cfg_inject_priority, expected_error = params
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])
+    Path('setup.cfg').write_text(f"""
+    [ploomber]
+    inject-priority = {cfg_inject_priority}
+    """)
+
+    with pytest.raises(BaseException):
+        cli.cmd_router()
+
+    out, err = capsys.readouterr()
+
+    assert expected_error in err
+
+
+def get_nb_injected_params(template_path):
+    updated_template = Path(template_path).read_text()
+    nb = json.loads(updated_template)
+    parameters_cell_index = 1
+    some_param_index = 1
+    injected_cell = nb['cells'][parameters_cell_index]
+    some_param_string = injected_cell['source'][some_param_index]
+    some_param = some_param_string.split()[2]
+    return some_param
+
+
 def test_inject_remove(monkeypatch, tmp_nbs):
     monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])
     expected = 'tags=["injected-parameters"]'

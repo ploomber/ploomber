@@ -1,0 +1,24 @@
+tasks:
+    - source: template_a.ipynb
+      name: task-a
+      product: output/template-a.ipynb
+      params:
+        some_param: param-a
+
+    - source: template_a.ipynb
+      name: task-a-suffix
+      product: output/template-a-suffix.ipynb
+      params:
+        some_param: param-a-suffix
+
+    - source: template_b.ipynb
+      name: task-b
+      product: output/template_b.ipynb
+      params:
+        some_param: param-b
+
+    - source: template_b.ipynb
+      name: task-b-suffix
+      product: output/template-b-suffix.ipynb
+      params:
+        some_param: param-b-suffix

@@ -11,6 +11,135 @@ from ploomber.cli.io import command_endpoint
 from ploomber.sources.notebooksource import recursive_update
 from ploomber_core.exceptions import BaseException
 from ploomber.telemetry import telemetry
+import warnings
+from ploomber.dag.util import get_unique_list
+from ploomber.util.default import try_to_load_cfg_recursively
+import re
+
+
+def _load_prioritized_tasks_to_inject_from_cfg(dag, cfg):
+    priorities_set = set()
+    _cfg_inject_priorities = cfg['ploomber'].get('inject-priority')
+
+    if _cfg_inject_priorities:
+        prioritized_tasks_names = _cfg_inject_priorities.split(',')
+
+        for prioritized_task_name in prioritized_tasks_names:
+            has_wildcard = '*' in prioritized_task_name
+            if has_wildcard:
+                regex = prioritized_task_name.replace('*', '.*')
+                matching_tasks_set = _find_tasks_by_regex(dag, regex)
+                priorities_set = priorities_set.union(matching_tasks_set)
+            else:
+                priorities_set.add(prioritized_task_name)
+
+    priorities = list(priorities_set)
+    return priorities
+
+
+def _find_tasks_by_regex(dag, regex):
+    tasks = set()
+    for task_name in dag:
+        match = re.search(f'{regex}', task_name)
+        if match:
+            tasks.add(task_name)
+
+    return tasks
+
+
+def _get_prioritized_tasks_to_inject(dag):
+    cfg = try_to_load_cfg_recursively()
+    priorities = []
+    if cfg:
+        priorities = _load_prioritized_tasks_to_inject_from_cfg(dag, cfg)
+
+    return priorities
+
+
+def _find_task_in_dag_by_name(dag, task_name):
+    for task in dag.values():
+        if task.name == task_name:
+            return task
+
+    return None
+
+
+def _get_default_task_to_inject_by_template_name(dag, full_template_name):
+    default_task = None
+    # by default we take the 1st defined task we find for a given template
+    for task in dag.values():
+        if task.source is not None:
+            task_source = Path(task.source._path).name
+
+            if task_source == full_template_name:
+                default_task = task
+                break
+
+    return default_task
+
+
+def _get_tasks_to_inject(dag, templates_to_exclude=[]):
+    used_templates = []
+    for task in dag.values():
+        full_template_name = Path(task.source._path).name
+        used_templates.append(full_template_name)
+
+    templates = get_unique_list(used_templates)
+    tasks_to_inject = []
+    warning_message = ''
+    for template in templates:
+        if template not in templates_to_exclude:
+            task_to_inject = _get_default_task_to_inject_by_template_name(
+                dag, template)
+
+            task_to_inject_name = task_to_inject.name
+            tasks_to_inject.append(task_to_inject_name)
+            warning_message += (
+                f'{template} appears more than once in your '
+                f'pipeline, the parameters from {task_to_inject_name} '
+                'will be injected, to inject the parameters of '
+                'another task please modify setup.cfg\n')
+
+    return tasks_to_inject, warning_message
+
+
+def _get_params_to_inject(dag, priorities=[]):
+    used_tempaltes = []
+    exceptions = []
+    for prioritized_task_name_to_inject in priorities:
+        dag_task = _find_task_in_dag_by_name(dag,
+                                             prioritized_task_name_to_inject)
+        is_prioritized_task_exist = True if dag_task is not None else False
+
+        if is_prioritized_task_exist:
+            full_template_name = Path(dag_task.source._path).name
+            if full_template_name not in used_tempaltes:
+                used_tempaltes.append(full_template_name)
+            else:
+                exceptions.append(
+                    BaseException(
+                        'Error. Values correspond to the same task.'))
+                break
+        else:
+            exceptions.append(
+                ValueError(
+                    f'Error. Invalid task name.'
+                    f'{prioritized_task_name_to_inject} '
+                    'is not defined in pipeline.yaml'))
+            break
+
+    # get unprioritized tasks for unused tempaltes
+    unprioritized_tasks_to_inject, warning_message = _get_tasks_to_inject(
+        dag, templates_to_exclude=used_tempaltes)
+
+    tasks_to_inject = unprioritized_tasks_to_inject + priorities
+    inject_cell_args = _format_inject_cells_args(tasks_to_inject)
+
+    return inject_cell_args, warning_message, exceptions
+
+
+def _format_inject_cells_args(tasks_to_inject):
+    return {'priority': tasks_to_inject}
 
 
 def _format(fmt, entry_point, dag, verbose=True):
@@ -23,11 +152,14 @@ def _format(fmt, entry_point, dag, verbose=True):
     ]
 
 
-def _inject_cell(dag):
+def _inject_cell(dag, **kwargs):
+    if not kwargs:
+        kwargs = dict()
+
     _call_in_source(dag,
                     'save_injected_cell',
                     'Injected cell',
-                    dict(),
+                    kwargs,
                     verbose=False)
 
 
@@ -38,15 +170,19 @@ def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
     kwargs = kwargs or {}
     files = []
     results = []
-
     for task in dag.values():
-        try:
-            method = getattr(task.source, method_name)
-        except AttributeError:
-            pass
-        else:
-            results.append(method(**kwargs))
-            files.append(str(task.source._path))
+        ok_to_inject_task = True
+        if 'priority' in kwargs:
+            ok_to_inject_task = task.name in kwargs['priority']
+
+        if ok_to_inject_task:
+            try:
+                method = getattr(task.source, method_name)
+            except AttributeError:
+                pass
+            else:
+                results.append(method(**kwargs))
+                files.append(str(task.source._path))
 
     files_ = '\n'.join((f'    {f}' for f in files))
 
@@ -250,7 +386,6 @@ def main():
             '-r',
             action='store_true',
             help='Remove injected cell in all script/notebook tasks')
-
         # re-format
         parser.add_argument('--format',
                             '-f',
@@ -332,7 +467,19 @@ def main():
                        f'tasks: {", ".join(new_paths)}.')
 
     if args.inject:
-        _inject_cell(dag)
+        prioritized_tasks_to_inject = _get_prioritized_tasks_to_inject(dag)
+
+        params_to_inject, warning_message, exceptions = _get_params_to_inject(
+            dag, priorities=prioritized_tasks_to_inject)
+
+        for exception in exceptions:
+            raise (exception)
+
+        if warning_message:
+            warnings.warn(warning_message)
+
+        _inject_cell(dag, **params_to_inject)
+
         click.secho(
             'Finished cell injection. Re-run this command if your '
             'pipeline.yaml changes.',
