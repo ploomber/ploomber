@@ -30,7 +30,7 @@ execution. For example, in SQL tasks, this is where jinja placeholders resolve
 to their actual values.
 
 When calling `DAG.build`, `Task.build` executes, and the task status determines
-whether to run the task or not
+whether to run the task or not.
 
 # Product
 
