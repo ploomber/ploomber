@@ -515,10 +515,7 @@ def cloud_build(force, json):
         click.echo(json_module.dumps(dict(runid=runid)))
 
     telemetry.log_api("cloud-build",
-                          metadata={
-                              'force': force,
-                              'json': json
-                          })
+                      metadata={'force': force, 'json': json})
 
 
 @cloud.command(name='task')
