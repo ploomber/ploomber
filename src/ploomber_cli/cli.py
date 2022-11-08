@@ -617,7 +617,7 @@ def cloud_status(run_id, watch, json, summary):
     else:
         api.run_detail_print(run_id, json=json, summary=summary)
 
-    telemetry.log_api("cloud-task",
+    telemetry.log_api("cloud-status",
                       metadata={
                           'run_id': run_id,
                           'watch': watch,
