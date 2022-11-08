@@ -488,7 +488,7 @@ def delete_pipeline(pipeline_id):
 
 
 @cloud.command(name='build')
-@telemetry.log_call('build', payload=True)
+@telemetry.log_call('build', payload=False)
 @click.option('-f',
               '--force',
               help='Force execution by ignoring status',
@@ -516,7 +516,7 @@ def cloud_build(force, json):
 
 
 @cloud.command(name='task')
-@telemetry.log_call('task', payload=True)
+@telemetry.log_call('task', payload=False)
 @click.argument('task_name')
 @click.option('-f',
               '--force',
@@ -545,7 +545,7 @@ def cloud_task(task_name, force, json):
 
 
 @cloud.command(name="list")
-@telemetry.log_call('list', payload=True)
+@telemetry.log_call('list', payload=False)
 @click.option('--json', is_flag=True)
 def cloud_list(json):
     """List executions:
@@ -558,7 +558,7 @@ def cloud_list(json):
 
 
 @cloud.command(name="status")
-@telemetry.log_call('status', payload=True)
+@telemetry.log_call('status', payload=False)
 @click.argument('run_id')
 @click.option('--watch', '-w', is_flag=True)
 @click.option('--json', is_flag=True)
@@ -602,7 +602,7 @@ def cloud_status(run_id, watch, json, summary):
 
 
 @cloud.command(name="products")
-@telemetry.log_call('products', payload=True)
+@telemetry.log_call('products', payload=False)
 @click.option('-d', '--delete', default=None)
 @click.option('--json', is_flag=True)
 def cloud_products(delete, json):
@@ -630,7 +630,7 @@ def cloud_products(delete, json):
 
 
 @cloud.command(name="download")
-@telemetry.log_call('download', payload=True)
+@telemetry.log_call('download', payload=False)
 @click.argument('pattern')
 @click.option('--summary', '-s', is_flag=True)
 def cloud_download(pattern, summary):
@@ -652,7 +652,7 @@ def cloud_download(pattern, summary):
 
 
 @cloud.command(name="logs")
-@telemetry.log_call('logs', payload=True)
+@telemetry.log_call('logs', payload=False)
 @click.argument('run_id')
 @click.option('--image', '-i', is_flag=True)
 @click.option('--watch', '-w', is_flag=True)
@@ -704,7 +704,7 @@ def cloud_logs(run_id, image, watch, task):
 
 
 @cloud.command(name="abort")
-@telemetry.log_call('abort', payload=True)
+@telemetry.log_call('abort', payload=False)
 @click.argument('run_id')
 def cloud_abort(run_id):
     """Abort a cloud execution:
@@ -721,7 +721,7 @@ def cloud_abort(run_id):
 
 
 @cloud.command(name="data")
-@telemetry.log_call('data', payload=True)
+@telemetry.log_call('data', payload=False)
 @click.option('-u', '--upload', default=None)
 @click.option('-p', '--prefix', default=None)
 @click.option('-n', '--name', default=None)
@@ -783,7 +783,7 @@ def cloud_data(upload, delete, prefix, name):
 
 
 @cloud.command(name="nb")
-@telemetry.log_call('nb', payload=True)
+@telemetry.log_call('nb', payload=False)
 @click.argument('path_to_notebook')
 @click.option('--json', is_flag=True)
 def cloud_notebook(path_to_notebook, json):
