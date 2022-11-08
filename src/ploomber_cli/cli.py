@@ -6,7 +6,6 @@ import sys
 import json as json_module
 
 from ploomber_scaffold import scaffold as scaffold_project
-from ploomber.telemetry import telemetry
 import click
 
 CLICK_VERSION = int(click.__version__[0])
