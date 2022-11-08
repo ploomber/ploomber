@@ -487,7 +487,6 @@ def delete_pipeline(pipeline_id):
 
 
 @cloud.command(name='build')
-@telemetry.log_call('build', payload=True)
 @click.option('-f',
               '--force',
               help='Force execution by ignoring status',
@@ -503,6 +502,8 @@ def cloud_build(force, json):
     $ ploomber cloud build --force
     """
     from ploomber.cloud.api import PloomberCloudAPI
+    from ploomber.telemetry import telemetry
+
     api = PloomberCloudAPI()
     runid = api.build(force,
                       github_number=None,
@@ -512,6 +513,9 @@ def cloud_build(force, json):
                       task=None)
     if json:
         click.echo(json_module.dumps(dict(runid=runid)))
+
+    telemetry.log_api("cloud-build",
+                      metadata={'force': force, 'json': json})
 
 
 @cloud.command(name='task')
@@ -531,6 +535,8 @@ def cloud_task(task_name, force, json):
     $ ploomber cloud task {task-name} --force
     """
     from ploomber.cloud.api import PloomberCloudAPI
+    from ploomber.telemetry import telemetry
+
     api = PloomberCloudAPI()
     runid = api.build(force,
                       github_number=None,
@@ -541,6 +547,13 @@ def cloud_task(task_name, force, json):
     if json:
         click.echo(json_module.dumps(dict(runid=runid)))
 
+    telemetry.log_api("cloud-task",
+                      metadata={
+                          'task_name': task_name,
+                          'force': force,
+                          'json': json
+                      })
+
 
 @cloud.command(name="list")
 @click.option('--json', is_flag=True)
@@ -550,8 +563,14 @@ def cloud_list(json):
     $ ploomber cloud list
     """
     from ploomber.cloud.api import PloomberCloudAPI
+    from ploomber.telemetry import telemetry
     api = PloomberCloudAPI()
     api.runs(json=json)
+
+    telemetry.log_api("cloud-list",
+                      metadata={
+                          'json': json
+                      })
 
 
 @cloud.command(name="status")
@@ -573,6 +592,8 @@ def cloud_status(run_id, watch, json, summary):
     $ ploomber cloud status @latest --summary
     """
     from ploomber.cloud.api import PloomberCloudAPI
+    from ploomber.telemetry import telemetry
+
     api = PloomberCloudAPI()
 
     if watch:
@@ -596,6 +617,14 @@ def cloud_status(run_id, watch, json, summary):
     else:
         api.run_detail_print(run_id, json=json, summary=summary)
 
+    telemetry.log_api("cloud-status",
+                      metadata={
+                          'run_id': run_id,
+                          'watch': watch,
+                          'json': json,
+                          'summary': summary
+                      })
+
 
 @cloud.command(name="products")
 @click.option('-d', '--delete', default=None)
@@ -616,12 +645,20 @@ def cloud_products(delete, json):
     $ ploomber cloud products --delete '*.csv'
     """
     from ploomber.cloud.api import PloomberCloudAPI
+    from ploomber.telemetry import telemetry
+
     api = PloomberCloudAPI()
 
     if delete:
         api.delete_products(delete)
     else:
         api.products_list(json=json)
+
+    telemetry.log_api("cloud-products",
+                      metadata={
+                          'delete': delete,
+                          'json': json
+                      })
 
 
 @cloud.command(name="download")
@@ -641,8 +678,15 @@ def cloud_download(pattern, summary):
     $ ploomber cloud download '*.csv' --summary
     """
     from ploomber.cloud.api import PloomberCloudAPI
+    from ploomber.telemetry import telemetry
     api = PloomberCloudAPI()
     api.products_download(pattern, summary=summary)
+
+    telemetry.log_api("cloud-download",
+                      metadata={
+                          'pattern': pattern,
+                          'summary': summary
+                      })
 
 
 @cloud.command(name="logs")
@@ -674,6 +718,8 @@ def cloud_logs(run_id, image, watch, task):
     $ ploomber cloud logs @latest --watch
     """
     from ploomber.cloud.api import PloomberCloudAPI
+    from ploomber.telemetry import telemetry
+
     api = PloomberCloudAPI()
 
     if image:
@@ -695,6 +741,14 @@ def cloud_logs(run_id, image, watch, task):
     else:
         api.run_logs(run_id, task)
 
+    telemetry.log_api("cloud-logs",
+                      metadata={
+                          'run_id': run_id,
+                          'image': image,
+                          'watch': watch,
+                          'task': task
+                      })
+
 
 @cloud.command(name="abort")
 @click.argument('run_id')
@@ -708,8 +762,14 @@ def cloud_abort(run_id):
     $ ploomber cloud abort @latest
     """
     from ploomber.cloud.api import PloomberCloudAPI
+    from ploomber.telemetry import telemetry
     api = PloomberCloudAPI()
     api.run_abort(run_id)
+
+    telemetry.log_api("cloud-abort",
+                      metadata={
+                          'run_id': run_id
+                      })
 
 
 @cloud.command(name="data")
@@ -747,6 +807,7 @@ def cloud_data(upload, delete, prefix, name):
     >>> download_data('dataset.parquet') # doctest: +SKIP
     """
     from ploomber.cloud.api import PloomberCloudAPI
+    from ploomber.telemetry import telemetry
     api = PloomberCloudAPI()
 
     # one arg max
@@ -772,6 +833,14 @@ def cloud_data(upload, delete, prefix, name):
 
         api.data_list()
 
+    telemetry.log_api("cloud-data",
+                      metadata={
+                          'upload': upload,
+                          'delete': delete,
+                          'prefix': prefix,
+                          'name': name
+                      })
+
 
 @cloud.command(name="nb")
 @click.argument('path_to_notebook')
@@ -783,6 +852,7 @@ def cloud_notebook(path_to_notebook, json):
     """
     from ploomber.cloud.api import PloomberCloudAPI
     from ploomber.cloud import io
+    from ploomber.telemetry import telemetry
 
     # TODO: add unit test
     path_to_notebook = io.download_notebook_if_needed(path_to_notebook)
@@ -816,3 +886,9 @@ def cloud_notebook(path_to_notebook, json):
             "Done. Monitor Docker build process with:\n  "
             f"$ ploomber cloud logs {runid} --image --watch",
             fg='green')
+
+    telemetry.log_api("cloud-nb",
+                      metadata={
+                          'path_to_notebook': path_to_notebook,
+                          'json': json
+                      })
