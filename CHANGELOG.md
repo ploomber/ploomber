@@ -1,6 +1,7 @@
 # CHANGELOG
 
-## 0.21.7dev
+## 0.21.7 (2022-11-09)
+* Option to prioritize cell injection via `setup.cfg` when the same notebook appears more than once in the pipeline ([#1019](https://github.com/ploomber/ploomber/issues/1019))
 
 ## 0.21.6 (2022-11-06)
 * Adds `--summary` to `ploomber cloud status`
