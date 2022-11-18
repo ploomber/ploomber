@@ -1,3 +1,4 @@
+import re
 from pathlib import PurePosixPath
 from urllib import parse
 import sys
@@ -6,7 +7,7 @@ from urllib.parse import urlparse, parse_qs
 from urllib.error import HTTPError
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
-from glob import glob
+from glob import glob, iglob
 import zipfile
 from functools import wraps
 from datetime import datetime
@@ -14,6 +15,8 @@ import json
 
 import click
 import humanize
+import nbformat
+import yaml
 
 from ploomber.table import Table
 from ploomber.cloud import io, config
@@ -265,7 +268,7 @@ class PloomberCloudAPI:
 
         click.echo(out)
 
-        if "POST_BUILD State: SUCCEEDED" in out:
+        if "Phase complete: BUILD State: SUCCEEDED" in out:
             done = True
             click.secho(
                 '\nSuccessful Docker build! Monitor task status:\n  '
@@ -394,6 +397,54 @@ class PloomberCloudAPI:
 
         return response_create
 
+    def upload_data_notebook(self, path_to_notebook, json_):
+        """Uploads the required file to trigger a notebook execution
+        """
+        nb = nbformat.v4.reads(Path(path_to_notebook).read_text())
+
+        if not nb.cells:
+            raise ValueError('Empty notebook')
+
+        first = nb.cells[0]
+
+        if first.cell_type == 'raw':
+            config = yaml.safe_load(first['source'])
+            include = config.get('include')
+
+        else:
+            raise ValueError('Expected notebook to contain a '
+                             'configuration cell at the top')
+
+        if include:
+            include = get_files_from_include_section(
+                Path(path_to_notebook).parent, include)
+
+            # remove spaces, they'll cause trouble
+            stem = Path(path_to_notebook).stem.replace(' ', '-')
+            key = f'{stem}.zip'
+
+            with zipfile.ZipFile(key, 'w') as zipped:
+                for file in include:
+                    click.echo(f'Including {file}...')
+                    zipped.write(file)
+
+                zipped.write(path_to_notebook, arcname='notebook.ipynb')
+
+            return self.upload_data(key,
+                                    prefix='notebooks',
+                                    key=key,
+                                    version=True,
+                                    verbose=not json_)
+
+        else:
+            # remove spaces, they'll cause trouble
+            key = Path(path_to_notebook).name.replace(' ', '-')
+            return self.upload_data(path_to_notebook,
+                                    prefix='notebooks',
+                                    key=key,
+                                    version=True,
+                                    verbose=not json_)
+
     @auth_header
     def download_data(self, headers, key):
         response = _requests.post(f"{self._host}/download/data",
@@ -467,10 +518,19 @@ class PloomberCloudAPI:
                 echo('Pipeline finished due to no newly triggered tasks,'
                      ' try running ploomber cloud build --force')
 
-            echo(
-                '\nPipeline finished. Check outputs:'
-                '\n  $ ploomber cloud products',
-                fg='green')
+            match = is_notebook_project(tasks[0]['name'])
+
+            if match:
+                echo(
+                    '\nPipeline finished. Download outputs:'
+                    f'\n  $ ploomber cloud download "{match}/*"',
+                    fg='green')
+
+            else:
+                echo(
+                    '\nPipeline finished. Check outputs:'
+                    '\n  $ ploomber cloud products',
+                    fg='green')
 
         elif tasks:
             tasks_created = all([t['status'] == 'created' for t in tasks])
@@ -646,3 +706,66 @@ def summarize_tasks_status(tasks):
     } for value in set(status)]
 
     return summary
+
+
+def glob_from_paths(paths):
+    for path in paths:
+        path_ = Path(path)
+
+        if path_.is_file():
+            yield path
+        else:
+            yield from iglob_no_pycache(path)
+
+
+def iglob_no_pycache(path):
+    for path in iglob(f'{path}/**/*', recursive=True):
+        if '__pycache__' not in Path(path).parts:
+            yield path
+
+
+def get_files_from_include_section(base_dir, paths):
+    """
+    Validate that all paths are in the same directory or in subdirectories
+    of the base directory
+    """
+    missing = []
+
+    for path in paths:
+        if not Path(path).exists():
+            missing.append(path)
+
+    if missing:
+        paths = '\n'.join(f'- {path}' for path in missing)
+        raise BaseException(
+            f"The following paths in the 'include' section do not exist: "
+            f"\n{paths}")
+
+    base_dir_resolved = Path(base_dir).resolve()
+
+    not_in_base_dir = []
+    paths_relative = []
+
+    for path in glob_from_paths(paths):
+        path_resolved = Path(path).resolve()
+
+        try:
+            relative = path_resolved.relative_to(base_dir_resolved)
+        except ValueError:
+            not_in_base_dir.append(path)
+        else:
+            paths_relative.append(str(base_dir / relative))
+
+    if not_in_base_dir:
+        paths = '\n'.join(f'- {path}' for path in not_in_base_dir)
+        raise BaseException(
+            f"Only paths in the notebook's directory or "
+            "subdirectories are supported in the 'include' section. "
+            f"Remove the following ones or move them:\n{paths}")
+
+    return paths_relative
+
+
+def is_notebook_project(name):
+    matched = re.match(r'(\w+-\w{8})-', name)
+    return False if not matched else matched.group(1)
