@@ -514,8 +514,7 @@ def cloud_build(force, json):
     if json:
         click.echo(json_module.dumps(dict(runid=runid)))
 
-    telemetry.log_api("cloud-build",
-                      metadata={'force': force, 'json': json})
+    telemetry.log_api("cloud-build", metadata={'force': force, 'json': json})
 
 
 @cloud.command(name='task')
@@ -567,10 +566,7 @@ def cloud_list(json):
     api = PloomberCloudAPI()
     api.runs(json=json)
 
-    telemetry.log_api("cloud-list",
-                      metadata={
-                          'json': json
-                      })
+    telemetry.log_api("cloud-list", metadata={'json': json})
 
 
 @cloud.command(name="status")
@@ -766,10 +762,7 @@ def cloud_abort(run_id):
     api = PloomberCloudAPI()
     api.run_abort(run_id)
 
-    telemetry.log_api("cloud-abort",
-                      metadata={
-                          'run_id': run_id
-                      })
+    telemetry.log_api("cloud-abort", metadata={'run_id': run_id})
 
 
 @cloud.command(name="data")
@@ -861,11 +854,7 @@ def cloud_notebook(path_to_notebook, json):
         raise click.ClickException(f"{path_to_notebook} does not exist")
 
     api = PloomberCloudAPI()
-    response_upload = api.upload_data(path_to_notebook,
-                                      prefix='notebooks',
-                                      key=Path(path_to_notebook).name,
-                                      version=True,
-                                      verbose=not json)
+    response_upload = api.upload_data_notebook(path_to_notebook, json_=json)
     key = response_upload['key']
 
     if not json:

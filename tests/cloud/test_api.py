@@ -1,3 +1,4 @@
+import os
 from unittest.mock import Mock
 import zipfile
 from pathlib import Path
@@ -253,3 +254,136 @@ def test_run_detailed_print_fail(monkeypatch, capsys):
     assert 'name' in captured.out.splitlines()[0]
     assert 'runid' in captured.out.splitlines()[0]
     assert 'status' in captured.out.splitlines()[0]
+
+
+@pytest.fixture
+def tmp_directory_with_name(tmp_directory):
+    path = Path(tmp_directory, 'files')
+    path.mkdir()
+    os.chdir('files')
+    yield path
+    os.chdir('..')
+
+
+def create_all(paths):
+    for path in paths:
+        path = Path(path)
+        path.parent.mkdir(exist_ok=True, parents=True)
+        path.touch()
+
+
+@pytest.mark.parametrize('base_dir, paths, expected', [
+    ['', ['something.txt', 'another.txt'], ['something.txt', 'another.txt']],
+    ['.', ['something.txt', 'another.txt'], ['something.txt', 'another.txt']],
+    ['dir', ['dir/something.txt'], ['dir/something.txt']],
+    ['dir', ['dir/nested/something.txt'], ['dir/nested/something.txt']],
+    ['dir', ['../files/dir/something.txt'], ['dir/something.txt']],
+    ['dir', ['../files/dir/../dir/something.txt'], ['dir/something.txt']],
+])
+def test_get_files_from_include_section(tmp_directory_with_name, base_dir,
+                                        paths, expected):
+    create_all(paths)
+    assert api.get_files_from_include_section(base_dir, paths) == expected
+
+
+def test_get_files_from_include_section_absolute(tmp_directory_with_name):
+    Path('dir').mkdir()
+    Path('dir', 'something.txt').touch()
+    assert api.get_files_from_include_section(
+        'dir', [str(Path('dir', 'something.txt').resolve())]) == [
+            'dir/something.txt'
+        ]
+
+
+def test_get_files_from_include_section_directory(tmp_directory_with_name):
+    for f in ('x', 'y', 'z'):
+        for base in ('a', 'b', 'a/b'):
+            Path(base).mkdir(exist_ok=True)
+            Path(base, f).touch()
+
+    expected = {
+        'a/x',
+        'a/y',
+        'a/z',
+        'b/x',
+        'b/y',
+        'b/z',
+        'a/b',
+        'a/b/x',
+        'a/b/y',
+        'a/b/z',
+    }
+    assert set(api.get_files_from_include_section('.', ['a', 'b'])) == expected
+
+
+@pytest.mark.parametrize('base_dir, paths, expected_paths', [
+    [
+        'dir', ['../another/something.txt', 'a.txt'],
+        ['../another/something.txt']
+    ],
+    [
+        'dir', ['../../stuff/something.txt', '../dir/x.txt'],
+        ['../../stuff/something.txt']
+    ],
+    ['dir', ['/path/to/things.txt'], ['/path/to/things.txt']],
+],
+                         ids=[
+                             'parent',
+                             'grand-parent',
+                             'absolute',
+                         ])
+def test_get_files_from_include_section_error(tmp_directory, base_dir, paths,
+                                              expected_paths):
+
+    with pytest.raises(BaseException) as excinfo:
+        api.get_files_from_include_section(base_dir, paths)
+
+    for expected in expected_paths:
+        assert expected in str(excinfo.value)
+
+
+def test_get_files_from_include_section_error_if_missing(tmp_directory):
+    Path('a').touch()
+
+    with pytest.raises(BaseException) as excinfo:
+        api.get_files_from_include_section('.', ['b', 'c'])
+
+    assert '- b' in str(excinfo.value)
+    assert '- c' in str(excinfo.value)
+
+
+@pytest.mark.parametrize('paths, expected', [
+    [['a'], {'a'}],
+    [['a', 'dir'], {'a', 'dir/a', 'dir/b', 'dir/c'}],
+    [['some/nested/dir'],
+     {'some/nested/dir/a', 'some/nested/dir/b', 'some/nested/dir/c'}],
+    [['some'],
+     {
+         'some/nested/dir/a', 'some/nested/dir/b', 'some/nested/dir/c',
+         'some/nested/a', 'some/nested/b', 'some/nested/c', 'some/a', 'some/b',
+         'some/c', 'some/nested', 'some/nested/dir'
+     }],
+],
+                         ids=[
+                             'single-file',
+                             'directory',
+                             'nested',
+                             'nested-multiple',
+                         ])
+def test_glob_from_paths(tmp_directory, paths, expected):
+    Path('a').touch()
+
+    for f in ('a', 'b', 'c'):
+        for base in ('dir', 'some', 'some/nested', 'some/nested/dir'):
+            Path(base).mkdir(parents=True, exist_ok=True)
+            Path(base, f).touch()
+
+    assert set(api.glob_from_paths(paths)) == expected
+
+
+@pytest.mark.parametrize('name, expected', [
+    ['notebook-12345678-', 'notebook-12345678'],
+    ['nb-abcdfegf-', 'nb-abcdfegf'],
+])
+def test_is_notebook_project(name, expected):
+    assert api.is_notebook_project(name) == expected
