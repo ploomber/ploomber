@@ -263,6 +263,9 @@ class EnvironmentExpander:
     def get_user(self):
         return getpass.getuser()
 
+    def get_env(self):
+        return os.environ
+
     def get_cwd(self):
         return str(Path(os.getcwd()).resolve())
 

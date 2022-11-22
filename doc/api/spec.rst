@@ -1261,7 +1261,12 @@ even if not defined in the ``env.yaml`` (or if you don't have a ``env.yaml`` alt
 * ``{{now}}``: Current timestamp in ISO 8601 format (*Added in Ploomber 0.13.4*)
 * ``{{git_hash}}``: git tag (if any) or git hash (*Added in Ploomber 0.17.1*)
 * ``{{git}}``: returns the branch name (if at the tip of it), git tag (if any), or git hash (*Added in Ploomber 0.17.1*)
+* ``{{env.ANY_ENV_VAR}}`` environment variable present on the instance running the pipeline can be referenced using this syntax (*Added in Ploomber 0.21.7*)
 
+When packaging a soopervisor docker image and no `env.yaml` file is defined a default one will be generated
+including some default placeholders such as `{{git}}`, `{{git_hash}}`. The reason being is that the package being copied to the
+docker image will not include `.git` and other ignored folders so at runtime `ploomber` won't have the information
+necessary to calculate the git hash, hence this is being pre-calculated during image build time from the parent pipeline repo.
 
 A common use case for this is when passing paths to files to scripts/notebooks. For example, let's say your script has to read a file from a specific location. Using ``{{here}}`` turns path into absolute so you can ready it when using Jupyter, even if the script is in a different location than your ``pipeline.yaml``.
 

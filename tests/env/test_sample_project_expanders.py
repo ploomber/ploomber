@@ -42,6 +42,14 @@ def test_error_on_unknown_placeholder():
     assert expected == str(excinfo.value)
 
 
+def test_expand_env_vars(monkeypatch):
+    monkeypatch.setenv("TEST_ENV", "test_env_value")
+    expander = EnvironmentExpander({})
+
+    assert expander.expand_raw_value("{{env.TEST_ENV}}", parents=[]) \
+           == "test_env_value"
+
+
 def test_error_on_git_placeholder_if_missing_underscore_module():
     expander = EnvironmentExpander({})
 
