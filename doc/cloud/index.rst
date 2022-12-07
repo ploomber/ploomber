@@ -12,7 +12,7 @@ Cloud
     api-key
     cloud-notebooks-getting-started
     cloud-notebooks-user-guide
-    cloud-execution
+    pipelines-api-getting-started
     guide
     monitoring
 

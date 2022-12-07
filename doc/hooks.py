@@ -33,7 +33,7 @@ def config_init(app, config):
         'guides/versioning': 'user-guide',
         'guides/cloud-notebooks-getting-started': 'cloud',
         'guides/cloud-notebooks-user-guide': 'cloud',
-        'guides/cloud-execution': 'cloud',
+        'guides/pipelines-api-getting-started': 'cloud',
         'cookbook/report-generation': 'cookbook',
     }
 
