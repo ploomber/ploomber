@@ -1,5 +1,5 @@
-Cloud User Guide
-================
+Pipelines API User Guide
+========================
 
 *Note: Ploomber Cloud is in beta*
 

@@ -13,7 +13,7 @@ Cloud
     cloud-notebooks-getting-started
     cloud-notebooks-user-guide
     pipelines-api-getting-started
-    guide
+    pipelines-api-user-guide
     monitoring
 
     
