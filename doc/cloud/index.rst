@@ -10,10 +10,10 @@ Cloud
     :maxdepth: 2
 
     api-key
-    cloud-notebook-simple
-    cloud-notebook-parametrized
-    cloud-execution
-    guide
+    cloud-notebooks-getting-started
+    cloud-notebooks-user-guide
+    pipelines-api-getting-started
+    pipelines-api-user-guide
     monitoring
 
     
