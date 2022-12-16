@@ -31,9 +31,9 @@ def config_init(app, config):
         'guides/serialization': 'user-guide',
         'guides/logging': 'user-guide',
         'guides/versioning': 'user-guide',
-        'guides/cloud-notebook-simple': 'cloud',
-        'guides/cloud-notebook-parametrized': 'cloud',
-        'guides/cloud-execution': 'cloud',
+        'guides/cloud-notebooks-getting-started': 'cloud',
+        'guides/cloud-notebooks-user-guide': 'cloud',
+        'guides/pipelines-api-getting-started': 'cloud',
         'cookbook/report-generation': 'cookbook',
     }
 
