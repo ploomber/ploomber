@@ -126,7 +126,7 @@ class ParallelDill(Executor):
                 if self._bar:
                     self._bar.colour = 'red'
 
-            # sucessfully run task._build
+            # successfully run task._build
             else:
                 # ignore report here, we just the metadata to update it
                 _, meta = result

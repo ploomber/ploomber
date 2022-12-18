@@ -34,7 +34,7 @@ to the project's root folder and the DAGSpec should do the heavy lifting
 of instantiating a spec that could be converted to a dag (and reendered)
 independent of the working directory, because the project's root folder
 defines the pipelines's scope, and there is no point in looking for files
-outside of it, except when asking explicity through an absolute path.
+outside of it, except when asking explicitly through an absolute path.
 
 However, this behavior clashes with the Jupyter notebook defaults. Jupyter
 sets the current working directory not to the directory where
@@ -307,7 +307,7 @@ class DAGSpec(MutableMapping):
         # validate keys defined at the top (nested keys are not validated here)
         self._validate_top_keys(self.data, self._path)
 
-        logger.debug('DAGSpec enviroment:\n%s', pp.pformat(env))
+        logger.debug('DAGSpec environment:\n%s', pp.pformat(env))
 
         env = env or dict()
         path_to_defaults = default.path_to_env_from_spec(

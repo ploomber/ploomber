@@ -649,7 +649,7 @@ def test_dag_task_status_life_cycle(executor, tmp_directory):
     over executors since the object that gets updated might not be the same
     one that we declared here (this happens when a task runs in a different
     process), hence, it is the executor's responsibility to notify tasks
-    on sucess/fail scenarios so downstream tasks are updated correctly
+    on success/fail scenarios so downstream tasks are updated correctly
     """
     dag = DAG(executor=executor)
     t1 = PythonCallable(touch_root, File('ok.txt'), dag, name='t1')
@@ -867,7 +867,7 @@ def test_tracebacks_are_shown_for_all_on_build_failing_tasks(executor):
 
 
 @pytest.mark.parametrize('executor', _executors)
-def test_sucessful_execution(executor, tmp_directory):
+def test_successful_execution(executor, tmp_directory):
     dag = DAG(executor=executor)
     t1 = PythonCallable(touch_root, File('ok.txt'), dag, name='t1')
     t2 = PythonCallable(touch, File('a_file.txt'), dag, name='t2')

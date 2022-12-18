@@ -88,7 +88,7 @@ class Placeholder(abc.AbstractPlaceholder):
                 raise ValueError('Placeholder can only be initialized '
                                  'from jinja2.Templates whose undefined '
                                  'parameter is set to '
-                                 'jinja2.StrictUndefined, set it explicitely '
+                                 'jinja2.StrictUndefined, set it explicitly '
                                  'either in the Template or Environment '
                                  'constructors')
 

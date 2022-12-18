@@ -315,7 +315,7 @@ def check_params(passed, params_source, filename, warn=False):
     Parameters
     ----------
     passed : iterable
-        Paramters passed to the notebook (params argument)
+        Parameters passed to the notebook (params argument)
 
     params_source : str
         Parameters cell source code

@@ -167,14 +167,14 @@ class Commander:
         os.chdir(self._wd)
 
         self.rm(*self._to_delete)
-        supress = isinstance(exc_value, CommanderStop)
+        suppress = isinstance(exc_value, CommanderStop)
 
-        if supress:
+        if suppress:
             self.info(str(exc_value))
 
         self._warn_show()
 
-        return supress
+        return suppress
 
     def rm(self, *args):
         """Deletes all files/directories
