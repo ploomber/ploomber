@@ -594,7 +594,7 @@ class Task(abc.ABC):
                     else:
                         raise TaskBuildError(msg) from e
                 else:
-                    # sucessful task execution, on_finish hook execution,
+                    # successful task execution, on_finish hook execution,
                     # metadata saving and upload
                     self.exec_status = TaskStatus.Executed
 

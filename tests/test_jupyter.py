@@ -120,7 +120,7 @@ def test_does_not_log_error_dag_when_getting_a_directory(
     captured = capsys.readouterr()
     lines = captured.err.splitlines()
     log_with_skip_message = [
-        line for line in lines if '[Ploomber] An error occured' in line
+        line for line in lines if '[Ploomber] An error occurred' in line
     ]
     assert not len(log_with_skip_message)
 
@@ -1155,5 +1155,5 @@ def test_load_dag_exception_handling(monkeypatch):
 
     cm.load_dag()
 
-    msg = 'An error occured when loading your pipeline: known error'
+    msg = 'An error occurred when loading your pipeline: known error'
     assert cm.log.exception.call_args_list == [call(msg)]

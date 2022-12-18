@@ -32,7 +32,7 @@ class Executor(abc.ABC):
     process where Task._build() is called, this is an important detail for
     executors that run tasks in different processes, they have to report
     back the returned value from  Task._build and assign it to the
-    corresponding copy of the Task in the main process. Upon sucessful
+    corresponding copy of the Task in the main process. Upon successful
     execution, metadata is cleared up (FIXME: we should really be sending new
     metadata instead of clearing it to force a new fetch).
 

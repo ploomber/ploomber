@@ -440,18 +440,18 @@ def fn(some_arg):
 @pytest.mark.parametrize('path, err_msg', [
     [
         'ast.another.fn',
-        ("An error occured when trying to import "
+        ("An error occurred when trying to import "
          "dotted path 'ast.another.fn': No module named "
          "'ast.another'; 'ast' is not a package"),
     ],
     [
         'something.another',
-        ("An error occured when trying to import "
+        ("An error occurred when trying to import "
          "dotted path 'something.another': No module named 'something'"),
     ],
     [
         'my_module.my_function',
-        ("An error occured when trying to import "
+        ("An error occurred when trying to import "
          "dotted path 'my_module.my_function': No module named 'something'"),
     ],
 ],

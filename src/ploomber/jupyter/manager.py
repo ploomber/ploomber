@@ -269,13 +269,13 @@ def derive_class(base_class):
             try:
                 self._load_dag(starting_dir, log, model)
             except Exception as e:
-                self.log.exception('An error occured when loading '
+                self.log.exception('An error occurred when loading '
                                    f'your pipeline: {e}')
 
         def _load_dag(self, starting_dir=None, log=True, model=None):
             if self.dag is None or self.spec['meta']['jupyter_hot_reload']:
                 msg = (
-                    '[Ploomber] An error occured when trying to initialize '
+                    '[Ploomber] An error occurred when trying to initialize '
                     'the pipeline. Cells won\'t be injected until your '
                     'pipeline processes correctly. See error details below.')
 
@@ -529,7 +529,7 @@ def _load_jupyter_server_extension(app):
         app.session_manager.contents_manager = app.contents_manager
         app.web_app.settings["contents_manager"] = app.contents_manager
     except Exception:
-        error = """[Ploomber] An error occured. Please
+        error = """[Ploomber] An error occurred. Please
 deactivate the server extension with "jupyter serverextension disable ploomber"
 and configure the contents manager manually by adding
 c.NotebookApp.contents_manager_class = "ploomber.jupyter.PloomberContentsManager"

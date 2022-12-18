@@ -47,7 +47,7 @@ class TaskStatus(Enum):
     # this is less efficient but has the advantage that we could do "live
     # monitoring" as changes in status are always updated
 
-    # succesfully executed, propagate to move downstream dependencies from
+    # successfully executed, propagate to move downstream dependencies from
     # WaitingUpstream to WaitingExecution
     Executed = 'executed'
 

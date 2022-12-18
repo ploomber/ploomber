@@ -146,7 +146,7 @@ def load_dotted_path(dotted_path, raise_=True, reload=False):
             if raise_:
                 spec = importlib.util.find_spec(main_mod)
 
-                msg = ('An error occured when trying to import dotted '
+                msg = ('An error occurred when trying to import dotted '
                        f'path {dotted_path!r}: {e}')
 
                 if spec is not None:

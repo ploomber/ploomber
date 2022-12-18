@@ -15,7 +15,7 @@ from ploomber.constants import TaskStatus
 # TODO: and wih the subprocess options on/off
 # TODO: update other test aswell that parametrize on execuors to use all
 # serial with subprocess on/off
-# add to test dag : test counts in sucessful run, build again and counts
+# add to test dag : test counts in successful run, build again and counts
 # are the same
 # TODO: tests when on_render/on_finish fail an then on_failure fails
 # TODO: test callbacks when calling a task directly render and build,
