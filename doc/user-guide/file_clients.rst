@@ -10,7 +10,7 @@ The upload process happens in two steps:
 
 
 This is a guide on using file clients. For API docs
-    see :ref:`api-python-client`
+    see :any:`api-python-client`
 
 Pre-requisites
 ______________
