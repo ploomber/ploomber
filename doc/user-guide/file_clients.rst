@@ -9,8 +9,10 @@ The upload process happens in two steps:
 * Upload the file using appropriate cloud APIs.
 
 
-This is a guide on using file clients. For API docs
-    see :ref:`File clients <api-python-client>`_
+.. note::
+
+    This is a guide on ``file clients``. For API docs
+    see :ref:`api-cli-ploomber-scaffold`.
 
 Pre-requisites
 ______________
