@@ -169,6 +169,7 @@ def test_python_callable_with_file():
     assert str(t.product) == 'file.txt'
     assert str(t.source) == ('def touch(product):\n    '
                              'Path(str(product)).touch()\n')
+    assert str(Path(t.source._path).name) == "test_tasks.py"
 
 
 def test_postgresscript_with_relation(pg_client_and_schema):
