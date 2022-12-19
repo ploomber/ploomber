@@ -347,7 +347,7 @@ def some_fn():
     assert str(source) == 'def some_fn():\n    pass\n'
     assert source.name == 'some_fn'
     assert str(Path(source.loc).resolve()) == f'{loc}:4'
-
+    assert str(Path(source._path).name) == "some_dotted_path.py:4"
 
 def test_python_callable_with_nested_dotted_path_does_not_import(
         tmp_directory, add_current_to_sys_path, no_sys_modules_cache):
@@ -368,6 +368,7 @@ def some_fn():
     assert str(source) == 'def some_fn():\n    pass\n'
     assert source.name == 'some_fn'
     assert str(Path(source.loc).resolve()) == f'{loc}:2'
+    assert str(Path(source._path).name) == "some_dotted_path.py:1"
 
 
 @pytest.mark.parametrize('target_file, dotted_path_str', [
