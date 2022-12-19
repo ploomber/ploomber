@@ -5,9 +5,9 @@ File clients are used for uploading File products to the cloud. Currently two cl
 
 The upload process happens in two steps:
 * Given a local path, the remote path for storing the file is computed. An absolute local file path of `/path/to/project/out/data.csv` gets translated to `path/to/parent/out/data.csv`. Here, `parent` is the parent folder in the bucket to store the files.
-* Upload the file using [upload_file](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.upload_file) or [upload_from_filename](https://cloud.google.com/python/docs/reference/storage/latest/google.cloud.storage.blob.Blob#google_cloud_storage_blob_Blob_upload_from_filename) for Amazon S3 and Google Storage respectively.
+* Upload the file using `upload_file<https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.upload_file>` or `upload_from_filename<https://cloud.google.com/python/docs/reference/storage/latest/google.cloud.storage.blob.Blob#google_cloud_storage_blob_Blob_upload_from_filename>` for Amazon S3 and Google Storage respectively.
 
-For API docs see https://docs.ploomber.io/en/latest/api/python_api.html#clients
+For API docs see :ref:`api-python-client`
 
 
 Pre-requisites
