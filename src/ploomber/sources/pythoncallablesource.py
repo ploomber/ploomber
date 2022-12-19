@@ -1,6 +1,6 @@
 import importlib
 import inspect
-
+from pathlib import Path
 from ploomber.sources.abc import Source
 from ploomber.sources.inspect import getfile
 from ploomber.util.util import signature_check
@@ -80,6 +80,8 @@ class CallableLoader:
             _, line = inspect.getsourcelines(self.load())
             return '{}:{}'.format(path, line)
 
+    def get_path(self):
+        return getfile(self.load())
     @property
     def from_dotted_path(self):
         return self._from_dotted_path
@@ -98,7 +100,7 @@ class PythonCallableSource(Source):
 
     Parameters
     ----------
-    primitive : callable or str
+    primitive : primitive PythonCallableSource or str
         The function to use, an be a callable object or a dotted path string
 
     hot_reload : bool
@@ -124,7 +126,11 @@ class PythonCallableSource(Source):
         self._loc = None
         self._hot_reload = hot_reload
         self._needs_product = needs_product
-
+        if isinstance(primitive, str):
+            # If the primitive is the string path, the path will be set later
+            self._path = None
+        elif callable(primitive):
+            self._path = self._callable_loader.get_path()
     @property
     def hot_reload(self):
         return self._hot_reload
@@ -151,6 +157,8 @@ class PythonCallableSource(Source):
     def loc(self):
         if self._loc is None or self._hot_reload:
             self._loc = self._callable_loader.get_loc()
+            # Lazily set path when _loc is loaded
+            self._path = Path(self._loc).absolute()
 
         return self._loc
 
