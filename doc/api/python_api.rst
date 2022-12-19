@@ -65,6 +65,7 @@ Products
     GenericProduct
 
 .. _api-python-client:
+
 Clients
 -------
 
