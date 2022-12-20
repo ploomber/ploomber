@@ -82,6 +82,7 @@ class CallableLoader:
 
     def get_path(self):
         return getfile(self.load())
+
     @property
     def from_dotted_path(self):
         return self._from_dotted_path
@@ -131,6 +132,7 @@ class PythonCallableSource(Source):
             self._path = None
         elif callable(primitive):
             self._path = self._callable_loader.get_path()
+
     @property
     def hot_reload(self):
         return self._hot_reload
