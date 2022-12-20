@@ -128,7 +128,7 @@ class PythonCallableSource(Source):
         self._hot_reload = hot_reload
         self._needs_product = needs_product
         if isinstance(primitive, str):
-            # If the primitive is the string path, the path will be the file invokes the loc, will be lazily set when _loc is loaded 
+            # If the primitive is the string path, the path will be the file invokes the loc, will be lazily set when _loc is loaded
             self._path = None
         elif callable(primitive):
             self._path = self._callable_loader.get_path()
