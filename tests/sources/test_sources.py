@@ -368,7 +368,7 @@ def some_fn():
     assert str(source) == 'def some_fn():\n    pass\n'
     assert source.name == 'some_fn'
     assert str(Path(source.loc).resolve()) == f'{loc}:2'
-    assert str(Path(source._path).name) == "some_dotted_path.py:1"
+    assert str(Path(source._path).name) == "some_dotted_path.py:2"
 
 
 @pytest.mark.parametrize('target_file, dotted_path_str', [
