@@ -349,6 +349,7 @@ def some_fn():
     assert str(Path(source.loc).resolve()) == f'{loc}:4'
     assert str(Path(source._path).name) == "some_dotted_path.py:4"
 
+
 def test_python_callable_with_nested_dotted_path_does_not_import(
         tmp_directory, add_current_to_sys_path, no_sys_modules_cache):
     Path('nested').mkdir()
@@ -497,6 +498,7 @@ def test_dotted_path_and_callable_give_same_source():
 
 
 def test_error_if_python_callable_does_not_need_product_but_has_it():
+
     def fn(product):
         pass
 
