@@ -333,7 +333,8 @@ def test_python_callable_properties(path_to_test_pkg):
 
 def test_python_callable_with_dotted_path_does_not_import(
         tmp_directory, add_current_to_sys_path, no_sys_modules_cache):
-    loc = Path('some_dotted_path.py')
+    LOC_PATH_NAME = 'some_dotted_path.py'
+    loc = Path(LOC_PATH_NAME)
     loc.write_text("""
 import some_unknown_package
 
@@ -347,17 +348,18 @@ def some_fn():
     assert str(source) == 'def some_fn():\n    pass\n'
     assert source.name == 'some_fn'
     assert str(Path(source.loc).resolve()) == f'{loc}:4'
-    assert str(Path(source._path).name) == "some_dotted_path.py:4"
+    assert str(Path(source._path).name) == f'{LOC_PATH_NAME}:4'
 
 
 def test_python_callable_with_nested_dotted_path_does_not_import(
         tmp_directory, add_current_to_sys_path, no_sys_modules_cache):
+    LOC_PATH_NAME = 'some_dotted_path.py'
     Path('nested').mkdir()
     Path('nested', '__init__.py').write_text("""
 import some_unknown_package
 """)
 
-    loc = Path('nested', 'some_dotted_path.py').resolve()
+    loc = Path('nested', LOC_PATH_NAME).resolve()
     loc.write_text("""
 def some_fn():
     pass
@@ -369,7 +371,7 @@ def some_fn():
     assert str(source) == 'def some_fn():\n    pass\n'
     assert source.name == 'some_fn'
     assert str(Path(source.loc).resolve()) == f'{loc}:2'
-    assert str(Path(source._path).name) == "some_dotted_path.py:2"
+    assert str(Path(source._path).name) == f'{LOC_PATH_NAME}:2'
 
 
 @pytest.mark.parametrize('target_file, dotted_path_str', [
