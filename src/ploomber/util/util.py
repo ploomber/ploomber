@@ -10,11 +10,16 @@ import inspect
 from collections.abc import Iterable
 from contextlib import contextmanager
 
-from ploomber.exceptions import (CallbackSignatureError, CallbackCheckAborted,
-                                 TaskRenderError)
+from ploomber.exceptions import (
+    CallbackSignatureError,
+    CallbackCheckAborted,
+    TaskRenderError,
+)
 from ploomber.util.dotted_path import DottedPath
 
 
+# FIXME: this has been migrated to ploomber-core>=0.0.11,
+# delete, pin version in the setup.py, and change imports
 def requires(pkgs, name=None, extra_msg=None, pip_names=None):
     """
     Check if packages were imported, raise ImportError with an appropriate
@@ -42,24 +47,22 @@ def requires(pkgs, name=None, extra_msg=None, pip_names=None):
     """
 
     def decorator(f):
-
         @wraps(f)
         def wrapper(*args, **kwargs):
-            is_pkg_missing = [
-                importlib.util.find_spec(pkg) is None for pkg in pkgs
-            ]
+            is_pkg_missing = [importlib.util.find_spec(pkg) is None for pkg in pkgs]
 
             if any(is_pkg_missing):
                 missing_pkgs = [
-                    name for name, is_missing in zip(
-                        pip_names or pkgs, is_pkg_missing) if is_missing
+                    name
+                    for name, is_missing in zip(pip_names or pkgs, is_pkg_missing)
+                    if is_missing
                 ]
 
                 fn_name = name or f.__name__
 
                 raise ImportError(
-                    _make_requires_error_message(missing_pkgs, fn_name,
-                                                 extra_msg))
+                    _make_requires_error_message(missing_pkgs, fn_name, extra_msg)
+                )
 
             return f(*args, **kwargs)
 
@@ -69,18 +72,17 @@ def requires(pkgs, name=None, extra_msg=None, pip_names=None):
 
 
 def _make_requires_error_message(missing_pkgs, fn_name, extra_msg):
-    names_str = ' '.join(repr(pkg) for pkg in missing_pkgs)
+    names_str = " ".join(repr(pkg) for pkg in missing_pkgs)
 
-    error_msg = ('{} {} required to use {}. Install with: '
-                 'pip install {}'.format(
-                     names_str,
-                     'is' if len(missing_pkgs) == 1 else 'are',
-                     repr(fn_name),
-                     names_str,
-                 ))
+    error_msg = "{} {} required to use {}. Install with: " "pip install {}".format(
+        names_str,
+        "is" if len(missing_pkgs) == 1 else "are",
+        repr(fn_name),
+        names_str,
+    )
 
     if extra_msg:
-        error_msg += ('\n' + extra_msg)
+        error_msg += "\n" + extra_msg
 
     return error_msg
 
@@ -88,16 +90,16 @@ def _make_requires_error_message(missing_pkgs, fn_name, extra_msg):
 def check_mixed_envs(env_dependencies):
     # see: https://github.com/ploomber/soopervisor/issues/67
     env_dependencies = env_dependencies.split("\n")
-    problematic_dependencies = [
-        dep for dep in env_dependencies if ' @ file://' in dep
-    ]
+    problematic_dependencies = [dep for dep in env_dependencies if " @ file://" in dep]
     if problematic_dependencies:
-        warnings.warn("Found pip dependencies installed from local files.\n"
-                      "This usually happens when using conda and pip"
-                      " in the same environment, this will break "
-                      "installation of new environments from the lock file."
-                      " Problematic "
-                      f"dependencies:\n{problematic_dependencies}")
+        warnings.warn(
+            "Found pip dependencies installed from local files.\n"
+            "This usually happens when using conda and pip"
+            " in the same environment, this will break "
+            "installation of new environments from the lock file."
+            " Problematic "
+            f"dependencies:\n{problematic_dependencies}"
+        )
 
 
 def safe_remove(path):
@@ -171,40 +173,39 @@ def callback_check(fn, available, allow_default=True):
 
         if fn.callable is None:
             raise CallbackCheckAborted(
-                'Cannot check callback because function '
-                'is a dotted path whose function has not been imported yet')
+                "Cannot check callback because function "
+                "is a dotted path whose function has not been imported yet"
+            )
         else:
             fn = fn.callable
 
     parameters = inspect.signature(fn).parameters
     optional = {
-        name
-        for name, param in parameters.items()
-        if param.default != inspect._empty
+        name for name, param in parameters.items() if param.default != inspect._empty
     }
     # not all functions have __name__ (e.g. partials)
-    fn_name = getattr(fn, '__name__', fn)
+    fn_name = getattr(fn, "__name__", fn)
 
     if optional and not allow_default:
-        raise CallbackSignatureError('Callback functions cannot have '
-                                     'parameters with default values, '
-                                     'got: {} in "{}"'.format(
-                                         optional, fn_name))
+        raise CallbackSignatureError(
+            "Callback functions cannot have "
+            "parameters with default values, "
+            'got: {} in "{}"'.format(optional, fn_name)
+        )
 
     required = {
-        name
-        for name, param in parameters.items()
-        if param.default == inspect._empty
+        name for name, param in parameters.items() if param.default == inspect._empty
     }
 
     available_set = set(available)
     extra = required - available_set
 
     if extra:
-        raise CallbackSignatureError('Callback function "{}" unknown '
-                                     'parameter(s): {}, available ones are: '
-                                     '{}'.format(fn_name, extra,
-                                                 available_set))
+        raise CallbackSignatureError(
+            'Callback function "{}" unknown '
+            "parameter(s): {}, available ones are: "
+            "{}".format(fn_name, extra, available_set)
+        )
 
     return {k: v for k, v in available_raw.items() if k in required}
 
@@ -219,9 +220,7 @@ def signature_check(fn, params, task_name):
     parameters = inspect.signature(fn).parameters
 
     required = {
-        name
-        for name, param in parameters.items()
-        if param.default == inspect._empty
+        name for name, param in parameters.items() if param.default == inspect._empty
     }
 
     extra = params - set(parameters.keys())
@@ -230,29 +229,32 @@ def signature_check(fn, params, task_name):
     errors = []
 
     if extra:
-        msg = f'Got unexpected arguments: {sorted(extra)}'
+        msg = f"Got unexpected arguments: {sorted(extra)}"
         errors.append(msg)
 
     if missing:
-        msg = f'Missing arguments: {sorted(missing)}'
+        msg = f"Missing arguments: {sorted(missing)}"
         errors.append(msg)
 
-    if 'upstream' in missing:
-        errors.append('Verify this task declared upstream depedencies or '
-                      'remove the "upstream" argument from the function')
+    if "upstream" in missing:
+        errors.append(
+            "Verify this task declared upstream depedencies or "
+            'remove the "upstream" argument from the function'
+        )
 
-    missing_except_upstream = sorted(missing - {'upstream'})
+    missing_except_upstream = sorted(missing - {"upstream"})
 
     if missing_except_upstream:
         errors.append(f'Pass {missing_except_upstream} in "params"')
 
     if extra or missing:
-        msg = '. '.join(errors)
+        msg = ". ".join(errors)
         # not all functions have __name__ (e.g. partials)
-        fn_name = getattr(fn, '__name__', fn)
-        raise TaskRenderError('Error rendering task "{}" initialized with '
-                              'function "{}". {}'.format(
-                                  task_name, fn_name, msg))
+        fn_name = getattr(fn, "__name__", fn)
+        raise TaskRenderError(
+            'Error rendering task "{}" initialized with '
+            'function "{}". {}'.format(task_name, fn_name, msg)
+        )
 
     return True
 
@@ -303,7 +305,7 @@ def chdir_code(path):
     path = Path(path).resolve()
 
     if isinstance(path, WindowsPath):
-        path = str(path).replace('\\', '\\\\')
+        path = str(path).replace("\\", "\\\\")
 
     return f'os.chdir("{path}")'
 
