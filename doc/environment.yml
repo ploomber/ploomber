@@ -9,12 +9,13 @@ dependencies:
   - python=3.9
   - tree
   - pip
+  - psycopg2
+  - pandoc
   - pip:
     # needed for the examples
     - joblib
     - scikit-learn
     - seaborn
-    - psycopg2
     - mistune<2
 
     # for converting notebooks
