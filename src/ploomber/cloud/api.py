@@ -518,7 +518,10 @@ class PloomberCloudAPI:
                 echo('Pipeline finished due to no newly triggered tasks,'
                      ' try running ploomber cloud build --force')
 
-            match = is_notebook_project(tasks[0]['name'])
+            if tasks:
+                match = is_notebook_project(tasks[0]['name'])
+            else:
+                match = False
 
             if match:
                 echo(
