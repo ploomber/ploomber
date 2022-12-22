@@ -14,6 +14,12 @@ Ploomber manages connections to the database and orchestrates execution for you.
     </div>
 
 
+.. tip::
+
+    Check out our `JupySQL <https://jupysql.readthedocs.io/en/latest/intro.html>`_
+    library. It allows you to run SQL in a Jupyter notebook: ``result = %sql SELECT * FROM table``
+
+
 Process with SQL and Python
 ****************************
 

@@ -12,6 +12,13 @@ This guide explains how to develop pipelines where some of all tasks are SQL scr
     (such as active connections, running queries in parallel, dumping tables to
     local files), so you only write ``.sql`` files.
 
+
+
+.. tip::
+
+    Check out our `JupySQL <https://jupysql.readthedocs.io/en/latest/intro.html>`_
+    library. It allows you to run SQL in a Jupyter notebook: ``result = %sql SELECT * FROM table``
+
 Quick Start
 -----------
 

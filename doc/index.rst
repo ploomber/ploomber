@@ -54,4 +54,5 @@ Index
    deployment/index
    cookbook/index
    api/index
+   projects
    community/index
