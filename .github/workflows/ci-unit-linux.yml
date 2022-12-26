@@ -42,7 +42,7 @@ jobs:
 
     - name: Config
       run: |
-        conda create -q -n conda-env python=${{ matrix.python-version }}
+        conda create -q -n conda-env python=${{ matrix.python-version }} -c conda-forge
         # for the tests that depend on git repos
         git config --global user.email "someone@example.com"
         git config --global user.name "Someone"
