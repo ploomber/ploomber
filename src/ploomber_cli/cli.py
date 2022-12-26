@@ -4,14 +4,14 @@ import os
 from difflib import get_close_matches
 import sys
 import json as json_module
+from warnings import warn
 
 from ploomber_scaffold import scaffold as scaffold_project
 import click
 
 CLICK_VERSION = int(click.__version__[0])
 # NOTE: package_name was introduced in version 8
-VERSION_KWARGS = dict(
-    package_name='ploomber') if CLICK_VERSION >= 8 else dict()
+VERSION_KWARGS = dict(package_name="ploomber") if CLICK_VERSION >= 8 else dict()
 
 
 def _suggest_command(name: str, options):
@@ -21,8 +21,8 @@ def _suggest_command(name: str, options):
     name = name.lower()
 
     mapping = {
-        'run': 'build',
-        'execute': 'build',
+        "run": "build",
+        "execute": "build",
     }
 
     if name in mapping:
@@ -58,31 +58,31 @@ def cli():
 
 @cli.command()
 @click.option(
-    '--conda/--pip',
-    '-c/-p',
+    "--conda/--pip",
+    "-c/-p",
     is_flag=True,
     default=None,
-    help='Use environment.yaml/requirements.txt for dependencies',
+    help="Use environment.yaml/requirements.txt for dependencies",
 )
 @click.option(
-    '--package',
-    '-P',
+    "--package",
+    "-P",
     is_flag=True,
-    help='Use package template (creates setup.py)',
+    help="Use package template (creates setup.py)",
 )
 @click.option(
-    '--empty',
-    '-E',
+    "--empty",
+    "-E",
     is_flag=True,
-    help='Create a pipeline.yaml with no tasks',
+    help="Create a pipeline.yaml with no tasks",
 )
 @click.option(
-    '--entry-point',
-    '-e',
+    "--entry-point",
+    "-e",
     default=None,
-    help='Entry point to add tasks. Invalid if other flags present',
+    help="Entry point to add tasks. Invalid if other flags present",
 )
-@click.argument('name', required=False)
+@click.argument("name", required=False)
 def scaffold(name, conda, package, entry_point, empty):
     """
     Create a new project and task source files
@@ -104,47 +104,51 @@ def scaffold(name, conda, package, entry_point, empty):
     from ploomber import scaffold as _scaffold
     from ploomber.telemetry import telemetry
 
-    template = '-e/--entry-point is not compatible with {flag}'
+    template = "-e/--entry-point is not compatible with {flag}"
     user_passed_name = name is not None
 
     if entry_point and name:
         err = '-e/--entry-point is not compatible with the "name" argument'
-        telemetry.log_api("scaffold_error",
-                          metadata={
-                              'type': 'entry_and_name',
-                              'exception': err,
-                              'argv': sys.argv
-                          })
+        telemetry.log_api(
+            "scaffold_error",
+            metadata={"type": "entry_and_name", "exception": err, "argv": sys.argv},
+        )
         raise click.ClickException(err)
 
     if entry_point and conda:
-        err = template.format(flag='--conda')
-        telemetry.log_api("scaffold_error",
-                          metadata={
-                              'type': 'entry_and_conda_flag',
-                              'exception': err,
-                              'argv': sys.argv
-                          })
+        err = template.format(flag="--conda")
+        telemetry.log_api(
+            "scaffold_error",
+            metadata={
+                "type": "entry_and_conda_flag",
+                "exception": err,
+                "argv": sys.argv,
+            },
+        )
         raise click.ClickException(err)
 
     if entry_point and package:
-        err = template.format(flag='--package')
-        telemetry.log_api("scaffold_error",
-                          metadata={
-                              'type': 'entry_and_package_flag',
-                              'exception': err,
-                              'argv': sys.argv
-                          })
+        err = template.format(flag="--package")
+        telemetry.log_api(
+            "scaffold_error",
+            metadata={
+                "type": "entry_and_package_flag",
+                "exception": err,
+                "argv": sys.argv,
+            },
+        )
         raise click.ClickException(err)
 
     if entry_point and empty:
-        err = template.format(flag='--empty')
-        telemetry.log_api("scaffold_error",
-                          metadata={
-                              'type': 'entry_and_empty_flag',
-                              'exception': err,
-                              'argv': sys.argv
-                          })
+        err = template.format(flag="--empty")
+        telemetry.log_api(
+            "scaffold_error",
+            metadata={
+                "type": "entry_and_empty_flag",
+                "exception": err,
+                "argv": sys.argv,
+            },
+        )
         raise click.ClickException(err)
 
     # try to load a dag by looking in default places
@@ -155,17 +159,19 @@ def scaffold(name, conda, package, entry_point, empty):
 
         try:
             loaded = (
-                DAGSpec(entry_point, lazy_import='skip'),
+                DAGSpec(entry_point, lazy_import="skip"),
                 Path(entry_point).parent,
                 Path(entry_point),
             )
         except Exception as e:
-            telemetry.log_api("scaffold_error",
-                              metadata={
-                                  'type': 'dag_load_failed',
-                                  'exception': str(e),
-                                  'argv': sys.argv
-                              })
+            telemetry.log_api(
+                "scaffold_error",
+                metadata={
+                    "type": "dag_load_failed",
+                    "exception": str(e),
+                    "argv": sys.argv,
+                },
+            )
             raise click.ClickException(e) from e
 
     if loaded:
@@ -173,47 +179,52 @@ def scaffold(name, conda, package, entry_point, empty):
             click.secho(
                 "The 'name' positional argument is "
                 "only valid for creating new projects, ignoring...",
-                fg='yellow')
+                fg="yellow",
+            )
 
         # existing pipeline, add tasks
         spec, _, path_to_spec = loaded
         _scaffold.add(spec, path_to_spec)
 
-        telemetry.log_api("ploomber_scaffold",
-                          metadata={
-                              'type': 'add_task',
-                              'argv': sys.argv,
-                              'dag': loaded,
-                          })
+        telemetry.log_api(
+            "ploomber_scaffold",
+            metadata={
+                "type": "add_task",
+                "argv": sys.argv,
+                "dag": loaded,
+            },
+        )
     else:
         # no pipeline, create base project
-        telemetry.log_api("ploomber_scaffold",
-                          metadata={
-                              'type': 'base_project',
-                              'argv': sys.argv
-                          })
-        scaffold_project.cli(project_path=name,
-                             conda=conda,
-                             package=package,
-                             empty=empty)
+        telemetry.log_api(
+            "ploomber_scaffold", metadata={"type": "base_project", "argv": sys.argv}
+        )
+        scaffold_project.cli(
+            project_path=name, conda=conda, package=package, empty=empty
+        )
 
 
 @cli.command()
-@click.option('--use-lock/--no-use-lock',
-              '-l/-L',
-              default=None,
-              help=('Use lock/regular files. If not present, uses any '
-                    'of them, prioritizing lock files'))
-@click.option('--create-env',
-              '-e',
-              is_flag=True,
-              help=('Create a new environment, otherwise install in the '
-                    'current environment'))
 @click.option(
-    '--use-venv',
-    '-v',
+    "--use-lock/--no-use-lock",
+    "-l/-L",
+    default=None,
+    help=(
+        "Use lock/regular files. If not present, uses any "
+        "of them, prioritizing lock files"
+    ),
+)
+@click.option(
+    "--create-env",
+    "-e",
     is_flag=True,
-    help='Use Python\'s venv module (ignoring conda if installed)',
+    help=("Create a new environment, otherwise install in the " "current environment"),
+)
+@click.option(
+    "--use-venv",
+    "-v",
+    is_flag=True,
+    help="Use Python's venv module (ignoring conda if installed)",
 )
 def install(use_lock, create_env, use_venv):
     """
@@ -221,16 +232,14 @@ def install(use_lock, create_env, use_venv):
     """
     from ploomber import cli as cli_module
 
-    cli_module.install.main(use_lock=use_lock,
-                            create_env=create_env,
-                            use_venv=use_venv)
+    cli_module.install.main(use_lock=use_lock, create_env=create_env, use_venv=use_venv)
 
 
 @cli.command()
-@click.option('-n', '--name', help='Example to download', default=None)
-@click.option('-f', '--force', help='Force examples download', is_flag=True)
-@click.option('-o', '--output', help='Target directory', default=None)
-@click.option('-b', '--branch', help='Git branch to use.', default=None)
+@click.option("-n", "--name", help="Example to download", default=None)
+@click.option("-f", "--force", help="Force examples download", is_flag=True)
+@click.option("-o", "--output", help="Target directory", default=None)
+@click.option("-b", "--branch", help="Git branch to use.", default=None)
 def examples(name, force, branch, output):
     """
     Download examples
@@ -247,32 +256,28 @@ def examples(name, force, branch, output):
 
     Need help? https://ploomber.io/community
     """
-    click.echo('Loading examples...')
+    click.echo("Loading examples...")
 
     from ploomber import cli as cli_module
     from ploomber.telemetry import telemetry
 
     try:
-        cli_module.examples.main(name=name,
-                                 force=force,
-                                 branch=branch,
-                                 output=output)
+        cli_module.examples.main(name=name, force=force, branch=branch, output=output)
     except click.ClickException:
         raise
     except Exception as e:
-        telemetry.log_api("examples_error",
-                          metadata={
-                              'type': 'runtime_error',
-                              'exception': str(e),
-                              'argv': sys.argv
-                          })
+        telemetry.log_api(
+            "examples_error",
+            metadata={"type": "runtime_error", "exception": str(e), "argv": sys.argv},
+        )
         raise RuntimeError(
-            'An error happened when executing the examples command. Check out '
-            'the full error message for details. Downloading the examples '
-            'again or upgrading Ploomber may fix the '
-            'issue.\nDownload: ploomber examples -f\n'
-            'Update: pip install ploomber -U\n'
-            'Update [conda]: conda update ploomber -c conda-forge') from e
+            "An error happened when executing the examples command. Check out "
+            "the full error message for details. Downloading the examples "
+            "again or upgrading Ploomber may fix the "
+            "issue.\nDownload: ploomber examples -f\n"
+            "Update: pip install ploomber -U\n"
+            "Update [conda]: conda update ploomber -c conda-forge"
+        ) from e
 
 
 def _exit_with_error_message(msg):
@@ -281,19 +286,18 @@ def _exit_with_error_message(msg):
 
 
 def cmd_router():
-    """CLI entry point
-    """
+    """CLI entry point"""
     cmd_name = None if len(sys.argv) < 2 else sys.argv[1]
 
     # These are parsing dynamic parameters and that's why we're isolating it.
-    custom = ['build', 'plot', 'task', 'report', 'interact', 'status', 'nb']
+    custom = ["build", "plot", "task", "report", "interact", "status", "nb"]
 
     # users may attempt to run execute/run, suggest to use build instead
     # users may make typos when running one of the commands
     # suggest correct spelling on obvious typos
 
     if cmd_name in custom:
-        click.echo('Loading pipeline...')
+        click.echo("Loading pipeline...")
 
         from ploomber import cli as cli_module
 
@@ -302,16 +306,16 @@ def cmd_router():
         sys.argv.pop(1)
         # Add the current working directory, this is done automatically when
         # calling "python -m ploomber.build" but not here ("ploomber build")
-        sys.path.insert(0, os.path.abspath('.'))
+        sys.path.insert(0, os.path.abspath("."))
 
         custom = {
-            'build': cli_module.build.main,
-            'plot': cli_module.plot.main,
-            'task': cli_module.task.main,
-            'report': cli_module.report.main,
-            'interact': cli_module.interact.main,
-            'status': cli_module.status.main,
-            'nb': cli_module.nb.main,
+            "build": cli_module.build.main,
+            "plot": cli_module.plot.main,
+            "task": cli_module.task.main,
+            "report": cli_module.report.main,
+            "interact": cli_module.interact.main,
+            "status": cli_module.status.main,
+            "nb": cli_module.nb.main,
         }
 
         fn = custom[cmd_name]
@@ -320,13 +324,12 @@ def cmd_router():
         suggestion = _suggest_command(cmd_name, cli.commands.keys())
 
         # Set nested command keys based on command option
-        nested_cmds = {'cloud': cloud.commands.keys()}
+        nested_cmds = {"cloud": cloud.commands.keys()}
 
         # Evaluate nested command and provide suggested command if applicable
         if cmd_name in nested_cmds:
             nested_cmd_name = None if len(sys.argv) < 3 else sys.argv[2]
-            nested_suggestion = _suggest_command(nested_cmd_name,
-                                                 nested_cmds[cmd_name])
+            nested_suggestion = _suggest_command(nested_cmd_name, nested_cmds[cmd_name])
         else:
             nested_suggestion = None
 
@@ -334,15 +337,18 @@ def cmd_router():
             _exit_with_error_message(
                 "Try 'ploomber --help' for help.\n\n"
                 f"Error: {cmd_name!r} is not a valid command."
-                f" Did you mean {suggestion!r}?")
+                f" Did you mean {suggestion!r}?"
+            )
         elif nested_suggestion:
-            cmds = f'{cmd_name} {nested_cmd_name}'
-            suggestion = f'{cmd_name} {nested_suggestion}'
-            suggested_help = f'ploomber {cmd_name} --help'
+            cmds = f"{cmd_name} {nested_cmd_name}"
+            suggestion = f"{cmd_name} {nested_suggestion}"
+            suggested_help = f"ploomber {cmd_name} --help"
 
-            _exit_with_error_message(f"Try {suggested_help!r} for help.\n\n"
-                                     f"Error: {cmds!r} is not a valid command."
-                                     f" Did you mean {suggestion!r}?")
+            _exit_with_error_message(
+                f"Try {suggested_help!r} for help.\n\n"
+                f"Error: {cmds!r} is not a valid command."
+                f" Did you mean {suggestion!r}?"
+            )
         else:
             cli()
 
@@ -351,62 +357,54 @@ def cmd_router():
 # those are a place holder to show up in ploomber --help
 @cli.command()
 def build():
-    """Build pipeline
-    """
+    """Build pipeline"""
     pass  # pragma: no cover
 
 
 @cli.command()
 def status():
-    """Show pipeline status
-    """
+    """Show pipeline status"""
     pass  # pragma: no cover
 
 
 @cli.command()
 def plot():
-    """Plot pipeline
-    """
+    """Plot pipeline"""
     pass  # pragma: no cover
 
 
 @cli.command()
 def task():
-    """Interact with specific tasks
-    """
+    """Interact with specific tasks"""
     pass  # pragma: no cover
 
 
 @cli.command()
 def report():
-    """Generate pipeline report
-    """
+    """Generate pipeline report"""
     pass  # pragma: no cover
 
 
 @cli.command()
 def interact():
-    """Interact with your pipeline (REPL)
-    """
+    """Interact with your pipeline (REPL)"""
     pass  # pragma: no cover
 
 
 @cli.command()
 def nb():
-    """Manage scripts and notebooks
-    """
+    """Manage scripts and notebooks"""
     pass  # pragma: no cover
 
 
 @cli.group()
 def cloud():
-    """Manage Ploomber Cloud
-    """
+    """Manage Ploomber Cloud"""
     pass  # pragma: no cover
 
 
 @cloud.command()
-@click.argument('user_key', required=True)
+@click.argument("user_key", required=True)
 def set_key(user_key):
     """Set API key
 
@@ -414,6 +412,7 @@ def set_key(user_key):
     user config.yaml file.
     """
     from ploomber import cli as cli_module
+
     cli_module.cloud.set_key(user_key)
 
 
@@ -429,14 +428,23 @@ def get_key():
     key = cli_module.cloud.get_key()
 
     if key:
-        click.echo(f'This is your cloud API key: {key}')
+        click.echo(f"This is your cloud API key: {key}")
     else:
-        click.echo('No cloud API key was found.')
+        click.echo("No cloud API key was found.")
+
+
+def _future_warning(name):
+    warn(
+        f"The {name!r} API has been deprecated and will be "
+        "removed in the next release. If you're using this "
+        "service, let us on know Slack: https://ploomber.io/community/",
+        FutureWarning,
+    )
 
 
 @cloud.command()
-@click.argument('pipeline_id', default=None, required=False)
-@click.option('-v', '--verbose', default=False, is_flag=True, required=False)
+@click.argument("pipeline_id", default=None, required=False)
+@click.option("-v", "--verbose", default=False, is_flag=True, required=False)
 def get_pipelines(pipeline_id, verbose):
     """Get pipeline status
 
@@ -445,6 +453,8 @@ def get_pipelines(pipeline_id, verbose):
     latest. To get a detailed view pass the verbose flag.
     Returns a list of pipelines is succeeds, an Error string if fails.
     """
+    _future_warning("get-pipelines")
+
     from ploomber.table import Table
     from ploomber import cli as cli_module
 
@@ -455,11 +465,11 @@ def get_pipelines(pipeline_id, verbose):
 
 
 @cloud.command()
-@click.argument('pipeline_id', required=True)
-@click.argument('status', required=True)
-@click.argument('log', default=None, required=False)
-@click.argument('dag', default=None, required=False)
-@click.argument('pipeline_name', default=None, required=False)
+@click.argument("pipeline_id", required=True)
+@click.argument("status", required=True)
+@click.argument("log", default=None, required=False)
+@click.argument("dag", default=None, required=False)
+@click.argument("pipeline_name", default=None, required=False)
 def write_pipeline(pipeline_id, status, log, pipeline_name, dag):
     """Write a pipeline
 
@@ -469,13 +479,13 @@ def write_pipeline(pipeline_id, status, log, pipeline_name, dag):
     """
     from ploomber import cli as cli_module
 
-    print(
-        cli_module.cloud.write_pipeline(pipeline_id, status, log,
-                                        pipeline_name, dag))
+    _future_warning("write-pipeline")
+
+    print(cli_module.cloud.write_pipeline(pipeline_id, status, log, pipeline_name, dag))
 
 
 @cloud.command()
-@click.argument('pipeline_id', required=True)
+@click.argument("pipeline_id", required=True)
 def delete_pipeline(pipeline_id):
     """Delete a pipeline
 
@@ -483,15 +493,15 @@ def delete_pipeline(pipeline_id):
     Error string if fails.
     """
     from ploomber import cli as cli_module
+
+    _future_warning("delete-pipeline")
+
     print(cli_module.cloud.delete_pipeline(pipeline_id))
 
 
-@cloud.command(name='build')
-@click.option('-f',
-              '--force',
-              help='Force execution by ignoring status',
-              is_flag=True)
-@click.option('--json', is_flag=True)
+@cloud.command(name="build")
+@click.option("-f", "--force", help="Force execution by ignoring status", is_flag=True)
+@click.option("--json", is_flag=True)
 def cloud_build(force, json):
     """Build pipeline in the cloud:
 
@@ -505,25 +515,24 @@ def cloud_build(force, json):
     from ploomber.telemetry import telemetry
 
     api = PloomberCloudAPI()
-    runid = api.build(force,
-                      github_number=None,
-                      github_owner=None,
-                      github_repo=None,
-                      verbose=not json,
-                      task=None)
+    runid = api.build(
+        force,
+        github_number=None,
+        github_owner=None,
+        github_repo=None,
+        verbose=not json,
+        task=None,
+    )
     if json:
         click.echo(json_module.dumps(dict(runid=runid)))
 
-    telemetry.log_api("cloud-build", metadata={'force': force, 'json': json})
+    telemetry.log_api("cloud-build", metadata={"force": force, "json": json})
 
 
-@cloud.command(name='task')
-@click.argument('task_name')
-@click.option('-f',
-              '--force',
-              help='Force execution by ignoring status',
-              is_flag=True)
-@click.option('--json', is_flag=True)
+@cloud.command(name="task")
+@click.argument("task_name")
+@click.option("-f", "--force", help="Force execution by ignoring status", is_flag=True)
+@click.option("--json", is_flag=True)
 def cloud_task(task_name, force, json):
     """Build a single pipeline task:
 
@@ -537,25 +546,24 @@ def cloud_task(task_name, force, json):
     from ploomber.telemetry import telemetry
 
     api = PloomberCloudAPI()
-    runid = api.build(force,
-                      github_number=None,
-                      github_owner=None,
-                      github_repo=None,
-                      verbose=not json,
-                      task=task_name)
+    runid = api.build(
+        force,
+        github_number=None,
+        github_owner=None,
+        github_repo=None,
+        verbose=not json,
+        task=task_name,
+    )
     if json:
         click.echo(json_module.dumps(dict(runid=runid)))
 
-    telemetry.log_api("cloud-task",
-                      metadata={
-                          'task_name': task_name,
-                          'force': force,
-                          'json': json
-                      })
+    telemetry.log_api(
+        "cloud-task", metadata={"task_name": task_name, "force": force, "json": json}
+    )
 
 
 @cloud.command(name="list")
-@click.option('--json', is_flag=True)
+@click.option("--json", is_flag=True)
 def cloud_list(json):
     """List executions:
 
@@ -563,17 +571,18 @@ def cloud_list(json):
     """
     from ploomber.cloud.api import PloomberCloudAPI
     from ploomber.telemetry import telemetry
+
     api = PloomberCloudAPI()
     api.runs(json=json)
 
-    telemetry.log_api("cloud-list", metadata={'json': json})
+    telemetry.log_api("cloud-list", metadata={"json": json})
 
 
 @cloud.command(name="status")
-@click.argument('run_id')
-@click.option('--watch', '-w', is_flag=True)
-@click.option('--json', is_flag=True)
-@click.option('--summary', '-s', is_flag=True)
+@click.argument("run_id")
+@click.option("--watch", "-w", is_flag=True)
+@click.option("--json", is_flag=True)
+@click.option("--summary", "-s", is_flag=True)
 def cloud_status(run_id, watch, json, summary):
     """Get task's execution status:
 
@@ -601,11 +610,15 @@ def cloud_status(run_id, watch, json, summary):
             click.clear()
             out = api.run_detail_print(run_id, summary=summary)
 
-            status = set([t['status'] for t in out['tasks']])
+            status = set([t["status"] for t in out["tasks"]])
 
-            if out['run'] != 'created' and (status == {'finished'}
-                                            or 'aborted' in status or 'failed'
-                                            in status) or cumsum >= timeout:
+            if (
+                out["run"] != "created"
+                and (
+                    status == {"finished"} or "aborted" in status or "failed" in status
+                )
+                or cumsum >= timeout
+            ):
                 break
 
             time.sleep(idle)
@@ -613,18 +626,15 @@ def cloud_status(run_id, watch, json, summary):
     else:
         api.run_detail_print(run_id, json=json, summary=summary)
 
-    telemetry.log_api("cloud-status",
-                      metadata={
-                          'run_id': run_id,
-                          'watch': watch,
-                          'json': json,
-                          'summary': summary
-                      })
+    telemetry.log_api(
+        "cloud-status",
+        metadata={"run_id": run_id, "watch": watch, "json": json, "summary": summary},
+    )
 
 
 @cloud.command(name="products")
-@click.option('-d', '--delete', default=None)
-@click.option('--json', is_flag=True)
+@click.option("-d", "--delete", default=None)
+@click.option("--json", is_flag=True)
 def cloud_products(delete, json):
     """Manage products (outputs) in cloud workspace
 
@@ -650,16 +660,12 @@ def cloud_products(delete, json):
     else:
         api.products_list(json=json)
 
-    telemetry.log_api("cloud-products",
-                      metadata={
-                          'delete': delete,
-                          'json': json
-                      })
+    telemetry.log_api("cloud-products", metadata={"delete": delete, "json": json})
 
 
 @cloud.command(name="download")
-@click.argument('pattern')
-@click.option('--summary', '-s', is_flag=True)
+@click.argument("pattern")
+@click.option("--summary", "-s", is_flag=True)
 def cloud_download(pattern, summary):
     """Download products from cloud workspace:
 
@@ -675,21 +681,20 @@ def cloud_download(pattern, summary):
     """
     from ploomber.cloud.api import PloomberCloudAPI
     from ploomber.telemetry import telemetry
+
     api = PloomberCloudAPI()
     api.products_download(pattern, summary=summary)
 
-    telemetry.log_api("cloud-download",
-                      metadata={
-                          'pattern': pattern,
-                          'summary': summary
-                      })
+    telemetry.log_api(
+        "cloud-download", metadata={"pattern": pattern, "summary": summary}
+    )
 
 
 @cloud.command(name="logs")
-@click.argument('run_id')
-@click.option('--image', '-i', is_flag=True)
-@click.option('--watch', '-w', is_flag=True)
-@click.option('--task', '-t', default=None)
+@click.argument("run_id")
+@click.option("--image", "-i", is_flag=True)
+@click.option("--watch", "-w", is_flag=True)
+@click.option("--task", "-t", default=None)
 def cloud_logs(run_id, image, watch, task):
     """Get logs for all tasks in a cloud run
 
@@ -737,17 +742,14 @@ def cloud_logs(run_id, image, watch, task):
     else:
         api.run_logs(run_id, task)
 
-    telemetry.log_api("cloud-logs",
-                      metadata={
-                          'run_id': run_id,
-                          'image': image,
-                          'watch': watch,
-                          'task': task
-                      })
+    telemetry.log_api(
+        "cloud-logs",
+        metadata={"run_id": run_id, "image": image, "watch": watch, "task": task},
+    )
 
 
 @cloud.command(name="abort")
-@click.argument('run_id')
+@click.argument("run_id")
 def cloud_abort(run_id):
     """Abort a cloud execution:
 
@@ -759,17 +761,18 @@ def cloud_abort(run_id):
     """
     from ploomber.cloud.api import PloomberCloudAPI
     from ploomber.telemetry import telemetry
+
     api = PloomberCloudAPI()
     api.run_abort(run_id)
 
-    telemetry.log_api("cloud-abort", metadata={'run_id': run_id})
+    telemetry.log_api("cloud-abort", metadata={"run_id": run_id})
 
 
 @cloud.command(name="data")
-@click.option('-u', '--upload', default=None)
-@click.option('-p', '--prefix', default=None)
-@click.option('-n', '--name', default=None)
-@click.option('-d', '--delete', default=None)
+@click.option("-u", "--upload", default=None)
+@click.option("-p", "--prefix", default=None)
+@click.option("-n", "--name", default=None)
+@click.option("-d", "--delete", default=None)
 def cloud_data(upload, delete, prefix, name):
     """Manage input data workspace
 
@@ -801,6 +804,7 @@ def cloud_data(upload, delete, prefix, name):
     """
     from ploomber.cloud.api import PloomberCloudAPI
     from ploomber.telemetry import telemetry
+
     api = PloomberCloudAPI()
 
     # one arg max
@@ -809,35 +813,30 @@ def cloud_data(upload, delete, prefix, name):
         api.upload_data(upload, prefix=prefix, key=name)
     elif delete:
         if prefix:
-            click.echo(
-                'prefix has no effect when using -d/--delete. Ignoring...')
+            click.echo("prefix has no effect when using -d/--delete. Ignoring...")
 
         if name:
-            click.echo(
-                'name has no effect when using -d/--delete. Ignoring...')
+            click.echo("name has no effect when using -d/--delete. Ignoring...")
 
         api.delete_data(delete)
     else:
         if prefix:
-            click.echo('prefix has no effect when listing files. Ignoring...')
+            click.echo("prefix has no effect when listing files. Ignoring...")
 
         if name:
-            click.echo('name has no effect when listing files. Ignoring...')
+            click.echo("name has no effect when listing files. Ignoring...")
 
         api.data_list()
 
-    telemetry.log_api("cloud-data",
-                      metadata={
-                          'upload': upload,
-                          'delete': delete,
-                          'prefix': prefix,
-                          'name': name
-                      })
+    telemetry.log_api(
+        "cloud-data",
+        metadata={"upload": upload, "delete": delete, "prefix": prefix, "name": name},
+    )
 
 
 @cloud.command(name="nb")
-@click.argument('path_to_notebook')
-@click.option('--json', is_flag=True)
+@click.argument("path_to_notebook")
+@click.option("--json", is_flag=True)
 def cloud_notebook(path_to_notebook, json):
     """Run a notebook
 
@@ -855,29 +854,28 @@ def cloud_notebook(path_to_notebook, json):
 
     api = PloomberCloudAPI()
     response_upload = api.upload_data_notebook(path_to_notebook, json_=json)
-    key = response_upload['key']
+    key = response_upload["key"]
 
     if not json:
-        click.echo(f'Triggering execution of {key}...')
+        click.echo(f"Triggering execution of {key}...")
 
     response_execute = api.notebooks_execute(key, json_=json)
 
     if json:
         response = {
-            'response_upload': response_upload,
-            'response_execute': response_execute
+            "response_upload": response_upload,
+            "response_execute": response_execute,
         }
 
         click.echo(json_module.dumps(response))
     else:
-        runid = response_execute['runid']
+        runid = response_execute["runid"]
         click.secho(
             "Done. Monitor Docker build process with:\n  "
             f"$ ploomber cloud logs {runid} --image --watch",
-            fg='green')
+            fg="green",
+        )
 
-    telemetry.log_api("cloud-nb",
-                      metadata={
-                          'path_to_notebook': path_to_notebook,
-                          'json': json
-                      })
+    telemetry.log_api(
+        "cloud-nb", metadata={"path_to_notebook": path_to_notebook, "json": json}
+    )

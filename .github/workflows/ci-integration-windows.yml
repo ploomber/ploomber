@@ -98,7 +98,7 @@ jobs:
     name: Windows-integration-forked
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10']
 
     if: 
       github.event_name == 'repository_dispatch' &&
