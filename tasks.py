@@ -52,7 +52,7 @@ def setup(c, doc=False, version=None):
     if _IS_WINDOWS:
         cmds.pop(0)
 
-    c.run(f"conda create --name {env_name} python={version} --yes")
+    c.run(f"conda create --name {env_name} python={version} --yes -c conda-forge")
 
     c.run(" && ".join(cmds))
 
