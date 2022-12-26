@@ -17,6 +17,12 @@ workflows.
     </div>
 
 
+.. tip::
+
+    Check out our `sklearn-evaluation <https://sklearn-evaluation.readthedocs.io/en/latest/>`_
+    library. It contains a large collection of Machine Learning evaluation plots,
+    an experiment tracker, and many other features!
+
 Data cleaning and feature engineering
 *************************************
 

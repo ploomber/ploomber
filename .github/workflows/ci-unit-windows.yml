@@ -15,7 +15,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10']
 
     steps:
     # https://www.cybertec-postgresql.com/en/postgresql-github-actions-continuous-integration/
@@ -46,7 +46,8 @@ jobs:
         conda activate conda-env
 
         # make the build fail quickly on flake8 errors
-        pip install flake8
+        # pinning it because newer versions break the setup
+        pip install "flake8<6"
         flake8
 
         # there's a bug in jupyter, we need to install this first

@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10']
     
     services:
       postgres:
@@ -46,13 +46,20 @@ jobs:
         # for the tests that depend on git repos
         git config --global user.email "someone@example.com"
         git config --global user.name "Someone"
+
     - name: Install dependencies
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env
+
+        # upgrade pip to use the most recent resolver
+        pip install pip --upgrade
+
         # make the build fail quickly on flake8 errors
-        pip install flake8
+        # pinning it because newer versions break the setup
+        pip install "flake8<6"
         flake8
+
         # for some reason, conda does not resolve the env correctly and
         # installs and old version of pygraphviz (1.3) which breaks in
         # Python 3.7
@@ -64,6 +71,7 @@ jobs:
         else
           echo "skipping pygraphviz installation"
         fi
+
         # Test vanilla installation, make sure core modules are importable
         pip install .
         python -c 'import ploomber'
@@ -71,10 +79,13 @@ jobs:
         python -c 'import ploomber.products'
         python -c 'import ploomber.clients'
         python -c 'import ploomber.io'
+
         # install dev requirements
         pip install .[dev]
+
         # install IR kernel
         echo "install.packages('IRkernel', repos='http://cran.us.r-project.org'); IRkernel::installspec()" | Rscript -
+
         # install sample package for tests
         pip install --editable tests/assets/test_pkg
     - name: Run tests
@@ -85,10 +96,13 @@ jobs:
       run: |
         eval "$(conda shell.bash hook)"
         conda activate conda-env
+
         # doc tests
         export PY_IGNORE_IMPORTMISMATCH=1
         pytest src/ploomber --doctest-modules --ignore src/ploomber/resources
         unset PY_IGNORE_IMPORTMISMATCH
+
+        # run tests
         pip install pytest-timeout
         pytest tests --cov=ploomber --ignore=tests/cli/test_cloud_execution.py --ignore=tests/cli/test_cloud.py --ignore=tests/cloud --ignore=tests/telemetry --timeout=120
 
