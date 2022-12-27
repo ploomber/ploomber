@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## 0.21.8dev
+* Adds environment variable expansion via `{{env.ENV_VAR_NAME}}` (#1042)
+* Adds support for including extra files when using `ploomber cloud nb` via the `include` section
 
 ## 0.21.7 (2022-11-09)
 * Option to prioritize cell injection via `setup.cfg` when the same notebook appears more than once in the pipeline ([#1019](https://github.com/ploomber/ploomber/issues/1019))
