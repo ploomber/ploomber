@@ -5,5 +5,5 @@ addopts = "--pdbcls=IPython.terminal.debugger:Pdb"
 github = "ploomber/ploomber"
 
 [tool.pkgmt.check_links]
-extensions = ["rst"]
+extensions = ["rst", "py", "md", "ipynb"]
 ignore_substrings = ["snowflakecomputing.com"]
