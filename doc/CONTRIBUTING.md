@@ -93,7 +93,7 @@ contributing `.rst` files easier.
 
 Within an `.rst` file, you can use the following format 
 
-    `Link text <https://domain.invalid/>`_ 
+    `Link text <https://github.com/>`_ 
     
 for inline web links. Note: If you want the text to display the full link, the parser will find and links along with 
 mail addresses. Ensure there is a space between the word to be embedded and the link.
