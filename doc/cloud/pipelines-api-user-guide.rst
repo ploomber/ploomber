@@ -17,14 +17,8 @@ may switch to the `Teams Plan. <https://ploomber.io/cloud/>`_
 
 .. _hosted-jupyterlab:
 
-Hosted JupyterLab
-*****************
-
-You can submit pipelines from your laptop to Ploomber Cloud, or you may use
-the hosted `JupyterLab. <https://hub.ploomber.io/>`_:
-
-1. Click on Sign In
-2. In the username field, enter your email address but replace ``@`` for ``-at-``. For example ``user@example.com`` becomes ``user-at-example.com``
+Setup
+*****
 
 *Note:* We're constantly improving Ploomber Cloud; ensure you're running the latest
 version for the best experience: 
