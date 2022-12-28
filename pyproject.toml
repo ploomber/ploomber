@@ -6,4 +6,8 @@ github = "ploomber/ploomber"
 
 [tool.pkgmt.check_links]
 extensions = ["rst", "py", "md", "ipynb"]
-ignore_substrings = ["snowflakecomputing.com"]
+ignore_substrings = ["snowflakecomputing.com",
+                     "https://github.com/jupyter/notebook",
+                     "{your-user}",
+                     "{version}",
+                     "marketplace.visualstudio.com"]
