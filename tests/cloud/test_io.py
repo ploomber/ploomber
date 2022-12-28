@@ -7,73 +7,93 @@ import nbformat
 from ploomber.cloud import io
 
 
-@pytest.mark.parametrize('file_size, max_size, expected', [
-    [2, 1, [(0, 1), (1, 2)]],
-    [7, 2, [(0, 2), (2, 4), (4, 6), (6, 7)]],
-])
+@pytest.mark.parametrize(
+    "file_size, max_size, expected",
+    [
+        [2, 1, [(0, 1), (1, 2)]],
+        [7, 2, [(0, 2), (2, 4), (4, 6), (6, 7)]],
+    ],
+)
 def test_yield_index(file_size, max_size, expected):
     assert list(io.yield_index(file_size, max_size)) == expected
 
 
-@pytest.mark.parametrize('i, j, expected', [
-    [4, 6, [4, 5]],
-    [10, 13, [10, 11, 12]],
-])
+@pytest.mark.parametrize(
+    "i, j, expected",
+    [
+        [4, 6, [4, 5]],
+        [10, 13, [10, 11, 12]],
+    ],
+)
 def test_read_from_index(tmp_directory, i, j, expected):
-    Path('file').write_bytes(bytearray(range(256)))
+    Path("file").write_bytes(bytearray(range(256)))
 
-    out = io.read_from_index('file', i, j)
+    out = io.read_from_index("file", i, j)
 
     assert out == bytearray(expected)
 
 
 def test_yield_parts(tmp_directory):
-    Path('file').write_bytes(bytearray(range(10)))
+    Path("file").write_bytes(bytearray(range(10)))
 
-    assert list(io.yield_parts('file', 3)) == [
+    assert list(io.yield_parts("file", 3)) == [
         bytearray([0, 1, 2]),
         bytearray([3, 4, 5]),
         bytearray([6, 7, 8]),
-        bytearray([9])
+        bytearray([9]),
     ]
 
 
-@pytest.mark.parametrize('n_bytes, max_size, expected', [
-    [10, 1, 10],
-    [10, 2, 5],
-    [10, 3, 4],
-])
+@pytest.mark.parametrize(
+    "n_bytes, max_size, expected",
+    [
+        [10, 1, 10],
+        [10, 2, 5],
+        [10, 3, 4],
+    ],
+)
 def test_n_parts(tmp_directory, n_bytes, max_size, expected):
-    Path('file').write_bytes(bytearray(range(n_bytes)))
+    Path("file").write_bytes(bytearray(range(n_bytes)))
 
-    assert io.n_parts('file', max_size) == expected
+    assert io.n_parts("file", max_size) == expected
 
 
 def test_generate_links(monkeypatch):
-    monkeypatch.setattr(io.boto3, 'client', Mock())
+    monkeypatch.setattr(io.boto3, "client", Mock())
 
-    links = io.generate_links('bucket', 'file.csv', 'someid', 10)
+    links = io.generate_links("bucket", "file.csv", "someid", 10)
 
     assert len(links) == 10
 
 
-@pytest.mark.parametrize('url, file', [
-    [("https://raw.githubusercontent.com/ploomber/projects"
-      "/master/README.ipynb"), "README.ipynb"],
+URL = "https://raw.githubusercontent.com/ploomber/projects/master/README.ipynb"
+
+
+@pytest.mark.parametrize(
+    "url, file",
     [
-        "https://github.com/ploomber/projects/blob/master/README.ipynb",
-        "README.ipynb"
+        [(URL), "README.ipynb"],
+        [
+            "https://github.com/ploomber/projects/blob/master/README.ipynb",
+            "README.ipynb",
+        ],
+        [
+            (
+                "https://github.com/ploomber/projects/blob/master/templates/"
+                "ml-basic/README.ipynb"
+            ),
+            "README.ipynb",
+        ],
     ],
-    [("https://github.com/ploomber/projects/blob/master/templates/"
-      "ml-basic/README.ipynb"), "README.ipynb"],
-],
-                         ids=[
-                             "github-direct",
-                             "github",
-                             "github-nested",
-                         ])
+    ids=[
+        "github-direct",
+        "github",
+        "github-nested",
+    ],
+)
 def test_download_notebook_if_needed(tmp_directory, url, file):
     io.download_notebook_if_needed(url)
     assert Path(file).is_file()
-    assert nbformat.reads(Path(file).read_text(encoding='utf-8'),
-                          as_version=nbformat.NO_CONVERT)
+    assert nbformat.reads(
+        Path(file).read_text(encoding="utf-8"), as_version=nbformat.NO_CONVERT
+    )
