@@ -64,6 +64,7 @@ Products
     GenericSQLRelation
     GenericProduct
 
+.. _api-python-client:
 
 Clients
 -------

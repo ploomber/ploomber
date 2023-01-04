@@ -28,7 +28,7 @@ class S3Client(AbstractStorageClient):
     parent : str
         Parent folder in the bucket to store files. For example, if
         ``parent='path/to'``, and a product in your pipeline is
-        ``out/data.csv``, your file will appea in the bucket at
+        ``out/data.csv``, your file will appear in the bucket at
         ``path/to/out/data.csv``.
 
     json_credentials_path : str, default=None
@@ -153,7 +153,7 @@ class S3Client(AbstractStorageClient):
     See Also
     --------
     ploomber.clients.GCloudStorageClient :
-        Client for uploading products to Amazon Google Cloud Storage
+        Client for uploading products to Google Cloud Storage
 
     Notes
     -----

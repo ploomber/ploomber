@@ -18,6 +18,7 @@ User Guide
     configuration
     ../get-started/sql-pipeline
     sql-templating
+    file_clients
     testing
     debugging
     versioning
