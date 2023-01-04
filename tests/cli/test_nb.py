@@ -164,6 +164,44 @@ def test_failed_priority_injection_with_errors(
     assert expected_error in err
 
 
+@pytest.mark.parametrize(
+    'expected',
+    [
+        ([
+            ('template_a.ipynb', '"param-a-to-inject"'),
+            ('template_b.ipynb', '"param-b-to-inject"'),
+        ]),
+    ]
+)
+def test_inject_notebooks_with_priority_and_skip_functions(monkeypatch,
+                                                           expected,
+                                                           tmp_pi_nbs,
+                                                           capsys,
+                                                           ):
+    Path('setup.cfg').write_text("""
+[ploomber]
+entry-point=pipeline_with_functions.yaml
+inject-priority = *-inject-this
+""")
+
+    monkeypatch.setattr(sys, 'argv', ['ploomber', 'nb', '--inject'])
+
+    cli.cmd_router()
+
+    inject_results = []
+
+    _, err = capsys.readouterr()
+
+    if err:
+        inject_results.append(False)
+    else:
+        for template, expected_param in expected:
+            injected_param = get_nb_injected_params(template)
+            inject_results.append(expected_param == injected_param)
+
+    assert all(inject_results)
+
+
 def get_nb_injected_params(template_path):
     updated_template = Path(template_path).read_text()
     nb = json.loads(updated_template)

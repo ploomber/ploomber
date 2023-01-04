@@ -6,6 +6,7 @@ import stat
 
 import click
 
+from ploomber.tasks import NotebookRunner
 from ploomber.cli.parsers import CustomParser
 from ploomber.cli.io import command_endpoint
 from ploomber.sources.notebooksource import recursive_update
@@ -15,6 +16,10 @@ import warnings
 from ploomber.dag.util import get_unique_list
 from ploomber.util.default import try_to_load_cfg_recursively
 import re
+
+
+def _is_injectable_task(task):
+    return isinstance(task, NotebookRunner)
 
 
 def _load_prioritized_tasks_to_inject_from_cfg(dag, cfg):
@@ -68,12 +73,13 @@ def _get_default_task_to_inject_by_template_name(dag, full_template_name):
     default_task = None
     # by default we take the 1st defined task we find for a given template
     for task in dag.values():
-        if task.source is not None:
-            task_source = Path(task.source._path).name
+        if _is_injectable_task(task):
+            if task.source is not None:
+                task_source = Path(task.source._path).name
 
-            if task_source == full_template_name:
-                default_task = task
-                break
+                if task_source == full_template_name:
+                    default_task = task
+                    break
 
     return default_task
 
@@ -81,8 +87,9 @@ def _get_default_task_to_inject_by_template_name(dag, full_template_name):
 def _get_tasks_to_inject(dag, templates_to_exclude=[]):
     used_templates = []
     for task in dag.values():
-        full_template_name = Path(task.source._path).name
-        used_templates.append(full_template_name)
+        if _is_injectable_task(task):
+            full_template_name = Path(task.source._path).name
+            used_templates.append(full_template_name)
 
     templates = get_unique_list(used_templates)
     tasks_to_inject = []

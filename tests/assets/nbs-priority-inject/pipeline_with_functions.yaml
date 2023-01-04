@@ -1,0 +1,30 @@
+tasks:
+  - source: module.func
+    product: products/func.txt
+
+  - source: template_a.ipynb
+    name: task-a
+    product: output/template-a.ipynb
+    params:
+      some_param: param-a
+
+  - source: template_a.ipynb
+    name: task-a-inject-this
+    product: output/template-a-inject.ipynb
+    params:
+      some_param: param-a-to-inject
+
+  - source: module.func_two
+    product: products/func-two.txt
+
+  - source: template_b.ipynb
+    name: task-b
+    product: output/template-b.ipynb
+    params:
+      some_param: param-b
+
+  - source: template_b.ipynb
+    name: task-b-inject-this
+    product: output/template-b-inject.ipynb
+    params:
+      some_param: param-b-to-inject
