@@ -24,6 +24,7 @@ def color_mapping():
     by their equivalent ASCII codes in the terminal.
     Used by tests which check the actual colors output by pytest.
     """
+
     class ColorMapping:
         COLORS = {
             "red": "\x1b[31m",
@@ -49,9 +50,7 @@ def color_mapping():
         @classmethod
         def format_for_fnmatch(cls, lines: List[str]) -> List[str]:
             """Replace color names for use with LineMatcher.fnmatch_lines"""
-            return [
-                line.format(**cls.COLORS).replace("[", "[[]") for line in lines
-            ]
+            return [line.format(**cls.COLORS).replace("[", "[[]") for line in lines]
 
         @classmethod
         def format_for_rematch(cls, lines: List[str]) -> List[str]:
@@ -68,8 +67,7 @@ def test_terminal_width_COLUMNS(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_terminalwriter_width_bogus(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(shutil, "get_terminal_size",
-                        mock.Mock(return_value=(10, 10)))
+    monkeypatch.setattr(shutil, "get_terminal_size", mock.Mock(return_value=(10, 10)))
     monkeypatch.delenv("COLUMNS", raising=False)
     tw = terminalwriter.TerminalWriter()
     assert tw.fullwidth == 80
@@ -104,8 +102,7 @@ def test_terminalwriter_not_unicode() -> None:
     file = io.TextIOWrapper(buffer, encoding="cp1252")
     tw = terminalwriter.TerminalWriter(file)
     tw.write("hello 🌀 wôrld אבג", flush=True)
-    assert buffer.getvalue(
-    ) == br"hello \U0001f300 w\xf4rld \u05d0\u05d1\u05d2"
+    assert buffer.getvalue() == rb"hello \U0001f300 w\xf4rld \u05d0\u05d1\u05d2"
 
 
 win32 = int(sys.platform == "win32")
@@ -166,12 +163,11 @@ class TestTerminalWriter:
 
     def test_sep_longer_than_width(self, tw) -> None:
         tw.sep("-", "a" * 10, fullwidth=5)
-        (line, ) = tw.getlines()
+        (line,) = tw.getlines()
         # even though the string is wider than the line, still have a separator
         assert line == "- aaaaaaaaaa -\n"
 
-    @pytest.mark.skipif(sys.platform == "win32",
-                        reason="win32 has no native ansi")
+    @pytest.mark.skipif(sys.platform == "win32", reason="win32 has no native ansi")
     @pytest.mark.parametrize("bold", (True, False))
     @pytest.mark.parametrize("color", ("red", "green"))
     def test_markup(self, tw, bold: bool, color: str) -> None:
@@ -256,7 +252,8 @@ def test_should_do_markup_FORCE_COLOR(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_should_not_do_markup_NO_COLOR_and_FORCE_COLOR(
-    monkeypatch: MonkeyPatch, ) -> None:  # noqa
+    monkeypatch: MonkeyPatch,
+) -> None:  # noqa
     monkeypatch.setitem(os.environ, "NO_COLOR", "1")
     monkeypatch.setitem(os.environ, "FORCE_COLOR", "1")
     assert_color_not_set()
@@ -306,6 +303,7 @@ class TestTerminalWriterLineWidth:
             True,
             "{kw}assert{hl-reset} {number}0{hl-reset}\n",
             id="with markup and code_highlight",
+            marks=pytest.mark.xfail(reason="error with pygments 2.14"),
         ),
         pytest.param(
             True,
@@ -332,14 +330,12 @@ def test_code_highlight(has_markup, code_highlight, expected, color_mapping):
     tw = terminalwriter.TerminalWriter(f)
     tw.hasmarkup = has_markup
     tw.code_highlight = code_highlight
-    tw._write_source(["assert 0"], lexer='py')
+    tw._write_source(["assert 0"], lexer="py")
 
-    assert f.getvalue().splitlines(keepends=True) == color_mapping.format(
-        [expected])
+    assert f.getvalue().splitlines(keepends=True) == color_mapping.format([expected])
 
     with pytest.raises(
-            ValueError,
-            match=re.escape(
-                "indents size (2) should have same size as lines (1)"),
+        ValueError,
+        match=re.escape("indents size (2) should have same size as lines (1)"),
     ):
         tw._write_source(["assert 0"], [" ", " "])
