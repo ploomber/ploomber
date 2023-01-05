@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.21.10dev
+
 ## 0.21.9 (2023-01-04)
 * Fixes error that caused `ploomber nb --inject` to fail in pipelines that had function tasks ([#1056](https://github.com/ploomber/ploomber/issues/1056))
 
