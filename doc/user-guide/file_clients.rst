@@ -8,10 +8,7 @@ File clients
 
 File clients are used for uploading File products to the cloud. Currently two clients are supported for Amazon S3 and Google Cloud respectively.
 
-The upload process happens in two steps:
-
-* Given a local path, the remote path for storing the file is computed. An absolute local file path of ``/path/to/project/out/data.csv`` gets translated to ``path/to/parent/out/data.csv``. Here, ``parent`` is the parent folder in the bucket to store the files.
-* Upload the file using appropriate cloud APIs.
+During the upload process, an absolute local file path of ``/path/to/project/out/data.csv`` gets translated to ``path/to/parent/out/data.csv``. Here, ``parent`` is the parent folder in the bucket to store the files.
 
 
 Pre-requisites
