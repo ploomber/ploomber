@@ -1,5 +1,4 @@
 import os
-import shlex
 import pdb
 import shutil
 import tempfile
@@ -14,7 +13,7 @@ import nbformat
 import nbconvert
 from nbconvert import ExporterNameError
 
-from ploomber_core import deprecated
+
 # this was introduced in nbconvert 6.0
 try:
     from nbconvert.exporters.webpdf import WebPDFExporter
@@ -23,7 +22,7 @@ except ModuleNotFoundError:
 
 # papermill is importing a deprecated module from pyarrow
 with warnings.catch_warnings():
-    warnings.simplefilter('ignore', FutureWarning)
+    warnings.simplefilter("ignore", FutureWarning)
     import papermill as pm
 
 try:
@@ -34,7 +33,6 @@ except ImportError:
 
 from ploomber.exceptions import TaskBuildError, TaskInitializationError
 from ploomber.sources import NotebookSource
-from ploomber.sources.notebooksource import _cleanup_rendered_nb
 from ploomber.products import File, MetaProduct
 from ploomber.tasks.abc import Task
 from ploomber.util import chdir_code
@@ -64,11 +62,11 @@ def _write_text_utf_8(path, text):
     nbformat always reads as UTF-8:
     https://github.com/jupyter/nbformat/blob/df63593b64a15ee1c37b522973c39e8674f93c5b/nbformat/__init__.py#L125
     """
-    Path(path).write_text(text, encoding='utf-8')
+    Path(path).write_text(text, encoding="utf-8")
 
 
 def _suggest_passing_product_dictionary():
-    if Path('pipeline.yaml').is_file():
+    if Path("pipeline.yaml").is_file():
         return """
 
 If you want to generate multiple products, pass a dictionary to \
@@ -82,11 +80,13 @@ product:
   more-data: products/more-data.csv
 """
     else:
-        return ('\nIf you want this task '
-                'to generate multiple products, pass a dictionary '
-                'to "product", with the path to the '
-                'output notebook in the "nb" key (e.g. "output.ipynb") '
-                'and any other output paths in other keys)')
+        return (
+            "\nIf you want this task "
+            "to generate multiple products, pass a dictionary "
+            'to "product", with the path to the '
+            'output notebook in the "nb" key (e.g. "output.ipynb") '
+            "and any other output paths in other keys)"
+        )
 
 
 def _check_exporter(exporter, path_to_output):
@@ -94,23 +94,25 @@ def _check_exporter(exporter, path_to_output):
     Validate if the user can use the selected exporter
     """
     if WebPDFExporter is not None and exporter is WebPDFExporter:
-        pyppeteer_installed = find_spec('pyppeteer') is not None
+        pyppeteer_installed = find_spec("pyppeteer") is not None
 
         if not pyppeteer_installed:
             raise TaskInitializationError(
-                'pyppeteer is required to use '
-                'webpdf, install it '
-                'with:\npip install "nbconvert[webpdf]"')
+                "pyppeteer is required to use "
+                "webpdf, install it "
+                'with:\npip install "nbconvert[webpdf]"'
+            )
         else:
             if not chromium_downloader.check_chromium():
                 chromium_downloader.download_chromium()
 
-        if Path(path_to_output).suffix != '.pdf':
+        if Path(path_to_output).suffix != ".pdf":
             raise TaskInitializationError(
-                'Expected output to have '
-                'extension .pdf when using the webpdf '
-                f'exporter, got: {path_to_output}. Change the extension '
-                'and try again')
+                "Expected output to have "
+                "extension .pdf when using the webpdf "
+                f"exporter, got: {path_to_output}. Change the extension "
+                "and try again"
+            )
 
 
 def _safe_suffix(product):
@@ -138,20 +140,20 @@ class NotebookConverter:
     Handles cases where the output representation is text (e.g. HTML) or bytes
     (e.g. PDF)
     """
+
     # mapping of extensions to the corresponding nbconvert exporter
     EXTENSION2EXPORTER = {
-        '.md': 'markdown',
-        '.html': 'html',
-        '.tex': 'latex',
-        '.pdf': 'pdf',
-        '.rst': 'rst',
-        '.ipynb': 'ipynb',
+        ".md": "markdown",
+        ".html": "html",
+        ".tex": "latex",
+        ".pdf": "pdf",
+        ".rst": "rst",
+        ".ipynb": "ipynb",
     }
 
-    def __init__(self,
-                 path_to_output,
-                 exporter_name=None,
-                 nbconvert_export_kwargs=None):
+    def __init__(
+        self, path_to_output, exporter_name=None, nbconvert_export_kwargs=None
+    ):
         self._suffix = Path(path_to_output).suffix
 
         if exporter_name is None:
@@ -159,25 +161,27 @@ class NotebookConverter:
             # try to infer exporter name from the extension
             if not self._suffix:
                 raise TaskInitializationError(
-                    'Could not determine format for product '
-                    f'{pretty_print.try_relative_path(path_to_output)!r} '
-                    'because it has no extension. '
-                    'Add a valid one '
-                    f'({pretty_print.iterable(self.EXTENSION2EXPORTER)}) '
-                    'or pass "nbconvert_exporter_name".' +
-                    _suggest_passing_product_dictionary())
+                    "Could not determine format for product "
+                    f"{pretty_print.try_relative_path(path_to_output)!r} "
+                    "because it has no extension. "
+                    "Add a valid one "
+                    f"({pretty_print.iterable(self.EXTENSION2EXPORTER)}) "
+                    'or pass "nbconvert_exporter_name".'
+                    + _suggest_passing_product_dictionary()
+                )
 
             if self._suffix in self.EXTENSION2EXPORTER:
                 exporter_name = self.EXTENSION2EXPORTER[self._suffix]
             else:
                 raise TaskInitializationError(
-                    'Could not determine '
-                    'format for product '
-                    f'{pretty_print.try_relative_path(path_to_output)!r}. '
-                    'Pass a valid extension '
-                    f'({pretty_print.iterable(self.EXTENSION2EXPORTER)}) or '
-                    'pass "nbconvert_exporter_name".' +
-                    _suggest_passing_product_dictionary())
+                    "Could not determine "
+                    "format for product "
+                    f"{pretty_print.try_relative_path(path_to_output)!r}. "
+                    "Pass a valid extension "
+                    f"({pretty_print.iterable(self.EXTENSION2EXPORTER)}) or "
+                    'pass "nbconvert_exporter_name".'
+                    + _suggest_passing_product_dictionary()
+                )
 
         self._exporter = self._get_exporter(exporter_name, path_to_output)
 
@@ -188,17 +192,19 @@ class NotebookConverter:
 
         if self._exporter is None and self._nbconvert_export_kwargs:
             warnings.warn(
-                f'Output {self._path_to_output!r} is a '
-                'notebook file. nbconvert_export_kwargs '
-                f'{self._nbconvert_export_kwargs!r} will be '
-                'ignored since they only apply '
-                'when exporting the notebook to other formats '
-                'such as html. You may change the extension to apply '
-                'the conversion parameters')
+                f"Output {self._path_to_output!r} is a "
+                "notebook file. nbconvert_export_kwargs "
+                f"{self._nbconvert_export_kwargs!r} will be "
+                "ignored since they only apply "
+                "when exporting the notebook to other formats "
+                "such as html. You may change the extension to apply "
+                "the conversion parameters"
+            )
 
         if self._exporter is not None:
-            self._from_ipynb(self._path_to_output, self._exporter,
-                             self._nbconvert_export_kwargs)
+            self._from_ipynb(
+                self._path_to_output, self._exporter, self._nbconvert_export_kwargs
+            )
 
     @staticmethod
     def _get_exporter(exporter_name, path_to_output):
@@ -211,14 +217,14 @@ class NotebookConverter:
         Returns None if passed exported name is 'ipynb', raises ValueError
         if an exporter can't be located
         """
-        extension2exporter_name = {'md': 'markdown'}
+        extension2exporter_name = {"md": "markdown"}
 
         # sometimes extension does not match with the exporter name, fix
         # if needed
         if exporter_name in extension2exporter_name:
             exporter_name = extension2exporter_name[exporter_name]
 
-        if exporter_name == 'ipynb':
+        if exporter_name == "ipynb":
             exporter = None
         else:
             try:
@@ -238,7 +244,8 @@ class NotebookConverter:
                     f"{exporter_name!r} is not a "
                     "valid 'nbconvert_exporter_name' value. "
                     "Choose one from: "
-                    f'{pretty_print.iterable(names)}')
+                    f"{pretty_print.iterable(names)}"
+                )
 
         _check_exporter(exporter, path_to_output)
 
@@ -252,8 +259,9 @@ class NotebookConverter:
 
         path = Path(path_to_nb)
 
-        nb = nbformat.reads(path.read_text(encoding='utf-8'),
-                            as_version=nbformat.NO_CONVERT)
+        nb = nbformat.reads(
+            path.read_text(encoding="utf-8"), as_version=nbformat.NO_CONVERT
+        )
         content, _ = nbconvert.export(exporter, nb, **nbconvert_export_kwargs)
 
         if isinstance(content, str):
@@ -261,9 +269,11 @@ class NotebookConverter:
         elif isinstance(content, bytes):
             path.write_bytes(content)
         else:
-            raise TypeError('nbconvert returned a converted notebook with'
-                            'unknown format, only text and binary objects '
-                            'are supported')
+            raise TypeError(
+                "nbconvert returned a converted notebook with"
+                "unknown format, only text and binary objects "
+                "are supported"
+            )
 
         return content
 
@@ -280,100 +290,7 @@ class NotebookMixin(FileLoaderMixin):
     def static_analysis(self, value):
         self._source.static_analysis = value
 
-    @deprecated.method(deprecated_in='0.21', removed_in='0.22')
-    def develop(self, app='notebook', args=None):
-        """
-        Opens the rendered notebook (with injected parameters) and adds a
-        "debugging-settings" cell to the that changes directory to the current
-        active directory. This will reflect conditions when callign
-        `DAG.build()`. This modified notebook is saved in the same location as
-        the source with a "-tmp" added to the filename. Changes to this
-        notebook can be exported to the original notebook after the notebook
-        process is shut down. The "injected-parameters" and
-        "debugging-settings" cells are deleted before saving.
-
-        Parameters
-        ----------
-        app : {'notebook', 'lab'}, default: 'notebook'
-            Which Jupyter application to use
-        args : str
-            Extra parameters passed to the jupyter application
-
-        Notes
-        -----
-        Be careful when developing tasks interacively. If the task has run
-        successfully, you overwrite products but don't save the
-        updated source code, your DAG will enter an inconsistent state where
-        the metadata won't match the overwritten product.
-
-        If you modify the source code and call develop again, the source
-        code will be updated only if the ``hot_reload option`` is turned on.
-        See :class:`ploomber.DAGConfigurator` for details.
-        """
-        # TODO: this code needs refactoring, should be a context manager
-        # like the one we have for PythonCallable.develop that abstracts
-        # the handling of the temporary notebook while editing
-
-        apps = {'notebook', 'lab'}
-
-        if app not in apps:
-            raise ValueError('"app" must be one of {}, got: "{}"'.format(
-                apps, app))
-
-        if self.source.language != 'python':
-            raise NotImplementedError(
-                'develop is not implemented for "{}" '
-                'notebooks, only python is supported'.format(
-                    self.source.language))
-
-        if self.source.loc is None:
-            raise ValueError('Can only use develop in notebooks loaded '
-                             'from files, not from str')
-
-        nb = _read_rendered_notebook(self.source.nb_str_rendered)
-
-        name = self.source.loc.name
-        suffix = self.source.loc.suffix
-        name_new = name.replace(suffix, '-tmp.ipynb')
-        tmp = self.source.loc.with_name(name_new)
-        content = nbformat.writes(nb, version=nbformat.NO_CONVERT)
-        _write_text_utf_8(tmp, content)
-
-        # open notebook with injected debugging cell
-        try:
-            subprocess.run(['jupyter', app, str(tmp)] +
-                           shlex.split(args or ''),
-                           check=True)
-        except KeyboardInterrupt:
-            print(f'Jupyter {app} application closed...')
-
-        # read tmp file again, to see if the user made any changes
-        content_new = Path(tmp).read_text()
-
-        # maybe exclude changes in tmp cells?
-        if content == content_new:
-            print('No changes found...')
-        else:
-            # save changes
-            if _save():
-                nb = nbformat.reads(content_new,
-                                    as_version=nbformat.NO_CONVERT)
-
-                # remove injected-parameters and debugging-settings cells if
-                # they exist
-                _cleanup_rendered_nb(nb)
-
-                # write back in the same format and original location
-                ext_source = Path(self.source.loc).suffix[1:]
-                print('Saving notebook to: ', self.source.loc)
-                jupytext.write(nb, self.source.loc, fmt=ext_source)
-            else:
-                print('Not saving changes...')
-
-        # remove tmp file
-        Path(tmp).unlink()
-
-    def debug(self, kind='ipdb'):
+    def debug(self, kind="ipdb"):
         """
         Opens the notebook (with injected parameters) in debug mode in a
         temporary location
@@ -392,33 +309,34 @@ class NotebookMixin(FileLoaderMixin):
         updated source code, your DAG will enter an inconsistent state where
         the metadata won't match the overwritten product.
         """
-        if self.source.language != 'python':
+        if self.source.language != "python":
             raise NotImplementedError(
                 'debug is not implemented for "{}" '
-                'notebooks, only python is supported'.format(
-                    self.source.language))
+                "notebooks, only python is supported".format(self.source.language)
+            )
 
-        opts = {'ipdb', 'pdb', 'pm'}
+        opts = {"ipdb", "pdb", "pm"}
 
         if kind not in opts:
-            raise ValueError('kind must be one of {}'.format(opts))
+            raise ValueError("kind must be one of {}".format(opts))
 
         nb = _read_rendered_notebook(self.source.nb_str_rendered)
-        fd, tmp_path = tempfile.mkstemp(suffix='.py')
+        fd, tmp_path = tempfile.mkstemp(suffix=".py")
         os.close(fd)
-        code = jupytext.writes(nb, version=nbformat.NO_CONVERT, fmt='py')
+        code = jupytext.writes(nb, version=nbformat.NO_CONVERT, fmt="py")
         _write_text_utf_8(tmp_path, code)
 
-        if kind == 'pm':
+        if kind == "pm":
             # post-mortem debugging
             try:
-                subprocess.run(['ipython', tmp_path, '--pdb'])
+                subprocess.run(["ipython", tmp_path, "--pdb"])
             finally:
                 Path(tmp_path).unlink()
         else:
-            if kind == 'ipdb':
+            if kind == "ipdb":
                 from IPython.terminal.debugger import TerminalPdb, Pdb
-                code = compile(source=code, filename=tmp_path, mode='exec')
+
+                code = compile(source=code, filename=tmp_path, mode="exec")
 
                 try:
                     # this seems to only work in a Terminal
@@ -427,7 +345,7 @@ class NotebookMixin(FileLoaderMixin):
                     # this works in a Jupyter notebook
                     debugger = Pdb()
 
-            elif kind == 'pdb':
+            elif kind == "pdb":
                 debugger = pdb
 
             try:
@@ -608,31 +526,38 @@ class NotebookRunner(NotebookMixin, Task):
 
     `nbconvert's documentation <https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options>`_ # noqa
     """
-    PRODUCT_CLASSES_ALLOWED = (File, )
+
+    PRODUCT_CLASSES_ALLOWED = (File,)
 
     def _validate_nbconvert_exporter(self):
         if isinstance(self.nb_product_key, list) and isinstance(
-                self.nbconvert_exporter_name, str):
+            self.nbconvert_exporter_name, str
+        ):
             raise TaskInitializationError(
                 f"When specifying nb_product_key as a list, "
                 f"create a dictionary under nbconvert_exporter_name "
-                f"with required keys in {self.nb_product_key!r}. ")
+                f"with required keys in {self.nb_product_key!r}. "
+            )
 
         if isinstance(self.nb_product_key, str) and isinstance(
-                self.nbconvert_exporter_name, dict):
+            self.nbconvert_exporter_name, dict
+        ):
             raise TaskInitializationError(
                 "Please specify a single nbconvert_exporter_name "
                 "when generating a single notebook product. "
-                "Example : 'nbconvert_exporter_name': '<exporter name'> ")
+                "Example : 'nbconvert_exporter_name': '<exporter name'> "
+            )
 
         if isinstance(self.nb_product_key, list) and isinstance(
-                self.nbconvert_exporter_name, dict):
+            self.nbconvert_exporter_name, dict
+        ):
             for exporter_name in self.nbconvert_exporter_name:
                 if exporter_name not in self.nb_product_key:
                     raise TaskInitializationError(
                         f"Invalid nbconvert exporter : {exporter_name!r}. "
                         f"All exporter names in nbconvert_exporter_name "
-                        f"should be present in nb_product_key")
+                        f"should be present in nb_product_key"
+                    )
 
     def _validate_nb_product_key(self):
         for key in self.nb_product_key:
@@ -642,36 +567,40 @@ class NotebookRunner(NotebookMixin, Task):
                     f"product: {(str(self.product))!r}. "
                     f"All keys specified in "
                     f"{self.nb_product_key!r} must contain the "
-                    f"corresponding product path.")
+                    f"corresponding product path."
+                )
 
         for key, path in self.product.to_json_serializable().items():
-            if _safe_suffix(
-                    path
-            ) in ['.md', '.html', '.tex', '.pdf', '.rst', '.ipynb'] \
-                    and key not in self.nb_product_key:
+            if (
+                _safe_suffix(path) in [".md", ".html", ".tex", ".pdf", ".rst", ".ipynb"]
+                and key not in self.nb_product_key
+            ):
                 raise TaskInitializationError(
                     f"Missing key '{key}' in "
                     f"nb_product_key: {self.nb_product_key!r}. "
                     f"All notebook product keys specified in "
                     f"{(str(self.product))!r} must be specified "
-                    f"in nb_product_key as well.")
+                    f"in nb_product_key as well."
+                )
 
-    def __init__(self,
-                 source,
-                 product,
-                 dag,
-                 name=None,
-                 params=None,
-                 papermill_params=None,
-                 kernelspec_name=None,
-                 nbconvert_exporter_name=None,
-                 ext_in=None,
-                 nb_product_key='nb',
-                 static_analysis='regular',
-                 nbconvert_export_kwargs=None,
-                 local_execution=False,
-                 check_if_kernel_installed=True,
-                 debug_mode=None):
+    def __init__(
+        self,
+        source,
+        product,
+        dag,
+        name=None,
+        params=None,
+        papermill_params=None,
+        kernelspec_name=None,
+        nbconvert_exporter_name=None,
+        ext_in=None,
+        nb_product_key="nb",
+        static_analysis="regular",
+        nbconvert_export_kwargs=None,
+        local_execution=False,
+        check_if_kernel_installed=True,
+        debug_mode=None,
+    ):
         self.papermill_params = papermill_params or {}
         self.nbconvert_export_kwargs = nbconvert_export_kwargs or {}
         self.kernelspec_name = kernelspec_name
@@ -682,21 +611,30 @@ class NotebookRunner(NotebookMixin, Task):
         self.check_if_kernel_installed = check_if_kernel_installed
         self.debug_mode = debug_mode
 
-        if 'cwd' in self.papermill_params and self.local_execution:
-            raise KeyError('If local_execution is set to True, "cwd" should '
-                           'not appear in papermill_params, as such '
-                           'parameter will be set by the task itself')
+        if "cwd" in self.papermill_params and self.local_execution:
+            raise KeyError(
+                'If local_execution is set to True, "cwd" should '
+                "not appear in papermill_params, as such "
+                "parameter will be set by the task itself"
+            )
 
-        if 'engine' in self.papermill_params and debug_mode:
-            raise ValueError('Engine should not appear in "papermill_params" '
-                             'when "debug_mode" is enabled')
+        if "engine" in self.papermill_params and debug_mode:
+            raise ValueError(
+                'Engine should not appear in "papermill_params" '
+                'when "debug_mode" is enabled'
+            )
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
-        self._source = NotebookRunner._init_source(source, kwargs, ext_in,
-                                                   kernelspec_name,
-                                                   static_analysis,
-                                                   check_if_kernel_installed,
-                                                   False, False)
+        self._source = NotebookRunner._init_source(
+            source,
+            kwargs,
+            ext_in,
+            kernelspec_name,
+            static_analysis,
+            check_if_kernel_installed,
+            False,
+            False,
+        )
         super().__init__(product, dag, name, params)
 
         self._validate_nbconvert_exporter()
@@ -710,13 +648,14 @@ class NotebookRunner(NotebookMixin, Task):
                     f"Missing key '{nb_product_key}' in "
                     f"product: {(str(self.product))!r}. "
                     f"{nb_product_key!r} must contain "
-                    "the path to the output notebook.")
+                    "the path to the output notebook."
+                )
 
         if isinstance(self.nb_product_key, str):
             if isinstance(self.product, MetaProduct):
-                product_nb = (
-                    self.product[self.nb_product_key]._identifier.best_repr(
-                        shorten=False))
+                product_nb = self.product[self.nb_product_key]._identifier.best_repr(
+                    shorten=False
+                )
 
             else:
                 product_nb = self.product._identifier.best_repr(shorten=False)
@@ -728,18 +667,21 @@ class NotebookRunner(NotebookMixin, Task):
             }
 
         if isinstance(self.nb_product_key, str):
-            self._converter = NotebookConverter(product_nb,
-                                                nbconvert_exporter_name,
-                                                nbconvert_export_kwargs)
+            self._converter = NotebookConverter(
+                product_nb, nbconvert_exporter_name, nbconvert_export_kwargs
+            )
         else:
             self._converter = []
             for key, product_nb in multiple_product_nb.items():
 
-                exporter = nbconvert_exporter_name.get(
-                    key) if nbconvert_exporter_name else None
+                exporter = (
+                    nbconvert_exporter_name.get(key)
+                    if nbconvert_exporter_name
+                    else None
+                )
                 self._converter.append(
-                    NotebookConverter(product_nb, exporter,
-                                      nbconvert_export_kwargs))
+                    NotebookConverter(product_nb, exporter, nbconvert_export_kwargs)
+                )
 
     @property
     def debug_mode(self):
@@ -747,32 +689,35 @@ class NotebookRunner(NotebookMixin, Task):
 
     @debug_mode.setter
     def debug_mode(self, value):
-        _validate.is_in(value, {None, 'now', 'later'}, 'debug_mode')
+        _validate.is_in(value, {None, "now", "later"}, "debug_mode")
         self._debug_mode = value
 
     @staticmethod
-    def _init_source(source,
-                     kwargs,
-                     ext_in=None,
-                     kernelspec_name=None,
-                     static_analysis='regular',
-                     check_if_kernel_installed=False,
-                     extract_up=False,
-                     extract_prod=False):
+    def _init_source(
+        source,
+        kwargs,
+        ext_in=None,
+        kernelspec_name=None,
+        static_analysis="regular",
+        check_if_kernel_installed=False,
+        extract_up=False,
+        extract_prod=False,
+    ):
         ns = NotebookSource(
             source,
             ext_in=ext_in,
             kernelspec_name=kernelspec_name,
             static_analysis=static_analysis,
             check_if_kernel_installed=check_if_kernel_installed,
-            **kwargs)
+            **kwargs,
+        )
         ns._validate_parameters_cell(extract_up, extract_prod)
         return ns
 
     def run(self):
         # regular mode: raise but not check signature
         # strict mode: called at render time
-        if self.static_analysis == 'regular':
+        if self.static_analysis == "regular":
             self.source._check_notebook(raise_=True, check_signature=False)
 
         multiple_nb_products = []
@@ -794,7 +739,7 @@ class NotebookRunner(NotebookMixin, Task):
                     multiple_nb_products.append(path)
 
                     # but prefer the one which is already an ipynb file
-                    if path.suffix == '.ipynb':
+                    if path.suffix == ".ipynb":
                         key_to_use = key
 
                 nb_product = self.product[key_to_use]
@@ -807,31 +752,32 @@ class NotebookRunner(NotebookMixin, Task):
         # user's choice, if any error happens, this will allow them to debug
         # we will change the extension after the notebook runs successfully
         path_to_out = Path(str(nb_product))
-        path_to_out_ipynb = path_to_out.with_suffix('.ipynb')
+        path_to_out_ipynb = path_to_out.with_suffix(".ipynb")
 
-        fd, tmp = tempfile.mkstemp('.ipynb')
+        fd, tmp = tempfile.mkstemp(".ipynb")
         os.close(fd)
 
         tmp = Path(tmp)
         _write_text_utf_8(tmp, self.source.nb_str_rendered)
 
         if self.local_execution:
-            self.papermill_params['cwd'] = str(self.source.loc.parent)
+            self.papermill_params["cwd"] = str(self.source.loc.parent)
 
         # use our custom engine
-        if self.debug_mode == 'now':
-            self.papermill_params['engine_name'] = 'debug'
-        elif self.debug_mode == 'later':
-            self.papermill_params['engine_name'] = 'debuglater'
-            self.papermill_params['path_to_dump'] = f'{self.name}.dump'
+        if self.debug_mode == "now":
+            self.papermill_params["engine_name"] = "debug"
+        elif self.debug_mode == "later":
+            self.papermill_params["engine_name"] = "debuglater"
+            self.papermill_params["path_to_dump"] = f"{self.name}.dump"
 
         # create parent folders if they don't exist
         Path(path_to_out_ipynb).parent.mkdir(parents=True, exist_ok=True)
 
         try:
             # no need to pass parameters, they are already there
-            pm.execute_notebook(str(tmp), str(path_to_out_ipynb),
-                                **self.papermill_params)
+            pm.execute_notebook(
+                str(tmp), str(path_to_out_ipynb), **self.papermill_params
+            )
         except Exception as e:
             # upload partially executed notebook if there's a clint
             if nb_product.client:
@@ -839,17 +785,21 @@ class NotebookRunner(NotebookMixin, Task):
                 parent = nb_product.client.parent
                 remote_path = str(PurePosixPath(parent, path_to_out_ipynb))
 
-                raise TaskBuildError('Error when executing task'
-                                     f' {self.name!r}. Partially'
-                                     ' executed notebook uploaded to '
-                                     'remote storage at: '
-                                     f'{remote_path}') from e
+                raise TaskBuildError(
+                    "Error when executing task"
+                    f" {self.name!r}. Partially"
+                    " executed notebook uploaded to "
+                    "remote storage at: "
+                    f"{remote_path}"
+                ) from e
             else:
                 raise TaskBuildError(
-                    'Error when executing task'
-                    f' {self.name!r}. Partially'
-                    ' executed notebook '
-                    f'available at {str(path_to_out_ipynb)}', self) from e
+                    "Error when executing task"
+                    f" {self.name!r}. Partially"
+                    " executed notebook "
+                    f"available at {str(path_to_out_ipynb)}",
+                    self,
+                ) from e
         finally:
             tmp.unlink()
 
@@ -913,24 +863,27 @@ class ScriptRunner(NotebookMixin, Task):
         name=None,
         params=None,
         ext_in=None,
-        static_analysis='regular',
+        static_analysis="regular",
         local_execution=False,
     ):
         self.ext_in = ext_in
         self.local_execution = local_execution
 
         kwargs = dict(hot_reload=dag._params.hot_reload)
-        self._source = ScriptRunner._init_source(source, kwargs, ext_in,
-                                                 static_analysis, False, False)
+        self._source = ScriptRunner._init_source(
+            source, kwargs, ext_in, static_analysis, False, False
+        )
         super().__init__(product, dag, name, params)
 
     @staticmethod
-    def _init_source(source,
-                     kwargs,
-                     ext_in=None,
-                     static_analysis='regular',
-                     extract_up=False,
-                     extract_prod=False):
+    def _init_source(
+        source,
+        kwargs,
+        ext_in=None,
+        static_analysis="regular",
+        extract_up=False,
+        extract_prod=False,
+    ):
         ns = NotebookSource(
             source,
             ext_in=ext_in,
@@ -945,7 +898,7 @@ class ScriptRunner(NotebookMixin, Task):
     def run(self):
         # regular mode: raise but not check signature
         # strict mode: called at render time
-        if self.static_analysis == 'regular':
+        if self.static_analysis == "regular":
             self.source._check_notebook(raise_=True, check_signature=False)
 
         if self.local_execution:
@@ -953,30 +906,31 @@ class ScriptRunner(NotebookMixin, Task):
         else:
             cwd = None
 
-        fd, tmp = tempfile.mkstemp('.py')
+        fd, tmp = tempfile.mkstemp(".py")
         os.close(fd)
 
-        code = '\n\n'.join([
-            c['source'] for c in self.source.nb_obj_rendered.cells
-            if c['cell_type'] == 'code'
-        ])
+        code = "\n\n".join(
+            [
+                c["source"]
+                for c in self.source.nb_obj_rendered.cells
+                if c["cell_type"] == "code"
+            ]
+        )
 
         tmp = Path(tmp)
         tmp.write_text(code)
 
-        if self.source.language == 'python':
+        if self.source.language == "python":
             interpreter = _python_bin()
-        elif self.source.language == 'r':
-            interpreter = 'Rscript'
+        elif self.source.language == "r":
+            interpreter = "Rscript"
         else:
-            raise ValueError(
-                'ScriptRunner only works with Python and R scripts')
+            raise ValueError("ScriptRunner only works with Python and R scripts")
 
         try:
             _run_script_in_subprocess(interpreter, tmp, cwd)
         except Exception as e:
-            raise TaskBuildError('Error when executing task'
-                                 f' {self.name!r}.') from e
+            raise TaskBuildError("Error when executing task" f" {self.name!r}.") from e
         finally:
             tmp.unlink()
 
@@ -987,13 +941,14 @@ def _run_script_in_subprocess(interpreter, path, cwd):
     if res.returncode:
         stderr = res.stderr.decode()
 
-        if 'SyntaxError' in stderr:
-            stderr += ('(Note: IPython magics are not supported in '
-                       'ScriptRunner, remove them or use the regular '
-                       'NotebookRunner)')
+        if "SyntaxError" in stderr:
+            stderr += (
+                "(Note: IPython magics are not supported in "
+                "ScriptRunner, remove them or use the regular "
+                "NotebookRunner)"
+            )
 
-        raise RuntimeError('Error while executing ScriptRunner:\n'
-                           f'{stderr}')
+        raise RuntimeError("Error while executing ScriptRunner:\n" f"{stderr}")
 
 
 def _read_rendered_notebook(nb_str):
@@ -1010,19 +965,22 @@ def _read_rendered_notebook(nb_str):
 # invoked the jupyter app to make relative paths work
 import os
 {}
-""".format(chdir_code(Path('.').resolve()))
+""".format(
+        chdir_code(Path(".").resolve())
+    )
 
-    cell = nbformat_v.new_code_cell(source,
-                                    metadata={'tags': ['debugging-settings']})
+    cell = nbformat_v.new_code_cell(source, metadata={"tags": ["debugging-settings"]})
     nb.cells.insert(0, cell)
 
     return nb
 
 
 def _save():
-    res = input('Notebook changed, do you want to save changes '
-                'in the original location? (injected parameters '
-                'and debugging cells will be removed before '
-                'saving). Enter "no" to skip saving changes, '
-                'anything else will be interpreted as "yes": ')
-    return res != 'no'
+    res = input(
+        "Notebook changed, do you want to save changes "
+        "in the original location? (injected parameters "
+        "and debugging cells will be removed before "
+        'saving). Enter "no" to skip saving changes, '
+        'anything else will be interpreted as "yes": '
+    )
+    return res != "no"

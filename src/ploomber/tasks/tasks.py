@@ -2,21 +2,18 @@
 Task implementations
 
 A Task is a unit of work that produces a persistent change (Product)
-such as a bash or a SQL script
-"""
-import shlex
-import subprocess
+such as a bash or a SQL script"""
+
 import pdb
 import functools
 from collections.abc import Mapping
 
 import debuglater
 from IPython.terminal.debugger import TerminalPdb, Pdb
-from ploomber_core import deprecated
 
 from ploomber.tasks.abc import Task
 from ploomber.tasks.mixins import ClientMixin
-from ploomber.sources import (PythonCallableSource, GenericSource, EmptySource)
+from ploomber.sources import PythonCallableSource, GenericSource, EmptySource
 from ploomber.clients import ShellClient
 from ploomber.products.metadata import MetadataAlwaysUpToDate
 from ploomber.exceptions import TaskBuildError, MissingClientError
@@ -47,9 +44,8 @@ def _unserialize_params(params_original, unserializer):
     """
     params = params_original.to_dict()
 
-    params['upstream'] = {
-        k: _unserializer(v, unserializer)
-        for k, v in params['upstream'].items()
+    params["upstream"] = {
+        k: _unserializer(v, unserializer) for k, v in params["upstream"].items()
     }
 
     params = Params._from_dict(params, copy=False)
@@ -201,18 +197,21 @@ class PythonCallable(Task):
         python script.py
     """
 
-    def __init__(self,
-                 source,
-                 product,
-                 dag,
-                 name=None,
-                 params=None,
-                 unserializer=None,
-                 serializer=None,
-                 debug_mode=None):
+    def __init__(
+        self,
+        source,
+        product,
+        dag,
+        name=None,
+        params=None,
+        unserializer=None,
+        serializer=None,
+        debug_mode=None,
+    ):
         self._serializer = serializer or dag.serializer
-        kwargs = dict(hot_reload=dag._params.hot_reload,
-                      needs_product=self._serializer is None)
+        kwargs = dict(
+            hot_reload=dag._params.hot_reload, needs_product=self._serializer is None
+        )
         self._source = type(self)._init_source(source, kwargs)
         self._unserializer = unserializer or dag.unserializer
         self.debug_mode = debug_mode
@@ -224,7 +223,7 @@ class PythonCallable(Task):
 
     @debug_mode.setter
     def debug_mode(self, value):
-        _validate.is_in(value, {None, 'now', 'later'}, 'debug_mode')
+        _validate.is_in(value, {None, "now", "later"}, "debug_mode")
         self._debug_mode = value
 
     @staticmethod
@@ -232,7 +231,7 @@ class PythonCallable(Task):
         return PythonCallableSource(source, **kwargs)
 
     def run(self):
-        if 'upstream' in self.params and self._unserializer:
+        if "upstream" in self.params and self._unserializer:
             params = _unserialize_params(self.params, self._unserializer)
         else:
             params = self.params.to_dict()
@@ -240,20 +239,22 @@ class PythonCallable(Task):
         # do not pass product if serializer is set, we'll use the returned
         # value in such case
         if self._serializer:
-            product = params.pop('product')
+            product = params.pop("product")
         else:
-            product = params['product']
+            product = params["product"]
 
-        if self.debug_mode == 'later':
+        if self.debug_mode == "later":
             try:
                 out = self.source.primitive(**params)
             except Exception as e:
                 debuglater.run(self.name, echo=False)
-                path_to_dump = f'{self.name}.dump'
-                message = ((f'Serializing traceback to: {path_to_dump}. '
-                            f'To debug: dltr {path_to_dump}'))
+                path_to_dump = f"{self.name}.dump"
+                message = (
+                    f"Serializing traceback to: {path_to_dump}. "
+                    f"To debug: dltr {path_to_dump}"
+                )
                 raise TaskBuildError(message) from e
-        elif self.debug_mode == 'now':
+        elif self.debug_mode == "now":
             out = debug_if_exception(self.source.primitive, self.name, params)
         else:
             out = self.source.primitive(**params)
@@ -261,54 +262,12 @@ class PythonCallable(Task):
         # serialize output if needed
         if self._serializer:
             if out is None:
-                raise ValueError('Callable {} must return a value if task '
-                                 'is initialized with a serializer'.format(
-                                     self.source.primitive))
+                raise ValueError(
+                    "Callable {} must return a value if task "
+                    "is initialized with a serializer".format(self.source.primitive)
+                )
             else:
                 self._serializer(out, product)
-
-    @deprecated.method(deprecated_in='0.21', removed_in='0.22')
-    def develop(self, app='notebook', args=None):
-        """Edit function interactively using Jupyter
-
-        Parameters
-        ----------
-        app : str, {'notebook', 'lab'}, default='notebook'
-            Which jupyter application to use
-
-        args : str
-            Extra args passed to the selected jupyter application
-
-        Notes
-        -----
-        Cells whose first line is an empty commenf ("#"), will be removed when
-        exporting back to the function, you can use this for temporary,
-        exploratory work
-
-        Be careful when developing tasks interacively. If the task has run
-        successfully, you overwrite products but don't save the
-        updated source code, your DAG will enter an inconsistent state where
-        the metadata won't match the overwritten product.
-        """
-        apps = {'notebook', 'lab'}
-
-        if app not in apps:
-            raise ValueError('"app" must be one of {}, got: "{}"'.format(
-                apps, app))
-
-        if self.exec_status == TaskStatus.WaitingRender:
-            raise TaskBuildError(
-                'Error in task "{}". '
-                'Cannot call task.develop() on a task that has '
-                'not been '
-                'rendered, call DAG.render() first'.format(self.name))
-
-        with self._interactive_developer() as tmp:
-            try:
-                subprocess.run(['jupyter', app, tmp] + shlex.split(args or ''),
-                               check=True)
-            except KeyboardInterrupt:
-                print(f'Jupyter {app} application closed...')
 
     def _interactive_developer(self):
         """
@@ -317,7 +276,7 @@ class PythonCallable(Task):
         # TODO: resolve to absolute to make relative paths work
         return CallableInteractiveDeveloper(self.source.primitive, self.params)
 
-    def debug(self, kind='ipdb'):
+    def debug(self, kind="ipdb"):
         """
         Run callable in debug mode.
 
@@ -334,32 +293,33 @@ class PythonCallable(Task):
         updated source code, your DAG will enter an inconsistent state where
         the metadata won't match the overwritten product.
         """
-        opts = {'ipdb', 'pdb'}
+        opts = {"ipdb", "pdb"}
 
-        if kind == 'pm':
-            raise ValueError('Post-mortem debugging is not supported '
-                             'via the .debug() method.')
+        if kind == "pm":
+            raise ValueError(
+                "Post-mortem debugging is not supported " "via the .debug() method."
+            )
 
         if kind not in opts:
-            raise ValueError('"kind" must be one of {}, got: "{}"'.format(
-                opts, kind))
+            raise ValueError('"kind" must be one of {}, got: "{}"'.format(opts, kind))
 
         if self.exec_status == TaskStatus.WaitingRender:
-            raise TaskBuildError('Error in task "{}". '
-                                 'Cannot call task.debug() on a task that has '
-                                 'not been '
-                                 'rendered, call DAG.render() first'.format(
-                                     self.name))
+            raise TaskBuildError(
+                'Error in task "{}". '
+                "Cannot call task.debug() on a task that has "
+                "not been "
+                "rendered, call DAG.render() first".format(self.name)
+            )
 
-        if 'upstream' in self.params and self._unserializer:
+        if "upstream" in self.params and self._unserializer:
             params = _unserialize_params(self.params, self._unserializer)
         else:
             params = self.params.to_dict()
 
         if self._serializer:
-            params.pop('product')
+            params.pop("product")
 
-        if kind == 'ipdb':
+        if kind == "ipdb":
             try:
                 # this seems to only work in a Terminal
                 ipdb = TerminalPdb()
@@ -368,7 +328,7 @@ class PythonCallable(Task):
                 ipdb = Pdb()
 
             ipdb.runcall(self.source.primitive, **params)
-        elif kind == 'pdb':
+        elif kind == "pdb":
             pdb.runcall(self.source.primitive, **params)
 
     def load(self, key=None, **kwargs):
@@ -385,8 +345,10 @@ class PythonCallable(Task):
             Arguments passed to the unserializer function
         """
         if isinstance(self.product, MetaProduct) and key is None:
-            raise ValueError(f'Task {self!r} generates multiple products, '
-                             'use the "key" argument to load one')
+            raise ValueError(
+                f"Task {self!r} generates multiple products, "
+                'use the "key" argument to load one'
+            )
 
         prod = self.product if not key else self.product[key]
 
@@ -398,11 +360,9 @@ class PythonCallable(Task):
 
 # FIXME: there is already a TaskFactory, this is confusing
 def task_factory(_func=None, **factory_kwargs):
-    """Syntactic sugar for building PythonCallable tasks
-    """
+    """Syntactic sugar for building PythonCallable tasks"""
 
     def decorator(func):
-
         @functools.wraps(func)
         def wrapper(**wrapper_kwargs):
             kwargs = {**factory_kwargs, **wrapper_kwargs}
@@ -460,13 +420,7 @@ class ShellScript(ClientMixin, Task):
 
     """
 
-    def __init__(self,
-                 source,
-                 product,
-                 dag,
-                 name=None,
-                 client=None,
-                 params=None):
+    def __init__(self, source, product, dag, name=None, client=None, params=None):
         kwargs = dict(hot_reload=dag._params.hot_reload)
         self._source = type(self)._init_source(source, kwargs)
         super().__init__(product, dag, name, params)
@@ -485,8 +439,7 @@ class ShellScript(ClientMixin, Task):
     @staticmethod
     def _init_source(source, kwargs):
         required = {
-            'product': ('ShellScript must include {{product}} in '
-                        'its source')
+            "product": ("ShellScript must include {{product}} in " "its source")
         }
 
         return GenericSource(source, **kwargs, required=required)
@@ -520,11 +473,12 @@ class DownloadFromURL(Task):
     def run(self):
         # lazily load urllib as it is slow to import
         from urllib import request
+
         request.urlretrieve(str(self.source), filename=str(self.product))
 
     @staticmethod
     def _init_source(source, kwargs):
-        return GenericSource(str(source), **kwargs, optional=['product'])
+        return GenericSource(str(source), **kwargs, optional=["product"])
 
 
 class Link(Task):
@@ -568,15 +522,17 @@ class Link(Task):
         self.product._outdated_code_dependency = self._false
 
         if not self.product.exists():
-            raise RuntimeError('Link tasks should point to Products that '
-                               'already exist. "{}" task product "{}" does '
-                               'not exist'.format(self.name, self.product))
+            raise RuntimeError(
+                "Link tasks should point to Products that "
+                'already exist. "{}" task product "{}" does '
+                "not exist".format(self.name, self.product)
+            )
 
     def run(self):
         pass
 
     def set_upstream(self, other):
-        raise RuntimeError('Link tasks should not have upstream dependencies')
+        raise RuntimeError("Link tasks should not have upstream dependencies")
 
     @staticmethod
     def _init_source(kwargs):
@@ -621,16 +577,17 @@ class Input(Task):
         self.product._outdated_code_dependency = self._true
 
         if not self.product.exists():
-            raise RuntimeError('Input tasks should point to Products that '
-                               'already exist. "{}" task product "{}" does '
-                               'not exist'.format(self.name, self.product))
+            raise RuntimeError(
+                "Input tasks should point to Products that "
+                'already exist. "{}" task product "{}" does '
+                "not exist".format(self.name, self.product)
+            )
 
     def run(self):
         pass
 
     def set_upstream(self, other):
-        raise RuntimeError('Input tasks should not have upstream '
-                           'dependencies')
+        raise RuntimeError("Input tasks should not have upstream " "dependencies")
 
     @staticmethod
     def _init_source(kwargs):

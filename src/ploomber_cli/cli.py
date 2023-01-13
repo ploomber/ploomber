@@ -4,7 +4,6 @@ import os
 from difflib import get_close_matches
 import sys
 import json as json_module
-from warnings import warn
 
 from ploomber_scaffold import scaffold as scaffold_project
 import click
@@ -431,72 +430,6 @@ def get_key():
         click.echo(f"This is your cloud API key: {key}")
     else:
         click.echo("No cloud API key was found.")
-
-
-def _future_warning(name):
-    warn(
-        f"The {name!r} API has been deprecated and will be "
-        "removed in the next release. If you're using this "
-        "service, let us on know Slack: https://ploomber.io/community/",
-        FutureWarning,
-    )
-
-
-@cloud.command()
-@click.argument("pipeline_id", default=None, required=False)
-@click.option("-v", "--verbose", default=False, is_flag=True, required=False)
-def get_pipelines(pipeline_id, verbose):
-    """Get pipeline status
-
-    Specify a pipeline_id to get it's state, when not specified, pulls all of
-    the pipelines. You can pass "latest", instead of pipeline_id to get the
-    latest. To get a detailed view pass the verbose flag.
-    Returns a list of pipelines is succeeds, an Error string if fails.
-    """
-    _future_warning("get-pipelines")
-
-    from ploomber.table import Table
-    from ploomber import cli as cli_module
-
-    pipeline = cli_module.cloud.get_pipeline(pipeline_id, verbose)
-    if isinstance(pipeline, list) and pipeline:
-        pipeline = Table.from_dicts(pipeline, complete_keys=True)
-    print(pipeline)
-
-
-@cloud.command()
-@click.argument("pipeline_id", required=True)
-@click.argument("status", required=True)
-@click.argument("log", default=None, required=False)
-@click.argument("dag", default=None, required=False)
-@click.argument("pipeline_name", default=None, required=False)
-def write_pipeline(pipeline_id, status, log, pipeline_name, dag):
-    """Write a pipeline
-
-    Pipeline_id & status are required. You can also add logs and a pipeline
-    name. Returns a string with pipeline id if succeeds, an Error string if
-    fails.
-    """
-    from ploomber import cli as cli_module
-
-    _future_warning("write-pipeline")
-
-    print(cli_module.cloud.write_pipeline(pipeline_id, status, log, pipeline_name, dag))
-
-
-@cloud.command()
-@click.argument("pipeline_id", required=True)
-def delete_pipeline(pipeline_id):
-    """Delete a pipeline
-
-    pipeline_id is required. Returns a string with pipeline id if succeeds, an
-    Error string if fails.
-    """
-    from ploomber import cli as cli_module
-
-    _future_warning("delete-pipeline")
-
-    print(cli_module.cloud.delete_pipeline(pipeline_id))
 
 
 @cloud.command(name="build")
