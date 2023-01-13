@@ -1,4 +1,3 @@
-from unittest.mock import Mock
 from pathlib import Path
 import pytest
 import yaml
@@ -152,51 +151,3 @@ def test_cloud_user_tracked():
     runner.invoke(set_key, args=[key_val], catch_exceptions=False)
 
     assert key_val == telemetry.is_cloud_user()
-
-
-# Test empty string/emails without a @
-@pytest.mark.parametrize("user_email", ["", "test", "@", "a@c"])
-def test_malformed_email_signup(monkeypatch, user_email):
-    mock = Mock()
-    monkeypatch.setattr(cloud, "_email_registry", mock)
-
-    cloud._email_validation(user_email)
-    mock.assert_not_called()
-
-
-# Testing valid api calls when the email is correct
-def test_correct_email_signup(tmp_directory, monkeypatch):
-    monkeypatch.setattr(telemetry, "DEFAULT_HOME_DIR", ".")
-    registry_mock = Mock()
-    monkeypatch.setattr(cloud, "_email_registry", registry_mock)
-
-    sample_email = "test@example.com"
-    cloud._email_validation(sample_email)
-    registry_mock.assert_called_once()
-
-
-# Test valid emails are stored in the user conf
-def test_email_conf_file(tmp_directory, monkeypatch):
-    registry_mock = Mock()
-    monkeypatch.setattr(cloud, "_email_registry", registry_mock)
-    monkeypatch.setattr(telemetry, "DEFAULT_HOME_DIR", ".")
-
-    stats = Path("stats")
-    conf_path = stats / telemetry.DEFAULT_USER_CONF
-    conf_path.write_text("sample_conf_key: True\n")
-
-    sample_email = "test@example.com"
-    cloud._email_validation(sample_email)
-
-    conf = conf_path.read_text()
-    assert sample_email in conf
-
-
-def test_email_write_only_once(tmp_directory, monkeypatch):
-    monkeypatch.setattr(telemetry, "DEFAULT_HOME_DIR", ".")
-    input_mock = Mock(return_value="some1@email.com")
-    monkeypatch.setattr(cloud, "_get_input", input_mock)
-    monkeypatch.setattr(telemetry.UserSettings, "user_email", "some@email.com")
-
-    cloud._email_input()
-    assert not input_mock.called

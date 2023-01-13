@@ -422,9 +422,9 @@ def get_key():
     It retrieves it from the user config.yaml file. Returns the key if it
     exists
     """
-    from ploomber import cli as cli_module
+    from ploomber.cloud.key import get_key
 
-    key = cli_module.cloud.get_key()
+    key = get_key()
 
     if key:
         click.echo(f"This is your cloud API key: {key}")
