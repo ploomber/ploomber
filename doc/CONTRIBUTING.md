@@ -43,6 +43,21 @@ invoke docs
 
 To see the docs, open `doc/_build/html/index.html`
 
+## Documenting changes to `pipeline.yaml`
+
+If your change impacts the Spec API (i.e., `pipeline.yaml`). It should also be documented in [doc/api/spec.rst](doc/api/spec.rst). The `spec.rst` also uses the `.. versionadded` and `.. versionchanged` directives:
+
+```rst
+.. collapse:: Changelog
+
+    .. versionchanged:: X.Y.Z
+        What changed
+
+    .. versionadded:: X.Y.Z
+        what was added
+```
+
+If there isn't a `.. collapse:: Changelog` at the end of the section, add one.
 
 ## Layout
 
