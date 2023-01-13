@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.22.1dev
+
 ## 0.22.0 (2023-01-13)
 * [API Change] Deprecates `.develop()` method in Notebook Function tasks
 * [API Change] Deprecates the following `ploomber cloud` commands: `get-pipelines`, `write-pipeline`, and `delete-pipeline`
