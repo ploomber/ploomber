@@ -120,7 +120,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install 'pkgmt>=0.1.1'
+          pip install 'pkgmt[check]'
       - name: Check project
         run: |
           pkgmt check
