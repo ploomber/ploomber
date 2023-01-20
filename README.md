@@ -16,7 +16,7 @@
 <p align="center">
   <a href="https://ploomber.io/community">Join our community</a>
   |
-  <a href="https://www.getrevue.co/profile/ploomber">Newsletter</a>
+  <a href="https://share.hsforms.com/1E7Qa_OpcRPi_MV-segFsaAe6c2g">Newsletter</a>
   |
   <a href="mailto:contact@ploomber.io">Contact us</a>
   |
@@ -63,7 +63,7 @@ conda install ploomber -c conda-forge
 ## Community
 
 * [Join us on Slack](https://ploomber.io/community)
-* [Newsletter](https://www.getrevue.co/profile/ploomber)
+* [Newsletter](https://share.hsforms.com/1E7Qa_OpcRPi_MV-segFsaAe6c2g)
 * [YouTube](https://www.youtube.com/channel/UCaIS5BMlmeNQE4-Gn0xTDXQ)
 * [Contact the development team](mailto:contact@ploomber.io)
 

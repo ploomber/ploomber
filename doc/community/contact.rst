@@ -11,5 +11,5 @@ Stay up-to-date
 ***************
 
 - Follow us on `Twitter <https://twitter.com/intent/user?screen_name=ploomber>`_.
-- Subscribe to our `newsletter <https://www.getrevue.co/profile/ploomber>`_.
+- Subscribe to our `newsletter <https://share.hsforms.com/1E7Qa_OpcRPi_MV-segFsaAe6c2g>`_.
 - Subscribe to our `YouTube channel <https://www.youtube.com/channel/UCaIS5BMlmeNQE4-Gn0xTDXQ>`_.
