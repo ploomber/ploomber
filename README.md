@@ -22,7 +22,7 @@
   |
   <a href="https://docs.ploomber.io/">Docs</a>
   |
-  <a href="https://ploomber.io/">Blog</a>
+  <a href="https://ploomber.io/blog/">Blog</a>
   |  
   <a href="https://www.ploomber.io">Website</a>
   |
