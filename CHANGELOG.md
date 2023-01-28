@@ -4,7 +4,7 @@
 
 ## 0.22.1 (2023-01-28)
 
-* [Fix] Pinning `jupyter_client&lt;8` due to breaking change
+* [Fix] Pinning `jupyter_client<8` due to breaking change
 
 ## 0.22.0 (2023-01-13)
 
@@ -447,7 +447,7 @@
 - `ploomber plot` saves to `pipeline.{name}.png`
 - Override `env.yaml` to load using `PLOOMBER_ENV_FILENAME` environment variable
 - `EnvDict` init no longer searches recursively, moved that logic to `EnvDict.find`. `with_env` decorator now uses the latter to prevent breaking the API
-- `PostgresCopyFrom` compatible with `psycopg&gt;=2.9`
+- `PostgresCopyFrom` compatible with `psycopg>=2.9`
 - `jupyter_hot_reload=True` by default
 - `PythonCallableSource` finds the location of a dotted path without importing any of the submodules
 - Jupyter integration lazily loads DAGs (no need to import callable tasks)
@@ -611,7 +611,7 @@
 - Removes `matplotlib` from dependencies, now using `IPython.display`
   for inline plotting
 - Fixes bug that caused custom args to
-  `{PythonCallable, NotebookRunner}.develop(args=&quot;--arg=value&quot;)` not
+  `{PythonCallable, NotebookRunner}.develop(args"--arg=value")` not
   to be sent correctly to the subprocess
 - `NotebookRunner` (initialized from ipynb) only considers the actual
   code as its source, ignores the rest of the JSON contents
