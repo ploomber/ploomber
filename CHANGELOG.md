@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.22.2dev
+
 ## 0.22.1 (2023-01-28)
 
 * [Fix] Pinning `jupyter_client&lt;8` due to breaking change
