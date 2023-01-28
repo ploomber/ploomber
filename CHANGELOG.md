@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## 0.22.1dev
+* [Fix] Pinning `jupyter_client<8` due to breaking change
 
 ## 0.22.0 (2023-01-13)
 * [API Change] Deprecates `.develop()` method in Notebook Function tasks
