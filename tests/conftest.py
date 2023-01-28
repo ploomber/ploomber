@@ -23,65 +23,68 @@ from ploomber.cli import install
 import posthog
 from unittest.mock import Mock, MagicMock
 
-path_to_src = str(Path(__file__, '..', '..', 'testutils').resolve())
+path_to_src = str(Path(__file__, "..", "..", "testutils").resolve())
 sys.path.insert(0, path_to_src)
 
 from testutils import (  # noqa: E402
-    fixture_tmp_dir, _path_to_tests, fixture_backup,
-    _fix_all_dot_git_permissions)
+    fixture_tmp_dir,
+    _path_to_tests,
+    fixture_backup,
+    _fix_all_dot_git_permissions,
+)
 
 
-def git_init():
-    if Path('CHANGELOG.md').exists():
-        raise ValueError('call git_init in a temporary directory')
+def git_init(commit=True):
+    if Path("CHANGELOG.md").exists():
+        raise ValueError("call git_init in a temporary directory")
 
-    subprocess.run(['git', 'init', '-b', 'mybranch'])
-    subprocess.check_call(['git', 'config', 'commit.gpgsign', 'false'])
-    subprocess.check_call(['git', 'config', 'user.email', 'ci@ploomberio'])
-    subprocess.check_call(['git', 'config', 'user.name', 'Ploomber'])
+    subprocess.run(["git", "init", "-b", "mybranch"])
+    subprocess.check_call(["git", "config", "commit.gpgsign", "false"])
+    subprocess.check_call(["git", "config", "user.email", "ci@ploomberio"])
+    subprocess.check_call(["git", "config", "user.name", "Ploomber"])
 
-    subprocess.run(['git', 'add', '--all'])
-    subprocess.run(['git', 'commit', '-m', 'some-commit-message'])
+    if commit:
+        subprocess.run(["git", "add", "--all"])
+        subprocess.run(["git", "commit", "-m", "some-commit-message"])
 
 
 @pytest.fixture
 def tmp_git(tmp_directory):
-    Path('file').touch()
+    Path("file").touch()
     git_init()
 
 
 # FIXME: do we need this?
-@pytest.fixture(scope='class')
+@pytest.fixture(scope="class")
 def monkeypatch_session():
     from _pytest.monkeypatch import MonkeyPatch
+
     m = MonkeyPatch()
     yield m
     m.undo()
 
 
-@pytest.fixture(scope='class', autouse=True)
+@pytest.fixture(scope="class", autouse=True)
 def external_access(request, monkeypatch_session):
     # https://miguendes.me/pytest-disable-autouse
-    if 'allow_posthog' in request.keywords:
+    if "allow_posthog" in request.keywords:
         yield
     else:
         # https://github.com/pytest-dev/pytest/issues/7061#issuecomment-611892868
         external_access = MagicMock()
-        external_access.get_something = MagicMock(
-            return_value='Mock was used.')
-        monkeypatch_session.setattr(posthog, 'capture',
-                                    external_access.get_something)
+        external_access.get_something = MagicMock(return_value="Mock was used.")
+        monkeypatch_session.setattr(posthog, "capture", external_access.get_something)
         yield
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def path_to_tests():
     return _path_to_tests()
 
 
 @pytest.fixture()
 def path_to_test_pkg():
-    return str(Path(importlib.util.find_spec('test_pkg').origin).parent)
+    return str(Path(importlib.util.find_spec("test_pkg").origin).parent)
 
 
 @pytest.fixture
@@ -91,39 +94,39 @@ def backup_test_pkg():
     root = Path(test_pkg.__file__).parents[2]
 
     # sanity check, in case we change the structure
-    assert root.name == 'test_pkg'
+    assert root.name == "test_pkg"
 
-    shutil.copytree(str(root), str(Path(backup, 'test_pkg')))
+    shutil.copytree(str(root), str(Path(backup, "test_pkg")))
 
-    yield str(Path(importlib.util.find_spec('test_pkg').origin).parent)
+    yield str(Path(importlib.util.find_spec("test_pkg").origin).parent)
     os.chdir(old)
 
     shutil.rmtree(str(root))
-    shutil.copytree(str(Path(backup, 'test_pkg')), str(root))
+    shutil.copytree(str(Path(backup, "test_pkg")), str(root))
     shutil.rmtree(backup)
 
 
-@fixture_backup('spec-with-functions')
+@fixture_backup("spec-with-functions")
 def backup_spec_with_functions():
     pass
 
 
-@fixture_backup('spec-with-functions-flat')
+@fixture_backup("spec-with-functions-flat")
 def backup_spec_with_functions_flat():
     pass
 
 
-@fixture_backup('spec-with-functions-no-sources')
+@fixture_backup("spec-with-functions-no-sources")
 def backup_spec_with_functions_no_sources():
     pass
 
 
-@fixture_backup('simple')
+@fixture_backup("simple")
 def backup_simple():
     pass
 
 
-@fixture_backup('online')
+@fixture_backup("online")
 def backup_online():
     pass
 
@@ -170,9 +173,9 @@ def sqlite_client_and_tmp_dir():
     old = os.getcwd()
     tmp_dir = Path(tempfile.mkdtemp())
     os.chdir(str(tmp_dir))
-    client = SQLAlchemyClient('sqlite:///' + str(tmp_dir / 'my_db.db'))
-    df = pd.DataFrame({'x': range(10)})
-    df.to_sql('data', client.engine)
+    client = SQLAlchemyClient("sqlite:///" + str(tmp_dir / "my_db.db"))
+    df = pd.DataFrame({"x": range(10)})
+    df.to_sql("data", client.engine)
     yield client, tmp_dir
     os.chdir(old)
     client.close()
@@ -186,98 +189,104 @@ def cleanup_env():
     Env.end()
 
 
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'sample_dir')
+@fixture_tmp_dir(_path_to_tests() / "assets" / "sample_dir")
 def tmp_sample_dir():
     pass
 
 
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'sample_tasks')
+@fixture_tmp_dir(_path_to_tests() / "assets" / "sample_tasks")
 def tmp_sample_tasks():
     pass
 
 
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'pipeline-sql')
+@fixture_tmp_dir(_path_to_tests() / "assets" / "pipeline-sql")
 def tmp_pipeline_sql():
     pass
 
 
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs')
+@fixture_tmp_dir(_path_to_tests() / "assets" / "nbs")
 def tmp_nbs():
     pass
 
 
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-priority-inject')
+@fixture_tmp_dir(_path_to_tests() / "assets" / "nbs-priority-inject")
 def tmp_pi_nbs():
     pass
 
 
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-nested')
+@fixture_tmp_dir(_path_to_tests() / "assets" / "nbs-nested")
 def tmp_nbs_nested():
     pass
 
 
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-no-yaml')
+@fixture_tmp_dir(_path_to_tests() / "assets" / "nbs-no-yaml")
 def tmp_nbs_no_yaml():
     pass
 
 
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'partial')
+@fixture_tmp_dir(_path_to_tests() / "assets" / "partial")
 def tmp_partial():
     pass
 
 
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'fns-and-scripts')
+@fixture_tmp_dir(_path_to_tests() / "assets" / "fns-and-scripts")
 def tmp_fns_and_scripts():
     pass
 
 
-@fixture_tmp_dir(_path_to_tests() / 'assets' / 'nbs-factory')
+@fixture_tmp_dir(_path_to_tests() / "assets" / "nbs-factory")
 def tmp_nbs_factory():
     pass
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def path_to_source_code_file():
-    return (_path_to_tests() / 'assets' / 'sample' / 'src' / 'pkg' / 'module' /
-            'functions.py')
+    return (
+        _path_to_tests()
+        / "assets"
+        / "sample"
+        / "src"
+        / "pkg"
+        / "module"
+        / "functions.py"
+    )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def path_to_env():
-    return _path_to_tests() / 'assets' / 'sample' / 'env.yaml'
+    return _path_to_tests() / "assets" / "sample" / "env.yaml"
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def path_to_assets():
-    return _path_to_tests() / 'assets'
+    return _path_to_tests() / "assets"
 
 
-def _write_sample_conda_env(name='environment.yml', env_name='my_tmp_env'):
-    Path(name).write_text(f'name: {env_name}\ndependencies:\n- pip')
+def _write_sample_conda_env(name="environment.yml", env_name="my_tmp_env"):
+    Path(name).write_text(f"name: {env_name}\ndependencies:\n- pip")
 
 
 def _write_sample_conda_env_lock():
-    _write_sample_conda_env(name='environment.lock.yml')
+    _write_sample_conda_env(name="environment.lock.yml")
 
 
 def _write_sample_conda_files(dev=False):
+    _write_sample_conda_env("environment.yml" if not dev else "environment.dev.yml")
     _write_sample_conda_env(
-        'environment.yml' if not dev else 'environment.dev.yml')
-    _write_sample_conda_env(
-        'environment.lock.yml' if not dev else 'environment.dev.lock.yml')
+        "environment.lock.yml" if not dev else "environment.dev.lock.yml"
+    )
 
 
 def _write_sample_pip_files(dev=False):
-    Path('requirements.txt' if not dev else 'requirements.dev.txt').touch()
-    Path('requirements.lock.txt' if not dev else 'requirements.dev.lock.txt'
-         ).touch()
+    Path("requirements.txt" if not dev else "requirements.dev.txt").touch()
+    Path("requirements.lock.txt" if not dev else "requirements.dev.lock.txt").touch()
 
 
-def _write_sample_pip_req(name='requirements.txt'):
+def _write_sample_pip_req(name="requirements.txt"):
     Path(name).touch()
 
 
-def _write_sample_pip_req_lock(name='requirements.lock.txt'):
+def _write_sample_pip_req_lock(name="requirements.lock.txt"):
     Path(name).touch()
 
 
@@ -291,7 +300,7 @@ def _prepare_files(
     monkeypatch,
 ):
     mock = Mock(return_value=has_conda)
-    monkeypatch.setattr(install.shutil, 'which', mock)
+    monkeypatch.setattr(install.shutil, "which", mock)
 
     if env:
         _write_sample_conda_env()
@@ -307,7 +316,7 @@ def _prepare_files(
 
 
 def _load_db_credentials():
-    p = Path('~', '.auth', 'postgres-ploomber.json').expanduser()
+    p = Path("~", ".auth", "postgres-ploomber.json").expanduser()
 
     # if running locally, load from file
     if p.exists():
@@ -317,19 +326,19 @@ def _load_db_credentials():
     # if no credentials file, use env variable (previously, this was the method
     # used for running the Windows and macOS CI, but we not updated them to
     # use a local db)
-    elif 'POSTGRES' in os.environ:
-        b64 = os.environ['POSTGRES']
+    elif "POSTGRES" in os.environ:
+        b64 = os.environ["POSTGRES"]
         json_str = base64.b64decode(b64).decode()
         db = json.loads(json_str)
 
     # otherwise, use local db
     else:
         db = {
-            'uri': 'postgresql://postgres:postgres@localhost:5432/postgres',
-            'dbname': 'postgres',
-            'host': 'localhost',
-            'user': 'postgres',
-            'password': 'postgres',
+            "uri": "postgresql://postgres:postgres@localhost:5432/postgres",
+            "dbname": "postgres",
+            "host": "localhost",
+            "user": "postgres",
+            "password": "postgres",
         }
 
     return db
@@ -340,7 +349,7 @@ def db_credentials():
     return _load_db_credentials()
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def pg_client_and_schema():
     """
     Creates a temporary schema for the testing session, drops everything
@@ -352,29 +361,31 @@ def pg_client_and_schema():
     # are run at the same time, tests might conflict with each other
     # NOTE: avoid upper case characters, pandas.DataFrame.to_sql does not like
     # them
-    schema = (''.join(random.choice(string.ascii_letters)
-                      for i in range(12))).lower()
+    schema = ("".join(random.choice(string.ascii_letters) for i in range(12))).lower()
 
     # initialize client, set default schema
     # info: https://www.postgresonline.com/article_pfriendly/279.html
-    client = SQLAlchemyClient(db['uri'],
-                              create_engine_kwargs=dict(connect_args=dict(
-                                  options=f'-c search_path={schema}')))
+    client = SQLAlchemyClient(
+        db["uri"],
+        create_engine_kwargs=dict(
+            connect_args=dict(options=f"-c search_path={schema}")
+        ),
+    )
 
     # create schema
-    client.execute('CREATE SCHEMA {};'.format(schema))
+    client.execute("CREATE SCHEMA {};".format(schema))
 
-    df = pd.DataFrame({'x': range(10)})
-    df.to_sql('data', client.engine)
+    df = pd.DataFrame({"x": range(10)})
+    df.to_sql("data", client.engine)
 
     yield client, schema
 
     # clean up schema
-    client.execute('DROP SCHEMA {} CASCADE;'.format(schema))
+    client.execute("DROP SCHEMA {} CASCADE;".format(schema))
     client.close()
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def fake_conn():
     o = object()
 
@@ -384,7 +395,7 @@ def fake_conn():
 @pytest.fixture
 def add_current_to_sys_path():
     old = copy(sys.path)
-    sys.path.insert(0, os.path.abspath('.'))
+    sys.path.insert(0, os.path.abspath("."))
     yield sys.path
     sys.path = old
 

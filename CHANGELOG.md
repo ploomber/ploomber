@@ -2,6 +2,7 @@
 
 ## 0.22.2dev
 
+* [Fix] Fixes error that printed a git error message when failing to retrieve current git hash (#1067)
 ## 0.22.1 (2023-01-28)
 
 * [Fix] Pinning `jupyter_client<8` due to breaking change
