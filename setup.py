@@ -102,6 +102,8 @@ TESTING = [
     "multiprocess",
     # dill 0.3.6 is breaking windows github actions
     "dill==0.3.5.1",
+    # pandas not yet compatible with sqlalchemy 2
+    "sqlalchemy<2",
 ]
 
 # packages needed for development
