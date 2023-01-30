@@ -3,8 +3,8 @@ User Statistics
 
 As an open source project, we collect anonymous usage statistics to prioritize and find product gaps.
 This is optional and may be turned off by changing the configuration file:
- inside ~/.ploomber/stats/config.yaml
- Change stats_enabled to False.
+ inside ``~/.ploomber/stats/config.yaml``
+ Change ``stats_enabled`` to ``False``.
 
 The data we collect is limited to:
 
@@ -19,5 +19,5 @@ Version updates
 If there's an outdated version, ploomber will alert it through the console every second day in a non-invasive way.
 You can stop this checks for instance if you're running in production and you've locked versions.
 The check can be turned off by changing the configuration file:
- inside ~/.ploomber/stats/config.yaml
- Change version_check_enabled to False.
+ inside ``~/.ploomber/stats/config.yaml``
+ Change ``version_check_enabled`` to ``False``.
