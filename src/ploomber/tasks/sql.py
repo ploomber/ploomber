@@ -193,7 +193,7 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
           - source: script.sql
             product: data.parquet
 
-    `Full spec API example. <https://github.com/ploomber/projects/tree/master/cookbook/sql-dump>`_ # noqa
+    `Full spec API example. <https://github.com/ploomber/projects/tree/master/cookbook/sql-dump>`_ 
 
     Python API:
 
@@ -231,7 +231,7 @@ class SQLDump(io.FileLoaderMixin, ClientMixin, Task):
     --------
     ploomber.clients.SQLScript :
         A task to execute a SQL script and create a table/view as product
-    """
+    """ # noqa
     PRODUCT_CLASSES_ALLOWED = (File, GenericProduct)
 
     def __init__(self,

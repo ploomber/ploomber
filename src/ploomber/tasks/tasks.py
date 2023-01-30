@@ -177,7 +177,7 @@ class PythonCallable(Task):
             ``debug`` constructor flag renamed to ``debug_mode`` to avoid
             conflicts with the ``debug`` method.
 
-    More `examples using the Python API. <https://github.com/ploomber/projects/tree/master/python-api-examples>`_ # noqa
+    More `examples using the Python API. <https://github.com/ploomber/projects/tree/master/python-api-examples>`_ 
 
     The ``executor=Serial(build_in_subprocess=False)`` argument is only
     required if copy-pasting the example in a Python session. If you store the
@@ -195,7 +195,7 @@ class PythonCallable(Task):
         :class: text-editor
 
         python script.py
-    """
+    """ # noqa
 
     def __init__(
         self,

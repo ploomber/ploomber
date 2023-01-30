@@ -524,8 +524,8 @@ class NotebookRunner(NotebookMixin, Task):
             Support for generating output notebooks in multiple formats, see
             example above.
 
-    `nbconvert's documentation <https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options>`_ # noqa
-    """
+    `nbconvert's documentation <https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options>`_ 
+    """ # noqa
 
     PRODUCT_CLASSES_ALLOWED = (File,)
 
