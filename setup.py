@@ -33,7 +33,7 @@ NB = [
     "papermill",
     "jupytext",
     "ipykernel>=1.5.2",
-    "jupyter_client>=5.3.1,<8",
+    "jupyter_client>=5.3.1",
     "nbconvert>=5.6.0",
     "nbformat",
     # for notebook validation
