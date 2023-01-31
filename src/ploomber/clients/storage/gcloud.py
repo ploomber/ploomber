@@ -155,11 +155,11 @@ class GCloudStorageClient(AbstractStorageClient):
 
     Notes
     -----
-    `Complete example using the Spec API <https://github.com/ploomber/projects/tree/master/templates/google-cloud>`_ # noqa
+    `Complete example using the Spec API <https://github.com/ploomber/projects/tree/master/templates/google-cloud>`_ 
 
     If a notebook (or script) task fails, the partially executed ``.ipynb``
     file will be uploaded using this client.
-    """
+    """ # noqa
     @requires(['google.cloud.storage'],
               name='GCloudStorageClient',
               pip_names=['google-cloud-storage'])
