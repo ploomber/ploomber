@@ -26,6 +26,17 @@ Assume yellow tasks are outdated and green tasks are up-to-date.
 Executed tasks are shown in blue and skipped tasks are shown in white in
 diagrams below.
 
+Entry points
+------------
+
+By default, the CLI looks for an ``pipeline.yaml`` file in certain standard
+locations (:ref:`api-cli-default-locations`). If your pipeline exists in a
+non-standard location, pass the ``--entry-point`` argument.
+
+The ``pipeline.yaml`` file is known as "entry point". However, this is
+not the only type of entry point (See this guide to learn
+more: :doc:`../user-guide/spec-vs-python`).
+
 Build pipeline
 **************
 
