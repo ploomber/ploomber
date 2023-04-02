@@ -524,8 +524,8 @@ class NotebookRunner(NotebookMixin, Task):
             Support for generating output notebooks in multiple formats, see
             example above.
 
-    `nbconvert's documentation <https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options>`_ 
-    """ # noqa
+    `nbconvert's documentation <https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options>`_
+    """  # noqa
 
     PRODUCT_CLASSES_ALLOWED = (File,)
 
@@ -864,7 +864,7 @@ class ScriptRunner(NotebookMixin, Task):
         params=None,
         ext_in=None,
         static_analysis="regular",
-        local_execution=False,
+        local_execution=True,
     ):
         self.ext_in = ext_in
         self.local_execution = local_execution
@@ -901,11 +901,6 @@ class ScriptRunner(NotebookMixin, Task):
         if self.static_analysis == "regular":
             self.source._check_notebook(raise_=True, check_signature=False)
 
-        if self.local_execution:
-            cwd = str(self.source.loc.parent)
-        else:
-            cwd = None
-
         fd, tmp = tempfile.mkstemp(".py")
         os.close(fd)
 
@@ -916,6 +911,17 @@ class ScriptRunner(NotebookMixin, Task):
                 if c["cell_type"] == "code"
             ]
         )
+
+        if self.local_execution:
+            cwd = str(self.source.loc.parent.resolve())
+            # Adding a code cell on top of python file to
+            # support import of local module
+            code_block = "# Adding support for local execution\n"
+            code_block = code_block + "import sys\n"
+            code_block = code_block + f'sys.path.append("{cwd}")\n\n\n'
+            code = code_block + code
+        else:
+            cwd = None
 
         tmp = Path(tmp)
         tmp.write_text(code)
@@ -936,6 +942,9 @@ class ScriptRunner(NotebookMixin, Task):
 
 
 def _run_script_in_subprocess(interpreter, path, cwd):
+
+    # For python, the cwd will not get appended to the sys path
+    # Therefore added explicit codeblock above for local execution
     res = subprocess.run([interpreter, str(path)], cwd=cwd, stderr=PIPE)
 
     if res.returncode:
