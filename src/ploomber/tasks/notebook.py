@@ -41,6 +41,7 @@ from ploomber.util._sys import _python_bin
 
 import ploomber_engine as pe
 
+
 # TODO: ensure that all places where we call this function are unit tested
 def _write_text_utf_8(path, text):
     """Write text using UTF-8 encoding
@@ -526,7 +527,7 @@ class NotebookRunner(NotebookMixin, Task):
         .. versionchanged:: 0.22.3dev
             Added native ploomber_engine support with `ploomber_engine`
             parameter
-    
+
         .. versionchanged:: 0.20
             ``debug`` constructor flag renamed to ``debug_mode`` to prevent
             conflicts with the ``debug`` method
@@ -535,8 +536,8 @@ class NotebookRunner(NotebookMixin, Task):
             Support for generating output notebooks in multiple formats, see
             example above.
 
-    `nbconvert's documentation <https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options>`_ 
-    """ # noqa
+    `nbconvert's documentation <https://nbconvert.readthedocs.io/en/latest/config_options.html#preprocessor-options>`_
+    """  # noqa
 
     PRODUCT_CLASSES_ALLOWED = (File,)
 
@@ -626,25 +627,29 @@ class NotebookRunner(NotebookMixin, Task):
         self.check_if_kernel_installed = check_if_kernel_installed
         self.debug_mode = debug_mode
 
-        # We are migrating to nb_executor_params 
-        if self.papermill_params!={}:
-            if self.nb_executor_params=={}:
-                warnings.warn("papermill_params will be deprecated in future releases."
-                            "Please use nb_executor_params instead"
-                            "Copying to nb_executor_params instead",
-                            FutureWarning)
+        # We are migrating to nb_executor_params
+        if self.papermill_params != {}:
+            if self.nb_executor_params == {}:
+                warnings.warn(
+                    "papermill_params will be deprecated in future releases."
+                    "Please use nb_executor_params instead"
+                    "Copying to nb_executor_params instead",
+                    FutureWarning,
+                )
                 self.nb_executor_params = self.papermill_params
             else:
-                warnings.warn("Both papermill_params and nb_executor_params passed."
-                              "Overriding with nb_executor_params",
-                            SyntaxError)
+                warnings.warn(
+                    "Both papermill_params and nb_executor_params passed."
+                    "Overriding with nb_executor_params",
+                    SyntaxError,
+                )
 
         if self.ploomber_engine:
             if "engine_name" not in self.nb_executor_params:
                 self.nb_executor_params["engine_name"] = "ploomber_engine"
-            elif(self.nb_executor_params["engine_name"]!="ploomber_engine"):
+            elif self.nb_executor_params["engine_name"] != "ploomber_engine":
                 raise KeyError(
-                    'Found conflicting options: ploomber_engine is set '
+                    "Found conflicting options: ploomber_engine is set "
                     f'to {self.ploomber_engine} but "engine_name" is set to '
                     f'{self.nb_executor_params["engine_name"]} in "nb_executor_params'
                 )
@@ -814,14 +819,12 @@ class NotebookRunner(NotebookMixin, Task):
         try:
             # no need to pass parameters, they are already there
             if "engine_name" in self.nb_executor_params:
-                if self.nb_executor_params["engine_name"]=="ploomber_engine":
+                if self.nb_executor_params["engine_name"] == "ploomber_engine":
                     # Currently only limited support due to mismatch of arguments
                     # between papermill.execute_notebook() and
                     # ploomber_engine.execute_notebook(). Therefore not passing
                     # self.nb_executor_params
-                    pe.execute_notebook(
-                        str(tmp), str(path_to_out_ipynb)
-                    )
+                    pe.execute_notebook(str(tmp), str(path_to_out_ipynb))
                 else:
                     pm.execute_notebook(
                         str(tmp), str(path_to_out_ipynb), **self.nb_executor_params
