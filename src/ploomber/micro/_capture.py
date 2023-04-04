@@ -114,6 +114,9 @@ class _Client(PloomberClient):
         returned_value = None
 
         with _add_to_sys_path("."):
+            # Struck in endless for loop due to continous addition of error cells
+            # to nb due to recent changes
+            # https://github.com/ploomber/ploomber-engine/pull/67
             for index, cell in enumerate(self._nb.cells):
                 if cell.cell_type == "code":
 
@@ -156,11 +159,27 @@ def _capture_execute(function, globals_, **kwargs):
 
     upstream = kwargs.pop('upstream', {})
 
-    # FIXME: there something weird going on. the content of globals_ changes
-    # after a few tasks, it's the same object and then all of a sudden, it
-    # changes (I checked with id(globals_))
+    # Better and more robust Way
+    # client = PloomberClient(nb)
+
+    # # Ploomber Engine doesn't init the shell until it start executing
+    # cells. So can't pass it unitl ploomber engine natively supports it. 
+    # client._shell.user_ns = {
+    #         **client._shell.user_ns,
+    #         **globals_,
+    #         **upstream,
+    #         **kwargs
+    #     }
+
+    # nb = client.execute()
+    # val = None
+    
+    # The old way, not robust
     with _Client(nb) as client:
 
+        # FIXME: there something weird going on. the content of globals_ changes
+        # after a few tasks, it's the same object and then all of a sudden, it
+        # changes (I checked with id(globals_))
         client._shell.user_ns = {
             **client._shell.user_ns,
             **globals_,
