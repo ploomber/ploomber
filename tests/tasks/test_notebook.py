@@ -19,7 +19,7 @@ from ploomber.exceptions import (
 from ploomber.executors import Serial
 from ploomber.products import File
 from ploomber.sources.nb_utils import find_cell_with_tag
-from ploomber.tasks import NotebookRunner, notebook
+from ploomber.tasks import NotebookRunner, notebook, ScriptRunner
 
 
 def fake_from_notebook_node(self, nb, resources):
@@ -1383,3 +1383,31 @@ def test_notebook_add_parameters_cell_if_missing(
         else jupytext.guess_format(path.read_text(), ext=path.suffix)
     )
     assert fmt == expected_fmt
+
+
+def test_local_import_ScriptRunner(tmp_directory, capsys):
+    lib_pth = Path("lib_test.py")
+    lib_pth.write_text(
+        """
+def add():
+    return 1+2
+        """
+    )
+
+    exec_pth = Path("exec.py")
+    exec_pth.write_text(
+        """
+# + tags=["parameters"]
+product = None
+
+# +
+import lib_test
+lib_test.add()
+from pathlib import Path
+Path(product).touch()
+        """
+    )
+
+    dag = DAG()
+    ScriptRunner(Path("exec.py"), File("tmp.txt"), dag)
+    dag.build()

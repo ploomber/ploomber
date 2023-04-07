@@ -157,7 +157,6 @@ class NotebookConverter:
         self._suffix = Path(path_to_output).suffix
 
         if exporter_name is None:
-
             # try to infer exporter name from the extension
             if not self._suffix:
                 raise TaskInitializationError(
@@ -189,7 +188,6 @@ class NotebookConverter:
         self._nbconvert_export_kwargs = nbconvert_export_kwargs or {}
 
     def convert(self):
-
         if self._exporter is None and self._nbconvert_export_kwargs:
             warnings.warn(
                 f"Output {self._path_to_output!r} is a "
@@ -673,7 +671,6 @@ class NotebookRunner(NotebookMixin, Task):
         else:
             self._converter = []
             for key, product_nb in multiple_product_nb.items():
-
                 exporter = (
                     nbconvert_exporter_name.get(key)
                     if nbconvert_exporter_name
@@ -724,7 +721,6 @@ class NotebookRunner(NotebookMixin, Task):
 
         # the task generates more than one product
         if isinstance(self.product, MetaProduct):
-
             # generating a single output notebook
             if isinstance(self.nb_product_key, str):
                 nb_product = self.product[self.nb_product_key]
@@ -914,14 +910,11 @@ class ScriptRunner(NotebookMixin, Task):
 
         if self.local_execution:
             cwd = str(self.source.loc.parent.resolve())
-            # Adding a code cell on top of python file to
-            # support import of local module
-            code_block = "# Adding support for local execution\n"
-            code_block = code_block + "import sys\n"
-            code_block = code_block + f'sys.path.append("{cwd}")\n\n\n'
-            code = code_block + code
+            orig_env = os.environ.copy()
+            orig_env["PYTHONPATH"] = cwd
         else:
             cwd = None
+            orig_env = None
 
         tmp = Path(tmp)
         tmp.write_text(code)
@@ -934,18 +927,15 @@ class ScriptRunner(NotebookMixin, Task):
             raise ValueError("ScriptRunner only works with Python and R scripts")
 
         try:
-            _run_script_in_subprocess(interpreter, tmp, cwd)
+            _run_script_in_subprocess(interpreter, tmp, cwd, orig_env)
         except Exception as e:
             raise TaskBuildError("Error when executing task" f" {self.name!r}.") from e
         finally:
             tmp.unlink()
 
 
-def _run_script_in_subprocess(interpreter, path, cwd):
-
-    # For python, the cwd will not get appended to the sys path
-    # Therefore added explicit codeblock above for local execution
-    res = subprocess.run([interpreter, str(path)], cwd=cwd, stderr=PIPE)
+def _run_script_in_subprocess(interpreter, path, cwd, env):
+    res = subprocess.run([interpreter, str(path)], cwd=cwd, env=env, stderr=PIPE)
 
     if res.returncode:
         stderr = res.stderr.decode()
