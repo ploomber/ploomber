@@ -21,8 +21,7 @@ from ploomber.sources.interact import split_statement, indentation_idx
 
 
 class _CapturedPythonCallable(_PythonCallableNoValidation):
-    """A subclass of PythonCallable that allows capturing output
-    """
+    """A subclass of PythonCallable that allows capturing output"""
 
     def run(self):
         if "upstream" in self.params and self._unserializer:
@@ -59,24 +58,26 @@ class _CapturedPythonCallable(_PythonCallableNoValidation):
             except Exception as e:
                 debuglater.run(self.name, echo=False)
                 path_to_dump = f"{self.name}.dump"
-                message = (f"Serializing traceback to: {path_to_dump}. "
-                           f"To debug: dltr {path_to_dump}")
+                message = (
+                    f"Serializing traceback to: {path_to_dump}. "
+                    f"To debug: dltr {path_to_dump}"
+                )
                 raise TaskBuildError(message) from e
         elif self.debug_mode == "now":
-            nb, out = debug_if_exception(callable_=callable_,
-                                         task_name=self.name)
+            nb, out = debug_if_exception(callable_=callable_, task_name=self.name)
         else:
             nb, out = callable_()
 
-        Path(self.product['nb_ipynb']).write_text(nbformat.v4.writes(nb))
+        Path(self.product["nb_ipynb"]).write_text(nbformat.v4.writes(nb))
         _to_html(self.product["nb_html"], nb)
 
         # serialize output if needed
         if self._serializer:
             if out is None:
-                raise ValueError("Callable {} must return a value if task "
-                                 "is initialized with a serializer".format(
-                                     self.source.primitive))
+                raise ValueError(
+                    "Callable {} must return a value if task "
+                    "is initialized with a serializer".format(self.source.primitive)
+                )
             else:
                 self._serializer(out, product["return"])
 
@@ -119,7 +120,6 @@ class _Client(PloomberClient):
             # https://github.com/ploomber/ploomber-engine/pull/67
             for index, cell in enumerate(self._nb.cells):
                 if cell.cell_type == "code":
-
                     try:
                         self.execute_cell(
                             cell,
@@ -149,21 +149,20 @@ class _Client(PloomberClient):
 
 
 def _capture_execute(function, globals_, **kwargs):
-    """Execute functions as notebooks
-    """
+    """Execute functions as notebooks"""
     nb = nbformat.v4.new_notebook()
 
     for statement in _get_body_statements(function):
         c = nbformat.v4.new_code_cell(source=statement)
         nb.cells.append(c)
 
-    upstream = kwargs.pop('upstream', {})
+    upstream = kwargs.pop("upstream", {})
 
     # Better and more robust Way
     # client = PloomberClient(nb)
 
     # # Ploomber Engine doesn't init the shell until it start executing
-    # cells. So can't pass it unitl ploomber engine natively supports it. 
+    # cells. So can't pass it unitl ploomber engine natively supports it.
     # client._shell.user_ns = {
     #         **client._shell.user_ns,
     #         **globals_,
@@ -173,10 +172,9 @@ def _capture_execute(function, globals_, **kwargs):
 
     # nb = client.execute()
     # val = None
-    
+
     # The old way, not robust
     with _Client(nb) as client:
-
         # FIXME: there something weird going on. the content of globals_ changes
         # after a few tasks, it's the same object and then all of a sudden, it
         # changes (I checked with id(globals_))
@@ -184,7 +182,7 @@ def _capture_execute(function, globals_, **kwargs):
             **client._shell.user_ns,
             **globals_,
             **upstream,
-            **kwargs
+            **kwargs,
         }
 
         nb, val = client._execute()
@@ -193,8 +191,7 @@ def _capture_execute(function, globals_, **kwargs):
 
 
 def _get_body_statements(function):
-    """Extract function statements
-    """
+    """Extract function statements"""
     source = inspect.getsource(function)
 
     # get first non empty child, the function is usually the first one. one
@@ -206,12 +203,10 @@ def _get_body_statements(function):
             break
 
     # NOTE: I think we can remove the while loop
-    while fn.children[0].type in {'decorator', 'decorators'}:
+    while fn.children[0].type in {"decorator", "decorators"}:
         fn = fn.children[1]
 
-    body_elements = [
-        st for st in fn.children[-1].children if st.get_code().strip()
-    ]
+    body_elements = [st for st in fn.children[-1].children if st.get_code().strip()]
 
     return _deindent(body_elements)
 
@@ -228,25 +223,21 @@ def _deindent(body_elements):
         # remove indentation from all function body lines
         lines = [line[idx:] for line in lines]
 
-        deindented.append('\n'.join(lines))
+        deindented.append("\n".join(lines))
 
     return deindented
 
 
 def _to_html(path, nb):
-    """Convert a notebook to HTML
-    """
-    html = nbconvert.export(nbconvert.exporters.HTMLExporter,
-                            nb,
-                            exclude_input=True)[0]
-    Path(path).write_text(html, encoding='utf-8')
+    """Convert a notebook to HTML"""
+    html = nbconvert.export(nbconvert.exporters.HTMLExporter, nb, exclude_input=True)[0]
+    Path(path).write_text(html, encoding="utf-8")
 
 
 def _parse_tag(source):
-    """Given a chunk of code (str), extract the tag, if any
-    """
+    """Given a chunk of code (str), extract the tag, if any"""
     tag_maybe = source.strip().splitlines()[0]
-    result = re.match(r'# tag=([\w-]+)', tag_maybe)
+    result = re.match(r"# tag=([\w-]+)", tag_maybe)
 
     if result:
         return result.group(1)

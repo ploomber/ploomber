@@ -186,6 +186,7 @@ def test_capture_can_return_nothing(tmp_directory):
     dag = micro.dag_from_functions([first, second])
     dag.build()
 
+
 @pytest.mark.xfail(reason="_capture module has been deprecated")
 def test_capture_debug_now(tmp_directory, monkeypatch):
     @micro.capture
@@ -212,6 +213,7 @@ def test_capture_debug_now(tmp_directory, monkeypatch):
 
     assert task_name == "number"
 
+
 @pytest.mark.xfail(reason="_capture module has been deprecated")
 def test_capture_debug_later(tmp_directory, monkeypatch):
     @micro.capture
@@ -225,6 +227,7 @@ def test_capture_debug_later(tmp_directory, monkeypatch):
         dag.build(debug="later")
 
     assert Path("number.dump").is_file()
+
 
 @pytest.mark.xfail(reason="_capture module has been deprecated")
 def test_capture_that_depends_on_capture(tmp_directory):
@@ -271,7 +274,6 @@ def test_root_node_with_no_arguments(tmp_directory):
 
 # TODO: also test with grid
 def test_decorated_root_with_input_data(tmp_directory):
-
     # this is failing because it's not passing input_data - we're not
     # validating the signature,and just modifying the user's namespace,
     # but we have to, otherwise the error is confusing: "input_data" is not
@@ -332,6 +334,7 @@ def fit(get, model):
 
     return model
 
+
 @pytest.mark.xfail(reason="_capture module has been deprecated")
 def test_decorated_with_capture_and_grid(tmp_directory):
     dag = micro.dag_from_functions([get, fit])
@@ -353,6 +356,7 @@ def fn():
         1,
         2,
     )
+
 
 @pytest.mark.xfail(reason="_capture module has been deprecated")
 def test_get_body_statements():
@@ -385,10 +389,10 @@ def complex():
         ],
     ],
 )
-
 @pytest.mark.xfail(reason="_capture module has been deprecated")
 def test_deindents_statements(fn, expected):
     assert _capture._get_body_statements(fn) == expected
+
 
 @pytest.mark.xfail(reason="_capture module has been deprecated")
 @pytest.mark.parametrize(
@@ -460,7 +464,6 @@ def twos(ones):
 
 @pytest.mark.skip
 def test_multi_step_grid(tmp_directory):
-
     multi_grid = micro.MultiStepGrid()
 
     @multi_grid(x=[1, 2, 3])

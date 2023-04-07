@@ -10,22 +10,18 @@ from ploomber.products import File
 from ploomber.util.param_grid import ParamGrid
 from ploomber.micro._task import _PythonCallableNoValidation
 from ploomber.io.serialize import _build_extension_mapping_final
-from ploomber.io.unserialize import (_EXTERNAL, _DEFAULTS,
-                                     _unserialize_product)
-from ploomber.products import MetaProduct
+from ploomber.io.unserialize import _EXTERNAL, _DEFAULTS, _unserialize_product
 
 
 # we should re-use the existing logic in unserialize.py but this will do for
 # now
-def unserializer(extension_mapping=None,
-                 *,
-                 fallback=False,
-                 defaults=None,
-                 unpack=False):
-
+def unserializer(
+    extension_mapping=None, *, fallback=False, defaults=None, unpack=False
+):
     def _unserializer(fn):
         extension_mapping_final = _build_extension_mapping_final(
-            extension_mapping, defaults, fn, _DEFAULTS, 'unserializer')
+            extension_mapping, defaults, fn, _DEFAULTS, "unserializer"
+        )
 
         try:
             unserializer_fallback = _EXTERNAL[fallback]
@@ -35,27 +31,35 @@ def unserializer(extension_mapping=None,
             error = False
 
         if error:
-            raise ValueError(f'Invalid fallback argument {fallback!r} '
-                             f'in function {fn.__name__!r}. Must be one of '
-                             "True, 'joblib', or 'cloudpickle'")
+            raise ValueError(
+                f"Invalid fallback argument {fallback!r} "
+                f"in function {fn.__name__!r}. Must be one of "
+                "True, 'joblib', or 'cloudpickle'"
+            )
 
-        if unserializer_fallback is None and fallback in {
-                'cloudpickle', 'joblib'
-        }:
+        if unserializer_fallback is None and fallback in {"cloudpickle", "joblib"}:
             raise ModuleNotFoundError(
-                f'Error unserializing with function {fn.__name__!r}. '
-                f'{fallback} is not installed')
+                f"Error unserializing with function {fn.__name__!r}. "
+                f"{fallback} is not installed"
+            )
 
         n_params = len(signature(fn).parameters)
         if n_params != 1:
-            raise TypeError(f'Expected unserializer {fn.__name__!r} '
-                            f'to take 1 argument, but it takes {n_params!r}')
+            raise TypeError(
+                f"Expected unserializer {fn.__name__!r} "
+                f"to take 1 argument, but it takes {n_params!r}"
+            )
 
         @wraps(fn)
         def wrapper(product):
-            return _unserialize_product(product, extension_mapping_final,
-                                            fallback, unserializer_fallback,
-                                            fn, unpack)
+            return _unserialize_product(
+                product,
+                extension_mapping_final,
+                fallback,
+                unserializer_fallback,
+                fn,
+                unpack,
+            )
 
         return wrapper
 
@@ -78,8 +82,7 @@ def _unserializer(product):
 
 
 def grid(**params):
-    """A decorator to create multiple tasks, one per parameter combination
-    """
+    """A decorator to create multiple tasks, one per parameter combination"""
 
     def decorator(f):
         if not hasattr(f, "__ploomber_grid__"):
@@ -93,8 +96,7 @@ def grid(**params):
 
 
 def capture(f):
-    """A decorator to capture outputs in a function
-    """
+    """A decorator to capture outputs in a function"""
     f.__ploomber_capture__ = True
     f.__ploomber_globals__ = f.__globals__
     return f
@@ -107,8 +109,9 @@ def _signature_wrapper(f, call_with_args):
     # store the wrapper, we'll need this for hot_reload to work, see
     # the constructor of CallableLoader in
     # ploomber.sources.pythoncallablesource for details
-    f.__ploomber_wrapper_factory__ = partial(_signature_wrapper,
-                                             call_with_args=call_with_args)
+    f.__ploomber_wrapper_factory__ = partial(
+        _signature_wrapper, call_with_args=call_with_args
+    )
 
     @wraps(f)
     def wrapper_args(upstream, **kwargs):
@@ -136,20 +139,18 @@ def _get_upstream(fn):
 
         return set(signature(fn.__wrapped__).parameters) - ignore
     else:
-        return set(signature(fn).parameters) - {'input_data'}
+        return set(signature(fn).parameters) - {"input_data"}
 
 
 def _make_task(callable_, dag, params, output, call_with_args, suffix=None):
-    """Generate a Ploomber task from a function
-    """
+    """Generate a Ploomber task from a function"""
     name = callable_.__name__
     name = name if suffix is None else f"{name}-{suffix}"
     params_signature = set(signature(callable_).parameters)
 
     if len(params_signature) and params_signature != {"input_data"}:
         # wrap the callable_ so it looks like a function with an "upstream"
-        callable_ = _signature_wrapper(callable_,
-                                       call_with_args=call_with_args)
+        callable_ = _signature_wrapper(callable_, call_with_args=call_with_args)
 
     CLASS = _PythonCallableNoValidation
 
@@ -167,12 +168,14 @@ def _make_task(callable_, dag, params, output, call_with_args, suffix=None):
     return task
 
 
-def dag_from_functions(functions,
-                       output="output",
-                       params=None,
-                       parallel=False,
-                       dependencies=None,
-                       hot_reload=True):
+def dag_from_functions(
+    functions,
+    output="output",
+    params=None,
+    parallel=False,
+    dependencies=None,
+    hot_reload=True,
+):
     """Create a DAG from a list of functions
 
     Parameters
@@ -227,24 +230,20 @@ def dag_from_functions(functions,
 
         # if decorated, call with grid
         if hasattr(callable_, "__ploomber_grid__"):
-
             for i, items in enumerate(
-                    chain(*(ParamGrid(grid).product()
-                            for grid in callable_.__ploomber_grid__))):
-
+                chain(
+                    *(ParamGrid(grid).product() for grid in callable_.__ploomber_grid__)
+                )
+            ):
                 _make_task(
                     callable_,
                     dag=dag,
-                    params={
-                        **params_task,
-                        **items
-                    },
+                    params={**params_task, **items},
                     output=output,
                     call_with_args=callable_.__name__ in dependencies,
                     suffix=i,
                 )
         else:
-
             _make_task(
                 callable_,
                 dag=dag,
