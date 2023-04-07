@@ -9,7 +9,6 @@ from ploomber.io import serializer
 from ploomber.products import File
 from ploomber.util.param_grid import ParamGrid
 from ploomber.micro._task import _PythonCallableNoValidation
-from ploomber.micro._capture import _CapturedPythonCallable
 from ploomber.io.serialize import _build_extension_mapping_final
 from ploomber.io.unserialize import (_EXTERNAL, _DEFAULTS,
                                      _unserialize_product)
@@ -54,18 +53,7 @@ def unserializer(extension_mapping=None,
 
         @wraps(fn)
         def wrapper(product):
-            if isinstance(product, MetaProduct):
-                # hack to make the @capture decorator work
-                return {
-                    key: _unserialize_product(value, extension_mapping_final,
-                                              fallback, unserializer_fallback,
-                                              fn, unpack)
-                    for key, value in product.products.products.items()
-                    if not key.startswith('nb')
-                }['return']
-
-            else:
-                return _unserialize_product(product, extension_mapping_final,
+            return _unserialize_product(product, extension_mapping_final,
                                             fallback, unserializer_fallback,
                                             fn, unpack)
 
@@ -163,18 +151,9 @@ def _make_task(callable_, dag, params, output, call_with_args, suffix=None):
         callable_ = _signature_wrapper(callable_,
                                        call_with_args=call_with_args)
 
-    capture_ = hasattr(callable_, '__ploomber_capture__')
-    CLASS = (_PythonCallableNoValidation
-             if not capture_ else _CapturedPythonCallable)
+    CLASS = _PythonCallableNoValidation
 
-    if capture_:
-        product = {
-            'return': File(f"{output}/{name}"),
-            'nb_html': File(f"{output}/{name}.html"),
-            'nb_ipynb': File(f"{output}/{name}.ipynb")
-        }
-    else:
-        product = File(f"{output}/{name}")
+    product = File(f"{output}/{name}")
 
     task = CLASS(
         callable_,

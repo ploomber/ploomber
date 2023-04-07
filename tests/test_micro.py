@@ -186,7 +186,7 @@ def test_capture_can_return_nothing(tmp_directory):
     dag = micro.dag_from_functions([first, second])
     dag.build()
 
-
+@pytest.mark.xfail(reason="_capture module has been deprecated")
 def test_capture_debug_now(tmp_directory, monkeypatch):
     @micro.capture
     def number():
@@ -212,7 +212,7 @@ def test_capture_debug_now(tmp_directory, monkeypatch):
 
     assert task_name == "number"
 
-
+@pytest.mark.xfail(reason="_capture module has been deprecated")
 def test_capture_debug_later(tmp_directory, monkeypatch):
     @micro.capture
     def number():
@@ -226,7 +226,7 @@ def test_capture_debug_later(tmp_directory, monkeypatch):
 
     assert Path("number.dump").is_file()
 
-
+@pytest.mark.xfail(reason="_capture module has been deprecated")
 def test_capture_that_depends_on_capture(tmp_directory):
     @micro.capture
     def first():
@@ -332,7 +332,7 @@ def fit(get, model):
 
     return model
 
-
+@pytest.mark.xfail(reason="_capture module has been deprecated")
 def test_decorated_with_capture_and_grid(tmp_directory):
     dag = micro.dag_from_functions([get, fit])
     dag.build()
@@ -354,7 +354,7 @@ def fn():
         2,
     )
 
-
+@pytest.mark.xfail(reason="_capture module has been deprecated")
 def test_get_body_statements():
     assert len(_capture._get_body_statements(fn)) == 2
 
@@ -385,10 +385,12 @@ def complex():
         ],
     ],
 )
+
+@pytest.mark.xfail(reason="_capture module has been deprecated")
 def test_deindents_statements(fn, expected):
     assert _capture._get_body_statements(fn) == expected
 
-
+@pytest.mark.xfail(reason="_capture module has been deprecated")
 @pytest.mark.parametrize(
     "source, expected",
     [
