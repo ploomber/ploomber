@@ -19,6 +19,19 @@ jobs:
 
     steps:
     # https://www.cybertec-postgresql.com/en/postgresql-github-actions-continuous-integration/
+    - name: Start PostgreSQL
+      run: |
+        $pgService = Get-Service -Name postgresql*
+        Set-Service -InputObject $pgService -Status running -StartupType automatic
+        Start-Process -FilePath "$env:PGBIN\pg_isready" -Wait -PassThru
+    - name: Change PostgreSQL password
+      run: |
+        & $env:PGBIN\psql --command  "ALTER USER postgres PASSWORD 'postgres'"
+    - name: Check PostgreSQL authentication
+      run: |
+        $env:PGPASSWORD = 'postgres'
+        & $env:PGBIN\pg_isready --dbname postgres --username postgres
+    - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: conda-incubator/setup-miniconda@v2
       with:
@@ -32,6 +45,35 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
 
+        # make the build fail quickly on flake8 errors
+        # pinning it because newer versions break the setup
+        pip install "flake8<6"
+        flake8
+
+        # there's a bug in jupyter, we need to install this first
+        conda install pywin32
+
+        # install graphviz (pygraphviz not available in conda for win-64,
+        # it will be installed from pip)
+        # conda install -y graphviz -c conda-forge
+        # note: this installation still gives trouble (error when saving png
+        # files but it makes pygraphviz importable), we can get rid of this
+        # once we update the tests to mock the @requires decorator to make
+        # it think that pygraphviz is installed when it's not. the tests
+        # currently do not call pygraphviz (it's mocked), but @requires imports
+        # To support python 3.10, installing only for other versions.
+        VERSION=$(python -c 'import sys; print(".".join(map(str, sys.version_info[1:2])))')
+        if [ $VERSION -ne 10 ]; then
+          echo "installing pygraphviz"
+          conda install -y -c alubbock pygraphviz
+          dot -c
+        else
+          echo "skipping pygraphviz installation"
+        fi
+        # seems like pygraphviz just doesnt work on windows
+        # https://github.com/pygraphviz/pygraphviz/issues/40
+        # pip install pygraphviz
+
         # Test vanilla installation, make sure core modules are importable
         pip install .
         python -c 'import ploomber'
@@ -42,6 +84,9 @@ jobs:
         # install dev requirements
         pip install .[dev]
 
+        # install R and IR kernel
+        conda install -y r-base r-irkernel -c conda-forge
+        echo "IRkernel::installspec()" | Rscript -
 
         # install sample package for tests
         pip install --editable tests/assets/test_pkg
