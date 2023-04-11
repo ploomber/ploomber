@@ -45,7 +45,7 @@ def test_exception_two_nested_task_build():
         "\nploomber.exceptions.TaskBuildError: even more info"
     )
     assert expected in res
-    assert "raise ValueError('some error')" in res
+    assert 'raise ValueError("some error")' in res
 
 
 def test_exception_one_task_build():
@@ -62,7 +62,7 @@ def test_exception_one_task_build():
     )
     assert expected in res
     assert "raise exc from e" in res
-    assert "raise ValueError('some error')" in res
+    assert 'raise ValueError("some error")' in res
 
 
 def test_exception_no_task_build():
@@ -73,7 +73,7 @@ def test_exception_no_task_build():
     except Exception as exc:
         res = _format.exception(exc)
 
-    assert "raise ValueError('some error')\nValueError: some error\n" in res
+    assert 'raise ValueError("some error")\nValueError: some error\n' in res
     assert "raise exc from e\nValueError: more info\n" in res
     assert "raise exc from e\nValueError: even more info\n" in res
 
