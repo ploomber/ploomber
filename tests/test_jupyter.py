@@ -684,7 +684,7 @@ def test_hot_reload(tmp_nbs):
     # replace upstream dependency with a task that does not exist
     path = Path("plot.py")
     original_code = path.read_text()
-    new_code = original_code.replace("{'clean': None}", "{'no_task': None}")
+    new_code = original_code.replace('{"clean": None}', '{"no_task": None}')
     path.write_text(new_code)
 
     # no cell should be injected this time
