@@ -254,7 +254,9 @@ def test_function_replace(backup_test_pkg):
 def test_signature_line_break(backup_test_pkg):
     dev = CallableInteractiveDeveloper(functions.simple, params={})
     nb = dev.to_nb()
+    print(nb.cells[-2]['source'])
     nb.cells[-2]['source'] = 'x = 2'
+    print(nb.cells[-2]['source'])
 
     path = Path(backup_test_pkg, 'functions.py')
     source = path.read_text()
@@ -263,10 +265,12 @@ def test_signature_line_break(backup_test_pkg):
     path.write_text('\n'.join(lines))
 
     dev.overwrite(nb)
+    print(nb.cells[-2]['source'])
 
     importlib.reload(functions)
 
     source_fn = inspect.getsource(functions.simple)
+    print(source_fn)
 
     assert source_fn == ('def simple(upstream, product,\npath):\n    '
                          'up = upstream["some_task"]\n'
