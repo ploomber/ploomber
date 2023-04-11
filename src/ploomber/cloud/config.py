@@ -11,7 +11,7 @@ class TaskResource(BaseModel):
     gpu: int = None
 
     class Config:
-        extra = 'forbid'
+        extra = "forbid"
 
 
 class CloudConfig(BaseModel):
@@ -19,11 +19,11 @@ class CloudConfig(BaseModel):
     task_resources: Mapping[str, TaskResource] = None
 
     class Config:
-        extra = 'forbid'
+        extra = "forbid"
 
 
 def validate():
-    path = Path('cloud.yaml')
+    path = Path("cloud.yaml")
 
     # cloud.yaml is optional
     if not path.is_file():

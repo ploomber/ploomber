@@ -9,33 +9,29 @@ from ploomber.products import File
 def make(env):
     dag = DAG()
 
-    out = Path('output')
+    out = Path("output")
     out.mkdir(exist_ok=True)
 
     # our first task is a Python function, it outputs a csv file
-    load = NotebookRunner(Path('load.py'),
-                          product={
-                              'nb': File(out / 'load.ipynb'),
-                              'data': File(out / 'data.csv')
-                          },
-                          dag=dag,
-                          name='load')
+    load = NotebookRunner(
+        Path("load.py"),
+        product={"nb": File(out / "load.ipynb"), "data": File(out / "data.csv")},
+        dag=dag,
+        name="load",
+    )
 
     clean = NotebookRunner(
-        Path('clean.py'),
+        Path("clean.py"),
         # this task generates two files, the .ipynb
         # output notebook and another csv file
-        product={
-            'nb': File(out / 'clean.ipynb'),
-            'data': File(out / 'clean.csv')
-        },
+        product={"nb": File(out / "clean.ipynb"), "data": File(out / "clean.csv")},
         dag=dag,
-        name='clean')
+        name="clean",
+    )
 
-    plot = NotebookRunner(Path('plot.py'),
-                          File(out / 'plot.ipynb'),
-                          dag=dag,
-                          name='plot')
+    plot = NotebookRunner(
+        Path("plot.py"), File(out / "plot.ipynb"), dag=dag, name="plot"
+    )
 
     load >> clean >> plot
 

@@ -9,6 +9,6 @@ def test_can_download_file(tmp_directory):
     url = """
     https://google.com
     """
-    DownloadFromURL(url, File('file'), dag=dag, name='download')
+    DownloadFromURL(url, File("file"), dag=dag, name="download")
 
     assert dag.build()

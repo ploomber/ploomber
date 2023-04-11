@@ -1,2 +1,2 @@
 def some_print():
-    print('hi!')
+    print("hi!")

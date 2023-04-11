@@ -12,7 +12,7 @@ def load_dag():
     # setting lazy_import to true causes sources to be returned as paths,
     # instead of placeholders
     try:
-        return loader._default_spec_load(lazy_import='skip')
+        return loader._default_spec_load(lazy_import="skip")
     except DAGSpecInvalidError:
         return None
 
@@ -44,7 +44,7 @@ def add(spec, path_to_spec):
     # initialized with a path for a file that does not exist
 
     if path_to_spec:
-        click.echo(f'Found spec at {str(path_to_spec)!r}')
+        click.echo(f"Found spec at {str(path_to_spec)!r}")
 
         n = 0
 
@@ -54,17 +54,19 @@ def add(spec, path_to_spec):
         path_to_parent = str(Path(path_to_spec).resolve().parent)
 
         with add_to_sys_path(path_to_parent, chdir=False):
-            for task in spec['tasks']:
-                did_create = loader.create(source=task['source'],
-                                           params=spec['meta'],
-                                           class_=task['class'])
+            for task in spec["tasks"]:
+                did_create = loader.create(
+                    source=task["source"], params=spec["meta"], class_=task["class"]
+                )
                 n += int(did_create)
 
         if not n:
-            click.echo(f'All tasks sources declared in {str(path_to_spec)!r} '
-                       'exist, nothing was created.')
+            click.echo(
+                f"All tasks sources declared in {str(path_to_spec)!r} "
+                "exist, nothing was created."
+            )
         else:
-            click.echo(f'Created {n} new task sources.')
+            click.echo(f"Created {n} new task sources.")
 
     else:
-        click.echo('Error: No pipeline.yaml spec found...')
+        click.echo("Error: No pipeline.yaml spec found...")

@@ -21,9 +21,11 @@ from ploomber.products import MetaProduct
 
 def _str2txt(obj, product):
     if not isinstance(obj, str):
-        raise TypeError(f'Error serializing product {product!r} to .txt '
-                        'with default serializer: data must be str, '
-                        f'not {type(obj).__name__}')
+        raise TypeError(
+            f"Error serializing product {product!r} to .txt "
+            "with default serializer: data must be str, "
+            f"not {type(obj).__name__}"
+        )
 
     Path(product).write_text(obj)
 
@@ -37,28 +39,34 @@ def _obj2json(obj, product):
         error = False
 
     if error:
-        raise TypeError(f'Error serializing product {product!r} to .json with '
-                        'default serializer: Object of type  '
-                        f'{type(obj).__name__} is not '
-                        'JSON serializable')
+        raise TypeError(
+            f"Error serializing product {product!r} to .json with "
+            "default serializer: Object of type  "
+            f"{type(obj).__name__} is not "
+            "JSON serializable"
+        )
 
     Path(product).write_text(serialized)
 
 
 def _df2csv(obj, product):
-    if not hasattr(obj, 'to_csv'):
-        raise TypeError(f'Error serializing product {product!r} to .csv '
-                        'with default serializer: expected a pandas.DataFrame '
-                        f'but got an object of type {type(obj).__name__}')
+    if not hasattr(obj, "to_csv"):
+        raise TypeError(
+            f"Error serializing product {product!r} to .csv "
+            "with default serializer: expected a pandas.DataFrame "
+            f"but got an object of type {type(obj).__name__}"
+        )
 
     obj.to_csv(product)
 
 
 def _df2parquet(obj, product):
-    if not hasattr(obj, 'to_parquet'):
-        raise TypeError(f'Error serializing product {product!r} to .parquet '
-                        'with default serializer: expected a pandas.DataFrame '
-                        f'but got an object of type {type(obj).__name__}')
+    if not hasattr(obj, "to_parquet"):
+        raise TypeError(
+            f"Error serializing product {product!r} to .parquet "
+            "with default serializer: expected a pandas.DataFrame "
+            f"but got an object of type {type(obj).__name__}"
+        )
 
     obj.to_parquet(product)
 
@@ -66,16 +74,16 @@ def _df2parquet(obj, product):
 _EXTERNAL = {
     False: None,
     True: pickle.dump,
-    'pickle': pickle.dump,
-    'joblib': joblib_dump,
-    'cloudpickle': cloudpickle_dump,
+    "pickle": pickle.dump,
+    "joblib": joblib_dump,
+    "cloudpickle": cloudpickle_dump,
 }
 
 _DEFAULTS = {
-    '.txt': _str2txt,
-    '.json': _obj2json,
-    '.csv': _df2csv,
-    '.parquet': _df2parquet,
+    ".txt": _str2txt,
+    ".json": _obj2json,
+    ".csv": _df2csv,
+    ".parquet": _df2parquet,
 }
 
 
@@ -83,34 +91,36 @@ def _extension_mapping_validate(extension_mapping, fn):
     if extension_mapping is not None:
         if not isinstance(extension_mapping, Mapping):
             raise TypeError(
-                f'Invalid extension_mapping {extension_mapping!r} for '
-                f'decorated function {fn.__name__!r}. Expected '
-                'it to be a dictionary but got a '
-                f'{type(extension_mapping).__name__}')
+                f"Invalid extension_mapping {extension_mapping!r} for "
+                f"decorated function {fn.__name__!r}. Expected "
+                "it to be a dictionary but got a "
+                f"{type(extension_mapping).__name__}"
+            )
 
-        invalid_keys = {
-            k
-            for k in extension_mapping.keys() if not k.startswith('.')
-        }
+        invalid_keys = {k for k in extension_mapping.keys() if not k.startswith(".")}
 
         if invalid_keys:
             raise ValueError(
-                f'Invalid extension_mapping {extension_mapping!r} for '
-                f'decorated function {fn.__name__!r}. Expected '
+                f"Invalid extension_mapping {extension_mapping!r} for "
+                f"decorated function {fn.__name__!r}. Expected "
                 'keys to start with a dot (e.g., ".csv"). Invalid '
-                f'keys found: {invalid_keys!r}')
+                f"keys found: {invalid_keys!r}"
+            )
 
 
-def _build_extension_mapping_final(extension_mapping, defaults, fn,
-                                   defaults_provided, name):
+def _build_extension_mapping_final(
+    extension_mapping, defaults, fn, defaults_provided, name
+):
     defaults_keys = set(defaults_provided)
 
     if defaults:
         if not isinstance(defaults, Iterable) or isinstance(defaults, str):
-            raise TypeError(f'Invalid defaults {defaults!r} for '
-                            f'decorated function {fn.__name__!r}. Expected '
-                            'it to be a list but got a '
-                            f'{type(defaults).__name__}')
+            raise TypeError(
+                f"Invalid defaults {defaults!r} for "
+                f"decorated function {fn.__name__!r}. Expected "
+                "it to be a list but got a "
+                f"{type(defaults).__name__}"
+            )
 
         passed_defaults = set(defaults)
 
@@ -118,25 +128,24 @@ def _build_extension_mapping_final(extension_mapping, defaults, fn,
             overlap = passed_defaults & set(extension_mapping)
             if overlap:
                 raise ValueError(
-                    f'Error when adding @{name} decorator '
-                    f'to function {fn.__name__!r}: '
-                    'Keys in \'extension_mapping\' and \'defaults\' must not '
-                    f'overlap (overlapping keys: {overlap})')
+                    f"Error when adding @{name} decorator "
+                    f"to function {fn.__name__!r}: "
+                    "Keys in 'extension_mapping' and 'defaults' must not "
+                    f"overlap (overlapping keys: {overlap})"
+                )
 
         unexpected_defaults = passed_defaults - defaults_keys
 
         if unexpected_defaults:
             raise ValueError(
-                f'Error when adding @{name} decorator '
-                f'to function {fn.__name__!r}: unexpected values in '
+                f"Error when adding @{name} decorator "
+                f"to function {fn.__name__!r}: unexpected values in "
                 '"defaults" argument. Valid values are: '
-                f'{defaults_keys}. Unexpected '
-                f'values: {unexpected_defaults}')
+                f"{defaults_keys}. Unexpected "
+                f"values: {unexpected_defaults}"
+            )
 
-        defaults_map = {
-            k: v
-            for k, v in defaults_provided.items() if k in defaults
-        }
+        defaults_map = {k: v for k, v in defaults_provided.items() if k in defaults}
         extension_mapping_final = {**defaults_map, **(extension_mapping or {})}
     else:
         extension_mapping_final = extension_mapping
@@ -146,11 +155,7 @@ def _build_extension_mapping_final(extension_mapping, defaults, fn,
     return extension_mapping_final
 
 
-def serializer(extension_mapping=None,
-               *,
-               fallback=False,
-               defaults=None,
-               unpack=False):
+def serializer(extension_mapping=None, *, fallback=False, defaults=None, unpack=False):
     """Decorator for serializing functions
 
     Parameters
@@ -185,7 +190,8 @@ def serializer(extension_mapping=None,
 
     def _serializer(fn):
         extension_mapping_final = _build_extension_mapping_final(
-            extension_mapping, defaults, fn, _DEFAULTS, 'serializer')
+            extension_mapping, defaults, fn, _DEFAULTS, "serializer"
+        )
 
         try:
             serializer_fallback = _EXTERNAL[fallback]
@@ -195,21 +201,24 @@ def serializer(extension_mapping=None,
             error = False
 
         if error:
-            raise ValueError(f'Invalid fallback argument {fallback!r} '
-                             f'in function {fn.__name__!r}. Must be one of '
-                             "True, 'joblib', or 'cloudpickle'")
+            raise ValueError(
+                f"Invalid fallback argument {fallback!r} "
+                f"in function {fn.__name__!r}. Must be one of "
+                "True, 'joblib', or 'cloudpickle'"
+            )
 
-        if serializer_fallback is None and fallback in {
-                'cloudpickle', 'joblib'
-        }:
+        if serializer_fallback is None and fallback in {"cloudpickle", "joblib"}:
             raise ModuleNotFoundError(
-                f'Error serializing with function {fn.__name__!r}. '
-                f'{fallback} is not installed')
+                f"Error serializing with function {fn.__name__!r}. "
+                f"{fallback} is not installed"
+            )
 
         n_params = len(signature(fn).parameters)
         if n_params != 2:
-            raise TypeError(f'Expected serializer {fn.__name__!r} '
-                            f'to take 2 arguments, but it takes {n_params!r}')
+            raise TypeError(
+                f"Expected serializer {fn.__name__!r} "
+                f"to take 2 arguments, but it takes {n_params!r}"
+            )
 
         @wraps(fn)
         def wrapper(obj, product):
@@ -217,12 +226,25 @@ def serializer(extension_mapping=None,
                 _validate_obj(obj, product)
 
                 for key, value in obj.items():
-                    _serialize_product(value, product[key],
-                                       extension_mapping_final, fallback,
-                                       serializer_fallback, fn, unpack)
+                    _serialize_product(
+                        value,
+                        product[key],
+                        extension_mapping_final,
+                        fallback,
+                        serializer_fallback,
+                        fn,
+                        unpack,
+                    )
             else:
-                _serialize_product(obj, product, extension_mapping_final,
-                                   fallback, serializer_fallback, fn, unpack)
+                _serialize_product(
+                    obj,
+                    product,
+                    extension_mapping_final,
+                    fallback,
+                    serializer_fallback,
+                    fn,
+                    unpack,
+                )
 
         return wrapper
 
@@ -231,38 +253,42 @@ def serializer(extension_mapping=None,
 
 @serializer(fallback=True)
 def serializer_pickle(obj, product):
-    """A serializer that pickles everything
-    """
+    """A serializer that pickles everything"""
     # this should never execute
-    raise RuntimeError('Error when serializing with pickle module')
+    raise RuntimeError("Error when serializing with pickle module")
 
 
 def _validate_obj(obj, product):
     if not isinstance(obj, Mapping):
-        raise TypeError('Error serializing task: if task generates multiple '
-                        f'products {product!r} the function must return '
-                        f'a dictionary with the same keys (got {obj!r}, an '
-                        f'object of type {type(obj).__name__}).')
+        raise TypeError(
+            "Error serializing task: if task generates multiple "
+            f"products {product!r} the function must return "
+            f"a dictionary with the same keys (got {obj!r}, an "
+            f"object of type {type(obj).__name__})."
+        )
 
     unexpected = set(obj) - set(product.products.products)
     missing = set(product.products.products) - set(obj)
 
     if missing or unexpected:
-        error = ('Error serializing task: task generates products '
-                 f'{product!r} but the function did not return a '
-                 f'dictonary ({obj!r}) with valid keys. ')
+        error = (
+            "Error serializing task: task generates products "
+            f"{product!r} but the function did not return a "
+            f"dictonary ({obj!r}) with valid keys. "
+        )
 
         if missing:
-            error += f'Missing keys: {missing!r}. '
+            error += f"Missing keys: {missing!r}. "
 
         if unexpected:
-            error += f'Unexpected keys: {unexpected!r}. '
+            error += f"Unexpected keys: {unexpected!r}. "
 
         raise ValueError(error)
 
 
-def _serialize_product(obj, product, extension_mapping, fallback,
-                       serializer_fallback, fn, unpack):
+def _serialize_product(
+    obj, product, extension_mapping, fallback, serializer_fallback, fn, unpack
+):
     """
     Determine which function to use for serialization. Note that this
     function operates on single products. If the task generates multiple
@@ -287,27 +313,26 @@ def _serialize_product(obj, product, extension_mapping, fallback,
             out_path = _Path(product, filename)
 
             suffix_current = Path(filename).suffix
-            serializer = _determine_serializer(suffix_current,
-                                               extension_mapping, fallback,
-                                               serializer_fallback, fn)
+            serializer = _determine_serializer(
+                suffix_current, extension_mapping, fallback, serializer_fallback, fn
+            )
             serializer(o, out_path)
     else:
-        serializer = _determine_serializer(suffix, extension_mapping, fallback,
-                                           serializer_fallback, fn)
+        serializer = _determine_serializer(
+            suffix, extension_mapping, fallback, serializer_fallback, fn
+        )
         serializer(obj, product)
 
 
 def _make_serializer(fn):
-
     def _serialize(obj, product):
-        with open(product, 'wb') as f:
+        with open(product, "wb") as f:
             fn(obj, f)
 
     return _serialize
 
 
-def _determine_serializer(suffix, extension_mapping, fallback,
-                          serializer_fallback, fn):
+def _determine_serializer(suffix, extension_mapping, fallback, serializer_fallback, fn):
     # if there is a serializer for the given extension, use it...
     if extension_mapping and suffix in extension_mapping:
         return extension_mapping[suffix]
@@ -325,6 +350,8 @@ def _Path(parent, filename):
     except TypeError:
         pass
 
-    raise TypeError('Error creating output path from key with value '
-                    f'{filename!r}: expected str, bytes or os.PathLike '
-                    f'object, not {type(filename).__name__}')
+    raise TypeError(
+        "Error creating output path from key with value "
+        f"{filename!r}: expected str, bytes or os.PathLike "
+        f"object, not {type(filename).__name__}"
+    )

@@ -52,9 +52,8 @@ from ploomber.io import pretty_print
 
 
 class IgnoreBlackWarning(logging.Filter):
-
     def filter(self, record):
-        return 'Black is not installed' not in record.msg
+        return "Black is not installed" not in record.msg
 
 
 logging.getLogger("papermill.translators").addFilter(IgnoreBlackWarning())
@@ -64,14 +63,14 @@ def _jupytext_fmt(primitive, extension):
     """
     Determine the jupytext fmt string to use based on the content and extension
     """
-    if extension.startswith('.'):
+    if extension.startswith("."):
         extension = extension[1:]
 
-    if extension != 'ipynb':
-        fmt, _ = jupytext.guess_format(primitive, f'.{extension}')
-        fmt_final = f'{extension}:{fmt}'
+    if extension != "ipynb":
+        fmt, _ = jupytext.guess_format(primitive, f".{extension}")
+        fmt_final = f"{extension}:{fmt}"
     else:
-        fmt_final = '.ipynb'
+        fmt_final = ".ipynb"
 
     return fmt_final
 
@@ -94,7 +93,7 @@ def _read_primitive(path):
     jupytext already does this:
     https://github.com/mwouts/jupytext/issues/896
     """
-    return Path(path).read_text(encoding='utf-8')
+    return Path(path).read_text(encoding="utf-8")
 
 
 def _get_last_cell(nb):
@@ -107,7 +106,7 @@ def _get_last_cell(nb):
         cell = nb.cells[idx]
 
         # only return it if it has some code
-        if cell['source'].strip():
+        if cell["source"].strip():
             return cell
 
     # otherwise return the first cell
@@ -115,13 +114,18 @@ def _get_last_cell(nb):
 
 
 def _get_cell_suggestion(nb):
-    format_name = nb.metadata.get('jupytext', {}).get('text_representation',
-                                                      {}).get('format_name')
+    format_name = (
+        nb.metadata.get("jupytext", {})
+        .get("text_representation", {})
+        .get("format_name")
+    )
 
-    preamble = 'Add a new cell with your code'
+    preamble = "Add a new cell with your code"
 
-    if format_name == 'light':
-        message = f'{preamble}:\n' + """
+    if format_name == "light":
+        message = (
+            f"{preamble}:\n"
+            + """
 # + tags=["parameters"]
 # your parameters here...
 # -
@@ -130,17 +134,21 @@ def _get_cell_suggestion(nb):
 # your code here...
 # -
 """
+        )
 
-    elif format_name == 'percent':
-        message = f'{preamble}:\n' + """
+    elif format_name == "percent":
+        message = (
+            f"{preamble}:\n"
+            + """
 # %% tags=["parameters"]
 # your parameters here...
 
 # %%
 # your code here...
 """
+        )
     else:
-        message = preamble + '.'
+        message = preamble + "."
 
     return message
 
@@ -153,10 +161,11 @@ def requires_path(func):
 
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-
         if self._path is None:
-            raise ValueError(f'Cannot use {func.__name__!r} if notebook was '
-                             'not initialized from a file')
+            raise ValueError(
+                f"Cannot use {func.__name__!r} if notebook was "
+                "not initialized from a file"
+            )
 
         return func(self, *args, **kwargs)
 
@@ -188,17 +197,18 @@ class NotebookSource(Source):
     parameters and it makes sure kernelspec is defined
     """
 
-    @requires([
-        'parso', 'pyflakes', 'jupytext', 'nbformat', 'papermill',
-        'jupyter_client'
-    ])
-    def __init__(self,
-                 primitive,
-                 hot_reload=False,
-                 ext_in=None,
-                 kernelspec_name=None,
-                 static_analysis='regular',
-                 check_if_kernel_installed=True):
+    @requires(
+        ["parso", "pyflakes", "jupytext", "nbformat", "papermill", "jupyter_client"]
+    )
+    def __init__(
+        self,
+        primitive,
+        hot_reload=False,
+        ext_in=None,
+        kernelspec_name=None,
+        static_analysis="regular",
+        check_if_kernel_installed=True,
+    ):
         # any non-py file must first be converted using jupytext, we need
         # that representation for validation, if input is already a .py file
         # do not convert. If passed a string, try to guess format using
@@ -219,28 +229,32 @@ class NotebookSource(Source):
 
             if primitive.is_dir():
                 raise SourceInitializationError(
-                    f'Failed to initialize {str(primitive)!r}. '
-                    'Expected a file, got a directory.' +
-                    _suggest_ploomber_scaffold_is_dir())
+                    f"Failed to initialize {str(primitive)!r}. "
+                    "Expected a file, got a directory."
+                    + _suggest_ploomber_scaffold_is_dir()
+                )
 
             if not primitive.exists():
                 raise SourceInitializationError(
-                    f'Failed to initialize {str(primitive)!r}. '
-                    'File does not exist.' +
-                    _suggest_ploomber_scaffold_missing_file())
+                    f"Failed to initialize {str(primitive)!r}. "
+                    "File does not exist." + _suggest_ploomber_scaffold_missing_file()
+                )
 
             self._primitive = _read_primitive(primitive)
         else:
-            raise TypeError('Notebooks must be initialized from strings, '
-                            'Placeholder or pathlib.Path, got {}'.format(
-                                type(primitive)))
+            raise TypeError(
+                "Notebooks must be initialized from strings, "
+                "Placeholder or pathlib.Path, got {}".format(type(primitive))
+            )
 
-        static_analysis_vals = {'disable', 'regular', 'strict'}
+        static_analysis_vals = {"disable", "regular", "strict"}
 
         if static_analysis not in static_analysis_vals:
-            raise ValueError(f'{static_analysis!r} is not a '
-                             "valid 'static_analysis' value, choose one from: "
-                             f'{pretty_print.iterable(static_analysis_vals)}')
+            raise ValueError(
+                f"{static_analysis!r} is not a "
+                "valid 'static_analysis' value, choose one from: "
+                f"{pretty_print.iterable(static_analysis_vals)}"
+            )
 
         self.static_analysis = static_analysis
         self._kernelspec_name = kernelspec_name
@@ -249,33 +263,37 @@ class NotebookSource(Source):
         # TODO: validate ext_in values and extensions
 
         if self._path is None and hot_reload:
-            raise ValueError('hot_reload only works in the notebook was '
-                             'loaded from a file')
+            raise ValueError(
+                "hot_reload only works in the notebook was " "loaded from a file"
+            )
 
         if self._path is not None and ext_in is None:
             self._ext_in = self._path.suffix[1:]
         elif self._path is None and ext_in is None:
-
             if Path(self._primitive).exists():
                 path = str(self._primitive)
                 raise ValueError(
-                    f'The file {path!r} you passed looks like '
-                    'a path to a file. Perhaps you meant passing a '
-                    'pathlib.Path object? Example:\n\n'
-                    'from pathlib import Path\n'
-                    f'NotebookRunner(Path({path!r}))')
+                    f"The file {path!r} you passed looks like "
+                    "a path to a file. Perhaps you meant passing a "
+                    "pathlib.Path object? Example:\n\n"
+                    "from pathlib import Path\n"
+                    f"NotebookRunner(Path({path!r}))"
+                )
 
             else:
                 raise ValueError(
                     '"ext_in" cannot be None if the notebook is '
-                    'initialized from a string. Either pass '
-                    'a pathlib.Path object with the notebook file '
-                    'location or pass the source code as string '
-                    'and include the "ext_in" parameter')
+                    "initialized from a string. Either pass "
+                    "a pathlib.Path object with the notebook file "
+                    "location or pass the source code as string "
+                    'and include the "ext_in" parameter'
+                )
 
         elif self._path is not None and ext_in is not None:
-            raise ValueError('"ext_in" must be None if notebook is '
-                             'initialized from a pathlib.Path object')
+            raise ValueError(
+                '"ext_in" must be None if notebook is '
+                "initialized from a pathlib.Path object"
+            )
         elif self._path is None and ext_in is not None:
             self._ext_in = ext_in
 
@@ -307,8 +325,7 @@ class NotebookSource(Source):
         return self._primitive
 
     def render(self, params):
-        """Render notebook (fill parameters using papermill)
-        """
+        """Render notebook (fill parameters using papermill)"""
         self._params = json_serializable_params(params)
         self._render()
 
@@ -317,19 +334,19 @@ class NotebookSource(Source):
         # the latest version
         _, nb = self._read_nb_str_unrendered()
 
-        if nb.cells and 'parameters' in _get_last_cell(nb).metadata.get(
-                'tags', []):
+        if nb.cells and "parameters" in _get_last_cell(nb).metadata.get("tags", []):
             cell_suggestion = _get_cell_suggestion(nb)
-            kind = 'notebook' if self._ext_in == 'ipynb' else 'script'
+            kind = "notebook" if self._ext_in == "ipynb" else "script"
             raise SourceInitializationError(
-                f'Error processing {str(self._path)!r}: the last cell '
-                f'in the {kind} is the parameters cell. {cell_suggestion}')
+                f"Error processing {str(self._path)!r}: the last cell "
+                f"in the {kind} is the parameters cell. {cell_suggestion}"
+            )
 
         # this is needed for parameterize_notebook to work
         for cell in nb.cells:
-            if not hasattr(cell.metadata, 'tags'):
-                cell.metadata['tags'] = []
-        nb.metadata['papermill'] = dict()
+            if not hasattr(cell.metadata, "tags"):
+                cell.metadata["tags"] = []
+        nb.metadata["papermill"] = dict()
 
         # NOTE: we use parameterize_notebook instead of execute_notebook
         # with the prepare_only option because the latter adds a "papermill"
@@ -342,8 +359,8 @@ class NotebookSource(Source):
 
         # delete empty tags to prevent cluttering the notebooks
         for cell in nb.cells:
-            if not len(cell.metadata['tags']):
-                cell.metadata.pop('tags')
+            if not len(cell.metadata["tags"]):
+                cell.metadata.pop("tags")
 
         self._nb_str_rendered = nbformat.writes(nb)
         self._post_render_validation()
@@ -375,7 +392,8 @@ class NotebookSource(Source):
                 language=self._language,
                 kernelspec_name=self._kernelspec_name,
                 check_if_kernel_installed=self._check_if_kernel_installed,
-                path=self._path)
+                path=self._path,
+            )
 
             # if the user injected cells manually (with ploomber nb --inject)
             # the source will contain the injected cell, remove it because
@@ -386,7 +404,8 @@ class NotebookSource(Source):
             # this was initialized with a ipynb file, nb_obj contains
             # kernelspec info
             self._nb_str_unrendered = nbformat.writes(
-                self._nb_obj_unrendered, version=nbformat.NO_CONVERT)
+                self._nb_obj_unrendered, version=nbformat.NO_CONVERT
+            )
 
         return self._nb_str_unrendered, self._nb_obj_unrendered
 
@@ -397,10 +416,8 @@ class NotebookSource(Source):
         """
         pass
 
-    def _validate_parameters_cell(self,
-                                  extract_upstream=False,
-                                  extract_product=False):
-        '''Check parameters call and add it when it's missing
+    def _validate_parameters_cell(self, extract_upstream=False, extract_product=False):
+        """Check parameters call and add it when it's missing
 
         Parameters
         ----------
@@ -409,17 +426,17 @@ class NotebookSource(Source):
             only used if the notebook is missing the parameters cell
         extract_product : bool, default: False
             Same as extract_upstream
-        '''
-        params_cell, _ = find_cell_with_tag(self._nb_obj_unrendered,
-                                            'parameters')
+        """
+        params_cell, _ = find_cell_with_tag(self._nb_obj_unrendered, "parameters")
 
         if params_cell is None:
             loc = pretty_print.try_relative_path(self.loc)
             add_parameters_cell(self.loc, extract_upstream, extract_product)
             click.secho(
-                f'Notebook {loc} is missing the parameters cell, '
-                'adding it at the top of the file...',
-                fg='yellow')
+                f"Notebook {loc} is missing the parameters cell, "
+                "adding it at the top of the file...",
+                fg="yellow",
+            )
 
     def _post_render_validation(self):
         """
@@ -430,20 +447,22 @@ class NotebookSource(Source):
 
         # strict mode: raise and check signature
         # regular mode: _check_notebook called in .run
-        if self.static_analysis == 'strict':
+        if self.static_analysis == "strict":
             self._check_notebook(raise_=True, check_signature=True)
         else:
             # otherwise, only warn on unused parameters
             _warn_on_unused_params(self._nb_obj_unrendered, self._params)
 
     def _check_notebook(self, raise_, check_signature):
-        if self.static_analysis and self.language == 'python':
+        if self.static_analysis and self.language == "python":
             # warn if errors (e.g., undeclared variables, syntax errors)
-            check_notebook(self._nb_str_to_obj(self._nb_str_rendered),
-                           self._params,
-                           filename=self._path or 'notebook',
-                           raise_=raise_,
-                           check_signature=check_signature)
+            check_notebook(
+                self._nb_str_to_obj(self._nb_str_rendered),
+                self._params,
+                filename=self._path or "notebook",
+                raise_=raise_,
+                check_signature=check_signature,
+            )
 
     @property
     def doc(self):
@@ -470,8 +489,10 @@ class NotebookSource(Source):
         reloadig if necessary
         """
         if self._nb_str_rendered is None:
-            raise RuntimeError('Attempted to get location for an unrendered '
-                               'notebook, render it first')
+            raise RuntimeError(
+                "Attempted to get location for an unrendered "
+                "notebook, render it first"
+            )
 
         if self._hot_reload:
             self._render()
@@ -495,7 +516,7 @@ class NotebookSource(Source):
         self._read_nb_str_unrendered()
 
         # FIXME: this should ignore changes to the markdown cells
-        return '\n'.join([c.source for c in self._nb_obj_unrendered.cells])
+        return "\n".join([c.source for c in self._nb_obj_unrendered.cells])
 
     def __repr__(self):
         if self.loc is not None:
@@ -527,8 +548,7 @@ class NotebookSource(Source):
 
             try:
                 # make sure you return "r" instead of "R"
-                return (self._nb_obj_unrendered.metadata.kernelspec.language.
-                        lower())
+                return self._nb_obj_unrendered.metadata.kernelspec.language.lower()
             except AttributeError:
                 return None
 
@@ -540,13 +560,14 @@ class NotebookSource(Source):
 
     def _get_parameters_cell(self, force=False):
         self._read_nb_str_unrendered(force=force)
-        cell, _ = find_cell_with_tag(self._nb_obj_unrendered, tag='parameters')
+        cell, _ = find_cell_with_tag(self._nb_obj_unrendered, tag="parameters")
         return cell.source if cell else None
 
     def extract_upstream(self, force=False):
         extractor_class = extractor_class_for_language(self.language)
         return extractor_class(
-            self._get_parameters_cell(force=force)).extract_upstream()
+            self._get_parameters_cell(force=force)
+        ).extract_upstream()
 
     def extract_product(self):
         extractor_class = extractor_class_for_language(self.language)
@@ -562,23 +583,33 @@ class NotebookSource(Source):
         # add metadata to flag that the cell was injected manually
         recursive_update(
             self.nb_obj_rendered,
-            dict(metadata=dict(ploomber=dict(injected_manually=True))))
+            dict(metadata=dict(ploomber=dict(injected_manually=True))),
+        )
 
         # Are we updating a text file that has a metadata filter? If so,
         # add ploomber as a section that must be stored
-        if (self.nb_obj_rendered.metadata.get(
-                'jupytext', {}).get('notebook_metadata_filter') == '-all'):
+        if (
+            self.nb_obj_rendered.metadata.get("jupytext", {}).get(
+                "notebook_metadata_filter"
+            )
+            == "-all"
+        ):
             recursive_update(
                 self.nb_obj_rendered,
-                dict(metadata=dict(jupytext=dict(
-                    notebook_metadata_filter='ploomber,-all'))))
+                dict(
+                    metadata=dict(
+                        jupytext=dict(notebook_metadata_filter="ploomber,-all")
+                    )
+                ),
+            )
 
         # overwrite
         jupytext.write(self.nb_obj_rendered, self._path, fmt=fmt_)
 
         # overwrite all paired files
-        for path, fmt_ in iter_paired_notebooks(self.nb_obj_rendered, fmt_,
-                                                self._path.stem):
+        for path, fmt_ in iter_paired_notebooks(
+            self.nb_obj_rendered, fmt_, self._path.stem
+        ):
             # get absolute path for each notebook
             path = Path(self._path.parent / path)
             jupytext.write(self.nb_obj_rendered, fp=path, fmt=fmt_)
@@ -592,8 +623,8 @@ class NotebookSource(Source):
 
         # remove metadata
         recursive_update(
-            nb_clean,
-            dict(metadata=dict(ploomber=dict(injected_manually=None))))
+            nb_clean, dict(metadata=dict(ploomber=dict(injected_manually=None)))
+        )
 
         fmt_ = _jupytext_fmt(self._primitive, self._ext_in)
 
@@ -601,8 +632,9 @@ class NotebookSource(Source):
         jupytext.write(nb_clean, self._path, fmt=fmt_)
 
         # overwrite all paired files
-        for path, fmt_ in iter_paired_notebooks(self._nb_obj_unrendered, fmt_,
-                                                self._path.stem):
+        for path, fmt_ in iter_paired_notebooks(
+            self._nb_obj_unrendered, fmt_, self._path.stem
+        ):
             # get absolute path for each notebook
             path = Path(self._path.parent / path)
             jupytext.write(nb_clean, fp=path, fmt=fmt_)
@@ -619,7 +651,7 @@ class NotebookSource(Source):
         nb_clean = _cleanup_rendered_nb(self._nb_obj_unrendered)
 
         ext_file = self._path.suffix
-        ext_format = long_form_one_format(fmt)['extension']
+        ext_format = long_form_one_format(fmt)["extension"]
         extension_changed = ext_file != ext_format
 
         if extension_changed:
@@ -627,22 +659,25 @@ class NotebookSource(Source):
                 path = self._path.with_suffix(ext_format)
                 Path(self._path).unlink()
                 modified_entry = Path(entry_point).read_text()
-                main_file = f'{self.name}{ext_file}'
+                main_file = f"{self.name}{ext_file}"
                 if main_file in modified_entry:
                     modified_entry = modified_entry.replace(
-                        main_file, f'{self.name}{ext_format}')
+                        main_file, f"{self.name}{ext_format}"
+                    )
                     Path(entry_point).write_text(modified_entry)
                 else:
                     click.secho(
-                        f'{main_file} does not appear in entry-point'
-                        f'please edit manually\n',
-                        fg='yellow')
+                        f"{main_file} does not appear in entry-point"
+                        f"please edit manually\n",
+                        fg="yellow",
+                    )
                     path = self._path
             else:
                 click.secho(
                     "The entry-point is not a valid file, please"
                     " update the pipeline file extensions manually\n",
-                    fg='yellow')
+                    fg="yellow",
+                )
                 path = self._path
         else:
             path = self._path
@@ -653,51 +688,51 @@ class NotebookSource(Source):
 
     @requires_path
     def pair(self, base_path):
-        """Pairs with an ipynb file
-        """
+        """Pairs with an ipynb file"""
         # TODO: add unit test
-        if self._ext_in == 'ipynb':
+        if self._ext_in == "ipynb":
             raise ValueError(
-                'pairing only works with .py files, got .ipynb. '
-                'Yoy may convert the .ipynb to .py and try again.')
+                "pairing only works with .py files, got .ipynb. "
+                "Yoy may convert the .ipynb to .py and try again."
+            )
 
-        fmt, _ = jupytext.guess_format(self._primitive, f'.{self._ext_in}')
-        fmt_ = f'{self._ext_in}:{fmt}'
+        fmt, _ = jupytext.guess_format(self._primitive, f".{self._ext_in}")
+        fmt_ = f"{self._ext_in}:{fmt}"
 
         # mute jupytext's output
         with redirect_stdout(StringIO()):
-            jupytext_cli.jupytext(args=[
-                '--set-formats', f'{base_path}//ipynb,{fmt_}',
-                str(self._path)
-            ])
+            jupytext_cli.jupytext(
+                args=["--set-formats", f"{base_path}//ipynb,{fmt_}", str(self._path)]
+            )
 
     @requires_path
     def sync(self):
-        """Pairs with and ipynb file
-        """
+        """Pairs with and ipynb file"""
         # mute jupytext's output
         with redirect_stdout(StringIO()):
-            jupytext_cli.jupytext(args=['--sync', str(self._path)])
+            jupytext_cli.jupytext(args=["--sync", str(self._path)])
 
 
 def json_serializable_params(params):
     # papermill only allows JSON serializable parameters
     # convert Params object to dict
     params = params.to_dict()
-    params['product'] = params['product'].to_json_serializable()
+    params["product"] = params["product"].to_json_serializable()
 
-    if params.get('upstream'):
-        params['upstream'] = params['upstream'].to_json_serializable()
+    if params.get("upstream"):
+        params["upstream"] = params["upstream"].to_json_serializable()
 
     return params
 
 
-def _to_nb_obj(source,
-               language,
-               ext=None,
-               kernelspec_name=None,
-               check_if_kernel_installed=True,
-               path=None):
+def _to_nb_obj(
+    source,
+    language,
+    ext=None,
+    kernelspec_name=None,
+    check_if_kernel_installed=True,
+    path=None,
+):
     """
     Convert to jupyter notebook via jupytext, if the notebook does not contain
     kernel information and the user did not pass a kernelspec_name explicitly,
@@ -741,31 +776,27 @@ def _to_nb_obj(source,
     try:
         nb = jupytext.reads(source, fmt=ext)
     except Exception as e:
-        what = 'notebook' if ext == 'ipynb' else 'script'
-        err = f'Failed to read {what}'
+        what = "notebook" if ext == "ipynb" else "script"
+        err = f"Failed to read {what}"
 
         if path is not None:
-            err += f' from {str(path)!r}'
+            err += f" from {str(path)!r}"
 
         raise SourceInitializationError(err) from e
 
     # NOTE: I can add the cell with parameters here, but what happens if
     # extract_upstream is false? would that be a problem?
 
-    check_nb_kernelspec_info(nb,
-                             kernelspec_name,
-                             ext,
-                             language,
-                             check_if_installed=check_if_kernel_installed)
+    check_nb_kernelspec_info(
+        nb, kernelspec_name, ext, language, check_if_installed=check_if_kernel_installed
+    )
 
     return nb
 
 
-def check_nb_kernelspec_info(nb,
-                             kernelspec_name,
-                             ext,
-                             language,
-                             check_if_installed=True):
+def check_nb_kernelspec_info(
+    nb, kernelspec_name, ext, language, check_if_installed=True
+):
     """Make sure the passed notebook has kernel info
 
     Parameters
@@ -782,13 +813,14 @@ def check_nb_kernelspec_info(nb,
     # cannot keep going if we don't have the kernel name
     if kernel_name is None:
         raise SourceInitializationError(
-            'Notebook does not contain kernelspec metadata and '
-            'kernelspec_name was not specified, either add '
-            'kernelspec info to your source file or specify '
-            'a kernelspec by name. To see list of installed kernels run '
+            "Notebook does not contain kernelspec metadata and "
+            "kernelspec_name was not specified, either add "
+            "kernelspec info to your source file or specify "
+            "a kernelspec by name. To see list of installed kernels run "
             '"jupyter kernelspec list" in the terminal (first column '
             'indicates the name). Python is usually named "python3", '
-            'R usually "ir"')
+            'R usually "ir"'
+        )
 
     if check_if_installed:
         kernelspec = jupyter_client.kernelspec.get_kernel_spec(kernel_name)
@@ -796,20 +828,20 @@ def check_nb_kernelspec_info(nb,
         nb.metadata.kernelspec = {
             "display_name": kernelspec.display_name,
             "language": kernelspec.language,
-            "name": kernel_name
+            "name": kernel_name,
         }
     else:
-        if 'metadata' not in nb:
-            nb['metadata'] = dict()
+        if "metadata" not in nb:
+            nb["metadata"] = dict()
 
-        if 'kernelspec' not in nb['metadata']:
-            nb['metadata']['kernelspec'] = dict()
+        if "kernelspec" not in nb["metadata"]:
+            nb["metadata"]["kernelspec"] = dict()
 
         # we cannot ask jupyter, so we fill this in ourselves
         nb.metadata.kernelspec = {
-            "display_name": 'R' if kernel_name == 'ir' else 'Python 3',
-            "language": 'R' if kernel_name == 'ir' else 'python',
-            "name": kernel_name
+            "display_name": "R" if kernel_name == "ir" else "Python 3",
+            "language": "R" if kernel_name == "ir" else "python",
+            "name": kernel_name,
         }
 
 
@@ -833,7 +865,7 @@ def determine_kernel_name(nb, kernelspec_name, ext, language):
     if ext:
         language = determine_language(ext)
 
-    lang2kernel = {'python': 'python3', 'r': 'ir'}
+    lang2kernel = {"python": "python3", "r": "ir"}
 
     if language in lang2kernel:
         return lang2kernel[language]
@@ -842,7 +874,7 @@ def determine_kernel_name(nb, kernelspec_name, ext, language):
     is_python_ = is_python(nb)
 
     if is_python_:
-        return 'python3'
+        return "python3"
     else:
         return None
 
@@ -855,38 +887,39 @@ def inject_cell(model, params):
     A model is different than a notebook:
     https://jupyter-notebook.readthedocs.io/en/stable/extending/contents.html
     """
-    nb = nbformat.from_dict(model['content'])
+    nb = nbformat.from_dict(model["content"])
 
     # we must ensure nb has kernelspec info, otherwise papermill will fail to
     # parametrize
-    ext = model['name'].split('.')[-1]
+    ext = model["name"].split(".")[-1]
     check_nb_kernelspec_info(nb, kernelspec_name=None, ext=ext, language=None)
 
     # papermill adds a bunch of things before calling parameterize_notebook
     # if we don't add those things, parameterize_notebook breaks
     # https://github.com/nteract/papermill/blob/0532d499e13e93d8990211be33e9593f1bffbe6c/papermill/iorw.py#L400
-    if not hasattr(nb.metadata, 'papermill'):
-        nb.metadata['papermill'] = {
-            'parameters': dict(),
-            'environment_variables': dict(),
-            'version': None,
+    if not hasattr(nb.metadata, "papermill"):
+        nb.metadata["papermill"] = {
+            "parameters": dict(),
+            "environment_variables": dict(),
+            "version": None,
         }
 
     for cell in nb.cells:
-        if not hasattr(cell.metadata, 'tags'):
-            cell.metadata['tags'] = []
+        if not hasattr(cell.metadata, "tags"):
+            cell.metadata["tags"] = []
 
     params = json_serializable_params(params)
 
-    comment = ('This cell was injected automatically based on your stated '
-               'upstream dependencies (cell above) and pipeline.yaml '
-               'preferences. It is temporary and will be removed when you '
-               'save this notebook')
+    comment = (
+        "This cell was injected automatically based on your stated "
+        "upstream dependencies (cell above) and pipeline.yaml "
+        "preferences. It is temporary and will be removed when you "
+        "save this notebook"
+    )
 
-    model['content'] = parameterize_notebook(nb,
-                                             params,
-                                             report_mode=False,
-                                             comment=comment)
+    model["content"] = parameterize_notebook(
+        nb, params, report_mode=False, comment=comment
+    )
 
 
 def _cleanup_rendered_nb(nb, print_=True):
@@ -895,25 +928,22 @@ def _cleanup_rendered_nb(nb, print_=True):
     injected-parameters, debugging-settings, and metadata injected by
     papermill
     """
-    out = find_cell_with_tags(nb,
-                              ['injected-parameters', 'debugging-settings'])
+    out = find_cell_with_tags(nb, ["injected-parameters", "debugging-settings"])
 
     if print_:
         for key in out.keys():
-            print(f'Removing {key} cell...')
+            print(f"Removing {key} cell...")
 
-    idxs = set(cell['index'] for cell in out.values())
+    idxs = set(cell["index"] for cell in out.values())
 
-    nb['cells'] = [
-        cell for idx, cell in enumerate(nb['cells']) if idx not in idxs
-    ]
+    nb["cells"] = [cell for idx, cell in enumerate(nb["cells"]) if idx not in idxs]
 
     # papermill adds "tags" to all cells that don't have them, remove them
     # if they are empty to avoid cluttering the script
-    for cell in nb['cells']:
-        if 'tags' in cell.get('metadata', {}):
-            if not len(cell['metadata']['tags']):
-                del cell['metadata']['tags']
+    for cell in nb["cells"]:
+        if "tags" in cell.get("metadata", {}):
+            if not len(cell["metadata"]["tags"]):
+                del cell["metadata"]["tags"]
 
     return nb
 
@@ -933,11 +963,11 @@ def is_python(nb):
     except AttributeError:
         pass
     else:
-        is_python_ = language == 'python'
+        is_python_ = language == "python"
 
     # no language defined in metadata, check if it's valid python
     if is_python_ is None:
-        code_str = '\n'.join([c.source for c in nb.cells])
+        code_str = "\n".join([c.source for c in nb.cells])
 
         try:
             ast.parse(code_str)
@@ -948,7 +978,7 @@ def is_python(nb):
             # let's
             # run a quick test. It is very unlikely to have "<-" in Python (
             # {less than} {negative} but extremely common {assignment}
-            if '<-' not in code_str:
+            if "<-" not in code_str:
                 is_python_ = True
 
     # inconclusive test...
@@ -964,18 +994,17 @@ def determine_language(extension):
     returns programming language name (all lowercase) if could be determined,
     None if the test is inconclusive
     """
-    if extension.startswith('.'):
+    if extension.startswith("."):
         extension = extension[1:]
 
-    mapping = {'py': 'python', 'r': 'r', 'R': 'r', 'Rmd': 'r', 'rmd': 'r'}
+    mapping = {"py": "python", "r": "r", "R": "r", "Rmd": "r", "rmd": "r"}
 
     # ipynb can be many languages, it must return None
     return mapping.get(extension)
 
 
 def recursive_update(target, update):
-    """Recursively update a dictionary. Taken from jupytext.header
-    """
+    """Recursively update a dictionary. Taken from jupytext.header"""
     for key in update:
         value = update[key]
         if value is None:
@@ -994,34 +1023,33 @@ def parse_jupytext_format(fmt, name):
     path to the file and the extension
     """
     fmt_parsed = long_form_one_format(fmt)
-    path = Path(fmt_parsed['prefix'], f'{name}{fmt_parsed["extension"]}')
-    del fmt_parsed['prefix']
+    path = Path(fmt_parsed["prefix"], f'{name}{fmt_parsed["extension"]}')
+    del fmt_parsed["prefix"]
     return path, short_form_one_format(fmt_parsed)
 
 
 def iter_paired_notebooks(nb, fmt_, name):
-    formats = nb.metadata.get('jupytext', {}).get('formats', '')
+    formats = nb.metadata.get("jupytext", {}).get("formats", "")
 
     if not formats:
         return
 
-    formats = formats.split(',')
+    formats = formats.split(",")
 
     formats.remove(fmt_)
 
     # overwrite all paired files
-    for path, fmt_current in (parse_jupytext_format(fmt, name)
-                              for fmt in formats):
+    for path, fmt_current in (parse_jupytext_format(fmt, name) for fmt in formats):
         yield path, fmt_current
 
 
 def _nb2codestr(nb):
-    return '\n'.join([c.source for c in nb.cells if c.cell_type == 'code'])
+    return "\n".join([c.source for c in nb.cells if c.cell_type == "code"])
 
 
 def _warn_on_unused_params(nb, params):
     nb = deepcopy(nb)
-    _, idx = find_cell_with_tag(nb, 'parameters')
+    _, idx = find_cell_with_tag(nb, "parameters")
 
     # the notebooks might not have a parameters cell
     if idx is None:
@@ -1037,11 +1065,13 @@ def _warn_on_unused_params(nb, params):
 
     # remove product since it may not be required
     # FIXME: maybe only remove it if it's a dictionary with >2 keys
-    unused = set(params) - names - {'product'}
+    unused = set(params) - names - {"product"}
 
     if unused:
-        warnings.warn('These parameters are not used in the '
-                      f'task\'s source code: {pretty_print.iterable(unused)}')
+        warnings.warn(
+            "These parameters are not used in the "
+            f"task's source code: {pretty_print.iterable(unused)}"
+        )
 
 
 def add_parameters_cell(path, extract_upstream=False, extract_product=False):
@@ -1049,7 +1079,7 @@ def add_parameters_cell(path, extract_upstream=False, extract_product=False):
     Add parameters cell to a script/notebook in the given path, overwrites the
     original file
     """
-    source = ''
+    source = ""
 
     if extract_upstream:
         source += """\
@@ -1063,29 +1093,27 @@ product = None
 """
 
     if not extract_upstream and not extract_product:
-        source += '# add default values for parameters here'
+        source += "# add default values for parameters here"
 
     c = JupytextConfiguration()
     c.notebook_metadata_filter
-    c.cell_metadata_filter = 'all'
+    c.cell_metadata_filter = "all"
 
     nb = jupytext.read(path)
-    new_cell = nbformat.v4.new_code_cell(source,
-                                         metadata={'tags': ['parameters']})
+    new_cell = nbformat.v4.new_code_cell(source, metadata={"tags": ["parameters"]})
     nb.cells.insert(0, new_cell)
     jupytext.write(nb, path, config=c)
 
 
 def _suggest_ploomber_scaffold_missing_file():
-    if Path('pipeline.yaml').is_file():
-        return '\nTo create it, run: ploomber scaffold'
+    if Path("pipeline.yaml").is_file():
+        return "\nTo create it, run: ploomber scaffold"
     else:
-        return ''
+        return ""
 
 
 def _suggest_ploomber_scaffold_is_dir():
-    if Path('pipeline.yaml').is_file():
-        return ('\nTo create it, delete the directory, '
-                'then run: ploomber scaffold')
+    if Path("pipeline.yaml").is_file():
+        return "\nTo create it, delete the directory, " "then run: ploomber scaffold"
     else:
-        return ''
+        return ""

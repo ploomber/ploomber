@@ -17,12 +17,9 @@ def fn():
 def test_can_pickle_dag():
     dag = DAG()
 
-    t = ShellScript('cat "hi" > {{product}}',
-                    File('/tmp/file.txt'),
-                    dag,
-                    name='bash')
+    t = ShellScript('cat "hi" > {{product}}', File("/tmp/file.txt"), dag, name="bash")
 
-    t2 = PythonCallable(fn, File('/tmp/file2.txt'), dag, name='fn')
+    t2 = PythonCallable(fn, File("/tmp/file2.txt"), dag, name="fn")
 
     t >> t2
 
@@ -30,15 +27,15 @@ def test_can_pickle_dag():
 
 
 def test_postgres_relation_is_picklable():
-    rel = PostgresRelation(('schema', 'name', 'table'))
+    rel = PostgresRelation(("schema", "name", "table"))
     pickle.loads(pickle.dumps(rel))
 
 
 def test_file_is_pickable():
-    f = File('/path/to/file.csv')
+    f = File("/path/to/file.csv")
     pickle.loads(pickle.dumps(f))
 
 
 def test_placeholder_is_picklable():
-    p = Placeholder('{{hi}}')
+    p = Placeholder("{{hi}}")
     pickle.loads(pickle.dumps(p))

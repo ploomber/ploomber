@@ -41,6 +41,7 @@ class DAGConfigurator:
     >>> configurator.params.hot_reload = True
     >>> dag = configurator.create()
     """
+
     def __init__(self, d=None):
         if d:
             self._params = DAGConfiguration.from_dict(d)
@@ -62,7 +63,9 @@ class DAGConfigurator:
         return dag
 
     def __setattr__(self, key, value):
-        if key != '_params':
-            raise AttributeError('Cannot assign attributes to DAGConfigurator,'
-                                 ' use configurator.params.param_name = value')
+        if key != "_params":
+            raise AttributeError(
+                "Cannot assign attributes to DAGConfigurator,"
+                " use configurator.params.param_name = value"
+            )
         super().__setattr__(key, value)

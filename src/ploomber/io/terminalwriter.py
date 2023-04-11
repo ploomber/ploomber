@@ -34,8 +34,9 @@ def should_do_markup(file: TextIO) -> bool:
         return False
     if "FORCE_COLOR" in os.environ:
         return True
-    return (hasattr(file, "isatty") and file.isatty()
-            and os.environ.get("TERM") != "dumb")
+    return (
+        hasattr(file, "isatty") and file.isatty() and os.environ.get("TERM") != "dumb"
+    )
 
 
 class TerminalWriter:
@@ -48,6 +49,7 @@ class TerminalWriter:
         capabilities of the file argument. If False if determines coloring
         using properties in the file argument.
     """
+
     _esctable = dict(
         black=30,
         red=31,
@@ -71,13 +73,12 @@ class TerminalWriter:
         invert=7,
     )
 
-    def __init__(self,
-                 file: Optional[TextIO] = None,
-                 will_be_displayed: bool = True) -> None:
+    def __init__(
+        self, file: Optional[TextIO] = None, will_be_displayed: bool = True
+    ) -> None:
         if file is None:
             file = sys.stdout
-        if hasattr(file,
-                   "isatty") and file.isatty() and sys.platform == "win32":
+        if hasattr(file, "isatty") and file.isatty() and sys.platform == "win32":
             try:
                 import colorama
             except ImportError:
@@ -86,8 +87,7 @@ class TerminalWriter:
                 file = colorama.AnsiToWin32(file).stream
                 assert file is not None
         self._file = file
-        self.hasmarkup = should_do_markup(
-            sys.stdout if will_be_displayed else file)
+        self.hasmarkup = should_do_markup(sys.stdout if will_be_displayed else file)
         self._current_line = ""
         self._terminal_width = None  # type: Optional[int]
         self.code_highlight = True
@@ -114,15 +114,16 @@ class TerminalWriter:
         if self.hasmarkup:
             esc = [self._esctable[name] for name, on in markup.items() if on]
             if esc:
-                text = "".join("\x1b[%sm" % cod
-                               for cod in esc) + text + "\x1b[0m"
+                text = "".join("\x1b[%sm" % cod for cod in esc) + text + "\x1b[0m"
         return text
 
-    def sep(self,
-            sepchar: str,
-            title: Optional[str] = None,
-            fullwidth: Optional[int] = None,
-            **markup: bool) -> None:
+    def sep(
+        self,
+        sepchar: str,
+        title: Optional[str] = None,
+        fullwidth: Optional[int] = None,
+        **markup: bool,
+    ) -> None:
         if fullwidth is None:
             fullwidth = self.fullwidth
         # The goal is to have the line be as long as possible
@@ -185,10 +186,9 @@ class TerminalWriter:
     def flush(self) -> None:
         self._file.flush()
 
-    def _write_source(self,
-                      lines: Sequence[str],
-                      indents: Sequence[str] = (),
-                      lexer: str = 'pytb') -> None:
+    def _write_source(
+        self, lines: Sequence[str], indents: Sequence[str] = (), lexer: str = "pytb"
+    ) -> None:
         """Write lines of source code possibly highlighted.
 
         Keeping this private for now because the API is clunky.
@@ -201,7 +201,9 @@ class TerminalWriter:
         if indents and len(indents) != len(lines):
             raise ValueError(
                 "indents size ({}) should have same size as lines ({})".format(
-                    len(indents), len(lines)))
+                    len(indents), len(lines)
+                )
+            )
         if not indents:
             indents = [""] * len(lines)
         source = "\n".join(lines)
@@ -211,20 +213,20 @@ class TerminalWriter:
 
     def _highlight(self, source: str, lexer: str) -> str:
         """Highlight the given source code if we have markup support."""
-        if lexer not in {'py', 'pytb'}:
+        if lexer not in {"py", "pytb"}:
             raise ValueError(f'lexer must be "py" or "pytb", got: {lexer!r}')
 
         if not self.hasmarkup or not self.code_highlight:
             return source
         try:
             from pygments.formatters.terminal import TerminalFormatter
-            from pygments.lexers.python import (PythonLexer,
-                                                PythonTracebackLexer)
+            from pygments.lexers.python import PythonLexer, PythonTracebackLexer
             from pygments import highlight
         except ImportError:
             return source
         else:
-            Lexer = PythonLexer if lexer == 'py' else PythonTracebackLexer
-            highlighted = highlight(source, Lexer(),
-                                    TerminalFormatter(bg="dark"))  # type: str
+            Lexer = PythonLexer if lexer == "py" else PythonTracebackLexer
+            highlighted = highlight(
+                source, Lexer(), TerminalFormatter(bg="dark")
+            )  # type: str
             return highlighted

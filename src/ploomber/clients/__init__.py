@@ -6,12 +6,12 @@ from ploomber.clients.storage.local import LocalStorageClient
 from ploomber.clients.storage.aws import S3Client
 
 __all__ = [
-    'Client',
-    'DBAPIClient',
-    'SQLAlchemyClient',
-    'ShellClient',
-    'RemoteShellClient',
-    'GCloudStorageClient',
-    'LocalStorageClient',
-    'S3Client',
+    "Client",
+    "DBAPIClient",
+    "SQLAlchemyClient",
+    "ShellClient",
+    "RemoteShellClient",
+    "GCloudStorageClient",
+    "LocalStorageClient",
+    "S3Client",
 ]

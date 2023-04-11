@@ -31,9 +31,9 @@ def debug_if_exception(callable_, task_name, kwargs=None):
     # any other thing starts the debugging session
     except Exception as e:
         click.secho(
-            f'{e} {type(e)} - Error in task {task_name!r}. '
-            'Starting debugger...',
-            fg='red')
+            f"{e} {type(e)} - Error in task {task_name!r}. " "Starting debugger...",
+            fg="red",
+        )
 
         ipdb.post_mortem(sys.exc_info()[2])
 

@@ -1,4 +1,5 @@
 import pickle
+
 try:
     import importlib.resources as importlib_resources
 except ImportError:  # pragma: no cover
@@ -27,10 +28,7 @@ class OnlineDAG(abc.ABC):
         dag = self.init_dag_from_partial(self.get_partial())
 
         # TODO: add support for manually specifying upstream dependencies
-        upstream = {
-            name: dag[name].source.extract_upstream()
-            for name in dag._iter()
-        }
+        upstream = {name: dag[name].source.extract_upstream() for name in dag._iter()}
 
         # names of all tasks used as upstream
         upstream_tasks = chain(*upstream.values())
@@ -52,16 +50,13 @@ class OnlineDAG(abc.ABC):
                 dag[name].set_upstream(dag[dependency])
 
         # get all terminal nodes and make them a dependency of the  node
-        terminal_current = [
-            name for name, degree in dag._G.out_degree() if not degree
-        ]
+        terminal_current = [name for name, degree in dag._G.out_degree() if not degree]
 
         # TODO: extract upstream and make sure they match with the ones in
         # terminal_current
-        terminal = in_memory_callable(self.terminal_task,
-                                      dag,
-                                      name='terminal',
-                                      params=self.terminal_params())
+        terminal = in_memory_callable(
+            self.terminal_task, dag, name="terminal", params=self.terminal_params()
+        )
 
         for dependency in terminal_current:
             terminal.set_upstream(dag[dependency])
@@ -70,17 +65,18 @@ class OnlineDAG(abc.ABC):
 
     @classmethod
     def init_dag_from_partial(cls, partial):
-        """Initialize partial returned by get_partial()
-        """
+        """Initialize partial returned by get_partial()"""
         if isinstance(partial, (str, Path)):
             spec = DAGSpecPartial(partial)
             return spec.to_dag()
         elif isinstance(partial, DAG):
             return partial
         else:
-            raise TypeError(f'Expected {cls.__name__}.get_partial() to '
-                            'return a str, pathlib.Path or ploomber.DAG, '
-                            f'got {type(partial).__name__}')
+            raise TypeError(
+                f"Expected {cls.__name__}.get_partial() to "
+                "return a str, pathlib.Path or ploomber.DAG, "
+                f"got {type(partial).__name__}"
+            )
 
     def predict(self, **kwargs):
         """
@@ -147,21 +143,24 @@ class OnlineModel(OnlineDAG):
     >>> model = OnlineModel(my_module) # doctest: +SKIP
     >>> model.predict(x=some_input) # doctest: +SKIP
     """
+
     def __init__(self, module):
         self._module = module
         super().__init__()
 
         names = list(self.in_memory.dag._iter())
 
-        if 'features' not in names:
+        if "features" not in names:
             raise ValueError(
-                f'Error initializing {type(self).__name__}. The initialized '
+                f"Error initializing {type(self).__name__}. The initialized "
                 'DAG must contain a task named "features". '
-                f'Got tasks with names: {names}')
+                f"Got tasks with names: {names}"
+            )
 
     def get_partial(self):
         with importlib_resources.path(
-                self._module, 'pipeline-features.yaml') as path_to_spec:
+            self._module, "pipeline-features.yaml"
+        ) as path_to_spec:
             path = path_to_spec
 
         return path
@@ -170,26 +169,26 @@ class OnlineModel(OnlineDAG):
         error = None
 
         try:
-            content = importlib_resources.read_binary(self._module,
-                                                      'model.pickle')
+            content = importlib_resources.read_binary(self._module, "model.pickle")
         except FileNotFoundError as e:
             error = e
 
         if error:
             raise FileNotFoundError(
-                f'Error initializing {type(self).__name__} '
-                f'from module {self._module.__name__!r}: Missing model file. '
-                f'Expected location: {error.filename}')
+                f"Error initializing {type(self).__name__} "
+                f"from module {self._module.__name__!r}: Missing model file. "
+                f"Expected location: {error.filename}"
+            )
 
         model = pickle.loads(content)
         return dict(model=model)
 
     @staticmethod
     def terminal_task(upstream, model):
-        return model.predict(upstream['features'])
+        return model.predict(upstream["features"])
 
     def predict(self, **kwargs):
         """
         Returns the output of ``model.predict(upstream['features'])``
         """
-        return self.in_memory.build(kwargs)['terminal']
+        return self.in_memory.build(kwargs)["terminal"]

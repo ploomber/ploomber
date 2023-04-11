@@ -41,10 +41,12 @@ class InMemoryDAG:
         non_callables = _non_callables(dag)
 
         if non_callables:
-            non_callables_repr = ', '.join(repr(t) for t in non_callables)
-            raise TypeError('All tasks in the DAG must be PythonCallable, '
-                            'got unallowed '
-                            f'types: {non_callables_repr}')
+            non_callables_repr = ", ".join(repr(t) for t in non_callables)
+            raise TypeError(
+                "All tasks in the DAG must be PythonCallable, "
+                "got unallowed "
+                f"types: {non_callables_repr}"
+            )
 
         # if the tasks are not initialized with a serializer in the partial
         # (this happens when the partial is imported in a pipeline.yaml file
@@ -57,9 +59,7 @@ class InMemoryDAG:
         dag.render()
 
         self.dag = dag
-        self.root_nodes = [
-            name for name, degree in dag._G.in_degree() if not degree
-        ]
+        self.root_nodes = [name for name, degree in dag._G.in_degree() if not degree]
         self.return_postprocessor = return_postprocessor or _do_nothing
 
         # TODO: validate that root nodes have single parameter in the signature
@@ -103,10 +103,12 @@ class InMemoryDAG:
         # not KeyError (the former is the one used when calling functions with
         # invalid arguments) - maybe an argument validate.keys to choose
         # which error to raise?
-        validate.keys(valid=input_data_names,
-                      passed=set(input_data),
-                      required=input_data_names,
-                      name='input_data')
+        validate.keys(
+            valid=input_data_names,
+            passed=set(input_data),
+            required=input_data_names,
+            name="input_data",
+        )
 
         if copy is True:
             copying_function = copy_module.copy
@@ -120,24 +122,25 @@ class InMemoryDAG:
             params = task.params.to_dict()
 
             if task_name in self.root_nodes:
-                params = {**params, 'input_data': input_data[task_name]}
+                params = {**params, "input_data": input_data[task_name]}
 
             # replace params with the returned value from upstream tasks
-            if 'upstream' in params:
-                params['upstream'] = {
-                    k: copying_function(outs[k])
-                    for k, v in params['upstream'].items()
+            if "upstream" in params:
+                params["upstream"] = {
+                    k: copying_function(outs[k]) for k, v in params["upstream"].items()
                 }
 
-            params.pop('product', None)
+            params.pop("product", None)
 
             output = self.return_postprocessor(task.source.primitive(**params))
 
             if output is None:
                 raise ValueError(
-                    'All callables in a {} must return a value. '
+                    "All callables in a {} must return a value. "
                     'Callable "{}", from task "{}" returned None'.format(
-                        type(self).__name__, task.source.name, task_name))
+                        type(self).__name__, task.source.name, task_name
+                    )
+                )
 
             outs[task_name] = output
 

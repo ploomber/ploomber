@@ -9,5 +9,5 @@ product = None
 
 # +
 engine = create_engine(get_uri())
-df = pd.read_sql('SELECT * FROM %s' % upstream['transform'], engine)
+df = pd.read_sql("SELECT * FROM %s" % upstream["transform"], engine)
 sns.distplot(df.value_per_customer)

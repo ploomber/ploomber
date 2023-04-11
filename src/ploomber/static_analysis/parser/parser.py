@@ -1,6 +1,5 @@
 import itertools
-from ploomber.static_analysis.parser.tokens import (Assignment, Name, Operator,
-                                                    Null)
+from ploomber.static_analysis.parser.tokens import Assignment, Name, Operator, Null
 
 
 class Parser:
@@ -14,6 +13,7 @@ class Parser:
     tokens : list
         Tokens, obtained from a Lexer
     """
+
     def __init__(self, tokens):
         self.tokens = tokens
         self.pos = 0
@@ -27,19 +27,19 @@ class Parser:
         return self.tokens[self.pos + 1]
 
     def get_tail(self, exclude_next=True):
-        return self.tokens[self.pos + 1 + int(exclude_next):]
+        return self.tokens[self.pos + 1 + int(exclude_next) :]
 
     def parse(self):
-        """The current implementation can only parse one expression at a time
-        """
+        """The current implementation can only parse one expression at a time"""
         if not isinstance(self.current_token, Name):
-            raise SyntaxError('First token must be a valid name')
+            raise SyntaxError("First token must be a valid name")
 
         if not isinstance(self.next_token, Assignment):
-            raise SyntaxError('Second token must be an assignment')
+            raise SyntaxError("Second token must be an assignment")
 
-        return Expression(self.current_token, self.next_token,
-                          build_node(self.get_tail()))
+        return Expression(
+            self.current_token, self.next_token, build_node(self.get_tail())
+        )
 
 
 def get_slicer(elements, size):
@@ -52,7 +52,6 @@ def get_slicer(elements, size):
             return
 
         if len(slice_) == size - 1:
-
             slice_.append(None)
 
         yield slice_
@@ -69,7 +68,7 @@ class Expression(Node):
         self.right = right
 
     def __repr__(self):
-        return '{} {} {}'.format(self.left, self.op, self.right)
+        return "{} {} {}".format(self.left, self.op, self.right)
 
 
 class ListNode(Node):
@@ -83,8 +82,7 @@ class ListNode(Node):
 class DictionaryNode(Node):
     def __init__(self, tokens):
         self.elements = [
-            (key, value)
-            for key, equal, value, comma in get_slicer(tokens, size=4)
+            (key, value) for key, equal, value, comma in get_slicer(tokens, size=4)
         ]
 
     def to_python(self):
@@ -92,7 +90,7 @@ class DictionaryNode(Node):
 
 
 def build_node(tokens):
-    if tokens[0] == Operator('list'):
+    if tokens[0] == Operator("list"):
         elements = tokens[2:-1]
 
         if isinstance(elements[0], Name):
@@ -103,5 +101,7 @@ def build_node(tokens):
     elif tokens[0] == Null():
         return tokens[0]
     else:
-        raise SyntaxError('Variables should be assigned to values of type '
-                          'list (e.g. list("a", "b"))  or NULL')
+        raise SyntaxError(
+            "Variables should be assigned to values of type "
+            'list (e.g. list("a", "b"))  or NULL'
+        )

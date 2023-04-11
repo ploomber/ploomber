@@ -22,32 +22,29 @@ def to_tuple(k, values):
 
 # only these configurations log errors
 grid = {
-    'build_in_subprocess': [True, False],
-    'catch_exceptions': [True],
-    'catch_warnings': [True, False]
+    "build_in_subprocess": [True, False],
+    "catch_exceptions": [True],
+    "catch_warnings": [True, False],
 }
 
-executors_w_exception_logging = [
-    Serial(**kwargs) for kwargs in expand_grid(grid)
-]
+executors_w_exception_logging = [Serial(**kwargs) for kwargs in expand_grid(grid)]
 
 
 def write_simple_pipeline(file_name, modules, function_name):
     source = f"{'.'.join(modules)}.{function_name}"
-    Path(file_name).write_text(f"""
+    Path(file_name).write_text(
+        f"""
 tasks:
     - source: {source}
       product: out.ipynb
-""")
+"""
+    )
 
 
 def assert_function_in_module(function_name, module_file):
     code = module_file.read_text()
     module = ast.parse(code)
-    names = {
-        element.name
-        for element in module.body if hasattr(element, 'name')
-    }
+    names = {element.name for element in module.body if hasattr(element, "name")}
     assert function_name in names
 
 

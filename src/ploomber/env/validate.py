@@ -23,7 +23,7 @@ def raw_data_keys(d):
         errors.append(str(e))
 
     if errors:
-        msg = 'Error validating env.\n' + '\n'.join(errors)
+        msg = "Error validating env.\n" + "\n".join(errors)
         raise ValueError(msg)
 
 
@@ -43,19 +43,21 @@ def get_keys_for_dict(d):
 
 
 def no_double_underscores(keys):
-    not_allowed = [k for k in keys if '__' in k]
+    not_allowed = [k for k in keys if "__" in k]
 
     if not_allowed:
-        raise ValueError('Keys cannot have double '
-                         'underscores, got: {}'.format(not_allowed))
+        raise ValueError(
+            "Keys cannot have double " "underscores, got: {}".format(not_allowed)
+        )
 
 
 def no_leading_underscore(keys):
-    allowed = {'_module'}
-    not_allowed = [k for k in keys if k.startswith('_') and k
-                   not in allowed]
+    allowed = {"_module"}
+    not_allowed = [k for k in keys if k.startswith("_") and k not in allowed]
 
     if not_allowed:
-        raise ValueError('Top-level keys cannot start '
-                         'with an underscore, except for {}. '
-                         'Got: {}'.format(allowed, not_allowed))
+        raise ValueError(
+            "Top-level keys cannot start "
+            "with an underscore, except for {}. "
+            "Got: {}".format(allowed, not_allowed)
+        )

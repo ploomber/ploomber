@@ -11,7 +11,7 @@ from ploomber.io import TerminalWriter
 
 
 def to_pascal_case(name):
-    return ''.join([w.capitalize() for w in name.split('_')])
+    return "".join([w.capitalize() for w in name.split("_")])
 
 
 def _delete(dst):
@@ -30,6 +30,7 @@ class CommanderException(ClickException):
     from the user. It is a subclass of ClickException, which signals the CLI
     to hide the traceback
     """
+
     pass
 
 
@@ -38,40 +39,41 @@ class CommanderStop(Exception):
     An exception that stops the execution of a commander without raising
     an exception
     """
+
     pass
 
 
 class Commander:
-    """Manage script workflows
-    """
+    """Manage script workflows"""
 
-    def __init__(self,
-                 workspace=None,
-                 templates_path=None,
-                 environment_kwargs=None):
+    def __init__(self, workspace=None, templates_path=None, environment_kwargs=None):
         self.tw = TerminalWriter()
         self.workspace = None if not workspace else Path(workspace).resolve()
         self._to_delete = []
         self._warnings = []
 
-        self._wd = Path('.').resolve()
+        self._wd = Path(".").resolve()
 
         if templates_path:
-            self._env = Environment(loader=PackageLoader(*templates_path),
-                                    undefined=StrictUndefined,
-                                    **(environment_kwargs or {}))
-            self._env.filters['to_pascal_case'] = to_pascal_case
+            self._env = Environment(
+                loader=PackageLoader(*templates_path),
+                undefined=StrictUndefined,
+                **(environment_kwargs or {}),
+            )
+            self._env.filters["to_pascal_case"] = to_pascal_case
         else:
             self._env = None
 
-    def run(self,
-            *cmd,
-            description=None,
-            capture_output=False,
-            expected_output=None,
-            error_message=None,
-            hint=None,
-            show_cmd=True):
+    def run(
+        self,
+        *cmd,
+        description=None,
+        capture_output=False,
+        expected_output=None,
+        error_message=None,
+        hint=None,
+        show_cmd=True,
+    ):
         """Execute a command in a subprocess
 
         Parameters
@@ -104,15 +106,16 @@ class Commander:
             (and error message if it fails) or not. Only valid when
             description is not None
         """
-        cmd_str = ' '.join(cmd)
+        cmd_str = " ".join(cmd)
 
         if expected_output is not None and not capture_output:
-            raise RuntimeError('capture_output must be True when '
-                               'expected_output is not None')
+            raise RuntimeError(
+                "capture_output must be True when " "expected_output is not None"
+            )
 
         if description:
-            header = f'{description}: {cmd_str}' if show_cmd else description
-            self.tw.sep('=', header, blue=True)
+            header = f"{description}: {cmd_str}" if show_cmd else description
+            self.tw.sep("=", header, blue=True)
 
         error = None
         result = None
@@ -138,21 +141,22 @@ class Commander:
                 line_first = error_message
             else:
                 if show_cmd:
-                    cmd_str = ' '.join(cmd)
-                    line_first = ('An error occurred when executing '
-                                  f'command: {cmd_str}')
+                    cmd_str = " ".join(cmd)
+                    line_first = (
+                        "An error occurred when executing " f"command: {cmd_str}"
+                    )
                 else:
-                    line_first = 'An error occurred.'
+                    line_first = "An error occurred."
 
             lines.append(line_first)
 
             if not capture_output:
-                lines.append(f'Original error message: {error}')
+                lines.append(f"Original error message: {error}")
 
             if hint:
-                lines.append(f'Hint: {hint}.')
+                lines.append(f"Hint: {hint}.")
 
-            raise CommanderException('\n'.join(lines))
+            raise CommanderException("\n".join(lines))
         else:
             return result
 
@@ -217,16 +221,15 @@ class Commander:
         # This message is no longer valid since this is only called
         # when there is no env yet
         if dst.exists():
-            self.success(f'Using existing {path!s}...')
+            self.success(f"Using existing {path!s}...")
         else:
-            self.info(f'Adding {dst!s}...')
+            self.info(f"Adding {dst!s}...")
             dst.parent.mkdir(exist_ok=True, parents=True)
             content = self._env.get_template(str(path)).render(**render_kwargs)
             dst.write_text(content)
 
     def cd(self, dir_):
-        """Change current working directory
-        """
+        """Change current working directory"""
         os.chdir(dir_)
 
     def cp(self, src):
@@ -247,8 +250,7 @@ class Commander:
         path = Path(src)
 
         if not path.exists():
-            raise CommanderException(
-                f'Missing {src} file. Add it and try again.')
+            raise CommanderException(f"Missing {src} file. Add it and try again.")
 
         # convert to absolute to ensure we delete the right file on __exit__
         dst = Path(self.workspace, path.name).resolve()
@@ -280,37 +282,31 @@ class Commander:
             Path(dst).touch()
 
         original = Path(dst).read_text()
-        Path(dst).write_text(original + '\n' + line + '\n')
+        Path(dst).write_text(original + "\n" + line + "\n")
 
     def print(self, line):
-        """Print message (no color)
-        """
-        self.tw.write(f'{line}\n')
+        """Print message (no color)"""
+        self.tw.write(f"{line}\n")
 
     def success(self, line=None):
-        """Print success message (green)
-        """
-        self.tw.sep('=', line, green=True)
+        """Print success message (green)"""
+        self.tw.sep("=", line, green=True)
 
     def info(self, line=None):
-        """Print information message (blue)
-        """
-        self.tw.sep('=', line, blue=True)
+        """Print information message (blue)"""
+        self.tw.sep("=", line, blue=True)
 
     def warn(self, line=None):
-        """Print warning (yellow)
-        """
-        self.tw.sep('=', line, yellow=True)
+        """Print warning (yellow)"""
+        self.tw.sep("=", line, yellow=True)
 
     def warn_on_exit(self, line):
-        """Append a warning message to be displayed on exit
-        """
+        """Append a warning message to be displayed on exit"""
         self._warnings.append(line)
 
     def _warn_show(self):
-        """Display accumulated warning messages (added via .warn_on_exit)
-        """
+        """Display accumulated warning messages (added via .warn_on_exit)"""
         if self._warnings:
-            self.tw.sep('=', 'Warnings', yellow=True)
-            self.tw.write('\n\n'.join(self._warnings) + '\n')
-            self.tw.sep('=', yellow=True)
+            self.tw.sep("=", "Warnings", yellow=True)
+            self.tw.write("\n\n".join(self._warnings) + "\n")
+            self.tw.sep("=", yellow=True)

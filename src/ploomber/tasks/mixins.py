@@ -13,6 +13,7 @@ class ClientMixin:
     ValueError
         If there is no valid client to use
     """
+
     @property
     def client(self):
         if self._client is None:
@@ -20,8 +21,9 @@ class ClientMixin:
 
             if dag_client is None:
                 raise MissingClientError(
-                    f'{type(self).__name__} must be initialized with a '
-                    'client. Pass a client directly or set a DAG-level one')
+                    f"{type(self).__name__} must be initialized with a "
+                    "client. Pass a client directly or set a DAG-level one"
+                )
 
             return dag_client
 

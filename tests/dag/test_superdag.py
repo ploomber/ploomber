@@ -19,13 +19,13 @@ def touch(upstream, product):
 def test_superdag(tmp_directory):
     dag1 = DAG()
 
-    t11 = PythonCallable(touch_root, File('11.txt'), dag1, name='11')
-    t12 = PythonCallable(touch, File('12.txt'), dag1, name='12')
+    t11 = PythonCallable(touch_root, File("11.txt"), dag1, name="11")
+    t12 = PythonCallable(touch, File("12.txt"), dag1, name="12")
 
     dag2 = DAG()
 
-    t21 = PythonCallable(touch, File('21.txt'), dag2, name='21')
-    t22 = PythonCallable(touch, File('22.txt'), dag2, name='22')
+    t21 = PythonCallable(touch, File("21.txt"), dag2, name="21")
+    t22 = PythonCallable(touch, File("22.txt"), dag2, name="22")
 
     t11 >> t12 >> t21 >> t22
 
@@ -35,7 +35,7 @@ def test_superdag(tmp_directory):
 
     dag.build()
 
-    files = ['11.txt', '12.txt', '21.txt', '22.txt']
+    files = ["11.txt", "12.txt", "21.txt", "22.txt"]
 
     assert set(dag.G.nodes()) == {t11, t12, t21, t22}
     assert all(Path(name).exists() for name in files)

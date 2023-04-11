@@ -24,9 +24,9 @@ from ploomber.io.serialize import _build_extension_mapping_final
 _EXTERNAL = {
     False: None,
     True: pickle.load,
-    'pickle': pickle.load,
-    'joblib': joblib_load,
-    'cloudpickle': cloudpickle_load,
+    "pickle": pickle.load,
+    "joblib": joblib_load,
+    "cloudpickle": cloudpickle_load,
 }
 
 
@@ -40,33 +40,33 @@ def _json2obj(product):
 
 def _csv2df(product):
     if pd is None:
-        raise ModuleNotFoundError('Error using .csv default unserializer: '
-                                  'pandas is not installed')
+        raise ModuleNotFoundError(
+            "Error using .csv default unserializer: " "pandas is not installed"
+        )
 
     return pd.read_csv(product)
 
 
 def _parquet2df(product):
     if pd is None:
-        raise ModuleNotFoundError('Error using .parquet default unserializer: '
-                                  'pandas is not installed')
+        raise ModuleNotFoundError(
+            "Error using .parquet default unserializer: " "pandas is not installed"
+        )
 
     return pd.read_parquet(product)
 
 
 _DEFAULTS = {
-    '.txt': _txt2str,
-    '.json': _json2obj,
-    '.csv': _csv2df,
-    '.parquet': _parquet2df,
+    ".txt": _txt2str,
+    ".json": _json2obj,
+    ".csv": _csv2df,
+    ".parquet": _parquet2df,
 }
 
 
-def unserializer(extension_mapping=None,
-                 *,
-                 fallback=False,
-                 defaults=None,
-                 unpack=False):
+def unserializer(
+    extension_mapping=None, *, fallback=False, defaults=None, unpack=False
+):
     """Decorator for unserializing functions
 
     Parameters
@@ -103,7 +103,8 @@ def unserializer(extension_mapping=None,
 
     def _unserializer(fn):
         extension_mapping_final = _build_extension_mapping_final(
-            extension_mapping, defaults, fn, _DEFAULTS, 'unserializer')
+            extension_mapping, defaults, fn, _DEFAULTS, "unserializer"
+        )
 
         try:
             unserializer_fallback = _EXTERNAL[fallback]
@@ -113,36 +114,49 @@ def unserializer(extension_mapping=None,
             error = False
 
         if error:
-            raise ValueError(f'Invalid fallback argument {fallback!r} '
-                             f'in function {fn.__name__!r}. Must be one of '
-                             "True, 'joblib', or 'cloudpickle'")
+            raise ValueError(
+                f"Invalid fallback argument {fallback!r} "
+                f"in function {fn.__name__!r}. Must be one of "
+                "True, 'joblib', or 'cloudpickle'"
+            )
 
-        if unserializer_fallback is None and fallback in {
-                'cloudpickle', 'joblib'
-        }:
+        if unserializer_fallback is None and fallback in {"cloudpickle", "joblib"}:
             raise ModuleNotFoundError(
-                f'Error unserializing with function {fn.__name__!r}. '
-                f'{fallback} is not installed')
+                f"Error unserializing with function {fn.__name__!r}. "
+                f"{fallback} is not installed"
+            )
 
         n_params = len(signature(fn).parameters)
         if n_params != 1:
-            raise TypeError(f'Expected unserializer {fn.__name__!r} '
-                            f'to take 1 argument, but it takes {n_params!r}')
+            raise TypeError(
+                f"Expected unserializer {fn.__name__!r} "
+                f"to take 1 argument, but it takes {n_params!r}"
+            )
 
         @wraps(fn)
         def wrapper(product):
             if isinstance(product, MetaProduct):
                 return {
-                    key: _unserialize_product(value, extension_mapping_final,
-                                              fallback, unserializer_fallback,
-                                              fn, unpack)
+                    key: _unserialize_product(
+                        value,
+                        extension_mapping_final,
+                        fallback,
+                        unserializer_fallback,
+                        fn,
+                        unpack,
+                    )
                     for key, value in product.products.products.items()
                 }
 
             else:
-                return _unserialize_product(product, extension_mapping_final,
-                                            fallback, unserializer_fallback,
-                                            fn, unpack)
+                return _unserialize_product(
+                    product,
+                    extension_mapping_final,
+                    fallback,
+                    unserializer_fallback,
+                    fn,
+                    unpack,
+                )
 
         return wrapper
 
@@ -151,16 +165,14 @@ def unserializer(extension_mapping=None,
 
 @unserializer(fallback=True)
 def unserializer_pickle(product):
-    """An unserializer that unpickles everything
-    """
+    """An unserializer that unpickles everything"""
     # this should never execute
-    raise RuntimeError('Error when unserializing with pickle module')
+    raise RuntimeError("Error when unserializing with pickle module")
 
 
 def _make_unserializer(fn):
-
     def _unserialize(product):
-        with open(product, 'rb') as f:
+        with open(product, "rb") as f:
             obj = fn(f)
 
         return obj
@@ -168,16 +180,16 @@ def _make_unserializer(fn):
     return _unserialize
 
 
-def _unserialize_product(product, extension_mapping, fallback,
-                         unserializer_fallback, fn, unpack):
-
+def _unserialize_product(
+    product, extension_mapping, fallback, unserializer_fallback, fn, unpack
+):
     if unpack and Path(product).is_dir():
         out = {}
 
-        for path in Path(product).glob('*'):
-            unserializer = _determine_unserializer(path, extension_mapping,
-                                                   fallback,
-                                                   unserializer_fallback, fn)
+        for path in Path(product).glob("*"):
+            unserializer = _determine_unserializer(
+                path, extension_mapping, fallback, unserializer_fallback, fn
+            )
 
             out[path.name] = unserializer(path)
 
@@ -185,14 +197,15 @@ def _unserialize_product(product, extension_mapping, fallback,
 
     # treat product as a single file...
     else:
-        unserializer = _determine_unserializer(product, extension_mapping,
-                                               fallback, unserializer_fallback,
-                                               fn)
+        unserializer = _determine_unserializer(
+            product, extension_mapping, fallback, unserializer_fallback, fn
+        )
         return unserializer(product)
 
 
-def _determine_unserializer(product, extension_mapping, fallback,
-                            unserializer_fallback, fn):
+def _determine_unserializer(
+    product, extension_mapping, fallback, unserializer_fallback, fn
+):
     suffix = Path(product).suffix
 
     if extension_mapping and suffix in extension_mapping:

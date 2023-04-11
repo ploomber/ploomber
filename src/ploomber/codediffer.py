@@ -25,20 +25,25 @@ def normalize_null(code):
 
 def normalize_sql(code):
     if not sqlparse:
-        raise ImportError('sqlparse is required for normalizing SQL code')
+        raise ImportError("sqlparse is required for normalizing SQL code")
 
-    return None if code is None else sqlparse.format(code,
-                                                     keyword_case='upper',
-                                                     identifier_case='lower',
-                                                     strip_comments=True,
-                                                     reindent=True,
-                                                     indent_with=4)
+    return (
+        None
+        if code is None
+        else sqlparse.format(
+            code,
+            keyword_case="upper",
+            identifier_case="lower",
+            strip_comments=True,
+            reindent=True,
+            indent_with=4,
+        )
+    )
 
 
 def _delete_python_comments(code):
     tokens = tokenize.generate_tokens(io.StringIO(code).readline)
-    tokens = [(num, val) for num, val, _, _, _ in tokens
-              if num != tokenize.COMMENT]
+    tokens = [(num, val) for num, val, _, _, _ in tokens if num != tokenize.COMMENT]
     return tokenize.untokenize(tokens)
 
 
@@ -57,12 +62,13 @@ def normalize_python(code):
 
         if not autopep8 or not parso:
             raise ImportError(
-                'autopep8 and parso are required for normalizing '
-                'Python code: pip install autopep8 parso')
+                "autopep8 and parso are required for normalizing "
+                "Python code: pip install autopep8 parso"
+            )
 
         node = parso.parse(code).children[0]
 
-        if node.type == 'decorated':
+        if node.type == "decorated":
             node = node.children[-1]
 
         try:
@@ -72,7 +78,7 @@ def normalize_python(code):
             doc_node = None
 
         if doc_node is not None:
-            code = code.replace('\n' + doc_node.get_code(), '')
+            code = code.replace("\n" + doc_node.get_code(), "")
 
         code = autopep8.fix_code(code)
 
@@ -80,36 +86,30 @@ def normalize_python(code):
 
 
 def diff_strings(a, b):
-    """Compute the diff between two strings
-    """
+    """Compute the diff between two strings"""
     d = Differ()
 
     if a is None and b is None:
-        return '[Both a and b are None]'
+        return "[Both a and b are None]"
 
-    out = ''
+    out = ""
 
     if a is None:
-        out += '[a is None]\n'
+        out += "[a is None]\n"
     elif b is None:
-        out += '[a is None]\n'
+        out += "[a is None]\n"
 
-    a = '' if a is None else a
-    b = '' if b is None else b
+    a = "" if a is None else a
+    b = "" if b is None else b
 
-    result = d.compare(a.splitlines(keepends=True),
-                       b.splitlines(keepends=True))
-    out += ''.join(result)
+    result = d.compare(a.splitlines(keepends=True), b.splitlines(keepends=True))
+    out += "".join(result)
 
     return out
 
 
 class CodeDiffer:
-    NORMALIZERS = {
-        None: normalize_null,
-        'py': normalize_python,
-        'sql': normalize_sql
-    }
+    NORMALIZERS = {None: normalize_null, "py": normalize_python, "sql": normalize_sql}
 
     def is_different(self, a, b, a_params, b_params, extension=None):
         """
@@ -159,7 +159,7 @@ class CodeDiffer:
         else:
             a_params_ = remove_non_serializable_top_keys(a_params)
             b_params_ = remove_non_serializable_top_keys(b_params)
-            outdated_params = (a_params_ != b_params_)
+            outdated_params = a_params_ != b_params_
 
         result = outdated_params or (a_norm != b_norm)
         # TODO: improve diff view, also show a params diff view. probably
@@ -170,8 +170,7 @@ class CodeDiffer:
         return result, diff
 
     def get_diff(self, a, b, extension=None, normalize=True):
-        """Get the diff view
-        """
+        """Get the diff view"""
         # TODO: remove normalize param, we are already normalizing in the
         # is_different method
         if normalize:
@@ -183,13 +182,12 @@ class CodeDiffer:
         diff = diff_strings(a, b)
 
         if extension is not None:
-            diff = '[Code was normalized]\n' + diff
+            diff = "[Code was normalized]\n" + diff
 
         return diff
 
     def _get_normalizer(self, extension):
-        """Get the normalizer function for a given extension
-        """
+        """Get the normalizer function for a given extension"""
         if extension in self.NORMALIZERS:
             return self.NORMALIZERS[extension]
         else:

@@ -147,7 +147,6 @@ def test_init_with_missing_file(tmp_directory):
 
 
 def test_error_if_tasks_is_none():
-
     with pytest.raises(DAGSpecInitializationError) as excinfo:
         DAGSpec({"tasks": None})
 
@@ -1057,7 +1056,6 @@ def test_git_placeholder_and_not_in_git_repository(tmp_directory, save_env_yaml)
     ],
 )
 def test_passing_env_in_class_methods(method, kwargs, tmp_directory):
-
     spec_dict = {
         "tasks": [
             {
@@ -1439,7 +1437,6 @@ def test_import_tasks_from_paths_are_relative_to_the_yaml_spec(tmp_nbs, tmp_path
 
 
 def test_loads_serializer_and_unserializer(backup_online, add_current_to_sys_path):
-
     spec = DAGSpec(
         {
             "tasks": [
@@ -1666,7 +1663,6 @@ def test_validate_product_default_class_values():
 
 
 def test_warn_if_param_declared_in_env_but_unused_in_spec():
-
     with pytest.warns(UserWarning) as record:
         DAGSpec(
             {
@@ -1686,7 +1682,6 @@ def test_warn_if_param_declared_in_env_but_unused_in_spec():
 
 
 def test_doesnt_warn_if_param_declared_in_env_is_used_in_spec():
-
     with pytest.warns(None) as record:
         DAGSpec(
             {
@@ -2039,7 +2034,6 @@ def get_db_client(param=1):
 def test_lazy_load_dag_level_client(
     tmp_directory, tmp_imports, my_testing_module, client_spec
 ):
-
     tasks = [
         {"source": "my_testing_module.task", "product": "output.csv"},
     ]

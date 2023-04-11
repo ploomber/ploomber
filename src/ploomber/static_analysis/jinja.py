@@ -16,8 +16,10 @@ class JinjaExtractor:
 
     def __init__(self, code):
         if not isinstance(code, (str, Placeholder)):
-            raise TypeError('Code must be a str or Placeholder object, got: '
-                            '{}'.format(type(code)))
+            raise TypeError(
+                "Code must be a str or Placeholder object, got: "
+                "{}".format(type(code))
+            )
         self.code = code
         self.ast = self._get_ast(code)
 
@@ -44,13 +46,18 @@ class JinjaExtractor:
         attr = self.ast.find_all(Getattr)
         item = self.ast.find_all(Getitem)
 
-        return set([
-            obj.arg.as_const() if isinstance(obj, Getitem) else obj.attr
-            # iterate over get attribute and get item
-            for obj in chain(attr, item)
-            # only check variable access
-            if hasattr(obj.node, 'name') and obj.node.name == variable
-        ]) or None
+        return (
+            set(
+                [
+                    obj.arg.as_const() if isinstance(obj, Getitem) else obj.attr
+                    # iterate over get attribute and get item
+                    for obj in chain(attr, item)
+                    # only check variable access
+                    if hasattr(obj.node, "name") and obj.node.name == variable
+                ]
+            )
+            or None
+        )
 
     def find_variable_assignment(self, variable):
         """
