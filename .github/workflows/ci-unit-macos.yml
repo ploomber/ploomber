@@ -64,10 +64,9 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
 
-        # make the build fail quickly on flake8 errors
-        # pinning it because newer versions break the setup
-        pip install "flake8<6"
-        flake8
+        # make the build fail quickly on linting errors
+        pip install pkgmt
+        pkgmt lint
 
         # To support python 3.10, installing only for other versions.
         VERSION=$(python -c 'import sys; print(".".join(map(str, sys.version_info[1:2])))')
