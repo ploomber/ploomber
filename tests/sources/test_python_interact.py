@@ -256,10 +256,10 @@ def test_signature_line_break(backup_test_pkg):
     nb = dev.to_nb()
 
     for i in range(len(nb.cells)):
-        print(i,"\t" + nb.cells[i]['source'])
+        print(i, "\t" + nb.cells[i]['source'])
     nb.cells[-2]['source'] = 'x = 2'
     for i in range(len(nb.cells)):
-        print(i,"\t" + nb.cells[i]['source'])
+        print(i, "\t" + nb.cells[i]['source'])
 
     path = Path(backup_test_pkg, 'functions.py')
     source = path.read_text()
