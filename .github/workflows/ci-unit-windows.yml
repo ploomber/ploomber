@@ -100,4 +100,4 @@ jobs:
         eval "$(conda shell.bash hook)"
         conda activate conda-env
         pip install pytest-timeout
-        pytest tests/sources/test_python_interact.py::test_signature_line_break -vv -rx --ignore=tests/cli/test_cloud_execution.py --ignore=tests/cli/test_cloud.py --ignore=tests/cloud --ignore=tests/telemetry --timeout=120
+        pytest -s -vv tests --ignore=tests/cli/test_cloud_execution.py --ignore=tests/cli/test_cloud.py --ignore=tests/cloud --ignore=tests/telemetry --timeout=120
