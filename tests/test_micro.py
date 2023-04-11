@@ -1,14 +1,10 @@
 import pickle
 from pathlib import Path
-from unittest.mock import Mock
 
 import pandas as pd
-import matplotlib.pyplot as plt
-import nbformat
 import pytest
 
 from ploomber_engine.ipython import PloomberShell
-from ploomber.exceptions import DAGBuildError, DAGRenderError
 from ploomber import micro
 
 
@@ -134,31 +130,6 @@ def test_inline_grid_multiple(tmp_directory):
         {0: 6, 1: 6, 2: 6},
         {0: 7, 1: 7, 2: 7},
     ]
-
-
-@pytest.mark.skip(reason="this test hangs up intermittently")
-@pytest.mark.parametrize("parallel", [True, False])
-@pytest.mark.parametrize("debug", [None, "now", "later"])
-def test_capture(tmp_directory, parallel, debug):
-    dag = micro.dag_from_functions(
-        [ones, plot_ones],
-        params={"ones": {"input_data": [1] * 3}},
-        output="cache",
-        parallel=parallel,
-    )
-
-    dag.build(debug=debug)
-
-    ones_ = pickle.loads(Path("cache", "ones").read_bytes()).to_dict()
-    plot_ones_ = pickle.loads(Path("cache", "plot_ones").read_bytes())
-
-    assert ones_ == {0: 1, 1: 1, 2: 1}
-    assert plot_ones_ == 1
-    assert Path("cache", "plot_ones.html").is_file()
-    nb = nbformat.reads(
-        Path("cache", "plot_ones.ipynb").read_text(), as_version=nbformat.NO_CONVERT
-    )
-    assert nb.cells[0].metadata.tags[0] == "plot"
 
 
 def test_root_node_with_no_arguments(tmp_directory):
