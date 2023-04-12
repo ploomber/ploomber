@@ -15,8 +15,8 @@ def touch(product, upstream):
 
 def test_non_existent_file(tmp_directory):
     dag = DAG()
-    f = File('file.txt')
-    ta = ShellScript('echo hi > {{product}}', f, dag, 'ta')
+    f = File("file.txt")
+    ta = ShellScript("echo hi > {{product}}", f, dag, "ta")
     ta.render()
 
     assert not f.exists()
@@ -26,15 +26,14 @@ def test_non_existent_file(tmp_directory):
 
 
 def test_outdated_data_simple_dependency(tmp_directory):
-    """ A -> B
-    """
+    """A -> B"""
     dag = DAG()
 
-    fa = Path('a.txt')
-    fb = Path('b.txt')
+    fa = Path("a.txt")
+    fb = Path("b.txt")
 
-    ta = PythonCallable(touch_root, File(fa), dag, 'ta')
-    tb = PythonCallable(touch, File(fb), dag, 'tb')
+    ta = PythonCallable(touch_root, File(fa), dag, "ta")
+    tb = PythonCallable(touch, File(fb), dag, "tb")
 
     ta >> tb
 
@@ -68,17 +67,16 @@ def test_outdated_data_simple_dependency(tmp_directory):
 
 
 def test_many_upstream(tmp_directory):
-    """ {A, B} -> C
-    """
+    """{A, B} -> C"""
     dag = DAG()
 
-    fa = Path('a.txt')
-    fb = Path('b.txt')
-    fc = Path('c.txt')
+    fa = Path("a.txt")
+    fb = Path("b.txt")
+    fc = Path("c.txt")
 
-    ta = PythonCallable(touch_root, File(fa), dag, 'ta')
-    tb = PythonCallable(touch_root, File(fb), dag, 'tb')
-    tc = PythonCallable(touch, File(fc), dag, 'tc')
+    ta = PythonCallable(touch_root, File(fa), dag, "ta")
+    tb = PythonCallable(touch_root, File(fb), dag, "tb")
+    tc = PythonCallable(touch, File(fc), dag, "tc")
 
     (ta + tb) >> tc
 
@@ -109,22 +107,20 @@ def test_many_upstream(tmp_directory):
 
 
 def test_many_downstream():
-    """ A -> {B, C}
-    """
+    """A -> {B, C}"""
     pass
 
 
 def test_chained_dependency():
-    """ A -> B -> C
-    """
+    """A -> B -> C"""
     pass
 
 
 def test_can_instantiate_task_with_many_products():
     dag = DAG()
-    fa1 = File('a1.txt')
-    fa2 = File('a2.txt')
-    ta = ShellScript('echo {{product}}', [fa1, fa2], dag, 'ta')
+    fa1 = File("a1.txt")
+    fa2 = File("a2.txt")
+    ta = ShellScript("echo {{product}}", [fa1, fa2], dag, "ta")
     ta.render()
 
     assert not ta.product.exists()
@@ -136,13 +132,13 @@ def test_can_instantiate_task_with_many_products():
 def test_overloaded_operators():
     dag = DAG()
 
-    fa = Path('a.txt')
-    fb = Path('b.txt')
-    fc = Path('c.txt')
+    fa = Path("a.txt")
+    fb = Path("b.txt")
+    fc = Path("c.txt")
 
-    ta = ShellScript('touch {{product}}', File(fa), dag, 'ta')
-    tb = ShellScript('touch {{product}}', File(fb), dag, 'tb')
-    tc = ShellScript('touch {{product}}', File(fc), dag, 'tc')
+    ta = ShellScript("touch {{product}}", File(fa), dag, "ta")
+    tb = ShellScript("touch {{product}}", File(fb), dag, "tb")
+    tc = ShellScript("touch {{product}}", File(fc), dag, "tc")
 
     ta >> tb >> tc
 
@@ -154,13 +150,13 @@ def test_overloaded_operators():
 def test_adding_tasks():
     dag = DAG()
 
-    fa = Path('a.txt')
-    fb = Path('b.txt')
-    fc = Path('c.txt')
+    fa = Path("a.txt")
+    fb = Path("b.txt")
+    fc = Path("c.txt")
 
-    ta = ShellScript('touch {{product}}', File(fa), dag, 'ta')
-    tb = ShellScript('touch {{product}}', File(fb), dag, 'tb')
-    tc = ShellScript('touch {{product}}', File(fc), dag, 'tc')
+    ta = ShellScript("touch {{product}}", File(fa), dag, "ta")
+    tb = ShellScript("touch {{product}}", File(fb), dag, "tb")
+    tc = ShellScript("touch {{product}}", File(fc), dag, "tc")
 
     assert list((ta + tb).tasks) == [ta, tb]
     assert list((tb + ta).tasks) == [tb, ta]
@@ -172,13 +168,13 @@ def test_adding_tasks():
 def test_adding_tasks_left():
     dag = DAG()
 
-    fa = Path('a.txt')
-    fb = Path('b.txt')
-    fc = Path('c.txt')
+    fa = Path("a.txt")
+    fb = Path("b.txt")
+    fc = Path("c.txt")
 
-    ta = ShellScript('touch {{product}}', File(fa), dag, 'ta')
-    tb = ShellScript('touch {{product}}', File(fb), dag, 'tb')
-    tc = ShellScript('touch {{product}}', File(fc), dag, 'tc')
+    ta = ShellScript("touch {{product}}", File(fa), dag, "ta")
+    tb = ShellScript("touch {{product}}", File(fb), dag, "tb")
+    tc = ShellScript("touch {{product}}", File(fc), dag, "tc")
 
     (ta + tb) >> tc
 
@@ -190,13 +186,13 @@ def test_adding_tasks_left():
 def test_adding_tasks_right():
     dag = DAG()
 
-    fa = Path('a.txt')
-    fb = Path('b.txt')
-    fc = Path('c.txt')
+    fa = Path("a.txt")
+    fb = Path("b.txt")
+    fc = Path("c.txt")
 
-    ta = ShellScript('touch {{product}}', File(fa), dag, 'ta')
-    tb = ShellScript('touch {{product}}', File(fb), dag, 'tb')
-    tc = ShellScript('touch {{product}}', File(fc), dag, 'tc')
+    ta = ShellScript("touch {{product}}", File(fa), dag, "ta")
+    tb = ShellScript("touch {{product}}", File(fb), dag, "tb")
+    tc = ShellScript("touch {{product}}", File(fc), dag, "tc")
 
     ta >> (tb + tc)
 

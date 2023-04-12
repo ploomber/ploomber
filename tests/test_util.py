@@ -9,7 +9,7 @@ from ploomber.util import dotted_path
 
 
 def test_add_to_sys_path():
-    path = str(Path('/path/to/add').resolve())
+    path = str(Path("/path/to/add").resolve())
 
     with add_to_sys_path(path, chdir=False):
         assert path in sys.path
@@ -18,7 +18,7 @@ def test_add_to_sys_path():
 
 
 def test_add_to_sys_path_with_chdir(tmp_directory):
-    path = Path('.').resolve() / 'some_directory'
+    path = Path(".").resolve() / "some_directory"
     path.mkdir()
     path = str(path)
     old_dir = os.getcwd()
@@ -41,7 +41,7 @@ def test_add_to_sys_path_with_none():
 
 
 def test_add_to_sys_path_with_exception():
-    path = str(Path('/path/to/add').resolve())
+    path = str(Path("/path/to/add").resolve())
 
     with pytest.raises(Exception):
         with add_to_sys_path(path, chdir=False):
@@ -53,26 +53,29 @@ def test_add_to_sys_path_with_exception():
 
 def test_load_dotted_path_with_reload(tmp_directory, add_current_to_sys_path):
     # write a sample module
-    Path('dotted_path_with_reload.py').write_text("""
+    Path("dotted_path_with_reload.py").write_text(
+        """
 def x():
     pass
-""")
+"""
+    )
 
     # load the module
-    dotted_path.load_dotted_path('dotted_path_with_reload.x')
+    dotted_path.load_dotted_path("dotted_path_with_reload.x")
 
     # add a new function
-    Path('dotted_path_with_reload.py').write_text("""
+    Path("dotted_path_with_reload.py").write_text(
+        """
 def x():
     pass
 
 def y():
     pass
-""")
+"""
+    )
 
     # the new function should be importable since we are using reload=True
-    assert dotted_path.load_dotted_path('dotted_path_with_reload.y',
-                                        reload=True)
+    assert dotted_path.load_dotted_path("dotted_path_with_reload.y", reload=True)
 
 
 def test_chdir_code(tmp_directory):

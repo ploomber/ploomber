@@ -8,14 +8,19 @@ class RaiseExtension(Extension):
     """
     jinja template extension to allow raising exceptions
     """
-    tags = set(['raise'])
+
+    tags = set(["raise"])
 
     def parse(self, parser):
         lineno = next(parser.stream).lineno
         message_node = parser.parse_expression()
-        return nodes.CallBlock(self.call_method('_raise', [message_node],
-                                                lineno=lineno), [], [], [],
-                               lineno=lineno)
+        return nodes.CallBlock(
+            self.call_method("_raise", [message_node], lineno=lineno),
+            [],
+            [],
+            [],
+            lineno=lineno,
+        )
 
     def _raise(self, msg, caller):
         raise TemplateRuntimeError(msg)

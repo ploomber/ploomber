@@ -19,38 +19,38 @@ def touch_all_upstream(product, upstream):
 
 
 def test_get():
-    a = File('1.txt')
-    m = MetaProduct({'a': a})
+    a = File("1.txt")
+    m = MetaProduct({"a": a})
 
-    assert m.get('a') is a
-    assert m.get('b') is None
+    assert m.get("a") is a
+    assert m.get("b") is None
 
 
 def test_delete_metadata(tmp_directory):
-    Path('.a.txt.metadata').touch()
-    Path('.b.txt.metadata').touch()
+    Path(".a.txt.metadata").touch()
+    Path(".b.txt.metadata").touch()
 
-    a = File('a.txt')
-    b = File('b.txt')
-    m = MetaProduct({'a': a, 'b': b})
+    a = File("a.txt")
+    b = File("b.txt")
+    m = MetaProduct({"a": a, "b": b})
     m.metadata.delete()
 
-    assert not Path('.a.txt.metadata').exists()
-    assert not Path('.b.txt.metadata').exists()
+    assert not Path(".a.txt.metadata").exists()
+    assert not Path(".b.txt.metadata").exists()
 
 
 def test_can_iterate_over_products():
-    p1 = File('1.txt')
-    p2 = File('2.txt')
+    p1 = File("1.txt")
+    p2 = File("2.txt")
     m = MetaProduct([p1, p2])
 
     assert set(m) == {p1, p2}
 
 
 def test_can_iterate_when_initialized_with_dictionary():
-    p1 = File('1.txt')
-    p2 = File('2.txt')
-    m = MetaProduct({'a': p1, 'b': p2})
+    p1 = File("1.txt")
+    p2 = File("2.txt")
+    m = MetaProduct({"a": p1, "b": p2})
 
     assert set(m) == {p1, p2}
 
@@ -58,13 +58,13 @@ def test_can_iterate_when_initialized_with_dictionary():
 def test_can_create_task_with_more_than_one_product(tmp_directory):
     dag = DAG()
 
-    fa = Path('a.txt')
-    fb = Path('b.txt')
-    fc = Path('c.txt')
-    fd = Path('d.txt')
+    fa = Path("a.txt")
+    fb = Path("b.txt")
+    fc = Path("c.txt")
+    fd = Path("d.txt")
 
-    ta = PythonCallable(touch_all, (File(fa), File(fb)), dag, 'ta')
-    tc = PythonCallable(touch_all_upstream, (File(fc), File(fd)), dag, 'tc')
+    ta = PythonCallable(touch_all, (File(fa), File(fb)), dag, "ta")
+    tc = PythonCallable(touch_all_upstream, (File(fc), File(fd)), dag, "tc")
 
     ta >> tc
 
@@ -78,7 +78,7 @@ def test_can_create_task_with_more_than_one_product(tmp_directory):
 
 def test_download():
     p1, p2 = Mock(), Mock()
-    m = MetaProduct({'a': p1, 'b': p2})
+    m = MetaProduct({"a": p1, "b": p2})
 
     m.download()
 
@@ -88,7 +88,7 @@ def test_download():
 
 def test_upload():
     p1, p2 = Mock(), Mock()
-    m = MetaProduct({'a': p1, 'b': p2})
+    m = MetaProduct({"a": p1, "b": p2})
 
     m.upload()
 
@@ -101,32 +101,23 @@ def test_error_if_metaproduct_initialized_with_non_products():
         pass
 
     with pytest.raises(AttributeError) as excinfo:
-        PythonCallable(do_stuff, {'a': 'not-a-product'}, dag=DAG())
+        PythonCallable(do_stuff, {"a": "not-a-product"}, dag=DAG())
 
-    assert 'Expected MetaProduct to initialize' in str(excinfo.value)
+    assert "Expected MetaProduct to initialize" in str(excinfo.value)
     assert "'not-a-product'" in str(excinfo.value)
     assert "<class 'str'>" in str(excinfo.value)
     assert "File('not-a-product')" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
-    'arg, expected',
+    "arg, expected",
     [
         [
-            {
-                'a': 1,
-                'b': 2
-            },
+            {"a": 1, "b": 2},
             "MetaProduct({'a': 1, 'b': 2})",
         ],
         [
-            {
-                'a': 1,
-                'b': 2,
-                'c': 3,
-                'd': 4,
-                'e': 5
-            },
+            {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5},
             "MetaProduct({'a': 1, 'b': 2, 'c': 3, 'd': 4, ...})",
         ],
     ],

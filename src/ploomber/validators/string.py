@@ -8,10 +8,7 @@ _NORMALIZED_PRODUCTS = {name.upper(): name for name in products.__all__}
 _NORMALIZED = {**_NORMALIZED_TASKS, **_NORMALIZED_PRODUCTS}
 
 _KEY2CLASS_TASKS = {name: getattr(tasks, name) for name in tasks.__all__}
-_KEY2CLASS_PRODUCTS = {
-    name: getattr(products, name)
-    for name in products.__all__
-}
+_KEY2CLASS_PRODUCTS = {name: getattr(products, name) for name in products.__all__}
 _KEY2CLASS = {**_KEY2CLASS_TASKS, **_KEY2CLASS_PRODUCTS}
 
 
@@ -27,7 +24,7 @@ def _suggest_class_name(name: str, options):
 
 
 def _normalize_input(name):
-    return name.upper().replace('-', '').replace('_', '').replace(' ', '')
+    return name.upper().replace("-", "").replace("_", "").replace(" ", "")
 
 
 def get_suggestion(key_str, mapping=None):
@@ -47,10 +44,10 @@ def validate_task_class_name(value):
     """
     if value not in _KEY2CLASS_TASKS:
         suggestion = get_suggestion(value, mapping=_NORMALIZED_TASKS)
-        msg = f'{value!r} is not a valid Task class name'
+        msg = f"{value!r} is not a valid Task class name"
 
         if suggestion:
-            msg += f'. Did you mean {suggestion!r}?'
+            msg += f". Did you mean {suggestion!r}?"
 
         raise ValueError(msg)
 
@@ -64,10 +61,10 @@ def validate_product_class_name(value):
     """
     if value not in _KEY2CLASS_PRODUCTS:
         suggestion = get_suggestion(value, mapping=_NORMALIZED_PRODUCTS)
-        msg = f'{value!r} is not a valid Product class name'
+        msg = f"{value!r} is not a valid Product class name"
 
         if suggestion:
-            msg += f'. Did you mean {suggestion!r}?'
+            msg += f". Did you mean {suggestion!r}?"
 
         raise ValueError(msg)
 

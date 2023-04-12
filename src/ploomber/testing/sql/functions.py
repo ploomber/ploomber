@@ -26,12 +26,14 @@ def nulls_in_columns(client, cols: Union[str, List[str]], product):
     # NOTE: SELECT EXISTS does not work on oracle
     # it can be SELECT 1 FROM EXISTS(...) dual (dual is a system table
     # it always exists). Should we support it?
-    sql = Template("""
+    sql = Template(
+        """
     SELECT EXISTS(
         SELECT * FROM {{product}}
         WHERE {{cols | join(' is null or ') }} is null
     )
-    """).render(cols=cols, product=product)
+    """
+    ).render(cols=cols, product=product)
 
     cur = client.connection.cursor()
     cur.execute(sql)
@@ -59,9 +61,11 @@ def distinct_values_in_column(client, col: str, product):
        Distinct values in column
     """
 
-    sql = Template("""
+    sql = Template(
+        """
     SELECT DISTINCT {{col}} FROM {{product}}
-    """).render(col=col, product=product)
+    """
+    ).render(col=col, product=product)
 
     cur = client.connection.cursor()
     cur.execute(sql)
@@ -88,9 +92,11 @@ def range_in_column(client, col: str, product):
     tuple
         (minimum, maximum) values
     """
-    sql = Template("""
+    sql = Template(
+        """
     SELECT MIN({{col}}), MAX({{col}}) FROM {{product}}
-    """).render(col=col, product=product)
+    """
+    ).render(col=col, product=product)
 
     cur = client.connection.cursor()
     cur.execute(sql)
@@ -123,13 +129,15 @@ def exists_row_where(client, criteria: str, product):
     bool
         True if exists at least one row matching the criteria
     """
-    sql = Template("""
+    sql = Template(
+        """
     SELECT EXISTS(
         SELECT *
         FROM {{product}}
         WHERE {{criteria}}
     )
-    """).render(product=product, criteria=criteria)
+    """
+    ).render(product=product, criteria=criteria)
 
     cur = client.connection.cursor()
     cur.execute(sql)

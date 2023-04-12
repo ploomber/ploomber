@@ -12,14 +12,14 @@ from ploomber.cli import (
 )
 
 __all__ = [
-    'cloud',
-    'task',
-    'plot',
-    'build',
-    'report',
-    'interact',
-    'status',
-    'examples',
-    'install',
-    'nb',
+    "cloud",
+    "task",
+    "plot",
+    "build",
+    "report",
+    "interact",
+    "status",
+    "examples",
+    "install",
+    "nb",
 ]

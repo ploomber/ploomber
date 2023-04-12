@@ -19,16 +19,16 @@ def touch(upstream, product):
 
 
 def failing(product):
-    raise Exception('Bad things happened')
+    raise Exception("Bad things happened")
 
 
 def test_parallel_execution(tmp_directory):
-    dag = DAG('dag', executor='parallel')
+    dag = DAG("dag", executor="parallel")
 
-    a1 = PythonCallable(touch_root, File('a1.txt'), dag, 'a1')
-    a2 = PythonCallable(touch_root, File('a2.txt'), dag, 'a2')
-    b = PythonCallable(touch, File('b.txt'), dag, 'b')
-    c = PythonCallable(touch, File('c.txt'), dag, 'c')
+    a1 = PythonCallable(touch_root, File("a1.txt"), dag, "a1")
+    a2 = PythonCallable(touch_root, File("a2.txt"), dag, "a2")
+    b = PythonCallable(touch, File("b.txt"), dag, "b")
+    c = PythonCallable(touch, File("c.txt"), dag, "c")
 
     (a1 + a2) >> b >> c
 

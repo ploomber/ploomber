@@ -9,13 +9,16 @@ def strip(tokens):
     Remove whitespace, comments and punctuation (;)
     """
     return [
-        t for t in tokens if not t.is_whitespace
-        and not isinstance(t, sqlparse.sql.Comment) and t.value != ';'
+        t
+        for t in tokens
+        if not t.is_whitespace
+        and not isinstance(t, sqlparse.sql.Comment)
+        and t.value != ";"
     ]
 
 
 def strip_punctuation(tokens):
-    return [t for t in tokens if t.value != ';']
+    return [t for t in tokens if t.value != ";"]
 
 
 def strip_comments(tokens):
@@ -23,7 +26,7 @@ def strip_comments(tokens):
 
 
 def code_from_token_list(tokens):
-    return ''.join([t.value for t in tokens])
+    return "".join([t.value for t in tokens])
 
 
 def name_code_pair(f):
@@ -39,7 +42,7 @@ def name_code_pair(f):
 def find_select(tokens):
     for idx, t in enumerate(tokens):
         # TODO: use .get_type instead of normalized
-        if t.normalized == 'SELECT':
+        if t.normalized == "SELECT":
             return idx
 
 
@@ -69,22 +72,20 @@ def get_identifiers_and_select_from_create(create):
     # last one is the parenthesis object that encloses the identifier list
     parenthesis = identifier.tokens[-1]
     # ignore parenthesis tokens at the beginning and end
-    _, id_list = find_with_class(parenthesis,
-                                 class_=sqlparse.sql.IdentifierList)
+    _, id_list = find_with_class(parenthesis, class_=sqlparse.sql.IdentifierList)
 
     idx = find_select(parenthesis)
     # ignore last token, it's the closing parenthesis
-    select = code_from_token_list(strip_punctuation(
-        parenthesis.tokens[idx:-1]))
+    select = code_from_token_list(strip_punctuation(parenthesis.tokens[idx:-1]))
 
     return strip(id_list), select
 
 
 def find_identifiers_list(sql):
     # find the first of those (identifier happens when there is a single def)
-    id_list = find_with_class(sql,
-                              class_=(sqlparse.sql.Identifier,
-                                      sqlparse.sql.IdentifierList))
+    id_list = find_with_class(
+        sql, class_=(sqlparse.sql.Identifier, sqlparse.sql.IdentifierList)
+    )
 
     # if one identifier, wrap it as a list of length 1
     if isinstance(id_list[1], sqlparse.sql.Identifier):
@@ -125,10 +126,11 @@ class SQLParser:
     mapping : dict
         Contains the extracted subqueries
     """
+
     def __init__(self, sql):
         if sql is not None:
             # get the first create table statement
-            out = find_with_type(sqlparse.parse(sql), type_='CREATE')
+            out = find_with_type(sqlparse.parse(sql), type_="CREATE")
 
             if out is not None:
                 # there is a create statement
@@ -138,10 +140,8 @@ class SQLParser:
                 ids, select = get_identifiers_and_select_from_create(create)
             else:
                 # no create statement, look for the WITH ... SELECT statement
-                _, with_select = find_with_type(sqlparse.parse(sql),
-                                                type_='SELECT')
-                ids, select = get_identifiers_and_select_from_with_select(
-                    with_select)
+                _, with_select = find_with_type(sqlparse.parse(sql), type_="SELECT")
+                ids, select = get_identifiers_and_select_from_with_select(with_select)
 
             # this should be
             # {identifier} AS ( SELECT ... )
@@ -153,15 +153,14 @@ class SQLParser:
 
             m = {t[0]: t[1] for t in functions_t}
 
-            m['_select'] = select
+            m["_select"] = select
 
             self.mapping = m
         else:
             self.mapping = dict()
 
     def __getitem__(self, key):
-        """Same as .until(key)
-        """
+        """Same as .until(key)"""
         return self.until(key)
 
     def _ipython_key_completions_(self):
@@ -178,7 +177,7 @@ class SQLParser:
         return len(self.mapping)
 
     def __repr__(self):
-        return f'{type(self).__name__} with keys: {list(self.mapping)!r}'
+        return f"{type(self).__name__} with keys: {list(self.mapping)!r}"
 
     def until(self, key, select=None, limit=20, parse=True):
         """
@@ -197,22 +196,24 @@ class SQLParser:
             if a_key == key:
                 break
 
-        if key == '_select':
+        if key == "_select":
             _, select = pairs.pop(-1)
         else:
             if select is None:
-                select = f'SELECT * FROM {pairs[-1][0]}'
+                select = f"SELECT * FROM {pairs[-1][0]}"
 
                 if limit:
-                    select += f' LIMIT {limit}'
+                    select += f" LIMIT {limit}"
             else:
                 select = Template(select).render(key=key)
 
-        sql = Template("""
+        sql = Template(
+            """
 WITH {%- for id,code in pairs -%}{{',' if not loop.first else '' }} {{id}} AS (
     {{code}}
 ){% endfor %}
-{{select}}""").render(pairs=pairs, select=select)
+{{select}}"""
+        ).render(pairs=pairs, select=select)
 
         return sql if not parse else type(self)(sql)
 
@@ -233,8 +234,8 @@ WITH {%- for id,code in pairs -%}{{',' if not loop.first else '' }} {{id}} AS (
 
     def insert_last(self, select, inplace=False):
         m = copy(self.mapping)
-        m['last'] = m.pop('_select')
-        mapping = {**m, '_select': select}
+        m["last"] = m.pop("_select")
+        mapping = {**m, "_select": select}
 
         if inplace:
             self.mapping = mapping
@@ -244,7 +245,7 @@ WITH {%- for id,code in pairs -%}{{',' if not loop.first else '' }} {{id}} AS (
 
     def replace_last(self, select, inplace=False):
         mapping = copy(self.mapping)
-        mapping['_select'] = select
+        mapping["_select"] = select
 
         if inplace:
             self.mapping = mapping
@@ -253,14 +254,9 @@ WITH {%- for id,code in pairs -%}{{',' if not loop.first else '' }} {{id}} AS (
             return type(self)._with_mapping(mapping)
 
     def __str__(self):
-        """Short for .until(key='_select')
-        """
+        """Short for .until(key='_select')"""
         return self.to_str(select=None, limit=None)
 
     def to_str(self, select=None, limit=20):
-        """Short for .until(key=None, *args, **kwargs)
-        """
-        return self.until(key='_select',
-                          select=select,
-                          limit=limit,
-                          parse=False)
+        """Short for .until(key=None, *args, **kwargs)"""
+        return self.until(key="_select", select=select, limit=limit, parse=False)

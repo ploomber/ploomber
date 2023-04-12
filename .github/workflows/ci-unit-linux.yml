@@ -55,10 +55,9 @@ jobs:
         # upgrade pip to use the most recent resolver
         pip install pip --upgrade
 
-        # make the build fail quickly on flake8 errors
-        # pinning it because newer versions break the setup
-        pip install "flake8<6"
-        flake8
+        # make the build fail quickly on linting errors
+        pip install pkgmt
+        pkgmt lint
 
         # for some reason, conda does not resolve the env correctly and
         # installs and old version of pygraphviz (1.3) which breaks in

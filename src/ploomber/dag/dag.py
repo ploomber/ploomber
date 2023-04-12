@@ -78,24 +78,28 @@ from IPython.display import Image
 
 from ploomber.table import Table, TaskReport, BuildReport
 from ploomber.products import MetaProduct
-from ploomber.util import (image_bytes2html, isiterable)
+from ploomber.util import image_bytes2html, isiterable
 from ploomber import resources
 from ploomber import executors
 from ploomber.executors import _format
 from ploomber.constants import TaskStatus, DAGStatus
-from ploomber.exceptions import (DAGBuildError, DAGRenderError,
-                                 DAGBuildEarlyStop, DAGCycle)
-from ploomber.messagecollector import (RenderExceptionsCollector,
-                                       RenderWarningsCollector)
-from ploomber.util.util import (callback_check, _make_requires_error_message,
-                                svg2html)
+from ploomber.exceptions import (
+    DAGBuildError,
+    DAGRenderError,
+    DAGBuildEarlyStop,
+    DAGCycle,
+)
+from ploomber.messagecollector import RenderExceptionsCollector, RenderWarningsCollector
+from ploomber.util.util import callback_check, _make_requires_error_message, svg2html
 from ploomber.dag.dagconfiguration import DAGConfiguration
 from ploomber.dag.daglogger import DAGLogger
 from ploomber.dag.dagclients import DAGClients
 from ploomber.dag.abstractdag import AbstractDAG
-from ploomber.dag.util import (check_duplicated_products,
-                               fetch_remote_metadata_in_parallel,
-                               _path_for_plot)
+from ploomber.dag.util import (
+    check_duplicated_products,
+    fetch_remote_metadata_in_parallel,
+    _path_for_plot,
+)
 from ploomber.tasks.abc import Task
 from ploomber.tasks import NotebookRunner, PythonCallable
 
@@ -109,7 +113,8 @@ _pygraphviz_message = (
     f"Note that 'pygraphviz' requires 'graphviz' (which is not "
     "pip-installable). To install both: "
     f"{_conda_cmd}\nFor alternatives, see: "
-    "https://ploomber.io/s/plot")
+    "https://ploomber.io/s/plot"
+)
 
 
 class DAG(AbstractDAG):
@@ -204,31 +209,31 @@ class DAG(AbstractDAG):
 
     """
 
-    def __init__(self, name=None, clients=None, executor='serial'):
+    def __init__(self, name=None, clients=None, executor="serial"):
         self._G = nx.DiGraph()
 
-        self.name = name or 'No name'
+        self.name = name or "No name"
         self._logger = logging.getLogger(__name__)
 
         self._clients = DAGClients(clients)
         self.__exec_status = DAGStatus.WaitingRender
 
-        if executor == 'serial':
+        if executor == "serial":
             self._executor = executors.Serial()
-        elif executor == 'parallel':
+        elif executor == "parallel":
             self._executor = executors.Parallel()
         elif isinstance(executor, executors.abc.Executor):
             self._executor = executor
         else:
             raise TypeError(
                 'executor must be "serial", "parallel" or '
-                'an instance of executors.Executor, got type {}'.format(
-                    type(executor)))
+                "an instance of executors.Executor, got type {}".format(type(executor))
+            )
 
         self.on_finish = None
         self.on_failure = None
         self.on_render = None
-        self._available_callback_kwargs = {'dag': self}
+        self._available_callback_kwargs = {"dag": self}
 
         self._params = DAGConfiguration()
 
@@ -252,7 +257,7 @@ class DAG(AbstractDAG):
 
     @_exec_status.setter
     def _exec_status(self, value):
-        self._logger.debug('Setting %s status to %s', self, value)
+        self._logger.debug("Setting %s status to %s", self, value)
 
         # The Task class is responsible for updating their status
         # (except for Executed and Errored, those are updated by the executor)
@@ -267,8 +272,7 @@ class DAG(AbstractDAG):
         # should do it?
 
         if value == DAGStatus.WaitingRender:
-            self.check_tasks_have_allowed_status({TaskStatus.WaitingRender},
-                                                 value)
+            self.check_tasks_have_allowed_status({TaskStatus.WaitingRender}, value)
 
         # render errored
         elif value == DAGStatus.ErroredRender:
@@ -296,34 +300,38 @@ class DAG(AbstractDAG):
         elif value == DAGStatus.Executed:
             exec_values = set(task.exec_status for task in self.values())
             # check len(self) to prevent this from failing on an empty DAG
-            if not exec_values <= {TaskStatus.Executed, TaskStatus.Skipped
-                                   } and len(self):
-                warnings.warn('The DAG "{}" entered in an inconsistent '
-                              'state: trying to set DAG status to '
-                              'DAGStatus.Executed but executor '
-                              'returned tasks whose status is not '
-                              'TaskStatus.Executed nor '
-                              'TaskStatus.Skipped, returned '
-                              'status: {}'.format(self.name, exec_values))
+            if not exec_values <= {TaskStatus.Executed, TaskStatus.Skipped} and len(
+                self
+            ):
+                warnings.warn(
+                    'The DAG "{}" entered in an inconsistent '
+                    "state: trying to set DAG status to "
+                    "DAGStatus.Executed but executor "
+                    "returned tasks whose status is not "
+                    "TaskStatus.Executed nor "
+                    "TaskStatus.Skipped, returned "
+                    "status: {}".format(self.name, exec_values)
+                )
         elif value == DAGStatus.Errored:
             # no value validation since this state is also set then the
             # DAG executor ends up abrubtly
             pass
         else:
-            raise RuntimeError('Unknown DAGStatus value: {}'.format(value))
+            raise RuntimeError("Unknown DAGStatus value: {}".format(value))
 
         self.__exec_status = value
 
     def check_tasks_have_allowed_status(self, allowed, new_status):
         exec_values = set(task.exec_status for task in self.values())
         if not exec_values <= allowed:
-            warnings.warn('The DAG "{}" entered in an inconsistent state: '
-                          'trying to set DAG status to '
-                          '{} but executor '
-                          'returned tasks whose status is not in a '
-                          'subet of {}. Returned '
-                          'status: {}'.format(self.name, new_status, allowed,
-                                              exec_values))
+            warnings.warn(
+                'The DAG "{}" entered in an inconsistent state: '
+                "trying to set DAG status to "
+                "{} but executor "
+                "returned tasks whose status is not in a "
+                "subet of {}. Returned "
+                "status: {}".format(self.name, new_status, allowed, exec_values)
+            )
 
     @property
     def product(self):
@@ -337,9 +345,8 @@ class DAG(AbstractDAG):
         return self._clients
 
     def pop(self, name):
-        """Remove a task from the dag
-        """
-        t = self._G.nodes[name]['task']
+        """Remove a task from the dag"""
+        t = self._G.nodes[name]["task"]
         self._G.remove_node(name)
         return t
 
@@ -366,7 +373,7 @@ class DAG(AbstractDAG):
             you want this to be False, Ploomber uses this internally when
             exporting pipelines to other platforms (via Soopervisor).
         """
-        g = self._to_graph(fmt='networkx')
+        g = self._to_graph(fmt="networkx")
 
         def unique(elements):
             elements_unique = []
@@ -383,14 +390,12 @@ class DAG(AbstractDAG):
         # and over
         for dag in dags:
             if dag is not self:
-                dag._render_current(force=force,
-                                    show_progress=show_progress,
-                                    remote=remote)
+                dag._render_current(
+                    force=force, show_progress=show_progress, remote=remote
+                )
 
         # then, render this dag
-        self._render_current(force=force,
-                             show_progress=show_progress,
-                             remote=remote)
+        self._render_current(force=force, show_progress=show_progress, remote=remote)
 
         return self
 
@@ -423,7 +428,9 @@ class DAG(AbstractDAG):
                 if show_progress:
                     tasks.set_description(
                         'Rendering DAG "{}"'.format(self.name)
-                        if self.name != 'No name' else 'Rendering DAG')
+                        if self.name != "No name"
+                        else "Rendering DAG"
+                    )
 
                 with warnings.catch_warnings(record=True) as warnings_current:
                     warnings.simplefilter("ignore", DeprecationWarning)
@@ -432,14 +439,15 @@ class DAG(AbstractDAG):
                         t.render(
                             force=force,
                             outdated_by_code=self._params.outdated_by_code,
-                            remote=remote)
+                            remote=remote,
+                        )
                     except Exception as e:
                         tr = _format.exception(e)
                         exceptions.append(task=t, message=tr)
 
                 if warnings_current:
                     warnings_str = [str(w.message) for w in warnings_current]
-                    warnings_.append(task=t, message='\n'.join(warnings_str))
+                    warnings_.append(task=t, message="\n".join(warnings_str))
 
             if warnings_:
                 # FIXME: maybe raise one by one to keep the warning type
@@ -453,8 +461,9 @@ class DAG(AbstractDAG):
                 self._run_on_render()
             except Exception as e:
                 # error in hook, log exception
-                msg = ('Exception when running on_render '
-                       'for DAG "{}": {}'.format(self.name, e))
+                msg = "Exception when running on_render " 'for DAG "{}": {}'.format(
+                    self.name, e
+                )
                 self._logger.exception(msg)
                 self._exec_status = DAGStatus.ErroredRender
                 raise DAGRenderError(msg) from e
@@ -463,11 +472,7 @@ class DAG(AbstractDAG):
 
             self._exec_status = DAGStatus.WaitingExecution
 
-    def build(self,
-              force=False,
-              show_progress=True,
-              debug=None,
-              close_clients=True):
+    def build(self, force=False, show_progress=True, debug=None, close_clients=True):
         """
         Runs the DAG in order so that all upstream dependencies are run for
         every task
@@ -512,8 +517,9 @@ class DAG(AbstractDAG):
             A dict-like object with tasks as keys and dicts with task
             status as values
         """
-        kwargs = callback_check(self._params.logging_factory,
-                                available={'dag_name': self.name})
+        kwargs = callback_check(
+            self._params.logging_factory, available={"dag_name": self.name}
+        )
 
         res = self._params.logging_factory(**kwargs)
 
@@ -529,10 +535,12 @@ class DAG(AbstractDAG):
             executor_original = self.executor
 
             # serial debugger needed if debugnow
-            if debug == 'now':
-                self.executor = executors.Serial(build_in_subprocess=False,
-                                                 catch_exceptions=False,
-                                                 catch_warnings=False)
+            if debug == "now":
+                self.executor = executors.Serial(
+                    build_in_subprocess=False,
+                    catch_exceptions=False,
+                    catch_warnings=False,
+                )
 
             # set debug flag to True on all tasks that have one. Currently
             # only NotebookRunner exposes this
@@ -541,9 +549,7 @@ class DAG(AbstractDAG):
                 if isinstance(task, (NotebookRunner, PythonCallable)):
                     task.debug_mode = debug
 
-        callable_ = partial(self._build,
-                            force=force,
-                            show_progress=show_progress)
+        callable_ = partial(self._build, force=force, show_progress=show_progress)
 
         with dag_logger:
             try:
@@ -553,7 +559,7 @@ class DAG(AbstractDAG):
                     self.close_clients()
 
         # if debugging now, revert back the original executor
-        if debug == 'now':
+        if debug == "now":
             self.executor = executor_original
 
         return report
@@ -566,12 +572,14 @@ class DAG(AbstractDAG):
         self.render(force=force, show_progress=False)
 
         if self._exec_status == DAGStatus.ErroredRender:
-            raise DAGBuildError('Cannot build dag that failed to render, '
-                                'fix rendering errors then build again. '
-                                'To see the full traceback again, run '
-                                'dag.render(force=True)')
+            raise DAGBuildError(
+                "Cannot build dag that failed to render, "
+                "fix rendering errors then build again. "
+                "To see the full traceback again, run "
+                "dag.render(force=True)"
+            )
         else:
-            self._logger.info('Building DAG %s', self)
+            self._logger.info("Building DAG %s", self)
 
             tb = {}
 
@@ -579,8 +587,7 @@ class DAG(AbstractDAG):
                 # within_dag flags when we execute a task in isolation
                 # vs as part of a dag execution
                 # FIXME: not passing force flag
-                task_reports = self._executor(dag=self,
-                                              show_progress=show_progress)
+                task_reports = self._executor(dag=self, show_progress=show_progress)
 
             # executors raise this error to signal that there was an error
             # building the dag, this allows us to run the on_failure hook,
@@ -588,7 +595,7 @@ class DAG(AbstractDAG):
             # a user might turn that setting off in the executor to start
             # a debugging session at the line of failure)
             except DAGBuildError as e:
-                tb['build'] = traceback.format_exc()
+                tb["build"] = traceback.format_exc()
                 self._exec_status = DAGStatus.Errored
                 build_exception = e
             except DAGBuildEarlyStop:
@@ -601,21 +608,23 @@ class DAG(AbstractDAG):
 
             if build_exception is None:
                 empty = [
-                    TaskReport.empty_with_name(t.name) for t in self.values()
+                    TaskReport.empty_with_name(t.name)
+                    for t in self.values()
                     if t.exec_status == TaskStatus.Skipped
                 ]
 
                 build_report = BuildReport(task_reports + empty)
-                self._logger.info(' DAG report:\n{}'.format(build_report))
+                self._logger.info(" DAG report:\n{}".format(build_report))
 
                 # try on_finish hook
                 try:
                     self._run_on_finish(build_report)
                 except Exception as e:
-                    tb['on_finish'] = traceback.format_exc()
+                    tb["on_finish"] = traceback.format_exc()
                     # on_finish error, log exception and set status
-                    msg = ('Exception when running on_finish '
-                           'for DAG "{}": {}'.format(self.name, e))
+                    msg = "Exception when running on_finish " 'for DAG "{}": {}'.format(
+                        self.name, e
+                    )
                     self._logger.exception(msg)
                     self._exec_status = DAGStatus.Errored
 
@@ -636,8 +645,10 @@ class DAG(AbstractDAG):
                     self._run_on_failure(tb)
                 except Exception as e:
                     # error in hook, log exception
-                    msg = ('Exception when running on_failure '
-                           'for DAG "{}": {}'.format(self.name, e))
+                    msg = (
+                        "Exception when running on_failure "
+                        'for DAG "{}": {}'.format(self.name, e)
+                    )
                     self._logger.exception(msg)
 
                     # do not raise exception if early stop
@@ -650,8 +661,7 @@ class DAG(AbstractDAG):
                 raise build_exception
 
     def close_clients(self):
-        """Close all clients (dag-level, task-level and product-level)
-        """
+        """Close all clients (dag-level, task-level and product-level)"""
         # keep track of closed clients so we only call .close() once.
         # For most clients, calling .close() multiple times does not throw
         # any errors. However, when using google.cloud.bigquery.dbapi (and
@@ -676,39 +686,35 @@ class DAG(AbstractDAG):
 
     def _run_on_failure(self, tb):
         if self.on_failure:
-            self._logger.debug('Executing on_failure hook '
-                               'for dag "%s"', self.name)
+            self._logger.debug("Executing on_failure hook " 'for dag "%s"', self.name)
             kwargs_available = copy(self._available_callback_kwargs)
-            kwargs_available['traceback'] = tb
+            kwargs_available["traceback"] = tb
 
             kwargs = callback_check(self.on_failure, kwargs_available)
             self.on_failure(**kwargs)
         else:
-            self._logger.debug('No on_failure hook for dag '
-                               '"%s", skipping', self.name)
+            self._logger.debug(
+                "No on_failure hook for dag " '"%s", skipping', self.name
+            )
 
     def _run_on_finish(self, build_report):
         if self.on_finish:
-            self._logger.debug('Executing on_finish hook '
-                               'for dag "%s"', self.name)
+            self._logger.debug("Executing on_finish hook " 'for dag "%s"', self.name)
             kwargs_available = copy(self._available_callback_kwargs)
-            kwargs_available['report'] = build_report
+            kwargs_available["report"] = build_report
             kwargs = callback_check(self.on_finish, kwargs_available)
             self.on_finish(**kwargs)
         else:
-            self._logger.debug('No on_finish hook for dag '
-                               '"%s", skipping', self.name)
+            self._logger.debug("No on_finish hook for dag " '"%s", skipping', self.name)
 
     def _run_on_render(self):
         if self.on_render:
-            self._logger.debug('Executing on_render hook '
-                               'for dag "%s"', self.name)
+            self._logger.debug("Executing on_render hook " 'for dag "%s"', self.name)
             kwargs_available = copy(self._available_callback_kwargs)
             kwargs = callback_check(self.on_render, kwargs_available)
             self.on_render(**kwargs)
         else:
-            self._logger.debug('No on_render hook for dag '
-                               '"%s", skipping', self.name)
+            self._logger.debug("No on_render hook for dag " '"%s", skipping', self.name)
 
     def _deepcopy_safe(self):
         clients = self.clients
@@ -717,20 +723,16 @@ class DAG(AbstractDAG):
         try:
             copy = deepcopy(self)
         except Exception as e:
-            raise RuntimeError(
-                "An error occurred while copying DAG object") from e
+            raise RuntimeError("An error occurred while copying DAG object") from e
         finally:
             self._clients = clients
 
         copy._clients = clients
         return copy
 
-    def build_partially(self,
-                        target,
-                        force=False,
-                        show_progress=True,
-                        debug=None,
-                        skip_upstream=False):
+    def build_partially(
+        self, target, force=False, show_progress=True, debug=None, skip_upstream=False
+    ):
         """Partially build a dag until certain task
 
         Parameters
@@ -770,20 +772,24 @@ class DAG(AbstractDAG):
             .. versionadded:: 0.20
                 ``debug`` now supports debugging NotebookRunner tasks
         """
-        return self._build_partially(target=target,
-                                     force=force,
-                                     show_progress=show_progress,
-                                     debug=debug,
-                                     skip_upstream=skip_upstream,
-                                     deepcopy=True)
+        return self._build_partially(
+            target=target,
+            force=force,
+            show_progress=show_progress,
+            debug=debug,
+            skip_upstream=skip_upstream,
+            deepcopy=True,
+        )
 
-    def _build_partially(self,
-                         target,
-                         force=False,
-                         show_progress=True,
-                         debug=None,
-                         skip_upstream=False,
-                         deepcopy=True):
+    def _build_partially(
+        self,
+        target,
+        force=False,
+        show_progress=True,
+        debug=None,
+        skip_upstream=False,
+        deepcopy=True,
+    ):
         # we have to use a deep copy since using a soft one will corrupt
         # task status in subsequent runs
         if deepcopy:
@@ -792,12 +798,11 @@ class DAG(AbstractDAG):
             dag_another = self
 
         # task names are usually str, although this isn't strictly enforced
-        if isinstance(target, str) and '*' in target:
+        if isinstance(target, str) and "*" in target:
             targets = set(fnmatch.filter(self._iter(), target))
 
             to_include = [
-                self[target]._lineage for target in targets
-                if self[target]._lineage
+                self[target]._lineage for target in targets if self[target]._lineage
             ]
 
             if to_include:
@@ -828,19 +833,16 @@ class DAG(AbstractDAG):
                 if name not in targets:
                     dag_another[name].exec_status = TaskStatus.Skipped
 
-        return dag_another.build(force=force,
-                                 show_progress=show_progress,
-                                 debug=debug)
+        return dag_another.build(force=force, show_progress=show_progress, debug=debug)
 
     def status(self, **kwargs):
-        """Returns a table with tasks status
-        """
+        """Returns a table with tasks status"""
         # FIXME: delete this, make dag.render() return this
         self.render()
 
         return Table([self[name].status(**kwargs) for name in self])
 
-    def to_markup(self, path=None, fmt='html', sections=None, backend=None):
+    def to_markup(self, path=None, fmt="html", sections=None, backend=None):
         """Returns a str (md or html) with the pipeline's description
 
         Parameters
@@ -849,54 +851,51 @@ class DAG(AbstractDAG):
             Which sections to include, possible values are "plot", "status"
             and "source". Defaults to ["plot", "status"]
         """
-        sections = sections or ['plot', 'status']
+        sections = sections or ["plot", "status"]
 
-        if fmt not in {'html', 'md'}:
-            raise ValueError('fmt must be html or md, got {}'.format(fmt))
+        if fmt not in {"html", "md"}:
+            raise ValueError("fmt must be html or md, got {}".format(fmt))
 
-        if 'status' in sections:
-            status = self.status().to_format('html')
+        if "status" in sections:
+            status = self.status().to_format("html")
         else:
             status = False
 
         backend = plot.choose_backend(backend)
 
-        if 'plot' in sections:
-            ext = '.png' if backend == 'pygraphviz' \
-                  else '.html'
+        if "plot" in sections:
+            ext = ".png" if backend == "pygraphviz" else ".html"
             fd, path_to_plot = tempfile.mkstemp(suffix=ext)
             os.close(fd)
 
-            if backend == 'pygraphviz':
+            if backend == "pygraphviz":
                 self.plot(output=path_to_plot, backend=backend)
                 plot_ = image_bytes2html(Path(path_to_plot).read_bytes())
             else:
-                self.plot(output=path_to_plot,
-                          backend=backend,
-                          image_only=True)
+                self.plot(output=path_to_plot, backend=backend, image_only=True)
                 json_data = Path(path_to_plot).read_text()
                 plot_ = svg2html()
         else:
             plot_ = False
 
-        template_md = importlib_resources.read_text(resources, 'dag.md')
-        out = Template(template_md).render(plot=plot_,
-                                           status=status,
-                                           source='source' in sections,
-                                           dag=self)
+        template_md = importlib_resources.read_text(resources, "dag.md")
+        out = Template(template_md).render(
+            plot=plot_, status=status, source="source" in sections, dag=self
+        )
 
-        if fmt == 'html':
+        if fmt == "html":
             from ploomber.util import markup
+
             out = markup.markdown_to_html(out)
 
             # add css
-            if backend == 'd3' and 'plot' in sections:
+            if backend == "d3" and "plot" in sections:
                 html = importlib_resources.read_text(
-                    resources, 'github-markdown-d3.html')
+                    resources, "github-markdown-d3.html"
+                )
                 out = Template(html).render(content=out, json_data=json_data)
             else:
-                html = importlib_resources.read_text(resources,
-                                                     'github-markdown.html')
+                html = importlib_resources.read_text(resources, "github-markdown.html")
                 out = Template(html).render(content=out)
 
         if path is not None:
@@ -904,11 +903,9 @@ class DAG(AbstractDAG):
 
         return out
 
-    def plot(self,
-             output='embed',
-             include_products=False,
-             backend=None,
-             image_only=False):
+    def plot(
+        self, output="embed", include_products=False, backend=None, image_only=False
+    ):
         """Plot the DAG
 
         Parameters
@@ -927,36 +924,42 @@ class DAG(AbstractDAG):
             otherwise it uses D3 (which doesn't require extra dependencies),
             you can force to use a backend by passing 'pygraphviz' or 'd3'.
         """
-        if backend not in {None, 'd3', 'pygraphviz'}:
-            raise ValueError("Expected backend to be: None, 'd3' "
-                             f"or 'pygraphviz', but got: {backend!r}")
+        if backend not in {None, "d3", "pygraphviz"}:
+            raise ValueError(
+                "Expected backend to be: None, 'd3' "
+                f"or 'pygraphviz', but got: {backend!r}"
+            )
 
         # FIXME: add tests for this
         self.render()
 
-        if plot.choose_backend(backend) == 'd3':
+        if plot.choose_backend(backend) == "d3":
             if include_products:
-                raise ValueError("'include_products' is not supported "
-                                 "when using the d3 backend. Switch the "
-                                 "flag or change to the pypgrahviz backend")
+                raise ValueError(
+                    "'include_products' is not supported "
+                    "when using the d3 backend. Switch the "
+                    "flag or change to the pypgrahviz backend"
+                )
 
-            if output != 'embed':
+            if output != "embed":
                 suffix = Path(output).suffix
 
-                if suffix != '.html':
-                    raise ValueError('Error when using d3 backend: '
-                                     'expected a path with '
-                                     f'extension .html, but got: {output!r}, '
-                                     'please change the extension')
+                if suffix != ".html":
+                    raise ValueError(
+                        "Error when using d3 backend: "
+                        "expected a path with "
+                        f"extension .html, but got: {output!r}, "
+                        "please change the extension"
+                    )
 
-            G = self._to_graph(fmt='d3', include_products=include_products)
+            G = self._to_graph(fmt="d3", include_products=include_products)
 
             dag_json = nx.readwrite.json_graph.node_link_data(G)
 
-            with _path_for_plot(path_to_plot=output, fmt='html') as path:
+            with _path_for_plot(path_to_plot=output, fmt="html") as path:
                 plot.with_d3(dag_json, output=path, image_only=image_only)
 
-                if output == 'embed':
+                if output == "embed":
                     return plot.embedded_html(path=path)
                 else:
                     return path
@@ -964,36 +967,39 @@ class DAG(AbstractDAG):
         elif not plot.check_pygraphviz_installed() and backend == "pygraphviz":
             raise ImportError(
                 _make_requires_error_message(
-                    ['pygraphviz<1.8'] if sys.version_info <
-                    (3, 8) else ['pygraphviz'], 'plot', _pygraphviz_message))
+                    ["pygraphviz<1.8"] if sys.version_info < (3, 8) else ["pygraphviz"],
+                    "plot",
+                    _pygraphviz_message,
+                )
+            )
 
         # use pygraphviz
-        with _path_for_plot(path_to_plot=output, fmt='png') as path:
+        with _path_for_plot(path_to_plot=output, fmt="png") as path:
             # attributes docs:
             # https://graphviz.gitlab.io/_pages/doc/info/attrs.html
 
-            G = self._to_graph(fmt='pygraphviz',
-                               include_products=include_products)
-            G.draw(path, prog='dot', args='-Grankdir=LR')
+            G = self._to_graph(fmt="pygraphviz", include_products=include_products)
+            G.draw(path, prog="dot", args="-Grankdir=LR")
 
-            if output == 'embed':
+            if output == "embed":
                 return Image(filename=path)
             else:
                 return path
 
     def _add_task(self, task):
-        """Adds a task to the DAG
-        """
+        """Adds a task to the DAG"""
         if task.name in self._G:
-            raise ValueError('DAG already has a task with name '
-                             f'{task.name!r}. Pass a "name" '
-                             'argument to the task to '
-                             'change it')
+            raise ValueError(
+                "DAG already has a task with name "
+                f'{task.name!r}. Pass a "name" '
+                "argument to the task to "
+                "change it"
+            )
 
         if task.name is not None:
             self._G.add_node(task.name, task=task)
         else:
-            raise ValueError('Tasks must have a name, got None')
+            raise ValueError("Tasks must have a name, got None")
 
     def _to_graph(self, fmt, only_current_dag=False, include_products=False):
         """
@@ -1011,10 +1017,10 @@ class DAG(AbstractDAG):
             If False, each node only contains the task name, if True
             if contains the task name and products.
         """
-        FMT = {'networkx', 'pygraphviz', 'd3'}
+        FMT = {"networkx", "pygraphviz", "d3"}
 
         if fmt not in FMT:
-            raise ValueError(f'Invalid format, expected one of: {FMT}')
+            raise ValueError(f"Invalid format, expected one of: {FMT}")
 
         # https://networkx.github.io/documentation/networkx-1.10/reference/drawing.html
         # http://graphviz.org/doc/info/attrs.html
@@ -1023,25 +1029,23 @@ class DAG(AbstractDAG):
         G = nx.DiGraph()
 
         for task in self.values():
-
             # these formats are used for plotting, so only pass certain task
             # attributes
-            if fmt in {'pygraphviz', 'd3'}:
+            if fmt in {"pygraphviz", "d3"}:
                 outdated = task.product._is_outdated()
 
                 # add parameters for graphviz plotting
-                color = ('#F08080' if outdated else '#90EE90')
+                color = "#F08080" if outdated else "#90EE90"
 
-                label = (_task_short_repr(task)
-                         if include_products else task.name)
+                label = _task_short_repr(task) if include_products else task.name
 
                 attr = {
-                    'fillcolor': color,
-                    'style': 'dashed, filled' if outdated else 'filled',
-                    'fontname': 'Helvetica',
-                    'fontsize': '16pt',
-                    'id': task.name,
-                    'label': label
+                    "fillcolor": color,
+                    "style": "dashed, filled" if outdated else "filled",
+                    "fontname": "Helvetica",
+                    "fontsize": "16pt",
+                    "id": task.name,
+                    "label": label,
                 }
                 # graphviz uses the str representation of the node object to
                 # distinguish them - by default str(task) returns
@@ -1060,18 +1064,26 @@ class DAG(AbstractDAG):
                 Determine what to use to identify the edges the task object
                 or task name
                 """
-                return task if fmt == 'networkx' else task.name
+                return task if fmt == "networkx" else task.name
 
             # add edges
             if only_current_dag:
-                G.add_edges_from([(get_task_id(up), get_task_id(task))
-                                  for up in task.upstream.values()
-                                  if up.dag is self])
+                G.add_edges_from(
+                    [
+                        (get_task_id(up), get_task_id(task))
+                        for up in task.upstream.values()
+                        if up.dag is self
+                    ]
+                )
             else:
-                G.add_edges_from([(get_task_id(up), get_task_id(task))
-                                  for up in task.upstream.values()])
+                G.add_edges_from(
+                    [
+                        (get_task_id(up), get_task_id(task))
+                        for up in task.upstream.values()
+                    ]
+                )
 
-        if fmt in {'networkx', 'd3'}:
+        if fmt in {"networkx", "d3"}:
             return G
         else:
             # to_agraph converts to pygraphviz
@@ -1086,13 +1098,12 @@ class DAG(AbstractDAG):
             Pass a string to group this edge, upon rendering, upstream
             products are available via task[group_name][tas_name]
         """
-        attrs = {} if group_name is None else {'group_name': group_name}
+        attrs = {} if group_name is None else {"group_name": group_name}
 
         # when adding a task group (but not a dag)
         if isiterable(task_from) and not isinstance(task_from, DAG):
             # if iterable, add all components as separate upstream tasks
             for a_task_from in task_from:
-
                 # this happens when the task was originally declared in
                 # another dag...
                 if a_task_from.name not in self._G:
@@ -1110,10 +1121,9 @@ class DAG(AbstractDAG):
             self._G.add_edge(task_from.name, task_to.name, **attrs)
 
     def _get_upstream(self, task_name):
-        """Get upstream tasks given a task name (returns Task objects)
-        """
+        """Get upstream tasks given a task name (returns Task objects)"""
         upstream_names = self._G.predecessors(task_name)
-        return {name: self._G.nodes[name]['task'] for name in upstream_names}
+        return {name: self._G.nodes[name]["task"] for name in upstream_names}
 
     def get_downstream(self, task_name):
         """
@@ -1139,7 +1149,7 @@ class DAG(AbstractDAG):
         up-to-date metadata is when calling DAG.build(), so we call this
         method before building, which forces metadata reload.
         """
-        self._logger.debug('Clearing product status')
+        self._logger.debug("Clearing product status")
         # clearing out this way is only useful after building, but not
         # if the metadata changed since it wont be reloaded
         for task in self.values():
@@ -1147,10 +1157,9 @@ class DAG(AbstractDAG):
 
     def __getitem__(self, key) -> Task:
         try:
-            return self._G.nodes[key]['task']
+            return self._G.nodes[key]["task"]
         except KeyError as e:
-            e.args = ('DAG does not have a task with name {}'.format(
-                repr(key)), )
+            e.args = ("DAG does not have a task with name {}".format(repr(key)),)
             raise
 
     def __delitem__(self, key):
@@ -1182,8 +1191,7 @@ class DAG(AbstractDAG):
             raise DAGCycle
 
     def _iter(self):
-        """Iterate over tasks names (unordered but more efficient than __iter__
-        """
+        """Iterate over tasks names (unordered but more efficient than __iter__"""
         for name in self._G:
             yield name
 
@@ -1205,26 +1213,24 @@ class DAG(AbstractDAG):
         state = self.__dict__.copy()
         # _logger is not pickable, so we remove them and build
         # them again in __setstate__
-        del state['_logger']
+        del state["_logger"]
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self._logger = logging.getLogger('{}.{}'.format(
-            __name__,
-            type(self).__name__))
+        self._logger = logging.getLogger("{}.{}".format(__name__, type(self).__name__))
 
 
 def _single_product_short_repr(product):
     s = repr(product)
 
     if len(s) > 20:
-        s_short = ''
+        s_short = ""
 
         t = ceil(len(s) / 20)
 
         for i in range(t):
-            s_short += s[(20 * i):(20 * (i + 1))] + '\n'
+            s_short += s[(20 * i) : (20 * (i + 1))] + "\n"
     else:
         s_short = s
 
@@ -1232,8 +1238,7 @@ def _single_product_short_repr(product):
 
 
 def _meta_product_short_repr(metaproduct):
-    return ', '.join(
-        [_single_product_short_repr(p) for p in metaproduct.products])
+    return ", ".join([_single_product_short_repr(p) for p in metaproduct.products])
 
 
 def _product_short_repr(product):
@@ -1244,10 +1249,8 @@ def _product_short_repr(product):
 
 
 def _task_short_repr(task):
-
     def short(s):
         max_l = 30
-        return s if len(s) <= max_l else s[:max_l - 3] + '...'
+        return s if len(s) <= max_l else s[: max_l - 3] + "..."
 
-    return ('{} -> \n{}'.format(short(str(task.name)),
-                                _product_short_repr(task.product)))
+    return "{} -> \n{}".format(short(str(task.name)), _product_short_repr(task.product))

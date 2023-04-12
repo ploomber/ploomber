@@ -13,6 +13,7 @@ class DAGClients(MutableMapping):
     1. __setitem__, __getitem__ work with strings (e.g., clients['SQLScript'])
     2. __setitem__ validates the key is a Task or Product subclass
     """
+
     def __init__(self, mapping=None):
         self._mapping = mapping or dict()
 
@@ -28,7 +29,7 @@ class DAGClients(MutableMapping):
             suggestion = get_suggestion(key)
 
             if suggestion and str_to_class(suggestion) in self:
-                error += f'. Did you mean {suggestion!r}?'
+                error += f". Did you mean {suggestion!r}?"
 
             raise KeyError(error)
 
@@ -50,20 +51,24 @@ class DAGClients(MutableMapping):
             if key_obj is None:
                 maybe = get_suggestion(key)
 
-                msg = (f'Could not set DAG-level client {value!r}. '
-                       f'{key!r} is not a valid Task or '
-                       'Product class name')
+                msg = (
+                    f"Could not set DAG-level client {value!r}. "
+                    f"{key!r} is not a valid Task or "
+                    "Product class name"
+                )
 
                 if maybe:
-                    msg += f'. Did you mean {maybe!r}?'
+                    msg += f". Did you mean {maybe!r}?"
 
                 raise ValueError(msg)
         else:
             key_obj = key
 
         if not isclass(key_obj) or not issubclass(key_obj, (Task, Product)):
-            raise ValueError('DAG client keys must be Tasks '
-                             f'or Products, value {key_obj!r} is not')
+            raise ValueError(
+                "DAG client keys must be Tasks "
+                f"or Products, value {key_obj!r} is not"
+            )
 
         self._mapping[key_obj] = value
 
@@ -78,4 +83,4 @@ class DAGClients(MutableMapping):
         return len(self._mapping)
 
     def __repr__(self):
-        return f'{type(self).__name__}({self._mapping!r})'
+        return f"{type(self).__name__}({self._mapping!r})"

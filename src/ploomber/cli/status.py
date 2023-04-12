@@ -4,10 +4,9 @@ from ploomber.telemetry import telemetry
 
 
 @cli_endpoint
-@telemetry.log_call('status')
+@telemetry.log_call("status")
 def main():
-    parser = CustomParser(description='Show pipeline status',
-                          prog='ploomber status')
+    parser = CustomParser(description="Show pipeline status", prog="ploomber status")
     with parser:
         # this command has no static args
         pass

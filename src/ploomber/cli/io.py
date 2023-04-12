@@ -43,9 +43,10 @@ def cli_endpoint(fn):
     Call some_endpoint(catch_exception=False) to disable this behavior (e.g.
     for testing)
     """
+
     @wraps(fn)
     def wrapper(catch_exception=True, **kwargs):
-        if os.environ.get('PLOOMBER_DEBUG'):
+        if os.environ.get("PLOOMBER_DEBUG"):
             catch_exception = False
 
         if catch_exception:
@@ -58,7 +59,7 @@ def cli_endpoint(fn):
             # for base exceptions (we raise this), we display the message
             # in red (no traceback since it's irrelevant for the user)
             except BaseException as e:
-                click.secho(e.get_message(), file=sys.stderr, fg='red')
+                click.secho(e.get_message(), file=sys.stderr, fg="red")
                 sys.exit(1)
             # this means it's an unknown error (either a bug in ploomber or
             # an error in the user's code). we display the full traceback,
@@ -79,7 +80,7 @@ def cli_endpoint(fn):
 
                 sys.exit(1)
         else:
-            if os.environ.get('PLOOMBER_POST_MORTEM'):
+            if os.environ.get("PLOOMBER_POST_MORTEM"):
                 try:
                     fn(**kwargs)
                 except Exception:
@@ -97,23 +98,25 @@ def command_endpoint(fn):
     not execute them. If it tails, it prints error message to stderror, then
     calls with exit code 1.
     """
+
     @wraps(fn)
     def wrapper(**kwargs):
         try:
             fn(**kwargs)
         # echo error message when it's a subclass Exception
         except BaseException as e:
-            click.secho(e.get_message(), file=sys.stderr, fg='red')
+            click.secho(e.get_message(), file=sys.stderr, fg="red")
             sys.exit(1)
         # show the full traceback if it's not a subclass Exception
         except Exception as e:
             error = _format.exception(e)  # get the traceback
             if error:
                 tw = TerminalWriter(
-                    file=sys.stderr)  # write to terminal all the traceback
+                    file=sys.stderr
+                )  # write to terminal all the traceback
                 tw._write_source(error.splitlines())
             else:
-                print(f'Error: {e}', file=sys.stderr)
+                print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
 
     return wrapper

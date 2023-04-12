@@ -9,9 +9,11 @@ from ploomber.products import File
 def make():
     dag = DAG()
 
-    NotebookRunner(Path('clean.py'),
-                   File(Path(tempfile.mkdtemp()) / 'file.html'),
-                   dag=dag,
-                   name='clean')
+    NotebookRunner(
+        Path("clean.py"),
+        File(Path(tempfile.mkdtemp()) / "file.html"),
+        dag=dag,
+        name="clean",
+    )
 
     return dag

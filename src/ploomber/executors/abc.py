@@ -48,17 +48,20 @@ class Executor(abc.ABC):
     The following is still being defined: do we need to send the whole dag
     object? Looks like we are good by just sending the tasks
     """
+
     @abc.abstractmethod
     def __call__(self, dag):
         exec_status = set([t.exec_status for t in dag.values()])
 
         if exec_status - {
-                TaskStatus.WaitingExecution,
-                TaskStatus.WaitingUpstream,
-                TaskStatus.Skipped,
-                TaskStatus.WaitingDownload,
+            TaskStatus.WaitingExecution,
+            TaskStatus.WaitingUpstream,
+            TaskStatus.Skipped,
+            TaskStatus.WaitingDownload,
         }:
-            raise ValueError('Tasks should only have either '
-                             'TaskStatus.WaitingExecution or '
-                             'TaskStatus.WaitingUpstream before attempting '
-                             'to execute, got status: {}'.format(exec_status))
+            raise ValueError(
+                "Tasks should only have either "
+                "TaskStatus.WaitingExecution or "
+                "TaskStatus.WaitingUpstream before attempting "
+                "to execute, got status: {}".format(exec_status)
+            )

@@ -21,8 +21,7 @@ def simple(upstream, product, path):
 
 
 def simple_w_docstring(upstream, product, path):
-    """Some docstring
-    """
+    """Some docstring"""
     up = upstream["some_task"]
     x = 1
     Path(path).write_text(str(x))
@@ -45,7 +44,8 @@ def multiple_lines_signature(upstream, product, path):
 
 
 def this_is_a_function_with_a_very_long_name_with_forces_us_to_split_params(
-        upstream, product, path):
+    upstream, product, path
+):
     up = upstream["some_task"]
     x = 1
     Path(path).write_text(str(x))
@@ -59,7 +59,7 @@ def large_function():
         pass
 
     for i in range(10):
-        print('Looping...')
+        print("Looping...")
 
     def another_function():
         pass

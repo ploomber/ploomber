@@ -3,11 +3,11 @@ from enum import Enum
 
 # TODO: rename to use the names as the hooks: finished and failure
 class DAGStatus(Enum):
-    WaitingRender = 'waiting_render'
-    WaitingExecution = 'waiting_execution'
-    ErroredRender = 'errored_render'
-    Executed = 'executed'
-    Errored = 'errored'
+    WaitingRender = "waiting_render"
+    WaitingExecution = "waiting_execution"
+    ErroredRender = "errored_render"
+    Executed = "executed"
+    Errored = "errored"
 
 
 # TODO: rename to use the names as the hooks: finished and failure
@@ -15,7 +15,7 @@ class TaskStatus(Enum):
     # INIT
 
     # waiting render
-    WaitingRender = 'waiting_render'
+    WaitingRender = "waiting_render"
 
     # SET AT RENDERING TIME
     # At rendering time: traverse in topological order and determine
@@ -24,21 +24,21 @@ class TaskStatus(Enum):
     # up-to-date, no need to run. Propagate to move downstream dependencies
     # from WaitingUpstream to WaitingExecution
     # TODO: rename to UpToDate
-    Skipped = 'skipped'
+    Skipped = "skipped"
 
     # outdated: waiting to be run by the executor
-    WaitingExecution = 'waiting_execution'
+    WaitingExecution = "waiting_execution"
     # outdated: waits for upstream dependencies to be either Executed
     # or Skipped
-    WaitingUpstream = 'waiting_upstream'
+    WaitingUpstream = "waiting_upstream"
     # up-to-date but need to download from remote location
-    WaitingDownload = 'waiting_download'
+    WaitingDownload = "waiting_download"
 
     # failed to render, propagate ErroredRender to downstream dependencies
     # downstream dependencies and set them to AbortedRender
-    ErroredRender = 'errored_render'
+    ErroredRender = "errored_render"
     # Am I really stopping render due to this?
-    AbortedRender = 'aborted_render'
+    AbortedRender = "aborted_render"
 
     # SET AT BUILDING TIME
     # Two options, one is similar to the process at rendering time: determine
@@ -49,14 +49,14 @@ class TaskStatus(Enum):
 
     # succesfully executed, propagate to move downstream dependencies from
     # WaitingUpstream to WaitingExecution
-    Executed = 'executed'
+    Executed = "executed"
 
     # crashed, propagate to move downstream dependencies from WaitingUpstream
     # to Aborted
-    Errored = 'errored'
+    Errored = "errored"
 
     # an upstream dependency crashed, do not execute, propagate to abort
     # any downstream dependency
-    Aborted = 'aborted'
+    Aborted = "aborted"
 
-    BrokenProcessPool = 'broken_process_pool'
+    BrokenProcessPool = "broken_process_pool"

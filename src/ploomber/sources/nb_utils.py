@@ -6,8 +6,8 @@ def find_cell_with_tags(nb, tags):
     tags_to_find = list(tags)
     tags_found = {}
 
-    for index, cell in enumerate(nb['cells']):
-        for tag in cell['metadata'].get('tags', []):
+    for index, cell in enumerate(nb["cells"]):
+        for tag in cell["metadata"].get("tags", []):
             if tag in tags_to_find:
                 tags_found[tag] = dict(cell=cell, index=index)
                 tags_to_find.remove(tag)
@@ -27,6 +27,6 @@ def find_cell_with_tag(nb, tag):
 
     if out:
         located = out[tag]
-        return located['cell'], located['index']
+        return located["cell"], located["index"]
     else:
         return None, None

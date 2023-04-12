@@ -38,9 +38,10 @@ import inspect
 import warnings
 
 import jupyter_client
+
 # papermill is importing a deprecated module from pyarrow
 with warnings.catch_warnings():
-    warnings.simplefilter('ignore', FutureWarning)
+    warnings.simplefilter("ignore", FutureWarning)
     from papermill.translators import PythonTranslator
 import parso
 import nbformat
@@ -79,12 +80,14 @@ class CallableInteractiveDeveloper:
     ...     # do stuff with the notebook file
     ...     pass
     """
+
     def __init__(self, fn, params):
         self.fn = fn
         self.path_to_source = Path(inspect.getsourcefile(fn))
         self.params = params
         self.tmp_path = self.path_to_source.with_name(
-            self.path_to_source.with_suffix('').name + '-tmp.ipynb')
+            self.path_to_source.with_suffix("").name + "-tmp.ipynb"
+        )
         self._source_code = None
 
     def _reload_fn(self):
@@ -108,8 +111,9 @@ class CallableInteractiveDeveloper:
 
         body_elements, _ = parse_function(self.fn)
         top, local, bottom = extract_imports(self.fn)
-        return function_to_nb(body_elements, top, local, bottom, self.params,
-                              self.fn, path)
+        return function_to_nb(
+            body_elements, top, local, bottom, self.params, self.fn, path
+        )
 
     def overwrite(self, obj):
         """
@@ -124,10 +128,10 @@ class CallableInteractiveDeveloper:
         else:
             nb = obj
 
-        nb.cells = nb.cells[:last_non_empty_cell(nb.cells)]
+        nb.cells = nb.cells[: last_non_empty_cell(nb.cells)]
 
         # remove cells that are only needed for the nb but not for the function
-        code_cells = [c['source'] for c in nb.cells if keep_cell(c)]
+        code_cells = [c["source"] for c in nb.cells if keep_cell(c)]
 
         # add 4 spaces to each code cell, exclude white space lines
         code_cells = [indent_cell(code) for code in code_cells]
@@ -135,7 +139,7 @@ class CallableInteractiveDeveloper:
         # get the original file where the function is defined
         content = self.path_to_source.read_text()
         content_lines = content.splitlines()
-        trailing_newline = content[-1] == '\n'
+        trailing_newline = content[-1] == "\n"
 
         # an upstream parameter
         fn_starts, fn_ends = function_lines(self.fn)
@@ -153,25 +157,27 @@ class CallableInteractiveDeveloper:
         # properly end the function definition, if this is the last definition
         # in the file, we don't have to add this
         if footer:
-            footer = [''] + footer
+            footer = [""] + footer
 
-        new_content = '\n'.join(header + code_cells + footer)
+        new_content = "\n".join(header + code_cells + footer)
 
         # replace old top imports with new ones
         new_content_lines = new_content.splitlines()
-        _, line = extract_imports_top(parso.parse(new_content),
-                                      new_content_lines)
-        imports_top_cell, _ = find_cell_with_tag(nb, 'imports-top')
+        _, line = extract_imports_top(parso.parse(new_content), new_content_lines)
+        imports_top_cell, _ = find_cell_with_tag(nb, "imports-top")
 
         # ignore trailing whitespace in top imports cell but keep original
         # amount of whitespace separating the last import and the first name
         # definition
-        content_to_write = (imports_top_cell['source'].rstrip() + '\n' +
-                            '\n'.join(new_content_lines[line - 1:]))
+        content_to_write = (
+            imports_top_cell["source"].rstrip()
+            + "\n"
+            + "\n".join(new_content_lines[line - 1 :])
+        )
 
         # if the original file had a trailing newline, keep it
         if trailing_newline:
-            content_to_write += '\n'
+            content_to_write += "\n"
 
         # NOTE: this last part parses the code several times, we can improve
         # performance by only parsing once
@@ -179,19 +185,16 @@ class CallableInteractiveDeveloper:
         fn_def = find_function_with_name(m, self.fn.__name__)
         fn_code = fn_def.get_code()
 
-        has_upstream_dependencies = PythonCallableExtractor(
-            fn_code).extract_upstream()
+        has_upstream_dependencies = PythonCallableExtractor(fn_code).extract_upstream()
         upstream_in_func_sig = upstream_in_func_signature(fn_code)
 
         if not upstream_in_func_sig and has_upstream_dependencies:
             fn_code_new = add_upstream_to_func_signature(fn_code)
-            content_to_write = _replace_fn_source(content_to_write, fn_def,
-                                                  fn_code_new)
+            content_to_write = _replace_fn_source(content_to_write, fn_def, fn_code_new)
 
         elif upstream_in_func_sig and not has_upstream_dependencies:
             fn_code_new = remove_upstream_to_func_signature(fn_code)
-            content_to_write = _replace_fn_source(content_to_write, fn_def,
-                                                  fn_code_new)
+            content_to_write = _replace_fn_source(content_to_write, fn_def, fn_code_new)
 
         self.path_to_source.write_text(content_to_write)
 
@@ -204,13 +207,15 @@ class CallableInteractiveDeveloper:
         current_source_code = self.path_to_source.read_text()
 
         if self._source_code != current_source_code:
-            raise ValueError(f'File "{self.path_to_source}" (where '
-                             f'callable "{self.fn.__name__}" is defined) '
-                             'changed while editing the function in the '
-                             'notebook app. This might lead to corrupted '
-                             'source files. Changes from the notebook were '
-                             'not saved back to the module. Notebook '
-                             f'available at "{self.tmp_path}')
+            raise ValueError(
+                f'File "{self.path_to_source}" (where '
+                f'callable "{self.fn.__name__}" is defined) '
+                "changed while editing the function in the "
+                "notebook app. This might lead to corrupted "
+                "source files. Changes from the notebook were "
+                "not saved back to the module. Notebook "
+                f'available at "{self.tmp_path}'
+            )
 
         self.overwrite(self.tmp_path)
         Path(self.tmp_path).unlink()
@@ -222,8 +227,7 @@ class CallableInteractiveDeveloper:
 
 
 def last_non_empty_cell(cells):
-    """Returns the index + 1 for the last non-empty cell
-    """
+    """Returns the index + 1 for the last non-empty cell"""
     idx = len(cells)
 
     for cell in cells[::-1]:
@@ -240,29 +244,32 @@ def keep_cell(cell):
     Rule to decide whether to keep a cell or not. This is executed before
     converting the notebook back to a function
     """
-    cell_tags = set(cell['metadata'].get('tags', {}))
+    cell_tags = set(cell["metadata"].get("tags", {}))
 
     # remove cell with this tag, they are not part of the function body
     tags_to_remove = {
-        'injected-parameters',
-        'imports-top',
-        'imports-local',
-        'imports-bottom',
-        'debugging-settings',
+        "injected-parameters",
+        "imports-top",
+        "imports-local",
+        "imports-bottom",
+        "debugging-settings",
     }
 
     has_tags_to_remove = len(cell_tags & tags_to_remove)
 
-    return (cell['cell_type'] == 'code' and not has_tags_to_remove
-            and cell['source'][:2] != '#\n')
+    return (
+        cell["cell_type"] == "code"
+        and not has_tags_to_remove
+        and cell["source"][:2] != "#\n"
+    )
 
 
 def indent_line(lline):
-    return '    ' + lline if lline else ''
+    return "    " + lline if lline else ""
 
 
 def indent_cell(code):
-    return '\n'.join([indent_line(line) for line in code.splitlines()])
+    return "\n".join([indent_line(line) for line in code.splitlines()])
 
 
 def body_elements_from_source(source):
@@ -303,9 +310,10 @@ def extract_imports(fn):
     imports_top, line = extract_imports_top(module, lines)
 
     # any imports below the top imports
-    lines_bottom = '\n'.join(lines[line - 1:])
-    imports_bottom = '\n'.join(
-        imp.get_code() for imp in parso.parse(lines_bottom).iter_imports())
+    lines_bottom = "\n".join(lines[line - 1 :])
+    imports_bottom = "\n".join(
+        imp.get_code() for imp in parso.parse(lines_bottom).iter_imports()
+    )
 
     # generate imports from local definitions
     imports_local = make_import_from_definitions(module, fn)
@@ -332,7 +340,7 @@ def extract_imports_top(module, lines):
     line, _ = ch.start_pos
 
     # line numbers start at 1...
-    imports_top = '\n'.join(lines[:line - 1])
+    imports_top = "\n".join(lines[: line - 1])
     new_lines = trailing_newlines(imports_top)
 
     return imports_top[:-new_lines], line - new_lines
@@ -343,7 +351,7 @@ def has_import(stmt):
     Check if statement contains an import
     """
     for ch in stmt.children:
-        if ch.type in {'import_name', 'import_from'}:
+        if ch.type in {"import_name", "import_from"}:
             return True
     return False
 
@@ -352,7 +360,7 @@ def trailing_newlines(s):
     n = 0
 
     for char in reversed(s):
-        if char != '\n':
+        if char != "\n":
             break
         n += 1
 
@@ -374,18 +382,16 @@ def get_func_and_class_names(module):
 
 def make_import_from_definitions(module, fn):
     module_name = inspect.getmodule(fn).__name__
-    names = [
-        name for name in get_func_and_class_names(module)
-        if name != fn.__name__
-    ]
+    names = [name for name in get_func_and_class_names(module) if name != fn.__name__]
 
     if names:
-        names_all = ', '.join(names)
-        return f'from {module_name} import {names_all}'
+        names_all = ", ".join(names)
+        return f"from {module_name} import {names_all}"
 
 
-def function_to_nb(body_elements, imports_top, imports_local, imports_bottom,
-                   params, fn, path):
+def function_to_nb(
+    body_elements, imports_top, imports_local, imports_bottom, params, fn, path
+):
     """
     Save function body elements to a notebook
     """
@@ -395,7 +401,7 @@ def function_to_nb(body_elements, imports_top, imports_local, imports_bottom,
     # json serializable
     try:
         params = params.to_json_serializable()
-        params['product'] = params['product'].to_json_serializable()
+        params["product"] = params["product"].to_json_serializable()
     except AttributeError:
         pass
 
@@ -403,8 +409,8 @@ def function_to_nb(body_elements, imports_top, imports_local, imports_bottom,
     nb = nb_format.new_notebook()
 
     # get the module where the function is declared
-    tokens = inspect.getmodule(fn).__name__.split('.')
-    module_name = '.'.join(tokens[:-1])
+    tokens = inspect.getmodule(fn).__name__.split(".")
+    module_name = ".".join(tokens[:-1])
 
     # add cell that chdirs for the current working directory
     # add __package__, we need this for relative imports to work
@@ -416,24 +422,28 @@ def function_to_nb(body_elements, imports_top, imports_local, imports_bottom,
 import os
 {}
 __package__ = "{}"
-""".format(chdir_code(Path('.').resolve()), module_name)
-    cell = nb_format.new_code_cell(source,
-                                   metadata={'tags': ['debugging-settings']})
+""".format(
+        chdir_code(Path(".").resolve()), module_name
+    )
+    cell = nb_format.new_code_cell(source, metadata={"tags": ["debugging-settings"]})
     nb.cells.append(cell)
 
     # then add params passed to the function
-    cell = nb_format.new_code_cell(PythonTranslator.codify(params),
-                                   metadata={'tags': ['injected-parameters']})
+    cell = nb_format.new_code_cell(
+        PythonTranslator.codify(params), metadata={"tags": ["injected-parameters"]}
+    )
     nb.cells.append(cell)
 
     # first three cells: imports
-    for code, tag in ((imports_top, 'imports-top'),
-                      (imports_local, 'imports-local'), (imports_bottom,
-                                                         'imports-bottom')):
+    for code, tag in (
+        (imports_top, "imports-top"),
+        (imports_local, "imports-local"),
+        (imports_bottom, "imports-bottom"),
+    ):
         if code:
             nb.cells.append(
-                nb_format.new_code_cell(source=code,
-                                        metadata=dict(tags=[tag])))
+                nb_format.new_code_cell(source=code, metadata=dict(tags=[tag]))
+            )
 
     for statement in body_elements:
         lines, newlines = split_statement(statement)
@@ -445,19 +455,18 @@ __package__ = "{}"
         lines = [line[idx:] for line in lines]
 
         # add one empty cell per leading new line
-        nb.cells.extend(
-            [nb_format.new_code_cell(source='') for _ in range(newlines)])
+        nb.cells.extend([nb_format.new_code_cell(source="") for _ in range(newlines)])
 
         # add actual code as a single string
-        cell = nb_format.new_code_cell(source='\n'.join(lines))
+        cell = nb_format.new_code_cell(source="\n".join(lines))
         nb.cells.append(cell)
 
-    k = jupyter_client.kernelspec.get_kernel_spec('python3')
+    k = jupyter_client.kernelspec.get_kernel_spec("python3")
 
     nb.metadata.kernelspec = {
         "display_name": k.display_name,
         "language": k.language,
-        "name": 'python3'
+        "name": "python3",
     }
 
     if path:
@@ -472,12 +481,12 @@ def split_statement(statement):
     newlines = 0
 
     for char in code:
-        if char != '\n':
+        if char != "\n":
             break
 
         newlines += 1
 
-    lines = code.strip('\n').split('\n')
+    lines = code.strip("\n").split("\n")
     return lines, newlines
 
 
@@ -488,36 +497,39 @@ def indentation_idx(line):
 
 def upstream_in_func_signature(source):
     _, params = _get_func_def_and_params(source)
-    return 'upstream' in set(p.name.get_code().strip() for p in params
-                             if p.type == 'param')
+    return "upstream" in set(
+        p.name.get_code().strip() for p in params if p.type == "param"
+    )
 
 
 def add_upstream_to_func_signature(source):
     fn, params = _get_func_def_and_params(source)
     # add a "," if there is at least one param
-    params.insert(-1, ', upstream' if len(params) > 2 else 'upstream')
+    params.insert(-1, ", upstream" if len(params) > 2 else "upstream")
     signature = try_get_code(params)
     fn.children[2] = signature
     # delete leading newline code, to avoid duplicating it
-    return try_get_code(fn.children).lstrip('\n')
+    return try_get_code(fn.children).lstrip("\n")
 
 
 def remove_upstream_to_func_signature(source):
     fn, params = _get_func_def_and_params(source)
-    params_names = (p.get_code().strip(', ') for p in params[1:-1])
-    params_list = ', '.join(p for p in params_names if p != 'upstream')
-    signature = f'({params_list})'
+    params_names = (p.get_code().strip(", ") for p in params[1:-1])
+    params_list = ", ".join(p for p in params_names if p != "upstream")
+    signature = f"({params_list})"
     fn.children[2] = signature
     # delete leading newline code, to avoid duplicating it
-    return try_get_code(fn.children).lstrip('\n')
+    return try_get_code(fn.children).lstrip("\n")
 
 
 def _get_func_def_and_params(source):
     fn = parso.parse(source).children[0]
 
-    if fn.type != 'funcdef':
-        raise ValueError('Expected first element from parse source'
-                         f' code to be "funcdef", got {fn.type!r}')
+    if fn.type != "funcdef":
+        raise ValueError(
+            "Expected first element from parse source"
+            f' code to be "funcdef", got {fn.type!r}'
+        )
 
     return fn, fn.children[2].children
 
@@ -525,8 +537,8 @@ def _get_func_def_and_params(source):
 def _replace_fn_source(content_to_write, fn_def, fn_code_new):
     line_from, line_to = fn_def.start_pos[0], fn_def.end_pos[0]
     lines = content_to_write.splitlines()
-    lines_new = (lines[:line_from - 1] + [fn_code_new] + lines[line_to - 1:])
-    return '\n'.join(lines_new)
+    lines_new = lines[: line_from - 1] + [fn_code_new] + lines[line_to - 1 :]
+    return "\n".join(lines_new)
 
 
 def try_get_code(elements):
@@ -540,7 +552,7 @@ def try_get_code(elements):
 
         code.append(s)
 
-    return ''.join(code)
+    return "".join(code)
 
 
 def find_function_with_name(module, fn_name):

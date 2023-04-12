@@ -74,7 +74,7 @@ class ParallelDill(Executor):
         Parallel executor
     """
 
-    @requires(['multiprocess'], 'ParallelDill')
+    @requires(["multiprocess"], "ParallelDill")
     def __init__(self, processes=None, print_progress=False):
         self.processes = processes or os.cpu_count()
         self.print_progress = print_progress
@@ -96,9 +96,7 @@ class ParallelDill(Executor):
         n_scheduled = 0
 
         for name in dag:
-            if dag[name].exec_status in {
-                    TaskStatus.Executed, TaskStatus.Skipped
-            }:
+            if dag[name].exec_status in {TaskStatus.Executed, TaskStatus.Skipped}:
                 done.append(dag[name])
             else:
                 n_scheduled += 1
@@ -109,22 +107,20 @@ class ParallelDill(Executor):
             self._bar = None
 
         def callback(future):
-            """Keep track of finished tasks
-            """
+            """Keep track of finished tasks"""
             if self._bar:
                 self._bar.update()
 
             result, task_name = future
 
             task = self._dag[task_name]
-            self._logger.debug('Added %s to the list of finished tasks...',
-                               task.name)
+            self._logger.debug("Added %s to the list of finished tasks...", task.name)
 
             if isinstance(result, Message):
                 task.exec_status = TaskStatus.Errored
 
                 if self._bar:
-                    self._bar.colour = 'red'
+                    self._bar.colour = "red"
 
             # sucessfully run task._build
             else:
@@ -142,19 +138,17 @@ class ParallelDill(Executor):
 
             # TODO: if some unknown exception occurs, exc wont have ._name
             task = self._dag[exc._name]
-            self._logger.debug('Added %s to the list of finished tasks...',
-                               task.name)
+            self._logger.debug("Added %s to the list of finished tasks...", task.name)
 
             task.exec_status = TaskStatus.Errored
 
             if self._bar:
-                self._bar.colour = 'red'
+                self._bar.colour = "red"
 
             done.append(task)
             started.remove(task)
 
-            failed.append(
-                Message(task=task, message=_format.exception(exc), obj=exc))
+            failed.append(Message(task=task, message=_format.exception(exc), obj=exc))
 
         def next_task():
             """
@@ -177,9 +171,11 @@ class ParallelDill(Executor):
                 # ignore tasks that are already started, I should probably add
                 # an executing status but that cannot exist in the task itself,
                 # maybe in the manaer?
-                if (task.exec_status in {
-                        TaskStatus.WaitingExecution, TaskStatus.WaitingDownload
-                } and task not in started):
+                if (
+                    task.exec_status
+                    in {TaskStatus.WaitingExecution, TaskStatus.WaitingDownload}
+                    and task not in started
+                ):
                     return task
                 # there might be some up-to-date tasks, add them
 
@@ -189,26 +185,32 @@ class ParallelDill(Executor):
                 click.clear()
 
                 if set_done:
-                    _log(f'Finished: {pretty_print.iterable(set_done)}',
-                         self._logger.debug,
-                         print_progress=self.print_progress)
+                    _log(
+                        f"Finished: {pretty_print.iterable(set_done)}",
+                        self._logger.debug,
+                        print_progress=self.print_progress,
+                    )
 
                 remaining = pretty_print.iterable(set_all - set_done)
-                _log(f'Remaining: {remaining}',
-                     self._logger.debug,
-                     print_progress=self.print_progress)
-                _log(f'Finished {len(set_done)} out of {len(set_all)} tasks',
-                     self._logger.info,
-                     print_progress=self.print_progress)
+                _log(
+                    f"Remaining: {remaining}",
+                    self._logger.debug,
+                    print_progress=self.print_progress,
+                )
+                _log(
+                    f"Finished {len(set_done)} out of {len(set_all)} tasks",
+                    self._logger.info,
+                    print_progress=self.print_progress,
+                )
 
             if set_done == set_all:
-                self._logger.debug('All tasks done')
+                self._logger.debug("All tasks done")
 
                 raise StopIteration
 
             self._i += 1
 
-        task_kwargs = {'catch_exceptions': True}
+        task_kwargs = {"catch_exceptions": True}
 
         with Pool(processes=self.processes) as pool:
             while True:
@@ -219,7 +221,7 @@ class ParallelDill(Executor):
 
                 if self._bar:
                     current_ = pretty_print.iterable(current)
-                    self._bar.set_description(f'Running: {current_}')
+                    self._bar.set_description(f"Running: {current_}")
 
                 try:
                     task = next_task()
@@ -231,10 +233,11 @@ class ParallelDill(Executor):
                             TaskBuildWrapper(task),
                             kwds=task_kwargs,
                             callback=callback,
-                            error_callback=callback_error)
+                            error_callback=callback_error,
+                        )
                         future_mapping[async_result] = task
                         started.append(task)
-                        self._logger.info('Added %s to the pool...', task.name)
+                        self._logger.info("Added %s to the pool...", task.name)
 
         if self._bar:
             self._bar.close()
@@ -251,9 +254,9 @@ class ParallelDill(Executor):
         state = self.__dict__.copy()
         # _logger is not pickable, so we remove them and build
         # them again in __setstate__
-        del state['_logger']
+        del state["_logger"]
         # progress bar is not picklable
-        del state['_bar']
+        del state["_bar"]
         return state
 
     # same as Parallel (and possibly Executor?)

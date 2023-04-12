@@ -24,15 +24,15 @@ def _is_injectable_task(task):
 
 def _load_prioritized_tasks_to_inject_from_cfg(dag, cfg):
     priorities_set = set()
-    _cfg_inject_priorities = cfg['ploomber'].get('inject-priority')
+    _cfg_inject_priorities = cfg["ploomber"].get("inject-priority")
 
     if _cfg_inject_priorities:
-        prioritized_tasks_names = _cfg_inject_priorities.split(',')
+        prioritized_tasks_names = _cfg_inject_priorities.split(",")
 
         for prioritized_task_name in prioritized_tasks_names:
-            has_wildcard = '*' in prioritized_task_name
+            has_wildcard = "*" in prioritized_task_name
             if has_wildcard:
-                regex = prioritized_task_name.replace('*', '.*')
+                regex = prioritized_task_name.replace("*", ".*")
                 matching_tasks_set = _find_tasks_by_regex(dag, regex)
                 priorities_set = priorities_set.union(matching_tasks_set)
             else:
@@ -45,7 +45,7 @@ def _load_prioritized_tasks_to_inject_from_cfg(dag, cfg):
 def _find_tasks_by_regex(dag, regex):
     tasks = set()
     for task_name in dag:
-        match = re.search(f'{regex}', task_name)
+        match = re.search(f"{regex}", task_name)
         if match:
             tasks.add(task_name)
 
@@ -93,19 +93,19 @@ def _get_tasks_to_inject(dag, templates_to_exclude=[]):
 
     templates = get_unique_list(used_templates)
     tasks_to_inject = []
-    warning_message = ''
+    warning_message = ""
     for template in templates:
         if template not in templates_to_exclude:
-            task_to_inject = _get_default_task_to_inject_by_template_name(
-                dag, template)
+            task_to_inject = _get_default_task_to_inject_by_template_name(dag, template)
 
             task_to_inject_name = task_to_inject.name
             tasks_to_inject.append(task_to_inject_name)
             warning_message += (
-                f'{template} appears more than once in your '
-                f'pipeline, the parameters from {task_to_inject_name} '
-                'will be injected, to inject the parameters of '
-                'another task please modify setup.cfg\n')
+                f"{template} appears more than once in your "
+                f"pipeline, the parameters from {task_to_inject_name} "
+                "will be injected, to inject the parameters of "
+                "another task please modify setup.cfg\n"
+            )
 
     return tasks_to_inject, warning_message
 
@@ -114,8 +114,7 @@ def _get_params_to_inject(dag, priorities=[]):
     used_tempaltes = []
     exceptions = []
     for prioritized_task_name_to_inject in priorities:
-        dag_task = _find_task_in_dag_by_name(dag,
-                                             prioritized_task_name_to_inject)
+        dag_task = _find_task_in_dag_by_name(dag, prioritized_task_name_to_inject)
         is_prioritized_task_exist = True if dag_task is not None else False
 
         if is_prioritized_task_exist:
@@ -124,20 +123,23 @@ def _get_params_to_inject(dag, priorities=[]):
                 used_tempaltes.append(full_template_name)
             else:
                 exceptions.append(
-                    BaseException(
-                        'Error. Values correspond to the same task.'))
+                    BaseException("Error. Values correspond to the same task.")
+                )
                 break
         else:
             exceptions.append(
                 ValueError(
-                    f'Error. Invalid task name.'
-                    f'{prioritized_task_name_to_inject} '
-                    'is not defined in pipeline.yaml'))
+                    f"Error. Invalid task name."
+                    f"{prioritized_task_name_to_inject} "
+                    "is not defined in pipeline.yaml"
+                )
+            )
             break
 
     # get unprioritized tasks for unused tempaltes
     unprioritized_tasks_to_inject, warning_message = _get_tasks_to_inject(
-        dag, templates_to_exclude=used_tempaltes)
+        dag, templates_to_exclude=used_tempaltes
+    )
 
     tasks_to_inject = unprioritized_tasks_to_inject + priorities
     inject_cell_args = _format_inject_cells_args(tasks_to_inject)
@@ -146,16 +148,20 @@ def _get_params_to_inject(dag, priorities=[]):
 
 
 def _format_inject_cells_args(tasks_to_inject):
-    return {'priority': tasks_to_inject}
+    return {"priority": tasks_to_inject}
 
 
 def _format(fmt, entry_point, dag, verbose=True):
     return [
-        str(p) for p in _call_in_source(dag,
-                                        'format',
-                                        'Formatted notebooks',
-                                        dict(fmt=fmt, entry_point=entry_point),
-                                        verbose=verbose) if p is not None
+        str(p)
+        for p in _call_in_source(
+            dag,
+            "format",
+            "Formatted notebooks",
+            dict(fmt=fmt, entry_point=entry_point),
+            verbose=verbose,
+        )
+        if p is not None
     ]
 
 
@@ -163,11 +169,7 @@ def _inject_cell(dag, **kwargs):
     if not kwargs:
         kwargs = dict()
 
-    _call_in_source(dag,
-                    'save_injected_cell',
-                    'Injected cell',
-                    kwargs,
-                    verbose=False)
+    _call_in_source(dag, "save_injected_cell", "Injected cell", kwargs, verbose=False)
 
 
 def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
@@ -179,8 +181,8 @@ def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
     results = []
     for task in dag.values():
         ok_to_inject_task = True
-        if 'priority' in kwargs:
-            ok_to_inject_task = task.name in kwargs['priority']
+        if "priority" in kwargs:
+            ok_to_inject_task = task.name in kwargs["priority"]
 
         if ok_to_inject_task:
             try:
@@ -191,10 +193,10 @@ def _call_in_source(dag, method_name, message, kwargs=None, verbose=True):
                 results.append(method(**kwargs))
                 files.append(str(task.source._path))
 
-    files_ = '\n'.join((f'    {f}' for f in files))
+    files_ = "\n".join((f"    {f}" for f in files))
 
     if verbose:
-        click.echo(f'{message}:\n{files_}')
+        click.echo(f"{message}:\n{files_}")
 
     return results
 
@@ -205,9 +207,10 @@ def _install_hook(path_to_hook, content, entry_point):
     """
     if path_to_hook.exists():
         raise RuntimeError(
-            'hook already exists '
+            "hook already exists "
             f'at {path_to_hook}. Run: "ploomber nb -u" to uninstall the '
-            'existing hook and try again')
+            "existing hook and try again"
+        )
 
     path_to_hook.write_text(content.format(entry_point=entry_point))
     # make the file executable
@@ -215,8 +218,7 @@ def _install_hook(path_to_hook, content, entry_point):
 
 
 def _delete_hook(path):
-    """Delete a git hook at the given path
-    """
+    """Delete a git hook at the given path"""
     if path.exists():
         if path.is_file():
             path.unlink()
@@ -224,7 +226,7 @@ def _delete_hook(path):
             # in the remote case that it's a directory
             shutil.rmtree(path)
 
-    click.echo(f'Deleted hook located at {path}')
+    click.echo(f"Deleted hook located at {path}")
 
 
 pre_commit_hook = """
@@ -272,24 +274,24 @@ def _py_with_single_click_enable():
     opening .py files as notebooks with a single click. If the secion already
     exists, it overrides its value
     """
-    parent = Path('~/.jupyter', 'labconfig').expanduser()
-    path = parent / 'default_setting_overrides.json'
+    parent = Path("~/.jupyter", "labconfig").expanduser()
+    path = parent / "default_setting_overrides.json"
 
     if path.exists():
         target = json.loads(path.read_text())
     else:
         target = {}
 
-    recursive_update(target,
-                     json.loads(_jupyterlab_default_settings_overrides))
+    recursive_update(target, json.loads(_jupyterlab_default_settings_overrides))
 
-    click.echo(f'Overriding JupyterLab defaults at: {str(path)}')
+    click.echo(f"Overriding JupyterLab defaults at: {str(path)}")
     parent.mkdir(exist_ok=True, parents=True)
     path.write_text(json.dumps(target))
     click.secho(
-        'Done. You can now open .py and other formats in JupyterLab '
-        'with a single click. You may need to reload JupyterLab',
-        fg='green')
+        "Done. You can now open .py and other formats in JupyterLab "
+        "with a single click. You may need to reload JupyterLab",
+        fg="green",
+    )
 
 
 def _py_with_single_click_disable():
@@ -298,13 +300,13 @@ def _py_with_single_click_disable():
     the value in
     ['@jupyterlab/docmanager-extension:plugin'][''defaultViewers'], if any
     """
-    parent = Path('~/.jupyter', 'labconfig')
-    target = (parent / 'default_setting_overrides.json').expanduser()
+    parent = Path("~/.jupyter", "labconfig")
+    target = (parent / "default_setting_overrides.json").expanduser()
 
     if target.exists():
         content = json.loads(target.read_text())
-        key1 = '@jupyterlab/docmanager-extension:plugin'
-        key2 = 'defaultViewers'
+        key1 = "@jupyterlab/docmanager-extension:plugin"
+        key2 = "defaultViewers"
 
         if content.get(key1, {}).get(key2):
             del content[key1][key2]
@@ -315,9 +317,10 @@ def _py_with_single_click_disable():
             Path(target).write_text(json.dumps(content))
 
     click.secho(
-        'Done. Disabled opening .py files and other formats in JupyterLab '
-        'with a single click. You may need to reload JupyterLab',
-        fg='yellow')
+        "Done. Disabled opening .py files and other formats in JupyterLab "
+        "with a single click. You may need to reload JupyterLab",
+        fg="yellow",
+    )
 
 
 _description = """Manage scripts and notebooks
@@ -343,13 +346,14 @@ $ ploomber nb -f ipynb
 
 # TODO: --log, --log-file should not appear as options
 @command_endpoint
-@telemetry.log_call('nb')
+@telemetry.log_call("nb")
 def main():
     parser = CustomParser(
         description=_description,
-        prog='ploomber nb',
+        prog="ploomber nb",
         # required for the --help text to keep line breaks
-        formatter_class=argparse.RawTextHelpFormatter)
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
 
     with parser:
         # The next options do not require a valid entry point
@@ -357,63 +361,75 @@ def main():
         # opening .py files as notebooks in JupyterLab with a single click
         single_click = parser.add_mutually_exclusive_group()
         single_click.add_argument(
-            '--single-click',
-            '-S',
-            action='store_true',
-            help=('Override JupyterLab defaults to open '
-                  'scripts as notebook with a single click'))
+            "--single-click",
+            "-S",
+            action="store_true",
+            help=(
+                "Override JupyterLab defaults to open "
+                "scripts as notebook with a single click"
+            ),
+        )
         single_click.add_argument(
-            '--single-click-disable',
-            '-d',
-            action='store_true',
-            help=('Disables opening scripts as notebook with a single '
-                  'click in JupyterLab'))
+            "--single-click-disable",
+            "-d",
+            action="store_true",
+            help=(
+                "Disables opening scripts as notebook with a single "
+                "click in JupyterLab"
+            ),
+        )
 
         # install/uninstall hook
         hook = parser.add_mutually_exclusive_group()
-        hook.add_argument('--install-hook',
-                          '-I',
-                          action='store_true',
-                          help='Install git pre-commit hook')
-        hook.add_argument('--uninstall-hook',
-                          '-u',
-                          action='store_true',
-                          help='Uninstall git pre-commit hook')
+        hook.add_argument(
+            "--install-hook",
+            "-I",
+            action="store_true",
+            help="Install git pre-commit hook",
+        )
+        hook.add_argument(
+            "--uninstall-hook",
+            "-u",
+            action="store_true",
+            help="Uninstall git pre-commit hook",
+        )
 
         # The next options require a valid entry point
 
         # inject/remove cell
         cell = parser.add_mutually_exclusive_group()
-        cell.add_argument('--inject',
-                          '-i',
-                          action='store_true',
-                          help='Inject cell to all script/notebook tasks')
         cell.add_argument(
-            '--remove',
-            '-r',
-            action='store_true',
-            help='Remove injected cell in all script/notebook tasks')
+            "--inject",
+            "-i",
+            action="store_true",
+            help="Inject cell to all script/notebook tasks",
+        )
+        cell.add_argument(
+            "--remove",
+            "-r",
+            action="store_true",
+            help="Remove injected cell in all script/notebook tasks",
+        )
         # re-format
-        parser.add_argument('--format',
-                            '-f',
-                            help='Re-format script/notebook tasks '
-                            '(values: "py:percent" and "ipynb")')
+        parser.add_argument(
+            "--format",
+            "-f",
+            help="Re-format script/notebook tasks "
+            '(values: "py:percent" and "ipynb")',
+        )
 
         # pair scripts and nbs
-        parser.add_argument('--pair',
-                            '-p',
-                            help='Pair scripts with ipynb files')
+        parser.add_argument("--pair", "-p", help="Pair scripts with ipynb files")
 
         # sync scripts and nbs
-        parser.add_argument('--sync',
-                            '-s',
-                            action='store_true',
-                            help='Sync scripts with ipynb files')
+        parser.add_argument(
+            "--sync", "-s", action="store_true", help="Sync scripts with ipynb files"
+        )
 
     loading_error = None
 
     # commands that need an entry point to work
-    needs_entry_point = {'format', 'inject', 'remove', 'sync', 'pair'}
+    needs_entry_point = {"format", "inject", "remove", "sync", "pair"}
 
     args_ = parser.parse_args()
 
@@ -426,8 +442,9 @@ def main():
             dag.render(show_progress=False)
 
         if loading_error:
-            raise BaseException('Could not run nb command: the DAG '
-                                'failed to load') from loading_error
+            raise BaseException(
+                "Could not run nb command: the DAG " "failed to load"
+            ) from loading_error
     else:
         dag = None
         args = args_
@@ -441,43 +458,43 @@ def main():
         _py_with_single_click_disable()
 
     if args.install_hook:
-        if not Path('.git').is_dir():
+        if not Path(".git").is_dir():
             raise NotADirectoryError(
-                'Expected a .git/ directory in the current working '
-                'directory. Run this from the repository root directory.')
+                "Expected a .git/ directory in the current working "
+                "directory. Run this from the repository root directory."
+            )
 
-        parent = Path('.git', 'hooks')
+        parent = Path(".git", "hooks")
         parent.mkdir(exist_ok=True)
 
         # pre-commit: remove injected cells
-        _install_hook(parent / 'pre-commit', pre_commit_hook, args.entry_point)
-        click.echo('Successfully installed pre-commit git hook')
+        _install_hook(parent / "pre-commit", pre_commit_hook, args.entry_point)
+        click.echo("Successfully installed pre-commit git hook")
 
         # post-commit: inject cells
-        _install_hook(parent / 'post-commit', post_commit_hook,
-                      args.entry_point)
-        click.echo('Successfully installed post-commit git hook')
+        _install_hook(parent / "post-commit", post_commit_hook, args.entry_point)
+        click.echo("Successfully installed post-commit git hook")
 
     if args.uninstall_hook:
-        _delete_hook(Path('.git', 'hooks', 'pre-commit'))
-        _delete_hook(Path('.git', 'hooks', 'post-commit'))
+        _delete_hook(Path(".git", "hooks", "pre-commit"))
+        _delete_hook(Path(".git", "hooks", "post-commit"))
 
     # options that need a valid DAG
 
     if args.format:
-        new_paths = _format(fmt=args.format,
-                            entry_point=args.entry_point,
-                            dag=dag)
+        new_paths = _format(fmt=args.format, entry_point=args.entry_point, dag=dag)
 
         if len(new_paths):
-            click.echo('Extension changed for the following '
-                       f'tasks: {", ".join(new_paths)}.')
+            click.echo(
+                "Extension changed for the following " f'tasks: {", ".join(new_paths)}.'
+            )
 
     if args.inject:
         prioritized_tasks_to_inject = _get_prioritized_tasks_to_inject(dag)
 
         params_to_inject, warning_message, exceptions = _get_params_to_inject(
-            dag, priorities=prioritized_tasks_to_inject)
+            dag, priorities=prioritized_tasks_to_inject
+        )
 
         for exception in exceptions:
             raise (exception)
@@ -488,29 +505,32 @@ def main():
         _inject_cell(dag, **params_to_inject)
 
         click.secho(
-            'Finished cell injection. Re-run this command if your '
-            'pipeline.yaml changes.',
-            fg='green')
+            "Finished cell injection. Re-run this command if your "
+            "pipeline.yaml changes.",
+            fg="green",
+        )
 
     if args.remove:
         _call_in_source(
             dag,
-            'remove_injected_cell',
-            'Removed injected cell',
+            "remove_injected_cell",
+            "Removed injected cell",
             dict(),
         )
 
     if args.sync:
         # maybe its more efficient to pass all notebook paths at once?
-        _call_in_source(dag, 'sync', 'Synced notebooks')
+        _call_in_source(dag, "sync", "Synced notebooks")
 
     # can pair give trouble if we're reformatting?
     if args.pair:
         _call_in_source(
             dag,
-            'pair',
-            'Paired notebooks',
+            "pair",
+            "Paired notebooks",
             dict(base_path=args.pair),
         )
-        click.echo(f'Finished pairing notebooks. Tip: add {args.pair!r} to '
-                   'your .gitignore to keep your repository clean')
+        click.echo(
+            f"Finished pairing notebooks. Tip: add {args.pair!r} to "
+            "your .gitignore to keep your repository clean"
+        )

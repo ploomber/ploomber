@@ -7,7 +7,8 @@ from ploomber.spec import DAGSpec
 
 @pytest.fixture
 def tmp_spec(tmp_directory):
-    Path('script.py').write_text("""
+    Path("script.py").write_text(
+        """
 from pathlib import Path
 
 # %% tags=["parameters"]
@@ -15,14 +16,17 @@ upstream = None
 
 # %%
 Path(product).touch()
-""")
+"""
+    )
 
     spec = {
-        'tasks': [{
-            'source': 'script.py',
-            'product': 'file.txt',
-            'class': 'ScriptRunner',
-        }]
+        "tasks": [
+            {
+                "source": "script.py",
+                "product": "file.txt",
+                "class": "ScriptRunner",
+            }
+        ]
     }
 
     return spec

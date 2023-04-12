@@ -9,24 +9,31 @@ class Params(abc.MutableMapping):
     dictionary does not have a key "upstream" nor "product" because they'd
     clash with the ones added upon Task rendering
     """
+
     def __init__(self, params=None):
         if params is None:
             self._dict = {}
         else:
             if not isinstance(params, abc.Mapping):
-                raise TypeError('Params must be initialized '
-                                f'with a mapping, got: {params!r} '
-                                f'({type(params).__name__!r})')
+                raise TypeError(
+                    "Params must be initialized "
+                    f"with a mapping, got: {params!r} "
+                    f"({type(params).__name__!r})"
+                )
 
-            if 'upstream' in params:
-                raise ValueError('Task params cannot be initialized with an '
-                                 '"upstream" key as it automatically added '
-                                 'upon rendering')
+            if "upstream" in params:
+                raise ValueError(
+                    "Task params cannot be initialized with an "
+                    '"upstream" key as it automatically added '
+                    "upon rendering"
+                )
 
-            if 'product' in params:
-                raise ValueError('Task params cannot be initialized with a '
-                                 '"product" key as it automatically added '
-                                 'upon rendering')
+            if "product" in params:
+                raise ValueError(
+                    "Task params cannot be initialized with a "
+                    '"product" key as it automatically added '
+                    "upon rendering"
+                )
 
             self._dict = copy_module.copy(params)
 
@@ -45,8 +52,7 @@ class Params(abc.MutableMapping):
         return obj
 
     def _setitem(self, key, value):
-        """Private method for updating the underlying data
-        """
+        """Private method for updating the underlying data"""
         self._dict[key] = value
 
     def to_dict(self):
@@ -66,10 +72,10 @@ class Params(abc.MutableMapping):
         out = self.to_dict()
 
         if params_only:
-            out.pop('product', None)
-            out.pop('upstream', None)
-        elif 'upstream' in out:
-            out['upstream'] = out['upstream'].to_json_serializable()
+            out.pop("product", None)
+            out.pop("upstream", None)
+        elif "upstream" in out:
+            out["upstream"] = out["upstream"].to_json_serializable()
 
         return out
 
@@ -77,14 +83,17 @@ class Params(abc.MutableMapping):
         try:
             return self._dict[key]
         except KeyError:
-            raise KeyError('Cannot obtain Task param named '
-                           '"{}", declared params are: {}'.format(
-                               key, list(self._dict.keys())))
+            raise KeyError(
+                "Cannot obtain Task param named "
+                '"{}", declared params are: {}'.format(key, list(self._dict.keys()))
+            )
 
     def __setitem__(self, key, value):
-        raise RuntimeError('Task params are read-only, if you need a copy'
-                           ' use Params.to_dict() (returns a shallow copy)'
-                           ' of the underlying dictionary')
+        raise RuntimeError(
+            "Task params are read-only, if you need a copy"
+            " use Params.to_dict() (returns a shallow copy)"
+            " of the underlying dictionary"
+        )
 
     def __iter__(self):
         for name in self._dict.keys():
@@ -97,7 +106,7 @@ class Params(abc.MutableMapping):
         return str(self._dict)
 
     def __repr__(self):
-        return 'Params({})'.format(repr(self._dict))
+        return "Params({})".format(repr(self._dict))
 
     def get(self, key):
         return self._dict.get(key)

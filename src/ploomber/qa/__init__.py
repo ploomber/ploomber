@@ -8,4 +8,4 @@ details than static analyzers can
 """
 from ploomber.qa.dagqualitychecker import DAGQualityChecker
 
-__all__ = ['DAGQualityChecker']
+__all__ = ["DAGQualityChecker"]

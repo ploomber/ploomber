@@ -31,26 +31,24 @@ class Client(abc.ABC):
     2.0 (PEP 249)
 
     """
+
     def __init__(self):
         self._set_logger()
 
     @property
     @abc.abstractmethod
     def connection(self):
-        """Return a connection, open one if there isn't any
-        """
+        """Return a connection, open one if there isn't any"""
         pass
 
     @abc.abstractmethod
     def execute(self, code):
-        """Execute code
-        """
+        """Execute code"""
         pass
 
     @abc.abstractmethod
     def close(self):
-        """Close connection if there is one active
-        """
+        """Close connection if there is one active"""
         pass
 
     # __getstate__ and __setstate__ are needed to make this picklable
@@ -59,7 +57,7 @@ class Client(abc.ABC):
         state = self.__dict__.copy()
         # _logger is not pickable, so we remove them and build it
         # again in __setstate__
-        del state['_logger']
+        del state["_logger"]
         return state
 
     def __setstate__(self, state):
@@ -67,6 +65,4 @@ class Client(abc.ABC):
         self._set_logger()
 
     def _set_logger(self):
-        self._logger = logging.getLogger('{}.{}'.format(
-            __name__,
-            type(self).__name__))
+        self._logger = logging.getLogger("{}.{}".format(__name__, type(self).__name__))

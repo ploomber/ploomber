@@ -159,7 +159,6 @@ class NotebookConverter:
         self._suffix = Path(path_to_output).suffix
 
         if exporter_name is None:
-
             # try to infer exporter name from the extension
             if not self._suffix:
                 raise TaskInitializationError(
@@ -191,7 +190,6 @@ class NotebookConverter:
         self._nbconvert_export_kwargs = nbconvert_export_kwargs or {}
 
     def convert(self):
-
         if self._exporter is None and self._nbconvert_export_kwargs:
             warnings.warn(
                 f"Output {self._path_to_output!r} is a "
@@ -716,7 +714,6 @@ class NotebookRunner(NotebookMixin, Task):
         else:
             self._converter = []
             for key, product_nb in multiple_product_nb.items():
-
                 exporter = (
                     nbconvert_exporter_name.get(key)
                     if nbconvert_exporter_name
@@ -767,7 +764,6 @@ class NotebookRunner(NotebookMixin, Task):
 
         # the task generates more than one product
         if isinstance(self.product, MetaProduct):
-
             # generating a single output notebook
             if isinstance(self.nb_product_key, str):
                 nb_product = self.product[self.nb_product_key]

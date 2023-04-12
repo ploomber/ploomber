@@ -12,7 +12,4 @@ def download_data(key, *, path=None):
     # TODO: this should find the root directory and download relative to it
     # then return the absolute path
     url = PloomberCloudAPI().download_data(key).text
-    return _download_file(url,
-                          skip_if_exists=True,
-                          raise_on_missing=True,
-                          path=path)
+    return _download_file(url, skip_if_exists=True, raise_on_missing=True, path=path)

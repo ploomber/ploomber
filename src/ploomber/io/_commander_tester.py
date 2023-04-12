@@ -32,6 +32,7 @@ class CommanderTester:
     >>> monkeypatch.setattr(_commander, 'subprocess',
     ...     subprocess_mock) # doctest: +SKIP
     """
+
     def __init__(self, run=None, return_value=None):
         self._run = run or []
         self._return_value = return_value or dict()
