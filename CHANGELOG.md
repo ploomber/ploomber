@@ -2,6 +2,8 @@
 
 ## 0.22.3dev
 
+* [Fix] Fixed local execution error when using Scriptrunner
+
 ## 0.22.2 (2023-01-30)
 
 * [Fix] Fixes error that printed a git error message when failing to retrieve current git hash ([#1067](https://github.com/ploomber/ploomber/issues/1067))
