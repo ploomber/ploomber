@@ -1,7 +1,7 @@
 # CHANGELOG
 
 ## 0.22.3dev
-* Clearer error messages when generating pipeline plots
+* [Fix] Clearer error messages when generating pipeline plots
 
 ## 0.22.2 (2023-01-30)
 
