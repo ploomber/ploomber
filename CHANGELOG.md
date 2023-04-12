@@ -2,6 +2,7 @@
 
 ## 0.22.3dev
 * [Fix] Clearer error messages when generating pipeline plots
+* [Fix] Fix error when checking OS to determine which plotting backend to use
 
 ## 0.22.2 (2023-01-30)
 
